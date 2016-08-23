@@ -1,15 +1,15 @@
 #pragma once
 
-#include "part.h"
-
 #include <QtCore/QObject>
 #include <atomic>
 #include <vector>
 
-class QMutex;
 namespace qttask { class Progress; }
 
 namespace Mayo {
+
+class DocumentItem;
+class PartItem;
 
 class Document : public QObject
 {
@@ -26,6 +26,7 @@ public:
     };
 
     Document(QObject* parent = nullptr);
+    ~Document();
 
     bool importIges(
             const QString& filepath, qttask::Progress* progress = nullptr);
@@ -46,20 +47,13 @@ public:
 
     bool isEmpty() const;
 
-    static void qtRegisterRequiredMetaTypes();
-
 signals:
-    void partImported(uint64_t partId, const Part& part);
+    void partImported(const PartItem* partItem);
 
 private:
-    void addPart(const Part& part);
+    void addPartItem(PartItem* part);
 
-    struct Id_Part {
-        uint64_t id;
-        Part part;
-    };
-    std::vector<Id_Part> m_vecIdPart;
-    std::atomic<uint64_t> m_seqPartId = 0;
+    std::vector<DocumentItem*> m_rootDocumentItems;
 };
 
 } // namespace Mayo

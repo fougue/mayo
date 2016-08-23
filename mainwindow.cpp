@@ -34,10 +34,11 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
-
     QObject::connect(
                 m_ui->tab_Documents, &QTabWidget::tabCloseRequested,
                 this, &MainWindow::onTabCloseRequested);
+
+    this->updateControlsActivation();
 }
 
 MainWindow::~MainWindow()
@@ -47,10 +48,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::newDoc()
 {
+    static unsigned newDocId = 0;
     auto doc = new Document(this);
     auto uiDoc = new UiDocument(doc);
-    m_ui->tab_Documents->addTab(uiDoc, tr("New"));
     QObject::connect(uiDoc, &QObject::destroyed, doc, &QObject::deleteLater);
+    m_ui->tab_Documents->addTab(uiDoc, tr("New-%1").arg(++newDocId));
+    m_ui->tab_Documents->setCurrentWidget(uiDoc);
+    this->updateControlsActivation();
 }
 
 void MainWindow::openPartInNewDoc()
@@ -118,6 +122,12 @@ void MainWindow::onTabCloseRequested(int tabIndex)
     QWidget* tab = m_ui->tab_Documents->widget(tabIndex);
     m_ui->tab_Documents->removeTab(tabIndex);
     tab->deleteLater();
+    this->updateControlsActivation();
+}
+
+void MainWindow::updateControlsActivation()
+{
+    m_ui->actionImportPart->setEnabled(m_ui->tab_Documents->count() > 0);
 }
 
 } // namespace Mayo

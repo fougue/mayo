@@ -7,7 +7,7 @@
 namespace Mayo {
 
 class Document;
-class Part;
+class PartItem;
 class QtOccView;
 
 class UiDocument : public QWidget
@@ -21,7 +21,7 @@ public:
     Document* document();
 
 private:
-    void onPartImported(uint64_t partId, const Part& part);
+    void onPartImported(const PartItem* partItem);
 
     Document* m_document = nullptr;
     Handle_V3d_Viewer m_v3dViewer;

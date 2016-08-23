@@ -9,10 +9,12 @@ HEADERS += \
     qt_occ_view_controller.h \
     document.h \
     ui_document.h \
-    part.h \
     fougtools/qttools/gui/qwidget_utils.h \
     occt_window.h \
-    task_manager_dialog.h
+    task_manager_dialog.h \
+    document_item.h \
+    brep_shape_item.h \
+    stl_mesh_item.h
 
 SOURCES += \
     main.cpp \
@@ -21,10 +23,12 @@ SOURCES += \
     qt_occ_view_controller.cpp \
     document.cpp \
     ui_document.cpp \
-    part.cpp \
     fougtools/qttools/gui/qwidget_utils.cpp \
     occt_window.cpp \
-    task_manager_dialog.cpp
+    task_manager_dialog.cpp \
+    document_item.cpp \
+    brep_shape_item.cpp \
+    stl_mesh_item.cpp
 
 include(fougtools/qttools/task/qttools_task.pri)
 

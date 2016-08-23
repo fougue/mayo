@@ -20,6 +20,8 @@ private:
 
     void onTabCloseRequested(int tabIndex);
 
+    void updateControlsActivation();
+
     class Ui_MainWindow *m_ui = nullptr;
 };
 

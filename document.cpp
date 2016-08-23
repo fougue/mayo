@@ -1,5 +1,8 @@
 #include "document.h"
 
+#include "brep_shape_item.h"
+#include "stl_mesh_item.h"
+
 #include <QtCore/QFile>
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
@@ -127,6 +130,12 @@ Document::Document(QObject *parent)
 {
 }
 
+Document::~Document()
+{
+    for (DocumentItem* item : m_rootDocumentItems)
+        delete item;
+}
+
 bool Document::importIges(const QString &filepath, qttask::Progress* progress)
 {
     IFSelect_ReturnStatus error;
@@ -134,9 +143,10 @@ bool Document::importIges(const QString &filepath, qttask::Progress* progress)
             Internal::loadShapeFromFile<IGESControl_Reader>(
                 filepath, &error, progress);
     if (error == IFSelect_RetDone) {
-        Part part(shape);
-        part.setFilePath(filepath);
-        this->addPart(part);
+        auto partItem = new BRepShapeItem;
+        partItem->setFilePath(filepath);
+        partItem->setBRepShape(shape);
+        this->addPartItem(partItem);
     }
     return error == IFSelect_RetDone;
 }
@@ -148,9 +158,10 @@ bool Document::importStep(const QString &filepath, qttask::Progress* progress)
             Internal::loadShapeFromFile<STEPControl_Reader>(
                 filepath, &error, progress);
     if (error == IFSelect_RetDone) {
-        Part part(shape);
-        part.setFilePath(filepath);
-        this->addPart(part);
+        auto partItem = new BRepShapeItem;
+        partItem->setFilePath(filepath);
+        partItem->setBRepShape(shape);
+        this->addPartItem(partItem);
     }
     return error == IFSelect_RetDone;
 }
@@ -171,9 +182,10 @@ bool Document::importStl(const QString &filepath, qttask::Progress* progress)
         options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
         const int err = gmio_stl_read(&stream, &meshcreator, &options);
         if (err == GMIO_ERROR_OK) {
-            Part part(stlMesh);
-            part.setFilePath(filepath);
-            this->addPart(part);
+            auto partItem = new StlMeshItem;
+            partItem->setFilePath(filepath);
+            partItem->setStlMesh(stlMesh);
+            this->addPartItem(partItem);
             return true;
         }
     }
@@ -228,24 +240,13 @@ QStringList Document::partFormatFilters()
 
 bool Document::isEmpty() const
 {
-    return m_vecIdPart.empty();
+    return m_rootDocumentItems.empty();
 }
 
-void Document::qtRegisterRequiredMetaTypes()
+void Document::addPartItem(PartItem* partItem)
 {
-    qRegisterMetaType<uint64_t>("uint64_t");
-    qRegisterMetaType<Part>("Part");
-    qRegisterMetaType<Part>("Mayo::Part");
-}
-
-void Document::addPart(const Part &part)
-{
-    Id_Part idPart;
-    idPart.id = m_seqPartId;
-    idPart.part = part;
-    m_vecIdPart.push_back(std::move(idPart));
-    ++m_seqPartId;
-    emit partImported(idPart.id, part);
+    m_rootDocumentItems.push_back(partItem);
+    emit partImported(partItem);
 }
 
 } // namespace Mayo

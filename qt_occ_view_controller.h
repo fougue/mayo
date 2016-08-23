@@ -18,7 +18,6 @@ public:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
-    void showActionMenu(const QPoint& pos);
     void setViewCursor(const QCursor& cursor);
 
 private:

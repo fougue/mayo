@@ -1,7 +1,8 @@
 #include "ui_document.h"
 
 #include "document.h"
-#include "part.h"
+#include "brep_shape_item.h"
+#include "stl_mesh_item.h"
 #include "qt_occ_view.h"
 #include "qt_occ_view_controller.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
@@ -150,20 +151,22 @@ Document *UiDocument::document()
     return m_document;
 }
 
-void UiDocument::onPartImported(uint64_t partId, const Part &part)
+void UiDocument::onPartImported(const PartItem* partItem)
 {
-    if (part.ownsBRepShape()) {
-        Handle_AIS_Shape aisShape = new AIS_Shape(part.brepShape());
+    if (sameType<BRepShapeItem>(partItem)) {
+        auto brepShapeItem = static_cast<const BRepShapeItem*>(partItem);
+        Handle_AIS_Shape aisShape = new AIS_Shape(brepShapeItem->brepShape());
         aisShape->SetMaterial(Graphic3d_NOM_PLASTIC);
         aisShape->SetDisplayMode(AIS_Shaded);
         aisShape->SetColor(Quantity_Color(0.33, 0.33, 0.33, Quantity_TOC_RGB));
         aisShape->Attributes()->SetFaceBoundaryDraw(Standard_True);
         m_aisContext->Display(aisShape);
     }
-    else if (part.ownsStlMesh()) {
+    else if (sameType<StlMeshItem>(partItem)) {
+        auto stlMeshItem = static_cast<const StlMeshItem*>(partItem);
         Handle_MeshVS_Mesh meshVisu = new MeshVS_Mesh;
         Handle_XSDRAWSTLVRML_DataSource dataSource =
-                new XSDRAWSTLVRML_DataSource(part.stlMesh());
+                new XSDRAWSTLVRML_DataSource(stlMeshItem->stlMesh());
         meshVisu->SetDataSource(dataSource);
         // meshVisu->AddBuilder(..., Standard_False); -> No selection
         meshVisu->AddBuilder(new MeshVS_MeshPrsBuilder(meshVisu), Standard_True);
