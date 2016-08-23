@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "gui.h"
 #include <QtCore/QPair>
 #include <QtCore/QPoint>
 #include <QMessageBox>
@@ -26,7 +27,7 @@ class QWidget;
 
 namespace qtgui {
 
-class QWidgetUtils
+class QTTOOLS_GUI_EXPORT QWidgetUtils
 {
 public:
     template<typename PARENT_WIDGET>

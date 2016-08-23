@@ -9,7 +9,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 private:
@@ -22,7 +22,7 @@ private:
 
     void updateControlsActivation();
 
-    class Ui_MainWindow *m_ui = nullptr;
+    class Ui_MainWindow* m_ui = nullptr;
 };
 
 } // namespace Mayo

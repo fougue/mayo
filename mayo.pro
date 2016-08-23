@@ -14,7 +14,11 @@ HEADERS += \
     src/qt_occ_view_controller.h \
     src/stl_mesh_item.h \
     src/task_manager_dialog.h \
-    src/ui_document.h
+    src/document_view.h \
+    src/fougtools/qttools/gui/gui.h \
+    src/fougtools/qttools/gui/item_view_utils.h \
+    src/fougtools/occtools/occtools.h \
+    src/fougtools/occtools/qt_utils.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -28,13 +32,18 @@ SOURCES += \
     src/qt_occ_view_controller.cpp \
     src/stl_mesh_item.cpp \
     src/task_manager_dialog.cpp \
-    src/ui_document.cpp
+    src/document_view.cpp \
+    src/fougtools/qttools/gui/item_view_utils.cpp \
+    src/fougtools/occtools/qt_utils.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
+include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
+INCLUDEPATH += src/qt-solutions/qtpropertybrowser/src
 
 FORMS += \
     src/mainwindow.ui \
-    src/task_manager_dialog.ui
+    src/task_manager_dialog.ui \
+    src/document_view.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

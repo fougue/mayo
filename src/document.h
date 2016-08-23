@@ -45,6 +45,7 @@ public:
     static QString partFormatFilter(PartFormat format);
     static QStringList partFormatFilters();
 
+    const std::vector<DocumentItem*>& rootDocumentItems() const;
     bool isEmpty() const;
 
 signals:

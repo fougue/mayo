@@ -238,6 +238,11 @@ QStringList Document::partFormatFilters()
     return filters;
 }
 
+const std::vector<DocumentItem *> &Document::rootDocumentItems() const
+{
+    return m_rootDocumentItems;
+}
+
 bool Document::isEmpty() const
 {
     return m_rootDocumentItems.empty();

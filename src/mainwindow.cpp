@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "document.h"
-#include "ui_document.h"
+#include "document_view.h"
 #include "task_manager_dialog.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
@@ -50,21 +50,24 @@ void MainWindow::newDoc()
 {
     static unsigned newDocId = 0;
     auto doc = new Document(this);
-    auto uiDoc = new UiDocument(doc);
-    QObject::connect(uiDoc, &QObject::destroyed, doc, &QObject::deleteLater);
-    m_ui->tab_Documents->addTab(uiDoc, tr("New-%1").arg(++newDocId));
-    m_ui->tab_Documents->setCurrentWidget(uiDoc);
+    auto docView = new DocumentView(doc);
+    QObject::connect(docView, &QObject::destroyed, doc, &QObject::deleteLater);
+    m_ui->tab_Documents->addTab(docView, tr("New-%1").arg(++newDocId));
+    m_ui->tab_Documents->setCurrentWidget(docView);
     this->updateControlsActivation();
 }
 
 void MainWindow::openPartInNewDoc()
 {
+    qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                this, tr("Error"), tr("Not yet implemented"));
 }
 
 void MainWindow::importPartInCurrentDoc()
 {
-    auto uiDoc = qobject_cast<UiDocument*>(m_ui->tab_Documents->currentWidget());
-    if (uiDoc != nullptr) {
+    auto docView =
+            qobject_cast<DocumentView*>(m_ui->tab_Documents->currentWidget());
+    if (docView != nullptr) {
         QSettings settings;
         static const QLatin1String keyLastOpenDir("GUI/MainWindow_lastOpenDir");
         const QString lastOpenDir =
@@ -80,7 +83,7 @@ void MainWindow::importPartInCurrentDoc()
                     filters,
                     &selectedFilter);
         if (!filepath.isEmpty()) {
-            Document* doc = uiDoc->document();
+            Document* doc = docView->document();
             const auto itFormatFound =
                     std::find_if(Document::partFormats().cbegin(),
                                  Document::partFormats().cend(),
