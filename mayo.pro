@@ -1,40 +1,40 @@
-QT       += core gui widgets
-
 TARGET = mayo
 TEMPLATE = app
 
+QT += core gui widgets
+
 HEADERS += \
-    mainwindow.h \
-    qt_occ_view.h \
-    qt_occ_view_controller.h \
-    document.h \
-    ui_document.h \
-    fougtools/qttools/gui/qwidget_utils.h \
-    occt_window.h \
-    task_manager_dialog.h \
-    document_item.h \
-    brep_shape_item.h \
-    stl_mesh_item.h
+    src/brep_shape_item.h \
+    src/document.h \
+    src/document_item.h \
+    src/fougtools/qttools/gui/qwidget_utils.h \
+    src/mainwindow.h \
+    src/occt_window.h \
+    src/qt_occ_view.h \
+    src/qt_occ_view_controller.h \
+    src/stl_mesh_item.h \
+    src/task_manager_dialog.h \
+    src/ui_document.h
 
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    qt_occ_view.cpp \
-    qt_occ_view_controller.cpp \
-    document.cpp \
-    ui_document.cpp \
-    fougtools/qttools/gui/qwidget_utils.cpp \
-    occt_window.cpp \
-    task_manager_dialog.cpp \
-    document_item.cpp \
-    brep_shape_item.cpp \
-    stl_mesh_item.cpp
+    src/brep_shape_item.cpp \
+    src/document.cpp \
+    src/document_item.cpp \
+    src/fougtools/qttools/gui/qwidget_utils.cpp \
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/occt_window.cpp \
+    src/qt_occ_view.cpp \
+    src/qt_occ_view_controller.cpp \
+    src/stl_mesh_item.cpp \
+    src/task_manager_dialog.cpp \
+    src/ui_document.cpp
 
-include(fougtools/qttools/task/qttools_task.pri)
+include(src/fougtools/qttools/task/qttools_task.pri)
 
 FORMS += \
-    mainwindow.ui \
-    task_manager_dialog.ui
+    src/mainwindow.ui \
+    src/task_manager_dialog.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

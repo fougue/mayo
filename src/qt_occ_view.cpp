@@ -29,12 +29,6 @@
 
 namespace Mayo {
 
-/*! \class QtOccView
- *  \brief Qt wrapper around the V3d_View class
- *
- *  QtOccView does not handle input devices interaction like keyboard and mouse.
- */
-
 QtOccView::QtOccView(QWidget *parent)
     : QWidget(parent)
 { }
@@ -94,7 +88,8 @@ void QtOccView::paintEvent(QPaintEvent* /*event*/)
         this->redraw();
 }
 
-/*! \brief Reimplemented from QWidget::resizeEvent()
+/*! Reimplemented from QWidget::resizeEvent()
+ *
  *  Called when the widget needs to resize itself, but seeing as a paint event
  *  always follows a resize event, we'll move the work into the paint event
  */
@@ -107,8 +102,8 @@ void QtOccView::initialize()
 {
     if (!m_isInitialized) {
         this->setMouseTracking(true);
-        // Avoid Qt background clears to improve resizing speed, along with a couple
-        // of other attributes
+
+        // Avoid Qt background clears to improve resizing speed
         this->setAutoFillBackground(false);
         this->setAttribute(Qt::WA_NoSystemBackground);
         this->setAttribute(Qt::WA_PaintOnScreen);
@@ -118,21 +113,6 @@ void QtOccView::initialize()
         m_view = m_viewer->CreateView();
 
         Handle_OcctWindow hWnd = new OcctWindow(this);
-
-#if 0
-#if defined(Q_OS_WIN32)
-        Aspect_Handle winHandle = (Aspect_Handle)this->winId();
-        Handle_WNT_Window hWnd = new WNT_Window(winHandle);
-#elif defined(Q_OS_MAC) && !defined(MACOSX_USE_GLX)
-        NSView* viewHandle = (NSView*)m_backPtr->winId();
-        Handle_Cocoa_Window hWnd = new Cocoa_Window(viewHandle);
-#else
-        Window winHandle = (Window)m_backPtr->winId();
-        Handle_Aspect_DisplayConnection dispConnection =
-                m_viewer->Driver()->GetDisplayConnection();
-        Handle_Xw_Window hWnd = new Xw_Window(dispConnection, winHandle);
-#endif
-#endif
         m_view->SetWindow(hWnd);
         if (!hWnd->IsMapped())
             hWnd->Map();

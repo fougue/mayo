@@ -7,6 +7,10 @@
 
 namespace Mayo {
 
+/*! Qt wrapper around the V3d_View class
+ *
+ *  QtOccView does not handle input devices interaction like keyboard and mouse.
+ */
 class QtOccView : public QWidget
 {
     Q_OBJECT
