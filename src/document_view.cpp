@@ -202,7 +202,8 @@ DocumentView::DocumentView(Document *doc, QWidget *parent)
                 btnFitAll, &QAbstractButton::clicked,
                 m_ui->widget_View3d, &QtOccView::fitAll);
     QObject::connect(
-                doc, &Document::partImported, this, &DocumentView::onPartImported);
+                doc, &Document::partImported,
+                this, &DocumentView::onPartImported);
     QObject::connect(
                 m_ui->treeWidget_Document->selectionModel(),
                 &QItemSelectionModel::selectionChanged,
@@ -343,6 +344,7 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
 
         QtTreePropertyBrowser* propBrowser = m_ui->propBrowser_DocumentItem;
         Quantity_Color partColor;
+        Graphic3d_NameOfMaterial partMaterial;
         if (sameType<BRepShapeItem>(itemGpxObject->item)) {
             propBrowser->insertProperty(m_propTransparency, nullptr);
             propBrowser->insertProperty(
@@ -353,16 +355,19 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
             propBrowser->removeProperty(m_propMeshVsShowEdges);
             propBrowser->removeProperty(m_propMeshVsShowNodes);
 
+            // Transparency
             m_propTransparency->setValue(gpxObject->Transparency() * 100);
-
+            // Display mode
             if (gpxObject->DisplayMode() == AIS_WireFrame)
                 m_propAisShapeDisplayMode->setValue(0);
             else if (gpxObject->DisplayMode() == AIS_Shaded)
                 m_propAisShapeDisplayMode->setValue(1);
-
+            // Show face boundary
             m_propAisShapeShowFaceBoundary->setValue(
                         gpxObject->Attributes()->FaceBoundaryDraw() == Standard_True);
-
+            // Material
+            partMaterial = gpxObject->Material();
+            // Color
             gpxObject->Color(partColor);
         }
         else if (sameType<StlMeshItem>(itemGpxObject->item)) {
@@ -374,34 +379,39 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
             propBrowser->insertProperty(m_propMeshVsShowEdges, m_propMeshVsDisplayMode);
             propBrowser->insertProperty(m_propMeshVsShowNodes, m_propMeshVsShowEdges);
 
+            // Display mode
             if (gpxObject->DisplayMode() == MeshVS_DMF_WireFrame)
                 m_propMeshVsDisplayMode->setValue(0);
             else if (gpxObject->DisplayMode() == MeshVS_DMF_Shading)
                 m_propMeshVsDisplayMode->setValue(1);
             else if (gpxObject->DisplayMode() == MeshVS_DMF_Shrink)
                 m_propMeshVsDisplayMode->setValue(2);
-
+            // Show edges
             Standard_Boolean boolVal;
             meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
             m_propMeshVsShowEdges->setValue(boolVal == Standard_True);
-
+            // Show nodes
             meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_DisplayNodes, boolVal);
             m_propMeshVsShowNodes->setValue(boolVal == Standard_True);
-
+            // Material
+            Graphic3d_MaterialAspect materialAspect;
+            meshVisu->GetDrawer()->GetMaterial(
+                        MeshVS_DA_FrontMaterial, materialAspect);
+            partMaterial = materialAspect.Name();
+            // Color
             meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, partColor);
         }
 
         // Material
-        const Graphic3d_NameOfMaterial material = gpxObject->Material();
         auto itMat =
                 std::find_if(
-                    std::begin(Internal::materials),
-                    std::end(Internal::materials),
+                    std::cbegin(Internal::materials),
+                    std::cend(Internal::materials),
                     [=](const Internal::Material& mat) {
-            return mat.occMat == material;
+            return mat.occMat == partMaterial;
         } );
-        if (itMat != std::end(Internal::materials))
-            m_propMaterial->setValue(itMat - std::begin(Internal::materials));
+        if (itMat != std::cend(Internal::materials))
+            m_propMaterial->setValue(itMat - std::cbegin(Internal::materials));
 
         // Color
         m_propColor->setValue(occ::QtUtils::toQColor(partColor));
