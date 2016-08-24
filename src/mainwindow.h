@@ -12,12 +12,18 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+signals:
+    void importPartFinished(
+            bool ok, const QString& filepath, const QString& msg);
+
 private:
     void newDoc();
     void openPartInNewDoc();
     void importPartInCurrentDoc();
     void quitApp();
 
+    void onImportPartFinished(
+            bool ok, const QString& filepath, const QString& msg);
     void onTabCloseRequested(int tabIndex);
 
     void updateControlsActivation();

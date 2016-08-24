@@ -18,7 +18,8 @@ HEADERS += \
     src/fougtools/qttools/gui/gui.h \
     src/fougtools/qttools/gui/item_view_utils.h \
     src/fougtools/occtools/occtools.h \
-    src/fougtools/occtools/qt_utils.h
+    src/fougtools/occtools/qt_utils.h \
+    src/message_indicator.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -34,7 +35,8 @@ SOURCES += \
     src/task_manager_dialog.cpp \
     src/document_view.cpp \
     src/fougtools/qttools/gui/item_view_utils.cpp \
-    src/fougtools/occtools/qt_utils.cpp
+    src/fougtools/occtools/qt_utils.cpp \
+    src/message_indicator.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)

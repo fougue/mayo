@@ -3,11 +3,13 @@
 
 #include "document.h"
 #include "document_view.h"
+#include "message_indicator.h"
 #include "task_manager_dialog.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
 #include "fougtools/qttools/task/runner_qthreadpool.h"
 
+#include <QtCore/QTime>
 #include <QtCore/QSettings>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
@@ -37,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->tab_Documents, &QTabWidget::tabCloseRequested,
                 this, &MainWindow::onTabCloseRequested);
+    QObject::connect(
+                this, &MainWindow::importPartFinished,
+                this, &MainWindow::onImportPartFinished);
 
     this->updateControlsActivation();
 }
@@ -98,15 +103,15 @@ void MainWindow::importPartInCurrentDoc()
             qttask::BaseRunner* task =
                     qttask::Manager::globalInstance()->newTask<QThreadPool>();
             task->run([=]{
+                QTime chrono;
+                chrono.start();
                 const bool importOk =
                         doc->import(format, filepath, &task->progress());
-                if (!importOk) {
-                    qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                                this,
-                                tr("Error"),
-                                tr("Failed to import part:\n    '%1'")
-                                .arg(filepath));
-                }
+                const QString msg =
+                        importOk ?
+                            tr("Import time: %1ms").arg(chrono.elapsed()) :
+                            tr("Failed to import part:\n    '%1'").arg(filepath);
+                emit importPartFinished(importOk, filepath, msg);
             });
 
             settings.setValue(
@@ -118,6 +123,15 @@ void MainWindow::importPartInCurrentDoc()
 void MainWindow::quitApp()
 {
     QApplication::quit();
+}
+
+void MainWindow::onImportPartFinished(
+        bool ok, const QString &/*filepath*/, const QString &msg)
+{
+    if (ok)
+        MessageIndicator::showMessage(msg, this);
+    else
+        qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
 void MainWindow::onTabCloseRequested(int tabIndex)
