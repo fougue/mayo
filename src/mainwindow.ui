@@ -67,7 +67,14 @@
     <addaction name="separator"/>
     <addaction name="actionAboutMayo"/>
    </widget>
+   <widget class="QMenu" name="menu_Options">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="actionOptions"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Options"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -99,6 +106,11 @@
   <action name="actionReportBug">
    <property name="text">
     <string>Report Bug</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>

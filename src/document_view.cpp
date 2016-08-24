@@ -3,6 +3,7 @@
 #include "document.h"
 #include "brep_shape_item.h"
 #include "stl_mesh_item.h"
+#include "options.h"
 #include "qt_occ_view.h"
 #include "qt_occ_view_controller.h"
 #include "ui_document_view.h"
@@ -101,55 +102,6 @@ static void connectViewProjBtn(
                 [=]{ view->v3dView()->SetProj(proj); });
 }
 
-struct Material
-{
-    Graphic3d_NameOfMaterial occMat;
-    QString name;
-};
-
-static const Material materials[] = {
-    { Graphic3d_NOM_BRASS,
-      QApplication::translate("Mayo::DocumentView", "Brass") },
-    { Graphic3d_NOM_BRONZE,
-      QApplication::translate("Mayo::DocumentView", "Bronze") },
-    { Graphic3d_NOM_COPPER,
-      QApplication::translate("Mayo::DocumentView", "Copper") },
-    { Graphic3d_NOM_GOLD,
-      QApplication::translate("Mayo::DocumentView", "Gold") },
-    { Graphic3d_NOM_PEWTER,
-      QApplication::translate("Mayo::DocumentView", "Pewter") },
-    { Graphic3d_NOM_PLASTER,
-      QApplication::translate("Mayo::DocumentView", "Plaster") },
-    { Graphic3d_NOM_PLASTIC,
-      QApplication::translate("Mayo::DocumentView", "Plastic") },
-    { Graphic3d_NOM_SILVER,
-      QApplication::translate("Mayo::DocumentView", "Silver") },
-    { Graphic3d_NOM_STEEL,
-      QApplication::translate("Mayo::DocumentView", "Steel") },
-    { Graphic3d_NOM_STONE,
-      QApplication::translate("Mayo::DocumentView", "Stone") },
-    { Graphic3d_NOM_SHINY_PLASTIC,
-      QApplication::translate("Mayo::DocumentView", "Shiny plastic") },
-    { Graphic3d_NOM_SATIN,
-      QApplication::translate("Mayo::DocumentView", "Satin") },
-    { Graphic3d_NOM_METALIZED,
-      QApplication::translate("Mayo::DocumentView", "Metalized") },
-    { Graphic3d_NOM_NEON_GNC,
-      QApplication::translate("Mayo::DocumentView", "Neon gnc") },
-    { Graphic3d_NOM_CHROME,
-      QApplication::translate("Mayo::DocumentView", "Chrome") },
-    { Graphic3d_NOM_ALUMINIUM,
-      QApplication::translate("Mayo::DocumentView", "Aluminium") },
-    { Graphic3d_NOM_OBSIDIAN,
-      QApplication::translate("Mayo::DocumentView", "Obsidian") },
-    { Graphic3d_NOM_NEON_PHC,
-      QApplication::translate("Mayo::DocumentView", "Neon phc") },
-    { Graphic3d_NOM_JADE,
-      QApplication::translate("Mayo::DocumentView", "Jade") },
-    { Graphic3d_NOM_DEFAULT,
-      QApplication::translate("Mayo::DocumentView", "Default") }
-};
-
 } // namespace Internal
 
 DocumentView::DocumentView(Document *doc, QWidget *parent)
@@ -247,7 +199,7 @@ DocumentView::DocumentView(Document *doc, QWidget *parent)
             m_varPropMgr->addProperty(
                 QtVariantPropertyManager::enumTypeId(), tr("Material"));
     QStringList materialNames;
-    for (const Internal::Material& mat : Internal::materials)
+    for (const Options::Material& mat : Options::materials())
         materialNames.push_back(mat.name);
     m_propMaterial->setAttribute(QLatin1String("enumNames"), materialNames);
 
@@ -280,14 +232,14 @@ void DocumentView::onPartImported(const PartItem* partItem)
     if (partItem->isNull())
         return;
 
-    static const Quantity_Color defaultPartColor(0.33, 0.33, 0.33, Quantity_TOC_RGB);
+    const Options* opts = Options::instance();
     Handle_AIS_InteractiveObject aisObject;
     if (sameType<BRepShapeItem>(partItem)) {
         auto brepShapeItem = static_cast<const BRepShapeItem*>(partItem);
         Handle_AIS_Shape aisShape = new AIS_Shape(brepShapeItem->brepShape());
-        aisShape->SetMaterial(Graphic3d_NOM_PLASTIC);
+        aisShape->SetMaterial(opts->brepShapeDefaultMaterial());
         aisShape->SetDisplayMode(AIS_Shaded);
-        aisShape->SetColor(defaultPartColor);
+        aisShape->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
         aisShape->Attributes()->SetFaceBoundaryDraw(Standard_True);
         aisObject = aisShape;
     }
@@ -300,12 +252,16 @@ void DocumentView::onPartImported(const PartItem* partItem)
         // meshVisu->AddBuilder(..., Standard_False); -> No selection
         meshVisu->AddBuilder(new MeshVS_MeshPrsBuilder(meshVisu), Standard_True);
         // MeshVS_DrawerAttribute
-        meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, Standard_False);
-        meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, Standard_False);
+        meshVisu->GetDrawer()->SetBoolean(
+                    MeshVS_DA_ShowEdges, opts->meshDefaultShowEdges());
+        meshVisu->GetDrawer()->SetBoolean(
+                    MeshVS_DA_DisplayNodes, opts->meshDefaultShowNodes());
         meshVisu->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial,
-                    Graphic3d_MaterialAspect(Graphic3d_NOM_PLASTIC));
-        meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultPartColor);
+                    Graphic3d_MaterialAspect(opts->meshDefaultMaterial()));
+        meshVisu->GetDrawer()->SetColor(
+                    MeshVS_DA_InteriorColor,
+                    occ::QtUtils::toOccColor(opts->meshDefaultColor()));
         meshVisu->SetDisplayMode(MeshVS_DMF_Shading);
         // Wireframe as default hilight mode
         meshVisu->SetHilightMode(MeshVS_DMF_WireFrame);
@@ -405,13 +361,13 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
         // Material
         auto itMat =
                 std::find_if(
-                    std::cbegin(Internal::materials),
-                    std::cend(Internal::materials),
-                    [=](const Internal::Material& mat) {
-            return mat.occMat == partMaterial;
+                    std::cbegin(Options::materials()),
+                    std::cend(Options::materials()),
+                    [=](const Options::Material& mat) {
+            return mat.code == partMaterial;
         } );
-        if (itMat != std::cend(Internal::materials))
-            m_propMaterial->setValue(itMat - std::cbegin(Internal::materials));
+        if (itMat != std::cend(Options::materials()))
+            m_propMaterial->setValue(itMat - std::cbegin(Options::materials()));
 
         // Color
         m_propColor->setValue(occ::QtUtils::toQColor(partColor));
@@ -468,7 +424,7 @@ void DocumentView::onQVariantPropertyValueChanged(
         }
         else if (property == m_propMaterial) {
             const int matId = value.toInt();
-            const Graphic3d_NameOfMaterial mat = Internal::materials[matId].occMat;
+            const Graphic3d_NameOfMaterial mat = Options::materials().at(matId).code;
             if (sameType<BRepShapeItem>(itemGpxObject->item)) {
                 gpxObject->SetMaterial(mat);
             }

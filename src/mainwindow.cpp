@@ -5,6 +5,7 @@
 #include "document.h"
 #include "document_view.h"
 #include "message_indicator.h"
+#include "options_dialog.h"
 #include "task_manager_dialog.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
@@ -38,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
+    QObject::connect(
+                m_ui->actionOptions, &QAction::triggered,
+                this, &MainWindow::editOptions);
     QObject::connect(
                 m_ui->actionReportBug, &QAction::triggered,
                 this, &MainWindow::reportbug);
@@ -135,6 +139,12 @@ void MainWindow::importPartInCurrentDoc()
 void MainWindow::quitApp()
 {
     QApplication::quit();
+}
+
+void MainWindow::editOptions()
+{
+    auto dlg = new OptionsDialog(this);
+    qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::aboutMayo()

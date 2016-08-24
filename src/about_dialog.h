@@ -13,7 +13,7 @@ public:
     ~AboutDialog();
 
 private:
-    class Ui_AboutDialog *m_ui;
+    class Ui_AboutDialog* m_ui = nullptr;
 };
 
 } // namespace Mayo

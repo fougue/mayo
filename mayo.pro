@@ -20,7 +20,9 @@ HEADERS += \
     src/fougtools/occtools/occtools.h \
     src/fougtools/occtools/qt_utils.h \
     src/message_indicator.h \
-    src/about_dialog.h
+    src/about_dialog.h \
+    src/options_dialog.h \
+    src/options.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -38,7 +40,9 @@ SOURCES += \
     src/fougtools/qttools/gui/item_view_utils.cpp \
     src/fougtools/occtools/qt_utils.cpp \
     src/message_indicator.cpp \
-    src/about_dialog.cpp
+    src/about_dialog.cpp \
+    src/options_dialog.cpp \
+    src/options.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -48,7 +52,8 @@ FORMS += \
     src/mainwindow.ui \
     src/task_manager_dialog.ui \
     src/document_view.ui \
-    src/about_dialog.ui
+    src/about_dialog.ui \
+    src/options_dialog.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

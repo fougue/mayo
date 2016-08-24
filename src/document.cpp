@@ -2,6 +2,7 @@
 
 #include "brep_shape_item.h"
 #include "stl_mesh_item.h"
+#include "options.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QMutex>
@@ -11,6 +12,8 @@
 #include <BRepTools.hxx>
 #include <IGESControl_Reader.hxx>
 #include <Message_ProgressIndicator.hxx>
+#include <OSD_Path.hxx>
+#include <RWStl.hxx>
 #include <StlMesh_Mesh.hxx>
 #include <STEPControl_Reader.hxx>
 #include <Transfer_TransientProcess.hxx>
@@ -184,23 +187,35 @@ bool Document::importOccBRep(const QString &filepath, qttask::Progress* progress
 
 bool Document::importStl(const QString &filepath, qttask::Progress* progress)
 {
-    QFile file(filepath);
-    if (file.open(QIODevice::ReadOnly)) {
-        Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
-        gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
-        gmio_stream stream = gmio_stream_qiodevice(&file);
-        gmio_stl_read_options options = {};
-        options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
-        const int err = gmio_stl_read(&stream, &meshcreator, &options);
-        if (err == GMIO_ERROR_OK) {
-            auto partItem = new StlMeshItem;
-            partItem->setFilePath(filepath);
-            partItem->setStlMesh(stlMesh);
-            this->addPartItem(partItem);
-            return true;
+    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
+    Handle_StlMesh_Mesh stlMesh;
+    bool ok = false;
+    if (lib == Options::StlIoLibrary::Gmio) {
+        QFile file(filepath);
+        if (file.open(QIODevice::ReadOnly)) {
+            stlMesh = new StlMesh_Mesh;
+            gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
+            gmio_stream stream = gmio_stream_qiodevice(&file);
+            gmio_stl_read_options options = {};
+            options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
+            const int err = gmio_stl_read(&stream, &meshcreator, &options);
+            ok = (err == GMIO_ERROR_OK);
         }
     }
-    return false;
+    else if (lib == Options::StlIoLibrary::OpenCascade) {
+        Handle_Message_ProgressIndicator indicator =
+                new Internal::OccImportProgress(progress);
+        stlMesh = RWStl::ReadFile(
+                    OSD_Path(filepath.toLocal8Bit().constData()), indicator);
+        ok = !stlMesh.IsNull();
+    }
+    if (ok) {
+        auto partItem = new StlMeshItem;
+        partItem->setFilePath(filepath);
+        partItem->setStlMesh(stlMesh);
+        this->addPartItem(partItem);
+    }
+    return ok;
 }
 
 bool Document::import(

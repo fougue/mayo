@@ -28,14 +28,6 @@ public:
     Document(QObject* parent = nullptr);
     ~Document();
 
-    bool importIges(
-            const QString& filepath, qttask::Progress* progress = nullptr);
-    bool importStep(
-            const QString& filepath, qttask::Progress* progress = nullptr);
-    bool importOccBRep(
-            const QString& filepath, qttask::Progress* progress = nullptr);
-    bool importStl(
-            const QString& filepath, qttask::Progress* progress = nullptr);
     bool import(
             PartFormat format,
             const QString& filepath,
@@ -53,6 +45,15 @@ signals:
 
 private:
     void addPartItem(PartItem* part);
+
+    bool importIges(
+            const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importStep(
+            const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importOccBRep(
+            const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importStl(
+            const QString& filepath, qttask::Progress* progress = nullptr);
 
     std::vector<DocumentItem*> m_rootDocumentItems;
 };

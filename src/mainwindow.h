@@ -21,6 +21,7 @@ private:
     void openPartInNewDoc();
     void importPartInCurrentDoc();
     void quitApp();
+    void editOptions();
     void aboutMayo();
     void reportbug();
 
