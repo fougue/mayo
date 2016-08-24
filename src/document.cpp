@@ -7,6 +7,8 @@
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 
+#include <BRep_Builder.hxx>
+#include <BRepTools.hxx>
 #include <IGESControl_Reader.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <StlMesh_Mesh.hxx>
@@ -123,6 +125,15 @@ TopoDS_Shape loadShapeFromFile(
     return result;
 }
 
+BRepShapeItem* createBRepShapeItem(
+        const QString& filepath, const TopoDS_Shape& shape)
+{
+    auto partItem = new BRepShapeItem;
+    partItem->setFilePath(filepath);
+    partItem->setBRepShape(shape);
+    return partItem;
+}
+
 } // namespace Internal
 
 Document::Document(QObject *parent)
@@ -142,12 +153,8 @@ bool Document::importIges(const QString &filepath, qttask::Progress* progress)
     const TopoDS_Shape shape =
             Internal::loadShapeFromFile<IGESControl_Reader>(
                 filepath, &error, progress);
-    if (error == IFSelect_RetDone) {
-        auto partItem = new BRepShapeItem;
-        partItem->setFilePath(filepath);
-        partItem->setBRepShape(shape);
-        this->addPartItem(partItem);
-    }
+    if (error == IFSelect_RetDone)
+        this->addPartItem(Internal::createBRepShapeItem(filepath, shape));
     return error == IFSelect_RetDone;
 }
 
@@ -157,18 +164,22 @@ bool Document::importStep(const QString &filepath, qttask::Progress* progress)
     const TopoDS_Shape shape =
             Internal::loadShapeFromFile<STEPControl_Reader>(
                 filepath, &error, progress);
-    if (error == IFSelect_RetDone) {
-        auto partItem = new BRepShapeItem;
-        partItem->setFilePath(filepath);
-        partItem->setBRepShape(shape);
-        this->addPartItem(partItem);
-    }
+    if (error == IFSelect_RetDone)
+        this->addPartItem(Internal::createBRepShapeItem(filepath, shape));
     return error == IFSelect_RetDone;
 }
 
 bool Document::importOccBRep(const QString &filepath, qttask::Progress* progress)
 {
-    return false;
+    TopoDS_Shape shape;
+    BRep_Builder brepBuilder;
+    Handle_Message_ProgressIndicator indicator =
+            new Internal::OccImportProgress(progress);
+    const bool ok = BRepTools::Read(
+            shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
+    if (ok)
+        this->addPartItem(Internal::createBRepShapeItem(filepath, shape));
+    return ok;
 }
 
 bool Document::importStl(const QString &filepath, qttask::Progress* progress)
