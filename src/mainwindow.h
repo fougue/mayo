@@ -21,6 +21,8 @@ private:
     void openPartInNewDoc();
     void importPartInCurrentDoc();
     void quitApp();
+    void aboutMayo();
+    void reportbug();
 
     void onImportPartFinished(
             bool ok, const QString& filepath, const QString& msg);

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "about_dialog.h"
 #include "document.h"
 #include "document_view.h"
 #include "message_indicator.h"
@@ -11,6 +12,7 @@
 
 #include <QtCore/QTime>
 #include <QtCore/QSettings>
+#include <QtGui/QDesktopServices>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 
@@ -36,6 +38,12 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
+    QObject::connect(
+                m_ui->actionReportBug, &QAction::triggered,
+                this, &MainWindow::reportbug);
+    QObject::connect(
+                m_ui->actionAboutMayo, &QAction::triggered,
+                this, &MainWindow::aboutMayo);
     QObject::connect(
                 m_ui->tab_Documents, &QTabWidget::tabCloseRequested,
                 this, &MainWindow::onTabCloseRequested);
@@ -123,6 +131,18 @@ void MainWindow::importPartInCurrentDoc()
 void MainWindow::quitApp()
 {
     QApplication::quit();
+}
+
+void MainWindow::aboutMayo()
+{
+    auto dlg = new AboutDialog(this);
+    qtgui::QWidgetUtils::asyncDialogExec(dlg);
+}
+
+void MainWindow::reportbug()
+{
+    QDesktopServices::openUrl(
+                QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
 }
 
 void MainWindow::onImportPartFinished(
