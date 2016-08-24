@@ -211,11 +211,11 @@ DocumentView::DocumentView(Document *doc, QWidget *parent)
                 &DocumentView::onTreeWidgetDocumentSelectionChanged);
 
     // Create editable properties
-    m_propTransparency =
+    m_propAisShapeTransparency =
             m_varPropMgr->addProperty(QVariant::Int, tr("Transparency"));
-    m_propTransparency->setAttribute(QStringLiteral("minimum"), 0);
-    m_propTransparency->setAttribute(QLatin1String("maximum"), 100);
-    m_propTransparency->setAttribute(QLatin1String("singleStep"), 10);
+    m_propAisShapeTransparency->setAttribute(QStringLiteral("minimum"), 0);
+    m_propAisShapeTransparency->setAttribute(QLatin1String("maximum"), 100);
+    m_propAisShapeTransparency->setAttribute(QLatin1String("singleStep"), 10);
 
     m_propAisShapeDisplayMode =
             m_varPropMgr->addProperty(
@@ -346,9 +346,9 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
         Quantity_Color partColor;
         Graphic3d_NameOfMaterial partMaterial;
         if (sameType<BRepShapeItem>(itemGpxObject->item)) {
-            propBrowser->insertProperty(m_propTransparency, nullptr);
+            propBrowser->insertProperty(m_propAisShapeTransparency, nullptr);
             propBrowser->insertProperty(
-                        m_propAisShapeDisplayMode, m_propTransparency);
+                        m_propAisShapeDisplayMode, m_propAisShapeTransparency);
             propBrowser->insertProperty(
                         m_propAisShapeShowFaceBoundary, m_propAisShapeDisplayMode);
             propBrowser->removeProperty(m_propMeshVsDisplayMode);
@@ -356,7 +356,7 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
             propBrowser->removeProperty(m_propMeshVsShowNodes);
 
             // Transparency
-            m_propTransparency->setValue(gpxObject->Transparency() * 100);
+            m_propAisShapeTransparency->setValue(gpxObject->Transparency() * 100);
             // Display mode
             if (gpxObject->DisplayMode() == AIS_WireFrame)
                 m_propAisShapeDisplayMode->setValue(0);
@@ -372,7 +372,7 @@ void DocumentView::onTreeWidgetDocumentSelectionChanged()
         }
         else if (sameType<StlMeshItem>(itemGpxObject->item)) {
             auto meshVisu = static_cast<const MeshVS_Mesh*>(gpxObject.operator->());
-            propBrowser->removeProperty(m_propTransparency);
+            propBrowser->removeProperty(m_propAisShapeTransparency);
             propBrowser->removeProperty(m_propAisShapeDisplayMode);
             propBrowser->removeProperty(m_propAisShapeShowFaceBoundary);
             propBrowser->insertProperty(m_propMeshVsDisplayMode, nullptr);
@@ -432,7 +432,7 @@ void DocumentView::onQVariantPropertyValueChanged(
         Handle_AIS_InteractiveObject gpxObject = itemGpxObject->gpxObject;
         Handle_AIS_InteractiveContext cxt = gpxObject->GetContext();
 
-        if (property == m_propTransparency) {
+        if (property == m_propAisShapeTransparency) {
             cxt->SetTransparency(gpxObject, value.toDouble() / 100.);
         }
         else if (property == m_propAisShapeDisplayMode) {

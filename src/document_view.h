@@ -54,7 +54,7 @@ private:
     class Ui_DocumentView* m_ui = nullptr;
 
     QtVariantPropertyManager* m_varPropMgr = nullptr;
-    QtVariantProperty* m_propTransparency = nullptr;
+    QtVariantProperty* m_propAisShapeTransparency = nullptr;
     QtVariantProperty* m_propAisShapeDisplayMode = nullptr;
     QtVariantProperty* m_propAisShapeShowFaceBoundary = nullptr;
     QtVariantProperty* m_propMeshVsDisplayMode = nullptr;
