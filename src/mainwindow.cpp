@@ -82,18 +82,20 @@ void MainWindow::importPartInCurrentDoc()
             qobject_cast<DocumentView*>(m_ui->tab_Documents->currentWidget());
     if (docView != nullptr) {
         QSettings settings;
-        static const QLatin1String keyLastOpenDir("GUI/MainWindow_lastOpenDir");
+        static const QLatin1String keyLastOpenDir(
+                    "GUI/MainWindow_lastOpenDir");
+        static const QLatin1String keyLastSelectedFilter(
+                    "GUI/MainWindow_lastSelectedFilter");
         const QString lastOpenDir =
                 settings.value(keyLastOpenDir, QString()).toString();
-        const QString filters =
-                Document::partFormatFilters().join(QLatin1String(";;"));
-        QString selectedFilter;
+        QString selectedFilter =
+                settings.value(keyLastSelectedFilter, QString()).toString();
         const QString filepath =
                 QFileDialog::getOpenFileName(
                     this,
                     tr("Select Part File"),
                     lastOpenDir,
-                    filters,
+                    Document::partFormatFilters().join(QLatin1String(";;")),
                     &selectedFilter);
         if (!filepath.isEmpty()) {
             Document* doc = docView->document();
@@ -124,6 +126,8 @@ void MainWindow::importPartInCurrentDoc()
 
             settings.setValue(
                         keyLastOpenDir, QFileInfo(filepath).canonicalPath());
+            settings.setValue(
+                        keyLastSelectedFilter, selectedFilter);
         }
     }
 }
