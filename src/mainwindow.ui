@@ -71,6 +71,8 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
+    <addaction name="actionSaveImageView"/>
+    <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
    <addaction name="menu_File"/>
@@ -113,8 +115,19 @@
     <string>Options</string>
    </property>
   </action>
+  <action name="actionSaveImageView">
+   <property name="icon">
+    <iconset resource="../mayo.qrc">
+     <normaloff>:/images/camera_photo.png</normaloff>:/images/camera_photo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save View to Image</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="../mayo.qrc"/>
+ </resources>
  <connections/>
 </ui>

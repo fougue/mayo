@@ -5,6 +5,7 @@
 #include "options.h"
 
 #include <QtCore/QFile>
+#include <QtCore/QFileInfo>
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 
@@ -128,12 +129,23 @@ TopoDS_Shape loadShapeFromFile(
     return result;
 }
 
-BRepShapeItem* createBRepShapeItem(
+static BRepShapeItem* createBRepShapeItem(
         const QString& filepath, const TopoDS_Shape& shape)
 {
     auto partItem = new BRepShapeItem;
     partItem->setFilePath(filepath);
+    partItem->setLabel(QFileInfo(filepath).fileName());
     partItem->setBRepShape(shape);
+    return partItem;
+}
+
+static StlMeshItem* createStlMeshItem(
+        const QString& filepath, const Handle_StlMesh_Mesh& mesh)
+{
+    auto partItem = new StlMeshItem;
+    partItem->setFilePath(filepath);
+    partItem->setLabel(QFileInfo(filepath).fileName());
+    partItem->setStlMesh(mesh);
     return partItem;
 }
 
@@ -209,12 +221,8 @@ bool Document::importStl(const QString &filepath, qttask::Progress* progress)
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         ok = !stlMesh.IsNull();
     }
-    if (ok) {
-        auto partItem = new StlMeshItem;
-        partItem->setFilePath(filepath);
-        partItem->setStlMesh(stlMesh);
-        this->addPartItem(partItem);
-    }
+    if (ok)
+        this->addPartItem(Internal::createStlMeshItem(filepath, stlMesh));
     return ok;
 }
 

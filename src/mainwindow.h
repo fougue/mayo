@@ -22,6 +22,7 @@ private:
     void importPartInCurrentDoc();
     void quitApp();
     void editOptions();
+    void saveImageView();
     void aboutMayo();
     void reportbug();
 

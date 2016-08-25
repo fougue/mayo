@@ -6,6 +6,7 @@
 #include "document_view.h"
 #include "message_indicator.h"
 #include "options_dialog.h"
+#include "save_image_view_dialog.h"
 #include "task_manager_dialog.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
@@ -39,6 +40,9 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
+    QObject::connect(
+                m_ui->actionSaveImageView, &QAction::triggered,
+                this, &MainWindow::saveImageView);
     QObject::connect(
                 m_ui->actionOptions, &QAction::triggered,
                 this, &MainWindow::editOptions);
@@ -144,6 +148,14 @@ void MainWindow::quitApp()
 void MainWindow::editOptions()
 {
     auto dlg = new OptionsDialog(this);
+    qtgui::QWidgetUtils::asyncDialogExec(dlg);
+}
+
+void MainWindow::saveImageView()
+{
+    auto docView =
+            qobject_cast<const DocumentView*>(m_ui->tab_Documents->currentWidget());
+    auto dlg = new SaveImageViewDialog(docView->qtOccView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 

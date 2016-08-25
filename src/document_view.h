@@ -29,6 +29,8 @@ public:
     const Document* document() const;
     Document* document();
 
+    const QtOccView* qtOccView() const;
+
 private:
     void onPartImported(const PartItem* partItem);
     void onTreeWidgetDocumentSelectionChanged();

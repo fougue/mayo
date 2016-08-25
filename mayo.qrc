@@ -9,5 +9,6 @@
         <file>images/view_right.png</file>
         <file>images/view_top.png</file>
         <file>images/fougue_logo.png</file>
+        <file>images/camera_photo.png</file>
     </qresource>
 </RCC>

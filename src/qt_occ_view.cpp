@@ -125,7 +125,7 @@ void QtOccView::initialize()
         m_view->TriedronDisplay(
                     Aspect_TOTP_LEFT_LOWER,
                     Quantity_NOC_GRAY50,
-                    0.1,
+                    0.075,
                     V3d_ZBUFFER);
 
         m_view->MustBeResized();

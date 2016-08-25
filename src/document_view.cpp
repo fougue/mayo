@@ -32,7 +32,6 @@
 #include <MeshVS_MeshPrsBuilder.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
 
-#include <QtCore/QFileInfo>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QToolButton>
 #include <QtVariantEditorFactory>
@@ -227,6 +226,11 @@ Document *DocumentView::document()
     return m_document;
 }
 
+const QtOccView *DocumentView::qtOccView() const
+{
+    return m_ui->widget_View3d;
+}
+
 void DocumentView::onPartImported(const PartItem* partItem)
 {
     if (partItem->isNull())
@@ -270,12 +274,10 @@ void DocumentView::onPartImported(const PartItem* partItem)
     }
 
     if (!aisObject.IsNull()) {
-        const QString label = QFileInfo(partItem->filePath()).fileName();
         auto treeItem = new QTreeWidgetItem;
-
-        // Label
-        treeItem->setText(0, !label.trimmed().isEmpty() ? label : tr("<unnamed>"));
-        treeItem->setToolTip(0, partItem->filePath());
+        const QString partLabel =
+                !partItem->label().isEmpty() ? partItem->label() : tr("<unnamed>");
+        treeItem->setText(0, partLabel);
 
         m_mapTreeItemGpxObject.emplace(
                     treeItem, Item_GpxObject(partItem, aisObject));

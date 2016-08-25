@@ -22,7 +22,8 @@ HEADERS += \
     src/message_indicator.h \
     src/about_dialog.h \
     src/options_dialog.h \
-    src/options.h
+    src/options.h \
+    src/save_image_view_dialog.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -42,7 +43,8 @@ SOURCES += \
     src/message_indicator.cpp \
     src/about_dialog.cpp \
     src/options_dialog.cpp \
-    src/options.cpp
+    src/options.cpp \
+    src/save_image_view_dialog.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -53,7 +55,8 @@ FORMS += \
     src/task_manager_dialog.ui \
     src/document_view.ui \
     src/about_dialog.ui \
-    src/options_dialog.ui
+    src/options_dialog.ui \
+    src/save_image_view_dialog.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
