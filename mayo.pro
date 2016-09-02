@@ -23,7 +23,16 @@ HEADERS += \
     src/about_dialog.h \
     src/options_dialog.h \
     src/options.h \
-    src/save_image_view_dialog.h
+    src/save_image_view_dialog.h \
+    src/application.h \
+    src/application_view.h \
+    src/document_item_props_view.h \
+    src/document_item_graphics.h \
+    src/property.h \
+    src/property_enumeration.h \
+    src/property_builtins.h \
+    src/brep_shape_item_graphics.h \
+    src/stl_mesh_item_graphics.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -44,7 +53,15 @@ SOURCES += \
     src/about_dialog.cpp \
     src/options_dialog.cpp \
     src/options.cpp \
-    src/save_image_view_dialog.cpp
+    src/save_image_view_dialog.cpp \
+    src/application.cpp \
+    src/application_view.cpp \
+    src/document_item_props_view.cpp \
+    src/document_item_graphics.cpp \
+    src/property.cpp \
+    src/property_enumeration.cpp \
+    src/brep_shape_item_graphics.cpp \
+    src/stl_mesh_item_graphics.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -56,7 +73,9 @@ FORMS += \
     src/document_view.ui \
     src/about_dialog.ui \
     src/options_dialog.ui \
-    src/save_image_view_dialog.ui
+    src/save_image_view_dialog.ui \
+    src/application_view.ui \
+    src/document_item_props_view.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

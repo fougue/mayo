@@ -4,6 +4,9 @@
 
 namespace Mayo {
 
+class Application;
+class Document;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "about_dialog.h"
+#include "application.h"
 #include "document.h"
 #include "document_view.h"
 #include "message_indicator.h"
@@ -69,11 +70,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::newDoc()
 {
-    static unsigned newDocId = 0;
-    auto doc = new Document(this);
+    Document* doc = Application::instance()->addDocument();
     auto docView = new DocumentView(doc);
     QObject::connect(docView, &QObject::destroyed, doc, &QObject::deleteLater);
-    m_ui->tab_Documents->addTab(docView, tr("New-%1").arg(++newDocId));
+    m_ui->tab_Documents->addTab(docView, doc->label());
     m_ui->tab_Documents->setCurrentWidget(docView);
     this->updateControlsActivation();
 }
@@ -183,9 +183,12 @@ void MainWindow::onImportPartFinished(
 void MainWindow::onTabCloseRequested(int tabIndex)
 {
     QWidget* tab = m_ui->tab_Documents->widget(tabIndex);
+    auto docView = qobject_cast<DocumentView*>(tab);
+    Application::instance()->eraseDocument(docView->document());
     m_ui->tab_Documents->removeTab(tabIndex);
-    tab->deleteLater();
+    docView->deleteLater();
     this->updateControlsActivation();
+
 }
 
 void MainWindow::updateControlsActivation()

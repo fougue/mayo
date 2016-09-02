@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
     QApplication::setOrganizationName("Fougue");
     QApplication::setOrganizationDomain("www.fougue.pro");
@@ -13,5 +13,5 @@ int main(int argc, char *argv[])
     Mayo::MainWindow w;
     w.show();
 
-    return a.exec();
+    return app.exec();
 }

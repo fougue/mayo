@@ -153,8 +153,7 @@ DocumentView::DocumentView(Document *doc, QWidget *parent)
                 btnFitAll, &QAbstractButton::clicked,
                 m_ui->widget_View3d, &QtOccView::fitAll);
     QObject::connect(
-                doc, &Document::partImported,
-                this, &DocumentView::onPartImported);
+                doc, &Document::itemAdded, this, &DocumentView::onItemAdded);
     QObject::connect(
                 m_ui->treeWidget_Document->selectionModel(),
                 &QItemSelectionModel::selectionChanged,
@@ -231,15 +230,12 @@ const QtOccView *DocumentView::qtOccView() const
     return m_ui->widget_View3d;
 }
 
-void DocumentView::onPartImported(const PartItem* partItem)
+void DocumentView::onItemAdded(DocumentItem* docItem)
 {
-    if (partItem->isNull())
-        return;
-
     const Options* opts = Options::instance();
     Handle_AIS_InteractiveObject aisObject;
-    if (sameType<BRepShapeItem>(partItem)) {
-        auto brepShapeItem = static_cast<const BRepShapeItem*>(partItem);
+    if (sameType<BRepShapeItem>(docItem)) {
+        auto brepShapeItem = static_cast<const BRepShapeItem*>(docItem);
         Handle_AIS_Shape aisShape = new AIS_Shape(brepShapeItem->brepShape());
         aisShape->SetMaterial(opts->brepShapeDefaultMaterial());
         aisShape->SetDisplayMode(AIS_Shaded);
@@ -247,8 +243,8 @@ void DocumentView::onPartImported(const PartItem* partItem)
         aisShape->Attributes()->SetFaceBoundaryDraw(Standard_True);
         aisObject = aisShape;
     }
-    else if (sameType<StlMeshItem>(partItem)) {
-        auto stlMeshItem = static_cast<const StlMeshItem*>(partItem);
+    else if (sameType<StlMeshItem>(docItem)) {
+        auto stlMeshItem = static_cast<const StlMeshItem*>(docItem);
         Handle_MeshVS_Mesh meshVisu = new MeshVS_Mesh;
         Handle_XSDRAWSTLVRML_DataSource dataSource =
                 new XSDRAWSTLVRML_DataSource(stlMeshItem->stlMesh());
@@ -276,11 +272,11 @@ void DocumentView::onPartImported(const PartItem* partItem)
     if (!aisObject.IsNull()) {
         auto treeItem = new QTreeWidgetItem;
         const QString partLabel =
-                !partItem->label().isEmpty() ? partItem->label() : tr("<unnamed>");
+                !docItem->label().isEmpty() ? docItem->label() : tr("<unnamed>");
         treeItem->setText(0, partLabel);
 
         m_mapTreeItemGpxObject.emplace(
-                    treeItem, Item_GpxObject(partItem, aisObject));
+                    treeItem, Item_GpxObject(docItem, aisObject));
         m_ui->treeWidget_Document->addTopLevelItem(treeItem);
 
         m_aisContext->Display(aisObject);

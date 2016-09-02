@@ -8,6 +8,7 @@ namespace qttask { class Progress; }
 
 namespace Mayo {
 
+class Application;
 class DocumentItem;
 class PartItem;
 
@@ -25,8 +26,11 @@ public:
         Stl
     };
 
-    Document(QObject* parent = nullptr);
-    ~Document();
+    const Application* application() const;
+    Application* application();
+
+    const QString& label() const;
+    void setLabel(const QString& v);
 
     bool import(
             PartFormat format,
@@ -41,9 +45,13 @@ public:
     bool isEmpty() const;
 
 signals:
-    void partImported(const PartItem* partItem);
+    void itemAdded(DocumentItem* docItem);
 
 private:
+    friend class Application;
+    Document(Application* app);
+    ~Document();
+
     void addPartItem(PartItem* part);
 
     bool importIges(
@@ -55,7 +63,9 @@ private:
     bool importStl(
             const QString& filepath, qttask::Progress* progress = nullptr);
 
+    Application* m_app = nullptr;
     std::vector<DocumentItem*> m_rootDocumentItems;
+    QString m_label;
 };
 
 } // namespace Mayo

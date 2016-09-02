@@ -32,7 +32,7 @@ public:
     const QtOccView* qtOccView() const;
 
 private:
-    void onPartImported(const PartItem* partItem);
+    void onItemAdded(DocumentItem* docItem);
     void onTreeWidgetDocumentSelectionChanged();
     void onQVariantPropertyValueChanged(
             QtProperty* property, const QVariant& value);

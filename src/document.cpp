@@ -1,5 +1,6 @@
 #include "document.h"
 
+#include "application.h"
 #include "brep_shape_item.h"
 #include "stl_mesh_item.h"
 #include "options.h"
@@ -151,8 +152,9 @@ static StlMeshItem* createStlMeshItem(
 
 } // namespace Internal
 
-Document::Document(QObject *parent)
-    : QObject(parent)
+Document::Document(Application *app)
+    : QObject(app),
+      m_app(app)
 {
 }
 
@@ -160,6 +162,26 @@ Document::~Document()
 {
     for (DocumentItem* item : m_rootDocumentItems)
         delete item;
+}
+
+const Application *Document::application() const
+{
+    return m_app;
+}
+
+Application *Document::application()
+{
+    return m_app;
+}
+
+const QString &Document::label() const
+{
+    return m_label;
+}
+
+void Document::setLabel(const QString &v)
+{
+    m_label = v;
 }
 
 bool Document::importIges(const QString &filepath, qttask::Progress* progress)
@@ -285,7 +307,7 @@ bool Document::isEmpty() const
 void Document::addPartItem(PartItem* partItem)
 {
     m_rootDocumentItems.push_back(partItem);
-    emit partImported(partItem);
+    emit itemAdded(partItem);
 }
 
 } // namespace Mayo
