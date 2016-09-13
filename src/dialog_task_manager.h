@@ -7,13 +7,13 @@ namespace Mayo {
 
 namespace Internal { class TaskWidget; }
 
-class TaskManagerDialog : public QDialog
+class DialogTaskManager : public QDialog
 {
     Q_OBJECT
 
 public:
-    TaskManagerDialog(QWidget *parent = nullptr);
-    ~TaskManagerDialog();
+    DialogTaskManager(QWidget *parent = nullptr);
+    ~DialogTaskManager();
 
     bool isRunning() const;
     void execWithTask(quint64 taskId);
@@ -27,7 +27,7 @@ private:
 
     Internal::TaskWidget* taskWidget(quint64 taskId);
 
-    class Ui_TaskManagerDialog* m_ui = nullptr;
+    class Ui_DialogTaskManager* m_ui = nullptr;
     QHash<quint64, Internal::TaskWidget*> m_taskIdToWidget;
     bool m_isRunning = false;
     unsigned m_taskCount = 0;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::OptionsDialog</class>
- <widget class="QDialog" name="Mayo::OptionsDialog">
+ <class>Mayo::DialogOptions</class>
+ <widget class="QDialog" name="Mayo::DialogOptions">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -161,7 +161,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Mayo::OptionsDialog</receiver>
+   <receiver>Mayo::DialogOptions</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -177,7 +177,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Mayo::OptionsDialog</receiver>
+   <receiver>Mayo::DialogOptions</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

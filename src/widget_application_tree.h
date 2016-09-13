@@ -10,13 +10,13 @@ class Document;
 class DocumentItem;
 class Property;
 
-class ApplicationTreeWidget : public QWidget
+class WidgetApplicationTree : public QWidget
 {
     Q_OBJECT
 
 public:
-    ApplicationTreeWidget(QWidget* widget = nullptr);
-    ~ApplicationTreeWidget();
+    WidgetApplicationTree(QWidget* widget = nullptr);
+    ~WidgetApplicationTree();
 
     std::vector<DocumentItem*> selectedDocumentItems() const;
 
@@ -45,7 +45,7 @@ private:
     std::vector<TreeWidgetItem_DocumentItem>::iterator
     findTreeItemDocumentItem(const DocumentItem* docItem);
 
-    class Ui_ApplicationTreeWidget* m_ui = nullptr;
+    class Ui_WidgetApplicationTree* m_ui = nullptr;
     std::vector<TreeWidgetItem_Document> m_vecTreeItemDoc;
     std::vector<TreeWidgetItem_DocumentItem> m_vecTreeItemDocItem;
 };

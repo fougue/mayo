@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::DocumentItemPropsWidget</class>
- <widget class="QWidget" name="Mayo::DocumentItemPropsWidget">
+ <class>Mayo::WidgetDocumentItemProps</class>
+ <widget class="QWidget" name="Mayo::WidgetDocumentItemProps">
   <property name="geometry">
    <rect>
     <x>0</x>

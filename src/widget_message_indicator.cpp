@@ -1,4 +1,4 @@
-#include "message_indicator.h"
+#include "widget_message_indicator.h"
 
 #include <QtCore/QTimer>
 #include <QtCore/QPropertyAnimation>
@@ -19,7 +19,7 @@ static QFont indicatorFont(const QFont& font)
 
 } // namespace Internal
 
-MessageIndicator::MessageIndicator(const QString& msg, QWidget* parent)
+WidgetMessageIndicator::WidgetMessageIndicator(const QString& msg, QWidget* parent)
     : QWidget(parent),
       m_message(msg),
       m_messageRect(QFontMetrics(Internal::indicatorFont(this->font())).boundingRect(msg))
@@ -32,27 +32,27 @@ MessageIndicator::MessageIndicator(const QString& msg, QWidget* parent)
     }
 }
 
-qreal MessageIndicator::opacity() const
+qreal WidgetMessageIndicator::opacity() const
 {
     return m_opacity;
 
 }
-void MessageIndicator::setOpacity(qreal value)
+void WidgetMessageIndicator::setOpacity(qreal value)
 {
     m_opacity = value;
     this->update();
 }
 
-void MessageIndicator::run()
+void WidgetMessageIndicator::run()
 {
     this->show();
     QTimer::singleShot(
                 1500 + m_message.length() * 60,
                 this,
-                &MessageIndicator::runInternal);
+                &WidgetMessageIndicator::runInternal);
 }
 
-void MessageIndicator::paintEvent(QPaintEvent*)
+void WidgetMessageIndicator::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing);
@@ -73,7 +73,7 @@ void MessageIndicator::paintEvent(QPaintEvent*)
     p.drawText(textRect, m_message);
 }
 
-void MessageIndicator::runInternal()
+void WidgetMessageIndicator::runInternal()
 {
     auto anim = new QPropertyAnimation(this, "opacity", this);
     anim->setDuration(200);
@@ -84,9 +84,9 @@ void MessageIndicator::runInternal()
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void MessageIndicator::showMessage(const QString& msg, QWidget* parent)
+void WidgetMessageIndicator::showMessage(const QString& msg, QWidget* parent)
 {
-    (new MessageIndicator(msg, parent))->run();
+    (new WidgetMessageIndicator(msg, parent))->run();
 }
 
 } // namespace Mayo

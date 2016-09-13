@@ -9,15 +9,15 @@ namespace Mayo {
 
 /*! Qt wrapper around the V3d_View class
  *
- *  QtOccView does not handle input devices interaction like keyboard and mouse.
+ *  WidgetOccView does not handle input devices interaction like keyboard and mouse.
  */
-class QtOccView : public QWidget
+class WidgetOccView : public QWidget
 {
     Q_OBJECT
 
 public:
-    QtOccView(QWidget* parent = nullptr);
-    QtOccView(const Handle_V3d_Viewer& viewer, QWidget* parent = nullptr);
+    WidgetOccView(QWidget* parent = nullptr);
+    WidgetOccView(const Handle_V3d_Viewer& viewer, QWidget* parent = nullptr);
 
     const Handle_V3d_Viewer& occV3dViewer() const;
     void setOccV3dViewer(const Handle_V3d_Viewer& viewer);

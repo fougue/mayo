@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::ApplicationTreeWidget</class>
- <widget class="QWidget" name="Mayo::ApplicationTreeWidget">
+ <class>Mayo::WidgetApplicationTree</class>
+ <widget class="QWidget" name="Mayo::WidgetApplicationTree">
   <property name="geometry">
    <rect>
     <x>0</x>

@@ -1,16 +1,16 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "about_dialog.h"
+#include "dialog_about.h"
 #include "application.h"
 #include "document.h"
 #include "gui_application.h"
 #include "gui_document.h"
-#include "gui_document_view3d.h"
-#include "message_indicator.h"
-#include "options_dialog.h"
-#include "save_image_view_dialog.h"
-#include "task_manager_dialog.h"
+#include "widget_gui_document_view3d.h"
+#include "widget_message_indicator.h"
+#include "dialog_options.h"
+#include "dialog_save_image_view.h"
+#include "dialog_task_manager.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
 #include "fougtools/qttools/task/runner_qthreadpool.h"
@@ -32,7 +32,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->widget_DocumentProps->setGuiApplication(guiApp);
     m_ui->widget_DocumentProps->editDocumentItems(std::vector<DocumentItem*>());
 
-    new TaskManagerDialog(this);
+    new DialogTaskManager(this);
 
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
@@ -70,7 +70,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
                 m_ui->widget_ApplicationTree,
-                &ApplicationTreeWidget::selectionChanged,
+                &WidgetApplicationTree::selectionChanged,
                 this,
                 &MainWindow::onApplicationTreeWidgetSelectionChanged);
 
@@ -96,7 +96,7 @@ void MainWindow::openPartInNewDoc()
 void MainWindow::importPartInCurrentDoc()
 {
     auto docView3d =
-            qobject_cast<GuiDocumentView3d*>(
+            qobject_cast<WidgetGuiDocumentView3d*>(
                 m_ui->tab_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
         QSettings settings;
@@ -157,22 +157,22 @@ void MainWindow::quitApp()
 
 void MainWindow::editOptions()
 {
-    auto dlg = new OptionsDialog(this);
+    auto dlg = new DialogOptions(this);
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::saveImageView()
 {
     auto docView3d =
-            qobject_cast<const GuiDocumentView3d*>(
+            qobject_cast<const WidgetGuiDocumentView3d*>(
                 m_ui->tab_GuiDocuments->currentWidget());
-    auto dlg = new SaveImageViewDialog(docView3d->qtOccView());
+    auto dlg = new DialogSaveImageView(docView3d->widgetOccView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::aboutMayo()
 {
-    auto dlg = new AboutDialog(this);
+    auto dlg = new DialogAbout(this);
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
@@ -185,8 +185,8 @@ void MainWindow::reportbug()
 void MainWindow::onGuiDocumentAdded(GuiDocument *guiDoc)
 {
     m_ui->tab_GuiDocuments->addTab(
-                guiDoc->view3d(), guiDoc->document()->label());
-    m_ui->tab_GuiDocuments->setCurrentWidget(guiDoc->view3d());
+                guiDoc->widgetView3d(), guiDoc->document()->label());
+    m_ui->tab_GuiDocuments->setCurrentWidget(guiDoc->widgetView3d());
     this->updateControlsActivation();
 }
 
@@ -200,7 +200,7 @@ void MainWindow::onImportPartFinished(
         bool ok, const QString &/*filepath*/, const QString &msg)
 {
     if (ok)
-        MessageIndicator::showMessage(msg, this);
+        WidgetMessageIndicator::showMessage(msg, this);
     else
         qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
@@ -208,7 +208,7 @@ void MainWindow::onImportPartFinished(
 void MainWindow::onTabCloseRequested(int tabIndex)
 {
     QWidget* tab = m_ui->tab_GuiDocuments->widget(tabIndex);
-    auto docView3d = qobject_cast<GuiDocumentView3d*>(tab);
+    auto docView3d = qobject_cast<WidgetGuiDocumentView3d*>(tab);
     Application::instance()->eraseDocument(docView3d->guiDocument()->document());
     m_ui->tab_GuiDocuments->removeTab(tabIndex);
     this->updateControlsActivation();
@@ -216,7 +216,7 @@ void MainWindow::onTabCloseRequested(int tabIndex)
 
 void MainWindow::updateControlsActivation()
 {
-    const bool appDocumentsEmpty =Application::instance()->documents().empty();
+    const bool appDocumentsEmpty = Application::instance()->documents().empty();
     m_ui->actionImportPart->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
 }

@@ -1,6 +1,6 @@
-#include "task_manager_dialog.h"
+#include "dialog_task_manager.h"
 
-#include "ui_task_manager_dialog.h"
+#include "ui_dialog_task_manager.h"
 #include "fougtools/qttools/task/manager.h"
 #include "fougtools/qttools/task/progress.h"
 
@@ -93,9 +93,9 @@ void TaskWidget::onUnboundedProgressTimeout()
 
 } // namespace Internal
 
-TaskManagerDialog::TaskManagerDialog(QWidget *parent)
+DialogTaskManager::DialogTaskManager(QWidget *parent)
     : QDialog(parent),
-      m_ui(new Ui_TaskManagerDialog)
+      m_ui(new Ui_DialogTaskManager)
 {
     this->setWindowFlags(
                 Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
@@ -105,37 +105,37 @@ TaskManagerDialog::TaskManagerDialog(QWidget *parent)
     auto taskMgr = qttask::Manager::globalInstance();
     QObject::connect(
                 taskMgr, &qttask::Manager::started,
-                this, &TaskManagerDialog::onTaskStarted);
+                this, &DialogTaskManager::onTaskStarted);
     QObject::connect(
                 taskMgr, &qttask::Manager::ended,
-                this, &TaskManagerDialog::onTaskEnded);
+                this, &DialogTaskManager::onTaskEnded);
     QObject::connect(
                 taskMgr, &qttask::Manager::progress,
-                this, &TaskManagerDialog::onTaskProgress);
+                this, &DialogTaskManager::onTaskProgress);
     QObject::connect(
                 taskMgr, &qttask::Manager::progressStep,
-                this, &TaskManagerDialog::onTaskProgressStep);
+                this, &DialogTaskManager::onTaskProgressStep);
     this->setWindowModality(Qt::WindowModal);
 }
 
-TaskManagerDialog::~TaskManagerDialog()
+DialogTaskManager::~DialogTaskManager()
 {
     delete m_ui;
 }
 
-bool TaskManagerDialog::isRunning() const
+bool DialogTaskManager::isRunning() const
 {
     return m_isRunning;
 }
 
-void TaskManagerDialog::execWithTask(quint64 taskId)
+void DialogTaskManager::execWithTask(quint64 taskId)
 {
     m_isRunning = true;
     this->onTaskStarted(taskId, QString());
     this->exec();
 }
 
-void TaskManagerDialog::onTaskStarted(quint64 taskId, const QString& title)
+void DialogTaskManager::onTaskStarted(quint64 taskId, const QString& title)
 {
     if (!m_isRunning)
         this->show();
@@ -144,7 +144,7 @@ void TaskManagerDialog::onTaskStarted(quint64 taskId, const QString& title)
     widget->m_interruptBtn->setProperty(Internal::TaskWidget_taskIdProp, taskId);
     QObject::connect(
                 widget->m_interruptBtn, &QToolButton::clicked,
-                this, &TaskManagerDialog::interruptTask);
+                this, &DialogTaskManager::interruptTask);
     m_ui->contentsLayout->insertWidget(0, widget);
     m_taskIdToWidget.insert(taskId, widget);
 
@@ -154,7 +154,7 @@ void TaskManagerDialog::onTaskStarted(quint64 taskId, const QString& title)
         this->onTaskProgressStep(taskId, title);
 }
 
-void TaskManagerDialog::onTaskEnded(quint64 taskId)
+void DialogTaskManager::onTaskEnded(quint64 taskId)
 {
     Internal::TaskWidget* widget = this->taskWidget(taskId);
     if (widget != nullptr) {
@@ -173,7 +173,7 @@ void TaskManagerDialog::onTaskEnded(quint64 taskId)
     }
 }
 
-void TaskManagerDialog::onTaskProgress(quint64 taskId, int percent)
+void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
 {
     Internal::TaskWidget* widget = this->taskWidget(taskId);
     if (widget != nullptr) {
@@ -187,14 +187,14 @@ void TaskManagerDialog::onTaskProgress(quint64 taskId, int percent)
     }
 }
 
-void TaskManagerDialog::onTaskProgressStep(quint64 taskId, const QString& name)
+void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
 {
     Internal::TaskWidget* widget = this->taskWidget(taskId);
     if (widget != nullptr)
         widget->m_label->setText(name);
 }
 
-void TaskManagerDialog::interruptTask()
+void DialogTaskManager::interruptTask()
 {
     auto interruptBtn = qobject_cast<QToolButton*>(this->sender());
     if (interruptBtn != nullptr
@@ -206,7 +206,7 @@ void TaskManagerDialog::interruptTask()
     }
 }
 
-Internal::TaskWidget *TaskManagerDialog::taskWidget(quint64 taskId)
+Internal::TaskWidget *DialogTaskManager::taskWidget(quint64 taskId)
 {
     auto it = m_taskIdToWidget.find(taskId);
     return it != m_taskIdToWidget.end() ? it.value() : nullptr;

@@ -1,7 +1,7 @@
-#include "gui_document_view3d.h"
+#include "widget_gui_document_view3d.h"
 
 #include "gui_document.h"
-#include "qt_occ_view.h"
+#include "widget_occ_view.h"
 #include "qt_occ_view_controller.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
@@ -26,7 +26,7 @@ static QToolButton* createViewBtn(
 }
 
 static void connectViewProjBtn(
-        QToolButton* btn, QtOccView* view, V3d_TypeOfOrientation proj)
+        QToolButton* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
 {
     QObject::connect(
                 btn, &QAbstractButton::clicked,
@@ -35,10 +35,10 @@ static void connectViewProjBtn(
 
 } // namespace Internal
 
-GuiDocumentView3d::GuiDocumentView3d(GuiDocument* guiDoc, QWidget *parent)
+WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *parent)
     : QWidget(parent),
       m_guiDoc(guiDoc),
-      m_qtOccView(new QtOccView(this))
+      m_qtOccView(new WidgetOccView(this))
 {
     new QtOccViewController(m_qtOccView);
 
@@ -73,15 +73,15 @@ GuiDocumentView3d::GuiDocumentView3d(GuiDocument* guiDoc, QWidget *parent)
     Internal::connectViewProjBtn(btnViewBottom, m_qtOccView, V3d_Zneg);
     QObject::connect(
                 btnFitAll, &QAbstractButton::clicked,
-                m_qtOccView, &QtOccView::fitAll);
+                m_qtOccView, &WidgetOccView::fitAll);
 }
 
-GuiDocument *GuiDocumentView3d::guiDocument() const
+GuiDocument *WidgetGuiDocumentView3d::guiDocument() const
 {
     return m_guiDoc;
 }
 
-QtOccView *GuiDocumentView3d::qtOccView() const
+WidgetOccView *WidgetGuiDocumentView3d::widgetOccView() const
 {
     return m_qtOccView;
 }

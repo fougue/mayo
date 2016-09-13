@@ -1,15 +1,14 @@
-#include "about_dialog.h"
-#include "ui_about_dialog.h"
+#include "dialog_about.h"
 
+#include "ui_dialog_about.h"
 #include <Standard_Version.hxx>
-
 #include <gmio_core/version.h>
 
 namespace Mayo {
 
-AboutDialog::AboutDialog(QWidget *parent)
+DialogAbout::DialogAbout(QWidget *parent)
     : QDialog(parent),
-      m_ui(new Ui_AboutDialog)
+      m_ui(new Ui_DialogAbout)
 {
     m_ui->setupUi(this);
 
@@ -22,7 +21,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     m_ui->label_Gmio->setText(m_ui->label_Gmio->text().arg(GMIO_VERSION_STR));
 }
 
-AboutDialog::~AboutDialog()
+DialogAbout::~DialogAbout()
 {
     delete m_ui;
 }

@@ -5,13 +5,13 @@ class QToolButton;
 
 namespace Mayo {
 
-class OptionsDialog : public QDialog
+class DialogOptions : public QDialog
 {
     Q_OBJECT
 
 public:
-    OptionsDialog(QWidget *parent = nullptr);
-    ~OptionsDialog();
+    DialogOptions(QWidget *parent = nullptr);
+    ~DialogOptions();
 
     void accept() override;
 
@@ -21,7 +21,7 @@ private:
             QToolButton* targetBtn,
             QColor* targetColor);
 
-    class Ui_OptionsDialog* m_ui = nullptr;
+    class Ui_DialogOptions* m_ui = nullptr;
     QColor m_brepShapeDefaultColor;
     QColor m_meshDefaultColor;
 };

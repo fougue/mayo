@@ -14,11 +14,11 @@ class GuiApplication;
 class GpxDocumentItem;
 class Property;
 
-class DocumentItemPropsWidget : public QWidget
+class WidgetDocumentItemProps : public QWidget
 {
 public:
-    DocumentItemPropsWidget(QWidget* parent = nullptr);
-    ~DocumentItemPropsWidget();
+    WidgetDocumentItemProps(QWidget* parent = nullptr);
+    ~WidgetDocumentItemProps();
 
     void setGuiApplication(GuiApplication* guiApp);
 
@@ -37,7 +37,7 @@ private:
     };
 
     GuiApplication* m_guiApp = nullptr;
-    class Ui_DocumentItemPropsWidget* m_ui = nullptr;
+    class Ui_WidgetDocumentItemProps* m_ui = nullptr;
     DocumentItem* m_currentDocItem = nullptr;
     GpxDocumentItem* m_currentGpxDocItem = nullptr;
 

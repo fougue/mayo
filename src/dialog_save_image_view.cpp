@@ -1,7 +1,7 @@
-#include "save_image_view_dialog.h"
+#include "dialog_save_image_view.h"
 
-#include "qt_occ_view.h"
-#include "ui_save_image_view_dialog.h"
+#include "widget_occ_view.h"
+#include "ui_dialog_save_image_view.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
 #include <QtCore/QHash>
@@ -28,9 +28,9 @@ static QImage qtImageTemp(const Image_PixMap& occImg)
 
 } // namespace Internal
 
-SaveImageViewDialog::SaveImageViewDialog(const QtOccView* view, QWidget *parent)
+DialogSaveImageView::DialogSaveImageView(const WidgetOccView* view, QWidget *parent)
     : QDialog(parent),
-      m_ui(new Ui_SaveImageViewDialog),
+      m_ui(new Ui_DialogSaveImageView),
       m_view(view)
 {
     m_ui->setupUi(this);
@@ -43,24 +43,24 @@ SaveImageViewDialog::SaveImageViewDialog(const QtOccView* view, QWidget *parent)
     m_ui->buttonBox->addButton(previewBtn, QDialogButtonBox::ActionRole);
     QObject::connect(
                 saveBtn, &QAbstractButton::clicked,
-                this, &SaveImageViewDialog::saveFile);
+                this, &DialogSaveImageView::saveFile);
     QObject::connect(
                 copyBtn, &QAbstractButton::clicked,
-                this, &SaveImageViewDialog::clipboardCopy);
+                this, &DialogSaveImageView::clipboardCopy);
     QObject::connect(
                 previewBtn, &QAbstractButton::clicked,
-                this, &SaveImageViewDialog::preview);
+                this, &DialogSaveImageView::preview);
 
     m_ui->edit_Width->setValue(view->geometry().width());
     m_ui->edit_Height->setValue(view->geometry().height());
 }
 
-SaveImageViewDialog::~SaveImageViewDialog()
+DialogSaveImageView::~DialogSaveImageView()
 {
     delete m_ui;
 }
 
-void SaveImageViewDialog::saveFile()
+void DialogSaveImageView::saveFile()
 {
     QHash<QString, QByteArray> mapFilterFormat;
     QStringList listFormat;
@@ -100,7 +100,7 @@ void SaveImageViewDialog::saveFile()
     }
 }
 
-void SaveImageViewDialog::clipboardCopy()
+void DialogSaveImageView::clipboardCopy()
 {
     Image_PixMap occPix;
     if (this->createImageView(&occPix)) {
@@ -109,7 +109,7 @@ void SaveImageViewDialog::clipboardCopy()
     }
 }
 
-void SaveImageViewDialog::preview()
+void DialogSaveImageView::preview()
 {
     Image_PixMap occPix;
     if (this->createImageView(&occPix)) {
@@ -127,7 +127,7 @@ void SaveImageViewDialog::preview()
     }
 }
 
-bool SaveImageViewDialog::createImageView(Image_PixMap* img) const
+bool DialogSaveImageView::createImageView(Image_PixMap* img) const
 {
     img->SetTopDown(true);
     const Standard_Boolean ok = m_view->occV3dView()->ToPixMap(

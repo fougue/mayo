@@ -11,13 +11,13 @@ namespace Mayo {
  *  Messages are displayed at widget's bottom-left corner and during a time
  *  proportional to the length of the message.
  */
-class MessageIndicator : public QWidget
+class WidgetMessageIndicator : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity USER true)
 
 public:
-    MessageIndicator(const QString& msg, QWidget* parent = nullptr);
+    WidgetMessageIndicator(const QString& msg, QWidget* parent = nullptr);
 
     qreal opacity() const;
     void setOpacity(qreal value);

@@ -6,14 +6,14 @@ class QCursor;
 
 namespace Mayo {
 
-class QtOccView;
+class WidgetOccView;
 
 class QtOccViewController : public QObject
 {
     Q_OBJECT
 
 public:
-    QtOccViewController(QtOccView* view = nullptr);
+    QtOccViewController(WidgetOccView* view = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -22,7 +22,7 @@ private:
 
 private:
     QPoint m_prevPos;
-    class QtOccView* m_view = nullptr;
+    class WidgetOccView* m_view = nullptr;
 };
 
 } // namespace Mayo

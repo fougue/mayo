@@ -1,8 +1,8 @@
-#include "options_dialog.h"
+#include "dialog_options.h"
 
 #include "options.h"
 #include "property_enumeration.h"
-#include "ui_options_dialog.h"
+#include "ui_dialog_options.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/occtools/qt_utils.h"
 
@@ -21,9 +21,9 @@ static QPixmap colorPixmap(const QColor& color)
 
 } // namespace Internal
 
-OptionsDialog::OptionsDialog(QWidget *parent)
+DialogOptions::DialogOptions(QWidget *parent)
     : QDialog(parent),
-      m_ui(new Ui_OptionsDialog)
+      m_ui(new Ui_DialogOptions)
 {
     m_ui->setupUi(this);
 
@@ -74,12 +74,12 @@ OptionsDialog::OptionsDialog(QWidget *parent)
     m_ui->checkBox_MeshShowNodes->setChecked(opts->meshDefaultShowNodes());
 }
 
-OptionsDialog::~OptionsDialog()
+DialogOptions::~DialogOptions()
 {
     delete m_ui;
 }
 
-void OptionsDialog::accept()
+void DialogOptions::accept()
 {
     Options* opts = Options::instance();
 
@@ -104,7 +104,7 @@ void OptionsDialog::accept()
     QDialog::accept();
 }
 
-void OptionsDialog::chooseColor(
+void DialogOptions::chooseColor(
         const QColor& currentColor, QToolButton* targetBtn, QColor* targetColor)
 {
     auto dlg = new QColorDialog(this);

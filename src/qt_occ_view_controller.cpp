@@ -1,6 +1,6 @@
 #include "qt_occ_view_controller.h"
 
-#include "qt_occ_view.h"
+#include "widget_occ_view.h"
 
 #include <QtCore/QDebug>
 #include <QtGui/QBitmap>
@@ -55,7 +55,7 @@ static const QCursor& rotateCursor()
 
 } // namespace Internal
 
-QtOccViewController::QtOccViewController(QtOccView* view)
+QtOccViewController::QtOccViewController(WidgetOccView* view)
     : QObject(view),
       m_view(view)
 {
@@ -65,7 +65,7 @@ QtOccViewController::QtOccViewController(QtOccView* view)
 
 bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
-    auto view = qobject_cast<const QtOccView*>(watched);
+    auto view = qobject_cast<const WidgetOccView*>(watched);
     if (view != m_view)
         return QObject::eventFilter(watched, event);
     Handle_V3d_View occView = view->occV3dView();

@@ -36,8 +36,8 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="ApplicationTreeWidget" name="widget_ApplicationTree" native="true"/>
-       <widget class="DocumentItemPropsWidget" name="widget_DocumentProps" native="true"/>
+       <widget class="WidgetApplicationTree" name="widget_ApplicationTree" native="true"/>
+       <widget class="WidgetDocumentItemProps" name="widget_DocumentProps" native="true"/>
       </widget>
       <widget class="QTabWidget" name="tab_GuiDocuments">
        <property name="sizePolicy">
@@ -146,15 +146,15 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>ApplicationTreeWidget</class>
+   <class>WidgetApplicationTree</class>
    <extends>QWidget</extends>
-   <header>application_tree_widget.h</header>
+   <header>widget_application_tree.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>DocumentItemPropsWidget</class>
+   <class>WidgetDocumentItemProps</class>
    <extends>QWidget</extends>
-   <header>document_item_props_widget.h</header>
+   <header>widget_document_item_props.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -1,11 +1,11 @@
-#include "document_item_props_widget.h"
+#include "widget_document_item_props.h"
 
 #include "document_item.h"
 #include "gui_application.h"
 #include "gui_document.h"
 #include "gpx_document_item.h"
 #include "options.h"
-#include "ui_document_item_props_widget.h"
+#include "ui_widget_document_item_props.h"
 #include "fougtools/occtools/qt_utils.h"
 
 #include <QtVariantEditorFactory>
@@ -167,9 +167,9 @@ template<typename T> void setPropertyValue(Property* prop, const QVariant& value
 
 } // namespace Internal
 
-DocumentItemPropsWidget::DocumentItemPropsWidget(QWidget *parent)
+WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
     : QWidget(parent),
-      m_ui(new Ui_DocumentItemPropsWidget),
+      m_ui(new Ui_WidgetDocumentItemProps),
       m_varPropMgr(new QtVariantPropertyManager(this))
 {
     m_ui->setupUi(this);
@@ -178,17 +178,17 @@ DocumentItemPropsWidget::DocumentItemPropsWidget(QWidget *parent)
                 m_varPropMgr, variantEditorFactory);
 }
 
-DocumentItemPropsWidget::~DocumentItemPropsWidget()
+WidgetDocumentItemProps::~WidgetDocumentItemProps()
 {
     delete m_ui;
 }
 
-void DocumentItemPropsWidget::setGuiApplication(GuiApplication *guiApp)
+void WidgetDocumentItemProps::setGuiApplication(GuiApplication *guiApp)
 {
     m_guiApp = guiApp;
 }
 
-void DocumentItemPropsWidget::editDocumentItems(
+void WidgetDocumentItemProps::editDocumentItems(
         const std::vector<DocumentItem*>& vecDocItem)
 {
     this->connectPropertyValueChangeSignals(false);
@@ -262,22 +262,22 @@ void DocumentItemPropsWidget::editDocumentItems(
     }
 }
 
-void DocumentItemPropsWidget::connectPropertyValueChangeSignals(bool on)
+void WidgetDocumentItemProps::connectPropertyValueChangeSignals(bool on)
 {
     if (on) {
         QObject::connect(
                     m_varPropMgr, &QtVariantPropertyManager::valueChanged,
-                    this, &DocumentItemPropsWidget::onQVariantPropertyValueChanged,
+                    this, &WidgetDocumentItemProps::onQVariantPropertyValueChanged,
                     Qt::UniqueConnection);
     }
     else {
         QObject::disconnect(
                     m_varPropMgr, &QtVariantPropertyManager::valueChanged,
-                    this, &DocumentItemPropsWidget::onQVariantPropertyValueChanged);
+                    this, &WidgetDocumentItemProps::onQVariantPropertyValueChanged);
     }
 }
 
-void DocumentItemPropsWidget::onQVariantPropertyValueChanged(
+void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
         QtProperty *qtProp, const QVariant &value)
 {
     if (m_currentGpxDocItem != nullptr) {
@@ -311,7 +311,7 @@ void DocumentItemPropsWidget::onQVariantPropertyValueChanged(
     }
 }
 
-void DocumentItemPropsWidget::mapProperty(
+void WidgetDocumentItemProps::mapProperty(
         QtVariantProperty *qtProp, Property *prop)
 {
     const QtProp_Prop pair = { qtProp, prop };

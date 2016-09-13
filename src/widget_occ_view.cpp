@@ -1,4 +1,4 @@
-#include "qt_occ_view.h"
+#include "widget_occ_view.h"
 
 #include "occt_window.h"
 
@@ -29,39 +29,39 @@
 
 namespace Mayo {
 
-QtOccView::QtOccView(QWidget *parent)
+WidgetOccView::WidgetOccView(QWidget *parent)
     : QWidget(parent)
 { }
 
-QtOccView::QtOccView(const Handle_V3d_Viewer& viewer, QWidget* parent)
+WidgetOccView::WidgetOccView(const Handle_V3d_Viewer& viewer, QWidget* parent)
     : QWidget(parent),
       m_viewer(viewer)
 { }
 
-const Handle_V3d_Viewer &QtOccView::occV3dViewer() const
+const Handle_V3d_Viewer &WidgetOccView::occV3dViewer() const
 {
     return m_viewer;
 }
 
-void QtOccView::setOccV3dViewer(const Handle_V3d_Viewer &viewer)
+void WidgetOccView::setOccV3dViewer(const Handle_V3d_Viewer &viewer)
 {
     Q_ASSERT(m_viewer.IsNull());
     m_viewer = viewer;
 }
 
-const Handle_V3d_View& QtOccView::occV3dView() const
+const Handle_V3d_View& WidgetOccView::occV3dView() const
 {
     return m_view;
 }
 
 //! Hack for Qt 4.5.x
-QPaintEngine* QtOccView::paintEngine() const
+QPaintEngine* WidgetOccView::paintEngine() const
 {
     return nullptr;
 }
 
 //! Force a redraw of the view
-void QtOccView::redraw()
+void WidgetOccView::redraw()
 {
     if (!m_view.IsNull()) {
         if (m_needsResize)
@@ -72,7 +72,7 @@ void QtOccView::redraw()
     m_needsResize = false;
 }
 
-void QtOccView::fitAll()
+void WidgetOccView::fitAll()
 {
     if (!m_view.IsNull()) {
         m_view->ZFitAll();
@@ -81,7 +81,7 @@ void QtOccView::fitAll()
 }
 
 //! Reimplemented from QWidget::paintEvent()
-void QtOccView::paintEvent(QPaintEvent* /*event*/)
+void WidgetOccView::paintEvent(QPaintEvent* /*event*/)
 {
     initialize();
     if (!m_viewer.IsNull())
@@ -93,12 +93,12 @@ void QtOccView::paintEvent(QPaintEvent* /*event*/)
  *  Called when the widget needs to resize itself, but seeing as a paint event
  *  always follows a resize event, we'll move the work into the paint event
  */
-void QtOccView::resizeEvent(QResizeEvent* /*event*/)
+void WidgetOccView::resizeEvent(QResizeEvent* /*event*/)
 {
     m_needsResize = true;
 }
 
-void QtOccView::initialize()
+void WidgetOccView::initialize()
 {
     if (!m_isInitialized) {
         this->setMouseTracking(true);

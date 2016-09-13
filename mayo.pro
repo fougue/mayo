@@ -10,31 +10,31 @@ HEADERS += \
     src/fougtools/qttools/gui/qwidget_utils.h \
     src/mainwindow.h \
     src/occt_window.h \
-    src/qt_occ_view.h \
     src/qt_occ_view_controller.h \
     src/stl_mesh_item.h \
-    src/task_manager_dialog.h \
     src/fougtools/qttools/gui/gui.h \
     src/fougtools/qttools/gui/item_view_utils.h \
     src/fougtools/occtools/occtools.h \
     src/fougtools/occtools/qt_utils.h \
-    src/message_indicator.h \
-    src/about_dialog.h \
-    src/options_dialog.h \
     src/options.h \
-    src/save_image_view_dialog.h \
     src/application.h \
     src/property.h \
     src/property_enumeration.h \
     src/property_builtins.h \
-    src/application_tree_widget.h \
-    src/document_item_props_widget.h \
     src/gui_document.h \
-    src/gui_document_view3d.h \
     src/gui_application.h \
     src/gpx_document_item.h \
     src/gpx_brep_shape_item.h \
-    src/gpx_stl_mesh_item.h
+    src/gpx_stl_mesh_item.h \
+    src/dialog_about.h \
+    src/dialog_options.h \
+    src/dialog_task_manager.h \
+    src/dialog_save_image_view.h \
+    src/widget_application_tree.h \
+    src/widget_document_item_props.h \
+    src/widget_message_indicator.h \
+    src/widget_gui_document_view3d.h \
+    src/widget_occ_view.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -44,28 +44,28 @@ SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
     src/occt_window.cpp \
-    src/qt_occ_view.cpp \
     src/qt_occ_view_controller.cpp \
     src/stl_mesh_item.cpp \
-    src/task_manager_dialog.cpp \
     src/fougtools/qttools/gui/item_view_utils.cpp \
     src/fougtools/occtools/qt_utils.cpp \
-    src/message_indicator.cpp \
-    src/about_dialog.cpp \
-    src/options_dialog.cpp \
     src/options.cpp \
-    src/save_image_view_dialog.cpp \
     src/application.cpp \
     src/property.cpp \
     src/property_enumeration.cpp \
-    src/application_tree_widget.cpp \
-    src/document_item_props_widget.cpp \
     src/gui_document.cpp \
-    src/gui_document_view3d.cpp \
     src/gui_application.cpp \
     src/gpx_document_item.cpp \
     src/gpx_brep_shape_item.cpp \
-    src/gpx_stl_mesh_item.cpp
+    src/gpx_stl_mesh_item.cpp \
+    src/dialog_about.cpp \
+    src/dialog_options.cpp \
+    src/dialog_task_manager.cpp \
+    src/dialog_save_image_view.cpp \
+    src/widget_application_tree.cpp \
+    src/widget_document_item_props.cpp \
+    src/widget_message_indicator.cpp \
+    src/widget_gui_document_view3d.cpp \
+    src/widget_occ_view.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -73,12 +73,12 @@ INCLUDEPATH += src/qt-solutions/qtpropertybrowser/src
 
 FORMS += \
     src/mainwindow.ui \
-    src/task_manager_dialog.ui \
-    src/about_dialog.ui \
-    src/options_dialog.ui \
-    src/save_image_view_dialog.ui \
-    src/application_tree_widget.ui \
-    src/document_item_props_widget.ui
+    src/dialog_about.ui \
+    src/dialog_options.ui \
+    src/dialog_task_manager.ui \
+    src/dialog_save_image_view.ui \
+    src/widget_application_tree.ui \
+    src/widget_document_item_props.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::TaskManagerDialog</class>
- <widget class="QDialog" name="Mayo::TaskManagerDialog">
+ <class>Mayo::DialogTaskManager</class>
+ <widget class="QDialog" name="Mayo::DialogTaskManager">
   <property name="geometry">
    <rect>
     <x>0</x>

@@ -3,8 +3,8 @@
 #include "document.h"
 #include "document_item.h"
 #include "gpx_document_item.h"
-#include "gui_document_view3d.h"
-#include "qt_occ_view.h"
+#include "widget_gui_document_view3d.h"
+#include "widget_occ_view.h"
 
 #include "gpx_brep_shape_item.h"
 #include "gpx_stl_mesh_item.h"
@@ -119,11 +119,11 @@ GuiDocument::GuiDocument(Document *doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
       m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
-      m_guiDocView3d(new GuiDocumentView3d(this))
+      m_guiDocView3d(new WidgetGuiDocumentView3d(this))
 {
     assert(doc != nullptr);
 
-    m_guiDocView3d->qtOccView()->setOccV3dViewer(m_v3dViewer);
+    m_guiDocView3d->widgetOccView()->setOccV3dViewer(m_v3dViewer);
 
     QObject::connect(
                 doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
@@ -136,7 +136,7 @@ Document *GuiDocument::document() const
     return m_document;
 }
 
-GuiDocumentView3d *GuiDocument::view3d() const
+WidgetGuiDocumentView3d *GuiDocument::widgetView3d() const
 {
     return m_guiDocView3d;
 }
