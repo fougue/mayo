@@ -68,7 +68,7 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
     auto view = qobject_cast<const QtOccView*>(watched);
     if (view != m_view)
         return QObject::eventFilter(watched, event);
-    Handle_V3d_View occView = view->v3dView();
+    Handle_V3d_View occView = view->occV3dView();
 
     //const Qt::KeyboardModifiers keybMods = QApplication::queryKeyboardModifiers();
 

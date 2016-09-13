@@ -10,7 +10,10 @@ class Enumeration
 {
 public:
     typedef int Value;
-    typedef std::pair<Value, QString> Mapping;
+    struct Mapping {
+        Value value;
+        QString string;
+    };
 
     Enumeration() = default;
 
@@ -24,6 +27,7 @@ public:
     const QString& string(Value eval) const;
 
     Mapping mapping(std::size_t i) const;
+    const std::vector<Mapping>& mappings() const;
 
 private:
     std::vector<Mapping>::const_iterator findCppSql(Value eval) const;
@@ -53,9 +57,13 @@ private:
     const Enumeration* m_enumeration;
 };
 
+const Enumeration& enum_Graphic3dNameOfMaterial();
+
+
+
+// -- Implementation
+
 template<typename T> T PropertyEnumeration::valueAs() const
 { return static_cast<T>(m_value); }
-
-const Enumeration& enum_Graphic3dNameOfMaterial();
 
 } // namespace Mayo

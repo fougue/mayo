@@ -11,6 +11,7 @@ namespace Mayo {
 class Application;
 class DocumentItem;
 class PartItem;
+class Property;
 
 class Document : public QObject
 {
@@ -36,19 +37,23 @@ public:
             PartFormat format,
             const QString& filepath,
             qttask::Progress* progress = nullptr);
+    bool eraseRootItem(DocumentItem* docItem);
 
     static const std::vector<PartFormat>& partFormats();
     static QString partFormatFilter(PartFormat format);
     static QStringList partFormatFilters();
 
-    const std::vector<DocumentItem*>& rootDocumentItems() const;
+    const std::vector<DocumentItem*>& rootItems() const;
     bool isEmpty() const;
 
 signals:
     void itemAdded(DocumentItem* docItem);
+    void itemErased(const DocumentItem* docItem);
+    void itemPropertyChanged(const DocumentItem* docItem, const Property* prop);
 
 private:
     friend class Application;
+    friend class DocumentItem;
     Document(Application* app);
     ~Document();
 
@@ -64,7 +69,7 @@ private:
             const QString& filepath, qttask::Progress* progress = nullptr);
 
     Application* m_app = nullptr;
-    std::vector<DocumentItem*> m_rootDocumentItems;
+    std::vector<DocumentItem*> m_rootItems;
     QString m_label;
 };
 

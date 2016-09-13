@@ -1,6 +1,15 @@
 #include "document_item.h"
 
+#include "document.h"
+#include <QtCore/QCoreApplication>
+
 namespace Mayo {
+
+DocumentItem::DocumentItem()
+    : propertyLabel(
+          this, QCoreApplication::translate("Mayo::DocumentItem", "label"))
+{
+}
 
 Document *DocumentItem::document()
 {
@@ -17,19 +26,15 @@ void DocumentItem::setDocument(Document *doc)
     m_document = doc;
 }
 
-const QString& DocumentItem::label() const
-{
-    return m_label;
-}
-
-void DocumentItem::setLabel(const QString &v)
-{
-    m_label = v;
-}
-
 const std::vector<DocumentItem*>& DocumentItem::outItems() const
 {
     return m_outItems;
+}
+
+void DocumentItem::onPropertyChanged(Property *prop)
+{
+    if (m_document != nullptr)
+        emit m_document->itemPropertyChanged(this, prop);
 }
 
 const QString& PartItem::filePath() const

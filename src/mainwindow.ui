@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>655</width>
-    <height>627</height>
+    <width>707</width>
+    <height>649</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,13 +28,31 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QTabWidget" name="tab_Documents">
-      <property name="currentIndex">
-       <number>-1</number>
+     <widget class="QSplitter" name="splitter_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="tabsClosable">
-       <bool>true</bool>
-      </property>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <widget class="ApplicationTreeWidget" name="widget_ApplicationTree" native="true"/>
+       <widget class="DocumentItemPropsWidget" name="widget_DocumentProps" native="true"/>
+      </widget>
+      <widget class="QTabWidget" name="tab_GuiDocuments">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="currentIndex">
+        <number>-1</number>
+       </property>
+       <property name="tabsClosable">
+        <bool>true</bool>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -44,7 +62,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>655</width>
+     <width>707</width>
      <height>21</height>
     </rect>
    </property>
@@ -126,6 +144,20 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>ApplicationTreeWidget</class>
+   <extends>QWidget</extends>
+   <header>application_tree_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DocumentItemPropsWidget</class>
+   <extends>QWidget</extends>
+   <header>document_item_props_widget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../mayo.qrc"/>
  </resources>

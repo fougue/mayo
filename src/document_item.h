@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QtCore/QString>
+#include "property_builtins.h"
 #include <cstring>
 #include <vector>
 
@@ -8,24 +8,27 @@ namespace Mayo {
 
 class Document;
 
-class DocumentItem
+class DocumentItem : public PropertyOwner
 {
 public:
+    DocumentItem();
+
     Document* document();
     const Document* document() const;
     void setDocument(Document* doc);
 
-    const QString& label() const;
-    void setLabel(const QString& v);
+    PropertyQString propertyLabel;
 
     const std::vector<DocumentItem*>& outItems() const; // For future use
 
     virtual const char* dynType() const = 0;
 
+protected:
+    void onPropertyChanged(Property* prop) override;
+
 private:
     Document* m_document = nullptr;
     std::vector<DocumentItem*> m_outItems;
-    QString m_label;
 };
 
 class PartItem : public DocumentItem

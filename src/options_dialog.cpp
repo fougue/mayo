@@ -1,6 +1,7 @@
 #include "options_dialog.h"
 
 #include "options.h"
+#include "property_enumeration.h"
 #include "ui_options_dialog.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/occtools/qt_utils.h"
@@ -54,11 +55,13 @@ OptionsDialog::OptionsDialog(QWidget *parent)
                           &m_meshDefaultColor);
     } );
 
-    for (const Options::Material& mat : Options::materials()) {
+    const auto& vecGpxMaterialMapping =
+            Mayo::enum_Graphic3dNameOfMaterial().mappings();
+    for (const Enumeration::Mapping& mapping : vecGpxMaterialMapping) {
         m_ui->comboBox_BRepShapeDefaultMaterial->addItem(
-                    mat.name, static_cast<int>(mat.code));
+                    mapping.string, mapping.value);
         m_ui->comboBox_MeshDefaultMaterial->addItem(
-                    mat.name, static_cast<int>(mat.code));
+                    mapping.string, mapping.value);
     }
     m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_BRepShapeDefaultMaterial->findData(

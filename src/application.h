@@ -7,6 +7,7 @@ namespace Mayo {
 
 class Document;
 class DocumentItem;
+class Property;
 
 class Application : public QObject
 {
@@ -22,8 +23,10 @@ public:
 
 signals:
     void documentAdded(Document* doc);
-    void documentErased(Document* doc);
+    void documentErased(const Document* doc);
     void documentItemAdded(DocumentItem* docItem);
+    void documentItemPropertyChanged(
+            const DocumentItem* docItem, const Property* prop);
 
 private:
     Application(QObject* parent = nullptr);

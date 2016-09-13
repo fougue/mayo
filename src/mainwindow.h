@@ -6,13 +6,15 @@ namespace Mayo {
 
 class Application;
 class Document;
+class GuiApplication;
+class GuiDocument;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
 signals:
@@ -29,12 +31,15 @@ private:
     void aboutMayo();
     void reportbug();
 
+    void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onApplicationTreeWidgetSelectionChanged();
     void onImportPartFinished(
             bool ok, const QString& filepath, const QString& msg);
     void onTabCloseRequested(int tabIndex);
 
     void updateControlsActivation();
 
+    GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
 };
 

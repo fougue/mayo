@@ -3,7 +3,6 @@
 #include <QtCore/QSettings>
 #include <QtGui/QColor>
 #include <Graphic3d_NameOfMaterial.hxx>
-#include <vector>
 
 namespace Mayo {
 
@@ -14,13 +13,6 @@ public:
         Gmio,
         OpenCascade
     };
-
-    struct Material
-    {
-        Graphic3d_NameOfMaterial code;
-        QString name;
-    };
-    static const std::vector<Material>& materials();
 
     static Options* instance();
 

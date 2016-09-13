@@ -1,18 +1,18 @@
 #pragma once
 
-#include "document_item_graphics.h"
+#include "gpx_document_item.h"
 #include "stl_mesh_item.h"
 #include <MeshVS_Mesh.hxx>
 
 namespace Mayo {
 
-class StlMeshItemGraphics :
-        public CovariantDocumentItemGraphics<StlMeshItem, MeshVS_Mesh, Handle_MeshVS_Mesh>
+class GpxStlMeshItem :
+        public GpxCovariantDocumentItem<StlMeshItem, MeshVS_Mesh, Handle_MeshVS_Mesh>
 {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::StlMeshItemGraphics)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxStlMeshItem)
 
 public:
-    StlMeshItemGraphics(StlMeshItem* item);
+    GpxStlMeshItem(StlMeshItem* item);
 
     PropertyEnumeration propertyDisplayMode;
     PropertyBool propertyShowEdges;

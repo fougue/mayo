@@ -1,17 +1,33 @@
-#include "brep_shape_item_graphics.h"
+#include "gpx_brep_shape_item.h"
+
+#include "options.h"
+#include "fougtools/occtools/qt_utils.h"
 
 #include <AIS_InteractiveContext.hxx>
 
 namespace Mayo {
 
-BRepShapeItemGraphics::BRepShapeItemGraphics(BRepShapeItem *item)
-    : CovariantDocumentItemGraphics(item),
+GpxBRepShapeItem::GpxBRepShapeItem(BRepShapeItem *item)
+    : GpxCovariantDocumentItem(item),
       propertyTransparency(this, tr("Transparency"), 0, 100, 5),
       propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
       propertyShowFaceBoundary(this, tr("Show face boundary"))
 {
+    const Options* opts = Options::instance();
+
+    // Create the AIS_Shape object
+    Handle_AIS_Shape aisShape = new AIS_Shape(item->brepShape());
+    aisShape->SetMaterial(opts->brepShapeDefaultMaterial());
+    aisShape->SetDisplayMode(AIS_Shaded);
+    aisShape->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
+    aisShape->Attributes()->SetFaceBoundaryDraw(Standard_True);
+    aisShape->Attributes()->SetIsoOnTriangulation(Standard_True);
+
+    m_hndGpxObject = aisShape;
+
+    // Init properties
     Mayo_PropertyChangedBlocker(this);
-    this->propertyMaterial.setValue(m_hndGpxObject->Material());
+    this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
     this->propertyColor.setValue(m_hndGpxObject->Color());
     this->propertyTransparency.setValue(
                 static_cast<int>(m_hndGpxObject->Transparency() * 100));
@@ -20,7 +36,7 @@ BRepShapeItemGraphics::BRepShapeItemGraphics(BRepShapeItem *item)
                 m_hndGpxObject->Attributes()->FaceBoundaryDraw() == Standard_True);
 }
 
-void BRepShapeItemGraphics::onPropertyChanged(Property *prop)
+void GpxBRepShapeItem::onPropertyChanged(Property *prop)
 {
     Handle_AIS_InteractiveContext cxt = this->gpxObject()->GetContext();
     const Handle_AIS_InteractiveObject& hndGpx = this->handleGpxObject();
@@ -28,6 +44,7 @@ void BRepShapeItemGraphics::onPropertyChanged(Property *prop)
     if (prop == &this->propertyMaterial) {
         ptrGpx->SetMaterial(
                     this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>());
+        cxt->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyColor) {
         ptrGpx->SetColor(this->propertyColor.value());
@@ -46,7 +63,7 @@ void BRepShapeItemGraphics::onPropertyChanged(Property *prop)
     }
 }
 
-const Enumeration &BRepShapeItemGraphics::enum_DisplayMode()
+const Enumeration &GpxBRepShapeItem::enum_DisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {

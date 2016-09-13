@@ -1,10 +1,10 @@
-#include "document_item_graphics.h"
+#include "gpx_document_item.h"
 
 #include <QtCore/QCoreApplication>
 
 namespace Mayo {
 
-DocumentItemGraphics::DocumentItemGraphics()
+GpxDocumentItem::GpxDocumentItem()
     : propertyMaterial(this, tr("Material"), &enum_Graphic3dNameOfMaterial()),
       propertyColor(this, tr("Color"))
 {

@@ -1,18 +1,18 @@
 #pragma once
 
 #include "brep_shape_item.h"
-#include "document_item_graphics.h"
+#include "gpx_document_item.h"
 #include <AIS_Shape.hxx>
 
 namespace Mayo {
 
-class BRepShapeItemGraphics :
-        public CovariantDocumentItemGraphics<BRepShapeItem, AIS_Shape, Handle_AIS_Shape>
+class GpxBRepShapeItem :
+        public GpxCovariantDocumentItem<BRepShapeItem, AIS_Shape, Handle_AIS_Shape>
 {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::BRepShapeItemGraphics)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxBRepShapeItem)
 
 public:
-    BRepShapeItemGraphics(BRepShapeItem* item);
+    GpxBRepShapeItem(BRepShapeItem* item);
 
     PropertyInt propertyTransparency;
     PropertyEnumeration propertyDisplayMode;

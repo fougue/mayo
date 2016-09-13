@@ -14,7 +14,6 @@ HEADERS += \
     src/qt_occ_view_controller.h \
     src/stl_mesh_item.h \
     src/task_manager_dialog.h \
-    src/document_view.h \
     src/fougtools/qttools/gui/gui.h \
     src/fougtools/qttools/gui/item_view_utils.h \
     src/fougtools/occtools/occtools.h \
@@ -25,14 +24,17 @@ HEADERS += \
     src/options.h \
     src/save_image_view_dialog.h \
     src/application.h \
-    src/application_view.h \
-    src/document_item_props_view.h \
-    src/document_item_graphics.h \
     src/property.h \
     src/property_enumeration.h \
     src/property_builtins.h \
-    src/brep_shape_item_graphics.h \
-    src/stl_mesh_item_graphics.h
+    src/application_tree_widget.h \
+    src/document_item_props_widget.h \
+    src/gui_document.h \
+    src/gui_document_view3d.h \
+    src/gui_application.h \
+    src/gpx_document_item.h \
+    src/gpx_brep_shape_item.h \
+    src/gpx_stl_mesh_item.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -46,7 +48,6 @@ SOURCES += \
     src/qt_occ_view_controller.cpp \
     src/stl_mesh_item.cpp \
     src/task_manager_dialog.cpp \
-    src/document_view.cpp \
     src/fougtools/qttools/gui/item_view_utils.cpp \
     src/fougtools/occtools/qt_utils.cpp \
     src/message_indicator.cpp \
@@ -55,13 +56,16 @@ SOURCES += \
     src/options.cpp \
     src/save_image_view_dialog.cpp \
     src/application.cpp \
-    src/application_view.cpp \
-    src/document_item_props_view.cpp \
-    src/document_item_graphics.cpp \
     src/property.cpp \
     src/property_enumeration.cpp \
-    src/brep_shape_item_graphics.cpp \
-    src/stl_mesh_item_graphics.cpp
+    src/application_tree_widget.cpp \
+    src/document_item_props_widget.cpp \
+    src/gui_document.cpp \
+    src/gui_document_view3d.cpp \
+    src/gui_application.cpp \
+    src/gpx_document_item.cpp \
+    src/gpx_brep_shape_item.cpp \
+    src/gpx_stl_mesh_item.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -70,12 +74,11 @@ INCLUDEPATH += src/qt-solutions/qtpropertybrowser/src
 FORMS += \
     src/mainwindow.ui \
     src/task_manager_dialog.ui \
-    src/document_view.ui \
     src/about_dialog.ui \
     src/options_dialog.ui \
     src/save_image_view_dialog.ui \
-    src/application_view.ui \
-    src/document_item_props_view.ui
+    src/application_tree_widget.ui \
+    src/document_item_props_widget.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)

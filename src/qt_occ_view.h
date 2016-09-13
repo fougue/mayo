@@ -19,10 +19,10 @@ public:
     QtOccView(QWidget* parent = nullptr);
     QtOccView(const Handle_V3d_Viewer& viewer, QWidget* parent = nullptr);
 
-    const Handle_V3d_Viewer& v3dViewer() const;
-    void setV3dViewer(const Handle_V3d_Viewer& viewer);
+    const Handle_V3d_Viewer& occV3dViewer() const;
+    void setOccV3dViewer(const Handle_V3d_Viewer& viewer);
 
-    const Handle_V3d_View& v3dView() const;
+    const Handle_V3d_View& occV3dView() const;
 
     QPaintEngine* paintEngine() const override;
 

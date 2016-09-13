@@ -36,6 +36,9 @@ Document *Application::addDocument(const QString &label)
     QObject::connect(
                 doc, &Document::itemAdded,
                 this, &Application::documentItemAdded);
+    QObject::connect(
+                doc, &Document::itemPropertyChanged,
+                this, &Application::documentItemPropertyChanged);
     m_documents.emplace_back(doc);
     ++docSequenceId;
     emit documentAdded(doc);

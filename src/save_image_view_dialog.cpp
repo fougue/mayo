@@ -130,7 +130,7 @@ void SaveImageViewDialog::preview()
 bool SaveImageViewDialog::createImageView(Image_PixMap* img) const
 {
     img->SetTopDown(true);
-    const Standard_Boolean ok = m_view->v3dView()->ToPixMap(
+    const Standard_Boolean ok = m_view->occV3dView()->ToPixMap(
                 *img,
                 m_ui->edit_Width->value(),
                 m_ui->edit_Height->value(),

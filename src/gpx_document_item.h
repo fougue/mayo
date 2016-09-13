@@ -11,12 +11,12 @@ namespace Mayo {
 
 class DocumentItem;
 
-class DocumentItemGraphics : public PropertyOwner
+class GpxDocumentItem : public PropertyOwner
 {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::DocumentItemGraphics)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxDocumentItem)
 
 public:
-    DocumentItemGraphics();
+    GpxDocumentItem();
 
     virtual DocumentItem* documentItem() const = 0;
     virtual const Handle_AIS_InteractiveObject& handleGpxObject() const = 0;
@@ -27,10 +27,10 @@ public:
 };
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
-class CovariantDocumentItemGraphics : public DocumentItemGraphics
+class GpxCovariantDocumentItem : public GpxDocumentItem
 {
 public:
-    CovariantDocumentItemGraphics(DOC_ITEM* item);
+    GpxCovariantDocumentItem(DOC_ITEM* item);
 
     DOC_ITEM* documentItem() const override;
     const Handle_AIS_InteractiveObject& handleGpxObject() const override;
@@ -48,22 +48,22 @@ protected:
 // --
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
-CovariantDocumentItemGraphics<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::
-CovariantDocumentItemGraphics(DOC_ITEM* item)
+GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::
+GpxCovariantDocumentItem(DOC_ITEM* item)
     : m_docItem(item)
 { }
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
-DOC_ITEM* CovariantDocumentItemGraphics<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::documentItem() const
+DOC_ITEM* GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::documentItem() const
 { return m_docItem; }
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
 const Handle_AIS_InteractiveObject&
-CovariantDocumentItemGraphics<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::handleGpxObject() const
+GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::handleGpxObject() const
 { return m_hndGpxObject; }
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
-GPX_OBJECT* CovariantDocumentItemGraphics<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::gpxObject() const
+GPX_OBJECT* GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::gpxObject() const
 { return m_hndGpxObject.operator->(); }
 
 } // namespace Mayo

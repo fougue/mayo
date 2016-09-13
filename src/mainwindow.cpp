@@ -4,7 +4,9 @@
 #include "about_dialog.h"
 #include "application.h"
 #include "document.h"
-#include "document_view.h"
+#include "gui_application.h"
+#include "gui_document.h"
+#include "gui_document_view3d.h"
 #include "message_indicator.h"
 #include "options_dialog.h"
 #include "save_image_view_dialog.h"
@@ -21,11 +23,14 @@
 
 namespace Mayo {
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     : QMainWindow(parent),
+      m_guiApp(guiApp),
       m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
+    m_ui->widget_DocumentProps->setGuiApplication(guiApp);
+    m_ui->widget_DocumentProps->editDocumentItems(std::vector<DocumentItem*>());
 
     new TaskManagerDialog(this);
 
@@ -54,11 +59,20 @@ MainWindow::MainWindow(QWidget *parent)
                 m_ui->actionAboutMayo, &QAction::triggered,
                 this, &MainWindow::aboutMayo);
     QObject::connect(
-                m_ui->tab_Documents, &QTabWidget::tabCloseRequested,
+                m_ui->tab_GuiDocuments, &QTabWidget::tabCloseRequested,
                 this, &MainWindow::onTabCloseRequested);
     QObject::connect(
                 this, &MainWindow::importPartFinished,
                 this, &MainWindow::onImportPartFinished);
+
+    QObject::connect(
+                guiApp, &GuiApplication::guiDocumentAdded,
+                this, &MainWindow::onGuiDocumentAdded);
+    QObject::connect(
+                m_ui->widget_ApplicationTree,
+                &ApplicationTreeWidget::selectionChanged,
+                this,
+                &MainWindow::onApplicationTreeWidgetSelectionChanged);
 
     this->updateControlsActivation();
 }
@@ -70,12 +84,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::newDoc()
 {
-    Document* doc = Application::instance()->addDocument();
-    auto docView = new DocumentView(doc);
-    QObject::connect(docView, &QObject::destroyed, doc, &QObject::deleteLater);
-    m_ui->tab_Documents->addTab(docView, doc->label());
-    m_ui->tab_Documents->setCurrentWidget(docView);
-    this->updateControlsActivation();
+    Application::instance()->addDocument();
 }
 
 void MainWindow::openPartInNewDoc()
@@ -86,9 +95,10 @@ void MainWindow::openPartInNewDoc()
 
 void MainWindow::importPartInCurrentDoc()
 {
-    auto docView =
-            qobject_cast<DocumentView*>(m_ui->tab_Documents->currentWidget());
-    if (docView != nullptr) {
+    auto docView3d =
+            qobject_cast<GuiDocumentView3d*>(
+                m_ui->tab_GuiDocuments->currentWidget());
+    if (docView3d != nullptr) {
         QSettings settings;
         static const QLatin1String keyLastOpenDir(
                     "GUI/MainWindow_lastOpenDir");
@@ -106,7 +116,7 @@ void MainWindow::importPartInCurrentDoc()
                     Document::partFormatFilters().join(QLatin1String(";;")),
                     &selectedFilter);
         if (!filepath.isEmpty()) {
-            Document* doc = docView->document();
+            Document* doc = docView3d->guiDocument()->document();
             const auto itFormatFound =
                     std::find_if(Document::partFormats().cbegin(),
                                  Document::partFormats().cend(),
@@ -153,9 +163,10 @@ void MainWindow::editOptions()
 
 void MainWindow::saveImageView()
 {
-    auto docView =
-            qobject_cast<const DocumentView*>(m_ui->tab_Documents->currentWidget());
-    auto dlg = new SaveImageViewDialog(docView->qtOccView());
+    auto docView3d =
+            qobject_cast<const GuiDocumentView3d*>(
+                m_ui->tab_GuiDocuments->currentWidget());
+    auto dlg = new SaveImageViewDialog(docView3d->qtOccView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
@@ -171,6 +182,20 @@ void MainWindow::reportbug()
                 QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
 }
 
+void MainWindow::onGuiDocumentAdded(GuiDocument *guiDoc)
+{
+    m_ui->tab_GuiDocuments->addTab(
+                guiDoc->view3d(), guiDoc->document()->label());
+    m_ui->tab_GuiDocuments->setCurrentWidget(guiDoc->view3d());
+    this->updateControlsActivation();
+}
+
+void MainWindow::onApplicationTreeWidgetSelectionChanged()
+{
+    m_ui->widget_DocumentProps->editDocumentItems(
+                m_ui->widget_ApplicationTree->selectedDocumentItems());
+}
+
 void MainWindow::onImportPartFinished(
         bool ok, const QString &/*filepath*/, const QString &msg)
 {
@@ -182,18 +207,18 @@ void MainWindow::onImportPartFinished(
 
 void MainWindow::onTabCloseRequested(int tabIndex)
 {
-    QWidget* tab = m_ui->tab_Documents->widget(tabIndex);
-    auto docView = qobject_cast<DocumentView*>(tab);
-    Application::instance()->eraseDocument(docView->document());
-    m_ui->tab_Documents->removeTab(tabIndex);
-    docView->deleteLater();
+    QWidget* tab = m_ui->tab_GuiDocuments->widget(tabIndex);
+    auto docView3d = qobject_cast<GuiDocumentView3d*>(tab);
+    Application::instance()->eraseDocument(docView3d->guiDocument()->document());
+    m_ui->tab_GuiDocuments->removeTab(tabIndex);
     this->updateControlsActivation();
-
 }
 
 void MainWindow::updateControlsActivation()
 {
-    m_ui->actionImportPart->setEnabled(m_ui->tab_Documents->count() > 0);
+    const bool appDocumentsEmpty =Application::instance()->documents().empty();
+    m_ui->actionImportPart->setEnabled(!appDocumentsEmpty);
+    m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
 }
 
 } // namespace Mayo

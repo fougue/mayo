@@ -11,5 +11,6 @@
         <file>images/fougue_logo.png</file>
         <file>images/camera_photo.png</file>
         <file>images/document.png</file>
+        <file>images/no.png</file>
     </qresource>
 </RCC>

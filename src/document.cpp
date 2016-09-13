@@ -135,7 +135,7 @@ static BRepShapeItem* createBRepShapeItem(
 {
     auto partItem = new BRepShapeItem;
     partItem->setFilePath(filepath);
-    partItem->setLabel(QFileInfo(filepath).fileName());
+    partItem->propertyLabel.setValue(QFileInfo(filepath).fileName());
     partItem->setBRepShape(shape);
     return partItem;
 }
@@ -145,7 +145,7 @@ static StlMeshItem* createStlMeshItem(
 {
     auto partItem = new StlMeshItem;
     partItem->setFilePath(filepath);
-    partItem->setLabel(QFileInfo(filepath).fileName());
+    partItem->propertyLabel.setValue(QFileInfo(filepath).fileName());
     partItem->setStlMesh(mesh);
     return partItem;
 }
@@ -160,7 +160,7 @@ Document::Document(Application *app)
 
 Document::~Document()
 {
-    for (DocumentItem* item : m_rootDocumentItems)
+    for (DocumentItem* item : m_rootItems)
         delete item;
 }
 
@@ -251,12 +251,28 @@ bool Document::importStl(const QString &filepath, qttask::Progress* progress)
 bool Document::import(
         PartFormat format, const QString &filepath, qttask::Progress* progress)
 {
+    progress->setStep(QFileInfo(filepath).fileName());
     switch (format) {
     case PartFormat::Iges: return this->importIges(filepath, progress);
     case PartFormat::Step: return this->importStep(filepath, progress);
     case PartFormat::OccBrep: return this->importOccBRep(filepath, progress);
     case PartFormat::Stl: return this->importStl(filepath, progress);
     case PartFormat::Unknown: break;
+    }
+    return false;
+}
+
+bool Document::eraseRootItem(DocumentItem *docItem)
+{
+    auto itFound = std::find(
+                m_rootItems.cbegin(),
+                m_rootItems.cend(),
+                docItem);
+    if (itFound != m_rootItems.cend()) {
+        m_rootItems.erase(itFound);
+        delete docItem;
+        emit itemErased(docItem);
+        return true;
     }
     return false;
 }
@@ -294,19 +310,20 @@ QStringList Document::partFormatFilters()
     return filters;
 }
 
-const std::vector<DocumentItem *> &Document::rootDocumentItems() const
+const std::vector<DocumentItem *> &Document::rootItems() const
 {
-    return m_rootDocumentItems;
+    return m_rootItems;
 }
 
 bool Document::isEmpty() const
 {
-    return m_rootDocumentItems.empty();
+    return m_rootItems.empty();
 }
 
 void Document::addPartItem(PartItem* partItem)
 {
-    m_rootDocumentItems.push_back(partItem);
+    partItem->setDocument(this);
+    m_rootItems.push_back(partItem);
     emit itemAdded(partItem);
 }
 

@@ -38,18 +38,18 @@ QtOccView::QtOccView(const Handle_V3d_Viewer& viewer, QWidget* parent)
       m_viewer(viewer)
 { }
 
-const Handle_V3d_Viewer &QtOccView::v3dViewer() const
+const Handle_V3d_Viewer &QtOccView::occV3dViewer() const
 {
     return m_viewer;
 }
 
-void QtOccView::setV3dViewer(const Handle_V3d_Viewer &viewer)
+void QtOccView::setOccV3dViewer(const Handle_V3d_Viewer &viewer)
 {
     Q_ASSERT(m_viewer.IsNull());
     m_viewer = viewer;
 }
 
-const Handle_V3d_View& QtOccView::v3dView() const
+const Handle_V3d_View& QtOccView::occV3dView() const
 {
     return m_view;
 }

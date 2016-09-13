@@ -6,17 +6,17 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
-class Application;
 class Document;
 class DocumentItem;
+class Property;
 
-class ApplicationView : public QWidget
+class ApplicationTreeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    ApplicationView(Application* app, QWidget* widget);
-    ~ApplicationView();
+    ApplicationTreeWidget(QWidget* widget = nullptr);
+    ~ApplicationTreeWidget();
 
     std::vector<DocumentItem*> selectedDocumentItems() const;
 
@@ -25,23 +25,27 @@ signals:
 
 private:
     void onDocumentAdded(Document* doc);
-    void onDocumentErased(Document* doc);
+    void onDocumentErased(const Document* doc);
     void onDocumentItemAdded(DocumentItem* docItem);
+    void onDocumentItemPropertyChanged(
+            const DocumentItem* docItem, const Property* prop);
+
     void onTreeWidgetDocumentSelectionChanged();
 
     struct TreeWidgetItem_Document {
-        QTreeWidgetItem* treeItem = nullptr;
-        Document* doc = nullptr;
+        QTreeWidgetItem* treeItem;
+        Document* doc;
     };
     struct TreeWidgetItem_DocumentItem {
-        QTreeWidgetItem* treeItem = nullptr;
-        DocumentItem* docItem = nullptr;
+        QTreeWidgetItem* treeItem;
+        DocumentItem* docItem;
     };
     std::vector<TreeWidgetItem_Document>::iterator
     findTreeItemDocument(const Document* doc);
+    std::vector<TreeWidgetItem_DocumentItem>::iterator
+    findTreeItemDocumentItem(const DocumentItem* docItem);
 
-    Application* m_app = nullptr;
-    class Ui_ApplicationView* m_ui = nullptr;
+    class Ui_ApplicationTreeWidget* m_ui = nullptr;
     std::vector<TreeWidgetItem_Document> m_vecTreeItemDoc;
     std::vector<TreeWidgetItem_DocumentItem> m_vecTreeItemDocItem;
 };
