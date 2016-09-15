@@ -113,20 +113,20 @@ void MainWindow::importPartInCurrentDoc()
                     this,
                     tr("Select Part File"),
                     lastOpenDir,
-                    Document::partFormatFilters().join(QLatin1String(";;")),
+                    Application::partFormatFilters().join(QLatin1String(";;")),
                     &selectedFilter);
         if (!filepath.isEmpty()) {
             Document* doc = docView3d->guiDocument()->document();
             const auto itFormatFound =
-                    std::find_if(Document::partFormats().cbegin(),
-                                 Document::partFormats().cend(),
-                                 [=](Document::PartFormat format) {
-                return selectedFilter == Document::partFormatFilter(format);
+                    std::find_if(Application::partFormats().cbegin(),
+                                 Application::partFormats().cend(),
+                                 [=](Application::PartFormat format) {
+                return selectedFilter == Application::partFormatFilter(format);
             } );
-            const Document::PartFormat format =
-                    itFormatFound != Document::partFormats().cend() ?
+            const Application::PartFormat format =
+                    itFormatFound != Application::partFormats().cend() ?
                         *itFormatFound :
-                        Document::PartFormat::Unknown;
+                        Application::PartFormat::Unknown;
 
             qttask::BaseRunner* task =
                     qttask::Manager::globalInstance()->newTask<QThreadPool>();
@@ -134,7 +134,8 @@ void MainWindow::importPartInCurrentDoc()
                 QTime chrono;
                 chrono.start();
                 const bool importOk =
-                        doc->import(format, filepath, &task->progress());
+                        Application::instance()->importInDocument(
+                            doc, format, filepath, &task->progress());
                 const QString msg =
                         importOk ?
                             tr("Import time: %1ms").arg(chrono.elapsed()) :

@@ -3,6 +3,10 @@ TEMPLATE = app
 
 QT += core gui widgets
 
+*msvc* {
+    QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
+}
+
 HEADERS += \
     src/brep_shape_item.h \
     src/document.h \

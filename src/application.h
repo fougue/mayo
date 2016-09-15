@@ -3,6 +3,8 @@
 #include <QtCore/QObject>
 #include <vector>
 
+namespace qttask { class Progress; }
+
 namespace Mayo {
 
 class Document;
@@ -21,6 +23,24 @@ public:
     Document* addDocument(const QString& label = QString());
     bool eraseDocument(Document* doc);
 
+    enum class PartFormat
+    {
+        Unknown,
+        Iges,
+        Step,
+        OccBrep,
+        Stl
+    };
+    static const std::vector<PartFormat>& partFormats();
+    static QString partFormatFilter(PartFormat format);
+    static QStringList partFormatFilters();
+
+    bool importInDocument(
+            Document* doc,
+            PartFormat format,
+            const QString& filepath,
+            qttask::Progress* progress = nullptr);
+
 signals:
     void documentAdded(Document* doc);
     void documentErased(const Document* doc);
@@ -30,6 +50,15 @@ signals:
 
 private:
     Application(QObject* parent = nullptr);
+
+    bool importIges(
+            Document* doc, const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importStep(
+            Document* doc, const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importOccBRep(
+            Document* doc, const QString& filepath, qttask::Progress* progress = nullptr);
+    bool importStl(
+            Document* doc, const QString& filepath, qttask::Progress* progress = nullptr);
 
     std::vector<Document*> m_documents;
 };
