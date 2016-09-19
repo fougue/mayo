@@ -14,18 +14,28 @@
 
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
+#include <IGESControl_Controller.hxx>
 #include <IGESControl_Reader.hxx>
+#include <IGESControl_Writer.hxx>
+#include <Interface_Static.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <OSD_Path.hxx>
 #include <RWStl.hxx>
 #include <StlMesh_Mesh.hxx>
 #include <STEPControl_Reader.hxx>
+#include <STEPControl_Writer.hxx>
+#include <StlAPI_Writer.hxx>
+#include <Transfer_FinderProcess.hxx>
 #include <Transfer_TransientProcess.hxx>
+#include <XSControl_TransferWriter.hxx>
 #include <XSControl_WorkSession.hxx>
 
 #include <gmio_core/error.h>
+#include <gmio_stl/stl_error.h>
+#include <gmio_stl/stl_infos.h>
 #include <gmio_stl/stl_io.h>
 #include <gmio_support/stream_qt.h>
+#include <gmio_support/stl_occ_brep.h>
 #include <gmio_support/stl_occ_mesh.h>
 
 #include <algorithm>
@@ -152,6 +162,45 @@ static StlMeshItem* createStlMeshItem(
     return partItem;
 }
 
+static QString gmioErrorToQString(int error)
+{
+    switch (error) {
+    // Core
+    case GMIO_ERROR_OK:
+        return QString();
+    case GMIO_ERROR_UNKNOWN:
+        return Application::tr("GMIO_ERROR_UNKNOWN");
+    case GMIO_ERROR_NULL_MEMBLOCK:
+        return Application::tr("GMIO_ERROR_NULL_MEMBLOCK");
+    case GMIO_ERROR_INVALID_MEMBLOCK_SIZE:
+        return Application::tr("GMIO_ERROR_INVALID_MEMBLOCK_SIZE");
+    case GMIO_ERROR_STREAM:
+        return Application::tr("GMIO_ERROR_STREAM");
+    case GMIO_ERROR_TRANSFER_STOPPED:
+        return Application::tr("GMIO_ERROR_TRANSFER_STOPPED");
+    case GMIO_ERROR_STDIO:
+        return Application::tr("GMIO_ERROR_STDIO");
+    case GMIO_ERROR_BAD_LC_NUMERIC:
+        return Application::tr("GMIO_ERROR_BAD_LC_NUMERIC");
+    // STL
+    case GMIO_STL_ERROR_UNKNOWN_FORMAT:
+        return Application::tr("GMIO_STL_ERROR_UNKNOWN_FORMAT");
+    case GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE:
+        return Application::tr("GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE");
+    case GMIO_STL_ERROR_PARSING:
+        return Application::tr("GMIO_STL_ERROR_PARSING");
+    case GMIO_STL_ERROR_INVALID_FLOAT32_PREC:
+        return Application::tr("GMIO_STL_ERROR_INVALID_FLOAT32_PREC");
+    case GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER:
+        return Application::tr("GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER");
+    case GMIO_STL_ERROR_HEADER_WRONG_SIZE:
+        return Application::tr("GMIO_STL_ERROR_HEADER_WRONG_SIZE");
+    case GMIO_STL_ERROR_FACET_COUNT:
+        return Application::tr("GMIO_STL_ERROR_FACET_COUNT");
+    }
+    return Application::tr("GMIO_ERROR_UNKNOWN");
+}
+
 } // namespace Internal
 
 Application::Application(QObject *parent)
@@ -221,6 +270,34 @@ bool Application::importInDocument(
     return false;
 }
 
+Application::IoResult Application::exportDocumentItems(
+        const std::vector<DocumentItem*> &docItems,
+        PartFormat format,
+        const ExportOptions &options,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    progress->setStep(QFileInfo(filepath).fileName());
+    switch (format) {
+    case PartFormat::Iges:
+        return this->exportIges(docItems, options, filepath, progress);
+    case PartFormat::Step:
+        return this->exportStep(docItems, options, filepath, progress);
+    case PartFormat::OccBrep:
+        return this->exportOccBRep(docItems, options, filepath, progress);
+    case PartFormat::Stl:
+        return this->exportStl(docItems, options, filepath, progress);
+    case PartFormat::Unknown:
+        break;
+    }
+    return { false, tr("Unknown error") };
+}
+
+bool Application::hasExportOptionsForFormat(Application::PartFormat format)
+{
+    return format == PartFormat::Stl;
+}
+
 const std::vector<Application::PartFormat> &Application::partFormats()
 {
     const static std::vector<PartFormat> vecFormat = {
@@ -262,7 +339,7 @@ bool Application::importIges(
             Internal::loadShapeFromFile<IGESControl_Reader>(
                 filepath, &error, progress);
     if (error == IFSelect_RetDone)
-        doc->addPartItem(Internal::createBRepShapeItem(filepath, shape));
+        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
     return error == IFSelect_RetDone;
 }
 
@@ -274,7 +351,7 @@ bool Application::importStep(
             Internal::loadShapeFromFile<STEPControl_Reader>(
                 filepath, &error, progress);
     if (error == IFSelect_RetDone)
-        doc->addPartItem(Internal::createBRepShapeItem(filepath, shape));
+        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
     return error == IFSelect_RetDone;
 }
 
@@ -288,7 +365,7 @@ bool Application::importOccBRep(
     const bool ok = BRepTools::Read(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     if (ok)
-        doc->addPartItem(Internal::createBRepShapeItem(filepath, shape));
+        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
     return ok;
 }
 
@@ -296,30 +373,214 @@ bool Application::importStl(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
     const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
-    Handle_StlMesh_Mesh stlMesh;
     bool ok = false;
     if (lib == Options::StlIoLibrary::Gmio) {
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
-            stlMesh = new StlMesh_Mesh;
-            gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
             gmio_stream stream = gmio_stream_qiodevice(&file);
             gmio_stl_read_options options = {};
+            options.func_stla_get_streamsize = &gmio_stla_infos_get_streamsize;
             options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
-            const int err = gmio_stl_read(&stream, &meshcreator, &options);
+            int err = GMIO_ERROR_OK;
+            while (gmio_no_error(err) && !file.atEnd()) {
+                Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
+                gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
+                err = gmio_stl_read(&stream, &meshcreator, &options);
+                if (gmio_no_error(err))
+                    doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
+            }
             ok = (err == GMIO_ERROR_OK);
         }
     }
     else if (lib == Options::StlIoLibrary::OpenCascade) {
         Handle_Message_ProgressIndicator indicator =
                 new Internal::OccImportProgress(progress);
-        stlMesh = RWStl::ReadFile(
+        Handle_StlMesh_Mesh stlMesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
+        if (!stlMesh.IsNull())
+            doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
         ok = !stlMesh.IsNull();
     }
-    if (ok)
-        doc->addPartItem(Internal::createStlMeshItem(filepath, stlMesh));
     return ok;
+}
+
+Application::IoResult Application::exportIges(
+        const std::vector<DocumentItem *> &docItems,
+        const ExportOptions& /*options*/,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    QMutexLocker locker(Internal::globalMutex()); Q_UNUSED(locker);
+    Handle_Message_ProgressIndicator indicator =
+            new Internal::OccImportProgress(progress);
+
+    IGESControl_Controller::Init();
+    IGESControl_Writer writer(
+                Interface_Static::CVal("XSTEP.iges.unit"),
+                Interface_Static::IVal("XSTEP.iges.writebrep.mode"));
+    if (!indicator.IsNull())
+        writer.TransferProcess()->SetProgress(indicator);
+    for (const DocumentItem* item : docItems) {
+        if (sameType<BRepShapeItem>(item)) {
+            auto brepItem = static_cast<const BRepShapeItem*>(item);
+            writer.AddShape(brepItem->brepShape());
+        }
+    }
+    writer.ComputeModel();
+    const Standard_Boolean ok = writer.Write(
+                const_cast<Standard_CString>(filepath.toLocal8Bit().constData()));
+    writer.TransferProcess()->SetProgress(nullptr);
+    return { ok == Standard_True, QString() };
+}
+
+Application::IoResult Application::exportStep(
+        const std::vector<DocumentItem *> &docItems,
+        const ExportOptions& /*options*/,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    QMutexLocker locker(Internal::globalMutex()); Q_UNUSED(locker);
+    Handle_Message_ProgressIndicator indicator =
+            new Internal::OccImportProgress(progress);
+    STEPControl_Writer writer;
+    if (!indicator.IsNull())
+        writer.WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
+    for (const DocumentItem* item : docItems) {
+        if (sameType<BRepShapeItem>(item)) {
+            auto brepItem = static_cast<const BRepShapeItem*>(item);
+            writer.Transfer(brepItem->brepShape(), STEPControl_AsIs);
+        }
+    }
+    const IFSelect_ReturnStatus status = writer.Write(
+                const_cast<Standard_CString>(filepath.toLocal8Bit().constData()));
+    writer.WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
+
+    QString errorText;
+    switch (status) {
+    case IFSelect_RetVoid: errorText = tr("IFSelect_RetVoid"); break;
+    case IFSelect_RetDone: break;
+    case IFSelect_RetError: errorText = tr("IFSelect_RetError"); break;
+    case IFSelect_RetFail: errorText = tr("IFSelect_RetFail"); break;
+    case IFSelect_RetStop: errorText = tr("IFSelect_RetStop"); break;
+    }
+    return { status == IFSelect_RetDone, errorText };
+}
+
+Application::IoResult Application::exportOccBRep(
+        const std::vector<DocumentItem *> &docItems,
+        const ExportOptions& options,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    // TODO
+    return { false, QStringLiteral("TODO") };
+}
+
+Application::IoResult Application::exportStl(
+        const std::vector<DocumentItem *> &docItems,
+        const ExportOptions& options,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
+    if (lib == Options::StlIoLibrary::Gmio)
+        return this->exportStl_gmio(docItems, options, filepath, progress);
+    else if (lib == Options::StlIoLibrary::OpenCascade)
+        return this->exportStl_OCC(docItems, options, filepath, progress);
+    return { false, tr("Unknown Error") };
+}
+
+Application::IoResult Application::exportStl_gmio(
+        const std::vector<DocumentItem *> &docItems,
+        const Application::ExportOptions &options,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    QFile file(filepath);
+    if (file.open(QIODevice::WriteOnly)) {
+        gmio_stream stream = gmio_stream_qiodevice(&file);
+        gmio_stl_write_options gmioOptions = {};
+        gmioOptions.stla_float32_format = options.stlaFloat32Format;
+        gmioOptions.stla_float32_prec = options.stlaFloat32Precision;
+        gmioOptions.stla_solid_name = options.stlaSolidName.c_str();
+        gmioOptions.task_iface =
+                Internal::gmio_qttask_create_task_iface(progress);
+        for (const DocumentItem* item : docItems) {
+            if (progress != nullptr) {
+                progress->setStep(
+                            tr("Writting item %1")
+                            .arg(item->propertyLabel.value()));
+            }
+            int error = GMIO_ERROR_OK;
+            if (sameType<BRepShapeItem>(item)) {
+                auto brepItem = static_cast<const BRepShapeItem*>(item);
+                const gmio_stl_mesh_occshape gmioMesh(brepItem->brepShape());
+                error = gmio_stl_write(
+                            options.stlFormat, &stream, &gmioMesh, &gmioOptions);
+            }
+            else if (sameType<StlMeshItem>(item)) {
+                auto meshItem = static_cast<const StlMeshItem*>(item);
+                const gmio_stl_mesh_occmesh gmioMesh(meshItem->stlMesh());
+                error = gmio_stl_write(
+                            options.stlFormat, &stream, &gmioMesh, &gmioOptions);
+            }
+            if (error != GMIO_ERROR_OK)
+                return { false, Internal::gmioErrorToQString(error) };
+        }
+        return { true, QString() };
+    }
+    return { false, file.errorString() };
+}
+
+Application::IoResult Application::exportStl_OCC(
+        const std::vector<DocumentItem *> &docItems,
+        const Application::ExportOptions &options,
+        const QString &filepath,
+        qttask::Progress *progress)
+{
+    if (options.stlFormat != GMIO_STL_FORMAT_ASCII
+            && options.stlFormat != GMIO_STL_FORMAT_BINARY_LE)
+    {
+        return { false, tr("Format not supported") };
+    }
+    if (!docItems.empty() && docItems.size() > 1)
+        return { false,  tr("OpenCascade RWStl does not support multi-solids") };
+
+    if (docItems.size() > 0) {
+        const DocumentItem* item = docItems.front();
+        if (sameType<BRepShapeItem>(item)) {
+            auto brepItem = static_cast<const BRepShapeItem*>(item);
+            StlAPI_Writer writer;
+            if (options.stlFormat == GMIO_STL_FORMAT_ASCII)
+                writer.ASCIIMode() = Standard_True;
+            else
+                writer.ASCIIMode() = Standard_False;
+            const StlAPI_ErrorStatus error = writer.Write(
+                        brepItem->brepShape(), filepath.toLocal8Bit().constData());
+            switch (error) {
+            case StlAPI_StatusOK: return { true, QString() };
+            case StlAPI_MeshIsEmpty: return { false, tr("StlAPI_MeshIsEmpty") };
+            case StlAPI_CannotOpenFile: return { false, tr("StlAPI_CannotOpenFile") };
+            case StlAPI_WriteError: return { false, tr("StlAPI_WriteError") };
+            }
+        }
+        else if (sameType<StlMeshItem>(item)) {
+            Handle_Message_ProgressIndicator indicator =
+                    new Internal::OccImportProgress(progress);
+            Standard_Boolean occOk = Standard_False;
+            auto meshItem = static_cast<const StlMeshItem*>(item);
+            const QByteArray filepathLocal8b = filepath.toLocal8Bit();
+            const OSD_Path osdFilepath(filepathLocal8b.constData());
+            const Handle_StlMesh_Mesh& stlMesh = meshItem->stlMesh();
+            if (options.stlFormat == GMIO_STL_FORMAT_ASCII)
+                occOk = RWStl::WriteAscii(stlMesh, osdFilepath, indicator);
+            else
+                occOk = RWStl::WriteBinary(stlMesh, osdFilepath, indicator);
+            const bool ok = occOk == Standard_True;
+            return { ok, ok ? QString() : tr("Unknown error") };
+        }
+    }
+    return { true, QString() };
 }
 
 } // namespace Mayo

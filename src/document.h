@@ -37,7 +37,7 @@ private:
     Document(Application* app);
     ~Document();
 
-    void addPartItem(PartItem* part);
+    void addItem(DocumentItem* item);
 
     Application* m_app = nullptr;
     std::vector<DocumentItem*> m_rootItems;

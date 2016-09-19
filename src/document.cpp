@@ -59,11 +59,11 @@ bool Document::isEmpty() const
     return m_rootItems.empty();
 }
 
-void Document::addPartItem(PartItem* partItem)
+void Document::addItem(DocumentItem* item)
 {
-    partItem->setDocument(this);
-    m_rootItems.push_back(partItem);
-    emit itemAdded(partItem);
+    item->setDocument(this);
+    m_rootItems.push_back(item);
+    emit itemAdded(item);
 }
 
 } // namespace Mayo

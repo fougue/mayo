@@ -74,6 +74,7 @@
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionImportPart"/>
+    <addaction name="actionExportSelectedItems"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -140,6 +141,11 @@
    </property>
    <property name="text">
     <string>Save View to Image</string>
+   </property>
+  </action>
+  <action name="actionExportSelectedItems">
+   <property name="text">
+    <string>Export selected items</string>
    </property>
   </action>
  </widget>

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "application.h"
 #include <QtWidgets/QMainWindow>
 
 namespace Mayo {
 
-class Application;
 class Document;
 class GuiApplication;
 class GuiDocument;
@@ -18,13 +18,13 @@ public:
     ~MainWindow();
 
 signals:
-    void importPartFinished(
-            bool ok, const QString& filepath, const QString& msg);
+    void operationFinished(bool ok, const QString& msg);
 
 private:
     void newDoc();
     void openPartInNewDoc();
     void importPartInCurrentDoc();
+    void exportSelectedItems();
     void quitApp();
     void editOptions();
     void saveImageView();
@@ -33,10 +33,13 @@ private:
 
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onApplicationTreeWidgetSelectionChanged();
-    void onImportPartFinished(
-            bool ok, const QString& filepath, const QString& msg);
+    void onOperationFinished(bool ok, const QString& msg);
     void onTabCloseRequested(int tabIndex);
 
+    void doExportSelectedItems(
+            Application::PartFormat format,
+            const Application::ExportOptions& opts,
+            const QString& filepath);
     void updateControlsActivation();
 
     GuiApplication* m_guiApp = nullptr;

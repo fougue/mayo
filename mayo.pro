@@ -38,7 +38,8 @@ HEADERS += \
     src/widget_document_item_props.h \
     src/widget_message_indicator.h \
     src/widget_gui_document_view3d.h \
-    src/widget_occ_view.h
+    src/widget_occ_view.h \
+    src/dialog_export_options.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -69,7 +70,8 @@ SOURCES += \
     src/widget_document_item_props.cpp \
     src/widget_message_indicator.cpp \
     src/widget_gui_document_view3d.cpp \
-    src/widget_occ_view.cpp
+    src/widget_occ_view.cpp \
+    src/dialog_export_options.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -82,7 +84,8 @@ FORMS += \
     src/dialog_task_manager.ui \
     src/dialog_save_image_view.ui \
     src/widget_application_tree.ui \
-    src/widget_document_item_props.ui
+    src/widget_document_item_props.ui \
+    src/dialog_export_options.ui
 
 # gmio
 isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
@@ -95,6 +98,7 @@ INCLUDEPATH += $$GMIO_ROOT/include
 LIBS += -L$$GMIO_ROOT/lib -lgmio$$GMIO_BIN_SUFFIX
 SOURCES += \
     $$GMIO_ROOT/src/gmio_support/stl_occ_mesh.cpp \
+    $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
     $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
 
 # OpenCascade
