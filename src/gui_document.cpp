@@ -155,6 +155,7 @@ void GuiDocument::onItemAdded(DocumentItem *item)
     const DocumentItem_Gpx pair = { item, Internal::createGpxForItem(item) };
     m_vecDocItemGpx.emplace_back(std::move(pair));
     m_aisContext->Display(pair.gpx->handleGpxObject());
+    m_guiDocView3d->widgetOccView()->fitAll();
 }
 
 void GuiDocument::onItemErased(const DocumentItem *item)
