@@ -67,7 +67,8 @@ DialogExportOptions::DialogExportOptions(QWidget *parent)
         m_ui->comboBox_StlFormat->setCurrentIndex(
                     m_ui->comboBox_StlFormat->findData(opts.stlFormat));
         m_ui->lineEdit_StlGmioAsciiSolidName->setText(
-                    QString::fromStdString(opts.stlaSolidName));
+                    QString::fromLatin1(
+                        QByteArray::fromStdString(opts.stlaSolidName)));
         switch (opts.stlaFloat32Format) {
         case GMIO_FLOAT_TEXT_FORMAT_DECIMAL_LOWERCASE:
         case GMIO_FLOAT_TEXT_FORMAT_DECIMAL_UPPERCASE:
@@ -108,6 +109,26 @@ void DialogExportOptions::setPartFormat(Application::PartFormat format)
                 qobject_cast<QStandardItemModel*>(m_ui->comboBox_StlFormat->model());
         QStandardItem* itemBinaryBigEndian = comboBoxStlFormatModel->item(2);
         itemBinaryBigEndian->setEnabled(lib == Options::StlIoLibrary::Gmio);
+        if (lib == Options::StlIoLibrary::Gmio) {
+            QObject::connect(
+                        m_ui->comboBox_StlFormat,
+                        static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                        [=](int index) {
+                m_ui->widget_StlGmioAscii->setEnabled(index == 0);
+            });
+            m_ui->widget_StlGmioAscii->setEnabled(
+                        m_ui->comboBox_StlFormat->currentData().toInt()
+                        == GMIO_STL_FORMAT_ASCII);
+        }
+        else {
+            if (m_ui->comboBox_StlFormat->currentData().toInt()
+                    == GMIO_STL_FORMAT_BINARY_BE)
+            {
+                const int comboBoxBinLeId =
+                        m_ui->comboBox_StlFormat->findData(GMIO_STL_FORMAT_BINARY_LE);
+                m_ui->comboBox_StlFormat->setCurrentIndex(comboBoxBinLeId);
+            }
+        }
     }
 }
 
@@ -119,7 +140,7 @@ Application::ExportOptions DialogExportOptions::currentExportOptions() const
                 m_ui->comboBox_StlFormat->currentData().toInt());
     if (lib == Options::StlIoLibrary::Gmio) {
         options.stlaSolidName =
-                m_ui->lineEdit_StlGmioAsciiSolidName->text().toStdString();
+                m_ui->lineEdit_StlGmioAsciiSolidName->text().toLatin1().toStdString();
         const int comboBoxFloatFormatId =
                 m_ui->comboBox_StlGmioAsciiFloatFormat->currentIndex();
         const bool floatFormatUppercase =

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Export Options</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QGroupBox" name="groupBox_Stl">
      <property name="title">
@@ -45,7 +45,7 @@
       </item>
       <item row="1" column="0" colspan="3">
        <widget class="QWidget" name="widget_StlGmio" native="true">
-        <layout class="QGridLayout" name="gridLayout">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -58,71 +58,89 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_StlGmioAsciiSolidName">
-           <property name="text">
-            <string>gmio ASCII solid name</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEdit_StlGmioAsciiSolidName"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_StlGmioAsciiFloatFormat">
-           <property name="text">
-            <string>gmio ASCII float format</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QComboBox" name="comboBox_StlGmioAsciiFloatFormat">
-             <item>
+         <item>
+          <widget class="QWidget" name="widget_StlGmioAscii" native="true">
+           <layout class="QGridLayout" name="gridLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_StlGmioAsciiFloatFormat">
               <property name="text">
-               <string>Decimal</string>
+               <string>gmio ASCII float format</string>
               </property>
-             </item>
-             <item>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinBox_StlGmioAsciiFloatPrecision">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>9</number>
+              </property>
+              <property name="value">
+               <number>6</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEdit_StlGmioAsciiSolidName"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_StlGmioAsciiFloatPrecision">
               <property name="text">
-               <string>Scientific</string>
+               <string>gmio ASCII float precision</string>
               </property>
-             </item>
-             <item>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_StlGmioAsciiSolidName">
               <property name="text">
-               <string>Shortest</string>
+               <string>gmio ASCII solid name</string>
               </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="checkBox_StlGmioAsciiFloatFormatUppercase">
-             <property name="text">
-              <string>Uppercase</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_StlGmioAsciiFloatPrecision">
-           <property name="text">
-            <string>gmio ASCII float precision</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QSpinBox" name="spinBox_StlGmioAsciiFloatPrecision">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>9</number>
-           </property>
-           <property name="value">
-            <number>6</number>
-           </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QComboBox" name="comboBox_StlGmioAsciiFloatFormat">
+                <item>
+                 <property name="text">
+                  <string>Decimal</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Scientific</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Shortest</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_StlGmioAsciiFloatFormatUppercase">
+                <property name="text">
+                 <string>Uppercase</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
