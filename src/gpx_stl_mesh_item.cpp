@@ -107,6 +107,7 @@ void GpxStlMeshItem::onPropertyChanged(Property *prop)
                     MeshVS_DA_DisplayNodes, this->propertyShowNodes.value());
         Internal::redisplayAndUpdateViewer(ptrGpx);
     }
+    GpxDocumentItem::onPropertyChanged(prop);
 }
 
 const Enumeration &GpxStlMeshItem::enum_DisplayMode()

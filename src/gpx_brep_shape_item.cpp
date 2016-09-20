@@ -61,6 +61,7 @@ void GpxBRepShapeItem::onPropertyChanged(Property *prop)
         ptrGpx->Redisplay(Standard_True); // All modes
         cxt->UpdateCurrentViewer();
     }
+    GpxDocumentItem::onPropertyChanged(prop);
 }
 
 const Enumeration &GpxBRepShapeItem::enum_DisplayMode()

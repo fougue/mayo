@@ -22,8 +22,12 @@ public:
     virtual const Handle_AIS_InteractiveObject& handleGpxObject() const = 0;
     virtual AIS_InteractiveObject* gpxObject() const = 0;
 
+    PropertyBool propertyIsVisible;
     PropertyEnumeration propertyMaterial;
     PropertyOccColor propertyColor;
+
+protected:
+    void onPropertyChanged(Property* prop) override;
 };
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
