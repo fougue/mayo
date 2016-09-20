@@ -1,6 +1,16 @@
 #include "stl_mesh_item.h"
 
+#include <QtCore/QCoreApplication>
+
 namespace Mayo {
+
+StlMeshItem::StlMeshItem()
+    : propertyNodeCount(
+          this, QCoreApplication::translate("Mayo::StlMeshItem", "Node count")),
+      propertyTriangleCount(
+          this, QCoreApplication::translate("Mayo::StlMeshItem", "Triangle count"))
+{
+}
 
 const Handle_StlMesh_Mesh &StlMeshItem::stlMesh() const
 {

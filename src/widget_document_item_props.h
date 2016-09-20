@@ -29,6 +29,8 @@ private:
     void onQVariantPropertyValueChanged(
             QtProperty *qtProp, const QVariant &value);
 
+    void createQtProperties(
+            const std::vector<Property*>& properties, QtProperty* parentProp);
     void mapProperty(QtVariantProperty* qtProp, Property* prop);
 
     struct QtProp_Prop {

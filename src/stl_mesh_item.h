@@ -8,6 +8,8 @@ namespace Mayo {
 class StlMeshItem : public PartItem
 {
 public:
+    StlMeshItem();
+
     const Handle_StlMesh_Mesh& stlMesh() const;
     void setStlMesh(const Handle_StlMesh_Mesh& mesh);
 
@@ -15,6 +17,9 @@ public:
 
     static const char* type;
     const char* dynType() const override;
+
+    PropertyInt propertyNodeCount; // Read-only
+    PropertyInt propertyTriangleCount; // Read-only
 
 private:
     Handle_StlMesh_Mesh m_stlMesh;

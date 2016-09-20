@@ -158,6 +158,8 @@ static StlMeshItem* createStlMeshItem(
     auto partItem = new StlMeshItem;
     partItem->setFilePath(filepath);
     partItem->propertyLabel.setValue(QFileInfo(filepath).fileName());
+    partItem->propertyNodeCount.setValue(mesh->NbVertices());
+    partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
     partItem->setStlMesh(mesh);
     return partItem;
 }

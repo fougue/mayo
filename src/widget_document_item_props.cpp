@@ -200,16 +200,12 @@ void WidgetDocumentItemProps::editDocumentItems(
 
         // Data
         m_currentDocItem = vecDocItem.front();
-        {
+        if (m_currentDocItem != nullptr) {
             QtProperty* propGroupData =
                     m_varPropMgr->addProperty(
                         QtVariantPropertyManager::groupTypeId(), tr("Data"));
             m_ui->propsBrowser_DocumentItem->addProperty(propGroupData);
-            Property* propLabel = &m_currentDocItem->propertyLabel;
-            QtVariantProperty* qtPropLabel =
-                    Internal::createQtProperty<QString>(propLabel, m_varPropMgr);
-            propGroupData->addSubProperty(qtPropLabel);
-            this->mapProperty(qtPropLabel, propLabel);
+            this->createQtProperties(m_currentDocItem->properties(), propGroupData);
         }
 
         // Graphics
@@ -221,37 +217,8 @@ void WidgetDocumentItemProps::editDocumentItems(
                     m_varPropMgr->addProperty(
                         QtVariantPropertyManager::groupTypeId(), tr("Graphics"));
             m_ui->propsBrowser_DocumentItem->addProperty(propGroupGpx);
-
             const GpxDocumentItem* gpxItem = m_currentGpxDocItem;
-            for (Property* prop : gpxItem->properties()) {
-                typedef QtVariantProperty* (*FuncCreateQtProperty)(
-                            const Property*, QtVariantPropertyManager*);
-                typedef std::pair<const char*, FuncCreateQtProperty>
-                        PropType_FuncCreateQtProp;
-                static const PropType_FuncCreateQtProp arrayPair[] = {
-                    { Property::OccColorTypeName, &Internal::createQtProperty<QColor>},
-                    { Property::EnumerationTypeName, &Internal::createQtProperty<Internal::EnumTag> },
-                    { Property::BoolTypeName, &Internal::createQtProperty<bool> },
-                    { Property::IntTypeName, &Internal::createQtProperty<int> },
-                    { Property::DoubleTypeName, &Internal::createQtProperty<double> },
-                    { Property::QStringTypeName, &Internal::createQtProperty<QString> }
-                };
-                QtVariantProperty* qtProp = nullptr;
-                const char* strPropType = prop->dynTypeName();
-                for (const PropType_FuncCreateQtProp& pair : arrayPair) {
-                    const char* propDynTypeName = pair.first;
-                    const FuncCreateQtProperty funcCreateQtProp = pair.second;
-                    if (std::strcmp(strPropType, propDynTypeName) == 0) {
-                        qtProp = funcCreateQtProp(prop, m_varPropMgr);
-                        break;
-                    }
-                }
-
-                if (qtProp != nullptr) {
-                    propGroupGpx->addSubProperty(qtProp);
-                    this->mapProperty(qtProp, prop);
-                }
-            }
+            this->createQtProperties(gpxItem->properties(), propGroupGpx);
         }
         this->connectPropertyValueChangeSignals(true);
     }
@@ -280,7 +247,7 @@ void WidgetDocumentItemProps::connectPropertyValueChangeSignals(bool on)
 void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
         QtProperty *qtProp, const QVariant &value)
 {
-    if (m_currentGpxDocItem != nullptr) {
+    if (m_currentDocItem != nullptr || m_currentGpxDocItem != nullptr) {
         auto itFound = std::find_if(
                     m_vecQtPropProp.cbegin(),
                     m_vecQtPropProp.cend(),
@@ -307,6 +274,41 @@ void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
                     break;
                 }
             }
+        }
+    }
+}
+
+void WidgetDocumentItemProps::createQtProperties(
+        const std::vector<Property*>& properties, QtProperty *parentProp)
+{
+    typedef QtVariantProperty* (*FuncCreateQtProperty)(
+                const Property*, QtVariantPropertyManager*);
+    typedef std::pair<const char*, FuncCreateQtProperty>
+            PropType_FuncCreateQtProp;
+    static const PropType_FuncCreateQtProp arrayPair[] = {
+        { Property::OccColorTypeName, &Internal::createQtProperty<QColor>},
+        { Property::EnumerationTypeName, &Internal::createQtProperty<Internal::EnumTag> },
+        { Property::BoolTypeName, &Internal::createQtProperty<bool> },
+        { Property::IntTypeName, &Internal::createQtProperty<int> },
+        { Property::DoubleTypeName, &Internal::createQtProperty<double> },
+        { Property::QStringTypeName, &Internal::createQtProperty<QString> }
+    };
+    for (Property* prop : properties) {
+        QtVariantProperty* qtProp = nullptr;
+        const char* strPropType = prop->dynTypeName();
+        for (const PropType_FuncCreateQtProp& pair : arrayPair) {
+            const char* propDynTypeName = pair.first;
+            const FuncCreateQtProperty funcCreateQtProp = pair.second;
+            if (std::strcmp(strPropType, propDynTypeName) == 0) {
+                qtProp = funcCreateQtProp(prop, m_varPropMgr);
+                break;
+            }
+        }
+        if (qtProp != nullptr) {
+            parentProp->addSubProperty(qtProp);
+            foreach (QtBrowserItem* item, m_ui->propsBrowser_DocumentItem->items(qtProp))
+                m_ui->propsBrowser_DocumentItem->setExpanded(item, false);
+            this->mapProperty(qtProp, prop);
         }
     }
 }
