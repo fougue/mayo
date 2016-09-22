@@ -77,6 +77,10 @@ void GpxBRepShapeItem::onPropertyChanged(Property *prop)
     }
     else if (prop == &this->propertyColor) {
         ptrGpx->SetColor(this->propertyColor.value());
+        if (this->propertyShowFaceBoundary.value()) {
+            ptrGpx->Redisplay(Standard_True); // All modes
+            cxt->UpdateCurrentViewer();
+        }
     }
     else if (prop == &this->propertyTransparency) {
         cxt->SetTransparency(hndGpx, this->propertyTransparency.value() / 100.);

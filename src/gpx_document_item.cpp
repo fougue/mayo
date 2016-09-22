@@ -36,7 +36,7 @@
 namespace Mayo {
 
 GpxDocumentItem::GpxDocumentItem()
-    : propertyIsVisible(this, tr("Visible?")),
+    : propertyIsVisible(this, tr("Visible")),
       propertyMaterial(this, tr("Material"), &enum_Graphic3dNameOfMaterial()),
       propertyColor(this, tr("Color"))
 {
