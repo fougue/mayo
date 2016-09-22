@@ -154,8 +154,7 @@ TopoDS_Shape loadShapeFromFile(
     if (!indicator.IsNull())
         indicator->NewScope(30, "Loading file");
     READER reader;
-    *error = reader.ReadFile(
-                const_cast<Standard_CString>(filepath.toLocal8Bit().constData()));
+    *error = reader.ReadFile(filepath.toLocal8Bit().constData());
     if (!indicator.IsNull())
         indicator->EndScope();
     if (*error == IFSelect_RetDone) {
@@ -555,8 +554,7 @@ Application::IoResult Application::exportIges(
         }
     }
     writer.ComputeModel();
-    const Standard_Boolean ok = writer.Write(
-                const_cast<Standard_CString>(filepath.toLocal8Bit().constData()));
+    const Standard_Boolean ok = writer.Write(filepath.toLocal8Bit().constData());
     writer.TransferProcess()->SetProgress(nullptr);
     return { ok == Standard_True, QString() };
 }
@@ -579,8 +577,8 @@ Application::IoResult Application::exportStep(
             writer.Transfer(brepItem->brepShape(), STEPControl_AsIs);
         }
     }
-    const IFSelect_ReturnStatus status = writer.Write(
-                const_cast<Standard_CString>(filepath.toLocal8Bit().constData()));
+    const IFSelect_ReturnStatus status =
+            writer.Write(filepath.toLocal8Bit().constData());
     writer.WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
 
     QString errorText;
@@ -596,12 +594,38 @@ Application::IoResult Application::exportStep(
 
 Application::IoResult Application::exportOccBRep(
         const std::vector<DocumentItem *> &docItems,
-        const ExportOptions& options,
+        const ExportOptions& /*options*/,
         const QString &filepath,
         qttask::Progress *progress)
 {
-    // TODO
-    return { false, QStringLiteral("TODO") };
+    std::vector<const TopoDS_Shape*> vecShapePtr;
+    vecShapePtr.reserve(docItems.size());
+    for (const DocumentItem* item : docItems) {
+        if (sameType<BRepShapeItem>(item)) {
+            const auto brepItem = static_cast<const BRepShapeItem*>(item);
+            vecShapePtr.push_back(&brepItem->brepShape());
+        }
+    }
+    TopoDS_Shape shape;
+    if (vecShapePtr.size() > 1) {
+        TopoDS_Compound cmpd;
+        BRep_Builder builder;
+        builder.MakeCompound(cmpd);
+        for (const TopoDS_Shape* shapePtr : vecShapePtr)
+            builder.Add(cmpd, *shapePtr);
+        shape = cmpd;
+    }
+    else if (vecShapePtr.size() == 1) {
+        shape = *vecShapePtr.front();
+    }
+
+    Handle_Message_ProgressIndicator indicator =
+            new Internal::OccImportProgress(progress);
+    const Standard_Boolean ok =
+            BRepTools::Write(shape, filepath.toLocal8Bit().constData(), indicator);
+    if (ok == Standard_True)
+        return { true, QString() };
+    return { false, tr("Unknown Error") };
 }
 
 Application::IoResult Application::exportStl(
