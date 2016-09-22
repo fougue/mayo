@@ -18,3 +18,7 @@ Although only tested with VC++/Windows it should build fine on Linux and MacOS.
 `qmake "GMIO_ROOT=path_to_gmio" "CASCADE_ROOT=path_to_opencascade"`  
 `(n)make`
 
+# Screenshots
+
+<img src="doc/screenshot_stl.png"/>
+<img src="doc/screenshot_irb.png"/>
