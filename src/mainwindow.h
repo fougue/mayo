@@ -31,6 +31,7 @@
 
 #include "application.h"
 #include <QtWidgets/QMainWindow>
+#include <functional>
 
 namespace Mayo {
 
@@ -65,6 +66,8 @@ private:
     void onOperationFinished(bool ok, const QString& msg);
     void onTabCloseRequested(int tabIndex);
 
+    void foreachOpenFileName(
+            std::function<void (Application::PartFormat, QString)>&& func);
     void runImportTask(
             Document *doc,
             Application::PartFormat format,

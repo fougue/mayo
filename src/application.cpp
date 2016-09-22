@@ -178,7 +178,7 @@ static BRepShapeItem* createBRepShapeItem(
 {
     auto partItem = new BRepShapeItem;
     partItem->setFilePath(filepath);
-    partItem->propertyLabel.setValue(QFileInfo(filepath).fileName());
+    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
     partItem->setBRepShape(shape);
     return partItem;
 }
@@ -188,7 +188,7 @@ static StlMeshItem* createStlMeshItem(
 {
     auto partItem = new StlMeshItem;
     partItem->setFilePath(filepath);
-    partItem->propertyLabel.setValue(QFileInfo(filepath).fileName());
+    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
     partItem->propertyNodeCount.setValue(mesh->NbVertices());
     partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
     partItem->setStlMesh(mesh);
@@ -350,6 +350,9 @@ Document *Application::addDocument(const QString &label)
                       .arg(docSequenceId > 0 ?
                                QString::number(docSequenceId) :
                                QString()));
+    }
+    else {
+        doc->setLabel(label);
     }
     QObject::connect(
                 doc, &Document::itemAdded,

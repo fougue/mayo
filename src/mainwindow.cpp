@@ -91,6 +91,38 @@ struct ImportExportSettings
     }
 };
 
+struct OpenFileNames {
+    QStringList listFilepath;
+    ImportExportSettings lastIoSettings;
+    Application::PartFormat selectedFormat;
+
+    static OpenFileNames get(QWidget* parentWidget)
+    {
+        OpenFileNames result;
+        result.selectedFormat = Application::PartFormat::Unknown;
+        result.lastIoSettings = ImportExportSettings::load();
+        QStringList listPartFormatFilter = Application::partFormatFilters();
+        const QString allFilesFilter = Application::tr("All files(*.*)");
+        listPartFormatFilter.append(allFilesFilter);
+        result.listFilepath =
+                QFileDialog::getOpenFileNames(
+                    parentWidget,
+                    Application::tr("Select Part File"),
+                    result.lastIoSettings.openDir,
+                    listPartFormatFilter.join(QLatin1String(";;")),
+                    &result.lastIoSettings.selectedFilter);
+        if (!result.listFilepath.isEmpty()) {
+            result.lastIoSettings.openDir =
+                    QFileInfo(result.listFilepath.front()).canonicalPath();
+            result.selectedFormat =
+                    result.lastIoSettings.selectedFilter != allFilesFilter ?
+                        partFormatFromFilter(result.lastIoSettings.selectedFilter) :
+                        Application::PartFormat::Unknown;
+        }
+        return result;
+    }
+};
+
 } // namespace Internal
 
 
@@ -163,8 +195,12 @@ void MainWindow::newDoc()
 
 void MainWindow::openPartInNewDoc()
 {
-    qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                this, tr("Error"), tr("Not yet implemented"));
+    this->foreachOpenFileName(
+                [=](Application::PartFormat format, QString filepath) {
+        Document* doc = Application::instance()->addDocument(
+                    QFileInfo(filepath).fileName());
+        this->runImportTask(doc, format, filepath);
+    });
 }
 
 void MainWindow::importInCurrentDoc()
@@ -173,42 +209,11 @@ void MainWindow::importInCurrentDoc()
             qobject_cast<WidgetGuiDocumentView3d*>(
                 m_ui->tab_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
-        auto lastSettings = Internal::ImportExportSettings::load();
-        QStringList listPartFormatFilter = Application::partFormatFilters();
-        const QString allFilesFilter = tr("All files(*.*)");
-        listPartFormatFilter.append(allFilesFilter);
-        const QStringList listFilepath =
-                QFileDialog::getOpenFileNames(
-                    this,
-                    tr("Select Part File"),
-                    lastSettings.openDir,
-                    listPartFormatFilter.join(QLatin1String(";;")),
-                    &lastSettings.selectedFilter);
-        if (!listFilepath.isEmpty()) {
-            lastSettings.openDir =
-                    QFileInfo(listFilepath.front()).canonicalPath();
-            Document* doc = docView3d->guiDocument()->document();
-            const Application::PartFormat selectedFormat =
-                    lastSettings.selectedFilter != allFilesFilter ?
-                        Internal::partFormatFromFilter(lastSettings.selectedFilter) :
-                        Application::PartFormat::Unknown;
-            for (const QString& filepath : listFilepath) {
-                const Application::PartFormat fileFormat =
-                        selectedFormat != Application::PartFormat::Unknown ?
-                            selectedFormat :
-                            Application::findPartFormat(filepath);
-                if (fileFormat != Application::PartFormat::Unknown) {
-                    this->runImportTask(doc, fileFormat, filepath);
-                }
-                else {
-                    qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                                this,
-                                tr("Error"),
-                                tr("'%1'\nUnknown file format").arg(filepath));
-                }
-            }
-            Internal::ImportExportSettings::save(lastSettings);
-        }
+        Document* doc = docView3d->guiDocument()->document();
+        this->foreachOpenFileName(
+                    [=](Application::PartFormat format, QString filepath) {
+            this->runImportTask(doc, format, filepath);
+        });
     }
 }
 
@@ -333,6 +338,30 @@ void MainWindow::onTabCloseRequested(int tabIndex)
     Application::instance()->eraseDocument(docView3d->guiDocument()->document());
     m_ui->tab_GuiDocuments->removeTab(tabIndex);
     this->updateControlsActivation();
+}
+
+void MainWindow::foreachOpenFileName(
+        std::function<void (Application::PartFormat, QString)>&& func)
+{
+    const auto resFileNames = Internal::OpenFileNames::get(this);
+    if (!resFileNames.listFilepath.isEmpty()) {
+        for (const QString& filepath : resFileNames.listFilepath) {
+            const Application::PartFormat fileFormat =
+                    resFileNames.selectedFormat != Application::PartFormat::Unknown ?
+                        resFileNames.selectedFormat :
+                        Application::findPartFormat(filepath);
+            if (fileFormat != Application::PartFormat::Unknown) {
+                func(fileFormat, filepath);
+            }
+            else {
+                qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                            this,
+                            tr("Error"),
+                            tr("'%1'\nUnknown file format").arg(filepath));
+            }
+        }
+        Internal::ImportExportSettings::save(resFileNames.lastIoSettings);
+    }
 }
 
 void MainWindow::runExportTask(
