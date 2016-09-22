@@ -138,7 +138,7 @@ private:
     qttask::Progress* m_progress = nullptr;
 };
 
-template<typename READER>
+template<typename READER> // Either IGESControl_Reader or STEPControl_Reader
 TopoDS_Shape loadShapeFromFile(
         const QString& filepath,
         IFSelect_ReturnStatus* error,

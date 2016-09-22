@@ -52,7 +52,7 @@ signals:
 private:
     void newDoc();
     void openPartInNewDoc();
-    void importPartInCurrentDoc();
+    void importInCurrentDoc();
     void exportSelectedItems();
     void quitApp();
     void editOptions();

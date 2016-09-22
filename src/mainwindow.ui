@@ -73,7 +73,7 @@
     <addaction name="actionNewDoc"/>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
-    <addaction name="actionImportPart"/>
+    <addaction name="actionImport"/>
     <addaction name="actionExportSelectedItems"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -107,7 +107,7 @@
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="actionImportPart">
+  <action name="actionImport">
    <property name="text">
     <string>Import</string>
    </property>

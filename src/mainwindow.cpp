@@ -112,8 +112,8 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 m_ui->actionOpen, &QAction::triggered,
                 this, &MainWindow::openPartInNewDoc);
     QObject::connect(
-                m_ui->actionImportPart, &QAction::triggered,
-                this, &MainWindow::importPartInCurrentDoc);
+                m_ui->actionImport, &QAction::triggered,
+                this, &MainWindow::importInCurrentDoc);
     QObject::connect(
                 m_ui->actionExportSelectedItems, &QAction::triggered,
                 this, &MainWindow::exportSelectedItems);
@@ -167,39 +167,46 @@ void MainWindow::openPartInNewDoc()
                 this, tr("Error"), tr("Not yet implemented"));
 }
 
-void MainWindow::importPartInCurrentDoc()
+void MainWindow::importInCurrentDoc()
 {
     auto docView3d =
             qobject_cast<WidgetGuiDocumentView3d*>(
                 m_ui->tab_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
         auto lastSettings = Internal::ImportExportSettings::load();
-        const QString filepath =
-                QFileDialog::getOpenFileName(
+        const QStringList listFilepath =
+                QFileDialog::getOpenFileNames(
                     this,
                     tr("Select Part File"),
                     lastSettings.openDir,
                     Application::partFormatFilters().join(QLatin1String(";;")),
                     &lastSettings.selectedFilter);
-        if (!filepath.isEmpty()) {
-            lastSettings.openDir = QFileInfo(filepath).canonicalPath();
+        if (!listFilepath.isEmpty()) {
+            lastSettings.openDir =
+                    QFileInfo(listFilepath.front()).canonicalPath();
             Document* doc = docView3d->guiDocument()->document();
             const Application::PartFormat format =
                     Internal::partFormatFromFilter(lastSettings.selectedFilter);
-            qttask::BaseRunner* task =
-                    qttask::Manager::globalInstance()->newTask<QThreadPool>();
-            task->run([=]{
-                QTime chrono;
-                chrono.start();
-                const bool ok =
-                        Application::instance()->importInDocument(
-                            doc, format, filepath, &task->progress());
-                const QString msg =
-                        ok ?
-                            tr("Import time: %1ms").arg(chrono.elapsed()) :
-                            tr("Failed to import part:\n    '%1'").arg(filepath);
-                emit operationFinished(ok, msg);
-            });
+            for (const QString& filepath : listFilepath) {
+                qttask::BaseRunner* task =
+                        qttask::Manager::globalInstance()->newTask<QThread>();
+                task->run([=]{
+                    QTime chrono;
+                    chrono.start();
+                    const bool ok =
+                            Application::instance()->importInDocument(
+                                doc, format, filepath, &task->progress());
+                    QString msg;
+                    if (ok) {
+                        msg = tr("Import time '%1': %2ms")
+                                .arg(QFileInfo(filepath).fileName())
+                                .arg(chrono.elapsed());
+                    } else {
+                        msg = tr("Failed to import part:\n    '%1'").arg(filepath);
+                    }
+                    emit operationFinished(ok, msg);
+                });
+            }
             Internal::ImportExportSettings::save(lastSettings);
         }
     }
@@ -310,7 +317,7 @@ void MainWindow::doExportSelectedItems(
     const std::vector<DocumentItem*> vecDocItem =
             m_ui->widget_ApplicationTree->selectedDocumentItems();
     qttask::BaseRunner* task =
-            qttask::Manager::globalInstance()->newTask<QThreadPool>();
+            qttask::Manager::globalInstance()->newTask<QThread>();
     task->run([=]{
         QTime chrono;
         chrono.start();
@@ -328,7 +335,7 @@ void MainWindow::doExportSelectedItems(
 void MainWindow::updateControlsActivation()
 {
     const bool appDocumentsEmpty = Application::instance()->documents().empty();
-    m_ui->actionImportPart->setEnabled(!appDocumentsEmpty);
+    m_ui->actionImport->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
 }
 
