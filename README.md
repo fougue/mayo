@@ -2,7 +2,6 @@
 Mayo is a basic 3D viewer inspired by FreeCad.  
 Its primary goal is to visualize CAD files imported/exported
 with the [gmio](https://github.com/fougue/gmio) library.  
-Mayo is a C++ project based on OpenCascade and Qt5.
 
 Current features are :
 * Multi-documents support, user can open many parts in the session
