@@ -61,6 +61,7 @@
 
 #include <gmio_core/error.h>
 #include <gmio_stl/stl_error.h>
+#include <gmio_stl/stl_format.h>
 #include <gmio_stl/stl_infos.h>
 #include <gmio_stl/stl_io.h>
 #include <gmio_support/stream_qt.h>
@@ -68,6 +69,8 @@
 #include <gmio_support/stl_occ_mesh.h>
 
 #include <algorithm>
+#include <array>
+#include <fstream>
 
 namespace Mayo {
 
@@ -232,6 +235,83 @@ static QString gmioErrorToQString(int error)
     return Application::tr("GMIO_ERROR_UNKNOWN");
 }
 
+const char* skipWhiteSpaces(const char* str, std::size_t len)
+{
+    std::size_t pos = 0;
+    while (std::isspace(str[pos]) && pos < len)
+        ++pos;
+    return str + pos;
+}
+
+template <std::size_t N>
+bool matchToken(const char* buffer, const char (&token)[N])
+{
+    return std::strncmp(buffer, token, N - 1) == 0;
+}
+
+Application::PartFormat findPartFormatFromContents(
+        const char *contentsBegin, std::size_t contentsBeginSize)
+{
+    // -- IGES ?
+    {
+        // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
+        bool isIges = true;
+        if (contentsBeginSize >= 80 && contentsBegin[72] == 'S') {
+            for (int i = 73; i < 80 && isIges; ++i) {
+                if (contentsBegin[i] != ' ' && !std::isdigit(contentsBegin[i]))
+                    isIges = false;
+            }
+            if (isIges && (contentsBegin[80] == '\n'
+                           || contentsBegin[80] == '\r'
+                           || contentsBegin[80] == '\f'))
+            {
+                const int sVal = std::atoi(contentsBegin + 73);
+                if (sVal == 1)
+                    return Application::PartFormat::Iges;
+            }
+        }
+    } // IGES
+
+    contentsBegin = skipWhiteSpaces(contentsBegin, contentsBeginSize);
+
+    // -- STEP ?
+    {
+        // regex : ^\s*ISO-10303-21\s*;\s*HEADER
+        static const char stepIsoId[] = "ISO-10303-21";
+        static const std::size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
+        static const char stepHeaderToken[] = "HEADER";
+        static const std::size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
+        if (std::strncmp(contentsBegin, stepIsoId, stepIsoIdLen) == 0) {
+            auto charIt = skipWhiteSpaces(
+                        contentsBegin + stepIsoIdLen,
+                        contentsBeginSize - stepIsoIdLen);
+            if (*charIt == ';'
+                    && (charIt - contentsBegin) < contentsBeginSize)
+            {
+                charIt = skipWhiteSpaces(
+                            charIt + 1,
+                            contentsBeginSize - (charIt - contentsBegin));
+                if (std::strncmp(charIt, stepHeaderToken, stepHeaderTokenLen)
+                        == 0)
+                {
+                    return Application::PartFormat::Step;
+                }
+            }
+        }
+    } // STEP
+
+    // -- OpenCascade BREP ?
+    {
+        // regex : ^\s*DBRep_DrawableShape
+        static const char occBRepToken[] = "DBRep_DrawableShape";
+        if (matchToken(contentsBegin, occBRepToken))
+            return Application::PartFormat::OccBrep;
+    }
+
+    // Fallback case
+    return Application::PartFormat::Unknown;
+}
+
 } // namespace Internal
 
 Application::Application(QObject *parent)
@@ -360,6 +440,23 @@ QStringList Application::partFormatFilters()
             << Application::partFormatFilter(PartFormat::OccBrep)
             << Application::partFormatFilter(PartFormat::Stl);
     return filters;
+}
+
+Application::PartFormat Application::findPartFormat(const QString &filepath)
+{
+    QFile file(filepath);
+    if (file.open(QIODevice::ReadOnly)) {
+        gmio_stream qtstream = gmio_stream_qiodevice(&file);
+        const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
+        if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
+            return Application::PartFormat::Stl;
+        std::array<char, 2048> contentsBegin;
+        contentsBegin.fill(0);
+        file.read(contentsBegin.data(), contentsBegin.size());
+        return Internal::findPartFormatFromContents(
+                    contentsBegin.data(), contentsBegin.size());
+    }
+    return PartFormat::Unknown;
 }
 
 bool Application::importIges(

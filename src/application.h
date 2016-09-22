@@ -82,6 +82,7 @@ public:
     static const std::vector<PartFormat>& partFormats();
     static QString partFormatFilter(PartFormat format);
     static QStringList partFormatFilters();
+    static PartFormat findPartFormat(const QString& filepath);
 
     bool importInDocument(
             Document* doc,

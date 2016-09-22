@@ -69,6 +69,10 @@ private:
             Application::PartFormat format,
             const Application::ExportOptions& opts,
             const QString& filepath);
+    void runImportTask(
+            Document *doc,
+            Application::PartFormat format,
+            const QString &filepath);
     void updateControlsActivation();
 
     GuiApplication* m_guiApp = nullptr;

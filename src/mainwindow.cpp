@@ -174,42 +174,65 @@ void MainWindow::importInCurrentDoc()
                 m_ui->tab_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
         auto lastSettings = Internal::ImportExportSettings::load();
+        QStringList listPartFormatFilter = Application::partFormatFilters();
+        const QString allFilesFilter = tr("All files(*.*)");
+        listPartFormatFilter.append(allFilesFilter);
         const QStringList listFilepath =
                 QFileDialog::getOpenFileNames(
                     this,
                     tr("Select Part File"),
                     lastSettings.openDir,
-                    Application::partFormatFilters().join(QLatin1String(";;")),
+                    listPartFormatFilter.join(QLatin1String(";;")),
                     &lastSettings.selectedFilter);
         if (!listFilepath.isEmpty()) {
             lastSettings.openDir =
                     QFileInfo(listFilepath.front()).canonicalPath();
             Document* doc = docView3d->guiDocument()->document();
-            const Application::PartFormat format =
-                    Internal::partFormatFromFilter(lastSettings.selectedFilter);
+            const Application::PartFormat selectedFormat =
+                    lastSettings.selectedFilter != allFilesFilter ?
+                        Internal::partFormatFromFilter(lastSettings.selectedFilter) :
+                        Application::PartFormat::Unknown;
             for (const QString& filepath : listFilepath) {
-                qttask::BaseRunner* task =
-                        qttask::Manager::globalInstance()->newTask<QThread>();
-                task->run([=]{
-                    QTime chrono;
-                    chrono.start();
-                    const bool ok =
-                            Application::instance()->importInDocument(
-                                doc, format, filepath, &task->progress());
-                    QString msg;
-                    if (ok) {
-                        msg = tr("Import time '%1': %2ms")
-                                .arg(QFileInfo(filepath).fileName())
-                                .arg(chrono.elapsed());
-                    } else {
-                        msg = tr("Failed to import part:\n    '%1'").arg(filepath);
-                    }
-                    emit operationFinished(ok, msg);
-                });
+                const Application::PartFormat fileFormat =
+                        selectedFormat != Application::PartFormat::Unknown ?
+                            selectedFormat :
+                            Application::findPartFormat(filepath);
+                if (fileFormat != Application::PartFormat::Unknown) {
+                    this->runImportTask(doc, fileFormat, filepath);
+                }
+                else {
+                    qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                                this,
+                                tr("Error"),
+                                tr("'%1'\nUnknown file format").arg(filepath));
+                }
             }
             Internal::ImportExportSettings::save(lastSettings);
         }
     }
+}
+
+void MainWindow::runImportTask(
+        Document* doc, Application::PartFormat format, const QString& filepath)
+{
+    qttask::BaseRunner* task =
+            qttask::Manager::globalInstance()->newTask<QThread>();
+    task->run([=]{
+        QTime chrono;
+        chrono.start();
+        const bool ok =
+                Application::instance()->importInDocument(
+                    doc, format, filepath, &task->progress());
+        QString msg;
+        if (ok) {
+            msg = tr("Import time '%1': %2ms")
+                    .arg(QFileInfo(filepath).fileName())
+                    .arg(chrono.elapsed());
+        } else {
+            msg = tr("Failed to import part:\n    '%1'").arg(filepath);
+        }
+        emit operationFinished(ok, msg);
+    });
 }
 
 void MainWindow::exportSelectedItems()
