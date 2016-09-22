@@ -84,7 +84,7 @@ public:
     static QStringList partFormatFilters();
     static PartFormat findPartFormat(const QString& filepath);
 
-    bool importInDocument(
+    IoResult importInDocument(
             Document* doc,
             PartFormat format,
             const QString& filepath,
@@ -108,13 +108,13 @@ signals:
 private:
     Application(QObject* parent = nullptr);
 
-    bool importIges(
+    IoResult importIges(
             Document* doc, const QString& filepath, qttask::Progress* progress);
-    bool importStep(
+    IoResult importStep(
             Document* doc, const QString& filepath, qttask::Progress* progress);
-    bool importOccBRep(
+    IoResult importOccBRep(
             Document* doc, const QString& filepath, qttask::Progress* progress);
-    bool importStl(
+    IoResult importStl(
             Document* doc, const QString& filepath, qttask::Progress* progress);
 
     IoResult exportIges(

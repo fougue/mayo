@@ -234,6 +234,18 @@ static QString gmioErrorToQString(int error)
     return Application::tr("GMIO_ERROR_UNKNOWN");
 }
 
+static QString occReturnStatusToQString(IFSelect_ReturnStatus status)
+{
+    switch (status) {
+    case IFSelect_RetVoid: return Application::tr("IFSelect_RetVoid");
+    case IFSelect_RetDone: return QString();
+    case IFSelect_RetError: return Application::tr("IFSelect_RetError");
+    case IFSelect_RetFail: return Application::tr("IFSelect_RetFail");
+    case IFSelect_RetStop: return Application::tr("IFSelect_RetStop");
+    }
+    return Application::tr("IFSelect Unknown");
+}
+
 const char* skipWhiteSpaces(const char* str, std::size_t len)
 {
     std::size_t pos = 0;
@@ -363,7 +375,7 @@ bool Application::eraseDocument(Document *doc)
     return false;
 }
 
-bool Application::importInDocument(
+Application::IoResult Application::importInDocument(
         Document* doc,
         PartFormat format,
         const QString &filepath,
@@ -377,7 +389,7 @@ bool Application::importInDocument(
     case PartFormat::Stl: return this->importStl(doc, filepath, progress);
     case PartFormat::Unknown: break;
     }
-    return false;
+    return { false, tr("Unknown error") };
 }
 
 Application::IoResult Application::exportDocumentItems(
@@ -458,31 +470,31 @@ Application::PartFormat Application::findPartFormat(const QString &filepath)
     return PartFormat::Unknown;
 }
 
-bool Application::importIges(
+Application::IoResult Application::importIges(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
-    IFSelect_ReturnStatus error;
+    IFSelect_ReturnStatus err;
     const TopoDS_Shape shape =
             Internal::loadShapeFromFile<IGESControl_Reader>(
-                filepath, &error, progress);
-    if (error == IFSelect_RetDone)
+                filepath, &err, progress);
+    if (err == IFSelect_RetDone)
         doc->addItem(Internal::createBRepShapeItem(filepath, shape));
-    return error == IFSelect_RetDone;
+    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
-bool Application::importStep(
+Application::IoResult Application::importStep(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
-    IFSelect_ReturnStatus error;
+    IFSelect_ReturnStatus err;
     const TopoDS_Shape shape =
             Internal::loadShapeFromFile<STEPControl_Reader>(
-                filepath, &error, progress);
-    if (error == IFSelect_RetDone)
+                filepath, &err, progress);
+    if (err == IFSelect_RetDone)
         doc->addItem(Internal::createBRepShapeItem(filepath, shape));
-    return error == IFSelect_RetDone;
+    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
-bool Application::importOccBRep(
+Application::IoResult Application::importOccBRep(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
     TopoDS_Shape shape;
@@ -493,14 +505,14 @@ bool Application::importOccBRep(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     if (ok)
         doc->addItem(Internal::createBRepShapeItem(filepath, shape));
-    return ok;
+    return { ok, ok ? QString() : tr("Unknown Error") };
 }
 
-bool Application::importStl(
+Application::IoResult Application::importStl(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
+    Application::IoResult result = { false, QString() };
     const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
-    bool ok = false;
     if (lib == Options::StlIoLibrary::Gmio) {
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
@@ -516,7 +528,9 @@ bool Application::importStl(
                 if (gmio_no_error(err))
                     doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
             }
-            ok = (err == GMIO_ERROR_OK);
+            result.ok = (err == GMIO_ERROR_OK);
+            if (!result.ok)
+                result.errorText = Internal::gmioErrorToQString(err);
         }
     }
     else if (lib == Options::StlIoLibrary::OpenCascade) {
@@ -526,9 +540,11 @@ bool Application::importStl(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         if (!stlMesh.IsNull())
             doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
-        ok = !stlMesh.IsNull();
+        result.ok = !stlMesh.IsNull();
+        if (!result.ok)
+            result.errorText = tr("Imported STL mesh is null");
     }
-    return ok;
+    return result;
 }
 
 Application::IoResult Application::exportIges(
@@ -577,19 +593,10 @@ Application::IoResult Application::exportStep(
             writer.Transfer(brepItem->brepShape(), STEPControl_AsIs);
         }
     }
-    const IFSelect_ReturnStatus status =
+    const IFSelect_ReturnStatus err =
             writer.Write(filepath.toLocal8Bit().constData());
     writer.WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
-
-    QString errorText;
-    switch (status) {
-    case IFSelect_RetVoid: errorText = tr("IFSelect_RetVoid"); break;
-    case IFSelect_RetDone: break;
-    case IFSelect_RetError: errorText = tr("IFSelect_RetError"); break;
-    case IFSelect_RetFail: errorText = tr("IFSelect_RetFail"); break;
-    case IFSelect_RetStop: errorText = tr("IFSelect_RetStop"); break;
-    }
-    return { status == IFSelect_RetDone, errorText };
+    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
 Application::IoResult Application::exportOccBRep(

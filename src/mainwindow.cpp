@@ -220,18 +220,19 @@ void MainWindow::runImportTask(
     task->run([=]{
         QTime chrono;
         chrono.start();
-        const bool ok =
+        const Application::IoResult result =
                 Application::instance()->importInDocument(
                     doc, format, filepath, &task->progress());
         QString msg;
-        if (ok) {
+        if (result.ok) {
             msg = tr("Import time '%1': %2ms")
                     .arg(QFileInfo(filepath).fileName())
                     .arg(chrono.elapsed());
         } else {
-            msg = tr("Failed to import part:\n    '%1'").arg(filepath);
+            msg = tr("Failed to import part:\n    %1\nError: %2")
+                    .arg(filepath).arg(result.errorText);
         }
-        emit operationFinished(ok, msg);
+        emit operationFinished(result.ok, msg);
     });
 }
 
@@ -249,21 +250,23 @@ void MainWindow::exportSelectedItems()
         lastSettings.openDir = QFileInfo(filepath).canonicalPath();
         const Application::PartFormat format =
                 Internal::partFormatFromFilter(lastSettings.selectedFilter);
+        const std::vector<DocumentItem*> vecDocItem =
+                m_ui->widget_ApplicationTree->selectedDocumentItems();
         if (Application::hasExportOptionsForFormat(format)) {
             auto dlg = new DialogExportOptions(this);
             dlg->setPartFormat(format);
             QObject::connect(
                         dlg, &QDialog::accepted,
                         [=]{
-                this->doExportSelectedItems(
-                            format, dlg->currentExportOptions(), filepath);
+                this->runExportTask(
+                            vecDocItem, format, dlg->currentExportOptions(), filepath);
                 Internal::ImportExportSettings::save(lastSettings);
             });
             qtgui::QWidgetUtils::asyncDialogExec(dlg);
         }
         else {
-            this->doExportSelectedItems(
-                        format, Application::ExportOptions(), filepath);
+            this->runExportTask(
+                        vecDocItem, format, Application::ExportOptions(), filepath);
             Internal::ImportExportSettings::save(lastSettings);
         }
     }
@@ -332,26 +335,30 @@ void MainWindow::onTabCloseRequested(int tabIndex)
     this->updateControlsActivation();
 }
 
-void MainWindow::doExportSelectedItems(
+void MainWindow::runExportTask(
+        const std::vector<DocumentItem*>& docItems,
         Application::PartFormat format,
-        const Application::ExportOptions &opts,
+        const Application::ExportOptions& opts,
         const QString& filepath)
 {
-    const std::vector<DocumentItem*> vecDocItem =
-            m_ui->widget_ApplicationTree->selectedDocumentItems();
     qttask::BaseRunner* task =
             qttask::Manager::globalInstance()->newTask<QThread>();
     task->run([=]{
         QTime chrono;
         chrono.start();
-        const bool ok =
+        const Application::IoResult result =
                 Application::instance()->exportDocumentItems(
-                    vecDocItem, format, opts, filepath, &task->progress());
-        const QString msg =
-                ok ?
-                    tr("Export time: %1ms").arg(chrono.elapsed()) :
-                    tr("Failed to export part:\n    '%1'").arg(filepath);
-        emit operationFinished(ok, msg);
+                    docItems, format, opts, filepath, &task->progress());
+        QString msg;
+        if (result.ok) {
+            msg = tr("Export time '%1': %2ms")
+                    .arg(QFileInfo(filepath).fileName())
+                    .arg(chrono.elapsed());
+        } else {
+            msg = tr("Failed to export part:\n    %1\nError: %2")
+                    .arg(filepath).arg(result.errorText);
+        }
+        emit operationFinished(result.ok, msg);
     });
 }
 
