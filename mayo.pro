@@ -95,10 +95,11 @@ CONFIG(debug, debug|release) {
     GMIO_BIN_SUFFIX =
 }
 INCLUDEPATH += $$GMIO_ROOT/include
-LIBS += -L$$GMIO_ROOT/lib -lgmio$$GMIO_BIN_SUFFIX
+LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
 SOURCES += \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_mesh.cpp \
     $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
+    $$GMIO_ROOT/src/gmio_support/stl_occ_mesh.cpp \
+    $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
     $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
 
 # OpenCascade

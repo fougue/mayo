@@ -209,12 +209,13 @@ static QString gmioErrorToQString(int error)
         return Application::tr("GMIO_ERROR_INVALID_MEMBLOCK_SIZE");
     case GMIO_ERROR_STREAM:
         return Application::tr("GMIO_ERROR_STREAM");
-    case GMIO_ERROR_TRANSFER_STOPPED:
-        return Application::tr("GMIO_ERROR_TRANSFER_STOPPED");
+    case GMIO_ERROR_TASK_STOPPED:
+        return Application::tr("GMIO_ERROR_TASK_STOPPED");
     case GMIO_ERROR_STDIO:
         return Application::tr("GMIO_ERROR_STDIO");
     case GMIO_ERROR_BAD_LC_NUMERIC:
         return Application::tr("GMIO_ERROR_BAD_LC_NUMERIC");
+    // TODO: complete other core enum values
     // STL
     case GMIO_STL_ERROR_UNKNOWN_FORMAT:
         return Application::tr("GMIO_STL_ERROR_UNKNOWN_FORMAT");
@@ -515,21 +516,34 @@ Application::IoResult Application::importStl(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
     Application::IoResult result = { false, QString() };
-    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
+    const Options::StlIoLibrary lib =
+            Options::instance()->stlIoLibrary();
+    const Options::GmioStlImportType gmioImpType =
+            Options::instance()->gmioStlImportType();
     if (lib == Options::StlIoLibrary::Gmio) {
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
             gmio_stream stream = gmio_stream_qiodevice(&file);
             gmio_stl_read_options options = {};
-            options.func_stla_get_streamsize = &gmio_stla_infos_get_streamsize;
+            options.func_stla_get_streamsize = &gmio_stla_infos_probe_streamsize;
             options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
             int err = GMIO_ERROR_OK;
             while (gmio_no_error(err) && !file.atEnd()) {
-                Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
-                gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
-                err = gmio_stl_read(&stream, &meshcreator, &options);
-                if (gmio_no_error(err))
-                    doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
+                if (gmioImpType == Options::GmioStlImportType::OccStlMesh) {
+                    Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
+                    gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
+                    err = gmio_stl_read(&stream, &meshcreator, &options);
+                    if (gmio_no_error(err))
+                        doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
+                }
+                else if (gmioImpType == Options::GmioStlImportType::OccPolyTriShape) {
+                    gmio_stl_mesh_creator_occshape meshcreator;
+                    err = gmio_stl_read(&stream, &meshcreator, &options);
+                    if (gmio_no_error(err)) {
+                        const TopoDS_Shape& shape = meshcreator.shape();
+                        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
+                    }
+                }
             }
             result.ok = (err == GMIO_ERROR_OK);
             if (!result.ok)

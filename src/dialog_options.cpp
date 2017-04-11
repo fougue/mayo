@@ -35,6 +35,7 @@
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/occtools/qt_utils.h"
 
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QColorDialog>
 
 namespace Mayo {
@@ -43,7 +44,7 @@ namespace Internal {
 
 static QPixmap colorPixmap(const QColor& color)
 {
-    QPixmap pix(24, 24);
+    QPixmap pix(16, 16);
     pix.fill(color);
     return pix;
 }
@@ -57,18 +58,31 @@ DialogOptions::DialogOptions(QWidget *parent)
     m_ui->setupUi(this);
 
     const Options* opts = Options::instance();
-    const Options::StlIoLibrary lib = opts->stlIoLibrary();
-    if (lib == Options::StlIoLibrary::Gmio)
-        m_ui->radioBtn_UseGmio->setChecked(true);
-    else if (lib == Options::StlIoLibrary::OpenCascade)
-        m_ui->radioBtn_UseOcc->setChecked(true);
+    const auto& vecGpxMaterialMapping =
+            Mayo::enum_Graphic3dNameOfMaterial().mappings();
 
+    // STL import/export
+    auto btnGrp_stlIoLib = new QButtonGroup(this);
+    btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseGmio);
+    btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseOcc);
+    QObject::connect(
+                m_ui->radioBtn_UseGmio, &QAbstractButton::toggled,
+                m_ui->widget_gmioStlImport, &QWidget::setEnabled);
+
+    const Options::StlIoLibrary lib = opts->stlIoLibrary();
+    m_ui->radioBtn_UseGmio->setChecked(lib == Options::StlIoLibrary::Gmio);
+    m_ui->radioBtn_UseOcc->setChecked(lib == Options::StlIoLibrary::OpenCascade);
+
+    const Options::GmioStlImportType impType = opts->gmioStlImportType();
+    m_ui->radioBtn_GmioImportStlMesh->setChecked(
+                impType == Options::GmioStlImportType::OccStlMesh);
+    m_ui->radioBtn_GmioImportPolyTriShape->setChecked(
+                impType == Options::GmioStlImportType::OccPolyTriShape);
+
+    // BRep shape defaults
     m_ui->toolBtn_BRepShapeDefaultColor->setIcon(
                 Internal::colorPixmap(opts->brepShapeDefaultColor()));
-    m_ui->toolBtn_MeshDefaultColor->setIcon(
-                Internal::colorPixmap(opts->meshDefaultColor()));
     m_brepShapeDefaultColor = opts->brepShapeDefaultColor();
-    m_meshDefaultColor = opts->meshDefaultColor();
     QObject::connect(
                 m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked,
                 [=] {
@@ -76,6 +90,16 @@ DialogOptions::DialogOptions(QWidget *parent)
                           m_ui->toolBtn_BRepShapeDefaultColor,
                           &m_brepShapeDefaultColor);
     } );
+    for (const Enumeration::Mapping& m : vecGpxMaterialMapping)
+        m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.string, m.value);
+    m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
+                m_ui->comboBox_BRepShapeDefaultMaterial->findData(
+                    static_cast<int>(opts->brepShapeDefaultMaterial())));
+
+    // Mesh defaults
+    m_ui->toolBtn_MeshDefaultColor->setIcon(
+                Internal::colorPixmap(opts->meshDefaultColor()));
+    m_meshDefaultColor = opts->meshDefaultColor();
     QObject::connect(
                 m_ui->toolBtn_MeshDefaultColor, &QAbstractButton::clicked,
                 [=] {
@@ -83,22 +107,11 @@ DialogOptions::DialogOptions(QWidget *parent)
                           m_ui->toolBtn_MeshDefaultColor,
                           &m_meshDefaultColor);
     } );
-
-    const auto& vecGpxMaterialMapping =
-            Mayo::enum_Graphic3dNameOfMaterial().mappings();
-    for (const Enumeration::Mapping& mapping : vecGpxMaterialMapping) {
-        m_ui->comboBox_BRepShapeDefaultMaterial->addItem(
-                    mapping.string, mapping.value);
-        m_ui->comboBox_MeshDefaultMaterial->addItem(
-                    mapping.string, mapping.value);
-    }
-    m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
-                m_ui->comboBox_BRepShapeDefaultMaterial->findData(
-                    static_cast<int>(opts->brepShapeDefaultMaterial())));
+    for (const Enumeration::Mapping& m : vecGpxMaterialMapping)
+        m_ui->comboBox_MeshDefaultMaterial->addItem(m.string, m.value);
     m_ui->comboBox_MeshDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_MeshDefaultMaterial->findData(
                     static_cast<int>(opts->meshDefaultMaterial())));
-
     m_ui->checkBox_MeshShowEdges->setChecked(opts->meshDefaultShowEdges());
     m_ui->checkBox_MeshShowNodes->setChecked(opts->meshDefaultShowNodes());
 }
@@ -112,21 +125,30 @@ void DialogOptions::accept()
 {
     Options* opts = Options::instance();
 
+    // STL import/export
     if (m_ui->radioBtn_UseGmio->isChecked())
         opts->setStlIoLibrary(Options::StlIoLibrary::Gmio);
     else if (m_ui->radioBtn_UseOcc->isChecked())
         opts->setStlIoLibrary(Options::StlIoLibrary::OpenCascade);
 
-    opts->setBrepShapeDefaultColor(m_brepShapeDefaultColor);
-    opts->setMeshDefaultColor(m_meshDefaultColor);
+    if (opts->stlIoLibrary() == Options::StlIoLibrary::Gmio) {
+        if (m_ui->radioBtn_GmioImportStlMesh->isChecked())
+            opts->setGmioStlImportType(Options::GmioStlImportType::OccStlMesh);
+        else if (m_ui->radioBtn_GmioImportPolyTriShape->isChecked())
+            opts->setGmioStlImportType(Options::GmioStlImportType::OccPolyTriShape);
+    }
 
+    // BRep shape defaults
+    opts->setBrepShapeDefaultColor(m_brepShapeDefaultColor);
     opts->setBrepShapeDefaultMaterial(
                 static_cast<Graphic3d_NameOfMaterial>(
                     m_ui->comboBox_BRepShapeDefaultMaterial->currentData().toInt()));
+
+    // Mesh defaults
+    opts->setMeshDefaultColor(m_meshDefaultColor);
     opts->setMeshDefaultMaterial(
                 static_cast<Graphic3d_NameOfMaterial>(
                     m_ui->comboBox_MeshDefaultMaterial->currentData().toInt()));
-
     opts->setMeshDefaultShowEdges(m_ui->checkBox_MeshShowEdges->isChecked());
     opts->setMeshDefaultShowNodes(m_ui->checkBox_MeshShowNodes->isChecked());
 

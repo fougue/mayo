@@ -12,5 +12,6 @@
         <file>images/camera_photo.png</file>
         <file>images/document.png</file>
         <file>images/no.png</file>
+        <file>images/widget_pseudo_fold.png</file>
     </qresource>
 </RCC>

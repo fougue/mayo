@@ -42,11 +42,18 @@ public:
         Gmio,
         OpenCascade
     };
+    enum class GmioStlImportType {
+        OccStlMesh,
+        OccPolyTriShape
+    };
 
     static Options* instance();
 
     StlIoLibrary stlIoLibrary() const;
     void setStlIoLibrary(StlIoLibrary lib);
+
+    GmioStlImportType gmioStlImportType() const;
+    void setGmioStlImportType(GmioStlImportType imp);
 
     // BRep shape graphics
 
