@@ -29,30 +29,25 @@
 
 #pragma once
 
-#include "document_item.h"
-#include <StlMesh_Mesh.hxx>
+#include <Poly_Triangulation.hxx>
+class gp_XYZ;
+namespace occ { class StlMeshRandomAccess; }
 
-namespace Mayo {
+namespace occ {
 
-class StlMeshItem : public PartItem
+class MeshUtils
 {
 public:
-    StlMeshItem();
+    static double triangleSignedVolume(
+            const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
+    static double triangleArea(
+            const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
 
-    const Handle_StlMesh_Mesh& stlMesh() const;
-    void setStlMesh(const Handle_StlMesh_Mesh& mesh);
+    static double meshVolume(const occ::StlMeshRandomAccess& mesh);
+    static double meshArea(const occ::StlMeshRandomAccess& mesh);
 
-    bool isNull() const override;
-
-    static const char* type;
-    const char* dynType() const override;
-
-    PropertyInt propertyNodeCount; // Read-only
-    PropertyInt propertyTriangleCount; // Read-only
-    PropertyInt propertyDomainCount; // Read-only
-
-private:
-    Handle_StlMesh_Mesh m_stlMesh;
+    static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
+    static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 };
 
-} // namespace Mayo
+} // namespace occ

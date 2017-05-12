@@ -39,7 +39,9 @@ HEADERS += \
     src/widget_message_indicator.h \
     src/widget_gui_document_view3d.h \
     src/widget_occ_view.h \
-    src/dialog_export_options.h
+    src/dialog_export_options.h \
+    src/stl_mesh_random_access.h \
+    src/mesh_utils.h
 
 SOURCES += \
     src/brep_shape_item.cpp \
@@ -71,7 +73,9 @@ SOURCES += \
     src/widget_message_indicator.cpp \
     src/widget_gui_document_view3d.cpp \
     src/widget_occ_view.cpp \
-    src/dialog_export_options.cpp
+    src/dialog_export_options.cpp \
+    src/stl_mesh_random_access.cpp \
+    src/mesh_utils.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -108,6 +112,7 @@ SOURCES += \
 isEmpty(CASCADE_ROOT):error(Variable CASCADE_ROOT is empty)
 include(occ.pri)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
+LIBS += -lTKG2d
 LIBS += -lTKBRep -lTKSTL
 LIBS += -lTKXSBase -lTKIGES -lTKSTEP
 LIBS += -lTKMeshVS -lTKXSDRAW

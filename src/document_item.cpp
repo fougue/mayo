@@ -36,7 +36,7 @@ namespace Mayo {
 
 DocumentItem::DocumentItem()
     : propertyLabel(
-          this, QCoreApplication::translate("Mayo::DocumentItem", "label"))
+          this, QCoreApplication::translate("Mayo::DocumentItem", "Label"))
 {
 }
 
@@ -64,6 +64,14 @@ void DocumentItem::onPropertyChanged(Property *prop)
 {
     if (m_document != nullptr)
         emit m_document->itemPropertyChanged(this, prop);
+}
+
+PartItem::PartItem()
+    : propertyVolume(
+          this, QCoreApplication::translate("Mayo::PartItem", "Volume")),
+      propertyArea(
+          this, QCoreApplication::translate("Mayo::PartItem", "Area"))
+{
 }
 
 const QString& PartItem::filePath() const

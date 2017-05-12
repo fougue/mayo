@@ -34,6 +34,8 @@
 #include "brep_shape_item.h"
 #include "stl_mesh_item.h"
 #include "options.h"
+#include "mesh_utils.h"
+#include "stl_mesh_random_access.h"
 #include "fougtools/qttools/task/progress.h"
 
 #include <QtCore/QFile>
@@ -41,6 +43,8 @@
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <IGESControl_Controller.hxx>
@@ -179,6 +183,27 @@ static BRepShapeItem* createBRepShapeItem(
     auto partItem = new BRepShapeItem;
     partItem->setFilePath(filepath);
     partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
+    GProp_GProps system;
+    BRepGProp::VolumeProperties(shape, system);
+    partItem->propertyVolume.setValue(system.Mass());
+    BRepGProp::SurfaceProperties(shape, system);
+    partItem->propertyArea.setValue(system.Mass());
+    partItem->setBRepShape(shape);
+    return partItem;
+}
+
+static BRepShapeItem* createWrapBRepShapeItem(
+        const QString& filepath,
+        const TopoDS_Shape& shape,
+        const Handle_Poly_Triangulation& shapeTriangulation)
+{
+    auto partItem = new BRepShapeItem;
+    partItem->setFilePath(filepath);
+    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
+    partItem->propertyVolume.setValue(
+                occ::MeshUtils::triangulationVolume(shapeTriangulation));
+    partItem->propertyArea.setValue(
+                occ::MeshUtils::triangulationArea(shapeTriangulation));
     partItem->setBRepShape(shape);
     return partItem;
 }
@@ -189,8 +214,12 @@ static StlMeshItem* createStlMeshItem(
     auto partItem = new StlMeshItem;
     partItem->setFilePath(filepath);
     partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-    partItem->propertyNodeCount.setValue(mesh->NbVertices());
-    partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
+    const occ::StlMeshRandomAccess meshAccess(mesh);
+    partItem->propertyNodeCount.setValue(meshAccess.vertexCount());
+    partItem->propertyTriangleCount.setValue(meshAccess.triangleCount());
+    partItem->propertyDomainCount.setValue(meshAccess.domainCount());
+    partItem->propertyVolume.setValue(occ::MeshUtils::meshVolume(meshAccess));
+    partItem->propertyArea.setValue(occ::MeshUtils::meshArea(meshAccess));
     partItem->setStlMesh(mesh);
     return partItem;
 }
@@ -540,8 +569,10 @@ Application::IoResult Application::importStl(
                     gmio_stl_mesh_creator_occshape meshcreator;
                     err = gmio_stl_read(&stream, &meshcreator, &options);
                     if (gmio_no_error(err)) {
-                        const TopoDS_Shape& shape = meshcreator.shape();
-                        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
+                        doc->addItem(Internal::createWrapBRepShapeItem(
+                                         filepath,
+                                         meshcreator.shape(),
+                                         meshcreator.polytri()));
                     }
                 }
             }

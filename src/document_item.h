@@ -63,6 +63,8 @@ private:
 class PartItem : public DocumentItem
 {
 public:
+    PartItem();
+
     const QString& filePath() const;
     void setFilePath(const QString& v);
 
@@ -70,6 +72,9 @@ public:
 
     static const char* type;
     const char* dynType() const override;
+
+    PropertyDouble propertyVolume; // Read-only
+    PropertyDouble propertyArea; // Read-only
 
 private:
     QString m_filePath;

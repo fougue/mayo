@@ -29,6 +29,8 @@
 
 #include "brep_shape_item.h"
 
+#include <QtCore/QCoreApplication>
+
 namespace Mayo {
 
 const TopoDS_Shape &BRepShapeItem::brepShape() const

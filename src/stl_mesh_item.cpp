@@ -37,7 +37,9 @@ StlMeshItem::StlMeshItem()
     : propertyNodeCount(
           this, QCoreApplication::translate("Mayo::StlMeshItem", "Node count")),
       propertyTriangleCount(
-          this, QCoreApplication::translate("Mayo::StlMeshItem", "Triangle count"))
+          this, QCoreApplication::translate("Mayo::StlMeshItem", "Triangle count")),
+      propertyDomainCount(
+          this, QCoreApplication::translate("Mayo::StlMeshItem", "Domain count"))
 {
 }
 
