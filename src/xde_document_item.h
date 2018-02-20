@@ -30,23 +30,46 @@
 #pragma once
 
 #include "document_item.h"
-#include <TopoDS_Shape.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <XCAFDoc_ColorTool.hxx>
 
 namespace Mayo {
 
-class BRepShapeItem : public PartItem
+class XdeDocumentItem : public PartItem
 {
 public:
-    const TopoDS_Shape& brepShape() const;
-    void setBRepShape(const TopoDS_Shape& shape);
+    XdeDocumentItem(const Handle_TDocStd_Document& doc);
 
-    bool isNull() const override;
+    const Handle_TDocStd_Document& cafDoc() const;
+    const Handle_XCAFDoc_ShapeTool& shapeTool() const;
+    const Handle_XCAFDoc_ColorTool& colorTool() const;
+
+    TopoDS_Shape shape(const TDF_Label& lbl) const;
+    QString findLabelName(const TDF_Label& lbl) const;
+
+    TDF_LabelSequence topLevelFreeShapeLabels() const;
+
+    bool isShape(const TDF_Label& lbl) const;
+    bool isShapeAssembly(const TDF_Label& lbl) const;
+    bool isShapeReference(const TDF_Label& lbl) const;
+    bool isShapeSimple(const TDF_Label& lbl) const;
+    bool isShapeComponent(const TDF_Label& lbl) const;
+    bool isShapeCompound(const TDF_Label& lbl) const;
+    bool isShapeSub(const TDF_Label& lbl) const;
+
+    bool hasShapeColor(const TDF_Label& lbl) const;
+    Quantity_Color shapeColor(const TDF_Label& lbl) const;
+
+    TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
 
     static const char* type;
     const char* dynType() const override;
 
 private:
-    TopoDS_Shape m_brepShape;
+    Handle_TDocStd_Document m_cafDoc;
+    Handle_XCAFDoc_ShapeTool m_shapeTool;
+    Handle_XCAFDoc_ColorTool m_colorTool;
 };
 
 } // namespace Mayo

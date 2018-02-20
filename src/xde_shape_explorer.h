@@ -27,28 +27,47 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#include "brep_shape_item.h"
+#pragma once
 
-#include <QtCore/QCoreApplication>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <queue>
 
 namespace Mayo {
 
-const TopoDS_Shape &BRepShapeItem::brepShape() const
+class XdeShapeExplorer
 {
-    return m_brepShape;
-}
+public:
+    XdeShapeExplorer(const Handle_XCAFDoc_ShapeTool& shapeTool);
+    XdeShapeExplorer(const Handle_XCAFDoc_ShapeTool& shapeTool,
+                     const TDF_Label& startLabel);
 
-void BRepShapeItem::setBRepShape(const TopoDS_Shape &shape)
-{
-    m_brepShape = shape;
-}
+    void begin(const TDF_Label& label);
+    void goNext();
+    bool atEnd() const;
 
-bool BRepShapeItem::isNull() const
-{
-    return m_brepShape.IsNull();
-}
+    const TDF_Label& current() const;
+    unsigned currentIterationId() const;
+    const TDF_Label& currentParent() const;
+    unsigned currentParentIterationId() const;
 
-const char* BRepShapeItem::type = "8095882e-8b1f-4b19-a0dd-f74f27748169";
-const char* BRepShapeItem::dynType() const { return BRepShapeItem::type; }
+private:
+    void enqueueChildren(const TDF_Label& label, unsigned iterationId);
+
+    struct ChildrenQueue {
+        TDF_Label parentLabel;
+        unsigned parentIterationId = 0;
+        std::queue<TDF_Label> queueChildLabel;
+        void push(const TDF_Label& lbl);
+        void pop();
+        const TDF_Label& front() const;
+        bool isEmpty() const;
+    };
+
+    std::queue<ChildrenQueue> m_queueMaster;
+    Handle_XCAFDoc_ShapeTool m_shapeTool;
+    TDF_Label m_current;
+    unsigned m_currentIterationId = 0;
+    bool m_atEnd = true;
+};
 
 } // namespace Mayo

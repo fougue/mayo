@@ -62,16 +62,27 @@ const QString &Property::label() const
     return m_label;
 }
 
+bool Property::isUserReadOnly() const
+{
+    return m_isUserReadOnly;
+}
+
+void Property::setUserReadOnly(bool on)
+{
+    m_isUserReadOnly = on;
+}
+
 Property::Property(PropertyOwner *owner, const QString &label)
     : m_owner(owner),
       m_label(label)
 {
-    m_owner->addProperty(this);
+    if (m_owner != nullptr)
+        m_owner->addProperty(this);
 }
 
 void Property::notifyChanged()
 {
-    if (!m_owner->isPropertyChangedBlocked())
+    if (m_owner != nullptr && !m_owner->isPropertyChangedBlocked())
         m_owner->onPropertyChanged(this);
 }
 
@@ -84,15 +95,62 @@ const char Property::QDateTimeTypeName[] = "Mayo::PropertyQDateTime";
 const char Property::EnumerationTypeName[] = "Mayo::PropertyEnumeration";
 const char Property::OccColorTypeName[] = "Mayo::PropertyOccColor";
 
-PropertyOwner::PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner *owner)
+PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner *owner)
     : m_owner(owner)
 {
-    m_owner->blockPropertyChanged(true);
+    if (m_owner != nullptr)
+        m_owner->blockPropertyChanged(true);
 }
 
-PropertyOwner::PropertyChangedBlocker::~PropertyChangedBlocker()
+PropertyChangedBlocker::~PropertyChangedBlocker()
 {
-    m_owner->blockPropertyChanged(false);
+    if (m_owner != nullptr)
+        m_owner->blockPropertyChanged(false);
+}
+
+HandleProperty::HandleProperty(HandleProperty &&other)
+{
+    this->swap(std::move(other));
+}
+
+HandleProperty &HandleProperty::operator=(HandleProperty &&other)
+{
+    this->swap(std::move(other));
+    return *this;
+}
+
+HandleProperty::HandleProperty(Property *prop, HandleProperty::Storage storage)
+    : m_prop(prop),
+      m_storage(storage)
+{
+}
+
+HandleProperty::~HandleProperty()
+{
+    if (m_storage == HandleProperty::Owner)
+        delete m_prop;
+}
+
+Property *HandleProperty::get() const
+{
+    return m_prop;
+}
+
+Property *HandleProperty::operator->() const
+{
+    return m_prop;
+}
+
+HandleProperty::Storage HandleProperty::storage() const
+{
+    return m_storage;
+}
+
+void HandleProperty::swap(HandleProperty &&other)
+{
+    m_prop = other.m_prop;
+    m_storage = other.m_storage;
+    other.m_prop = nullptr;
 }
 
 } // namespace Mayo

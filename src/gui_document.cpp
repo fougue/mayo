@@ -35,9 +35,9 @@
 #include "widget_gui_document_view3d.h"
 #include "widget_occ_view.h"
 
-#include "gpx_brep_shape_item.h"
+#include "gpx_xde_document_item.h"
 #include "gpx_stl_mesh_item.h"
-#include "brep_shape_item.h"
+#include "xde_document_item.h"
 #include "stl_mesh_item.h"
 
 #include <Standard_Version.hxx>
@@ -59,7 +59,7 @@ namespace Mayo {
 namespace Internal {
 
 template<typename ITEM> struct ItemTraits { };
-template<> struct ItemTraits<BRepShapeItem> { typedef GpxBRepShapeItem GpxType; };
+template<> struct ItemTraits<XdeDocumentItem> { typedef GpxXdeDocumentItem GpxType; };
 template<> struct ItemTraits<StlMeshItem> { typedef GpxStlMeshItem GpxType; };
 
 template<typename ITEM>
@@ -76,7 +76,7 @@ bool createGpxIfItemOfType(GpxDocumentItem** gpx, DocumentItem* item)
 static GpxDocumentItem* createGpxForItem(DocumentItem* item)
 {
     GpxDocumentItem* gpx = nullptr;
-    createGpxIfItemOfType<BRepShapeItem>(&gpx, item);
+    createGpxIfItemOfType<XdeDocumentItem>(&gpx, item);
     createGpxIfItemOfType<StlMeshItem>(&gpx, item);
     return gpx;
 }

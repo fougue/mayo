@@ -41,6 +41,7 @@ class DocumentItem : public PropertyOwner
 {
 public:
     DocumentItem();
+    virtual ~DocumentItem();
 
     Document* document();
     const Document* document() const;
@@ -54,19 +55,18 @@ public:
 
 protected:
     void onPropertyChanged(Property* prop) override;
+    void addChildItem(DocumentItem* item);
+    void setParentItem(DocumentItem* parentItem);
 
 private:
     Document* m_document = nullptr;
-    std::vector<DocumentItem*> m_outItems;
+    std::vector<DocumentItem*> m_vecOutItem;
 };
 
 class PartItem : public DocumentItem
 {
 public:
     PartItem();
-
-    const QString& filePath() const;
-    void setFilePath(const QString& v);
 
     virtual bool isNull() const;
 
@@ -75,9 +75,6 @@ public:
 
     PropertyDouble propertyVolume; // Read-only
     PropertyDouble propertyArea; // Read-only
-
-private:
-    QString m_filePath;
 };
 
 bool sameType(const DocumentItem* lhs, const DocumentItem* rhs);

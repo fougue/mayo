@@ -35,11 +35,11 @@
 namespace Mayo {
 
 class Property;
-class PropertyEnumeration;
 
 class PropertyOwner
 {
 public:
+    // TODO change to computed properties, remove member m_properties
     const std::vector<Property*>& properties() const;
 
 protected:
@@ -49,17 +49,17 @@ protected:
 
     void addProperty(Property* prop);
 
-    struct PropertyChangedBlocker {
-        PropertyChangedBlocker(PropertyOwner* owner);
-        ~PropertyChangedBlocker();
-        PropertyOwner* const m_owner;
-    };
-
 private:
     friend class Property;
     friend struct PropertyChangedBlocker;
     std::vector<Property*> m_properties;
     bool m_propertyChangedBlocked = false;
+};
+
+struct PropertyChangedBlocker {
+    PropertyChangedBlocker(PropertyOwner* owner);
+    ~PropertyChangedBlocker();
+    PropertyOwner* const m_owner;
 };
 
 #define Mayo_PropertyChangedBlocker(owner) \
@@ -78,6 +78,9 @@ public:
 
     const QString& label() const;
 
+    bool isUserReadOnly() const;
+    void setUserReadOnly(bool on);
+
     virtual const char* dynTypeName() const = 0;
 
     static const char BoolTypeName[];
@@ -95,6 +98,35 @@ protected:
 private:
     PropertyOwner* const m_owner = nullptr;
     const QString m_label;
+    bool m_isUserReadOnly = false;
+};
+
+class HandleProperty
+{
+public:
+    enum Storage {
+        Pointer,
+        Owner
+    };
+
+    HandleProperty() = default;
+    HandleProperty(Property* prop, Storage storage);
+    HandleProperty(HandleProperty&& other);
+    HandleProperty(const HandleProperty&) = delete;
+    ~HandleProperty();
+
+    HandleProperty& operator=(HandleProperty&& other);
+    HandleProperty& operator=(const HandleProperty&) = delete;
+
+    Property* get() const;
+    Property* operator->() const;
+    Storage storage() const;
+
+private:
+    void swap(HandleProperty&& other);
+
+    Property* m_prop = nullptr;
+    Storage m_storage = Pointer;
 };
 
 } // namespace Mayo

@@ -91,6 +91,7 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionSaveImageView"/>
+    <addaction name="actionInspectXDE"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
@@ -152,6 +153,11 @@
   <action name="actionExportSelectedItems">
    <property name="text">
     <string>Export selected items</string>
+   </property>
+  </action>
+  <action name="actionInspectXDE">
+   <property name="text">
+    <string>Inspect XDE</string>
    </property>
   </action>
  </widget>

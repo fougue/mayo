@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include "property.h"
+
 #include <QtWidgets/QWidget>
 #include <vector>
 
@@ -41,7 +43,6 @@ namespace Mayo {
 class DocumentItem;
 class GuiApplication;
 class GpxDocumentItem;
-class Property;
 
 class WidgetDocumentItemProps : public QWidget
 {
@@ -52,6 +53,7 @@ public:
     void setGuiApplication(GuiApplication* guiApp);
 
     void editDocumentItems(const std::vector<DocumentItem*>& vecDocItem);
+    void editProperties(const std::vector<HandleProperty>& vecHndProp);
 
 private:
     void connectPropertyValueChangeSignals(bool on);
@@ -60,6 +62,8 @@ private:
 
     void createQtProperties(
             const std::vector<Property*>& properties, QtProperty* parentProp);
+    void createQtProperty(
+            Property* property, QtProperty* parentProp);
     void mapProperty(QtVariantProperty* qtProp, Property* prop);
 
     struct QtProp_Prop {

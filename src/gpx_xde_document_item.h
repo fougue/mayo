@@ -29,29 +29,23 @@
 
 #pragma once
 
-#include "brep_shape_item.h"
+#include "xde_document_item.h"
 #include "gpx_document_item.h"
-#include <AIS_Shape.hxx>
+#include <XCAFPrs_AISObject.hxx>
 
 namespace Mayo {
 
-class GpxBRepShapeItem :
-        public GpxCovariantDocumentItem<BRepShapeItem, AIS_Shape, Handle_AIS_Shape>
+class GpxXdeDocumentItem :
+        public GpxCovariantDocumentItem<XdeDocumentItem, XCAFPrs_AISObject, Handle_XCAFPrs_AISObject>,
+        public GpxBRepShapeCommonProperties
 {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxBRepShapeItem)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxXdeDocumentItem)
 
 public:
-    GpxBRepShapeItem(BRepShapeItem* item);
-
-    PropertyInt propertyTransparency;
-    PropertyEnumeration propertyDisplayMode;
-    PropertyBool propertyShowFaceBoundary;
+    GpxXdeDocumentItem(XdeDocumentItem* item);
 
 protected:
     void onPropertyChanged(Property* prop) override;
-
-private:
-    static const Enumeration& enum_DisplayMode();
 };
 
 } // namespace Mayo

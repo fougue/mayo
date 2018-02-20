@@ -41,6 +41,9 @@ StlMeshItem::StlMeshItem()
       propertyDomainCount(
           this, QCoreApplication::translate("Mayo::StlMeshItem", "Domain count"))
 {
+    this->propertyNodeCount.setUserReadOnly(true);
+    this->propertyTriangleCount.setUserReadOnly(true);
+    this->propertyDomainCount.setUserReadOnly(true);
 }
 
 const Handle_StlMesh_Mesh &StlMeshItem::stlMesh() const

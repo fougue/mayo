@@ -31,6 +31,7 @@
 #include "ui_mainwindow.h"
 
 #include "application.h"
+#include "xde_document_item.h"
 #include "dialog_about.h"
 #include "dialog_export_options.h"
 #include "dialog_options.h"
@@ -50,6 +51,11 @@
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
+
+#include "dialog_inspect_xde.h"
+#include <STEPCAFControl_Reader.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFApp_Application.hxx>
 
 namespace Mayo {
 
@@ -71,8 +77,7 @@ static Application::PartFormat partFormatFromFilter(const QString& filter)
                 Application::PartFormat::Unknown;
 }
 
-struct ImportExportSettings
-{
+struct ImportExportSettings {
     QString openDir;
     QString selectedFilter;
 
@@ -96,7 +101,14 @@ struct OpenFileNames {
     ImportExportSettings lastIoSettings;
     Application::PartFormat selectedFormat;
 
-    static OpenFileNames get(QWidget* parentWidget)
+    enum GetOption {
+        GetOne,
+        GetMany
+    };
+
+    static OpenFileNames get(
+            QWidget* parentWidget,
+            OpenFileNames::GetOption option = OpenFileNames::GetMany)
     {
         OpenFileNames result;
         result.selectedFormat = Application::PartFormat::Unknown;
@@ -104,13 +116,22 @@ struct OpenFileNames {
         QStringList listPartFormatFilter = Application::partFormatFilters();
         const QString allFilesFilter = Application::tr("All files(*.*)");
         listPartFormatFilter.append(allFilesFilter);
-        result.listFilepath =
-                QFileDialog::getOpenFileNames(
-                    parentWidget,
-                    Application::tr("Select Part File"),
-                    result.lastIoSettings.openDir,
-                    listPartFormatFilter.join(QLatin1String(";;")),
-                    &result.lastIoSettings.selectedFilter);
+        const QString dlgTitle = Application::tr("Select Part File");
+        const QString& dlgOpenDir = result.lastIoSettings.openDir;
+        const QString dlgFilter = listPartFormatFilter.join(QLatin1String(";;"));
+        QString* dlgPtrSelFilter = &result.lastIoSettings.selectedFilter;
+        if (option == OpenFileNames::GetOne) {
+            const QString filepath =
+                    QFileDialog::getOpenFileName(
+                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
+            result.listFilepath.clear();
+            result.listFilepath.push_back(filepath);
+        }
+        else {
+            result.listFilepath =
+                    QFileDialog::getOpenFileNames(
+                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
+        }
         if (!result.listFilepath.isEmpty()) {
             result.lastIoSettings.openDir =
                     QFileInfo(result.listFilepath.front()).canonicalPath();
@@ -155,6 +176,9 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
                 this, &MainWindow::saveImageView);
+    QObject::connect(
+                m_ui->actionInspectXDE, &QAction::triggered,
+                this, &MainWindow::inspectXde);
     QObject::connect(
                 m_ui->actionOptions, &QAction::triggered,
                 this, &MainWindow::editOptions);
@@ -297,6 +321,23 @@ void MainWindow::saveImageView()
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
+void MainWindow::inspectXde()
+{
+    const std::vector<DocumentItem*> vecDocItem =
+            m_ui->widget_ApplicationTree->selectedDocumentItems();
+    const XdeDocumentItem* xdeDocItem = nullptr;
+    for (const DocumentItem* docItem : vecDocItem) {
+        xdeDocItem = dynamic_cast<const XdeDocumentItem*>(docItem);
+        if (xdeDocItem != nullptr)
+            break;
+    }
+    if (xdeDocItem != nullptr) {
+        auto dlg = new DialogInspectXde(this);
+        dlg->load(xdeDocItem->cafDoc());
+        qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    }
+}
+
 void MainWindow::aboutMayo()
 {
     auto dlg = new DialogAbout(this);
@@ -319,8 +360,16 @@ void MainWindow::onGuiDocumentAdded(GuiDocument *guiDoc)
 
 void MainWindow::onApplicationTreeWidgetSelectionChanged()
 {
-    m_ui->widget_DocumentProps->editDocumentItems(
-                m_ui->widget_ApplicationTree->selectedDocumentItems());
+    const std::vector<DocumentItem*> vecDocItem =
+            m_ui->widget_ApplicationTree->selectedDocumentItems();
+    if (vecDocItem.size() >= 1) {
+        m_ui->widget_DocumentProps->editDocumentItems(vecDocItem);
+    }
+    else {
+        const std::vector<HandleProperty> vecHndProp =
+                m_ui->widget_ApplicationTree->propertiesOfCurrentObject();
+        m_ui->widget_DocumentProps->editProperties(vecHndProp);
+    }
 }
 
 void MainWindow::onOperationFinished(bool ok, const QString &msg)

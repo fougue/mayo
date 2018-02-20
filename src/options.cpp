@@ -32,7 +32,6 @@
 namespace Mayo {
 
 static const char keyStlIoLibrary[] = "Core/stlIoLibrary";
-static const char keyGmioStlImportType[] = "Core/gmioStlImportType";
 static const char keyBrepShapeDefaultColor[] = "BRepShapeGpx/defaultColor";
 static const char keyBrepShapeDefaultMaterial[] = "BRepShapeGpx/defaultMaterial";
 static const char keyMeshDefaultColor[] = "MeshGpx/defaultColor";
@@ -56,20 +55,6 @@ Options::StlIoLibrary Options::stlIoLibrary() const
 void Options::setStlIoLibrary(Options::StlIoLibrary lib)
 {
     m_settings.setValue(keyStlIoLibrary, static_cast<int>(lib));
-}
-
-Options::GmioStlImportType Options::gmioStlImportType() const
-{
-    static const int defaultVal =
-            static_cast<int>(GmioStlImportType::OccStlMesh);
-    const int gmioStlImpType =
-            m_settings.value(keyGmioStlImportType, defaultVal).toInt();
-    return static_cast<GmioStlImportType>(gmioStlImpType);
-}
-
-void Options::setGmioStlImportType(Options::GmioStlImportType imp)
-{
-    m_settings.setValue(keyGmioStlImportType, static_cast<int>(imp));
 }
 
 QColor Options::brepShapeDefaultColor() const

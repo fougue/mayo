@@ -58,6 +58,7 @@ private:
     void quitApp();
     void editOptions();
     void saveImageView();
+    void inspectXde();
     void aboutMayo();
     void reportbug();
 

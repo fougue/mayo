@@ -171,7 +171,6 @@ template<> struct QtPropertyInit<EnumTag> {
 // -- Generic API
 // --
 
-
 template<typename T>
 static QtVariantProperty* createQtProperty(
         const Property* prop, QtVariantPropertyManager* varPropMgr)
@@ -258,6 +257,28 @@ void WidgetDocumentItemProps::editDocumentItems(
     }
 }
 
+void WidgetDocumentItemProps::editProperties(
+        const std::vector<HandleProperty>& vecHndProp)
+{
+    m_currentDocItem = nullptr;
+    m_currentGpxDocItem = nullptr;
+    if (!vecHndProp.empty()) {
+        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
+        m_varPropMgr->clear();
+        m_ui->propsBrowser_DocumentItem->clear();
+        m_vecQtPropProp.clear();
+        QtProperty* propGroupData =
+                m_varPropMgr->addProperty(
+                    QtVariantPropertyManager::groupTypeId(), tr("Properties"));
+        m_ui->propsBrowser_DocumentItem->addProperty(propGroupData);
+        for (const HandleProperty& propHnd : vecHndProp)
+            this->createQtProperty(propHnd.get(), propGroupData);
+    }
+    else {
+        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+    }
+}
+
 void WidgetDocumentItemProps::connectPropertyValueChangeSignals(bool on)
 {
     if (on) {
@@ -276,33 +297,34 @@ void WidgetDocumentItemProps::connectPropertyValueChangeSignals(bool on)
 void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
         QtProperty *qtProp, const QVariant &value)
 {
-    if (m_currentDocItem != nullptr || m_currentGpxDocItem != nullptr) {
-        auto itFound = std::find_if(
-                    m_vecQtPropProp.cbegin(),
-                    m_vecQtPropProp.cend(),
-                    [=](const QtProp_Prop& pair) { return pair.qtProp == qtProp; });
-        if (itFound != m_vecQtPropProp.cend()) {
-            Property* prop = itFound->prop;
-            const char* strPropType = prop->dynTypeName();
-            typedef void (*FuncSetPropertyValue)(Property*, const QVariant&);
-            typedef std::pair<const char*, FuncSetPropertyValue>
-                    PropType_FuncSetPropertyValue;
-            static const PropType_FuncSetPropertyValue arrayPair[] = {
-                { Property::OccColorTypeName, &Internal::setPropertyValue<QColor>},
-                { Property::EnumerationTypeName, &Internal::setPropertyValue<Internal::EnumTag> },
-                { Property::BoolTypeName, &Internal::setPropertyValue<bool> },
-                { Property::IntTypeName, &Internal::setPropertyValue<int> },
-                { Property::DoubleTypeName, &Internal::setPropertyValue<double> },
-                { Property::QStringTypeName, &Internal::setPropertyValue<QString> }
-            };
-            for (const PropType_FuncSetPropertyValue& pair : arrayPair) {
-                const char* propDynTypeName = pair.first;
-                const FuncSetPropertyValue funcSetPropValue = pair.second;
-                if (std::strcmp(strPropType, propDynTypeName) == 0) {
-                    funcSetPropValue(prop, value);
-                    break;
-                }
-            }
+    if (m_currentDocItem == nullptr && m_currentGpxDocItem == nullptr)
+        return;
+
+    auto itFound = std::find_if(
+                m_vecQtPropProp.cbegin(),
+                m_vecQtPropProp.cend(),
+                [=](const QtProp_Prop& pair) { return pair.qtProp == qtProp; });
+    if (itFound == m_vecQtPropProp.cend())
+        return;
+
+    Property* prop = itFound->prop;
+    const char* strPropType = prop->dynTypeName();
+    using FuncSetPropertyValue = void (*)(Property*, const QVariant&);
+    using PropType_FuncSetPropertyValue = std::pair<const char*, FuncSetPropertyValue>;
+    static const PropType_FuncSetPropertyValue arrayPair[] = {
+        { Property::OccColorTypeName, &Internal::setPropertyValue<QColor> },
+        { Property::EnumerationTypeName, &Internal::setPropertyValue<Internal::EnumTag> },
+        { Property::BoolTypeName, &Internal::setPropertyValue<bool> },
+        { Property::IntTypeName, &Internal::setPropertyValue<int> },
+        { Property::DoubleTypeName, &Internal::setPropertyValue<double> },
+        { Property::QStringTypeName, &Internal::setPropertyValue<QString> }
+    };
+    for (const PropType_FuncSetPropertyValue& pair : arrayPair) {
+        const char* propDynTypeName = pair.first;
+        const FuncSetPropertyValue funcSetPropValue = pair.second;
+        if (std::strcmp(strPropType, propDynTypeName) == 0) {
+            funcSetPropValue(prop, value);
+            break;
         }
     }
 }
@@ -310,35 +332,43 @@ void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
 void WidgetDocumentItemProps::createQtProperties(
         const std::vector<Property*>& properties, QtProperty *parentProp)
 {
-    typedef QtVariantProperty* (*FuncCreateQtProperty)(
-                const Property*, QtVariantPropertyManager*);
-    typedef std::pair<const char*, FuncCreateQtProperty>
-            PropType_FuncCreateQtProp;
+    for (Property* prop : properties)
+        this->createQtProperty(prop, parentProp);
+}
+
+void WidgetDocumentItemProps::createQtProperty(
+        Property *property, QtProperty *parentProp)
+{
+    using FuncCreateQtProperty =
+        QtVariantProperty* (*)(const Property*, QtVariantPropertyManager*);
+    using PropType_FuncCreateQtProp =
+        std::pair<const char*, FuncCreateQtProperty>;
     static const PropType_FuncCreateQtProp arrayPair[] = {
-        { Property::OccColorTypeName, &Internal::createQtProperty<QColor>},
+        { Property::OccColorTypeName, &Internal::createQtProperty<QColor> },
         { Property::EnumerationTypeName, &Internal::createQtProperty<Internal::EnumTag> },
         { Property::BoolTypeName, &Internal::createQtProperty<bool> },
         { Property::IntTypeName, &Internal::createQtProperty<int> },
         { Property::DoubleTypeName, &Internal::createQtProperty<double> },
         { Property::QStringTypeName, &Internal::createQtProperty<QString> }
     };
-    for (Property* prop : properties) {
-        QtVariantProperty* qtProp = nullptr;
-        const char* strPropType = prop->dynTypeName();
-        for (const PropType_FuncCreateQtProp& pair : arrayPair) {
-            const char* propDynTypeName = pair.first;
-            const FuncCreateQtProperty funcCreateQtProp = pair.second;
-            if (std::strcmp(strPropType, propDynTypeName) == 0) {
-                qtProp = funcCreateQtProp(prop, m_varPropMgr);
-                break;
-            }
+
+    QtVariantProperty* qtProp = nullptr;
+    const char* strPropType = property->dynTypeName();
+    for (const PropType_FuncCreateQtProp& pair : arrayPair) {
+        const char* propDynTypeName = pair.first;
+        const FuncCreateQtProperty funcCreateQtProp = pair.second;
+        if (std::strcmp(strPropType, propDynTypeName) == 0) {
+            qtProp = funcCreateQtProp(property, m_varPropMgr);
+            break;
         }
-        if (qtProp != nullptr) {
-            parentProp->addSubProperty(qtProp);
-            foreach (QtBrowserItem* item, m_ui->propsBrowser_DocumentItem->items(qtProp))
-                m_ui->propsBrowser_DocumentItem->setExpanded(item, false);
-            this->mapProperty(qtProp, prop);
-        }
+    }
+    if (qtProp != nullptr) {
+        parentProp->addSubProperty(qtProp);
+        if (property->isUserReadOnly())
+            qtProp->setAttribute(QLatin1String("readOnly"), true);
+        foreach (QtBrowserItem* item, m_ui->propsBrowser_DocumentItem->items(qtProp))
+            m_ui->propsBrowser_DocumentItem->setExpanded(item, false);
+        this->mapProperty(qtProp, property);
     }
 }
 

@@ -32,11 +32,18 @@
 #include "document.h"
 #include <QtCore/QCoreApplication>
 
+#include <cassert>
+#include <limits>
+
 namespace Mayo {
 
 DocumentItem::DocumentItem()
     : propertyLabel(
           this, QCoreApplication::translate("Mayo::DocumentItem", "Label"))
+{
+}
+
+DocumentItem::~DocumentItem()
 {
 }
 
@@ -57,7 +64,7 @@ void DocumentItem::setDocument(Document *doc)
 
 const std::vector<DocumentItem*>& DocumentItem::outItems() const
 {
-    return m_outItems;
+    return m_vecOutItem;
 }
 
 void DocumentItem::onPropertyChanged(Property *prop)
@@ -72,16 +79,10 @@ PartItem::PartItem()
       propertyArea(
           this, QCoreApplication::translate("Mayo::PartItem", "Area"))
 {
-}
-
-const QString& PartItem::filePath() const
-{
-    return m_filePath;
-}
-
-void PartItem::setFilePath(const QString &v)
-{
-    m_filePath = v;
+    this->propertyVolume.setRange(0., std::numeric_limits<double>::max());
+    this->propertyArea.setRange(0., std::numeric_limits<double>::max());
+    this->propertyVolume.setUserReadOnly(true);
+    this->propertyArea.setUserReadOnly(true);
 }
 
 bool PartItem::isNull() const

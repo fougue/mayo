@@ -29,15 +29,16 @@
 
 #pragma once
 
+#include "property.h"
+
 #include <QtWidgets/QWidget>
-#include <vector>
 class QTreeWidgetItem;
 
 namespace Mayo {
 
 class Document;
 class DocumentItem;
-class Property;
+class XdeDocumentItem;
 
 class WidgetApplicationTree : public QWidget
 {
@@ -48,6 +49,7 @@ public:
     ~WidgetApplicationTree();
 
     std::vector<DocumentItem*> selectedDocumentItems() const;
+    std::vector<HandleProperty> propertiesOfCurrentObject() const;
 
 signals:
     void selectionChanged();
@@ -61,22 +63,14 @@ private:
 
     void onTreeWidgetDocumentSelectionChanged();
 
-    struct TreeWidgetItem_Document {
-        QTreeWidgetItem* treeItem;
-        Document* doc;
-    };
-    struct TreeWidgetItem_DocumentItem {
-        QTreeWidgetItem* treeItem;
-        DocumentItem* docItem;
-    };
-    std::vector<TreeWidgetItem_Document>::iterator
-    findTreeItemDocument(const Document* doc);
-    std::vector<TreeWidgetItem_DocumentItem>::iterator
-    findTreeItemDocumentItem(const DocumentItem* docItem);
+    QTreeWidgetItem* loadDocumentItem(DocumentItem* docItem);
+    void loadXdeShapeStructure(
+            QTreeWidgetItem* treeDocItem, const XdeDocumentItem* xdeDocItem);
+
+    QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
+    QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
 
     class Ui_WidgetApplicationTree* m_ui = nullptr;
-    std::vector<TreeWidgetItem_Document> m_vecTreeItemDoc;
-    std::vector<TreeWidgetItem_DocumentItem> m_vecTreeItemDocItem;
 };
 
 } // namespace Mayo

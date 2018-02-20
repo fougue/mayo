@@ -103,7 +103,7 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 
     switch (event->type()) {
     case QEvent::MouseButtonPress: {
-        const QMouseEvent* mouseEvent = static_cast<const QMouseEvent*>(event);
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const QPoint currPos = view->mapFromGlobal(mouseEvent->globalPos());
         m_prevPos = currPos;
         if (mouseEvent->button() == Qt::LeftButton) {
@@ -113,7 +113,7 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         break;
     }
     case QEvent::MouseMove: {
-        const QMouseEvent* mouseEvent = static_cast<const QMouseEvent*>(event);
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const QPoint currPos = view->mapFromGlobal(mouseEvent->globalPos());
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
@@ -135,7 +135,7 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         return true;
     }
     case QEvent::Wheel: {
-        const QWheelEvent* wheelEvent = static_cast<const QWheelEvent*>(event);
+        auto wheelEvent = static_cast<const QWheelEvent*>(event);
         Standard_Real currentScale = occView->Scale();
         if (wheelEvent->delta() > 0)
             currentScale *= 1.1; // +10%

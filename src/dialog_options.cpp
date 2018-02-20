@@ -65,19 +65,10 @@ DialogOptions::DialogOptions(QWidget *parent)
     auto btnGrp_stlIoLib = new QButtonGroup(this);
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseGmio);
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseOcc);
-    QObject::connect(
-                m_ui->radioBtn_UseGmio, &QAbstractButton::toggled,
-                m_ui->widget_gmioStlImport, &QWidget::setEnabled);
 
     const Options::StlIoLibrary lib = opts->stlIoLibrary();
     m_ui->radioBtn_UseGmio->setChecked(lib == Options::StlIoLibrary::Gmio);
     m_ui->radioBtn_UseOcc->setChecked(lib == Options::StlIoLibrary::OpenCascade);
-
-    const Options::GmioStlImportType impType = opts->gmioStlImportType();
-    m_ui->radioBtn_GmioImportStlMesh->setChecked(
-                impType == Options::GmioStlImportType::OccStlMesh);
-    m_ui->radioBtn_GmioImportPolyTriShape->setChecked(
-                impType == Options::GmioStlImportType::OccPolyTriShape);
 
     // BRep shape defaults
     m_ui->toolBtn_BRepShapeDefaultColor->setIcon(
@@ -130,13 +121,6 @@ void DialogOptions::accept()
         opts->setStlIoLibrary(Options::StlIoLibrary::Gmio);
     else if (m_ui->radioBtn_UseOcc->isChecked())
         opts->setStlIoLibrary(Options::StlIoLibrary::OpenCascade);
-
-    if (opts->stlIoLibrary() == Options::StlIoLibrary::Gmio) {
-        if (m_ui->radioBtn_GmioImportStlMesh->isChecked())
-            opts->setGmioStlImportType(Options::GmioStlImportType::OccStlMesh);
-        else if (m_ui->radioBtn_GmioImportPolyTriShape->isChecked())
-            opts->setGmioStlImportType(Options::GmioStlImportType::OccPolyTriShape);
-    }
 
     // BRep shape defaults
     opts->setBrepShapeDefaultColor(m_brepShapeDefaultColor);

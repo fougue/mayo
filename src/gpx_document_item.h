@@ -57,6 +57,8 @@ public:
 
 protected:
     void onPropertyChanged(Property* prop) override;
+
+    void initForGpxBRepShape(const Handle_AIS_InteractiveObject& hndGpx);
 };
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
@@ -64,6 +66,7 @@ class GpxCovariantDocumentItem : public GpxDocumentItem
 {
 public:
     GpxCovariantDocumentItem(DOC_ITEM* item);
+    GpxCovariantDocumentItem(DOC_ITEM* item, const HND_GPX_OBJECT& hndGpx);
 
     DOC_ITEM* documentItem() const override;
     const Handle_AIS_InteractiveObject& handleGpxObject() const override;
@@ -74,7 +77,30 @@ protected:
     HND_GPX_OBJECT m_hndGpxObject;
 };
 
+class GpxBRepShapeCommonProperties
+{
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxBRepShapeCommonProperties)
 
+public:
+    PropertyInt propertyTransparency;
+    PropertyEnumeration propertyDisplayMode;
+    PropertyBool propertyShowFaceBoundary;
+
+protected:
+    GpxBRepShapeCommonProperties(PropertyOwner* owner);
+
+    void initCommonProperties(
+            PropertyOwner* owner, const Handle_AIS_InteractiveObject& hndGpx);
+    void handleCommonPropertyChange(
+            Property* prop, const Handle_AIS_InteractiveObject& hndGpx);
+    void handlePropertyMaterial(
+            PropertyEnumeration* prop, const Handle_AIS_InteractiveObject& hndGpx);
+    void handlePropertyColor(
+            PropertyOccColor* prop, const Handle_AIS_InteractiveObject& hndGpx);
+
+private:
+    static const Enumeration& enum_DisplayMode();
+};
 
 // --
 // -- Implementation
@@ -84,6 +110,13 @@ template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
 GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::
 GpxCovariantDocumentItem(DOC_ITEM* item)
     : m_docItem(item)
+{ }
+
+template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
+GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::
+GpxCovariantDocumentItem(DOC_ITEM* item, const HND_GPX_OBJECT& hndGpx)
+    : m_docItem(item),
+      m_hndGpxObject(hndGpx)
 { }
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>

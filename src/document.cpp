@@ -32,6 +32,8 @@
 #include "application.h"
 #include "document_item.h"
 
+#include <cassert>
+
 namespace Mayo {
 
 Document::Document(Application *app)
@@ -88,7 +90,7 @@ bool Document::isEmpty() const
     return m_rootItems.empty();
 }
 
-void Document::addItem(DocumentItem* item)
+void Document::addRootItem(DocumentItem* item)
 {
     item->setDocument(this);
     m_rootItems.push_back(item);

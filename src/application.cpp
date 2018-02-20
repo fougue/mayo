@@ -31,7 +31,8 @@
 
 #include "document.h"
 #include "document_item.h"
-#include "brep_shape_item.h"
+#include "caf_utils.h"
+#include "xde_document_item.h"
 #include "stl_mesh_item.h"
 #include "options.h"
 #include "mesh_utils.h"
@@ -48,20 +49,23 @@
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <IGESControl_Controller.hxx>
-#include <IGESControl_Reader.hxx>
-#include <IGESControl_Writer.hxx>
 #include <Interface_Static.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <OSD_Path.hxx>
 #include <RWStl.hxx>
 #include <StlMesh_Mesh.hxx>
-#include <STEPControl_Reader.hxx>
-#include <STEPControl_Writer.hxx>
 #include <StlAPI_Writer.hxx>
 #include <Transfer_FinderProcess.hxx>
 #include <Transfer_TransientProcess.hxx>
 #include <XSControl_TransferWriter.hxx>
 #include <XSControl_WorkSession.hxx>
+
+#include <IGESCAFControl_Reader.hxx>
+#include <IGESCAFControl_Writer.hxx>
+#include <STEPCAFControl_Reader.hxx>
+#include <STEPCAFControl_Writer.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
 
 #include <gmio_core/error.h>
 #include <gmio_stl/stl_error.h>
@@ -177,42 +181,80 @@ TopoDS_Shape loadShapeFromFile(
     return result;
 }
 
-static BRepShapeItem* createBRepShapeItem(
-        const QString& filepath, const TopoDS_Shape& shape)
+template<typename CAF_READER> struct CafReaderTraits {};
+
+template<> struct CafReaderTraits<IGESCAFControl_Reader> {
+    typedef IGESCAFControl_Reader ReaderType;
+    static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
+        return reader.WS();
+    }
+};
+
+template<> struct CafReaderTraits<STEPCAFControl_Reader> {
+    typedef STEPCAFControl_Reader ReaderType;
+    static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
+        return reader.Reader().WS();
+    }
+};
+
+template<typename CAF_READER> // Either IGESCAFControl_Reader or STEPCAFControl_Reader
+void loadCafDocumentFromFile(
+        const QString& filepath,
+        Handle_TDocStd_Document& doc,
+        IFSelect_ReturnStatus* error,
+        qttask::Progress* progress)
 {
-    auto partItem = new BRepShapeItem;
-    partItem->setFilePath(filepath);
-    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-    GProp_GProps system;
-    BRepGProp::VolumeProperties(shape, system);
-    partItem->propertyVolume.setValue(system.Mass());
-    BRepGProp::SurfaceProperties(shape, system);
-    partItem->propertyArea.setValue(system.Mass());
-    partItem->setBRepShape(shape);
-    return partItem;
+    QMutexLocker locker(globalMutex()); Q_UNUSED(locker);
+    Handle_Message_ProgressIndicator indicator = new OccImportProgress(progress);
+
+    if (!indicator.IsNull())
+        indicator->NewScope(30, "Loading file");
+    CAF_READER reader;
+    reader.SetColorMode(Standard_True);
+    reader.SetNameMode(Standard_True);
+    reader.SetLayerMode(Standard_True);
+    *error = reader.ReadFile(filepath.toLocal8Bit().constData());
+    if (!indicator.IsNull())
+        indicator->EndScope();
+    if (*error == IFSelect_RetDone) {
+        Handle_XSControl_WorkSession ws =
+                CafReaderTraits<CAF_READER>::workSession(reader);
+        if (!indicator.IsNull()) {
+            ws->MapReader()->SetProgress(indicator);
+            indicator->NewScope(70, "Translating file");
+        }
+        if (reader.Transfer(doc) == Standard_False)
+            *error = IFSelect_RetFail;
+        if (!indicator.IsNull()) {
+            indicator->EndScope();
+            ws->MapReader()->SetProgress(nullptr);
+        }
+    }
 }
 
-static BRepShapeItem* createWrapBRepShapeItem(
-        const QString& filepath,
-        const TopoDS_Shape& shape,
-        const Handle_Poly_Triangulation& shapeTriangulation)
+static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
 {
-    auto partItem = new BRepShapeItem;
-    partItem->setFilePath(filepath);
-    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-    partItem->propertyVolume.setValue(
-                occ::MeshUtils::triangulationVolume(shapeTriangulation));
-    partItem->propertyArea.setValue(
-                occ::MeshUtils::triangulationArea(shapeTriangulation));
-    partItem->setBRepShape(shape);
-    return partItem;
+    TopoDS_Shape shape;
+    const TDF_LabelSequence seqTopLevelFreeShapeLabel =
+            xdeDocItem->topLevelFreeShapeLabels();
+    if (seqTopLevelFreeShapeLabel.Size() > 1) {
+        TopoDS_Compound cmpd;
+        BRep_Builder builder;
+        builder.MakeCompound(cmpd);
+        for (const TDF_Label& label : seqTopLevelFreeShapeLabel)
+            builder.Add(cmpd, xdeDocItem->shape(label));
+        shape = cmpd;
+    }
+    else if (seqTopLevelFreeShapeLabel.Size() == 1) {
+        shape = xdeDocItem->shape(seqTopLevelFreeShapeLabel.First());
+    }
+    return shape;
 }
 
 static StlMeshItem* createStlMeshItem(
         const QString& filepath, const Handle_StlMesh_Mesh& mesh)
 {
     auto partItem = new StlMeshItem;
-    partItem->setFilePath(filepath);
     partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
     const occ::StlMeshRandomAccess meshAccess(mesh);
     partItem->propertyNodeCount.setValue(meshAccess.vertexCount());
@@ -222,6 +264,32 @@ static StlMeshItem* createStlMeshItem(
     partItem->propertyArea.setValue(occ::MeshUtils::meshArea(meshAccess));
     partItem->setStlMesh(mesh);
     return partItem;
+}
+
+static XdeDocumentItem* createXdeDocumentItem(
+        const QString& filepath, const Handle_TDocStd_Document& cafDoc)
+{
+    auto xdeDocItem = new XdeDocumentItem(cafDoc);
+    xdeDocItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
+
+    const Handle_XCAFDoc_ShapeTool& shapeTool = xdeDocItem->shapeTool();
+    const TDF_LabelSequence seqTopLevelFreeShapeLabel =
+            xdeDocItem->topLevelFreeShapeLabels();
+    if (seqTopLevelFreeShapeLabel.Size() > 1) {
+        const TDF_Label asmLabel = shapeTool->NewShape();
+        for (const TDF_Label& shapeLabel : seqTopLevelFreeShapeLabel)
+            shapeTool->AddComponent(asmLabel, shapeLabel, TopLoc_Location());
+        shapeTool->UpdateAssembly(asmLabel);
+    }
+
+    const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
+    GProp_GProps system;
+    BRepGProp::VolumeProperties(shape, system);
+    xdeDocItem->propertyVolume.setValue(std::max(system.Mass(), 0.));
+    BRepGProp::SurfaceProperties(shape, system);
+    xdeDocItem->propertyArea.setValue(std::max(system.Mass(), 0.));
+
+    return xdeDocItem;
 }
 
 static QString gmioErrorToQString(int error)
@@ -426,7 +494,7 @@ Application::IoResult Application::importInDocument(
 }
 
 Application::IoResult Application::exportDocumentItems(
-        const std::vector<DocumentItem*> &docItems,
+        const std::vector<DocumentItem*>& docItems,
         PartFormat format,
         const ExportOptions &options,
         const QString &filepath,
@@ -506,24 +574,25 @@ Application::PartFormat Application::findPartFormat(const QString &filepath)
 Application::IoResult Application::importIges(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
+    IGESControl_Controller::Init();
+    Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
     IFSelect_ReturnStatus err;
-    const TopoDS_Shape shape =
-            Internal::loadShapeFromFile<IGESControl_Reader>(
-                filepath, &err, progress);
+    Internal::loadCafDocumentFromFile<IGESCAFControl_Reader>(
+                filepath, cafDoc, &err, progress);
     if (err == IFSelect_RetDone)
-        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
+        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
     return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
 Application::IoResult Application::importStep(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
+    Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
     IFSelect_ReturnStatus err;
-    const TopoDS_Shape shape =
-            Internal::loadShapeFromFile<STEPControl_Reader>(
-                filepath, &err, progress);
+    Internal::loadCafDocumentFromFile<STEPCAFControl_Reader>(
+                filepath, cafDoc, &err, progress);
     if (err == IFSelect_RetDone)
-        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
+        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
     return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
@@ -536,8 +605,14 @@ Application::IoResult Application::importOccBRep(
             new Internal::OccImportProgress(progress);
     const bool ok = BRepTools::Read(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
-    if (ok)
-        doc->addItem(Internal::createBRepShapeItem(filepath, shape));
+    if (ok) {
+        Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
+        Handle_XCAFDoc_ShapeTool shapeTool =
+                XCAFDoc_DocumentTool::ShapeTool(cafDoc->Main());
+        const TDF_Label labelShape = shapeTool->NewShape();
+        shapeTool->SetShape(labelShape, shape);
+        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
+    }
     return { ok, ok ? QString() : tr("Unknown Error") };
 }
 
@@ -547,8 +622,6 @@ Application::IoResult Application::importStl(
     Application::IoResult result = { false, QString() };
     const Options::StlIoLibrary lib =
             Options::instance()->stlIoLibrary();
-    const Options::GmioStlImportType gmioImpType =
-            Options::instance()->gmioStlImportType();
     if (lib == Options::StlIoLibrary::Gmio) {
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
@@ -558,23 +631,11 @@ Application::IoResult Application::importStl(
             options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
             int err = GMIO_ERROR_OK;
             while (gmio_no_error(err) && !file.atEnd()) {
-                if (gmioImpType == Options::GmioStlImportType::OccStlMesh) {
-                    Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
-                    gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
-                    err = gmio_stl_read(&stream, &meshcreator, &options);
-                    if (gmio_no_error(err))
-                        doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
-                }
-                else if (gmioImpType == Options::GmioStlImportType::OccPolyTriShape) {
-                    gmio_stl_mesh_creator_occshape meshcreator;
-                    err = gmio_stl_read(&stream, &meshcreator, &options);
-                    if (gmio_no_error(err)) {
-                        doc->addItem(Internal::createWrapBRepShapeItem(
-                                         filepath,
-                                         meshcreator.shape(),
-                                         meshcreator.polytri()));
-                    }
-                }
+                Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
+                gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
+                err = gmio_stl_read(&stream, &meshcreator, &options);
+                if (gmio_no_error(err))
+                    doc->addRootItem(Internal::createStlMeshItem(filepath, stlMesh));
             }
             result.ok = (err == GMIO_ERROR_OK);
             if (!result.ok)
@@ -587,7 +648,7 @@ Application::IoResult Application::importStl(
         Handle_StlMesh_Mesh stlMesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         if (!stlMesh.IsNull())
-            doc->addItem(Internal::createStlMeshItem(filepath, stlMesh));
+            doc->addRootItem(Internal::createStlMeshItem(filepath, stlMesh));
         result.ok = !stlMesh.IsNull();
         if (!result.ok)
             result.errorText = tr("Imported STL mesh is null");
@@ -606,15 +667,16 @@ Application::IoResult Application::exportIges(
             new Internal::OccImportProgress(progress);
 
     IGESControl_Controller::Init();
-    IGESControl_Writer writer(
-                Interface_Static::CVal("XSTEP.iges.unit"),
-                Interface_Static::IVal("XSTEP.iges.writebrep.mode"));
+    IGESCAFControl_Writer writer;
+    writer.SetColorMode(Standard_True);
+    writer.SetNameMode(Standard_True);
+    writer.SetLayerMode(Standard_True);
     if (!indicator.IsNull())
         writer.TransferProcess()->SetProgress(indicator);
     for (const DocumentItem* item : docItems) {
-        if (sameType<BRepShapeItem>(item)) {
-            auto brepItem = static_cast<const BRepShapeItem*>(item);
-            writer.AddShape(brepItem->brepShape());
+        if (sameType<XdeDocumentItem>(item)) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+            writer.Transfer(xdeDocItem->cafDoc());
         }
     }
     writer.ComputeModel();
@@ -632,18 +694,18 @@ Application::IoResult Application::exportStep(
     QMutexLocker locker(Internal::globalMutex()); Q_UNUSED(locker);
     Handle_Message_ProgressIndicator indicator =
             new Internal::OccImportProgress(progress);
-    STEPControl_Writer writer;
+    STEPCAFControl_Writer writer;
     if (!indicator.IsNull())
-        writer.WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
+        writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
     for (const DocumentItem* item : docItems) {
-        if (sameType<BRepShapeItem>(item)) {
-            auto brepItem = static_cast<const BRepShapeItem*>(item);
-            writer.Transfer(brepItem->brepShape(), STEPControl_AsIs);
+        if (sameType<XdeDocumentItem>(item)) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+            writer.Transfer(xdeDocItem->cafDoc());
         }
     }
     const IFSelect_ReturnStatus err =
             writer.Write(filepath.toLocal8Bit().constData());
-    writer.WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
+    writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
     return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
 }
 
@@ -653,25 +715,28 @@ Application::IoResult Application::exportOccBRep(
         const QString &filepath,
         qttask::Progress *progress)
 {
-    std::vector<const TopoDS_Shape*> vecShapePtr;
-    vecShapePtr.reserve(docItems.size());
+    std::vector<TopoDS_Shape> vecShape;
+    vecShape.reserve(docItems.size());
     for (const DocumentItem* item : docItems) {
-        if (sameType<BRepShapeItem>(item)) {
-            const auto brepItem = static_cast<const BRepShapeItem*>(item);
-            vecShapePtr.push_back(&brepItem->brepShape());
+        if (sameType<XdeDocumentItem>(item)) {
+            const auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+            const TDF_LabelSequence seqTopLevelFreeShapeLabel =
+                    xdeDocItem->topLevelFreeShapeLabels();
+            for (const TDF_Label& label : seqTopLevelFreeShapeLabel)
+                vecShape.push_back(xdeDocItem->shape(label));
         }
     }
     TopoDS_Shape shape;
-    if (vecShapePtr.size() > 1) {
+    if (vecShape.size() > 1) {
         TopoDS_Compound cmpd;
         BRep_Builder builder;
         builder.MakeCompound(cmpd);
-        for (const TopoDS_Shape* shapePtr : vecShapePtr)
-            builder.Add(cmpd, *shapePtr);
+        for (const TopoDS_Shape& subShape : vecShape)
+            builder.Add(cmpd, subShape);
         shape = cmpd;
     }
-    else if (vecShapePtr.size() == 1) {
-        shape = *vecShapePtr.front();
+    else if (vecShape.size() == 1) {
+        shape = vecShape.front();
     }
 
     Handle_Message_ProgressIndicator indicator =
@@ -719,9 +784,10 @@ Application::IoResult Application::exportStl_gmio(
                             .arg(item->propertyLabel.value()));
             }
             int error = GMIO_ERROR_OK;
-            if (sameType<BRepShapeItem>(item)) {
-                auto brepItem = static_cast<const BRepShapeItem*>(item);
-                const gmio_stl_mesh_occshape gmioMesh(brepItem->brepShape());
+            if (sameType<XdeDocumentItem>(item)) {
+                auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+                const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
+                const gmio_stl_mesh_occshape gmioMesh(shape);
                 error = gmio_stl_write(
                             options.stlFormat, &stream, &gmioMesh, &gmioOptions);
             }
@@ -755,15 +821,13 @@ Application::IoResult Application::exportStl_OCC(
 
     if (docItems.size() > 0) {
         const DocumentItem* item = docItems.front();
-        if (sameType<BRepShapeItem>(item)) {
-            auto brepItem = static_cast<const BRepShapeItem*>(item);
+        if (sameType<XdeDocumentItem>(item)) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
             StlAPI_Writer writer;
-            if (options.stlFormat == GMIO_STL_FORMAT_ASCII)
-                writer.ASCIIMode() = Standard_True;
-            else
-                writer.ASCIIMode() = Standard_False;
+            writer.ASCIIMode() = options.stlFormat == GMIO_STL_FORMAT_ASCII;
+            const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
             const StlAPI_ErrorStatus error = writer.Write(
-                        brepItem->brepShape(), filepath.toLocal8Bit().constData());
+                        shape, filepath.toLocal8Bit().constData());
             switch (error) {
             case StlAPI_StatusOK: return { true, QString() };
             case StlAPI_MeshIsEmpty: return { false, tr("StlAPI_MeshIsEmpty") };

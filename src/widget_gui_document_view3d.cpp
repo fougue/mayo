@@ -59,7 +59,10 @@ static void connectViewProjBtn(
 {
     QObject::connect(
                 btn, &QAbstractButton::clicked,
-                [=]{ view->occV3dView()->SetProj(proj); });
+                [=]{
+        view->occV3dView()->SetProj(proj);
+        view->fitAll();
+    });
 }
 
 } // namespace Internal
