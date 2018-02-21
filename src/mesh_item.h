@@ -29,29 +29,29 @@
 
 #pragma once
 
-#include "gpx_document_item.h"
-#include "stl_mesh_item.h"
-#include <MeshVS_Mesh.hxx>
+#include "document_item.h"
+#include <Poly_Triangulation.hxx>
 
 namespace Mayo {
 
-class GpxStlMeshItem :
-        public GpxCovariantDocumentItem<StlMeshItem, MeshVS_Mesh, Handle_MeshVS_Mesh>
+class MeshItem : public PartItem
 {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxStlMeshItem)
-
 public:
-    GpxStlMeshItem(StlMeshItem* item);
+    MeshItem();
 
-    PropertyEnumeration propertyDisplayMode;
-    PropertyBool propertyShowEdges;
-    PropertyBool propertyShowNodes;
+    const Handle_Poly_Triangulation& triangulation() const;
+    void setTriangulation(const Handle_Poly_Triangulation& mesh);
 
-protected:
-    void onPropertyChanged(Property* prop) override;
+    bool isNull() const override;
+
+    static const char* type;
+    const char* dynType() const override;
+
+    PropertyInt propertyNodeCount; // Read-only
+    PropertyInt propertyTriangleCount; // Read-only
 
 private:
-    static const Enumeration& enum_DisplayMode();
+    Handle_Poly_Triangulation m_triangulation;
 };
 
 } // namespace Mayo

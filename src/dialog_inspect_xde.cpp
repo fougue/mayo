@@ -50,7 +50,7 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
 {
     // if (label.HasAttribute())
     for (TDF_AttributeIterator it(label); it.More(); it.Next()) {
-        const TDF_Attribute* ptrAttr = it.Value();
+        const Handle_TDF_Attribute ptrAttr = it.Value();
         const Standard_GUID& attrId = ptrAttr->ID();
         QString text;
         QString value;

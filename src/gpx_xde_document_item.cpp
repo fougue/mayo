@@ -22,7 +22,7 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
 
 void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
 {
-    const Handle_AIS_InteractiveObject& hndGpx = this->handleGpxObject();
+    Handle_AIS_InteractiveObject hndGpx = this->handleGpxObject();
     if (prop == &this->propertyMaterial) {
         GpxBRepShapeCommonProperties::handlePropertyMaterial(
                     &this->propertyMaterial, hndGpx);

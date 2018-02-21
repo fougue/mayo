@@ -141,7 +141,7 @@ void WidgetOccView::initialize()
 
         m_view = m_viewer->CreateView();
 
-        Handle_OcctWindow hWnd = new OcctWindow(this);
+        Handle_Aspect_Window hWnd = new OcctWindow(this);
         m_view->SetWindow(hWnd);
         if (!hWnd->IsMapped())
             hWnd->Map();

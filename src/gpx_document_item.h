@@ -48,7 +48,7 @@ public:
     GpxDocumentItem();
 
     virtual DocumentItem* documentItem() const = 0;
-    virtual const Handle_AIS_InteractiveObject& handleGpxObject() const = 0;
+    virtual Handle_AIS_InteractiveObject handleGpxObject() const = 0;
     virtual AIS_InteractiveObject* gpxObject() const = 0;
 
     PropertyBool propertyIsVisible;
@@ -69,7 +69,7 @@ public:
     GpxCovariantDocumentItem(DOC_ITEM* item, const HND_GPX_OBJECT& hndGpx);
 
     DOC_ITEM* documentItem() const override;
-    const Handle_AIS_InteractiveObject& handleGpxObject() const override;
+    Handle_AIS_InteractiveObject handleGpxObject() const override;
     GPX_OBJECT* gpxObject() const override;
 
 protected:
@@ -124,7 +124,7 @@ DOC_ITEM* GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::docume
 { return m_docItem; }
 
 template<typename DOC_ITEM, typename GPX_OBJECT, typename HND_GPX_OBJECT>
-const Handle_AIS_InteractiveObject&
+Handle_AIS_InteractiveObject
 GpxCovariantDocumentItem<DOC_ITEM, GPX_OBJECT, HND_GPX_OBJECT>::handleGpxObject() const
 { return m_hndGpxObject; }
 

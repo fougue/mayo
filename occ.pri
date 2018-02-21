@@ -22,6 +22,8 @@ win32-msvc2008:MSVC_VERSION = 9
 win32-msvc2010:MSVC_VERSION = 10
 win32-msvc2012:MSVC_VERSION = 11
 win32-msvc2013:MSVC_VERSION = 12
+win32-msvc2015:MSVC_VERSION = 14
+win32-msvc2017:MSVC_VERSION = 15
 
 # Find OCC version
 OCC_VERSION_FILE_CONTENTS = $$cat($$CASCADE_ROOT/inc/Standard_Version.hxx, lines)
@@ -49,18 +51,9 @@ else {
 }
 
 # Set CASCADE_SUB_LIB_PATH
-equals(OCC_VERSION_STR, 6.7.1) \
-    | equals(OCC_VERSION_STR, 6.8.0) \
-    | equals(OCC_VERSION_STR, 6.9.0) \
-    | equals(OCC_VERSION_STR, 6.9.1) \
-    | equals(OCC_VERSION_STR, 7.0.0) \
-{
-  win32:CASCADE_SUB_LIB_PATH = win$${ARCH_BITS_SIZE}/vc$$MSVC_VERSION/lib
-  linux-*:CASCADE_SUB_LIB_PATH = lin$${ARCH_BITS_SIZE}/gcc/lib
-  CONFIG(debug, debug|release):CASCADE_SUB_LIB_PATH = $${CASCADE_SUB_LIB_PATH}d
-} else {
-  CASCADE_SUB_LIB_PATH = lib
-}
+win32:CASCADE_SUB_LIB_PATH = win$${ARCH_BITS_SIZE}/vc$$MSVC_VERSION/lib
+linux-*:CASCADE_SUB_LIB_PATH = lin$${ARCH_BITS_SIZE}/gcc/lib
+#CONFIG(debug, debug|release):CASCADE_SUB_LIB_PATH = $${CASCADE_SUB_LIB_PATH}d
 
 CASCADE_LIB_PATH += $$CASCADE_ROOT/$$CASCADE_SUB_LIB_PATH
 LIBS += $$sysPath($$join(CASCADE_LIB_PATH, " -L", -L))
