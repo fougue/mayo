@@ -27,6 +27,7 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
+#ifdef HAVE_GMIO
 #include "dialog_export_options.h"
 
 #include "options.h"
@@ -205,3 +206,5 @@ void DialogExportOptions::accept()
 }
 
 } // namespace Mayo
+
+#endif // HAVE_GMIO

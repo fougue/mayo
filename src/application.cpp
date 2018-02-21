@@ -65,14 +65,16 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
-#include <gmio_core/error.h>
-#include <gmio_stl/stl_error.h>
-#include <gmio_stl/stl_format.h>
-#include <gmio_stl/stl_infos.h>
-#include <gmio_stl/stl_io.h>
-#include <gmio_support/stream_qt.h>
-#include <gmio_support/stl_occ_brep.h>
-#include <gmio_support/stl_occ_polytri.h>
+#ifdef HAVE_GMIO
+#  include <gmio_core/error.h>
+#  include <gmio_stl/stl_error.h>
+#  include <gmio_stl/stl_format.h>
+#  include <gmio_stl/stl_infos.h>
+#  include <gmio_stl/stl_io.h>
+#  include <gmio_support/stream_qt.h>
+#  include <gmio_support/stl_occ_brep.h>
+#  include <gmio_support/stl_occ_polytri.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -88,6 +90,7 @@ static QMutex* globalMutex()
     return &mutex;
 }
 
+#ifdef HAVE_GMIO
 static bool gmio_qttask_is_stop_requested(void* cookie)
 {
     auto progress = static_cast<const qttask::Progress*>(cookie);
@@ -114,6 +117,47 @@ static gmio_task_iface gmio_qttask_create_task_iface(qttask::Progress* progress)
     task.func_handle_progress = gmio_qttask_handle_progress;
     return task;
 }
+
+static QString gmioErrorToQString(int error)
+{
+    switch (error) {
+    // Core
+    case GMIO_ERROR_OK:
+        return QString();
+    case GMIO_ERROR_UNKNOWN:
+        return Application::tr("GMIO_ERROR_UNKNOWN");
+    case GMIO_ERROR_NULL_MEMBLOCK:
+        return Application::tr("GMIO_ERROR_NULL_MEMBLOCK");
+    case GMIO_ERROR_INVALID_MEMBLOCK_SIZE:
+        return Application::tr("GMIO_ERROR_INVALID_MEMBLOCK_SIZE");
+    case GMIO_ERROR_STREAM:
+        return Application::tr("GMIO_ERROR_STREAM");
+    case GMIO_ERROR_TASK_STOPPED:
+        return Application::tr("GMIO_ERROR_TASK_STOPPED");
+    case GMIO_ERROR_STDIO:
+        return Application::tr("GMIO_ERROR_STDIO");
+    case GMIO_ERROR_BAD_LC_NUMERIC:
+        return Application::tr("GMIO_ERROR_BAD_LC_NUMERIC");
+    // TODO: complete other core enum values
+    // STL
+    case GMIO_STL_ERROR_UNKNOWN_FORMAT:
+        return Application::tr("GMIO_STL_ERROR_UNKNOWN_FORMAT");
+    case GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE:
+        return Application::tr("GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE");
+    case GMIO_STL_ERROR_PARSING:
+        return Application::tr("GMIO_STL_ERROR_PARSING");
+    case GMIO_STL_ERROR_INVALID_FLOAT32_PREC:
+        return Application::tr("GMIO_STL_ERROR_INVALID_FLOAT32_PREC");
+    case GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER:
+        return Application::tr("GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER");
+    case GMIO_STL_ERROR_HEADER_WRONG_SIZE:
+        return Application::tr("GMIO_STL_ERROR_HEADER_WRONG_SIZE");
+    case GMIO_STL_ERROR_FACET_COUNT:
+        return Application::tr("GMIO_STL_ERROR_FACET_COUNT");
+    }
+    return Application::tr("GMIO_ERROR_UNKNOWN");
+}
+#endif
 
 class OccImportProgress : public Message_ProgressIndicator
 {
@@ -288,46 +332,6 @@ static XdeDocumentItem* createXdeDocumentItem(
     return xdeDocItem;
 }
 
-static QString gmioErrorToQString(int error)
-{
-    switch (error) {
-    // Core
-    case GMIO_ERROR_OK:
-        return QString();
-    case GMIO_ERROR_UNKNOWN:
-        return Application::tr("GMIO_ERROR_UNKNOWN");
-    case GMIO_ERROR_NULL_MEMBLOCK:
-        return Application::tr("GMIO_ERROR_NULL_MEMBLOCK");
-    case GMIO_ERROR_INVALID_MEMBLOCK_SIZE:
-        return Application::tr("GMIO_ERROR_INVALID_MEMBLOCK_SIZE");
-    case GMIO_ERROR_STREAM:
-        return Application::tr("GMIO_ERROR_STREAM");
-    case GMIO_ERROR_TASK_STOPPED:
-        return Application::tr("GMIO_ERROR_TASK_STOPPED");
-    case GMIO_ERROR_STDIO:
-        return Application::tr("GMIO_ERROR_STDIO");
-    case GMIO_ERROR_BAD_LC_NUMERIC:
-        return Application::tr("GMIO_ERROR_BAD_LC_NUMERIC");
-    // TODO: complete other core enum values
-    // STL
-    case GMIO_STL_ERROR_UNKNOWN_FORMAT:
-        return Application::tr("GMIO_STL_ERROR_UNKNOWN_FORMAT");
-    case GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE:
-        return Application::tr("GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE");
-    case GMIO_STL_ERROR_PARSING:
-        return Application::tr("GMIO_STL_ERROR_PARSING");
-    case GMIO_STL_ERROR_INVALID_FLOAT32_PREC:
-        return Application::tr("GMIO_STL_ERROR_INVALID_FLOAT32_PREC");
-    case GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER:
-        return Application::tr("GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER");
-    case GMIO_STL_ERROR_HEADER_WRONG_SIZE:
-        return Application::tr("GMIO_STL_ERROR_HEADER_WRONG_SIZE");
-    case GMIO_STL_ERROR_FACET_COUNT:
-        return Application::tr("GMIO_STL_ERROR_FACET_COUNT");
-    }
-    return Application::tr("GMIO_ERROR_UNKNOWN");
-}
-
 static QString occReturnStatusToQString(IFSelect_ReturnStatus status)
 {
     switch (status) {
@@ -348,15 +352,34 @@ const char* skipWhiteSpaces(const char* str, std::size_t len)
     return str + pos;
 }
 
-template <std::size_t N>
+template<size_t N>
 bool matchToken(const char* buffer, const char (&token)[N])
 {
     return std::strncmp(buffer, token, N - 1) == 0;
 }
 
 Application::PartFormat findPartFormatFromContents(
-        const char *contentsBegin, std::size_t contentsBeginSize)
+        const char *contentsBegin,
+        size_t contentsBeginSize,
+        uint64_t fullContentsSizeHint)
 {
+    // -- Binary STL ?
+    static const size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
+    if (contentsBeginSize >= binaryStlHeaderSize) {
+        const uint32_t offset = 80; // Skip header
+        const uint32_t facetsCount =
+                (static_cast<uint32_t>(contentsBegin[offset + 0]) << 24)
+                | (static_cast<uint32_t>(contentsBegin[offset + 1]) << 16)
+                | (static_cast<uint32_t>(contentsBegin[offset + 2]) << 8)
+                | (static_cast<uint32_t>(contentsBegin[offset + 3]));
+        const unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
+        if ((facetSize * facetsCount + binaryStlHeaderSize)
+                == fullContentsSizeHint)
+        {
+            return Application::PartFormat::Stl;
+        }
+    }
+
     // -- IGES ?
     {
         // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
@@ -411,6 +434,14 @@ Application::PartFormat findPartFormatFromContents(
         static const char occBRepToken[] = "DBRep_DrawableShape";
         if (matchToken(contentsBegin, occBRepToken))
             return Application::PartFormat::OccBrep;
+    }
+
+    // -- ASCII STL ?
+    {
+        // regex : ^\s*solid
+        const char asciiStlToken[] = "solid";
+        if (matchToken(contentsBegin, asciiStlToken))
+            return Application::PartFormat::Stl;
     }
 
     // Fallback case
@@ -554,15 +585,17 @@ Application::PartFormat Application::findPartFormat(const QString &filepath)
 {
     QFile file(filepath);
     if (file.open(QIODevice::ReadOnly)) {
+#ifdef HAVE_GMIO
         gmio_stream qtstream = gmio_stream_qiodevice(&file);
         const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
         if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
             return Application::PartFormat::Stl;
+#endif
         std::array<char, 2048> contentsBegin;
         contentsBegin.fill(0);
         file.read(contentsBegin.data(), contentsBegin.size());
         return Internal::findPartFormatFromContents(
-                    contentsBegin.data(), contentsBegin.size());
+                    contentsBegin.data(), contentsBegin.size(), file.size());
     }
     return PartFormat::Unknown;
 }
@@ -619,6 +652,7 @@ Application::IoResult Application::importStl(
     const Options::StlIoLibrary lib =
             Options::instance()->stlIoLibrary();
     if (lib == Options::StlIoLibrary::Gmio) {
+#ifdef HAVE_GMIO
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
             gmio_stream stream = gmio_stream_qiodevice(&file);
@@ -638,6 +672,7 @@ Application::IoResult Application::importStl(
             if (!result.ok)
                 result.errorText = Internal::gmioErrorToQString(err);
         }
+#endif // HAVE_GMIO
     }
     else if (lib == Options::StlIoLibrary::OpenCascade) {
         Handle_Message_ProgressIndicator indicator =
@@ -766,6 +801,7 @@ Application::IoResult Application::exportStl_gmio(
         qttask::Progress *progress)
 {
     QFile file(filepath);
+#ifdef HAVE_GMIO
     if (file.open(QIODevice::WriteOnly)) {
         gmio_stream stream = gmio_stream_qiodevice(&file);
         gmio_stl_write_options gmioOptions = {};
@@ -799,6 +835,7 @@ Application::IoResult Application::exportStl_gmio(
         }
         return { true, QString() };
     }
+#endif // HAVE_GMIO
     return { false, file.errorString() };
 }
 
@@ -808,12 +845,17 @@ Application::IoResult Application::exportStl_OCC(
         const QString &filepath,
         qttask::Progress *progress)
 {
+#ifdef HAVE_GMIO
+    const bool isAsciiFormat = options.stlFormat == GMIO_STL_FORMAT_ASCII;
     if (options.stlFormat != GMIO_STL_FORMAT_ASCII
             && options.stlFormat != GMIO_STL_FORMAT_BINARY_LE)
     {
         return { false, tr("Format not supported") };
     }
-    if (!docItems.empty() && docItems.size() > 1)
+#else
+    const bool isAsciiFormat = options.stlFormat == ExportOptions::StlFormat::Ascii;
+#endif
+    if (docItems.size() > 1)
         return { false,  tr("OpenCascade RWStl does not support multi-solids") };
 
     if (docItems.size() > 0) {
@@ -821,7 +863,7 @@ Application::IoResult Application::exportStl_OCC(
         if (sameType<XdeDocumentItem>(item)) {
             auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
             StlAPI_Writer writer;
-            writer.ASCIIMode() = options.stlFormat == GMIO_STL_FORMAT_ASCII;
+            writer.ASCIIMode() = isAsciiFormat;
             const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
             const Standard_Boolean ok = writer.Write(
                         shape, filepath.toLocal8Bit().constData());
@@ -835,7 +877,7 @@ Application::IoResult Application::exportStl_OCC(
             const QByteArray filepathLocal8b = filepath.toLocal8Bit();
             const OSD_Path osdFilepath(filepathLocal8b.constData());
             const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
-            if (options.stlFormat == GMIO_STL_FORMAT_ASCII)
+            if (isAsciiFormat)
                 occOk = RWStl::WriteAscii(mesh, osdFilepath, indicator);
             else
                 occOk = RWStl::WriteBinary(mesh, osdFilepath, indicator);

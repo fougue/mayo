@@ -100,18 +100,23 @@ FORMS += \
     src/dialog_inspect_xde.ui
 
 # gmio
-isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
-CONFIG(debug, debug|release) {
-    GMIO_BIN_SUFFIX = d
+#isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
+isEmpty(GMIO_ROOT) {
+    warning(gmio is disabled)
 } else {
-    GMIO_BIN_SUFFIX =
+    CONFIG(debug, debug|release) {
+        GMIO_BIN_SUFFIX = d
+    } else {
+        GMIO_BIN_SUFFIX =
+    }
+    INCLUDEPATH += $$GMIO_ROOT/include
+    LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
+    SOURCES += \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
+        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
+    DEFINES += HAVE_GMIO
 }
-INCLUDEPATH += $$GMIO_ROOT/include
-LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
-SOURCES += \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
-    $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
 
 # OpenCascade
 isEmpty(CASCADE_ROOT):error(Variable CASCADE_ROOT is empty)

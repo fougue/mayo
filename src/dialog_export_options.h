@@ -35,6 +35,7 @@
 
 namespace Mayo {
 
+#ifdef HAVE_GMIO
 class DialogExportOptions : public QDialog
 {
     Q_OBJECT
@@ -54,5 +55,6 @@ private:
     Application::PartFormat m_partFormat = Application::PartFormat::Unknown;
     class Ui_DialogExportOptions* m_ui = nullptr;
 };
+#endif
 
 } // namespace Mayo

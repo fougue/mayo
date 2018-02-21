@@ -31,7 +31,9 @@
 
 #include "ui_dialog_about.h"
 #include <Standard_Version.hxx>
-#include <gmio_core/version.h>
+#ifdef HAVE_GMIO
+#  include <gmio_core/version.h>
+#endif
 
 namespace Mayo {
 
@@ -47,7 +49,11 @@ DialogAbout::DialogAbout(QWidget *parent)
                 m_ui->label_BuildDateTime->text().arg(__DATE__).arg(__TIME__));
     m_ui->label_Qt->setText(m_ui->label_Qt->text().arg(QT_VERSION_STR));
     m_ui->label_Occ->setText(m_ui->label_Occ->text().arg(OCC_VERSION_COMPLETE));
+#ifdef HAVE_GMIO
     m_ui->label_Gmio->setText(m_ui->label_Gmio->text().arg(GMIO_VERSION_STR));
+#else
+    m_ui->label_Gmio->hide();
+#endif
 }
 
 DialogAbout::~DialogAbout()

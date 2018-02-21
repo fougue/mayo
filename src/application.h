@@ -29,8 +29,10 @@
 
 #pragma once
 
-#include <gmio_core/text_format.h>
-#include <gmio_stl/stl_format.h>
+#ifdef HAVE_GMIO
+#  include <gmio_core/text_format.h>
+#  include <gmio_stl/stl_format.h>
+#endif
 #include <QtCore/QObject>
 #include <string>
 #include <vector>
@@ -64,11 +66,19 @@ public:
     };
 
     struct ExportOptions {
+#ifdef HAVE_GMIO
         gmio_stl_format stlFormat = GMIO_STL_FORMAT_UNKNOWN;
         std::string stlaSolidName;
         gmio_float_text_format stlaFloat32Format =
                 GMIO_FLOAT_TEXT_FORMAT_SHORTEST_LOWERCASE;
         uint8_t stlaFloat32Precision = 9;
+#else
+        enum class StlFormat {
+            Ascii,
+            Binary
+        };
+        StlFormat stlFormat = StlFormat::Binary;
+#endif
     };
 
     // -- API

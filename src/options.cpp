@@ -47,9 +47,13 @@ Options *Options::instance()
 
 Options::StlIoLibrary Options::stlIoLibrary() const
 {
+#ifdef HAVE_GMIO
     static const int defaultVal = static_cast<int>(StlIoLibrary::Gmio);
     const int stlIoLib = m_settings.value(keyStlIoLibrary, defaultVal).toInt();
     return static_cast<StlIoLibrary>(stlIoLib);
+#else
+    return StlIoLibrary::OpenCascade;
+#endif
 }
 
 void Options::setStlIoLibrary(Options::StlIoLibrary lib)

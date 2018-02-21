@@ -282,6 +282,7 @@ void MainWindow::exportSelectedItems()
         const std::vector<DocumentItem*> vecDocItem =
                 m_ui->widget_ApplicationTree->selectedDocumentItems();
         if (Application::hasExportOptionsForFormat(format)) {
+#ifdef HAVE_GMIO
             auto dlg = new DialogExportOptions(this);
             dlg->setPartFormat(format);
             QObject::connect(
@@ -292,6 +293,11 @@ void MainWindow::exportSelectedItems()
                 Internal::ImportExportSettings::save(lastSettings);
             });
             qtgui::QWidgetUtils::asyncDialogExec(dlg);
+#else
+            this->runExportTask(
+                        vecDocItem, format, Application::ExportOptions(), filepath);
+            Internal::ImportExportSettings::save(lastSettings);
+#endif
         }
         else {
             this->runExportTask(
