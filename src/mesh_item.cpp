@@ -27,41 +27,38 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#include "stl_mesh_item.h"
+#include "mesh_item.h"
 
 #include <QtCore/QCoreApplication>
 
 namespace Mayo {
 
-StlMeshItem::StlMeshItem()
+MeshItem::MeshItem()
     : propertyNodeCount(
-          this, QCoreApplication::translate("Mayo::StlMeshItem", "Node count")),
+          this, QCoreApplication::translate("Mayo::MeshItem", "Node count")),
       propertyTriangleCount(
-          this, QCoreApplication::translate("Mayo::StlMeshItem", "Triangle count")),
-      propertyDomainCount(
-          this, QCoreApplication::translate("Mayo::StlMeshItem", "Domain count"))
+          this, QCoreApplication::translate("Mayo::MeshItem", "Triangle count"))
 {
     this->propertyNodeCount.setUserReadOnly(true);
     this->propertyTriangleCount.setUserReadOnly(true);
-    this->propertyDomainCount.setUserReadOnly(true);
 }
 
-const Handle_StlMesh_Mesh &StlMeshItem::stlMesh() const
+const Handle_Poly_Triangulation& MeshItem::triangulation() const
 {
-    return m_stlMesh;
+    return m_triangulation;
 }
 
-void StlMeshItem::setStlMesh(const Handle_StlMesh_Mesh &mesh)
+void MeshItem::setTriangulation(const Handle_Poly_Triangulation& mesh)
 {
-    m_stlMesh = mesh;
+    m_triangulation = mesh;
 }
 
-bool StlMeshItem::isNull() const
+bool MeshItem::isNull() const
 {
-    return m_stlMesh.IsNull();
+    return m_triangulation.IsNull();
 }
 
-const char* StlMeshItem::type = "2d441323-48db-4222-91b4-bdb7b5460c3f";
-const char* StlMeshItem::dynType() const { return StlMeshItem::type; }
+const char* MeshItem::type = "2d441323-48db-4222-91b4-bdb7b5460c3f";
+const char* MeshItem::dynType() const { return MeshItem::type; }
 
 } // namespace Mayo

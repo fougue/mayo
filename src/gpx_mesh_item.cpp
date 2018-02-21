@@ -27,7 +27,7 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#include "gpx_stl_mesh_item.h"
+#include "gpx_mesh_item.h"
 
 #include "options.h"
 #include "fougtools/occtools/qt_utils.h"
@@ -51,7 +51,7 @@ static void redisplayAndUpdateViewer(AIS_InteractiveObject* ptrGpx)
 
 } // namespace Internal
 
-GpxStlMeshItem::GpxStlMeshItem(StlMeshItem *item)
+GpxMeshItem::GpxMeshItem(MeshItem *item)
     : GpxCovariantDocumentItem(item),
       propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
       propertyShowEdges(this, tr("Show edges")),
@@ -60,7 +60,7 @@ GpxStlMeshItem::GpxStlMeshItem(StlMeshItem *item)
     // Create the MeshVS_Mesh object
     const Options* opts = Options::instance();
     Handle_XSDRAWSTLVRML_DataSource dataSource =
-            new XSDRAWSTLVRML_DataSource(item->stlMesh());
+            new XSDRAWSTLVRML_DataSource(item->triangulation());
     Handle_MeshVS_Mesh meshVisu = new MeshVS_Mesh;
     meshVisu->SetDataSource(dataSource);
     // meshVisu->AddBuilder(..., Standard_False); -> No selection
@@ -105,10 +105,10 @@ GpxStlMeshItem::GpxStlMeshItem(StlMeshItem *item)
     this->propertyShowNodes.setValue(boolVal == Standard_True);
 }
 
-void GpxStlMeshItem::onPropertyChanged(Property *prop)
+void GpxMeshItem::onPropertyChanged(Property *prop)
 {
     Handle_AIS_InteractiveContext cxt = this->gpxObject()->GetContext();
-    const Handle_AIS_InteractiveObject& hndGpx = this->handleGpxObject();
+    Handle_AIS_InteractiveObject hndGpx = this->handleGpxObject();
     MeshVS_Mesh* ptrGpx = this->gpxObject();
     if (prop == &this->propertyMaterial) {
         const Graphic3d_NameOfMaterial mat =
@@ -123,7 +123,8 @@ void GpxStlMeshItem::onPropertyChanged(Property *prop)
         Internal::redisplayAndUpdateViewer(ptrGpx);
     }
     else if (prop == &this->propertyDisplayMode) {
-        cxt->SetDisplayMode(hndGpx, this->propertyDisplayMode.value());
+        cxt->SetDisplayMode(
+                    hndGpx, this->propertyDisplayMode.value(), Standard_True);
         //ptrGpx->SetDisplayMode(this->propertyDisplayMode.value());
     }
     else if (prop == &this->propertyShowEdges) {
@@ -139,7 +140,7 @@ void GpxStlMeshItem::onPropertyChanged(Property *prop)
     GpxDocumentItem::onPropertyChanged(prop);
 }
 
-const Enumeration &GpxStlMeshItem::enum_DisplayMode()
+const Enumeration &GpxMeshItem::enum_DisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {

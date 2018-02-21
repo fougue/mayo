@@ -28,7 +28,6 @@
 ****************************************************************************/
 
 #include "mesh_utils.h"
-#include "stl_mesh_random_access.h"
 #include <cmath>
 
 namespace occ {
@@ -54,16 +53,6 @@ double MeshUtils::triangleArea(
     return 0.5 * std::sqrt(cx*cx + cy*cy + cz*cz);
 }
 
-double MeshUtils::meshVolume(const occ::StlMeshRandomAccess &mesh)
-{
-    double volume = 0;
-    for (int i = 0; i < mesh.triangleCount(); ++i) {
-        const auto tri = mesh.triangleCoords(i);
-        volume += MeshUtils::triangleSignedVolume(*tri.p1, *tri.p2, *tri.p3);
-    }
-    return std::abs(volume);
-}
-
 double MeshUtils::triangulationVolume(
         const Handle_Poly_Triangulation &triangulation)
 {
@@ -80,16 +69,6 @@ double MeshUtils::triangulationVolume(
                     vecNode.Value(v3).Coord());
     }
     return std::abs(volume);
-}
-
-double MeshUtils::meshArea(const occ::StlMeshRandomAccess &mesh)
-{
-    double area = 0;
-    for (int i = 0; i < mesh.triangleCount(); ++i) {
-        const auto tri = mesh.triangleCoords(i);
-        area += MeshUtils::triangleArea(*tri.p1, *tri.p2, *tri.p3);
-    }
-    return area;
 }
 
 double MeshUtils::triangulationArea(

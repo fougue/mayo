@@ -33,10 +33,9 @@
 #include "document_item.h"
 #include "caf_utils.h"
 #include "xde_document_item.h"
-#include "stl_mesh_item.h"
+#include "mesh_item.h"
 #include "options.h"
 #include "mesh_utils.h"
-#include "stl_mesh_random_access.h"
 #include "fougtools/qttools/task/progress.h"
 
 #include <QtCore/QFile>
@@ -53,7 +52,6 @@
 #include <Message_ProgressIndicator.hxx>
 #include <OSD_Path.hxx>
 #include <RWStl.hxx>
-#include <StlMesh_Mesh.hxx>
 #include <StlAPI_Writer.hxx>
 #include <Transfer_FinderProcess.hxx>
 #include <Transfer_TransientProcess.hxx>
@@ -74,7 +72,7 @@
 #include <gmio_stl/stl_io.h>
 #include <gmio_support/stream_qt.h>
 #include <gmio_support/stl_occ_brep.h>
-#include <gmio_support/stl_occ_mesh.h>
+#include <gmio_support/stl_occ_polytri.h>
 
 #include <algorithm>
 #include <array>
@@ -251,18 +249,16 @@ static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
     return shape;
 }
 
-static StlMeshItem* createStlMeshItem(
-        const QString& filepath, const Handle_StlMesh_Mesh& mesh)
+static MeshItem* createMeshItem(
+        const QString& filepath, const Handle_Poly_Triangulation& mesh)
 {
-    auto partItem = new StlMeshItem;
+    auto partItem = new MeshItem;
     partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-    const occ::StlMeshRandomAccess meshAccess(mesh);
-    partItem->propertyNodeCount.setValue(meshAccess.vertexCount());
-    partItem->propertyTriangleCount.setValue(meshAccess.triangleCount());
-    partItem->propertyDomainCount.setValue(meshAccess.domainCount());
-    partItem->propertyVolume.setValue(occ::MeshUtils::meshVolume(meshAccess));
-    partItem->propertyArea.setValue(occ::MeshUtils::meshArea(meshAccess));
-    partItem->setStlMesh(mesh);
+    partItem->propertyNodeCount.setValue(mesh->NbNodes());
+    partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
+    partItem->propertyVolume.setValue(occ::MeshUtils::triangulationVolume(mesh));
+    partItem->propertyArea.setValue(occ::MeshUtils::triangulationArea(mesh));
+    partItem->setTriangulation(mesh);
     return partItem;
 }
 
@@ -279,7 +275,7 @@ static XdeDocumentItem* createXdeDocumentItem(
         const TDF_Label asmLabel = shapeTool->NewShape();
         for (const TDF_Label& shapeLabel : seqTopLevelFreeShapeLabel)
             shapeTool->AddComponent(asmLabel, shapeLabel, TopLoc_Location());
-        shapeTool->UpdateAssembly(asmLabel);
+        shapeTool->UpdateAssemblies();
     }
 
     const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
@@ -631,11 +627,12 @@ Application::IoResult Application::importStl(
             options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
             int err = GMIO_ERROR_OK;
             while (gmio_no_error(err) && !file.atEnd()) {
-                Handle_StlMesh_Mesh stlMesh = new StlMesh_Mesh;
-                gmio_stl_mesh_creator_occmesh meshcreator(stlMesh);
+                gmio_stl_mesh_creator_occpolytri meshcreator;
                 err = gmio_stl_read(&stream, &meshcreator, &options);
-                if (gmio_no_error(err))
-                    doc->addRootItem(Internal::createStlMeshItem(filepath, stlMesh));
+                if (gmio_no_error(err)) {
+                    const Handle_Poly_Triangulation& mesh = meshcreator.polytri();
+                    doc->addRootItem(Internal::createMeshItem(filepath, mesh));
+                }
             }
             result.ok = (err == GMIO_ERROR_OK);
             if (!result.ok)
@@ -645,11 +642,11 @@ Application::IoResult Application::importStl(
     else if (lib == Options::StlIoLibrary::OpenCascade) {
         Handle_Message_ProgressIndicator indicator =
                 new Internal::OccImportProgress(progress);
-        Handle_StlMesh_Mesh stlMesh = RWStl::ReadFile(
+        const Handle_Poly_Triangulation mesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
-        if (!stlMesh.IsNull())
-            doc->addRootItem(Internal::createStlMeshItem(filepath, stlMesh));
-        result.ok = !stlMesh.IsNull();
+        if (!mesh.IsNull())
+            doc->addRootItem(Internal::createMeshItem(filepath, mesh));
+        result.ok = !mesh.IsNull();
         if (!result.ok)
             result.errorText = tr("Imported STL mesh is null");
     }
@@ -791,9 +788,9 @@ Application::IoResult Application::exportStl_gmio(
                 error = gmio_stl_write(
                             options.stlFormat, &stream, &gmioMesh, &gmioOptions);
             }
-            else if (sameType<StlMeshItem>(item)) {
-                auto meshItem = static_cast<const StlMeshItem*>(item);
-                const gmio_stl_mesh_occmesh gmioMesh(meshItem->stlMesh());
+            else if (sameType<MeshItem>(item)) {
+                auto meshItem = static_cast<const MeshItem*>(item);
+                const gmio_stl_mesh_occpolytri gmioMesh(meshItem->triangulation());
                 error = gmio_stl_write(
                             options.stlFormat, &stream, &gmioMesh, &gmioOptions);
             }
@@ -826,27 +823,22 @@ Application::IoResult Application::exportStl_OCC(
             StlAPI_Writer writer;
             writer.ASCIIMode() = options.stlFormat == GMIO_STL_FORMAT_ASCII;
             const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
-            const StlAPI_ErrorStatus error = writer.Write(
+            const Standard_Boolean ok = writer.Write(
                         shape, filepath.toLocal8Bit().constData());
-            switch (error) {
-            case StlAPI_StatusOK: return { true, QString() };
-            case StlAPI_MeshIsEmpty: return { false, tr("StlAPI_MeshIsEmpty") };
-            case StlAPI_CannotOpenFile: return { false, tr("StlAPI_CannotOpenFile") };
-            case StlAPI_WriteError: return { false, tr("StlAPI_WriteError") };
-            }
+            return { ok, ok ? QString() : tr("Unknown StlAPI_Writer failure") };
         }
-        else if (sameType<StlMeshItem>(item)) {
+        else if (sameType<MeshItem>(item)) {
             Handle_Message_ProgressIndicator indicator =
                     new Internal::OccImportProgress(progress);
             Standard_Boolean occOk = Standard_False;
-            auto meshItem = static_cast<const StlMeshItem*>(item);
+            auto meshItem = static_cast<const MeshItem*>(item);
             const QByteArray filepathLocal8b = filepath.toLocal8Bit();
             const OSD_Path osdFilepath(filepathLocal8b.constData());
-            const Handle_StlMesh_Mesh& stlMesh = meshItem->stlMesh();
+            const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
             if (options.stlFormat == GMIO_STL_FORMAT_ASCII)
-                occOk = RWStl::WriteAscii(stlMesh, osdFilepath, indicator);
+                occOk = RWStl::WriteAscii(mesh, osdFilepath, indicator);
             else
-                occOk = RWStl::WriteBinary(stlMesh, osdFilepath, indicator);
+                occOk = RWStl::WriteBinary(mesh, osdFilepath, indicator);
             const bool ok = occOk == Standard_True;
             return { ok, ok ? QString() : tr("Unknown error") };
         }

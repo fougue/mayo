@@ -1,34 +1,35 @@
+// Excerpted from $OCC/samples/qt/Common/src
 #pragma once
 
 #include <Aspect_Window.hxx>
-#include <Standard_Version.hxx>
 
 #include <QWidget>
+class OcctWindow;
 
 /*
-  OcctWindow class implements Aspect_Window interface using Qt API 
-  as a platform-independent source of window geometry information. 
-  A similar class should be used instead of platform-specific OCCT 
-  classes (WNT_Window, Xw_Window) in any Qt 5 application using OCCT 
+  OcctWindow class implements Aspect_Window interface using Qt API
+  as a platform-independent source of window geometry information.
+  A similar class should be used instead of platform-specific OCCT
+  classes (WNT_Window, Xw_Window) in any Qt 5 application using OCCT
   3D visualization.
 
-  With Qt 5, the requirement for a Qt-based application to rely fully 
-  on Qt public API and stop using platform-specific APIs looks mandatory. 
-  An example of this is changed QWidget event sequence: when a widget is 
-  first shown on the screen, a resize event is generated before the 
+  With Qt 5, the requirement for a Qt-based application to rely fully
+  on Qt public API and stop using platform-specific APIs looks mandatory.
+  An example of this is changed QWidget event sequence: when a widget is
+  first shown on the screen, a resize event is generated before the
   underlying native window is resized correctly, however the QWidget instance
-  already holds correct size information at that moment. The OCCT classes 
-  acting as a source of window geometry for V3d_View class (WNT_Window, Xw_Window) 
-  are no longer compatible with changed Qt behavior because they rely on 
-  platform-specific API that cannot return correct window geometry information 
-  in some cases. A reasonable solution is to provide a Qt-based implementation 
+  already holds correct size information at that moment. The OCCT classes
+  acting as a source of window geometry for V3d_View class (WNT_Window, Xw_Window)
+  are no longer compatible with changed Qt behavior because they rely on
+  platform-specific API that cannot return correct window geometry information
+  in some cases. A reasonable solution is to provide a Qt-based implementation
   of Aspect_Window interface at application level.
 */
 
 class OcctWindow : public Aspect_Window
 {
 public:
-  
+
   //! Constructor
   OcctWindow( QWidget* theWidget, const Quantity_NameOfColor theBackColor = Quantity_NOC_MATRAGRAY );
 
@@ -59,7 +60,7 @@ public:
 
   //! Opens the window <me>.
   virtual void Map() const;
-  
+
   //! Closes the window <me>.
   virtual void Unmap() const;
 
@@ -68,13 +69,11 @@ public:
 
   //! Returns The Window RATIO equal to the physical
   //! WIDTH/HEIGHT dimensions.
-  virtual Quantity_Ratio Ratio() const;
+  virtual Standard_Real Ratio() const;
 
   virtual void Size( Standard_Integer& theWidth, Standard_Integer& theHeight ) const;
 
-#if OCC_VERSION_HEX >= 0x070000
   virtual Aspect_FBConfig NativeFBConfig() const Standard_OVERRIDE { return NULL; }
-#endif
 
   DEFINE_STANDARD_RTTIEXT(OcctWindow,Aspect_Window)
 
@@ -85,5 +84,3 @@ protected:
   Standard_Integer myYBottom;
   QWidget* myWidget;
 };
-
-typedef Handle(OcctWindow) Handle_OcctWindow;

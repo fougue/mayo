@@ -29,30 +29,29 @@
 
 #pragma once
 
-#include "document_item.h"
-#include <StlMesh_Mesh.hxx>
+#include "gpx_document_item.h"
+#include "mesh_item.h"
+#include <MeshVS_Mesh.hxx>
 
 namespace Mayo {
 
-class StlMeshItem : public PartItem
+class GpxMeshItem :
+        public GpxCovariantDocumentItem<MeshItem, MeshVS_Mesh, Handle_MeshVS_Mesh>
 {
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxMeshItem)
+
 public:
-    StlMeshItem();
+    GpxMeshItem(MeshItem* item);
 
-    const Handle_StlMesh_Mesh& stlMesh() const;
-    void setStlMesh(const Handle_StlMesh_Mesh& mesh);
+    PropertyEnumeration propertyDisplayMode;
+    PropertyBool propertyShowEdges;
+    PropertyBool propertyShowNodes;
 
-    bool isNull() const override;
-
-    static const char* type;
-    const char* dynType() const override;
-
-    PropertyInt propertyNodeCount; // Read-only
-    PropertyInt propertyTriangleCount; // Read-only
-    PropertyInt propertyDomainCount; // Read-only
+protected:
+    void onPropertyChanged(Property* prop) override;
 
 private:
-    Handle_StlMesh_Mesh m_stlMesh;
+    static const Enumeration& enum_DisplayMode();
 };
 
 } // namespace Mayo

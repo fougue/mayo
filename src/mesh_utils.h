@@ -43,9 +43,6 @@ public:
     static double triangleArea(
             const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
 
-    static double meshVolume(const occ::StlMeshRandomAccess& mesh);
-    static double meshArea(const occ::StlMeshRandomAccess& mesh);
-
     static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 };

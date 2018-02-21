@@ -52,9 +52,9 @@ void GpxDocumentItem::onPropertyChanged(Property *prop)
     if (prop == &this->propertyIsVisible) {
         Handle_AIS_InteractiveContext cxt = this->handleGpxObject()->GetContext();
         if (this->propertyIsVisible.value())
-            cxt->Display(this->handleGpxObject());
+            cxt->Display(this->handleGpxObject(), Standard_True);
         else
-            cxt->Erase(this->handleGpxObject());
+            cxt->Erase(this->handleGpxObject(), Standard_True);
     }
 }
 
@@ -70,7 +70,10 @@ void GpxDocumentItem::initForGpxBRepShape(
 
     Mayo_PropertyChangedBlocker(this);
     this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
-    this->propertyColor.setValue(hndGpx->Color());
+
+    Quantity_Color color;
+    hndGpx->Color(color);
+    this->propertyColor.setValue(color);
 }
 
 void GpxBRepShapeCommonProperties::initCommonProperties(
@@ -96,10 +99,12 @@ void GpxBRepShapeCommonProperties::handleCommonPropertyChange(
 {
     Handle_AIS_InteractiveContext cxt = hndGpx->GetContext();
     if (prop == &this->propertyTransparency) {
-        cxt->SetTransparency(hndGpx, this->propertyTransparency.value() / 100.);
+        cxt->SetTransparency(
+                    hndGpx, this->propertyTransparency.value() / 100., Standard_True);
     }
     else if (prop == &this->propertyDisplayMode) {
-        cxt->SetDisplayMode(hndGpx, this->propertyDisplayMode.value());
+        cxt->SetDisplayMode(
+                    hndGpx, this->propertyDisplayMode.value(), Standard_True);
     }
     else if (prop == &this->propertyShowFaceBoundary) {
         hndGpx->Attributes()->SetFaceBoundaryDraw(
