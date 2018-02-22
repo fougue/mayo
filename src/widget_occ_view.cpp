@@ -117,11 +117,9 @@ void WidgetOccView::paintEvent(QPaintEvent* /*event*/)
         this->redraw();
 }
 
-/*! Reimplemented from QWidget::resizeEvent()
- *
- *  Called when the widget needs to resize itself, but seeing as a paint event
- *  always follows a resize event, we'll move the work into the paint event
- */
+//! Reimplemented from QWidget::resizeEvent()
+//! Called when the widget needs to resize itself, but seeing as a paint event
+//! always follows a resize event, we'll move the work into the paint event
 void WidgetOccView::resizeEvent(QResizeEvent* /*event*/)
 {
     m_needsResize = true;
@@ -156,6 +154,9 @@ void WidgetOccView::initialize()
                     Quantity_NOC_GRAY50,
                     0.075,
                     V3d_ZBUFFER);
+
+        m_view->ChangeRenderingParams().IsAntialiasingEnabled = true;
+        m_view->ChangeRenderingParams().NbMsaaSamples = 4;
 
         m_view->MustBeResized();
         m_isInitialized = true;
