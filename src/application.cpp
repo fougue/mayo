@@ -344,9 +344,9 @@ static QString occReturnStatusToQString(IFSelect_ReturnStatus status)
     return Application::tr("IFSelect Unknown");
 }
 
-const char* skipWhiteSpaces(const char* str, std::size_t len)
+static const char* skipWhiteSpaces(const char* str, size_t len)
 {
-    std::size_t pos = 0;
+    size_t pos = 0;
     while (std::isspace(str[pos]) && pos < len)
         ++pos;
     return str + pos;
@@ -367,11 +367,12 @@ Application::PartFormat findPartFormatFromContents(
     static const size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
     if (contentsBeginSize >= binaryStlHeaderSize) {
         const uint32_t offset = 80; // Skip header
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(contentsBegin);
         const uint32_t facetsCount =
-                (static_cast<uint32_t>(contentsBegin[offset + 0]) << 24)
-                | (static_cast<uint32_t>(contentsBegin[offset + 1]) << 16)
-                | (static_cast<uint32_t>(contentsBegin[offset + 2]) << 8)
-                | (static_cast<uint32_t>(contentsBegin[offset + 3]));
+                bytes[offset]
+                | (bytes[offset+1] << 8)
+                | (bytes[offset+2] << 16)
+                | (bytes[offset+3] << 24);
         const unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
         if ((facetSize * facetsCount + binaryStlHeaderSize)
                 == fullContentsSizeHint)
@@ -406,9 +407,9 @@ Application::PartFormat findPartFormatFromContents(
     {
         // regex : ^\s*ISO-10303-21\s*;\s*HEADER
         static const char stepIsoId[] = "ISO-10303-21";
-        static const std::size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
+        static const size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
         static const char stepHeaderToken[] = "HEADER";
-        static const std::size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
+        static const size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
         if (std::strncmp(contentsBegin, stepIsoId, stepIsoIdLen) == 0) {
             auto charIt = skipWhiteSpaces(
                         contentsBegin + stepIsoIdLen,
