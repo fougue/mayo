@@ -34,6 +34,7 @@
 #include "caf_utils.h"
 #include "document.h"
 #include "document_item.h"
+#include "mesh_item.h"
 #include "ui_widget_application_tree.h"
 #include "xde_document_item.h"
 #include "xde_shape_explorer.h"
@@ -120,6 +121,8 @@ static QIcon documentItemIcon(const DocumentItem* docItem)
 {
     if (sameType<XdeDocumentItem>(docItem))
         return QIcon(":/images/xde_document_16.png");
+    else if (sameType<MeshItem>(docItem))
+        return QIcon(":/images/mesh_16.png");
     return QIcon();
 }
 

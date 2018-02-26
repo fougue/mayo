@@ -17,5 +17,8 @@
         <file>images/xde_simple_shape_16.png</file>
         <file>images/file_16.png</file>
         <file>images/xde_document_16.png</file>
+        <file>images/mesh_24.png</file>
+        <file>images/mesh_16.png</file>
+        <file>images/mesh_32.png</file>
     </qresource>
 </RCC>
