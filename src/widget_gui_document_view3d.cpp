@@ -29,13 +29,13 @@
 
 #include "widget_gui_document_view3d.h"
 
+#include "button_view3d.h"
 #include "gui_document.h"
 #include "widget_occ_view.h"
 #include "qt_occ_view_controller.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
 #include <QtWidgets/QBoxLayout>
-#include <QtWidgets/QToolButton>
 
 #include <V3d_TypeOfOrientation.hxx>
 
@@ -43,10 +43,10 @@ namespace Mayo {
 
 namespace Internal {
 
-static QToolButton* createViewBtn(
+static ButtonView3d* createViewBtn(
         QWidget* parent, const QString& imageFile, const QString& tooltip)
 {
-    auto btn = new QToolButton(parent);
+    auto btn = new ButtonView3d(parent);
     btn->setIcon(QIcon(QString(":/images/%1.png").arg(imageFile)));
     btn->setIconSize(QSize(16, 16));
     btn->setFixedSize(24, 24);
@@ -55,10 +55,10 @@ static QToolButton* createViewBtn(
 }
 
 static void connectViewProjBtn(
-        QToolButton* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
+        ButtonView3d* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
 {
     QObject::connect(
-                btn, &QAbstractButton::clicked,
+                btn, &ButtonView3d::clicked,
                 [=]{
         view->occV3dView()->SetProj(proj);
         view->fitAll();
@@ -87,14 +87,15 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     auto btnViewRight = Internal::createViewBtn(this, "view_right", tr("Right"));
     auto btnViewTop = Internal::createViewBtn(this, "view_top", tr("Top"));
     auto btnViewBottom = Internal::createViewBtn(this, "view_bottom", tr("Bottom"));
-    btnFitAll->move(0, 0);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewIso, btnFitAll);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBack, btnViewIso);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewFront, btnViewBack);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewLeft, btnViewFront);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewRight, btnViewLeft);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewTop, btnViewRight);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop);
+    const int margin = 4;
+    btnFitAll->move(margin, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewIso, btnFitAll, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBack, btnViewIso, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewFront, btnViewBack, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewLeft, btnViewFront, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewRight, btnViewLeft, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewTop, btnViewRight, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
 
     Internal::connectViewProjBtn(btnViewIso, m_qtOccView, V3d_XposYnegZpos);
     Internal::connectViewProjBtn(btnViewBack, m_qtOccView, V3d_Xneg);
@@ -104,7 +105,7 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     Internal::connectViewProjBtn(btnViewTop, m_qtOccView, V3d_Zpos);
     Internal::connectViewProjBtn(btnViewBottom, m_qtOccView, V3d_Zneg);
     QObject::connect(
-                btnFitAll, &QAbstractButton::clicked,
+                btnFitAll, &ButtonView3d::clicked,
                 m_qtOccView, &WidgetOccView::fitAll);
 }
 

@@ -45,7 +45,8 @@ HEADERS += \
     src/xde_shape_explorer.h \
     src/brep_utils.h \
     src/mesh_item.h \
-    src/gpx_mesh_item.h
+    src/gpx_mesh_item.h \
+    src/button_view3d.h
 
 SOURCES += \
     src/document.cpp \
@@ -82,7 +83,8 @@ SOURCES += \
     src/xde_shape_explorer.cpp \
     src/brep_utils.cpp \
     src/mesh_item.cpp \
-    src/gpx_mesh_item.cpp
+    src/gpx_mesh_item.cpp \
+    src/button_view3d.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)

@@ -30,24 +30,36 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
+#include <QtGui/QIcon>
 
 namespace Mayo {
 
-class GuiDocument;
-class WidgetOccView;
-
-class WidgetGuiDocumentView3d : public QWidget {
+class ButtonView3d : public QWidget {
     Q_OBJECT
 
 public:
-    WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget* parent = nullptr);
+    ButtonView3d(QWidget* parent = nullptr);
 
-    GuiDocument* guiDocument() const;
-    WidgetOccView* widgetOccView() const;
+    const QIcon& icon() const;
+    void setIcon(const QIcon& icon);
+
+    const QSize& iconSize() const;
+    void setIconSize(const QSize& size);
+
+signals:
+    void clicked();
+
+protected:
+    void paintEvent(QPaintEvent* event) override;
+    void enterEvent(QEvent* event) override;
+    void leaveEvent(QEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event);
 
 private:
-    GuiDocument* m_guiDoc = nullptr;
-    WidgetOccView* m_qtOccView = nullptr;
+    QIcon m_icon;
+    QSize m_iconSize;
+    QColor m_backgroundColor;
+    QColor m_hoverColor;
 };
 
 } // namespace Mayo

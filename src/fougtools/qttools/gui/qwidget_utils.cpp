@@ -108,10 +108,11 @@ QPoint QWidgetUtils::globalPos(const QWidget *widget, Qt::Corner widgetCorner)
 
 /*! Move position of \p widget so it's displayed stuck to the right of \p nextTo
  */
-void QWidgetUtils::moveWidgetRightTo(QWidget* widget, const QWidget* nextTo)
+void QWidgetUtils::moveWidgetRightTo(
+        QWidget* widget, const QWidget* nextTo, int margin)
 {
     const QRect frameGeom = nextTo->frameGeometry();
-    widget->move(nextTo->mapToGlobal(QPoint(frameGeom.width(), 0)));
+    widget->move(nextTo->mapToGlobal(QPoint(frameGeom.width() + margin, 0)));
 }
 
 /*! Move position of \p widget so it's displayed stuck to the left of \p nextTo
