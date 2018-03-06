@@ -29,63 +29,28 @@
 
 #pragma once
 
-#include <QtCore/QObject>
-#include <QtCore/QSettings>
-#include <QtGui/QColor>
-#include <Aspect_HatchStyle.hxx>
-#include <Graphic3d_NameOfMaterial.hxx>
+#include <array>
+#include <AIS_InteractiveObject.hxx>
+#include <Bnd_Box.hxx>
+#include <gp_Pnt.hxx>
 
 namespace Mayo {
 
-class Options : public QObject {
-    Q_OBJECT
-public:
-    enum class StlIoLibrary {
-        Gmio,
-        OpenCascade
-    };
+struct BndUtils {
+    static void add(Bnd_Box* box, const Bnd_Box& other);
+    static Bnd_Box get(const Handle_AIS_InteractiveObject& obj);
+};
 
-    static Options* instance();
+struct BndBoxCoords {
+    double xmin;
+    double ymin;
+    double zmin;
+    double xmax;
+    double ymax;
+    double zmax;
 
-    StlIoLibrary stlIoLibrary() const;
-    void setStlIoLibrary(StlIoLibrary lib);
-
-    // BRep shape graphics
-
-    QColor brepShapeDefaultColor() const;
-    void setBrepShapeDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial brepShapeDefaultMaterial() const;
-    void setBrepShapeDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    // Mesh graphics
-
-    QColor meshDefaultColor() const;
-    void setMeshDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial meshDefaultMaterial() const;
-    void setMeshDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    bool meshDefaultShowEdges() const;
-    void setMeshDefaultShowEdges(bool on);
-
-    bool meshDefaultShowNodes() const;
-    void setMeshDefaultShowNodes(bool on);
-
-    // Clip planes
-
-    bool isClipPlaneCappingOn() const;
-    void setClipPlaneCapping(bool on);
-
-    Aspect_HatchStyle clipPlaneCappingHatch() const;
-    void setClipPlaneCappingHatch(Aspect_HatchStyle hatch);
-
-signals:
-    void clipPlaneCappingToggled(bool on);
-    void clipPlaneCappingHatchChanged(Aspect_HatchStyle hatch);
-
-private:
-    QSettings m_settings;
+    std::array<gp_Pnt, 8> vertices() const;
+    static BndBoxCoords get(const Bnd_Box& box);
 };
 
 } // namespace Mayo

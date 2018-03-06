@@ -33,19 +33,17 @@ namespace qtgui {
  *  \ingroup qttools_gui
  */
 
-/*! \brief Make \p widget the central widget of \p dialog
- *
- *  \p dialog should be empty for this function to work.\n
- *  wrapWidgetInDialog() will try to find if \p widget contains a
- *  QDialogButtonBox, if so
- *  then it connects to \p dialog 's accept()/reject() slots.
- */
+//! Make 'widget' the central widget of 'dialog'
+//!
+//! 'dialog' should be empty for this function to work.\n
+//! wrapWidgetInDialog() will try to find if 'widget' contains a
+//! QDialogButtonBox, if so then it connects to dialog's accept()/reject() slots.
 void QWidgetUtils::wrapWidgetInDialog(QWidget *widget, QDialog *dialog)
 {
-    if (widget != NULL && dialog != NULL) {
+    if (widget != nullptr && dialog != nullptr) {
         dialog->setWindowTitle(widget->windowTitle());
         widget->setParent(dialog);
-        if (dialog->layout() != NULL) {
+        if (dialog->layout() != nullptr) {
             dialog->layout()->addWidget(widget);
         }
         else {
@@ -55,7 +53,7 @@ void QWidgetUtils::wrapWidgetInDialog(QWidget *widget, QDialog *dialog)
         }
 
         auto btnBox = widget->findChild<QDialogButtonBox*>();
-        if (btnBox != NULL) {
+        if (btnBox != nullptr) {
             QObject::connect(
                         btnBox, &QDialogButtonBox::accepted,
                         dialog, &QDialog::accept);
@@ -66,16 +64,15 @@ void QWidgetUtils::wrapWidgetInDialog(QWidget *widget, QDialog *dialog)
     }
 }
 
-/*! Add \p contentsWidget to \p containerWidget
- *
- *  If \p containerWidget is empty, a QBoxLayout is created to receive
- *  \p contentsWidget
- */
+//! Add 'contentsWidget' to 'containerWidget'
+//!
+//! If 'containerWidget' is empty, a QBoxLayout is created to receive
+//! 'contentsWidget'
 void QWidgetUtils::addContentsWidget(
         QWidget *containerWidget, QWidget *contentsWidget)
 {
-    if (containerWidget != NULL && contentsWidget != NULL) {
-        if (containerWidget->layout() == NULL) {
+    if (containerWidget != nullptr && contentsWidget != nullptr) {
+        if (containerWidget->layout() == nullptr) {
             containerWidget->setLayout(new QVBoxLayout);
             containerWidget->layout()->setContentsMargins(0, 0, 0, 0);
         }
@@ -84,13 +81,12 @@ void QWidgetUtils::addContentsWidget(
     }
 }
 
-/*! Returns the global position of a widget corner
- *
- *  \returns Null point (ie. with coordinates (0, 0)) if \p widget is null
- */
+//! Returns the global position of a widget corner
+//!
+//! \returns nullptr point (ie. with coordinates (0, 0)) if 'widget' is nullptr
 QPoint QWidgetUtils::globalPos(const QWidget *widget, Qt::Corner widgetCorner)
 {
-    if (widget != NULL) {
+    if (widget != nullptr) {
         const QRect geom = widget->frameGeometry();
         switch (widgetCorner) {
         case Qt::TopLeftCorner:
@@ -106,8 +102,7 @@ QPoint QWidgetUtils::globalPos(const QWidget *widget, Qt::Corner widgetCorner)
     return QPoint(0, 0);
 }
 
-/*! Move position of \p widget so it's displayed stuck to the right of \p nextTo
- */
+//! Move position of 'widget' so it's displayed stuck to the right of 'nextTo'
 void QWidgetUtils::moveWidgetRightTo(
         QWidget* widget, const QWidget* nextTo, int margin)
 {
@@ -115,26 +110,23 @@ void QWidgetUtils::moveWidgetRightTo(
     widget->move(nextTo->mapToGlobal(QPoint(frameGeom.width() + margin, 0)));
 }
 
-/*! Move position of \p widget so it's displayed stuck to the left of \p nextTo
- */
-void QWidgetUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo)
+//! Move position of 'widget' so it's displayed stuck to the left of 'nextTo'
+void QWidgetUtils::moveWidgetLeftTo(
+        QWidget* widget, const QWidget* nextTo, int margin)
 {
-    //const QRect nextToFrameGeom = nextTo->frameGeometry();
-    const QRect widgetFrameGeom = widget->frameGeometry();
-    widget->move(nextTo->mapToGlobal(QPoint(-widgetFrameGeom.width(), 0)));
+    const QRect frameGeom = widget->frameGeometry();
+    widget->move(nextTo->mapToGlobal(QPoint(-frameGeom.width() - margin, 0)));
 }
 
-/*! Current slide positions of the horizontal and vertical scroll bars
- */
+//! Current slide positions of the horizontal and vertical scroll bars
 QPair<int, int> QWidgetUtils::horizAndVertScrollValue(const QAbstractScrollArea* area)
 {
     return qMakePair(area->horizontalScrollBar()->value(),
                      area->verticalScrollBar()->value());
 }
 
-/*! Set the current slide positions of the horizontal and vertical scroll bars
- *  to \p values
- */
+//! Set the current slide positions of the horizontal and vertical scroll bars
+//! to 'values'
 void QWidgetUtils::setHorizAndVertScrollValue(
         QAbstractScrollArea* area, const QPair<int, int>& values)
 {
@@ -142,10 +134,10 @@ void QWidgetUtils::setHorizAndVertScrollValue(
     area->verticalScrollBar()->setValue(values.second);
 }
 
-/*! Executes \p dialog asynchronously */
+//! Executes 'dialog' asynchronously
 void QWidgetUtils::asyncDialogExec(QDialog *dialog)
 {
-    if (dialog != NULL) {
+    if (dialog != nullptr) {
         dialog->setModal(true);
         QObject::connect(
                     dialog, &QDialog::finished,
@@ -155,16 +147,16 @@ void QWidgetUtils::asyncDialogExec(QDialog *dialog)
     }
 }
 
-/*! Executes \p menu asynchronously */
+//! Executes 'menu' asynchronously
 void QWidgetUtils::asyncMenuExec(QMenu *menu, const QPoint &pos)
 {
-    if (menu != NULL) {
+    if (menu != nullptr) {
         QObject::connect(menu, &QMenu::aboutToHide, menu, &QObject::deleteLater);
         menu->popup(pos);
     }
 }
 
-/*! Executes message box information asynchronously */
+//! Executes message box information asynchronously
 QMessageBox* QWidgetUtils::asyncMsgBoxInfo(
         QWidget* parent,
         const QString& title,
@@ -177,7 +169,7 @@ QMessageBox* QWidgetUtils::asyncMsgBoxInfo(
     return msgBox;
 }
 
-/*! Executes message box warning asynchronously */
+//! Executes message box warning asynchronously
 QMessageBox* QWidgetUtils::asyncMsgBoxWarning(
         QWidget *parent,
         const QString &title,
@@ -190,7 +182,7 @@ QMessageBox* QWidgetUtils::asyncMsgBoxWarning(
     return msgBox;
 }
 
-/*! Executes message box critical asynchronously */
+//! Executes message box critical asynchronously
 QMessageBox* QWidgetUtils::asyncMsgBoxCritical(
         QWidget* parent,
         const QString& title,

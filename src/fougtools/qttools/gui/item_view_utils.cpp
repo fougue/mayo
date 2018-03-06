@@ -38,7 +38,7 @@ namespace qtgui {
 QVector<int> ItemViewUtils::selectedRows(const QAbstractItemView* view, int col)
 {
     const QItemSelectionModel* itemSelModel = view->selectionModel();
-    if (itemSelModel == NULL || !itemSelModel->hasSelection())
+    if (itemSelModel == nullptr || !itemSelModel->hasSelection())
         return QVector<int>();
     const QModelIndexList selIndexes = itemSelModel->selectedIndexes();
     QVector<int> result;
@@ -57,7 +57,7 @@ void ItemViewUtils::selectRows(QAbstractItemView* view, const QVector<int>& rows
 {
     const QAbstractItemModel* model = view->model();
     QItemSelectionModel* selModel = view->selectionModel();
-    if (model == NULL || selModel == NULL)
+    if (model == nullptr || selModel == nullptr)
         return;
     const QItemSelectionModel::SelectionFlags selFlags =
             QItemSelectionModel::ToggleCurrent | QItemSelectionModel::Rows;

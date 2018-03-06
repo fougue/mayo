@@ -34,6 +34,7 @@
 namespace Mayo {
 
 class GuiDocument;
+class WidgetClipPlanes;
 class WidgetOccView;
 
 class WidgetGuiDocumentView3d : public QWidget {
@@ -46,8 +47,12 @@ public:
     WidgetOccView* widgetOccView() const;
 
 private:
+    void toggleWidgetClipPlanes();
+
     GuiDocument* m_guiDoc = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
+    WidgetClipPlanes* m_widgetClipPlanes = nullptr;
+    QRect m_firstBtnFrameRect;
 };
 
 } // namespace Mayo

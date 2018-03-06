@@ -7,6 +7,8 @@ QT += core gui widgets
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
 }
 
+CONFIG += console
+
 HEADERS += \
     src/document.h \
     src/document_item.h \
@@ -46,7 +48,10 @@ HEADERS += \
     src/brep_utils.h \
     src/mesh_item.h \
     src/gpx_mesh_item.h \
-    src/button_view3d.h
+    src/button_view3d.h \
+    src/widget_clip_planes.h \
+    src/span.h \
+    src/bnd_utils.h
 
 SOURCES += \
     src/document.cpp \
@@ -84,7 +89,9 @@ SOURCES += \
     src/brep_utils.cpp \
     src/mesh_item.cpp \
     src/gpx_mesh_item.cpp \
-    src/button_view3d.cpp
+    src/button_view3d.cpp \
+    src/widget_clip_planes.cpp \
+    src/bnd_utils.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -99,7 +106,8 @@ FORMS += \
     src/widget_application_tree.ui \
     src/widget_document_item_props.ui \
     src/dialog_export_options.ui \
-    src/dialog_inspect_xde.ui
+    src/dialog_inspect_xde.ui \
+    src/widget_clip_planes.ui
 
 # gmio
 #isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
@@ -129,6 +137,7 @@ LIBS += -lTKBRep -lTKSTL
 LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
 LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF
+LIBS += -lTKG3d
 
 OCCT_DEFINES = $$(CSF_DEFINES)
 DEFINES += $$split(OCCT_DEFINES, ;)

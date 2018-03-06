@@ -42,17 +42,17 @@ void Enumeration::map(Value eval, const QString& str)
     m_vecMapping.emplace_back(std::move(mapping));
 }
 
-std::size_t Enumeration::size() const
+size_t Enumeration::size() const
 {
     return m_vecMapping.size();
 }
 
-std::size_t Enumeration::index(Value eval) const
+size_t Enumeration::index(Value eval) const
 {
     return this->findCppSql(eval) - m_vecMapping.cbegin();
 }
 
-Enumeration::Value Enumeration::valueAt(std::size_t i) const
+Enumeration::Value Enumeration::valueAt(size_t i) const
 {
     return m_vecMapping.at(i).value;
 }
@@ -74,7 +74,7 @@ const QString& Enumeration::string(Value eval) const
     return it->string;
 }
 
-Enumeration::Mapping Enumeration::mapping(std::size_t i) const
+Enumeration::Mapping Enumeration::mapping(size_t i) const
 {
     assert(i < m_vecMapping.size());
     return m_vecMapping.at(i);
@@ -199,6 +199,53 @@ const Enumeration &enum_Graphic3dNameOfMaterial()
         enumeration.map(
                     Graphic3d_NOM_DEFAULT,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Default"));
+    }
+    return enumeration;
+}
+
+const Enumeration &enum_AspectHatchStyle()
+{
+    static Enumeration enumeration;
+    if (enumeration.size() == 0) {
+        enumeration.map(
+                    Aspect_HS_SOLID,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Solid"));
+        enumeration.map(
+                    Aspect_HS_HORIZONTAL,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Horizontal"));
+        enumeration.map(
+                    Aspect_HS_HORIZONTAL_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Horizontal sparse"));
+        enumeration.map(
+                    Aspect_HS_VERTICAL,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Vertical"));
+        enumeration.map(
+                    Aspect_HS_VERTICAL_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Vertical sparse"));
+        enumeration.map(
+                    Aspect_HS_DIAGONAL_45,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_45"));
+        enumeration.map(
+                    Aspect_HS_DIAGONAL_45_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_45 sparse"));
+        enumeration.map(
+                    Aspect_HS_DIAGONAL_135,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_135"));
+        enumeration.map(
+                    Aspect_HS_DIAGONAL_135_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_135 sparse"));
+        enumeration.map(
+                    Aspect_HS_GRID,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid"));
+        enumeration.map(
+                    Aspect_HS_GRID_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid sparse"));
+        enumeration.map(
+                    Aspect_HS_GRID_DIAGONAL,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid diagonal"));
+        enumeration.map(
+                    Aspect_HS_GRID_DIAGONAL_WIDE,
+                    QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid diagonal sparse"));
     }
     return enumeration;
 }

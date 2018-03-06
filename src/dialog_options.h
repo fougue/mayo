@@ -34,8 +34,7 @@ class QToolButton;
 
 namespace Mayo {
 
-class DialogOptions : public QDialog
-{
+class DialogOptions : public QDialog {
     Q_OBJECT
 
 public:

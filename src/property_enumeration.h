@@ -31,14 +31,14 @@
 
 #include "property.h"
 #include <utility>
+#include <Aspect_HatchStyle.hxx>
 #include <Graphic3d_NameOfMaterial.hxx>
 
 namespace Mayo {
 
-class Enumeration
-{
+class Enumeration {
 public:
-    typedef int Value;
+    using Value = int;
     struct Mapping {
         Value value;
         QString string;
@@ -48,24 +48,22 @@ public:
 
     void map(int eval, const QString& str);
 
-    std::size_t size() const;
-    std::size_t index(int eval) const;
+    size_t size() const;
+    size_t index(int eval) const;
 
-    Value valueAt(std::size_t i) const;
+    Value valueAt(size_t i) const;
     Value value(const QString& str) const;
     const QString& string(Value eval) const;
 
-    Mapping mapping(std::size_t i) const;
+    Mapping mapping(size_t i) const;
     const std::vector<Mapping>& mappings() const;
 
 private:
     std::vector<Mapping>::const_iterator findCppSql(Value eval) const;
-
     std::vector<Mapping> m_vecMapping;
 };
 
-class PropertyEnumeration : public Property
-{
+class PropertyEnumeration : public Property {
 public:
     PropertyEnumeration(
             PropertyOwner* owner,
@@ -87,6 +85,7 @@ private:
 };
 
 const Enumeration& enum_Graphic3dNameOfMaterial();
+const Enumeration& enum_AspectHatchStyle();
 
 
 

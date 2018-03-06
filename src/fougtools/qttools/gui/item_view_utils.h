@@ -22,8 +22,7 @@ class QSortFilterProxyModel;
 
 namespace qtgui {
 
-class QTTOOLS_GUI_EXPORT ItemViewUtils
-{
+class QTTOOLS_GUI_EXPORT ItemViewUtils {
 public:
     static QVector<int> selectedRows(const QAbstractItemView* view, int col = -1);
     static void selectRows(QAbstractItemView* view, const QVector<int>& rows);

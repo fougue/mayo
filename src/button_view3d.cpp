@@ -42,6 +42,29 @@ ButtonView3d::ButtonView3d(QWidget *parent)
       m_hoverColor(65, 200, 250)
 { }
 
+bool ButtonView3d::isCheckable() const
+{
+    return m_isCheckable;
+}
+
+void ButtonView3d::setCheckable(bool on)
+{
+    m_isCheckable = on;
+}
+
+bool ButtonView3d::isChecked() const
+{
+    return m_isCheckable ? m_isChecked : false;
+}
+
+void ButtonView3d::setChecked(bool on)
+{
+    if (m_isCheckable) {
+        m_isChecked = on;
+        this->update();
+    }
+}
+
 const QIcon &ButtonView3d::icon() const
 {
     return m_icon;
@@ -69,7 +92,7 @@ void ButtonView3d::paintEvent(QPaintEvent *)
     const QRect surface(0, 0, frame.width(), frame.height());
     const QPoint mousePos = this->mapFromGlobal(QCursor::pos());
 
-    if (surface.contains(mousePos))
+    if (surface.contains(mousePos) || this->isChecked())
         painter.fillRect(surface, m_hoverColor);
     else
         painter.fillRect(surface, m_backgroundColor);
@@ -95,8 +118,11 @@ void ButtonView3d::leaveEvent(QEvent* event)
 
 void ButtonView3d::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
         emit clicked();
+        if (m_isCheckable)
+            this->setChecked(!m_isChecked);
+    }
     QWidget::mouseReleaseEvent(event);
 }
 

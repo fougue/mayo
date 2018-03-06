@@ -40,6 +40,12 @@ class ButtonView3d : public QWidget {
 public:
     ButtonView3d(QWidget* parent = nullptr);
 
+    bool isCheckable() const;
+    void setCheckable(bool on);
+
+    bool isChecked() const;
+    void setChecked(bool on);
+
     const QIcon& icon() const;
     void setIcon(const QIcon& icon);
 
@@ -56,6 +62,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event);
 
 private:
+    bool m_isCheckable = false;
+    bool m_isChecked = false;
     QIcon m_icon;
     QSize m_iconSize;
     QColor m_backgroundColor;

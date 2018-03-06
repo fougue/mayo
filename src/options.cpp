@@ -38,6 +38,8 @@ static const char keyMeshDefaultColor[] = "MeshGpx/defaultColor";
 static const char keyMeshDefaultMaterial[] = "MeshGpx/defaultMaterial";
 static const char keyMeshDefaultShowEdges[] = "MeshGpx/defaultShowEdges";
 static const char keyMeshDefaultShowNodes[] = "MeshGpx/defaultShowNodes";
+static const char keyClipPlaneCappingOn[] = "ClipPlane/CappingOn";
+static const char keyClipPlaneCappingHatch[] = "ClipPlane/CappingHatch";
 
 Options *Options::instance()
 {
@@ -128,6 +130,29 @@ bool Options::meshDefaultShowNodes() const
 void Options::setMeshDefaultShowNodes(bool on)
 {
     m_settings.setValue(keyMeshDefaultShowNodes, on);
+}
+
+bool Options::isClipPlaneCappingOn() const
+{
+    return m_settings.value(keyClipPlaneCappingOn, true).toBool();
+}
+
+void Options::setClipPlaneCapping(bool on)
+{
+    m_settings.setValue(keyClipPlaneCappingOn, on);
+    emit clipPlaneCappingToggled(on);
+}
+
+Aspect_HatchStyle Options::clipPlaneCappingHatch() const
+{
+    const int hatch = m_settings.value(keyClipPlaneCappingHatch, Aspect_HS_SOLID).toInt();
+    return static_cast<Aspect_HatchStyle>(hatch);
+}
+
+void Options::setClipPlaneCappingHatch(Aspect_HatchStyle hatch)
+{
+    m_settings.setValue(keyClipPlaneCappingHatch, static_cast<int>(hatch));
+    emit clipPlaneCappingHatchChanged(hatch);
 }
 
 } // namespace Mayo

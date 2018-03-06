@@ -31,6 +31,7 @@
 
 #include <QtCore/QObject>
 #include <AIS_InteractiveContext.hxx>
+#include <Bnd_Box.hxx>
 #include <V3d_Viewer.hxx>
 #include <vector>
 
@@ -41,14 +42,20 @@ class DocumentItem;
 class GpxDocumentItem;
 class WidgetGuiDocumentView3d;
 
-class GuiDocument : public QObject
-{
+class GuiDocument : public QObject {
+    Q_OBJECT
+
 public:
     GuiDocument(Document* doc);
 
     Document* document() const;
     WidgetGuiDocumentView3d* widgetView3d() const;
     GpxDocumentItem* findItemGpx(const DocumentItem* item) const;
+
+    const Bnd_Box& gpxBoundingBox() const;
+
+signals:
+    void gpxBoundingBoxChanged(const Bnd_Box& bndBox);
 
 private:
     void onItemAdded(DocumentItem* item);
@@ -64,6 +71,7 @@ private:
     Handle_AIS_InteractiveContext m_aisContext;
     WidgetGuiDocumentView3d* m_guiDocView3d = nullptr;
     std::vector<DocumentItem_Gpx> m_vecDocItemGpx;
+    Bnd_Box m_gpxBoundingBox;
 };
 
 } // namespace Mayo

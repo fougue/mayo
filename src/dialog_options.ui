@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>379</width>
-    <height>340</height>
+    <width>231</width>
+    <height>388</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -217,6 +217,62 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_ClipPlanes">
+     <property name="title">
+      <string>Clip planes</string>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>20</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="checkBox_Capping">
+        <property name="text">
+         <string>Capping</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QWidget" name="widget_CappingHatch" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Capping hatch</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_CappingHatch"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -245,6 +301,7 @@
   <zorder>groupBox_MeshGpx</zorder>
   <zorder>buttonBox</zorder>
   <zorder>verticalSpacer</zorder>
+  <zorder>groupBox_ClipPlanes</zorder>
  </widget>
  <resources/>
  <connections>

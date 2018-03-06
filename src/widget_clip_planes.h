@@ -29,63 +29,61 @@
 
 #pragma once
 
-#include <QtCore/QObject>
-#include <QtCore/QSettings>
-#include <QtGui/QColor>
-#include <Aspect_HatchStyle.hxx>
-#include <Graphic3d_NameOfMaterial.hxx>
+#include <QtWidgets/QWidget>
+#include <Bnd_Box.hxx>
+#include <Graphic3d_ClipPlane.hxx>
+#include <vector>
+class QCheckBox;
+class QDoubleSpinBox;
+class QAbstractSlider;
+class QAbstractButton;
 
 namespace Mayo {
 
-class Options : public QObject {
+class WidgetOccView;
+
+class WidgetClipPlanes : public QWidget {
     Q_OBJECT
+
 public:
-    enum class StlIoLibrary {
-        Gmio,
-        OpenCascade
-    };
+    WidgetClipPlanes(WidgetOccView* view, QWidget* parent = nullptr);
+    ~WidgetClipPlanes();
 
-    static Options* instance();
-
-    StlIoLibrary stlIoLibrary() const;
-    void setStlIoLibrary(StlIoLibrary lib);
-
-    // BRep shape graphics
-
-    QColor brepShapeDefaultColor() const;
-    void setBrepShapeDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial brepShapeDefaultMaterial() const;
-    void setBrepShapeDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    // Mesh graphics
-
-    QColor meshDefaultColor() const;
-    void setMeshDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial meshDefaultMaterial() const;
-    void setMeshDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    bool meshDefaultShowEdges() const;
-    void setMeshDefaultShowEdges(bool on);
-
-    bool meshDefaultShowNodes() const;
-    void setMeshDefaultShowNodes(bool on);
-
-    // Clip planes
-
-    bool isClipPlaneCappingOn() const;
-    void setClipPlaneCapping(bool on);
-
-    Aspect_HatchStyle clipPlaneCappingHatch() const;
-    void setClipPlaneCappingHatch(Aspect_HatchStyle hatch);
-
-signals:
-    void clipPlaneCappingToggled(bool on);
-    void clipPlaneCappingHatchChanged(Aspect_HatchStyle hatch);
+    void setRanges(const Bnd_Box& box);
+    void setClippingOn(bool on);
 
 private:
-    QSettings m_settings;
+    struct UiClipPlane {
+        QCheckBox* check_On;
+        QWidget* widget_Control;
+
+        UiClipPlane(QCheckBox* checkOn, QWidget* widgetControl);
+        QDoubleSpinBox* posSpin() const;
+        QAbstractSlider* posSlider() const;
+        QAbstractButton* inverseBtn() const;
+        QDoubleSpinBox* customXDirSpin() const;
+        QDoubleSpinBox* customYDirSpin() const;
+        QDoubleSpinBox* customZDirSpin() const;
+        double spinValueToSliderValue(double val) const;
+        double sliderValueToSpinValue(double val) const;
+    };
+
+    struct ClipPlaneData {
+        Handle_Graphic3d_ClipPlane gpx;
+        UiClipPlane ui;
+    };
+
+    using Range = std::pair<double, double>;
+
+    void connectUi(ClipPlaneData* data);
+
+    void setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on);
+    void setPlaneRange(ClipPlaneData* data, const Range& range);
+
+    class Ui_WidgetClipPlanes* m_ui;
+    WidgetOccView* m_view;
+    std::vector<ClipPlaneData> m_vecClipPlaneData;
+    Bnd_Box m_bndBox;
 };
 
 } // namespace Mayo

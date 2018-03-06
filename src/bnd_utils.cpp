@@ -27,65 +27,44 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#pragma once
-
-#include <QtCore/QObject>
-#include <QtCore/QSettings>
-#include <QtGui/QColor>
-#include <Aspect_HatchStyle.hxx>
-#include <Graphic3d_NameOfMaterial.hxx>
+#include "bnd_utils.h"
 
 namespace Mayo {
 
-class Options : public QObject {
-    Q_OBJECT
-public:
-    enum class StlIoLibrary {
-        Gmio,
-        OpenCascade
-    };
+std::array<gp_Pnt, 8> BndBoxCoords::vertices() const
+{
+    return {{
+            { this->xmin, this->ymin, this->zmax },
+            { this->xmax, this->ymin, this->zmax },
+            { this->xmin, this->ymin, this->zmin },
+            { this->xmax, this->ymin, this->zmin },
+            { this->xmin, this->ymax, this->zmax },
+            { this->xmax, this->ymax, this->zmax },
+            { this->xmin, this->ymax, this->zmin },
+            { this->xmax, this->ymax, this->zmin }
+        }};
+}
 
-    static Options* instance();
+BndBoxCoords BndBoxCoords::get(const Bnd_Box &box)
+{
+    BndBoxCoords bbc = {};
+    if (!box.IsVoid())
+        box.Get(bbc.xmin, bbc.ymin, bbc.zmin, bbc.xmax, bbc.ymax, bbc.zmax);
+    return bbc;
+}
 
-    StlIoLibrary stlIoLibrary() const;
-    void setStlIoLibrary(StlIoLibrary lib);
+void BndUtils::add(Bnd_Box *box, const Bnd_Box &other)
+{
+    const auto bbc = BndBoxCoords::get(other);
+    for (const gp_Pnt& pnt : bbc.vertices())
+        box->Add(pnt);
+}
 
-    // BRep shape graphics
-
-    QColor brepShapeDefaultColor() const;
-    void setBrepShapeDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial brepShapeDefaultMaterial() const;
-    void setBrepShapeDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    // Mesh graphics
-
-    QColor meshDefaultColor() const;
-    void setMeshDefaultColor(const QColor& color);
-
-    Graphic3d_NameOfMaterial meshDefaultMaterial() const;
-    void setMeshDefaultMaterial(Graphic3d_NameOfMaterial material);
-
-    bool meshDefaultShowEdges() const;
-    void setMeshDefaultShowEdges(bool on);
-
-    bool meshDefaultShowNodes() const;
-    void setMeshDefaultShowNodes(bool on);
-
-    // Clip planes
-
-    bool isClipPlaneCappingOn() const;
-    void setClipPlaneCapping(bool on);
-
-    Aspect_HatchStyle clipPlaneCappingHatch() const;
-    void setClipPlaneCappingHatch(Aspect_HatchStyle hatch);
-
-signals:
-    void clipPlaneCappingToggled(bool on);
-    void clipPlaneCappingHatchChanged(Aspect_HatchStyle hatch);
-
-private:
-    QSettings m_settings;
-};
+Bnd_Box BndUtils::get(const Handle_AIS_InteractiveObject &obj)
+{
+    Bnd_Box box;
+    obj->BoundingBox(box);
+    return box;
+}
 
 } // namespace Mayo

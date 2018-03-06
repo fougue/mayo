@@ -105,6 +105,19 @@ DialogOptions::DialogOptions(QWidget *parent)
                     static_cast<int>(opts->meshDefaultMaterial())));
     m_ui->checkBox_MeshShowEdges->setChecked(opts->meshDefaultShowEdges());
     m_ui->checkBox_MeshShowNodes->setChecked(opts->meshDefaultShowNodes());
+
+    // Clip planes
+    m_ui->checkBox_Capping->setChecked(opts->isClipPlaneCappingOn());
+    const auto& vecHatchStyle = Mayo::enum_AspectHatchStyle().mappings();
+    for (const Enumeration::Mapping& m : vecHatchStyle)
+        m_ui->comboBox_CappingHatch->addItem(m.string, m.value);
+    m_ui->comboBox_CappingHatch->setCurrentIndex(
+                m_ui->comboBox_CappingHatch->findData(
+                    static_cast<int>(opts->clipPlaneCappingHatch())));
+    QObject::connect(
+                m_ui->checkBox_Capping, &QAbstractButton::clicked,
+                m_ui->widget_CappingHatch, &QWidget::setEnabled);
+    m_ui->widget_CappingHatch->setEnabled(m_ui->checkBox_Capping->isChecked());
 }
 
 DialogOptions::~DialogOptions()
@@ -136,6 +149,12 @@ void DialogOptions::accept()
     opts->setMeshDefaultShowEdges(m_ui->checkBox_MeshShowEdges->isChecked());
     opts->setMeshDefaultShowNodes(m_ui->checkBox_MeshShowNodes->isChecked());
 
+    // Clip planes
+    opts->setClipPlaneCapping(m_ui->checkBox_Capping->isChecked());
+    opts->setClipPlaneCappingHatch(
+                static_cast<Aspect_HatchStyle>(
+                    m_ui->comboBox_CappingHatch->currentData().toInt()));
+
     QDialog::accept();
 }
 
@@ -144,14 +163,12 @@ void DialogOptions::chooseColor(
 {
     auto dlg = new QColorDialog(this);
     dlg->setCurrentColor(currentColor);
-    QObject::connect(
-                dlg, &QDialog::finished,
-                [=](int result) {
+    QObject::connect(dlg, &QDialog::finished, [=](int result) {
         if (result == QDialog::Accepted) {
             targetBtn->setIcon(Internal::colorPixmap(dlg->selectedColor()));
             *targetColor = dlg->selectedColor();
         }
-    } );
+    });
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 

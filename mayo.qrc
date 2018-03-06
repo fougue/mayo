@@ -20,5 +20,6 @@
         <file>images/mesh_24.png</file>
         <file>images/mesh_16.png</file>
         <file>images/mesh_32.png</file>
+        <file>images/clipping.png</file>
     </qresource>
 </RCC>

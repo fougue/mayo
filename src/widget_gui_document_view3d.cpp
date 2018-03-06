@@ -33,8 +33,10 @@
 #include "gui_document.h"
 #include "widget_occ_view.h"
 #include "qt_occ_view_controller.h"
+#include "widget_clip_planes.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
+#include <QtGui/QPainter>
 #include <QtWidgets/QBoxLayout>
 
 #include <V3d_TypeOfOrientation.hxx>
@@ -44,10 +46,11 @@ namespace Mayo {
 namespace Internal {
 
 static ButtonView3d* createViewBtn(
-        QWidget* parent, const QString& imageFile, const QString& tooltip)
+        QWidget* parent, QString imageFile, QString tooltip)
 {
     auto btn = new ButtonView3d(parent);
-    btn->setIcon(QIcon(QString(":/images/%1.png").arg(imageFile)));
+    imageFile = imageFile.contains('.') ? imageFile : (imageFile + ".png");
+    btn->setIcon(QIcon(QString(":/images/%1").arg(imageFile)));
     btn->setIconSize(QSize(16, 16));
     btn->setFixedSize(24, 24);
     btn->setToolTip(tooltip);
@@ -57,13 +60,29 @@ static ButtonView3d* createViewBtn(
 static void connectViewProjBtn(
         ButtonView3d* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
 {
-    QObject::connect(
-                btn, &ButtonView3d::clicked,
-                [=]{
+    QObject::connect(btn, &ButtonView3d::clicked, [=]{
         view->occV3dView()->SetProj(proj);
         view->fitAll();
     });
 }
+
+class PanelView3d : public QWidget {
+public:
+    PanelView3d(QWidget* parent = nullptr)
+        : QWidget(parent)
+    {}
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+        const QRect frame = this->frameGeometry();
+        const QRect surface(0, 0, frame.width(), frame.height());
+        painter.fillRect(surface, this->palette().color(QPalette::Button));
+    }
+};
+
+const int widgetMargin = 4;
 
 } // namespace Internal
 
@@ -87,7 +106,9 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     auto btnViewRight = Internal::createViewBtn(this, "view_right", tr("Right"));
     auto btnViewTop = Internal::createViewBtn(this, "view_top", tr("Top"));
     auto btnViewBottom = Internal::createViewBtn(this, "view_bottom", tr("Bottom"));
-    const int margin = 4;
+    auto btnEditClipPlanes = Internal::createViewBtn(this, "clipping", tr("Edit clip planes"));
+    btnEditClipPlanes->setCheckable(true);
+    const int margin = Internal::widgetMargin;
     btnFitAll->move(margin, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewIso, btnFitAll, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBack, btnViewIso, margin);
@@ -96,6 +117,7 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewRight, btnViewLeft, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewTop, btnViewRight, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipPlanes, btnViewBottom, margin);
 
     Internal::connectViewProjBtn(btnViewIso, m_qtOccView, V3d_XposYnegZpos);
     Internal::connectViewProjBtn(btnViewBack, m_qtOccView, V3d_Xneg);
@@ -107,6 +129,11 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     QObject::connect(
                 btnFitAll, &ButtonView3d::clicked,
                 m_qtOccView, &WidgetOccView::fitAll);
+    QObject::connect(
+                btnEditClipPlanes, &ButtonView3d::clicked,
+                this, &WidgetGuiDocumentView3d::toggleWidgetClipPlanes);
+
+    m_firstBtnFrameRect = btnFitAll->frameGeometry();
 }
 
 GuiDocument *WidgetGuiDocumentView3d::guiDocument() const
@@ -117,6 +144,29 @@ GuiDocument *WidgetGuiDocumentView3d::guiDocument() const
 WidgetOccView *WidgetGuiDocumentView3d::widgetOccView() const
 {
     return m_qtOccView;
+}
+
+void WidgetGuiDocumentView3d::toggleWidgetClipPlanes()
+{
+    if (m_widgetClipPlanes == nullptr) {
+        auto panel = new Internal::PanelView3d(this);
+        auto widget = new WidgetClipPlanes(this->widgetOccView(), panel);
+        qtgui::QWidgetUtils::addContentsWidget(panel, widget);
+        panel->show();
+        panel->adjustSize();
+        const int margin = Internal::widgetMargin;
+        panel->move(margin, m_firstBtnFrameRect.bottom() + margin);
+        m_widgetClipPlanes = widget;
+        QObject::connect(
+                    m_guiDoc, &GuiDocument::gpxBoundingBoxChanged,
+                    widget, &WidgetClipPlanes::setRanges);
+        widget->setRanges(m_guiDoc->gpxBoundingBox());
+    }
+    else {
+        QWidget* panel = m_widgetClipPlanes->parentWidget();
+        panel->setHidden(!panel->isHidden());
+        m_widgetClipPlanes->setClippingOn(panel->isVisible());
+    }
 }
 
 } // namespace Mayo

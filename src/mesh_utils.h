@@ -31,12 +31,10 @@
 
 #include <Poly_Triangulation.hxx>
 class gp_XYZ;
-namespace occ { class StlMeshRandomAccess; }
 
 namespace occ {
 
-class MeshUtils
-{
+class MeshUtils {
 public:
     static double triangleSignedVolume(
             const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);

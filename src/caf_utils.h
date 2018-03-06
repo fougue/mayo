@@ -21,7 +21,7 @@ namespace std {
 
 //! Specialization of C++11 std::hash<> functor for TDF_Label
 template<> struct hash<TDF_Label> {
-    inline std::size_t operator()(const TDF_Label& lbl) const
+    inline size_t operator()(const TDF_Label& lbl) const
     { return qHash(occ::CafUtils::labelTag(lbl)); }
 };
 

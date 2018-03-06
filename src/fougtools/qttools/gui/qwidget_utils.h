@@ -27,8 +27,7 @@ class QWidget;
 
 namespace qtgui {
 
-class QTTOOLS_GUI_EXPORT QWidgetUtils
-{
+class QTTOOLS_GUI_EXPORT QWidgetUtils {
 public:
     template<typename PARENT_WIDGET>
     static PARENT_WIDGET* findFirstParentWidget(QWidget* widget);
@@ -42,7 +41,7 @@ public:
 
     static QPoint globalPos(const QWidget* widget, Qt::Corner widgetCorner);
     static void moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
-    static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo);
+    static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
 
     static QPair<int, int> horizAndVertScrollValue(const QAbstractScrollArea* area);
     static void setHorizAndVertScrollValue(
@@ -78,29 +77,31 @@ public:
 
 namespace qtgui {
 
-//! Searches up in the direct parents of \p widget the first ancestor being of type \c PARENT_WIDGET
+//! Searches up in the direct parents of \p widget the first ancestor being of
+//! type \c PARENT_WIDGET
 template<typename PARENT_WIDGET>
 PARENT_WIDGET* QWidgetUtils::findFirstParentWidget(QWidget* widget)
 {
-    PARENT_WIDGET* foundParentWidget = NULL;
+    PARENT_WIDGET* foundParentWidget = nullptr;
     QWidget* iteratorWidget = widget;
-    while (iteratorWidget != NULL && foundParentWidget == NULL) {
+    while (iteratorWidget != nullptr && foundParentWidget == nullptr) {
         iteratorWidget = iteratorWidget->parentWidget();
         foundParentWidget = qobject_cast<PARENT_WIDGET*>(iteratorWidget);
     }
     return foundParentWidget;
 }
 
-//! Searches up in the direct parents of \p widget the last ancestor being of type \c PARENT_WIDGET
+//! Searches up in the direct parents of \p widget the last ancestor being of
+//! type \c PARENT_WIDGET
 template<typename PARENT_WIDGET>
 PARENT_WIDGET* QWidgetUtils::findLastParentWidget(QWidget* widget)
 {
-    PARENT_WIDGET* foundParentWidget = NULL;
+    PARENT_WIDGET* foundParentWidget = nullptr;
     QWidget* iteratorWidget = widget;
-    while (iteratorWidget != NULL) {
+    while (iteratorWidget != nullptr) {
         iteratorWidget = iteratorWidget->parentWidget();
         PARENT_WIDGET* currParentWidget = qobject_cast<PARENT_WIDGET*>(iteratorWidget);
-        if (currParentWidget != NULL)
+        if (currParentWidget != nullptr)
             foundParentWidget = currParentWidget;
     }
     return foundParentWidget;
