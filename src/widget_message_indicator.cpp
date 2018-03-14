@@ -32,7 +32,6 @@
 #include <QtCore/QTimer>
 #include <QtCore/QPropertyAnimation>
 #include <QtGui/QFontMetricsF>
-#include <QtGui/QLinearGradient>
 #include <QtGui/QPainter>
 
 namespace Mayo {
@@ -64,8 +63,8 @@ WidgetMessageIndicator::WidgetMessageIndicator(const QString& msg, QWidget* pare
 qreal WidgetMessageIndicator::opacity() const
 {
     return m_opacity;
-
 }
+
 void WidgetMessageIndicator::setOpacity(qreal value)
 {
     m_opacity = value;
@@ -75,10 +74,8 @@ void WidgetMessageIndicator::setOpacity(qreal value)
 void WidgetMessageIndicator::run()
 {
     this->show();
-    QTimer::singleShot(
-                1500 + m_message.length() * 60,
-                this,
-                &WidgetMessageIndicator::runInternal);
+    const int duration = 1500 + m_message.length() * 60;
+    QTimer::singleShot(duration, this, &WidgetMessageIndicator::runInternal);
 }
 
 void WidgetMessageIndicator::paintEvent(QPaintEvent*)
@@ -87,14 +84,9 @@ void WidgetMessageIndicator::paintEvent(QPaintEvent*)
     p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing);
     p.setOpacity(m_opacity);
 
-    QPainterPath boxPath;
     const QRectF boxRect(
                 0, 0, m_messageRect.width() + 18, m_messageRect.height() + 8);
-    boxPath.addRoundedRect(boxRect, 8, 8);
-    QLinearGradient boxGrad(0, 0, 0, boxRect.height());
-    boxGrad.setColorAt(0, QColor(214, 235, 255));
-    boxGrad.setColorAt(1, QColor(128, 200, 255));
-    p.fillPath(boxPath, boxGrad);
+    p.fillRect(boxRect, QColor(128, 200, 255));
 
     p.setFont(Internal::indicatorFont(this->font()));
     const QRectF textRect(

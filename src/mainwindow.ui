@@ -28,11 +28,11 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitter_2">
+     <widget class="QSplitter" name="splitter_Main">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QSplitter" name="splitter">
+      <widget class="QSplitter" name="splitter_Left">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -99,7 +99,6 @@
    <addaction name="menu_Options"/>
    <addaction name="menu_Help"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionNewDoc">
    <property name="text">
     <string>New</string>

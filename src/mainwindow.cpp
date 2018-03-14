@@ -146,13 +146,16 @@ struct OpenFileNames {
 
 } // namespace Internal
 
-
 MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     : QMainWindow(parent),
       m_guiApp(guiApp),
       m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
+    m_ui->centralWidget->setStyleSheet(
+                "QSplitter::handle:vertical { width: 2px; }\n"
+                "QSplitter::handle:horizontal { width: 2px; }\n");
+
     m_ui->widget_DocumentProps->setGuiApplication(guiApp);
     m_ui->widget_DocumentProps->editDocumentItems(std::vector<DocumentItem*>());
 

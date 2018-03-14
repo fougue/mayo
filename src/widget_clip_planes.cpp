@@ -149,7 +149,7 @@ WidgetClipPlanes::WidgetClipPlanes(WidgetOccView* view, QWidget* parent)
           UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom) }
     };
 
-    Options* opts = Options::instance();
+    const Options* opts = Options::instance();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
