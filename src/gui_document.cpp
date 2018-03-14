@@ -46,6 +46,8 @@
 #include <SelectMgr_SelectionManager.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <V3d_TypeOfOrientation.hxx>
+#include <AIS_Trihedron.hxx>
+#include <Geom_Axis2Placement.hxx>
 
 #include <cassert>
 
@@ -107,6 +109,28 @@ void eraseGpxObjectFromContext(
     }
 }
 
+static Handle_AIS_Trihedron createOriginTrihedron()
+{
+    Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
+    Handle_AIS_Trihedron aisTrihedron = new AIS_Trihedron(axis);
+    aisTrihedron->SetDatumDisplayMode(Prs3d_DM_Shaded);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_XArrow, Quantity_NOC_RED2);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_YArrow, Quantity_NOC_GREEN2);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_ZArrow, Quantity_NOC_BLUE2);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_XAxis, Quantity_NOC_RED2);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_YAxis, Quantity_NOC_GREEN2);
+    aisTrihedron->SetDatumPartColor(Prs3d_DP_ZAxis, Quantity_NOC_BLUE2);
+    aisTrihedron->SetLabel(Prs3d_DP_XAxis, "");
+    aisTrihedron->SetLabel(Prs3d_DP_YAxis, "");
+    aisTrihedron->SetLabel(Prs3d_DP_ZAxis, "");
+    //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
+    aisTrihedron->SetSize(60);
+    Handle_Graphic3d_TransformPers trsf =
+            new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers);
+    aisTrihedron->SetTransformPersistence(trsf);
+    return aisTrihedron;
+}
+
 } // namespace Internal
 
 GuiDocument::GuiDocument(Document *doc)
@@ -118,6 +142,7 @@ GuiDocument::GuiDocument(Document *doc)
     assert(doc != nullptr);
 
     m_guiDocView3d->widgetOccView()->setOccV3dViewer(m_v3dViewer);
+    m_aisContext->Display(Internal::createOriginTrihedron(), true);
 
     QObject::connect(doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
     QObject::connect(doc, &Document::itemErased, this, &GuiDocument::onItemErased);
