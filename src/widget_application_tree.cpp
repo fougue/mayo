@@ -224,7 +224,8 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
 
             auto propShapeType = new PropertyQString(nullptr, tr("Shape"));
             const TopAbs_ShapeEnum shapeType = xdeDocItem->shape(label).ShapeType();
-            propShapeType->setValue(StringUtils::rawText(shapeType));
+            propShapeType->setValue(QString(StringUtils::rawText(shapeType))
+                                    .remove("TopAbs_"));
             propShapeType->setUserReadOnly(true);
             vecHndProp.emplace_back(propShapeType, hndStorage);
 

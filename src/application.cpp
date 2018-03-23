@@ -36,6 +36,7 @@
 #include "mesh_item.h"
 #include "options.h"
 #include "mesh_utils.h"
+#include "string_utils.h"
 #include "fougtools/qttools/task/progress.h"
 
 #include <QtCore/QFile>
@@ -337,26 +338,6 @@ static XdeDocumentItem* createXdeDocumentItem(
     return xdeDocItem;
 }
 
-static QString occReturnStatusToQString(IFSelect_ReturnStatus status)
-{
-    switch (status) {
-    case IFSelect_RetVoid: return Application::tr("IFSelect_RetVoid");
-    case IFSelect_RetDone: return QString();
-    case IFSelect_RetError: return Application::tr("IFSelect_RetError");
-    case IFSelect_RetFail: return Application::tr("IFSelect_RetFail");
-    case IFSelect_RetStop: return Application::tr("IFSelect_RetStop");
-    }
-    return Application::tr("IFSelect Unknown");
-}
-
-static const char* skipWhiteSpaces(const char* str, size_t len)
-{
-    size_t pos = 0;
-    while (std::isspace(str[pos]) && pos < len)
-        ++pos;
-    return str + pos;
-}
-
 template<size_t N>
 bool matchToken(const char* buffer, const char (&token)[N])
 {
@@ -406,7 +387,7 @@ Application::PartFormat findPartFormatFromContents(
         }
     } // IGES
 
-    contentsBegin = skipWhiteSpaces(contentsBegin, contentsBeginSize);
+    contentsBegin = StringUtils::skipWhiteSpaces(contentsBegin, contentsBeginSize);
 
     // -- STEP ?
     {
@@ -416,13 +397,13 @@ Application::PartFormat findPartFormatFromContents(
         static const char stepHeaderToken[] = "HEADER";
         static const size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
         if (std::strncmp(contentsBegin, stepIsoId, stepIsoIdLen) == 0) {
-            auto charIt = skipWhiteSpaces(
+            auto charIt = StringUtils::skipWhiteSpaces(
                         contentsBegin + stepIsoIdLen,
                         contentsBeginSize - stepIsoIdLen);
             if (*charIt == ';'
                     && (charIt - contentsBegin) < contentsBeginSize)
             {
-                charIt = skipWhiteSpaces(
+                charIt = StringUtils::skipWhiteSpaces(
                             charIt + 1,
                             contentsBeginSize - (charIt - contentsBegin));
                 if (std::strncmp(charIt, stepHeaderToken, stepHeaderTokenLen)
@@ -616,7 +597,7 @@ Application::IoResult Application::importIges(
                 filepath, cafDoc, &err, progress);
     if (err == IFSelect_RetDone)
         doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
-    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
+    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
 }
 
 Application::IoResult Application::importStep(
@@ -628,7 +609,7 @@ Application::IoResult Application::importStep(
                 filepath, cafDoc, &err, progress);
     if (err == IFSelect_RetDone)
         doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
-    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
+    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
 }
 
 Application::IoResult Application::importOccBRep(
@@ -744,7 +725,7 @@ Application::IoResult Application::exportStep(
     const IFSelect_ReturnStatus err =
             writer.Write(filepath.toLocal8Bit().constData());
     writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
-    return { err == IFSelect_RetDone, Internal::occReturnStatusToQString(err) };
+    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
 }
 
 Application::IoResult Application::exportOccBRep(
