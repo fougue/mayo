@@ -226,16 +226,20 @@ TopoDS_Shape loadShapeFromFile(
 template<typename CAF_READER> struct CafReaderTraits {};
 
 template<> struct CafReaderTraits<IGESCAFControl_Reader> {
-    typedef IGESCAFControl_Reader ReaderType;
+    using ReaderType = IGESCAFControl_Reader;
     static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
         return reader.WS();
     }
+    static void setPropsMode(ReaderType*, bool) { }
 };
 
 template<> struct CafReaderTraits<STEPCAFControl_Reader> {
-    typedef STEPCAFControl_Reader ReaderType;
+    using ReaderType = STEPCAFControl_Reader;
     static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
         return reader.Reader().WS();
+    }
+    static void setPropsMode(ReaderType* reader, bool on) {
+        reader->SetPropsMode(on);
     }
 };
 
@@ -252,9 +256,10 @@ void loadCafDocumentFromFile(
     if (!indicator.IsNull())
         indicator->NewScope(30, "Loading file");
     CAF_READER reader;
-    reader.SetColorMode(Standard_True);
-    reader.SetNameMode(Standard_True);
-    reader.SetLayerMode(Standard_True);
+    reader.SetColorMode(true);
+    reader.SetNameMode(true);
+    reader.SetLayerMode(true);
+    CafReaderTraits<CAF_READER>::setPropsMode(&reader, true);
     *error = reader.ReadFile(filepath.toLocal8Bit().constData());
     if (!indicator.IsNull())
         indicator->EndScope();
