@@ -45,13 +45,13 @@ HEADERS += \
     src/gpx_xde_document_item.h \
     src/fougtools/qttools/core/qstring_hfunc.h \
     src/xde_shape_explorer.h \
-    src/brep_utils.h \
     src/mesh_item.h \
     src/gpx_mesh_item.h \
     src/button_view3d.h \
     src/widget_clip_planes.h \
     src/span.h \
-    src/bnd_utils.h
+    src/bnd_utils.h \
+    src/string_utils.h
 
 SOURCES += \
     src/document.cpp \
@@ -86,12 +86,12 @@ SOURCES += \
     src/xde_document_item.cpp \
     src/gpx_xde_document_item.cpp \
     src/xde_shape_explorer.cpp \
-    src/brep_utils.cpp \
     src/mesh_item.cpp \
     src/gpx_mesh_item.cpp \
     src/button_view3d.cpp \
     src/widget_clip_planes.cpp \
-    src/bnd_utils.cpp
+    src/bnd_utils.cpp \
+    src/string_utils.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -138,6 +138,7 @@ LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
 LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF
 LIBS += -lTKG3d
+LIBS += -lTKGeomBase
 
 OCCT_DEFINES = $$(CSF_DEFINES)
 DEFINES += $$split(OCCT_DEFINES, ;)

@@ -17,6 +17,7 @@
 
 #include "occtools.h"
 
+#include <Precision.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_NameOfColor.hxx>
 #include <TCollection_AsciiString.hxx>
@@ -24,6 +25,8 @@
 
 #include <QtCore/QString>
 #include <QtGui/QColor>
+
+#include <cmath>
 
 namespace occ {
 
@@ -73,12 +76,15 @@ QString QtUtils::toQString(
         unsigned prec)
 {
     QString result = format;
+    const double x = std::abs(pv.X()) < Precision::Confusion() ? 0. : pv.X();
+    const double y = std::abs(pv.Y()) < Precision::Confusion() ? 0. : pv.Y();
+    const double z = std::abs(pv.Z()) < Precision::Confusion() ? 0. : pv.Z();
     result.replace(
-                QLatin1String("%x"), QString::number(pv.X(), realFormat, prec));
+                QLatin1String("%x"), QString::number(x, realFormat, prec));
     result.replace(
-                QLatin1String("%y"), QString::number(pv.Y(), realFormat, prec));
+                QLatin1String("%y"), QString::number(y, realFormat, prec));
     return result.replace(
-                QLatin1String("%z"), QString::number(pv.Z(), realFormat, prec));
+                QLatin1String("%z"), QString::number(z, realFormat, prec));
 }
 
 } // namespace occ

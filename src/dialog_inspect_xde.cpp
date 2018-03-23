@@ -1,7 +1,7 @@
 #include "dialog_inspect_xde.h"
 
-#include "brep_utils.h"
 #include "caf_utils.h"
+#include "string_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include "fougtools/qttools/gui/qwidget_utils.h"
@@ -40,12 +40,6 @@ enum TreeWidgetItemRole {
     TreeWidgetItem_TdfLabelRole = Qt::UserRole + 1
 };
 
-static QString occColorToQString(
-        const Quantity_Color& color, const QString& format = "R:%1 G:%2 B:%3")
-{
-    return format.arg(color.Red()).arg(color.Green()).arg(color.Blue());
-}
-
 static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeItem)
 {
     // if (label.HasAttribute())
@@ -83,12 +77,12 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
         else if (attrId == XCAFDoc_Color::GetID()) {
             const auto& color = static_cast<const XCAFDoc_Color&>(*ptrAttr);
             text = "XCAFDoc_Color";
-            value = occColorToQString(color.GetColor());
+            value = StringUtils::text(color.GetColor());
         }
         else if (attrId == XCAFDoc_Location::GetID()) {
             const auto& location = static_cast<const XCAFDoc_Location&>(*ptrAttr);
             text = "XCAFDoc_Location";
-            value = !location.Get().IsIdentity() ? "identity" : "matrix_4x4";
+            value = StringUtils::text(location.Get().Transformation());
         }
         else {
             std::stringstream sstream;
@@ -120,7 +114,7 @@ static QTreeWidgetItem* createOccColorTreeItem(
 {
     auto itemColor = new QTreeWidgetItem;
     itemColor->setText(0, text);
-    itemColor->setText(1, occColorToQString(color));
+    itemColor->setText(1, StringUtils::text(color));
     QPixmap pixColor(24, 16);
     pixColor.fill(occ::QtUtils::toQColor(color));
     itemColor->setIcon(1, pixColor);
@@ -176,7 +170,7 @@ static void loadLabelShapeProperties(
     if (shapeTool->GetShape(label, shape)) {
         auto itemShapeType = new QTreeWidgetItem;
         itemShapeType->setText(0, DialogInspectXde::tr("ShapeType"));
-        const char* cstrShapeType = occ::BRepUtils::shapeTypeToString(shape.ShapeType());
+        const char* cstrShapeType = StringUtils::rawText(shape.ShapeType());
         itemShapeType->setText(1, QString::fromLatin1(cstrShapeType));
         listItemProp.push_back(itemShapeType);
     }

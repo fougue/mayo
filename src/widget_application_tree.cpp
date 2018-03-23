@@ -30,8 +30,8 @@
 #include "widget_application_tree.h"
 
 #include "application.h"
-#include "brep_utils.h"
 #include "caf_utils.h"
+#include "string_utils.h"
 #include "document.h"
 #include "document_item.h"
 #include "mesh_item.h"
@@ -224,7 +224,7 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
 
             auto propShapeType = new PropertyQString(nullptr, tr("Shape"));
             const TopAbs_ShapeEnum shapeType = xdeDocItem->shape(label).ShapeType();
-            propShapeType->setValue(occ::BRepUtils::shapeTypeToString(shapeType));
+            propShapeType->setValue(StringUtils::rawText(shapeType));
             propShapeType->setUserReadOnly(true);
             vecHndProp.emplace_back(propShapeType, hndStorage);
 
@@ -249,10 +249,7 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
             if (xdeDocItem->isShapeReference(label)) {
                 const TopLoc_Location loc = xdeDocItem->shapeReferenceLocation(label);
                 auto propLoc = new PropertyQString(nullptr, tr("Location"));
-                if (loc.IsIdentity())
-                    propLoc->setValue(tr("Identity"));
-                else
-                    propLoc->setValue(tr("<Value>"));
+                propLoc->setValue(StringUtils::text(loc.Transformation()));
                 propLoc->setUserReadOnly(true);
                 vecHndProp.emplace_back(propLoc, hndStorage);
             }
