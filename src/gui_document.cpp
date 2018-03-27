@@ -128,6 +128,7 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     Handle_Graphic3d_TransformPers trsf =
             new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers);
     aisTrihedron->SetTransformPersistence(trsf);
+    aisTrihedron->SetInfiniteState(true);
     return aisTrihedron;
 }
 

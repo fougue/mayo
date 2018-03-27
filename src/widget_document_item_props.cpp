@@ -53,46 +53,46 @@ template<typename T> struct PropTraits {};
 
 template<> struct PropTraits<bool> {
     static int qVariantTypeId() { return QVariant::Bool; }
-    typedef bool QVariantType;
-    typedef PropertyBool PropertyType;
+    using QVariantType = bool;
+    using PropertyType = PropertyBool;
 };
 
 template<> struct PropTraits<int> {
     static int qVariantTypeId() { return QVariant::Int; }
-    typedef int QVariantType;
-    typedef PropertyInt PropertyType;
+    using QVariantType = int;
+    using PropertyType = PropertyInt;
 };
 
 template<> struct PropTraits<double> {
     static int qVariantTypeId() { return QVariant::Double; }
-    typedef double QVariantType;
-    typedef PropertyDouble PropertyType;
+    using QVariantType = double;
+    using PropertyType = PropertyDouble;
 };
 
 template<> struct PropTraits<QColor> {
     static int qVariantTypeId() { return QVariant::Color; }
-    typedef QColor QVariantType;
-    typedef PropertyOccColor PropertyType;
+    using QQVariantType = QColor;
+    using PropertyType = PropertyOccColor;
 };
 
 template<> struct PropTraits<QString> {
     static int qVariantTypeId() { return QVariant::String; }
-    typedef QString QVariantType;
-    typedef PropertyQString PropertyType;
+    using QVariantType = QString;
+    using PropertyType = PropertyQString;
 };
 
 template<> struct PropTraits<EnumTag> {
     static int qVariantTypeId() { return QtVariantPropertyManager::enumTypeId(); }
-    typedef int QVariantType;
-    typedef PropertyEnumeration PropertyType;
+    using QVariantType = int;
+    using PropertyType = PropertyEnumeration;
 };
 
 // --
 // -- PropertyQVariantCast<>
 // --
 template<typename T> struct PropertyQVariantCast {
-    typedef typename PropTraits<T>::QVariantType QVariantType;
-    typedef typename PropTraits<T>::PropertyType PropertyType;
+    using QVariantType = typename PropTraits<T>::QVariantType;
+    using PropertyType = typename PropTraits<T>::PropertyType;
 
     static QVariantType toQVariantValue(const PropertyType* prop)
     { return qvariant_cast<QVariantType>(prop->value()); }
@@ -175,7 +175,7 @@ template<typename T>
 static QtVariantProperty* createQtProperty(
         const Property* prop, QtVariantPropertyManager* varPropMgr)
 {
-    typedef typename PropTraits<T>::PropertyType PropertyType;
+    using PropertyType = typename PropTraits<T>::PropertyType;
     auto castedProp = static_cast<const PropertyType*>(prop);
     QtVariantProperty* qtProp =
             varPropMgr->addProperty(
@@ -187,7 +187,7 @@ static QtVariantProperty* createQtProperty(
 
 template<typename T> void setPropertyValue(Property* prop, const QVariant& value)
 {
-    typedef typename PropTraits<T>::PropertyType PropertyType;
+    using PropertyType = typename PropTraits<T>::PropertyType;
     auto castedProp = static_cast<PropertyType*>(prop);
     castedProp->setValue(
                 PropertyQVariantCast<T>::toPropertyValue(value, castedProp));
@@ -204,6 +204,9 @@ WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
     auto variantEditorFactory = new QtVariantEditorFactory(this);
     m_ui->propsBrowser_DocumentItem->setFactoryForManager(
                 m_varPropMgr, variantEditorFactory);
+    m_ui->propsBrowser_DocumentItem->setResizeMode(
+                QtTreePropertyBrowser::ResizeToContents);
+    m_ui->propsBrowser_DocumentItem->setIndentation(15);
 }
 
 WidgetDocumentItemProps::~WidgetDocumentItemProps()

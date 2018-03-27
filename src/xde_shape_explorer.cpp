@@ -29,8 +29,6 @@
 
 #include "xde_shape_explorer.h"
 
-#include "caf_utils.h"
-
 namespace Mayo {
 
 XdeShapeExplorer::XdeShapeExplorer(const Handle_XCAFDoc_ShapeTool &shapeTool)
