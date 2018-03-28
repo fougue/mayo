@@ -48,10 +48,10 @@ namespace Internal {
 static QImage qtImageTemp(const Image_PixMap& occImg)
 {
     const QImage img(occImg.Data(),
-                     occImg.Width(),
-                     occImg.Height(),
+                     static_cast<int>(occImg.Width()),
+                     static_cast<int>(occImg.Height()),
                      static_cast<int>(occImg.SizeRowBytes()),
-                     QImage::Format_ARGB32);
+                     QImage::Format_RGBA8888);
     return img;
 }
 
@@ -159,13 +159,14 @@ void DialogSaveImageView::preview()
 bool DialogSaveImageView::createImageView(Image_PixMap* img) const
 {
     img->SetTopDown(true);
-    const Standard_Boolean ok = m_view->occV3dView()->ToPixMap(
+    const bool ok =
+            m_view->occV3dView()->ToPixMap(
                 *img,
                 m_ui->edit_Width->value(),
                 m_ui->edit_Height->value(),
                 Graphic3d_BT_RGBA,
                 m_ui->checkBox_KeepRatio->isChecked());
-    return ok == Standard_True;
+    return ok;
 }
 
 } // namespace Mayo
