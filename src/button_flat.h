@@ -29,68 +29,58 @@
 
 #pragma once
 
-#include "application.h"
-#include <QtWidgets/QMainWindow>
-#include <functional>
-class QFileSystemModel;
+#include <QtWidgets/QWidget>
+#include <QtGui/QIcon>
+#include <QtGui/QBrush>
+class QAction;
 
 namespace Mayo {
 
-class Document;
-class GuiApplication;
-class GuiDocument;
-
-class MainWindow : public QMainWindow
-{
+class ButtonFlat : public QWidget {
     Q_OBJECT
 
 public:
-    MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
-    ~MainWindow();
+    ButtonFlat(QWidget* parent = nullptr);
+
+    bool isCheckable() const;
+    void setCheckable(bool on);
+
+    bool isChecked() const;
+    void setChecked(bool on);
+
+    const QIcon& icon() const;
+    void setIcon(const QIcon& icon);
+
+    const QSize& iconSize() const;
+    void setIconSize(const QSize& size);
+
+    QAction* defaultAction() const;
+    void setDefaultAction(QAction* action);
+
+    const QBrush& hoverBrush() const;
+    void setHoverBrush(const QBrush& brush);
+
+    const QBrush& backgroundBrush() const;
+    void setBackgroundBrush(const QBrush& brush);
 
 signals:
-    void operationFinished(bool ok, const QString& msg);
-    void currentDocumentIndexChanged(int docIdx);
+    void clicked();
 
 protected:
-    void showEvent(QShowEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
+    void enterEvent(QEvent* event) override;
+    void leaveEvent(QEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event);
 
 private:
-    void newDoc();
-    void openPartInNewDoc();
-    void importInCurrentDoc();
-    void exportSelectedItems();
-    void quitApp();
-    void editOptions();
-    void saveImageView();
-    void inspectXde();
-    void aboutMayo();
-    void reportbug();
+    void syncToAction();
 
-    void onApplicationTreeWidgetSelectionChanged();
-    void onOperationFinished(bool ok, const QString& msg);
-    void closeCurrentDocument();
-    void closeDocument(int docIndex);
-
-    void foreachOpenFileName(
-            std::function<void (Application::PartFormat, QString)>&& func);
-    void runImportTask(
-            Document *doc,
-            Application::PartFormat format,
-            const QString &filepath);
-    void runExportTask(
-            const std::vector<DocumentItem*>& docItems,
-            Application::PartFormat format,
-            const Application::ExportOptions& opts,
-            const QString& filepath);
-    void updateControlsActivation();
-
-    int currentDocumentIndex() const;
-    void setCurrentDocumentIndex(int idx);
-
-    GuiApplication* m_guiApp = nullptr;
-    class Ui_MainWindow* m_ui = nullptr;
-    QFileSystemModel* m_fileSysModel;
+    bool m_isCheckable = false;
+    bool m_isChecked = false;
+    QIcon m_icon;
+    QSize m_iconSize;
+    QBrush m_hoverBrush;
+    QAction* m_defaultAction = nullptr;
 };
 
 } // namespace Mayo

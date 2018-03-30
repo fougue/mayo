@@ -29,10 +29,11 @@
 
 #include "widget_gui_document_view3d.h"
 
-#include "button_view3d.h"
+#include "button_flat.h"
 #include "gui_document.h"
-#include "widget_occ_view.h"
 #include "qt_occ_view_controller.h"
+#include "theme.h"
+#include "widget_occ_view.h"
 #include "widget_clip_planes.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
@@ -45,11 +46,17 @@ namespace Mayo {
 
 namespace Internal {
 
-static ButtonView3d* createViewBtn(
+static ButtonFlat* createViewBtn(
         QWidget* parent, QString imageFile, QString tooltip)
 {
-    auto btn = new ButtonView3d(parent);
+    const QBrush btnBackgroundBrush(
+                mayoTheme()->color(Theme::Color::ButtonView3dBackground));
+    const QBrush btnHoverBrush(
+                mayoTheme()->color(Theme::Color::ButtonView3dHover));
+    auto btn = new ButtonFlat(parent);
     imageFile = imageFile.contains('.') ? imageFile : (imageFile + ".png");
+    btn->setBackgroundBrush(btnBackgroundBrush);
+    btn->setHoverBrush(btnHoverBrush);
     btn->setIcon(QIcon(QString(":/images/%1").arg(imageFile)));
     btn->setIconSize(QSize(16, 16));
     btn->setFixedSize(24, 24);
@@ -58,9 +65,9 @@ static ButtonView3d* createViewBtn(
 }
 
 static void connectViewProjBtn(
-        ButtonView3d* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
+        ButtonFlat* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
 {
-    QObject::connect(btn, &ButtonView3d::clicked, [=]{
+    QObject::connect(btn, &ButtonFlat::clicked, [=]{
         view->occV3dView()->SetProj(proj);
         view->fitAll();
     });
@@ -78,7 +85,8 @@ protected:
         QPainter painter(this);
         const QRect frame = this->frameGeometry();
         const QRect surface(0, 0, frame.width(), frame.height());
-        painter.fillRect(surface, this->palette().color(QPalette::Button));
+        const QColor panelColor = mayoTheme()->color(Theme::Color::FlatBackground);
+        painter.fillRect(surface, panelColor);
     }
 };
 
@@ -98,7 +106,7 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     layout->addWidget(m_qtOccView);
     this->setLayout(layout);
 
-    auto btnFitAll = Internal::createViewBtn(this, "fit_all", tr("Fit All"));
+    auto btnFitAll = Internal::createViewBtn(this, "fitall_16", tr("Fit All"));
     auto btnViewIso = Internal::createViewBtn(this, "view_axo", tr("Isometric"));
     auto btnViewBack = Internal::createViewBtn(this, "view_back", tr("Back"));
     auto btnViewFront = Internal::createViewBtn(this, "view_front", tr("Front"));
@@ -127,10 +135,10 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     Internal::connectViewProjBtn(btnViewTop, m_qtOccView, V3d_Zpos);
     Internal::connectViewProjBtn(btnViewBottom, m_qtOccView, V3d_Zneg);
     QObject::connect(
-                btnFitAll, &ButtonView3d::clicked,
+                btnFitAll, &ButtonFlat::clicked,
                 m_qtOccView, &WidgetOccView::fitAll);
     QObject::connect(
-                btnEditClipPlanes, &ButtonView3d::clicked,
+                btnEditClipPlanes, &ButtonFlat::clicked,
                 this, &WidgetGuiDocumentView3d::toggleWidgetClipPlanes);
 
     m_firstBtnFrameRect = btnFitAll->frameGeometry();

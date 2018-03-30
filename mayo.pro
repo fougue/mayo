@@ -10,88 +10,94 @@ QT += core gui widgets
 CONFIG += console
 
 HEADERS += \
+    src/application.h \
+    src/bnd_utils.h \
+    src/button_flat.h \
+    src/caf_utils.h \
+    src/dialog_about.h \
+    src/dialog_export_options.h \
+    src/dialog_inspect_xde.h \
+    src/dialog_options.h \
+    src/dialog_save_image_view.h \
+    src/dialog_task_manager.h \
     src/document.h \
     src/document_item.h \
-    src/mainwindow.h \
-    src/occt_window.h \
-    src/qt_occ_view_controller.h \
-    src/fougtools/qttools/gui/gui.h \
-    src/fougtools/qttools/gui/qwidget_utils.h \
-    src/fougtools/qttools/gui/item_view_utils.h \
     src/fougtools/occtools/occtools.h \
     src/fougtools/occtools/qt_utils.h \
-    src/options.h \
-    src/application.h \
-    src/property.h \
-    src/property_enumeration.h \
-    src/property_builtins.h \
-    src/gui_document.h \
-    src/gui_application.h \
-    src/gpx_document_item.h \
-    src/dialog_about.h \
-    src/dialog_options.h \
-    src/dialog_task_manager.h \
-    src/dialog_save_image_view.h \
-    src/widget_application_tree.h \
-    src/widget_document_item_props.h \
-    src/widget_message_indicator.h \
-    src/widget_gui_document_view3d.h \
-    src/widget_occ_view.h \
-    src/dialog_export_options.h \
-    src/mesh_utils.h \
-    src/dialog_inspect_xde.h \
-    src/caf_utils.h \
-    src/xde_document_item.h \
-    src/gpx_xde_document_item.h \
     src/fougtools/qttools/core/qstring_hfunc.h \
-    src/xde_shape_explorer.h \
-    src/mesh_item.h \
+    src/fougtools/qttools/gui/gui.h \
+    src/fougtools/qttools/gui/item_view_buttons.h \
+    src/fougtools/qttools/gui/item_view_utils.h \
+    src/fougtools/qttools/gui/proxy_styled_item_delegate.h \
+    src/fougtools/qttools/gui/qwidget_utils.h \
+    src/gpx_document_item.h \
     src/gpx_mesh_item.h \
-    src/button_view3d.h \
-    src/widget_clip_planes.h \
+    src/gpx_xde_document_item.h \
+    src/gui_application.h \
+    src/gui_document.h \
+    src/mainwindow.h \
+    src/mesh_item.h \
+    src/mesh_utils.h \
+    src/occt_window.h \
+    src/options.h \
+    src/property.h \
+    src/property_builtins.h \
+    src/property_enumeration.h \
+    src/qt_occ_view_controller.h \
     src/span.h \
-    src/bnd_utils.h \
-    src/string_utils.h
+    src/string_utils.h \
+    src/widget_application_tree.h \
+    src/widget_clip_planes.h \
+    src/widget_document_item_props.h \
+    src/widget_gui_document_view3d.h \
+    src/widget_message_indicator.h \
+    src/widget_occ_view.h \
+    src/xde_document_item.h \
+    src/xde_shape_explorer.h \
+    src/theme.h
 
 SOURCES += \
+    src/application.cpp \
+    src/bnd_utils.cpp \
+    src/button_flat.cpp \
+    src/caf_utils.cpp \
+    src/dialog_about.cpp \
+    src/dialog_export_options.cpp \
+    src/dialog_inspect_xde.cpp \
+    src/dialog_options.cpp \
+    src/dialog_save_image_view.cpp \
+    src/dialog_task_manager.cpp \
     src/document.cpp \
     src/document_item.cpp \
+    src/fougtools/occtools/qt_utils.cpp \
+    src/fougtools/qttools/gui/item_view_buttons.cpp \
+    src/fougtools/qttools/gui/item_view_utils.cpp \
+    src/fougtools/qttools/gui/proxy_styled_item_delegate.cpp \
+    src/fougtools/qttools/gui/qwidget_utils.cpp \
+    src/gpx_document_item.cpp \
+    src/gpx_mesh_item.cpp \
+    src/gpx_xde_document_item.cpp \
+    src/gui_application.cpp \
+    src/gui_document.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
+    src/mesh_item.cpp \
+    src/mesh_utils.cpp \
     src/occt_window.cpp \
-    src/qt_occ_view_controller.cpp \
-    src/fougtools/qttools/gui/item_view_utils.cpp \
-    src/fougtools/qttools/gui/qwidget_utils.cpp \
-    src/fougtools/occtools/qt_utils.cpp \
     src/options.cpp \
-    src/application.cpp \
     src/property.cpp \
     src/property_enumeration.cpp \
-    src/gui_document.cpp \
-    src/gui_application.cpp \
-    src/gpx_document_item.cpp \
-    src/dialog_about.cpp \
-    src/dialog_options.cpp \
-    src/dialog_task_manager.cpp \
-    src/dialog_save_image_view.cpp \
+    src/qt_occ_view_controller.cpp \
+    src/string_utils.cpp \
     src/widget_application_tree.cpp \
-    src/widget_document_item_props.cpp \
-    src/widget_message_indicator.cpp \
-    src/widget_gui_document_view3d.cpp \
-    src/widget_occ_view.cpp \
-    src/dialog_export_options.cpp \
-    src/mesh_utils.cpp \
-    src/dialog_inspect_xde.cpp \
-    src/caf_utils.cpp \
-    src/xde_document_item.cpp \
-    src/gpx_xde_document_item.cpp \
-    src/xde_shape_explorer.cpp \
-    src/mesh_item.cpp \
-    src/gpx_mesh_item.cpp \
-    src/button_view3d.cpp \
     src/widget_clip_planes.cpp \
-    src/bnd_utils.cpp \
-    src/string_utils.cpp
+    src/widget_document_item_props.cpp \
+    src/widget_gui_document_view3d.cpp \
+    src/widget_message_indicator.cpp \
+    src/widget_occ_view.cpp \
+    src/xde_document_item.cpp \
+    src/xde_shape_explorer.cpp \
+    src/theme.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -144,3 +150,5 @@ OCCT_DEFINES = $$(CSF_DEFINES)
 DEFINES += $$split(OCCT_DEFINES, ;)
 DEFINES += OCCT_HANDLE_NOCAST
 RESOURCES += mayo.qrc
+
+RC_ICONS = images/appicon.ico

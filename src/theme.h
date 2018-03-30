@@ -29,68 +29,29 @@
 
 #pragma once
 
-#include "application.h"
-#include <QtWidgets/QMainWindow>
-#include <functional>
-class QFileSystemModel;
+#include <QtGui/QColor>
 
 namespace Mayo {
 
-class Document;
-class GuiApplication;
-class GuiDocument;
-
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
-
-public:
-    MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
-    ~MainWindow();
-
-signals:
-    void operationFinished(bool ok, const QString& msg);
-    void currentDocumentIndexChanged(int docIdx);
-
-protected:
-    void showEvent(QShowEvent* event) override;
+struct Theme {
+    enum class Color {
+        FlatBackground,
+        FlatHover,
+        ButtonView3dBackground,
+        ButtonView3dHover
+    };
+    enum class Image {
+        FlatDownIndicator,
+        FlatDownIndicatorDisabled
+    };
+    QColor color(Color role) const;
+    QString imageUrl(Image img) const;
 
 private:
-    void newDoc();
-    void openPartInNewDoc();
-    void importInCurrentDoc();
-    void exportSelectedItems();
-    void quitApp();
-    void editOptions();
-    void saveImageView();
-    void inspectXde();
-    void aboutMayo();
-    void reportbug();
-
-    void onApplicationTreeWidgetSelectionChanged();
-    void onOperationFinished(bool ok, const QString& msg);
-    void closeCurrentDocument();
-    void closeDocument(int docIndex);
-
-    void foreachOpenFileName(
-            std::function<void (Application::PartFormat, QString)>&& func);
-    void runImportTask(
-            Document *doc,
-            Application::PartFormat format,
-            const QString &filepath);
-    void runExportTask(
-            const std::vector<DocumentItem*>& docItems,
-            Application::PartFormat format,
-            const Application::ExportOptions& opts,
-            const QString& filepath);
-    void updateControlsActivation();
-
-    int currentDocumentIndex() const;
-    void setCurrentDocumentIndex(int idx);
-
-    GuiApplication* m_guiApp = nullptr;
-    class Ui_MainWindow* m_ui = nullptr;
-    QFileSystemModel* m_fileSysModel;
+    Theme() = default;
+    friend Theme* mayoTheme();
 };
+
+Theme* mayoTheme();
 
 } // namespace Mayo

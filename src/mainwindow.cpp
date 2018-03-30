@@ -31,17 +31,20 @@
 #include "ui_mainwindow.h"
 
 #include "application.h"
-#include "xde_document_item.h"
 #include "dialog_about.h"
 #include "dialog_export_options.h"
+#include "dialog_inspect_xde.h"
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document.h"
 #include "gui_application.h"
 #include "gui_document.h"
+#include "theme.h"
 #include "widget_gui_document_view3d.h"
 #include "widget_message_indicator.h"
+#include "xde_document_item.h"
+#include "fougtools/qttools/gui/item_view_buttons.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
 #include "fougtools/qttools/task/runner_qthreadpool.h"
@@ -51,11 +54,13 @@
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QFileSystemModel>
 
-#include "dialog_inspect_xde.h"
 #include <STEPCAFControl_Reader.hxx>
 #include <TDocStd_Document.hxx>
 #include <XCAFApp_Application.hxx>
+
+#include <QtCore/QStringListModel>
 
 namespace Mayo {
 
@@ -63,6 +68,42 @@ namespace Internal {
 
 static const QLatin1String keyLastOpenDir("GUI/MainWindow_lastOpenDir");
 static const QLatin1String keyLastSelectedFilter("GUI/MainWindow_lastSelectedFilter");
+
+class DocumentModel : public QStringListModel {
+public:
+    DocumentModel(Application* app)
+        : QStringListModel(app)
+    {
+        for (Document* doc : app->documents())
+            this->appendDocument(doc);
+        QObject::connect(
+                    app, &Application::documentAdded,
+                    this, &DocumentModel::appendDocument);
+        QObject::connect(
+                    app, &Application::documentErased,
+                    this, &DocumentModel::removeDocument);
+    }
+
+private:
+    void appendDocument(Document* doc)
+    {
+        const int rowId = this->rowCount();
+        this->insertRow(rowId);
+        this->setData(this->index(rowId), doc->label());
+        m_docs.emplace_back(doc);
+    }
+
+    void removeDocument(const Document* doc)
+    {
+        auto itFound = std::find(m_docs.begin(), m_docs.end(), doc);
+        if (itFound != m_docs.end()) {
+            this->removeRow(itFound - m_docs.begin());
+            m_docs.erase(itFound);
+        }
+    }
+
+    std::vector<const Document*> m_docs;
+};
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
@@ -155,12 +196,91 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->centralWidget->setStyleSheet(
                 "QSplitter::handle:vertical { width: 2px; }\n"
                 "QSplitter::handle:horizontal { width: 2px; }\n");
+    m_ui->splitter_Main->setStretchFactor(0, 1);
+    m_ui->splitter_Main->setStretchFactor(1, 3);
+
+    m_ui->splitter_ApplicationTree->setStretchFactor(0, 2);
+    m_ui->splitter_ApplicationTree->setStretchFactor(1, 1);
+
+    m_ui->stack_LeftContents->setCurrentIndex(0);
 
     m_ui->widget_DocumentProps->setGuiApplication(guiApp);
     m_ui->widget_DocumentProps->editDocumentItems(std::vector<DocumentItem*>());
 
+    m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
+    m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
+    m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
+
+    // Style sheet for the combo boxes just below the menu bar
+    {
+        const QString comboStyleSheet = QString(
+                "QComboBox {"
+                "    border-style: solid;"
+                "    background: %1;"
+                "    padding: 2px 15px 2px 10px;"
+                "}\n"
+                "QComboBox:hover {"
+                "    border-style: solid;"
+                "    background: %2;"
+                "    padding: 2px 15px 2px 10px;"
+                "}\n"
+                "QComboBox::drop-down {"
+                "    subcontrol-origin: padding;"
+                "    subcontrol-position: top right;"
+                "    width: 15px;"
+                "    border-left-width: 0px;"
+                "    border-top-right-radius: 3px;"
+                "    border-bottom-right-radius: 3px;"
+                "}\n"
+                "QComboBox::down-arrow { image: url(%3); }\n"
+                "QComboBox::down-arrow:disabled { image: url(%4); }\n"
+                ).arg(mayoTheme()->color(Theme::Color::FlatBackground).name(),
+                      mayoTheme()->color(Theme::Color::FlatHover).name(),
+                      mayoTheme()->imageUrl(Theme::Image::FlatDownIndicator),
+                      mayoTheme()->imageUrl(Theme::Image::FlatDownIndicatorDisabled));
+        m_ui->combo_GuiDocuments->setStyleSheet(comboStyleSheet);
+        m_ui->combo_LeftContents->setStyleSheet(comboStyleSheet);
+
+        QIcon icon(":/images/down_8.png");
+        icon.pixmap(8, 8, QIcon::Disabled).save("c:\\temp\\down-disabled_8.png");
+
+    }
+
+    // Opened documents GUI
+    {
+        auto listViewBtns =
+                new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+        listViewBtns->addButton(
+                    1, QPixmap(":/images/close.png"), m_ui->actionCloseDoc->toolTip());
+        listViewBtns->setButtonDetection(1, -1, QVariant());
+        listViewBtns->setButtonDisplayColumn(1, 0);
+        listViewBtns->setButtonDisplayModes(
+                    1, qtgui::ItemViewButtons::DisplayOnDetection);
+        listViewBtns->setButtonItemSide(
+                    1, qtgui::ItemViewButtons::ItemRightSide);
+        const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
+        listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
+        listViewBtns->installDefaultItemDelegate();
+        QObject::connect(
+                    listViewBtns, &qtgui::ItemViewButtons::buttonClicked,
+                    [=](int btnId, const QModelIndex& index) {
+            if (btnId == 1)
+                this->closeDocument(index.row());
+        });
+    }
+
     new DialogTaskManager(this);
 
+    m_fileSysModel = new QFileSystemModel(this);
+    m_ui->treeView_FileSystem->setModel(m_fileSysModel);
+
+    auto docModel = new Internal::DocumentModel(Application::instance());
+    m_ui->combo_GuiDocuments->setModel(docModel);
+    m_ui->listView_OpenedDocuments->setModel(docModel);
+
+    const auto sigComboIndexChanged =
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
+    // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
                 this, &MainWindow::newDoc);
@@ -176,6 +296,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
+    // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
                 this, &MainWindow::saveImageView);
@@ -185,27 +306,57 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionOptions, &QAction::triggered,
                 this, &MainWindow::editOptions);
+    // "Help" actions
     QObject::connect(
                 m_ui->actionReportBug, &QAction::triggered,
                 this, &MainWindow::reportbug);
     QObject::connect(
                 m_ui->actionAboutMayo, &QAction::triggered,
                 this, &MainWindow::aboutMayo);
+    // "Window" actions and navigation in documents
+    QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, [=]{
+        this->setCurrentDocumentIndex(this->currentDocumentIndex() - 1);
+    });
+    QObject::connect(m_ui->actionNextDoc, &QAction::triggered, [=]{
+        this->setCurrentDocumentIndex(this->currentDocumentIndex() + 1);
+    });
     QObject::connect(
-                m_ui->tab_GuiDocuments, &QTabWidget::tabCloseRequested,
-                this, &MainWindow::onTabCloseRequested);
+                m_ui->actionCloseDoc, &QAction::triggered,
+                this, &MainWindow::closeCurrentDocument);
+    QObject::connect(
+                m_ui->combo_GuiDocuments, sigComboIndexChanged,
+                this, &MainWindow::currentDocumentIndexChanged);
+    QObject::connect(
+                this, &MainWindow::currentDocumentIndexChanged,
+                m_ui->stack_GuiDocuments, &QStackedWidget::setCurrentIndex);
+    QObject::connect(
+                this, &MainWindow::currentDocumentIndexChanged,
+                this, &MainWindow::updateControlsActivation);
+    // ...
+    QObject::connect(
+                m_ui->combo_LeftContents, sigComboIndexChanged,
+                m_ui->stack_LeftContents, &QStackedWidget::setCurrentIndex);
+    QObject::connect(
+                guiApp, &GuiApplication::guiDocumentAdded, [=](GuiDocument* doc) {
+        m_ui->stack_GuiDocuments->addWidget(doc->widgetView3d());
+        this->updateControlsActivation();
+    });
+    QObject::connect(
+                m_ui->widget_ApplicationTree, &WidgetApplicationTree::selectionChanged,
+                this, &MainWindow::onApplicationTreeWidgetSelectionChanged);
+    QObject::connect(
+                m_ui->listView_OpenedDocuments, &QListView::clicked,
+                [=](const QModelIndex& index) {
+        this->setCurrentDocumentIndex(index.row());
+    });
+    QObject::connect(
+                this, &MainWindow::currentDocumentIndexChanged, [=](int docId) {
+        QAbstractItemView* view = m_ui->listView_OpenedDocuments;
+        view->setCurrentIndex(view->model()->index(docId, 0));
+    });
     QObject::connect(
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
-
-    QObject::connect(
-                guiApp, &GuiApplication::guiDocumentAdded,
-                this, &MainWindow::onGuiDocumentAdded);
-    QObject::connect(
-                m_ui->widget_ApplicationTree,
-                &WidgetApplicationTree::selectionChanged,
-                this,
-                &MainWindow::onApplicationTreeWidgetSelectionChanged);
 
     this->updateControlsActivation();
 }
@@ -213,6 +364,16 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete m_ui;
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    const int btnSideLen = m_ui->combo_GuiDocuments->frameGeometry().height();
+    const QList<ButtonFlat*> listBtn =
+            m_ui->widget_ControlGuiDocuments->findChildren<ButtonFlat*>();
+    for (ButtonFlat* btn : listBtn)
+        btn->setFixedSize(btnSideLen, btnSideLen);
 }
 
 void MainWindow::newDoc()
@@ -224,8 +385,9 @@ void MainWindow::openPartInNewDoc()
 {
     this->foreachOpenFileName(
                 [=](Application::PartFormat format, QString filepath) {
-        Document* doc = Application::instance()->addDocument(
-                    QFileInfo(filepath).fileName());
+        const QString filename = QFileInfo(filepath).fileName();
+        Document* doc = Application::instance()->addDocument(filename);
+        m_fileSysModel->setRootPath(filepath);
         this->runImportTask(doc, format, filepath);
     });
 }
@@ -234,7 +396,7 @@ void MainWindow::importInCurrentDoc()
 {
     auto docView3d =
             qobject_cast<WidgetGuiDocumentView3d*>(
-                m_ui->tab_GuiDocuments->currentWidget());
+                m_ui->stack_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
         Document* doc = docView3d->guiDocument()->document();
         this->foreachOpenFileName(
@@ -270,6 +432,7 @@ void MainWindow::runImportTask(
 
 void MainWindow::exportSelectedItems()
 {
+    static const Application::ExportOptions defaultOpts;
     auto lastSettings = Internal::ImportExportSettings::load();
     const QString filepath =
             QFileDialog::getSaveFileName(
@@ -288,23 +451,19 @@ void MainWindow::exportSelectedItems()
 #ifdef HAVE_GMIO
             auto dlg = new DialogExportOptions(this);
             dlg->setPartFormat(format);
-            QObject::connect(
-                        dlg, &QDialog::accepted,
-                        [=]{
-                this->runExportTask(
-                            vecDocItem, format, dlg->currentExportOptions(), filepath);
+            QObject::connect(dlg, &QDialog::accepted, [=]{
+                const Application::ExportOptions opts = dlg->currentExportOptions();
+                this->runExportTask(vecDocItem, format, opts, filepath);
                 Internal::ImportExportSettings::save(lastSettings);
             });
             qtgui::QWidgetUtils::asyncDialogExec(dlg);
 #else
-            this->runExportTask(
-                        vecDocItem, format, Application::ExportOptions(), filepath);
+            this->runExportTask(vecDocItem, format, defaultOpts, filepath);
             Internal::ImportExportSettings::save(lastSettings);
 #endif
         }
         else {
-            this->runExportTask(
-                        vecDocItem, format, Application::ExportOptions(), filepath);
+            this->runExportTask(vecDocItem, format, defaultOpts, filepath);
             Internal::ImportExportSettings::save(lastSettings);
         }
     }
@@ -325,7 +484,7 @@ void MainWindow::saveImageView()
 {
     auto docView3d =
             qobject_cast<const WidgetGuiDocumentView3d*>(
-                m_ui->tab_GuiDocuments->currentWidget());
+                m_ui->stack_GuiDocuments->currentWidget());
     auto dlg = new DialogSaveImageView(docView3d->widgetOccView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
@@ -359,20 +518,13 @@ void MainWindow::reportbug()
                 QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
 }
 
-void MainWindow::onGuiDocumentAdded(GuiDocument *guiDoc)
-{
-    m_ui->tab_GuiDocuments->addTab(
-                guiDoc->widgetView3d(), guiDoc->document()->label());
-    m_ui->tab_GuiDocuments->setCurrentWidget(guiDoc->widgetView3d());
-    this->updateControlsActivation();
-}
-
 void MainWindow::onApplicationTreeWidgetSelectionChanged()
 {
     const std::vector<DocumentItem*> vecDocItem =
             m_ui->widget_ApplicationTree->selectedDocumentItems();
     if (vecDocItem.size() >= 1) {
         m_ui->widget_DocumentProps->editDocumentItems(vecDocItem);
+
     }
     else {
         const std::vector<HandleProperty> vecHndProp =
@@ -389,13 +541,20 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
         qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
-void MainWindow::onTabCloseRequested(int tabIndex)
+void MainWindow::closeCurrentDocument()
 {
-    QWidget* tab = m_ui->tab_GuiDocuments->widget(tabIndex);
-    auto docView3d = qobject_cast<WidgetGuiDocumentView3d*>(tab);
-    Application::instance()->eraseDocument(docView3d->guiDocument()->document());
-    m_ui->tab_GuiDocuments->removeTab(tabIndex);
-    this->updateControlsActivation();
+    this->closeDocument(this->currentDocumentIndex());
+}
+
+void MainWindow::closeDocument(int docIndex)
+{
+    if (0 <= docIndex && docIndex < m_ui->stack_GuiDocuments->count()) {
+        QWidget* tab = m_ui->stack_GuiDocuments->widget(docIndex);
+        auto docView3d = qobject_cast<WidgetGuiDocumentView3d*>(tab);
+        Application::instance()->eraseDocument(docView3d->guiDocument()->document());
+        m_ui->stack_GuiDocuments->removeWidget(docView3d);
+        this->updateControlsActivation();
+    }
 }
 
 void MainWindow::foreachOpenFileName(
@@ -451,9 +610,27 @@ void MainWindow::runExportTask(
 
 void MainWindow::updateControlsActivation()
 {
-    const bool appDocumentsEmpty = Application::instance()->documents().empty();
+    const size_t appDocumentsCount = Application::instance()->documents().size();
+    const bool appDocumentsEmpty = appDocumentsCount == 0;
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
+    m_ui->actionCloseDoc->setEnabled(!appDocumentsEmpty);
+    const int currentDocIndex = this->currentDocumentIndex();
+    m_ui->actionPreviousDoc->setEnabled(
+                !appDocumentsEmpty && currentDocIndex > 0);
+    m_ui->actionNextDoc->setEnabled(
+                !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
+    m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
+}
+
+int MainWindow::currentDocumentIndex() const
+{
+    return m_ui->combo_GuiDocuments->currentIndex();
+}
+
+void MainWindow::setCurrentDocumentIndex(int idx)
+{
+    m_ui->combo_GuiDocuments->setCurrentIndex(idx);
 }
 
 } // namespace Mayo

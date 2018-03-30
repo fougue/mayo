@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/fit_all.png</file>
         <file>images/view_axo.png</file>
         <file>images/view_back.png</file>
         <file>images/view_bottom.png</file>
@@ -8,8 +7,6 @@
         <file>images/view_left.png</file>
         <file>images/view_right.png</file>
         <file>images/view_top.png</file>
-        <file>images/fougue_logo.png</file>
-        <file>images/camera_photo.png</file>
         <file>images/no.png</file>
         <file>images/widget_pseudo_fold.png</file>
         <file>images/xde_assembly_16.png</file>
@@ -21,5 +18,19 @@
         <file>images/mesh_16.png</file>
         <file>images/mesh_32.png</file>
         <file>images/clipping.png</file>
+        <file>images/close.png</file>
+        <file>images/next.png</file>
+        <file>images/previous.png</file>
+        <file>images/fitall_16.png</file>
+        <file>images/camera_32.png</file>
+        <file>images/fitall_24.png</file>
+        <file>images/fitall_32.png</file>
+        <file>images/appicon_16.png</file>
+        <file>images/appicon_24.png</file>
+        <file>images/appicon_32.png</file>
+        <file>images/appicon_64.png</file>
+        <file>images/down_16.png</file>
+        <file>images/down_8.png</file>
+        <file>images/down_disabled_8.png</file>
     </qresource>
 </RCC>

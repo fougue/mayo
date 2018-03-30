@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
-    <height>181</height>
+    <width>288</width>
+    <height>175</height>
    </rect>
   </property>
   <property name="palette">
@@ -96,10 +96,10 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="../mayo.qrc">:/images/fougue_logo.png</pixmap>
+      <pixmap resource="../mayo.qrc">:/images/appicon_64.png</pixmap>
      </property>
-     <property name="scaledContents">
-      <bool>true</bool>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
      </property>
     </widget>
    </item>

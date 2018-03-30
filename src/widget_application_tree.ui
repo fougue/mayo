@@ -31,6 +31,9 @@
      <property name="selectionMode">
       <enum>QAbstractItemView::ExtendedSelection</enum>
      </property>
+     <property name="textElideMode">
+      <enum>Qt::ElideNone</enum>
+     </property>
      <attribute name="headerVisible">
       <bool>false</bool>
      </attribute>
