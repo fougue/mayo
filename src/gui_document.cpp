@@ -126,7 +126,7 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
     Handle_Graphic3d_TransformPers trsf =
-            new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers);
+            new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location());
     aisTrihedron->SetTransformPersistence(trsf);
     aisTrihedron->SetInfiniteState(true);
     return aisTrihedron;
