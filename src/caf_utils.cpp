@@ -6,7 +6,13 @@
 
 #include "fougtools/occtools/qt_utils.h"
 
+#include <mutex>
+
 namespace occ {
+
+namespace Internal {
+static std::mutex mutex_XCAFApplication;
+} // namespace Internal
 
 QString CafUtils::labelTag(const TDF_Label &label)
 {
@@ -26,6 +32,7 @@ QString CafUtils::labelAttrStdName(const TDF_Label &label)
 Handle_TDocStd_Document CafUtils::createXdeDocument(const char *format)
 {
     Handle_TDocStd_Document doc;
+    std::lock_guard<std::mutex> lock(Internal::mutex_XCAFApplication);
     XCAFApp_Application::GetApplication()->NewDocument(format, doc);
     return doc;
 }
