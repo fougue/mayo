@@ -63,6 +63,18 @@ void BndUtils::add(Bnd_Box *box, const Bnd_Box &other)
 Bnd_Box BndUtils::get(const Handle_AIS_InteractiveObject &obj)
 {
     Bnd_Box box;
+    if (obj.IsNull())
+        return box;
+
+    // Ensure bounding box is calculated
+    for (PrsMgr_ModedPresentation& pres : obj->Presentations()) {
+        if (pres.Mode() == obj->DisplayMode()) {
+            const Handle_Prs3d_Presentation& pres3d = pres.Presentation()->Presentation();
+            if (!pres3d->CStructure()->BoundingBox().IsValid())
+                pres3d->CalculateBoundBox();
+        }
+    }
+
     obj->BoundingBox(box);
     return box;
 }
