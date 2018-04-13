@@ -41,8 +41,6 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
-#include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
 
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -79,17 +77,15 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <fstream>
+#include <mutex>
 
 namespace Mayo {
 
 namespace Internal {
 
-static QMutex* globalMutex()
-{
-    static QMutex mutex;
-    return &mutex;
-}
+static std::mutex globalMutex;
 
 #ifdef HAVE_GMIO
 static bool gmio_qttask_is_stop_requested(void* cookie)
@@ -160,10 +156,10 @@ static QString gmioErrorToQString(int error)
 }
 #endif
 
-class OccImportProgress : public Message_ProgressIndicator
+class OccProgress : public Message_ProgressIndicator
 {
 public:
-    OccImportProgress(qttask::Progress* progress)
+    OccProgress(qttask::Progress* progress)
         : m_progress(progress)
     {
         this->SetScale(0., 100., 1.);
@@ -198,8 +194,8 @@ TopoDS_Shape loadShapeFromFile(
         IFSelect_ReturnStatus* error,
         qttask::Progress* progress)
 {
-    QMutexLocker locker(globalMutex()); Q_UNUSED(locker);
-    Handle_Message_ProgressIndicator indicator = new OccImportProgress(progress);
+    std::lock_guard<std::mutex> lock(globalMutex); Q_UNUSED(lock);
+    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
     TopoDS_Shape result;
 
     if (!indicator.IsNull())
@@ -251,8 +247,8 @@ void loadCafDocumentFromFile(
         IFSelect_ReturnStatus* error,
         qttask::Progress* progress)
 {
-    QMutexLocker locker(globalMutex()); Q_UNUSED(locker);
-    Handle_Message_ProgressIndicator indicator = new OccImportProgress(progress);
+    std::lock_guard<std::mutex> lock(globalMutex); Q_UNUSED(lock);
+    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
 
     if (!indicator.IsNull())
         indicator->NewScope(30, "Loading file");
@@ -453,15 +449,14 @@ const std::vector<Document *> &Application::documents() const
     return m_documents;
 }
 
-Document *Application::addDocument(const QString &label)
+Document *Application::createDocument(const QString &label)
 {
-    static unsigned docSequenceId = 0;
     auto doc = new Document(this);
     if (label.isEmpty()) {
-        doc->setLabel(tr("Anonymous%1")
-                      .arg(docSequenceId > 0 ?
-                               QString::number(docSequenceId) :
-                               QString()));
+        static std::atomic<unsigned> docSequenceId = 0;
+        const unsigned docId = std::atomic_fetch_add(&docSequenceId, 1);
+        const QString docIdStr = docId > 0 ? QString::number(docId) : QString();
+        doc->setLabel(tr("Anonymous%1").arg(docIdStr));
     }
     else {
         doc->setLabel(label);
@@ -472,8 +467,13 @@ Document *Application::addDocument(const QString &label)
     QObject::connect(
                 doc, &Document::itemPropertyChanged,
                 this, &Application::documentItemPropertyChanged);
+    return doc;
+}
+
+Document *Application::addDocument(const QString &label)
+{
+    Document* doc = this->createDocument(label);
     m_documents.emplace_back(doc);
-    ++docSequenceId;
     emit documentAdded(doc);
     return doc;
 }
@@ -483,7 +483,7 @@ bool Application::eraseDocument(Document *doc)
     auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
     if (itFound != m_documents.cend()) {
         m_documents.erase(itFound);
-        delete doc;
+        doc->deleteLater();
         emit documentErased(doc);
         return true;
     }
@@ -617,8 +617,7 @@ Application::IoResult Application::importOccBRep(
 {
     TopoDS_Shape shape;
     BRep_Builder brepBuilder;
-    Handle_Message_ProgressIndicator indicator =
-            new Internal::OccImportProgress(progress);
+    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     const bool ok = BRepTools::Read(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     if (ok) {
@@ -663,7 +662,7 @@ Application::IoResult Application::importStl(
     }
     else if (lib == Options::StlIoLibrary::OpenCascade) {
         Handle_Message_ProgressIndicator indicator =
-                new Internal::OccImportProgress(progress);
+                    new Internal::OccProgress(progress);
         const Handle_Poly_Triangulation mesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         if (!mesh.IsNull())
@@ -681,9 +680,8 @@ Application::IoResult Application::exportIges(
         const QString &filepath,
         qttask::Progress *progress)
 {
-    QMutexLocker locker(Internal::globalMutex()); Q_UNUSED(locker);
-    Handle_Message_ProgressIndicator indicator =
-            new Internal::OccImportProgress(progress);
+    std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
+    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
 
     IGESControl_Controller::Init();
     IGESCAFControl_Writer writer;
@@ -710,9 +708,8 @@ Application::IoResult Application::exportStep(
         const QString &filepath,
         qttask::Progress *progress)
 {
-    QMutexLocker locker(Internal::globalMutex()); Q_UNUSED(locker);
-    Handle_Message_ProgressIndicator indicator =
-            new Internal::OccImportProgress(progress);
+    std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
+    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     STEPCAFControl_Writer writer;
     if (!indicator.IsNull())
         writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
@@ -758,8 +755,7 @@ Application::IoResult Application::exportOccBRep(
         shape = vecShape.front();
     }
 
-    Handle_Message_ProgressIndicator indicator =
-            new Internal::OccImportProgress(progress);
+    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     const Standard_Boolean ok =
             BRepTools::Write(shape, filepath.toLocal8Bit().constData(), indicator);
     if (ok == Standard_True)
@@ -858,7 +854,7 @@ Application::IoResult Application::exportStl_OCC(
         }
         else if (sameType<MeshItem>(item)) {
             Handle_Message_ProgressIndicator indicator =
-                    new Internal::OccImportProgress(progress);
+            new Internal::OccProgress(progress);
             Standard_Boolean occOk = Standard_False;
             auto meshItem = static_cast<const MeshItem*>(item);
             const QByteArray filepathLocal8b = filepath.toLocal8Bit();

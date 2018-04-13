@@ -86,6 +86,7 @@ public:
 
     const std::vector<Document*>& documents() const;
 
+    Document* createDocument(const QString& label);
     Document* addDocument(const QString& label = QString());
     bool eraseDocument(Document* doc);
 

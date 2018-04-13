@@ -47,20 +47,15 @@
 #include "fougtools/qttools/gui/item_view_buttons.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 #include "fougtools/qttools/task/manager.h"
-#include "fougtools/qttools/task/runner_qthreadpool.h"
+#include "fougtools/qttools/task/runner_stdasync.h"
 
 #include <QtCore/QTime>
 #include <QtCore/QSettings>
 #include <QtGui/QDesktopServices>
+#include <QtCore/QStringListModel>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QFileSystemModel>
-
-#include <STEPCAFControl_Reader.hxx>
-#include <TDocStd_Document.hxx>
-#include <XCAFApp_Application.hxx>
-
-#include <QtCore/QStringListModel>
 
 namespace Mayo {
 
@@ -409,8 +404,7 @@ void MainWindow::importInCurrentDoc()
 void MainWindow::runImportTask(
         Document* doc, Application::PartFormat format, const QString& filepath)
 {
-    qttask::BaseRunner* task =
-            qttask::Manager::globalInstance()->newTask<QThread>();
+    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
     task->run([=]{
         QTime chrono;
         chrono.start();
@@ -424,7 +418,7 @@ void MainWindow::runImportTask(
                     .arg(chrono.elapsed());
         } else {
             msg = tr("Failed to import part:\n    %1\nError: %2")
-                    .arg(filepath).arg(result.errorText);
+                    .arg(filepath, result.errorText);
         }
         emit operationFinished(result.ok, msg);
     });
