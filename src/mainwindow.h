@@ -48,12 +48,11 @@ public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 signals:
     void operationFinished(bool ok, const QString& msg);
     void currentDocumentIndexChanged(int docIdx);
-
-protected:
-    void showEvent(QShowEvent* event) override;
 
 private:
     void newDoc();

@@ -32,5 +32,6 @@
         <file>images/down_16.png</file>
         <file>images/down_8.png</file>
         <file>images/down_disabled_8.png</file>
+        <file>images/appicon_128.png</file>
     </qresource>
 </RCC>

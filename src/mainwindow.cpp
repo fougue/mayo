@@ -291,6 +291,14 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
+    QObject::connect(
+                m_ui->label_MainHome, &QLabel::linkActivated,
+                [=](const QString& link) {
+        if (link == "NewDocument")
+            m_ui->actionNewDoc->trigger();
+        else if (link == "OpenDocuments")
+            m_ui->actionOpen->trigger();
+    });
     // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
@@ -353,6 +361,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
 
+    m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     this->updateControlsActivation();
 }
 
@@ -361,14 +370,19 @@ MainWindow::~MainWindow()
     delete m_ui;
 }
 
-void MainWindow::showEvent(QShowEvent *event)
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    QMainWindow::showEvent(event);
-    const int btnSideLen = m_ui->combo_GuiDocuments->frameGeometry().height();
-    const QList<ButtonFlat*> listBtn =
-            m_ui->widget_ControlGuiDocuments->findChildren<ButtonFlat*>();
-    for (ButtonFlat* btn : listBtn)
-        btn->setFixedSize(btnSideLen, btnSideLen);
+    if (watched == m_ui->widget_ControlGuiDocuments
+            && event->type() == QEvent::Show)
+    {
+        const int btnSideLen = m_ui->combo_GuiDocuments->frameGeometry().height();
+        const QList<ButtonFlat*> listBtn =
+                m_ui->widget_ControlGuiDocuments->findChildren<ButtonFlat*>();
+        for (ButtonFlat* btn : listBtn)
+            btn->setFixedSize(btnSideLen, btnSideLen);
+        return true;
+    }
+    return false;
 }
 
 void MainWindow::newDoc()
@@ -614,7 +628,10 @@ void MainWindow::updateControlsActivation()
                 !appDocumentsEmpty && currentDocIndex > 0);
     m_ui->actionNextDoc->setEnabled(
                 !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
+    m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
+    m_ui->stack_Main->setCurrentWidget(
+                appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl);
 }
 
 int MainWindow::currentDocumentIndex() const
