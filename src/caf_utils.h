@@ -7,8 +7,7 @@
 
 namespace occ {
 
-class CafUtils {
-public:
+struct CafUtils {
     static QString labelTag(const TDF_Label &label);
     static QString labelAttrStdName(const TDF_Label &label);
 

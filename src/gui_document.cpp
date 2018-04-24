@@ -33,21 +33,18 @@
 #include "document.h"
 #include "document_item.h"
 #include "gpx_document_item.h"
-#include "widget_gui_document_view3d.h"
-#include "widget_occ_view.h"
-#include "gpx_xde_document_item.h"
 #include "gpx_mesh_item.h"
-#include "xde_document_item.h"
+#include "gpx_utils.h"
+#include "gpx_xde_document_item.h"
 #include "mesh_item.h"
+#include "xde_document_item.h"
 
+#include <AIS_Trihedron.hxx>
 #include <Aspect_DisplayConnection.hxx>
+#include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <OpenGl_GraphicDriver.hxx>
-#include <SelectMgr_SelectionManager.hxx>
-#include <TCollection_ExtendedString.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <AIS_Trihedron.hxx>
-#include <Geom_Axis2Placement.hxx>
 
 #include <cassert>
 
@@ -93,22 +90,6 @@ static Handle_V3d_Viewer createOccViewer()
     return viewer;
 }
 
-void eraseGpxObjectFromContext(
-        const Handle_AIS_InteractiveObject &object,
-        const Handle_AIS_InteractiveContext &context)
-{
-    if (!object.IsNull()) {
-        context->Erase(object, Standard_False);
-        context->Remove(object, Standard_False);
-        context->ClearPrs(object, 0, Standard_False);
-        context->SelectionManager()->Remove(object);
-
-        Handle_AIS_InteractiveObject objectHCopy = object;
-        while (!objectHCopy.IsNull())
-            objectHCopy.Nullify();
-    }
-}
-
 static Handle_AIS_Trihedron createOriginTrihedron()
 {
     Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
@@ -138,11 +119,25 @@ GuiDocument::GuiDocument(Document *doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
       m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
-      m_guiDocView3d(new WidgetGuiDocumentView3d(this))
+      m_v3dView(m_v3dViewer->CreateView())
 {
     assert(doc != nullptr);
 
-    m_guiDocView3d->widgetOccView()->setOccV3dViewer(m_v3dViewer);
+    // 3D view - Enable anti-aliasing with MSAA
+    m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
+    m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
+    // 3D view - Set gradient background
+    m_v3dView->SetBgGradientColors(
+                Quantity_Color(0.5, 0.58, 1., Quantity_TOC_RGB),
+                Quantity_NOC_WHITE,
+                Aspect_GFM_VER);
+    // 3D view - Add shaded trihedron located in the bottom-left corner
+    m_v3dView->TriedronDisplay(
+                Aspect_TOTP_LEFT_LOWER,
+                Quantity_NOC_GRAY50,
+                0.075,
+                V3d_ZBUFFER);
+    // 3D scene - Add trihedron placed at the origin
     m_aisContext->Display(Internal::createOriginTrihedron(), true);
 
     QObject::connect(doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
@@ -154,9 +149,9 @@ Document *GuiDocument::document() const
     return m_document;
 }
 
-WidgetGuiDocumentView3d *GuiDocument::widgetView3d() const
+const Handle_V3d_View &GuiDocument::v3dView() const
 {
-    return m_guiDocView3d;
+    return m_v3dView;
 }
 
 GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem *item) const
@@ -179,8 +174,7 @@ void GuiDocument::onItemAdded(DocumentItem *item)
     const Handle_AIS_InteractiveObject aisObject = pair.gpx->handleGpxObject();
     m_aisContext->Display(aisObject, true);
     m_vecDocItemGpx.emplace_back(std::move(pair));
-    m_guiDocView3d->widgetOccView()->fitAll();
-
+    GpxUtils::V3dView_fitAll(m_v3dView);
     BndUtils::add(&m_gpxBoundingBox, BndUtils::get(aisObject));
     emit gpxBoundingBoxChanged(m_gpxBoundingBox);
 }
@@ -193,9 +187,9 @@ void GuiDocument::onItemErased(const DocumentItem *item)
                 [=](const DocumentItem_Gpx& pair) { return pair.item == item; });
     if (itFound != m_vecDocItemGpx.end()) {
         // Delete gpx item
-        Internal::eraseGpxObjectFromContext(
-                    itFound->gpx->handleGpxObject(), m_aisContext);
-        delete itFound->gpx;
+        GpxDocumentItem* gpxDocItem = itFound->gpx;
+        GpxUtils::AisContext_eraseObject(m_aisContext, gpxDocItem->handleGpxObject());
+        delete gpxDocItem;
         m_vecDocItemGpx.erase(itFound);
 
         // Recompute bounding box

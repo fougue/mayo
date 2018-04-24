@@ -33,6 +33,7 @@
 #include <AIS_InteractiveContext.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_Viewer.hxx>
+#include <V3d_View.hxx>
 #include <vector>
 
 namespace Mayo {
@@ -40,7 +41,6 @@ namespace Mayo {
 class Document;
 class DocumentItem;
 class GpxDocumentItem;
-class WidgetGuiDocumentView3d;
 
 class GuiDocument : public QObject {
     Q_OBJECT
@@ -49,7 +49,7 @@ public:
     GuiDocument(Document* doc);
 
     Document* document() const;
-    WidgetGuiDocumentView3d* widgetView3d() const;
+    const Handle_V3d_View& v3dView() const;
     GpxDocumentItem* findItemGpx(const DocumentItem* item) const;
 
     const Bnd_Box& gpxBoundingBox() const;
@@ -68,8 +68,8 @@ private:
 
     Document* m_document = nullptr;
     Handle_V3d_Viewer m_v3dViewer;
+    Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveContext m_aisContext;
-    WidgetGuiDocumentView3d* m_guiDocView3d = nullptr;
     std::vector<DocumentItem_Gpx> m_vecDocItemGpx;
     Bnd_Box m_gpxBoundingBox;
 };

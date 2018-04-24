@@ -51,7 +51,7 @@ private:
 
 private:
     QPoint m_prevPos;
-    class WidgetOccView* m_view = nullptr;
+    WidgetOccView* m_view = nullptr;
 };
 
 } // namespace Mayo

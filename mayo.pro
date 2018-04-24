@@ -49,12 +49,14 @@ HEADERS += \
     src/widget_application_tree.h \
     src/widget_clip_planes.h \
     src/widget_document_item_props.h \
-    src/widget_gui_document_view3d.h \
     src/widget_message_indicator.h \
     src/widget_occ_view.h \
     src/xde_document_item.h \
     src/xde_shape_explorer.h \
-    src/theme.h
+    src/theme.h \
+    src/gpx_utils.h \
+    src/math_utils.h \
+    src/widget_gui_document.h
 
 SOURCES += \
     src/application.cpp \
@@ -92,12 +94,14 @@ SOURCES += \
     src/widget_application_tree.cpp \
     src/widget_clip_planes.cpp \
     src/widget_document_item_props.cpp \
-    src/widget_gui_document_view3d.cpp \
     src/widget_message_indicator.cpp \
     src/widget_occ_view.cpp \
     src/xde_document_item.cpp \
     src/xde_shape_explorer.cpp \
-    src/theme.cpp
+    src/theme.cpp \
+    src/gpx_utils.cpp \
+    src/math_utils.cpp \
+    src/widget_gui_document.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)

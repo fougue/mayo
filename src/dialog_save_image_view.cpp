@@ -29,7 +29,7 @@
 
 #include "dialog_save_image_view.h"
 
-#include "widget_occ_view.h"
+#include "gpx_utils.h"
 #include "ui_dialog_save_image_view.h"
 #include "fougtools/qttools/gui/qwidget_utils.h"
 
@@ -57,7 +57,7 @@ static QImage qtImageTemp(const Image_PixMap& occImg)
 
 } // namespace Internal
 
-DialogSaveImageView::DialogSaveImageView(const WidgetOccView* view, QWidget *parent)
+DialogSaveImageView::DialogSaveImageView(const Handle_V3d_View& view, QWidget *parent)
     : QDialog(parent),
       m_ui(new Ui_DialogSaveImageView),
       m_view(view)
@@ -80,8 +80,8 @@ DialogSaveImageView::DialogSaveImageView(const WidgetOccView* view, QWidget *par
                 previewBtn, &QAbstractButton::clicked,
                 this, &DialogSaveImageView::preview);
 
-    m_ui->edit_Width->setValue(view->geometry().width());
-    m_ui->edit_Height->setValue(view->geometry().height());
+    m_ui->edit_Width->setValue(GpxUtils::AspectWindow_width(view->Window()));
+    m_ui->edit_Height->setValue(GpxUtils::AspectWindow_height(view->Window()));
 }
 
 DialogSaveImageView::~DialogSaveImageView()
@@ -160,7 +160,7 @@ bool DialogSaveImageView::createImageView(Image_PixMap* img) const
 {
     img->SetTopDown(true);
     const bool ok =
-            m_view->occV3dView()->ToPixMap(
+            m_view->ToPixMap(
                 *img,
                 m_ui->edit_Width->value(),
                 m_ui->edit_Height->value(),

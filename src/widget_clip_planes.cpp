@@ -31,8 +31,9 @@
 
 #include "ui_widget_clip_planes.h"
 #include "bnd_utils.h"
+#include "gpx_utils.h"
+#include "math_utils.h"
 #include "options.h"
-#include "widget_occ_view.h"
 
 #include <algorithm>
 #include <Bnd_Box.hxx>
@@ -40,101 +41,10 @@
 
 namespace Mayo {
 
-namespace Internal {
-
-static double mappedValue(
-        double val, double omin, double omax, double nmin, double nmax)
-{
-    return (((val - omin) * (nmax - nmin)) / (omax - omin)) + nmin;
-}
-
-static bool isReversedStandardDir(const gp_Dir& n)
-{
-    for (int i = 0; i < 3; ++i) {
-        const double c = n.XYZ().GetData()[i];
-        if (c < 0 && (std::abs(c) - 1) < Precision::Confusion())
-            return true;
-    }
-    return false;
-}
-
-static double planePosition(const gp_Pln& plane)
-{
-    const gp_Vec vecLoc(plane.Location().XYZ());
-    const gp_Vec vecNormal(plane.Axis().Direction());
-    return vecLoc.Dot(vecNormal);
-}
-
-static bool isPlaneInView(
-        const Handle_Graphic3d_ClipPlane& plane, const Handle_V3d_View& view3d)
-{
-    const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view3d->ClipPlanes();
-    if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
-        return false;
-    auto itFound = std::find_if(
-                seqClipPlane->cbegin(),
-                seqClipPlane->cend(),
-                [=](const Handle_Graphic3d_ClipPlane& candidate) {
-       return candidate.operator->() == plane.operator->();
-    });
-    return itFound != seqClipPlane->cend();
-}
-
-static std::pair<double, double> planeRange(
-        const BndBoxCoords& bbc, const gp_Dir& planeNormal)
-{
-    const gp_Vec n(isReversedStandardDir(planeNormal) ?
-                       planeNormal.Reversed() :
-                       planeNormal);
-    bool isMaxValid = false;
-    bool isMinValid = false;
-    double rmax;
-    double rmin;
-    for (const gp_Pnt& bndPoint : bbc.vertices()) {
-        const gp_Vec vec(bndPoint.XYZ());
-        const double dot = n.Dot(vec);
-        rmax = isMaxValid ? std::max(rmax, dot) : dot;
-        rmin = isMinValid ? std::min(rmin, dot) : dot;
-        isMaxValid = true;
-        isMinValid = true;
-    }
-    if (isMaxValid && isMinValid)
-        return { rmin, rmax };
-    return {};
-}
-
-static void setPlaneNormal(const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n)
-{
-    const double planePos = planePosition(plane->ToPlane());
-    const gp_Vec placement(planePos * gp_Vec(n));
-    plane->SetEquation(gp_Pln(placement.XYZ(), n));
-}
-
-static void setPlanePosition(const Handle_Graphic3d_ClipPlane& plane, double pos)
-{
-    const gp_Dir& n = plane->ToPlane().Axis().Direction();
-    if (isReversedStandardDir(n))
-        pos = -pos;
-    const gp_Vec placement(pos * gp_Vec(n));
-    plane->SetEquation(gp_Pln(placement.XYZ(), n));
-}
-
-static void setPlaneCappingHatch(
-        const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch)
-{
-    if (hatch == Aspect_HS_SOLID)
-        plane->SetCappingHatchOff();
-    else
-        plane->SetCappingHatchOn();
-    plane->SetCappingHatch(hatch);
-}
-
-} // namespace Internal
-
-WidgetClipPlanes::WidgetClipPlanes(WidgetOccView* view, QWidget* parent)
+WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* parent)
     : QWidget(parent),
       m_ui(new Ui_WidgetClipPlanes),
-      m_view(view)
+      m_view(view3d)
 {
     m_ui->setupUi(this);
 
@@ -155,7 +65,7 @@ WidgetClipPlanes::WidgetClipPlanes(WidgetOccView* view, QWidget* parent)
         this->connectUi(&data);
         data.gpx->SetCapping(opts->isClipPlaneCappingOn());
         if (data.gpx->IsCapping())
-            Internal::setPlaneCappingHatch(data.gpx, opts->clipPlaneCappingHatch());
+            GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, opts->clipPlaneCappingHatch());
         Graphic3d_MaterialAspect clipMaterial(Graphic3d_NOM_STEEL);
         Quantity_NameOfColor colorName;
         if (&data == &m_vecClipPlaneData.at(0))
@@ -173,14 +83,14 @@ WidgetClipPlanes::WidgetClipPlanes(WidgetOccView* view, QWidget* parent)
     QObject::connect(opts, &Options::clipPlaneCappingToggled, [=](bool on) {
         for (ClipPlaneData& data : m_vecClipPlaneData)
             data.gpx->SetCapping(on);
-        m_view->redraw();
+        m_view->Redraw();
     });
     QObject::connect(
                 opts, &Options::clipPlaneCappingHatchChanged,
                 [=](Aspect_HatchStyle hatch) {
         for (ClipPlaneData& data : m_vecClipPlaneData)
-            Internal::setPlaneCappingHatch(data.gpx, hatch);
-        m_view->redraw();
+            GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, hatch);
+        m_view->Redraw();
     });
 
     m_ui->widget_CustomDir->setVisible(false);
@@ -198,19 +108,19 @@ void WidgetClipPlanes::setRanges(const Bnd_Box &bndBox)
     const auto bbc = BndBoxCoords::get(bndBox);
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         const gp_Dir& n = data.gpx->ToPlane().Axis().Direction();
-        this->setPlaneRange(&data, Internal::planeRange(bbc, n));
+        this->setPlaneRange(&data, MathUtils::planeRange(bbc, n));
         data.ui.check_On->setEnabled(!isBndBoxVoid);
         if (isBndBoxVoid)
             data.ui.check_On->setChecked(false);
     }
-    m_view->redraw();
+    m_view->Redraw();
 }
 
 void WidgetClipPlanes::setClippingOn(bool on)
 {
     for (ClipPlaneData& data : m_vecClipPlaneData)
         data.gpx->SetOn(on ? data.ui.check_On->isChecked() : false);
-    m_view->redraw();
+    m_view->Redraw();
 }
 
 void WidgetClipPlanes::connectUi(ClipPlaneData* data)
@@ -225,7 +135,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     QObject::connect(ui.check_On, &QCheckBox::clicked, [=](bool on) {
         ui.widget_Control->setEnabled(on);
         this->setPlaneOn(gpx, on);
-        m_view->redraw();
+        m_view->Redraw();
     });
 
     if (data->ui.customXDirSpin() != nullptr) {
@@ -249,23 +159,23 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         QSignalBlocker sigBlock(posSlider); Q_UNUSED(sigBlock);
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
-        Internal::setPlanePosition(gpx, pos);
-        m_view->redraw();
+        GpxUtils::Gpx3dClipPlane_setPosition(gpx, pos);
+        m_view->Redraw();
     });
 
     QObject::connect(posSlider, &QSlider::valueChanged, [=](int pct) {
         const double pos = ui.sliderValueToSpinValue(pct);
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
-        Internal::setPlanePosition(gpx, pos);
-        m_view->redraw();
+        GpxUtils::Gpx3dClipPlane_setPosition(gpx, pos);
+        m_view->Redraw();
     });
 
     QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, [=]{
         const gp_Dir invNormal = gpx->ToPlane().Axis().Direction().Reversed();
-        Internal::setPlaneNormal(gpx, invNormal);
-        Internal::setPlanePosition(gpx, data->ui.posSpin()->value());
-        m_view->redraw();
+        GpxUtils::Gpx3dClipPlane_setNormal(gpx, invNormal);
+        GpxUtils::Gpx3dClipPlane_setPosition(gpx, data->ui.posSpin()->value());
+        m_view->Redraw();
     });
 
     // Custom plane normal
@@ -281,9 +191,9 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
             if (vecNormal.Magnitude() > Precision::Confusion()) {
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
-                this->setPlaneRange(data, Internal::planeRange(bbc, normal));
-                Internal::setPlaneNormal(gpx, normal);
-                m_view->redraw();
+                this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));
+                GpxUtils::Gpx3dClipPlane_setNormal(gpx, normal);
+                m_view->Redraw();
             }
         });
     };
@@ -306,8 +216,8 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
 void WidgetClipPlanes::setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on)
 {
     plane->SetOn(on);
-    if (!Internal::isPlaneInView(plane, m_view->occV3dView()))
-        m_view->occV3dView()->AddClipPlane(plane);
+    if (!GpxUtils::V3dView_hasClipPlane(m_view, plane))
+        m_view->AddClipPlane(plane);
 }
 
 void WidgetClipPlanes::setPlaneRange(ClipPlaneData *data, const Range& range)
@@ -327,7 +237,7 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData *data, const Range& range)
     posSpin->setRange(rmin - gap, rmax + gap);
     posSpin->setSingleStep(std::abs(posSpin->maximum() - posSpin->minimum()) / 100.);
     if (useMidValue) {
-        Internal::setPlanePosition(data->gpx, newPlanePos);
+        GpxUtils::Gpx3dClipPlane_setPosition(data->gpx, newPlanePos);
         posSpin->setValue(newPlanePos);
         posSlider->setValue(data->ui.spinValueToSliderValue(newPlanePos));
     }
@@ -367,14 +277,14 @@ QDoubleSpinBox *WidgetClipPlanes::UiClipPlane::customZDirSpin() const {
 double WidgetClipPlanes::UiClipPlane::spinValueToSliderValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
-    return Internal::mappedValue(
+    return MathUtils::mappedValue(
         val, spin->minimum(), spin->maximum(), slider->minimum(), slider->maximum());
 }
 
 double WidgetClipPlanes::UiClipPlane::sliderValueToSpinValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
-    return Internal::mappedValue(
+    return MathUtils::mappedValue(
         val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum());
 }
 

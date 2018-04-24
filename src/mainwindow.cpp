@@ -41,7 +41,7 @@
 #include "gui_application.h"
 #include "gui_document.h"
 #include "theme.h"
-#include "widget_gui_document_view3d.h"
+#include "widget_gui_document.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
 #include "fougtools/qttools/gui/item_view_buttons.h"
@@ -341,7 +341,8 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 m_ui->stack_LeftContents, &QStackedWidget::setCurrentIndex);
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentAdded, [=](GuiDocument* doc) {
-        m_ui->stack_GuiDocuments->addWidget(doc->widgetView3d());
+        auto widget = new WidgetGuiDocument(doc);
+        m_ui->stack_GuiDocuments->addWidget(widget);
         this->updateControlsActivation();
     });
     QObject::connect(
@@ -404,7 +405,7 @@ void MainWindow::openPartInNewDoc()
 void MainWindow::importInCurrentDoc()
 {
     auto docView3d =
-            qobject_cast<WidgetGuiDocumentView3d*>(
+            qobject_cast<WidgetGuiDocument*>(
                 m_ui->stack_GuiDocuments->currentWidget());
     if (docView3d != nullptr) {
         Document* doc = docView3d->guiDocument()->document();
@@ -490,10 +491,10 @@ void MainWindow::editOptions()
 
 void MainWindow::saveImageView()
 {
-    auto docView3d =
-            qobject_cast<const WidgetGuiDocumentView3d*>(
+    auto widget =
+            qobject_cast<const WidgetGuiDocument*>(
                 m_ui->stack_GuiDocuments->currentWidget());
-    auto dlg = new DialogSaveImageView(docView3d->widgetOccView());
+    auto dlg = new DialogSaveImageView(widget->guiDocument()->v3dView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
@@ -558,7 +559,7 @@ void MainWindow::closeDocument(int docIndex)
 {
     if (0 <= docIndex && docIndex < m_ui->stack_GuiDocuments->count()) {
         QWidget* tab = m_ui->stack_GuiDocuments->widget(docIndex);
-        auto docView3d = qobject_cast<WidgetGuiDocumentView3d*>(tab);
+        auto docView3d = qobject_cast<WidgetGuiDocument*>(tab);
         Application::instance()->eraseDocument(docView3d->guiDocument()->document());
         m_ui->stack_GuiDocuments->removeWidget(docView3d);
         this->updateControlsActivation();

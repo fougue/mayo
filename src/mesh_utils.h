@@ -34,8 +34,7 @@ class gp_XYZ;
 
 namespace occ {
 
-class MeshUtils {
-public:
+struct MeshUtils {
     static double triangleSignedVolume(
             const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
     static double triangleArea(

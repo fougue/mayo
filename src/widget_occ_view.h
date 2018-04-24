@@ -29,46 +29,31 @@
 
 #pragma once
 
-#include <functional>
 #include <QtWidgets/QWidget>
 #include <V3d_View.hxx>
-#include <V3d_Viewer.hxx>
 
 namespace Mayo {
 
-/*! Qt wrapper around the V3d_View class
- *
- *  WidgetOccView does not handle input devices interaction like keyboard and mouse.
- */
-class WidgetOccView : public QWidget
-{
+//! Qt wrapper around the V3d_View class
+//!
+//! WidgetOccView does not handle input devices interaction like keyboard and
+//! mouse.
+class WidgetOccView : public QWidget {
     Q_OBJECT
 
 public:
-    WidgetOccView(QWidget* parent = nullptr);
-    WidgetOccView(const Handle_V3d_Viewer& viewer, QWidget* parent = nullptr);
+    WidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
 
-    const Handle_V3d_Viewer& occV3dViewer() const;
-    void setOccV3dViewer(const Handle_V3d_Viewer& viewer);
-
-    const Handle_V3d_View& occV3dView() const;
+    const Handle_V3d_View& v3dView() const;
 
     QPaintEngine* paintEngine() const override;
-
-    void redraw();
-    void fitAll();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
 private:
-    void initialize();
-
-    Handle_V3d_Viewer m_viewer;
     Handle_V3d_View m_view;
-    bool m_isInitialized = false;
-    bool m_needsResize = false;
 };
 
 } // namespace Mayo

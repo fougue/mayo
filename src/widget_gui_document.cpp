@@ -27,9 +27,10 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#include "widget_gui_document_view3d.h"
+#include "widget_gui_document.h"
 
 #include "button_flat.h"
+#include "gpx_utils.h"
 #include "gui_document.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
@@ -65,11 +66,11 @@ static ButtonFlat* createViewBtn(
 }
 
 static void connectViewProjBtn(
-        ButtonFlat* btn, WidgetOccView* view, V3d_TypeOfOrientation proj)
+        ButtonFlat* btn, const Handle_V3d_View& view, V3d_TypeOfOrientation proj)
 {
     QObject::connect(btn, &ButtonFlat::clicked, [=]{
-        view->occV3dView()->SetProj(proj);
-        view->fitAll();
+        view->SetProj(proj);
+        GpxUtils::V3dView_fitAll(view);
     });
 }
 
@@ -94,10 +95,10 @@ const int widgetMargin = 4;
 
 } // namespace Internal
 
-WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *parent)
+WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
     : QWidget(parent),
       m_guiDoc(guiDoc),
-      m_qtOccView(new WidgetOccView(this))
+      m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this))
 {
     new QtOccViewController(m_qtOccView);
 
@@ -127,38 +128,34 @@ WidgetGuiDocumentView3d::WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget *p
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipPlanes, btnViewBottom, margin);
 
-    Internal::connectViewProjBtn(btnViewIso, m_qtOccView, V3d_XposYnegZpos);
-    Internal::connectViewProjBtn(btnViewBack, m_qtOccView, V3d_Xneg);
-    Internal::connectViewProjBtn(btnViewFront, m_qtOccView, V3d_Xpos);
-    Internal::connectViewProjBtn(btnViewLeft, m_qtOccView, V3d_Ypos);
-    Internal::connectViewProjBtn(btnViewRight, m_qtOccView, V3d_Yneg);
-    Internal::connectViewProjBtn(btnViewTop, m_qtOccView, V3d_Zpos);
-    Internal::connectViewProjBtn(btnViewBottom, m_qtOccView, V3d_Zneg);
+    const Handle_V3d_View view3d = guiDoc->v3dView();
+    Internal::connectViewProjBtn(btnViewIso, view3d, V3d_XposYnegZpos);
+    Internal::connectViewProjBtn(btnViewBack, view3d, V3d_Xneg);
+    Internal::connectViewProjBtn(btnViewFront, view3d, V3d_Xpos);
+    Internal::connectViewProjBtn(btnViewLeft, view3d, V3d_Ypos);
+    Internal::connectViewProjBtn(btnViewRight, view3d, V3d_Yneg);
+    Internal::connectViewProjBtn(btnViewTop, view3d, V3d_Zpos);
+    Internal::connectViewProjBtn(btnViewBottom, view3d, V3d_Zneg);
     QObject::connect(
                 btnFitAll, &ButtonFlat::clicked,
-                m_qtOccView, &WidgetOccView::fitAll);
+                [=]{ GpxUtils::V3dView_fitAll(view3d); });
     QObject::connect(
                 btnEditClipPlanes, &ButtonFlat::clicked,
-                this, &WidgetGuiDocumentView3d::toggleWidgetClipPlanes);
+                this, &WidgetGuiDocument::toggleWidgetClipPlanes);
 
     m_firstBtnFrameRect = btnFitAll->frameGeometry();
 }
 
-GuiDocument *WidgetGuiDocumentView3d::guiDocument() const
+GuiDocument *WidgetGuiDocument::guiDocument() const
 {
     return m_guiDoc;
 }
 
-WidgetOccView *WidgetGuiDocumentView3d::widgetOccView() const
-{
-    return m_qtOccView;
-}
-
-void WidgetGuiDocumentView3d::toggleWidgetClipPlanes()
+void WidgetGuiDocument::toggleWidgetClipPlanes()
 {
     if (m_widgetClipPlanes == nullptr) {
         auto panel = new Internal::PanelView3d(this);
-        auto widget = new WidgetClipPlanes(this->widgetOccView(), panel);
+        auto widget = new WidgetClipPlanes(m_guiDoc->v3dView(), panel);
         qtgui::QWidgetUtils::addContentsWidget(panel, widget);
         panel->show();
         panel->adjustSize();

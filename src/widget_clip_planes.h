@@ -32,6 +32,7 @@
 #include <QtWidgets/QWidget>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
+#include <V3d_View.hxx>
 #include <vector>
 class QCheckBox;
 class QDoubleSpinBox;
@@ -40,13 +41,11 @@ class QAbstractButton;
 
 namespace Mayo {
 
-class WidgetOccView;
-
 class WidgetClipPlanes : public QWidget {
     Q_OBJECT
 
 public:
-    WidgetClipPlanes(WidgetOccView* view, QWidget* parent = nullptr);
+    WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* parent = nullptr);
     ~WidgetClipPlanes();
 
     void setRanges(const Bnd_Box& box);
@@ -81,7 +80,7 @@ private:
     void setPlaneRange(ClipPlaneData* data, const Range& range);
 
     class Ui_WidgetClipPlanes* m_ui;
-    WidgetOccView* m_view;
+    Handle_V3d_View m_view;
     std::vector<ClipPlaneData> m_vecClipPlaneData;
     Bnd_Box m_bndBox;
 };

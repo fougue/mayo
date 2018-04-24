@@ -37,14 +37,13 @@ class GuiDocument;
 class WidgetClipPlanes;
 class WidgetOccView;
 
-class WidgetGuiDocumentView3d : public QWidget {
+class WidgetGuiDocument : public QWidget {
     Q_OBJECT
 
 public:
-    WidgetGuiDocumentView3d(GuiDocument* guiDoc, QWidget* parent = nullptr);
+    WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
 
     GuiDocument* guiDocument() const;
-    WidgetOccView* widgetOccView() const;
 
 private:
     void toggleWidgetClipPlanes();

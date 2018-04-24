@@ -59,6 +59,7 @@ double MeshUtils::triangulationVolume(
     double volume = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     const Poly_Array1OfTriangle& vecTriangle = triangulation->Triangles();
+    // TODO Parallelize computation
     for (int i = 1; i < vecTriangle.Size(); ++i) {
         const Poly_Triangle& tri = vecTriangle.Value(i);
         int v1, v2, v3;
@@ -77,6 +78,7 @@ double MeshUtils::triangulationArea(
     double area = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     const Poly_Array1OfTriangle& vecTriangle = triangulation->Triangles();
+    // TODO Parallelize computation
     for (int i = 1; i < vecTriangle.Size(); ++i) {
         const Poly_Triangle& tri = vecTriangle.Value(i);
         int v1, v2, v3;

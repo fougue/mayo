@@ -8,8 +8,7 @@ class gp_Trsf;
 
 namespace Mayo {
 
-class StringUtils {
-public:
+struct StringUtils {
     static QString text(const gp_Trsf& trsf);
     static QString text(
             const Quantity_Color& color,
