@@ -156,3 +156,4 @@ DEFINES += OCCT_HANDLE_NOCAST
 RESOURCES += mayo.qrc
 
 RC_ICONS = images/appicon.ico
+OTHER_FILES += images/credits.txt
