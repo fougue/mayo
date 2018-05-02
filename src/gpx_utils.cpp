@@ -2,6 +2,8 @@
 #include "math_utils.h"
 
 #include <algorithm>
+#include <ElSLib.hxx>
+#include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
 
 namespace Mayo {
@@ -25,6 +27,33 @@ bool GpxUtils::V3dView_hasClipPlane(
        return candidate.operator->() == plane.operator->();
     });
     return itFound != seqClipPlane->cend();
+}
+
+gp_Pnt GpxUtils::V3dView_to3dPosition(
+        const Handle_V3d_View& view, double x, double y)
+{
+    double xEye, yEye, zEye, xAt, yAt, zAt;
+    view->Eye(xEye, yEye, zEye);
+    view->At(xAt, yAt, zAt);
+    const gp_Pnt pntEye(xEye, yEye, zEye);
+    const gp_Pnt pntAt(xAt, yAt, zAt);
+
+    const gp_Vec vecEye(pntEye, pntAt);
+    const gp_Dir dirEye(vecEye);
+
+    const gp_Pln planeView(pntAt, dirEye);
+    double px, py, pz;
+    const int ix = static_cast<int>(std::round(x));
+    const int iy = static_cast<int>(std::round(y));
+    view->Convert(ix, iy, px, py, pz);
+    const gp_Pnt pntConverted(px, py, pz);
+    const gp_Pnt2d pntConvertedOnPlane = ProjLib::Project(planeView, pntConverted);
+    const gp_Pnt pntResult =
+            ElSLib::Value(
+                pntConvertedOnPlane.X(),
+                pntConvertedOnPlane.Y(),
+                planeView);
+    return pntResult;
 }
 
 void GpxUtils::AisContext_eraseObject(

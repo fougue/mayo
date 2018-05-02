@@ -84,64 +84,68 @@ static const QCursor& rotateCursor()
 
 } // namespace Internal
 
-QtOccViewController::QtOccViewController(WidgetOccView* view)
-    : QObject(view),
-      m_view(view)
+QtOccViewController::QtOccViewController(WidgetOccView* widgetView)
+    : BaseV3dViewController(widgetView->v3dView(), widgetView),
+      m_widgetView(widgetView)
 {
-    if (view != nullptr)
-        view->installEventFilter(this);
+    widgetView->installEventFilter(this);
 }
 
 bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
-    auto view = qobject_cast<const WidgetOccView*>(watched);
-    if (view != m_view)
-        return QObject::eventFilter(watched, event);
-    Handle_V3d_View occView = view->v3dView();
+    if (watched != m_widgetView)
+        return BaseV3dViewController::eventFilter(watched, event);
+    Handle_V3d_View view = m_widgetView->v3dView();
 
     //const Qt::KeyboardModifiers keybMods = QApplication::queryKeyboardModifiers();
 
     switch (event->type()) {
     case QEvent::MouseButtonPress: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = view->mapFromGlobal(mouseEvent->globalPos());
+        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
         m_prevPos = currPos;
         if (mouseEvent->button() == Qt::LeftButton) {
-            occView->StartRotation(currPos.x(), currPos.y());
+            view->StartRotation(currPos.x(), currPos.y());
             return true;
         }
         break;
     }
     case QEvent::MouseMove: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = view->mapFromGlobal(mouseEvent->globalPos());
+        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
+        emit mouseMoved(currPos);
 
         if (QApplication::mouseButtons() == Qt::LeftButton) {
             this->setViewCursor(Internal::rotateCursor());
-            occView->Rotation(currPos.x(), currPos.y());
+            view->Rotation(currPos.x(), currPos.y());
+            this->setStateRotation(true);
             return true;
         }
         else if (QApplication::mouseButtons() == Qt::RightButton) {
             this->setViewCursor(Qt::SizeAllCursor);
-            occView->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
+            view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
+            this->setStatePanning(true);
             return true;
         }
         break;
     }
     case QEvent::MouseButtonRelease: {
         this->setViewCursor(Qt::ArrowCursor);
+        this->setStateRotation(false);
+        this->setStatePanning(false);
         return true;
     }
     case QEvent::Wheel: {
         auto wheelEvent = static_cast<const QWheelEvent*>(event);
-        Standard_Real currentScale = occView->Scale();
+        Standard_Real currentScale = view->Scale();
         if (wheelEvent->delta() > 0)
             currentScale *= 1.1; // +10%
         else
             currentScale /= 1.1; // -10%
-        occView->SetScale(currentScale);
+        view->SetScale(currentScale);
+        emit viewScaled();
         return true;
     }
     default: return false;
@@ -152,8 +156,47 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 
 void QtOccViewController::setViewCursor(const QCursor &cursor)
 {
-    if (m_view != nullptr)
-        m_view->setCursor(cursor);
+    if (m_widgetView != nullptr)
+        m_widgetView->setCursor(cursor);
+}
+
+BaseV3dViewController::BaseV3dViewController(
+        const Handle_V3d_View &view, QObject *parent)
+    : QObject(parent),
+      m_view(view)
+{
+}
+
+bool BaseV3dViewController::isRotating() const
+{
+    return m_stateRotation;
+}
+
+bool BaseV3dViewController::isPanning() const
+{
+    return m_statePanning;
+}
+
+void BaseV3dViewController::setStateRotation(bool on)
+{
+    if (m_stateRotation != on) {
+        if (on)
+            emit viewRotationStarted();
+        else
+            emit viewRotationEnded();
+        m_stateRotation = on;
+    }
+}
+
+void BaseV3dViewController::setStatePanning(bool on)
+{
+    if (m_statePanning != on) {
+        if (on)
+            emit viewPanningStarted();
+        else
+            emit viewPanningEnded();
+        m_statePanning = on;
+    }
 }
 
 } // namespace Mayo

@@ -2,6 +2,7 @@
 #include "bnd_utils.h"
 
 #include <Precision.hxx>
+#include <algorithm>
 #include <cmath>
 
 namespace Mayo {

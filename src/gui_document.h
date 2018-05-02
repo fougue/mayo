@@ -50,6 +50,7 @@ public:
 
     Document* document() const;
     const Handle_V3d_View& v3dView() const;
+    const Handle_AIS_InteractiveContext& aisInteractiveContext() const;
     GpxDocumentItem* findItemGpx(const DocumentItem* item) const;
 
     const Bnd_Box& gpxBoundingBox() const;

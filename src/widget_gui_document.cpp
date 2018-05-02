@@ -100,8 +100,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
       m_guiDoc(guiDoc),
       m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this))
 {
-    new QtOccViewController(m_qtOccView);
-
+    m_controller = new QtOccViewController(m_qtOccView);
     auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_qtOccView);
@@ -149,6 +148,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
 GuiDocument *WidgetGuiDocument::guiDocument() const
 {
     return m_guiDoc;
+}
+
+BaseV3dViewController *WidgetGuiDocument::controller() const
+{
+    return m_controller;
 }
 
 void WidgetGuiDocument::toggleWidgetClipPlanes()

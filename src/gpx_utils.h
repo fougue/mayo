@@ -12,6 +12,8 @@ struct GpxUtils {
     static bool V3dView_hasClipPlane(
             const Handle_V3d_View& view,
             const Handle_Graphic3d_ClipPlane& plane);
+    static gp_Pnt V3dView_to3dPosition(
+            const Handle_V3d_View& view, double x, double y);
 
     static void AisContext_eraseObject(
             const Handle_AIS_InteractiveContext& context,

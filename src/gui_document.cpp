@@ -154,6 +154,11 @@ const Handle_V3d_View &GuiDocument::v3dView() const
     return m_v3dView;
 }
 
+const Handle_AIS_InteractiveContext &GuiDocument::aisInteractiveContext() const
+{
+    return m_aisContext;
+}
+
 GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem *item) const
 {
     auto itFound = std::find_if(

@@ -40,7 +40,6 @@ namespace Mayo {
 //! mouse.
 class WidgetOccView : public QWidget {
     Q_OBJECT
-
 public:
     WidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
 
@@ -49,6 +48,7 @@ public:
     QPaintEngine* paintEngine() const override;
 
 protected:
+    void showEvent(QShowEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 

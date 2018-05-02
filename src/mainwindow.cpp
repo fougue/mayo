@@ -38,8 +38,10 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document.h"
+#include "gpx_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
+#include "qt_occ_view_controller.h"
 #include "theme.h"
 #include "widget_gui_document.h"
 #include "widget_message_indicator.h"
@@ -180,6 +182,15 @@ struct OpenFileNames {
     }
 };
 
+static gp_Pnt pointUnderMouse(const GuiDocument* guiDoc, const QPoint& pos)
+{
+    const Handle_AIS_InteractiveContext& ctx = guiDoc->aisInteractiveContext();
+    ctx->MoveTo(pos.x(), pos.y(), guiDoc->v3dView(), true);
+    if (ctx->HasDetected() && ctx->MainSelector()->NbPicked() > 0)
+        return ctx->MainSelector()->PickedPoint(1);
+    return GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos.x(), pos.y());
+}
+
 } // namespace Internal
 
 MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
@@ -293,12 +304,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::quitApp);
     QObject::connect(
                 m_ui->label_MainHome, &QLabel::linkActivated,
-                [=](const QString& link) {
-        if (link == "NewDocument")
-            m_ui->actionNewDoc->trigger();
-        else if (link == "OpenDocuments")
-            m_ui->actionOpen->trigger();
-    });
+                this, &MainWindow::onHomePageLinkActivated);
     // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
@@ -340,11 +346,8 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 m_ui->combo_LeftContents, sigComboIndexChanged,
                 m_ui->stack_LeftContents, &QStackedWidget::setCurrentIndex);
     QObject::connect(
-                guiApp, &GuiApplication::guiDocumentAdded, [=](GuiDocument* doc) {
-        auto widget = new WidgetGuiDocument(doc);
-        m_ui->stack_GuiDocuments->addWidget(widget);
-        this->updateControlsActivation();
-    });
+                guiApp, &GuiApplication::guiDocumentAdded,
+                this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
                 m_ui->widget_ApplicationTree, &WidgetApplicationTree::selectionChanged,
                 this, &MainWindow::onApplicationTreeWidgetSelectionChanged);
@@ -434,6 +437,32 @@ void MainWindow::runImportTask(
         } else {
             msg = tr("Failed to import part:\n    %1\nError: %2")
                     .arg(filepath, result.errorText);
+        }
+        emit operationFinished(result.ok, msg);
+    });
+}
+
+void MainWindow::runExportTask(
+        const std::vector<DocumentItem*>& docItems,
+        Application::PartFormat format,
+        const Application::ExportOptions& opts,
+        const QString& filepath)
+{
+    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
+    task->run([=]{
+        QTime chrono;
+        chrono.start();
+        const Application::IoResult result =
+                Application::instance()->exportDocumentItems(
+                    docItems, format, opts, filepath, &task->progress());
+        QString msg;
+        if (result.ok) {
+            msg = tr("Export time '%1': %2ms")
+                    .arg(QFileInfo(filepath).fileName())
+                    .arg(chrono.elapsed());
+        } else {
+            msg = tr("Failed to export part:\n    %1\nError: %2")
+                    .arg(filepath).arg(result.errorText);
         }
         emit operationFinished(result.ok, msg);
     });
@@ -550,6 +579,32 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
         qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
+void MainWindow::onHomePageLinkActivated(const QString &link)
+{
+    if (link == "NewDocument")
+        m_ui->actionNewDoc->trigger();
+    else if (link == "OpenDocuments")
+        m_ui->actionOpen->trigger();
+}
+
+void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
+{
+    auto widget = new WidgetGuiDocument(guiDoc);
+    BaseV3dViewController* ctrl = widget->controller();
+    QObject::connect(
+                ctrl, &BaseV3dViewController::mouseMoved,
+                [=](const QPoint& pos2d) {
+        if (!ctrl->isPanning() && !ctrl->isRotating()) {
+            const gp_Pnt pos3d = Internal::pointUnderMouse(guiDoc, pos2d);
+            m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
+            m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
+            m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
+        }
+    });
+    m_ui->stack_GuiDocuments->addWidget(widget);
+    this->updateControlsActivation();
+}
+
 void MainWindow::closeCurrentDocument()
 {
     this->closeDocument(this->currentDocumentIndex());
@@ -590,33 +645,6 @@ void MainWindow::foreachOpenFileName(
     }
 }
 
-void MainWindow::runExportTask(
-        const std::vector<DocumentItem*>& docItems,
-        Application::PartFormat format,
-        const Application::ExportOptions& opts,
-        const QString& filepath)
-{
-    qttask::BaseRunner* task =
-            qttask::Manager::globalInstance()->newTask<QThread>();
-    task->run([=]{
-        QTime chrono;
-        chrono.start();
-        const Application::IoResult result =
-                Application::instance()->exportDocumentItems(
-                    docItems, format, opts, filepath, &task->progress());
-        QString msg;
-        if (result.ok) {
-            msg = tr("Export time '%1': %2ms")
-                    .arg(QFileInfo(filepath).fileName())
-                    .arg(chrono.elapsed());
-        } else {
-            msg = tr("Failed to export part:\n    %1\nError: %2")
-                    .arg(filepath).arg(result.errorText);
-        }
-        emit operationFinished(result.ok, msg);
-    });
-}
-
 void MainWindow::updateControlsActivation()
 {
     const size_t appDocumentsCount = Application::instance()->documents().size();
@@ -631,8 +659,12 @@ void MainWindow::updateControlsActivation()
                 !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
     m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
-    m_ui->stack_Main->setCurrentWidget(
-                appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl);
+
+    QWidget* oldMainPage = m_ui->stack_Main->currentWidget();
+    QWidget* newMainPage =
+            appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
+    if (oldMainPage != newMainPage)
+        m_ui->stack_Main->setCurrentWidget(newMainPage);
 }
 
 int MainWindow::currentDocumentIndex() const

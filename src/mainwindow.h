@@ -68,6 +68,8 @@ private:
 
     void onApplicationTreeWidgetSelectionChanged();
     void onOperationFinished(bool ok, const QString& msg);
+    void onHomePageLinkActivated(const QString& link);
+    void onGuiDocumentAdded(GuiDocument* guiDoc);
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 
