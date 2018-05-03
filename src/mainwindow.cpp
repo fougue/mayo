@@ -246,10 +246,6 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                       mayoTheme()->imageUrl(Theme::Image::FlatDownIndicatorDisabled));
         m_ui->combo_GuiDocuments->setStyleSheet(comboStyleSheet);
         m_ui->combo_LeftContents->setStyleSheet(comboStyleSheet);
-
-        QIcon icon(":/images/down_8.png");
-        icon.pixmap(8, 8, QIcon::Disabled).save("c:\\temp\\down-disabled_8.png");
-
     }
 
     // Opened documents GUI

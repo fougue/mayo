@@ -77,9 +77,9 @@ private:
     void foreachOpenFileName(
             std::function<void (Application::PartFormat, QString)>&& func);
     void runImportTask(
-            Document *doc,
+            Document* doc,
             Application::PartFormat format,
-            const QString &filepath);
+            const QString& filepath);
     void runExportTask(
             const std::vector<DocumentItem*>& docItems,
             Application::PartFormat format,
