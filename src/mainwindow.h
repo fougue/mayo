@@ -63,6 +63,7 @@ private:
     void editOptions();
     void saveImageView();
     void inspectXde();
+    void toggleFullscreen();
     void aboutMayo();
     void reportbug();
 
@@ -84,7 +85,9 @@ private:
             Application::PartFormat format,
             const Application::ExportOptions& opts,
             const QString& filepath);
+
     void updateControlsActivation();
+    void updateFullscreenOrNormalActionText();
 
     int currentDocumentIndex() const;
     void setCurrentDocumentIndex(int idx);
@@ -92,6 +95,7 @@ private:
     GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
     QFileSystemModel* m_fileSysModel;
+    Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
 };
 
 } // namespace Mayo

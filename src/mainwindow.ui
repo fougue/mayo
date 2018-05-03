@@ -534,6 +534,8 @@
     <property name="title">
      <string>&amp;Window</string>
     </property>
+    <addaction name="actionFullscreenOrNormal"/>
+    <addaction name="separator"/>
     <addaction name="actionPreviousDoc"/>
     <addaction name="actionNextDoc"/>
    </widget>
@@ -642,6 +644,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionFullscreenOrNormal">
+   <property name="text">
+    <string>Switch Fullscreen/Normal</string>
+   </property>
+   <property name="toolTip">
+    <string>Fullscreen/Normal</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
    </property>
   </action>
  </widget>

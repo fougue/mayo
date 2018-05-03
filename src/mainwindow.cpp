@@ -323,6 +323,9 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 m_ui->actionAboutMayo, &QAction::triggered,
                 this, &MainWindow::aboutMayo);
     // "Window" actions and navigation in documents
+    QObject::connect(
+                m_ui->actionFullscreenOrNormal, &QAction::triggered,
+                this, &MainWindow::toggleFullscreen);
     QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, [=]{
         this->setCurrentDocumentIndex(this->currentDocumentIndex() - 1);
     });
@@ -367,6 +370,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     this->updateControlsActivation();
+    this->updateFullscreenOrNormalActionText();
 }
 
 MainWindow::~MainWindow()
@@ -544,6 +548,21 @@ void MainWindow::inspectXde()
     }
 }
 
+void MainWindow::toggleFullscreen()
+{
+    if (this->isFullScreen()) {
+        if (m_previousWindowState.testFlag(Qt::WindowMaximized))
+            this->showMaximized();
+        else
+            this->showNormal();
+    }
+    else {
+        m_previousWindowState = this->windowState();
+        this->showFullScreen();
+    }
+    this->updateFullscreenOrNormalActionText();
+}
+
 void MainWindow::aboutMayo()
 {
     auto dlg = new DialogAbout(this);
@@ -665,6 +684,12 @@ void MainWindow::updateControlsActivation()
             appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
     if (oldMainPage != newMainPage)
         m_ui->stack_Main->setCurrentWidget(newMainPage);
+}
+
+void MainWindow::updateFullscreenOrNormalActionText()
+{
+    m_ui->actionFullscreenOrNormal->setText(
+                this->isFullScreen() ? tr("Normal") : tr("Fullscreen"));
 }
 
 int MainWindow::currentDocumentIndex() const
