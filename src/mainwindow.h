@@ -64,6 +64,7 @@ private:
     void saveImageView();
     void inspectXde();
     void toggleFullscreen();
+    void toggleLeftSidebar();
     void aboutMayo();
     void reportbug();
 
@@ -87,7 +88,7 @@ private:
             const QString& filepath);
 
     void updateControlsActivation();
-    void updateFullscreenOrNormalActionText();
+    void updateActionText(QAction* action);
 
     int currentDocumentIndex() const;
     void setCurrentDocumentIndex(int idx);

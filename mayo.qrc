@@ -33,5 +33,6 @@
         <file>images/down_8.png</file>
         <file>images/down_disabled_8.png</file>
         <file>images/appicon_128.png</file>
+        <file>images/left_sidebar.png</file>
     </qresource>
 </RCC>

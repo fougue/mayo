@@ -202,6 +202,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->centralWidget->setStyleSheet(
                 "QSplitter::handle:vertical { width: 2px; }\n"
                 "QSplitter::handle:horizontal { width: 2px; }\n");
+    m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
     m_ui->splitter_Main->setStretchFactor(1, 3);
 
@@ -322,6 +323,9 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionFullscreenOrNormal, &QAction::triggered,
                 this, &MainWindow::toggleFullscreen);
+    QObject::connect(
+                m_ui->actionShowHideLeftSidebar, &QAction::triggered,
+                this, &MainWindow::toggleLeftSidebar);
     QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, [=]{
         this->setCurrentDocumentIndex(this->currentDocumentIndex() - 1);
     });
@@ -366,7 +370,8 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     this->updateControlsActivation();
-    this->updateFullscreenOrNormalActionText();
+    this->updateActionText(m_ui->actionFullscreenOrNormal);
+    this->updateActionText(m_ui->actionShowHideLeftSidebar);
 }
 
 MainWindow::~MainWindow()
@@ -556,7 +561,14 @@ void MainWindow::toggleFullscreen()
         m_previousWindowState = this->windowState();
         this->showFullScreen();
     }
-    this->updateFullscreenOrNormalActionText();
+    this->updateActionText(m_ui->actionFullscreenOrNormal);
+}
+
+void MainWindow::toggleLeftSidebar()
+{
+    const bool isLeftSideBarVisible = m_ui->widget_Left->isVisible();
+    m_ui->widget_Left->setVisible(!isLeftSideBarVisible);
+    this->updateActionText(m_ui->actionShowHideLeftSidebar);
 }
 
 void MainWindow::aboutMayo()
@@ -662,8 +674,13 @@ void MainWindow::foreachOpenFileName(
 
 void MainWindow::updateControlsActivation()
 {
+    const QWidget* currMainPage = m_ui->stack_Main->currentWidget();
     const size_t appDocumentsCount = Application::instance()->documents().size();
     const bool appDocumentsEmpty = appDocumentsCount == 0;
+    QWidget* newMainPage =
+            appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
+    if (currMainPage != newMainPage)
+        m_ui->stack_Main->setCurrentWidget(newMainPage);
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
     m_ui->actionCloseDoc->setEnabled(!appDocumentsEmpty);
@@ -673,19 +690,23 @@ void MainWindow::updateControlsActivation()
     m_ui->actionNextDoc->setEnabled(
                 !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
     m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
+    m_ui->actionShowHideLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
-
-    QWidget* oldMainPage = m_ui->stack_Main->currentWidget();
-    QWidget* newMainPage =
-            appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
-    if (oldMainPage != newMainPage)
-        m_ui->stack_Main->setCurrentWidget(newMainPage);
 }
 
-void MainWindow::updateFullscreenOrNormalActionText()
+void MainWindow::updateActionText(QAction* action)
 {
-    m_ui->actionFullscreenOrNormal->setText(
-                this->isFullScreen() ? tr("Normal") : tr("Fullscreen"));
+    QString text;
+    if (action == m_ui->actionFullscreenOrNormal) {
+        text = this->isFullScreen() ? tr("Normal") : tr("Fullscreen");
+    }
+    else if (action == m_ui->actionShowHideLeftSidebar) {
+        text = m_ui->widget_Left->isVisible() ?
+                    tr("Hide Left Sidebar") :
+                    tr("Show Left Sidebar");
+    }
+    if (!text.isEmpty())
+        action->setText(text);
 }
 
 int MainWindow::currentDocumentIndex() const

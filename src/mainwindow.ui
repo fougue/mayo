@@ -33,7 +33,7 @@
     <item>
      <widget class="QStackedWidget" name="stack_Main">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_MainHome">
        <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -41,26 +41,32 @@
          <number>20</number>
         </property>
         <item>
-         <widget class="QLabel" name="label_AppIcon">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="pixmap">
-           <pixmap resource="../mayo.qrc">:/images/appicon_128.png</pixmap>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_MainHome">
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;You can create a &lt;/span&gt;&lt;a href=&quot;NewDocument&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;New Document&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;or &lt;/span&gt;&lt;a href=&quot;OpenDocuments&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Open Existing Documents&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignHCenter|Qt::AlignTop</set>
-          </property>
+         <widget class="QWidget" name="widget_MainHome" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_9">
+           <item>
+            <widget class="QLabel" name="label_AppIcon">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="pixmap">
+              <pixmap resource="../mayo.qrc">:/images/appicon_128.png</pixmap>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_MainHome">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;You can create a &lt;/span&gt;&lt;a href=&quot;NewDocument&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;New Document&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;or &lt;/span&gt;&lt;a href=&quot;OpenDocuments&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Open Existing Documents&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignHCenter|Qt::AlignTop</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -83,6 +89,9 @@
          <widget class="QSplitter" name="splitter_Main">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="childrenCollapsible">
+           <bool>false</bool>
           </property>
           <widget class="QWidget" name="widget_Left" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -535,6 +544,7 @@
      <string>&amp;Window</string>
     </property>
     <addaction name="actionFullscreenOrNormal"/>
+    <addaction name="actionShowHideLeftSidebar"/>
     <addaction name="separator"/>
     <addaction name="actionPreviousDoc"/>
     <addaction name="actionNextDoc"/>
@@ -655,6 +665,18 @@
    </property>
    <property name="shortcut">
     <string>F11</string>
+   </property>
+  </action>
+  <action name="actionShowHideLeftSidebar">
+   <property name="icon">
+    <iconset resource="../mayo.qrc">
+     <normaloff>:/images/left_sidebar.png</normaloff>:/images/left_sidebar.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show/Hide Left Sidebar</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+0</string>
    </property>
   </action>
  </widget>
