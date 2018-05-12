@@ -183,15 +183,15 @@ template<typename T> void PropertyScalarConstraints<T>::setSingleStep(T step)
 template<typename T, const char* TYPENAME_STR>
 GenericScalarProperty<T, TYPENAME_STR>::GenericScalarProperty(
         PropertyOwner* owner, const QString& label)
-    : GenericProperty(owner, label)
+    : GenericProperty<T, TYPENAME_STR>(owner, label)
 { }
 
 template<typename T, const char* TYPENAME_STR>
 GenericScalarProperty<T, TYPENAME_STR>::GenericScalarProperty(
             PropertyOwner* owner, const QString& label,
             T minimum, T maximum, T singleStep)
-    : GenericProperty(owner, label),
-      PropertyScalarConstraints(minimum, maximum, singleStep)
+    : GenericProperty<T, TYPENAME_STR>(owner, label),
+      PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }
 
 } // namespace Mayo

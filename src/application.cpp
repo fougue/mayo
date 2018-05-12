@@ -453,8 +453,8 @@ Document *Application::createDocument(const QString &label)
 {
     auto doc = new Document(this);
     if (label.isEmpty()) {
-        static std::atomic<unsigned> docSequenceId = 0;
-        const unsigned docId = std::atomic_fetch_add(&docSequenceId, 1);
+        static std::atomic<unsigned> docSequenceId = {0};
+        const unsigned docId = std::atomic_fetch_add(&docSequenceId, (unsigned)1);
         const QString docIdStr = docId > 0 ? QString::number(docId) : QString();
         doc->setLabel(tr("Anonymous%1").arg(docIdStr));
     }

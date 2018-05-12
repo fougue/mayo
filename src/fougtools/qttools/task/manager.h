@@ -80,7 +80,7 @@ private:
     BaseRunner* getRunner(quint64 taskId);
     const BaseRunner* getRunner(quint64 taskId) const;
 
-    std::atomic<quint64> m_taskIdSeq = 0;
+    std::atomic<quint64> m_taskIdSeq = {0};
     std::unordered_map<quint64, BaseRunner*> m_taskIdToRunner;
 };
 
