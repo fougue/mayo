@@ -766,6 +766,7 @@ public:
     void slotRangeChanged(QtProperty *property, double min, double max);
     void slotSingleStepChanged(QtProperty *property, double step);
     void slotDecimalsChanged(QtProperty *property, int prec);
+    void slotSuffixChanged(QtProperty *property, const QString& suffix);
     void slotReadOnlyChanged(QtProperty *property, bool readOnly);
     void slotSetValue(double value);
 };
@@ -862,6 +863,25 @@ void QtDoubleSpinBoxFactoryPrivate::slotDecimalsChanged(QtProperty *property, in
     }
 }
 
+void QtDoubleSpinBoxFactoryPrivate::slotSuffixChanged(QtProperty *property, const QString& suffix)
+{
+    if (!m_createdEditors.contains(property))
+        return;
+
+    QtDoublePropertyManager *manager = q_ptr->propertyManager(property);
+    if (!manager)
+        return;
+
+    QList<QDoubleSpinBox *> editors = m_createdEditors[property];
+    QListIterator<QDoubleSpinBox *> itEditor(editors);
+    while (itEditor.hasNext()) {
+        QDoubleSpinBox *editor = itEditor.next();
+        editor->blockSignals(true);
+        editor->setSuffix(suffix);
+        editor->blockSignals(false);
+    }
+}
+
 void QtDoubleSpinBoxFactoryPrivate::slotSetValue(double value)
 {
     QObject *object = q_ptr->sender();
@@ -921,6 +941,8 @@ void QtDoubleSpinBoxFactory::connectPropertyManager(QtDoublePropertyManager *man
                 this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     connect(manager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
+    connect(manager, SIGNAL(suffixChanged(QtProperty *, const QString&)),
+                this, SLOT(slotSuffixChanged(QtProperty *, const QString&)));
     connect(manager, SIGNAL(readOnlyChanged(QtProperty *, bool)),
                 this, SLOT(slotReadOnlyChanged(QtProperty *, bool)));
 }
@@ -936,6 +958,7 @@ QWidget *QtDoubleSpinBoxFactory::createEditor(QtDoublePropertyManager *manager,
     QDoubleSpinBox *editor = d_ptr->createEditor(property, parent);
     editor->setSingleStep(manager->singleStep(property));
     editor->setDecimals(manager->decimals(property));
+    editor->setSuffix(manager->suffix(property));
     editor->setRange(manager->minimum(property), manager->maximum(property));
     editor->setValue(manager->value(property));
     editor->setKeyboardTracking(false);
@@ -962,6 +985,8 @@ void QtDoubleSpinBoxFactory::disconnectPropertyManager(QtDoublePropertyManager *
                 this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     disconnect(manager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
+    disconnect(manager, SIGNAL(suffixChanged(QtProperty *, const QString&)),
+                this, SLOT(slotSuffixChanged(QtProperty *, const QString&)));
     disconnect(manager, SIGNAL(readOnlyChanged(QtProperty *, bool)),
                 this, SLOT(slotReadOnlyChanged(QtProperty *, bool)));
 }

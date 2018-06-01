@@ -313,6 +313,7 @@ public:
     void slotRangeChanged(QtProperty *property, double min, double max);
     void slotSingleStepChanged(QtProperty *property, double step);
     void slotDecimalsChanged(QtProperty *property, int prec);
+    void slotSuffixChanged(QtProperty *property, const QString& suffix);
     void slotValueChanged(QtProperty *property, bool val);
     void slotValueChanged(QtProperty *property, const QString &val);
     void slotRegExpChanged(QtProperty *property, const QRegExp &regExp);
@@ -368,6 +369,7 @@ public:
     const QString m_constraintAttribute;
     const QString m_singleStepAttribute;
     const QString m_decimalsAttribute;
+    const QString m_suffixAttribute;
     const QString m_enumIconsAttribute;
     const QString m_enumNamesAttribute;
     const QString m_flagNamesAttribute;
@@ -383,6 +385,7 @@ QtVariantPropertyManagerPrivate::QtVariantPropertyManagerPrivate() :
     m_constraintAttribute(QLatin1String("constraint")),
     m_singleStepAttribute(QLatin1String("singleStep")),
     m_decimalsAttribute(QLatin1String("decimals")),
+    m_suffixAttribute(QLatin1String("suffix")),
     m_enumIconsAttribute(QLatin1String("enumIcons")),
     m_enumNamesAttribute(QLatin1String("enumNames")),
     m_flagNamesAttribute(QLatin1String("flagNames")),
@@ -529,6 +532,12 @@ void QtVariantPropertyManagerPrivate::slotDecimalsChanged(QtProperty *property, 
 {
     if (QtVariantProperty *varProp = m_internalToProperty.value(property, 0))
         emit q_ptr->attributeChanged(varProp, m_decimalsAttribute, QVariant(prec));
+}
+
+void QtVariantPropertyManagerPrivate::slotSuffixChanged(QtProperty *property, const QString &suffix)
+{
+    if (QtVariantProperty *varProp = m_internalToProperty.value(property))
+        emit q_ptr->attributeChanged(varProp, m_suffixAttribute, QVariant(suffix));
 }
 
 void QtVariantPropertyManagerPrivate::slotValueChanged(QtProperty *property, bool val)
@@ -992,6 +1001,8 @@ QtVariantPropertyManager::QtVariantPropertyManager(QObject *parent)
             QVariant::Double;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_decimalsAttribute] =
             QVariant::Int;
+    d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_suffixAttribute] =
+            QVariant::String;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_readOnlyAttribute] =
         QVariant::Bool;
     d_ptr->m_typeToValueType[QVariant::Double] = QVariant::Double;
@@ -1003,6 +1014,8 @@ QtVariantPropertyManager::QtVariantPropertyManager(QObject *parent)
                 this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     connect(doublePropertyManager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
+    connect(doublePropertyManager, SIGNAL(suffixChanged(QtProperty *, const QString&)),
+                this, SLOT(slotSuffixChanged(QtProperty *, const QString&)));
     // BoolPropertyManager
     QtBoolPropertyManager *boolPropertyManager = new QtBoolPropertyManager(this);
     d_ptr->m_typeToPropertyManager[QVariant::Bool] = boolPropertyManager;
@@ -1515,6 +1528,8 @@ QVariant QtVariantPropertyManager::attributeValue(const QtProperty *property, co
             return doubleManager->singleStep(internProp);
         if (attribute == d_ptr->m_decimalsAttribute)
             return doubleManager->decimals(internProp);
+        if (attribute == d_ptr->m_suffixAttribute)
+            return doubleManager->suffix(internProp);
         if (attribute == d_ptr->m_readOnlyAttribute)
             return doubleManager->isReadOnly(internProp);
         return QVariant();
@@ -1770,6 +1785,8 @@ void QtVariantPropertyManager::setAttribute(QtProperty *property,
             doubleManager->setSingleStep(internProp, qVariantValue<double>(value));
         if (attribute == d_ptr->m_decimalsAttribute)
             doubleManager->setDecimals(internProp, qVariantValue<int>(value));
+        if (attribute == d_ptr->m_suffixAttribute)
+            doubleManager->setSuffix(internProp, qVariantValue<QString>(value));
         if (attribute == d_ptr->m_readOnlyAttribute)
             doubleManager->setReadOnly(internProp, qVariantValue<bool>(value));
         return;

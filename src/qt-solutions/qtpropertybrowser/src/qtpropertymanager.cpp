@@ -943,6 +943,7 @@ public:
         double maxVal;
         double singleStep;
         int decimals;
+        QString suffix;
         bool readOnly;
         double minimumValue() const { return minVal; }
         double maximumValue() const { return maxVal; }
@@ -1091,6 +1092,11 @@ int QtDoublePropertyManager::decimals(const QtProperty *property) const
     return getData<int>(d_ptr->m_values, &QtDoublePropertyManagerPrivate::Data::decimals, property, 0);
 }
 
+QString QtDoublePropertyManager::suffix(const QtProperty *property) const
+{
+    return getData<QString>(d_ptr->m_values, &QtDoublePropertyManagerPrivate::Data::suffix, property);
+}
+
 /*!
     Returns read-only status of the property.
 
@@ -1111,7 +1117,9 @@ QString QtDoublePropertyManager::valueText(const QtProperty *property) const
     const QtDoublePropertyManagerPrivate::PropertyValueMap::const_iterator it = d_ptr->m_values.constFind(property);
     if (it == d_ptr->m_values.constEnd())
         return QString();
-    return QLocale::system().toString(it.value().val, 'f', it.value().decimals);
+    return tr("%1%2").arg(
+                QLocale::system().toString(it.value().val, 'f', it.value().decimals),
+                it.value().suffix);
 }
 
 /*!
@@ -1215,6 +1223,24 @@ void QtDoublePropertyManager::setDecimals(QtProperty *property, int prec)
     it.value() = data;
 
     emit decimalsChanged(property, data.decimals);
+}
+
+void QtDoublePropertyManager::setSuffix(QtProperty *property, const QString &suffix)
+{
+    const auto it = d_ptr->m_values.find(property);
+    if (it == d_ptr->m_values.end())
+        return;
+
+    QtDoublePropertyManagerPrivate::Data data = it.value();
+
+    if (data.suffix == suffix)
+        return;
+
+    data.suffix = suffix;
+
+    it.value() = data;
+
+    emit suffixChanged(property, data.suffix);
 }
 
 /*!
