@@ -118,6 +118,13 @@ DialogOptions::DialogOptions(QWidget *parent)
                 m_ui->checkBox_Capping, &QAbstractButton::clicked,
                 m_ui->widget_CappingHatch, &QWidget::setEnabled);
     m_ui->widget_CappingHatch->setEnabled(m_ui->checkBox_Capping->isChecked());
+
+    // Units
+    m_ui->comboBox_UnitSystem->addItem(tr("SI"), UnitSystem::SI);
+    m_ui->comboBox_UnitSystem->addItem(tr("Imperial UK"), UnitSystem::ImperialUK);
+    m_ui->comboBox_UnitSystem->setCurrentIndex(
+                m_ui->comboBox_UnitSystem->findData(opts->unitSystemSchema()));
+    m_ui->spinBox_Decimals->setValue(opts->unitSystemDecimals());
 }
 
 DialogOptions::~DialogOptions()
@@ -154,6 +161,12 @@ void DialogOptions::accept()
     opts->setClipPlaneCappingHatch(
                 static_cast<Aspect_HatchStyle>(
                     m_ui->comboBox_CappingHatch->currentData().toInt()));
+
+    // Units
+    opts->setUnitSystemSchema(
+                static_cast<UnitSystem::Schema>(
+                    m_ui->comboBox_UnitSystem->currentData().toInt()));
+    opts->setUnitSystemDecimals(m_ui->spinBox_Decimals->value());
 
     QDialog::accept();
 }

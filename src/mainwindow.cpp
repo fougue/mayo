@@ -43,7 +43,9 @@
 #include "gui_document.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
+#include "widget_application_tree.h"
 #include "widget_gui_document.h"
+#include "widget_document_item_props.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
 #include "fougtools/qttools/gui/item_view_buttons.h"
@@ -212,7 +214,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
     m_ui->widget_DocumentProps->setGuiApplication(guiApp);
-    m_ui->widget_DocumentProps->editDocumentItems(std::vector<DocumentItem*>());
+    m_ui->widget_DocumentProps->editDocumentItems(Span<DocumentItem*>());
 
     m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
@@ -585,17 +587,12 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationTreeWidgetSelectionChanged()
 {
-    const std::vector<DocumentItem*> vecDocItem =
-            m_ui->widget_ApplicationTree->selectedDocumentItems();
-    if (vecDocItem.size() >= 1) {
-        m_ui->widget_DocumentProps->editDocumentItems(vecDocItem);
-
-    }
-    else {
-        const std::vector<HandleProperty> vecHndProp =
-                m_ui->widget_ApplicationTree->propertiesOfCurrentObject();
-        m_ui->widget_DocumentProps->editProperties(vecHndProp);
-    }
+    const WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
+    WidgetDocumentItemProps* uiDocProps = m_ui->widget_DocumentProps;
+    if (uiAppTree->hasSelectedDocumentItems())
+        uiDocProps->editDocumentItems(uiAppTree->selectedDocumentItems());
+    else
+        uiDocProps->editProperties(uiAppTree->propertiesOfCurrentObject());
 }
 
 void MainWindow::onOperationFinished(bool ok, const QString &msg)

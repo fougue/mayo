@@ -1,5 +1,6 @@
 #pragma once
 
+#include "unit_system.h"
 #include <QtCore/QString>
 #include <IFSelect_ReturnStatus.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -9,7 +10,9 @@ class gp_Trsf;
 namespace Mayo {
 
 struct StringUtils {
-    static QString text(const gp_Trsf& trsf);
+    static QString text(
+            const gp_Trsf& trsf,
+            UnitSystem::Schema schema = UnitSystem::SI);
     static QString text(
             const Quantity_Color& color,
             const QString& format = "R:%1 G:%2 B:%3");

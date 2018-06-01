@@ -78,6 +78,7 @@ public:
     void setValue(Enumeration::Value v);
 
     const char* dynTypeName() const override;
+    static const char TypeName[];
 
 private:
     Enumeration::Value m_value;

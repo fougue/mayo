@@ -48,6 +48,7 @@ public:
     WidgetApplicationTree(QWidget* widget = nullptr);
     ~WidgetApplicationTree();
 
+    bool hasSelectedDocumentItems() const;
     std::vector<DocumentItem*> selectedDocumentItems() const;
     std::vector<HandleProperty> propertiesOfCurrentObject() const;
 

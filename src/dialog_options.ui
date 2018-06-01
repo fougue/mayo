@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>231</width>
-    <height>388</height>
+    <width>191</width>
+    <height>482</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -273,6 +273,54 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_Units">
+     <property name="title">
+      <string>Units</string>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <property name="leftMargin">
+       <number>20</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>System</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboBox_UnitSystem"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Decimals</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="spinBox_Decimals">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>12</number>
+        </property>
+        <property name="value">
+         <number>2</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -302,6 +350,7 @@
   <zorder>buttonBox</zorder>
   <zorder>verticalSpacer</zorder>
   <zorder>groupBox_ClipPlanes</zorder>
+  <zorder>groupBox_Units</zorder>
  </widget>
  <resources/>
  <connections>

@@ -74,13 +74,13 @@ void DocumentItem::onPropertyChanged(Property *prop)
 }
 
 PartItem::PartItem()
-    : propertyVolume(
-          this, QCoreApplication::translate("Mayo::PartItem", "Volume")),
-      propertyArea(
-          this, QCoreApplication::translate("Mayo::PartItem", "Area"))
+    : propertyArea(
+          this, QCoreApplication::translate("Mayo::PartItem", "Area")),
+      propertyVolume(
+          this, QCoreApplication::translate("Mayo::PartItem", "Volume"))
 {
-    this->propertyVolume.setRange(0., std::numeric_limits<double>::max());
-    this->propertyArea.setRange(0., std::numeric_limits<double>::max());
+//    this->propertyVolume.setRange(0., std::numeric_limits<double>::max());
+//    this->propertyArea.setRange(0., std::numeric_limits<double>::max());
     this->propertyVolume.setUserReadOnly(true);
     this->propertyArea.setUserReadOnly(true);
 }

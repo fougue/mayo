@@ -56,7 +56,10 @@ HEADERS += \
     src/theme.h \
     src/gpx_utils.h \
     src/math_utils.h \
-    src/widget_gui_document.h
+    src/widget_gui_document.h \
+    src/unit.h \
+    src/quantity.h \
+    src/unit_system.h
 
 SOURCES += \
     src/application.cpp \
@@ -101,7 +104,10 @@ SOURCES += \
     src/theme.cpp \
     src/gpx_utils.cpp \
     src/math_utils.cpp \
-    src/widget_gui_document.cpp
+    src/widget_gui_document.cpp \
+    src/unit.cpp \
+    src/quantity.cpp \
+    src/unit_system.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)

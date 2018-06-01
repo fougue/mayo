@@ -302,8 +302,10 @@ static MeshItem* createMeshItem(
     partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
     partItem->propertyNodeCount.setValue(mesh->NbNodes());
     partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
-    partItem->propertyVolume.setValue(occ::MeshUtils::triangulationVolume(mesh));
-    partItem->propertyArea.setValue(occ::MeshUtils::triangulationArea(mesh));
+    partItem->propertyVolume.setQuantity(
+                occ::MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
+    partItem->propertyArea.setQuantity(
+                occ::MeshUtils::triangulationArea(mesh) * Quantity_SquaredMillimeter);
     partItem->setTriangulation(mesh);
     return partItem;
 }
@@ -327,9 +329,11 @@ static XdeDocumentItem* createXdeDocumentItem(
     const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
     GProp_GProps system;
     BRepGProp::VolumeProperties(shape, system);
-    xdeDocItem->propertyVolume.setValue(std::max(system.Mass(), 0.));
+    xdeDocItem->propertyVolume.setQuantity(
+                std::max(system.Mass(), 0.) * Quantity_CubicMillimeter);
     BRepGProp::SurfaceProperties(shape, system);
-    xdeDocItem->propertyArea.setValue(std::max(system.Mass(), 0.));
+    xdeDocItem->propertyArea.setQuantity(
+                std::max(system.Mass(), 0.) * Quantity_SquaredMillimeter);
 
     return xdeDocItem;
 }

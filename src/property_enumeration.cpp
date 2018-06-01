@@ -132,8 +132,10 @@ void PropertyEnumeration::setValue(Enumeration::Value v)
 
 const char* PropertyEnumeration::dynTypeName() const
 {
-    return Property::EnumerationTypeName;
+    return PropertyEnumeration::TypeName;
 }
+
+const char PropertyEnumeration::TypeName[] = "Mayo::PropertyEnumeration";
 
 const Enumeration &enum_Graphic3dNameOfMaterial()
 {

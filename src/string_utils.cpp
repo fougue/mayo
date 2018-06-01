@@ -1,25 +1,37 @@
 #include "string_utils.h"
 
+#include "unit_system.h"
 #include "fougtools/occtools/qt_utils.h"
 #include <gp_Trsf.hxx>
 #include <Quantity_Color.hxx>
 #include <cctype>
-#include <cmath>
 
 namespace Mayo {
 
-static const double pi = std::acos(-1);
-
-QString StringUtils::text(const gp_Trsf& trsf)
+QString StringUtils::text(const gp_Trsf& trsf, UnitSystem::Schema schema)
 {
     gp_XYZ axisRotation;
     double angleRotation;
     const gp_XYZ& pos = trsf.TranslationPart();
     trsf.GetRotation(axisRotation, angleRotation);
-    return QString("[%1; %2°; %3]")
-            .arg(occ::QtUtils::toQString(axisRotation, "(%x %y %z)"))
-            .arg((angleRotation * 180) / pi)
-            .arg(occ::QtUtils::toQString(pos, "(%xmm %ymm %zmm)"));
+    const auto trAngleRotation =
+            UnitSystem::translate(schema, angleRotation * Quantity_Radian);
+    const auto trPosX =
+            UnitSystem::translate(schema, pos.X() * Quantity_Millimeter);
+    const auto trPosY =
+            UnitSystem::translate(schema, pos.Y() * Quantity_Millimeter);
+    const auto trPosZ =
+            UnitSystem::translate(schema, pos.Z() * Quantity_Millimeter);
+    const gp_XYZ trPos(trPosX.value, trPosY.value, trPosZ.value);
+    const QString trPosFormat = QStringLiteral("%x%1 %y%2 %z%3").
+            arg(QString::fromUtf8(trPosX.strUnit),
+                QString::fromUtf8(trPosY.strUnit),
+                QString::fromUtf8(trPosZ.strUnit));
+    return QStringLiteral("[(%1); %2%3; (%4)")
+            .arg(occ::QtUtils::toQString(axisRotation, "%x %y %z"))
+            .arg(trAngleRotation.value)
+            .arg(QString::fromUtf8(trAngleRotation.strUnit))
+            .arg(occ::QtUtils::toQString(trPos, trPosFormat));
 }
 
 QString StringUtils::text(const Quantity_Color &color, const QString &format)

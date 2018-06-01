@@ -86,14 +86,7 @@ void Property::notifyChanged()
         m_owner->onPropertyChanged(this);
 }
 
-const char Property::BoolTypeName[] = "Mayo::PropertyBool";
-const char Property::IntTypeName[] = "Mayo::PropertyInt";
-const char Property::DoubleTypeName[] = "Mayo::PropertyDouble";
-const char Property::QByteArrayTypeName[] = "Mayo::PropertyQByteArray";
-const char Property::QStringTypeName[] = "Mayo::PropertyQString";
-const char Property::QDateTimeTypeName[] = "Mayo::PropertyQDateTime";
-const char Property::EnumerationTypeName[] = "Mayo::PropertyEnumeration";
-const char Property::OccColorTypeName[] = "Mayo::PropertyOccColor";
+
 
 PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner *owner)
     : m_owner(owner)

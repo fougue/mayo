@@ -83,15 +83,6 @@ public:
 
     virtual const char* dynTypeName() const = 0;
 
-    static const char BoolTypeName[];
-    static const char IntTypeName[];
-    static const char DoubleTypeName[];
-    static const char QByteArrayTypeName[];
-    static const char QStringTypeName[];
-    static const char QDateTimeTypeName[];
-    static const char EnumerationTypeName[];
-    static const char OccColorTypeName[];
-
 protected:
     void notifyChanged();
 

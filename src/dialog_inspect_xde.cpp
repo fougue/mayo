@@ -1,6 +1,7 @@
 #include "dialog_inspect_xde.h"
 
 #include "caf_utils.h"
+#include "options.h"
 #include "string_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
@@ -82,7 +83,9 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
         else if (attrId == XCAFDoc_Location::GetID()) {
             const auto& location = static_cast<const XCAFDoc_Location&>(*ptrAttr);
             text = "XCAFDoc_Location";
-            value = StringUtils::text(location.Get().Transformation());
+            value = StringUtils::text(
+                        location.Get().Transformation(),
+                        Options::instance()->unitSystemSchema());
         }
         else {
             std::stringstream sstream;
@@ -126,7 +129,7 @@ static void loadLabelColorProperties(
         const Handle_XCAFDoc_ColorTool& colorTool,
         QTreeWidgetItem* treeItem)
 {
-    typedef std::tuple<QString, bool> ColorProperty;
+    using ColorProperty = std::tuple<QString, bool>;
     auto listColorProperty = {
         ColorProperty("IsColor", colorTool->IsColor(label)),
         ColorProperty("IsSet_ColorGen", colorTool->IsSet(label, XCAFDoc_ColorGen)),
@@ -175,7 +178,7 @@ static void loadLabelShapeProperties(
         listItemProp.push_back(itemShapeType);
     }
 
-    typedef std::tuple<QString, bool> ShapeProperty;
+    using ShapeProperty = std::tuple<QString, bool>;
     auto listShapeProperty = {
         ShapeProperty("IsShape", shapeTool->IsShape(label)),
         ShapeProperty("IsTopLevel", shapeTool->IsTopLevel(label)),

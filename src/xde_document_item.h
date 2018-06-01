@@ -62,6 +62,7 @@ public:
     Quantity_Color shapeColor(const TDF_Label& lbl) const;
 
     TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
+    TDF_Label shapeReferred(const TDF_Label& lbl) const;
 
     static const char* type;
     const char* dynType() const override;

@@ -30,6 +30,7 @@
 #pragma once
 
 #include "property.h"
+#include "span.h"
 
 #include <QtWidgets/QWidget>
 #include <vector>
@@ -52,8 +53,8 @@ public:
 
     void setGuiApplication(GuiApplication* guiApp);
 
-    void editDocumentItems(const std::vector<DocumentItem*>& vecDocItem);
-    void editProperties(const std::vector<HandleProperty>& vecHndProp);
+    void editDocumentItems(Span<DocumentItem*> spanDocItem);
+    void editProperties(Span<HandleProperty> vecHndProp);
 
 private:
     void connectPropertyValueChangeSignals(bool on);
@@ -65,6 +66,7 @@ private:
     void createQtProperty(
             Property* property, QtProperty* parentProp);
     void mapProperty(QtVariantProperty* qtProp, Property* prop);
+    void refreshAllQtProperties();
 
     struct QtProp_Prop {
         QtVariantProperty* qtProp;
@@ -73,8 +75,10 @@ private:
 
     GuiApplication* m_guiApp = nullptr;
     class Ui_WidgetDocumentItemProps* m_ui = nullptr;
+
     DocumentItem* m_currentDocItem = nullptr;
     GpxDocumentItem* m_currentGpxDocItem = nullptr;
+    std::vector<HandleProperty> m_currentVecHndProperty;
 
     QtVariantPropertyManager* m_varPropMgr = nullptr;
     std::vector<QtProp_Prop> m_vecQtPropProp;

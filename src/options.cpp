@@ -40,6 +40,8 @@ static const char keyMeshDefaultShowEdges[] = "MeshGpx/defaultShowEdges";
 static const char keyMeshDefaultShowNodes[] = "MeshGpx/defaultShowNodes";
 static const char keyClipPlaneCappingOn[] = "ClipPlane/CappingOn";
 static const char keyClipPlaneCappingHatch[] = "ClipPlane/CappingHatch";
+static const char keyUnitSystemSchema[] = "UnitSystem/Schema";
+static const char keyUnitSystemDecimals[] = "UnitSystem/Decimals";
 
 Options *Options::instance()
 {
@@ -139,20 +141,53 @@ bool Options::isClipPlaneCappingOn() const
 
 void Options::setClipPlaneCapping(bool on)
 {
-    m_settings.setValue(keyClipPlaneCappingOn, on);
-    emit clipPlaneCappingToggled(on);
+    if (this->isClipPlaneCappingOn() != on) {
+        m_settings.setValue(keyClipPlaneCappingOn, on);
+        emit clipPlaneCappingToggled(on);
+    }
 }
 
 Aspect_HatchStyle Options::clipPlaneCappingHatch() const
 {
-    const int hatch = m_settings.value(keyClipPlaneCappingHatch, Aspect_HS_SOLID).toInt();
+    const int hatch =
+            m_settings.value(keyClipPlaneCappingHatch, Aspect_HS_SOLID).toInt();
     return static_cast<Aspect_HatchStyle>(hatch);
 }
 
 void Options::setClipPlaneCappingHatch(Aspect_HatchStyle hatch)
 {
-    m_settings.setValue(keyClipPlaneCappingHatch, static_cast<int>(hatch));
-    emit clipPlaneCappingHatchChanged(hatch);
+    if (this->clipPlaneCappingHatch() != hatch) {
+        m_settings.setValue(keyClipPlaneCappingHatch, static_cast<int>(hatch));
+        emit clipPlaneCappingHatchChanged(hatch);
+    }
+}
+
+UnitSystem::Schema Options::unitSystemSchema() const
+{
+    const int intSchema =
+            m_settings.value(keyUnitSystemSchema, UnitSystem::SI).toInt();
+    return static_cast<UnitSystem::Schema>(intSchema);
+}
+
+void Options::setUnitSystemSchema(UnitSystem::Schema schema)
+{
+    if (schema != this->unitSystemSchema()) {
+        m_settings.setValue(keyUnitSystemSchema, schema);
+        emit this->unitSystemSchemaChanged(schema);
+    }
+}
+
+int Options::unitSystemDecimals() const
+{
+    return m_settings.value(keyUnitSystemDecimals, 2).toInt();
+}
+
+void Options::setUnitSystemDecimals(int count)
+{
+    if (count != this->unitSystemDecimals()) {
+        m_settings.setValue(keyUnitSystemDecimals, count);
+        emit this->unitSystemDecimalsChanged(count);
+    }
 }
 
 } // namespace Mayo

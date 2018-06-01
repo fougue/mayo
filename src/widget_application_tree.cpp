@@ -45,6 +45,8 @@
 #include <cassert>
 #include <unordered_map>
 
+//#define MAYO_WIDGET_APPLICATION_TREE_SHOW_REFERENCE_NODES
+
 Q_DECLARE_METATYPE(TDF_Label)
 
 namespace Mayo {
@@ -178,13 +180,24 @@ WidgetApplicationTree::~WidgetApplicationTree()
     delete m_ui;
 }
 
+bool WidgetApplicationTree::hasSelectedDocumentItems() const
+{
+    const QList<QTreeWidgetItem*> listTreeItem =
+            m_ui->treeWidget_App->selectedItems();
+    for (const QTreeWidgetItem* treeItem : listTreeItem) {
+        if (Internal::treeItemType(treeItem) == Internal::TreeItemType_DocumentItem)
+            return true;
+    }
+    return false;
+}
+
 std::vector<DocumentItem*> WidgetApplicationTree::selectedDocumentItems() const
 {
     const QList<QTreeWidgetItem*> listTreeItem =
             m_ui->treeWidget_App->selectedItems();
     std::vector<DocumentItem*> vecDocItem;
     vecDocItem.reserve(listTreeItem.size());
-    for (QTreeWidgetItem* treeItem : listTreeItem) {
+    for (const QTreeWidgetItem* treeItem : listTreeItem) {
         if (Internal::treeItemType(treeItem) == Internal::TreeItemType_DocumentItem)
             vecDocItem.push_back(Internal::treeItemDocumentItem(treeItem));
     }
@@ -224,8 +237,8 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
 
             auto propShapeType = new PropertyQString(nullptr, tr("Shape"));
             const TopAbs_ShapeEnum shapeType = xdeDocItem->shape(label).ShapeType();
-            propShapeType->setValue(QString(StringUtils::rawText(shapeType))
-                                    .remove("TopAbs_"));
+            propShapeType->setValue(
+                        QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
             propShapeType->setUserReadOnly(true);
             vecHndProp.emplace_back(propShapeType, hndStorage);
 
@@ -249,15 +262,25 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
 
             if (xdeDocItem->isShapeReference(label)) {
                 const TopLoc_Location loc = xdeDocItem->shapeReferenceLocation(label);
-                auto propLoc = new PropertyQString(nullptr, tr("Location"));
-                propLoc->setValue(StringUtils::text(loc.Transformation()));
+                auto propLoc = new PropertyOccTrsf(nullptr, tr("Location"));
+                propLoc->setValue(loc.Transformation());
                 propLoc->setUserReadOnly(true);
                 vecHndProp.emplace_back(propLoc, hndStorage);
+#ifndef MAYO_WIDGET_APPLICATION_TREE_SHOW_REFERENCE_NODES
+                const TDF_Label referredLabel = xdeDocItem->shapeReferred(label);
+                if (xdeDocItem->hasShapeColor(referredLabel)) {
+                    auto propColor = new PropertyOccColor(nullptr, tr("Color(Referred)"));
+                    propColor->setValue(xdeDocItem->shapeColor(referredLabel));
+                    propColor->setUserReadOnly(true);
+                    vecHndProp.emplace_back(propColor, hndStorage);
+                }
+#endif
             }
 
             if (xdeDocItem->hasShapeColor(label)) {
                 auto propColor = new PropertyOccColor(nullptr, tr("Color"));
                 propColor->setValue(xdeDocItem->shapeColor(label));
+                propColor->setUserReadOnly(true);
                 vecHndProp.emplace_back(propColor, hndStorage);
             }
         }
@@ -312,7 +335,7 @@ void WidgetApplicationTree::loadXdeShapeStructure(
                         itParentTreeItem->second :
                         treeDocItem;
 // TODO Maybe a user option is a good idea
-#if 0 // Show references
+#ifdef MAYO_WIDGET_APPLICATION_TREE_SHOW_REFERENCE_NODES
             auto treeItem = new QTreeWidgetItem(parentTreeItem);
             const QString stdName = xdeDocItem->findLabelName(currentLabel);
             treeItem->setText(0, stdName);

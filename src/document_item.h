@@ -73,8 +73,8 @@ public:
     static const char* type;
     const char* dynType() const override;
 
-    PropertyDouble propertyVolume; // Read-only
-    PropertyDouble propertyArea; // Read-only
+    PropertyArea propertyArea; // Read-only
+    PropertyVolume propertyVolume; // Read-only
 };
 
 bool sameType(const DocumentItem* lhs, const DocumentItem* rhs);
