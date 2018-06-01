@@ -17,7 +17,7 @@ Although only tested with VC++/Windows it should build fine on Linux and MacOS.
 `cd .../mayo`  
 `qmake "CASCADE_ROOT=path_to_opencascade"`  
 `(n)make`  
-To enable optional gmio library, use this qmake command:  
+To enable optional gmio library, use this qmake command instead:  
 `qmake "CASCADE_ROOT=path_to_opencascade" "GMIO_ROOT=path_to_gmio"`
 
 # Screencast
