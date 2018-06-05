@@ -59,7 +59,8 @@ HEADERS += \
     src/widget_gui_document.h \
     src/unit.h \
     src/quantity.h \
-    src/unit_system.h
+    src/unit_system.h \
+    src/widget_file_system.h
 
 SOURCES += \
     src/application.cpp \
@@ -107,7 +108,8 @@ SOURCES += \
     src/widget_gui_document.cpp \
     src/unit.cpp \
     src/quantity.cpp \
-    src/unit_system.cpp
+    src/unit_system.cpp \
+    src/widget_file_system.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)

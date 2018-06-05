@@ -50,6 +50,9 @@ public:
     const QString& label() const;
     void setLabel(const QString& v);
 
+    const QString& filePath() const;
+    void setFilePath(const QString& filepath);
+
     bool eraseRootItem(DocumentItem* docItem);
 
     const std::vector<DocumentItem*>& rootItems() const;
@@ -71,6 +74,7 @@ private:
     Application* m_app = nullptr;
     std::vector<DocumentItem*> m_rootItems;
     QString m_label;
+    QString m_filePath;
 };
 
 } // namespace Mayo

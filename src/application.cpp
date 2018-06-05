@@ -474,12 +474,13 @@ Document *Application::createDocument(const QString &label)
     return doc;
 }
 
-Document *Application::addDocument(const QString &label)
+void Application::addDocument(Document *doc)
 {
-    Document* doc = this->createDocument(label);
-    m_documents.emplace_back(doc);
-    emit documentAdded(doc);
-    return doc;
+    auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
+    if (doc != nullptr && itFound == m_documents.cend()) {
+        m_documents.emplace_back(doc);
+        emit documentAdded(doc);
+    }
 }
 
 bool Application::eraseDocument(Document *doc)

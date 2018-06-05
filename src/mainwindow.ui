@@ -171,7 +171,7 @@
                <item>
                 <widget class="QStackedWidget" name="stack_LeftContents">
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>2</number>
                  </property>
                  <widget class="QWidget" name="page_ApplicationTree">
                   <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -249,11 +249,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QTreeView" name="treeView_FileSystem">
-                     <attribute name="headerVisible">
-                      <bool>false</bool>
-                     </attribute>
-                    </widget>
+                    <widget class="WidgetFileSystem" name="widget_FileSystem" native="true"/>
                    </item>
                   </layout>
                  </widget>
@@ -698,6 +694,12 @@
    <class>ButtonFlat</class>
    <extends>QToolButton</extends>
    <header>button_flat.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WidgetFileSystem</class>
+   <extends>QWidget</extends>
+   <header>widget_file_system.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

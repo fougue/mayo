@@ -68,6 +68,16 @@ void Document::setLabel(const QString &v)
     m_label = v;
 }
 
+const QString &Document::filePath() const
+{
+    return m_filePath;
+}
+
+void Document::setFilePath(const QString &filepath)
+{
+    m_filePath = filepath;
+}
+
 bool Document::eraseRootItem(DocumentItem *docItem)
 {
     auto itFound = std::find(m_rootItems.cbegin(), m_rootItems.cend(), docItem);

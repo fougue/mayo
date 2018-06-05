@@ -44,6 +44,7 @@
 #include "qt_occ_view_controller.h"
 #include "theme.h"
 #include "widget_application_tree.h"
+#include "widget_file_system.h"
 #include "widget_gui_document.h"
 #include "widget_document_item_props.h"
 #include "widget_message_indicator.h"
@@ -59,7 +60,6 @@
 #include <QtCore/QStringListModel>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
-#include <QtWidgets/QFileSystemModel>
 
 namespace Mayo {
 
@@ -276,9 +276,6 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     new DialogTaskManager(this);
 
-    m_fileSysModel = new QFileSystemModel(this);
-    m_ui->treeView_FileSystem->setModel(m_fileSysModel);
-
     auto docModel = new Internal::DocumentModel(Application::instance());
     m_ui->combo_GuiDocuments->setModel(docModel);
     m_ui->listView_OpenedDocuments->setModel(docModel);
@@ -346,6 +343,18 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 this, &MainWindow::currentDocumentIndexChanged,
                 this, &MainWindow::updateControlsActivation);
+    QObject::connect(
+                this, &MainWindow::currentDocumentIndexChanged,
+                [=](int docIdx) {
+        auto widgetGuiDoc = this->widgetGuiDocument(docIdx);
+        if (widgetGuiDoc != nullptr) {
+            m_ui->widget_FileSystem->setLocation(
+                        widgetGuiDoc->guiDocument()->document()->filePath());
+        }
+    });
+    QObject::connect(
+                m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
+                this, &MainWindow::onWidgetFileSystemLocationActivated);
     // ...
     QObject::connect(
                 m_ui->combo_LeftContents, sigComboIndexChanged,
@@ -398,27 +407,27 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 
 void MainWindow::newDoc()
 {
-    Application::instance()->addDocument();
+    Document* doc = Application::instance()->createDocument();
+    Application::instance()->addDocument(doc);
 }
 
 void MainWindow::openPartInNewDoc()
 {
     this->foreachOpenFileName(
                 [=](Application::PartFormat format, QString filepath) {
-        const QString filename = QFileInfo(filepath).fileName();
-        Document* doc = Application::instance()->addDocument(filename);
-        m_fileSysModel->setRootPath(filepath);
+        const QFileInfo fi(filepath);
+        Document* doc = Application::instance()->createDocument(fi.fileName());
+        doc->setFilePath(fi.absoluteFilePath());
+        Application::instance()->addDocument(doc);
         this->runImportTask(doc, format, filepath);
     });
 }
 
 void MainWindow::importInCurrentDoc()
 {
-    auto docView3d =
-            qobject_cast<WidgetGuiDocument*>(
-                m_ui->stack_GuiDocuments->currentWidget());
-    if (docView3d != nullptr) {
-        Document* doc = docView3d->guiDocument()->document();
+    auto widgetGuiDoc = this->widgetGuiDocument(this->currentDocumentIndex());
+    if (widgetGuiDoc != nullptr) {
+        Document* doc = widgetGuiDoc->guiDocument()->document();
         this->foreachOpenFileName(
                     [=](Application::PartFormat format, QString filepath) {
             this->runImportTask(doc, format, filepath);
@@ -527,10 +536,8 @@ void MainWindow::editOptions()
 
 void MainWindow::saveImageView()
 {
-    auto widget =
-            qobject_cast<const WidgetGuiDocument*>(
-                m_ui->stack_GuiDocuments->currentWidget());
-    auto dlg = new DialogSaveImageView(widget->guiDocument()->v3dView());
+    auto widgetGuiDoc = this->widgetGuiDocument(this->currentDocumentIndex());
+    auto dlg = new DialogSaveImageView(widgetGuiDoc->guiDocument()->v3dView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
@@ -629,6 +636,38 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     this->updateControlsActivation();
 }
 
+void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
+{
+    const QString locAbsoluteFilePath = loc.absoluteFilePath();
+    const std::vector<Document*> vecDocument = Application::instance()->documents();
+    // Try to find any existing document with the same filepath
+    auto itDocFound = std::find_if(
+                vecDocument.cbegin(),
+                vecDocument.cend(),
+                [=](const Document* doc) {
+        return QFileInfo(doc->filePath()).absoluteFilePath() == locAbsoluteFilePath;
+    });
+    if (itDocFound != vecDocument.cend()) {
+        this->setCurrentDocumentIndex(itDocFound - vecDocument.cbegin());
+    }
+    else {
+        const Application::PartFormat fileFormat =
+                Application::findPartFormat(locAbsoluteFilePath);
+        if (fileFormat != Application::PartFormat::Unknown) {
+            Document* doc = Application::instance()->createDocument(loc.fileName());
+            doc->setFilePath(locAbsoluteFilePath);
+            Application::instance()->addDocument(doc);
+            this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
+        }
+        else {
+            qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                        this,
+                        tr("Error"),
+                        tr("'%1'\nUnknown file format").arg(locAbsoluteFilePath));
+        }
+    }
+}
+
 void MainWindow::closeCurrentDocument()
 {
     this->closeDocument(this->currentDocumentIndex());
@@ -637,10 +676,10 @@ void MainWindow::closeCurrentDocument()
 void MainWindow::closeDocument(int docIndex)
 {
     if (0 <= docIndex && docIndex < m_ui->stack_GuiDocuments->count()) {
-        QWidget* tab = m_ui->stack_GuiDocuments->widget(docIndex);
-        auto docView3d = qobject_cast<WidgetGuiDocument*>(tab);
-        Application::instance()->eraseDocument(docView3d->guiDocument()->document());
-        m_ui->stack_GuiDocuments->removeWidget(docView3d);
+        auto widgetGuiDoc = this->widgetGuiDocument(docIndex);
+        Document* doc = widgetGuiDoc->guiDocument()->document();
+        m_ui->stack_GuiDocuments->removeWidget(widgetGuiDoc);
+        Application::instance()->eraseDocument(doc);
         this->updateControlsActivation();
     }
 }
@@ -714,6 +753,12 @@ int MainWindow::currentDocumentIndex() const
 void MainWindow::setCurrentDocumentIndex(int idx)
 {
     m_ui->combo_GuiDocuments->setCurrentIndex(idx);
+}
+
+WidgetGuiDocument *MainWindow::widgetGuiDocument(int idx) const
+{
+    return qobject_cast<WidgetGuiDocument*>(
+                m_ui->stack_GuiDocuments->widget(idx));
 }
 
 } // namespace Mayo

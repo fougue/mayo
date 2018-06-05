@@ -32,13 +32,14 @@
 #include "application.h"
 #include <QtWidgets/QMainWindow>
 #include <functional>
-class QFileSystemModel;
+class QFileInfo;
 
 namespace Mayo {
 
 class Document;
 class GuiApplication;
 class GuiDocument;
+class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow
 {
@@ -72,6 +73,7 @@ private:
     void onOperationFinished(bool ok, const QString& msg);
     void onHomePageLinkActivated(const QString& link);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 
@@ -93,9 +95,10 @@ private:
     int currentDocumentIndex() const;
     void setCurrentDocumentIndex(int idx);
 
+    WidgetGuiDocument* widgetGuiDocument(int idx) const;
+
     GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
-    QFileSystemModel* m_fileSysModel;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
 };
 

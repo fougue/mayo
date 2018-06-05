@@ -86,8 +86,8 @@ public:
 
     const std::vector<Document*>& documents() const;
 
-    Document* createDocument(const QString& label);
-    Document* addDocument(const QString& label = QString());
+    Document* createDocument(const QString& label = QString());
+    void addDocument(Document* doc);
     bool eraseDocument(Document* doc);
 
     static const std::vector<PartFormat>& partFormats();
