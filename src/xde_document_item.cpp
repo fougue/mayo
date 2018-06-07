@@ -132,10 +132,10 @@ TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl) const
     return referred;
 }
 
-const char* XdeDocumentItem::type = "2a3efb26-cd32-432d-b95c-cdc64c3cf7d9";
-const char *XdeDocumentItem::dynType() const
+const char XdeDocumentItem::TypeName[] = "2a3efb26-cd32-432d-b95c-cdc64c3cf7d9";
+const char *XdeDocumentItem::dynTypeName() const
 {
-    return XdeDocumentItem::type;
+    return XdeDocumentItem::TypeName;
 }
 
 } // namespace Mayo

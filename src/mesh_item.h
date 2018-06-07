@@ -44,8 +44,8 @@ public:
 
     bool isNull() const override;
 
-    static const char* type;
-    const char* dynType() const override;
+    static const char TypeName[];
+    const char* dynTypeName() const override;
 
     PropertyInt propertyNodeCount; // Read-only
     PropertyInt propertyTriangleCount; // Read-only

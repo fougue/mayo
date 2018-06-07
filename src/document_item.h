@@ -51,7 +51,7 @@ public:
 
     const std::vector<DocumentItem*>& outItems() const; // For future use
 
-    virtual const char* dynType() const = 0;
+    virtual const char* dynTypeName() const = 0;
 
 protected:
     void onPropertyChanged(Property* prop) override;
@@ -70,8 +70,8 @@ public:
 
     virtual bool isNull() const;
 
-    static const char* type;
-    const char* dynType() const override;
+    static const char TypeName[];
+    const char* dynTypeName() const override;
 
     PropertyArea propertyArea; // Read-only
     PropertyVolume propertyVolume; // Read-only
@@ -79,11 +79,10 @@ public:
 
 bool sameType(const DocumentItem* lhs, const DocumentItem* rhs);
 
-template<typename T>
-bool sameType(const DocumentItem* item)
+template<typename T> bool sameType(const DocumentItem* item)
 {
     return item != nullptr ?
-                std::strcmp(item->dynType(), T::type) == 0 :
+                std::strcmp(item->dynTypeName(), T::TypeName) == 0 :
                 false;
 }
 

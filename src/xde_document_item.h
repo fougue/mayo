@@ -64,8 +64,8 @@ public:
     TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
     TDF_Label shapeReferred(const TDF_Label& lbl) const;
 
-    static const char* type;
-    const char* dynType() const override;
+    static const char TypeName[];
+    const char* dynTypeName() const override;
 
 private:
     Handle_TDocStd_Document m_cafDoc;

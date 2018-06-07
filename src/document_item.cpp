@@ -90,13 +90,13 @@ bool PartItem::isNull() const
     return false;
 }
 
-const char* PartItem::type = "247d246a-6316-4a99-b68e-bdcf565fa8aa";
-const char* PartItem::dynType() const { return PartItem::type; }
+const char PartItem::TypeName[] = "247d246a-6316-4a99-b68e-bdcf565fa8aa";
+const char* PartItem::dynTypeName() const { return PartItem::TypeName; }
 
 bool sameType(const DocumentItem *lhs, const DocumentItem *rhs)
 {
     if (lhs != nullptr && rhs != nullptr)
-        return std::strcmp(lhs->dynType(), rhs->dynType()) == 0;
+        return std::strcmp(lhs->dynTypeName(), rhs->dynTypeName()) == 0;
     return false;
 }
 

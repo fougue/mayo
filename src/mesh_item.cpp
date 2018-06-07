@@ -58,7 +58,7 @@ bool MeshItem::isNull() const
     return m_triangulation.IsNull();
 }
 
-const char* MeshItem::type = "2d441323-48db-4222-91b4-bdb7b5460c3f";
-const char* MeshItem::dynType() const { return MeshItem::type; }
+const char MeshItem::TypeName[] = "2d441323-48db-4222-91b4-bdb7b5460c3f";
+const char* MeshItem::dynTypeName() const { return MeshItem::TypeName; }
 
 } // namespace Mayo
