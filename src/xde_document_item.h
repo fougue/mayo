@@ -30,6 +30,7 @@
 #pragma once
 
 #include "document_item.h"
+#include "quantity.h"
 #include <TDocStd_Document.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_ColorTool.hxx>
@@ -63,6 +64,16 @@ public:
 
     TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
     TDF_Label shapeReferred(const TDF_Label& lbl) const;
+
+    struct ValidationProperties {
+        bool hasCentroid;
+        bool hasArea;
+        bool hasVolume;
+        gp_Pnt centroid;
+        QuantityArea area;
+        QuantityVolume volume;
+    };
+    ValidationProperties validationProperties(const TDF_Label& lbl) const;
 
     static const char TypeName[];
     const char* dynTypeName() const override;

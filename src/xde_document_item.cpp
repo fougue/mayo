@@ -2,7 +2,12 @@
 
 #include "caf_utils.h"
 
+#include <Standard_GUID.hxx>
+#include <TDF_AttributeIterator.hxx>
+#include <XCAFDoc_Area.hxx>
+#include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_Volume.hxx>
 
 namespace Mayo {
 
@@ -130,6 +135,34 @@ TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl) const
     TDF_Label referred;
     m_shapeTool->GetReferredShape(lbl, referred);
     return referred;
+}
+
+XdeDocumentItem::ValidationProperties XdeDocumentItem::validationProperties(
+        const TDF_Label &lbl) const
+{
+    ValidationProperties props = {};
+    for (TDF_AttributeIterator it(lbl); it.More(); it.Next()) {
+        const Handle_TDF_Attribute ptrAttr = it.Value();
+        const Standard_GUID& attrId = ptrAttr->ID();
+        if (&attrId == &XCAFDoc_Centroid::GetID()) {
+            const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);
+            props.hasCentroid = true;
+            props.centroid = centroid.Get();
+        }
+        else if (&attrId == &XCAFDoc_Area::GetID()) {
+            const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
+            props.hasArea = true;
+            props.area = area.Get() * Quantity_SquaredMillimeter;
+        }
+        else if (&attrId == &XCAFDoc_Volume::GetID()) {
+            const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);
+            props.hasVolume = true;
+            props.volume = volume.Get() * Quantity_CubicMillimeter;
+        }
+        if (props.hasCentroid && props.hasArea && props.hasVolume)
+            break;
+    }
+    return props;
 }
 
 const char XdeDocumentItem::TypeName[] = "2a3efb26-cd32-432d-b95c-cdc64c3cf7d9";

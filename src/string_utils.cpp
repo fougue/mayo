@@ -8,6 +8,22 @@
 
 namespace Mayo {
 
+QString StringUtils::text(const gp_Pnt &pos, UnitSystem::Schema schema)
+{
+    const auto trPosX =
+            UnitSystem::translate(schema, pos.X() * Quantity_Millimeter);
+    const auto trPosY =
+            UnitSystem::translate(schema, pos.Y() * Quantity_Millimeter);
+    const auto trPosZ =
+            UnitSystem::translate(schema, pos.Z() * Quantity_Millimeter);
+    const gp_XYZ trPos(trPosX.value, trPosY.value, trPosZ.value);
+    const QString trPosFormat = QStringLiteral("(%x%1 %y%2 %z%3)").
+            arg(QString::fromUtf8(trPosX.strUnit),
+                QString::fromUtf8(trPosY.strUnit),
+                QString::fromUtf8(trPosZ.strUnit));
+    return occ::QtUtils::toQString(trPos, trPosFormat);
+}
+
 QString StringUtils::text(const gp_Trsf& trsf, UnitSystem::Schema schema)
 {
     gp_XYZ axisRotation;
@@ -16,22 +32,12 @@ QString StringUtils::text(const gp_Trsf& trsf, UnitSystem::Schema schema)
     trsf.GetRotation(axisRotation, angleRotation);
     const auto trAngleRotation =
             UnitSystem::translate(schema, angleRotation * Quantity_Radian);
-    const auto trPosX =
-            UnitSystem::translate(schema, pos.X() * Quantity_Millimeter);
-    const auto trPosY =
-            UnitSystem::translate(schema, pos.Y() * Quantity_Millimeter);
-    const auto trPosZ =
-            UnitSystem::translate(schema, pos.Z() * Quantity_Millimeter);
-    const gp_XYZ trPos(trPosX.value, trPosY.value, trPosZ.value);
-    const QString trPosFormat = QStringLiteral("%x%1 %y%2 %z%3").
-            arg(QString::fromUtf8(trPosX.strUnit),
-                QString::fromUtf8(trPosY.strUnit),
-                QString::fromUtf8(trPosZ.strUnit));
-    return QStringLiteral("[(%1); %2%3; (%4)")
-            .arg(occ::QtUtils::toQString(axisRotation, "%x %y %z"))
-            .arg(trAngleRotation.value)
-            .arg(QString::fromUtf8(trAngleRotation.strUnit))
-            .arg(occ::QtUtils::toQString(trPos, trPosFormat));
+    const QString strAngleRotation = QString::number(trAngleRotation.value);
+    return QStringLiteral("[(%1); %2%3; %4")
+            .arg(occ::QtUtils::toQString(axisRotation, "%x %y %z"),
+                 strAngleRotation,
+                 QString::fromUtf8(trAngleRotation.strUnit),
+                 StringUtils::text(pos, schema));
 }
 
 QString StringUtils::text(const Quantity_Color &color, const QString &format)

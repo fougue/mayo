@@ -147,6 +147,33 @@ static QString documentItemLabel(const DocumentItem* docItem)
                 WidgetApplicationTree::tr("<unnamed>");
 }
 
+static void addValidationProperties(
+        const XdeDocumentItem::ValidationProperties& validationProps,
+        std::vector<HandleProperty>* ptrVecHndProp,
+        const QString& nameFormat = QStringLiteral("%1"),
+        HandleProperty::Storage hndStorage = HandleProperty::Owner,
+        PropertyOwner* propOwner = nullptr)
+{
+    if (validationProps.hasCentroid) {
+        auto propCentroid = new PropertyOccPnt(
+                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Centroid")));
+        propCentroid->setValue(validationProps.centroid);
+        ptrVecHndProp->emplace_back(propCentroid, hndStorage);
+    }
+    if (validationProps.hasArea) {
+        auto propArea = new PropertyArea(
+                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Area")));
+        propArea->setQuantity(validationProps.area);
+        ptrVecHndProp->emplace_back(propArea, hndStorage);
+    }
+    if (validationProps.hasVolume) {
+        auto propVolume = new PropertyVolume(
+                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Volume")));
+        propVolume->setQuantity(validationProps.volume);
+        ptrVecHndProp->emplace_back(propVolume, hndStorage);
+    }
+}
+
 } // namespace Internal
 
 WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
@@ -239,7 +266,6 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
             const TopAbs_ShapeEnum shapeType = xdeDocItem->shape(label).ShapeType();
             propShapeType->setValue(
                         QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
-            propShapeType->setUserReadOnly(true);
             vecHndProp.emplace_back(propShapeType, hndStorage);
 
             QStringList listXdeShapeKind;
@@ -257,34 +283,39 @@ std::vector<HandleProperty> WidgetApplicationTree::propertiesOfCurrentObject() c
                 listXdeShapeKind.push_back(tr("Sub"));
             auto propXdeShapeKind = new PropertyQString(nullptr, tr("XDE shape"));
             propXdeShapeKind->setValue(listXdeShapeKind.join('+'));
-            propXdeShapeKind->setUserReadOnly(true);
             vecHndProp.emplace_back(propXdeShapeKind, hndStorage);
 
             if (xdeDocItem->isShapeReference(label)) {
                 const TopLoc_Location loc = xdeDocItem->shapeReferenceLocation(label);
                 auto propLoc = new PropertyOccTrsf(nullptr, tr("Location"));
                 propLoc->setValue(loc.Transformation());
-                propLoc->setUserReadOnly(true);
                 vecHndProp.emplace_back(propLoc, hndStorage);
-#ifndef MAYO_WIDGET_APPLICATION_TREE_SHOW_REFERENCE_NODES
-                const TDF_Label referredLabel = xdeDocItem->shapeReferred(label);
-                if (xdeDocItem->hasShapeColor(referredLabel)) {
-                    auto propColor = new PropertyOccColor(nullptr, tr("Color(Referred)"));
-                    propColor->setValue(xdeDocItem->shapeColor(referredLabel));
-                    propColor->setUserReadOnly(true);
-                    vecHndProp.emplace_back(propColor, hndStorage);
-                }
-#endif
             }
-
+            Internal::addValidationProperties(
+                        xdeDocItem->validationProperties(label), &vecHndProp);
             if (xdeDocItem->hasShapeColor(label)) {
                 auto propColor = new PropertyOccColor(nullptr, tr("Color"));
                 propColor->setValue(xdeDocItem->shapeColor(label));
-                propColor->setUserReadOnly(true);
                 vecHndProp.emplace_back(propColor, hndStorage);
             }
+#ifndef MAYO_WIDGET_APPLICATION_TREE_SHOW_REFERENCE_NODES
+            if (xdeDocItem->isShapeReference(label)) {
+                const TDF_Label referredLabel = xdeDocItem->shapeReferred(label);
+                Internal::addValidationProperties(
+                            xdeDocItem->validationProperties(referredLabel),
+                            &vecHndProp,
+                            tr("[Referred]%1"));
+                if (xdeDocItem->hasShapeColor(referredLabel)) {
+                    auto propColor = new PropertyOccColor(nullptr, tr("[Referred]Color"));
+                    propColor->setValue(xdeDocItem->shapeColor(referredLabel));
+                    vecHndProp.emplace_back(propColor, hndStorage);
+                }
+            }
+#endif
         }
     }
+    for (HandleProperty& prop : vecHndProp)
+        prop->setUserReadOnly(true);
     return vecHndProp;
 }
 
@@ -361,7 +392,8 @@ void WidgetApplicationTree::loadXdeShapeStructure(
                             xdeDocItem->findLabelName(refLabel).trimmed();
                     const QString text =
                             !refStdName.isEmpty() && refStdName != stdName ?
-                                QString("%1 [->%2]").arg(refStdName, stdName) :
+                                // \xe2\x86\x92 : UTF8 rightwards arrow
+                                QString::fromUtf8("%1 [\xe2\x86\x92%2]").arg(refStdName, stdName) :
                                 stdName;
                     treeItem->setText(0, text);
                     Internal::setTreeItemXdeShapeLabel(treeItem, refLabel);

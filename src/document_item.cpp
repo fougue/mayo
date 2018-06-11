@@ -75,9 +75,9 @@ void DocumentItem::onPropertyChanged(Property *prop)
 
 PartItem::PartItem()
     : propertyArea(
-          this, QCoreApplication::translate("Mayo::PartItem", "Area")),
+          this, QCoreApplication::translate("Mayo::PartItem", "Computed area")),
       propertyVolume(
-          this, QCoreApplication::translate("Mayo::PartItem", "Volume"))
+          this, QCoreApplication::translate("Mayo::PartItem", "Computed volume"))
 {
 //    this->propertyVolume.setRange(0., std::numeric_limits<double>::max());
 //    this->propertyArea.setRange(0., std::numeric_limits<double>::max());

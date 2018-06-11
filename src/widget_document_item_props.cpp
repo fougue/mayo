@@ -111,6 +111,21 @@ template<> struct PropertyHelper<PropertyOccColor> {
     }
 };
 
+template<> struct PropertyHelper<PropertyOccPnt> {
+    using PropertyType = PropertyOccPnt;
+    using ValueType = PropertyType::ValueType;
+
+    static int qVariantTypeId() { return QVariant::String; }
+    static void init(QtVariantProperty*, const PropertyType*) {}
+    static QVariant toQVariant(const PropertyType* prop) {
+        return StringUtils::text(
+                    prop->value(), Options::instance()->unitSystemSchema());
+    }
+    static ValueType toPropertyValue(const QVariant&, const PropertyType*) {
+        return gp_Pnt(); // TODO
+    }
+};
+
 template<> struct PropertyHelper<PropertyOccTrsf> {
     using PropertyType = PropertyOccTrsf;
     using ValueType = PropertyType::ValueType;
@@ -364,6 +379,7 @@ void WidgetDocumentItemProps::createQtProperty(
         std::pair<const char*, FuncCreateQtProperty>;
     static const PropType_FuncCreateQtProp arrayPair[] = {
         { PropertyOccColor::TypeName, &Internal::createQtProperty<PropertyOccColor> },
+        { PropertyOccPnt::TypeName, &Internal::createQtProperty<PropertyOccPnt> },
         { PropertyOccTrsf::TypeName, &Internal::createQtProperty<PropertyOccTrsf> },
         { PropertyEnumeration::TypeName, &Internal::createQtProperty<PropertyEnumeration> },
         { PropertyBool::TypeName, &Internal::createQtProperty<PropertyBool> },

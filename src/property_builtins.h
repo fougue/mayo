@@ -134,6 +134,7 @@ using PropertyQByteArray = GenericProperty<QByteArray>;
 using PropertyQString = GenericProperty<QString>;
 using PropertyQDateTime = GenericProperty<QDateTime>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
+using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
@@ -174,6 +175,7 @@ const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray";
 const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
 const char PropertyQDateTime::TypeName[] = "Mayo::PropertyQDateTime";
 const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
+const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
 const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
 
 // PropertyScalarConstraints<>

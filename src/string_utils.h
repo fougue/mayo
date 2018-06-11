@@ -5,11 +5,15 @@
 #include <IFSelect_ReturnStatus.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 class Quantity_Color;
+class gp_Pnt;
 class gp_Trsf;
 
 namespace Mayo {
 
 struct StringUtils {
+    static QString text(
+            const gp_Pnt& pos,
+            UnitSystem::Schema schema = UnitSystem::SI);
     static QString text(
             const gp_Trsf& trsf,
             UnitSystem::Schema schema = UnitSystem::SI);
