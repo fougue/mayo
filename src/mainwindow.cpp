@@ -38,6 +38,7 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document.h"
+#include "document_item.h"
 #include "gpx_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
@@ -65,8 +66,9 @@ namespace Mayo {
 
 namespace Internal {
 
-static const QLatin1String keyLastOpenDir("GUI/MainWindow_lastOpenDir");
-static const QLatin1String keyLastSelectedFilter("GUI/MainWindow_lastSelectedFilter");
+static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
+static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
+static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
 
 class DocumentModel : public QStringListModel {
 public:
@@ -89,6 +91,7 @@ private:
         const int rowId = this->rowCount();
         this->insertRow(rowId);
         this->setData(this->index(rowId), doc->label());
+        //this->setData(this->index(rowId), doc->filePath(), Qt::ToolTipRole);
         m_docs.emplace_back(doc);
     }
 
@@ -214,7 +217,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
     m_ui->widget_DocumentProps->setGuiApplication(guiApp);
-    m_ui->widget_DocumentProps->editDocumentItems(Span<DocumentItem*>());
+    m_ui->widget_DocumentProps->editDocumentItem(nullptr);
 
     m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
@@ -355,10 +358,14 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
                 this, &MainWindow::onWidgetFileSystemLocationActivated);
+    // Left header bar of controls
+    QObject::connect(
+                m_ui->btn_CloseLeftSideBar, &ButtonFlat::clicked,
+                this, &MainWindow::toggleLeftSidebar);
     // ...
     QObject::connect(
                 m_ui->combo_LeftContents, sigComboIndexChanged,
-                m_ui->stack_LeftContents, &QStackedWidget::setCurrentIndex);
+                this, &MainWindow::onLeftContentsPageChanged);
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
@@ -379,7 +386,9 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
 
+    m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
+    this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     this->updateControlsActivation();
     this->updateActionText(m_ui->actionFullscreenOrNormal);
     this->updateActionText(m_ui->actionShowHideLeftSidebar);
@@ -392,14 +401,21 @@ MainWindow::~MainWindow()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    auto funcSizeBtn = [](const QWidget* container, const QWidget* widgetHeightRef) {
+        const int btnSideLen = widgetHeightRef->frameGeometry().height();
+        const QList<ButtonFlat*> listBtn = container->findChildren<ButtonFlat*>();
+        for (ButtonFlat* btn : listBtn)
+            btn->setFixedSize(btnSideLen, btnSideLen);
+        return true;
+    };
     if (watched == m_ui->widget_ControlGuiDocuments
             && event->type() == QEvent::Show)
     {
-        const int btnSideLen = m_ui->combo_GuiDocuments->frameGeometry().height();
-        const QList<ButtonFlat*> listBtn =
-                m_ui->widget_ControlGuiDocuments->findChildren<ButtonFlat*>();
-        for (ButtonFlat* btn : listBtn)
-            btn->setFixedSize(btnSideLen, btnSideLen);
+        funcSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
+        return true;
+    }
+    if (watched == m_ui->widget_LeftHeader&& event->type() == QEvent::Show) {
+        funcSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
         return true;
     }
     return false;
@@ -596,10 +612,42 @@ void MainWindow::onApplicationTreeWidgetSelectionChanged()
 {
     const WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
     WidgetDocumentItemProps* uiDocProps = m_ui->widget_DocumentProps;
-    if (uiAppTree->hasSelectedDocumentItems())
-        uiDocProps->editDocumentItems(uiAppTree->selectedDocumentItems());
-    else
-        uiDocProps->editProperties(uiAppTree->propertiesOfCurrentObject());
+
+    const auto vecTreeItem = uiAppTree->selectedItems();
+    if (vecTreeItem.size() == 1) {
+        const WidgetApplicationTree::Item& item = vecTreeItem.front();
+        if (item.isDocumentItem()) {
+            uiDocProps->editDocumentItem(item.documentItem());
+        }
+        else if (item.isXdeDocumentItemLabel()) {
+            const XdeDocumentItem::ShapePropertiesOption optProps =
+                    uiAppTree->isMergeXdeReferredShapeOn() ?
+                        XdeDocumentItem::ShapePropertiesOption::MergeReferred :
+                        XdeDocumentItem::ShapePropertiesOption::None;
+            const XdeDocumentItem* xdeDocItem =
+                    item.xdeDocumentItemLabel().xdeDocumentItem;
+            uiDocProps->editProperties(
+                        xdeDocItem->shapeProperties(
+                            item.xdeDocumentItemLabel().label, optProps));
+        }
+        else {
+            uiDocProps->editDocumentItem(nullptr);
+        }
+    }
+
+    if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
+        const auto vecTreeItem = uiAppTree->selectedItems();
+        if (vecTreeItem.size() == 1) {
+            const Document* doc = vecTreeItem.front().document();
+            if (doc != nullptr) {
+                const std::vector<Document*>& vecDoc = Application::instance()->documents();
+                auto itFound = std::find(vecDoc.cbegin(), vecDoc.cend(), doc);
+                auto index = itFound != vecDoc.cend() ? itFound - vecDoc.cbegin() : -1;
+                if (index != -1)
+                    this->setCurrentDocumentIndex(index);
+            }
+        }
+    }
 }
 
 void MainWindow::onOperationFinished(bool ok, const QString &msg)
@@ -665,6 +713,40 @@ void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
                         tr("Error"),
                         tr("'%1'\nUnknown file format").arg(locAbsoluteFilePath));
         }
+    }
+}
+
+void MainWindow::onLeftContentsPageChanged(int pageId)
+{
+    m_ui->stack_LeftContents->setCurrentIndex(pageId);
+    QWidget* placeHolder =
+            m_ui->widget_LeftHeader->findChild<QWidget*>(
+                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
+    delete placeHolder;
+    placeHolder = new QWidget(m_ui->widget_LeftHeader);
+    placeHolder->setObjectName("LeftHeaderPlaceHolder");
+    auto layoutPlaceHolder = new QHBoxLayout(placeHolder);
+    layoutPlaceHolder->setContentsMargins(0, 0, 0, 0);
+    m_ui->Layout_WidgetLeftHeader->insertWidget(2, placeHolder);
+    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree) {
+        auto btnLinkWithRightCombo = new ButtonFlat(placeHolder);
+        const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
+        btnLinkWithRightCombo->setCheckable(true);
+        btnLinkWithRightCombo->setChecked(
+                    QSettings().value(Internal::keyLinkWithDocumentSelector, false)
+                    .toBool());
+        btnLinkWithRightCombo->setFixedSize(btnSideLen, btnSideLen);
+        btnLinkWithRightCombo->setIcon(QPixmap(":/images/link-button_16.png"));
+        btnLinkWithRightCombo->setToolTip(tr("Link With Document Selector"));
+        layoutPlaceHolder->addWidget(btnLinkWithRightCombo);
+        QObject::connect(btnLinkWithRightCombo, &ButtonFlat::clicked, [=]{
+            QSettings().setValue(
+                        Internal::keyLinkWithDocumentSelector,
+                        btnLinkWithRightCombo->isChecked());
+        });
+    }
+    else {
+        delete placeHolder;
     }
 }
 

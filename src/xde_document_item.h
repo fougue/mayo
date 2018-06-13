@@ -34,12 +34,35 @@
 #include <TDocStd_Document.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_ColorTool.hxx>
+#include <QtCore/QCoreApplication>
 
 namespace Mayo {
 
-class XdeDocumentItem : public PartItem
-{
+class XdeDocumentItem : public PartItem {
+    Q_DECLARE_TR_FUNCTIONS(XdeDocumentItem)
 public:
+    struct Label {
+        Label() = default;
+        Label(XdeDocumentItem* docItem, const TDF_Label& lbl);
+        static const Label& null();
+        XdeDocumentItem* xdeDocumentItem;
+        TDF_Label label;
+    };
+
+    struct ValidationProperties {
+        bool hasCentroid;
+        bool hasArea;
+        bool hasVolume;
+        gp_Pnt centroid;
+        QuantityArea area;
+        QuantityVolume volume;
+    };
+
+    enum class ShapePropertiesOption {
+        None,
+        MergeReferred
+    };
+
     XdeDocumentItem(const Handle_TDocStd_Document& doc);
 
     const Handle_TDocStd_Document& cafDoc() const;
@@ -65,15 +88,10 @@ public:
     TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
     TDF_Label shapeReferred(const TDF_Label& lbl) const;
 
-    struct ValidationProperties {
-        bool hasCentroid;
-        bool hasArea;
-        bool hasVolume;
-        gp_Pnt centroid;
-        QuantityArea area;
-        QuantityVolume volume;
-    };
     ValidationProperties validationProperties(const TDF_Label& lbl) const;
+    std::vector<HandleProperty> shapeProperties(
+            const TDF_Label& label,
+            ShapePropertiesOption opt = ShapePropertiesOption::None) const;
 
     static const char TypeName[];
     const char* dynTypeName() const override;

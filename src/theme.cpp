@@ -40,9 +40,12 @@ QColor Theme::color(Color role) const
     case Color::FlatBackground:
     case Color::ButtonView3dBackground:
         return QGuiApplication::palette().color(QPalette::Button);
+    case Color::FlatChecked:
+        return QGuiApplication::palette().color(QPalette::Button).darker(125);
     case Color::FlatHover:
         return QGuiApplication::palette().color(QPalette::Button).darker(110);
     case Color::ButtonView3dHover:
+    case Color::ButtonView3dChecked:
         return QColor(65, 200, 250);
     }
     return QColor();

@@ -41,7 +41,8 @@ namespace Mayo {
 ButtonFlat::ButtonFlat(QWidget *parent)
     : QWidget(parent),
       m_iconSize(16, 16),
-      m_hoverBrush(mayoTheme()->color(Theme::Color::FlatHover))
+      m_hoverBrush(mayoTheme()->color(Theme::Color::FlatHover)),
+      m_checkedBrush(mayoTheme()->color(Theme::Color::FlatChecked))
 {
     this->setBackgroundBrush(mayoTheme()->color(Theme::Color::FlatBackground));
     this->setFixedSize(24, 24);
@@ -117,6 +118,17 @@ void ButtonFlat::setHoverBrush(const QBrush &brush)
     this->update();
 }
 
+const QBrush &ButtonFlat::checkedBrush() const
+{
+    return m_checkedBrush;
+}
+
+void ButtonFlat::setCheckedBrush(const QBrush &brush)
+{
+    m_checkedBrush = brush;
+    this->update();
+}
+
 const QBrush &ButtonFlat::backgroundBrush() const
 {
     return this->palette().button();
@@ -137,7 +149,9 @@ void ButtonFlat::paintEvent(QPaintEvent*)
     const QPoint mousePos = this->mapFromGlobal(QCursor::pos());
     const bool isEnabled = this->isEnabled();
 
-    if (isEnabled && (surface.contains(mousePos) || this->isChecked()))
+    if (isEnabled && this->isChecked())
+        painter.fillRect(surface, m_checkedBrush);
+    else if (isEnabled && surface.contains(mousePos))
         painter.fillRect(surface, m_hoverBrush);
     else
         painter.fillRect(surface, this->backgroundBrush());
@@ -165,13 +179,13 @@ void ButtonFlat::leaveEvent(QEvent* event)
 void ButtonFlat::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        emit clicked();
         if (m_defaultAction != nullptr) {
             QSignalBlocker sigBlock(this); Q_UNUSED(sigBlock);
             m_defaultAction->trigger();
         }
         if (m_isCheckable)
             this->setChecked(!m_isChecked);
+        emit clicked();
     }
     QWidget::mouseReleaseEvent(event);
 }

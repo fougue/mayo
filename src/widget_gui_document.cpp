@@ -50,14 +50,11 @@ namespace Internal {
 static ButtonFlat* createViewBtn(
         QWidget* parent, QString imageFile, QString tooltip)
 {
-    const QBrush btnBackgroundBrush(
-                mayoTheme()->color(Theme::Color::ButtonView3dBackground));
-    const QBrush btnHoverBrush(
-                mayoTheme()->color(Theme::Color::ButtonView3dHover));
     auto btn = new ButtonFlat(parent);
     imageFile = imageFile.contains('.') ? imageFile : (imageFile + ".png");
-    btn->setBackgroundBrush(btnBackgroundBrush);
-    btn->setHoverBrush(btnHoverBrush);
+    btn->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonView3dBackground));
+    btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3dChecked));
+    btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3dHover));
     btn->setIcon(QIcon(QString(":/images/%1").arg(imageFile)));
     btn->setIconSize(QSize(16, 16));
     btn->setFixedSize(24, 24);

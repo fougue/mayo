@@ -53,7 +53,7 @@ public:
 
     void setGuiApplication(GuiApplication* guiApp);
 
-    void editDocumentItems(Span<DocumentItem*> spanDocItem);
+    void editDocumentItem(DocumentItem* docItem);
     void editProperties(Span<HandleProperty> vecHndProp);
 
 private:

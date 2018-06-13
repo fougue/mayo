@@ -271,12 +271,12 @@ void WidgetDocumentItemProps::setGuiApplication(GuiApplication *guiApp)
     m_guiApp = guiApp;
 }
 
-void WidgetDocumentItemProps::editDocumentItems(Span<DocumentItem*> spanDocItem)
+void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
 {
     m_currentVecHndProperty.clear();
-    if (spanDocItem.size() == 1) {
+    if (docItem != nullptr) {
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
-        m_currentDocItem = spanDocItem.at(0);
+        m_currentDocItem = docItem;
         const GuiDocument* guiDoc =
                 m_guiApp->findGuiDocument(m_currentDocItem->document());
         m_currentGpxDocItem = guiDoc->findItemGpx(m_currentDocItem);

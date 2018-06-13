@@ -41,10 +41,8 @@ class GuiApplication;
 class GuiDocument;
 class WidgetGuiDocument;
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
-
 public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
@@ -74,6 +72,7 @@ private:
     void onHomePageLinkActivated(const QString& link);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
+    void onLeftContentsPageChanged(int pageId);
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 

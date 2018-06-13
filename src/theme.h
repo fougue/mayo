@@ -36,8 +36,10 @@ namespace Mayo {
 struct Theme {
     enum class Color {
         FlatBackground,
+        FlatChecked,
         FlatHover,
         ButtonView3dBackground,
+        ButtonView3dChecked,
         ButtonView3dHover
     };
     enum class Image {

@@ -1,6 +1,7 @@
 #include "xde_document_item.h"
 
 #include "caf_utils.h"
+#include "string_utils.h"
 
 #include <Standard_GUID.hxx>
 #include <TDF_AttributeIterator.hxx>
@@ -10,6 +11,37 @@
 #include <XCAFDoc_Volume.hxx>
 
 namespace Mayo {
+
+namespace Internal {
+
+static void addValidationProperties(
+        const XdeDocumentItem::ValidationProperties& validationProps,
+        std::vector<HandleProperty>* ptrVecHndProp,
+        const QString& nameFormat = QStringLiteral("%1"))
+{
+    PropertyOwner* propOwner = nullptr;
+    const HandleProperty::Storage hndStorage = HandleProperty::Owner;
+    if (validationProps.hasCentroid) {
+        auto propCentroid = new PropertyOccPnt(
+                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Centroid")));
+        propCentroid->setValue(validationProps.centroid);
+        ptrVecHndProp->emplace_back(propCentroid, hndStorage);
+    }
+    if (validationProps.hasArea) {
+        auto propArea = new PropertyArea(
+                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Area")));
+        propArea->setQuantity(validationProps.area);
+        ptrVecHndProp->emplace_back(propArea, hndStorage);
+    }
+    if (validationProps.hasVolume) {
+        auto propVolume = new PropertyVolume(
+                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Volume")));
+        propVolume->setQuantity(validationProps.volume);
+        ptrVecHndProp->emplace_back(propVolume, hndStorage);
+    }
+}
+
+} // namespace Internal
 
 XdeDocumentItem::XdeDocumentItem(const Handle_TDocStd_Document &doc)
     : m_cafDoc(doc),
@@ -169,6 +201,77 @@ const char XdeDocumentItem::TypeName[] = "2a3efb26-cd32-432d-b95c-cdc64c3cf7d9";
 const char *XdeDocumentItem::dynTypeName() const
 {
     return XdeDocumentItem::TypeName;
+}
+
+std::vector<HandleProperty> XdeDocumentItem::shapeProperties(
+        const TDF_Label& label, ShapePropertiesOption opt) const
+{
+    std::vector<HandleProperty> vecHndProp;
+    const auto hndStorage = HandleProperty::Owner;
+
+    auto propShapeType = new PropertyQString(nullptr, tr("Shape"));
+    const TopAbs_ShapeEnum shapeType = this->shape(label).ShapeType();
+    propShapeType->setValue(
+                QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
+    vecHndProp.emplace_back(propShapeType, hndStorage);
+
+    QStringList listXdeShapeKind;
+    if (this->isShapeAssembly(label))
+        listXdeShapeKind.push_back(tr("Assembly"));
+    if (this->isShapeReference(label))
+        listXdeShapeKind.push_back(tr("Reference"));
+    if (this->isShapeComponent(label))
+        listXdeShapeKind.push_back(tr("Component"));
+    if (this->isShapeCompound(label))
+        listXdeShapeKind.push_back(tr("Compound"));
+    if (this->isShapeSimple(label))
+        listXdeShapeKind.push_back(tr("Simple"));
+    if (this->isShapeSub(label))
+        listXdeShapeKind.push_back(tr("Sub"));
+    auto propXdeShapeKind = new PropertyQString(nullptr, tr("XDE shape"));
+    propXdeShapeKind->setValue(listXdeShapeKind.join('+'));
+    vecHndProp.emplace_back(propXdeShapeKind, hndStorage);
+
+    if (this->isShapeReference(label)) {
+        const TopLoc_Location loc = this->shapeReferenceLocation(label);
+        auto propLoc = new PropertyOccTrsf(nullptr, tr("Location"));
+        propLoc->setValue(loc.Transformation());
+        vecHndProp.emplace_back(propLoc, hndStorage);
+    }
+    Internal::addValidationProperties(
+                this->validationProperties(label), &vecHndProp);
+    if (this->hasShapeColor(label)) {
+        auto propColor = new PropertyOccColor(nullptr, tr("Color"));
+        propColor->setValue(this->shapeColor(label));
+        vecHndProp.emplace_back(propColor, hndStorage);
+    }
+
+    if (this->isShapeReference(label)
+            && opt == ShapePropertiesOption::MergeReferred)
+    {
+        const TDF_Label referredLabel = this->shapeReferred(label);
+        Internal::addValidationProperties(
+                    this->validationProperties(referredLabel),
+                    &vecHndProp,
+                    tr("[Referred]%1"));
+        if (this->hasShapeColor(referredLabel)) {
+            auto propColor = new PropertyOccColor(nullptr, tr("[Referred]Color"));
+            propColor->setValue(this->shapeColor(referredLabel));
+            vecHndProp.emplace_back(propColor, hndStorage);
+        }
+    }
+    return vecHndProp;
+}
+
+XdeDocumentItem::Label::Label(XdeDocumentItem *docItem, const TDF_Label &lbl)
+    : xdeDocumentItem(docItem),
+      label(lbl)
+{}
+
+const XdeDocumentItem::Label &XdeDocumentItem::Label::null()
+{
+    static const Label lbl = { nullptr, TDF_Label() };
+    return lbl;
 }
 
 } // namespace Mayo

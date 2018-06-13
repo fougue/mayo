@@ -60,6 +60,9 @@ public:
     const QBrush& hoverBrush() const;
     void setHoverBrush(const QBrush& brush);
 
+    const QBrush& checkedBrush() const;
+    void setCheckedBrush(const QBrush& brush);
+
     const QBrush& backgroundBrush() const;
     void setBackgroundBrush(const QBrush& brush);
 
@@ -80,6 +83,7 @@ private:
     QIcon m_icon;
     QSize m_iconSize;
     QBrush m_hoverBrush;
+    QBrush m_checkedBrush;
     QAction* m_defaultAction = nullptr;
 };
 
