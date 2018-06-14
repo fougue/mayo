@@ -36,6 +36,7 @@
 #include <QtCore/QObject>
 #include <string>
 #include <vector>
+class QFileInfo;
 
 namespace qttask { class Progress; }
 
@@ -81,14 +82,19 @@ public:
 #endif
     };
 
+    using ArrayDocument = std::vector<Document*>;
+    using ArrayDocumentConstIterator = ArrayDocument::const_iterator;
+
     // -- API
     static Application* instance();
 
-    const std::vector<Document*>& documents() const;
+    const ArrayDocument& documents() const;
 
     Document* createDocument(const QString& label = QString());
     void addDocument(Document* doc);
     bool eraseDocument(Document* doc);
+
+    ArrayDocumentConstIterator findDocumentByLocation(const QFileInfo& loc) const;
 
     static const std::vector<PartFormat>& partFormats();
     static QString partFormatFilter(PartFormat format);

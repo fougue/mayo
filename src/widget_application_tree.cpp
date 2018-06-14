@@ -271,6 +271,7 @@ void WidgetApplicationTree::onDocumentAdded(Document *doc)
             !doc->label().isEmpty() ? doc->label() : tr("<unnamed>");
     treeItem->setText(0, docLabel);
     treeItem->setIcon(0, QPixmap(":/images/file_16.png"));
+    treeItem->setToolTip(0, doc->filePath());
     Internal::setTreeItemDocument(treeItem, doc);
     assert(Internal::treeItemDocument(treeItem) == doc);
     m_ui->treeWidget_App->addTopLevelItem(treeItem);

@@ -227,7 +227,7 @@ template<> struct CafReaderTraits<IGESCAFControl_Reader> {
     static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
         return reader.WS();
     }
-    static void setPropsMode(ReaderType*, bool) { }
+    static void setPropsMode(ReaderType*, bool) { /* N/A */ }
 };
 
 template<> struct CafReaderTraits<STEPCAFControl_Reader> {
@@ -493,6 +493,19 @@ bool Application::eraseDocument(Document *doc)
         return true;
     }
     return false;
+}
+
+Application::ArrayDocumentConstIterator
+Application::findDocumentByLocation(const QFileInfo& loc) const
+{
+    const QString locAbsoluteFilePath = loc.absoluteFilePath();
+    auto itDocFound = std::find_if(
+                m_documents.cbegin(),
+                m_documents.cend(),
+                [=](const Document* doc) {
+        return QFileInfo(doc->filePath()).absoluteFilePath() == locAbsoluteFilePath;
+    });
+    return itDocFound;
 }
 
 Application::IoResult Application::importInDocument(

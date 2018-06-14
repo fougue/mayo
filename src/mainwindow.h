@@ -31,7 +31,6 @@
 
 #include "application.h"
 #include <QtWidgets/QMainWindow>
-#include <functional>
 class QFileInfo;
 
 namespace Mayo {
@@ -53,9 +52,13 @@ signals:
     void operationFinished(bool ok, const QString& msg);
     void currentDocumentIndexChanged(int docIdx);
 
+protected:
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+
 private:
-    void newDoc();
-    void openPartInNewDoc();
+    void newDocument();
+    void openDocuments();
     void importInCurrentDoc();
     void exportSelectedItems();
     void quitApp();
@@ -76,8 +79,7 @@ private:
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 
-    void foreachOpenFileName(
-            std::function<void (Application::PartFormat, QString)>&& func);
+    void openDocumentsFromList(const QStringList& listFilePath);
     void runImportTask(
             Document* doc,
             Application::PartFormat format,

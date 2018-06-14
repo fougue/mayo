@@ -60,6 +60,9 @@
 #include <QtGui/QDesktopServices>
 #include <QtCore/QStringListModel>
 #include <QtWidgets/QApplication>
+#include <QtGui/QDragEnterEvent>
+#include <QtGui/QDropEvent>
+#include <QtCore/QMimeData>
 #include <QtWidgets/QFileDialog>
 
 namespace Mayo {
@@ -70,28 +73,35 @@ static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
 static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
 static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
 
-class DocumentModel : public QStringListModel {
+class DocumentListModel : public QStringListModel {
 public:
-    DocumentModel(Application* app)
+    DocumentListModel(Application* app)
         : QStringListModel(app)
     {
         for (Document* doc : app->documents())
             this->appendDocument(doc);
         QObject::connect(
                     app, &Application::documentAdded,
-                    this, &DocumentModel::appendDocument);
+                    this, &DocumentListModel::appendDocument);
         QObject::connect(
                     app, &Application::documentErased,
-                    this, &DocumentModel::removeDocument);
+                    this, &DocumentListModel::removeDocument);
+    }
+
+    QVariant data(const QModelIndex& index, int role) const override
+    {
+        if (index.isValid() && role == Qt::ToolTipRole)
+            return m_docs.at(index.row())->filePath();
+        return QStringListModel::data(index, role);
     }
 
 private:
-    void appendDocument(Document* doc)
+    void appendDocument(const Document* doc)
     {
         const int rowId = this->rowCount();
         this->insertRow(rowId);
-        this->setData(this->index(rowId), doc->label());
-        //this->setData(this->index(rowId), doc->filePath(), Qt::ToolTipRole);
+        const QModelIndex indexRow = this->index(rowId);
+        this->setData(indexRow, doc->label());
         m_docs.emplace_back(doc);
     }
 
@@ -182,6 +192,7 @@ struct OpenFileNames {
                     result.lastIoSettings.selectedFilter != allFilesFilter ?
                         partFormatFromFilter(result.lastIoSettings.selectedFilter) :
                         Application::PartFormat::Unknown;
+            ImportExportSettings::save(result.lastIoSettings);
         }
         return result;
     }
@@ -194,6 +205,14 @@ static gp_Pnt pointUnderMouse(const GuiDocument* guiDoc, const QPoint& pos)
     if (ctx->HasDetected() && ctx->MainSelector()->NbPicked() > 0)
         return ctx->MainSelector()->PickedPoint(1);
     return GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos.x(), pos.y());
+}
+
+static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
+{
+    qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                parent,
+                MainWindow::tr("Error"),
+                MainWindow::tr("'%1'\nUnknown file format").arg(filepath));
 }
 
 } // namespace Internal
@@ -279,7 +298,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     new DialogTaskManager(this);
 
-    auto docModel = new Internal::DocumentModel(Application::instance());
+    auto docModel = new Internal::DocumentListModel(Application::instance());
     m_ui->combo_GuiDocuments->setModel(docModel);
     m_ui->listView_OpenedDocuments->setModel(docModel);
 
@@ -288,10 +307,10 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
-                this, &MainWindow::newDoc);
+                this, &MainWindow::newDocument);
     QObject::connect(
                 m_ui->actionOpen, &QAction::triggered,
-                this, &MainWindow::openPartInNewDoc);
+                this, &MainWindow::openDocuments);
     QObject::connect(
                 m_ui->actionImport, &QAction::triggered,
                 this, &MainWindow::importInCurrentDoc);
@@ -386,6 +405,9 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
 
+    this->setAcceptDrops(true);
+    //this->centralWidget()->setAcceptDrops(true);
+    //this->centralWidget()->installEventFilter(this);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
@@ -414,29 +436,42 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         funcSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
         return true;
     }
-    if (watched == m_ui->widget_LeftHeader&& event->type() == QEvent::Show) {
+    if (watched == m_ui->widget_LeftHeader && event->type() == QEvent::Show) {
         funcSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
         return true;
     }
     return false;
 }
 
-void MainWindow::newDoc()
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    const QList<QUrl> listUrl = event->mimeData()->urls();
+    QStringList listFilePath;
+    for (const QUrl& url : listUrl) {
+        if (url.isLocalFile())
+            listFilePath.push_back(url.toLocalFile());
+    }
+    event->acceptProposedAction();
+    this->openDocumentsFromList(listFilePath);
+}
+
+void MainWindow::newDocument()
 {
     Document* doc = Application::instance()->createDocument();
     Application::instance()->addDocument(doc);
 }
 
-void MainWindow::openPartInNewDoc()
+void MainWindow::openDocuments()
 {
-    this->foreachOpenFileName(
-                [=](Application::PartFormat format, QString filepath) {
-        const QFileInfo fi(filepath);
-        Document* doc = Application::instance()->createDocument(fi.fileName());
-        doc->setFilePath(fi.absoluteFilePath());
-        Application::instance()->addDocument(doc);
-        this->runImportTask(doc, format, filepath);
-    });
+    const auto resFileNames = Internal::OpenFileNames::get(this);
+    if (!resFileNames.listFilepath.isEmpty())
+        this->openDocumentsFromList(resFileNames.listFilepath);
 }
 
 void MainWindow::importInCurrentDoc()
@@ -444,10 +479,19 @@ void MainWindow::importInCurrentDoc()
     auto widgetGuiDoc = this->widgetGuiDocument(this->currentDocumentIndex());
     if (widgetGuiDoc != nullptr) {
         Document* doc = widgetGuiDoc->guiDocument()->document();
-        this->foreachOpenFileName(
-                    [=](Application::PartFormat format, QString filepath) {
-            this->runImportTask(doc, format, filepath);
-        });
+        const auto resFileNames = Internal::OpenFileNames::get(this);
+        if (!resFileNames.listFilepath.isEmpty()) {
+            const Application::PartFormat userFormat = resFileNames.selectedFormat;
+            const bool hasUserFormat = userFormat != Application::PartFormat::Unknown;
+            for (const QString& filepath : resFileNames.listFilepath) {
+                const Application::PartFormat fileFormat =
+                        hasUserFormat ? userFormat : Application::findPartFormat(filepath);
+                if (fileFormat != Application::PartFormat::Unknown)
+                    this->runImportTask(doc, fileFormat, filepath);
+                else
+                    Internal::msgBoxErrorFileFormat(this, filepath);
+            }
+        }
     }
 }
 
@@ -686,34 +730,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
 {
-    const QString locAbsoluteFilePath = loc.absoluteFilePath();
-    const std::vector<Document*> vecDocument = Application::instance()->documents();
-    // Try to find any existing document with the same filepath
-    auto itDocFound = std::find_if(
-                vecDocument.cbegin(),
-                vecDocument.cend(),
-                [=](const Document* doc) {
-        return QFileInfo(doc->filePath()).absoluteFilePath() == locAbsoluteFilePath;
-    });
-    if (itDocFound != vecDocument.cend()) {
-        this->setCurrentDocumentIndex(itDocFound - vecDocument.cbegin());
-    }
-    else {
-        const Application::PartFormat fileFormat =
-                Application::findPartFormat(locAbsoluteFilePath);
-        if (fileFormat != Application::PartFormat::Unknown) {
-            Document* doc = Application::instance()->createDocument(loc.fileName());
-            doc->setFilePath(locAbsoluteFilePath);
-            Application::instance()->addDocument(doc);
-            this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
-        }
-        else {
-            qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                        this,
-                        tr("Error"),
-                        tr("'%1'\nUnknown file format").arg(locAbsoluteFilePath));
-        }
-    }
+    this->openDocumentsFromList(QStringList(loc.absoluteFilePath()));
 }
 
 void MainWindow::onLeftContentsPageChanged(int pageId)
@@ -766,27 +783,30 @@ void MainWindow::closeDocument(int docIndex)
     }
 }
 
-void MainWindow::foreachOpenFileName(
-        std::function<void (Application::PartFormat, QString)>&& func)
+void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
-    const auto resFileNames = Internal::OpenFileNames::get(this);
-    if (!resFileNames.listFilepath.isEmpty()) {
-        for (const QString& filepath : resFileNames.listFilepath) {
+    const Application::ArrayDocument& vecDocument = Application::instance()->documents();
+    for (const QString& filePath : listFilePath) {
+        const QFileInfo loc(filePath);
+        auto itDocFound = Application::instance()->findDocumentByLocation(loc);
+        if (itDocFound == vecDocument.cend()) {
+            const QString locAbsoluteFilePath = loc.absoluteFilePath();
             const Application::PartFormat fileFormat =
-                    resFileNames.selectedFormat != Application::PartFormat::Unknown ?
-                        resFileNames.selectedFormat :
-                        Application::findPartFormat(filepath);
+                    Application::findPartFormat(locAbsoluteFilePath);
             if (fileFormat != Application::PartFormat::Unknown) {
-                func(fileFormat, filepath);
+                Document* doc = Application::instance()->createDocument(loc.fileName());
+                doc->setFilePath(QDir::toNativeSeparators(locAbsoluteFilePath));
+                Application::instance()->addDocument(doc);
+                this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
             }
             else {
-                qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                            this,
-                            tr("Error"),
-                            tr("'%1'\nUnknown file format").arg(filepath));
+                Internal::msgBoxErrorFileFormat(this, locAbsoluteFilePath);
             }
         }
-        Internal::ImportExportSettings::save(resFileNames.lastIoSettings);
+        else {
+            if (listFilePath.size() == 1)
+                this->setCurrentDocumentIndex(itDocFound - vecDocument.cbegin());
+        }
     }
 }
 
