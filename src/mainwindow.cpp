@@ -39,6 +39,7 @@
 #include "dialog_task_manager.h"
 #include "document.h"
 #include "document_item.h"
+#include "document_list_model.h"
 #include "gpx_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
@@ -72,50 +73,6 @@ namespace Internal {
 static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
 static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
 static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
-
-class DocumentListModel : public QStringListModel {
-public:
-    DocumentListModel(Application* app)
-        : QStringListModel(app)
-    {
-        for (Document* doc : app->documents())
-            this->appendDocument(doc);
-        QObject::connect(
-                    app, &Application::documentAdded,
-                    this, &DocumentListModel::appendDocument);
-        QObject::connect(
-                    app, &Application::documentErased,
-                    this, &DocumentListModel::removeDocument);
-    }
-
-    QVariant data(const QModelIndex& index, int role) const override
-    {
-        if (index.isValid() && role == Qt::ToolTipRole)
-            return m_docs.at(index.row())->filePath();
-        return QStringListModel::data(index, role);
-    }
-
-private:
-    void appendDocument(const Document* doc)
-    {
-        const int rowId = this->rowCount();
-        this->insertRow(rowId);
-        const QModelIndex indexRow = this->index(rowId);
-        this->setData(indexRow, doc->label());
-        m_docs.emplace_back(doc);
-    }
-
-    void removeDocument(const Document* doc)
-    {
-        auto itFound = std::find(m_docs.begin(), m_docs.end(), doc);
-        if (itFound != m_docs.end()) {
-            this->removeRow(itFound - m_docs.begin());
-            m_docs.erase(itFound);
-        }
-    }
-
-    std::vector<const Document*> m_docs;
-};
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
@@ -298,7 +255,7 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     new DialogTaskManager(this);
 
-    auto docModel = new Internal::DocumentListModel(Application::instance());
+    auto docModel = new DocumentListModel(Application::instance());
     m_ui->combo_GuiDocuments->setModel(docModel);
     m_ui->listView_OpenedDocuments->setModel(docModel);
 
