@@ -1,3 +1,9 @@
+/****************************************************************************
+** Copyright (c) 2018, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
 #pragma once
 
 #include <QtWidgets/QDialog>
@@ -6,10 +12,8 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
-class DialogInspectXde : public QDialog
-{
+class DialogInspectXde : public QDialog {
     Q_OBJECT
-
 public:
     DialogInspectXde(QWidget *parent = nullptr);
     ~DialogInspectXde();
