@@ -31,6 +31,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QPalette>
+#include <QtWidgets/QComboBox>
 
 namespace Mayo {
 
@@ -60,6 +61,36 @@ QString Theme::imageUrl(Theme::Image img) const
         return ":/images/down_disabled_8.png";
     }
     return QString();
+}
+
+void Theme::makeFlat(QComboBox *comboBox)
+{
+    const QString comboStyleSheet = QString(
+            "QComboBox {"
+            "    border-style: solid;"
+            "    background: %1;"
+            "    padding: 2px 15px 2px 10px;"
+            "}\n"
+            "QComboBox:hover {"
+            "    border-style: solid;"
+            "    background: %2;"
+            "    padding: 2px 15px 2px 10px;"
+            "}\n"
+            "QComboBox::drop-down {"
+            "    subcontrol-origin: padding;"
+            "    subcontrol-position: top right;"
+            "    width: 15px;"
+            "    border-left-width: 0px;"
+            "    border-top-right-radius: 3px;"
+            "    border-bottom-right-radius: 3px;"
+            "}\n"
+            "QComboBox::down-arrow { image: url(%3); }\n"
+            "QComboBox::down-arrow:disabled { image: url(%4); }\n"
+            ).arg(this->color(Theme::Color::FlatBackground).name(),
+                  this->color(Theme::Color::FlatHover).name(),
+                  this->imageUrl(Theme::Image::FlatDownIndicator),
+                  this->imageUrl(Theme::Image::FlatDownIndicatorDisabled));
+    comboBox->setStyleSheet(comboStyleSheet);
 }
 
 Theme *mayoTheme()

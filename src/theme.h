@@ -30,6 +30,7 @@
 #pragma once
 
 #include <QtGui/QColor>
+class QComboBox;
 
 namespace Mayo {
 
@@ -48,6 +49,8 @@ struct Theme {
     };
     QColor color(Color role) const;
     QString imageUrl(Image img) const;
+
+    void makeFlat(QComboBox* comboBox);
 
 private:
     Theme() = default;

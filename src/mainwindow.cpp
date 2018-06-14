@@ -200,35 +200,8 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
     m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
 
     // Style sheet for the combo boxes just below the menu bar
-    {
-        const QString comboStyleSheet = QString(
-                "QComboBox {"
-                "    border-style: solid;"
-                "    background: %1;"
-                "    padding: 2px 15px 2px 10px;"
-                "}\n"
-                "QComboBox:hover {"
-                "    border-style: solid;"
-                "    background: %2;"
-                "    padding: 2px 15px 2px 10px;"
-                "}\n"
-                "QComboBox::drop-down {"
-                "    subcontrol-origin: padding;"
-                "    subcontrol-position: top right;"
-                "    width: 15px;"
-                "    border-left-width: 0px;"
-                "    border-top-right-radius: 3px;"
-                "    border-bottom-right-radius: 3px;"
-                "}\n"
-                "QComboBox::down-arrow { image: url(%3); }\n"
-                "QComboBox::down-arrow:disabled { image: url(%4); }\n"
-                ).arg(mayoTheme()->color(Theme::Color::FlatBackground).name(),
-                      mayoTheme()->color(Theme::Color::FlatHover).name(),
-                      mayoTheme()->imageUrl(Theme::Image::FlatDownIndicator),
-                      mayoTheme()->imageUrl(Theme::Image::FlatDownIndicatorDisabled));
-        m_ui->combo_GuiDocuments->setStyleSheet(comboStyleSheet);
-        m_ui->combo_LeftContents->setStyleSheet(comboStyleSheet);
-    }
+    mayoTheme()->makeFlat(m_ui->combo_GuiDocuments);
+    mayoTheme()->makeFlat(m_ui->combo_LeftContents);
 
     // Opened documents GUI
     {
@@ -363,8 +336,6 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 this, &MainWindow::onOperationFinished);
 
     this->setAcceptDrops(true);
-    //this->centralWidget()->setAcceptDrops(true);
-    //this->centralWidget()->installEventFilter(this);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
