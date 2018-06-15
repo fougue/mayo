@@ -74,15 +74,20 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         return BaseV3dViewController::eventFilter(watched, event);
     Handle_V3d_View view = m_widgetView->v3dView();
 
-    //const Qt::KeyboardModifiers keybMods = QApplication::queryKeyboardModifiers();
-
     switch (event->type()) {
     case QEvent::MouseButtonPress: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
         m_prevPos = currPos;
         if (mouseEvent->button() == Qt::LeftButton) {
+            this->setViewCursor(Internal::rotateCursor());
+            this->setStateRotation(true);
             view->StartRotation(currPos.x(), currPos.y());
+            return true;
+        }
+        else if (mouseEvent->button() == Qt::RightButton) {
+            this->setViewCursor(Qt::SizeAllCursor);
+            this->setStatePanning(true);
             return true;
         }
         break;
@@ -94,16 +99,13 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         m_prevPos = currPos;
         emit mouseMoved(currPos);
 
-        if (QApplication::mouseButtons() == Qt::LeftButton) {
-            this->setViewCursor(Internal::rotateCursor());
+        const Qt::MouseButtons mouseButtons = QApplication::mouseButtons();
+        if (mouseButtons == Qt::LeftButton && this->isRotating()) {
             view->Rotation(currPos.x(), currPos.y());
-            this->setStateRotation(true);
             return true;
         }
-        else if (QApplication::mouseButtons() == Qt::RightButton) {
-            this->setViewCursor(Qt::SizeAllCursor);
+        else if (mouseButtons == Qt::RightButton && this->isPanning()) {
             view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
-            this->setStatePanning(true);
             return true;
         }
         break;
