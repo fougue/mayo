@@ -7,14 +7,19 @@
 #include "gui_application.h"
 
 #include "application.h"
+#include "application_item_selection_model.h"
 #include "document.h"
 #include "gui_document.h"
+
+#include <unordered_set>
 
 namespace Mayo {
 
 GuiApplication::GuiApplication(QObject *parent)
     : QObject(parent)
 {
+    m_selectionModel = new ApplicationItemSelectionModel(this);
+
     auto app = Application::instance();
     QObject::connect(
                 app, &Application::documentAdded,
@@ -22,6 +27,19 @@ GuiApplication::GuiApplication(QObject *parent)
     QObject::connect(
                 app, &Application::documentErased,
                 this, &GuiApplication::onDocumentErased);
+
+    QObject::connect(
+                m_selectionModel, &ApplicationItemSelectionModel::changed,
+                this, &GuiApplication::onApplicationItemSelectionChanged);
+    QObject::connect(
+                m_selectionModel, &ApplicationItemSelectionModel::cleared,
+                this, &GuiApplication::onApplicationItemSelectionCleared);
+}
+
+GuiApplication *GuiApplication::instance()
+{
+    static GuiApplication app;
+    return &app;
 }
 
 GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
@@ -31,6 +49,11 @@ GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
                 m_vecDocGuiDoc.cend(),
                 [=](const Doc_GuiDoc& pair) { return pair.doc == doc; });
     return itFound != m_vecDocGuiDoc.cend() ? itFound->guiDoc : nullptr;
+}
+
+ApplicationItemSelectionModel* GuiApplication::selectionModel() const
+{
+    return m_selectionModel;
 }
 
 void GuiApplication::onDocumentAdded(Document *doc)
@@ -52,6 +75,33 @@ void GuiApplication::onDocumentErased(const Document *doc)
         m_vecDocGuiDoc.erase(itFound);
         emit guiDocumentErased(guiDoc);
     }
+}
+
+void GuiApplication::onApplicationItemSelectionCleared()
+{
+    for (Doc_GuiDoc pair : m_vecDocGuiDoc) {
+        pair.guiDoc->clearItemSelection();
+        pair.guiDoc->updateV3dViewer();
+    }
+}
+
+void GuiApplication::onApplicationItemSelectionChanged(
+        Span<ApplicationItem> selected, Span<ApplicationItem> deselected)
+{
+    std::unordered_set<GuiDocument*> setGuiDocDirty;
+    auto funcToggleItemSelected = [&](const ApplicationItem& item) {
+        GuiDocument* guiDoc = this->findGuiDocument(item.document());
+        if (guiDoc != nullptr) {
+            guiDoc->toggleItemSelected(item);
+            setGuiDocDirty.insert(guiDoc);
+        }
+    };
+    for (const ApplicationItem& item : selected)
+        funcToggleItemSelected(item);
+    for (const ApplicationItem& item : deselected)
+        funcToggleItemSelected(item);
+    for (GuiDocument* guiDoc : setGuiDocDirty)
+        guiDoc->updateV3dViewer();
 }
 
 } // namespace Mayo

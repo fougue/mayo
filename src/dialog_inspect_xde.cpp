@@ -22,6 +22,7 @@
 #include <TDataStd_Name.hxx>
 #include <TDataStd_TreeNode.hxx>
 #include <TDataStd_UAttribute.hxx>
+#include <TNaming_NamedShape.hxx>
 #include <XCAFDoc_Area.hxx>
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_Color.hxx>
@@ -46,6 +47,19 @@ namespace Internal {
 enum TreeWidgetItemRole {
     TreeWidgetItem_TdfLabelRole = Qt::UserRole + 1
 };
+
+static const char* rawText(TNaming_Evolution evolution)
+{
+    switch (evolution) {
+    case TNaming_PRIMITIVE : return "PRIMITIVE";
+    case TNaming_GENERATED : return "GENERATED";
+    case TNaming_MODIFY : return "MODIFY";
+    case TNaming_DELETE : return "DELETE";
+    case TNaming_REPLACE : return "REPLACE";
+    case TNaming_SELECTED : return "SELECTED";
+    }
+    return "??";
+}
 
 static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeItem)
 {
@@ -92,6 +106,13 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
             value = StringUtils::text(
                         location.Get().Transformation(),
                         Options::instance()->unitSystemSchema());
+        }
+        else if (attrId == TNaming_NamedShape::GetID()) {
+            const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);
+            text = "TNaming_NamedShape";
+            value = DialogInspectXde::tr("ShapeType=%1, Evolution=%2")
+                    .arg(StringUtils::rawText(namedShape.Get().ShapeType()))
+                    .arg(rawText(namedShape.Evolution()));
         }
         else {
             std::stringstream sstream;

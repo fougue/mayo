@@ -52,7 +52,6 @@ HEADERS += \
     src/widget_message_indicator.h \
     src/widget_occ_view.h \
     src/xde_document_item.h \
-    src/xde_shape_explorer.h \
     src/theme.h \
     src/gpx_utils.h \
     src/math_utils.h \
@@ -61,7 +60,11 @@ HEADERS += \
     src/quantity.h \
     src/unit_system.h \
     src/widget_file_system.h \
-    src/document_list_model.h
+    src/document_list_model.h \
+    src/application_item.h \
+    src/brep_utils.h \
+    src/libtree.h \
+    src/application_item_selection_model.h
 
 SOURCES += \
     src/application.cpp \
@@ -102,7 +105,6 @@ SOURCES += \
     src/widget_message_indicator.cpp \
     src/widget_occ_view.cpp \
     src/xde_document_item.cpp \
-    src/xde_shape_explorer.cpp \
     src/theme.cpp \
     src/gpx_utils.cpp \
     src/math_utils.cpp \
@@ -111,7 +113,10 @@ SOURCES += \
     src/quantity.cpp \
     src/unit_system.cpp \
     src/widget_file_system.cpp \
-    src/document_list_model.cpp
+    src/document_list_model.cpp \
+    src/application_item.cpp \
+    src/brep_utils.cpp \
+    src/application_item_selection_model.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -156,7 +161,7 @@ LIBS += -lTKG2d
 LIBS += -lTKBRep -lTKSTL
 LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
 LIBS += -lTKMeshVS -lTKXSDRAW
-LIBS += -lTKLCAF -lTKXCAF
+LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKG3d
 LIBS += -lTKGeomBase
 

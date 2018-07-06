@@ -53,6 +53,7 @@ QString StringUtils::text(const Quantity_Color &color, const QString &format)
 
 const char* StringUtils::rawText(TopAbs_ShapeEnum shapeType)
 {
+    // TODO Replace maybe by TopAbs::ShapeTypeToString()
     switch (shapeType) {
     case TopAbs_COMPOUND: return "TopAbs_COMPOUND";
     case TopAbs_COMPSOLID: return "TopAbs_COMPSOLID";

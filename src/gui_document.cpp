@@ -6,7 +6,9 @@
 
 #include "gui_document.h"
 
+#include "application_item.h"
 #include "bnd_utils.h"
+#include "brep_utils.h"
 #include "document.h"
 #include "document_item.h"
 #include "gpx_document_item.h"
@@ -22,6 +24,7 @@
 #include <Graphic3d_GraphicDriver.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
+#include <StdSelect_BRepOwner.hxx>
 
 #include <cassert>
 
@@ -138,11 +141,8 @@ const Handle_AIS_InteractiveContext &GuiDocument::aisInteractiveContext() const
 
 GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem *item) const
 {
-    auto itFound = std::find_if(
-                m_vecDocItemGpx.cbegin(),
-                m_vecDocItemGpx.cend(),
-                [=](const DocumentItem_Gpx& pair) { return pair.item == item; });
-    return itFound != m_vecDocItemGpx.cend() ? itFound->gpx : nullptr;
+    const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
+    return guiDocItem != nullptr ? guiDocItem->gpxDocItem : nullptr;
 }
 
 const Bnd_Box &GuiDocument::gpxBoundingBox() const
@@ -150,12 +150,77 @@ const Bnd_Box &GuiDocument::gpxBoundingBox() const
     return m_gpxBoundingBox;
 }
 
+void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
+{
+    if (appItem.document() != this->document())
+        return;
+    if (appItem.isXdeAssemblyNode()) {
+        const XdeAssemblyNode& xdeAsmNode = appItem.xdeAssemblyNode();
+        const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
+        const GuiDocumentItem* guiItem = this->findGuiDocumentItem(xdeItem);
+        if (guiItem != nullptr) {
+            const TopLoc_Location shapeLoc =
+                    xdeItem->shapeAbsoluteLocation(xdeAsmNode.nodeId);
+            const TopoDS_Shape shape =
+                    xdeItem->shape(xdeAsmNode.label()).Located(shapeLoc);
+            std::vector<TopoDS_Face> vecFace;
+            if (BRepUtils::moreComplex(shape.ShapeType(), TopAbs_FACE)) {
+                BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
+                    vecFace.push_back(face);
+                });
+            }
+            else if (shape.ShapeType() == TopAbs_FACE) {
+                vecFace.push_back(TopoDS::Face(shape));
+            }
+            for (const TopoDS_Face& face : vecFace) {
+                auto brepOwner = guiItem->findBrepOwner(face);
+                if (!brepOwner.IsNull())
+                    m_aisContext->AddOrRemoveSelected(brepOwner, false);
+            }
+        }
+    }
+    else if (appItem.isDocumentItem()) {
+        const GpxDocumentItem* gpxItem = this->findItemGpx(appItem.documentItem());
+        if (gpxItem != nullptr)
+            m_aisContext->AddOrRemoveSelected(gpxItem->handleGpxObject(), false);
+    }
+    else if (appItem.isDocument()) {
+        for (const DocumentItem* docItem : appItem.document()->rootItems()) {
+            const GpxDocumentItem* gpxItem = this->findItemGpx(docItem);
+            if (gpxItem != nullptr)
+                m_aisContext->AddOrRemoveSelected(gpxItem->handleGpxObject(), false);
+        }
+    }
+}
+
+void GuiDocument::clearItemSelection()
+{
+    m_aisContext->ClearSelected(false);
+}
+
+void GuiDocument::updateV3dViewer()
+{
+    m_aisContext->UpdateCurrentViewer();
+}
+
 void GuiDocument::onItemAdded(DocumentItem *item)
 {
-    const DocumentItem_Gpx pair = { item, Internal::createGpxForItem(item) };
-    const Handle_AIS_InteractiveObject aisObject = pair.gpx->handleGpxObject();
+    GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
+    const Handle_AIS_InteractiveObject aisObject = guiItem.gpxDocItem->handleGpxObject();
     m_aisContext->Display(aisObject, true);
-    m_vecDocItemGpx.emplace_back(std::move(pair));
+    if (sameType<XdeDocumentItem>(item)) {
+        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_VERTEX));
+        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_EDGE));
+        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_FACE));
+//        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_SOLID));
+        opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+        m_aisContext->EntityOwners(
+                    mapEntityOwner, aisObject, AIS_Shape::SelectionMode(TopAbs_FACE));
+        guiItem.vecGpxEntityOwner.reserve(mapEntityOwner->Extent());
+        for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
+            guiItem.vecGpxEntityOwner.push_back(std::move(*it));
+    }
+    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
     GpxUtils::V3dView_fitAll(m_v3dView);
     BndUtils::add(&m_gpxBoundingBox, BndUtils::get(aisObject));
     emit gpxBoundingBoxChanged(m_gpxBoundingBox);
@@ -164,24 +229,52 @@ void GuiDocument::onItemAdded(DocumentItem *item)
 void GuiDocument::onItemErased(const DocumentItem *item)
 {
     auto itFound = std::find_if(
-                m_vecDocItemGpx.begin(),
-                m_vecDocItemGpx.end(),
-                [=](const DocumentItem_Gpx& pair) { return pair.item == item; });
-    if (itFound != m_vecDocItemGpx.end()) {
+                m_vecGuiDocumentItem.begin(),
+                m_vecGuiDocumentItem.end(),
+                [=](const GuiDocumentItem& guiItem) { return guiItem.docItem == item; });
+    if (itFound != m_vecGuiDocumentItem.end()) {
         // Delete gpx item
-        GpxDocumentItem* gpxDocItem = itFound->gpx;
+        GpxDocumentItem* gpxDocItem = itFound->gpxDocItem;
         GpxUtils::AisContext_eraseObject(m_aisContext, gpxDocItem->handleGpxObject());
         delete gpxDocItem;
-        m_vecDocItemGpx.erase(itFound);
+        m_vecGuiDocumentItem.erase(itFound);
 
         // Recompute bounding box
         m_gpxBoundingBox.SetVoid();
-        for (const DocumentItem_Gpx& pair : m_vecDocItemGpx) {
-            const Bnd_Box otherBox = BndUtils::get(pair.gpx->handleGpxObject());
+        for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
+            const Bnd_Box otherBox = BndUtils::get(guiItem.gpxDocItem->handleGpxObject());
             BndUtils::add(&m_gpxBoundingBox, otherBox);
         }
         emit gpxBoundingBoxChanged(m_gpxBoundingBox);
     }
+}
+
+const GuiDocument::GuiDocumentItem*
+GuiDocument::findGuiDocumentItem(const DocumentItem *item) const
+{
+    auto itFound = std::find_if(
+                m_vecGuiDocumentItem.cbegin(),
+                m_vecGuiDocumentItem.cend(),
+                [=](const GuiDocumentItem& guiItem) { return guiItem.docItem == item; });
+    return itFound != m_vecGuiDocumentItem.cend() ? &(*itFound) : nullptr;
+}
+
+GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem *item, GpxDocumentItem *gpx)
+    : docItem(item), gpxDocItem(gpx)
+{
+}
+
+Handle_SelectMgr_EntityOwner GuiDocument::GuiDocumentItem::findBrepOwner(const TopoDS_Face& face) const
+{
+    auto itFound = std::find_if(
+                vecGpxEntityOwner.cbegin(),
+                vecGpxEntityOwner.cend(),
+                [=](const Handle_SelectMgr_EntityOwner& owner) {
+        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
+        return !brepOwner.IsNull() ? brepOwner->Shape() == face : false;
+    });
+    return itFound != vecGpxEntityOwner.cend() ?
+                *itFound : Handle_SelectMgr_EntityOwner();
 }
 
 } // namespace Mayo

@@ -67,7 +67,7 @@ bool Document::eraseRootItem(DocumentItem *docItem)
     return false;
 }
 
-const std::vector<DocumentItem *> &Document::rootItems() const
+const std::vector<DocumentItem*>& Document::rootItems() const
 {
     return m_rootItems;
 }

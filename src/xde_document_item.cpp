@@ -54,6 +54,7 @@ XdeDocumentItem::XdeDocumentItem(const Handle_TDocStd_Document &doc)
       m_shapeTool(XCAFDoc_DocumentTool::ShapeTool(doc->Main())),
       m_colorTool(XCAFDoc_DocumentTool::ColorTool(doc->Main()))
 {
+    this->rebuildAssemblyTree();
 }
 
 const Handle_TDocStd_Document &XdeDocumentItem::cafDoc() const
@@ -71,9 +72,26 @@ const Handle_XCAFDoc_ColorTool &XdeDocumentItem::colorTool() const
     return m_colorTool;
 }
 
+void XdeDocumentItem::rebuildAssemblyTree()
+{
+    m_asmTree.clear();
+    for (const TDF_Label& rootLabel : this->topLevelFreeShapes())
+        this->deepBuildAssemblyTree(0, rootLabel);
+}
+
+const Tree<TDF_Label> &XdeDocumentItem::assemblyTree() const
+{
+    return m_asmTree;
+}
+
 bool XdeDocumentItem::isShape(const TDF_Label &lbl) const
 {
     return m_shapeTool->IsShape(lbl);
+}
+
+bool XdeDocumentItem::isShapeFree(const TDF_Label &lbl) const
+{
+    return m_shapeTool->IsFree(lbl);
 }
 
 TopoDS_Shape XdeDocumentItem::shape(const TDF_Label &lbl) const
@@ -107,11 +125,9 @@ QString XdeDocumentItem::findLabelName(const TDF_Label &lbl) const
     return name;
 }
 
-TDF_LabelSequence XdeDocumentItem::topLevelFreeShapeLabels() const
+QString XdeDocumentItem::findLabelName(AssemblyNodeId nodeId) const
 {
-    TDF_LabelSequence seq;
-    m_shapeTool->GetFreeShapes(seq);
-    return seq;
+    return this->findLabelName(m_asmTree.nodeData(nodeId));
 }
 
 bool XdeDocumentItem::isShapeAssembly(const TDF_Label &lbl) const
@@ -175,6 +191,19 @@ TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl) const
     return referred;
 }
 
+TopLoc_Location XdeDocumentItem::shapeAbsoluteLocation(AssemblyNodeId nodeId) const
+{
+    TopLoc_Location absoluteLoc;
+    AssemblyNodeId it = nodeId;
+    while (it != 0) {
+        const TDF_Label& nodeLabel = m_asmTree.nodeData(it);
+        const TopLoc_Location nodeLoc = m_shapeTool->GetLocation(nodeLabel);
+        absoluteLoc = nodeLoc * absoluteLoc;
+        it = m_asmTree.nodeParent(it);
+    }
+    return absoluteLoc;
+}
+
 XdeDocumentItem::ValidationProperties XdeDocumentItem::validationProperties(
         const TDF_Label &lbl) const
 {
@@ -207,6 +236,24 @@ const char XdeDocumentItem::TypeName[] = "2a3efb26-cd32-432d-b95c-cdc64c3cf7d9";
 const char *XdeDocumentItem::dynTypeName() const
 {
     return XdeDocumentItem::TypeName;
+}
+
+void XdeDocumentItem::deepBuildAssemblyTree(
+        AssemblyNodeId parentNode, const TDF_Label &label)
+{
+    const AssemblyNodeId node = m_asmTree.appendChild(parentNode, label);
+    if (this->isShapeAssembly(label)) {
+        for (const TDF_Label& child : this->shapeComponents(label))
+            this->deepBuildAssemblyTree(node, child);
+    }
+    else if (this->isShapeSimple(label)) {
+        for (const TDF_Label& child : this->shapeSubs(label))
+            this->deepBuildAssemblyTree(node, child);
+    }
+    else if (this->isShapeReference(label)) {
+        const TDF_Label referred = this->shapeReferred(label);
+        this->deepBuildAssemblyTree(node, referred);
+    }
 }
 
 std::vector<HandleProperty> XdeDocumentItem::shapeProperties(
@@ -269,15 +316,29 @@ std::vector<HandleProperty> XdeDocumentItem::shapeProperties(
     return vecHndProp;
 }
 
-XdeDocumentItem::Label::Label(XdeDocumentItem *docItem, const TDF_Label &lbl)
-    : xdeDocumentItem(docItem),
-      label(lbl)
+XdeAssemblyNode::XdeAssemblyNode(
+        XdeDocumentItem* docItem, XdeDocumentItem::AssemblyNodeId nde)
+    : ownerDocItem(docItem),
+      nodeId(nde)
 {}
 
-const XdeDocumentItem::Label &XdeDocumentItem::Label::null()
+bool XdeAssemblyNode::isValid() const
 {
-    static const Label lbl = { nullptr, TDF_Label() };
-    return lbl;
+    return this->ownerDocItem != nullptr && this->nodeId != 0;
+}
+
+const TDF_Label &XdeAssemblyNode::label() const
+{
+    static const TDF_Label nullLabel;
+    return this->ownerDocItem != nullptr ?
+                this->ownerDocItem->assemblyTree().nodeData(this->nodeId) :
+                nullLabel;
+}
+
+const XdeAssemblyNode &XdeAssemblyNode::null()
+{
+    static const XdeAssemblyNode node = {};
+    return node;
 }
 
 } // namespace Mayo

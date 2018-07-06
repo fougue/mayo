@@ -39,11 +39,6 @@ void DocumentItem::setDocument(Document *doc)
     m_document = doc;
 }
 
-const std::vector<DocumentItem*>& DocumentItem::outItems() const
-{
-    return m_vecOutItem;
-}
-
 void DocumentItem::onPropertyChanged(Property *prop)
 {
     if (m_document != nullptr)

@@ -14,10 +14,10 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     : GpxCovariantDocumentItem(item),
       GpxBRepShapeCommonProperties(this)
 {
-    const TDF_LabelSequence seqShapeLabel = item->topLevelFreeShapeLabels();
-    assert(seqShapeLabel.Size() <= 1);
-    if (!seqShapeLabel.IsEmpty()) {
-        m_hndGpxObject = new XCAFPrs_AISObject(seqShapeLabel.First());
+    const std::vector<TDF_Label> vecFreeShape = item->topLevelFreeShapes();
+    assert(vecFreeShape.size() <= 1);
+    if (!vecFreeShape.empty()) {
+        m_hndGpxObject = new XCAFPrs_AISObject(vecFreeShape.front());
         GpxDocumentItem::initForGpxBRepShape(m_hndGpxObject);
         GpxBRepShapeCommonProperties::initCommonProperties(this, m_hndGpxObject);
     }

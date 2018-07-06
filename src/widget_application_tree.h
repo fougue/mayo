@@ -6,54 +6,26 @@
 
 #pragma once
 
+#include "application_item.h"
 #include "property.h"
 #include "xde_document_item.h"
 
 #include <QtWidgets/QWidget>
+class QItemSelection;
 class QTreeWidgetItem;
 
 namespace Mayo {
 
-class Document;
-class DocumentItem;
-class XdeDocumentItem;
-
 class WidgetApplicationTree : public QWidget {
     Q_OBJECT
 public:
-    struct Item {
-        Item() = default;
-        Item(Document* doc);
-        Item(DocumentItem* docItem);
-        Item(const XdeDocumentItem::Label& lbl);
-
-        bool isValid() const;
-        bool isDocument() const;
-        bool isDocumentItem() const;
-        bool isXdeDocumentItemLabel() const;
-
-        Document* document() const;
-        DocumentItem* documentItem() const;
-        const XdeDocumentItem::Label& xdeDocumentItemLabel() const;
-
-    private:
-        Document* m_doc;
-        DocumentItem* m_docItem;
-        XdeDocumentItem::Label m_xdeDocLabel;
-    };
+    using Item = ApplicationItem;
 
     WidgetApplicationTree(QWidget* widget = nullptr);
     ~WidgetApplicationTree();
 
-    std::vector<Item> selectedItems() const;
-    bool hasSelectedDocumentItems() const;
-    std::vector<DocumentItem*> selectedDocumentItems() const;
-
     bool isMergeXdeReferredShapeOn() const;
     void setMergeXdeReferredShape(bool on);
-
-signals:
-    void selectionChanged();
 
 private:
     void onDocumentAdded(Document* doc);
@@ -62,10 +34,11 @@ private:
     void onDocumentItemPropertyChanged(
             const DocumentItem* docItem, const Property* prop);
 
-    void onTreeWidgetDocumentSelectionChanged();
+    void onTreeWidgetDocumentSelectionChanged(
+            const QItemSelection &selected, const QItemSelection &deselected);
 
     QTreeWidgetItem* loadDocumentItem(DocumentItem* docItem);
-    void loadXdeShapeStructure(
+    void guiBuildXdeTree(
             QTreeWidgetItem* treeDocItem, XdeDocumentItem* xdeDocItem);
 
     QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;

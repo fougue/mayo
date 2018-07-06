@@ -243,11 +243,6 @@ WidgetDocumentItemProps::~WidgetDocumentItemProps()
     delete m_ui;
 }
 
-void WidgetDocumentItemProps::setGuiApplication(GuiApplication *guiApp)
-{
-    m_guiApp = guiApp;
-}
-
 void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
 {
     m_currentVecHndProperty.clear();
@@ -255,7 +250,7 @@ void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
         m_currentDocItem = docItem;
         const GuiDocument* guiDoc =
-                m_guiApp->findGuiDocument(m_currentDocItem->document());
+                GuiApplication::instance()->findGuiDocument(m_currentDocItem->document());
         m_currentGpxDocItem = guiDoc->findItemGpx(m_currentDocItem);
         this->refreshAllQtProperties();
     }

@@ -4,7 +4,6 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "gui_application.h"
 #include "mainwindow.h"
 #include <QtWidgets/QApplication>
 
@@ -17,9 +16,8 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("Mayo");
     QApplication::setApplicationVersion("0.1");
 
-    Mayo::GuiApplication guiApp;
-    Mayo::MainWindow w(&guiApp);
-    w.show();
+    Mayo::MainWindow mainWindow;
+    mainWindow.show();
 
     return app.exec();
 }

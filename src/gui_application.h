@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "application_item_selection_model.h"
 #include <QtCore/QObject>
 #include <vector>
 
@@ -18,9 +19,11 @@ class GuiDocument;
 class GuiApplication : public QObject {
     Q_OBJECT
 public:
-    GuiApplication(QObject* parent = nullptr);
+    static GuiApplication* instance();
 
     GuiDocument* findGuiDocument(const Document* doc) const;
+
+    ApplicationItemSelectionModel* selectionModel() const;
 
 signals:
     void guiDocumentAdded(GuiDocument* guiDoc);
@@ -31,12 +34,19 @@ protected:
     void onDocumentErased(const Document* doc);
 
 private:
+    void onApplicationItemSelectionCleared();
+    void onApplicationItemSelectionChanged(
+            Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
+
+    GuiApplication(QObject* parent = nullptr);
+
     struct Doc_GuiDoc {
         Document* doc;
         GuiDocument* guiDoc;
     };
 
     std::vector<Doc_GuiDoc> m_vecDocGuiDoc;
+    ApplicationItemSelectionModel* m_selectionModel = nullptr;
 };
 
 } // namespace Mayo

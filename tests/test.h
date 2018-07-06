@@ -11,6 +11,8 @@ class Test : public QObject {
 private slots:
   void Quantity_test();
   void UnitSystem_test();
+
+  void LibTree_test();
 };
 
 } // namespace Mayo

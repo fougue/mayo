@@ -12,9 +12,11 @@
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
 #include <vector>
+class TopoDS_Face;
 
 namespace Mayo {
 
+class ApplicationItem;
 class Document;
 class DocumentItem;
 class GpxDocumentItem;
@@ -31,6 +33,11 @@ public:
 
     const Bnd_Box& gpxBoundingBox() const;
 
+    void toggleItemSelected(const ApplicationItem& appItem);
+    void clearItemSelection();
+
+    void updateV3dViewer();
+
 signals:
     void gpxBoundingBoxChanged(const Bnd_Box& bndBox);
 
@@ -38,16 +45,22 @@ private:
     void onItemAdded(DocumentItem* item);
     void onItemErased(const DocumentItem* item);
 
-    struct DocumentItem_Gpx {
-        DocumentItem* item;
-        GpxDocumentItem* gpx;
+    using ArrayGpxEntityOwner = std::vector<Handle_SelectMgr_EntityOwner>;
+    struct GuiDocumentItem {
+        GuiDocumentItem() = default;
+        GuiDocumentItem(DocumentItem* item, GpxDocumentItem* gpx);
+        DocumentItem* docItem;
+        GpxDocumentItem* gpxDocItem;
+        ArrayGpxEntityOwner vecGpxEntityOwner;
+        Handle_SelectMgr_EntityOwner findBrepOwner(const TopoDS_Face& face) const;
     };
+    const GuiDocumentItem* findGuiDocumentItem(const DocumentItem* item) const;
 
     Document* m_document = nullptr;
     Handle_V3d_Viewer m_v3dViewer;
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveContext m_aisContext;
-    std::vector<DocumentItem_Gpx> m_vecDocItemGpx;
+    std::vector<GuiDocumentItem> m_vecGuiDocumentItem;
     Bnd_Box m_gpxBoundingBox;
 };
 

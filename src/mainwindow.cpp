@@ -8,6 +8,8 @@
 #include "ui_mainwindow.h"
 
 #include "application.h"
+#include "application_item_selection_model.h"
+#include "brep_utils.h"
 #include "dialog_about.h"
 #include "dialog_export_options.h"
 #include "dialog_inspect_xde.h"
@@ -151,9 +153,8 @@ static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
 
 } // namespace Internal
 
-MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-      m_guiApp(guiApp),
       m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
@@ -169,7 +170,6 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
-    m_ui->widget_DocumentProps->setGuiApplication(guiApp);
     m_ui->widget_DocumentProps->editDocumentItem(nullptr);
 
     m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
@@ -293,11 +293,13 @@ MainWindow::MainWindow(GuiApplication *guiApp, QWidget *parent)
                 m_ui->combo_LeftContents, sigComboIndexChanged,
                 this, &MainWindow::onLeftContentsPageChanged);
     QObject::connect(
-                guiApp, &GuiApplication::guiDocumentAdded,
+                GuiApplication::instance(), &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                m_ui->widget_ApplicationTree, &WidgetApplicationTree::selectionChanged,
-                this, &MainWindow::onApplicationTreeWidgetSelectionChanged);
+                GuiApplication::instance()->selectionModel(),
+                &ApplicationItemSelectionModel::changed,
+                this,
+                &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 [=](const QModelIndex& index) {
@@ -465,7 +467,7 @@ void MainWindow::exportSelectedItems()
         const Application::PartFormat format =
                 Internal::partFormatFromFilter(lastSettings.selectedFilter);
         const std::vector<DocumentItem*> vecDocItem =
-                m_ui->widget_ApplicationTree->selectedDocumentItems();
+                GuiApplication::instance()->selectionModel()->selectedDocumentItems();
         if (Application::hasExportOptionsForFormat(format)) {
 #ifdef HAVE_GMIO
             auto dlg = new DialogExportOptions(this);
@@ -509,7 +511,7 @@ void MainWindow::saveImageView()
 void MainWindow::inspectXde()
 {
     const std::vector<DocumentItem*> vecDocItem =
-            m_ui->widget_ApplicationTree->selectedDocumentItems();
+            GuiApplication::instance()->selectionModel()->selectedDocumentItems();
     const XdeDocumentItem* xdeDocItem = nullptr;
     for (const DocumentItem* docItem : vecDocItem) {
         xdeDocItem = dynamic_cast<const XdeDocumentItem*>(docItem);
@@ -557,37 +559,31 @@ void MainWindow::reportbug()
                 QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
 }
 
-void MainWindow::onApplicationTreeWidgetSelectionChanged()
+void MainWindow::onApplicationItemSelectionChanged()
 {
     const WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
     WidgetDocumentItemProps* uiDocProps = m_ui->widget_DocumentProps;
 
-    const auto vecTreeItem = uiAppTree->selectedItems();
-    if (vecTreeItem.size() == 1) {
-        const WidgetApplicationTree::Item& item = vecTreeItem.front();
-        if (item.isDocumentItem()) {
-            uiDocProps->editDocumentItem(item.documentItem());
-        }
-        else if (item.isXdeDocumentItemLabel()) {
-            const XdeDocumentItem::ShapePropertiesOption optProps =
+    Span<const ApplicationItem> spanAppItem =
+            GuiApplication::instance()->selectionModel()->selectedItems();
+    if (spanAppItem.size() == 1) {
+        const ApplicationItem& item = spanAppItem.at(0);
+        if (item.isXdeAssemblyNode()) {
+            const XdeAssemblyNode& xdeAsmNode = item.xdeAssemblyNode();
+            const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
+            const TDF_Label& xdeLabel = xdeAsmNode.label();
+            using ShapePropsOption = XdeDocumentItem::ShapePropertiesOption;
+            const ShapePropsOption opt =
                     uiAppTree->isMergeXdeReferredShapeOn() ?
-                        XdeDocumentItem::ShapePropertiesOption::MergeReferred :
-                        XdeDocumentItem::ShapePropertiesOption::None;
-            const XdeDocumentItem* xdeDocItem =
-                    item.xdeDocumentItemLabel().xdeDocumentItem;
-            uiDocProps->editProperties(
-                        xdeDocItem->shapeProperties(
-                            item.xdeDocumentItemLabel().label, optProps));
+                        ShapePropsOption::MergeReferred : ShapePropsOption::None;
+            uiDocProps->editProperties(xdeItem->shapeProperties(xdeLabel, opt));
         }
         else {
-            uiDocProps->editDocumentItem(nullptr);
+            uiDocProps->editDocumentItem(item.documentItem());
         }
-    }
 
-    if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
-        const auto vecTreeItem = uiAppTree->selectedItems();
-        if (vecTreeItem.size() == 1) {
-            const Document* doc = vecTreeItem.front().document();
+        if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
+            const Document* doc = item.document();
             if (doc != nullptr) {
                 const std::vector<Document*>& vecDoc = Application::instance()->documents();
                 auto itFound = std::find(vecDoc.cbegin(), vecDoc.cend(), doc);
@@ -596,6 +592,9 @@ void MainWindow::onApplicationTreeWidgetSelectionChanged()
                     this->setCurrentDocumentIndex(index);
             }
         }
+    }
+    else {
+        // TODO
     }
 }
 

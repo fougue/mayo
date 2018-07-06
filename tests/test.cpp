@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include "../src/libtree.h"
 #include "../src/unit.h"
 #include "../src/unit_system.h"
 
@@ -41,6 +42,27 @@ void Test::UnitSystem_test()
     for (const TranslateResult_Test& test : array) {
         QCOMPARE(test.first, test.second);
     }
+}
+
+void Test::LibTree_test()
+{
+    const TreeNodeId nullptrId = 0;
+    Tree<std::string> tree;
+    TreeNodeId n0 = tree.appendChild(0, "0");
+    TreeNodeId n0_1 = tree.appendChild(n0, "0-1");
+    TreeNodeId n0_2 = tree.appendChild(n0, "0-2");
+    TreeNodeId n0_1_1 = tree.appendChild(n0_1, "0-1-1");
+    TreeNodeId n0_1_2 = tree.appendChild(n0_1, "0-1-2");
+
+    QCOMPARE(tree.nodeParent(n0_1), n0);
+    QCOMPARE(tree.nodeParent(n0_2), n0);
+    QCOMPARE(tree.nodeParent(n0_1_1), n0_1);
+    QCOMPARE(tree.nodeParent(n0_1_2), n0_1);
+    QCOMPARE(tree.nodeChildFirst(n0_1), n0_1_1);
+    QCOMPARE(tree.nodeChildLast(n0_1), n0_1_2);
+    QCOMPARE(tree.nodeSiblingNext(n0_1_1), n0_1_2);
+    QCOMPARE(tree.nodeSiblingPrevious(n0_1_2), n0_1_1);
+    QCOMPARE(tree.nodeSiblingNext(n0_1_2), nullptrId);
 }
 
 } // namespace Mayo

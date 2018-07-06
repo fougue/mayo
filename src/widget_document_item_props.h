@@ -19,15 +19,12 @@ class QtVariantProperty;
 namespace Mayo {
 
 class DocumentItem;
-class GuiApplication;
 class GpxDocumentItem;
 
 class WidgetDocumentItemProps : public QWidget {
 public:
     WidgetDocumentItemProps(QWidget* parent = nullptr);
     ~WidgetDocumentItemProps();
-
-    void setGuiApplication(GuiApplication* guiApp);
 
     void editDocumentItem(DocumentItem* docItem);
     void editProperties(Span<HandleProperty> vecHndProp);
@@ -49,7 +46,6 @@ private:
         Property* prop;
     };
 
-    GuiApplication* m_guiApp = nullptr;
     class Ui_WidgetDocumentItemProps* m_ui = nullptr;
 
     DocumentItem* m_currentDocItem = nullptr;

@@ -25,18 +25,13 @@ public:
 
     PropertyQString propertyLabel;
 
-    const std::vector<DocumentItem*>& outItems() const; // For future use
-
     virtual const char* dynTypeName() const = 0;
 
 protected:
     void onPropertyChanged(Property* prop) override;
-    void addChildItem(DocumentItem* item);
-    void setParentItem(DocumentItem* parentItem);
 
 private:
     Document* m_document = nullptr;
-    std::vector<DocumentItem*> m_vecOutItem;
 };
 
 class PartItem : public DocumentItem {

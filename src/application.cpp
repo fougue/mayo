@@ -256,18 +256,17 @@ void loadCafDocumentFromFile(
 static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
 {
     TopoDS_Shape shape;
-    const TDF_LabelSequence seqTopLevelFreeShapeLabel =
-            xdeDocItem->topLevelFreeShapeLabels();
-    if (seqTopLevelFreeShapeLabel.Size() > 1) {
+    const std::vector<TDF_Label> vecFreeShape = xdeDocItem->topLevelFreeShapes();
+    if (vecFreeShape.size() > 1) {
         TopoDS_Compound cmpd;
         BRep_Builder builder;
         builder.MakeCompound(cmpd);
-        for (const TDF_Label& label : seqTopLevelFreeShapeLabel)
+        for (const TDF_Label& label : vecFreeShape)
             builder.Add(cmpd, xdeDocItem->shape(label));
         shape = cmpd;
     }
-    else if (seqTopLevelFreeShapeLabel.Size() == 1) {
-        shape = xdeDocItem->shape(seqTopLevelFreeShapeLabel.First());
+    else if (vecFreeShape.size() == 1) {
+        shape = xdeDocItem->shape(vecFreeShape.front());
     }
     return shape;
 }
@@ -294,13 +293,13 @@ static XdeDocumentItem* createXdeDocumentItem(
     xdeDocItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
 
     const Handle_XCAFDoc_ShapeTool& shapeTool = xdeDocItem->shapeTool();
-    const TDF_LabelSequence seqTopLevelFreeShapeLabel =
-            xdeDocItem->topLevelFreeShapeLabels();
-    if (seqTopLevelFreeShapeLabel.Size() > 1) {
+    const std::vector<TDF_Label> vecFreeShape = xdeDocItem->topLevelFreeShapes();
+    if (vecFreeShape.size() > 1) {
         const TDF_Label asmLabel = shapeTool->NewShape();
-        for (const TDF_Label& shapeLabel : seqTopLevelFreeShapeLabel)
+        for (const TDF_Label& shapeLabel : vecFreeShape)
             shapeTool->AddComponent(asmLabel, shapeLabel, TopLoc_Location());
         shapeTool->UpdateAssemblies();
+        xdeDocItem->rebuildAssemblyTree();
     }
 
     const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
@@ -425,7 +424,7 @@ Application *Application::instance()
     return &app;
 }
 
-const std::vector<Document *> &Application::documents() const
+const std::vector<Document*>& Application::documents() const
 {
     return m_documents;
 }
@@ -731,9 +730,7 @@ Application::IoResult Application::exportOccBRep(
     for (const DocumentItem* item : docItems) {
         if (sameType<XdeDocumentItem>(item)) {
             const auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
-            const TDF_LabelSequence seqTopLevelFreeShapeLabel =
-                    xdeDocItem->topLevelFreeShapeLabels();
-            for (const TDF_Label& label : seqTopLevelFreeShapeLabel)
+            for (const TDF_Label& label : xdeDocItem->topLevelFreeShapes())
                 vecShape.push_back(xdeDocItem->shape(label));
         }
     }

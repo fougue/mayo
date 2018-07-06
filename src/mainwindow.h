@@ -7,20 +7,21 @@
 #pragma once
 
 #include "application.h"
+#include "application_item.h"
+#include "application_item_selection_model.h"
 #include <QtWidgets/QMainWindow>
 class QFileInfo;
 
 namespace Mayo {
 
 class Document;
-class GuiApplication;
 class GuiDocument;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -47,7 +48,7 @@ private:
     void aboutMayo();
     void reportbug();
 
-    void onApplicationTreeWidgetSelectionChanged();
+    void onApplicationItemSelectionChanged();
     void onOperationFinished(bool ok, const QString& msg);
     void onHomePageLinkActivated(const QString& link);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
@@ -75,7 +76,6 @@ private:
 
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
 
-    GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
 };
