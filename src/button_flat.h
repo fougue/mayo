@@ -54,6 +54,7 @@ protected:
 private:
     void syncToAction();
 
+    bool m_isMouseHover = false;
     bool m_isCheckable = false;
     bool m_isChecked = false;
     QIcon m_icon;

@@ -12,6 +12,8 @@
 #include <QtGui/QPainter>
 #include <QtWidgets/QAction>
 
+#include <QtCore/QtDebug>
+
 namespace Mayo {
 
 ButtonFlat::ButtonFlat(QWidget *parent)
@@ -122,12 +124,12 @@ void ButtonFlat::paintEvent(QPaintEvent*)
     QPainter painter(this);
     const QRect frame = this->frameGeometry();
     const QRect surface(0, 0, frame.width(), frame.height());
-    const QPoint mousePos = this->mapFromGlobal(QCursor::pos());
+    //const QPoint mousePos = this->mapFromGlobal(QCursor::pos());
     const bool isEnabled = this->isEnabled();
 
     if (isEnabled && this->isChecked())
         painter.fillRect(surface, m_checkedBrush);
-    else if (isEnabled && surface.contains(mousePos))
+    else if (isEnabled && m_isMouseHover)
         painter.fillRect(surface, m_hoverBrush);
     else
         painter.fillRect(surface, this->backgroundBrush());
@@ -142,12 +144,14 @@ void ButtonFlat::paintEvent(QPaintEvent*)
 
 void ButtonFlat::enterEvent(QEvent* event)
 {
+    m_isMouseHover = true;
     this->update();
     QWidget::enterEvent(event);
 }
 
 void ButtonFlat::leaveEvent(QEvent* event)
 {
+    m_isMouseHover = false;
     this->update();
     QWidget::leaveEvent(event);
 }

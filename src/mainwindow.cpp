@@ -22,6 +22,7 @@
 #include "gpx_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
+#include "options.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
 #include "widget_application_tree.h"
@@ -35,15 +36,18 @@
 #include "fougtools/qttools/task/manager.h"
 #include "fougtools/qttools/task/runner_stdasync.h"
 
+#include <QtCore/QMimeData>
 #include <QtCore/QTime>
 #include <QtCore/QSettings>
-#include <QtGui/QDesktopServices>
 #include <QtCore/QStringListModel>
-#include <QtWidgets/QApplication>
+#include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
-#include <QtCore/QMimeData>
+#include <QtWidgets/QActionGroup>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QWidgetAction>
+#include <tuple>
 
 namespace Mayo {
 
@@ -52,6 +56,7 @@ namespace Internal {
 static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
 static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
 static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
+static const char keyReferenceItemTextTemplateId[] = "GUI/MainWindow_ReferenceItemTextTemplateId";
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
@@ -321,6 +326,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->updateControlsActivation();
     this->updateActionText(m_ui->actionFullscreenOrNormal);
     this->updateActionText(m_ui->actionShowHideLeftSidebar);
+    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+                Options::instance()->referenceItemTextTemplate());
 }
 
 MainWindow::~MainWindow()
@@ -640,16 +647,10 @@ void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
 void MainWindow::onLeftContentsPageChanged(int pageId)
 {
     m_ui->stack_LeftContents->setCurrentIndex(pageId);
-    QWidget* placeHolder =
-            m_ui->widget_LeftHeader->findChild<QWidget*>(
-                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
-    delete placeHolder;
-    placeHolder = new QWidget(m_ui->widget_LeftHeader);
-    placeHolder->setObjectName("LeftHeaderPlaceHolder");
-    auto layoutPlaceHolder = new QHBoxLayout(placeHolder);
-    layoutPlaceHolder->setContentsMargins(0, 0, 0, 0);
-    m_ui->Layout_WidgetLeftHeader->insertWidget(2, placeHolder);
-    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree) {
+    QWidget* placeHolder = this->recreateLeftHeaderPlaceHolder();
+    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree
+        && placeHolder != nullptr)
+    {
         auto btnLinkWithRightCombo = new ButtonFlat(placeHolder);
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
         btnLinkWithRightCombo->setCheckable(true);
@@ -659,16 +660,73 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
         btnLinkWithRightCombo->setFixedSize(btnSideLen, btnSideLen);
         btnLinkWithRightCombo->setIcon(QPixmap(":/images/link-button_16.png"));
         btnLinkWithRightCombo->setToolTip(tr("Link With Document Selector"));
-        layoutPlaceHolder->addWidget(btnLinkWithRightCombo);
+        placeHolder->layout()->addWidget(btnLinkWithRightCombo);
         QObject::connect(btnLinkWithRightCombo, &ButtonFlat::clicked, [=]{
             QSettings().setValue(
                         Internal::keyLinkWithDocumentSelector,
                         btnLinkWithRightCombo->isChecked());
         });
+
+        auto btnSettings = new ButtonFlat(placeHolder);
+        btnSettings->setFixedSize(btnSideLen, btnSideLen);
+        btnSettings->setIcon(QPixmap(":/images/reference-text-mode_16.png"));
+        btnSettings->setToolTip(tr("Text mode for assembly references"));
+        placeHolder->layout()->addWidget(btnSettings);
+        QObject::connect(
+                    btnSettings, &ButtonFlat::clicked,
+                    this, &MainWindow::onApplicationTreeReferenceSettingsClicked);
     }
     else {
         delete placeHolder;
     }
+}
+
+void MainWindow::onApplicationTreeReferenceSettingsClicked()
+{
+    auto menu = new QMenu(this->findLeftHeaderPlaceHolder());
+    menu->setToolTipsVisible(true);
+
+    auto group = new QActionGroup(menu);
+    group->setExclusive(true);
+    auto actionOnlyInstance = new QAction(tr("Reference"), menu);
+    actionOnlyInstance->setToolTip(tr("Show only name of reference"));
+    auto actionOnlyReferred = new QAction(tr("Referred"), menu);
+    actionOnlyReferred->setToolTip(tr("Show only name of referred entity"));
+    // UTF8 rightwards arrow : \xe2\x86\x92
+    auto actionInstanceAndReferred =
+            new QAction(tr("Reference \xe2\x86\x92 Referred"), menu);
+    actionInstanceAndReferred->setToolTip(
+                tr("Show name of reference and referred entity"));
+
+    Options* opts = Options::instance();
+    using TextMode = Options::ReferenceItemTextMode;
+    using MenuData = std::tuple<QAction*, TextMode>;
+    const std::vector<MenuData> arrayMenuData = {
+        { actionOnlyInstance, TextMode::ReferenceOnly },
+        { actionOnlyReferred, TextMode::ReferredOnly },
+        { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
+    };
+    for (const MenuData& menuData : arrayMenuData) {
+        QAction* action = std::get<0>(menuData);
+        action->setCheckable(true);
+        group->addAction(action);
+        menu->addAction(action);
+        if (std::get<1>(menuData) == opts->referenceItemTextMode())
+            action->setChecked(true);
+    }
+
+    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
+        for (const MenuData& menuData : arrayMenuData) {
+            if (std::get<0>(menuData) == action) {
+                const TextMode textMode = std::get<1>(menuData);
+                opts->setReferenceItemTextMode(textMode);
+                m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+                            Options::toReferenceItemTextTemplate(textMode));
+            }
+        }
+    });
+
+    qtgui::QWidgetUtils::asyncMenuExec(menu);
 }
 
 void MainWindow::closeCurrentDocument()
@@ -765,6 +823,25 @@ WidgetGuiDocument *MainWindow::widgetGuiDocument(int idx) const
 {
     return qobject_cast<WidgetGuiDocument*>(
                 m_ui->stack_GuiDocuments->widget(idx));
+}
+
+QWidget* MainWindow::findLeftHeaderPlaceHolder() const
+{
+    return m_ui->widget_LeftHeader->findChild<QWidget*>(
+        "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
+}
+
+QWidget *MainWindow::recreateLeftHeaderPlaceHolder()
+{
+    QWidget* placeHolder = this->findLeftHeaderPlaceHolder();
+    delete placeHolder;
+    placeHolder = new QWidget(m_ui->widget_LeftHeader);
+    placeHolder->setObjectName("LeftHeaderPlaceHolder");
+    auto layoutPlaceHolder = new QHBoxLayout(placeHolder);
+    layoutPlaceHolder->setContentsMargins(0, 0, 0, 0);
+    layoutPlaceHolder->setSpacing(0);
+    m_ui->Layout_WidgetLeftHeader->insertWidget(2, placeHolder);
+    return placeHolder;
 }
 
 } // namespace Mayo

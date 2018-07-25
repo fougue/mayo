@@ -19,6 +19,7 @@ static const char keyClipPlaneCappingOn[] = "ClipPlane/CappingOn";
 static const char keyClipPlaneCappingHatch[] = "ClipPlane/CappingHatch";
 static const char keyUnitSystemSchema[] = "UnitSystem/Schema";
 static const char keyUnitSystemDecimals[] = "UnitSystem/Decimals";
+static const char keyReferenceItemTextMode[] = "ModelTree/ReferenceItemTextMode";
 
 Options *Options::instance()
 {
@@ -165,6 +166,36 @@ void Options::setUnitSystemDecimals(int count)
         m_settings.setValue(keyUnitSystemDecimals, count);
         emit this->unitSystemDecimalsChanged(count);
     }
+}
+
+QString Options::toReferenceItemTextTemplate(Options::ReferenceItemTextMode mode)
+{
+    switch (mode) {
+    case ReferenceItemTextMode::ReferenceOnly:
+        return QStringLiteral("%instance");
+    case ReferenceItemTextMode::ReferredOnly:
+        return QStringLiteral("%referred");
+    case ReferenceItemTextMode::ReferenceAndReferred:
+        // UTF8 rightwards arrow : \xe2\x86\x92
+        return QString::fromUtf8("%instance \xe2\x86\x92 %referred");
+    }
+}
+
+QString Options::referenceItemTextTemplate() const
+{
+    return Options::toReferenceItemTextTemplate(this->referenceItemTextMode());
+}
+
+Options::ReferenceItemTextMode Options::referenceItemTextMode() const
+{
+    static const int defaultVal = static_cast<int>(ReferenceItemTextMode::ReferenceOnly);
+    const int val = m_settings.value(keyReferenceItemTextMode, defaultVal).toInt();
+    return static_cast<ReferenceItemTextMode>(val);
+}
+
+void Options::setReferenceItemTextMode(Options::ReferenceItemTextMode mode)
+{
+    m_settings.setValue(keyReferenceItemTextMode, static_cast<int>(mode));
 }
 
 } // namespace Mayo

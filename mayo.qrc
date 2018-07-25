@@ -36,5 +36,7 @@
         <file>images/left_sidebar.png</file>
         <file>images/link-button_16.png</file>
         <file>images/left-arrow-cross_16.png</file>
+        <file>images/settings_16.png</file>
+        <file>images/reference-text-mode_16.png</file>
     </qresource>
 </RCC>

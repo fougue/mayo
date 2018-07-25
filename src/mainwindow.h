@@ -54,10 +54,12 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
+    void onApplicationTreeReferenceSettingsClicked();
+
+    void openDocumentsFromList(const QStringList& listFilePath);
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 
-    void openDocumentsFromList(const QStringList& listFilePath);
     void runImportTask(
             Document* doc,
             Application::PartFormat format,
@@ -75,6 +77,8 @@ private:
     void setCurrentDocumentIndex(int idx);
 
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
+    QWidget* findLeftHeaderPlaceHolder() const;
+    QWidget* recreateLeftHeaderPlaceHolder();
 
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;

@@ -71,6 +71,18 @@ public:
         return UnitSystem::translate(Options::instance()->unitSystemSchema(), qty);
     }
 
+    // Model tree
+    enum class ReferenceItemTextMode {
+        ReferenceOnly,
+        ReferredOnly,
+        ReferenceAndReferred
+    };
+    static QString toReferenceItemTextTemplate(ReferenceItemTextMode mode);
+
+    QString referenceItemTextTemplate() const;
+    ReferenceItemTextMode referenceItemTextMode() const;
+    void setReferenceItemTextMode(ReferenceItemTextMode mode);
+
 signals:
     void clipPlaneCappingToggled(bool on);
     void clipPlaneCappingHatchChanged(Aspect_HatchStyle hatch);

@@ -229,6 +229,8 @@ WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
                 &QItemSelectionModel::selectionChanged,
                 this,
                 &WidgetApplicationTree::onTreeWidgetDocumentSelectionChanged);
+
+    m_refItemTextTemplate = QString::fromUtf8("%instance");
 }
 
 WidgetApplicationTree::~WidgetApplicationTree()
@@ -245,6 +247,46 @@ void WidgetApplicationTree::setMergeXdeReferredShape(bool on)
 {
     m_isMergeXdeReferredShapeOn = on;
     // TODO : reload XDE documents
+}
+
+const QString &WidgetApplicationTree::referenceItemTextTemplate() const
+{
+    return m_refItemTextTemplate;
+}
+
+QString WidgetApplicationTree::referenceItemText(
+        const XdeDocumentItem* xdeDocItem,
+        const TDF_Label& refLabel,
+        const TDF_Label& referredLabel) const
+{
+    const QString refName = xdeDocItem->findLabelName(refLabel).trimmed();
+    const QString referredName = xdeDocItem->findLabelName(referredLabel).trimmed();
+    //if (!refNodeName.isEmpty() && refNodeName != guiNodeText)
+    QString itemText = m_refItemTextTemplate;
+    itemText.replace("%instance", refName)
+            .replace("%referred", referredName);
+    return itemText;
+}
+
+void WidgetApplicationTree::setReferenceItemTextTemplate(const QString &textTemplate)
+{
+    m_refItemTextTemplate = textTemplate;
+
+    for (QTreeWidgetItemIterator it(m_ui->treeWidget_App); *it; ++it) {
+        QTreeWidgetItem* item = *it;
+        const Internal::TreeItemType itemType = Internal::treeItemType(item);
+        if (itemType == Internal::TreeItemType_XdeAssemblyNode) {
+            const XdeAssemblyNode asmNode = Internal::treeItemXdeAssemblyNode(item);
+            const XdeDocumentItem* docItem = asmNode.ownerDocItem;
+            if (docItem->isShapeReference(asmNode.label())) {
+                const TDF_Label& refLabel = asmNode.label();
+                const TDF_Label& referredLabel = docItem->shapeReferred(refLabel);
+                const QString itemText =
+                        this->referenceItemText(docItem, refLabel, referredLabel);
+                item->setText(0, itemText);
+            }
+        }
+    }
 }
 
 void WidgetApplicationTree::onDocumentAdded(Document *doc)
@@ -301,12 +343,7 @@ void WidgetApplicationTree::guiBuildXdeTree(
                 XdeDocumentItem::AssemblyNodeId guiNodeId = nodeId;
                 if (setRefNodeId.find(nodeParentId) != setRefNodeId.cend()) {
                     const TDF_Label& refLabel = asmTree.nodeData(nodeParentId);
-                    const QString refNodeName =
-                            xdeDocItem->findLabelName(refLabel).trimmed();
-                    if (!refNodeName.isEmpty() && refNodeName != guiNodeText) {
-                        guiNodeText = QString::fromUtf8("%1 [\xe2\x86\x92%2]") // UTF8 rightwards arrow
-                                      .arg(refNodeName, guiNodeText);
-                    }
+                    guiNodeText = this->referenceItemText(xdeDocItem, refLabel, nodeLabel);
                     guiNodeId = nodeParentId;
                 }
                 guiNode->setText(0, guiNodeText);

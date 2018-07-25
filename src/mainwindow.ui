@@ -33,7 +33,7 @@
     <item>
      <widget class="QStackedWidget" name="stack_Main">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_MainHome">
        <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -207,7 +207,7 @@
                <item>
                 <widget class="QStackedWidget" name="stack_LeftContents">
                  <property name="currentIndex">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <widget class="QWidget" name="page_ApplicationTree">
                   <layout class="QVBoxLayout" name="verticalLayout_2">

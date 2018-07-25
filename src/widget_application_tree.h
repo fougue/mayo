@@ -27,6 +27,9 @@ public:
     bool isMergeXdeReferredShapeOn() const;
     void setMergeXdeReferredShape(bool on);
 
+    const QString& referenceItemTextTemplate() const;
+    void setReferenceItemTextTemplate(const QString& textTemplate);
+
 private:
     void onDocumentAdded(Document* doc);
     void onDocumentErased(const Document* doc);
@@ -44,8 +47,14 @@ private:
     QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
     QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
 
+    QString referenceItemText(
+            const XdeDocumentItem* xdeDocItem,
+            const TDF_Label& refLabel,
+            const TDF_Label& referredLabel) const;
+
     class Ui_WidgetApplicationTree* m_ui = nullptr;
     bool m_isMergeXdeReferredShapeOn = true;
+    QString m_refItemTextTemplate;
 };
 
 } // namespace Mayo
