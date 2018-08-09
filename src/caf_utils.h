@@ -14,8 +14,8 @@
 namespace occ {
 
 struct CafUtils {
-    static QString labelTag(const TDF_Label &label);
-    static QString labelAttrStdName(const TDF_Label &label);
+    static QLatin1String labelTag(const TDF_Label& label);
+    static QString labelAttrStdName(const TDF_Label& label);
 
     static Handle_TDocStd_Document createXdeDocument(const char* format = "XmlXCAF");
 };

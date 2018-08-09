@@ -6,13 +6,14 @@
 namespace Mayo {
 
 class Test : public QObject {
-  Q_OBJECT
+    Q_OBJECT
 
 private slots:
-  void Quantity_test();
-  void UnitSystem_test();
+    void CafUtils_test();
+    void Quantity_test();
+    void UnitSystem_test();
 
-  void LibTree_test();
+    void LibTree_test();
 };
 
 } // namespace Mayo

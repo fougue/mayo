@@ -20,14 +20,14 @@ namespace Internal {
 static std::mutex mutex_XCAFApplication;
 } // namespace Internal
 
-QString CafUtils::labelTag(const TDF_Label &label)
+QLatin1String CafUtils::labelTag(const TDF_Label& label)
 {
-    TCollection_AsciiString entry;
+    static thread_local TCollection_AsciiString entry;
     TDF_Tool::Entry(label, entry);
-    return QString::fromUtf8(entry.ToCString());
+    return QLatin1String(entry.ToCString(), entry.Length());
 }
 
-QString CafUtils::labelAttrStdName(const TDF_Label &label)
+QString CafUtils::labelAttrStdName(const TDF_Label& label)
 {
     Handle_TDataStd_Name attrName;
     if (label.FindAttribute(TDataStd_Name::GetID(), attrName))

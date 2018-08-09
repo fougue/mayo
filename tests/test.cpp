@@ -21,6 +21,11 @@ static bool operator==(
             && std::abs(lhs.factor - rhs.factor) < 1e-6;
 }
 
+void Test::CafUtils_test()
+{
+    // TODO Add CafUtils::labelTag() test for multi-threaded safety
+}
+
 void Test::Quantity_test()
 {
     const QuantityArea area = (10 * Quantity_Millimeter) * (5 * Quantity_Centimeter);
