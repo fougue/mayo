@@ -64,6 +64,7 @@ public:
     static Application* instance();
 
     const ArrayDocument& documents() const;
+    int documentCount() const;
     Document* documentAt(int index) const;
 
     Document* createDocument(const QString& label = QString());

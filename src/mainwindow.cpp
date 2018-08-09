@@ -635,6 +635,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     });
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
+    this->setCurrentDocumentIndex(Application::instance()->documentCount() - 1);
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
@@ -774,7 +775,7 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 void MainWindow::updateControlsActivation()
 {
     const QWidget* currMainPage = m_ui->stack_Main->currentWidget();
-    const size_t appDocumentsCount = Application::instance()->documents().size();
+    const int appDocumentsCount = Application::instance()->documentCount();
     const bool appDocumentsEmpty = appDocumentsCount == 0;
     QWidget* newMainPage =
             appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
