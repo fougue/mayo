@@ -424,6 +424,12 @@ Application *Application::instance()
     return &app;
 }
 
+Document *Application::documentAt(int index) const
+{
+    const bool validIndex = 0 <= index && index < m_documents.size();
+    return validIndex ? m_documents.at(index) : nullptr;
+}
+
 const std::vector<Document*>& Application::documents() const
 {
     return m_documents;

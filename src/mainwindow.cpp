@@ -280,11 +280,9 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 this, &MainWindow::currentDocumentIndexChanged,
                 [=](int docIdx) {
-        auto widgetGuiDoc = this->widgetGuiDocument(docIdx);
-        if (widgetGuiDoc != nullptr) {
-            m_ui->widget_FileSystem->setLocation(
-                        widgetGuiDoc->guiDocument()->document()->filePath());
-        }
+        const Document* doc = Application::instance()->documentAt(docIdx);
+        if (doc != nullptr)
+            m_ui->widget_FileSystem->setLocation(doc->filePath());
     });
     QObject::connect(
                 m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
@@ -747,18 +745,19 @@ void MainWindow::closeDocument(int docIndex)
 
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
-    const Application::ArrayDocument& vecDocument = Application::instance()->documents();
+    auto app = Application::instance();
+    const Application::ArrayDocument& vecDocument = app->documents();
     for (const QString& filePath : listFilePath) {
         const QFileInfo loc(filePath);
-        auto itDocFound = Application::instance()->findDocumentByLocation(loc);
+        auto itDocFound = app->findDocumentByLocation(loc);
         if (itDocFound == vecDocument.cend()) {
             const QString locAbsoluteFilePath = loc.absoluteFilePath();
             const Application::PartFormat fileFormat =
                     Application::findPartFormat(locAbsoluteFilePath);
             if (fileFormat != Application::PartFormat::Unknown) {
-                Document* doc = Application::instance()->createDocument(loc.fileName());
+                Document* doc = app->createDocument(loc.fileName());
                 doc->setFilePath(QDir::toNativeSeparators(locAbsoluteFilePath));
-                Application::instance()->addDocument(doc);
+                app->addDocument(doc);
                 this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
             }
             else {
