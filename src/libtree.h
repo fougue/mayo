@@ -151,12 +151,9 @@ template<typename T, typename FUNC>
 void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FUNC& func)
 {
     func(node);
-    for (auto it = tree.nodeChildFirst(node);
-         it != 0;
-         it = tree.nodeSiblingNext(it))
-    {
+    const TreeNodeId childFirst = tree.nodeChildFirst(node);
+    for (auto it = childFirst; it != 0; it = tree.nodeSiblingNext(it))
         deepForeachTreeNode(it, tree, func);
-    }
 }
 
 template<typename T, typename FUNC>

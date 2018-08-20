@@ -22,7 +22,7 @@ namespace Internal {
 
 static void redisplayAndUpdateViewer(AIS_InteractiveObject* ptrGpx)
 {
-    ptrGpx->Redisplay(Standard_True); // All modes
+    ptrGpx->Redisplay(true); // All modes
     ptrGpx->GetContext()->UpdateCurrentViewer();
 }
 
@@ -40,8 +40,8 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
             new XSDRAWSTLVRML_DataSource(item->triangulation());
     Handle_MeshVS_Mesh meshVisu = new MeshVS_Mesh;
     meshVisu->SetDataSource(dataSource);
-    // meshVisu->AddBuilder(..., Standard_False); -> No selection
-    meshVisu->AddBuilder(new MeshVS_MeshPrsBuilder(meshVisu), Standard_True);
+    // meshVisu->AddBuilder(..., false); -> No selection
+    meshVisu->AddBuilder(new MeshVS_MeshPrsBuilder(meshVisu), true);
     // -- MeshVS_DrawerAttribute
     meshVisu->GetDrawer()->SetBoolean(
                 MeshVS_DA_ShowEdges, opts->meshDefaultShowEdges());
@@ -64,8 +64,7 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     Mayo_PropertyChangedBlocker(this);
     // -- Material
     Graphic3d_MaterialAspect materialAspect;
-    meshVisu->GetDrawer()->GetMaterial(
-                MeshVS_DA_FrontMaterial, materialAspect);
+    meshVisu->GetDrawer()->GetMaterial(MeshVS_DA_FrontMaterial, materialAspect);
     this->propertyMaterial.setValue(materialAspect.Name());
     // -- Color
     Quantity_Color color;
@@ -74,12 +73,12 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     // -- Display mode
     this->propertyDisplayMode.setValue(meshVisu->DisplayMode());
     // -- Show edges
-    Standard_Boolean boolVal;
+    bool boolVal;
     meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
-    this->propertyShowEdges.setValue(boolVal == Standard_True);
+    this->propertyShowEdges.setValue(boolVal);
     // -- Show nodes
     meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_DisplayNodes, boolVal);
-    this->propertyShowNodes.setValue(boolVal == Standard_True);
+    this->propertyShowNodes.setValue(boolVal);
 }
 
 void GpxMeshItem::onPropertyChanged(Property *prop)
@@ -101,7 +100,7 @@ void GpxMeshItem::onPropertyChanged(Property *prop)
     }
     else if (prop == &this->propertyDisplayMode) {
         cxt->SetDisplayMode(
-                    hndGpx, this->propertyDisplayMode.value(), Standard_True);
+                    hndGpx, this->propertyDisplayMode.value(), true);
         //ptrGpx->SetDisplayMode(this->propertyDisplayMode.value());
     }
     else if (prop == &this->propertyShowEdges) {
