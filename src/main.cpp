@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "mainwindow.h"
+#include "theme.h"
 #include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("Mayo");
     QApplication::setApplicationVersion("0.1");
 
+    Mayo::mayoTheme()->setup();
     Mayo::MainWindow mainWindow;
     mainWindow.show();
 

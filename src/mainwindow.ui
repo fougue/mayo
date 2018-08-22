@@ -183,7 +183,7 @@
                   <item>
                    <widget class="Line" name="line_SeparatorComboLeftContents">
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Plain</enum>
                     </property>
                     <property name="orientation">
                      <enum>Qt::Vertical</enum>
@@ -191,13 +191,16 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="ButtonFlat" name="btn_CloseLeftSideBar">
+                   <widget class="QToolButton" name="btn_CloseLeftSideBar">
                     <property name="toolTip">
                      <string>Close Left Side Bar</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../mayo.qrc">
-                      <normaloff>:/images/left-arrow-cross_16.png</normaloff>:/images/left-arrow-cross_16.png</iconset>
+                      <normaloff>:/images/themes/classic/left-arrow-cross_16.png</normaloff>:/images/themes/classic/left-arrow-cross_16.png</iconset>
+                    </property>
+                    <property name="autoRaise">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -294,19 +297,6 @@
               </layout>
              </widget>
             </item>
-            <item>
-             <widget class="Line" name="line_LeftRightSeparator">
-              <property name="frameShadow">
-               <enum>QFrame::Plain</enum>
-              </property>
-              <property name="lineWidth">
-               <number>1</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="widget_Right" native="true">
@@ -345,30 +335,36 @@
                 <number>0</number>
                </property>
                <item>
-                <widget class="ButtonFlat" name="btn_PreviousGuiDocument">
+                <widget class="QToolButton" name="btn_PreviousGuiDocument">
                  <property name="icon">
                   <iconset resource="../mayo.qrc">
-                   <normaloff>:/images/previous.png</normaloff>:/images/previous.png</iconset>
+                   <normaloff>:/images/themes/classic/back_32.png</normaloff>:/images/themes/classic/back_32.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
                    <width>12</width>
                    <height>12</height>
                   </size>
+                 </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="ButtonFlat" name="btn_NextGuiDocument">
+                <widget class="QToolButton" name="btn_NextGuiDocument">
                  <property name="icon">
                   <iconset resource="../mayo.qrc">
-                   <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
+                   <normaloff>:/images/themes/classic/next_32.png</normaloff>:/images/themes/classic/next_32.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
                    <width>12</width>
                    <height>12</height>
                   </size>
+                 </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -388,7 +384,7 @@
                <item>
                 <widget class="Line" name="line">
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Plain</enum>
                  </property>
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -396,10 +392,10 @@
                 </widget>
                </item>
                <item>
-                <widget class="ButtonFlat" name="btn_CloseGuiDocument">
+                <widget class="QToolButton" name="btn_CloseGuiDocument">
                  <property name="icon">
                   <iconset resource="../mayo.qrc">
-                   <normaloff>:/images/close.png</normaloff>:/images/close.png</iconset>
+                   <normaloff>:/images/themes/classic/cross_32.png</normaloff>:/images/themes/classic/cross_32.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -407,12 +403,15 @@
                    <height>12</height>
                   </size>
                  </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item>
                 <widget class="Line" name="line_2">
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Plain</enum>
                  </property>
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -630,7 +629,7 @@
   <action name="actionSaveImageView">
    <property name="icon">
     <iconset resource="../mayo.qrc">
-     <normaloff>:/images/camera_32.png</normaloff>:/images/camera_32.png</iconset>
+     <normaloff>:/images/themes/classic/camera_32.png</normaloff>:/images/themes/classic/camera_32.png</iconset>
    </property>
    <property name="text">
     <string>Save View to Image</string>
@@ -648,7 +647,7 @@
   </action>
   <action name="actionPreviousDoc">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/previous.png</normaloff>:/images/previous.png</iconset>
    </property>
    <property name="text">
@@ -663,7 +662,7 @@
   </action>
   <action name="actionNextDoc">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
    </property>
    <property name="text">
@@ -678,7 +677,7 @@
   </action>
   <action name="actionCloseDoc">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/close.png</normaloff>:/images/close.png</iconset>
    </property>
    <property name="text">
@@ -702,7 +701,7 @@
   <action name="actionShowHideLeftSidebar">
    <property name="icon">
     <iconset resource="../mayo.qrc">
-     <normaloff>:/images/left_sidebar.png</normaloff>:/images/left_sidebar.png</iconset>
+     <normaloff>:/images/themes/classic/left-sidebar_32.png</normaloff>:/images/themes/classic/left-sidebar_32.png</iconset>
    </property>
    <property name="text">
     <string>Show/Hide Left Sidebar</string>
@@ -725,11 +724,6 @@
    <extends>QWidget</extends>
    <header>widget_document_item_props.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ButtonFlat</class>
-   <extends>QToolButton</extends>
-   <header>button_flat.h</header>
   </customwidget>
   <customwidget>
    <class>WidgetFileSystem</class>

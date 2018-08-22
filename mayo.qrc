@@ -18,11 +18,6 @@
         <file>images/mesh_16.png</file>
         <file>images/mesh_32.png</file>
         <file>images/clipping.png</file>
-        <file>images/close.png</file>
-        <file>images/next.png</file>
-        <file>images/previous.png</file>
-        <file>images/fitall_16.png</file>
-        <file>images/camera_32.png</file>
         <file>images/fitall_24.png</file>
         <file>images/fitall_32.png</file>
         <file>images/appicon_16.png</file>
@@ -30,13 +25,20 @@
         <file>images/appicon_32.png</file>
         <file>images/appicon_64.png</file>
         <file>images/down_16.png</file>
-        <file>images/down_8.png</file>
-        <file>images/down_disabled_8.png</file>
         <file>images/appicon_128.png</file>
-        <file>images/left_sidebar.png</file>
-        <file>images/link-button_16.png</file>
-        <file>images/left-arrow-cross_16.png</file>
         <file>images/settings_16.png</file>
-        <file>images/reference-text-mode_16.png</file>
+        <file>images/themes/classic/expand_16.png</file>
+        <file>images/themes/classic/back_32.png</file>
+        <file>images/themes/classic/cross_32.png</file>
+        <file>images/themes/classic/link-button_16.png</file>
+        <file>images/themes/classic/next_32.png</file>
+        <file>images/themes/classic/pin_16.png</file>
+        <file>images/themes/classic/camera_32.png</file>
+        <file>images/themes/classic/left-arrow-cross_16.png</file>
+        <file>images/themes/classic/left-sidebar_32.png</file>
+        <file>images/themes/classic/indicator-down_8.png</file>
+        <file>images/themes/classic/indicator-down-disabled_8.png</file>
+        <file>images/themes/dark/indicator-down_8.png</file>
+        <file>images/themes/dark/stop_32.png</file>
     </qresource>
 </RCC>

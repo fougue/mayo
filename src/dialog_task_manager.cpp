@@ -6,6 +6,7 @@
 
 #include "dialog_task_manager.h"
 #include "ui_dialog_task_manager.h"
+#include "theme.h"
 
 #include <fougtools/qttools/task/manager.h>
 #include <fougtools/qttools/task/progress.h>
@@ -21,8 +22,7 @@ namespace Internal {
 
 static const char TaskWidget_taskIdProp[] = "Mayo::TaskId";
 
-class TaskWidget : public QWidget
-{
+class TaskWidget : public QWidget {
 public:
     TaskWidget(QWidget* parent = nullptr);
 
@@ -54,7 +54,7 @@ TaskWidget::TaskWidget(QWidget *parent)
     m_progress->setRange(0, 100);
     m_progress->setValue(0);
 
-    m_interruptBtn->setIcon(QPixmap(":/images/no.png"));
+    m_interruptBtn->setIcon(mayoTheme()->icon(Theme::Icon::Stop));
     m_interruptBtn->setAutoRaise(true);
 
     auto progressLayout = new QHBoxLayout;

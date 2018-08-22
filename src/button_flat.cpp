@@ -19,10 +19,10 @@ namespace Mayo {
 ButtonFlat::ButtonFlat(QWidget *parent)
     : QWidget(parent),
       m_iconSize(16, 16),
-      m_hoverBrush(mayoTheme()->color(Theme::Color::FlatHover)),
-      m_checkedBrush(mayoTheme()->color(Theme::Color::FlatChecked))
+      m_hoverBrush(mayoTheme()->color(Theme::Color::ButtonFlat_Hover)),
+      m_checkedBrush(mayoTheme()->color(Theme::Color::ButtonFlat_Checked))
 {
-    this->setBackgroundBrush(mayoTheme()->color(Theme::Color::FlatBackground));
+    this->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonFlat_Background));
     this->setFixedSize(24, 24);
 }
 
