@@ -5,28 +5,20 @@ defineReplace(sysPath) {
   return($$result)
 }
 
-INCLUDEPATH += $$CASCADE_ROOT/inc
+INCLUDEPATH += $$CASCADE_INC_DIR
 
-linux-*:DEFINES += HAVE_CONFIG_H \
-                   HAVE_FSTREAM \
-                   HAVE_IOSTREAM \
-                   HAVE_IOMANIP \
-                   HAVE_LIMITS_H
+linux-*:DEFINES += \
+    HAVE_CONFIG_H \
+    HAVE_FSTREAM \
+    HAVE_IOSTREAM \
+    HAVE_IOMANIP \
+    HAVE_LIMITS_H
 
 win32-*:DEFINES += WNT
 linux-*:DEFINES += LIN LININTEL OCC_CONVERT_SIGNALS
 
-MSVC_VERSION = xx
-win32-msvc2005:MSVC_VERSION = 8
-win32-msvc2008:MSVC_VERSION = 9
-win32-msvc2010:MSVC_VERSION = 10
-win32-msvc2012:MSVC_VERSION = 11
-win32-msvc2013:MSVC_VERSION = 12
-win32-msvc2015:MSVC_VERSION = 14
-win32-msvc2017:MSVC_VERSION = 15
-
 # Find OCC version
-OCC_VERSION_FILE_CONTENTS = $$cat($$CASCADE_ROOT/inc/Standard_Version.hxx, lines)
+OCC_VERSION_FILE_CONTENTS = $$cat($$CASCADE_INC_DIR/Standard_Version.hxx, lines)
 
 OCC_VERSION_MAJOR = $$find(OCC_VERSION_FILE_CONTENTS, OCC_VERSION_MAJOR\s+[0-9]+)
 OCC_VERSION_MAJOR = $$section(OCC_VERSION_MAJOR, " ", -1)
@@ -50,11 +42,5 @@ else {
   error(Platform architecture not supported (QT_ARCH = $$QT_ARCH))
 }
 
-# Set CASCADE_SUB_LIB_PATH
-win32:CASCADE_SUB_LIB_PATH = win$${ARCH_BITS_SIZE}/vc$$MSVC_VERSION/lib
-linux-*:CASCADE_SUB_LIB_PATH = lin$${ARCH_BITS_SIZE}/gcc/lib
-#CONFIG(debug, debug|release):CASCADE_SUB_LIB_PATH = $${CASCADE_SUB_LIB_PATH}d
-
-CASCADE_LIB_PATH += $$CASCADE_ROOT/$$CASCADE_SUB_LIB_PATH
-LIBS += $$sysPath($$join(CASCADE_LIB_PATH, " -L", -L))
-QMAKE_RPATHDIR += $$CASCADE_LIB_PATH
+LIBS += $$sysPath($$join(CASCADE_LIB_DIR, " -L", -L))
+QMAKE_RPATHDIR += $$CASCADE_LIB_DIR

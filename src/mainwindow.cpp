@@ -581,7 +581,9 @@ void MainWindow::onApplicationItemSelectionChanged()
             const ShapePropsOption opt =
                     uiAppTree->isMergeXdeReferredShapeOn() ?
                         ShapePropsOption::MergeReferred : ShapePropsOption::None;
-            uiDocProps->editProperties(xdeItem->shapeProperties(xdeLabel, opt));
+            std::vector<HandleProperty> vecShapeProp =
+                    xdeItem->shapeProperties(xdeLabel, opt);
+            uiDocProps->editProperties(vecShapeProp);
         }
         else {
             uiDocProps->editDocumentItem(item.documentItem());

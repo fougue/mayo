@@ -357,7 +357,7 @@ void ItemViewButtons::paint(
     //  QStyledItemDelegate::paint(painter, option, index);
 
     if (this->itemView()->isEnabled()) {
-        QStyleOptionViewItemV4 optionForBtn(option);
+        QStyleOptionViewItem optionForBtn(option);
         optionForBtn.rect =
                 this->itemView()->visualRect(d->modelIndexForButtonDisplay(index));
         const int btnIndex = this->buttonAtModelIndex(index);

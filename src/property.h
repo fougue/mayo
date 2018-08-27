@@ -50,6 +50,7 @@ public:
     Property(Property&&) = delete;
     Property& operator=(const Property&) = delete;
     Property& operator=(Property&&) = delete;
+    virtual ~Property() = default;
 
     const QString& label() const;
 

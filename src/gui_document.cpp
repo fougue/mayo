@@ -98,8 +98,8 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 GuiDocument::GuiDocument(Document *doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
-      m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
-      m_v3dView(m_v3dViewer->CreateView())
+      m_v3dView(m_v3dViewer->CreateView()),
+      m_aisContext(new AIS_InteractiveContext(m_v3dViewer))
 {
     assert(doc != nullptr);
 

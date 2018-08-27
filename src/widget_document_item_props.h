@@ -27,7 +27,7 @@ public:
     ~WidgetDocumentItemProps();
 
     void editDocumentItem(DocumentItem* docItem);
-    void editProperties(Span<HandleProperty> vecHndProp);
+    void editProperties(Span<HandleProperty> spanHndProp);
 
 private:
     void connectPropertyValueChangeSignals(bool on);

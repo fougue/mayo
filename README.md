@@ -15,10 +15,10 @@ Current features are :
 Mayo requires Qt5 and OpenCascade-7.2.0.  
 Although only tested with VC++/Windows it should build fine on Linux and MacOS.  
 `cd .../mayo`  
-`qmake "CASCADE_ROOT=path_to_opencascade"`  
+`qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"`  
 `(n)make`  
-To enable optional gmio library, use this qmake command instead:  
-`qmake "CASCADE_ROOT=path_to_opencascade" "GMIO_ROOT=path_to_gmio"`
+To enable optional gmio library, add this option to the qmake command line:  
+`"GMIO_ROOT=path_to_gmio"`
 
 # Screencast
 
