@@ -256,10 +256,13 @@ public:
 
 } // namespace Internal
 
-Theme* mayoTheme()
+Theme* createTheme(const QString& key)
 {
-    static Internal::ThemeDark theme;
-    return &theme;
+    if (key == "classic")
+        return new Internal::ThemeClassic;
+    if (key == "dark")
+        return new Internal::ThemeDark;
+    return nullptr;
 }
 
 } // namespace Mayo

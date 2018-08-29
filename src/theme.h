@@ -53,6 +53,7 @@ protected:
     friend Theme* mayoTheme();
 };
 
+Theme* createTheme(const QString& key);
 Theme* mayoTheme();
 
 } // namespace Mayo
