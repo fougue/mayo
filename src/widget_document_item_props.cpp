@@ -152,7 +152,7 @@ template<> struct PropertyHelper<PropertyEnumeration> {
             return mapping.value == prop->value();
         });
         if (itEnum != enumMappings.cend())
-            return itEnum - enumMappings.cbegin();
+            return static_cast<int>(itEnum - enumMappings.cbegin());
         return -1;
     }
     static ValueType toPropertyValue(const QVariant& value, const PropertyType* prop) {

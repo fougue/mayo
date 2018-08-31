@@ -145,16 +145,6 @@ template<typename T> void GenericProperty<T>::setValue(const T& val)
 template<typename T> const char* GenericProperty<T>::dynTypeName() const
 { return TypeName; }
 
-const char PropertyBool::TypeName[] = "Mayo::PropertyBool";
-const char PropertyInt::TypeName[] = "Mayo::PropertyInt";
-const char PropertyDouble::TypeName[] = "Mayo::PropertyDouble";
-const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray";
-const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
-const char PropertyQDateTime::TypeName[] = "Mayo::PropertyQDateTime";
-const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
-const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
-const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
-
 // PropertyScalarConstraints<>
 
 template<typename T>
@@ -202,15 +192,15 @@ template<typename T> void PropertyScalarConstraints<T>::setSingleStep(T step)
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
         PropertyOwner* owner, const QString& label)
-    : GenericProperty(owner, label)
+    : GenericProperty<T>(owner, label)
 { }
 
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
             PropertyOwner* owner, const QString& label,
             T minimum, T maximum, T singleStep)
-    : GenericProperty(owner, label),
-      PropertyScalarConstraints(minimum, maximum, singleStep)
+    : GenericProperty<T>(owner, label),
+      PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }
 
 // GenericPropertyQuantity<>
@@ -235,13 +225,5 @@ void GenericPropertyQuantity<UNIT>::setQuantity(const Quantity<UNIT>& qty)
 template<Unit UNIT>
 const char* GenericPropertyQuantity<UNIT>::dynTypeName() const
 { return TypeName; }
-
-const char PropertyLength::TypeName[] = "Mayo::PropertyLength";
-const char PropertyArea::TypeName[] = "Mayo::PropertyArea";
-const char PropertyVolume::TypeName[] = "Mayo::PropertyVolume";
-const char PropertyMass::TypeName[] = "Mayo::PropertyMass";
-const char PropertyTime::TypeName[] = "Mayo::PropertyTime";
-const char PropertyAngle::TypeName[] = "Mayo::PropertyAngle";
-const char PropertyVelocity::TypeName[] = "Mayo::PropertyVelocity";
 
 } // namespace Mayo

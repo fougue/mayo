@@ -7,6 +7,8 @@
 #include "widget_occ_view.h"
 #include "occt_window.h"
 
+#include <QtGui/QResizeEvent>
+
 namespace Mayo {
 
 WidgetOccView::WidgetOccView(const Handle_V3d_View& view, QWidget* parent)
@@ -48,9 +50,10 @@ void WidgetOccView::paintEvent(QPaintEvent*)
     m_view->Redraw();
 }
 
-void WidgetOccView::resizeEvent(QResizeEvent*)
+void WidgetOccView::resizeEvent(QResizeEvent* event)
 {
-    m_view->MustBeResized();
+    if (!event->spontaneous()) // Workaround for infinite window shrink on Ubuntu
+        m_view->MustBeResized();
 }
 
 } // namespace Mayo

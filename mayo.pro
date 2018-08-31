@@ -7,7 +7,9 @@ QT += core gui widgets
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
 }
 
-CONFIG += console
+CONFIG += console c++14
+
+INCLUDEPATH += src
 
 HEADERS += \
     src/application.h \
@@ -116,7 +118,8 @@ SOURCES += \
     src/document_list_model.cpp \
     src/application_item.cpp \
     src/brep_utils.cpp \
-    src/application_item_selection_model.cpp
+    src/application_item_selection_model.cpp \
+    src/property_builtins.cpp
 
 include(src/fougtools/qttools/task/qttools_task.pri)
 include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
@@ -137,7 +140,7 @@ FORMS += \
 # gmio
 #isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
 isEmpty(GMIO_ROOT) {
-    warning(gmio is disabled)
+    message(gmio is disabled)
 } else {
     CONFIG(debug, debug|release) {
         GMIO_BIN_SUFFIX = d
@@ -154,7 +157,8 @@ isEmpty(GMIO_ROOT) {
 }
 
 # OpenCascade
-isEmpty(CASCADE_ROOT):error(Variable CASCADE_ROOT is empty)
+isEmpty(CASCADE_INC_DIR):error(Variable CASCADE_INC_DIR is empty)
+isEmpty(CASCADE_LIB_DIR):error(Variable CASCADE_LIB_DIR is empty)
 include(occ.pri)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
 LIBS += -lTKG2d

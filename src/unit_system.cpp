@@ -18,6 +18,7 @@ namespace Internal {
 static const char* symbol(Unit unit)
 {
     switch (unit) {
+    case Unit::None: return "";
     // Base
     case Unit::Length: return "m";
     case Unit::Mass: return "kg";
@@ -35,7 +36,6 @@ static const char* symbol(Unit unit)
     case Unit::Density: return "kg/m^3";
     case Unit::Pressure: return "kg/m.s²";
     }
-    Q_ASSERT(false);
     return "?";
 }
 
@@ -52,7 +52,7 @@ template<size_t N> UnitSystem::TranslateResult translate(
         if (value < t.threshold)
             return { value / t.factor, t.str, t.factor };
     }
-    return { value, nullptr };
+    return { value, nullptr, 1. };
 }
 
 #define MAYO_CUBIC_SYMBOL "\xc2\xb3"

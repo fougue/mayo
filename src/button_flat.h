@@ -49,7 +49,7 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     void enterEvent(QEvent* event) override;
     void leaveEvent(QEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     void syncToAction();

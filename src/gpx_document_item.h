@@ -21,6 +21,7 @@ class GpxDocumentItem : public PropertyOwner {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxDocumentItem)
 public:
     GpxDocumentItem();
+    virtual ~GpxDocumentItem() = default;
 
     virtual DocumentItem* documentItem() const = 0;
     virtual Handle_AIS_InteractiveObject handleGpxObject() const = 0;

@@ -179,6 +179,7 @@ QString Options::toReferenceItemTextTemplate(Options::ReferenceItemTextMode mode
         // UTF8 rightwards arrow : \xe2\x86\x92
         return QString::fromUtf8("%instance \xe2\x86\x92 %referred");
     }
+    return QString();
 }
 
 QString Options::referenceItemTextTemplate() const

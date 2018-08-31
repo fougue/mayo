@@ -92,8 +92,8 @@ void DialogSaveImageView::saveFile()
                     nullptr;
 
         Image_PixMap occPix;
-        bool saveOk = false;
-        if (saveOk = this->createImageView(&occPix)) {
+        bool saveOk = this->createImageView(&occPix);
+        if (saveOk) {
             const QImage img = Internal::qtImageTemp(occPix);
             saveOk = img.save(fileName, format);
         }
