@@ -516,11 +516,11 @@ void MainWindow::saveImageView()
 
 void MainWindow::inspectXde()
 {
-    const std::vector<DocumentItem*> vecDocItem =
-            GuiApplication::instance()->selectionModel()->selectedDocumentItems();
+    const Span<const ApplicationItem> spanAppItem =
+            GuiApplication::instance()->selectionModel()->selectedItems();
     const XdeDocumentItem* xdeDocItem = nullptr;
-    for (const DocumentItem* docItem : vecDocItem) {
-        xdeDocItem = dynamic_cast<const XdeDocumentItem*>(docItem);
+    for (const ApplicationItem& appItem : spanAppItem) {
+        xdeDocItem = dynamic_cast<const XdeDocumentItem*>(appItem.documentItem());
         if (xdeDocItem != nullptr)
             break;
     }
@@ -604,6 +604,7 @@ void MainWindow::onApplicationItemSelectionChanged()
     else {
         // TODO
     }
+    this->updateControlsActivation();
 }
 
 void MainWindow::onOperationFinished(bool ok, const QString &msg)
@@ -795,6 +796,15 @@ void MainWindow::updateControlsActivation()
     m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
     m_ui->actionShowHideLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
+
+    Span<const ApplicationItem> spanSelectedAppItem =
+            GuiApplication::instance()->selectionModel()->selectedItems();
+    const ApplicationItem firstAppItem =
+            !spanSelectedAppItem.empty() ?
+                spanSelectedAppItem.at(0) : ApplicationItem();
+    m_ui->actionInspectXDE->setEnabled(
+                spanSelectedAppItem.size() == 1
+                && sameType<XdeDocumentItem>(firstAppItem.documentItem()));
 }
 
 void MainWindow::updateActionText(QAction* action)
