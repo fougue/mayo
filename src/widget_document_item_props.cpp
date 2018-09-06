@@ -378,7 +378,10 @@ void WidgetDocumentItemProps::createQtProperty(
         }
     }
     if (qtProp != nullptr) {
-        parentProp->addSubProperty(qtProp);
+        if (parentProp != nullptr)
+            parentProp->addSubProperty(qtProp);
+        else
+            m_ui->propsBrowser_DocumentItem->addProperty(qtProp);
         if (property->isUserReadOnly())
             qtProp->setAttribute(QLatin1String("readOnly"), true);
         foreach (QtBrowserItem* item, m_ui->propsBrowser_DocumentItem->items(qtProp))
@@ -425,12 +428,8 @@ void WidgetDocumentItemProps::refreshAllQtProperties()
 
     // "On-the-fly" properties
     if (!m_currentVecHndProperty.empty()) {
-        QtProperty* propGroupData =
-                m_varPropMgr->addProperty(
-                    QtVariantPropertyManager::groupTypeId(), tr("Properties"));
-        m_ui->propsBrowser_DocumentItem->addProperty(propGroupData);
         for (const HandleProperty& propHnd : m_currentVecHndProperty)
-            this->createQtProperty(propHnd.get(), propGroupData);
+            this->createQtProperty(propHnd.get(), nullptr);
     }
 }
 
