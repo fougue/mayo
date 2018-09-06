@@ -30,8 +30,8 @@
 #include "gpx_document_item.h"
 
 #include "options.h"
-#include "fougtools/occtools/qt_utils.h"
 
+#include <fougtools/occtools/qt_utils.h>
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
 #include <QtCore/QCoreApplication>

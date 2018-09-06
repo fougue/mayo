@@ -14,7 +14,8 @@
 #include "options.h"
 #include "mesh_utils.h"
 #include "string_utils.h"
-#include "fougtools/qttools/task/progress.h"
+
+#include <fougtools/qttools/task/progress.h>
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>

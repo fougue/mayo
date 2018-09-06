@@ -11,8 +11,8 @@
 #include "string_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
-#include "fougtools/qttools/gui/qwidget_utils.h"
-#include "fougtools/occtools/qt_utils.h"
+#include <fougtools/qttools/gui/qwidget_utils.h>
+#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QMetaType>
 

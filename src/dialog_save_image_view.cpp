@@ -5,11 +5,10 @@
 ****************************************************************************/
 
 #include "dialog_save_image_view.h"
-
-#include "gpx_utils.h"
 #include "ui_dialog_save_image_view.h"
-#include "fougtools/qttools/gui/qwidget_utils.h"
+#include "gpx_utils.h"
 
+#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtCore/QHash>
 #include <QtGui/QClipboard>
 #include <QtGui/QImage>

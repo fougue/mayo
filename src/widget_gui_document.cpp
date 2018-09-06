@@ -13,11 +13,10 @@
 #include "theme.h"
 #include "widget_occ_view.h"
 #include "widget_clip_planes.h"
-#include "fougtools/qttools/gui/qwidget_utils.h"
 
+#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtGui/QPainter>
 #include <QtWidgets/QBoxLayout>
-
 #include <V3d_TypeOfOrientation.hxx>
 
 namespace Mayo {

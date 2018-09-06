@@ -9,9 +9,9 @@
 #include "options.h"
 #include "property_enumeration.h"
 #include "ui_dialog_options.h"
-#include "fougtools/qttools/gui/qwidget_utils.h"
-#include "fougtools/occtools/qt_utils.h"
 
+#include <fougtools/qttools/gui/qwidget_utils.h>
+#include <fougtools/occtools/qt_utils.h>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QColorDialog>
 

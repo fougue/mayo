@@ -7,7 +7,7 @@
 #include "string_utils.h"
 
 #include "unit_system.h"
-#include "fougtools/occtools/qt_utils.h"
+#include <fougtools/occtools/qt_utils.h>
 #include <gp_Trsf.hxx>
 #include <Quantity_Color.hxx>
 #include <cctype>

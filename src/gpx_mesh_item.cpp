@@ -7,8 +7,8 @@
 #include "gpx_mesh_item.h"
 
 #include "options.h"
-#include "fougtools/occtools/qt_utils.h"
 
+#include <fougtools/occtools/qt_utils.h>
 #include <AIS_InteractiveContext.hxx>
 #include <MeshVS_DrawerAttribute.hxx>
 #include <MeshVS_Drawer.hxx>

@@ -31,10 +31,11 @@
 #include "widget_document_item_props.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
-#include "fougtools/qttools/gui/item_view_buttons.h"
-#include "fougtools/qttools/gui/qwidget_utils.h"
-#include "fougtools/qttools/task/manager.h"
-#include "fougtools/qttools/task/runner_stdasync.h"
+
+#include <fougtools/qttools/gui/item_view_buttons.h>
+#include <fougtools/qttools/gui/qwidget_utils.h>
+#include <fougtools/qttools/task/manager.h>
+#include <fougtools/qttools/task/runner_stdasync.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>

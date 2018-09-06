@@ -10,7 +10,7 @@
 #include <TDF_Tool.hxx>
 #include <XCAFApp_Application.hxx>
 
-#include "fougtools/occtools/qt_utils.h"
+#include <fougtools/occtools/qt_utils.h>
 
 #include <mutex>
 

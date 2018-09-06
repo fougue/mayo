@@ -14,7 +14,7 @@
 #include "string_utils.h"
 #include "unit_system.h"
 #include "ui_widget_document_item_props.h"
-#include "fougtools/occtools/qt_utils.h"
+#include <fougtools/occtools/qt_utils.h>
 #include <QtVariantPropertyManager>
 
 namespace Mayo {

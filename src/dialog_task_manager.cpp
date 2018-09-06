@@ -5,11 +5,10 @@
 ****************************************************************************/
 
 #include "dialog_task_manager.h"
-
 #include "ui_dialog_task_manager.h"
-#include "fougtools/qttools/task/manager.h"
-#include "fougtools/qttools/task/progress.h"
 
+#include <fougtools/qttools/task/manager.h>
+#include <fougtools/qttools/task/progress.h>
 #include <QtCore/QTimer>
 #include <QtCore/QtDebug>
 #include <QtWidgets/QLabel>
