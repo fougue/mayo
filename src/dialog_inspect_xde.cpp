@@ -63,6 +63,7 @@ static const char* rawText(TNaming_Evolution evolution)
 
 static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeItem)
 {
+    auto options = Options::instance();
     // if (label.HasAttribute())
     for (TDF_AttributeIterator it(label); it.More(); it.Next()) {
         const Handle_TDF_Attribute ptrAttr = it.Value();
@@ -83,17 +84,17 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
         else if (attrId == XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             text = "XCAFDoc_Area";
-            value = QString::number(area.Get());
+            value = StringUtils::text(area.Get(), options->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Centroid::GetID()) {
             const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);
             text = "XCAFDoc_Centroid";
-            value = occ::QtUtils::toQString(centroid.Get());
+            value = StringUtils::text(centroid.Get(), options->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);
             text = "XCAFDoc_Volume";
-            value = QString::number(volume.Get());
+            value = StringUtils::text(volume.Get(), options->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Color::GetID()) {
             const auto& color = static_cast<const XCAFDoc_Color&>(*ptrAttr);
@@ -105,7 +106,7 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
             text = "XCAFDoc_Location";
             value = StringUtils::text(
                         location.Get().Transformation(),
-                        Options::instance()->unitSystemSchema());
+                        Options::instance()->defaultTextOptions());
         }
         else if (attrId == TNaming_NamedShape::GetID()) {
             const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);

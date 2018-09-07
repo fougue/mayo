@@ -7,6 +7,7 @@
 #pragma once
 
 #include "property.h"
+#include "span.h"
 #include <utility>
 #include <Aspect_HatchStyle.hxx>
 #include <Graphic3d_NameOfMaterial.hxx>
@@ -33,7 +34,7 @@ public:
     const QString& string(Value eval) const;
 
     Mapping mapping(size_t i) const;
-    const std::vector<Mapping>& mappings() const;
+    Span<const Mapping> mappings() const;
 
 private:
     std::vector<Mapping>::const_iterator findCppSql(Value eval) const;

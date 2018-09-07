@@ -179,6 +179,7 @@ void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
             }
         }
     }
+#if 0
     else if (appItem.isDocumentItem()) {
         const GpxDocumentItem* gpxItem = this->findItemGpx(appItem.documentItem());
         if (gpxItem != nullptr)
@@ -191,6 +192,7 @@ void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
                 m_aisContext->AddOrRemoveSelected(gpxItem->handleGpxObject(), false);
         }
     }
+#endif
 }
 
 void GuiDocument::clearItemSelection()

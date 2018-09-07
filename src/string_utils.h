@@ -7,22 +7,28 @@
 #pragma once
 
 #include "unit_system.h"
+#include <QtCore/QLocale>
 #include <QtCore/QString>
 #include <IFSelect_ReturnStatus.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 class Quantity_Color;
 class gp_Pnt;
+class gp_Dir;
 class gp_Trsf;
 
 namespace Mayo {
 
 struct StringUtils {
-    static QString text(
-            const gp_Pnt& pos,
-            UnitSystem::Schema schema = UnitSystem::SI);
-    static QString text(
-            const gp_Trsf& trsf,
-            UnitSystem::Schema schema = UnitSystem::SI);
+    struct TextOptions {
+        QLocale locale;
+        UnitSystem::Schema unitSchema;
+        int unitDecimals;
+    };
+
+    static QString text(double value, const TextOptions& opt);
+    static QString text(const gp_Pnt& pos, const TextOptions& opt);
+    static QString text(const gp_Dir& pos, const TextOptions& opt);
+    static QString text(const gp_Trsf& trsf, const TextOptions& opt);
     static QString text(
             const Quantity_Color& color,
             const QString& format = "R:%1 G:%2 B:%3");

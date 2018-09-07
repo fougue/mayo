@@ -79,12 +79,10 @@ QString QtUtils::toQString(
     const double x = std::abs(pv.X()) < Precision::Confusion() ? 0. : pv.X();
     const double y = std::abs(pv.Y()) < Precision::Confusion() ? 0. : pv.Y();
     const double z = std::abs(pv.Z()) < Precision::Confusion() ? 0. : pv.Z();
-    result.replace(
-                QLatin1String("%x"), QString::number(x, realFormat, prec));
-    result.replace(
-                QLatin1String("%y"), QString::number(y, realFormat, prec));
-    return result.replace(
-                QLatin1String("%z"), QString::number(z, realFormat, prec));
+    result.replace(QLatin1String("%x"), QString::number(x, realFormat, prec));
+    result.replace(QLatin1String("%y"), QString::number(y, realFormat, prec));
+    result.replace(QLatin1String("%z"), QString::number(z, realFormat, prec));
+    return result;
 }
 
 } // namespace occ

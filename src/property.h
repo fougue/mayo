@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <QtCore/QMetaType>
 #include <QtCore/QString>
 #include <vector>
 
@@ -96,3 +97,6 @@ private:
 };
 
 } // namespace Mayo
+
+Q_DECLARE_METATYPE(Mayo::Property*)
+Q_DECLARE_METATYPE(const Mayo::Property*)

@@ -43,6 +43,25 @@ void Options::setStlIoLibrary(Options::StlIoLibrary lib)
     m_settings.setValue(keyStlIoLibrary, static_cast<int>(lib));
 }
 
+const QLocale &Options::locale() const
+{
+    return m_locale;
+}
+
+void Options::setLocale(const QLocale &locale)
+{
+    m_locale = locale;
+}
+
+StringUtils::TextOptions Options::defaultTextOptions() const
+{
+    StringUtils::TextOptions opt;
+    opt.locale = m_locale;
+    opt.unitDecimals = this->unitSystemDecimals();
+    opt.unitSchema = this->unitSystemSchema();
+    return opt;
+}
+
 QColor Options::brepShapeDefaultColor() const
 {
     static const QColor defaultColor(Qt::gray);
@@ -168,6 +187,11 @@ void Options::setUnitSystemDecimals(int count)
     }
 }
 
+UnitSystem::TranslateResult Options::unitSystemTranslate(double value, Unit unit)
+{
+    return UnitSystem::translate(this->unitSystemSchema(), value, unit);
+}
+
 QString Options::toReferenceItemTextTemplate(Options::ReferenceItemTextMode mode)
 {
     switch (mode) {
@@ -197,6 +221,11 @@ Options::ReferenceItemTextMode Options::referenceItemTextMode() const
 void Options::setReferenceItemTextMode(Options::ReferenceItemTextMode mode)
 {
     m_settings.setValue(keyReferenceItemTextMode, static_cast<int>(mode));
+}
+
+Options::Options()
+    : m_locale(QLocale::system())
+{
 }
 
 } // namespace Mayo

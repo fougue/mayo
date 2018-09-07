@@ -87,18 +87,32 @@ public:
             T minimum, T maximum, T singleStep);
 };
 
+class BasePropertyQuantity : public Property {
+public:
+    virtual Unit quantityUnit() const = 0;
+    virtual double quantityValue() const = 0;
+    virtual void setQuantityValue(double v) = 0;
+
+    const char* dynTypeName() const override;
+    static const char TypeName[];
+
+protected:
+    BasePropertyQuantity(PropertyOwner* owner, const QString& label);
+};
+
 template<Unit UNIT>
-class GenericPropertyQuantity : public Property {
+class GenericPropertyQuantity : public BasePropertyQuantity {
 public:
     using QuantityType = Quantity<UNIT>;
 
     GenericPropertyQuantity(PropertyOwner* owner, const QString& label);
 
+    Unit quantityUnit() const override;
+    double quantityValue() const override;
+    void setQuantityValue(double v) override;
+
     const QuantityType& quantity() const;
     void setQuantity(const QuantityType& qty);
-
-    const char* dynTypeName() const override;
-    static const char TypeName[];
 
 private:
     QuantityType m_quantity;
@@ -208,8 +222,20 @@ GenericScalarProperty<T>::GenericScalarProperty(
 template<Unit UNIT>
 GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(
         PropertyOwner* owner, const QString& label)
-    : Property(owner, label)
+    : BasePropertyQuantity(owner, label)
 { }
+
+template<Unit UNIT>
+Unit GenericPropertyQuantity<UNIT>::quantityUnit() const
+{ return UNIT; }
+
+template<Unit UNIT>
+double GenericPropertyQuantity<UNIT>::quantityValue() const
+{ return this->quantity().value(); }
+
+template<Unit UNIT>
+void GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
+{ m_quantity.setValue(v); }
 
 template<Unit UNIT>
 const Quantity<UNIT>& GenericPropertyQuantity<UNIT>::quantity() const
@@ -221,9 +247,5 @@ void GenericPropertyQuantity<UNIT>::setQuantity(const Quantity<UNIT>& qty)
     m_quantity = qty;
     this->notifyChanged();
 }
-
-template<Unit UNIT>
-const char* GenericPropertyQuantity<UNIT>::dynTypeName() const
-{ return TypeName; }
 
 } // namespace Mayo

@@ -46,7 +46,21 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QtTreePropertyBrowser" name="propsBrowser_DocumentItem" native="true"/>
+        <widget class="QTreeWidget" name="treeWidget_Browser">
+         <attribute name="headerVisible">
+          <bool>true</bool>
+         </attribute>
+         <column>
+          <property name="text">
+           <string>Property</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Value</string>
+          </property>
+         </column>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -55,14 +69,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QtTreePropertyBrowser</class>
-   <extends>QWidget</extends>
-   <header location="global">qttreepropertybrowser.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
