@@ -54,7 +54,6 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
-    void onApplicationTreeReferenceSettingsClicked();
 
     void openDocumentsFromList(const QStringList& listFilePath);
     void closeCurrentDocument();
@@ -79,6 +78,7 @@ private:
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
+    QMenu* createMenuTreeReferenceSettings();
 
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;

@@ -7,33 +7,55 @@
 #pragma once
 
 #include <QtGui/QColor>
+#include <QtGui/QIcon>
+#include <QtGui/QPixmap>
 class QComboBox;
 
 namespace Mayo {
 
-struct Theme {
+class Theme {
+public:
     enum class Color {
-        FlatBackground,
-        FlatChecked,
-        FlatHover,
-        ButtonView3dBackground,
-        ButtonView3dChecked,
-        ButtonView3dHover
+        Palette_Base,
+        Palette_Window,
+        Palette_Button,
+        ButtonFlat_Background,
+        ButtonFlat_Hover,
+        ButtonFlat_Checked,
+        ButtonView3d_Background,
+        ButtonView3d_Hover,
+        ButtonView3d_Checked,
+        View3d_BackgroundGradientStart,
+        View3d_BackgroundGradientEnd
     };
-    enum class Image {
-        FlatDownIndicator,
-        FlatDownIndicatorDisabled
+
+    enum class Icon {
+        Expand,
+        Cross,
+        Link,
+        Pin,
+        Back,
+        Next,
+        Camera,
+        LeftSidebar,
+        LeftArrowCross,
+        IndicatorDown,
+        Stop,
+        ItemMesh
     };
-    QColor color(Color role) const;
-    QString imageUrl(Image img) const;
 
-    void makeFlat(QComboBox* comboBox);
+    virtual const QIcon& icon(Icon icn) const = 0;
+    virtual QColor color(Color role) const = 0;
 
-private:
+    virtual void setup() = 0;
+    virtual void setupHeaderComboBox(QComboBox* cb) = 0;
+
+protected:
     Theme() = default;
     friend Theme* mayoTheme();
 };
 
+Theme* createTheme(const QString& key);
 Theme* mayoTheme();
 
 } // namespace Mayo

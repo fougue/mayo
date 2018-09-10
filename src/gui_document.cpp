@@ -16,7 +16,9 @@
 #include "gpx_utils.h"
 #include "gpx_xde_document_item.h"
 #include "mesh_item.h"
+#include "theme.h"
 #include "xde_document_item.h"
+#include "fougtools/occtools/qt_utils.h"
 
 #include <AIS_Trihedron.hxx>
 #include <Aspect_DisplayConnection.hxx>
@@ -103,13 +105,16 @@ GuiDocument::GuiDocument(Document *doc)
 {
     assert(doc != nullptr);
 
+    //m_v3dView->SetShadingModel(V3d_PHONG);
     // 3D view - Enable anti-aliasing with MSAA
     m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
-                Quantity_Color(0.5, 0.58, 1., Quantity_TOC_RGB),
-                Quantity_NOC_WHITE,
+                occ::QtUtils::toOccColor(
+                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart)),
+                occ::QtUtils::toOccColor(
+                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
                 Aspect_GFM_VER);
     // 3D view - Add shaded trihedron located in the bottom-left corner
     m_v3dView->TriedronDisplay(

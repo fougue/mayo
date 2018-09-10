@@ -45,19 +45,23 @@ protected:
     void paintEvent(QPaintEvent*) override
     {
         QPainter painter(this);
+
+        // This is needed by the "classic" theme, force a painted background
         const QRect frame = this->frameGeometry();
         const QRect surface(0, 0, frame.width(), frame.height());
         const QColor panelColor = palette().color(QPalette::Base);
         painter.fillRect(surface, panelColor);
+
         QStyleOption option;
         option.initFrom(this);
+        option.state |= QStyle::State_HasFocus;
         this->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, this);
     }
 };
 
-static QPixmap colorSquarePixmap(const QColor& c, const QSize& size = QSize(16, 16))
+static QPixmap colorSquarePixmap(const QColor& c, int sideLen = 16)
 {
-    QPixmap pixColor(size);
+    QPixmap pixColor(sideLen, sideLen);
     pixColor.fill(c);
     return pixColor;
 }
@@ -276,18 +280,21 @@ public:
                             painter,
                             option.widget);
 
-                const int colorSideLen = option.rect.height();
-                painter->fillRect(
-                            QRect(option.rect.x(), option.rect.y(),
-                                  colorSideLen, colorSideLen),
-                            occ::QtUtils::toQColor(propColor->value()));
+                const QColor color = occ::QtUtils::toQColor(propColor->value());
+                const QPixmap pixColor = colorSquarePixmap(color, option.rect.height());
+                painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
                 const QString strColor = propertyValueText(propColor);
-                const QRect bndStrColor = option.fontMetrics.boundingRect(strColor);
-                painter->drawText(
-                            option.rect.x() + colorSideLen + 6,
-                            option.rect.y() + bndStrColor.height()
-                            - (option.rect.height() - bndStrColor.height()) / 2,
+
+                QRect labelRect = option.rect;
+                labelRect.setX(option.rect.x() + pixColor.width() + 6);
+                QApplication::style()->drawItemText(
+                            painter,
+                            labelRect,
+                            Qt::AlignLeft | Qt::AlignVCenter,
+                            option.palette,
+                            option.state.testFlag(QStyle::State_Enabled),
                             strColor);
+
                 painter->restore();
                 return;
             }
@@ -337,6 +344,14 @@ public:
     {
         // Disable default behavior that sets item data(property is changed directly)
     }
+
+    QSize sizeHint(
+            const QStyleOptionViewItem &option,
+            const QModelIndex &index) const override
+    {
+        const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
+        return QSize(baseSize.width(), 1.1 * baseSize.height());
+    }
 };
 
 } // namespace Internal
@@ -346,6 +361,7 @@ WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
       m_ui(new Ui_WidgetDocumentItemProps)
 {
     m_ui->setupUi(this);
+    m_ui->treeWidget_Browser->setUniformRowHeights(true);
     m_ui->treeWidget_Browser->setIndentation(15);
     m_ui->treeWidget_Browser->setItemDelegate(
                 new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser));

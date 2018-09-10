@@ -14,6 +14,7 @@
 #include "document_item.h"
 #include "gui_application.h"
 #include "mesh_item.h"
+#include "theme.h"
 #include "xde_document_item.h"
 
 #include <QtCore/QMetaType>
@@ -125,7 +126,7 @@ static QIcon documentItemIcon(const DocumentItem* docItem)
     if (sameType<XdeDocumentItem>(docItem))
         return QIcon(":/images/xde_document_16.png");
     else if (sameType<MeshItem>(docItem))
-        return QIcon(":/images/mesh_16.png");
+        return mayoTheme()->icon(Theme::Icon::ItemMesh);
     return QIcon();
 }
 
@@ -210,6 +211,7 @@ WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
       m_ui(new Ui_WidgetApplicationTree)
 {
     m_ui->setupUi(this);
+    m_ui->treeWidget_App->setUniformRowHeights(true);
 
     auto app = Application::instance();
     QObject::connect(

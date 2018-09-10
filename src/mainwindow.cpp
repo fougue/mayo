@@ -48,6 +48,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QWidgetAction>
+#include <QtDebug>
 #include <tuple>
 
 namespace Mayo {
@@ -164,9 +165,6 @@ MainWindow::MainWindow(QWidget *parent)
       m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
-    m_ui->centralWidget->setStyleSheet(
-                "QSplitter::handle:vertical { width: 2px; }\n"
-                "QSplitter::handle:horizontal { width: 2px; }\n");
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
     m_ui->splitter_Main->setStretchFactor(1, 3);
@@ -182,16 +180,27 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
     m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
 
-    // Style sheet for the combo boxes just below the menu bar
-    mayoTheme()->makeFlat(m_ui->combo_GuiDocuments);
-    mayoTheme()->makeFlat(m_ui->combo_LeftContents);
+    m_ui->actionPreviousDoc->setIcon(mayoTheme()->icon(Theme::Icon::Back));
+    m_ui->actionNextDoc->setIcon(mayoTheme()->icon(Theme::Icon::Next));
+    m_ui->actionCloseDoc->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
+    m_ui->actionSaveImageView->setIcon(mayoTheme()->icon(Theme::Icon::Camera));
+    m_ui->actionShowHideLeftSidebar->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
+    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::LeftArrowCross));
+
+    mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
+    mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
+    QString labelMainHomeText = m_ui->label_MainHome->text();
+    labelMainHomeText.replace(
+                QRegularExpression("color:#[0-9a-fA-F]{6,6};"), // ex: color:#0000ff
+                QString("color:%1;").arg(qApp->palette().color(QPalette::Link).name()));
+    m_ui->label_MainHome->setText(labelMainHomeText);
 
     // Opened documents GUI
     {
         auto listViewBtns =
                 new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
         listViewBtns->addButton(
-                    1, QPixmap(":/images/close.png"), m_ui->actionCloseDoc->toolTip());
+                    1, mayoTheme()->icon(Theme::Icon::Cross), m_ui->actionCloseDoc->toolTip());
         listViewBtns->setButtonDetection(1, -1, QVariant());
         listViewBtns->setButtonDisplayColumn(1, 0);
         listViewBtns->setButtonDisplayModes(
@@ -290,7 +299,7 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::onWidgetFileSystemLocationActivated);
     // Left header bar of controls
     QObject::connect(
-                m_ui->btn_CloseLeftSideBar, &ButtonFlat::clicked,
+                m_ui->btn_CloseLeftSideBar, &QAbstractButton::clicked,
                 this, &MainWindow::toggleLeftSidebar);
     // ...
     QObject::connect(
@@ -338,10 +347,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     auto funcSizeBtn = [](const QWidget* container, const QWidget* widgetHeightRef) {
         const int btnSideLen = widgetHeightRef->frameGeometry().height();
-        const QList<ButtonFlat*> listBtn = container->findChildren<ButtonFlat*>();
-        for (ButtonFlat* btn : listBtn)
+        const QList<QAbstractButton*> listBtn = container->findChildren<QAbstractButton*>();
+        for (QAbstractButton* btn : listBtn)
             btn->setFixedSize(btnSideLen, btnSideLen);
-        return true;
     };
     if (watched == m_ui->widget_ControlGuiDocuments
             && event->type() == QEvent::Show)
@@ -655,82 +663,35 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
     if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree
         && placeHolder != nullptr)
     {
-        auto btnLinkWithRightCombo = new ButtonFlat(placeHolder);
+        auto btnLinkWithRightCombo = new QToolButton(placeHolder);
+        btnLinkWithRightCombo->setAutoRaise(true);
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
         btnLinkWithRightCombo->setCheckable(true);
         btnLinkWithRightCombo->setChecked(
                     QSettings().value(Internal::keyLinkWithDocumentSelector, false)
                     .toBool());
         btnLinkWithRightCombo->setFixedSize(btnSideLen, btnSideLen);
-        btnLinkWithRightCombo->setIcon(QPixmap(":/images/link-button_16.png"));
+        btnLinkWithRightCombo->setIcon(mayoTheme()->icon(Theme::Icon::Link));
         btnLinkWithRightCombo->setToolTip(tr("Link With Document Selector"));
         placeHolder->layout()->addWidget(btnLinkWithRightCombo);
-        QObject::connect(btnLinkWithRightCombo, &ButtonFlat::clicked, [=]{
+        QObject::connect(btnLinkWithRightCombo, &QAbstractButton::clicked, [=]{
             QSettings().setValue(
                         Internal::keyLinkWithDocumentSelector,
                         btnLinkWithRightCombo->isChecked());
         });
 
-        auto btnSettings = new ButtonFlat(placeHolder);
+        auto btnSettings = new QToolButton(placeHolder);
+        btnSettings->setAutoRaise(true);
         btnSettings->setFixedSize(btnSideLen, btnSideLen);
-        btnSettings->setIcon(QPixmap(":/images/reference-text-mode_16.png"));
+        btnSettings->setIcon(mayoTheme()->icon(Theme::Icon::Pin));
         btnSettings->setToolTip(tr("Text mode for assembly references"));
         placeHolder->layout()->addWidget(btnSettings);
-        QObject::connect(
-                    btnSettings, &ButtonFlat::clicked,
-                    this, &MainWindow::onApplicationTreeReferenceSettingsClicked);
+        btnSettings->setMenu(this->createMenuTreeReferenceSettings());
+        btnSettings->setPopupMode(QToolButton::InstantPopup);
     }
     else {
         delete placeHolder;
     }
-}
-
-void MainWindow::onApplicationTreeReferenceSettingsClicked()
-{
-    auto menu = new QMenu(this->findLeftHeaderPlaceHolder());
-    menu->setToolTipsVisible(true);
-
-    auto group = new QActionGroup(menu);
-    group->setExclusive(true);
-    auto actionOnlyInstance = new QAction(tr("Reference"), menu);
-    actionOnlyInstance->setToolTip(tr("Show only name of reference"));
-    auto actionOnlyReferred = new QAction(tr("Referred"), menu);
-    actionOnlyReferred->setToolTip(tr("Show only name of referred entity"));
-    // UTF8 rightwards arrow : \xe2\x86\x92
-    auto actionInstanceAndReferred =
-            new QAction(tr("Reference \xe2\x86\x92 Referred"), menu);
-    actionInstanceAndReferred->setToolTip(
-                tr("Show name of reference and referred entity"));
-
-    Options* opts = Options::instance();
-    using TextMode = Options::ReferenceItemTextMode;
-    using MenuData = std::tuple<QAction*, TextMode>;
-    const std::vector<MenuData> arrayMenuData = {
-        { actionOnlyInstance, TextMode::ReferenceOnly },
-        { actionOnlyReferred, TextMode::ReferredOnly },
-        { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
-    };
-    for (const MenuData& menuData : arrayMenuData) {
-        QAction* action = std::get<0>(menuData);
-        action->setCheckable(true);
-        group->addAction(action);
-        menu->addAction(action);
-        if (std::get<1>(menuData) == opts->referenceItemTextMode())
-            action->setChecked(true);
-    }
-
-    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
-        for (const MenuData& menuData : arrayMenuData) {
-            if (std::get<0>(menuData) == action) {
-                const TextMode textMode = std::get<1>(menuData);
-                opts->setReferenceItemTextMode(textMode);
-                m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
-                            Options::toReferenceItemTextTemplate(textMode));
-            }
-        }
-    });
-
-    qtgui::QWidgetUtils::asyncMenuExec(menu);
 }
 
 void MainWindow::closeCurrentDocument()
@@ -856,6 +817,54 @@ QWidget *MainWindow::recreateLeftHeaderPlaceHolder()
     layoutPlaceHolder->setSpacing(0);
     m_ui->Layout_WidgetLeftHeader->insertWidget(2, placeHolder);
     return placeHolder;
+}
+
+QMenu *MainWindow::createMenuTreeReferenceSettings()
+{
+    auto menu = new QMenu(this->findLeftHeaderPlaceHolder());
+    menu->setToolTipsVisible(true);
+
+    auto group = new QActionGroup(menu);
+    group->setExclusive(true);
+    auto actionOnlyInstance = new QAction(tr("Reference"), menu);
+    actionOnlyInstance->setToolTip(tr("Show only name of reference"));
+    auto actionOnlyReferred = new QAction(tr("Referred"), menu);
+    actionOnlyReferred->setToolTip(tr("Show only name of referred entity"));
+    // UTF8 rightwards arrow : \xe2\x86\x92
+    auto actionInstanceAndReferred =
+            new QAction(tr("Reference \xe2\x86\x92 Referred"), menu);
+    actionInstanceAndReferred->setToolTip(
+                tr("Show name of reference and referred entity"));
+
+    Options* opts = Options::instance();
+    using TextMode = Options::ReferenceItemTextMode;
+    using MenuData = std::tuple<QAction*, TextMode>;
+    const std::vector<MenuData> arrayMenuData = {
+        { actionOnlyInstance, TextMode::ReferenceOnly },
+        { actionOnlyReferred, TextMode::ReferredOnly },
+        { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
+    };
+    for (const MenuData& menuData : arrayMenuData) {
+        QAction* action = std::get<0>(menuData);
+        action->setCheckable(true);
+        group->addAction(action);
+        menu->addAction(action);
+        if (std::get<1>(menuData) == opts->referenceItemTextMode())
+            action->setChecked(true);
+    }
+
+    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
+        for (const MenuData& menuData : arrayMenuData) {
+            if (std::get<0>(menuData) == action) {
+                const TextMode textMode = std::get<1>(menuData);
+                opts->setReferenceItemTextMode(textMode);
+                m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+                            Options::toReferenceItemTextTemplate(textMode));
+            }
+        }
+    });
+
+    return menu;
 }
 
 } // namespace Mayo

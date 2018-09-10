@@ -28,9 +28,9 @@ static ButtonFlat* createViewBtn(
 {
     auto btn = new ButtonFlat(parent);
     imageFile = imageFile.contains('.') ? imageFile : (imageFile + ".png");
-    btn->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonView3dBackground));
-    btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3dChecked));
-    btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3dHover));
+    btn->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Background));
+    btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
+    btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
     btn->setIcon(QIcon(QString(":/images/%1").arg(imageFile)));
     btn->setIconSize(QSize(16, 16));
     btn->setFixedSize(24, 24);
@@ -59,7 +59,7 @@ protected:
         QPainter painter(this);
         const QRect frame = this->frameGeometry();
         const QRect surface(0, 0, frame.width(), frame.height());
-        const QColor panelColor = mayoTheme()->color(Theme::Color::FlatBackground);
+        const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
         painter.fillRect(surface, panelColor);
     }
 };
@@ -80,6 +80,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
     this->setLayout(layout);
 
     auto btnFitAll = Internal::createViewBtn(this, "fitall_16", tr("Fit All"));
+    btnFitAll->setIcon(mayoTheme()->icon(Theme::Icon::Expand));
     auto btnViewIso = Internal::createViewBtn(this, "view_axo", tr("Isometric"));
     auto btnViewBack = Internal::createViewBtn(this, "view_back", tr("Back"));
     auto btnViewFront = Internal::createViewBtn(this, "view_front", tr("Front"));
