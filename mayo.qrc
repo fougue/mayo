@@ -14,9 +14,6 @@
         <file>images/xde_simple_shape_16.png</file>
         <file>images/file_16.png</file>
         <file>images/xde_document_16.png</file>
-        <file>images/mesh_24.png</file>
-        <file>images/mesh_16.png</file>
-        <file>images/mesh_32.png</file>
         <file>images/clipping.png</file>
         <file>images/fitall_24.png</file>
         <file>images/fitall_32.png</file>
@@ -40,5 +37,8 @@
         <file>images/themes/classic/indicator-down-disabled_8.png</file>
         <file>images/themes/dark/indicator-down_8.png</file>
         <file>images/themes/dark/stop_32.png</file>
+        <file>images/themes/classic/mesh_16.png</file>
+        <file>images/themes/classic/mesh_24.png</file>
+        <file>images/themes/classic/mesh_32.png</file>
     </qresource>
 </RCC>

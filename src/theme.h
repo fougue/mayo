@@ -16,6 +16,7 @@ namespace Mayo {
 class Theme {
 public:
     enum class Color {
+        Palette_Base,
         Palette_Window,
         Palette_Button,
         ButtonFlat_Background,
@@ -39,7 +40,8 @@ public:
         LeftSidebar,
         LeftArrowCross,
         IndicatorDown,
-        Stop
+        Stop,
+        ItemMesh
     };
 
     virtual const QIcon& icon(Icon icn) const = 0;

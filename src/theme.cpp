@@ -55,6 +55,8 @@ public:
     {
         const QPalette appPalette = qApp->palette();
         switch (role) {
+        case Theme::Color::Palette_Base:
+            return appPalette.color(QPalette::Base);
         case Theme::Color::Palette_Window:
             return appPalette.color(QPalette::Window);
         case Theme::Color::Palette_Button:
@@ -90,6 +92,7 @@ public:
         case Icon::LeftArrowCross: return QPixmap(":/images/themes/classic/left-arrow-cross_16.png");
         case Icon::IndicatorDown: return QPixmap(":/images/themes/classic/indicator-down_8.png");
         case Icon::Stop: return QPixmap(":/images/no.png");
+        case Icon::ItemMesh: return QPixmap(":/images/themes/classic/mesh_16.png");
         }
         return QPixmap();
     }
@@ -118,6 +121,7 @@ public:
         case Icon::LeftArrowCross: return lazyIcon<Icon::LeftArrowCross>();
         case Icon::IndicatorDown: return lazyIcon<Icon::IndicatorDown>();
         case Icon::Stop: return lazyIcon<Icon::Stop>();
+        case Icon::ItemMesh: return lazyIcon<Icon::ItemMesh>();
         }
         return nullIcn;
     }
@@ -143,6 +147,8 @@ public:
     {
         const QPalette appPalette = qApp->palette();
         switch (role) {
+        case Theme::Color::Palette_Base:
+            return appPalette.color(QPalette::Base);
         case Theme::Color::Palette_Window:
             return appPalette.color(QPalette::Window);
         case Theme::Color::Palette_Button:
@@ -194,6 +200,7 @@ public:
             static const QIcon icn(":/images/themes/dark/stop_32.png");
             return icn;
         }
+        case Icon::ItemMesh: return invertedClassicIcon<Icon::ItemMesh>();
         } // endswitch()
         static const QIcon nullIcn;
         return nullIcn;
@@ -203,6 +210,7 @@ public:
     {
         qApp->setStyle(QStyleFactory::create("Fusion"));
         QPalette p = qApp->palette();
+        p.setColor(QPalette::Base, QColor(80, 80, 80));
         p.setColor(QPalette::Window, QColor(53, 53, 53));
         p.setColor(QPalette::Button, QColor(73, 73, 73));
         p.setColor(QPalette::Highlight, QColor(110, 110, 110));
@@ -225,10 +233,8 @@ public:
         qApp->setPalette(p);
 
         const QString css =
-                "QListView { background: #505050; }"
-                "QListView::item:hover { background: #606060; }"
-                "QTreeView { background: #505050; }"
-                "QTreeView::item:hover { background: #606060; }"
+                "QAbstractItemView { background: #505050; } "
+                "QAbstractItemView::item:hover { background: #606060; }"
                 "QLineEdit { background: #505050; }"
                 "QMenu { background: #505050; border: 1px solid rgb(100,100,100); }"
                 "QMenu::item:selected { background: rgb(110,110,110); }"
@@ -237,9 +243,9 @@ public:
                 "QDoubleSpinBox { background: #505050; }"
                 "QToolButton:checked { background: #383838; }"
                 "QToolButton:pressed { background: #383838; }"
-                "QComboBox QAbstractItemView { background: #505050; } "
+                "QComboBox { background: #505050; } "
                 "QGroupBox { border: 1px solid #808080; margin-top: 4ex; } "
-                "QFileDialog QAbstractItemView { background: #505050; } "
+                "QFileDialog { background: #505050; } "
                 "QComboBox:editable { background: #505050; } "
                 "QComboBox::disabled { background: rgb(40,40,40); } "
                 "QProgressBar { background: #505050; }";
