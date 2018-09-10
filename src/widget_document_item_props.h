@@ -12,9 +12,7 @@
 #include <QtWidgets/QWidget>
 #include <vector>
 
-class QtProperty;
-class QtVariantPropertyManager;
-class QtVariantProperty;
+class QTreeWidgetItem;
 
 namespace Mayo {
 
@@ -30,30 +28,17 @@ public:
     void editProperties(Span<HandleProperty> spanHndProp);
 
 private:
-    void connectPropertyValueChangeSignals(bool on);
-    void onQVariantPropertyValueChanged(
-            QtProperty *qtProp, const QVariant &value);
-
     void createQtProperties(
-            const std::vector<Property*>& properties, QtProperty* parentProp);
+            const std::vector<Property*>& properties, QTreeWidgetItem* parentItem);
     void createQtProperty(
-            Property* property, QtProperty* parentProp);
-    void mapProperty(QtVariantProperty* qtProp, Property* prop);
+            Property* property, QTreeWidgetItem* parentItem);
     void refreshAllQtProperties();
-
-    struct QtProp_Prop {
-        QtVariantProperty* qtProp;
-        Property* prop;
-    };
 
     class Ui_WidgetDocumentItemProps* m_ui = nullptr;
 
     DocumentItem* m_currentDocItem = nullptr;
     GpxDocumentItem* m_currentGpxDocItem = nullptr;
     std::vector<HandleProperty> m_currentVecHndProperty;
-
-    QtVariantPropertyManager* m_varPropMgr = nullptr;
-    std::vector<QtProp_Prop> m_vecQtPropProp;
 };
 
 } // namespace Mayo

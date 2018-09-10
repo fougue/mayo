@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "string_utils.h"
 #include "unit_system.h"
+#include <QtCore/QLocale>
 #include <QtCore/QObject>
 #include <QtCore/QSettings>
 #include <QtGui/QColor>
@@ -24,6 +26,11 @@ public:
     };
 
     static Options* instance();
+
+    const QLocale& locale() const;
+    void setLocale(const QLocale& locale);
+
+    StringUtils::TextOptions defaultTextOptions() const;
 
     StlIoLibrary stlIoLibrary() const;
     void setStlIoLibrary(StlIoLibrary lib);
@@ -70,6 +77,7 @@ public:
     static UnitSystem::TranslateResult unitSystemTranslate(const Quantity<UNIT>& qty) {
         return UnitSystem::translate(Options::instance()->unitSystemSchema(), qty);
     }
+    UnitSystem::TranslateResult unitSystemTranslate(double value, Unit unit);
 
     // Model tree
     enum class ReferenceItemTextMode {
@@ -91,7 +99,10 @@ signals:
     void unitSystemDecimalsChanged(int count);
 
 private:
+    Options();
+
     QSettings m_settings;
+    QLocale m_locale;
 };
 
 } // namespace Mayo

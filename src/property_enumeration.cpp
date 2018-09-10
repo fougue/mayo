@@ -57,7 +57,7 @@ Enumeration::Mapping Enumeration::mapping(size_t i) const
     return m_vecMapping.at(i);
 }
 
-const std::vector<Enumeration::Mapping> &Enumeration::mappings() const
+Span<const Enumeration::Mapping> Enumeration::mappings() const
 {
     return m_vecMapping;
 }

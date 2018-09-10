@@ -14,41 +14,75 @@
 
 namespace Mayo {
 
-QString StringUtils::text(const gp_Pnt &pos, UnitSystem::Schema schema)
+static QString valueText(double value, const StringUtils::TextOptions &opt)
 {
-    const auto trPosX =
-            UnitSystem::translate(schema, pos.X() * Quantity_Millimeter);
-    const auto trPosY =
-            UnitSystem::translate(schema, pos.Y() * Quantity_Millimeter);
-    const auto trPosZ =
-            UnitSystem::translate(schema, pos.Z() * Quantity_Millimeter);
-    const gp_XYZ trPos(trPosX.value, trPosY.value, trPosZ.value);
-    const QString trPosFormat = QStringLiteral("(%x%1 %y%2 %z%3)").
-            arg(QString::fromUtf8(trPosX.strUnit),
-                QString::fromUtf8(trPosY.strUnit),
-                QString::fromUtf8(trPosZ.strUnit));
-    return occ::QtUtils::toQString(trPos, trPosFormat);
+    const double c = std::abs(value) < Precision::Confusion() ? 0. : value;
+    QString str = opt.locale.toString(c, 'f', opt.unitDecimals);
+    const QChar chDecPnt = opt.locale.decimalPoint();
+    const int posPnt = str.indexOf(chDecPnt);
+    if (posPnt != -1) { // Remove useless trailing zeroes
+        while (str.back() != chDecPnt && str.back() == opt.locale.zeroDigit())
+            str.chop(1);
+        if (str.back() == chDecPnt)
+            str.chop(1);
+    }
+    return str;
 }
 
-QString StringUtils::text(const gp_Trsf& trsf, UnitSystem::Schema schema)
+static QString coordsText(const gp_XYZ& coords, const StringUtils::TextOptions &opt)
+{
+    const QString strX = valueText(coords.X(), opt);
+    const QString strY = valueText(coords.Y(), opt);
+    const QString strZ = valueText(coords.Z(), opt);
+    return "(" + strX + " " + strY + " " + strZ + ")";
+}
+
+static QString pntCoordText(double coord, const StringUtils::TextOptions &opt)
+{
+    const UnitSystem::TranslateResult trCoord =
+            UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
+    const QString strValue = valueText(trCoord.value, opt);
+    return strValue + trCoord.strUnit;
+}
+
+QString StringUtils::text(double value, const TextOptions& opt)
+{
+    return valueText(value, opt);
+}
+
+QString StringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
+{
+    const QString strX = pntCoordText(pos.X(), opt);
+    const QString strY = pntCoordText(pos.Y(), opt);
+    const QString strZ = pntCoordText(pos.Z(), opt);
+    return "(" + strX + " " + strY + " " + strZ + ")";
+}
+
+QString StringUtils::text(const gp_Dir& dir, const StringUtils::TextOptions& opt)
+{
+    return coordsText(dir.XYZ(), opt);
+}
+
+QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
 {
     gp_XYZ axisRotation;
     double angleRotation;
-    const gp_XYZ& pos = trsf.TranslationPart();
     trsf.GetRotation(axisRotation, angleRotation);
-    const auto trAngleRotation =
-            UnitSystem::translate(schema, angleRotation * Quantity_Radian);
-    const QString strAngleRotation = QString::number(trAngleRotation.value);
-    return QStringLiteral("[(%1); %2%3; %4")
-            .arg(occ::QtUtils::toQString(axisRotation, "%x %y %z"),
-                 strAngleRotation,
+    const UnitSystem::TranslateResult trAngleRotation =
+            UnitSystem::translate(opt.unitSchema, angleRotation * Quantity_Radian);
+    return QStringLiteral("[%1; %2%3; %4")
+            .arg(coordsText(axisRotation, opt),
+                 valueText(trAngleRotation.value, opt),
                  QString::fromUtf8(trAngleRotation.strUnit),
-                 StringUtils::text(pos, schema));
+                 StringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
 }
 
 QString StringUtils::text(const Quantity_Color &color, const QString &format)
 {
-    return format.arg(color.Red()).arg(color.Green()).arg(color.Blue());
+    const int red = color.Red() * 255;
+    const int green = color.Green() * 255;
+    const int blue = color.Blue() * 255;
+    return format.arg(red).arg(green).arg(blue);
 }
 
 const char* StringUtils::rawText(TopAbs_ShapeEnum shapeType)

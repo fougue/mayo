@@ -313,6 +313,8 @@ std::vector<HandleProperty> XdeDocumentItem::shapeProperties(
             vecHndProp.emplace_back(propColor, hndStorage);
         }
     }
+    for (HandleProperty& prop : vecHndProp)
+        prop->setUserReadOnly(true);
     return vecHndProp;
 }
 

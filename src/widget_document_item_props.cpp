@@ -15,220 +15,340 @@
 #include "unit_system.h"
 #include "ui_widget_document_item_props.h"
 #include <fougtools/occtools/qt_utils.h>
-#include <QtVariantPropertyManager>
+#include <fougtools/qttools/gui/qwidget_utils.h>
+
+#include <QtGui/QPainter>
+#include <QtWidgets/QColorDialog>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QDoubleSpinBox>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QStyledItemDelegate>
+#include <QtWidgets/QToolButton>
+
+#include <functional>
+#include <unordered_map>
 
 namespace Mayo {
 
 namespace Internal {
 
-template<typename T>
-void setQtPropertyScalarConstraints(
-        QtVariantProperty* qtProp, const PropertyScalarConstraints<T>* cnts)
-{
-    if (cnts->constraintsEnabled()) {
-        qtProp->setAttribute("minimum", cnts->minimum());
-        qtProp->setAttribute("maximum", cnts->maximum());
-        qtProp->setAttribute("singleStep", cnts->singleStep());
+class PanelEditor : public QWidget {
+public:
+    PanelEditor(QWidget* parent = nullptr)
+        : QWidget(parent)
+    {}
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+        const QRect frame = this->frameGeometry();
+        const QRect surface(0, 0, frame.width(), frame.height());
+        const QColor panelColor = palette().color(QPalette::Base);
+        painter.fillRect(surface, panelColor);
+        QStyleOption option;
+        option.initFrom(this);
+        this->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, this);
     }
+};
+
+static QPixmap colorSquarePixmap(const QColor& c, const QSize& size = QSize(16, 16))
+{
+    QPixmap pixColor(size);
+    pixColor.fill(c);
+    return pixColor;
 }
 
-template<typename PROPERTY> struct PropertyHelper {};
+static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
+{
+    auto widget = new QWidget(parent);
+    QSizePolicy sp = widget->sizePolicy();
+    sp.setHorizontalStretch(stretch);
+    widget->setSizePolicy(sp);
+    return widget;
+}
 
-template<> struct PropertyHelper<PropertyBool> {
-    using PropertyType = PropertyBool;
-    using ValueType = PropertyType::ValueType;
+static QString yesNoString(bool on)
+{
+    return on ? WidgetDocumentItemProps::tr("Yes") : WidgetDocumentItemProps::tr("No");
+}
 
-    static int qVariantTypeId() { return QVariant::Bool; }
-    static void init(QtVariantProperty*, const PropertyType*) {}
-    static QVariant toQVariant(const PropertyType* prop) { return prop->value(); }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return qvariant_cast<ValueType>(value);
+static QString propertyValueText(const Property* prop)
+{
+    auto options = Options::instance();
+    const QLocale locale = options->locale();
+    const char* propTypeName = prop != nullptr ? prop->dynTypeName() : "";
+    if (propTypeName == PropertyBool::TypeName) {
+        return yesNoString(static_cast<const PropertyBool*>(prop)->value());
     }
-};
-
-template<> struct PropertyHelper<PropertyInt> {
-    using PropertyType = PropertyInt;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::Int; }
-    static void init(QtVariantProperty* qtProp, const PropertyType* prop) {
-        setQtPropertyScalarConstraints(qtProp, prop);
+    else if (propTypeName == PropertyInt::TypeName) {
+        return locale.toString(static_cast<const PropertyInt*>(prop)->value());
     }
-    static QVariant toQVariant(const PropertyType* prop) { return prop->value(); }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return qvariant_cast<ValueType>(value);
-    }
-};
-
-template<> struct PropertyHelper<PropertyDouble> {
-    using PropertyType = PropertyDouble;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::Double; }
-    static void init(QtVariantProperty* qtProp, const PropertyType* prop) {
-        setQtPropertyScalarConstraints(qtProp, prop);
-    }
-    static QVariant toQVariant(const PropertyType* prop) { return prop->value(); }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return qvariant_cast<ValueType>(value);
-    }
-};
-
-template<> struct PropertyHelper<PropertyOccColor> {
-    using PropertyType = PropertyOccColor;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::Color; }
-    static void init(QtVariantProperty*, const PropertyType*) {}
-    static QVariant toQVariant(const PropertyType* prop) {
-        return occ::QtUtils::toQColor(prop->value());
-    }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return occ::QtUtils::toOccColor(qvariant_cast<QColor>(value));
-    }
-};
-
-template<> struct PropertyHelper<PropertyOccPnt> {
-    using PropertyType = PropertyOccPnt;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::String; }
-    static void init(QtVariantProperty*, const PropertyType*) {}
-    static QVariant toQVariant(const PropertyType* prop) {
+    else if (propTypeName == PropertyDouble::TypeName) {
         return StringUtils::text(
-                    prop->value(), Options::instance()->unitSystemSchema());
+                    static_cast<const PropertyDouble*>(prop)->value(),
+                    options->defaultTextOptions());
     }
-    static ValueType toPropertyValue(const QVariant&, const PropertyType*) {
-        return gp_Pnt(); // TODO
+    else if (propTypeName == PropertyQByteArray::TypeName) {
+        return QString::fromUtf8(static_cast<const PropertyQByteArray*>(prop)->value());
     }
-};
-
-template<> struct PropertyHelper<PropertyOccTrsf> {
-    using PropertyType = PropertyOccTrsf;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::String; }
-    static void init(QtVariantProperty*, const PropertyType*) {}
-    static QVariant toQVariant(const PropertyType* prop) {
+    else if (propTypeName == PropertyQString::TypeName) {
+        return static_cast<const PropertyQString*>(prop)->value();
+    }
+    else if (propTypeName == PropertyQDateTime::TypeName) {
+        return locale.toString(static_cast<const PropertyQDateTime*>(prop)->value());
+    }
+    else if (propTypeName == PropertyOccColor::TypeName) {
+        return StringUtils::text(static_cast<const PropertyOccColor*>(prop)->value());
+    }
+    else if (propTypeName == PropertyOccPnt::TypeName) {
         return StringUtils::text(
-                    prop->value(), Options::instance()->unitSystemSchema());
+                    static_cast<const PropertyOccPnt*>(prop)->value(),
+                    options->defaultTextOptions());
     }
-    static ValueType toPropertyValue(const QVariant&, const PropertyType*) {
-        return gp_Trsf(); // TODO
+    else if (propTypeName == PropertyOccTrsf::TypeName) {
+        return StringUtils::text(
+                    static_cast<const PropertyOccTrsf*>(prop)->value(),
+                    options->defaultTextOptions());
     }
-};
-
-template<> struct PropertyHelper<PropertyQString> {
-    using PropertyType = PropertyQString;
-    using ValueType = PropertyType::ValueType;
-
-    static int qVariantTypeId() { return QVariant::String; }
-    static void init(QtVariantProperty*, const PropertyType*) {}
-    static QVariant toQVariant(const PropertyType* prop) { return prop->value(); }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return qvariant_cast<ValueType>(value);
-    }
-};
-
-template<> struct PropertyHelper<PropertyEnumeration> {
-    using PropertyType = PropertyEnumeration;
-    using ValueType = Enumeration::Value;
-
-    static int qVariantTypeId() { return QtVariantPropertyManager::enumTypeId(); }
-    static void init(QtVariantProperty* qtProp, const PropertyType* prop) {
-        QStringList enumNames;
-        const auto& enumMappings = prop->enumeration().mappings();
-        for (const Enumeration::Mapping& mapping : enumMappings)
-            enumNames.push_back(mapping.string);
-        qtProp->setAttribute("enumNames", enumNames);
-    }
-    static QVariant toQVariant(const PropertyType* prop) {
-        const auto& enumMappings = prop->enumeration().mappings();
-        auto itEnum =
-                std::find_if(
+    else if (propTypeName == PropertyEnumeration::TypeName) {
+        auto propEnum = static_cast<const PropertyEnumeration*>(prop);
+        const auto& enumMappings = propEnum->enumeration().mappings();
+        auto itEnum = std::find_if(
                     enumMappings.cbegin(),
                     enumMappings.cend(),
                     [=](const Enumeration::Mapping& mapping) {
-            return mapping.value == prop->value();
+            return mapping.value == propEnum->value();
         });
-        if (itEnum != enumMappings.cend())
-            return static_cast<int>(itEnum - enumMappings.cbegin());
-        return -1;
+        return itEnum != enumMappings.cend() ? itEnum->string : QString();
     }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType* prop) {
-        const int enumValueId = value.toInt();
-        return prop->enumeration().mapping(enumValueId).value;
+    else if (propTypeName == BasePropertyQuantity::TypeName) {
+        auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);
+        const UnitSystem::TranslateResult trRes =
+                options->unitSystemTranslate(
+                    qtyProp->quantityValue(), qtyProp->quantityUnit());
+        return WidgetDocumentItemProps::tr("%1%2")
+                .arg(StringUtils::text(trRes.value, options->defaultTextOptions()))
+                .arg(trRes.strUnit);
     }
-};
-
-template<Unit UNIT> struct PropertyQuantityHelper {
-    using PropertyType = GenericPropertyQuantity<UNIT>;
-    using ValueType = typename PropertyType::QuantityType;
-
-    static int qVariantTypeId() { return QVariant::Double; }
-    static void init(QtVariantProperty* qtProp, const PropertyType* prop) {
-        const UnitSystem::TranslateResult res =
-                Options::unitSystemTranslate(prop->quantity());
-        qtProp->setAttribute("suffix", QString::fromUtf8(res.strUnit));
-        qtProp->setAttribute("decimals", Options::instance()->unitSystemDecimals());
-        qtProp->setValue(res.value);
-    }
-    static QVariant toQVariant(const PropertyType* prop) {
-        return Options::unitSystemTranslate(prop->quantity()).value;
-    }
-    static ValueType toPropertyValue(const QVariant& value, const PropertyType*) {
-        return value.toDouble(); // TODO This is broken
-    }
-};
-
-template<> struct PropertyHelper<PropertyLength> : public PropertyQuantityHelper<Unit::Length> {};
-template<> struct PropertyHelper<PropertyArea> : public PropertyQuantityHelper<Unit::Area> {};
-template<> struct PropertyHelper<PropertyVolume> : public PropertyQuantityHelper<Unit::Volume> {};
-template<> struct PropertyHelper<PropertyMass> : public PropertyQuantityHelper<Unit::Mass> {};
-template<> struct PropertyHelper<PropertyTime> : public PropertyQuantityHelper<Unit::Time> {};
-template<> struct PropertyHelper<PropertyAngle> : public PropertyQuantityHelper<Unit::Angle> {};
-template<> struct PropertyHelper<PropertyVelocity> : public PropertyQuantityHelper<Unit::Velocity> {};
-
-// --
-// -- Generic API
-// --
-
-template<typename PROPERTY>
-QtVariantProperty* createQtProperty(
-        const Property* prop, QtVariantPropertyManager* varPropMgr)
-{
-    auto castedProp = static_cast<const PROPERTY*>(prop);
-    QtVariantProperty* qtProp =
-            varPropMgr->addProperty(
-                PropertyHelper<PROPERTY>::qVariantTypeId(),
-                prop->label());
-    PropertyHelper<PROPERTY>::init(qtProp, castedProp);
-    qtProp->setValue(PropertyHelper<PROPERTY>::toQVariant(castedProp));
-    return qtProp;
+    return WidgetDocumentItemProps::tr("ERROR: no stringifier for property type '%1'")
+            .arg(propTypeName);
 }
 
-template<typename PROPERTY>
-void setPropertyValue(Property* prop, const QVariant& value)
+static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent)
 {
-    auto castedProp = static_cast<PROPERTY*>(prop);
-    castedProp->setValue(
-                PropertyHelper<PROPERTY>::toPropertyValue(value, castedProp));
+    auto editor = new QDoubleSpinBox(parent);
+    const UnitSystem::TranslateResult trRes =
+            Options::instance()->unitSystemTranslate(
+                prop->quantityValue(), prop->quantityUnit());
+    editor->setSuffix(QString::fromUtf8(trRes.strUnit));
+    editor->setDecimals(Options::instance()->unitSystemDecimals());
+    editor->setValue(trRes.value);
+    auto signalValueChanged =
+            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+    QObject::connect(editor, signalValueChanged, [=](double value) {
+       prop->setQuantityValue(value);
+    });
+    return editor;
 }
+
+static QWidget* createPanelEditor(QWidget* parent)
+{
+    auto frame = new PanelEditor(parent);
+    auto layout = new QHBoxLayout(frame);
+    layout->setContentsMargins(2, 0, 0, 0);
+    return frame;
+}
+
+static QWidget* createPropertyEditor(PropertyBool* prop, QWidget* parent)
+{
+    auto frame = createPanelEditor(parent);
+    auto editor = new QCheckBox(frame);
+    frame->layout()->addWidget(editor);
+    auto propBool = static_cast<PropertyBool*>(prop);
+    editor->setText(yesNoString(propBool->value()));
+    editor->setChecked(propBool->value());
+    QObject::connect(editor, &QCheckBox::toggled, [=](bool on) {
+        editor->setText(yesNoString(on));
+        propBool->setValue(on);
+    });
+    return frame;
+}
+
+static QWidget* createPropertyEditor(PropertyInt* prop, QWidget* parent)
+{
+    auto editor = new QSpinBox(parent);
+    if (prop->constraintsEnabled()) {
+        editor->setRange(prop->minimum(), prop->maximum());
+        editor->setSingleStep(prop->singleStep());
+    }
+    editor->setValue(prop->value());
+    auto signalValueChanged =
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged);
+    QObject::connect(editor, signalValueChanged, [=](int val) {
+        prop->setValue(val);
+    });
+    return editor;
+}
+
+static QWidget* createPropertyEditor(PropertyQString* prop, QWidget* parent)
+{
+    auto editor = new QLineEdit(parent);
+    editor->setText(prop->value());
+    QObject::connect(editor, &QLineEdit::textChanged, [=](const QString& text) {
+        prop->setValue(text);
+    });
+    return editor;
+}
+
+static QWidget* createPropertyEditor(PropertyEnumeration* prop, QWidget* parent)
+{
+    auto editor = new QComboBox(parent);
+    const Enumeration& enumDef = prop->enumeration();
+    for (const Enumeration::Mapping& mapping : enumDef.mappings())
+        editor->addItem(mapping.string, mapping.value);
+    editor->setCurrentIndex(editor->findData(prop->value()));
+    auto signalActivated =
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::activated);
+    QObject::connect(editor, signalActivated, [=](int index) {
+        prop->setValue(editor->itemData(index).toInt());
+    });
+    return editor;
+}
+
+static QWidget* createPropertyEditor(PropertyOccColor* prop, QWidget* parent)
+{
+    auto frame = createPanelEditor(parent);
+    auto editor = new QWidget(frame);
+
+    auto labelColor = new QLabel(frame);
+    const QColor inputColor = occ::QtUtils::toQColor(prop->value());
+    labelColor->setPixmap(colorSquarePixmap(inputColor));
+
+    auto labelRgb = new QLabel(frame);
+    labelRgb->setText(propertyValueText(prop));
+
+    auto btnColor = new QToolButton(frame);
+    btnColor->setText("...");
+    btnColor->setToolTip(WidgetDocumentItemProps::tr("Choose color ..."));
+    QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
+        auto dlg = new QColorDialog(editor);
+        dlg->setCurrentColor(inputColor);
+        QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
+            prop->setValue(occ::QtUtils::toOccColor(c));
+            labelColor->setPixmap(colorSquarePixmap(c));
+        });
+        qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    });
+
+    frame->layout()->addWidget(labelColor);
+    frame->layout()->addWidget(labelRgb);
+    frame->layout()->addWidget(btnColor);
+    frame->layout()->addWidget(hSpacerWidget(editor));
+
+    return frame;
+}
+
+class PropertyItemDelegate : public QStyledItemDelegate {
+public:
+    PropertyItemDelegate(QObject* parent = nullptr)
+        : QStyledItemDelegate(parent)
+    {}
+
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        if (index.column() == 1) {
+            auto prop = qvariant_cast<Property*>(index.data());
+            if (prop != nullptr
+                    && prop->dynTypeName() == PropertyOccColor::TypeName)
+            {
+                auto propColor = static_cast<PropertyOccColor*>(prop);
+                painter->save();
+
+                QApplication::style()->drawPrimitive(
+                            QStyle::PE_PanelItemViewItem,
+                            &option,
+                            painter,
+                            option.widget);
+
+                const int colorSideLen = option.rect.height();
+                painter->fillRect(
+                            QRect(option.rect.x(), option.rect.y(),
+                                  colorSideLen, colorSideLen),
+                            occ::QtUtils::toQColor(propColor->value()));
+                const QString strColor = propertyValueText(propColor);
+                const QRect bndStrColor = option.fontMetrics.boundingRect(strColor);
+                painter->drawText(
+                            option.rect.x() + colorSideLen + 6,
+                            option.rect.y() + bndStrColor.height()
+                            - (option.rect.height() - bndStrColor.height()) / 2,
+                            strColor);
+                painter->restore();
+                return;
+            }
+        }
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+
+    QString displayText(const QVariant& value, const QLocale&) const override
+    {
+        if (value.type() == QVariant::String)
+            return value.toString();
+        else if (value.canConvert<Property*>()) {
+            const auto prop = qvariant_cast<Property*>(value);
+            return propertyValueText(prop);
+        }
+        return QString();
+    }
+
+    QWidget* createEditor(
+            QWidget* parent,
+            const QStyleOptionViewItem&,
+            const QModelIndex& index) const override
+    {
+        if (index.column() == 0)
+            return nullptr;
+        auto prop = qvariant_cast<Property*>(index.data());
+        if (prop == nullptr || prop->isUserReadOnly())
+            return nullptr;
+        const char* propTypeName = prop->dynTypeName();
+        if (propTypeName == BasePropertyQuantity::TypeName)
+            return createPropertyEditor(static_cast<BasePropertyQuantity*>(prop), parent);
+        if (propTypeName == PropertyBool::TypeName)
+            return createPropertyEditor(static_cast<PropertyBool*>(prop), parent);
+        if (propTypeName == PropertyInt::TypeName)
+            return createPropertyEditor(static_cast<PropertyInt*>(prop), parent);
+        if (propTypeName == PropertyQString::TypeName)
+            return createPropertyEditor(static_cast<PropertyQString*>(prop), parent);
+        if (propTypeName == PropertyOccColor::TypeName)
+            return createPropertyEditor(static_cast<PropertyOccColor*>(prop), parent);
+        if (propTypeName == PropertyEnumeration::TypeName)
+            return createPropertyEditor(static_cast<PropertyEnumeration*>(prop), parent);
+        return nullptr;
+    }
+
+    void setModelData(
+            QWidget*, QAbstractItemModel*, const QModelIndex&) const override
+    {
+        // Disable default behavior that sets item data(property is changed directly)
+    }
+};
 
 } // namespace Internal
 
 WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
     : QWidget(parent),
-      m_ui(new Ui_WidgetDocumentItemProps),
-      m_varPropMgr(new QtVariantPropertyManager(this))
+      m_ui(new Ui_WidgetDocumentItemProps)
 {
     m_ui->setupUi(this);
-    auto variantEditorFactory = new QtVariantEditorFactory(this);
-    m_ui->propsBrowser_DocumentItem->setFactoryForManager(
-                m_varPropMgr, variantEditorFactory);
-    m_ui->propsBrowser_DocumentItem->setResizeMode(
-                QtTreePropertyBrowser::ResizeToContents);
-    m_ui->propsBrowser_DocumentItem->setIndentation(15);
+    m_ui->treeWidget_Browser->setIndentation(15);
+    m_ui->treeWidget_Browser->setItemDelegate(
+                new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser));
 
     QObject::connect(
                 Options::instance(), &Options::unitSystemSchemaChanged,
@@ -255,7 +375,6 @@ void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
         this->refreshAllQtProperties();
     }
     else {
-        this->connectPropertyValueChangeSignals(false);
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
         m_currentDocItem = nullptr;
         m_currentGpxDocItem = nullptr;
@@ -278,152 +397,47 @@ void WidgetDocumentItemProps::editProperties(Span<HandleProperty> spanHndProp)
     }
 }
 
-void WidgetDocumentItemProps::connectPropertyValueChangeSignals(bool on)
-{
-    if (on) {
-        QObject::connect(
-                    m_varPropMgr, &QtVariantPropertyManager::valueChanged,
-                    this, &WidgetDocumentItemProps::onQVariantPropertyValueChanged,
-                    Qt::UniqueConnection);
-    }
-    else {
-        QObject::disconnect(
-                    m_varPropMgr, &QtVariantPropertyManager::valueChanged,
-                    this, &WidgetDocumentItemProps::onQVariantPropertyValueChanged);
-    }
-}
-
-void WidgetDocumentItemProps::onQVariantPropertyValueChanged(
-        QtProperty *qtProp, const QVariant &value)
-{
-    if (m_currentDocItem == nullptr && m_currentGpxDocItem == nullptr)
-        return;
-
-    auto itFound = std::find_if(
-                m_vecQtPropProp.cbegin(),
-                m_vecQtPropProp.cend(),
-                [=](const QtProp_Prop& pair) { return pair.qtProp == qtProp; });
-    if (itFound == m_vecQtPropProp.cend())
-        return;
-
-    Property* prop = itFound->prop;
-    const char* strPropType = prop->dynTypeName();
-    using FuncSetPropertyValue = void (*)(Property*, const QVariant&);
-    using PropType_FuncSetPropertyValue = std::pair<const char*, FuncSetPropertyValue>;
-    static const PropType_FuncSetPropertyValue arrayPair[] = {
-        { PropertyOccColor::TypeName, &Internal::setPropertyValue<PropertyOccColor> },
-        { PropertyEnumeration::TypeName, &Internal::setPropertyValue<PropertyEnumeration> },
-        { PropertyBool::TypeName, &Internal::setPropertyValue<PropertyBool> },
-        { PropertyInt::TypeName, &Internal::setPropertyValue<PropertyInt> },
-        { PropertyDouble::TypeName, &Internal::setPropertyValue<PropertyDouble> },
-        { PropertyQString::TypeName, &Internal::setPropertyValue<PropertyQString> }/*,
-        { PropertyLength::TypeName, &Internal::setPropertyValue<PropertyLength> },
-        { PropertyArea::TypeName, &Internal::setPropertyValue<PropertyArea> },
-        { PropertyVolume::TypeName, &Internal::setPropertyValue<PropertyVolume> },
-        { PropertyMass::TypeName, &Internal::setPropertyValue<PropertyMass> },
-        { PropertyTime::TypeName, &Internal::setPropertyValue<PropertyTime> },
-        { PropertyAngle::TypeName, &Internal::setPropertyValue<PropertyAngle> },
-        { PropertyVelocity::TypeName, &Internal::setPropertyValue<PropertyVelocity> }*/
-    };
-    for (const PropType_FuncSetPropertyValue& pair : arrayPair) {
-        const char* propDynTypeName = pair.first;
-        const FuncSetPropertyValue funcSetPropValue = pair.second;
-        if (std::strcmp(strPropType, propDynTypeName) == 0) {
-            funcSetPropValue(prop, value);
-            break;
-        }
-    }
-}
-
 void WidgetDocumentItemProps::createQtProperties(
-        const std::vector<Property*>& properties, QtProperty *parentProp)
+        const std::vector<Property*>& properties, QTreeWidgetItem* parentItem)
 {
     for (Property* prop : properties)
-        this->createQtProperty(prop, parentProp);
+        this->createQtProperty(prop, parentItem);
 }
 
 void WidgetDocumentItemProps::createQtProperty(
-        Property *property, QtProperty *parentProp)
+        Property* property, QTreeWidgetItem* parentItem)
 {
-    using FuncCreateQtProperty =
-        QtVariantProperty* (*)(const Property*, QtVariantPropertyManager*);
-    using PropType_FuncCreateQtProp =
-        std::pair<const char*, FuncCreateQtProperty>;
-    static const PropType_FuncCreateQtProp arrayPair[] = {
-        { PropertyOccColor::TypeName, &Internal::createQtProperty<PropertyOccColor> },
-        { PropertyOccPnt::TypeName, &Internal::createQtProperty<PropertyOccPnt> },
-        { PropertyOccTrsf::TypeName, &Internal::createQtProperty<PropertyOccTrsf> },
-        { PropertyEnumeration::TypeName, &Internal::createQtProperty<PropertyEnumeration> },
-        { PropertyBool::TypeName, &Internal::createQtProperty<PropertyBool> },
-        { PropertyInt::TypeName, &Internal::createQtProperty<PropertyInt> },
-        { PropertyDouble::TypeName, &Internal::createQtProperty<PropertyDouble> },
-        { PropertyQString::TypeName, &Internal::createQtProperty<PropertyQString> },
-        { PropertyLength::TypeName, &Internal::createQtProperty<PropertyLength> },
-        { PropertyArea::TypeName, &Internal::createQtProperty<PropertyArea> },
-        { PropertyVolume::TypeName, &Internal::createQtProperty<PropertyVolume> },
-        { PropertyMass::TypeName, &Internal::createQtProperty<PropertyMass> },
-        { PropertyTime::TypeName, &Internal::createQtProperty<PropertyTime> },
-        { PropertyAngle::TypeName, &Internal::createQtProperty<PropertyAngle> },
-        { PropertyVelocity::TypeName, &Internal::createQtProperty<PropertyVelocity> }
-    };
-
-    QtVariantProperty* qtProp = nullptr;
-    const char* strPropType = property->dynTypeName();
-    for (const PropType_FuncCreateQtProp& pair : arrayPair) {
-        const char* propDynTypeName = pair.first;
-        const FuncCreateQtProperty funcCreateQtProp = pair.second;
-        if (std::strcmp(strPropType, propDynTypeName) == 0) {
-            qtProp = funcCreateQtProp(property, m_varPropMgr);
-            break;
-        }
-    }
-    if (qtProp != nullptr) {
-        if (parentProp != nullptr)
-            parentProp->addSubProperty(qtProp);
-        else
-            m_ui->propsBrowser_DocumentItem->addProperty(qtProp);
-        if (property->isUserReadOnly())
-            qtProp->setAttribute(QLatin1String("readOnly"), true);
-        foreach (QtBrowserItem* item, m_ui->propsBrowser_DocumentItem->items(qtProp))
-            m_ui->propsBrowser_DocumentItem->setExpanded(item, false);
-        this->mapProperty(qtProp, property);
-    }
-}
-
-void WidgetDocumentItemProps::mapProperty(
-        QtVariantProperty *qtProp, Property *prop)
-{
-    const QtProp_Prop pair = { qtProp, prop };
-    m_vecQtPropProp.emplace_back(std::move(pair));
+    auto itemProp = new QTreeWidgetItem;
+    itemProp->setText(0, property->label());
+    itemProp->setData(1, Qt::DisplayRole, QVariant::fromValue<Property*>(property));
+    itemProp->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+    if (parentItem != nullptr)
+        parentItem->addChild(itemProp);
+    else
+        m_ui->treeWidget_Browser->addTopLevelItem(itemProp);
 }
 
 void WidgetDocumentItemProps::refreshAllQtProperties()
 {
-    m_varPropMgr->clear();
-    m_ui->propsBrowser_DocumentItem->clear();
-    m_vecQtPropProp.clear();
+    m_ui->treeWidget_Browser->clear();
 
     // Data
     if (m_currentDocItem != nullptr) {
-        this->connectPropertyValueChangeSignals(false);
-        QtProperty* propGroupData =
-                m_varPropMgr->addProperty(
-                    QtVariantPropertyManager::groupTypeId(), tr("Data"));
-        m_ui->propsBrowser_DocumentItem->addProperty(propGroupData);
-        this->createQtProperties(m_currentDocItem->properties(), propGroupData);
-        this->connectPropertyValueChangeSignals(true);
+        auto itemGroupData = new QTreeWidgetItem;
+        itemGroupData->setText(0, tr("Data"));
+        this->createQtProperties(m_currentDocItem->properties(), itemGroupData);
+        m_ui->treeWidget_Browser->addTopLevelItem(itemGroupData);
+        itemGroupData->setExpanded(true);
     }
 
     // Graphics
     if (m_currentGpxDocItem != nullptr) {
-        this->connectPropertyValueChangeSignals(false);
-        QtProperty* propGroupGpx =
-                m_varPropMgr->addProperty(
-                    QtVariantPropertyManager::groupTypeId(), tr("Graphics"));
-        m_ui->propsBrowser_DocumentItem->addProperty(propGroupGpx);
+        auto itemGroupGpx = new QTreeWidgetItem;
+        itemGroupGpx->setText(0, tr("Graphics"));
         const GpxDocumentItem* gpxItem = m_currentGpxDocItem;
-        this->createQtProperties(gpxItem->properties(), propGroupGpx);
-        this->connectPropertyValueChangeSignals(true);
+        this->createQtProperties(gpxItem->properties(), itemGroupGpx);
+        m_ui->treeWidget_Browser->addTopLevelItem(itemGroupGpx);
+        itemGroupGpx->setExpanded(true);
     }
 
     // "On-the-fly" properties
@@ -431,6 +445,9 @@ void WidgetDocumentItemProps::refreshAllQtProperties()
         for (const HandleProperty& propHnd : m_currentVecHndProperty)
             this->createQtProperty(propHnd.get(), nullptr);
     }
+
+    m_ui->treeWidget_Browser->resizeColumnToContents(0);
+    m_ui->treeWidget_Browser->resizeColumnToContents(1);
 }
 
 } // namespace Mayo

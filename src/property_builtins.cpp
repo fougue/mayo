@@ -8,6 +8,16 @@
 
 namespace Mayo {
 
+const char *BasePropertyQuantity::dynTypeName() const
+{
+    return BasePropertyQuantity::TypeName;
+}
+
+BasePropertyQuantity::BasePropertyQuantity(PropertyOwner *owner, const QString &label)
+    : Property(owner, label)
+{
+}
+
 template<> const char PropertyBool::TypeName[] = "Mayo::PropertyBool";
 template<> const char GenericProperty<int>/*PropertyInt*/::TypeName[] = "Mayo::PropertyInt";
 template<> const char GenericProperty<double>/*PropertyDouble*/::TypeName[] = "Mayo::PropertyDouble";
@@ -18,12 +28,6 @@ template<> const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
 template<> const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
 
-template<> const char PropertyLength::TypeName[] = "Mayo::PropertyLength";
-template<> const char PropertyArea::TypeName[] = "Mayo::PropertyArea";
-template<> const char PropertyVolume::TypeName[] = "Mayo::PropertyVolume";
-template<> const char PropertyMass::TypeName[] = "Mayo::PropertyMass";
-template<> const char PropertyTime::TypeName[] = "Mayo::PropertyTime";
-template<> const char PropertyAngle::TypeName[] = "Mayo::PropertyAngle";
-template<> const char PropertyVelocity::TypeName[] = "Mayo::PropertyVelocity";
+const char BasePropertyQuantity::TypeName[] = "Mayo::BasePropertyQuantity";
 
 } // namespace Mayo

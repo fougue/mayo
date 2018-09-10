@@ -603,6 +603,7 @@ void MainWindow::onApplicationItemSelectionChanged()
     }
     else {
         // TODO
+        uiDocProps->editDocumentItem(nullptr);
     }
     this->updateControlsActivation();
 }
