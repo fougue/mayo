@@ -214,9 +214,9 @@ public:
         p.setColor(QPalette::Window, QColor(53, 53, 53));
         p.setColor(QPalette::Button, QColor(73, 73, 73));
         p.setColor(QPalette::Highlight, QColor(110, 110, 110));
-        p.setColor(QPalette::Text, QColor(255, 255, 255));
-        p.setColor(QPalette::ButtonText, QColor(255, 255, 255));
-        p.setColor(QPalette::WindowText, QColor(255, 255, 255));
+        p.setColor(QPalette::Text, Qt::white);
+        p.setColor(QPalette::ButtonText, Qt::white);
+        p.setColor(QPalette::WindowText, Qt::white);
         const QColor linkColor(115, 131, 191);
         p.setColor(QPalette::Link, linkColor);
         p.setColor(QPalette::LinkVisited, linkColor);
@@ -233,6 +233,7 @@ public:
         qApp->setPalette(p);
 
         const QString css =
+                "QFrame[frameShape=\"5\"] { color: gray; margin-top: 2px; margin-bottom: 2px; } "
                 "QAbstractItemView { background: #505050; } "
                 "QAbstractItemView::item:hover { background: #606060; }"
                 "QLineEdit { background: #505050; }"

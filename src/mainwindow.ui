@@ -52,7 +52,7 @@
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../mayo.qrc">:/images/appicon_128.png</pixmap>
+              <pixmap>:/images/appicon_128.png</pixmap>
              </property>
              <property name="alignment">
               <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -196,7 +196,7 @@
                      <string>Close Left Side Bar</string>
                     </property>
                     <property name="icon">
-                     <iconset resource="../mayo.qrc">
+                     <iconset>
                       <normaloff>:/images/themes/classic/left-arrow-cross_16.png</normaloff>:/images/themes/classic/left-arrow-cross_16.png</iconset>
                     </property>
                     <property name="autoRaise">
@@ -337,7 +337,7 @@
                <item>
                 <widget class="QToolButton" name="btn_PreviousGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/back_32.png</normaloff>:/images/themes/classic/back_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -354,7 +354,7 @@
                <item>
                 <widget class="QToolButton" name="btn_NextGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/next_32.png</normaloff>:/images/themes/classic/next_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -394,7 +394,7 @@
                <item>
                 <widget class="QToolButton" name="btn_CloseGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/cross_32.png</normaloff>:/images/themes/classic/cross_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -628,7 +628,7 @@
   </action>
   <action name="actionSaveImageView">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/themes/classic/camera_32.png</normaloff>:/images/themes/classic/camera_32.png</iconset>
    </property>
    <property name="text">
@@ -700,7 +700,7 @@
   </action>
   <action name="actionShowHideLeftSidebar">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/themes/classic/left-sidebar_32.png</normaloff>:/images/themes/classic/left-sidebar_32.png</iconset>
    </property>
    <property name="text">
@@ -732,8 +732,6 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../mayo.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
