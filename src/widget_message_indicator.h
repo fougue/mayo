@@ -30,6 +30,8 @@ public:
 
     static void showMessage(const QString& msg, QWidget* parent);
 
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 protected:
     void paintEvent(QPaintEvent*) override;
 

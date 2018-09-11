@@ -11,6 +11,7 @@
 #include <QtCore/QPropertyAnimation>
 #include <QtGui/QFontMetricsF>
 #include <QtGui/QPainter>
+#include <QtGui/QResizeEvent>
 
 namespace Mayo {
 
@@ -35,6 +36,7 @@ WidgetMessageIndicator::WidgetMessageIndicator(const QString& msg, QWidget* pare
         const qreal rectHeight = m_messageRect.height() + 10;
         this->setGeometry(
                     QRect(5, parent->height() - rectHeight - 5, rectWidth, rectHeight));
+        parent->installEventFilter(this);
     }
 }
 
@@ -86,6 +88,18 @@ void WidgetMessageIndicator::runInternal()
 void WidgetMessageIndicator::showMessage(const QString& msg, QWidget* parent)
 {
     (new WidgetMessageIndicator(msg, parent))->run();
+}
+
+bool WidgetMessageIndicator::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == this->parentWidget() && event->type() == QEvent::Resize) {
+        auto eventResize = static_cast<const QResizeEvent*>(event);
+        if (eventResize->size().height() != eventResize->oldSize().height()) {
+            const qreal rectHeight = m_messageRect.height() + 10;
+            this->move(5, eventResize->size().height() - rectHeight - 5);
+        }
+    }
+    return false;
 }
 
 } // namespace Mayo
