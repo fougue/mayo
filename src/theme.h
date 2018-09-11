@@ -26,7 +26,9 @@ public:
         ButtonView3d_Hover,
         ButtonView3d_Checked,
         View3d_BackgroundGradientStart,
-        View3d_BackgroundGradientEnd
+        View3d_BackgroundGradientEnd,
+        MessageIndicator_Background,
+        MessageIndicator_Text
     };
 
     enum class Icon {

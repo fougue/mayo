@@ -74,6 +74,10 @@ public:
             return QColor(128, 148, 255);
         case Theme::Color::View3d_BackgroundGradientEnd:
             return Qt::white;
+        case Theme::Color::MessageIndicator_Background:
+            return QColor(128, 200, 255);
+        case Theme::Color::MessageIndicator_Text:
+            return appPalette.color(QPalette::WindowText);
         }
         return QColor();
     }
@@ -167,6 +171,10 @@ public:
             return Qt::lightGray;
         case Theme::Color::View3d_BackgroundGradientEnd:
             return Qt::white;
+        case Theme::Color::MessageIndicator_Background:
+            return appPalette.color(QPalette::Highlight).lighter(125);
+        case Theme::Color::MessageIndicator_Text:
+            return appPalette.color(QPalette::WindowText);
         }
         return QColor();
     }

@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "widget_message_indicator.h"
+#include "theme.h"
 
 #include <QtCore/QTimer>
 #include <QtCore/QPropertyAnimation>
@@ -61,13 +62,13 @@ void WidgetMessageIndicator::paintEvent(QPaintEvent*)
     p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing);
     p.setOpacity(m_opacity);
 
-    const QRectF boxRect(
-                0, 0, m_messageRect.width() + 18, m_messageRect.height() + 8);
-    p.fillRect(boxRect, QColor(128, 200, 255));
+    const QRectF& msgRect = m_messageRect;
+    const QRectF boxRect(0, 0, msgRect.width() + 18, msgRect.height() + 8);
+    p.fillRect(boxRect, mayoTheme()->color(Theme::Color::MessageIndicator_Background));
 
     p.setFont(Internal::indicatorFont(this->font()));
-    const QRectF textRect(
-                9, 4, m_messageRect.width() + 4, m_messageRect.height());
+    const QRectF textRect(9, 4, msgRect.width() + 4, msgRect.height());
+    p.setPen(mayoTheme()->color(Theme::Color::MessageIndicator_Text));
     p.drawText(textRect, m_message);
 }
 
