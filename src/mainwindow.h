@@ -24,6 +24,8 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+    void openDocumentsFromList(const QStringList& listFilePath);
+
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
@@ -55,7 +57,6 @@ private:
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
 
-    void openDocumentsFromList(const QStringList& listFilePath);
     void closeCurrentDocument();
     void closeDocument(int docIndex);
 
