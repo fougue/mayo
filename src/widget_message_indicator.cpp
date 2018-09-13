@@ -78,6 +78,7 @@ void WidgetMessageIndicator::runInternal()
 {
     auto anim = new QPropertyAnimation(this, "opacity", this);
     anim->setDuration(200);
+    anim->setStartValue(1.);
     anim->setEndValue(0.);
     QObject::connect(
                 anim, &QAbstractAnimation::finished,
@@ -97,6 +98,7 @@ bool WidgetMessageIndicator::eventFilter(QObject *watched, QEvent *event)
         if (eventResize->size().height() != eventResize->oldSize().height()) {
             const qreal rectHeight = m_messageRect.height() + 10;
             this->move(5, eventResize->size().height() - rectHeight - 5);
+            return true;
         }
     }
     return false;
