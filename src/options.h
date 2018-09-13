@@ -35,6 +35,11 @@ public:
     StlIoLibrary stlIoLibrary() const;
     void setStlIoLibrary(StlIoLibrary lib);
 
+    // Recent files
+
+    QStringList recentFiles() const;
+    void setRecentFiles(const QStringList& files);
+
     // BRep shape graphics
 
     QColor brepShapeDefaultColor() const;

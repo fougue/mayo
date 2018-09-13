@@ -80,9 +80,11 @@ private:
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
     QMenu* createMenuTreeReferenceSettings();
+    QMenu* createMenuRecentFiles();
 
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
+    QStringList m_listRecentFile;
 };
 
 } // namespace Mayo

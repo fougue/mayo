@@ -158,11 +158,26 @@ static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
                 MainWindow::tr("'%1'\nUnknown file format").arg(filepath));
 }
 
+static void prependRecentFile(QStringList* listRecentFile, const QString& filepath)
+{
+    constexpr int sizeLimit = 10;
+    const QString absFilepath =
+            QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
+    for (const QString& recentFile : *listRecentFile) {
+        if (recentFile == absFilepath)
+            return;
+    }
+    listRecentFile->insert(listRecentFile->begin(), absFilepath);
+    while (listRecentFile->size() > sizeLimit)
+        listRecentFile->pop_back();
+}
+
 } // namespace Internal
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-      m_ui(new Ui_MainWindow)
+      m_ui(new Ui_MainWindow),
+      m_listRecentFile(Options::instance()->recentFiles())
 {
     m_ui->setupUi(this);
     m_ui->splitter_Main->setChildrenCollapsible(false);
@@ -245,6 +260,9 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->label_MainHome, &QLabel::linkActivated,
                 this, &MainWindow::onHomePageLinkActivated);
+    QObject::connect(
+                m_ui->menu_File, &QMenu::aboutToShow,
+                this, &MainWindow::createMenuRecentFiles);
     // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
@@ -341,6 +359,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete m_ui;
+    Options::instance()->setRecentFiles(m_listRecentFile);
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
@@ -407,10 +426,13 @@ void MainWindow::importInCurrentDoc()
             for (const QString& filepath : resFileNames.listFilepath) {
                 const Application::PartFormat fileFormat =
                         hasUserFormat ? userFormat : Application::findPartFormat(filepath);
-                if (fileFormat != Application::PartFormat::Unknown)
+                if (fileFormat != Application::PartFormat::Unknown) {
                     this->runImportTask(doc, fileFormat, filepath);
-                else
+                    Internal::prependRecentFile(&m_listRecentFile, filepath);
+                }
+                else {
                     Internal::msgBoxErrorFileFormat(this, filepath);
+                }
             }
         }
     }
@@ -718,14 +740,16 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
         const QFileInfo loc(filePath);
         auto itDocFound = app->findDocumentByLocation(loc);
         if (itDocFound == vecDocument.cend()) {
-            const QString locAbsoluteFilePath = loc.absoluteFilePath();
+            const QString locAbsoluteFilePath =
+                    QDir::toNativeSeparators(loc.absoluteFilePath());
             const Application::PartFormat fileFormat =
                     Application::findPartFormat(locAbsoluteFilePath);
             if (fileFormat != Application::PartFormat::Unknown) {
                 Document* doc = app->createDocument(loc.fileName());
-                doc->setFilePath(QDir::toNativeSeparators(locAbsoluteFilePath));
+                doc->setFilePath(locAbsoluteFilePath);
                 app->addDocument(doc);
                 this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
+                Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
             }
             else {
                 Internal::msgBoxErrorFileFormat(this, locAbsoluteFilePath);
@@ -794,7 +818,7 @@ void MainWindow::setCurrentDocumentIndex(int idx)
     m_ui->combo_GuiDocuments->setCurrentIndex(idx);
 }
 
-WidgetGuiDocument *MainWindow::widgetGuiDocument(int idx) const
+WidgetGuiDocument* MainWindow::widgetGuiDocument(int idx) const
 {
     return qobject_cast<WidgetGuiDocument*>(
                 m_ui->stack_GuiDocuments->widget(idx));
@@ -806,7 +830,7 @@ QWidget* MainWindow::findLeftHeaderPlaceHolder() const
         "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
 }
 
-QWidget *MainWindow::recreateLeftHeaderPlaceHolder()
+QWidget* MainWindow::recreateLeftHeaderPlaceHolder()
 {
     QWidget* placeHolder = this->findLeftHeaderPlaceHolder();
     delete placeHolder;
@@ -864,6 +888,30 @@ QMenu *MainWindow::createMenuTreeReferenceSettings()
         }
     });
 
+    return menu;
+}
+
+QMenu* MainWindow::createMenuRecentFiles()
+{
+    QMenu* menu = m_ui->actionRecentFiles->menu();
+    if (menu == nullptr)
+        menu = new QMenu(this);
+    menu->clear();
+    int idFile = 0;
+    for (const QString& file : m_listRecentFile) {
+        const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(file);
+        menu->addAction(entryRecentFile, [=]{
+            this->openDocumentsFromList(QStringList(file));
+        });
+    }
+    if (!m_listRecentFile.empty()) {
+        menu->addSeparator();
+        menu->addAction(tr("Clear menu"), [=]{
+            menu->clear();
+            m_listRecentFile.clear();
+        });
+    }
+    m_ui->actionRecentFiles->setMenu(menu);
     return menu;
 }
 
