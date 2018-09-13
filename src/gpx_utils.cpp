@@ -26,13 +26,11 @@ bool GpxUtils::V3dView_hasClipPlane(
     const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
     if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
         return false;
-    auto itFound = std::find_if(
-                seqClipPlane->cbegin(),
-                seqClipPlane->cend(),
-                [=](const Handle_Graphic3d_ClipPlane& candidate) {
-       return candidate.operator->() == plane.operator->();
-    });
-    return itFound != seqClipPlane->cend();
+    for (const Handle_Graphic3d_ClipPlane& candidate : *seqClipPlane) {
+        if (candidate.operator->() == plane.operator->())
+            return true;
+    }
+    return false;
 }
 
 gp_Pnt GpxUtils::V3dView_to3dPosition(

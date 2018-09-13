@@ -44,11 +44,11 @@ GuiApplication *GuiApplication::instance()
 
 GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
 {
-    auto itFound = std::find_if(
-                m_vecDocGuiDoc.cbegin(),
-                m_vecDocGuiDoc.cend(),
-                [=](const Doc_GuiDoc& pair) { return pair.doc == doc; });
-    return itFound != m_vecDocGuiDoc.cend() ? itFound->guiDoc : nullptr;
+    for (const Doc_GuiDoc& pair : m_vecDocGuiDoc) {
+        if (pair.doc == doc)
+            return pair.guiDoc;
+    }
+    return nullptr;
 }
 
 ApplicationItemSelectionModel* GuiApplication::selectionModel() const

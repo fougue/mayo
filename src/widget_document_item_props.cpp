@@ -121,13 +121,11 @@ static QString propertyValueText(const Property* prop)
     else if (propTypeName == PropertyEnumeration::TypeName) {
         auto propEnum = static_cast<const PropertyEnumeration*>(prop);
         const auto& enumMappings = propEnum->enumeration().mappings();
-        auto itEnum = std::find_if(
-                    enumMappings.cbegin(),
-                    enumMappings.cend(),
-                    [=](const Enumeration::Mapping& mapping) {
-            return mapping.value == propEnum->value();
-        });
-        return itEnum != enumMappings.cend() ? itEnum->string : QString();
+        for (const Enumeration::Mapping& mapping : enumMappings) {
+            if (mapping.value == propEnum->value())
+                return mapping.string;
+        }
+        return QString();
     }
     else if (propTypeName == BasePropertyQuantity::TypeName) {
         auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);

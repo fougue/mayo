@@ -259,11 +259,11 @@ void GuiDocument::onItemErased(const DocumentItem *item)
 const GuiDocument::GuiDocumentItem*
 GuiDocument::findGuiDocumentItem(const DocumentItem *item) const
 {
-    auto itFound = std::find_if(
-                m_vecGuiDocumentItem.cbegin(),
-                m_vecGuiDocumentItem.cend(),
-                [=](const GuiDocumentItem& guiItem) { return guiItem.docItem == item; });
-    return itFound != m_vecGuiDocumentItem.cend() ? &(*itFound) : nullptr;
+    for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
+        if (guiItem.docItem == item)
+            return &guiItem;
+    }
+    return nullptr;
 }
 
 GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem *item, GpxDocumentItem *gpx)
@@ -271,17 +271,15 @@ GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem *item, GpxDocumentIte
 {
 }
 
-Handle_SelectMgr_EntityOwner GuiDocument::GuiDocumentItem::findBrepOwner(const TopoDS_Face& face) const
+Handle_SelectMgr_EntityOwner
+GuiDocument::GuiDocumentItem::findBrepOwner(const TopoDS_Face& face) const
 {
-    auto itFound = std::find_if(
-                vecGpxEntityOwner.cbegin(),
-                vecGpxEntityOwner.cend(),
-                [=](const Handle_SelectMgr_EntityOwner& owner) {
+    for (const Handle_SelectMgr_EntityOwner& owner : vecGpxEntityOwner) {
         auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
-        return !brepOwner.IsNull() ? brepOwner->Shape() == face : false;
-    });
-    return itFound != vecGpxEntityOwner.cend() ?
-                *itFound : Handle_SelectMgr_EntityOwner();
+        if (!brepOwner.IsNull() && brepOwner->Shape() == face)
+            return owner;
+    }
+    return Handle_SelectMgr_EntityOwner();
 }
 
 } // namespace Mayo

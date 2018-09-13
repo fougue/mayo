@@ -36,12 +36,12 @@ Enumeration::Value Enumeration::valueAt(size_t i) const
 
 Enumeration::Value Enumeration::value(const QString& str) const
 {
-    auto it = std::find_if(
-                m_vecMapping.cbegin(),
-                m_vecMapping.cend(),
-                [&](const Mapping& mapping) { return mapping.string == str; });
-    assert(it != m_vecMapping.cend());
-    return it->value;
+    for (const Mapping& mapping : m_vecMapping) {
+        if (mapping.string == str)
+            return mapping.value;
+    }
+    assert(false);
+    return -1;
 }
 
 const QString& Enumeration::string(Value eval) const

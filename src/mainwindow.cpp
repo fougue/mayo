@@ -62,17 +62,14 @@ static const char keyReferenceItemTextTemplateId[] = "GUI/MainWindow_ReferenceIt
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
-    const auto itFormatFound =
-            std::find_if(Application::partFormats().cbegin(),
-                         Application::partFormats().cend(),
-                         [=](Application::PartFormat format) {
-        return filter == Application::partFormatFilter(format);
-    } );
-    return itFormatFound != Application::partFormats().cend() ?
-                *itFormatFound :
-                Application::PartFormat::Unknown;
+    for (Application::PartFormat format : Application::partFormats()) {
+        if (filter == Application::partFormatFilter(format))
+            return format;
+    }
+    return Application::PartFormat::Unknown;
 }
 
+// TODO: move in Options
 struct ImportExportSettings {
     QString openDir;
     QString selectedFilter;
