@@ -124,8 +124,6 @@ SOURCES += \
     src/xde_document_item.cpp \
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
-include(src/3rdparty/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
-INCLUDEPATH += src/3rdparty/qt-solutions/qtpropertybrowser/src
 
 FORMS += \
     src/dialog_about.ui \
