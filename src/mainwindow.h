@@ -79,7 +79,7 @@ private:
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
-    QMenu* createMenuTreeReferenceSettings();
+    QMenu* createMenuModelTreeSettings();
     QMenu* createMenuRecentFiles();
 
     class Ui_MainWindow* m_ui = nullptr;

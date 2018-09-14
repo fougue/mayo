@@ -43,6 +43,7 @@ public:
         LeftArrowCross,
         IndicatorDown,
         Stop,
+        Gear,
         ItemMesh
     };
 

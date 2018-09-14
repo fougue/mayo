@@ -40,5 +40,6 @@
         <file>images/themes/classic/mesh_16.png</file>
         <file>images/themes/classic/mesh_24.png</file>
         <file>images/themes/classic/mesh_32.png</file>
+        <file>images/themes/classic/gear_16.png</file>
     </qresource>
 </RCC>

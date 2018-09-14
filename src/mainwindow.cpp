@@ -682,30 +682,14 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
     if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree
         && placeHolder != nullptr)
     {
-        auto btnLinkWithRightCombo = new QToolButton(placeHolder);
-        btnLinkWithRightCombo->setAutoRaise(true);
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
-        btnLinkWithRightCombo->setCheckable(true);
-        btnLinkWithRightCombo->setChecked(
-                    QSettings().value(Internal::keyLinkWithDocumentSelector, false)
-                    .toBool());
-        btnLinkWithRightCombo->setFixedSize(btnSideLen, btnSideLen);
-        btnLinkWithRightCombo->setIcon(mayoTheme()->icon(Theme::Icon::Link));
-        btnLinkWithRightCombo->setToolTip(tr("Link With Document Selector"));
-        placeHolder->layout()->addWidget(btnLinkWithRightCombo);
-        QObject::connect(btnLinkWithRightCombo, &QAbstractButton::clicked, [=]{
-            QSettings().setValue(
-                        Internal::keyLinkWithDocumentSelector,
-                        btnLinkWithRightCombo->isChecked());
-        });
-
         auto btnSettings = new QToolButton(placeHolder);
         btnSettings->setAutoRaise(true);
         btnSettings->setFixedSize(btnSideLen, btnSideLen);
-        btnSettings->setIcon(mayoTheme()->icon(Theme::Icon::Pin));
-        btnSettings->setToolTip(tr("Text mode for assembly references"));
+        btnSettings->setIcon(mayoTheme()->icon(Theme::Icon::Gear));
+        btnSettings->setToolTip(tr("Options"));
         placeHolder->layout()->addWidget(btnSettings);
-        btnSettings->setMenu(this->createMenuTreeReferenceSettings());
+        btnSettings->setMenu(this->createMenuModelTreeSettings());
         btnSettings->setPopupMode(QToolButton::InstantPopup);
     }
     else {
@@ -840,50 +824,62 @@ QWidget* MainWindow::recreateLeftHeaderPlaceHolder()
     return placeHolder;
 }
 
-QMenu *MainWindow::createMenuTreeReferenceSettings()
+QMenu* MainWindow::createMenuModelTreeSettings()
 {
     auto menu = new QMenu(this->findLeftHeaderPlaceHolder());
     menu->setToolTipsVisible(true);
 
-    auto group = new QActionGroup(menu);
-    group->setExclusive(true);
-    auto actionOnlyInstance = new QAction(tr("Reference"), menu);
-    actionOnlyInstance->setToolTip(tr("Show only name of reference"));
-    auto actionOnlyReferred = new QAction(tr("Referred"), menu);
-    actionOnlyReferred->setToolTip(tr("Show only name of referred entity"));
-    // UTF8 rightwards arrow : \xe2\x86\x92
-    auto actionInstanceAndReferred =
-            new QAction(tr("Reference \xe2\x86\x92 Referred"), menu);
-    actionInstanceAndReferred->setToolTip(
-                tr("Show name of reference and referred entity"));
-
-    Options* opts = Options::instance();
-    using TextMode = Options::ReferenceItemTextMode;
-    using MenuData = std::tuple<QAction*, TextMode>;
-    const std::vector<MenuData> arrayMenuData = {
-        { actionOnlyInstance, TextMode::ReferenceOnly },
-        { actionOnlyReferred, TextMode::ReferredOnly },
-        { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
-    };
-    for (const MenuData& menuData : arrayMenuData) {
-        QAction* action = std::get<0>(menuData);
+    {   // Link with document selector
+        const bool isLinked =
+                QSettings().value(Internal::keyLinkWithDocumentSelector, false)
+                .toBool();
+        QAction* action = menu->addAction(tr("Link With Document Selector"));
         action->setCheckable(true);
-        group->addAction(action);
-        menu->addAction(action);
-        if (std::get<1>(menuData) == opts->referenceItemTextMode())
-            action->setChecked(true);
+        action->setChecked(isLinked);
+        QObject::connect(action, &QAction::triggered, [=](bool on) {
+            QSettings().setValue(Internal::keyLinkWithDocumentSelector, on);
+        });
     }
 
-    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
+    menu->addSeparator();
+    {   // Reference item text mode
+        auto group = new QActionGroup(menu);
+        group->setExclusive(true);
+        auto actionOnlyInstance =
+                new QAction(tr("Show only name of reference entities"), menu);
+        auto actionOnlyReferred =
+                new QAction(tr("Show only name of referred entities"), menu);
+        auto actionInstanceAndReferred =
+                new QAction(tr("Show name of both reference and referred entities"), menu);
+
+        Options* opts = Options::instance();
+        using TextMode = Options::ReferenceItemTextMode;
+        using MenuData = std::tuple<QAction*, TextMode>;
+        const std::vector<MenuData> arrayMenuData = {
+            { actionOnlyInstance, TextMode::ReferenceOnly },
+            { actionOnlyReferred, TextMode::ReferredOnly },
+            { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
+        };
         for (const MenuData& menuData : arrayMenuData) {
-            if (std::get<0>(menuData) == action) {
-                const TextMode textMode = std::get<1>(menuData);
-                opts->setReferenceItemTextMode(textMode);
-                m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
-                            Options::toReferenceItemTextTemplate(textMode));
-            }
+            QAction* action = std::get<0>(menuData);
+            action->setCheckable(true);
+            group->addAction(action);
+            menu->addAction(action);
+            if (std::get<1>(menuData) == opts->referenceItemTextMode())
+                action->setChecked(true);
         }
-    });
+
+        QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
+            for (const MenuData& menuData : arrayMenuData) {
+                if (std::get<0>(menuData) == action) {
+                    const TextMode textMode = std::get<1>(menuData);
+                    opts->setReferenceItemTextMode(textMode);
+                    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+                                Options::toReferenceItemTextTemplate(textMode));
+                }
+            }
+        });
+    }
 
     return menu;
 }
