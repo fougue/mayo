@@ -581,7 +581,14 @@
     <addaction name="actionPreviousDoc"/>
     <addaction name="actionNextDoc"/>
    </widget>
+   <widget class="QMenu" name="menu_Display">
+    <property name="title">
+     <string>&amp;Display</string>
+    </property>
+    <addaction name="actionToggleOriginTrihedron"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Display"/>
    <addaction name="menu_Options"/>
    <addaction name="menu_Window"/>
    <addaction name="menu_Help"/>
@@ -714,6 +721,11 @@
   <action name="actionRecentFiles">
    <property name="text">
     <string>Recent files</string>
+   </property>
+  </action>
+  <action name="actionToggleOriginTrihedron">
+   <property name="text">
+    <string>Toggle Origin Trihedron</string>
    </property>
   </action>
  </widget>

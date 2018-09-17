@@ -260,6 +260,10 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->menu_File, &QMenu::aboutToShow,
                 this, &MainWindow::createMenuRecentFiles);
+    // "Display" actions
+    QObject::connect(
+                m_ui->actionToggleOriginTrihedron, &QAction::triggered,
+                this, &MainWindow::toggleCurrentDocOriginTrihedron);
     // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
@@ -308,6 +312,7 @@ MainWindow::MainWindow(QWidget *parent)
         const Document* doc = Application::instance()->documentAt(docIdx);
         if (doc != nullptr)
             m_ui->widget_FileSystem->setLocation(doc->filePath());
+        this->updateActionText(m_ui->actionToggleOriginTrihedron);
     });
     QObject::connect(
                 m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
@@ -349,6 +354,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->updateControlsActivation();
     this->updateActionText(m_ui->actionFullscreenOrNormal);
     this->updateActionText(m_ui->actionShowHideLeftSidebar);
+    this->updateActionText(m_ui->actionToggleOriginTrihedron);
     m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
                 Options::instance()->referenceItemTextTemplate());
 }
@@ -413,7 +419,7 @@ void MainWindow::openDocuments()
 
 void MainWindow::importInCurrentDoc()
 {
-    auto widgetGuiDoc = this->widgetGuiDocument(this->currentDocumentIndex());
+    auto widgetGuiDoc = this->currentWidgetGuiDocument();
     if (widgetGuiDoc != nullptr) {
         Document* doc = widgetGuiDoc->guiDocument()->document();
         const auto resFileNames = Internal::OpenFileNames::get(this);
@@ -528,6 +534,16 @@ void MainWindow::quitApp()
     QApplication::quit();
 }
 
+void MainWindow::toggleCurrentDocOriginTrihedron()
+{
+    WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
+    if (widget != nullptr) {
+        widget->guiDocument()->toggleOriginTrihedronVisibility();
+        widget->guiDocument()->updateV3dViewer();
+        this->updateActionText(m_ui->actionToggleOriginTrihedron);
+    }
+}
+
 void MainWindow::editOptions()
 {
     auto dlg = new DialogOptions(this);
@@ -536,7 +552,7 @@ void MainWindow::editOptions()
 
 void MainWindow::saveImageView()
 {
-    auto widgetGuiDoc = this->widgetGuiDocument(this->currentDocumentIndex());
+    auto widgetGuiDoc = this->currentWidgetGuiDocument();
     auto dlg = new DialogSaveImageView(widgetGuiDoc->guiDocument()->v3dView());
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
@@ -654,6 +670,10 @@ void MainWindow::onHomePageLinkActivated(const QString &link)
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto widget = new WidgetGuiDocument(guiDoc);
+    if (Options::instance()->defaultShowOriginTrihedron()) {
+        guiDoc->toggleOriginTrihedronVisibility();
+        guiDoc->updateV3dViewer();
+    }
     BaseV3dViewController* ctrl = widget->controller();
     QObject::connect(
                 ctrl, &BaseV3dViewController::mouseMoved,
@@ -667,6 +687,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     });
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
+    this->updateActionText(m_ui->actionToggleOriginTrihedron);
     this->setCurrentDocumentIndex(Application::instance()->documentCount() - 1);
 }
 
@@ -753,6 +774,7 @@ void MainWindow::updateControlsActivation()
     if (currMainPage != newMainPage)
         m_ui->stack_Main->setCurrentWidget(newMainPage);
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
+    m_ui->actionToggleOriginTrihedron->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
     m_ui->actionCloseDoc->setEnabled(!appDocumentsEmpty);
     const int currentDocIndex = this->currentDocumentIndex();
@@ -785,6 +807,14 @@ void MainWindow::updateActionText(QAction* action)
                     tr("Hide Left Sidebar") :
                     tr("Show Left Sidebar");
     }
+    else if (action == m_ui->actionToggleOriginTrihedron) {
+        const WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
+        if (widget != nullptr) {
+            text = widget->guiDocument()->isOriginTrihedronVisible() ?
+                        tr("Hide Origin Trihedron") :
+                        tr("Show Origin Trihedron");
+        }
+    }
     if (!text.isEmpty())
         action->setText(text);
 }
@@ -803,6 +833,11 @@ WidgetGuiDocument* MainWindow::widgetGuiDocument(int idx) const
 {
     return qobject_cast<WidgetGuiDocument*>(
                 m_ui->stack_GuiDocuments->widget(idx));
+}
+
+WidgetGuiDocument *MainWindow::currentWidgetGuiDocument() const
+{
+    return this->widgetGuiDocument(this->currentDocumentIndex());
 }
 
 QWidget* MainWindow::findLeftHeaderPlaceHolder() const

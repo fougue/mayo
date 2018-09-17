@@ -35,6 +35,9 @@ public:
     StlIoLibrary stlIoLibrary() const;
     void setStlIoLibrary(StlIoLibrary lib);
 
+    bool defaultShowOriginTrihedron() const;
+    void setDefaultShowOriginTrihedron(bool on);
+
     // Recent files
 
     QStringList recentFiles() const;

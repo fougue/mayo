@@ -42,6 +42,7 @@ private:
     void importInCurrentDoc();
     void exportSelectedItems();
     void quitApp();
+    void toggleCurrentDocOriginTrihedron();
     void editOptions();
     void saveImageView();
     void inspectXde();
@@ -77,6 +78,7 @@ private:
     void setCurrentDocumentIndex(int idx);
 
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
+    WidgetGuiDocument* currentWidgetGuiDocument() const;
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
     QMenu* createMenuModelTreeSettings();

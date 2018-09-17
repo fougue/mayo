@@ -101,7 +101,8 @@ GuiDocument::GuiDocument(Document *doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
       m_v3dView(m_v3dViewer->CreateView()),
-      m_aisContext(new AIS_InteractiveContext(m_v3dViewer))
+      m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
+      m_aisOriginTrihedron(Internal::createOriginTrihedron())
 {
     assert(doc != nullptr);
 
@@ -122,8 +123,6 @@ GuiDocument::GuiDocument(Document *doc)
                 Quantity_NOC_GRAY50,
                 0.075,
                 V3d_ZBUFFER);
-    // 3D scene - Add trihedron placed at the origin
-    m_aisContext->Display(Internal::createOriginTrihedron(), true);
 
     QObject::connect(doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
     QObject::connect(doc, &Document::itemErased, this, &GuiDocument::onItemErased);
@@ -203,6 +202,19 @@ void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
 void GuiDocument::clearItemSelection()
 {
     m_aisContext->ClearSelected(false);
+}
+
+bool GuiDocument::isOriginTrihedronVisible() const
+{
+    return m_aisContext->IsDisplayed(m_aisOriginTrihedron);
+}
+
+void GuiDocument::toggleOriginTrihedronVisibility()
+{
+    if (this->isOriginTrihedronVisible())
+        m_aisContext->Erase(m_aisOriginTrihedron, false);
+    else
+        m_aisContext->Display(m_aisOriginTrihedron, false);
 }
 
 void GuiDocument::updateV3dViewer()

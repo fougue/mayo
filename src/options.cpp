@@ -10,6 +10,7 @@ namespace Mayo {
 
 static const char keyStlIoLibrary[] = "Core/stlIoLibrary";
 static const char keyRecentFiles[] = "File/recentFiles";
+static const char keyDefaultShowOriginTrihedron[] = "General/defaultShowOriginTrihedron";
 static const char keyBrepShapeDefaultColor[] = "BRepShapeGpx/defaultColor";
 static const char keyBrepShapeDefaultMaterial[] = "BRepShapeGpx/defaultMaterial";
 static const char keyMeshDefaultColor[] = "MeshGpx/defaultColor";
@@ -42,6 +43,16 @@ Options::StlIoLibrary Options::stlIoLibrary() const
 void Options::setStlIoLibrary(Options::StlIoLibrary lib)
 {
     m_settings.setValue(keyStlIoLibrary, static_cast<int>(lib));
+}
+
+bool Options::defaultShowOriginTrihedron() const
+{
+    return m_settings.value(keyDefaultShowOriginTrihedron, true).toBool();
+}
+
+void Options::setDefaultShowOriginTrihedron(bool on)
+{
+    m_settings.setValue(keyDefaultShowOriginTrihedron, on);
 }
 
 QStringList Options::recentFiles() const

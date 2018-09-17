@@ -36,6 +36,9 @@ public:
     void toggleItemSelected(const ApplicationItem& appItem);
     void clearItemSelection();
 
+    bool isOriginTrihedronVisible() const;
+    void toggleOriginTrihedronVisibility();
+
     void updateV3dViewer();
 
 signals:
@@ -60,6 +63,7 @@ private:
     Handle_V3d_Viewer m_v3dViewer;
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveContext m_aisContext;
+    Handle_AIS_InteractiveObject m_aisOriginTrihedron;
     std::vector<GuiDocumentItem> m_vecGuiDocumentItem;
     Bnd_Box m_gpxBoundingBox;
 };
