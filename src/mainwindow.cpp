@@ -192,6 +192,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
     m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
 
+    m_ui->actionZoomIn->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
+    m_ui->actionZoomOut->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
     m_ui->actionPreviousDoc->setIcon(mayoTheme()->icon(Theme::Icon::Back));
     m_ui->actionNextDoc->setIcon(mayoTheme()->icon(Theme::Icon::Next));
     m_ui->actionCloseDoc->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
@@ -264,6 +266,12 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
                 m_ui->actionToggleOriginTrihedron, &QAction::triggered,
                 this, &MainWindow::toggleCurrentDocOriginTrihedron);
+    QObject::connect(
+                m_ui->actionZoomIn, &QAction::triggered,
+                this, &MainWindow::zoomInCurrentDoc);
+    QObject::connect(
+                m_ui->actionZoomOut, &QAction::triggered,
+                this, &MainWindow::zoomOutCurrentDoc);
     // "Tools" actions
     QObject::connect(
                 m_ui->actionSaveImageView, &QAction::triggered,
@@ -544,6 +552,16 @@ void MainWindow::toggleCurrentDocOriginTrihedron()
     }
 }
 
+void MainWindow::zoomInCurrentDoc()
+{
+    this->currentWidgetGuiDocument()->controller()->zoomIn();
+}
+
+void MainWindow::zoomOutCurrentDoc()
+{
+    this->currentWidgetGuiDocument()->controller()->zoomOut();
+}
+
 void MainWindow::editOptions()
 {
     auto dlg = new DialogOptions(this);
@@ -775,6 +793,8 @@ void MainWindow::updateControlsActivation()
         m_ui->stack_Main->setCurrentWidget(newMainPage);
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
     m_ui->actionToggleOriginTrihedron->setEnabled(!appDocumentsEmpty);
+    m_ui->actionZoomIn->setEnabled(!appDocumentsEmpty);
+    m_ui->actionZoomOut->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
     m_ui->actionCloseDoc->setEnabled(!appDocumentsEmpty);
     const int currentDocIndex = this->currentDocumentIndex();

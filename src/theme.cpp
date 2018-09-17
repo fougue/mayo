@@ -97,6 +97,8 @@ public:
         case Icon::IndicatorDown: return QPixmap(":/images/themes/classic/indicator-down_8.png");
         case Icon::Stop: return QPixmap(":/images/no.png");
         case Icon::Gear: return QPixmap(":/images/themes/classic/gear_16.png");
+        case Icon::ZoomIn: return QPixmap(":/images/themes/classic/zoom-in_32.png");
+        case Icon::ZoomOut: return QPixmap(":/images/themes/classic/zoom-out_32.png");
         case Icon::ItemMesh: return QPixmap(":/images/themes/classic/mesh_16.png");
         }
         return QPixmap();
@@ -127,6 +129,8 @@ public:
         case Icon::IndicatorDown: return lazyIcon<Icon::IndicatorDown>();
         case Icon::Stop: return lazyIcon<Icon::Stop>();
         case Icon::Gear: return lazyIcon<Icon::Gear>();
+        case Icon::ZoomIn: return lazyIcon<Icon::ZoomIn>();
+        case Icon::ZoomOut: return lazyIcon<Icon::ZoomOut>();
         case Icon::ItemMesh: return lazyIcon<Icon::ItemMesh>();
         }
         return nullIcn;
@@ -207,6 +211,8 @@ public:
         case Icon::LeftArrowCross: return invertedClassicIcon<Icon::LeftArrowCross>();
         case Icon::IndicatorDown: return invertedClassicIcon<Icon::IndicatorDown>();
         case Icon::Gear: return invertedClassicIcon<Icon::Gear>();
+        case Icon::ZoomIn: return invertedClassicIcon<Icon::ZoomIn>();
+        case Icon::ZoomOut: return invertedClassicIcon<Icon::ZoomOut>();
         case Icon::Stop: {
             static const QIcon icn(":/images/themes/dark/stop_32.png");
             return icn;

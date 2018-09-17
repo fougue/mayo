@@ -118,13 +118,10 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
     }
     case QEvent::Wheel: {
         auto wheelEvent = static_cast<const QWheelEvent*>(event);
-        Standard_Real currentScale = view->Scale();
         if (wheelEvent->delta() > 0)
-            currentScale *= 1.1; // +10%
+            this->zoomIn();
         else
-            currentScale /= 1.1; // -10%
-        view->SetScale(currentScale);
-        emit viewScaled();
+            this->zoomOut();
         return true;
     }
     default: return false;
@@ -154,6 +151,18 @@ bool BaseV3dViewController::isRotating() const
 bool BaseV3dViewController::isPanning() const
 {
     return m_statePanning;
+}
+
+void BaseV3dViewController::zoomIn()
+{
+    m_view->SetScale(m_view->Scale() * 1.1); // +10%
+    emit viewScaled();
+}
+
+void BaseV3dViewController::zoomOut()
+{
+    m_view->SetScale(m_view->Scale() / 1.1); // -10%
+    emit viewScaled();
 }
 
 void BaseV3dViewController::setStateRotation(bool on)

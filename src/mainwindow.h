@@ -43,6 +43,8 @@ private:
     void exportSelectedItems();
     void quitApp();
     void toggleCurrentDocOriginTrihedron();
+    void zoomInCurrentDoc();
+    void zoomOutCurrentDoc();
     void editOptions();
     void saveImageView();
     void inspectXde();

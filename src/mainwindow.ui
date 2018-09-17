@@ -586,6 +586,9 @@
      <string>&amp;Display</string>
     </property>
     <addaction name="actionToggleOriginTrihedron"/>
+    <addaction name="separator"/>
+    <addaction name="actionZoomIn"/>
+    <addaction name="actionZoomOut"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Display"/>
@@ -726,6 +729,22 @@
   <action name="actionToggleOriginTrihedron">
    <property name="text">
     <string>Toggle Origin Trihedron</string>
+   </property>
+  </action>
+  <action name="actionZoomIn">
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl++</string>
+   </property>
+  </action>
+  <action name="actionZoomOut">
+   <property name="text">
+    <string>Zoom Out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+-</string>
    </property>
   </action>
  </widget>

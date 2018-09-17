@@ -44,6 +44,8 @@ public:
         IndicatorDown,
         Stop,
         Gear,
+        ZoomIn,
+        ZoomOut,
         ItemMesh
     };
 

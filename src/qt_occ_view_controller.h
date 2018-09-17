@@ -21,6 +21,9 @@ public:
     bool isRotating() const;
     bool isPanning() const;
 
+    void zoomIn();
+    void zoomOut();
+
 signals:
     void viewRotationStarted();
     void viewRotationEnded();
