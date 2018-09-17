@@ -15,8 +15,12 @@ namespace Mayo {
 
 Document::Document(Application *app)
     : QObject(app),
-      m_app(app)
+      m_app(app),
+      propertyLabel(this, tr("Label")),
+      propertyFilePath(this, tr("File path"))
 {
+    this->propertyLabel.setUserReadOnly(true);
+    this->propertyFilePath.setUserReadOnly(true);
 }
 
 Document::~Document()
@@ -37,22 +41,22 @@ Application *Document::application()
 
 const QString &Document::label() const
 {
-    return m_label;
+    return this->propertyLabel.value();
 }
 
 void Document::setLabel(const QString &v)
 {
-    m_label = v;
+    this->propertyLabel.setValue(v);
 }
 
 const QString &Document::filePath() const
 {
-    return m_filePath;
+    return this->propertyFilePath.value();
 }
 
 void Document::setFilePath(const QString &filepath)
 {
-    m_filePath = filepath;
+    this->propertyFilePath.setValue(filepath);
 }
 
 bool Document::eraseRootItem(DocumentItem *docItem)

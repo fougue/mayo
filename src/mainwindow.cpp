@@ -28,7 +28,7 @@
 #include "widget_application_tree.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
-#include "widget_document_item_props.h"
+#include "widget_properties_editor.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
 
@@ -186,7 +186,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
-    m_ui->widget_DocumentProps->editDocumentItem(nullptr);
+    m_ui->widget_Properties->clear();
 
     m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
@@ -629,7 +629,7 @@ void MainWindow::reportbug()
 void MainWindow::onApplicationItemSelectionChanged()
 {
     const WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
-    WidgetDocumentItemProps* uiDocProps = m_ui->widget_DocumentProps;
+    WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     Span<const ApplicationItem> spanAppItem =
             GuiApplication::instance()->selectionModel()->selectedItems();
@@ -645,10 +645,13 @@ void MainWindow::onApplicationItemSelectionChanged()
                         ShapePropsOption::MergeReferred : ShapePropsOption::None;
             std::vector<HandleProperty> vecShapeProp =
                     xdeItem->shapeProperties(xdeLabel, opt);
-            uiDocProps->editProperties(vecShapeProp);
+            uiProps->editProperties(vecShapeProp);
         }
-        else {
-            uiDocProps->editDocumentItem(item.documentItem());
+        else if (item.isDocumentItem()) {
+            uiProps->editProperties(item.documentItem());
+        }
+        else if (item.isDocument()) {
+            uiProps->editProperties(item.document());
         }
 
         if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
@@ -664,7 +667,7 @@ void MainWindow::onApplicationItemSelectionChanged()
     }
     else {
         // TODO
-        uiDocProps->editDocumentItem(nullptr);
+        uiProps->clear();
     }
     this->updateControlsActivation();
 }

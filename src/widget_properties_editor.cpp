@@ -4,8 +4,9 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "widget_document_item_props.h"
+#include "widget_properties_editor.h"
 
+#include "document.h"
 #include "document_item.h"
 #include "gui_application.h"
 #include "gui_document.h"
@@ -13,7 +14,7 @@
 #include "options.h"
 #include "string_utils.h"
 #include "unit_system.h"
-#include "ui_widget_document_item_props.h"
+#include "ui_widget_properties_editor.h"
 #include <fougtools/occtools/qt_utils.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
 
@@ -77,7 +78,7 @@ static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
 
 static QString yesNoString(bool on)
 {
-    return on ? WidgetDocumentItemProps::tr("Yes") : WidgetDocumentItemProps::tr("No");
+    return on ? WidgetPropertiesEditor::tr("Yes") : WidgetPropertiesEditor::tr("No");
 }
 
 static QString propertyValueText(const Property* prop)
@@ -132,11 +133,11 @@ static QString propertyValueText(const Property* prop)
         const UnitSystem::TranslateResult trRes =
                 options->unitSystemTranslate(
                     qtyProp->quantityValue(), qtyProp->quantityUnit());
-        return WidgetDocumentItemProps::tr("%1%2")
+        return WidgetPropertiesEditor::tr("%1%2")
                 .arg(StringUtils::text(trRes.value, options->defaultTextOptions()))
                 .arg(trRes.strUnit);
     }
-    return WidgetDocumentItemProps::tr("ERROR: no stringifier for property type '%1'")
+    return WidgetPropertiesEditor::tr("ERROR: no stringifier for property type '%1'")
             .arg(propTypeName);
 }
 
@@ -235,7 +236,7 @@ static QWidget* createPropertyEditor(PropertyOccColor* prop, QWidget* parent)
 
     auto btnColor = new QToolButton(frame);
     btnColor->setText("...");
-    btnColor->setToolTip(WidgetDocumentItemProps::tr("Choose color ..."));
+    btnColor->setToolTip(WidgetPropertiesEditor::tr("Choose color ..."));
     QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
         auto dlg = new QColorDialog(editor);
         dlg->setCurrentColor(inputColor);
@@ -354,9 +355,9 @@ public:
 
 } // namespace Internal
 
-WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
+WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
     : QWidget(parent),
-      m_ui(new Ui_WidgetDocumentItemProps)
+      m_ui(new Ui_WidgetPropertiesEditor)
 {
     m_ui->setupUi(this);
     m_ui->treeWidget_Browser->setUniformRowHeights(true);
@@ -366,20 +367,33 @@ WidgetDocumentItemProps::WidgetDocumentItemProps(QWidget *parent)
 
     QObject::connect(
                 Options::instance(), &Options::unitSystemSchemaChanged,
-                this, &WidgetDocumentItemProps::refreshAllQtProperties);
+                this, &WidgetPropertiesEditor::refreshAllQtProperties);
     QObject::connect(
                 Options::instance(), &Options::unitSystemDecimalsChanged,
-                this, &WidgetDocumentItemProps::refreshAllQtProperties);
+                this, &WidgetPropertiesEditor::refreshAllQtProperties);
 }
 
-WidgetDocumentItemProps::~WidgetDocumentItemProps()
+WidgetPropertiesEditor::~WidgetPropertiesEditor()
 {
     delete m_ui;
 }
 
-void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
+void WidgetPropertiesEditor::editProperties(Document *doc)
 {
-    m_currentVecHndProperty.clear();
+    this->releaseObjects();
+    if (doc != nullptr) {
+        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
+        m_currentDoc = doc;
+        this->refreshAllQtProperties();
+    }
+    else {
+        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+    }
+}
+
+void WidgetPropertiesEditor::editProperties(DocumentItem *docItem)
+{
+    this->releaseObjects();
     if (docItem != nullptr) {
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
         m_currentDocItem = docItem;
@@ -390,16 +404,12 @@ void WidgetDocumentItemProps::editDocumentItem(DocumentItem *docItem)
     }
     else {
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
-        m_currentDocItem = nullptr;
-        m_currentGpxDocItem = nullptr;
     }
 }
 
-void WidgetDocumentItemProps::editProperties(Span<HandleProperty> spanHndProp)
+void WidgetPropertiesEditor::editProperties(Span<HandleProperty> spanHndProp)
 {
-    m_currentDocItem = nullptr;
-    m_currentGpxDocItem = nullptr;
-    m_currentVecHndProperty.clear();
+    this->releaseObjects();
     for (HandleProperty& hndProp : spanHndProp)
         m_currentVecHndProperty.push_back(std::move(hndProp));
     if (!m_currentVecHndProperty.empty()) {
@@ -411,14 +421,20 @@ void WidgetDocumentItemProps::editProperties(Span<HandleProperty> spanHndProp)
     }
 }
 
-void WidgetDocumentItemProps::createQtProperties(
+void WidgetPropertiesEditor::clear()
+{
+    this->releaseObjects();
+    m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+}
+
+void WidgetPropertiesEditor::createQtProperties(
         const std::vector<Property*>& properties, QTreeWidgetItem* parentItem)
 {
     for (Property* prop : properties)
         this->createQtProperty(prop, parentItem);
 }
 
-void WidgetDocumentItemProps::createQtProperty(
+void WidgetPropertiesEditor::createQtProperty(
         Property* property, QTreeWidgetItem* parentItem)
 {
     auto itemProp = new QTreeWidgetItem;
@@ -431,11 +447,16 @@ void WidgetDocumentItemProps::createQtProperty(
         m_ui->treeWidget_Browser->addTopLevelItem(itemProp);
 }
 
-void WidgetDocumentItemProps::refreshAllQtProperties()
+void WidgetPropertiesEditor::refreshAllQtProperties()
 {
     m_ui->treeWidget_Browser->clear();
 
-    // Data
+    // Document
+    if (m_currentDoc != nullptr) {
+        this->createQtProperties(m_currentDoc->properties(), nullptr);
+    }
+
+    // Data for DocumentItem
     if (m_currentDocItem != nullptr) {
         auto itemGroupData = new QTreeWidgetItem;
         itemGroupData->setText(0, tr("Data"));
@@ -444,7 +465,7 @@ void WidgetDocumentItemProps::refreshAllQtProperties()
         itemGroupData->setExpanded(true);
     }
 
-    // Graphics
+    // Graphics for DocumentItem
     if (m_currentGpxDocItem != nullptr) {
         auto itemGroupGpx = new QTreeWidgetItem;
         itemGroupGpx->setText(0, tr("Graphics"));
@@ -462,6 +483,14 @@ void WidgetDocumentItemProps::refreshAllQtProperties()
 
     m_ui->treeWidget_Browser->resizeColumnToContents(0);
     m_ui->treeWidget_Browser->resizeColumnToContents(1);
+}
+
+void WidgetPropertiesEditor::releaseObjects()
+{
+    m_currentDoc = nullptr;
+    m_currentDocItem = nullptr;
+    m_currentGpxDocItem = nullptr;
+    m_currentVecHndProperty.clear();
 }
 
 } // namespace Mayo

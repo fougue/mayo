@@ -239,7 +239,7 @@
                        </sizepolicy>
                       </property>
                      </widget>
-                     <widget class="WidgetDocumentItemProps" name="widget_DocumentProps" native="true"/>
+                     <widget class="WidgetPropertiesEditor" name="widget_Properties" native="true"/>
                     </widget>
                    </item>
                   </layout>
@@ -757,15 +757,15 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>WidgetDocumentItemProps</class>
-   <extends>QWidget</extends>
-   <header>widget_document_item_props.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>WidgetFileSystem</class>
    <extends>QWidget</extends>
    <header>widget_file_system.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WidgetPropertiesEditor</class>
+   <extends>QWidget</extends>
+   <header>widget_properties_editor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

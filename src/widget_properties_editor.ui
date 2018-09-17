@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::WidgetDocumentItemProps</class>
- <widget class="QWidget" name="Mayo::WidgetDocumentItemProps">
+ <class>Mayo::WidgetPropertiesEditor</class>
+ <widget class="QWidget" name="Mayo::WidgetPropertiesEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -48,7 +48,7 @@
        <item>
         <widget class="QTreeWidget" name="treeWidget_Browser">
          <attribute name="headerVisible">
-          <bool>true</bool>
+          <bool>false</bool>
          </attribute>
          <column>
           <property name="text">

@@ -63,12 +63,12 @@ HEADERS += \
     src/unit_system.h \
     src/widget_application_tree.h \
     src/widget_clip_planes.h \
-    src/widget_document_item_props.h \
     src/widget_file_system.h \
     src/widget_gui_document.h \
     src/widget_message_indicator.h \
     src/widget_occ_view.h \
     src/xde_document_item.h \
+    src/widget_properties_editor.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -116,12 +116,12 @@ SOURCES += \
     src/unit_system.cpp \
     src/widget_application_tree.cpp \
     src/widget_clip_planes.cpp \
-    src/widget_document_item_props.cpp \
     src/widget_file_system.cpp \
     src/widget_gui_document.cpp \
     src/widget_message_indicator.cpp \
     src/widget_occ_view.cpp \
     src/xde_document_item.cpp \
+    src/widget_properties_editor.cpp
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
@@ -135,7 +135,7 @@ FORMS += \
     src/mainwindow.ui \
     src/widget_application_tree.ui \
     src/widget_clip_planes.ui \
-    src/widget_document_item_props.ui \
+    src/widget_properties_editor.ui
 
 # gmio
 isEmpty(GMIO_ROOT) {

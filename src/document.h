@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "property_builtins.h"
 #include <QtCore/QObject>
 #include <vector>
 
@@ -16,7 +17,7 @@ class DocumentItem;
 class PartItem;
 class Property;
 
-class Document : public QObject {
+class Document : public QObject, public PropertyOwner {
     Q_OBJECT
 public:
     const Application* application() const;
@@ -33,6 +34,9 @@ public:
     const std::vector<DocumentItem*>& rootItems() const;
     bool isEmpty() const;
 
+    PropertyQString propertyLabel;
+    PropertyQString propertyFilePath;
+
 signals:
     void itemAdded(DocumentItem* docItem);
     void itemErased(const DocumentItem* docItem);
@@ -48,8 +52,6 @@ private:
 
     Application* m_app = nullptr;
     std::vector<DocumentItem*> m_rootItems;
-    QString m_label;
-    QString m_filePath;
 };
 
 } // namespace Mayo

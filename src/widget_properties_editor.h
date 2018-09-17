@@ -16,16 +16,19 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
+class Document;
 class DocumentItem;
 class GpxDocumentItem;
 
-class WidgetDocumentItemProps : public QWidget {
+class WidgetPropertiesEditor : public QWidget {
 public:
-    WidgetDocumentItemProps(QWidget* parent = nullptr);
-    ~WidgetDocumentItemProps();
+    WidgetPropertiesEditor(QWidget* parent = nullptr);
+    ~WidgetPropertiesEditor();
 
-    void editDocumentItem(DocumentItem* docItem);
+    void editProperties(Document* doc);
+    void editProperties(DocumentItem* docItem);
     void editProperties(Span<HandleProperty> spanHndProp);
+    void clear();
 
 private:
     void createQtProperties(
@@ -33,9 +36,11 @@ private:
     void createQtProperty(
             Property* property, QTreeWidgetItem* parentItem);
     void refreshAllQtProperties();
+    void releaseObjects();
 
-    class Ui_WidgetDocumentItemProps* m_ui = nullptr;
+    class Ui_WidgetPropertiesEditor* m_ui = nullptr;
 
+    Document* m_currentDoc = nullptr;
     DocumentItem* m_currentDocItem = nullptr;
     GpxDocumentItem* m_currentGpxDocItem = nullptr;
     std::vector<HandleProperty> m_currentVecHndProperty;
