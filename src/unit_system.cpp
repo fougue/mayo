@@ -65,6 +65,8 @@ static UnitSystem::TranslateResult translateSI(double value, Unit unit)
         return { value, "mm²", 1. };
     else if (unit == Unit::Volume)
         return { value, "mm" MAYO_CUBIC_SYMBOL, 1. };
+    else if (unit == Unit::Velocity)
+        return { value, "mm/s", 1. };
     else if (unit == Unit::Density)
         return { value, "kg/mm" MAYO_CUBIC_SYMBOL, 1. };
     else if (unit == Unit::Pressure)
