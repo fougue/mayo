@@ -55,7 +55,6 @@
 
 #include <algorithm>
 #include <array>
-#include <atomic>
 #include <fstream>
 #include <mutex>
 
@@ -441,31 +440,16 @@ const std::vector<Document*>& Application::documents() const
     return m_documents;
 }
 
-Document *Application::createDocument(const QString &label)
-{
-    auto doc = new Document(this);
-    if (label.isEmpty()) {
-        static std::atomic<unsigned> docSequenceId = {};
-        const unsigned docId = docSequenceId.fetch_add(1);
-        const QString docIdStr = docId > 0 ? QString::number(docId) : QString();
-        doc->setLabel(tr("Anonymous%1").arg(docIdStr));
-    }
-    else {
-        doc->setLabel(label);
-    }
-    QObject::connect(
-                doc, &Document::itemAdded,
-                this, &Application::documentItemAdded);
-    QObject::connect(
-                doc, &Document::itemPropertyChanged,
-                this, &Application::documentItemPropertyChanged);
-    return doc;
-}
-
 void Application::addDocument(Document *doc)
 {
     auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
     if (doc != nullptr && itFound == m_documents.cend()) {
+        QObject::connect(
+                    doc, &Document::itemAdded,
+                    this, &Application::documentItemAdded);
+        QObject::connect(
+                    doc, &Document::itemPropertyChanged,
+                    this, &Application::documentItemPropertyChanged);
         m_documents.emplace_back(doc);
         emit documentAdded(doc);
     }

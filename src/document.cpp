@@ -4,18 +4,14 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "document.h"
-
 #include "application.h"
+#include "document.h"
 #include "document_item.h"
-
-#include <cassert>
 
 namespace Mayo {
 
-Document::Document(Application *app)
-    : QObject(app),
-      m_app(app),
+Document::Document(QObject* parent)
+    : QObject(parent),
       propertyLabel(this, tr("Label")),
       propertyFilePath(this, tr("File path"))
 {
@@ -27,16 +23,6 @@ Document::~Document()
 {
     for (DocumentItem* item : m_rootItems)
         delete item;
-}
-
-const Application *Document::application() const
-{
-    return m_app;
-}
-
-Application *Document::application()
-{
-    return m_app;
 }
 
 const QString &Document::label() const
@@ -79,6 +65,12 @@ const std::vector<DocumentItem*>& Document::rootItems() const
 bool Document::isEmpty() const
 {
     return m_rootItems.empty();
+}
+
+const char Document::TypeName[] = "Mayo::Document";
+const char* Document::dynTypeName() const
+{
+    return Document::TypeName;
 }
 
 void Document::addRootItem(DocumentItem* item)
