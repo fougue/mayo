@@ -87,7 +87,10 @@ public:
             T minimum, T maximum, T singleStep);
 };
 
-class BasePropertyQuantity : public Property {
+class BasePropertyQuantity :
+        public Property,
+        public PropertyScalarConstraints<double>
+{
 public:
     virtual Unit quantityUnit() const = 0;
     virtual double quantityValue() const = 0;
