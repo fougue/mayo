@@ -6,22 +6,20 @@
 
 #pragma once
 
+#include "application.h"
 #include "property_builtins.h"
 #include <QtCore/QObject>
 #include <vector>
 
 namespace Mayo {
 
-class Application;
 class DocumentItem;
-class PartItem;
-class Property;
 
 class Document : public QObject, public PropertyOwner {
     Q_OBJECT
 public:
-    const Application* application() const;
-    Application* application();
+    Document(QObject* parent = Application::instance());
+    virtual ~Document();
 
     const QString& label() const;
     void setLabel(const QString& v);
@@ -37,6 +35,9 @@ public:
     PropertyQString propertyLabel;
     PropertyQString propertyFilePath;
 
+    static const char TypeName[];
+    virtual const char* dynTypeName() const;
+
 signals:
     void itemAdded(DocumentItem* docItem);
     void itemErased(const DocumentItem* docItem);
@@ -45,12 +46,9 @@ signals:
 private:
     friend class Application;
     friend class DocumentItem;
-    Document(Application* app);
-    ~Document();
 
     void addRootItem(DocumentItem* item);
 
-    Application* m_app = nullptr;
     std::vector<DocumentItem*> m_rootItems;
 };
 

@@ -67,7 +67,6 @@ public:
     int documentCount() const;
     Document* documentAt(int index) const;
 
-    Document* createDocument(const QString& label = QString());
     void addDocument(Document* doc);
     bool eraseDocument(Document* doc);
 

@@ -414,7 +414,9 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 void MainWindow::newDocument()
 {
-    Document* doc = Application::instance()->createDocument();
+    static unsigned docSequenceId = 0;
+    auto doc = new Document;
+    doc->setLabel(tr("Anonymous%1").arg(++docSequenceId));
     Application::instance()->addDocument(doc);
 }
 
@@ -768,7 +770,8 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
             const Application::PartFormat fileFormat =
                     Application::findPartFormat(locAbsoluteFilePath);
             if (fileFormat != Application::PartFormat::Unknown) {
-                Document* doc = app->createDocument(loc.fileName());
+                auto doc = new Document;
+                doc->setLabel(loc.fileName());
                 doc->setFilePath(locAbsoluteFilePath);
                 app->addDocument(doc);
                 this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
