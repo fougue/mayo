@@ -27,6 +27,7 @@ public:
     const QString& filePath() const;
     void setFilePath(const QString& filepath);
 
+    void addRootItem(DocumentItem* item);
     bool eraseRootItem(DocumentItem* docItem);
 
     const std::vector<DocumentItem*>& rootItems() const;
@@ -46,8 +47,6 @@ signals:
 private:
     friend class Application;
     friend class DocumentItem;
-
-    void addRootItem(DocumentItem* item);
 
     std::vector<DocumentItem*> m_rootItems;
 };
