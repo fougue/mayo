@@ -8,6 +8,7 @@ QT += testlib
 HEADERS += \
     test.h \
     ../src/quantity.h \
+    ../src/result.h \
     ../src/unit.h \
     ../src/unit_system.h \
 

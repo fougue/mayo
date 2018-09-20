@@ -11,6 +11,7 @@ class Test : public QObject {
 private slots:
     void CafUtils_test();
     void Quantity_test();
+    void Result_test();
     void UnitSystem_test();
 
     void LibTree_test();
