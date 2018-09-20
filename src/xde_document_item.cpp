@@ -101,7 +101,7 @@ TopoDS_Shape XdeDocumentItem::shape(const TDF_Label &lbl) const
 
 QString XdeDocumentItem::findLabelName(const TDF_Label &lbl) const
 {
-    QString name = occ::CafUtils::labelAttrStdName(lbl);
+    QString name = CafUtils::labelAttrStdName(lbl);
     if (name.isEmpty()) {
         if (this->isShape(lbl)) {
             const TopoDS_Shape shape = this->shape(lbl);
@@ -119,7 +119,7 @@ QString XdeDocumentItem::findLabelName(const TDF_Label &lbl) const
             name = QString("%1 %2").arg(name).arg(lbl.Tag());
         }
         else {
-            name = QString("[[%1]]").arg(occ::CafUtils::labelTag(lbl));
+            name = QString("[[%1]]").arg(CafUtils::labelTag(lbl));
         }
     }
     return name;

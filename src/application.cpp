@@ -581,7 +581,7 @@ Application::IoResult Application::importIges(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
     IGESControl_Controller::Init();
-    Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
+    Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
     IFSelect_ReturnStatus err;
     Internal::loadCafDocumentFromFile<IGESCAFControl_Reader>(
                 filepath, cafDoc, &err, progress);
@@ -593,7 +593,7 @@ Application::IoResult Application::importIges(
 Application::IoResult Application::importStep(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
-    Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
+    Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
     IFSelect_ReturnStatus err;
     Internal::loadCafDocumentFromFile<STEPCAFControl_Reader>(
                 filepath, cafDoc, &err, progress);
@@ -611,7 +611,7 @@ Application::IoResult Application::importOccBRep(
     const bool ok = BRepTools::Read(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     if (ok) {
-        Handle_TDocStd_Document cafDoc = occ::CafUtils::createXdeDocument();
+        Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
         Handle_XCAFDoc_ShapeTool shapeTool =
                 XCAFDoc_DocumentTool::ShapeTool(cafDoc->Main());
         const TDF_Label labelShape = shapeTool->NewShape();

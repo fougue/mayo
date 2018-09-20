@@ -236,9 +236,9 @@ static void loadLabelShapeProperties(
             auto itemRefShape = new QTreeWidgetItem;
             itemRefShape->setText(0, DialogInspectXde::tr("ReferredShape"));
             const QString textItemRefShape =
-                    occ::CafUtils::labelTag(labelRef)
+                    CafUtils::labelTag(labelRef)
                     + " "
-                    + occ::CafUtils::labelAttrStdName(labelRef);
+                    + CafUtils::labelAttrStdName(labelRef);
             itemRefShape->setText(1, textItemRefShape);
             listItemProp.push_back(itemRefShape);
         }
@@ -250,9 +250,9 @@ static void loadLabelShapeProperties(
 static void loadLabel(const TDF_Label &label, QTreeWidgetItem *treeItem)
 {
     treeItem->setData(0, TreeWidgetItem_TdfLabelRole, QVariant::fromValue(label));
-    treeItem->setText(0, occ::CafUtils::labelTag(label));
+    treeItem->setText(0, CafUtils::labelTag(label));
 
-    const QString stdName = occ::CafUtils::labelAttrStdName(label);
+    const QString stdName = CafUtils::labelAttrStdName(label);
     if (!stdName.isEmpty())
         treeItem->setText(0, treeItem->text(0) + " " + stdName);
 }
