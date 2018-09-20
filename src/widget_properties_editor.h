@@ -20,6 +20,8 @@ class Document;
 class DocumentItem;
 class GpxDocumentItem;
 
+namespace Internal { class PropertyItemDelegate; }
+
 class WidgetPropertiesEditor : public QWidget {
 public:
     WidgetPropertiesEditor(QWidget* parent = nullptr);
@@ -29,6 +31,11 @@ public:
     void editProperties(DocumentItem* docItem);
     void editProperties(Span<HandleProperty> spanHndProp);
     void clear();
+
+    void addLineWidget(QWidget* widget);
+
+    double rowHeightFactor() const;
+    void setRowHeightFactor(double v);
 
 private:
     void createQtProperties(
@@ -44,6 +51,7 @@ private:
     DocumentItem* m_currentDocItem = nullptr;
     GpxDocumentItem* m_currentGpxDocItem = nullptr;
     std::vector<HandleProperty> m_currentVecHndProperty;
+    Internal::PropertyItemDelegate* m_itemDelegate = nullptr;
 };
 
 } // namespace Mayo

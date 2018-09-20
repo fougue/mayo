@@ -186,6 +186,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
+    m_ui->widget_Properties->setRowHeightFactor(1.4);
     m_ui->widget_Properties->clear();
 
     m_ui->btn_PreviousGuiDocument->setDefaultAction(m_ui->actionPreviousDoc);
