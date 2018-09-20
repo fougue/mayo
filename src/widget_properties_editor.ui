@@ -47,6 +47,9 @@
        </property>
        <item>
         <widget class="QTreeWidget" name="treeWidget_Browser">
+         <property name="editTriggers">
+          <set>QAbstractItemView::CurrentChanged|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+         </property>
          <attribute name="headerVisible">
           <bool>false</bool>
          </attribute>

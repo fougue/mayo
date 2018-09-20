@@ -150,6 +150,8 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
     editor->setSuffix(QString::fromUtf8(trRes.strUnit));
     editor->setDecimals(Options::instance()->unitSystemDecimals());
     editor->setValue(trRes.value);
+    if (prop->constraintsEnabled())
+        editor->setRange(prop->minimum(), prop->maximum());
     auto signalValueChanged =
             static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     QObject::connect(editor, signalValueChanged, [=](double value) {
@@ -261,6 +263,9 @@ public:
         : QStyledItemDelegate(parent)
     {}
 
+    double rowHeightFactor() const { return m_rowHeightFactor; }
+    void setRowHeightFactor(double v) { m_rowHeightFactor = v; }
+
     void paint(QPainter* painter,
                const QStyleOptionViewItem& option,
                const QModelIndex& index) const override
@@ -349,8 +354,11 @@ public:
             const QModelIndex &index) const override
     {
         const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
-        return QSize(baseSize.width(), 1.1 * baseSize.height());
+        return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
     }
+
+private:
+    double m_rowHeightFactor = 1.;
 };
 
 } // namespace Internal
@@ -362,8 +370,8 @@ WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
     m_ui->setupUi(this);
     m_ui->treeWidget_Browser->setUniformRowHeights(true);
     m_ui->treeWidget_Browser->setIndentation(15);
-    m_ui->treeWidget_Browser->setItemDelegate(
-                new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser));
+    m_itemDelegate = new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser);
+    m_ui->treeWidget_Browser->setItemDelegate(m_itemDelegate);
 
     QObject::connect(
                 Options::instance(), &Options::unitSystemSchemaChanged,
@@ -425,6 +433,24 @@ void WidgetPropertiesEditor::clear()
 {
     this->releaseObjects();
     m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+}
+
+void WidgetPropertiesEditor::addLineWidget(QWidget* widget)
+{
+    widget->setAutoFillBackground(true);
+    auto treeItem = new QTreeWidgetItem(m_ui->treeWidget_Browser);
+    m_ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
+    m_ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
+}
+
+double WidgetPropertiesEditor::rowHeightFactor() const
+{
+    return m_itemDelegate->rowHeightFactor();
+}
+
+void WidgetPropertiesEditor::setRowHeightFactor(double v)
+{
+    m_itemDelegate->setRowHeightFactor(v);
 }
 
 void WidgetPropertiesEditor::createQtProperties(
