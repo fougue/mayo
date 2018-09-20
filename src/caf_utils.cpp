@@ -14,7 +14,7 @@
 
 #include <mutex>
 
-namespace occ {
+namespace Mayo {
 
 namespace Internal {
 static std::mutex mutex_XCAFApplication;
@@ -43,4 +43,4 @@ Handle_TDocStd_Document CafUtils::createXdeDocument(const char *format)
     return doc;
 }
 
-} // namespace occ
+} // namespace Mayo
