@@ -18,6 +18,7 @@
 #include <QtCore/QVariant>
 #include <QtCore/QString>
 
+#include <atomic>
 #include <unordered_map>
 
 namespace qttask {
@@ -52,7 +53,7 @@ private:
 
     BaseRunner* m_runner = nullptr;
     std::unordered_map<int, QVariant> m_dataHash;
-    int m_value = 0;
+    std::atomic<int> m_value = {};
     QString m_step;
 };
 
