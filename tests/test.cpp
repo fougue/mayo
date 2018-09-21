@@ -74,8 +74,8 @@ void Test::Result_test()
         std::ostringstream sstr;
         Result::Data::data_ostr = &sstr;
         const Result res = Result::makeError("error_description");
-        QVERIFY(res.errorText == "error_description");
-        QVERIFY(!res.isValid);
+        QVERIFY(res.errorText() == "error_description");
+        QVERIFY(!res.valid());
         QCOMPARE(sstr.str().c_str(), "02");
     }
     {
@@ -84,9 +84,8 @@ void Test::Result_test()
         Result::Data data;
         data.foo = "FooData";
         const Result res = Result::makeValid(std::move(data));
-        QVERIFY(res.errorText.isEmpty());
-        QVERIFY(res.isValid);
-        QVERIFY(res.data.foo == "FooData");
+        QVERIFY(res.valid());
+        QVERIFY(res.get().foo == "FooData");
         QCOMPARE(sstr.str().c_str(), "0042");
     }
 }
