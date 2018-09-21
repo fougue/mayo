@@ -33,7 +33,7 @@ int Progress::value() const
 
 void Progress::setValue(int pct)
 {
-    m_value = pct;
+    m_value.fetch_add(pct);
     m_runner->qtSignals()->emitProgress(pct);
 }
 
