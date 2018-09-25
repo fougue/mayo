@@ -130,6 +130,10 @@ static QString propertyValueText(const Property* prop)
     }
     else if (propTypeName == BasePropertyQuantity::TypeName) {
         auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);
+        if (qtyProp->quantityUnit() == Unit::Time) {
+            const QTime duration = QTime(0, 0).addSecs(qtyProp->quantityValue());
+            return options->locale().toString(duration);
+        }
         const UnitSystem::TranslateResult trRes =
                 options->unitSystemTranslate(
                     qtyProp->quantityValue(), qtyProp->quantityUnit());
