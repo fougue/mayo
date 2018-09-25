@@ -66,6 +66,7 @@ QuantityArea operator*(const QuantityLength& lhs, const QuantityLength& rhs);
 QuantityVolume operator*(const QuantityLength& lhs, const QuantityArea& rhs);
 QuantityVolume operator*(const QuantityArea& lhs, const QuantityLength& rhs);
 QuantityVelocity operator/(const QuantityLength& lhs, const QuantityTime& rhs);
+QuantityTime operator/(const QuantityLength& lhs, const QuantityVelocity& rhs);
 
 const QuantityLength Quantity_Nanometer(1e-6);
 const QuantityLength Quantity_Micrometer(1e-3);

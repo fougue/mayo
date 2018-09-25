@@ -24,4 +24,8 @@ QuantityVelocity operator/(const QuantityLength &lhs, const QuantityTime &rhs) {
     return QuantityVelocity(lhs.value() / rhs.value());
 }
 
+QuantityTime operator/(const QuantityLength& lhs, const QuantityVelocity& rhs) {
+    return QuantityTime(lhs.value() / rhs.value());
+}
+
 } // namespace Mayo
