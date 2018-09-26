@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
+        <file>images/themes/classic/export_32.png</file>
+        <file>images/themes/classic/import_32.png</file>
         <file>images/view_axo.png</file>
         <file>images/view_back.png</file>
         <file>images/view_bottom.png</file>

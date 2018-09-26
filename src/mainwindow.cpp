@@ -181,8 +181,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->splitter_Main->setStretchFactor(0, 1);
     m_ui->splitter_Main->setStretchFactor(1, 3);
 
-    m_ui->splitter_ApplicationTree->setStretchFactor(0, 2);
-    m_ui->splitter_ApplicationTree->setStretchFactor(1, 1);
+    m_ui->splitter_ApplicationTree->setStretchFactor(0, 1);
+    m_ui->splitter_ApplicationTree->setStretchFactor(1, 2);
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
@@ -193,6 +193,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
     m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
 
+    m_ui->actionImport->setIcon(mayoTheme()->icon(Theme::Icon::Import));
+    m_ui->actionExportSelectedItems->setIcon(mayoTheme()->icon(Theme::Icon::Export));
     m_ui->actionZoomIn->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
     m_ui->actionZoomOut->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
     m_ui->actionPreviousDoc->setIcon(mayoTheme()->icon(Theme::Icon::Back));

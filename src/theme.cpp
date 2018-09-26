@@ -85,6 +85,8 @@ public:
     static QPixmap pixmap(Icon icn)
     {
         switch (icn) {
+        case Icon::Import: return QPixmap(":/images/themes/classic/import_32.png");
+        case Icon::Export: return QPixmap(":/images/themes/classic/export_32.png");
         case Icon::Expand: return QPixmap(":/images/themes/classic/expand_16.png");
         case Icon::Cross: return QPixmap(":/images/themes/classic/cross_32.png");
         case Icon::Link: return QPixmap(":/images/themes/classic/link-button_16.png");
@@ -117,6 +119,8 @@ public:
     {
         static const QIcon nullIcn;
         switch (icn) {
+        case Icon::Import: return lazyIcon<Icon::Import>();
+        case Icon::Export: return lazyIcon<Icon::Export>();
         case Icon::Expand: return lazyIcon<Icon::Expand>();
         case Icon::Cross: return lazyIcon<Icon::Cross>();
         case Icon::Link: return lazyIcon<Icon::Link>();
@@ -200,6 +204,8 @@ public:
     const QIcon& icon(Icon icn) const override
     {
         switch (icn) {
+        case Icon::Import: return invertedClassicIcon<Icon::Import>();
+        case Icon::Export: return invertedClassicIcon<Icon::Export>();
         case Icon::Expand: return invertedClassicIcon<Icon::Expand>();
         case Icon::Cross: return invertedClassicIcon<Icon::Cross>();
         case Icon::Link: return invertedClassicIcon<Icon::Link>();

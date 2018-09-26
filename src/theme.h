@@ -32,6 +32,8 @@ public:
     };
 
     enum class Icon {
+        Import,
+        Export,
         Expand,
         Cross,
         Link,
