@@ -153,13 +153,18 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
                 prop->quantityValue(), prop->quantityUnit());
     editor->setSuffix(QString::fromUtf8(trRes.strUnit));
     editor->setDecimals(Options::instance()->unitSystemDecimals());
+    const double rangeMin =
+            prop->constraintsEnabled() ?
+                prop->minimum() : std::numeric_limits<double>::min();
+    const double rangeMax =
+            prop->constraintsEnabled() ?
+                prop->maximum() : std::numeric_limits<double>::max();
+    editor->setRange(rangeMin, rangeMax);
     editor->setValue(trRes.value);
-    if (prop->constraintsEnabled())
-        editor->setRange(prop->minimum(), prop->maximum());
     auto signalValueChanged =
             static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     QObject::connect(editor, signalValueChanged, [=](double value) {
-       prop->setQuantityValue(value);
+        prop->setQuantityValue(value);
     });
     return editor;
 }
