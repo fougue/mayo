@@ -34,6 +34,13 @@ void PropertyOwner::addProperty(Property* prop)
     m_properties.emplace_back(prop);
 }
 
+void PropertyOwner::removeProperty(Property *prop)
+{
+    auto it = std::find(m_properties.begin(), m_properties.end(), prop);
+    if (it != m_properties.end())
+        m_properties.erase(it);
+}
+
 const QString &Property::label() const
 {
     return m_label;

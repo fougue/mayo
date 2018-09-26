@@ -51,10 +51,11 @@ void GpxDocumentItem::onPropertyChanged(Property *prop)
 {
     if (prop == &this->propertyIsVisible) {
         Handle_AIS_InteractiveContext cxt = this->handleGpxObject()->GetContext();
+        constexpr bool flagUpdateViewer = true;
         if (this->propertyIsVisible.value())
-            cxt->Display(this->handleGpxObject(), Standard_True);
+            cxt->Display(this->handleGpxObject(), flagUpdateViewer);
         else
-            cxt->Erase(this->handleGpxObject(), Standard_True);
+            cxt->Erase(this->handleGpxObject(), flagUpdateViewer);
     }
 }
 

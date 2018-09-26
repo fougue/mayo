@@ -25,6 +25,7 @@ protected:
     bool isPropertyChangedBlocked() const;
 
     void addProperty(Property* prop);
+    void removeProperty(Property* prop);
 
 private:
     friend class Property;
@@ -40,7 +41,7 @@ struct PropertyChangedBlocker {
 };
 
 #define Mayo_PropertyChangedBlocker(owner) \
-            PropertyChangedBlocker __Mayo_PropertyChangedBlocker(owner); \
+            Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(owner); \
             Q_UNUSED(__Mayo_PropertyChangedBlocker);
 
 class Property {
