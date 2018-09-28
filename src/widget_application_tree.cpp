@@ -124,7 +124,7 @@ static void setTreeItemXdeAssemblyNode(
 static QIcon documentItemIcon(const DocumentItem* docItem)
 {
     if (sameType<XdeDocumentItem>(docItem))
-        return QIcon(":/images/xde_document_16.png");
+        return mayoTheme()->icon(Theme::Icon::ItemXde);
     else if (sameType<MeshItem>(docItem))
         return mayoTheme()->icon(Theme::Icon::ItemMesh);
     return QIcon();
@@ -133,11 +133,11 @@ static QIcon documentItemIcon(const DocumentItem* docItem)
 static QIcon xdeShapeIcon(const XdeDocumentItem* docItem, const TDF_Label& label)
 {
     if (docItem->isShapeAssembly(label))
-        return QIcon(":/images/xde_assembly_16.png");
+        return mayoTheme()->icon(Theme::Icon::XdeAssembly);
     else if (docItem->isShapeReference(label))
         return QIcon(":/images/xde_reference_16.png");
     else if (docItem->isShapeSimple(label))
-        return QIcon(":/images/xde_simple_shape_16.png");
+        return mayoTheme()->icon(Theme::Icon::XdeSimpleShape);
     return QIcon();
 }
 
@@ -297,7 +297,7 @@ void WidgetApplicationTree::onDocumentAdded(Document *doc)
     const QString docLabel =
             !doc->label().isEmpty() ? doc->label() : tr("<unnamed>");
     treeItem->setText(0, docLabel);
-    treeItem->setIcon(0, QPixmap(":/images/file_16.png"));
+    treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::File));
     treeItem->setToolTip(0, doc->filePath());
     Internal::setTreeItemDocument(treeItem, doc);
     assert(Internal::treeItemDocument(treeItem) == doc);

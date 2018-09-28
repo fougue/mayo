@@ -5,12 +5,14 @@
 ****************************************************************************/
 
 #include "theme.h"
+#include "span.h"
 
 #include <QtGui/QImage>
 #include <QtGui/QPalette>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QStyleFactory>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -49,6 +51,86 @@ static QString cssFlatComboBox(
     return css;
 }
 
+static QPixmap invertedPixmap(const QPixmap& pix)
+{
+    QPixmap pixInv;
+    QImage img = pix.toImage();
+    img.invertPixels();
+    return QPixmap::fromImage(img);
+}
+
+static QString iconFileName(Theme::Icon icn)
+{
+    switch (icn) {
+    case Theme::Icon::File: return "file.svg";
+    case Theme::Icon::Import: return "import.svg";
+    case Theme::Icon::Export: return "export.svg";
+    case Theme::Icon::Expand: return "expand.svg";
+    case Theme::Icon::Cross: return "cross.svg";
+    case Theme::Icon::Link: return "link.svg";
+    case Theme::Icon::Back: return "back.svg";
+    case Theme::Icon::Next: return "next.svg";
+    case Theme::Icon::Camera: return "camera.svg";
+    case Theme::Icon::LeftSidebar: return "left-sidebar.svg";
+    case Theme::Icon::BackSquare: return "back-square.svg";
+    case Theme::Icon::IndicatorDown: return "indicator-down_8.png";
+    case Theme::Icon::Stop: return "stop.svg";
+    case Theme::Icon::Gear: return "gear.svg";
+    case Theme::Icon::ZoomIn: return "zoom-in.svg";
+    case Theme::Icon::ZoomOut: return "zoom-out.svg";
+    case Theme::Icon::ClipPlane: return "clip-plane.svg";
+    case Theme::Icon::View3dIso: return "view-iso.svg";
+    case Theme::Icon::View3dLeft: return "view-left.svg";
+    case Theme::Icon::View3dRight: return "view-right.svg";
+    case Theme::Icon::View3dTop: return "view-top.svg";
+    case Theme::Icon::View3dBottom: return "view-bottom.svg";
+    case Theme::Icon::View3dFront: return "view-front.svg";
+    case Theme::Icon::View3dBack: return "view-back.svg";
+    case Theme::Icon::ItemMesh: return "item-mesh.svg";
+    case Theme::Icon::ItemXde: return "item-xde.svg";
+    case Theme::Icon::XdeAssembly: return "xde-assembly.svg";
+    case Theme::Icon::XdeSimpleShape: return "xde-simple-shape.svg";
+    }
+    return QString();
+}
+
+static Span<const Theme::Icon> themeIcons()
+{
+    static const Theme::Icon arrayIcons[] = {
+        Theme::Icon::File,
+        Theme::Icon::Import,
+        Theme::Icon::Export,
+        Theme::Icon::Expand,
+        Theme::Icon::Cross,
+        Theme::Icon::Link,
+        Theme::Icon::Back,
+        Theme::Icon::Next,
+        Theme::Icon::Camera,
+        Theme::Icon::LeftSidebar,
+        Theme::Icon::BackSquare,
+        Theme::Icon::IndicatorDown,
+        Theme::Icon::Stop,
+        Theme::Icon::Gear,
+        Theme::Icon::ZoomIn,
+        Theme::Icon::ZoomOut,
+        Theme::Icon::ClipPlane,
+        Theme::Icon::View3dIso,
+        Theme::Icon::View3dLeft,
+        Theme::Icon::View3dRight,
+        Theme::Icon::View3dTop,
+        Theme::Icon::View3dBottom,
+        Theme::Icon::View3dFront,
+        Theme::Icon::View3dBack,
+        Theme::Icon::ItemMesh,
+        Theme::Icon::ItemXde,
+        Theme::Icon::XdeAssembly,
+        Theme::Icon::XdeSimpleShape
+    };
+    return arrayIcons;
+}
+
+static const QIcon nullQIcon = {};
+
 class ThemeClassic : public Theme {
 public:
     QColor color(Color role) const override
@@ -82,69 +164,19 @@ public:
         return QColor();
     }
 
-    static QPixmap pixmap(Icon icn)
-    {
-        switch (icn) {
-        case Icon::Import: return QPixmap(":/images/themes/classic/import_32.png");
-        case Icon::Export: return QPixmap(":/images/themes/classic/export_32.png");
-        case Icon::Expand: return QPixmap(":/images/themes/classic/expand_16.png");
-        case Icon::Cross: return QPixmap(":/images/themes/classic/cross_32.png");
-        case Icon::Link: return QPixmap(":/images/themes/classic/link-button_16.png");
-        case Icon::Pin: return QPixmap(":/images/themes/classic/pin_16.png");
-        case Icon::Back: return QPixmap(":/images/themes/classic/back_32.png");
-        case Icon::Next: return QPixmap(":/images/themes/classic/next_32.png");
-        case Icon::Camera: return QPixmap(":/images/themes/classic/camera_32.png");
-        case Icon::LeftSidebar: return QPixmap(":/images/themes/classic/left-sidebar_32.png");
-        case Icon::LeftArrowCross: return QPixmap(":/images/themes/classic/left-arrow-cross_16.png");
-        case Icon::IndicatorDown: return QPixmap(":/images/themes/classic/indicator-down_8.png");
-        case Icon::Stop: return QPixmap(":/images/no.png");
-        case Icon::Gear: return QPixmap(":/images/themes/classic/gear_16.png");
-        case Icon::ZoomIn: return QPixmap(":/images/themes/classic/zoom-in_32.png");
-        case Icon::ZoomOut: return QPixmap(":/images/themes/classic/zoom-out_32.png");
-        case Icon::ItemMesh: return QPixmap(":/images/themes/classic/mesh_16.png");
-        }
-        return QPixmap();
-    }
-
-    template<Theme::Icon THEME_ICON>
-    static const QIcon& lazyIcon()
-    {
-        static QIcon icn;
-        if (icn.isNull())
-            icn = QIcon(ThemeClassic::pixmap(THEME_ICON));
-        return icn;
-    }
-
     const QIcon& icon(Icon icn) const override
     {
-        static const QIcon nullIcn;
-        switch (icn) {
-        case Icon::Import: return lazyIcon<Icon::Import>();
-        case Icon::Export: return lazyIcon<Icon::Export>();
-        case Icon::Expand: return lazyIcon<Icon::Expand>();
-        case Icon::Cross: return lazyIcon<Icon::Cross>();
-        case Icon::Link: return lazyIcon<Icon::Link>();
-        case Icon::Pin: return lazyIcon<Icon::Pin>();
-        case Icon::Back: return lazyIcon<Icon::Back>();
-        case Icon::Next: return lazyIcon<Icon::Next>();
-        case Icon::Camera: return lazyIcon<Icon::Camera>();
-        case Icon::LeftSidebar: return lazyIcon<Icon::LeftSidebar>();
-        case Icon::LeftArrowCross: return lazyIcon<Icon::LeftArrowCross>();
-        case Icon::IndicatorDown: return lazyIcon<Icon::IndicatorDown>();
-        case Icon::Stop: return lazyIcon<Icon::Stop>();
-        case Icon::Gear: return lazyIcon<Icon::Gear>();
-        case Icon::ZoomIn: return lazyIcon<Icon::ZoomIn>();
-        case Icon::ZoomOut: return lazyIcon<Icon::ZoomOut>();
-        case Icon::ItemMesh: return lazyIcon<Icon::ItemMesh>();
-        }
-        return nullIcn;
+        auto it = m_mapIcon.find(icn);
+        return it != m_mapIcon.cend() ? it->second : nullQIcon;
     }
 
     void setup() override
     {
-        //    m_ui->centralWidget->setStyleSheet(
-        //                "QSplitter::handle:vertical { width: 2px; }\n"
-        //                "QSplitter::handle:horizontal { width: 2px; }\n");
+        const QString icnBasePath = ":/images/themes/classic/";
+        for (const Icon icn : themeIcons()) {
+            const QString icnFileName = iconFileName(icn);
+            m_mapIcon.emplace(icn, QIcon(QPixmap(icnBasePath + icnFileName)));
+        }
     }
 
     void setupHeaderComboBox(QComboBox* cb)
@@ -153,6 +185,9 @@ public:
         const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
         cb->setStyleSheet(cssFlatComboBox(urlDown, urlDownDisabled));
     }
+
+private:
+    std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
 };
 
 class ThemeDark : public Theme {
@@ -189,48 +224,23 @@ public:
         return QColor();
     }
 
-    template<Theme::Icon THEME_ICON>
-    static const QIcon& invertedClassicIcon()
-    {
-        static QIcon icn;
-        if (icn.isNull()) {
-            QImage img = ThemeClassic::pixmap(THEME_ICON).toImage();
-            img.invertPixels();
-            icn = QIcon(QPixmap::fromImage(img));
-        }
-        return icn;
-    }
-
     const QIcon& icon(Icon icn) const override
     {
-        switch (icn) {
-        case Icon::Import: return invertedClassicIcon<Icon::Import>();
-        case Icon::Export: return invertedClassicIcon<Icon::Export>();
-        case Icon::Expand: return invertedClassicIcon<Icon::Expand>();
-        case Icon::Cross: return invertedClassicIcon<Icon::Cross>();
-        case Icon::Link: return invertedClassicIcon<Icon::Link>();
-        case Icon::Pin: return invertedClassicIcon<Icon::Pin>();
-        case Icon::Back: return invertedClassicIcon<Icon::Back>();
-        case Icon::Next: return invertedClassicIcon<Icon::Next>();
-        case Icon::Camera: return invertedClassicIcon<Icon::Camera>();
-        case Icon::LeftSidebar: return invertedClassicIcon<Icon::LeftSidebar>();
-        case Icon::LeftArrowCross: return invertedClassicIcon<Icon::LeftArrowCross>();
-        case Icon::IndicatorDown: return invertedClassicIcon<Icon::IndicatorDown>();
-        case Icon::Gear: return invertedClassicIcon<Icon::Gear>();
-        case Icon::ZoomIn: return invertedClassicIcon<Icon::ZoomIn>();
-        case Icon::ZoomOut: return invertedClassicIcon<Icon::ZoomOut>();
-        case Icon::Stop: {
-            static const QIcon icn(":/images/themes/dark/stop_32.png");
-            return icn;
-        }
-        case Icon::ItemMesh: return invertedClassicIcon<Icon::ItemMesh>();
-        } // endswitch()
-        static const QIcon nullIcn;
-        return nullIcn;
+        auto it = m_mapIcon.find(icn);
+        return it != m_mapIcon.cend() ? it->second : nullQIcon;
     }
 
     void setup() override
     {
+        const QString icnBasePath = ":/images/themes/dark/";
+        for (const Icon icn : themeIcons()) {
+            const QString icnFileName = iconFileName(icn);
+            QPixmap pix(icnBasePath + icnFileName);
+            if (icn != Icon::Stop)
+                pix = invertedPixmap(pix);
+            m_mapIcon.emplace(icn, pix);
+        }
+
         qApp->setStyle(QStyleFactory::create("Fusion"));
         QPalette p = qApp->palette();
         p.setColor(QPalette::Base, QColor(80, 80, 80));
@@ -282,6 +292,9 @@ public:
         const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
         cb->setStyleSheet(cssFlatComboBox(urlDown, urlDownDisabled));
     }
+
+private:
+    std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
 };
 
 } // namespace Internal

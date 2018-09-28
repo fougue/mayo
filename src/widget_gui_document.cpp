@@ -24,15 +24,14 @@ namespace Mayo {
 namespace Internal {
 
 static ButtonFlat* createViewBtn(
-        QWidget* parent, QString imageFile, QString tooltip)
+        QWidget* parent, Theme::Icon icon, const QString& tooltip)
 {
     auto btn = new ButtonFlat(parent);
-    imageFile = imageFile.contains('.') ? imageFile : (imageFile + ".png");
     btn->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Background));
     btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
     btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
-    btn->setIcon(QIcon(QString(":/images/%1").arg(imageFile)));
-    btn->setIconSize(QSize(16, 16));
+    btn->setIcon(mayoTheme()->icon(icon));
+    btn->setIconSize(QSize(18, 18));
     btn->setFixedSize(24, 24);
     btn->setToolTip(tooltip);
     return btn;
@@ -79,17 +78,16 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
     layout->addWidget(m_qtOccView);
     this->setLayout(layout);
 
-    auto btnFitAll = Internal::createViewBtn(this, "fitall_16", tr("Fit All"));
-    btnFitAll->setIcon(mayoTheme()->icon(Theme::Icon::Expand));
-    auto btnViewIso = Internal::createViewBtn(this, "view_axo", tr("Isometric"));
-    auto btnViewBack = Internal::createViewBtn(this, "view_back", tr("Back"));
-    auto btnViewFront = Internal::createViewBtn(this, "view_front", tr("Front"));
-    auto btnViewLeft = Internal::createViewBtn(this, "view_left", tr("Left"));
-    auto btnViewRight = Internal::createViewBtn(this, "view_right", tr("Right"));
-    auto btnViewTop = Internal::createViewBtn(this, "view_top", tr("Top"));
-    auto btnViewBottom = Internal::createViewBtn(this, "view_bottom", tr("Bottom"));
-    auto btnEditClipPlanes = Internal::createViewBtn(this, "clipping", tr("Edit clip planes"));
-    btnEditClipPlanes->setCheckable(true);
+    auto btnFitAll = Internal::createViewBtn(this, Theme::Icon::Expand, tr("Fit All"));
+    auto btnViewIso = Internal::createViewBtn(this, Theme::Icon::View3dIso, tr("Isometric"));
+    auto btnViewBack = Internal::createViewBtn(this, Theme::Icon::View3dBack, tr("Back"));
+    auto btnViewFront = Internal::createViewBtn(this, Theme::Icon::View3dFront, tr("Front"));
+    auto btnViewLeft = Internal::createViewBtn(this, Theme::Icon::View3dLeft, tr("Left"));
+    auto btnViewRight = Internal::createViewBtn(this, Theme::Icon::View3dRight, tr("Right"));
+    auto btnViewTop = Internal::createViewBtn(this, Theme::Icon::View3dTop, tr("Top"));
+    auto btnViewBottom = Internal::createViewBtn(this, Theme::Icon::View3dBottom, tr("Bottom"));
+    auto btnEditClipping = Internal::createViewBtn(this, Theme::Icon::ClipPlane, tr("Edit clip planes"));
+    btnEditClipping->setCheckable(true);
     const int margin = Internal::widgetMargin;
     btnFitAll->move(margin, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewIso, btnFitAll, margin);
@@ -99,7 +97,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewRight, btnViewLeft, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewTop, btnViewRight, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
-    qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipPlanes, btnViewBottom, margin);
+    qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipping, btnViewBottom, margin);
 
     const Handle_V3d_View view3d = guiDoc->v3dView();
     Internal::connectViewProjBtn(btnViewIso, view3d, V3d_XposYnegZpos);
@@ -113,7 +111,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
                 btnFitAll, &ButtonFlat::clicked,
                 [=]{ GpxUtils::V3dView_fitAll(view3d); });
     QObject::connect(
-                btnEditClipPlanes, &ButtonFlat::clicked,
+                btnEditClipping, &ButtonFlat::clicked,
                 this, &WidgetGuiDocument::toggleWidgetClipPlanes);
 
     m_firstBtnFrameRect = btnFitAll->frameGeometry();

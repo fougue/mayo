@@ -202,7 +202,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->actionCloseDoc->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
     m_ui->actionSaveImageView->setIcon(mayoTheme()->icon(Theme::Icon::Camera));
     m_ui->actionShowHideLeftSidebar->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
-    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::LeftArrowCross));
+    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
 
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);

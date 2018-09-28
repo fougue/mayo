@@ -32,23 +32,34 @@ public:
     };
 
     enum class Icon {
+        File,
         Import,
         Export,
         Expand,
         Cross,
         Link,
-        Pin,
         Back,
         Next,
         Camera,
         LeftSidebar,
-        LeftArrowCross,
+        BackSquare,
         IndicatorDown,
         Stop,
         Gear,
         ZoomIn,
         ZoomOut,
-        ItemMesh
+        ClipPlane,
+        View3dIso,
+        View3dLeft,
+        View3dRight,
+        View3dTop,
+        View3dBottom,
+        View3dFront,
+        View3dBack,
+        ItemMesh,
+        ItemXde,
+        XdeAssembly,
+        XdeSimpleShape
     };
 
     virtual const QIcon& icon(Icon icn) const = 0;
