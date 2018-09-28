@@ -18,7 +18,8 @@
 #include "mesh_item.h"
 #include "theme.h"
 #include "xde_document_item.h"
-#include "fougtools/occtools/qt_utils.h"
+
+#include <fougtools/occtools/qt_utils.h>
 
 #include <AIS_Trihedron.hxx>
 #include <Aspect_DisplayConnection.hxx>
