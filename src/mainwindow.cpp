@@ -257,6 +257,15 @@ MainWindow::MainWindow(QWidget *parent)
                 m_ui->actionExportSelectedItems, &QAction::triggered,
                 this, &MainWindow::exportSelectedItems);
     QObject::connect(
+                m_ui->actionCloseDoc, &QAction::triggered,
+                this, &MainWindow::closeCurrentDocument);
+    QObject::connect(
+                m_ui->actionCloseAllDocuments, &QAction::triggered,
+                this, &MainWindow::closeAllDocuments);
+    QObject::connect(
+                m_ui->actionCloseAllExcept, &QAction::triggered,
+                this, &MainWindow::closeAllDocumentsExceptCurrent);
+    QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
     QObject::connect(
@@ -313,18 +322,7 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::currentDocumentIndexChanged);
     QObject::connect(
                 this, &MainWindow::currentDocumentIndexChanged,
-                m_ui->stack_GuiDocuments, &QStackedWidget::setCurrentIndex);
-    QObject::connect(
-                this, &MainWindow::currentDocumentIndexChanged,
-                this, &MainWindow::updateControlsActivation);
-    QObject::connect(
-                this, &MainWindow::currentDocumentIndexChanged,
-                [=](int docIdx) {
-        const Document* doc = Application::instance()->documentAt(docIdx);
-        if (doc != nullptr)
-            m_ui->widget_FileSystem->setLocation(doc->filePath());
-        this->updateActionText(m_ui->actionToggleOriginTrihedron);
-    });
+                this, &MainWindow::onCurrentDocumentIndexChanged);
     QObject::connect(
                 m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
                 this, &MainWindow::onWidgetFileSystemLocationActivated);
@@ -350,11 +348,6 @@ MainWindow::MainWindow(QWidget *parent)
         this->setCurrentDocumentIndex(index.row());
     });
     QObject::connect(
-                this, &MainWindow::currentDocumentIndexChanged, [=](int docId) {
-        QAbstractItemView* view = m_ui->listView_OpenedDocuments;
-        view->setCurrentIndex(view->model()->index(docId, 0));
-    });
-    QObject::connect(
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
 
@@ -368,6 +361,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->updateActionText(m_ui->actionToggleOriginTrihedron);
     m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
                 Options::instance()->referenceItemTextTemplate());
+
+    this->onCurrentDocumentIndexChanged(-1);
 }
 
 MainWindow::~MainWindow()
@@ -744,20 +739,75 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
     }
 }
 
+void MainWindow::onCurrentDocumentIndexChanged(int idx)
+{
+    m_ui->stack_GuiDocuments->setCurrentIndex(idx);
+    QAbstractItemView* view = m_ui->listView_OpenedDocuments;
+    view->setCurrentIndex(view->model()->index(idx, 0));
+
+    this->updateControlsActivation();
+    this->updateActionText(m_ui->actionToggleOriginTrihedron);
+
+    auto funcFilepathQuoted = [](const QString& filepath) {
+        for (QChar c : filepath) {
+            if (c.isSpace())
+                return "\"" + filepath + "\"";
+        }
+        return filepath;
+    };
+    const Document* doc = Application::instance()->documentAt(idx);
+    const QString textActionClose =
+            doc != nullptr ?
+                tr("Close %1").arg(funcFilepathQuoted(doc->label())) :
+                tr("Close");
+    const QString textActionCloseAllExcept =
+            doc != nullptr ?
+                tr("Close all except %1").arg(funcFilepathQuoted(doc->label())) :
+                tr("Close all except current");
+    const QString docFilePath =
+            doc != nullptr ? doc->filePath() : QString();
+    m_ui->actionCloseDoc->setText(textActionClose);
+    m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
+    m_ui->widget_FileSystem->setLocation(docFilePath);
+}
+
 void MainWindow::closeCurrentDocument()
 {
     this->closeDocument(this->currentDocumentIndex());
 }
 
-void MainWindow::closeDocument(int docIndex)
+void MainWindow::closeDocument(WidgetGuiDocument *widget)
 {
-    if (0 <= docIndex && docIndex < m_ui->stack_GuiDocuments->count()) {
-        auto widgetGuiDoc = this->widgetGuiDocument(docIndex);
-        Document* doc = widgetGuiDoc->guiDocument()->document();
-        m_ui->stack_GuiDocuments->removeWidget(widgetGuiDoc);
+    if (widget != nullptr) {
+        Document* doc = widget->guiDocument()->document();
+        m_ui->stack_GuiDocuments->removeWidget(widget);
         Application::instance()->eraseDocument(doc);
         this->updateControlsActivation();
     }
+}
+
+void MainWindow::closeDocument(int docIndex)
+{
+    if (0 <= docIndex && docIndex < m_ui->stack_GuiDocuments->count())
+        this->closeDocument(this->widgetGuiDocument(docIndex));
+}
+
+void MainWindow::closeAllDocumentsExceptCurrent()
+{
+    WidgetGuiDocument* current = this->currentWidgetGuiDocument();
+    std::vector<WidgetGuiDocument*> vecWidget;
+    for (int i = 0; i < m_ui->stack_GuiDocuments->count(); ++i)
+        vecWidget.push_back(this->widgetGuiDocument(i));
+    for (WidgetGuiDocument* widget : vecWidget) {
+        if (widget != current)
+            this->closeDocument(widget);
+    }
+}
+
+void MainWindow::closeAllDocuments()
+{
+    while (m_ui->stack_GuiDocuments->count() > 0)
+        this->closeCurrentDocument();
 }
 
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
@@ -806,6 +856,8 @@ void MainWindow::updateControlsActivation()
     m_ui->actionZoomOut->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);
     m_ui->actionCloseDoc->setEnabled(!appDocumentsEmpty);
+    m_ui->actionCloseAllDocuments->setEnabled(!appDocumentsEmpty);
+    m_ui->actionCloseAllExcept->setEnabled(!appDocumentsEmpty);
     const int currentDocIndex = this->currentDocumentIndex();
     m_ui->actionPreviousDoc->setEnabled(
                 !appDocumentsEmpty && currentDocIndex > 0);

@@ -59,9 +59,13 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
+    void onCurrentDocumentIndexChanged(int idx);
 
     void closeCurrentDocument();
+    void closeDocument(WidgetGuiDocument* widget);
     void closeDocument(int docIndex);
+    void closeAllDocumentsExceptCurrent();
+    void closeAllDocuments();
 
     void runImportTask(
             Document* doc,

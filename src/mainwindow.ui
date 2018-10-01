@@ -196,7 +196,7 @@
                      <string>Close Left Side Bar</string>
                     </property>
                     <property name="icon">
-                     <iconset resource="../mayo.qrc">
+                     <iconset>
                       <normaloff>:/images/themes/classic/left-arrow-cross_16.png</normaloff>:/images/themes/classic/left-arrow-cross_16.png</iconset>
                     </property>
                     <property name="autoRaise">
@@ -337,7 +337,7 @@
                <item>
                 <widget class="QToolButton" name="btn_PreviousGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/back_32.png</normaloff>:/images/themes/classic/back_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -354,7 +354,7 @@
                <item>
                 <widget class="QToolButton" name="btn_NextGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/next_32.png</normaloff>:/images/themes/classic/next_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -394,7 +394,7 @@
                <item>
                 <widget class="QToolButton" name="btn_CloseGuiDocument">
                  <property name="icon">
-                  <iconset resource="../mayo.qrc">
+                  <iconset>
                    <normaloff>:/images/themes/classic/cross_32.png</normaloff>:/images/themes/classic/cross_32.png</iconset>
                  </property>
                  <property name="iconSize">
@@ -552,6 +552,10 @@
     <addaction name="actionImport"/>
     <addaction name="actionExportSelectedItems"/>
     <addaction name="separator"/>
+    <addaction name="actionCloseDoc"/>
+    <addaction name="actionCloseAllDocuments"/>
+    <addaction name="actionCloseAllExcept"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -639,7 +643,7 @@
   </action>
   <action name="actionSaveImageView">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/themes/classic/camera_32.png</normaloff>:/images/themes/classic/camera_32.png</iconset>
    </property>
    <property name="text">
@@ -692,7 +696,7 @@
      <normaloff>:/images/close.png</normaloff>:/images/close.png</iconset>
    </property>
    <property name="text">
-    <string>Close Document</string>
+    <string>Close &quot;%1&quot;</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
@@ -711,7 +715,7 @@
   </action>
   <action name="actionShowHideLeftSidebar">
    <property name="icon">
-    <iconset resource="../mayo.qrc">
+    <iconset>
      <normaloff>:/images/themes/classic/left-sidebar_32.png</normaloff>:/images/themes/classic/left-sidebar_32.png</iconset>
    </property>
    <property name="text">
@@ -745,6 +749,19 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+-</string>
+   </property>
+  </action>
+  <action name="actionCloseAllDocuments">
+   <property name="text">
+    <string>Close all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+W</string>
+   </property>
+  </action>
+  <action name="actionCloseAllExcept">
+   <property name="text">
+    <string>Close all except &quot;%1&quot;</string>
    </property>
   </action>
  </widget>
