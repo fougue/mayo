@@ -141,9 +141,13 @@ struct OpenFileNames {
 static gp_Pnt pointUnderMouse(const GuiDocument* guiDoc, const QPoint& pos)
 {
     const Handle_AIS_InteractiveContext& ctx = guiDoc->aisInteractiveContext();
-    ctx->MoveTo(pos.x(), pos.y(), guiDoc->v3dView(), true);
-    if (ctx->HasDetected() && ctx->MainSelector()->NbPicked() > 0)
-        return ctx->MainSelector()->PickedPoint(1);
+    constexpr bool updateV3dViewer = true;
+    ctx->MoveTo(pos.x(), pos.y(), guiDoc->v3dView(), !updateV3dViewer);
+    if (ctx->HasDetected() && ctx->MainSelector()->NbPicked() > 0) {
+        const gp_Pnt pnt = ctx->MainSelector()->PickedPoint(1);
+        ctx->ClearDetected(!updateV3dViewer);
+        return pnt;
+    }
     return GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos.x(), pos.y());
 }
 
