@@ -494,7 +494,7 @@ Application::IoResult Application::importInDocument(
     case PartFormat::Stl: return this->importStl(doc, filepath, progress);
     case PartFormat::Unknown: break;
     }
-    return { false, tr("Unknown error") };
+    return IoResult::error(tr("Unknown error"));
 }
 
 Application::IoResult Application::exportDocumentItems(
@@ -517,7 +517,7 @@ Application::IoResult Application::exportDocumentItems(
     case PartFormat::Unknown:
         break;
     }
-    return { false, tr("Unknown error") };
+    return IoResult::error(tr("Unknown error"));
 }
 
 bool Application::hasExportOptionsForFormat(Application::PartFormat format)
@@ -585,9 +585,10 @@ Application::IoResult Application::importIges(
     IFSelect_ReturnStatus err;
     Internal::loadCafDocumentFromFile<IGESCAFControl_Reader>(
                 filepath, cafDoc, &err, progress);
-    if (err == IFSelect_RetDone)
-        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
-    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
+    if (err != IFSelect_RetDone)
+        return IoResult::error(StringUtils::rawText(err));
+    doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
+    return IoResult::ok();
 }
 
 Application::IoResult Application::importStep(
@@ -597,9 +598,10 @@ Application::IoResult Application::importStep(
     IFSelect_ReturnStatus err;
     Internal::loadCafDocumentFromFile<STEPCAFControl_Reader>(
                 filepath, cafDoc, &err, progress);
-    if (err == IFSelect_RetDone)
-        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
-    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
+    if (err != IFSelect_RetDone)
+        return IoResult::error(StringUtils::rawText(err));
+    doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
+    return IoResult::ok();
 }
 
 Application::IoResult Application::importOccBRep(
@@ -610,21 +612,20 @@ Application::IoResult Application::importOccBRep(
     Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     const bool ok = BRepTools::Read(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
-    if (ok) {
-        Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
-        Handle_XCAFDoc_ShapeTool shapeTool =
-                XCAFDoc_DocumentTool::ShapeTool(cafDoc->Main());
-        const TDF_Label labelShape = shapeTool->NewShape();
-        shapeTool->SetShape(labelShape, shape);
-        doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
-    }
-    return { ok, ok ? QString() : tr("Unknown Error") };
+    if (!ok)
+        return IoResult::error(tr("Unknown Error"));
+    Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
+    Handle_XCAFDoc_ShapeTool shapeTool =
+            XCAFDoc_DocumentTool::ShapeTool(cafDoc->Main());
+    const TDF_Label labelShape = shapeTool->NewShape();
+    shapeTool->SetShape(labelShape, shape);
+    doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
+    return IoResult::ok();
 }
 
 Application::IoResult Application::importStl(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
-    Application::IoResult result = { false, QString() };
     const Options::StlIoLibrary lib =
             Options::instance()->stlIoLibrary();
     if (lib == Options::StlIoLibrary::Gmio) {
@@ -644,9 +645,8 @@ Application::IoResult Application::importStl(
                     doc->addRootItem(Internal::createMeshItem(filepath, mesh));
                 }
             }
-            result.ok = (err == GMIO_ERROR_OK);
-            if (!result.ok)
-                result.errorText = Internal::gmioErrorToQString(err);
+            if (err != GMIO_ERROR_OK)
+                return IoResult::error(Internal::gmioErrorToQString(err));
         }
 #endif // HAVE_GMIO
     }
@@ -657,11 +657,10 @@ Application::IoResult Application::importStl(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         if (!mesh.IsNull())
             doc->addRootItem(Internal::createMeshItem(filepath, mesh));
-        result.ok = !mesh.IsNull();
-        if (!result.ok)
-            result.errorText = tr("Imported STL mesh is null");
+        else
+            return IoResult::error(tr("Imported STL mesh is null"));
     }
-    return result;
+    return IoResult::ok();
 }
 
 Application::IoResult Application::exportIges(
@@ -689,7 +688,7 @@ Application::IoResult Application::exportIges(
     writer.ComputeModel();
     const Standard_Boolean ok = writer.Write(filepath.toLocal8Bit().constData());
     writer.TransferProcess()->SetProgress(nullptr);
-    return { ok == Standard_True, QString() };
+    return ok ? IoResult::ok() : IoResult::error(tr("Unknown error"));
 }
 
 Application::IoResult Application::exportStep(
@@ -712,7 +711,9 @@ Application::IoResult Application::exportStep(
     const IFSelect_ReturnStatus err =
             writer.Write(filepath.toLocal8Bit().constData());
     writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
-    return { err == IFSelect_RetDone, StringUtils::rawText(err) };
+    return err == IFSelect_RetDone ?
+                IoResult::ok() :
+                IoResult::error(StringUtils::rawText(err));
 }
 
 Application::IoResult Application::exportOccBRep(
@@ -744,11 +745,9 @@ Application::IoResult Application::exportOccBRep(
     }
 
     Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-    const Standard_Boolean ok =
-            BRepTools::Write(shape, filepath.toLocal8Bit().constData(), indicator);
-    if (ok == Standard_True)
-        return { true, QString() };
-    return { false, tr("Unknown Error") };
+    if (!BRepTools::Write(shape, filepath.toLocal8Bit().constData(), indicator))
+        return IoResult::error(tr("Unknown Error"));
+    return IoResult::ok();
 }
 
 Application::IoResult Application::exportStl(
@@ -762,7 +761,7 @@ Application::IoResult Application::exportStl(
         return this->exportStl_gmio(docItems, options, filepath, progress);
     else if (lib == Options::StlIoLibrary::OpenCascade)
         return this->exportStl_OCC(docItems, options, filepath, progress);
-    return { false, tr("Unknown Error") };
+    return IoResult::error(tr("Unknown Error"));
 }
 
 Application::IoResult Application::exportStl_gmio(
@@ -802,12 +801,12 @@ Application::IoResult Application::exportStl_gmio(
                             options.stlFormat, &stream, &gmioMesh, &gmioOptions);
             }
             if (error != GMIO_ERROR_OK)
-                return { false, Internal::gmioErrorToQString(error) };
+                return IoResult::error(Internal::gmioErrorToQString(error));
         }
-        return { true, QString() };
+        return IoResult::ok();
     }
 #endif // HAVE_GMIO
-    return { false, file.errorString() };
+    return IoResult::error(file.errorString());
 }
 
 Application::IoResult Application::exportStl_OCC(
@@ -821,13 +820,13 @@ Application::IoResult Application::exportStl_OCC(
     if (options.stlFormat != GMIO_STL_FORMAT_ASCII
             && options.stlFormat != GMIO_STL_FORMAT_BINARY_LE)
     {
-        return { false, tr("Format not supported") };
+        return IoResult::error(tr("Format not supported"));
     }
 #else
     const bool isAsciiFormat = options.stlFormat == ExportOptions::StlFormat::Ascii;
 #endif
     if (docItems.size() > 1)
-        return { false,  tr("OpenCascade RWStl does not support multi-solids") };
+        return IoResult::error(tr("OpenCascade RWStl does not support multi-solids"));
 
     if (docItems.size() > 0) {
         const DocumentItem* item = docItems.front();
@@ -838,7 +837,8 @@ Application::IoResult Application::exportStl_OCC(
             const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
             const Standard_Boolean ok = writer.Write(
                         shape, filepath.toLocal8Bit().constData());
-            return { ok, ok ? QString() : tr("Unknown StlAPI_Writer failure") };
+            if (!ok)
+                return IoResult::error(tr("Unknown StlAPI_Writer failure"));
         }
         else if (sameType<MeshItem>(item)) {
             Handle_Message_ProgressIndicator indicator =
@@ -852,11 +852,11 @@ Application::IoResult Application::exportStl_OCC(
                 occOk = RWStl::WriteAscii(mesh, osdFilepath, indicator);
             else
                 occOk = RWStl::WriteBinary(mesh, osdFilepath, indicator);
-            const bool ok = occOk == Standard_True;
-            return { ok, ok ? QString() : tr("Unknown error") };
+            if (!occOk)
+                return IoResult::error(tr("Unknown error"));
         }
     }
-    return { true, QString() };
+    return IoResult::ok();
 }
 
 } // namespace Mayo

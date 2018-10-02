@@ -56,6 +56,7 @@ HEADERS += \
     src/property_enumeration.h \
     src/qt_occ_view_controller.h \
     src/quantity.h \
+    src/result.h \
     src/span.h \
     src/string_utils.h \
     src/theme.h \
@@ -67,8 +68,8 @@ HEADERS += \
     src/widget_gui_document.h \
     src/widget_message_indicator.h \
     src/widget_occ_view.h \
+    src/widget_properties_editor.h \
     src/xde_document_item.h \
-    src/widget_properties_editor.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -110,6 +111,7 @@ SOURCES += \
     src/property_enumeration.cpp \
     src/qt_occ_view_controller.cpp \
     src/quantity.cpp \
+    src/result.cpp \
     src/string_utils.cpp \
     src/theme.cpp \
     src/unit.cpp \
@@ -120,8 +122,8 @@ SOURCES += \
     src/widget_gui_document.cpp \
     src/widget_message_indicator.cpp \
     src/widget_occ_view.cpp \
+    src/widget_properties_editor.cpp \
     src/xde_document_item.cpp \
-    src/widget_properties_editor.cpp
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
@@ -135,7 +137,7 @@ FORMS += \
     src/mainwindow.ui \
     src/widget_application_tree.ui \
     src/widget_clip_planes.ui \
-    src/widget_properties_editor.ui
+    src/widget_properties_editor.ui \
 
 # gmio
 isEmpty(GMIO_ROOT) {

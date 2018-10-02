@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "result.h"
+
 #ifdef HAVE_GMIO
 #  include <gmio_core/text_format.h>
 #  include <gmio_stl/stl_format.h>
@@ -35,11 +37,7 @@ public:
         Stl
     };
 
-    struct IoResult {
-        bool ok;
-        QString errorText;
-        operator bool() const { return ok; }
-    };
+    using IoResult = Result<void>;
 
     struct ExportOptions {
 #ifdef HAVE_GMIO

@@ -73,7 +73,7 @@ void Test::Result_test()
     {
         std::ostringstream sstr;
         Result::Data::data_ostr = &sstr;
-        const Result res = Result::makeError("error_description");
+        const Result res = Result::error("error_description");
         QVERIFY(res.errorText() == "error_description");
         QVERIFY(!res.valid());
         QCOMPARE(sstr.str().c_str(), "02");
@@ -83,7 +83,7 @@ void Test::Result_test()
         Result::Data::data_ostr = &sstr;
         Result::Data data;
         data.foo = "FooData";
-        const Result res = Result::makeValid(std::move(data));
+        const Result res = Result::ok(std::move(data));
         QVERIFY(res.valid());
         QVERIFY(res.get().foo == "FooData");
         QCOMPARE(sstr.str().c_str(), "0042");

@@ -464,15 +464,15 @@ void MainWindow::runImportTask(
                 Application::instance()->importInDocument(
                     doc, format, filepath, &task->progress());
         QString msg;
-        if (result.ok) {
+        if (result) {
             msg = tr("Import time '%1': %2ms")
                     .arg(QFileInfo(filepath).fileName())
                     .arg(chrono.elapsed());
         } else {
             msg = tr("Failed to import part:\n    %1\nError: %2")
-                    .arg(filepath, result.errorText);
+                    .arg(filepath, result.errorText());
         }
-        emit operationFinished(result.ok, msg);
+        emit operationFinished(result.valid(), msg);
     });
 }
 
@@ -490,15 +490,15 @@ void MainWindow::runExportTask(
                 Application::instance()->exportDocumentItems(
                     docItems, format, opts, filepath, &task->progress());
         QString msg;
-        if (result.ok) {
+        if (result) {
             msg = tr("Export time '%1': %2ms")
                     .arg(QFileInfo(filepath).fileName())
                     .arg(chrono.elapsed());
         } else {
             msg = tr("Failed to export part:\n    %1\nError: %2")
-                    .arg(filepath).arg(result.errorText);
+                    .arg(filepath).arg(result.errorText());
         }
-        emit operationFinished(result.ok, msg);
+        emit operationFinished(result.valid(), msg);
     });
 }
 
