@@ -213,9 +213,9 @@ public:
         case Theme::Color::ButtonView3d_Checked:
             return appPalette.color(QPalette::Button).lighter(160);
         case Theme::Color::View3d_BackgroundGradientStart:
-            return Qt::lightGray;
+            return QColor(100, 100, 100);
         case Theme::Color::View3d_BackgroundGradientEnd:
-            return Qt::white;
+            return QColor(200, 200, 200);
         case Theme::Color::MessageIndicator_Background:
             return appPalette.color(QPalette::Highlight).lighter(125);
         case Theme::Color::MessageIndicator_Text:
