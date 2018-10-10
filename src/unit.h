@@ -19,7 +19,7 @@ enum class Unit {
     ThermodynamicTemperature, // Kelvin(K)
     AmountOfSubstance, // Mole(mol)
     LuminousIntensity, // Candela(cd)
-    Angle,  // Degree(°)
+    Angle,  // Radian(rad)
 
     // Derived
     Area,     // m²

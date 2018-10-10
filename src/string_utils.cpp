@@ -74,7 +74,7 @@ QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
     double angleRotation;
     trsf.GetRotation(axisRotation, angleRotation);
     const UnitSystem::TranslateResult trAngleRotation =
-            UnitSystem::translate(opt.unitSchema, angleRotation * Quantity_Radian);
+            UnitSystem::degrees(angleRotation * Quantity_Radian);
     return QStringLiteral("[%1; %2%3; %4")
             .arg(coordsText(axisRotation, opt),
                  valueText(trAngleRotation.value, opt),

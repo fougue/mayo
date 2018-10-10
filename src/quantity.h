@@ -108,7 +108,7 @@ const QuantityTime Quantity_Second(1.);
 const QuantityTime Quantity_Minute(60.);
 const QuantityTime Quantity_Hour(3600.);
 
-const QuantityAngle Quantity_Degree(1.);
-const QuantityAngle Quantity_Radian(180. / 3.14159265358979323846);
+const QuantityAngle Quantity_Degree(3.14159265358979323846 / 180.);
+const QuantityAngle Quantity_Radian(1.);
 
 } // namespace Mayo

@@ -27,7 +27,7 @@ static const char* symbol(Unit unit)
     case Unit::ThermodynamicTemperature: return "K";
     case Unit::AmountOfSubstance: return "mol";
     case Unit::LuminousIntensity: return "cd";
-    case Unit::Angle: return "°";
+    case Unit::Angle: return "rad";
     // Derived
     case Unit::Area: return "m²";
     case Unit::Volume: return "m^3";
@@ -189,6 +189,17 @@ UnitSystem::TranslateResult UnitSystem::translate(
     }
     Q_ASSERT(false);
     return {};
+}
+
+UnitSystem::TranslateResult UnitSystem::degrees(const QuantityAngle& angle)
+{
+    constexpr double factor = 180. / 3.14159265358979323846;
+    const double rad = angle.value();
+    TranslateResult res;
+    res.factor = factor;
+    res.strUnit = "°";
+    res.value = rad * factor;
+    return res;
 }
 
 } // namespace Mayo

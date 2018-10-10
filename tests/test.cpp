@@ -104,6 +104,12 @@ void Test::UnitSystem_test()
     for (const TranslateResult_Test& test : array) {
         QCOMPARE(test.first, test.second);
     }
+
+    {
+        const UnitSystem::TranslateResult tr =
+                UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian);
+        QCOMPARE(tr.value, 180.);
+    }
 }
 
 void Test::LibTree_test()

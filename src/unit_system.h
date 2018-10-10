@@ -30,6 +30,8 @@ public:
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);
 
+    static TranslateResult degrees(const QuantityAngle& angle);
+
     static std::string toSystemLocaleString(double value, const char* strUnit);
     static std::string toCLocaleString(double value, const char* strUnit);
 
