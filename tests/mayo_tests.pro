@@ -1,7 +1,7 @@
 TARGET = mayo_tests
 TEMPLATE = app
 
-CONFIG += no_batch
+CONFIG += c++14 no_batch
 
 QT += testlib
 

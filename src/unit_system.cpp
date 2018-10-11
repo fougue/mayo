@@ -195,11 +195,7 @@ UnitSystem::TranslateResult UnitSystem::degrees(const QuantityAngle& angle)
 {
     constexpr double factor = 180. / 3.14159265358979323846;
     const double rad = angle.value();
-    TranslateResult res;
-    res.factor = factor;
-    res.strUnit = "°";
-    res.value = rad * factor;
-    return res;
+    return { rad * factor, "°", factor };
 }
 
 } // namespace Mayo
