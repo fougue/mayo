@@ -23,6 +23,7 @@ public:
 
     const QString& errorText() const;
 
+    static Result<T> ok(const T& data);
     static Result<T> ok(T&& data);
     static Result<T> error(const QString& errorText = QString());
 
@@ -82,6 +83,14 @@ template<typename T> Result<T> Result<T>::error(const QString& errorText)
     Result<T> res;
     res.m_isValid = false;
     res.m_errorText = errorText;
+    return std::move(res);
+}
+
+template<typename T> Result<T> Result<T>::ok(const T& data)
+{
+    Result<T> res;
+    res.m_isValid = true;
+    res.m_data = data;
     return std::move(res);
 }
 
