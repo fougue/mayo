@@ -139,6 +139,13 @@ FORMS += \
     src/widget_clip_planes.ui \
     src/widget_properties_editor.ui \
 
+RESOURCES += mayo.qrc
+RC_ICONS = images/appicon.ico
+
+OTHER_FILES += \
+    README.md \
+    images/credits.txt
+
 # gmio
 isEmpty(GMIO_ROOT) {
     message(gmio is disabled)
@@ -173,9 +180,3 @@ LIBS += -lTKGeomBase
 OCCT_DEFINES = $$(CSF_DEFINES)
 DEFINES += $$split(OCCT_DEFINES, ;)
 DEFINES += OCCT_HANDLE_NOCAST
-RESOURCES += mayo.qrc
-
-RC_ICONS = images/appicon.ico
-OTHER_FILES += \
-    README.md \
-    images/credits.txt

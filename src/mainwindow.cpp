@@ -319,9 +319,6 @@ MainWindow::MainWindow(QWidget *parent)
         this->setCurrentDocumentIndex(this->currentDocumentIndex() + 1);
     });
     QObject::connect(
-                m_ui->actionCloseDoc, &QAction::triggered,
-                this, &MainWindow::closeCurrentDocument);
-    QObject::connect(
                 m_ui->combo_GuiDocuments, sigComboIndexChanged,
                 this, &MainWindow::currentDocumentIndexChanged);
     QObject::connect(
