@@ -8,6 +8,15 @@
 
 namespace Mayo {
 
+gp_Pnt BndBoxCoords::center() const
+{
+    return {
+      (this->xmax + this->xmin) / 2.,
+      (this->ymax + this->ymin) / 2.,
+      (this->zmax + this->zmin) / 2.
+    };
+}
+
 std::array<gp_Pnt, 8> BndBoxCoords::vertices() const
 {
     return {{
