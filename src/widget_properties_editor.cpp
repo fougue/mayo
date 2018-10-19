@@ -81,6 +81,16 @@ static QString yesNoString(bool on)
     return on ? WidgetPropertiesEditor::tr("Yes") : WidgetPropertiesEditor::tr("No");
 }
 
+static UnitSystem::TranslateResult unitTranslate(const BasePropertyQuantity* prop)
+{
+    if (prop->quantityUnit() == Unit::Angle) {
+        auto propAngle = static_cast<const PropertyAngle*>(prop);
+        return UnitSystem::degrees(propAngle->quantity());
+    }
+    return Options::instance()->unitSystemTranslate(
+                prop->quantityValue(), prop->quantityUnit());
+}
+
 static QString propertyValueText(const Property* prop)
 {
     auto options = Options::instance();
@@ -134,9 +144,7 @@ static QString propertyValueText(const Property* prop)
             const QTime duration = QTime(0, 0).addSecs(qtyProp->quantityValue());
             return options->locale().toString(duration);
         }
-        const UnitSystem::TranslateResult trRes =
-                options->unitSystemTranslate(
-                    qtyProp->quantityValue(), qtyProp->quantityUnit());
+        const UnitSystem::TranslateResult trRes = unitTranslate(qtyProp);
         return WidgetPropertiesEditor::tr("%1%2")
                 .arg(StringUtils::text(trRes.value, options->defaultTextOptions()))
                 .arg(trRes.strUnit);
@@ -148,9 +156,7 @@ static QString propertyValueText(const Property* prop)
 static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent)
 {
     auto editor = new QDoubleSpinBox(parent);
-    const UnitSystem::TranslateResult trRes =
-            Options::instance()->unitSystemTranslate(
-                prop->quantityValue(), prop->quantityUnit());
+    const UnitSystem::TranslateResult trRes = unitTranslate(prop);
     editor->setSuffix(QString::fromUtf8(trRes.strUnit));
     editor->setDecimals(Options::instance()->unitSystemDecimals());
     const double rangeMin =
@@ -164,6 +170,8 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
     auto signalValueChanged =
             static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     QObject::connect(editor, signalValueChanged, [=](double value) {
+        const double f = trRes.factor;
+        value = qFuzzyCompare(f, 1.) ? value : value * f;
         prop->setQuantityValue(value);
     });
     return editor;
