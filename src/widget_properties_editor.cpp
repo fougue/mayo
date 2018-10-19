@@ -456,6 +456,7 @@ void WidgetPropertiesEditor::addLineWidget(QWidget* widget)
 {
     widget->setAutoFillBackground(true);
     auto treeItem = new QTreeWidgetItem(m_ui->treeWidget_Browser);
+    treeItem->setFlags(Qt::ItemIsEnabled);
     m_ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
     m_ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
 }
