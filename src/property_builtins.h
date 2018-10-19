@@ -238,7 +238,10 @@ double GenericPropertyQuantity<UNIT>::quantityValue() const
 
 template<Unit UNIT>
 void GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
-{ m_quantity.setValue(v); }
+{
+    m_quantity.setValue(v);
+    this->notifyChanged();
+}
 
 template<Unit UNIT>
 const Quantity<UNIT>& GenericPropertyQuantity<UNIT>::quantity() const
