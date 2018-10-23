@@ -216,6 +216,23 @@ static QWidget* createPropertyEditor(PropertyInt* prop, QWidget* parent)
     return editor;
 }
 
+static QWidget* createPropertyEditor(PropertyDouble* prop, QWidget* parent)
+{
+    auto editor = new QDoubleSpinBox(parent);
+    if (prop->constraintsEnabled()) {
+        editor->setRange(prop->minimum(), prop->maximum());
+        editor->setSingleStep(prop->singleStep());
+    }
+    editor->setValue(prop->value());
+    editor->setDecimals(Options::instance()->unitSystemDecimals());
+    auto signalValueChanged =
+            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+    QObject::connect(editor, signalValueChanged, [=](double val) {
+        prop->setValue(val);
+    });
+    return editor;
+}
+
 static QWidget* createPropertyEditor(PropertyQString* prop, QWidget* parent)
 {
     auto editor = new QLineEdit(parent);
@@ -351,6 +368,8 @@ public:
             return createPropertyEditor(static_cast<PropertyBool*>(prop), parent);
         if (propTypeName == PropertyInt::TypeName)
             return createPropertyEditor(static_cast<PropertyInt*>(prop), parent);
+        if (propTypeName == PropertyDouble::TypeName)
+            return createPropertyEditor(static_cast<PropertyDouble*>(prop), parent);
         if (propTypeName == PropertyQString::TypeName)
             return createPropertyEditor(static_cast<PropertyQString*>(prop), parent);
         if (propTypeName == PropertyOccColor::TypeName)
