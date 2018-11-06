@@ -5,6 +5,9 @@ defineReplace(sysPath) {
   return($$result)
 }
 
+isEmpty(CASCADE_INC_DIR):CASCADE_INC_DIR = $$(CSF_OCCTIncludePath)
+isEmpty(CASCADE_LIB_DIR):CASCADE_LIB_DIR = $$(CSF_OCCTLibPath)
+
 INCLUDEPATH += $$CASCADE_INC_DIR
 
 linux-*:DEFINES += \
@@ -14,7 +17,9 @@ linux-*:DEFINES += \
     HAVE_IOMANIP \
     HAVE_LIMITS_H
 
-win32-*:DEFINES += WNT
+CASCADE_DEFINES = $$(CSF_DEFINES)
+DEFINES += $$split(OCCT_DEFINES, ;)
+DEFINES += OCCT_HANDLE_NOCAST
 linux-*:DEFINES += LIN LININTEL OCC_CONVERT_SIGNALS
 
 # Find OCC version

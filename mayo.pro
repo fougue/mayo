@@ -165,8 +165,6 @@ isEmpty(GMIO_ROOT) {
 }
 
 # OpenCascade
-isEmpty(CASCADE_INC_DIR):error(Variable CASCADE_INC_DIR is empty)
-isEmpty(CASCADE_LIB_DIR):error(Variable CASCADE_LIB_DIR is empty)
 include(occ.pri)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
 LIBS += -lTKG2d
@@ -176,7 +174,3 @@ LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKG3d
 LIBS += -lTKGeomBase
-
-OCCT_DEFINES = $$(CSF_DEFINES)
-DEFINES += $$split(OCCT_DEFINES, ;)
-DEFINES += OCCT_HANDLE_NOCAST
