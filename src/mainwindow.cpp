@@ -355,6 +355,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->setAcceptDrops(true);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
+    m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     this->updateControlsActivation();
     this->updateActionText(m_ui->actionFullscreenOrNormal);
@@ -362,6 +363,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->updateActionText(m_ui->actionToggleOriginTrihedron);
     m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
                 Options::instance()->referenceItemTextTemplate());
+    m_ui->widget_MouseCoords->hide();
 
     this->onCurrentDocumentIndexChanged(-1);
 }
@@ -372,7 +374,7 @@ MainWindow::~MainWindow()
     Options::instance()->setRecentFiles(m_listRecentFile);
 }
 
-bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
     auto funcSizeBtn = [](const QWidget* container, const QWidget* widgetHeightRef) {
         const int btnSideLen = widgetHeightRef->frameGeometry().height();
@@ -380,26 +382,31 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         for (QAbstractButton* btn : listBtn)
             btn->setFixedSize(btnSideLen, btnSideLen);
     };
-    if (watched == m_ui->widget_ControlGuiDocuments
-            && event->type() == QEvent::Show)
-    {
+    const QEvent::Type eventType = event->type();
+    if (watched == m_ui->widget_ControlGuiDocuments && eventType == QEvent::Show) {
         funcSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
         return true;
     }
-    if (watched == m_ui->widget_LeftHeader && event->type() == QEvent::Show) {
+    if (watched == m_ui->widget_LeftHeader && eventType == QEvent::Show) {
         funcSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
         return true;
+    }
+    if (watched == m_ui->stack_GuiDocuments) {
+        if (eventType == QEvent::Enter || eventType == QEvent::Leave) {
+            m_ui->widget_MouseCoords->setHidden(eventType == QEvent::Leave);
+            return true;
+        }
     }
     return false;
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
     if (event->mimeData()->hasUrls())
         event->acceptProposedAction();
 }
 
-void MainWindow::dropEvent(QDropEvent *event)
+void MainWindow::dropEvent(QDropEvent* event)
 {
     const QList<QUrl> listUrl = event->mimeData()->urls();
     QStringList listFilePath;
