@@ -167,7 +167,7 @@ void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
             const TopLoc_Location shapeLoc =
                     xdeItem->shapeAbsoluteLocation(xdeAsmNode.nodeId);
             const TopoDS_Shape shape =
-                    xdeItem->shape(xdeAsmNode.label()).Located(shapeLoc);
+                    XdeDocumentItem::shape(xdeAsmNode.label()).Located(shapeLoc);
             std::vector<TopoDS_Face> vecFace;
             if (BRepUtils::moreComplex(shape.ShapeType(), TopAbs_FACE)) {
                 BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {

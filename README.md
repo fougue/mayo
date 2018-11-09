@@ -8,6 +8,7 @@ Current features are :
 * Support of STL format with either OpenCascade or [gmio](https://github.com/fougue/gmio) (optional)
 * 3D clip planes with configurable capping
 * Save image(snapshot) of the current 3D view
+* Editable name of STEP/IGES entities
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
 * Area and volume properties for meshes and shapes
 

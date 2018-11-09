@@ -262,11 +262,11 @@ static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
         BRep_Builder builder;
         builder.MakeCompound(cmpd);
         for (const TDF_Label& label : vecFreeShape)
-            builder.Add(cmpd, xdeDocItem->shape(label));
+            builder.Add(cmpd, XdeDocumentItem::shape(label));
         shape = cmpd;
     }
     else if (vecFreeShape.size() == 1) {
-        shape = xdeDocItem->shape(vecFreeShape.front());
+        shape = XdeDocumentItem::shape(vecFreeShape.front());
     }
     return shape;
 }
@@ -525,7 +525,7 @@ bool Application::hasExportOptionsForFormat(Application::PartFormat format)
     return format == PartFormat::Stl;
 }
 
-const std::vector<Application::PartFormat> &Application::partFormats()
+const std::vector<Application::PartFormat>& Application::partFormats()
 {
     const static std::vector<PartFormat> vecFormat = {
         PartFormat::Iges,
@@ -594,6 +594,7 @@ Application::IoResult Application::importIges(
 Application::IoResult Application::importStep(
         Document* doc, const QString &filepath, qttask::Progress* progress)
 {
+    Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
     Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
     IFSelect_ReturnStatus err;
     Internal::loadCafDocumentFromFile<STEPCAFControl_Reader>(
@@ -698,6 +699,7 @@ Application::IoResult Application::exportStep(
         qttask::Progress *progress)
 {
     std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
+    Interface_Static::SetIVal("write.stepcaf.subshapes.name", 1);
     Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     STEPCAFControl_Writer writer;
     if (!indicator.IsNull())
@@ -728,7 +730,7 @@ Application::IoResult Application::exportOccBRep(
         if (sameType<XdeDocumentItem>(item)) {
             const auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
             for (const TDF_Label& label : xdeDocItem->topLevelFreeShapes())
-                vecShape.push_back(xdeDocItem->shape(label));
+                vecShape.push_back(XdeDocumentItem::shape(label));
         }
     }
     TopoDS_Shape shape;

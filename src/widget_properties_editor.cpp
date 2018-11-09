@@ -422,28 +422,19 @@ WidgetPropertiesEditor::~WidgetPropertiesEditor()
     delete m_ui;
 }
 
-void WidgetPropertiesEditor::editProperties(Document *doc)
+void WidgetPropertiesEditor::editProperties(PropertyOwner* propertyOwner)
 {
     this->releaseObjects();
-    if (doc != nullptr) {
+    if (propertyOwner) {
         m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
-        m_currentDoc = doc;
-        this->refreshAllQtProperties();
-    }
-    else {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
-    }
-}
-
-void WidgetPropertiesEditor::editProperties(DocumentItem *docItem)
-{
-    this->releaseObjects();
-    if (docItem != nullptr) {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
-        m_currentDocItem = docItem;
-        const GuiDocument* guiDoc =
-                GuiApplication::instance()->findGuiDocument(m_currentDocItem->document());
-        m_currentGpxDocItem = guiDoc->findItemGpx(m_currentDocItem);
+        m_currentPropertyOwner = propertyOwner;
+        auto docItem = dynamic_cast<DocumentItem*>(propertyOwner);
+        if (docItem) {
+            const GuiDocument* guiDoc =
+                    GuiApplication::instance()->findGuiDocument(docItem->document());
+            if (guiDoc)
+                m_currentGpxPropertyOwner = guiDoc->findItemGpx(docItem);
+        }
         this->refreshAllQtProperties();
     }
     else {
@@ -514,26 +505,19 @@ void WidgetPropertiesEditor::refreshAllQtProperties()
 {
     m_ui->treeWidget_Browser->clear();
 
-    // Document
-    if (m_currentDoc != nullptr) {
-        this->createQtProperties(m_currentDoc->properties(), nullptr);
-    }
+    if (m_currentPropertyOwner && !m_currentGpxPropertyOwner)
+        this->createQtProperties(m_currentPropertyOwner->properties(), nullptr);
 
-    // Data for DocumentItem
-    if (m_currentDocItem != nullptr) {
+    if (m_currentPropertyOwner && m_currentGpxPropertyOwner) {
         auto itemGroupData = new QTreeWidgetItem;
         itemGroupData->setText(0, tr("Data"));
-        this->createQtProperties(m_currentDocItem->properties(), itemGroupData);
+        this->createQtProperties(m_currentPropertyOwner->properties(), itemGroupData);
         m_ui->treeWidget_Browser->addTopLevelItem(itemGroupData);
         itemGroupData->setExpanded(true);
-    }
 
-    // Graphics for DocumentItem
-    if (m_currentGpxDocItem != nullptr) {
         auto itemGroupGpx = new QTreeWidgetItem;
         itemGroupGpx->setText(0, tr("Graphics"));
-        const GpxDocumentItem* gpxItem = m_currentGpxDocItem;
-        this->createQtProperties(gpxItem->properties(), itemGroupGpx);
+        this->createQtProperties(m_currentGpxPropertyOwner->properties(), itemGroupGpx);
         m_ui->treeWidget_Browser->addTopLevelItem(itemGroupGpx);
         itemGroupGpx->setExpanded(true);
     }
@@ -550,9 +534,8 @@ void WidgetPropertiesEditor::refreshAllQtProperties()
 
 void WidgetPropertiesEditor::releaseObjects()
 {
-    m_currentDoc = nullptr;
-    m_currentDocItem = nullptr;
-    m_currentGpxDocItem = nullptr;
+    m_currentPropertyOwner = nullptr;
+    m_currentGpxPropertyOwner = nullptr;
     m_currentVecHndProperty.clear();
 }
 

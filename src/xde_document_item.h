@@ -15,9 +15,12 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <QtCore/QCoreApplication>
 
+#include <memory>
 #include <vector>
 
 namespace Mayo {
+
+class XdeShapePropertyOwner;
 
 class XdeDocumentItem : public PartItem {
     Q_DECLARE_TR_FUNCTIONS(XdeDocumentItem)
@@ -51,33 +54,35 @@ public:
     LABEL_CONTAINER topLevelFreeShapes() const;
 
     template<typename LABEL_CONTAINER = std::vector<TDF_Label>>
-    LABEL_CONTAINER shapeComponents(const TDF_Label& lbl) const;
+    static LABEL_CONTAINER shapeComponents(const TDF_Label& lbl);
 
     template<typename LABEL_CONTAINER = std::vector<TDF_Label>>
-    LABEL_CONTAINER shapeSubs(const TDF_Label& lbl) const;
+    static LABEL_CONTAINER shapeSubs(const TDF_Label& lbl);
 
-    TopoDS_Shape shape(const TDF_Label& lbl) const;
-    QString findLabelName(const TDF_Label& lbl) const;
+    static QString findLabelName(const TDF_Label& lbl);
     QString findLabelName(AssemblyNodeId nodeId) const;
+    static void setLabelName(const TDF_Label& lbl, const QString& name);
+    void setLabelName(AssemblyNodeId nodeId, const QString& name);
 
-    bool isShape(const TDF_Label& lbl) const;
-    bool isShapeFree(const TDF_Label& lbl) const;
-    bool isShapeAssembly(const TDF_Label& lbl) const;
-    bool isShapeReference(const TDF_Label& lbl) const;
-    bool isShapeSimple(const TDF_Label& lbl) const;
-    bool isShapeComponent(const TDF_Label& lbl) const;
-    bool isShapeCompound(const TDF_Label& lbl) const;
-    bool isShapeSub(const TDF_Label& lbl) const;
+    static TopoDS_Shape shape(const TDF_Label& lbl);
+    static bool isShape(const TDF_Label& lbl);
+    static bool isShapeFree(const TDF_Label& lbl);
+    static bool isShapeAssembly(const TDF_Label& lbl);
+    static bool isShapeReference(const TDF_Label& lbl);
+    static bool isShapeSimple(const TDF_Label& lbl);
+    static bool isShapeComponent(const TDF_Label& lbl);
+    static bool isShapeCompound(const TDF_Label& lbl);
+    static bool isShapeSub(const TDF_Label& lbl);
 
     bool hasShapeColor(const TDF_Label& lbl) const;
     Quantity_Color shapeColor(const TDF_Label& lbl) const;
 
     TopLoc_Location shapeAbsoluteLocation(AssemblyNodeId nodeId) const;
-    TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl) const;
-    TDF_Label shapeReferred(const TDF_Label& lbl) const;
+    static TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl);
+    static TDF_Label shapeReferred(const TDF_Label& lbl);
 
-    ValidationProperties validationProperties(const TDF_Label& lbl) const;
-    std::vector<HandleProperty> shapeProperties(
+    static ValidationProperties validationProperties(const TDF_Label& lbl);
+    std::unique_ptr<XdeShapePropertyOwner> shapeProperties(
             const TDF_Label& label,
             ShapePropertiesOption opt = ShapePropertiesOption::None) const;
 
@@ -126,27 +131,28 @@ LABEL_CONTAINER XdeDocumentItem::topLevelFreeShapes() const {
     LABEL_CONTAINER cnter;
     const TDF_Label lbl = this->shapeTool()->Label();
     getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-        return this->isShape(child) && this->isShapeFree(child);
+        return XdeDocumentItem::isShape(child)
+               && XdeDocumentItem::isShapeFree(child);
     });
     return cnter;
 }
 
 template<typename LABEL_CONTAINER>
-LABEL_CONTAINER XdeDocumentItem::shapeComponents(const TDF_Label& lbl) const {
+LABEL_CONTAINER XdeDocumentItem::shapeComponents(const TDF_Label& lbl) {
     LABEL_CONTAINER cnter;
-    if (this->isShapeAssembly(lbl)) {
+    if (XdeDocumentItem::isShapeAssembly(lbl)) {
         getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-            return this->isShapeComponent(child);
+            return XdeDocumentItem::isShapeComponent(child);
         });
     }
     return cnter;
 }
 
 template<typename LABEL_CONTAINER>
-LABEL_CONTAINER XdeDocumentItem::shapeSubs(const TDF_Label& lbl) const {
+LABEL_CONTAINER XdeDocumentItem::shapeSubs(const TDF_Label& lbl) {
     LABEL_CONTAINER cnter;
     getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-        return this->isShapeSub(child);
+        return XdeDocumentItem::isShapeSub(child);
     });
     return cnter;
 }

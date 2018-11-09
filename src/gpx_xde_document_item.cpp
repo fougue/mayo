@@ -14,6 +14,14 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     : GpxCovariantDocumentItem(item),
       GpxBRepShapeCommonProperties(this)
 {
+    // TODO XCAFPrs_AISObject requires a root label containing a TopoDS_Shape
+    // If the XDE document as many free top-level shapes then there is a problem
+    // Doesn't work :
+    //     XCAFDoc_DocumentTool::ShapesLabel()
+    //     XCAFDoc_ShapeTool::BaseLabel()
+    // The only viable solution(instead of creating a root shape label containing
+    // the free top-level shapes) is to have an AIS object per free top-level
+    // shape.
     const std::vector<TDF_Label> vecFreeShape = item->topLevelFreeShapes();
     assert(vecFreeShape.size() <= 1);
     if (!vecFreeShape.empty()) {

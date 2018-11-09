@@ -27,8 +27,7 @@ public:
     WidgetPropertiesEditor(QWidget* parent = nullptr);
     ~WidgetPropertiesEditor();
 
-    void editProperties(Document* doc);
-    void editProperties(DocumentItem* docItem);
+    void editProperties(PropertyOwner* propertyOwner);
     void editProperties(Span<HandleProperty> spanHndProp);
     void clear();
 
@@ -47,9 +46,8 @@ private:
 
     class Ui_WidgetPropertiesEditor* m_ui = nullptr;
 
-    Document* m_currentDoc = nullptr;
-    DocumentItem* m_currentDocItem = nullptr;
-    GpxDocumentItem* m_currentGpxDocItem = nullptr;
+    PropertyOwner* m_currentPropertyOwner = nullptr;
+    PropertyOwner* m_currentGpxPropertyOwner = nullptr;
     std::vector<HandleProperty> m_currentVecHndProperty;
     Internal::PropertyItemDelegate* m_itemDelegate = nullptr;
 };

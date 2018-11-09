@@ -31,6 +31,7 @@
 #include "widget_properties_editor.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
+#include "xde_shape_property_owner.h"
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
@@ -636,7 +637,7 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-    const WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
+    WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     Span<const ApplicationItem> spanAppItem =
@@ -651,9 +652,17 @@ void MainWindow::onApplicationItemSelectionChanged()
             const ShapePropsOption opt =
                     uiAppTree->isMergeXdeReferredShapeOn() ?
                         ShapePropsOption::MergeReferred : ShapePropsOption::None;
-            std::vector<HandleProperty> vecShapeProp =
-                    xdeItem->shapeProperties(xdeLabel, opt);
-            uiProps->editProperties(vecShapeProp);
+            m_ptrXdeShapeProperties = xdeItem->shapeProperties(xdeLabel, opt);
+            XdeShapePropertyOwner* shapeProps = m_ptrXdeShapeProperties.get();
+            uiProps->editProperties(shapeProps);
+            if (shapeProps) {
+                QObject::connect(shapeProps, &XdeShapePropertyOwner::nameChanged, [=]{
+                    uiAppTree->refreshItemText(item);
+                });
+                QObject::connect(shapeProps, &XdeShapePropertyOwner::referredNameChanged, [=]{
+                    uiAppTree->refreshItemText(item);
+                });
+            }
         }
         else if (item.isDocumentItem()) {
             uiProps->editProperties(item.documentItem());

@@ -10,12 +10,14 @@
 #include "application_item.h"
 #include "application_item_selection_model.h"
 #include <QtWidgets/QMainWindow>
+#include <memory>
 class QFileInfo;
 
 namespace Mayo {
 
 class Document;
 class GuiDocument;
+class XdeShapePropertyOwner;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
@@ -93,6 +95,7 @@ private:
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     QStringList m_listRecentFile;
+    std::unique_ptr<XdeShapePropertyOwner> m_ptrXdeShapeProperties;
 };
 
 } // namespace Mayo

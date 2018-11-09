@@ -70,6 +70,7 @@ HEADERS += \
     src/widget_occ_view.h \
     src/widget_properties_editor.h \
     src/xde_document_item.h \
+    src/xde_shape_property_owner.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -124,6 +125,7 @@ SOURCES += \
     src/widget_occ_view.cpp \
     src/widget_properties_editor.cpp \
     src/xde_document_item.cpp \
+    src/xde_shape_property_owner.cpp
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 

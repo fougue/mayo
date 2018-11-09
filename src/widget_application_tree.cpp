@@ -130,50 +130,21 @@ static QIcon documentItemIcon(const DocumentItem* docItem)
     return QIcon();
 }
 
-static QIcon xdeShapeIcon(const XdeDocumentItem* docItem, const TDF_Label& label)
+static QIcon xdeShapeIcon(const TDF_Label& label)
 {
-    if (docItem->isShapeAssembly(label))
+    if (XdeDocumentItem::isShapeAssembly(label))
         return mayoTheme()->icon(Theme::Icon::XdeAssembly);
-    else if (docItem->isShapeReference(label))
+    else if (XdeDocumentItem::isShapeReference(label))
         return QIcon(":/images/xde_reference_16.png");
-    else if (docItem->isShapeSimple(label))
+    else if (XdeDocumentItem::isShapeSimple(label))
         return mayoTheme()->icon(Theme::Icon::XdeSimpleShape);
     return QIcon();
 }
 
-static QString documentItemLabel(const DocumentItem* docItem)
+static QString itemLabelText(const PropertyQString& prop)
 {
-    const QString docItemLabel = docItem->propertyLabel.value();
-    return !docItemLabel.isEmpty() ?
-                docItemLabel :
-                WidgetApplicationTree::tr("<unnamed>");
-}
-
-static void addValidationProperties(
-        const XdeDocumentItem::ValidationProperties& validationProps,
-        std::vector<HandleProperty>* ptrVecHndProp,
-        const QString& nameFormat = QStringLiteral("%1"),
-        HandleProperty::Storage hndStorage = HandleProperty::Owner,
-        PropertyOwner* propOwner = nullptr)
-{
-    if (validationProps.hasCentroid) {
-        auto propCentroid = new PropertyOccPnt(
-                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Centroid")));
-        propCentroid->setValue(validationProps.centroid);
-        ptrVecHndProp->emplace_back(propCentroid, hndStorage);
-    }
-    if (validationProps.hasArea) {
-        auto propArea = new PropertyArea(
-                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Area")));
-        propArea->setQuantity(validationProps.area);
-        ptrVecHndProp->emplace_back(propArea, hndStorage);
-    }
-    if (validationProps.hasVolume) {
-        auto propVolume = new PropertyVolume(
-                    propOwner, nameFormat.arg(WidgetApplicationTree::tr("Volume")));
-        propVolume->setQuantity(validationProps.volume);
-        ptrVecHndProp->emplace_back(propVolume, hndStorage);
-    }
+    const QString label = prop.value();
+    return !label.isEmpty() ? label : WidgetApplicationTree::tr("<unnamed>");
 }
 
 static QTreeWidgetItem* guiCreateXdeTreeNode(
@@ -185,8 +156,7 @@ static QTreeWidgetItem* guiCreateXdeTreeNode(
     const QString stdName = xdeDocItem->findLabelName(nodeId);
     guiNode->setText(0, stdName);
     setTreeItemXdeAssemblyNode(guiNode, XdeAssemblyNode(xdeDocItem, nodeId));
-    const QIcon icon = xdeShapeIcon(
-                xdeDocItem, xdeDocItem->assemblyTree().nodeData(nodeId));
+    const QIcon icon = xdeShapeIcon(xdeDocItem->assemblyTree().nodeData(nodeId));
     if (!icon.isNull())
         guiNode->setIcon(0, icon);
     return guiNode;
@@ -257,46 +227,81 @@ const QString &WidgetApplicationTree::referenceItemTextTemplate() const
 }
 
 QString WidgetApplicationTree::referenceItemText(
-        const XdeDocumentItem* xdeDocItem,
         const TDF_Label& refLabel,
         const TDF_Label& referredLabel) const
 {
-    const QString refName = xdeDocItem->findLabelName(refLabel).trimmed();
-    const QString referredName = xdeDocItem->findLabelName(referredLabel).trimmed();
-    //if (!refNodeName.isEmpty() && refNodeName != guiNodeText)
+    const QString refName = XdeDocumentItem::findLabelName(refLabel).trimmed();
+    const QString referredName = XdeDocumentItem::findLabelName(referredLabel).trimmed();
     QString itemText = m_refItemTextTemplate;
     itemText.replace("%instance", refName)
             .replace("%referred", referredName);
     return itemText;
 }
 
-void WidgetApplicationTree::setReferenceItemTextTemplate(const QString &textTemplate)
+void WidgetApplicationTree::refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item)
+{
+    const XdeAssemblyNode asmNode = Internal::treeItemXdeAssemblyNode(item);
+    if (XdeDocumentItem::isShapeReference(asmNode.label())) {
+        const TDF_Label& refLabel = asmNode.label();
+        const TDF_Label referredLabel = XdeDocumentItem::shapeReferred(refLabel);
+        const QString itemText = this->referenceItemText(refLabel, referredLabel);
+        item->setText(0, itemText);
+    }
+    else {
+        item->setText(0, XdeDocumentItem::findLabelName(asmNode.label()));
+    }
+}
+
+void WidgetApplicationTree::setReferenceItemTextTemplate(const QString& textTemplate)
 {
     m_refItemTextTemplate = textTemplate;
-
     for (QTreeWidgetItemIterator it(m_ui->treeWidget_App); *it; ++it) {
-        QTreeWidgetItem* item = *it;
-        const Internal::TreeItemType itemType = Internal::treeItemType(item);
-        if (itemType == Internal::TreeItemType_XdeAssemblyNode) {
-            const XdeAssemblyNode asmNode = Internal::treeItemXdeAssemblyNode(item);
-            const XdeDocumentItem* docItem = asmNode.ownerDocItem;
-            if (docItem->isShapeReference(asmNode.label())) {
-                const TDF_Label& refLabel = asmNode.label();
-                const TDF_Label& referredLabel = docItem->shapeReferred(refLabel);
-                const QString itemText =
-                        this->referenceItemText(docItem, refLabel, referredLabel);
-                item->setText(0, itemText);
-            }
+        if (Internal::treeItemType(*it) == Internal::TreeItemType_XdeAssemblyNode)
+            this->refreshXdeAssemblyNodeItemText(*it);
+    }
+}
+
+void WidgetApplicationTree::refreshItemText(const ApplicationItem& appItem)
+{
+    if (appItem.isDocument()) {
+        const Document* doc = appItem.document();
+        QTreeWidgetItem* treeItem = this->findTreeItemDocument(doc);
+        if (treeItem)
+            treeItem->setText(0, Internal::itemLabelText(doc->propertyLabel));
+    }
+    else if (appItem.isDocumentItem()) {
+        const DocumentItem* docItem = appItem.documentItem();
+        QTreeWidgetItem* treeItem = this->findTreeItemDocumentItem(docItem);
+        if (treeItem)
+            treeItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
+    }
+    else if (appItem.isXdeAssemblyNode()) {
+        const XdeAssemblyNode& xdeNode = appItem.xdeAssemblyNode();
+        TDF_LabelSequence seqLabelRefresh;
+        if (XdeDocumentItem::isShapeReference(xdeNode.label())
+                && m_refItemTextTemplate.contains("%referred"))
+        {
+            XCAFDoc_ShapeTool::GetUsers(
+                        XdeDocumentItem::shapeReferred(xdeNode.label()),
+                        seqLabelRefresh,
+                        false /* don't get sub children */);
+        }
+        else {
+            seqLabelRefresh.Append(xdeNode.label());
+        }
+        for (const TDF_Label& labelRefresh : seqLabelRefresh) {
+            QTreeWidgetItem* treeItem =
+                    this->findTreeItemXdeLabel(xdeNode.ownerDocItem, labelRefresh);
+            if (treeItem)
+                this->refreshXdeAssemblyNodeItemText(treeItem);
         }
     }
 }
 
-void WidgetApplicationTree::onDocumentAdded(Document *doc)
+void WidgetApplicationTree::onDocumentAdded(Document* doc)
 {
     auto treeItem = new QTreeWidgetItem;
-    const QString docLabel =
-            !doc->label().isEmpty() ? doc->label() : tr("<unnamed>");
-    treeItem->setText(0, docLabel);
+    treeItem->setText(0, Internal::itemLabelText(doc->propertyLabel));
     treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::File));
     treeItem->setToolTip(0, doc->filePath());
     Internal::setTreeItemDocument(treeItem, doc);
@@ -312,8 +317,7 @@ void WidgetApplicationTree::onDocumentErased(const Document *doc)
 QTreeWidgetItem* WidgetApplicationTree::loadDocumentItem(DocumentItem* docItem)
 {
     auto treeItem = new QTreeWidgetItem;
-    const QString docItemLabel = Internal::documentItemLabel(docItem);
-    treeItem->setText(0, docItemLabel);
+    treeItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
     const QIcon docItemIcon = Internal::documentItemIcon(docItem);
     if (!docItemIcon.isNull())
         treeItem->setIcon(0, docItemIcon);
@@ -322,7 +326,7 @@ QTreeWidgetItem* WidgetApplicationTree::loadDocumentItem(DocumentItem* docItem)
 }
 
 void WidgetApplicationTree::guiBuildXdeTree(
-        QTreeWidgetItem *treeDocItem, XdeDocumentItem *xdeDocItem)
+        QTreeWidgetItem* treeDocItem, XdeDocumentItem* xdeDocItem)
 {
     std::unordered_map<TreeNodeId, QTreeWidgetItem*> mapNodeIdToTreeItem;
     std::unordered_set<TreeNodeId> setRefNodeId;
@@ -335,23 +339,23 @@ void WidgetApplicationTree::guiBuildXdeTree(
                 itParentFound != mapNodeIdToTreeItem.end() ?
                     itParentFound->second : treeDocItem;
         if (m_isMergeXdeReferredShapeOn) {
-            if (xdeDocItem->isShapeReference(nodeLabel)) {
+            if (XdeDocumentItem::isShapeReference(nodeLabel)) {
                 mapNodeIdToTreeItem.insert({ nodeId, guiParentNode });
                 setRefNodeId.insert(nodeId);
             }
             else {
                 auto guiNode = new QTreeWidgetItem(guiParentNode);
-                QString guiNodeText = xdeDocItem->findLabelName(nodeLabel);
+                QString guiNodeText = XdeDocumentItem::findLabelName(nodeLabel);
                 XdeDocumentItem::AssemblyNodeId guiNodeId = nodeId;
                 if (setRefNodeId.find(nodeParentId) != setRefNodeId.cend()) {
                     const TDF_Label& refLabel = asmTree.nodeData(nodeParentId);
-                    guiNodeText = this->referenceItemText(xdeDocItem, refLabel, nodeLabel);
+                    guiNodeText = this->referenceItemText(refLabel, nodeLabel);
                     guiNodeId = nodeParentId;
                 }
                 guiNode->setText(0, guiNodeText);
                 Internal::setTreeItemXdeAssemblyNode(
                             guiNode, XdeAssemblyNode(xdeDocItem, guiNodeId));
-                const QIcon icon = Internal::xdeShapeIcon(xdeDocItem, nodeLabel);
+                const QIcon icon = Internal::xdeShapeIcon(nodeLabel);
                 if (!icon.isNull())
                     guiNode->setIcon(0, icon);
                 mapNodeIdToTreeItem.insert({ nodeId, guiNode });
@@ -386,6 +390,25 @@ QTreeWidgetItem *WidgetApplicationTree::findTreeItemDocumentItem(const DocumentI
     return nullptr;
 }
 
+QTreeWidgetItem* WidgetApplicationTree::findTreeItemXdeAssemblyNode(
+        const XdeAssemblyNode& xdeNode) const
+{
+    return this->findTreeItemXdeLabel(xdeNode.ownerDocItem, xdeNode.label());
+}
+
+QTreeWidgetItem *WidgetApplicationTree::findTreeItemXdeLabel(
+        const XdeDocumentItem* docItem, const TDF_Label& label) const
+{
+    QTreeWidgetItem* treeItem = this->findTreeItemDocumentItem(docItem);
+    if (treeItem) {
+        for (QTreeWidgetItemIterator it(treeItem); *it; ++it) {
+            if (Internal::treeItemXdeAssemblyNode(*it).label() == label)
+                return *it;
+        }
+    }
+    return nullptr;
+}
+
 void WidgetApplicationTree::onDocumentItemAdded(DocumentItem *docItem)
 {
     QTreeWidgetItem* treeDocItem = this->loadDocumentItem(docItem);
@@ -406,7 +429,7 @@ void WidgetApplicationTree::onDocumentItemPropertyChanged(
     QTreeWidgetItem* treeItemDocItem = this->findTreeItemDocumentItem(docItem);
     if (treeItemDocItem != nullptr) {
         if (prop == &docItem->propertyLabel)
-            treeItemDocItem->setText(0, Internal::documentItemLabel(docItem));
+            treeItemDocItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
     }
 }
 

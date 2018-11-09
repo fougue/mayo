@@ -30,6 +30,8 @@ public:
     const QString& referenceItemTextTemplate() const;
     void setReferenceItemTextTemplate(const QString& textTemplate);
 
+    void refreshItemText(const ApplicationItem& appItem);
+
 private:
     void onDocumentAdded(Document* doc);
     void onDocumentErased(const Document* doc);
@@ -46,11 +48,14 @@ private:
 
     QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
     QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
+    QTreeWidgetItem* findTreeItemXdeAssemblyNode(const XdeAssemblyNode& xdeNode) const;
+    QTreeWidgetItem* findTreeItemXdeLabel(const XdeDocumentItem* docItem, const TDF_Label& label) const;
 
     QString referenceItemText(
-            const XdeDocumentItem* xdeDocItem,
             const TDF_Label& refLabel,
             const TDF_Label& referredLabel) const;
+
+    void refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item);
 
     class Ui_WidgetApplicationTree* m_ui = nullptr;
     bool m_isMergeXdeReferredShapeOn = true;

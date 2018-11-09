@@ -5,11 +5,12 @@
 ****************************************************************************/
 
 #include "xde_document_item.h"
-
+#include "xde_shape_property_owner.h"
 #include "caf_utils.h"
-#include "string_utils.h"
+#include <fougtools/occtools/qt_utils.h>
 
 #include <Standard_GUID.hxx>
+#include <TDataStd_Name.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <XCAFDoc_Area.hxx>
 #include <XCAFDoc_Centroid.hxx>
@@ -17,37 +18,6 @@
 #include <XCAFDoc_Volume.hxx>
 
 namespace Mayo {
-
-namespace Internal {
-
-static void addValidationProperties(
-        const XdeDocumentItem::ValidationProperties& validationProps,
-        std::vector<HandleProperty>* ptrVecHndProp,
-        const QString& nameFormat = QStringLiteral("%1"))
-{
-    PropertyOwner* propOwner = nullptr;
-    const HandleProperty::Storage hndStorage = HandleProperty::Owner;
-    if (validationProps.hasCentroid) {
-        auto propCentroid = new PropertyOccPnt(
-                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Centroid")));
-        propCentroid->setValue(validationProps.centroid);
-        ptrVecHndProp->emplace_back(propCentroid, hndStorage);
-    }
-    if (validationProps.hasArea) {
-        auto propArea = new PropertyArea(
-                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Area")));
-        propArea->setQuantity(validationProps.area);
-        ptrVecHndProp->emplace_back(propArea, hndStorage);
-    }
-    if (validationProps.hasVolume) {
-        auto propVolume = new PropertyVolume(
-                    propOwner, nameFormat.arg(XdeDocumentItem::tr("Volume")));
-        propVolume->setQuantity(validationProps.volume);
-        ptrVecHndProp->emplace_back(propVolume, hndStorage);
-    }
-}
-
-} // namespace Internal
 
 XdeDocumentItem::XdeDocumentItem(const Handle_TDocStd_Document &doc)
     : m_cafDoc(doc),
@@ -57,17 +27,17 @@ XdeDocumentItem::XdeDocumentItem(const Handle_TDocStd_Document &doc)
     this->rebuildAssemblyTree();
 }
 
-const Handle_TDocStd_Document &XdeDocumentItem::cafDoc() const
+const Handle_TDocStd_Document& XdeDocumentItem::cafDoc() const
 {
     return m_cafDoc;
 }
 
-const Handle_XCAFDoc_ShapeTool &XdeDocumentItem::shapeTool() const
+const Handle_XCAFDoc_ShapeTool& XdeDocumentItem::shapeTool() const
 {
     return m_shapeTool;
 }
 
-const Handle_XCAFDoc_ColorTool &XdeDocumentItem::colorTool() const
+const Handle_XCAFDoc_ColorTool& XdeDocumentItem::colorTool() const
 {
     return m_colorTool;
 }
@@ -79,32 +49,32 @@ void XdeDocumentItem::rebuildAssemblyTree()
         this->deepBuildAssemblyTree(0, rootLabel);
 }
 
-const Tree<TDF_Label> &XdeDocumentItem::assemblyTree() const
+const Tree<TDF_Label>& XdeDocumentItem::assemblyTree() const
 {
     return m_asmTree;
 }
 
-bool XdeDocumentItem::isShape(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShape(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsShape(lbl);
+    return XCAFDoc_ShapeTool::IsShape(lbl);
 }
 
-bool XdeDocumentItem::isShapeFree(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShapeFree(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsFree(lbl);
+    return XCAFDoc_ShapeTool::IsFree(lbl);
 }
 
-TopoDS_Shape XdeDocumentItem::shape(const TDF_Label &lbl) const
+TopoDS_Shape XdeDocumentItem::shape(const TDF_Label& lbl)
 {
-    return m_shapeTool->GetShape(lbl);
+    return XCAFDoc_ShapeTool::GetShape(lbl);
 }
 
-QString XdeDocumentItem::findLabelName(const TDF_Label &lbl) const
+QString XdeDocumentItem::findLabelName(const TDF_Label& lbl)
 {
     QString name = CafUtils::labelAttrStdName(lbl);
     if (name.isEmpty()) {
-        if (this->isShape(lbl)) {
-            const TopoDS_Shape shape = this->shape(lbl);
+        if (XdeDocumentItem::isShape(lbl)) {
+            const TopoDS_Shape shape = XdeDocumentItem::shape(lbl);
             switch (shape.ShapeType()) {
             case TopAbs_COMPOUND: name = "Compound"; break;
             case TopAbs_COMPSOLID: name = "CompSolid"; break;
@@ -127,37 +97,47 @@ QString XdeDocumentItem::findLabelName(const TDF_Label &lbl) const
 
 QString XdeDocumentItem::findLabelName(AssemblyNodeId nodeId) const
 {
-    return this->findLabelName(m_asmTree.nodeData(nodeId));
+    return XdeDocumentItem::findLabelName(m_asmTree.nodeData(nodeId));
 }
 
-bool XdeDocumentItem::isShapeAssembly(const TDF_Label &lbl) const
+void XdeDocumentItem::setLabelName(const TDF_Label& lbl, const QString& name)
 {
-    return m_shapeTool->IsAssembly(lbl);
+    TDataStd_Name::Set(lbl, occ::QtUtils::toOccExtendedString(name));
 }
 
-bool XdeDocumentItem::isShapeReference(const TDF_Label &lbl) const
+void XdeDocumentItem::setLabelName(AssemblyNodeId nodeId, const QString& name)
 {
-    return m_shapeTool->IsReference(lbl);
+    XdeDocumentItem::setLabelName(m_asmTree.nodeData(nodeId), name);
 }
 
-bool XdeDocumentItem::isShapeSimple(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShapeAssembly(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsSimpleShape(lbl);
+    return XCAFDoc_ShapeTool::IsAssembly(lbl);
 }
 
-bool XdeDocumentItem::isShapeComponent(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShapeReference(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsComponent(lbl);
+    return XCAFDoc_ShapeTool::IsReference(lbl);
 }
 
-bool XdeDocumentItem::isShapeCompound(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShapeSimple(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsCompound(lbl);
+    return XCAFDoc_ShapeTool::IsSimpleShape(lbl);
 }
 
-bool XdeDocumentItem::isShapeSub(const TDF_Label &lbl) const
+bool XdeDocumentItem::isShapeComponent(const TDF_Label& lbl)
 {
-    return m_shapeTool->IsSubShape(lbl);
+    return XCAFDoc_ShapeTool::IsComponent(lbl);
+}
+
+bool XdeDocumentItem::isShapeCompound(const TDF_Label& lbl)
+{
+    return XCAFDoc_ShapeTool::IsCompound(lbl);
+}
+
+bool XdeDocumentItem::isShapeSub(const TDF_Label& lbl)
+{
+    return XCAFDoc_ShapeTool::IsSubShape(lbl);
 }
 
 bool XdeDocumentItem::hasShapeColor(const TDF_Label &lbl) const
@@ -179,15 +159,15 @@ Quantity_Color XdeDocumentItem::shapeColor(const TDF_Label &lbl) const
     return color;
 }
 
-TopLoc_Location XdeDocumentItem::shapeReferenceLocation(const TDF_Label &lbl) const
+TopLoc_Location XdeDocumentItem::shapeReferenceLocation(const TDF_Label &lbl)
 {
-    return m_shapeTool->GetLocation(lbl);
+    return XCAFDoc_ShapeTool::GetLocation(lbl);
 }
 
-TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl) const
+TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl)
 {
     TDF_Label referred;
-    m_shapeTool->GetReferredShape(lbl, referred);
+    XCAFDoc_ShapeTool::GetReferredShape(lbl, referred);
     return referred;
 }
 
@@ -197,7 +177,7 @@ TopLoc_Location XdeDocumentItem::shapeAbsoluteLocation(AssemblyNodeId nodeId) co
     AssemblyNodeId it = nodeId;
     while (it != 0) {
         const TDF_Label& nodeLabel = m_asmTree.nodeData(it);
-        const TopLoc_Location nodeLoc = m_shapeTool->GetLocation(nodeLabel);
+        const TopLoc_Location nodeLoc = XdeDocumentItem::shapeReferenceLocation(nodeLabel);
         absoluteLoc = nodeLoc * absoluteLoc;
         it = m_asmTree.nodeParent(it);
     }
@@ -205,7 +185,7 @@ TopLoc_Location XdeDocumentItem::shapeAbsoluteLocation(AssemblyNodeId nodeId) co
 }
 
 XdeDocumentItem::ValidationProperties XdeDocumentItem::validationProperties(
-        const TDF_Label &lbl) const
+        const TDF_Label& lbl)
 {
     ValidationProperties props = {};
     for (TDF_AttributeIterator it(lbl); it.More(); it.Next()) {
@@ -242,80 +222,26 @@ void XdeDocumentItem::deepBuildAssemblyTree(
         AssemblyNodeId parentNode, const TDF_Label &label)
 {
     const AssemblyNodeId node = m_asmTree.appendChild(parentNode, label);
-    if (this->isShapeAssembly(label)) {
-        for (const TDF_Label& child : this->shapeComponents(label))
+    if (XdeDocumentItem::isShapeAssembly(label)) {
+        for (const TDF_Label& child : XdeDocumentItem::shapeComponents(label))
             this->deepBuildAssemblyTree(node, child);
     }
-    else if (this->isShapeSimple(label)) {
-        for (const TDF_Label& child : this->shapeSubs(label))
+    else if (XdeDocumentItem::isShapeSimple(label)) {
+        for (const TDF_Label& child : XdeDocumentItem::shapeSubs(label))
             this->deepBuildAssemblyTree(node, child);
     }
-    else if (this->isShapeReference(label)) {
-        const TDF_Label referred = this->shapeReferred(label);
+    else if (XdeDocumentItem::isShapeReference(label)) {
+        const TDF_Label referred = XdeDocumentItem::shapeReferred(label);
         this->deepBuildAssemblyTree(node, referred);
     }
 }
 
-std::vector<HandleProperty> XdeDocumentItem::shapeProperties(
-        const TDF_Label& label, ShapePropertiesOption opt) const
+std::unique_ptr<XdeShapePropertyOwner> XdeDocumentItem::shapeProperties(
+        const TDF_Label& label, XdeDocumentItem::ShapePropertiesOption opt) const
 {
-    std::vector<HandleProperty> vecHndProp;
-    const auto hndStorage = HandleProperty::Owner;
-
-    auto propShapeType = new PropertyQString(nullptr, tr("Shape"));
-    const TopAbs_ShapeEnum shapeType = this->shape(label).ShapeType();
-    propShapeType->setValue(
-                QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
-    vecHndProp.emplace_back(propShapeType, hndStorage);
-
-    QStringList listXdeShapeKind;
-    if (this->isShapeAssembly(label))
-        listXdeShapeKind.push_back(tr("Assembly"));
-    if (this->isShapeReference(label))
-        listXdeShapeKind.push_back(tr("Reference"));
-    if (this->isShapeComponent(label))
-        listXdeShapeKind.push_back(tr("Component"));
-    if (this->isShapeCompound(label))
-        listXdeShapeKind.push_back(tr("Compound"));
-    if (this->isShapeSimple(label))
-        listXdeShapeKind.push_back(tr("Simple"));
-    if (this->isShapeSub(label))
-        listXdeShapeKind.push_back(tr("Sub"));
-    auto propXdeShapeKind = new PropertyQString(nullptr, tr("XDE shape"));
-    propXdeShapeKind->setValue(listXdeShapeKind.join('+'));
-    vecHndProp.emplace_back(propXdeShapeKind, hndStorage);
-
-    if (this->isShapeReference(label)) {
-        const TopLoc_Location loc = this->shapeReferenceLocation(label);
-        auto propLoc = new PropertyOccTrsf(nullptr, tr("Location"));
-        propLoc->setValue(loc.Transformation());
-        vecHndProp.emplace_back(propLoc, hndStorage);
-    }
-    Internal::addValidationProperties(
-                this->validationProperties(label), &vecHndProp);
-    if (this->hasShapeColor(label)) {
-        auto propColor = new PropertyOccColor(nullptr, tr("Color"));
-        propColor->setValue(this->shapeColor(label));
-        vecHndProp.emplace_back(propColor, hndStorage);
-    }
-
-    if (this->isShapeReference(label)
-            && opt == ShapePropertiesOption::MergeReferred)
-    {
-        const TDF_Label referredLabel = this->shapeReferred(label);
-        Internal::addValidationProperties(
-                    this->validationProperties(referredLabel),
-                    &vecHndProp,
-                    tr("[Referred]%1"));
-        if (this->hasShapeColor(referredLabel)) {
-            auto propColor = new PropertyOccColor(nullptr, tr("[Referred]Color"));
-            propColor->setValue(this->shapeColor(referredLabel));
-            vecHndProp.emplace_back(propColor, hndStorage);
-        }
-    }
-    for (HandleProperty& prop : vecHndProp)
-        prop->setUserReadOnly(true);
-    return vecHndProp;
+    auto owner = new XdeShapePropertyOwner(this, label, opt);
+    std::unique_ptr<XdeShapePropertyOwner> ptr(owner);
+    return ptr;
 }
 
 XdeAssemblyNode::XdeAssemblyNode(
