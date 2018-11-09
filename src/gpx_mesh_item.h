@@ -12,13 +12,13 @@
 
 namespace Mayo {
 
-class GpxMeshItem :
-        public GpxCovariantDocumentItem<MeshItem, MeshVS_Mesh, Handle_MeshVS_Mesh>
-{
+class GpxMeshItem : public GpxDocumentItem {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxMeshItem)
-
 public:
     GpxMeshItem(MeshItem* item);
+
+    MeshItem* documentItem() const override;
+    Handle_AIS_InteractiveObject handleGpxObject() const override;
 
     PropertyEnumeration propertyDisplayMode;
     PropertyBool propertyShowEdges;
@@ -29,6 +29,8 @@ protected:
 
 private:
     static const Enumeration& enum_DisplayMode();
+    MeshItem* m_meshItem = nullptr;
+    Handle_MeshVS_Mesh m_meshVisu;
 };
 
 } // namespace Mayo

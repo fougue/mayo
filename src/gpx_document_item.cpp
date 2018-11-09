@@ -29,9 +29,6 @@
 
 #include "gpx_document_item.h"
 
-#include "options.h"
-
-#include <fougtools/occtools/qt_utils.h>
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
 #include <QtCore/QCoreApplication>
@@ -51,97 +48,12 @@ void GpxDocumentItem::onPropertyChanged(Property *prop)
 {
     if (prop == &this->propertyIsVisible) {
         Handle_AIS_InteractiveContext cxt = this->handleGpxObject()->GetContext();
-        constexpr bool flagUpdateViewer = true;
+        static constexpr bool flagUpdateViewer = true;
         if (this->propertyIsVisible.value())
             cxt->Display(this->handleGpxObject(), flagUpdateViewer);
         else
             cxt->Erase(this->handleGpxObject(), flagUpdateViewer);
     }
-}
-
-void GpxDocumentItem::initForGpxBRepShape(
-        const Handle_AIS_InteractiveObject& hndGpx)
-{
-    const Options* opts = Options::instance();
-    hndGpx->SetMaterial(opts->brepShapeDefaultMaterial());
-    hndGpx->SetDisplayMode(AIS_Shaded);
-    hndGpx->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
-    hndGpx->Attributes()->SetFaceBoundaryDraw(Standard_True);
-    hndGpx->Attributes()->SetIsoOnTriangulation(Standard_True);
-
-    Mayo_PropertyChangedBlocker(this);
-    this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
-
-    Quantity_Color color;
-    hndGpx->Color(color);
-    this->propertyColor.setValue(color);
-}
-
-void GpxBRepShapeCommonProperties::initCommonProperties(
-        PropertyOwner *owner, const Handle_AIS_InteractiveObject& hndGpx)
-{
-    Mayo_PropertyChangedBlocker(owner);
-    this->propertyTransparency.setValue(
-                static_cast<int>(hndGpx->Transparency() * 100));
-    this->propertyDisplayMode.setValue(hndGpx->DisplayMode());
-    this->propertyShowFaceBoundary.setValue(
-                hndGpx->Attributes()->FaceBoundaryDraw() == Standard_True);
-}
-
-GpxBRepShapeCommonProperties::GpxBRepShapeCommonProperties(PropertyOwner* owner)
-    : propertyTransparency(owner, tr("Transparency"), 0, 100, 5),
-      propertyDisplayMode(owner, tr("Display mode"), &enum_DisplayMode()),
-      propertyShowFaceBoundary(owner, tr("Show face boundary"))
-{
-}
-
-void GpxBRepShapeCommonProperties::handleCommonPropertyChange(
-        Property *prop, const Handle_AIS_InteractiveObject &hndGpx)
-{
-    Handle_AIS_InteractiveContext cxt = hndGpx->GetContext();
-    if (prop == &this->propertyTransparency) {
-        cxt->SetTransparency(
-                    hndGpx, this->propertyTransparency.value() / 100., Standard_True);
-    }
-    else if (prop == &this->propertyDisplayMode) {
-        cxt->SetDisplayMode(
-                    hndGpx, this->propertyDisplayMode.value(), Standard_True);
-    }
-    else if (prop == &this->propertyShowFaceBoundary) {
-        hndGpx->Attributes()->SetFaceBoundaryDraw(
-                    this->propertyShowFaceBoundary.value());
-        hndGpx->Redisplay(Standard_True); // All modes
-        cxt->UpdateCurrentViewer();
-    }
-}
-
-void GpxBRepShapeCommonProperties::handlePropertyMaterial(
-        PropertyEnumeration *prop, const Handle_AIS_InteractiveObject &hndGpx)
-{
-    Handle_AIS_InteractiveContext cxt = hndGpx->GetContext();
-    hndGpx->SetMaterial(prop->valueAs<Graphic3d_NameOfMaterial>());
-    cxt->UpdateCurrentViewer();
-}
-
-void GpxBRepShapeCommonProperties::handlePropertyColor(
-        PropertyOccColor *prop, const Handle_AIS_InteractiveObject &hndGpx)
-{
-    Handle_AIS_InteractiveContext cxt = hndGpx->GetContext();
-    hndGpx->SetColor(prop->value());
-    if (this->propertyShowFaceBoundary.value()) {
-        hndGpx->Redisplay(Standard_True); // All modes
-        cxt->UpdateCurrentViewer();
-    }
-}
-
-const Enumeration &GpxBRepShapeCommonProperties::enum_DisplayMode()
-{
-    static Enumeration enumeration;
-    if (enumeration.size() == 0) {
-        enumeration.map(AIS_Shaded, tr("Shaded"));
-        enumeration.map(AIS_WireFrame, tr("Wireframe"));
-    }
-    return enumeration;
 }
 
 } // namespace Mayo

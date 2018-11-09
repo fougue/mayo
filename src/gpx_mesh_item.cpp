@@ -20,16 +20,16 @@ namespace Mayo {
 
 namespace Internal {
 
-static void redisplayAndUpdateViewer(AIS_InteractiveObject* ptrGpx)
+static void redisplayAndUpdateViewer(const Handle_AIS_InteractiveObject& gpx)
 {
-    ptrGpx->Redisplay(true); // All modes
-    ptrGpx->GetContext()->UpdateCurrentViewer();
+    gpx->Redisplay(true); // All modes
+    gpx->GetContext()->UpdateCurrentViewer();
 }
 
 } // namespace Internal
 
 GpxMeshItem::GpxMeshItem(MeshItem *item)
-    : GpxCovariantDocumentItem(item),
+    : m_meshItem(item),
       propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
       propertyShowEdges(this, tr("Show edges")),
       propertyShowNodes(this, tr("Show nodes"))
@@ -58,7 +58,7 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     meshVisu->SetHilightMode(MeshVS_DMF_WireFrame);
     meshVisu->SetMeshSelMethod(MeshVS_MSM_PRECISE);
 
-    m_hndGpxObject = meshVisu;
+    m_meshVisu = meshVisu;
 
     // Init properties
     Mayo_PropertyChangedBlocker(this);
@@ -81,37 +81,45 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     this->propertyShowNodes.setValue(boolVal);
 }
 
+MeshItem *GpxMeshItem::documentItem() const
+{
+    return m_meshItem;
+}
+
+Handle_AIS_InteractiveObject GpxMeshItem::handleGpxObject() const
+{
+    return m_meshVisu;
+}
+
 void GpxMeshItem::onPropertyChanged(Property *prop)
 {
-    Handle_AIS_InteractiveContext cxt = this->gpxObject()->GetContext();
-    Handle_AIS_InteractiveObject hndGpx = this->handleGpxObject();
-    MeshVS_Mesh* ptrGpx = this->gpxObject();
+    Handle_AIS_InteractiveContext cxt = m_meshVisu->GetContext();
     if (prop == &this->propertyMaterial) {
         const Graphic3d_NameOfMaterial mat =
                 this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>();
-        ptrGpx->GetDrawer()->SetMaterial(
+        m_meshVisu->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(mat));
-        Internal::redisplayAndUpdateViewer(ptrGpx);
+        Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyColor) {
-        ptrGpx->GetDrawer()->SetColor(
+        m_meshVisu->GetDrawer()->SetColor(
                     MeshVS_DA_InteriorColor, this->propertyColor.value());
-        Internal::redisplayAndUpdateViewer(ptrGpx);
+        Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyDisplayMode) {
         cxt->SetDisplayMode(
-                    hndGpx, this->propertyDisplayMode.value(), true);
+                    m_meshVisu, this->propertyDisplayMode.value(), true);
         //ptrGpx->SetDisplayMode(this->propertyDisplayMode.value());
     }
     else if (prop == &this->propertyShowEdges) {
-        ptrGpx->GetDrawer()->SetBoolean(
+        m_meshVisu->GetDrawer()->SetBoolean(
                     MeshVS_DA_ShowEdges, this->propertyShowEdges.value());
-        Internal::redisplayAndUpdateViewer(ptrGpx);
+        Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyShowNodes) {
-        ptrGpx->GetDrawer()->SetBoolean(
+        m_meshVisu->GetDrawer()->SetBoolean(
                     MeshVS_DA_DisplayNodes, this->propertyShowNodes.value());
-        Internal::redisplayAndUpdateViewer(ptrGpx);
+        Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     GpxDocumentItem::onPropertyChanged(prop);
 }

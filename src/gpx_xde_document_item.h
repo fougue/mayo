@@ -12,17 +12,25 @@
 
 namespace Mayo {
 
-class GpxXdeDocumentItem :
-        public GpxCovariantDocumentItem<XdeDocumentItem, XCAFPrs_AISObject, Handle_XCAFPrs_AISObject>,
-        public GpxBRepShapeCommonProperties
-{
+class GpxXdeDocumentItem : public GpxDocumentItem {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxXdeDocumentItem)
-
 public:
     GpxXdeDocumentItem(XdeDocumentItem* item);
 
+    XdeDocumentItem* documentItem() const override;
+    Handle_AIS_InteractiveObject handleGpxObject() const override;
+
+    PropertyInt propertyTransparency;
+    PropertyEnumeration propertyDisplayMode;
+    PropertyBool propertyShowFaceBoundary;
+
 protected:
     void onPropertyChanged(Property* prop) override;
+
+private:
+    static const Enumeration& enum_DisplayMode();
+    XdeDocumentItem* m_xdeDocItem = nullptr;
+    Handle_XCAFPrs_AISObject m_xdeGpx;
 };
 
 } // namespace Mayo
