@@ -226,23 +226,19 @@ void GuiDocument::updateV3dViewer()
 void GuiDocument::onItemAdded(DocumentItem *item)
 {
     GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
-    const Handle_AIS_InteractiveObject aisObject = guiItem.gpxDocItem->handleGpxObject();
-    m_aisContext->Display(aisObject, true);
+    guiItem.gpxDocItem->setContext(m_aisContext);
+    guiItem.gpxDocItem->display();
+    m_aisContext->UpdateCurrentViewer();
     if (sameType<XdeDocumentItem>(item)) {
-        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_VERTEX));
-        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_EDGE));
-        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_FACE));
-//        m_aisContext->Activate(aisObject, AIS_Shape::SelectionMode(TopAbs_SOLID));
-        opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
-        m_aisContext->EntityOwners(
-                    mapEntityOwner, aisObject, AIS_Shape::SelectionMode(TopAbs_FACE));
-        guiItem.vecGpxEntityOwner.reserve(mapEntityOwner->Extent());
-        for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
-            guiItem.vecGpxEntityOwner.push_back(std::move(*it));
+        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_VERTEX));
+        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_EDGE));
+        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_FACE));
+        guiItem.vecGpxEntityOwner =
+                guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
     }
-    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
     GpxUtils::V3dView_fitAll(m_v3dView);
-    BndUtils::add(&m_gpxBoundingBox, BndUtils::get(aisObject));
+    BndUtils::add(&m_gpxBoundingBox, guiItem.gpxDocItem->boundingBox());
+    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
     emit gpxBoundingBoxChanged(m_gpxBoundingBox);
 }
 
@@ -255,14 +251,13 @@ void GuiDocument::onItemErased(const DocumentItem *item)
     if (itFound != m_vecGuiDocumentItem.end()) {
         // Delete gpx item
         GpxDocumentItem* gpxDocItem = itFound->gpxDocItem;
-        GpxUtils::AisContext_eraseObject(m_aisContext, gpxDocItem->handleGpxObject());
         delete gpxDocItem;
         m_vecGuiDocumentItem.erase(itFound);
 
         // Recompute bounding box
         m_gpxBoundingBox.SetVoid();
         for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
-            const Bnd_Box otherBox = BndUtils::get(guiItem.gpxDocItem->handleGpxObject());
+            const Bnd_Box otherBox = guiItem.gpxDocItem->boundingBox();
             BndUtils::add(&m_gpxBoundingBox, otherBox);
         }
         emit gpxBoundingBoxChanged(m_gpxBoundingBox);

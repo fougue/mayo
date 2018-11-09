@@ -29,12 +29,15 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
       m_docItem(docItem),
       m_label(label)
 {
+    // Name
     m_propertyName.setValue(XdeDocumentItem::findLabelName(label));
 
+    // Shape type
     const TopAbs_ShapeEnum shapeType = XCAFDoc_ShapeTool::GetShape(label).ShapeType();
     m_propertyShapeType.setValue(
                 QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
 
+    // XDE shape kind
     QStringList listXdeShapeKind;
     if (XdeDocumentItem::isShapeAssembly(label))
         listXdeShapeKind.push_back(tr("Assembly"));
@@ -50,6 +53,7 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
         listXdeShapeKind.push_back(tr("Sub"));
     m_propertyXdeShapeKind.setValue(listXdeShapeKind.join('+'));
 
+    // Reference location
     if (XdeDocumentItem::isShapeReference(label)) {
         const TopLoc_Location loc = XdeDocumentItem::shapeReferenceLocation(label);
         m_propertyReferenceLocation.setValue(loc.Transformation());
@@ -58,11 +62,13 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
         this->removeProperty(&m_propertyReferenceLocation);
     }
 
+    // Color
     if (docItem->hasShapeColor(label))
         m_propertyColor.setValue(docItem->shapeColor(label));
     else
         this->removeProperty(&m_propertyColor);
 
+    // Validation properties
     {
         const XdeDocumentItem::ValidationProperties validProps =
                 XdeDocumentItem::validationProperties(label);
@@ -77,6 +83,7 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
             this->removeProperty(&m_propertyValidationVolume);
     }
 
+    // Referred entity's properties
     if (XdeDocumentItem::isShapeReference(label)
             && opt == XdeDocumentItem::ShapePropertiesOption::MergeReferred)
     {

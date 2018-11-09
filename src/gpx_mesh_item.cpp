@@ -6,6 +6,8 @@
 
 #include "gpx_mesh_item.h"
 
+#include "bnd_utils.h"
+#include "gpx_utils.h"
 #include "options.h"
 
 #include <fougtools/occtools/qt_utils.h>
@@ -81,19 +83,45 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     this->propertyShowNodes.setValue(boolVal);
 }
 
+GpxMeshItem::~GpxMeshItem()
+{
+    GpxUtils::AisContext_eraseObject(this->context(), m_meshVisu);
+}
+
 MeshItem *GpxMeshItem::documentItem() const
 {
     return m_meshItem;
 }
 
-Handle_AIS_InteractiveObject GpxMeshItem::handleGpxObject() const
+void GpxMeshItem::display()
 {
-    return m_meshVisu;
+    this->context()->Display(m_meshVisu, false);
+}
+
+void GpxMeshItem::hide()
+{
+    this->context()->Erase(m_meshVisu, false);
+}
+
+void GpxMeshItem::activateSelectionMode(int mode)
+{
+    this->context()->Activate(m_meshVisu, mode);
+}
+
+std::vector<Handle_SelectMgr_EntityOwner> GpxMeshItem::entityOwners(int mode) const
+{
+    std::vector<Handle_SelectMgr_EntityOwner> vec;
+    GpxDocumentItem::getEntityOwners(this->context(), m_meshVisu, mode, &vec);
+    return vec;
+}
+
+Bnd_Box GpxMeshItem::boundingBox() const
+{
+    return BndUtils::get(m_meshVisu);
 }
 
 void GpxMeshItem::onPropertyChanged(Property *prop)
 {
-    Handle_AIS_InteractiveContext cxt = m_meshVisu->GetContext();
     if (prop == &this->propertyMaterial) {
         const Graphic3d_NameOfMaterial mat =
                 this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>();
@@ -107,7 +135,7 @@ void GpxMeshItem::onPropertyChanged(Property *prop)
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyDisplayMode) {
-        cxt->SetDisplayMode(
+        this->context()->SetDisplayMode(
                     m_meshVisu, this->propertyDisplayMode.value(), true);
         //ptrGpx->SetDisplayMode(this->propertyDisplayMode.value());
     }

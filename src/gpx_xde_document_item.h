@@ -16,9 +16,15 @@ class GpxXdeDocumentItem : public GpxDocumentItem {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxXdeDocumentItem)
 public:
     GpxXdeDocumentItem(XdeDocumentItem* item);
+    ~GpxXdeDocumentItem();
 
     XdeDocumentItem* documentItem() const override;
-    Handle_AIS_InteractiveObject handleGpxObject() const override;
+
+    void display() override;
+    void hide() override;
+    void activateSelectionMode(int mode) override;
+    std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const override;
+    Bnd_Box boundingBox() const override;
 
     PropertyInt propertyTransparency;
     PropertyEnumeration propertyDisplayMode;
@@ -30,7 +36,7 @@ protected:
 private:
     static const Enumeration& enum_DisplayMode();
     XdeDocumentItem* m_xdeDocItem = nullptr;
-    Handle_XCAFPrs_AISObject m_xdeGpx;
+    std::vector<Handle_XCAFPrs_AISObject> m_vecXdeGpx;
 };
 
 } // namespace Mayo

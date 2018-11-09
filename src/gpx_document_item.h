@@ -10,6 +10,7 @@
 #include "property_enumeration.h"
 
 #include <QtCore/QCoreApplication>
+#include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
 
 namespace Mayo {
@@ -23,7 +24,15 @@ public:
     virtual ~GpxDocumentItem() = default;
 
     virtual DocumentItem* documentItem() const = 0;
-    virtual Handle_AIS_InteractiveObject handleGpxObject() const = 0;
+
+    const Handle_AIS_InteractiveContext& context() const { return m_ctx; }
+    void setContext(const Handle_AIS_InteractiveContext& ctx) { m_ctx = ctx; }
+
+    virtual void display() = 0;
+    virtual void hide() = 0;
+    virtual void activateSelectionMode(int mode) = 0;
+    virtual std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const = 0;
+    virtual Bnd_Box boundingBox() const = 0;
 
     PropertyBool propertyIsVisible;
     PropertyEnumeration propertyMaterial;
@@ -31,6 +40,14 @@ public:
 
 protected:
     void onPropertyChanged(Property* prop) override;
+    static void getEntityOwners(
+            const Handle_AIS_InteractiveContext& ctx,
+            const Handle_AIS_InteractiveObject& obj,
+            int mode,
+            std::vector<Handle_SelectMgr_EntityOwner>* vec);
+
+private:
+    Handle_AIS_InteractiveContext m_ctx;
 };
 
 } // namespace Mayo

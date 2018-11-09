@@ -6,6 +6,8 @@
 
 #include "gpx_xde_document_item.h"
 
+#include "bnd_utils.h"
+#include "gpx_utils.h"
 #include "options.h"
 
 #include <fougtools/occtools/qt_utils.h>
@@ -15,6 +17,8 @@
 #include <QtCore/QCoreApplication>
 #include <cassert>
 
+#include "span.h"
+
 namespace Mayo {
 
 GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
@@ -23,7 +27,7 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
       propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
       propertyShowFaceBoundary(this, tr("Show face boundary"))
 {
-    // TODO XCAFPrs_AISObject requires a root label containing a TopoDS_Shape
+    // XCAFPrs_AISObject requires a root label containing a TopoDS_Shape
     // If the XDE document as many free top-level shapes then there is a problem
     // Doesn't work :
     //     XCAFDoc_DocumentTool::ShapesLabel()
@@ -32,33 +36,39 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     // the free top-level shapes) is to have an AIS object per free top-level
     // shape.
     const std::vector<TDF_Label> vecFreeShape = item->topLevelFreeShapes();
-    assert(vecFreeShape.size() <= 1);
     if (!vecFreeShape.empty()) {
-        m_xdeGpx = new XCAFPrs_AISObject(vecFreeShape.front());
-
+        m_vecXdeGpx.reserve(vecFreeShape.size());
         const Options* opts = Options::instance();
-        m_xdeGpx->SetMaterial(opts->brepShapeDefaultMaterial());
-        m_xdeGpx->SetDisplayMode(AIS_Shaded);
-        m_xdeGpx->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
-        m_xdeGpx->Attributes()->SetFaceBoundaryDraw(true);
-        m_xdeGpx->Attributes()->SetIsoOnTriangulation(true);
-
         Mayo_PropertyChangedBlocker(this);
-        this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
-
-        Quantity_Color color;
-        m_xdeGpx->Color(color);
-        this->propertyColor.setValue(color);
-
-        this->propertyDisplayMode.setValue(m_xdeGpx->DisplayMode());
-        this->propertyTransparency.setValue(
-                    static_cast<int>(m_xdeGpx->Transparency() * 100));
-        this->propertyShowFaceBoundary.setValue(
-                    m_xdeGpx->Attributes()->FaceBoundaryDraw());
+        for (const TDF_Label& label : vecFreeShape) {
+            Handle_XCAFPrs_AISObject gpx = new XCAFPrs_AISObject(label);
+            gpx->SetMaterial(opts->brepShapeDefaultMaterial());
+            gpx->SetDisplayMode(AIS_Shaded);
+            gpx->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
+            gpx->Attributes()->SetFaceBoundaryDraw(true);
+            gpx->Attributes()->SetIsoOnTriangulation(true);
+            this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
+            Quantity_Color color;
+            gpx->Color(color);
+            this->propertyColor.setValue(color);
+            this->propertyDisplayMode.setValue(gpx->DisplayMode());
+            this->propertyTransparency.setValue(
+                        static_cast<int>(gpx->Transparency() * 100));
+            this->propertyShowFaceBoundary.setValue(
+                        gpx->Attributes()->FaceBoundaryDraw());
+            m_vecXdeGpx.push_back(gpx);
+        }
     }
     else { // Dummy
-        m_xdeGpx = new XCAFPrs_AISObject(item->cafDoc()->Main());
+        Handle_XCAFPrs_AISObject gpx = new XCAFPrs_AISObject(item->cafDoc()->Main());
+        m_vecXdeGpx.push_back(gpx);
     }
+}
+
+GpxXdeDocumentItem::~GpxXdeDocumentItem()
+{
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        GpxUtils::AisContext_eraseObject(this->context(), obj);
 }
 
 XdeDocumentItem *GpxXdeDocumentItem::documentItem() const
@@ -66,35 +76,72 @@ XdeDocumentItem *GpxXdeDocumentItem::documentItem() const
     return m_xdeDocItem;
 }
 
-Handle_AIS_InteractiveObject GpxXdeDocumentItem::handleGpxObject() const
+void GpxXdeDocumentItem::display()
 {
-    return m_xdeGpx;
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        this->context()->Display(obj, false);
+}
+
+void GpxXdeDocumentItem::hide()
+{
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        this->context()->Erase(obj, false);
+}
+
+void GpxXdeDocumentItem::activateSelectionMode(int mode)
+{
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        this->context()->Activate(obj, mode);
+}
+
+std::vector<Handle_SelectMgr_EntityOwner> GpxXdeDocumentItem::entityOwners(int mode) const
+{
+    std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        GpxDocumentItem::getEntityOwners(this->context(), obj, mode, &vecOwner);
+    return vecOwner;
+}
+
+Bnd_Box GpxXdeDocumentItem::boundingBox() const
+{
+    Bnd_Box bndBox;
+    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+        bndBox.Add(BndUtils::get(obj));
+    return bndBox;
 }
 
 void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
 {
-    Handle_AIS_InteractiveContext cxt = m_xdeGpx->GetContext();
     if (prop == &this->propertyMaterial) {
-        m_xdeGpx->SetMaterial(this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>());
-        cxt->UpdateCurrentViewer();
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+            obj->SetMaterial(this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>());
+        this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyColor) {
-        m_xdeGpx->SetColor(this->propertyColor.value());
-        if (this->propertyShowFaceBoundary.value()) {
-            m_xdeGpx->Redisplay(true); // All modes
-            cxt->UpdateCurrentViewer();
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx) {
+            obj->SetColor(this->propertyColor.value());
+            if (this->propertyShowFaceBoundary.value())
+                obj->Redisplay(true); // All modes
         }
+        this->context()->UpdateCurrentViewer();
     }
     if (prop == &this->propertyTransparency) {
-        cxt->SetTransparency(m_xdeGpx, this->propertyTransparency.value() / 100., true);
+        const double factor = this->propertyTransparency.value() / 100.;
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+            this->context()->SetTransparency(obj, factor, false);
+        this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyDisplayMode) {
-        cxt->SetDisplayMode(m_xdeGpx, this->propertyDisplayMode.value(), true);
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+            this->context()->SetDisplayMode(obj, this->propertyDisplayMode.value(), false);
+        this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyShowFaceBoundary) {
-        m_xdeGpx->Attributes()->SetFaceBoundaryDraw(this->propertyShowFaceBoundary.value());
-        m_xdeGpx->Redisplay(true); // All modes
-        cxt->UpdateCurrentViewer();
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx) {
+            obj->Attributes()->SetFaceBoundaryDraw(this->propertyShowFaceBoundary.value());
+            obj->Redisplay(true); // All modes
+        }
+        this->context()->UpdateCurrentViewer();
     }
     GpxDocumentItem::onPropertyChanged(prop);
 }

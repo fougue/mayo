@@ -64,7 +64,7 @@ void GpxUtils::AisContext_eraseObject(
         const Handle_AIS_InteractiveContext& context,
         const Handle_AIS_InteractiveObject& object)
 {
-    if (!object.IsNull()) {
+    if (!object.IsNull() && !context.IsNull()) {
         context->Erase(object, false);
         context->Remove(object, false);
         context->ClearPrs(object, 0, false);

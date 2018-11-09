@@ -292,16 +292,6 @@ static XdeDocumentItem* createXdeDocumentItem(
     auto xdeDocItem = new XdeDocumentItem(cafDoc);
     xdeDocItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
 
-    const Handle_XCAFDoc_ShapeTool& shapeTool = xdeDocItem->shapeTool();
-    const std::vector<TDF_Label> vecFreeShape = xdeDocItem->topLevelFreeShapes();
-    if (vecFreeShape.size() > 1) {
-        const TDF_Label asmLabel = shapeTool->NewShape();
-        for (const TDF_Label& shapeLabel : vecFreeShape)
-            shapeTool->AddComponent(asmLabel, shapeLabel, TopLoc_Location());
-        shapeTool->UpdateAssemblies();
-        xdeDocItem->rebuildAssemblyTree();
-    }
-
     const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
     GProp_GProps system;
     BRepGProp::VolumeProperties(shape, system);

@@ -47,13 +47,25 @@ GpxDocumentItem::GpxDocumentItem()
 void GpxDocumentItem::onPropertyChanged(Property *prop)
 {
     if (prop == &this->propertyIsVisible) {
-        Handle_AIS_InteractiveContext cxt = this->handleGpxObject()->GetContext();
-        static constexpr bool flagUpdateViewer = true;
         if (this->propertyIsVisible.value())
-            cxt->Display(this->handleGpxObject(), flagUpdateViewer);
+            this->display();
         else
-            cxt->Erase(this->handleGpxObject(), flagUpdateViewer);
+            this->hide();
+        this->context()->UpdateCurrentViewer();
     }
+}
+
+void GpxDocumentItem::getEntityOwners(
+                    const Handle_AIS_InteractiveContext& ctx,
+                    const Handle_AIS_InteractiveObject& obj,
+                    int mode,
+                    std::vector<Handle_SelectMgr_EntityOwner>* vec)
+{
+    opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+    ctx->EntityOwners(mapEntityOwner, obj, mode);
+    vec->reserve(vec->capacity() + mapEntityOwner->Extent());
+    for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
+        vec->push_back(std::move(*it));
 }
 
 } // namespace Mayo

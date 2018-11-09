@@ -16,9 +16,15 @@ class GpxMeshItem : public GpxDocumentItem {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxMeshItem)
 public:
     GpxMeshItem(MeshItem* item);
+    ~GpxMeshItem();
 
     MeshItem* documentItem() const override;
-    Handle_AIS_InteractiveObject handleGpxObject() const override;
+
+    void display() override;
+    void hide() override;
+    void activateSelectionMode(int mode) override;
+    std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const override;
+    Bnd_Box boundingBox() const override;
 
     PropertyEnumeration propertyDisplayMode;
     PropertyBool propertyShowEdges;
