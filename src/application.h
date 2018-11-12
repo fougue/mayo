@@ -91,10 +91,10 @@ public:
 signals:
     void documentAdded(Document* doc);
     void documentErased(const Document* doc);
+    void documentPropertyChanged(Document* doc, Property* prop);
     void documentItemAdded(DocumentItem* docItem);
     void documentItemErased(const DocumentItem* docItem);
-    void documentItemPropertyChanged(
-            const DocumentItem* docItem, const Property* prop);
+    void documentItemPropertyChanged(DocumentItem* docItem, Property* prop);
 
     // -- Implementation
 private:

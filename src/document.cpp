@@ -15,7 +15,6 @@ Document::Document(QObject* parent)
       propertyLabel(this, tr("Label")),
       propertyFilePath(this, tr("File path"))
 {
-    this->propertyLabel.setUserReadOnly(true);
     this->propertyFilePath.setUserReadOnly(true);
 }
 
@@ -78,6 +77,11 @@ void Document::addRootItem(DocumentItem* item)
     item->setDocument(this);
     m_rootItems.push_back(item);
     emit itemAdded(item);
+}
+
+void Document::onPropertyChanged(Property* prop)
+{
+    emit propertyChanged(prop);
 }
 
 } // namespace Mayo

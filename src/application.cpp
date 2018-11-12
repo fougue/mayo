@@ -434,6 +434,9 @@ void Application::addDocument(Document *doc)
 {
     auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
     if (doc != nullptr && itFound == m_documents.cend()) {
+        QObject::connect(doc, &Document::propertyChanged, [=](Property* prop) {
+            emit documentPropertyChanged(doc, prop);
+        });
         QObject::connect(
                     doc, &Document::itemAdded,
                     this, &Application::documentItemAdded);

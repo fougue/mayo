@@ -40,9 +40,13 @@ public:
     virtual const char* dynTypeName() const;
 
 signals:
+    void propertyChanged(Property* prop);
     void itemAdded(DocumentItem* docItem);
     void itemErased(const DocumentItem* docItem);
-    void itemPropertyChanged(const DocumentItem* docItem, const Property* prop);
+    void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+
+protected:
+    void onPropertyChanged(Property* prop) override;
 
 private:
     friend class Application;

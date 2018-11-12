@@ -35,10 +35,10 @@ public:
 private:
     void onDocumentAdded(Document* doc);
     void onDocumentErased(const Document* doc);
+    void onDocumentPropertyChanged(Document* doc, Property* prop);
     void onDocumentItemAdded(DocumentItem* docItem);
     void onDocumentItemErased(const DocumentItem* docItem);
-    void onDocumentItemPropertyChanged(
-            const DocumentItem* docItem, const Property* prop);
+    void onDocumentItemPropertyChanged(DocumentItem* docItem, Property* prop);
 
     void onTreeWidgetDocumentSelectionChanged(
             const QItemSelection &selected, const QItemSelection &deselected);

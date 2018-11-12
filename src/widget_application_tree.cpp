@@ -223,6 +223,9 @@ WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
                 app, &Application::documentErased,
                 this, &WidgetApplicationTree::onDocumentErased);
     QObject::connect(
+                app, &Application::documentPropertyChanged,
+                this, &WidgetApplicationTree::onDocumentPropertyChanged);
+    QObject::connect(
                 app, &Application::documentItemAdded,
                 this, &WidgetApplicationTree::onDocumentItemAdded);
     QObject::connect(
@@ -344,9 +347,16 @@ void WidgetApplicationTree::onDocumentAdded(Document* doc)
     m_ui->treeWidget_App->addTopLevelItem(treeItem);
 }
 
-void WidgetApplicationTree::onDocumentErased(const Document *doc)
+void WidgetApplicationTree::onDocumentErased(const Document* doc)
 {
     delete this->findTreeItemDocument(doc);
+}
+
+void WidgetApplicationTree::onDocumentPropertyChanged(Document* doc, Property* prop)
+{
+    QTreeWidgetItem* treeItem = this->findTreeItemDocument(doc);
+    if (treeItem && prop == &doc->propertyLabel)
+        treeItem->setText(0, Internal::itemLabelText(doc->propertyLabel));
 }
 
 QTreeWidgetItem* WidgetApplicationTree::loadDocumentItem(DocumentItem* docItem)
@@ -465,13 +475,11 @@ void WidgetApplicationTree::onDocumentItemErased(const DocumentItem* docItem)
 }
 
 void WidgetApplicationTree::onDocumentItemPropertyChanged(
-        const DocumentItem *docItem, const Property *prop)
+        DocumentItem* docItem, Property* prop)
 {
-    QTreeWidgetItem* treeItemDocItem = this->findTreeItemDocumentItem(docItem);
-    if (treeItemDocItem != nullptr) {
-        if (prop == &docItem->propertyLabel)
-            treeItemDocItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
-    }
+    QTreeWidgetItem* treeItem = this->findTreeItemDocumentItem(docItem);
+    if (treeItem &&prop == &docItem->propertyLabel)
+        treeItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
 }
 
 void WidgetApplicationTree::onTreeWidgetDocumentSelectionChanged(
