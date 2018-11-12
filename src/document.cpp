@@ -50,8 +50,8 @@ bool Document::eraseRootItem(DocumentItem *docItem)
     auto itFound = std::find(m_rootItems.cbegin(), m_rootItems.cend(), docItem);
     if (itFound != m_rootItems.cend()) {
         m_rootItems.erase(itFound);
-        delete docItem;
         emit itemErased(docItem);
+        delete docItem;
         return true;
     }
     return false;

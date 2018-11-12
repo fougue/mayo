@@ -253,6 +253,7 @@ void GuiDocument::onItemErased(const DocumentItem *item)
         GpxDocumentItem* gpxDocItem = itFound->gpxDocItem;
         delete gpxDocItem;
         m_vecGuiDocumentItem.erase(itFound);
+        this->updateV3dViewer();
 
         // Recompute bounding box
         m_gpxBoundingBox.SetVoid();

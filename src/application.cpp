@@ -438,6 +438,9 @@ void Application::addDocument(Document *doc)
                     doc, &Document::itemAdded,
                     this, &Application::documentItemAdded);
         QObject::connect(
+                    doc, &Document::itemErased,
+                    this, &Application::documentItemErased);
+        QObject::connect(
                     doc, &Document::itemPropertyChanged,
                     this, &Application::documentItemPropertyChanged);
         m_documents.emplace_back(doc);

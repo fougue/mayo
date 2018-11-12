@@ -17,6 +17,8 @@
 #include "theme.h"
 #include "xde_document_item.h"
 
+#include <fougtools/qttools/gui/item_view_buttons.h>
+
 #include <QtCore/QMetaType>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
@@ -183,6 +185,36 @@ WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
     m_ui->setupUi(this);
     m_ui->treeWidget_App->setUniformRowHeights(true);
 
+    // Add action "Remove item from document"
+    auto modelTreeBtns = new qtgui::ItemViewButtons(m_ui->treeWidget_App, this);
+    constexpr int idBtnRemove = 1;
+    modelTreeBtns->addButton(
+                idBtnRemove,
+                mayoTheme()->icon(Theme::Icon::Cross),
+                tr("Remove from document"));
+    modelTreeBtns->setButtonDetection(
+                idBtnRemove,
+                Internal::TreeItemTypeRole,
+                QVariant(Internal::TreeItemType_DocumentItem));
+    modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
+    modelTreeBtns->setButtonDisplayModes(
+                idBtnRemove, qtgui::ItemViewButtons::DisplayOnDetection);
+    modelTreeBtns->setButtonItemSide(
+                idBtnRemove, qtgui::ItemViewButtons::ItemRightSide);
+    const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
+    modelTreeBtns->setButtonIconSize(
+                idBtnRemove, QSize(iconSize * 0.66, iconSize * 0.66));
+    modelTreeBtns->installDefaultItemDelegate();
+    QObject::connect(
+                modelTreeBtns, &qtgui::ItemViewButtons::buttonClicked,
+                [=](int btnId, const QModelIndex& index) {
+        if (btnId == idBtnRemove) {
+            QTreeWidgetItem* treeItem = m_ui->treeWidget_App->itemFromIndex(index);
+            DocumentItem* docItem = Internal::treeItemDocumentItem(treeItem);
+            docItem->document()->eraseRootItem(docItem);
+        }
+    });
+
     auto app = Application::instance();
     QObject::connect(
                 app, &Application::documentAdded,
@@ -193,6 +225,9 @@ WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
     QObject::connect(
                 app, &Application::documentItemAdded,
                 this, &WidgetApplicationTree::onDocumentItemAdded);
+    QObject::connect(
+                app, &Application::documentItemErased,
+                this, &WidgetApplicationTree::onDocumentItemErased);
     QObject::connect(
                 app, &Application::documentItemPropertyChanged,
                 this, &WidgetApplicationTree::onDocumentItemPropertyChanged);
@@ -409,7 +444,7 @@ QTreeWidgetItem *WidgetApplicationTree::findTreeItemXdeLabel(
     return nullptr;
 }
 
-void WidgetApplicationTree::onDocumentItemAdded(DocumentItem *docItem)
+void WidgetApplicationTree::onDocumentItemAdded(DocumentItem* docItem)
 {
     QTreeWidgetItem* treeDocItem = this->loadDocumentItem(docItem);
     if (sameType<XdeDocumentItem>(docItem)) {
@@ -423,6 +458,12 @@ void WidgetApplicationTree::onDocumentItemAdded(DocumentItem *docItem)
     }
 }
 
+void WidgetApplicationTree::onDocumentItemErased(const DocumentItem* docItem)
+{
+    QTreeWidgetItem* treeItem = this->findTreeItemDocumentItem(docItem);
+    delete treeItem;
+}
+
 void WidgetApplicationTree::onDocumentItemPropertyChanged(
         const DocumentItem *docItem, const Property *prop)
 {
@@ -434,7 +475,7 @@ void WidgetApplicationTree::onDocumentItemPropertyChanged(
 }
 
 void WidgetApplicationTree::onTreeWidgetDocumentSelectionChanged(
-        const QItemSelection &selected, const QItemSelection &deselected)
+        const QItemSelection& selected, const QItemSelection& deselected)
 {
     const QModelIndexList listSelectedIndex = selected.indexes();
     const QModelIndexList listDeselectedIndex = deselected.indexes();

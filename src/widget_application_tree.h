@@ -36,6 +36,7 @@ private:
     void onDocumentAdded(Document* doc);
     void onDocumentErased(const Document* doc);
     void onDocumentItemAdded(DocumentItem* docItem);
+    void onDocumentItemErased(const DocumentItem* docItem);
     void onDocumentItemPropertyChanged(
             const DocumentItem* docItem, const Property* prop);
 

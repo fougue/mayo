@@ -90,7 +90,6 @@ public:
 
     QAbstractItemView* m_view;
     QHash<int, ButtonInfo> m_btnInfos;
-    QModelIndex m_prevModelIndexUnderMouse;
     const ButtonInfo* m_buttonUnderMouse;
 
 private:
@@ -275,7 +274,6 @@ QAbstractItemView* ItemViewButtons::itemView() const
 
 void ItemViewButtons::reset()
 {
-    d->m_prevModelIndexUnderMouse = QModelIndex();
     d->resetButtonUnderMouseState();
 }
 
@@ -299,10 +297,7 @@ bool ItemViewButtons::eventFilter(QObject *object, QEvent *event)
         case QEvent::Leave:
         case QEvent::MouseMove: {
             d->resetButtonUnderMouseState();
-            if (d->m_prevModelIndexUnderMouse != modelIndexUnderMouse)
-                d->itemViewUpdateAt(d->m_prevModelIndexUnderMouse);
             d->itemViewUpdateAt(modelIndexUnderMouse);
-            d->m_prevModelIndexUnderMouse = modelIndexUnderMouse;
             return true;
         }
         case QEvent::MouseButtonRelease: {
