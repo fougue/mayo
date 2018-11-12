@@ -22,7 +22,7 @@ public:
 
     void display() override;
     void hide() override;
-    void activateSelectionMode(int mode) override;
+    void activateSelection(int mode) override;
     std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const override;
     Bnd_Box boundingBox() const override;
 

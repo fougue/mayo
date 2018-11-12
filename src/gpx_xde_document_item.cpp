@@ -88,7 +88,7 @@ void GpxXdeDocumentItem::hide()
         this->context()->Erase(obj, false);
 }
 
-void GpxXdeDocumentItem::activateSelectionMode(int mode)
+void GpxXdeDocumentItem::activateSelection(int mode)
 {
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
         this->context()->Activate(obj, mode);

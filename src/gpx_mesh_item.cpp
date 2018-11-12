@@ -103,7 +103,7 @@ void GpxMeshItem::hide()
     this->context()->Erase(m_meshVisu, false);
 }
 
-void GpxMeshItem::activateSelectionMode(int mode)
+void GpxMeshItem::activateSelection(int mode)
 {
     this->context()->Activate(m_meshVisu, mode);
 }

@@ -30,8 +30,8 @@ public:
 
     virtual void display() = 0;
     virtual void hide() = 0;
-    virtual void activateSelectionMode(int mode) = 0;
-    virtual std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const = 0;
+    virtual void activateSelection(int mode);
+    virtual std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const;
     virtual Bnd_Box boundingBox() const = 0;
 
     PropertyBool propertyIsVisible;

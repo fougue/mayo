@@ -230,9 +230,9 @@ void GuiDocument::onItemAdded(DocumentItem *item)
     guiItem.gpxDocItem->display();
     m_aisContext->UpdateCurrentViewer();
     if (sameType<XdeDocumentItem>(item)) {
-        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_VERTEX));
-        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_EDGE));
-        guiItem.gpxDocItem->activateSelectionMode(AIS_Shape::SelectionMode(TopAbs_FACE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_EDGE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_FACE));
         guiItem.vecGpxEntityOwner =
                 guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
     }

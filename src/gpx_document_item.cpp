@@ -44,6 +44,15 @@ GpxDocumentItem::GpxDocumentItem()
     this->propertyIsVisible.setValue(true);
 }
 
+void GpxDocumentItem::activateSelection(int /*mode*/)
+{
+}
+
+std::vector<Handle_SelectMgr_EntityOwner> GpxDocumentItem::entityOwners(int /*mode*/) const
+{
+    return std::vector<Handle_SelectMgr_EntityOwner>();
+}
+
 void GpxDocumentItem::onPropertyChanged(Property *prop)
 {
     if (prop == &this->propertyIsVisible) {
