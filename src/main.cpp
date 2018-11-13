@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QApplication::setOrganizationName("Fougue");
+    QApplication::setOrganizationName("Fougue Ltd");
     QApplication::setOrganizationDomain("www.fougue.pro");
     QApplication::setApplicationName("Mayo");
     QApplication::setApplicationVersion("0.1");
@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
     // Create MainWindow
     Mayo::MainWindow mainWindow;
+    mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
     if (!args.listFileToOpen.empty()) {
         QTimer::singleShot(0, [&]{

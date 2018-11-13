@@ -33,6 +33,10 @@ DialogOptions::DialogOptions(QWidget *parent)
       m_ui(new Ui_DialogOptions)
 {
     m_ui->setupUi(this);
+#ifndef HAVE_GMIO
+    m_ui->groupBox_StlIo->hide();
+    this->adjustSize();
+#endif
 
     const Options* opts = Options::instance();
     const auto& vecGpxMaterialMapping =

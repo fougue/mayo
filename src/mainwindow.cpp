@@ -198,6 +198,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->btn_NextGuiDocument->setDefaultAction(m_ui->actionNextDoc);
     m_ui->btn_CloseGuiDocument->setDefaultAction(m_ui->actionCloseDoc);
 
+    m_ui->actionAboutMayo->setText(tr("About %1").arg(QApplication::applicationName()));
     m_ui->actionImport->setIcon(mayoTheme()->icon(Theme::Icon::Import));
     m_ui->actionExportSelectedItems->setIcon(mayoTheme()->icon(Theme::Icon::Export));
     m_ui->actionZoomIn->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));

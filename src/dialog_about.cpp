@@ -19,6 +19,9 @@ DialogAbout::DialogAbout(QWidget *parent)
       m_ui(new Ui_DialogAbout)
 {
     m_ui->setupUi(this);
+    m_ui->label_AppByOrg->setText(
+                tr("%1 By %2").arg(QApplication::applicationName(),
+                                   QApplication::organizationName()));
 
     m_ui->label_Version->setText(
                 m_ui->label_Version->text().arg("0.1-dev").arg(QT_POINTER_SIZE * 8));
