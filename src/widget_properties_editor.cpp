@@ -190,12 +190,11 @@ static QWidget* createPropertyEditor(PropertyBool* prop, QWidget* parent)
     auto frame = createPanelEditor(parent);
     auto editor = new QCheckBox(frame);
     frame->layout()->addWidget(editor);
-    auto propBool = static_cast<PropertyBool*>(prop);
-    editor->setText(yesNoString(propBool->value()));
-    editor->setChecked(propBool->value());
+    editor->setText(yesNoString(prop->value()));
+    editor->setChecked(prop->value());
     QObject::connect(editor, &QCheckBox::toggled, [=](bool on) {
         editor->setText(yesNoString(on));
-        propBool->setValue(on);
+        prop->setValue(on);
     });
     return frame;
 }
@@ -261,7 +260,6 @@ static QWidget* createPropertyEditor(PropertyEnumeration* prop, QWidget* parent)
 static QWidget* createPropertyEditor(PropertyOccColor* prop, QWidget* parent)
 {
     auto frame = createPanelEditor(parent);
-    auto editor = new QWidget(frame);
 
     auto labelColor = new QLabel(frame);
     const QColor inputColor = occ::QtUtils::toQColor(prop->value());
@@ -274,7 +272,7 @@ static QWidget* createPropertyEditor(PropertyOccColor* prop, QWidget* parent)
     btnColor->setText("...");
     btnColor->setToolTip(WidgetPropertiesEditor::tr("Choose color ..."));
     QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
-        auto dlg = new QColorDialog(editor);
+        auto dlg = new QColorDialog(frame);
         dlg->setCurrentColor(inputColor);
         QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
             prop->setValue(occ::QtUtils::toOccColor(c));
@@ -286,8 +284,53 @@ static QWidget* createPropertyEditor(PropertyOccColor* prop, QWidget* parent)
     frame->layout()->addWidget(labelColor);
     frame->layout()->addWidget(labelRgb);
     frame->layout()->addWidget(btnColor);
-    frame->layout()->addWidget(hSpacerWidget(editor));
+    frame->layout()->addWidget(hSpacerWidget(frame));
 
+    return frame;
+}
+
+static QDoubleSpinBox* createOccPntCoordEditor(
+        QWidget* parent,
+        PropertyOccPnt* prop,
+        double (gp_Pnt::*funcGetCoord)() const,
+        void (gp_Pnt::*funcSetCoord)(double))
+{
+    auto editor = new QDoubleSpinBox(parent);
+    const double coord = ((prop->value()).*funcGetCoord)();
+    const UnitSystem::TranslateResult trRes =
+            Options::instance()->unitSystemTranslate(coord * Quantity_Millimeter);
+    //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
+    editor->setDecimals(Options::instance()->unitSystemDecimals());
+    editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
+    editor->setRange(std::numeric_limits<double>::min(),
+                     std::numeric_limits<double>::max());
+    editor->setValue(trRes.value);
+    QSizePolicy sp = editor->sizePolicy();
+    sp.setHorizontalPolicy(QSizePolicy::Expanding);
+    editor->setSizePolicy(sp);
+    editor->setMinimumWidth(25);
+    auto signalValueChanged =
+            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+    QObject::connect(editor, signalValueChanged, [=](double value) {
+        const double f = trRes.factor;
+        value = qFuzzyCompare(f, 1.) ? value : value * f;
+        gp_Pnt pnt = prop->value();
+        (pnt.*funcSetCoord)(value);
+        prop->setValue(pnt);
+    });
+    return editor;
+}
+
+static QWidget* createPropertyEditor(PropertyOccPnt* prop, QWidget* parent)
+{
+    auto frame = createPanelEditor(parent);
+    QLayout* frameLayout = frame->layout();
+    frameLayout->addWidget(new QLabel("X", frame));
+    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::X, &gp_Pnt::SetX));
+    frameLayout->addWidget(new QLabel("Y", frame));
+    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::Y, &gp_Pnt::SetY));
+    frameLayout->addWidget(new QLabel("Z", frame));
+    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::Z, &gp_Pnt::SetZ));
     return frame;
 }
 
@@ -374,6 +417,8 @@ public:
             return createPropertyEditor(static_cast<PropertyQString*>(prop), parent);
         if (propTypeName == PropertyOccColor::TypeName)
             return createPropertyEditor(static_cast<PropertyOccColor*>(prop), parent);
+        if (propTypeName == PropertyOccPnt::TypeName)
+            return createPropertyEditor(static_cast<PropertyOccPnt*>(prop), parent);
         if (propTypeName == PropertyEnumeration::TypeName)
             return createPropertyEditor(static_cast<PropertyEnumeration*>(prop), parent);
         return nullptr;
@@ -460,6 +505,22 @@ void WidgetPropertiesEditor::clear()
 {
     this->releaseObjects();
     m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+}
+
+void WidgetPropertiesEditor::setPropertyEnabled(const Property* prop, bool on)
+{
+    for (QTreeWidgetItemIterator it(m_ui->treeWidget_Browser); *it; ++it) {
+        QTreeWidgetItem* treeItem = *it;
+        const QVariant value = treeItem->data(1, Qt::DisplayRole);
+        if (value.canConvert<Property*>()
+                && qvariant_cast<Property*>(value) == prop)
+        {
+            Qt::ItemFlags itemFlags = Qt::ItemIsSelectable | Qt::ItemIsEditable;
+            if (on)
+                itemFlags |= Qt::ItemIsEnabled;
+            treeItem->setFlags(itemFlags);
+        }
+    }
 }
 
 void WidgetPropertiesEditor::addLineWidget(QWidget* widget)

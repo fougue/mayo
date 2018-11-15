@@ -31,6 +31,8 @@ public:
     void editProperties(Span<HandleProperty> spanHndProp);
     void clear();
 
+    void setPropertyEnabled(const Property* prop, bool on);
+
     void addLineWidget(QWidget* widget);
 
     double rowHeightFactor() const;
