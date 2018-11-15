@@ -93,14 +93,9 @@ MeshItem *GpxMeshItem::documentItem() const
     return m_meshItem;
 }
 
-void GpxMeshItem::display()
+void GpxMeshItem::setVisible(bool on)
 {
-    this->context()->Display(m_meshVisu, false);
-}
-
-void GpxMeshItem::hide()
-{
-    this->context()->Erase(m_meshVisu, false);
+    GpxUtils::AisContext_setObjectVisible(this->context(), m_meshVisu, on);
 }
 
 void GpxMeshItem::activateSelection(int mode)

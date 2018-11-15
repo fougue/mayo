@@ -76,16 +76,10 @@ XdeDocumentItem *GpxXdeDocumentItem::documentItem() const
     return m_xdeDocItem;
 }
 
-void GpxXdeDocumentItem::display()
+void GpxXdeDocumentItem::setVisible(bool on)
 {
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-        this->context()->Display(obj, false);
-}
-
-void GpxXdeDocumentItem::hide()
-{
-    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-        this->context()->Erase(obj, false);
+        GpxUtils::AisContext_setObjectVisible(this->context(), obj, on);
 }
 
 void GpxXdeDocumentItem::activateSelection(int mode)

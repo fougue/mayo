@@ -20,8 +20,7 @@ public:
 
     XdeDocumentItem* documentItem() const override;
 
-    void display() override;
-    void hide() override;
+    void setVisible(bool on) override;
     void activateSelection(int mode) override;
     std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const override;
     Bnd_Box boundingBox() const override;

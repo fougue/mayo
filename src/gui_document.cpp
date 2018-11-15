@@ -227,7 +227,7 @@ void GuiDocument::onItemAdded(DocumentItem *item)
 {
     GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
     guiItem.gpxDocItem->setContext(m_aisContext);
-    guiItem.gpxDocItem->display();
+    guiItem.gpxDocItem->setVisible(true);
     m_aisContext->UpdateCurrentViewer();
     if (sameType<XdeDocumentItem>(item)) {
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));

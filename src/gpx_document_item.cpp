@@ -56,10 +56,7 @@ std::vector<Handle_SelectMgr_EntityOwner> GpxDocumentItem::entityOwners(int /*mo
 void GpxDocumentItem::onPropertyChanged(Property *prop)
 {
     if (prop == &this->propertyIsVisible) {
-        if (this->propertyIsVisible.value())
-            this->display();
-        else
-            this->hide();
+        this->setVisible(this->propertyIsVisible.value());
         this->context()->UpdateCurrentViewer();
     }
 }

@@ -28,8 +28,7 @@ public:
     const Handle_AIS_InteractiveContext& context() const { return m_ctx; }
     void setContext(const Handle_AIS_InteractiveContext& ctx) { m_ctx = ctx; }
 
-    virtual void display() = 0;
-    virtual void hide() = 0;
+    virtual void setVisible(bool on) = 0;
     virtual void activateSelection(int mode);
     virtual std::vector<Handle_SelectMgr_EntityOwner> entityOwners(int mode) const;
     virtual Bnd_Box boundingBox() const = 0;

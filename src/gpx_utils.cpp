@@ -76,6 +76,19 @@ void GpxUtils::AisContext_eraseObject(
     }
 }
 
+void GpxUtils::AisContext_setObjectVisible(
+        const Handle_AIS_InteractiveContext& context,
+        const Handle_AIS_InteractiveObject& object,
+        bool on)
+{
+    if (!context.IsNull() && !object.IsNull()) {
+        if (on)
+            context->Display(object, false);
+        else
+            context->Erase(object, false);
+    }
+}
+
 int GpxUtils::AspectWindow_width(const Handle_Aspect_Window &wnd)
 {
     if (wnd.IsNull())
