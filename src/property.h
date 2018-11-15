@@ -7,6 +7,7 @@
 #pragma once
 
 #include <QtCore/QMetaType>
+#include <QtCore/QObject>
 #include <QtCore/QString>
 #include <vector>
 
@@ -68,6 +69,18 @@ private:
     PropertyOwner* const m_owner = nullptr;
     const QString m_label;
     bool m_isUserReadOnly = false;
+};
+
+class PropertyOwnerSignals : public QObject, public PropertyOwner {
+    Q_OBJECT
+public:
+    PropertyOwnerSignals(QObject* parent = nullptr);
+
+signals:
+    void changed(Property* prop);
+
+protected:
+    void onPropertyChanged(Property* prop) override;
 };
 
 class HandleProperty {

@@ -130,4 +130,15 @@ void HandleProperty::swap(HandleProperty &&other)
     other.m_prop = nullptr;
 }
 
+PropertyOwnerSignals::PropertyOwnerSignals(QObject *parent)
+    : QObject(parent)
+{
+}
+
+void PropertyOwnerSignals::onPropertyChanged(Property *prop)
+{
+    PropertyOwner::onPropertyChanged(prop);
+    emit changed(prop);
+}
+
 } // namespace Mayo
