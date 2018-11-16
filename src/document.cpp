@@ -11,7 +11,7 @@
 namespace Mayo {
 
 Document::Document(QObject* parent)
-    : QObject(parent),
+    : PropertyOwnerSignals(parent),
       propertyLabel(this, tr("Label")),
       propertyFilePath(this, tr("File path"))
 {
@@ -77,11 +77,6 @@ void Document::addRootItem(DocumentItem* item)
     item->setDocument(this);
     m_rootItems.push_back(item);
     emit itemAdded(item);
-}
-
-void Document::onPropertyChanged(Property* prop)
-{
-    emit propertyChanged(prop);
 }
 
 } // namespace Mayo

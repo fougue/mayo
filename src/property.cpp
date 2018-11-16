@@ -138,7 +138,7 @@ PropertyOwnerSignals::PropertyOwnerSignals(QObject *parent)
 void PropertyOwnerSignals::onPropertyChanged(Property *prop)
 {
     PropertyOwner::onPropertyChanged(prop);
-    emit changed(prop);
+    emit propertyChanged(prop);
 }
 
 } // namespace Mayo

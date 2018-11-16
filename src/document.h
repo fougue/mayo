@@ -15,7 +15,7 @@ namespace Mayo {
 
 class DocumentItem;
 
-class Document : public QObject, public PropertyOwner {
+class Document : public PropertyOwnerSignals {
     Q_OBJECT
 public:
     Document(QObject* parent = Application::instance());
@@ -40,13 +40,9 @@ public:
     virtual const char* dynTypeName() const;
 
 signals:
-    void propertyChanged(Property* prop);
     void itemAdded(DocumentItem* docItem);
     void itemErased(const DocumentItem* docItem);
     void itemPropertyChanged(DocumentItem* docItem, Property* prop);
-
-protected:
-    void onPropertyChanged(Property* prop) override;
 
 private:
     friend class Application;

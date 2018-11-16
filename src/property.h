@@ -77,7 +77,7 @@ public:
     PropertyOwnerSignals(QObject* parent = nullptr);
 
 signals:
-    void changed(Property* prop);
+    void propertyChanged(Property* prop);
 
 protected:
     void onPropertyChanged(Property* prop) override;
