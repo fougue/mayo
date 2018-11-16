@@ -15,18 +15,6 @@
 
 namespace Mayo {
 
-template<typename T> struct PropertyDefault
-{ static T initValue() { return T(); } };
-
-template<> struct PropertyDefault<bool>
-{ static bool initValue() { return false; } };
-
-template<> struct PropertyDefault<int>
-{ static int initValue() { return 0; } };
-
-template<> struct PropertyDefault<double>
-{ static double initValue() { return 0.; } };
-
 template<typename T>
 class GenericProperty : public Property {
 public:
@@ -41,7 +29,7 @@ public:
     static const char TypeName[];
 
 protected:
-    T m_value = PropertyDefault<T>::initValue();
+    T m_value = {};
 };
 
 template<typename T>
