@@ -233,6 +233,7 @@ void GuiDocument::onItemAdded(DocumentItem *item)
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_EDGE));
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_FACE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SHELL));
         guiItem.vecGpxEntityOwner =
                 guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
     }
