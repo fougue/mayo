@@ -71,7 +71,7 @@ QtOccViewController::QtOccViewController(WidgetOccView* widgetView)
 bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched != m_widgetView)
-        return BaseV3dViewController::eventFilter(watched, event);
+        return false;
     Handle_V3d_View view = m_widgetView->v3dView();
 
     switch (event->type()) {
@@ -79,17 +79,6 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
         m_prevPos = currPos;
-        if (mouseEvent->button() == Qt::LeftButton) {
-            this->setViewCursor(Internal::rotateCursor());
-            this->setStateRotation(true);
-            view->StartRotation(currPos.x(), currPos.y());
-            return true;
-        }
-        else if (mouseEvent->button() == Qt::RightButton) {
-            this->setViewCursor(Qt::SizeAllCursor);
-            this->setStatePanning(true);
-            return true;
-        }
         break;
     }
     case QEvent::MouseMove: {
@@ -97,24 +86,33 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
-        emit mouseMoved(currPos);
-
-        const Qt::MouseButtons mouseButtons = QApplication::mouseButtons();
-        if (mouseButtons == Qt::LeftButton && this->isRotating()) {
+        if (mouseEvent->buttons() == Qt::LeftButton) {
+            if (!this->isRotating()) {
+                this->setViewCursor(Internal::rotateCursor());
+                this->setStateRotation(true);
+                view->StartRotation(prevPos.x(), prevPos.y());
+            }
             view->Rotation(currPos.x(), currPos.y());
-            return true;
         }
-        else if (mouseButtons == Qt::RightButton && this->isPanning()) {
+        else if (mouseEvent->buttons() == Qt::RightButton) {
+            if (!this->isPanning()) {
+                this->setViewCursor(Qt::SizeAllCursor);
+                this->setStatePanning(true);
+            }
             view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
-            return true;
         }
+        emit mouseMoved(currPos);
         break;
     }
     case QEvent::MouseButtonRelease: {
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
+        const bool wasRotatingOrPanning = this->isRotating() || this->isPanning();
         this->setViewCursor(Qt::ArrowCursor);
         this->setStateRotation(false);
         this->setStatePanning(false);
-        return true;
+        if (!wasRotatingOrPanning)
+            emit mouseClicked(mouseEvent->button());
+        break;
     }
     case QEvent::Wheel: {
         auto wheelEvent = static_cast<const QWheelEvent*>(event);
@@ -122,9 +120,10 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
             this->zoomIn();
         else
             this->zoomOut();
-        return true;
+        break;
     }
-    default: return false;
+    default:
+        break;
     } // end switch
 
     return false;

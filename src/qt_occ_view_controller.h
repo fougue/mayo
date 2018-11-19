@@ -31,6 +31,7 @@ signals:
     void viewPanningEnded();
     void viewScaled();
     void mouseMoved(const QPoint& posMouseInView);
+    void mouseClicked(Qt::MouseButton btn);
 
 protected:
     void setStateRotation(bool on);
