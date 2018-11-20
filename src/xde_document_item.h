@@ -50,14 +50,9 @@ public:
     void rebuildAssemblyTree();
     const Tree<TDF_Label>& assemblyTree() const;
 
-    template<typename LABEL_CONTAINER = std::vector<TDF_Label>>
-    LABEL_CONTAINER topLevelFreeShapes() const;
-
-    template<typename LABEL_CONTAINER = std::vector<TDF_Label>>
-    static LABEL_CONTAINER shapeComponents(const TDF_Label& lbl);
-
-    template<typename LABEL_CONTAINER = std::vector<TDF_Label>>
-    static LABEL_CONTAINER shapeSubs(const TDF_Label& lbl);
+    TDF_LabelSequence topLevelFreeShapes() const;
+    static TDF_LabelSequence shapeComponents(const TDF_Label& lbl);
+    static TDF_LabelSequence shapeSubs(const TDF_Label& lbl);
 
     static QString findLabelName(const TDF_Label& lbl);
     QString findLabelName(AssemblyNodeId nodeId) const;
@@ -90,17 +85,6 @@ public:
     const char* dynTypeName() const override;
 
 private:
-    template<typename LABEL_CONTAINER, typename PREDICATE>
-    static void getDirectChildren(
-            const TDF_Label& lbl, LABEL_CONTAINER* cnter, PREDICATE pred)
-    {
-        for (TDF_ChildIterator it(lbl); it.More(); it.Next()) {
-            const TDF_Label child = it.Value();
-            if (pred(child))
-                cnter->push_back(child);
-        }
-    }
-
     void deepBuildAssemblyTree(
             AssemblyNodeId parentNode, const TDF_Label& label);
 
@@ -120,41 +104,5 @@ struct XdeAssemblyNode {
     XdeDocumentItem* ownerDocItem;
     XdeDocumentItem::AssemblyNodeId nodeId;
 };
-
-
-// --
-// -- Implementation
-// --
-
-template<typename LABEL_CONTAINER>
-LABEL_CONTAINER XdeDocumentItem::topLevelFreeShapes() const {
-    LABEL_CONTAINER cnter;
-    const TDF_Label lbl = this->shapeTool()->Label();
-    getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-        return XdeDocumentItem::isShape(child)
-               && XdeDocumentItem::isShapeFree(child);
-    });
-    return cnter;
-}
-
-template<typename LABEL_CONTAINER>
-LABEL_CONTAINER XdeDocumentItem::shapeComponents(const TDF_Label& lbl) {
-    LABEL_CONTAINER cnter;
-    if (XdeDocumentItem::isShapeAssembly(lbl)) {
-        getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-            return XdeDocumentItem::isShapeComponent(child);
-        });
-    }
-    return cnter;
-}
-
-template<typename LABEL_CONTAINER>
-LABEL_CONTAINER XdeDocumentItem::shapeSubs(const TDF_Label& lbl) {
-    LABEL_CONTAINER cnter;
-    getDirectChildren(lbl, &cnter, [=](const TDF_Label& child) {
-        return XdeDocumentItem::isShapeSub(child);
-    });
-    return cnter;
-}
 
 } // namespace Mayo

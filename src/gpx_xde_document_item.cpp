@@ -35,12 +35,12 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     // The only viable solution(instead of creating a root shape label containing
     // the free top-level shapes) is to have an AIS object per free top-level
     // shape.
-    const std::vector<TDF_Label> vecFreeShape = item->topLevelFreeShapes();
-    if (!vecFreeShape.empty()) {
-        m_vecXdeGpx.reserve(vecFreeShape.size());
+    const TDF_LabelSequence seqFreeShape = item->topLevelFreeShapes();
+    if (!seqFreeShape.IsEmpty()) {
+        m_vecXdeGpx.reserve(seqFreeShape.Size());
         const Options* opts = Options::instance();
         Mayo_PropertyChangedBlocker(this);
-        for (const TDF_Label& label : vecFreeShape) {
+        for (const TDF_Label& label : seqFreeShape) {
             Handle_XCAFPrs_AISObject gpx = new XCAFPrs_AISObject(label);
             gpx->SetMaterial(opts->brepShapeDefaultMaterial());
             gpx->SetDisplayMode(AIS_Shaded);

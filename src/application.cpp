@@ -256,17 +256,17 @@ void loadCafDocumentFromFile(
 static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
 {
     TopoDS_Shape shape;
-    const std::vector<TDF_Label> vecFreeShape = xdeDocItem->topLevelFreeShapes();
-    if (vecFreeShape.size() > 1) {
+    const TDF_LabelSequence seqFreeShape = xdeDocItem->topLevelFreeShapes();
+    if (seqFreeShape.Size() > 1) {
         TopoDS_Compound cmpd;
         BRep_Builder builder;
         builder.MakeCompound(cmpd);
-        for (const TDF_Label& label : vecFreeShape)
+        for (const TDF_Label& label : seqFreeShape)
             builder.Add(cmpd, XdeDocumentItem::shape(label));
         shape = cmpd;
     }
-    else if (vecFreeShape.size() == 1) {
-        shape = XdeDocumentItem::shape(vecFreeShape.front());
+    else if (seqFreeShape.Size() == 1) {
+        shape = XdeDocumentItem::shape(seqFreeShape.First());
     }
     return shape;
 }

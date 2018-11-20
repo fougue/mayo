@@ -54,6 +54,27 @@ const Tree<TDF_Label>& XdeDocumentItem::assemblyTree() const
     return m_asmTree;
 }
 
+TDF_LabelSequence XdeDocumentItem::topLevelFreeShapes() const
+{
+    TDF_LabelSequence seq;
+    m_shapeTool->GetFreeShapes(seq);
+    return seq;
+}
+
+TDF_LabelSequence XdeDocumentItem::shapeComponents(const TDF_Label& lbl)
+{
+    TDF_LabelSequence seq;
+    XCAFDoc_ShapeTool::GetComponents(lbl, seq);
+    return seq;
+}
+
+TDF_LabelSequence XdeDocumentItem::shapeSubs(const TDF_Label& lbl)
+{
+    TDF_LabelSequence seq;
+    XCAFDoc_ShapeTool::GetSubShapes(lbl, seq);
+    return seq;
+}
+
 bool XdeDocumentItem::isShape(const TDF_Label& lbl)
 {
     return XCAFDoc_ShapeTool::IsShape(lbl);
