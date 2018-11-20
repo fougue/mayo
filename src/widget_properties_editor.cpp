@@ -431,8 +431,8 @@ public:
     }
 
     QSize sizeHint(
-            const QStyleOptionViewItem &option,
-            const QModelIndex &index) const override
+            const QStyleOptionViewItem& option,
+            const QModelIndex& index) const override
     {
         const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
         return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
@@ -449,7 +449,7 @@ WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
       m_ui(new Ui_WidgetPropertiesEditor)
 {
     m_ui->setupUi(this);
-    m_ui->treeWidget_Browser->setUniformRowHeights(true);
+    //m_ui->treeWidget_Browser->setUniformRowHeights(true);
     m_ui->treeWidget_Browser->setIndentation(15);
     m_itemDelegate = new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser);
     m_ui->treeWidget_Browser->setItemDelegate(m_itemDelegate);
