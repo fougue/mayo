@@ -519,6 +519,7 @@ void WidgetPropertiesEditor::setPropertyEnabled(const Property* prop, bool on)
             if (on)
                 itemFlags |= Qt::ItemIsEnabled;
             treeItem->setFlags(itemFlags);
+            break;
         }
     }
 }
