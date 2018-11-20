@@ -198,7 +198,7 @@ static void loadLabelShapeProperties(
     QList<QTreeWidgetItem*> listItemProp;
 
     TopoDS_Shape shape;
-    if (shapeTool->GetShape(label, shape)) {
+    if (XCAFDoc_ShapeTool::GetShape(label, shape)) {
         auto itemShapeType = new QTreeWidgetItem;
         itemShapeType->setText(0, DialogInspectXde::tr("ShapeType"));
         const char* cstrShapeType = StringUtils::rawText(shape.ShapeType());
@@ -208,16 +208,16 @@ static void loadLabelShapeProperties(
 
     using ShapeProperty = std::tuple<QString, bool>;
     auto listShapeProperty = {
-        ShapeProperty("IsShape", shapeTool->IsShape(label)),
+        ShapeProperty("IsShape", XCAFDoc_ShapeTool::IsShape(label)),
         ShapeProperty("IsTopLevel", shapeTool->IsTopLevel(label)),
-        ShapeProperty("IsFree", shapeTool->IsFree(label)),
-        ShapeProperty("IsAssembly", shapeTool->IsAssembly(label)),
-        ShapeProperty("IsComponent", shapeTool->IsComponent(label)),
-        ShapeProperty("IsSimpleShape", shapeTool->IsSimpleShape(label)),
-        ShapeProperty("IsCompound", shapeTool->IsCompound(label)),
-        ShapeProperty("IsSubShape", shapeTool->IsSubShape(label)),
-        ShapeProperty("IsExternRef", shapeTool->IsExternRef(label)),
-        ShapeProperty("IsReference", shapeTool->IsReference(label))
+        ShapeProperty("IsFree", XCAFDoc_ShapeTool::IsFree(label)),
+        ShapeProperty("IsAssembly", XCAFDoc_ShapeTool::IsAssembly(label)),
+        ShapeProperty("IsComponent", XCAFDoc_ShapeTool::IsComponent(label)),
+        ShapeProperty("IsSimpleShape", XCAFDoc_ShapeTool::IsSimpleShape(label)),
+        ShapeProperty("IsCompound", XCAFDoc_ShapeTool::IsCompound(label)),
+        ShapeProperty("IsSubShape", XCAFDoc_ShapeTool::IsSubShape(label)),
+        ShapeProperty("IsExternRef", XCAFDoc_ShapeTool::IsExternRef(label)),
+        ShapeProperty("IsReference", XCAFDoc_ShapeTool::IsReference(label))
     };
     const QString strYes = DialogInspectXde::tr("Yes");
     const QString strNo = DialogInspectXde::tr("No");
@@ -230,9 +230,9 @@ static void loadLabelShapeProperties(
         listItemProp.push_back(itemProp);
     }
 
-    if (shapeTool->IsReference(label)) {
+    if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
-        if (shapeTool->GetReferredShape(label, labelRef)) {
+        if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
             auto itemRefShape = new QTreeWidgetItem;
             itemRefShape->setText(0, DialogInspectXde::tr("ReferredShape"));
             const QString textItemRefShape =
@@ -300,10 +300,6 @@ void DialogInspectXde::load(const Handle_TDocStd_Document &doc)
         Internal::deepLoadChildrenLabels(label, treeItem);
         m_ui->treeWidget_Document->addTopLevelItem(treeItem);
         treeItem->setExpanded(true);
-//        TDF_LabelSequence seqFreeShapeLabel;
-//        const Handle_XCAFDoc_ShapeTool shapeTool =
-//                XCAFDoc_DocumentTool::ShapeTool(doc->Main());
-//        shapeTool->GetFreeShapes(seqFreeShapeLabel);
     }
 }
 
@@ -321,9 +317,9 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(
             m_ui->treeWidget_LabelProps->addTopLevelItem(itemAttrs);
         }
 
-        const Handle_XCAFDoc_ShapeTool shapeTool =
-                XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
-        if (shapeTool->IsShape(label)) {
+        if (XCAFDoc_ShapeTool::IsShape(label)) {
+            const Handle_XCAFDoc_ShapeTool shapeTool =
+                    XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
             auto itemShapeProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
             itemShapeProps->setText(0, tr("Shape specific"));
             Internal::loadLabelShapeProperties(label, shapeTool, itemShapeProps);
@@ -331,7 +327,7 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(
 
         const Handle_XCAFDoc_ColorTool colorTool =
                 XCAFDoc_DocumentTool::ColorTool(m_doc->Main());
-        if (colorTool->IsColor(label) || shapeTool->IsShape(label)) {
+        if (colorTool->IsColor(label) || XCAFDoc_ShapeTool::IsShape(label)) {
             auto itemColorProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
             itemColorProps->setText(0, tr("Color specific"));
             Internal::loadLabelColorProperties(label, colorTool, itemColorProps);
