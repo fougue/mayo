@@ -7,6 +7,7 @@ QT += testlib
 
 HEADERS += \
     test.h \
+    ../src/brep_utils.h \
     ../src/quantity.h \
     ../src/result.h \
     ../src/unit.h \
@@ -15,6 +16,11 @@ HEADERS += \
 SOURCES += \
     test.cpp \
     main.cpp \
+    ../src/brep_utils.cpp \
     ../src/quantity.cpp \
     ../src/unit.cpp \
     ../src/unit_system.cpp \
+
+# OpenCascade
+include(../occ.pri)
+LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim

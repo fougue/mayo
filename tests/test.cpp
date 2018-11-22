@@ -1,5 +1,14 @@
-#include "test.h"
+/****************************************************************************
+** Copyright (c) 2018, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
 
+// Need to include this first because of MSVC conflicts with M_E, M_LOG2, ...
+#include <BRepPrimAPI_MakeBox.hxx>
+
+#include "test.h"
+#include "../src/brep_utils.h"
 #include "../src/libtree.h"
 #include "../src/result.h"
 #include "../src/unit.h"
@@ -22,6 +31,24 @@ static bool operator==(
     return std::abs(lhs.value - rhs.value) < 1e-6
             && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
             && std::abs(lhs.factor - rhs.factor) < 1e-6;
+}
+
+void Test::BRepUtils_test()
+{
+    QVERIFY(BRepUtils::moreComplex(TopAbs_COMPOUND, TopAbs_SOLID));
+    QVERIFY(BRepUtils::moreComplex(TopAbs_SOLID, TopAbs_SHELL));
+    QVERIFY(BRepUtils::moreComplex(TopAbs_SHELL, TopAbs_FACE));
+    QVERIFY(BRepUtils::moreComplex(TopAbs_FACE, TopAbs_EDGE));
+    QVERIFY(BRepUtils::moreComplex(TopAbs_EDGE, TopAbs_VERTEX));
+
+    {
+        const TopoDS_Shape shapeNull;
+        const TopoDS_Shape shapeBase = BRepPrimAPI_MakeBox(25, 25, 25);
+        const TopoDS_Shape shapeCopy = shapeBase;
+        QCOMPARE(BRepUtils::hashCode(shapeNull), -1);
+        QVERIFY(BRepUtils::hashCode(shapeBase) >= 0);
+        QCOMPARE(BRepUtils::hashCode(shapeBase), BRepUtils::hashCode(shapeCopy));
+    }
 }
 
 void Test::CafUtils_test()

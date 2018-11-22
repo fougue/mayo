@@ -1,3 +1,9 @@
+/****************************************************************************
+** Copyright (c) 2018, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
 #pragma once
 
 #include <QtCore/QObject>
@@ -9,6 +15,7 @@ class Test : public QObject {
     Q_OBJECT
 
 private slots:
+    void BRepUtils_test();
     void CafUtils_test();
     void Quantity_test();
     void Result_test();

@@ -24,6 +24,8 @@ struct BRepUtils {
     static void forEachSubFace(const TopoDS_Shape& shape, FUNC fn);
 
     static bool moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs);
+
+    static int hashCode(const TopoDS_Shape& shape);
 };
 
 
