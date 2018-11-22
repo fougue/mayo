@@ -191,11 +191,26 @@ UnitSystem::TranslateResult UnitSystem::translate(
     return {};
 }
 
-UnitSystem::TranslateResult UnitSystem::degrees(const QuantityAngle& angle)
+UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
+{
+    return { angle.value(), "rad", 1. };
+}
+
+UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 {
     constexpr double factor = 180. / 3.14159265358979323846;
     const double rad = angle.value();
     return { rad * factor, "°", factor };
+}
+
+UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
+{
+    return { length.value(), "mm", 1. };
+}
+
+UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity speed)
+{
+    return { speed.value(), "mm/s", 1. };
 }
 
 } // namespace Mayo
