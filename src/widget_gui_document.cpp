@@ -55,11 +55,7 @@ public:
 protected:
     void paintEvent(QPaintEvent*) override
     {
-        QPainter painter(this);
-        const QRect frame = this->frameGeometry();
-        const QRect surface(0, 0, frame.width(), frame.height());
-        const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
-        painter.fillRect(surface, panelColor);
+        WidgetGuiDocument::paintPanel(this);
     }
 };
 
@@ -125,6 +121,15 @@ GuiDocument *WidgetGuiDocument::guiDocument() const
 BaseV3dViewController *WidgetGuiDocument::controller() const
 {
     return m_controller;
+}
+
+void WidgetGuiDocument::paintPanel(QWidget* widget)
+{
+    QPainter painter(widget);
+    const QRect frame = widget->frameGeometry();
+    const QRect surface(0, 0, frame.width(), frame.height());
+    const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
+    painter.fillRect(surface, panelColor);
 }
 
 void WidgetGuiDocument::toggleWidgetClipPlanes()

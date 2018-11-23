@@ -23,6 +23,8 @@ public:
     GuiDocument* guiDocument() const;
     BaseV3dViewController* controller() const;
 
+    static void paintPanel(QWidget* widget);
+
 private:
     void toggleWidgetClipPlanes();
 
