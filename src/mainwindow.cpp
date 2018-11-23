@@ -139,19 +139,6 @@ struct OpenFileNames {
     }
 };
 
-static gp_Pnt pointUnderMouse(const GuiDocument* guiDoc, const QPoint& pos)
-{
-    const Handle_AIS_InteractiveContext& ctx = guiDoc->aisInteractiveContext();
-    constexpr bool updateV3dViewer = true;
-    ctx->MoveTo(pos.x(), pos.y(), guiDoc->v3dView(), !updateV3dViewer);
-    if (ctx->HasDetected() && ctx->MainSelector()->NbPicked() > 0) {
-        const gp_Pnt pnt = ctx->MainSelector()->PickedPoint(1);
-        ctx->ClearDetected(!updateV3dViewer);
-        return pnt;
-    }
-    return GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos.x(), pos.y());
-}
-
 static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
 {
     qtgui::QWidgetUtils::asyncMsgBoxCritical(
@@ -718,7 +705,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
                 ctrl, &BaseV3dViewController::mouseMoved,
                 [=](const QPoint& pos2d) {
         if (!ctrl->isPanning() && !ctrl->isRotating()) {
-            const gp_Pnt pos3d = Internal::pointUnderMouse(guiDoc, pos2d);
+            const gp_Pnt pos3d = guiDoc->toPoint3d(pos2d.x(), pos2d.y());
             m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
             m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
             m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));

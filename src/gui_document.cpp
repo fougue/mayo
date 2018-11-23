@@ -223,6 +223,31 @@ void GuiDocument::updateV3dViewer()
     m_aisContext->UpdateCurrentViewer();
 }
 
+bool GuiDocument::isDetectionEnabled() const
+{
+    return m_isDetectionEnabled;
+}
+
+void GuiDocument::setDetectionEnabled(bool on)
+{
+    m_isDetectionEnabled = on;
+}
+
+gp_Pnt GuiDocument::toPoint3d(double x, double y) const
+{
+    const bool redrawV3dViewer = this->isDetectionEnabled();
+    m_aisContext->MoveTo(x, y, m_v3dView, redrawV3dViewer);
+    if (m_aisContext->HasDetected()
+        && m_aisContext->MainSelector()->NbPicked() > 0)
+    {
+        const gp_Pnt pnt = m_aisContext->MainSelector()->PickedPoint(1);
+        if (!redrawV3dViewer)
+            m_aisContext->ClearDetected(false);
+        return pnt;
+    }
+    return GpxUtils::V3dView_to3dPosition(m_v3dView, x, y);
+}
+
 void GuiDocument::onItemAdded(DocumentItem *item)
 {
     GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
@@ -232,8 +257,10 @@ void GuiDocument::onItemAdded(DocumentItem *item)
     if (sameType<XdeDocumentItem>(item)) {
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_EDGE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_WIRE));
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_FACE));
         guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SHELL));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SOLID));
         guiItem.vecGpxEntityOwner =
                 guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
     }
