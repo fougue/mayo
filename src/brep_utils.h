@@ -47,7 +47,8 @@ template<typename FUNC>
 void BRepUtils::forEachSubShape(
         const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn)
 {
-    BRepUtils::forEachSubShape(TopExp_Explorer(shape, shapeType), std::move(fn));
+    TopExp_Explorer expl(shape, shapeType);
+    BRepUtils::forEachSubShape(expl, std::move(fn));
 }
 
 template<typename FUNC>
