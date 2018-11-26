@@ -248,6 +248,17 @@ gp_Pnt GuiDocument::toPoint3d(double x, double y) const
     return GpxUtils::V3dView_to3dPosition(m_v3dView, x, y);
 }
 
+std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() const
+{
+    std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
+    m_aisContext->InitSelected();
+    while (m_aisContext->MoreSelected()) {
+        vecOwner.push_back(m_aisContext->SelectedOwner());
+        m_aisContext->NextSelected();
+    }
+    return vecOwner;
+}
+
 void GuiDocument::onItemAdded(DocumentItem *item)
 {
     GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));

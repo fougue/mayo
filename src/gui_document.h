@@ -33,6 +33,7 @@ public:
 
     const Bnd_Box& gpxBoundingBox() const;
 
+    std::vector<Handle_SelectMgr_EntityOwner> selectedEntityOwners() const;
     void toggleItemSelected(const ApplicationItem& appItem);
     void clearItemSelection();
 
