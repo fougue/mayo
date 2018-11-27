@@ -35,6 +35,7 @@ public:
     static TranslateResult degrees(QuantityAngle angle);
     static TranslateResult millimeters(QuantityLength length);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
+    static TranslateResult seconds(QuantityTime duration);
 
     static std::string toSystemLocaleString(double value, const char* strUnit);
     static std::string toCLocaleString(double value, const char* strUnit);

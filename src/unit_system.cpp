@@ -213,4 +213,9 @@ UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity sp
     return { speed.value(), "mm/s", 1. };
 }
 
+UnitSystem::TranslateResult UnitSystem::seconds(QuantityTime duration)
+{
+    return { duration.value(), "s", 1. };
+}
+
 } // namespace Mayo
