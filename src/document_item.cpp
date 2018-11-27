@@ -24,12 +24,7 @@ DocumentItem::~DocumentItem()
 {
 }
 
-Document *DocumentItem::document()
-{
-    return m_document;
-}
-
-const Document *DocumentItem::document() const
+Document *DocumentItem::document() const
 {
     return m_document;
 }

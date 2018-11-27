@@ -19,8 +19,7 @@ public:
     DocumentItem();
     virtual ~DocumentItem();
 
-    Document* document();
-    const Document* document() const;
+    Document* document() const;
     void setDocument(Document* doc);
 
     PropertyQString propertyLabel;
