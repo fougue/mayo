@@ -106,7 +106,7 @@ public:
     void setQuantity(const QuantityType& qty);
 
 private:
-    QuantityType m_quantity;
+    QuantityType m_quantity = {};
 };
 
 using PropertyBool = GenericProperty<bool>;
