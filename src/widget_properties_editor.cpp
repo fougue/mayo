@@ -81,6 +81,29 @@ static QString yesNoString(bool on)
     return on ? WidgetPropertiesEditor::tr("Yes") : WidgetPropertiesEditor::tr("No");
 }
 
+static QString toStringDHMS(QuantityTime time)
+{
+    const double duration_s = UnitSystem::seconds(time);
+    const double days = duration_s / 86400.;
+    const int dayCount = std::floor(days);
+    const double hours = (days - dayCount) * 24;
+    const int hourCount = std::floor(hours);
+    const double mins = (hours - hourCount) * 60;
+    const int minCount = std::floor(mins);
+    const double secs = (mins - minCount) * 60;
+    const int secCount = std::floor(secs);
+    QString text;
+    if (dayCount > 0)
+        text += WidgetPropertiesEditor::tr("%1d ").arg(dayCount);
+    if (hourCount > 0)
+        text += WidgetPropertiesEditor::tr("%1h ").arg(hourCount);
+    if (minCount > 0)
+        text += WidgetPropertiesEditor::tr("%1min ").arg(minCount);
+    if (secCount > 0)
+        text += WidgetPropertiesEditor::tr("%1s").arg(secCount);
+    return text.trimmed();
+}
+
 static UnitSystem::TranslateResult unitTranslate(const BasePropertyQuantity* prop)
 {
     if (prop->quantityUnit() == Unit::Angle) {
@@ -141,8 +164,8 @@ static QString propertyValueText(const Property* prop)
     else if (propTypeName == BasePropertyQuantity::TypeName) {
         auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);
         if (qtyProp->quantityUnit() == Unit::Time) {
-            const QTime duration = QTime(0, 0).addSecs(qtyProp->quantityValue());
-            return options->locale().toString(duration);
+            auto propTime = static_cast<const PropertyTime*>(prop);
+            return toStringDHMS(propTime->quantity());
         }
         const UnitSystem::TranslateResult trRes = unitTranslate(qtyProp);
         return WidgetPropertiesEditor::tr("%1%2")
@@ -435,7 +458,9 @@ public:
             const QModelIndex& index) const override
     {
         const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
-        return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
+        if (index.data(Qt::SizeHintRole).isNull())
+            return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
+        return baseSize;
     }
 
 private:
