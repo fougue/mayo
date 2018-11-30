@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Save View to Image</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="QGroupBox" name="groupBox">

@@ -137,8 +137,7 @@ void QWidgetUtils::setHorizAndVertScrollValue(
 //! Executes 'dialog' asynchronously
 void QWidgetUtils::asyncDialogExec(QDialog *dialog)
 {
-    if (dialog != nullptr) {
-        dialog->setModal(true);
+    if (dialog) {
         QObject::connect(
                     dialog, &QDialog::finished,
                     dialog, &QObject::deleteLater,

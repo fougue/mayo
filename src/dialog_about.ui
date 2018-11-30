@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>About</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0" rowspan="4">
     <widget class="QLabel" name="label_Logo">
@@ -32,7 +35,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap>:/images/appicon_64.png</pixmap>
+      <pixmap resource="../mayo.qrc">:/images/appicon_64.png</pixmap>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -132,7 +135,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../mayo.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
