@@ -701,15 +701,18 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         guiDoc->updateV3dViewer();
     }
     BaseV3dViewController* ctrl = widget->controller();
-    QObject::connect(
-                ctrl, &BaseV3dViewController::mouseMoved,
-                [=](const QPoint& pos2d) {
-        if (!ctrl->isPanning() && !ctrl->isRotating()) {
-            const gp_Pnt pos3d = guiDoc->toPoint3d(pos2d.x(), pos2d.y());
-            m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
-            m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
-            m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
-        }
+    QObject::connect(ctrl, &BaseV3dViewController::mouseMoved, [=](const QPoint& pos2d) {
+        if (ctrl->isPanning() || ctrl->isRotating())
+            return;
+        auto selector = guiDoc->aisInteractiveContext()->MainSelector();
+        selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
+        const gp_Pnt pos3d =
+                selector->NbPicked() > 0 ?
+                    selector->PickedPoint(1) :
+                    GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
+        m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
+        m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
+        m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
     });
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();

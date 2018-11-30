@@ -84,12 +84,10 @@ WidgetShapeSelector::WidgetShapeSelector(
 
     m_widgetGuiDoc->installEventFilter(this);
     this->onShapeSelectionModeChanged(comboBox->currentIndex());
-    m_widgetGuiDoc->guiDocument()->setDetectionEnabled(true);
 }
 
 WidgetShapeSelector::~WidgetShapeSelector()
 {
-    m_widgetGuiDoc->guiDocument()->setDetectionEnabled(false);
     m_widgetGuiDoc->guiDocument()->aisInteractiveContext()->ClearSelected(true);
 }
 

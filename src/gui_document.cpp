@@ -223,31 +223,6 @@ void GuiDocument::updateV3dViewer()
     m_aisContext->UpdateCurrentViewer();
 }
 
-bool GuiDocument::isDetectionEnabled() const
-{
-    return m_isDetectionEnabled;
-}
-
-void GuiDocument::setDetectionEnabled(bool on)
-{
-    m_isDetectionEnabled = on;
-}
-
-gp_Pnt GuiDocument::toPoint3d(double x, double y) const
-{
-    const bool redrawV3dViewer = this->isDetectionEnabled();
-    m_aisContext->MoveTo(x, y, m_v3dView, redrawV3dViewer);
-    if (m_aisContext->HasDetected()
-        && m_aisContext->MainSelector()->NbPicked() > 0)
-    {
-        const gp_Pnt pnt = m_aisContext->MainSelector()->PickedPoint(1);
-        if (!redrawV3dViewer)
-            m_aisContext->ClearDetected(false);
-        return pnt;
-    }
-    return GpxUtils::V3dView_to3dPosition(m_v3dView, x, y);
-}
-
 std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() const
 {
     std::vector<Handle_SelectMgr_EntityOwner> vecOwner;

@@ -42,11 +42,6 @@ public:
 
     void updateV3dViewer();
 
-    bool isDetectionEnabled() const;
-    void setDetectionEnabled(bool on);
-
-    gp_Pnt toPoint3d(double x, double y) const;
-
 signals:
     void gpxBoundingBoxChanged(const Bnd_Box& bndBox);
 
@@ -72,7 +67,6 @@ private:
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
     std::vector<GuiDocumentItem> m_vecGuiDocumentItem;
     Bnd_Box m_gpxBoundingBox;
-    bool m_isDetectionEnabled = false;
 };
 
 } // namespace Mayo
