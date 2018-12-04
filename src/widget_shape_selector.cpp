@@ -82,6 +82,7 @@ WidgetShapeSelector::WidgetShapeSelector(
                 widgetGuiDoc->controller(), &BaseV3dViewController::mouseClicked,
                 this, &WidgetShapeSelector::onView3dMouseClicked);
 
+    widgetGuiDoc->guiDocument()->aisInteractiveContext()->RemoveFilters();
     m_widgetGuiDoc->installEventFilter(this);
     this->onShapeSelectionModeChanged(comboBox->currentIndex());
 }
