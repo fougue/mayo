@@ -22,6 +22,7 @@ HEADERS += \
     src/3rdparty/fougtools/qttools/gui/item_view_utils.h \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.h \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.h \
+    src/ais_text.h \
     src/application.h \
     src/application_item.h \
     src/application_item_selection_model.h \
@@ -79,6 +80,7 @@ SOURCES += \
     src/3rdparty/fougtools/qttools/gui/item_view_utils.cpp \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.cpp \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.cpp \
+    src/ais_text.cpp \
     src/application.cpp \
     src/application_item.cpp \
     src/application_item_selection_model.cpp \
