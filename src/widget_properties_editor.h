@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "property.h"
+#include "property_builtins.h"
+#include "unit.h"
 #include "span.h"
 
 #include <QtWidgets/QWidget>
@@ -37,6 +38,14 @@ public:
 
     double rowHeightFactor() const;
     void setRowHeightFactor(double v);
+
+    struct UnitTranslation {
+      Unit unit;
+      const char* strUnit; // UTF8
+      double factor;
+    };
+    bool overridePropertyUnitTranslation(
+            const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
 private:
     void createQtProperties(

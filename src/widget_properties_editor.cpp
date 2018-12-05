@@ -114,66 +114,72 @@ static UnitSystem::TranslateResult unitTranslate(const BasePropertyQuantity* pro
                 prop->quantityValue(), prop->quantityUnit());
 }
 
-static QString propertyValueText(const Property* prop)
+static QString propertyValueText(const PropertyBool* prop) {
+    return yesNoString(prop->value());
+}
+
+static QString propertyValueText(const PropertyInt* prop) {
+    return Options::instance()->locale().toString(prop->value());
+}
+
+static QString propertyValueText(const PropertyDouble* prop) {
+    return StringUtils::text(prop->value(), Options::instance()->defaultTextOptions());
+}
+
+static QString propertyValueText(const PropertyQByteArray* prop) {
+    return QString::fromUtf8(prop->value());
+}
+
+static QString propertyValueText(const PropertyQString* prop) {
+    return prop->value();
+}
+
+static QString propertyValueText(const PropertyQDateTime* prop) {
+    return Options::instance()->locale().toString(prop->value());
+}
+
+static QString propertyValueText(const PropertyOccColor* prop) {
+    return StringUtils::text(prop->value());
+}
+
+static QString propertyValueText(const PropertyOccPnt* prop) {
+    return StringUtils::text(prop->value(), Options::instance()->defaultTextOptions());
+}
+
+static QString propertyValueText(const PropertyOccTrsf* prop) {
+    return StringUtils::text(prop->value(), Options::instance()->defaultTextOptions());
+}
+
+static QString propertyValueText(const PropertyEnumeration* prop)
 {
-    auto options = Options::instance();
-    const QLocale locale = options->locale();
-    const char* propTypeName = prop != nullptr ? prop->dynTypeName() : "";
-    if (propTypeName == PropertyBool::TypeName) {
-        return yesNoString(static_cast<const PropertyBool*>(prop)->value());
+    const auto& enumMappings = prop->enumeration().mappings();
+    for (const Enumeration::Mapping& mapping : enumMappings) {
+        if (mapping.value == prop->value())
+            return mapping.string;
     }
-    else if (propTypeName == PropertyInt::TypeName) {
-        return locale.toString(static_cast<const PropertyInt*>(prop)->value());
+    return QString();
+}
+
+static QString propertyValueText(const BasePropertyQuantity* prop)
+{
+    if (prop->quantityUnit() == Unit::Time) {
+        auto propTime = static_cast<const PropertyTime*>(prop);
+        return toStringDHMS(propTime->quantity());
     }
-    else if (propTypeName == PropertyDouble::TypeName) {
-        return StringUtils::text(
-                    static_cast<const PropertyDouble*>(prop)->value(),
-                    options->defaultTextOptions());
-    }
-    else if (propTypeName == PropertyQByteArray::TypeName) {
-        return QString::fromUtf8(static_cast<const PropertyQByteArray*>(prop)->value());
-    }
-    else if (propTypeName == PropertyQString::TypeName) {
-        return static_cast<const PropertyQString*>(prop)->value();
-    }
-    else if (propTypeName == PropertyQDateTime::TypeName) {
-        return locale.toString(static_cast<const PropertyQDateTime*>(prop)->value());
-    }
-    else if (propTypeName == PropertyOccColor::TypeName) {
-        return StringUtils::text(static_cast<const PropertyOccColor*>(prop)->value());
-    }
-    else if (propTypeName == PropertyOccPnt::TypeName) {
-        return StringUtils::text(
-                    static_cast<const PropertyOccPnt*>(prop)->value(),
-                    options->defaultTextOptions());
-    }
-    else if (propTypeName == PropertyOccTrsf::TypeName) {
-        return StringUtils::text(
-                    static_cast<const PropertyOccTrsf*>(prop)->value(),
-                    options->defaultTextOptions());
-    }
-    else if (propTypeName == PropertyEnumeration::TypeName) {
-        auto propEnum = static_cast<const PropertyEnumeration*>(prop);
-        const auto& enumMappings = propEnum->enumeration().mappings();
-        for (const Enumeration::Mapping& mapping : enumMappings) {
-            if (mapping.value == propEnum->value())
-                return mapping.string;
-        }
-        return QString();
-    }
-    else if (propTypeName == BasePropertyQuantity::TypeName) {
-        auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);
-        if (qtyProp->quantityUnit() == Unit::Time) {
-            auto propTime = static_cast<const PropertyTime*>(prop);
-            return toStringDHMS(propTime->quantity());
-        }
-        const UnitSystem::TranslateResult trRes = unitTranslate(qtyProp);
-        return WidgetPropertiesEditor::tr("%1%2")
-                .arg(StringUtils::text(trRes.value, options->defaultTextOptions()))
-                .arg(trRes.strUnit);
-    }
-    return WidgetPropertiesEditor::tr("ERROR: no stringifier for property type '%1'")
-            .arg(propTypeName);
+    const UnitSystem::TranslateResult trRes = unitTranslate(prop);
+    return WidgetPropertiesEditor::tr("%1%2")
+            .arg(StringUtils::text(trRes.value, Options::instance()->defaultTextOptions()))
+            .arg(trRes.strUnit);
+}
+
+static QString propertyValueText(
+        const BasePropertyQuantity* prop,
+        const WidgetPropertiesEditor::UnitTranslation& unitTr)
+{
+    const double trValue = prop->quantityValue() * unitTr.factor;
+    return WidgetPropertiesEditor::tr("%1%2")
+            .arg(StringUtils::text(trValue, Options::instance()->defaultTextOptions()))
+            .arg(unitTr.strUnit);
 }
 
 static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent)
@@ -366,15 +372,23 @@ public:
     double rowHeightFactor() const { return m_rowHeightFactor; }
     void setRowHeightFactor(double v) { m_rowHeightFactor = v; }
 
+    using UnitTranslation = WidgetPropertiesEditor::UnitTranslation;
+    bool overridePropertyUnitTranslation(
+            const BasePropertyQuantity* prop, UnitTranslation unitTr)
+    {
+        if (!prop || prop->quantityUnit() != unitTr.unit)
+            return false;
+        m_mapPropUnitTr.emplace(prop, unitTr);
+        return true;
+    }
+
     void paint(QPainter* painter,
                const QStyleOptionViewItem& option,
                const QModelIndex& index) const override
     {
         if (index.column() == 1) {
             auto prop = qvariant_cast<Property*>(index.data());
-            if (prop != nullptr
-                    && prop->dynTypeName() == PropertyOccColor::TypeName)
-            {
+            if (prop && prop->dynTypeName() == PropertyOccColor::TypeName) {
                 auto propColor = static_cast<PropertyOccColor*>(prop);
                 painter->save();
 
@@ -412,7 +426,38 @@ public:
             return value.toString();
         else if (value.canConvert<Property*>()) {
             const auto prop = qvariant_cast<Property*>(value);
-            return propertyValueText(prop);
+            //return propertyValueText(prop);
+            const char* propTypeName = prop ? prop->dynTypeName() : "";
+            if (propTypeName == PropertyBool::TypeName)
+                return propertyValueText(static_cast<const PropertyBool*>(prop));
+            if (propTypeName == PropertyInt::TypeName)
+                return propertyValueText(static_cast<const PropertyInt*>(prop));
+            if (propTypeName == PropertyDouble::TypeName)
+                return propertyValueText(static_cast<const PropertyDouble*>(prop));
+            if (propTypeName == PropertyQByteArray::TypeName)
+                return propertyValueText(static_cast<const PropertyQByteArray*>(prop));
+            if (propTypeName == PropertyQString::TypeName)
+                return propertyValueText(static_cast<const PropertyQString*>(prop));
+            if (propTypeName == PropertyQDateTime::TypeName)
+                return propertyValueText(static_cast<const PropertyQDateTime*>(prop));
+            if (propTypeName == PropertyOccColor::TypeName)
+                return propertyValueText(static_cast<const PropertyOccColor*>(prop));
+            if (propTypeName == PropertyOccPnt::TypeName)
+                return propertyValueText(static_cast<const PropertyOccPnt*>(prop));
+            if (propTypeName == PropertyOccTrsf::TypeName)
+                return propertyValueText(static_cast<const PropertyOccTrsf*>(prop));
+            if (propTypeName == PropertyEnumeration::TypeName)
+                return propertyValueText(static_cast<const PropertyEnumeration*>(prop));
+            if (propTypeName == BasePropertyQuantity::TypeName) {
+                auto qtyProp = static_cast<const BasePropertyQuantity*>(prop);
+                auto itFound = m_mapPropUnitTr.find(qtyProp);
+                if (itFound != m_mapPropUnitTr.cend())
+                    return propertyValueText(qtyProp, itFound->second);
+                else
+                    return propertyValueText(qtyProp);
+            }
+            return WidgetPropertiesEditor::tr("ERROR no stringifier for property type '%1'")
+                    .arg(propTypeName);
         }
         return QString();
     }
@@ -425,11 +470,9 @@ public:
         if (index.column() == 0)
             return nullptr;
         auto prop = qvariant_cast<Property*>(index.data());
-        if (prop == nullptr || prop->isUserReadOnly())
+        if (!prop || prop->isUserReadOnly())
             return nullptr;
         const char* propTypeName = prop->dynTypeName();
-        if (propTypeName == BasePropertyQuantity::TypeName)
-            return createPropertyEditor(static_cast<BasePropertyQuantity*>(prop), parent);
         if (propTypeName == PropertyBool::TypeName)
             return createPropertyEditor(static_cast<PropertyBool*>(prop), parent);
         if (propTypeName == PropertyInt::TypeName)
@@ -444,6 +487,8 @@ public:
             return createPropertyEditor(static_cast<PropertyOccPnt*>(prop), parent);
         if (propTypeName == PropertyEnumeration::TypeName)
             return createPropertyEditor(static_cast<PropertyEnumeration*>(prop), parent);
+        if (propTypeName == BasePropertyQuantity::TypeName)
+            return createPropertyEditor(static_cast<BasePropertyQuantity*>(prop), parent);
         return nullptr;
     }
 
@@ -465,6 +510,7 @@ public:
 
 private:
     double m_rowHeightFactor = 1.;
+    std::unordered_map<const BasePropertyQuantity*, UnitTranslation> m_mapPropUnitTr;
 };
 
 } // namespace Internal
@@ -573,6 +619,12 @@ void WidgetPropertiesEditor::createQtProperties(
 {
     for (Property* prop : properties)
         this->createQtProperty(prop, parentItem);
+}
+
+bool WidgetPropertiesEditor::overridePropertyUnitTranslation(
+        const BasePropertyQuantity* prop, UnitTranslation unitTr)
+{
+    return m_itemDelegate->overridePropertyUnitTranslation(prop, unitTr);
 }
 
 void WidgetPropertiesEditor::createQtProperty(
