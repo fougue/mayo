@@ -56,7 +56,7 @@ using QuantityVelocity = Quantity<Unit::Velocity>;
 
 template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs);
 
-template<Unit U> constexpr Quantity<U> operator*(double lhs, const Quantity<U> rhs);
+template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs);
 
 constexpr QuantityArea operator*(QuantityLength lhs, QuantityLength rhs);
 constexpr QuantityVolume operator*(QuantityLength lhs, QuantityArea rhs);

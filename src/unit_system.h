@@ -26,7 +26,7 @@ public:
     };
 
     template<Unit UNIT>
-    static TranslateResult translate(Schema schema, const Quantity<UNIT>& qty) {
+    static TranslateResult translate(Schema schema, Quantity<UNIT> qty) {
         return UnitSystem::translate(schema, qty.value(), UNIT);
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);

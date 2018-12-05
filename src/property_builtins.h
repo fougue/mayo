@@ -102,8 +102,8 @@ public:
     double quantityValue() const override;
     void setQuantityValue(double v) override;
 
-    const QuantityType& quantity() const;
-    void setQuantity(const QuantityType& qty);
+    QuantityType quantity() const;
+    void setQuantity(QuantityType qty);
 
 private:
     QuantityType m_quantity = {};
@@ -232,11 +232,11 @@ void GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 }
 
 template<Unit UNIT>
-const Quantity<UNIT>& GenericPropertyQuantity<UNIT>::quantity() const
+Quantity<UNIT> GenericPropertyQuantity<UNIT>::quantity() const
 { return m_quantity; }
 
 template<Unit UNIT>
-void GenericPropertyQuantity<UNIT>::setQuantity(const Quantity<UNIT>& qty)
+void GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
 {
     m_quantity = qty;
     this->notifyChanged();

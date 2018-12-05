@@ -82,7 +82,7 @@ public:
     void setUnitSystemDecimals(int count);
 
     template<Unit UNIT>
-    static UnitSystem::TranslateResult unitSystemTranslate(const Quantity<UNIT>& qty) {
+    static UnitSystem::TranslateResult unitSystemTranslate(Quantity<UNIT> qty) {
         return UnitSystem::translate(Options::instance()->unitSystemSchema(), qty);
     }
     UnitSystem::TranslateResult unitSystemTranslate(double value, Unit unit);
