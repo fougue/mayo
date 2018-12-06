@@ -24,8 +24,7 @@ namespace Mayo {
 GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     : m_xdeDocItem(item),
       propertyTransparency(this, tr("Transparency"), 0, 100, 5),
-      propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
-      propertyShowFaceBoundary(this, tr("Show face boundary"))
+      propertyDisplayMode(this, tr("Display mode"), &enumDisplayMode())
 {
     // XCAFPrs_AISObject requires a root label containing a TopoDS_Shape
     // If the XDE document as many free top-level shapes then there is a problem
@@ -51,11 +50,9 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
             Quantity_Color color;
             gpx->Color(color);
             this->propertyColor.setValue(color);
-            this->propertyDisplayMode.setValue(gpx->DisplayMode());
+            this->propertyDisplayMode.setValue(DisplayMode_ShadedWithFaceBoundary);
             this->propertyTransparency.setValue(
                         static_cast<int>(gpx->Transparency() * 100));
-            this->propertyShowFaceBoundary.setValue(
-                        gpx->Attributes()->FaceBoundaryDraw());
             m_vecXdeGpx.push_back(gpx);
         }
     }
@@ -112,9 +109,11 @@ void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
         this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyColor) {
+        auto dispMode = static_cast<DisplayMode>(this->propertyDisplayMode.value());
+        const bool showFaceBounds = dispMode == DisplayMode_ShadedWithFaceBoundary;
         for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx) {
             obj->SetColor(this->propertyColor.value());
-            if (this->propertyShowFaceBoundary.value())
+            if (showFaceBounds)
                 obj->Redisplay(true); // All modes
         }
         this->context()->UpdateCurrentViewer();
@@ -126,26 +125,30 @@ void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
         this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyDisplayMode) {
-        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-            this->context()->SetDisplayMode(obj, this->propertyDisplayMode.value(), false);
-        this->context()->UpdateCurrentViewer();
-    }
-    else if (prop == &this->propertyShowFaceBoundary) {
+        auto dispMode = static_cast<DisplayMode>(this->propertyDisplayMode.value());
+        const AIS_DisplayMode aisDispMode =
+                dispMode == DisplayMode_Wireframe ? AIS_WireFrame : AIS_Shaded;
+        const bool showFaceBounds = dispMode == DisplayMode_ShadedWithFaceBoundary;
         for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx) {
-            obj->Attributes()->SetFaceBoundaryDraw(this->propertyShowFaceBoundary.value());
-            obj->Redisplay(true); // All modes
+            if (obj->DisplayMode() != aisDispMode)
+                this->context()->SetDisplayMode(obj, aisDispMode, false);
+            if (obj->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
+                obj->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
+                obj->Redisplay(true);
+            }
         }
         this->context()->UpdateCurrentViewer();
     }
     GpxDocumentItem::onPropertyChanged(prop);
 }
 
-const Enumeration& GpxXdeDocumentItem::enum_DisplayMode()
+const Enumeration& GpxXdeDocumentItem::enumDisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
-        enumeration.map(AIS_Shaded, tr("Shaded"));
-        enumeration.map(AIS_WireFrame, tr("Wireframe"));
+        enumeration.map(DisplayMode_Wireframe, tr("Wireframe"));
+        enumeration.map(DisplayMode_Shaded, tr("Shaded"));
+        enumeration.map(DisplayMode_ShadedWithFaceBoundary, tr("Shaded with face boundaries"));
     }
     return enumeration;
 }

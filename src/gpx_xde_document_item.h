@@ -27,13 +27,18 @@ public:
 
     PropertyInt propertyTransparency;
     PropertyEnumeration propertyDisplayMode;
-    PropertyBool propertyShowFaceBoundary;
+
+    enum DisplayMode {
+        DisplayMode_Wireframe,
+        DisplayMode_Shaded,
+        DisplayMode_ShadedWithFaceBoundary
+    };
+    static const Enumeration& enumDisplayMode();
 
 protected:
     void onPropertyChanged(Property* prop) override;
 
 private:
-    static const Enumeration& enum_DisplayMode();
     XdeDocumentItem* m_xdeDocItem = nullptr;
     std::vector<Handle_XCAFPrs_AISObject> m_vecXdeGpx;
 };
