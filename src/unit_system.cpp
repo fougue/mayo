@@ -198,9 +198,9 @@ UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
 
 UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 {
-    constexpr double factor = 180. / 3.14159265358979323846;
+    constexpr double factor = Quantity_Degree.value();
     const double rad = angle.value();
-    return { rad * factor, "°", factor };
+    return { rad / factor, "°", factor };
 }
 
 UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
