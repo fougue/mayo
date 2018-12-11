@@ -29,8 +29,6 @@
 #include <V3d_TypeOfOrientation.hxx>
 #include <StdSelect_BRepOwner.hxx>
 
-#include <cassert>
-
 namespace Mayo {
 
 namespace Internal {
@@ -105,7 +103,7 @@ GuiDocument::GuiDocument(Document *doc)
       m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
       m_aisOriginTrihedron(Internal::createOriginTrihedron())
 {
-    assert(doc != nullptr);
+    Q_ASSERT(doc != nullptr);
 
     //m_v3dView->SetShadingModel(V3d_PHONG);
     // 3D view - Enable anti-aliasing with MSAA
@@ -147,7 +145,7 @@ const Handle_AIS_InteractiveContext &GuiDocument::aisInteractiveContext() const
 GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem *item) const
 {
     const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
-    return guiDocItem != nullptr ? guiDocItem->gpxDocItem : nullptr;
+    return guiDocItem ? guiDocItem->gpxDocItem.get() : nullptr;
 }
 
 const Bnd_Box &GuiDocument::gpxBoundingBox() const
@@ -264,8 +262,6 @@ void GuiDocument::onItemErased(const DocumentItem *item)
                 [=](const GuiDocumentItem& guiItem) { return guiItem.docItem == item; });
     if (itFound != m_vecGuiDocumentItem.end()) {
         // Delete gpx item
-        GpxDocumentItem* gpxDocItem = itFound->gpxDocItem;
-        delete gpxDocItem;
         m_vecGuiDocumentItem.erase(itFound);
         this->updateV3dViewer();
 

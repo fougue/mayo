@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include <gpx_document_item.h>
+
 #include <QtCore/QObject>
 #include <AIS_InteractiveContext.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
+#include <memory>
 #include <vector>
 class TopoDS_Face;
 
@@ -19,7 +22,6 @@ namespace Mayo {
 class ApplicationItem;
 class Document;
 class DocumentItem;
-class GpxDocumentItem;
 
 class GuiDocument : public QObject {
     Q_OBJECT
@@ -54,7 +56,7 @@ private:
         GuiDocumentItem() = default;
         GuiDocumentItem(DocumentItem* item, GpxDocumentItem* gpx);
         DocumentItem* docItem;
-        GpxDocumentItem* gpxDocItem;
+        std::unique_ptr<GpxDocumentItem> gpxDocItem;
         ArrayGpxEntityOwner vecGpxEntityOwner;
         Handle_SelectMgr_EntityOwner findBrepOwner(const TopoDS_Face& face) const;
     };
