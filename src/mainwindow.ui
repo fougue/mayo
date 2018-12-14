@@ -579,8 +579,8 @@
     <property name="title">
      <string>&amp;Window</string>
     </property>
-    <addaction name="actionFullscreenOrNormal"/>
-    <addaction name="actionShowHideLeftSidebar"/>
+    <addaction name="actionToggleFullscreen"/>
+    <addaction name="actionToggleLeftSidebar"/>
     <addaction name="separator"/>
     <addaction name="actionPreviousDoc"/>
     <addaction name="actionNextDoc"/>
@@ -702,23 +702,32 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="actionFullscreenOrNormal">
+  <action name="actionToggleFullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Switch Fullscreen/Normal</string>
+    <string>Fullscreen</string>
    </property>
    <property name="toolTip">
-    <string>Fullscreen/Normal</string>
+    <string>Switch Fullscreen/Normal</string>
    </property>
    <property name="shortcut">
     <string>F11</string>
    </property>
   </action>
-  <action name="actionShowHideLeftSidebar">
+  <action name="actionToggleLeftSidebar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>:/images/themes/classic/left-sidebar_32.png</normaloff>:/images/themes/classic/left-sidebar_32.png</iconset>
    </property>
    <property name="text">
+    <string>Show Left Sidebar</string>
+   </property>
+   <property name="toolTip">
     <string>Show/Hide Left Sidebar</string>
    </property>
    <property name="shortcut">
@@ -731,8 +740,14 @@
    </property>
   </action>
   <action name="actionToggleOriginTrihedron">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Toggle Origin Trihedron</string>
+    <string>Show Origin Trihedron</string>
+   </property>
+   <property name="toolTip">
+    <string>Show/Hide Origin Trihedron</string>
    </property>
   </action>
   <action name="actionZoomIn">

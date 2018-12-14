@@ -11,20 +11,20 @@
 
 namespace Mayo {
 
-class Application;
-class Document;
+class GuiApplication;
+class GuiDocument;
 
-class DocumentListModel : public QStringListModel {
+class GuiDocumentListModel : public QStringListModel {
 public:
-    DocumentListModel(Application* app);
+    GuiDocumentListModel(GuiApplication* app);
 
     QVariant data(const QModelIndex& index, int role) const override;
 
 private:
-    void appendDocument(const Document* doc);
-    void removeDocument(const Document* doc);
+    void appendGuiDocument(const GuiDocument* guiDoc);
+    void removeGuiDocument(const GuiDocument* guiDoc);
 
-    std::vector<const Document*> m_docs;
+    std::vector<const GuiDocument*> m_vecGuiDocument;
 };
 
 } // namespace Mayo

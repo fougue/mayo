@@ -18,7 +18,7 @@
 #include "dialog_task_manager.h"
 #include "document.h"
 #include "document_item.h"
-#include "document_list_model.h"
+#include "gui_document_list_model.h"
 #include "gpx_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
@@ -194,8 +194,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->actionNextDoc->setIcon(mayoTheme()->icon(Theme::Icon::Next));
     m_ui->actionCloseDoc->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
     m_ui->actionSaveImageView->setIcon(mayoTheme()->icon(Theme::Icon::Camera));
-    m_ui->actionShowHideLeftSidebar->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
+    m_ui->actionToggleLeftSidebar->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
     m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
+
+    m_ui->actionToggleLeftSidebar->setChecked(m_ui->widget_Left->isVisible());
+    m_ui->actionToggleFullscreen->setChecked(this->isFullScreen());
+    m_ui->actionToggleOriginTrihedron->setChecked(false);
 
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
@@ -205,37 +209,7 @@ MainWindow::MainWindow(QWidget *parent)
                 QString("color:%1;").arg(qApp->palette().color(QPalette::Link).name()));
     m_ui->label_MainHome->setText(labelMainHomeText);
 
-    // Opened documents GUI
-    {
-        auto listViewBtns =
-                new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
-        listViewBtns->addButton(
-                    1, mayoTheme()->icon(Theme::Icon::Cross), m_ui->actionCloseDoc->toolTip());
-        listViewBtns->setButtonDetection(1, -1, QVariant());
-        listViewBtns->setButtonDisplayColumn(1, 0);
-        listViewBtns->setButtonDisplayModes(
-                    1, qtgui::ItemViewButtons::DisplayOnDetection);
-        listViewBtns->setButtonItemSide(
-                    1, qtgui::ItemViewButtons::ItemRightSide);
-        const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
-        listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
-        listViewBtns->installDefaultItemDelegate();
-        QObject::connect(
-                    listViewBtns, &qtgui::ItemViewButtons::buttonClicked,
-                    [=](int btnId, const QModelIndex& index) {
-            if (btnId == 1)
-                this->closeDocument(index.row());
-        });
-    }
-
-    new DialogTaskManager(this);
-
-    auto docModel = new DocumentListModel(Application::instance());
-    m_ui->combo_GuiDocuments->setModel(docModel);
-    m_ui->listView_OpenedDocuments->setModel(docModel);
-
-    const auto sigComboIndexChanged =
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
+    auto sigComboIndexChanged = QOverload<int>::of(&QComboBox::currentIndexChanged);
     // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
@@ -269,7 +243,7 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::createMenuRecentFiles);
     // "Display" actions
     QObject::connect(
-                m_ui->actionToggleOriginTrihedron, &QAction::triggered,
+                m_ui->actionToggleOriginTrihedron, &QAction::toggled,
                 this, &MainWindow::toggleCurrentDocOriginTrihedron);
     QObject::connect(
                 m_ui->actionZoomIn, &QAction::triggered,
@@ -296,10 +270,10 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::aboutMayo);
     // "Window" actions and navigation in documents
     QObject::connect(
-                m_ui->actionFullscreenOrNormal, &QAction::triggered,
+                m_ui->actionToggleFullscreen, &QAction::toggled,
                 this, &MainWindow::toggleFullscreen);
     QObject::connect(
-                m_ui->actionShowHideLeftSidebar, &QAction::triggered,
+                m_ui->actionToggleLeftSidebar, &QAction::toggled,
                 this, &MainWindow::toggleLeftSidebar);
     QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, [=]{
         this->setCurrentDocumentIndex(this->currentDocumentIndex() - 1);
@@ -341,15 +315,45 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::operationFinished,
                 this, &MainWindow::onOperationFinished);
 
+    // Creation of annex objects
+    {
+        // Opened documents GUI
+        auto listViewBtns =
+                new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+        listViewBtns->addButton(
+                    1, mayoTheme()->icon(Theme::Icon::Cross), m_ui->actionCloseDoc->toolTip());
+        listViewBtns->setButtonDetection(1, -1, QVariant());
+        listViewBtns->setButtonDisplayColumn(1, 0);
+        listViewBtns->setButtonDisplayModes(
+                    1, qtgui::ItemViewButtons::DisplayOnDetection);
+        listViewBtns->setButtonItemSide(
+                    1, qtgui::ItemViewButtons::ItemRightSide);
+        const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
+        listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
+        listViewBtns->installDefaultItemDelegate();
+        QObject::connect(
+                    listViewBtns, &qtgui::ItemViewButtons::buttonClicked,
+                    [=](int btnId, const QModelIndex& index) {
+            if (btnId == 1)
+                this->closeDocument(index.row());
+        });
+    }
+
+    new DialogTaskManager(this);
+
+    // BEWARE MainWindow::onGuiDocumentAdded() must be called before
+    // MainWindow::onCurrentDocumentIndexChanged()
+    auto guiDocModel = new GuiDocumentListModel(GuiApplication::instance());
+    m_ui->combo_GuiDocuments->setModel(guiDocModel);
+    m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+
+    // Finialize setup
     this->setAcceptDrops(true);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     this->updateControlsActivation();
-    this->updateActionText(m_ui->actionFullscreenOrNormal);
-    this->updateActionText(m_ui->actionShowHideLeftSidebar);
-    this->updateActionText(m_ui->actionToggleOriginTrihedron);
     m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
                 Options::instance()->referenceItemTextTemplate());
     m_ui->widget_MouseCoords->hide();
@@ -542,10 +546,9 @@ void MainWindow::quitApp()
 void MainWindow::toggleCurrentDocOriginTrihedron()
 {
     WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
-    if (widget != nullptr) {
+    if (widget) {
         widget->guiDocument()->toggleOriginTrihedronVisibility();
         widget->guiDocument()->updateV3dViewer();
-        this->updateActionText(m_ui->actionToggleOriginTrihedron);
     }
 }
 
@@ -601,14 +604,12 @@ void MainWindow::toggleFullscreen()
         m_previousWindowState = this->windowState();
         this->showFullScreen();
     }
-    this->updateActionText(m_ui->actionFullscreenOrNormal);
 }
 
 void MainWindow::toggleLeftSidebar()
 {
-    const bool isLeftSideBarVisible = m_ui->widget_Left->isVisible();
-    m_ui->widget_Left->setVisible(!isLeftSideBarVisible);
-    this->updateActionText(m_ui->actionShowHideLeftSidebar);
+    const bool isVisible = m_ui->widget_Left->isVisible();
+    m_ui->widget_Left->setVisible(!isVisible);
 }
 
 void MainWindow::aboutMayo()
@@ -700,6 +701,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->updateV3dViewer();
     }
+
     BaseV3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &BaseV3dViewController::mouseMoved, [=](const QPoint& pos2d) {
         if (ctrl->isPanning() || ctrl->isRotating())
@@ -714,9 +716,9 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
     });
+
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
-    this->updateActionText(m_ui->actionToggleOriginTrihedron);
     this->setCurrentDocumentIndex(Application::instance()->documentCount() - 1);
 }
 
@@ -754,7 +756,6 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     view->setCurrentIndex(view->model()->index(idx, 0));
 
     this->updateControlsActivation();
-    this->updateActionText(m_ui->actionToggleOriginTrihedron);
 
     auto funcFilepathQuoted = [](const QString& filepath) {
         for (QChar c : filepath) {
@@ -777,7 +778,16 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     m_ui->actionCloseDoc->setText(textActionClose);
     m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
     m_ui->widget_FileSystem->setLocation(docFilePath);
-}
+
+    if (this->currentWidgetGuiDocument() != nullptr) {
+        QSignalBlocker sigBlock(m_ui->actionToggleOriginTrihedron); Q_UNUSED(sigBlock);
+        const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
+        m_ui->actionToggleOriginTrihedron->setChecked(guiDoc->isOriginTrihedronVisible());
+    }
+    else {
+        m_ui->actionToggleOriginTrihedron->setChecked(false);
+    }
+ }
 
 void MainWindow::closeCurrentDocument()
 {
@@ -872,7 +882,7 @@ void MainWindow::updateControlsActivation()
     m_ui->actionNextDoc->setEnabled(
                 !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
     m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
-    m_ui->actionShowHideLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
+    m_ui->actionToggleLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
 
     Span<const ApplicationItem> spanSelectedAppItem =
@@ -883,29 +893,6 @@ void MainWindow::updateControlsActivation()
     m_ui->actionInspectXDE->setEnabled(
                 spanSelectedAppItem.size() == 1
                 && sameType<XdeDocumentItem>(firstAppItem.documentItem()));
-}
-
-void MainWindow::updateActionText(QAction* action)
-{
-    QString text;
-    if (action == m_ui->actionFullscreenOrNormal) {
-        text = this->isFullScreen() ? tr("Normal") : tr("Fullscreen");
-    }
-    else if (action == m_ui->actionShowHideLeftSidebar) {
-        text = m_ui->widget_Left->isVisible() ?
-                    tr("Hide Left Sidebar") :
-                    tr("Show Left Sidebar");
-    }
-    else if (action == m_ui->actionToggleOriginTrihedron) {
-        const WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
-        if (widget != nullptr) {
-            text = widget->guiDocument()->isOriginTrihedronVisible() ?
-                        tr("Hide Origin Trihedron") :
-                        tr("Show Origin Trihedron");
-        }
-    }
-    if (!text.isEmpty())
-        action->setText(text);
 }
 
 int MainWindow::currentDocumentIndex() const

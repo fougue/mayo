@@ -20,7 +20,9 @@ class GuiApplication : public QObject {
     Q_OBJECT
 public:
     static GuiApplication* instance();
+    ~GuiApplication();
 
+    std::vector<GuiDocument*> guiDocuments() const;
     GuiDocument* findGuiDocument(const Document* doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;

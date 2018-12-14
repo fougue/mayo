@@ -80,7 +80,6 @@ private:
             const QString& filepath);
 
     void updateControlsActivation();
-    void updateActionText(QAction* action);
 
     int currentDocumentIndex() const;
     void setCurrentDocumentIndex(int idx);

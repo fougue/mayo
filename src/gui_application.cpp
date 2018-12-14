@@ -42,6 +42,14 @@ GuiApplication *GuiApplication::instance()
     return &app;
 }
 
+GuiApplication::~GuiApplication()
+{
+    for (Doc_GuiDoc& pair : m_vecDocGuiDoc) {
+        delete pair.guiDoc;
+        pair.guiDoc = nullptr;
+    }
+}
+
 GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
 {
     for (const Doc_GuiDoc& pair : m_vecDocGuiDoc) {
@@ -49,6 +57,15 @@ GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
             return pair.guiDoc;
     }
     return nullptr;
+}
+
+std::vector<GuiDocument*> GuiApplication::guiDocuments() const
+{
+    std::vector<GuiDocument*> vecGuiDoc;
+    vecGuiDoc.reserve(m_vecDocGuiDoc.size());
+    for (const Doc_GuiDoc& pair : m_vecDocGuiDoc)
+        vecGuiDoc.push_back(pair.guiDoc);
+    return vecGuiDoc;
 }
 
 ApplicationItemSelectionModel* GuiApplication::selectionModel() const

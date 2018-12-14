@@ -38,7 +38,6 @@ HEADERS += \
     src/dialog_task_manager.h \
     src/document.h \
     src/document_item.h \
-    src/document_list_model.h \
     src/gpx_document_item.h \
     src/gpx_mesh_item.h \
     src/gpx_utils.h \
@@ -73,6 +72,7 @@ HEADERS += \
     src/widget_shape_selector.h \
     src/xde_document_item.h \
     src/xde_shape_property_owner.h \
+    src/gui_document_list_model.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -96,7 +96,6 @@ SOURCES += \
     src/dialog_task_manager.cpp \
     src/document.cpp \
     src/document_item.cpp \
-    src/document_list_model.cpp \
     src/gpx_document_item.cpp \
     src/gpx_mesh_item.cpp \
     src/gpx_utils.cpp \
@@ -130,6 +129,7 @@ SOURCES += \
     src/widget_shape_selector.cpp \
     src/xde_document_item.cpp \
     src/xde_shape_property_owner.cpp \
+    src/gui_document_list_model.cpp
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
