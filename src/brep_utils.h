@@ -9,6 +9,7 @@
 #include <TopoDS_Face.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
+#include <string>
 
 namespace Mayo {
 
@@ -26,6 +27,9 @@ struct BRepUtils {
     static bool moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs);
 
     static int hashCode(const TopoDS_Shape& shape);
+
+    static std::string shapeToString(const TopoDS_Shape& shape);
+    static TopoDS_Shape shapeFromString(const std::string& str);
 };
 
 
