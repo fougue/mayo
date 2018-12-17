@@ -87,6 +87,8 @@ constexpr QuantityLength Quantity_Thou(0.0254);
 constexpr QuantityLength Quantity_Yard(914.4);
 constexpr QuantityLength Quantity_Mile(1609344.);
 
+constexpr QuantityVelocity Quantity_MillimeterPerSecond(1.);
+
 constexpr QuantityVolume Quantity_Liter(1e6);
 
 constexpr QuantityMass Quantity_Microgram(1e-9);
