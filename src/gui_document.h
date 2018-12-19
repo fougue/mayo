@@ -51,6 +51,8 @@ private:
     void onItemAdded(DocumentItem* item);
     void onItemErased(const DocumentItem* item);
 
+    void mapGpxItem(DocumentItem* item);
+
     using ArrayGpxEntityOwner = std::vector<Handle_SelectMgr_EntityOwner>;
     struct GuiDocumentItem {
         GuiDocumentItem() = default;

@@ -123,6 +123,9 @@ GuiDocument::GuiDocument(Document *doc)
                 0.075,
                 V3d_ZBUFFER);
 
+    for (DocumentItem* docItem : doc->rootItems())
+        this->mapGpxItem(docItem);
+
     QObject::connect(doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
     QObject::connect(doc, &Document::itemErased, this, &GuiDocument::onItemErased);
 }
@@ -232,25 +235,9 @@ std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() co
     return vecOwner;
 }
 
-void GuiDocument::onItemAdded(DocumentItem *item)
+void GuiDocument::onItemAdded(DocumentItem* item)
 {
-    GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
-    guiItem.gpxDocItem->setContext(m_aisContext);
-    guiItem.gpxDocItem->setVisible(true);
-    m_aisContext->UpdateCurrentViewer();
-    if (sameType<XdeDocumentItem>(item)) {
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_EDGE));
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_WIRE));
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_FACE));
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SHELL));
-        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SOLID));
-        guiItem.vecGpxEntityOwner =
-                guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
-    }
-    GpxUtils::V3dView_fitAll(m_v3dView);
-    BndUtils::add(&m_gpxBoundingBox, guiItem.gpxDocItem->boundingBox());
-    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
+    this->mapGpxItem(item);
     emit gpxBoundingBoxChanged(m_gpxBoundingBox);
 }
 
@@ -273,6 +260,27 @@ void GuiDocument::onItemErased(const DocumentItem *item)
         }
         emit gpxBoundingBoxChanged(m_gpxBoundingBox);
     }
+}
+
+void GuiDocument::mapGpxItem(DocumentItem *item)
+{
+    GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
+    guiItem.gpxDocItem->setContext(m_aisContext);
+    guiItem.gpxDocItem->setVisible(true);
+    m_aisContext->UpdateCurrentViewer();
+    if (sameType<XdeDocumentItem>(item)) {
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_VERTEX));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_EDGE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_WIRE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_FACE));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SHELL));
+        guiItem.gpxDocItem->activateSelection(AIS_Shape::SelectionMode(TopAbs_SOLID));
+        guiItem.vecGpxEntityOwner =
+                guiItem.gpxDocItem->entityOwners(AIS_Shape::SelectionMode(TopAbs_FACE));
+    }
+    GpxUtils::V3dView_fitAll(m_v3dView);
+    BndUtils::add(&m_gpxBoundingBox, guiItem.gpxDocItem->boundingBox());
+    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
 }
 
 const GuiDocument::GuiDocumentItem*

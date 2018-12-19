@@ -447,6 +447,7 @@ void Application::addDocument(Document *doc)
                     doc, &Document::itemPropertyChanged,
                     this, &Application::documentItemPropertyChanged);
         m_documents.emplace_back(doc);
+        doc->setParent(this);
         emit documentAdded(doc);
     }
 }
