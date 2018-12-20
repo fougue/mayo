@@ -454,6 +454,7 @@ void MainWindow::runImportTask(
         Document* doc, Application::PartFormat format, const QString& filepath)
 {
     auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
+    task->setTaskTitle(QFileInfo(filepath).fileName());
     task->run([=]{
         QTime chrono;
         chrono.start();
@@ -480,6 +481,7 @@ void MainWindow::runExportTask(
         const QString& filepath)
 {
     auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
+    task->setTaskTitle(QFileInfo(filepath).fileName());
     task->run([=]{
         QTime chrono;
         chrono.start();

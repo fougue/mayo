@@ -156,7 +156,7 @@ void DialogTaskManager::onTaskStarted(quint64 taskId, const QString& title)
     ++m_taskCount;
 
     if (!title.isEmpty())
-        this->onTaskProgressStep(taskId, title);
+        this->onTaskProgressStep(taskId, QString());
 }
 
 void DialogTaskManager::onTaskEnded(quint64 taskId)
@@ -194,9 +194,17 @@ void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
 
 void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
 {
+    const QString taskTitle = qttask::Manager::globalInstance()->taskTitle(taskId);
     Internal::TaskWidget* widget = this->taskWidget(taskId);
-    if (widget != nullptr)
-        widget->m_label->setText(name);
+    if (widget) {
+        QString text = taskTitle;
+        if (!name.isEmpty()) {
+            if (!text.isEmpty())
+                text += " / ";
+            text += name;
+        }
+        widget->m_label->setText(text);
+    }
 }
 
 void DialogTaskManager::interruptTask()

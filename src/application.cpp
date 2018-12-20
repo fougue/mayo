@@ -483,7 +483,6 @@ Application::IoResult Application::importInDocument(
         const QString &filepath,
         qttask::Progress* progress)
 {
-    progress->setStep(QFileInfo(filepath).fileName());
     switch (format) {
     case PartFormat::Iges: return this->importIges(doc, filepath, progress);
     case PartFormat::Step: return this->importStep(doc, filepath, progress);
@@ -501,7 +500,6 @@ Application::IoResult Application::exportDocumentItems(
         const QString &filepath,
         qttask::Progress *progress)
 {
-    progress->setStep(QFileInfo(filepath).fileName());
     switch (format) {
     case PartFormat::Iges:
         return this->exportIges(docItems, options, filepath, progress);
