@@ -799,6 +799,7 @@ void MainWindow::closeDocument(WidgetGuiDocument *widget)
     if (widget != nullptr) {
         Document* doc = widget->guiDocument()->document();
         m_ui->stack_GuiDocuments->removeWidget(widget);
+        widget->deleteLater();
         Application::instance()->eraseDocument(doc);
         this->updateControlsActivation();
     }
