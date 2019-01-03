@@ -182,10 +182,23 @@ const Handle_AIS_InteractiveContext &GpxShapeSelector::context() const
     return m_guiDocument->aisInteractiveContext();
 }
 
+bool GpxShapeSelector::hasSelectedShapes() const
+{
+    this->context()->InitSelected();
+    while (this->context()->MoreSelected()) {
+        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(this->context()->SelectedOwner());
+        if (!brepOwner.IsNull() && brepOwner->HasShape())
+            return true;
+        this->context()->NextSelected();
+    }
+    return false;
+}
+
 void GpxShapeSelector::clearSelection()
 {
     this->context()->ClearDetected(true);
     this->context()->ClearSelected(true);
+    emit shapeSelectionCleared();
 }
 
 void GpxShapeSelector::onShapeTypeChanged(TopAbs_ShapeEnum shapeEnum)
@@ -206,6 +219,7 @@ void GpxShapeSelector::onView3dMouseMove(const QPoint &pos)
 
 void GpxShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
 {
+    const bool hadSelected = this->hasSelectedShapes();
     auto detectedEntity = Handle_StdSelect_BRepOwner::DownCast(this->context()->DetectedOwner());
     AIS_StatusOfPick pickStatus = AIS_SOP_NothingSelected;
     if (!this->context()->HasDetected()) {
@@ -217,6 +231,9 @@ void GpxShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
         else if (m_mode == Mode::Multi)
             pickStatus = this->context()->ShiftSelect(true);
     }
+
+    if (m_mode == Mode::Multi && hadSelected && !this->hasSelectedShapes())
+        emit shapeSelectionCleared();
 
     if (pickStatus == AIS_SOP_Error
             || pickStatus == AIS_SOP_NothingSelected

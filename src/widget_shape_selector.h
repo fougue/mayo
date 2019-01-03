@@ -45,6 +45,7 @@ public:
 signals:
     void shapeTypeChanged(TopAbs_ShapeEnum shapeType);
     void shapeClicked(const TopoDS_Shape& shape);
+    void shapeSelectionCleared();
 
 protected:
     virtual void onShapeTypeChanged(TopAbs_ShapeEnum shapeEnum);
@@ -52,6 +53,8 @@ protected:
     virtual void onView3dMouseClicked(Qt::MouseButton btn);
 
     const Handle_AIS_InteractiveContext& context() const;
+
+    bool hasSelectedShapes() const;
 
     GuiDocument* m_guiDocument = nullptr;
     BaseV3dViewController* m_viewCtrl = nullptr;
