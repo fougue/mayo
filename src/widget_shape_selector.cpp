@@ -15,6 +15,7 @@
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QShortcut>
 
 #include <QtCore/QtDebug>
 
@@ -46,10 +47,12 @@ WidgetShapeSelector::WidgetShapeSelector(
         Span<const TopAbs_ShapeEnum> spanShapeType,
         WidgetGuiDocument* widgetGuiDoc)
     : QWidget(widgetGuiDoc),
-      m_widgetGuiDoc(widgetGuiDoc)
+      m_widgetGuiDoc(widgetGuiDoc),
+      m_selector(new GpxShapeSelector(widgetGuiDoc->guiDocument()))
 {
     Q_ASSERT(widgetGuiDoc);
 
+    this->setAutoFillBackground(true);
     auto comboBox = new QComboBox(this);
     m_comboBoxShapeType = comboBox;
     for (TopAbs_ShapeEnum shapeType : spanShapeType)
@@ -64,7 +67,7 @@ WidgetShapeSelector::WidgetShapeSelector(
     mainLayout->addWidget(m_btnBox);
 
     QObject::connect(
-                comboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated),
+                comboBox, QOverload<int>::of(&QComboBox::activated),
                 this, &WidgetShapeSelector::onShapeSelectionModeChanged);
     QObject::connect(
                 m_btnBox, &QDialogButtonBox::accepted,
@@ -75,21 +78,12 @@ WidgetShapeSelector::WidgetShapeSelector(
     QObject::connect(
                 m_btnBox, &QDialogButtonBox::clicked,
                 this, &WidgetShapeSelector::buttonClicked);
-    QObject::connect(
-                widgetGuiDoc->controller(), &BaseV3dViewController::mouseMoved,
-                this, &WidgetShapeSelector::onView3dMouseMove);
-    QObject::connect(
-                widgetGuiDoc->controller(), &BaseV3dViewController::mouseClicked,
-                this, &WidgetShapeSelector::onView3dMouseClicked);
+    m_selector->setViewController(widgetGuiDoc->controller());
 
-    widgetGuiDoc->guiDocument()->aisInteractiveContext()->RemoveFilters();
-    m_widgetGuiDoc->installEventFilter(this);
+    auto escShortcut = new QShortcut(Qt::Key_Escape, this);
+    QObject::connect(escShortcut, &QShortcut::activated, this, &WidgetShapeSelector::rejected);
+
     this->onShapeSelectionModeChanged(comboBox->currentIndex());
-}
-
-WidgetShapeSelector::~WidgetShapeSelector()
-{
-    m_widgetGuiDoc->guiDocument()->aisInteractiveContext()->ClearSelected(true);
 }
 
 void WidgetShapeSelector::addButton(QDialogButtonBox::StandardButton stdBtn)
@@ -107,9 +101,9 @@ QDialogButtonBox::ButtonRole WidgetShapeSelector::buttonRole(QAbstractButton *bt
     return m_btnBox->buttonRole(btn);
 }
 
-void WidgetShapeSelector::paintEvent(QPaintEvent*)
+GpxShapeSelector* WidgetShapeSelector::selector() const
 {
-    WidgetGuiDocument::paintPanel(this);
+    return m_selector;
 }
 
 void WidgetShapeSelector::onShapeSelectionModeChanged(int comboBoxItemId)
@@ -119,38 +113,123 @@ void WidgetShapeSelector::onShapeSelectionModeChanged(int comboBoxItemId)
             m_comboBoxShapeType->itemData(comboBoxItemId).toInt(&okToInt);
     const TopAbs_ShapeEnum shapeType =
             okToInt ? static_cast<TopAbs_ShapeEnum>(iShapeType) : TopAbs_SHAPE;
-    if (shapeType != TopAbs_SHAPE) {
-        const Handle_AIS_InteractiveContext& ctx =
-                m_widgetGuiDoc->guiDocument()->aisInteractiveContext();
-        ctx->ClearDetected(true);
-        ctx->RemoveFilters();
-        ctx->AddFilter(new StdSelect_ShapeTypeFilter(shapeType));
-        emit selectionModeChanged(shapeType);
-    }
+    m_selector->setShapeType(shapeType);
 }
 
-void WidgetShapeSelector::onView3dMouseMove(const QPoint& pos)
+
+// --
+// -- ShapeSelector
+// --
+
+GpxShapeSelector::GpxShapeSelector(GuiDocument* guiDoc)
+    : QObject(guiDoc),
+      m_guiDocument(guiDoc),
+      m_shapeType(TopAbs_SHAPE)
 {
-    const BaseV3dViewController* ctrl = m_widgetGuiDoc->controller();
-    const GuiDocument* guiDoc = m_widgetGuiDoc->guiDocument();
-    if (!ctrl->isPanning() && !ctrl->isRotating()) {
-        const Handle_AIS_InteractiveContext& ctx = guiDoc->aisInteractiveContext();
-        ctx->MoveTo(pos.x(), pos.y(), guiDoc->v3dView(), true);
-    }
+    this->context()->RemoveFilters();
 }
 
-void WidgetShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
+GpxShapeSelector::~GpxShapeSelector()
 {
-    const Handle_AIS_InteractiveContext& ctx =
-            m_widgetGuiDoc->guiDocument()->aisInteractiveContext();
-    if (!ctx->HasDetected())
-        ctx->ClearSelected(true);
-    else
-        ctx->ShiftSelect(true);
-    if (btn == Qt::LeftButton && ctx->HasDetected()) {
-        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(ctx->DetectedOwner());
-        if (!brepOwner.IsNull() && brepOwner->HasShape())
-            emit shapeClicked(brepOwner->Shape());
+    this->clearSelection();
+    this->context()->RemoveFilters();
+}
+
+BaseV3dViewController* GpxShapeSelector::viewController() const
+{
+    return m_viewCtrl;
+}
+
+void GpxShapeSelector::setViewController(BaseV3dViewController *ctrl)
+{
+    if (ctrl == m_viewCtrl)
+        return;
+
+    m_viewCtrl = ctrl;
+    QObject::connect(
+                ctrl, &BaseV3dViewController::mouseMoved,
+                this, &GpxShapeSelector::onView3dMouseMove);
+    QObject::connect(
+                ctrl, &BaseV3dViewController::mouseClicked,
+                this, &GpxShapeSelector::onView3dMouseClicked);
+}
+
+TopAbs_ShapeEnum GpxShapeSelector::shapeType() const
+{
+    return m_shapeType;
+}
+
+void GpxShapeSelector::setShapeType(TopAbs_ShapeEnum shapeEnum)
+{
+    m_shapeType = shapeEnum;
+    this->onShapeTypeChanged(shapeEnum);
+    emit shapeTypeChanged(shapeEnum);
+}
+
+GpxShapeSelector::Mode GpxShapeSelector::mode() const
+{
+    return m_mode;
+}
+
+void GpxShapeSelector::setMode(GpxShapeSelector::Mode mode)
+{
+    m_mode = mode;
+    this->clearSelection();
+}
+
+const Handle_AIS_InteractiveContext &GpxShapeSelector::context() const
+{
+    return m_guiDocument->aisInteractiveContext();
+}
+
+void GpxShapeSelector::clearSelection()
+{
+    this->context()->ClearDetected(true);
+    this->context()->ClearSelected(true);
+}
+
+void GpxShapeSelector::onShapeTypeChanged(TopAbs_ShapeEnum shapeEnum)
+{
+    this->clearSelection();
+    this->context()->RemoveFilters();
+    if (shapeEnum != TopAbs_SHAPE)
+        this->context()->AddFilter(new StdSelect_ShapeTypeFilter(shapeEnum));
+}
+
+void GpxShapeSelector::onView3dMouseMove(const QPoint &pos)
+{
+    if (!m_viewCtrl || m_viewCtrl->isPanning() || m_viewCtrl->isRotating())
+        return;
+
+    this->context()->MoveTo(pos.x(), pos.y(), m_guiDocument->v3dView(), true);
+}
+
+void GpxShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
+{
+    auto detectedEntity = Handle_StdSelect_BRepOwner::DownCast(this->context()->DetectedOwner());
+    AIS_StatusOfPick pickStatus = AIS_SOP_NothingSelected;
+    if (!this->context()->HasDetected()) {
+        this->context()->ClearSelected(true);
+    }
+    else {
+        if (m_mode == Mode::Single)
+            pickStatus = this->context()->Select(true);
+        else if (m_mode == Mode::Multi)
+            pickStatus = this->context()->ShiftSelect(true);
+    }
+
+    if (pickStatus == AIS_SOP_Error
+            || pickStatus == AIS_SOP_NothingSelected
+            || pickStatus == AIS_SOP_Removed)
+    {
+        return;
+    }
+
+    if (btn == Qt::LeftButton
+            && !detectedEntity.IsNull()
+            && detectedEntity->HasShape())
+    {
+        emit shapeClicked(detectedEntity->Shape());
     }
 }
 
