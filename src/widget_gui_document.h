@@ -23,6 +23,8 @@ public:
     GuiDocument* guiDocument() const;
     BaseV3dViewController* controller() const;
 
+    QRect rectControls() const;
+
     static void paintPanel(QWidget* widget);
 
 private:
@@ -32,7 +34,7 @@ private:
     BaseV3dViewController* m_controller = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
-    QRect m_firstBtnFrameRect;
+    QRect m_rectControls;
 };
 
 } // namespace Mayo

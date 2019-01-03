@@ -110,7 +110,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
                 btnEditClipping, &ButtonFlat::clicked,
                 this, &WidgetGuiDocument::toggleWidgetClipPlanes);
 
-    m_firstBtnFrameRect = btnFitAll->frameGeometry();
+    const QRect rectFirstBtn = btnFitAll->frameGeometry();
+    const QRect rectLastBtn = btnEditClipping->frameGeometry();
+    m_rectControls.setCoords(
+                rectFirstBtn.left(), rectFirstBtn.top(),
+                rectLastBtn.right(), rectLastBtn.bottom());
 }
 
 GuiDocument *WidgetGuiDocument::guiDocument() const
@@ -121,6 +125,11 @@ GuiDocument *WidgetGuiDocument::guiDocument() const
 BaseV3dViewController *WidgetGuiDocument::controller() const
 {
     return m_controller;
+}
+
+QRect WidgetGuiDocument::rectControls() const
+{
+    return m_rectControls;
 }
 
 void WidgetGuiDocument::paintPanel(QWidget* widget)
@@ -141,7 +150,7 @@ void WidgetGuiDocument::toggleWidgetClipPlanes()
         panel->show();
         panel->adjustSize();
         const int margin = Internal::widgetMargin;
-        panel->move(margin, m_firstBtnFrameRect.bottom() + margin);
+        panel->move(margin, m_rectControls.bottom() + margin);
         m_widgetClipPlanes = widget;
         QObject::connect(
                     m_guiDoc, &GuiDocument::gpxBoundingBoxChanged,
