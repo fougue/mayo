@@ -64,6 +64,7 @@ static QString iconFileName(Theme::Icon icn)
     switch (icn) {
     case Theme::Icon::File: return "file.svg";
     case Theme::Icon::Import: return "import.svg";
+    case Theme::Icon::Edit: return "edit.svg";
     case Theme::Icon::Export: return "export.svg";
     case Theme::Icon::Expand: return "expand.svg";
     case Theme::Icon::Cross: return "cross.svg";
@@ -99,6 +100,7 @@ static Span<const Theme::Icon> themeIcons()
     static const Theme::Icon arrayIcons[] = {
         Theme::Icon::File,
         Theme::Icon::Import,
+        Theme::Icon::Edit,
         Theme::Icon::Export,
         Theme::Icon::Expand,
         Theme::Icon::Cross,

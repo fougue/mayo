@@ -34,6 +34,7 @@ public:
     enum class Icon {
         File,
         Import,
+        Edit,
         Export,
         Expand,
         Cross,

@@ -65,5 +65,7 @@
         <file>images/widget_pseudo_fold.png</file>
         <file>images/xde_reference_16.png</file>
         <file>images/themes/classic/xde-simple-shape.svg</file>
+        <file>images/themes/classic/edit.svg</file>
+        <file>images/themes/dark/edit.svg</file>
     </qresource>
 </RCC>
