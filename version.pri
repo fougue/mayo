@@ -2,11 +2,11 @@ VER_MAJ = 0
 VER_MIN = 1
 VER_PAT = 0
 
-system(ruby -v):HAVE_RUBY=1
-defined(HAVE_RUBY, var) {
-    MAYO_REVNUM = $$system(ruby $$PWD/scripts/revnum.rb --rcs git --workdir $$PWD)
+system(git --version):HAVE_GIT=1
+defined(HAVE_GIT, var) {
+    MAYO_REVNUM = $$system(git rev-parse --short HEAD)
 } else {
-    warning("Ruby is not in PATH, cannot find revision number")
+    warning("Git is not in PATH, cannot find revision number")
 }
 MAYO_VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}-r$$MAYO_REVNUM
 
