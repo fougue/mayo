@@ -9,6 +9,8 @@ QT += core gui widgets
 
 CONFIG += console c++14
 
+include(version.pri)
+
 INCLUDEPATH += \
     src \
     src/3rdparty

@@ -7,6 +7,7 @@
 #include "dialog_about.h"
 
 #include "ui_dialog_about.h"
+#include "version.h"
 #include <Standard_Version.hxx>
 #ifdef HAVE_GMIO
 #  include <gmio_core/version.h>
@@ -24,7 +25,7 @@ DialogAbout::DialogAbout(QWidget *parent)
                                    QApplication::organizationName()));
 
     m_ui->label_Version->setText(
-                m_ui->label_Version->text().arg("0.1-dev").arg(QT_POINTER_SIZE * 8));
+                m_ui->label_Version->text().arg(strVersion).arg(QT_POINTER_SIZE * 8));
     m_ui->label_BuildDateTime->setText(
                 m_ui->label_BuildDateTime->text().arg(__DATE__).arg(__TIME__));
     m_ui->label_Qt->setText(m_ui->label_Qt->text().arg(QT_VERSION_STR));

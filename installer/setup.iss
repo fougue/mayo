@@ -1,7 +1,7 @@
 ; #define MsvcVersionName StringChange(GetEnv("QMAKESPEC"), "win32-", "")
 #define MsvcVersionName "msvc2017-x64"
 #define TargetArch "x64"
-#define VersionNumber "0.1"
+#define VersionNumber "0.1.0"
 
 #include "setupvars.iss"
 
