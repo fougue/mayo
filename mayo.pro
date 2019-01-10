@@ -3,11 +3,22 @@ TEMPLATE = app
 
 QT += core gui widgets
 
+CONFIG += console c++17
+#CONFIG += release_with_debuginfo
+
 *msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
+    QMAKE_CXXFLAGS += /std:c++17
+}
+*g++*{
+    QMAKE_CXXFLAGS += -std=c++17
 }
 
-CONFIG += console c++14
+release_with_debuginfo:*msvc* {
+    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
+    QMAKE_CXXFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
+}
 
 include(version.pri)
 
