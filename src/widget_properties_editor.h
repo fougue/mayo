@@ -7,34 +7,32 @@
 #pragma once
 
 #include "property_builtins.h"
-#include "unit.h"
 #include "span.h"
+#include "unit.h"
 
 #include <QtWidgets/QWidget>
-#include <vector>
-
-class QTreeWidgetItem;
 
 namespace Mayo {
-
-class Document;
-class DocumentItem;
-class GpxDocumentItem;
-
-namespace Internal { class PropertyItemDelegate; }
 
 class WidgetPropertiesEditor : public QWidget {
 public:
     WidgetPropertiesEditor(QWidget* parent = nullptr);
     ~WidgetPropertiesEditor();
 
-    void editProperties(PropertyOwner* propertyOwner);
-    void editProperties(Span<HandleProperty> spanHndProp);
+    struct Group;
+    Group* addGroup(const QString& name);
+    void setGroupName(Group* group, const QString& name);
+
+    void editProperties(PropertyOwner* propOwner, Group* grp = nullptr);
+    void editProperty(Property* prop, Group* grp = nullptr);
     void clear();
 
     void setPropertyEnabled(const Property* prop, bool on);
+    void setPropertySelectable(const Property* prop, bool on);
 
-    void addLineWidget(QWidget* widget);
+    void addLineSpacer(int height);
+    void addLineWidget(QWidget* widget, int height = -1);
+    Span<QWidget* const> lineWidgets() const;
 
     double rowHeightFactor() const;
     void setRowHeightFactor(double v);
@@ -48,19 +46,8 @@ public:
             const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
 private:
-    void createQtProperties(
-            const std::vector<Property*>& properties, QTreeWidgetItem* parentItem);
-    void createQtProperty(
-            Property* property, QTreeWidgetItem* parentItem);
-    void refreshAllQtProperties();
-    void releaseObjects();
-
-    class Ui_WidgetPropertiesEditor* m_ui = nullptr;
-
-    PropertyOwner* m_currentPropertyOwner = nullptr;
-    PropertyOwner* m_currentGpxPropertyOwner = nullptr;
-    std::vector<HandleProperty> m_currentVecHndProperty;
-    Internal::PropertyItemDelegate* m_itemDelegate = nullptr;
+    class Private;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo

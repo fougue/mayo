@@ -656,7 +656,12 @@ void MainWindow::onApplicationItemSelectionChanged()
             }
         }
         else if (item.isDocumentItem()) {
-            uiProps->editProperties(item.documentItem());
+            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
+            uiProps->editProperties(item.documentItem(), grpData);
+            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
+            const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
+            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
+            uiProps->editProperties(gpxDocItem, grpGpx);
         }
         else if (item.isDocument()) {
             uiProps->editProperties(item.document());

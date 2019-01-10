@@ -14,6 +14,7 @@
 #include "options.h"
 #include "string_utils.h"
 #include "unit_system.h"
+#include "theme.h"
 #include "ui_widget_properties_editor.h"
 #include <fougtools/occtools/qt_utils.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
@@ -31,6 +32,7 @@
 
 #include <functional>
 #include <unordered_map>
+#include <vector>
 
 namespace Mayo {
 
@@ -196,12 +198,12 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
                 prop->maximum() : std::numeric_limits<double>::max();
     editor->setRange(rangeMin, rangeMax);
     editor->setValue(trRes.value);
-    auto signalValueChanged =
-            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
-    QObject::connect(editor, signalValueChanged, [=](double value) {
+    QObject::connect(editor, &QDoubleSpinBox::editingFinished, [=]{
+        double value = editor->value();
         const double f = trRes.factor;
         value = qFuzzyCompare(f, 1.) ? value : value * f;
-        prop->setQuantityValue(value);
+        if (!qFuzzyCompare(prop->quantityValue(), value))
+            prop->setQuantityValue(value);
     });
     return editor;
 }
@@ -387,9 +389,9 @@ public:
                const QModelIndex& index) const override
     {
         if (index.column() == 1) {
-            auto prop = qvariant_cast<Property*>(index.data());
+            const auto prop = qvariant_cast<Property*>(index.data());
             if (prop && prop->dynTypeName() == PropertyOccColor::TypeName) {
-                auto propColor = static_cast<PropertyOccColor*>(prop);
+                auto propColor = static_cast<const PropertyOccColor*>(prop);
                 painter->save();
 
                 QApplication::style()->drawPrimitive(
@@ -417,7 +419,24 @@ public:
                 return;
             }
         }
+
         QStyledItemDelegate::paint(painter, option, index);
+        if (index.column() == 1 && !index.data().isNull()) {
+            const auto prop = qvariant_cast<Property*>(index.data());
+            if (!prop->isUserReadOnly()
+                    && option.state.testFlag(QStyle::State_Enabled)
+                    && option.state.testFlag(QStyle::State_MouseOver))
+            {
+                const QSize itemSize = this->sizeHint(option, index);
+                const QSize pixItemSize = option.decorationSize * 0.75;
+                const QPixmap pixEdit =
+                        mayoTheme()->icon(Theme::Icon::Edit).pixmap(pixItemSize);
+                painter->drawPixmap(
+                            option.rect.x() + itemSize.width() + 4,
+                            option.rect.y() + (itemSize.height() - pixItemSize.height()) / 2.,
+                            pixEdit);
+            }
+        }
     }
 
     QString displayText(const QVariant& value, const QLocale&) const override
@@ -515,167 +534,195 @@ private:
 
 } // namespace Internal
 
+struct WidgetPropertiesEditor::Group {
+    QTreeWidgetItem* treeItem;
+};
+
+class WidgetPropertiesEditor::Private {
+public:
+    void createQtProperty(Property* property, QTreeWidgetItem* parentItem);
+    QTreeWidgetItem* addLineWidgetItem(QWidget* widget, int height);
+    QTreeWidgetItem* findTreeItem(const Property* property) const;
+    bool hasGroup(const WidgetPropertiesEditor::Group* group) const;
+
+    Ui_WidgetPropertiesEditor* ui = nullptr;
+    Internal::PropertyItemDelegate* itemDelegate = nullptr;
+    std::vector<Property*> vecProperty;
+    std::vector<QWidget*> vecLineWidget;
+    std::vector<WidgetPropertiesEditor::Group> vecGroup;
+};
+
 WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
     : QWidget(parent),
-      m_ui(new Ui_WidgetPropertiesEditor)
+      d(new Private)
 {
-    m_ui->setupUi(this);
-    //m_ui->treeWidget_Browser->setUniformRowHeights(true);
-    m_ui->treeWidget_Browser->setIndentation(15);
-    m_itemDelegate = new Internal::PropertyItemDelegate(m_ui->treeWidget_Browser);
-    m_ui->treeWidget_Browser->setItemDelegate(m_itemDelegate);
-
-    QObject::connect(
-                Options::instance(), &Options::unitSystemSchemaChanged,
-                this, &WidgetPropertiesEditor::refreshAllQtProperties);
-    QObject::connect(
-                Options::instance(), &Options::unitSystemDecimalsChanged,
-                this, &WidgetPropertiesEditor::refreshAllQtProperties);
+    d->ui = new Ui_WidgetPropertiesEditor;
+    d->ui->setupUi(this);
+    d->ui->treeWidget_Browser->setIndentation(0);
+    d->ui->treeWidget_Browser->setItemsExpandable(false);
+    d->ui->treeWidget_Browser->setRootIsDecorated(false);
+    d->itemDelegate = new Internal::PropertyItemDelegate(d->ui->treeWidget_Browser);
+    d->ui->treeWidget_Browser->setItemDelegate(d->itemDelegate);
 }
 
 WidgetPropertiesEditor::~WidgetPropertiesEditor()
 {
-    delete m_ui;
+    delete d->ui;
+    delete d;
 }
 
-void WidgetPropertiesEditor::editProperties(PropertyOwner* propertyOwner)
+WidgetPropertiesEditor::Group* WidgetPropertiesEditor::addGroup(const QString& name)
 {
-    this->releaseObjects();
-    if (propertyOwner) {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
-        m_currentPropertyOwner = propertyOwner;
-        auto docItem = dynamic_cast<DocumentItem*>(propertyOwner);
-        if (docItem) {
-            const GuiDocument* guiDoc =
-                    GuiApplication::instance()->findGuiDocument(docItem->document());
-            if (guiDoc)
-                m_currentGpxPropertyOwner = guiDoc->findItemGpx(docItem);
-        }
-        this->refreshAllQtProperties();
-    }
-    else {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+    Group grp = {};
+    grp.treeItem = new QTreeWidgetItem;
+    grp.treeItem->setText(0, name);
+    grp.treeItem->setFirstColumnSpanned(true);
+    d->ui->treeWidget_Browser->addTopLevelItem(grp.treeItem);
+    grp.treeItem->setExpanded(true);
+    d->vecGroup.push_back(grp);
+    return &d->vecGroup.back();
+}
+
+void WidgetPropertiesEditor::setGroupName(Group* group, const QString& name)
+{
+    if (d->hasGroup(group))
+        group->treeItem->setText(0, name);
+}
+
+void WidgetPropertiesEditor::editProperties(PropertyOwner* propOwner, Group* grp)
+{
+    if (propOwner) {
+        d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
+        QTreeWidgetItem* parentTreeItem = d->hasGroup(grp) ? grp->treeItem : nullptr;
+        for (Property* prop : propOwner->properties())
+            d->createQtProperty(prop, parentTreeItem);
+        d->ui->treeWidget_Browser->resizeColumnToContents(0);
+        d->ui->treeWidget_Browser->resizeColumnToContents(1);
     }
 }
 
-void WidgetPropertiesEditor::editProperties(Span<HandleProperty> spanHndProp)
+void WidgetPropertiesEditor::editProperty(Property* prop, Group* grp)
 {
-    this->releaseObjects();
-    for (HandleProperty& hndProp : spanHndProp)
-        m_currentVecHndProperty.push_back(std::move(hndProp));
-    if (!m_currentVecHndProperty.empty()) {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserDetails);
-        this->refreshAllQtProperties();
-    }
-    else {
-        m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+    if (prop) {
+        d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
+        QTreeWidgetItem* parentTreeItem = d->hasGroup(grp) ? grp->treeItem : nullptr;
+        d->createQtProperty(prop, parentTreeItem);
+        d->ui->treeWidget_Browser->resizeColumnToContents(0);
+        d->ui->treeWidget_Browser->resizeColumnToContents(1);
     }
 }
 
 void WidgetPropertiesEditor::clear()
 {
-    this->releaseObjects();
-    m_ui->stack_Browser->setCurrentWidget(m_ui->page_BrowserEmpty);
+    d->vecProperty.clear();
+    d->vecLineWidget.clear();
+    d->vecGroup.clear();
+    d->ui->treeWidget_Browser->clear();
 }
 
 void WidgetPropertiesEditor::setPropertyEnabled(const Property* prop, bool on)
 {
-    for (QTreeWidgetItemIterator it(m_ui->treeWidget_Browser); *it; ++it) {
-        QTreeWidgetItem* treeItem = *it;
-        const QVariant value = treeItem->data(1, Qt::DisplayRole);
-        if (value.canConvert<Property*>()
-                && qvariant_cast<Property*>(value) == prop)
-        {
-            Qt::ItemFlags itemFlags = Qt::ItemIsSelectable | Qt::ItemIsEditable;
-            if (on)
-                itemFlags |= Qt::ItemIsEnabled;
-            treeItem->setFlags(itemFlags);
-            break;
-        }
+    QTreeWidgetItem* treeItem = d->findTreeItem(prop);
+    if (treeItem) {
+        if (on)
+            treeItem->setFlags(treeItem->flags() | Qt::ItemIsEnabled);
+        else
+            treeItem->setFlags(treeItem->flags() & ~Qt::ItemIsEnabled);
     }
 }
 
-void WidgetPropertiesEditor::addLineWidget(QWidget* widget)
+void WidgetPropertiesEditor::setPropertySelectable(const Property* prop, bool on)
 {
-    widget->setAutoFillBackground(true);
-    auto treeItem = new QTreeWidgetItem(m_ui->treeWidget_Browser);
-    treeItem->setFlags(Qt::ItemIsEnabled);
-    m_ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
-    m_ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
+    QTreeWidgetItem* treeItem = d->findTreeItem(prop);
+    if (treeItem) {
+        if (on)
+            treeItem->setFlags(treeItem->flags() | Qt::ItemIsSelectable);
+        else
+            treeItem->setFlags(treeItem->flags() & ~Qt::ItemIsSelectable);
+    }
+}
+
+void WidgetPropertiesEditor::addLineSpacer(int height)
+{
+    auto widget = new QWidget;
+    d->addLineWidgetItem(widget, height);
+}
+
+void WidgetPropertiesEditor::addLineWidget(QWidget* widget, int height)
+{
+    d->addLineWidgetItem(widget, height);
+}
+
+Span<QWidget* const> WidgetPropertiesEditor::lineWidgets() const
+{
+    return d->vecLineWidget;
 }
 
 double WidgetPropertiesEditor::rowHeightFactor() const
 {
-    return m_itemDelegate->rowHeightFactor();
+    return d->itemDelegate->rowHeightFactor();
 }
 
 void WidgetPropertiesEditor::setRowHeightFactor(double v)
 {
-    m_itemDelegate->setRowHeightFactor(v);
-}
-
-void WidgetPropertiesEditor::createQtProperties(
-        const std::vector<Property*>& properties, QTreeWidgetItem* parentItem)
-{
-    for (Property* prop : properties)
-        this->createQtProperty(prop, parentItem);
+    d->itemDelegate->setRowHeightFactor(v);
 }
 
 bool WidgetPropertiesEditor::overridePropertyUnitTranslation(
         const BasePropertyQuantity* prop, UnitTranslation unitTr)
 {
-    return m_itemDelegate->overridePropertyUnitTranslation(prop, unitTr);
+    return d->itemDelegate->overridePropertyUnitTranslation(prop, unitTr);
 }
 
-void WidgetPropertiesEditor::createQtProperty(
+void WidgetPropertiesEditor::Private::createQtProperty(
         Property* property, QTreeWidgetItem* parentItem)
 {
+    this->vecProperty.push_back(property);
     auto itemProp = new QTreeWidgetItem;
-    itemProp->setText(0, property->label());
+    const QString labelSpacer = parentItem ? "       " : "";
+    itemProp->setText(0, labelSpacer + property->label());
     itemProp->setData(1, Qt::DisplayRole, QVariant::fromValue<Property*>(property));
     itemProp->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
-    if (parentItem != nullptr)
+    if (parentItem)
         parentItem->addChild(itemProp);
     else
-        m_ui->treeWidget_Browser->addTopLevelItem(itemProp);
+        this->ui->treeWidget_Browser->addTopLevelItem(itemProp);
 }
 
-void WidgetPropertiesEditor::refreshAllQtProperties()
+QTreeWidgetItem* WidgetPropertiesEditor::Private::addLineWidgetItem(QWidget* widget, int height)
 {
-    m_ui->treeWidget_Browser->clear();
-
-    if (m_currentPropertyOwner && !m_currentGpxPropertyOwner)
-        this->createQtProperties(m_currentPropertyOwner->properties(), nullptr);
-
-    if (m_currentPropertyOwner && m_currentGpxPropertyOwner) {
-        auto itemGroupData = new QTreeWidgetItem;
-        itemGroupData->setText(0, tr("Data"));
-        this->createQtProperties(m_currentPropertyOwner->properties(), itemGroupData);
-        m_ui->treeWidget_Browser->addTopLevelItem(itemGroupData);
-        itemGroupData->setExpanded(true);
-
-        auto itemGroupGpx = new QTreeWidgetItem;
-        itemGroupGpx->setText(0, tr("Graphics"));
-        this->createQtProperties(m_currentGpxPropertyOwner->properties(), itemGroupGpx);
-        m_ui->treeWidget_Browser->addTopLevelItem(itemGroupGpx);
-        itemGroupGpx->setExpanded(true);
+    widget->setAutoFillBackground(true);
+    auto treeItem = new QTreeWidgetItem(this->ui->treeWidget_Browser);
+    treeItem->setFlags(Qt::ItemIsEnabled);
+    if (height > 0) {
+        treeItem->setSizeHint(0, QSize(100, height));
+        treeItem->setSizeHint(1, QSize(100, height));
     }
-
-    // "On-the-fly" properties
-    if (!m_currentVecHndProperty.empty()) {
-        for (const HandleProperty& propHnd : m_currentVecHndProperty)
-            this->createQtProperty(propHnd.get(), nullptr);
-    }
-
-    m_ui->treeWidget_Browser->resizeColumnToContents(0);
-    m_ui->treeWidget_Browser->resizeColumnToContents(1);
+    this->vecLineWidget.push_back(widget);
+    this->ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
+    this->ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
+    return treeItem;
 }
 
-void WidgetPropertiesEditor::releaseObjects()
+QTreeWidgetItem* WidgetPropertiesEditor::Private::findTreeItem(const Property* property) const
 {
-    m_currentPropertyOwner = nullptr;
-    m_currentGpxPropertyOwner = nullptr;
-    m_currentVecHndProperty.clear();
+    for (QTreeWidgetItemIterator it(this->ui->treeWidget_Browser); *it; ++it) {
+        QTreeWidgetItem* treeItem = *it;
+        const QVariant value = treeItem->data(1, Qt::DisplayRole);
+        if (value.canConvert<Property*>()
+                && qvariant_cast<Property*>(value) == property)
+        {
+            return treeItem;
+        }
+    }
+    return nullptr;
+}
+
+bool WidgetPropertiesEditor::Private::hasGroup(const Group *group) const
+{
+    return group
+            && group->treeItem
+            && group->treeItem->treeWidget() == ui->treeWidget_Browser;
 }
 
 } // namespace Mayo
