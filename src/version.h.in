@@ -1,0 +1,12 @@
+#pragma once
+
+namespace Mayo {
+
+const char strVersion[] = \"$$MAYO_VERSION\";
+const char strVersionMajMinPatch[] = \"$${VER_MAJ}.$${VER_MIN}.$$VER_PAT\";
+const char strVersionRevNum[] = \"$$MAYO_REVNUM\";
+const unsigned versionMajor = $$VER_MAJ;
+const unsigned versionMinor = $$VER_MIN;
+const unsigned versionPatch = $$VER_PAT;
+
+} // namespace Mayo
