@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "application_item.h"
 #include "result.h"
+#include "span.h"
 
 #ifdef HAVE_GMIO
 #  include <gmio_core/text_format.h>
@@ -80,8 +82,8 @@ public:
             PartFormat format,
             const QString& filepath,
             qttask::Progress* progress = nullptr);
-    IoResult exportDocumentItems(
-            const std::vector<DocumentItem*>& docItems,
+    IoResult exportApplicationItems(
+            Span<const ApplicationItem> appItems,
             PartFormat format,
             const ExportOptions& options,
             const QString& filepath,
@@ -110,32 +112,32 @@ private:
             Document* doc, const QString& filepath, qttask::Progress* progress);
 
     IoResult exportIges(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);
     IoResult exportStep(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);
     IoResult exportOccBRep(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);
     IoResult exportStl(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);
     IoResult exportStl_gmio(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);
     IoResult exportStl_OCC(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             const ExportOptions& options,
             const QString& filepath,
             qttask::Progress* progress);

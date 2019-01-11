@@ -475,7 +475,7 @@ void MainWindow::runImportTask(
 }
 
 void MainWindow::runExportTask(
-        const std::vector<DocumentItem*>& docItems,
+        Span<const ApplicationItem> appItems,
         Application::PartFormat format,
         const Application::ExportOptions& opts,
         const QString& filepath)
@@ -486,8 +486,8 @@ void MainWindow::runExportTask(
         QTime chrono;
         chrono.start();
         const Application::IoResult result =
-                Application::instance()->exportDocumentItems(
-                    docItems, format, opts, filepath, &task->progress());
+                Application::instance()->exportApplicationItems(
+                    appItems, format, opts, filepath, &task->progress());
         QString msg;
         if (result) {
             msg = tr("Export time '%1': %2ms")
@@ -516,8 +516,8 @@ void MainWindow::exportSelectedItems()
         lastSettings.openDir = QFileInfo(filepath).canonicalPath();
         const Application::PartFormat format =
                 Internal::partFormatFromFilter(lastSettings.selectedFilter);
-        const std::vector<DocumentItem*> vecDocItem =
-                GuiApplication::instance()->selectionModel()->selectedDocumentItems();
+        Span<const ApplicationItem> spanAppItem =
+                GuiApplication::instance()->selectionModel()->selectedItems();
         if (Application::hasExportOptionsForFormat(format)) {
 #ifdef HAVE_GMIO
             auto dlg = new DialogExportOptions(this);
@@ -529,12 +529,12 @@ void MainWindow::exportSelectedItems()
             });
             qtgui::QWidgetUtils::asyncDialogExec(dlg);
 #else
-            this->runExportTask(vecDocItem, format, defaultOpts, filepath);
+            this->runExportTask(spanAppItem, format, defaultOpts, filepath);
             Internal::ImportExportSettings::save(lastSettings);
 #endif
         }
         else {
-            this->runExportTask(vecDocItem, format, defaultOpts, filepath);
+            this->runExportTask(spanAppItem, format, defaultOpts, filepath);
             Internal::ImportExportSettings::save(lastSettings);
         }
     }

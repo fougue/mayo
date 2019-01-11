@@ -493,8 +493,8 @@ Application::IoResult Application::importInDocument(
     return IoResult::error(tr("Unknown error"));
 }
 
-Application::IoResult Application::exportDocumentItems(
-        const std::vector<DocumentItem*>& docItems,
+Application::IoResult Application::exportApplicationItems(
+        Span<const ApplicationItem> appItems,
         PartFormat format,
         const ExportOptions &options,
         const QString &filepath,
@@ -502,13 +502,13 @@ Application::IoResult Application::exportDocumentItems(
 {
     switch (format) {
     case PartFormat::Iges:
-        return this->exportIges(docItems, options, filepath, progress);
+        return this->exportIges(appItems, options, filepath, progress);
     case PartFormat::Step:
-        return this->exportStep(docItems, options, filepath, progress);
+        return this->exportStep(appItems, options, filepath, progress);
     case PartFormat::OccBrep:
-        return this->exportOccBRep(docItems, options, filepath, progress);
+        return this->exportOccBRep(appItems, options, filepath, progress);
     case PartFormat::Stl:
-        return this->exportStl(docItems, options, filepath, progress);
+        return this->exportStl(appItems, options, filepath, progress);
     case PartFormat::Unknown:
         break;
     }
@@ -660,7 +660,7 @@ Application::IoResult Application::importStl(
 }
 
 Application::IoResult Application::exportIges(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
         const QString &filepath,
         qttask::Progress *progress)
@@ -675,12 +675,16 @@ Application::IoResult Application::exportIges(
     writer.SetLayerMode(Standard_True);
     if (!indicator.IsNull())
         writer.TransferProcess()->SetProgress(indicator);
-    for (const DocumentItem* item : docItems) {
-        if (sameType<XdeDocumentItem>(item)) {
-            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+    for (const ApplicationItem& item : appItems) {
+        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
             writer.Transfer(xdeDocItem->cafDoc());
         }
+        else if (item.isXdeAssemblyNode()) {
+            writer.Transfer(item.xdeAssemblyNode().label());
+        }
     }
+
     writer.ComputeModel();
     const Standard_Boolean ok = writer.Write(filepath.toLocal8Bit().constData());
     writer.TransferProcess()->SetProgress(nullptr);
@@ -688,7 +692,7 @@ Application::IoResult Application::exportIges(
 }
 
 Application::IoResult Application::exportStep(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
         const QString &filepath,
         qttask::Progress *progress)
@@ -699,12 +703,16 @@ Application::IoResult Application::exportStep(
     STEPCAFControl_Writer writer;
     if (!indicator.IsNull())
         writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
-    for (const DocumentItem* item : docItems) {
-        if (sameType<XdeDocumentItem>(item)) {
-            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+    for (const ApplicationItem& item : appItems) {
+        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
             writer.Transfer(xdeDocItem->cafDoc());
         }
+        else if (item.isXdeAssemblyNode()) {
+            writer.Transfer(item.xdeAssemblyNode().label());
+        }
     }
+
     const IFSelect_ReturnStatus err =
             writer.Write(filepath.toLocal8Bit().constData());
     writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
@@ -714,20 +722,24 @@ Application::IoResult Application::exportStep(
 }
 
 Application::IoResult Application::exportOccBRep(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
         const QString &filepath,
         qttask::Progress *progress)
 {
     std::vector<TopoDS_Shape> vecShape;
-    vecShape.reserve(docItems.size());
-    for (const DocumentItem* item : docItems) {
-        if (sameType<XdeDocumentItem>(item)) {
-            const auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
+    vecShape.reserve(appItems.size());
+    for (const ApplicationItem& item : appItems) {
+        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
             for (const TDF_Label& label : xdeDocItem->topLevelFreeShapes())
                 vecShape.push_back(XdeDocumentItem::shape(label));
         }
+        else if (item.isXdeAssemblyNode()) {
+            vecShape.push_back(XdeDocumentItem::shape(item.xdeAssemblyNode().label()));
+        }
     }
+
     TopoDS_Shape shape;
     if (vecShape.size() > 1) {
         TopoDS_Compound cmpd;
@@ -748,21 +760,21 @@ Application::IoResult Application::exportOccBRep(
 }
 
 Application::IoResult Application::exportStl(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const ExportOptions& options,
         const QString &filepath,
         qttask::Progress *progress)
 {
     const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
     if (lib == Options::StlIoLibrary::Gmio)
-        return this->exportStl_gmio(docItems, options, filepath, progress);
+        return this->exportStl_gmio(appItems, options, filepath, progress);
     else if (lib == Options::StlIoLibrary::OpenCascade)
-        return this->exportStl_OCC(docItems, options, filepath, progress);
+        return this->exportStl_OCC(appItems, options, filepath, progress);
     return IoResult::error(tr("Unknown Error"));
 }
 
 Application::IoResult Application::exportStl_gmio(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const Application::ExportOptions &options,
         const QString &filepath,
         qttask::Progress *progress)
@@ -807,7 +819,7 @@ Application::IoResult Application::exportStl_gmio(
 }
 
 Application::IoResult Application::exportStl_OCC(
-        const std::vector<DocumentItem *> &docItems,
+        Span<const ApplicationItem> appItems,
         const Application::ExportOptions &options,
         const QString &filepath,
         qttask::Progress *progress)
@@ -822,37 +834,47 @@ Application::IoResult Application::exportStl_OCC(
 #else
     const bool isAsciiFormat = options.stlFormat == ExportOptions::StlFormat::Ascii;
 #endif
-    if (docItems.size() > 1)
+    if (appItems.size() > 1)
         return IoResult::error(tr("OpenCascade RWStl does not support multi-solids"));
 
-    if (docItems.size() > 0) {
-        const DocumentItem* item = docItems.front();
-        if (sameType<XdeDocumentItem>(item)) {
-            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
-            StlAPI_Writer writer;
-            writer.ASCIIMode() = isAsciiFormat;
-            const TopoDS_Shape shape = Internal::xdeDocumentWholeShape(xdeDocItem);
-            const Standard_Boolean ok = writer.Write(
-                        shape, filepath.toLocal8Bit().constData());
-            if (!ok)
-                return IoResult::error(tr("Unknown StlAPI_Writer failure"));
+    auto funcWriteShape = [=](const TopoDS_Shape& shape) {
+        StlAPI_Writer writer;
+        writer.ASCIIMode() = isAsciiFormat;
+        if (!writer.Write(shape, filepath.toLocal8Bit().constData()))
+            return IoResult::error(tr("Unknown StlAPI_Writer failure"));
+        return IoResult::ok();
+    };
+
+    if (!appItems.empty()) {
+        const ApplicationItem& item = appItems.at(0);
+        if (item.isDocumentItem()) {
+            if (sameType<XdeDocumentItem>(item.documentItem())) {
+                auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
+                return funcWriteShape(Internal::xdeDocumentWholeShape(xdeDocItem));
+            }
+            else if (sameType<MeshItem>(item.documentItem())) {
+                Handle_Message_ProgressIndicator indicator =
+                        new Internal::OccProgress(progress);
+                bool ok = false;
+                auto meshItem = static_cast<const MeshItem*>(item.documentItem());
+                const QByteArray filepathLocal8b = filepath.toLocal8Bit();
+                const OSD_Path osdFilepath(filepathLocal8b.constData());
+                const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
+                if (isAsciiFormat)
+                    ok = RWStl::WriteAscii(mesh, osdFilepath, indicator);
+                else
+                    ok = RWStl::WriteBinary(mesh, osdFilepath, indicator);
+
+                if (!ok)
+                    return IoResult::error(tr("Unknown error"));
+            }
         }
-        else if (sameType<MeshItem>(item)) {
-            Handle_Message_ProgressIndicator indicator =
-            new Internal::OccProgress(progress);
-            Standard_Boolean occOk = Standard_False;
-            auto meshItem = static_cast<const MeshItem*>(item);
-            const QByteArray filepathLocal8b = filepath.toLocal8Bit();
-            const OSD_Path osdFilepath(filepathLocal8b.constData());
-            const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
-            if (isAsciiFormat)
-                occOk = RWStl::WriteAscii(mesh, osdFilepath, indicator);
-            else
-                occOk = RWStl::WriteBinary(mesh, osdFilepath, indicator);
-            if (!occOk)
-                return IoResult::error(tr("Unknown error"));
+        else if (item.isXdeAssemblyNode()) {
+            const TDF_Label& labelShape = item.xdeAssemblyNode().label();
+            return funcWriteShape(XdeDocumentItem::shape(labelShape));
         }
     }
+
     return IoResult::ok();
 }
 

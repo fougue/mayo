@@ -74,7 +74,7 @@ private:
             Application::PartFormat format,
             const QString& filepath);
     void runExportTask(
-            const std::vector<DocumentItem*>& docItems,
+            Span<const ApplicationItem> appItems,
             Application::PartFormat format,
             const Application::ExportOptions& opts,
             const QString& filepath);
