@@ -71,6 +71,7 @@ public:
     WidgetShapeSelector(
             Span<const TopAbs_ShapeEnum> spanShapeType,
             WidgetGuiDocument* widgetGuiDoc);
+    ~WidgetShapeSelector();
 
     void addButton(QDialogButtonBox::StandardButton stdBtn);
     void addButton(QAbstractButton* btn, QDialogButtonBox::ButtonRole role);

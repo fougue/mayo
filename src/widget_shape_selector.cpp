@@ -86,6 +86,11 @@ WidgetShapeSelector::WidgetShapeSelector(
     this->onShapeSelectionModeChanged(comboBox->currentIndex());
 }
 
+WidgetShapeSelector::~WidgetShapeSelector()
+{
+    delete m_selector;
+}
+
 void WidgetShapeSelector::addButton(QDialogButtonBox::StandardButton stdBtn)
 {
     m_btnBox->addButton(stdBtn);
