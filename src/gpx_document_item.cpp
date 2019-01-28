@@ -44,6 +44,12 @@ GpxDocumentItem::GpxDocumentItem()
     this->propertyIsVisible.setValue(true);
 }
 
+void GpxDocumentItem::setVisible(bool on)
+{
+    Mayo_PropertyChangedBlocker(this);
+    this->propertyIsVisible.setValue(on);
+}
+
 void GpxDocumentItem::activateSelection(int /*mode*/)
 {
 }

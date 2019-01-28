@@ -95,6 +95,7 @@ MeshItem *GpxMeshItem::documentItem() const
 
 void GpxMeshItem::setVisible(bool on)
 {
+    GpxDocumentItem::setVisible(on);
     GpxUtils::AisContext_setObjectVisible(this->context(), m_meshVisu, on);
 }
 

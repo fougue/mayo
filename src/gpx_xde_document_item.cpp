@@ -75,21 +75,53 @@ XdeDocumentItem *GpxXdeDocumentItem::documentItem() const
 
 void GpxXdeDocumentItem::setVisible(bool on)
 {
+    Mayo::GpxDocumentItem::setVisible(on);
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
         GpxUtils::AisContext_setObjectVisible(this->context(), obj, on);
+
+    if (on && !m_selectionActivated) {
+        m_selectionActivated = true;
+        for (SelectionMode mode : m_setActivatedSelectionMode)
+            this->activateSelection(mode);
+    }
+
+    if (!on)
+        m_selectionActivated = false;
+}
+
+static int toAisShapeSelectionMode(GpxXdeDocumentItem::SelectionMode mode)
+{
+    using Gpx = GpxXdeDocumentItem;
+    switch (mode) {
+    case Gpx::SelectVertex: return AIS_Shape::SelectionMode(TopAbs_VERTEX);
+    case Gpx::SelectEdge: return AIS_Shape::SelectionMode(TopAbs_EDGE);
+    case Gpx::SelectWire: return AIS_Shape::SelectionMode(TopAbs_WIRE);
+    case Gpx::SelectFace: return AIS_Shape::SelectionMode(TopAbs_FACE);
+    case Gpx::SelectShell: return AIS_Shape::SelectionMode(TopAbs_SHELL);
+    case Gpx::SelectSolid: return AIS_Shape::SelectionMode(TopAbs_SOLID);
+    }
+    return AIS_Shape::SelectionMode(TopAbs_SHAPE);
 }
 
 void GpxXdeDocumentItem::activateSelection(int mode)
 {
-    for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-        this->context()->Activate(obj, mode);
+    const auto typedMode = static_cast<SelectionMode>(mode);
+    if (this->propertyIsVisible.value()) {
+        for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
+            this->context()->Activate(obj, toAisShapeSelectionMode(typedMode));
+    }
+
+    m_selectionActivated = this->propertyIsVisible.value();
+    m_setActivatedSelectionMode.insert(typedMode);
 }
 
 std::vector<Handle_SelectMgr_EntityOwner> GpxXdeDocumentItem::entityOwners(int mode) const
 {
+    const auto typedMode = static_cast<SelectionMode>(mode);
+    const int aisMode = toAisShapeSelectionMode(typedMode);
     std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-        GpxDocumentItem::getEntityOwners(this->context(), obj, mode, &vecOwner);
+        GpxDocumentItem::getEntityOwners(this->context(), obj, aisMode, &vecOwner);
     return vecOwner;
 }
 

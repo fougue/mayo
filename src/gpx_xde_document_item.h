@@ -9,12 +9,22 @@
 #include "xde_document_item.h"
 #include "gpx_document_item.h"
 #include <XCAFPrs_AISObject.hxx>
+#include <unordered_set>
 
 namespace Mayo {
 
 class GpxXdeDocumentItem : public GpxDocumentItem {
     Q_DECLARE_TR_FUNCTIONS(Mayo::GpxXdeDocumentItem)
 public:
+    enum SelectionMode {
+        SelectVertex,
+        SelectEdge,
+        SelectWire,
+        SelectFace,
+        SelectShell,
+        SelectSolid
+    };
+
     GpxXdeDocumentItem(XdeDocumentItem* item);
     ~GpxXdeDocumentItem();
 
@@ -41,6 +51,8 @@ protected:
 private:
     XdeDocumentItem* m_xdeDocItem = nullptr;
     std::vector<Handle_XCAFPrs_AISObject> m_vecXdeGpx;
+    bool m_selectionActivated = false;
+    std::unordered_set<SelectionMode> m_setActivatedSelectionMode;
 };
 
 } // namespace Mayo
