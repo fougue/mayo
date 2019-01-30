@@ -30,7 +30,7 @@ public:
     void addRootItem(DocumentItem* item);
     bool eraseRootItem(DocumentItem* docItem);
 
-    const std::vector<DocumentItem*>& rootItems() const;
+    Span<DocumentItem* const> rootItems() const;
     bool isEmpty() const;
 
     PropertyQString propertyLabel;

@@ -11,7 +11,7 @@
 
 namespace Mayo {
 
-const std::vector<Property*>& PropertyOwner::properties() const
+Span<Property* const> PropertyOwner::properties() const
 {
     return m_properties;
 }
@@ -34,7 +34,7 @@ void PropertyOwner::addProperty(Property* prop)
     m_properties.emplace_back(prop);
 }
 
-void PropertyOwner::removeProperty(Property *prop)
+void PropertyOwner::removeProperty(Property* prop)
 {
     auto it = std::find(m_properties.begin(), m_properties.end(), prop);
     if (it != m_properties.end())
@@ -56,7 +56,7 @@ void Property::setUserReadOnly(bool on)
     m_isUserReadOnly = on;
 }
 
-Property::Property(PropertyOwner *owner, const QString &label)
+Property::Property(PropertyOwner* owner, const QString& label)
     : m_owner(owner),
       m_label(label)
 {
@@ -130,12 +130,12 @@ void HandleProperty::swap(HandleProperty &&other)
     other.m_prop = nullptr;
 }
 
-PropertyOwnerSignals::PropertyOwnerSignals(QObject *parent)
+PropertyOwnerSignals::PropertyOwnerSignals(QObject* parent)
     : QObject(parent)
 {
 }
 
-void PropertyOwnerSignals::onPropertyChanged(Property *prop)
+void PropertyOwnerSignals::onPropertyChanged(Property* prop)
 {
     PropertyOwner::onPropertyChanged(prop);
     emit propertyChanged(prop);

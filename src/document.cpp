@@ -56,7 +56,7 @@ bool Document::eraseRootItem(DocumentItem *docItem)
     return false;
 }
 
-const std::vector<DocumentItem*>& Document::rootItems() const
+Span<DocumentItem* const> Document::rootItems() const
 {
     return m_rootItems;
 }

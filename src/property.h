@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "span.h"
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
 #include <QtCore/QString>
@@ -18,7 +19,7 @@ class Property;
 class PropertyOwner {
 public:
     // TODO change to computed properties, remove member m_properties
-    const std::vector<Property*>& properties() const;
+    Span<Property* const> properties() const;
 
 protected:
     virtual void onPropertyChanged(Property* prop);
