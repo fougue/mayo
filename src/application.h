@@ -57,22 +57,19 @@ public:
 #endif
     };
 
-    using ArrayDocument = std::vector<Document*>;
-    using ArrayDocumentConstIterator = ArrayDocument::const_iterator;
-
     // -- API
     static Application* instance();
 
-    const ArrayDocument& documents() const;
+    Span<Document* const> documents() const;
     int documentCount() const;
     Document* documentAt(int index) const;
+    int findDocumentByLocation(const QFileInfo& loc) const;
+    int indexOfDocument(const Document* doc) const;
 
     void addDocument(Document* doc);
     bool eraseDocument(Document* doc);
 
-    ArrayDocumentConstIterator findDocumentByLocation(const QFileInfo& loc) const;
-
-    static const std::vector<PartFormat>& partFormats();
+    static Span<const PartFormat> partFormats();
     static QString partFormatFilter(PartFormat format);
     static QStringList partFormatFilters();
     static PartFormat findPartFormat(const QString& filepath);

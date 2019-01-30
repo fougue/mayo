@@ -669,13 +669,9 @@ void MainWindow::onApplicationItemSelectionChanged()
 
         if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
             const Document* doc = item.document();
-            if (doc != nullptr) {
-                const std::vector<Document*>& vecDoc = Application::instance()->documents();
-                auto itFound = std::find(vecDoc.cbegin(), vecDoc.cend(), doc);
-                auto index = itFound != vecDoc.cend() ? itFound - vecDoc.cbegin() : -1;
-                if (index != -1)
-                    this->setCurrentDocumentIndex(index);
-            }
+            const int index = Application::instance()->indexOfDocument(doc);
+            if (index != -1)
+                this->setCurrentDocumentIndex(index);
         }
     }
     else {
@@ -726,7 +722,8 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
-    this->setCurrentDocumentIndex(Application::instance()->documentCount() - 1);
+    const int newDocIndex = Application::instance()->documentCount() - 1;
+    QTimer::singleShot(0, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
@@ -839,11 +836,10 @@ void MainWindow::closeAllDocuments()
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
     auto app = Application::instance();
-    const Application::ArrayDocument& vecDocument = app->documents();
     for (const QString& filePath : listFilePath) {
         const QFileInfo loc(filePath);
-        auto itDocFound = app->findDocumentByLocation(loc);
-        if (itDocFound == vecDocument.cend()) {
+        const int docId = app->findDocumentByLocation(loc);
+        if (docId == -1) {
             const QString locAbsoluteFilePath =
                     QDir::toNativeSeparators(loc.absoluteFilePath());
             const Application::PartFormat fileFormat =
@@ -862,7 +858,7 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
         }
         else {
             if (listFilePath.size() == 1)
-                this->setCurrentDocumentIndex(itDocFound - vecDocument.cbegin());
+                this->setCurrentDocumentIndex(docId);
         }
     }
 }

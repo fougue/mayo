@@ -421,19 +421,18 @@ int Application::documentCount() const
 
 Document *Application::documentAt(int index) const
 {
-    const bool validIndex = 0 <= index && index < m_documents.size();
+    const bool validIndex = (0 <= index) && (index < m_documents.size());
     return validIndex ? m_documents.at(index) : nullptr;
 }
 
-const std::vector<Document*>& Application::documents() const
+Span<Document* const> Application::documents() const
 {
     return m_documents;
 }
 
-void Application::addDocument(Document *doc)
+void Application::addDocument(Document* doc)
 {
-    auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
-    if (doc != nullptr && itFound == m_documents.cend()) {
+    if (doc && this->indexOfDocument(doc) == -1) {
         QObject::connect(doc, &Document::propertyChanged, [=](Property* prop) {
             emit documentPropertyChanged(doc, prop);
         });
@@ -452,7 +451,7 @@ void Application::addDocument(Document *doc)
     }
 }
 
-bool Application::eraseDocument(Document *doc)
+bool Application::eraseDocument(Document* doc)
 {
     auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
     if (itFound != m_documents.cend()) {
@@ -464,8 +463,7 @@ bool Application::eraseDocument(Document *doc)
     return false;
 }
 
-Application::ArrayDocumentConstIterator
-Application::findDocumentByLocation(const QFileInfo& loc) const
+int Application::findDocumentByLocation(const QFileInfo& loc) const
 {
     const QString locAbsoluteFilePath = loc.absoluteFilePath();
     auto itDocFound = std::find_if(
@@ -474,7 +472,13 @@ Application::findDocumentByLocation(const QFileInfo& loc) const
                 [=](const Document* doc) {
         return QFileInfo(doc->filePath()).absoluteFilePath() == locAbsoluteFilePath;
     });
-    return itDocFound;
+    return itDocFound != m_documents.cend() ? itDocFound - m_documents.cbegin() : -1;
+}
+
+int Application::indexOfDocument(const Document* doc) const
+{
+    auto itFound = std::find(m_documents.cbegin(), m_documents.cend(), doc);
+    return itFound != m_documents.cend() ? (itFound - m_documents.cbegin()) : -1;
 }
 
 Application::IoResult Application::importInDocument(
@@ -520,7 +524,7 @@ bool Application::hasExportOptionsForFormat(Application::PartFormat format)
     return format == PartFormat::Stl;
 }
 
-const std::vector<Application::PartFormat>& Application::partFormats()
+Span<const Application::PartFormat> Application::partFormats()
 {
     const static std::vector<PartFormat> vecFormat = {
         PartFormat::Iges,
