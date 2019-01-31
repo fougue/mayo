@@ -7,9 +7,9 @@
 #include "gpx_document_item_factory.h"
 #include "gpx_mesh_item.h"
 #include "gpx_xde_document_item.h"
-
 #include "mainwindow.h"
 #include "theme.h"
+#include "version.h"
 
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
@@ -103,12 +103,12 @@ static int runApp(QApplication* app)
 
 } // namespace Mayo
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     QApplication::setOrganizationName("Fougue Ltd");
     QApplication::setOrganizationDomain("www.fougue.pro");
     QApplication::setApplicationName("Mayo");
-    QApplication::setApplicationVersion("0.1");
+    QApplication::setApplicationVersion(Mayo::strVersionMajMinPatch);
     return Mayo::runApp(&app);
 }
