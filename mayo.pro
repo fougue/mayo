@@ -85,7 +85,8 @@ HEADERS += \
     src/widget_shape_selector.h \
     src/xde_document_item.h \
     src/xde_shape_property_owner.h \
-    src/gui_document_list_model.h
+    src/gui_document_list_model.h \
+    src/gpx_document_item_factory.h \
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -142,7 +143,8 @@ SOURCES += \
     src/widget_shape_selector.cpp \
     src/xde_document_item.cpp \
     src/xde_shape_property_owner.cpp \
-    src/gui_document_list_model.cpp
+    src/gui_document_list_model.cpp \
+    src/gpx_document_item_factory.cpp \
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 

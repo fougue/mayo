@@ -11,11 +11,9 @@
 #include "brep_utils.h"
 #include "document.h"
 #include "document_item.h"
-#include "gpx_document_item.h"
-#include "gpx_mesh_item.h"
 #include "gpx_utils.h"
 #include "gpx_xde_document_item.h"
-#include "mesh_item.h"
+#include "gpx_document_item_factory.h"
 #include "theme.h"
 #include "xde_document_item.h"
 
@@ -32,24 +30,6 @@
 namespace Mayo {
 
 namespace Internal {
-
-template<typename ITEM, typename GPX_ITEM>
-bool createGpxIfItemOfType(GpxDocumentItem** gpx, DocumentItem* item)
-{
-    if (*gpx == nullptr && sameType<ITEM>(item)) {
-        *gpx = new GPX_ITEM(static_cast<ITEM*>(item));
-        return true;
-    }
-    return false;
-}
-
-static GpxDocumentItem* createGpxForItem(DocumentItem* item)
-{
-    GpxDocumentItem* gpx = nullptr;
-    createGpxIfItemOfType<XdeDocumentItem, GpxXdeDocumentItem>(&gpx, item);
-    createGpxIfItemOfType<MeshItem, GpxMeshItem>(&gpx, item);
-    return gpx;
-}
 
 static Handle_V3d_Viewer createOccViewer()
 {
@@ -145,7 +125,7 @@ const Handle_AIS_InteractiveContext &GuiDocument::aisInteractiveContext() const
     return m_aisContext;
 }
 
-GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem *item) const
+GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem* item) const
 {
     const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
     return guiDocItem ? guiDocItem->gpxDocItem.get() : nullptr;
@@ -156,15 +136,16 @@ const Bnd_Box &GuiDocument::gpxBoundingBox() const
     return m_gpxBoundingBox;
 }
 
-void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
+void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
 {
     if (appItem.document() != this->document())
         return;
+
     if (appItem.isXdeAssemblyNode()) {
         const XdeAssemblyNode& xdeAsmNode = appItem.xdeAssemblyNode();
         const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
         const GuiDocumentItem* guiItem = this->findGuiDocumentItem(xdeItem);
-        if (guiItem != nullptr) {
+        if (guiItem) {
             const TopLoc_Location shapeLoc =
                     xdeItem->shapeAbsoluteLocation(xdeAsmNode.nodeId);
             const TopoDS_Shape shape =
@@ -178,6 +159,7 @@ void GuiDocument::toggleItemSelected(const ApplicationItem &appItem)
             else if (shape.ShapeType() == TopAbs_FACE) {
                 vecFace.push_back(TopoDS::Face(shape));
             }
+
             for (const TopoDS_Face& face : vecFace) {
                 auto brepOwner = guiItem->findBrepOwner(face);
                 if (!brepOwner.IsNull())
@@ -264,21 +246,23 @@ void GuiDocument::onItemErased(const DocumentItem *item)
 
 void GuiDocument::mapGpxItem(DocumentItem *item)
 {
-    GuiDocumentItem guiItem(item, Internal::createGpxForItem(item));
-    guiItem.gpxDocItem->setContext(m_aisContext);
-    guiItem.gpxDocItem->setVisible(true);
+    GpxDocumentItem* gpxItem = GpxDocumentItemFactory::instance()->create(item);
+    GuiDocumentItem guiItem(item, gpxItem);
+    gpxItem->setContext(m_aisContext);
+    gpxItem->setVisible(true);
     m_aisContext->UpdateCurrentViewer();
     if (sameType<XdeDocumentItem>(item)) {
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectVertex);
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectEdge);
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectWire);
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectFace);
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectShell);
-        guiItem.gpxDocItem->activateSelection(GpxXdeDocumentItem::SelectSolid);
-        guiItem.vecGpxEntityOwner = guiItem.gpxDocItem->entityOwners(GpxXdeDocumentItem::SelectFace);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectVertex);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectEdge);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectWire);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectFace);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectShell);
+        gpxItem->activateSelection(GpxXdeDocumentItem::SelectSolid);
+        guiItem.vecGpxEntityOwner = gpxItem->entityOwners(GpxXdeDocumentItem::SelectFace);
     }
+
     GpxUtils::V3dView_fitAll(m_v3dView);
-    BndUtils::add(&m_gpxBoundingBox, guiItem.gpxDocItem->boundingBox());
+    BndUtils::add(&m_gpxBoundingBox, gpxItem->boundingBox());
     m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
 }
 

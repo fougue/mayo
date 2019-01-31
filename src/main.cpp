@@ -4,28 +4,31 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "gpx_document_item_factory.h"
+#include "gpx_mesh_item.h"
+#include "gpx_xde_document_item.h"
+
 #include "mainwindow.h"
 #include "theme.h"
+
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
 #include <QtWidgets/QApplication>
 #include <iostream>
 #include <memory>
 
-namespace {
+namespace Mayo {
 
 class Main { Q_DECLARE_TR_FUNCTIONS(Main) };
 
-static std::unique_ptr<Mayo::Theme> globalTheme;
-
-struct Arguments {
+struct CommandLineArguments {
     QString themeName;
     QStringList listFileToOpen;
 };
 
-static Arguments processCommandLine()
+static CommandLineArguments processCommandLine()
 {
-    Arguments args;
+    CommandLineArguments args;
 
     // Configure command-line parser
     QCommandLineParser cmdParser;
@@ -55,40 +58,38 @@ static Arguments processCommandLine()
     return args;
 }
 
-} // namespace
-
-namespace Mayo {
+static std::unique_ptr<Theme> globalTheme;
 
 // Declared in theme.h
-Theme* mayoTheme() {
+Theme* mayoTheme()
+{
     return globalTheme.get();
 }
 
-} // namespace Mayo
-
-int main(int argc, char *argv[])
+static int runApp(QApplication* app)
 {
-    QApplication app(argc, argv);
+    const CommandLineArguments args = processCommandLine();
 
-    QApplication::setOrganizationName("Fougue Ltd");
-    QApplication::setOrganizationDomain("www.fougue.pro");
-    QApplication::setApplicationName("Mayo");
-    QApplication::setApplicationVersion("0.1");
-
-    const Arguments args = processCommandLine();
+    // Register Gpx factory functions
+    GpxDocumentItemFactory::instance()->registerCreatorFunction(
+                XdeDocumentItem::TypeName,
+                &GpxDocumentItemFactory::createGpx<XdeDocumentItem, GpxXdeDocumentItem>);
+    GpxDocumentItemFactory::instance()->registerCreatorFunction(
+                MeshItem::TypeName,
+                &GpxDocumentItemFactory::createGpx<MeshItem, GpxMeshItem>);
 
     // Create theme
-    globalTheme.reset(Mayo::createTheme(args.themeName));
+    globalTheme.reset(createTheme(args.themeName));
     if (!globalTheme) {
         const QString errorText =
                 Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
         std::cerr << qUtf8Printable(errorText) << std::endl;
         return -1;
     }
-    Mayo::mayoTheme()->setup();
+    mayoTheme()->setup();
 
     // Create MainWindow
-    Mayo::MainWindow mainWindow;
+    MainWindow mainWindow;
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
     if (!args.listFileToOpen.empty()) {
@@ -97,5 +98,17 @@ int main(int argc, char *argv[])
         });
     }
 
-    return app.exec();
+    return app->exec();
+}
+
+} // namespace Mayo
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    QApplication::setOrganizationName("Fougue Ltd");
+    QApplication::setOrganizationDomain("www.fougue.pro");
+    QApplication::setApplicationName("Mayo");
+    QApplication::setApplicationVersion("0.1");
+    return Mayo::runApp(&app);
 }
