@@ -22,7 +22,7 @@ public:
         double value;
         const char* strUnit; // UTF8
         double factor;
-        operator double() const { return this->value; }
+        constexpr operator double() const { return this->value; }
     };
 
     template<Unit UNIT>
@@ -34,6 +34,7 @@ public:
     static TranslateResult radians(QuantityAngle angle);
     static TranslateResult degrees(QuantityAngle angle);
     static TranslateResult millimeters(QuantityLength length);
+    static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
     static TranslateResult seconds(QuantityTime duration);
 

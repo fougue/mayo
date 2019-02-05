@@ -11,6 +11,8 @@
 #include <QtCore/QLocale>
 #include <cfloat>
 
+#define MAYO_CUBIC_SYMBOL "\xc2\xb3"
+
 namespace Mayo {
 
 namespace Internal {
@@ -30,10 +32,10 @@ static const char* symbol(Unit unit)
     case Unit::Angle: return "rad";
     // Derived
     case Unit::Area: return "m²";
-    case Unit::Volume: return "m^3";
+    case Unit::Volume: return "m" MAYO_CUBIC_SYMBOL;
     case Unit::Velocity: return "m/s";
     case Unit::Acceleration: return "m/s²";
-    case Unit::Density: return "kg/m^3";
+    case Unit::Density: return "kg/m" MAYO_CUBIC_SYMBOL;
     case Unit::Pressure: return "kg/m.s²";
     }
     return "?";
@@ -54,8 +56,6 @@ template<size_t N> UnitSystem::TranslateResult translate(
     }
     return { value, nullptr, 1. };
 }
-
-#define MAYO_CUBIC_SYMBOL "\xc2\xb3"
 
 static UnitSystem::TranslateResult translateSI(double value, Unit unit)
 {
@@ -206,6 +206,11 @@ UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
 {
     return { length.value(), "mm", 1. };
+}
+
+UnitSystem::TranslateResult UnitSystem::cubicMillimeters(QuantityVolume volume)
+{
+    return { volume.value(), "mm" MAYO_CUBIC_SYMBOL, 1. };
 }
 
 UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity speed)
