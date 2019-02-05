@@ -31,10 +31,10 @@ static void redisplayAndUpdateViewer(const Handle_AIS_InteractiveObject& gpx)
 } // namespace Internal
 
 GpxMeshItem::GpxMeshItem(MeshItem *item)
-    : m_meshItem(item),
-      propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
+    : propertyDisplayMode(this, tr("Display mode"), &enum_DisplayMode()),
       propertyShowEdges(this, tr("Show edges")),
-      propertyShowNodes(this, tr("Show nodes"))
+      propertyShowNodes(this, tr("Show nodes")),
+      m_meshItem(item)
 {
     // Create the MeshVS_Mesh object
     const Options* opts = Options::instance();

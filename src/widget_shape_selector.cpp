@@ -30,6 +30,9 @@ static QString stringShapeTypePlural(TopAbs_ShapeEnum shapeType)
     case TopAbs_FACE: return WidgetShapeSelector::tr("Faces");
     case TopAbs_SHELL: return WidgetShapeSelector::tr("Shells");
     case TopAbs_SOLID: return WidgetShapeSelector::tr("Solids");
+    case TopAbs_COMPOUND: return WidgetShapeSelector::tr("Compounds");
+    case TopAbs_COMPSOLID: return WidgetShapeSelector::tr("Connected solids");
+    case TopAbs_SHAPE: return WidgetShapeSelector::tr("?Shapes?");
     }
     return QString("?");
 }

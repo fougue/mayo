@@ -22,9 +22,9 @@
 namespace Mayo {
 
 GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
-    : m_xdeDocItem(item),
-      propertyTransparency(this, tr("Transparency"), 0, 100, 5),
-      propertyDisplayMode(this, tr("Display mode"), &enumDisplayMode())
+    : propertyTransparency(this, tr("Transparency"), 0, 100, 5),
+      propertyDisplayMode(this, tr("Display mode"), &enumDisplayMode()),
+      m_xdeDocItem(item)
 {
     // XCAFPrs_AISObject requires a root label containing a TopoDS_Shape
     // If the XDE document as many free top-level shapes then there is a problem
