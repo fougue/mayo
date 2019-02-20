@@ -3,8 +3,20 @@ TEMPLATE = app
 
 QT += core gui widgets
 
-CONFIG += console c++17
-#CONFIG += release_with_debuginfo
+CONFIG += c++17
+
+CONFIG(debug, debug|release) {
+    CONFIG += console
+} else {
+    CONFIG -= console
+    CONFIG += release_with_debuginfo
+}
+
+release_with_debuginfo:*msvc* {
+    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
+    QMAKE_CXXFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
+}
 
 *msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
@@ -12,12 +24,6 @@ CONFIG += console c++17
 }
 *g++*{
     QMAKE_CXXFLAGS += -std=c++17
-}
-
-release_with_debuginfo:*msvc* {
-    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
-    QMAKE_CXXFLAGS_RELEASE += /Zi
-    QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
 }
 
 include(version.pri)
@@ -169,8 +175,9 @@ OTHER_FILES += \
 
 # gmio
 isEmpty(GMIO_ROOT) {
-    message(gmio is disabled)
+    message(gmio OFF)
 } else {
+    message(gmio ON)
     CONFIG(debug, debug|release) {
         GMIO_BIN_SUFFIX = d
     } else {
