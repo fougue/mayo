@@ -22,5 +22,5 @@ SOURCES += \
     ../src/unit_system.cpp \
 
 # OpenCascade
-include(../occ.pri)
+include(../opencascade.pri)
 LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim

@@ -193,7 +193,7 @@ isEmpty(GMIO_ROOT) {
 }
 
 # OpenCascade
-include(occ.pri)
+include(opencascade.pri)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
 LIBS += -lTKG2d
 LIBS += -lTKBRep -lTKSTL

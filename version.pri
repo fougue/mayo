@@ -14,9 +14,9 @@ MAYO_VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}-r$$MAYO_REVNUM
 QMAKE_SUBSTITUTES += $$PWD/src/version.h.in
 
 CONFIG(debug, debug|release) {
-    message(Version $$MAYO_VERSION debug)
+    message(Mayo version $$MAYO_VERSION debug)
 } else {
-    message(Version $$MAYO_VERSION release)
+    message(Mayo version $$MAYO_VERSION release)
 }
 
 INCLUDEPATH += $$OUT_PWD/src  # To allow inclusion as "version.h" from source code

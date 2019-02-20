@@ -34,7 +34,7 @@ OCC_VERSION_PATCH = $$section(OCC_VERSION_PATCH, " ", -1)
 
 OCC_VERSION_STR = $$join($$list($$OCC_VERSION_MAJOR, $$OCC_VERSION_MINOR, $$OCC_VERSION_PATCH), .)
 
-message(OCC_VERSION : $$OCC_VERSION_STR)
+message(OpenCascade version $$OCC_VERSION_STR)
 
 # Platform dependant config
 equals(QT_ARCH, i386) {
