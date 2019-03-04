@@ -3,10 +3,10 @@
 namespace Mayo {
 
 const char strVersion[] = \"$$MAYO_VERSION\";
-const char strVersionMajMinPatch[] = \"$${VER_MAJ}.$${VER_MIN}.$$VER_PAT\";
-const char strVersionRevNum[] = \"$$MAYO_REVNUM\";
-const unsigned versionMajor = $$VER_MAJ;
-const unsigned versionMinor = $$VER_MIN;
-const unsigned versionPatch = $$VER_PAT;
+const char strVersionCommitId[] = \"$$MAYO_VERSION_COMMIT\";
+const unsigned versionRevisionNumber = $$MAYO_VERSION_REVNUM;
+const unsigned versionMajor = $$MAYO_VERSION_MAJ;
+const unsigned versionMinor = $$MAYO_VERSION_MIN;
+const unsigned versionPatch = $$MAYO_VERSION_PAT;
 
 } // namespace Mayo

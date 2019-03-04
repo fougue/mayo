@@ -27,6 +27,11 @@ release_with_debuginfo:*msvc* {
 }
 
 include(version.pri)
+CONFIG(debug, debug|release) {
+    message(Mayo version $$MAYO_VERSION debug)
+} else {
+    message(Mayo version $$MAYO_VERSION release)
+}
 
 INCLUDEPATH += \
     src \

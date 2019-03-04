@@ -109,6 +109,5 @@ int main(int argc, char* argv[])
     QApplication::setOrganizationName("Fougue Ltd");
     QApplication::setOrganizationDomain("www.fougue.pro");
     QApplication::setApplicationName("Mayo");
-    QApplication::setApplicationVersion(Mayo::strVersionMajMinPatch);
     return Mayo::runApp(&app);
 }
