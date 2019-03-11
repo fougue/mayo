@@ -26,6 +26,7 @@ public:
     };
 
     struct AbstractRubberBand {
+        virtual ~AbstractRubberBand() {}
         virtual void updateGeometry(const QRect& rect) = 0;
         virtual void setVisible(bool on) = 0;
     };
