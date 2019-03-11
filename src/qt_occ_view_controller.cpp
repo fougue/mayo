@@ -13,10 +13,11 @@
 #include <QtGui/QCursor>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QMenu>
-
 #include <V3d_View.hxx>
+
+// For QtOccViewController
+#include <QtWidgets/QRubberBand>
+#include <QtWidgets/QStyleFactory>
 
 namespace Mayo {
 
@@ -25,7 +26,7 @@ namespace Internal {
 static const QCursor& rotateCursor()
 {
     static QCursor cursor;
-    if (cursor.bitmap() == nullptr) {
+    if (!cursor.bitmap()) {
         const int rotateCursorWidth = 16;
         const int rotateCursorHeight = 16;
         const int rotateCursorByteCount =
@@ -87,31 +88,49 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
         if (mouseEvent->buttons() == Qt::LeftButton) {
-            if (!this->isRotating()) {
+            if (!this->isRotationStarted()) {
                 this->setViewCursor(Internal::rotateCursor());
-                this->setStateRotation(true);
+                this->startDynamicAction(DynamicAction::Rotation);
                 view->StartRotation(prevPos.x(), prevPos.y());
             }
+
             view->Rotation(currPos.x(), currPos.y());
         }
         else if (mouseEvent->buttons() == Qt::RightButton) {
-            if (!this->isPanning()) {
+            if (!this->isPanningStarted()) {
                 this->setViewCursor(Qt::SizeAllCursor);
-                this->setStatePanning(true);
+                this->startDynamicAction(DynamicAction::Panning);
             }
+
             view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
         }
+        else if (mouseEvent->buttons() == Qt::MiddleButton) {
+            if (!this->isWindowZoomingStarted()) {
+                this->setViewCursor(Qt::SizeBDiagCursor);
+                this->startDynamicAction(DynamicAction::WindowZoom);
+                m_posRubberBandStart = currPos;
+            }
+
+            this->drawRubberBand(m_posRubberBandStart, currPos);
+        }
+
         emit mouseMoved(currPos);
         break;
     }
     case QEvent::MouseButtonRelease: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const bool wasRotatingOrPanning = this->isRotating() || this->isPanning();
+        const bool hadDynamicAction = this->hasCurrentDynamicAction();
+        if (this->isWindowZoomingStarted()) {
+            const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
+            this->windowFitAll(m_posRubberBandStart, currPos);
+            this->hideRubberBand();
+        }
+
         this->setViewCursor(Qt::ArrowCursor);
-        this->setStateRotation(false);
-        this->setStatePanning(false);
-        if (!wasRotatingOrPanning)
+        this->stopDynamicAction();
+        if (!hadDynamicAction)
             emit mouseClicked(mouseEvent->button());
+
         break;
     }
     case QEvent::Wheel: {
@@ -120,6 +139,7 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
             this->zoomIn();
         else
             this->zoomOut();
+
         break;
     }
     default:
@@ -131,8 +151,34 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 
 void QtOccViewController::setViewCursor(const QCursor &cursor)
 {
-    if (m_widgetView != nullptr)
+    if (m_widgetView)
         m_widgetView->setCursor(cursor);
+}
+
+struct QtOccViewController::RubberBand : public BaseV3dViewController::AbstractRubberBand {
+    RubberBand(QWidget* parent)
+        : m_rubberBand(QRubberBand::Rectangle, parent)
+    {
+        // QWidget::setStyle() is important, set to windows style will just draw
+        // rectangle frame, otherwise will draw a solid rectangle.
+        m_rubberBand.setStyle(QStyleFactory::create("windows"));
+    }
+
+    void updateGeometry(const QRect& rect) override {
+        m_rubberBand.setGeometry(rect);
+    }
+
+    void setVisible(bool on) override {
+        m_rubberBand.setVisible(on);
+    }
+
+private:
+    QRubberBand m_rubberBand;
+};
+
+BaseV3dViewController::AbstractRubberBand* QtOccViewController::createRubberBand()
+{
+    return new RubberBand(m_widgetView);
 }
 
 BaseV3dViewController::BaseV3dViewController(
@@ -142,14 +188,9 @@ BaseV3dViewController::BaseV3dViewController(
 {
 }
 
-bool BaseV3dViewController::isRotating() const
+BaseV3dViewController::~BaseV3dViewController()
 {
-    return m_stateRotation;
-}
-
-bool BaseV3dViewController::isPanning() const
-{
-    return m_statePanning;
+    delete m_rubberBand;
 }
 
 void BaseV3dViewController::zoomIn()
@@ -164,26 +205,75 @@ void BaseV3dViewController::zoomOut()
     emit viewScaled();
 }
 
-void BaseV3dViewController::setStateRotation(bool on)
+void BaseV3dViewController::startDynamicAction(DynamicAction dynAction)
 {
-    if (m_stateRotation != on) {
-        if (on)
-            emit viewRotationStarted();
-        else
-            emit viewRotationEnded();
-        m_stateRotation = on;
+    if (dynAction == DynamicAction::None)
+        return;
+
+    if (m_dynamicAction != DynamicAction::None)
+        return;
+
+    m_dynamicAction = dynAction;
+    emit dynamicActionStarted(dynAction);
+}
+
+void BaseV3dViewController::stopDynamicAction()
+{
+    if (m_dynamicAction != DynamicAction::None) {
+        emit dynamicActionEnded(m_dynamicAction);
+        m_dynamicAction = DynamicAction::None;
     }
 }
 
-void BaseV3dViewController::setStatePanning(bool on)
+bool BaseV3dViewController::isRotationStarted() const
 {
-    if (m_statePanning != on) {
-        if (on)
-            emit viewPanningStarted();
-        else
-            emit viewPanningEnded();
-        m_statePanning = on;
-    }
+    return m_dynamicAction == DynamicAction::Rotation;
+}
+
+bool BaseV3dViewController::isPanningStarted() const
+{
+    return m_dynamicAction == DynamicAction::Panning;
+}
+
+bool BaseV3dViewController::isWindowZoomingStarted() const
+{
+    return m_dynamicAction == DynamicAction::WindowZoom;
+}
+
+void BaseV3dViewController::drawRubberBand(const QPoint& posMin, const QPoint& posMax)
+{
+    if (!m_rubberBand)
+        m_rubberBand = this->createRubberBand();
+
+    QRect rect;
+    rect.setX(std::min(posMin.x(), posMax.x()));
+    rect.setY(std::min(posMin.y(), posMax.y()));
+    rect.setWidth(std::abs(posMax.x() - posMin.x()));
+    rect.setHeight(std::abs(posMax.y() - posMin.y()));
+    m_rubberBand->updateGeometry(rect);
+    m_rubberBand->setVisible(true);
+}
+
+void BaseV3dViewController::hideRubberBand()
+{
+    if (m_rubberBand)
+        m_rubberBand->setVisible(false);
+}
+
+void BaseV3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
+{
+    if (std::abs(posMin.x() - posMax.x()) > 1 || std::abs(posMin.y() - posMax.y()) > 1)
+        m_view->WindowFitAll(posMin.x(), posMin.y(), posMax.x(), posMax.y());
+}
+
+BaseV3dViewController::DynamicAction BaseV3dViewController::currentDynamicAction() const
+{
+    return m_dynamicAction;
+}
+
+bool BaseV3dViewController::hasCurrentDynamicAction() const
+{
+    return m_dynamicAction != DynamicAction::None;
 }
 
 } // namespace Mayo

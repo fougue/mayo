@@ -219,7 +219,7 @@ void GpxShapeSelector::onShapeTypeChanged(TopAbs_ShapeEnum shapeEnum)
 
 void GpxShapeSelector::onView3dMouseMove(const QPoint &pos)
 {
-    if (!m_viewCtrl || m_viewCtrl->isPanning() || m_viewCtrl->isRotating())
+    if (!m_viewCtrl || m_viewCtrl->hasCurrentDynamicAction())
         return;
 
     this->context()->MoveTo(pos.x(), pos.y(), m_guiDocument->v3dView(), true);

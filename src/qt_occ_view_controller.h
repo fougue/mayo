@@ -9,38 +9,62 @@
 #include <V3d_View.hxx>
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
+#include <map>
 class QCursor;
+class QRubberBand;
 
 namespace Mayo {
 
 class BaseV3dViewController : public QObject {
     Q_OBJECT
 public:
-    BaseV3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
+    enum class DynamicAction {
+        None,
+        Panning,
+        Rotation,
+        WindowZoom
+    };
 
-    bool isRotating() const;
-    bool isPanning() const;
+    struct AbstractRubberBand {
+        virtual void updateGeometry(const QRect& rect) = 0;
+        virtual void setVisible(bool on) = 0;
+    };
+
+    BaseV3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
+    virtual ~BaseV3dViewController();
+
+    DynamicAction currentDynamicAction() const;
+    bool hasCurrentDynamicAction() const;
 
     void zoomIn();
     void zoomOut();
 
 signals:
-    void viewRotationStarted();
-    void viewRotationEnded();
-    void viewPanningStarted();
-    void viewPanningEnded();
+    void dynamicActionStarted(DynamicAction dynAction);
+    void dynamicActionEnded(DynamicAction dynAction);
     void viewScaled();
+
     void mouseMoved(const QPoint& posMouseInView);
     void mouseClicked(Qt::MouseButton btn);
 
 protected:
-    void setStateRotation(bool on);
-    void setStatePanning(bool on);
+    void startDynamicAction(DynamicAction dynAction);
+    void stopDynamicAction();
+
+    bool isRotationStarted() const;
+    bool isPanningStarted() const;
+    bool isWindowZoomingStarted() const;
+
+    void windowFitAll(const QPoint& posMin, const QPoint& posMax);
+
+    virtual AbstractRubberBand* createRubberBand() = 0;
+    void drawRubberBand(const QPoint& posMin, const QPoint& posMax);
+    void hideRubberBand();
 
 private:
     Handle_V3d_View m_view;
-    bool m_stateRotation = false;
-    bool m_statePanning = false;
+    DynamicAction m_dynamicAction = DynamicAction::None;
+    AbstractRubberBand* m_rubberBand = nullptr;
 };
 
 class WidgetOccView;
@@ -55,8 +79,12 @@ public:
 private:
     void setViewCursor(const QCursor& cursor);
 
+    AbstractRubberBand* createRubberBand() override;
+    struct RubberBand;
+
     WidgetOccView* m_widgetView = nullptr;
     QPoint m_prevPos;
+    QPoint m_posRubberBandStart;
 };
 
 } // namespace Mayo

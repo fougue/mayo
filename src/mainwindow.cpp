@@ -707,8 +707,9 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     BaseV3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &BaseV3dViewController::mouseMoved, [=](const QPoint& pos2d) {
-        if (ctrl->isPanning() || ctrl->isRotating())
+        if (ctrl->hasCurrentDynamicAction())
             return;
+
         auto selector = guiDoc->aisInteractiveContext()->MainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
