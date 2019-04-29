@@ -22,6 +22,19 @@ struct MathUtils {
     static double planePosition(const gp_Pln& plane);
     static std::pair<double, double> planeRange(
             const BndBoxCoords& bbc, const gp_Dir& planeNormal);
+
+    template<typename T, typename U> static T lerp(T a, T b, U t);
 };
+
+
+// --
+// -- Implementation
+// --
+
+template<typename T, typename U> T MathUtils::lerp(T a, T b, U t)
+{
+    // TODO Call std::lerp() when available(C++20)
+    return T(a * (1 - t) + b * t);
+}
 
 } // namespace Mayo
