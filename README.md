@@ -12,6 +12,13 @@ Current features are :
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
 * Area and volume properties for meshes and shapes
 
+3D viewer operations :
+* Rotate : mouse left + move
+* Pan : mouse right + move
+* Zoom : mouse wheel(scroll)
+* Window zoom : mouse wheel + move
+* Instant zoom : space bar
+
 # Build instructions
 Mayo requires Qt5 and OpenCascade-7.2.0.  
 Although only tested with VC++/Windows it should build fine on Linux and MacOS.  

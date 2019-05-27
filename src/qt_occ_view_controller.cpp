@@ -64,7 +64,8 @@ static const QCursor& rotateCursor()
 
 QtOccViewController::QtOccViewController(WidgetOccView* widgetView)
     : BaseV3dViewController(widgetView->v3dView(), widgetView),
-      m_widgetView(widgetView)
+      m_widgetView(widgetView),
+      m_prevCamera(new Graphic3d_Camera)
 {
     widgetView->installEventFilter(this);
 }
@@ -73,9 +74,47 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched != m_widgetView)
         return false;
-    Handle_V3d_View view = m_widgetView->v3dView();
 
+    Handle_V3d_View view = m_widgetView->v3dView();
     switch (event->type()) {
+    case QEvent::Enter: {
+        m_widgetView->grabKeyboard();
+        break;
+    }
+    case QEvent::Leave: {
+        m_widgetView->releaseKeyboard();
+        break;
+    }
+    case QEvent::KeyPress: {
+        auto keyEvent = static_cast<const QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_Space
+                && keyEvent->modifiers() == Qt::NoModifier
+                && !keyEvent->isAutoRepeat())
+        {
+            this->startDynamicAction(DynamicAction::InstantZoom);
+            m_prevCamera->Copy(view->Camera());
+            const QPoint currPos = m_widgetView->mapFromGlobal(QCursor::pos());
+            const int factor = 5;
+            const int dX = factor * 100;
+            view->StartZoomAtPoint(currPos.x(), currPos.y());
+            view->ZoomAtPoint(currPos.x(), currPos.y(), currPos.x() + dX, currPos.y());
+        }
+
+        break;
+    }
+    case QEvent::KeyRelease: {
+        auto keyEvent = static_cast<const QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_Space
+                && !keyEvent->isAutoRepeat()
+                && this->currentDynamicAction() == DynamicAction::InstantZoom)
+        {
+            this->stopDynamicAction();
+            view->Camera()->Copy(m_prevCamera);
+            view->Update();
+        }
+
+        break;
+    }
     case QEvent::MouseButtonPress: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
@@ -113,8 +152,10 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
 
             this->drawRubberBand(m_posRubberBandStart, currPos);
         }
+        else {
+            emit mouseMoved(currPos);
+        }
 
-        emit mouseMoved(currPos);
         break;
     }
     case QEvent::MouseButtonRelease: {

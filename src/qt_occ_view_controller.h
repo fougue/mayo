@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
@@ -22,7 +23,8 @@ public:
         None,
         Panning,
         Rotation,
-        WindowZoom
+        WindowZoom,
+        InstantZoom
     };
 
     struct AbstractRubberBand {
@@ -86,6 +88,7 @@ private:
     WidgetOccView* m_widgetView = nullptr;
     QPoint m_prevPos;
     QPoint m_posRubberBandStart;
+    Handle_Graphic3d_Camera m_prevCamera;
 };
 
 } // namespace Mayo
