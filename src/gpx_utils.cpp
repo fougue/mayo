@@ -21,7 +21,7 @@ void GpxUtils::V3dView_fitAll(const Handle_V3d_View& view)
 }
 
 bool GpxUtils::V3dView_hasClipPlane(
-        const Handle_V3d_View &view, const Handle_Graphic3d_ClipPlane &plane)
+        const Handle_V3d_View &view, const Handle_Graphic3d_ClipPlane& plane)
 {
     const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
     if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
@@ -89,7 +89,7 @@ void GpxUtils::AisContext_setObjectVisible(
     }
 }
 
-int GpxUtils::AspectWindow_width(const Handle_Aspect_Window &wnd)
+int GpxUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -98,7 +98,7 @@ int GpxUtils::AspectWindow_width(const Handle_Aspect_Window &wnd)
     return w;
 }
 
-int GpxUtils::AspectWindow_height(const Handle_Aspect_Window &wnd)
+int GpxUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -108,7 +108,7 @@ int GpxUtils::AspectWindow_height(const Handle_Aspect_Window &wnd)
 }
 
 void GpxUtils::Gpx3dClipPlane_setCappingHatch(
-        const Handle_Graphic3d_ClipPlane &plane, Aspect_HatchStyle hatch)
+        const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch)
 {
     if (hatch == Aspect_HS_SOLID)
         plane->SetCappingHatchOff();
@@ -118,7 +118,7 @@ void GpxUtils::Gpx3dClipPlane_setCappingHatch(
 }
 
 void GpxUtils::Gpx3dClipPlane_setNormal(
-        const Handle_Graphic3d_ClipPlane &plane, const gp_Dir &n)
+        const Handle_Graphic3d_ClipPlane& plane, const gp_Dir &n)
 {
     const double planePos = MathUtils::planePosition(plane->ToPlane());
     const gp_Vec placement(planePos * gp_Vec(n));
@@ -126,7 +126,7 @@ void GpxUtils::Gpx3dClipPlane_setNormal(
 }
 
 void GpxUtils::Gpx3dClipPlane_setPosition(
-        const Handle_Graphic3d_ClipPlane &plane, double pos)
+        const Handle_Graphic3d_ClipPlane& plane, double pos)
 {
     const gp_Dir& n = plane->ToPlane().Axis().Direction();
     if (MathUtils::isReversedStandardDir(n))

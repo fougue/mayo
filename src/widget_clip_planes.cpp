@@ -43,6 +43,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         data.gpx->SetCapping(opts->isClipPlaneCappingOn());
         if (data.gpx->IsCapping())
             GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, opts->clipPlaneCappingHatch());
+
         Graphic3d_MaterialAspect clipMaterial(Graphic3d_NOM_STEEL);
         Quantity_NameOfColor colorName;
         if (&data == &m_vecClipPlaneData.at(0))
@@ -53,6 +54,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             colorName = Quantity_NOC_BLUE1;
         else
             colorName = Quantity_NOC_GRAY;
+
         clipMaterial.SetColor(Quantity_Color(colorName));
         data.gpx->SetCappingMaterial(clipMaterial);
     }
@@ -62,9 +64,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             data.gpx->SetCapping(on);
         m_view->Redraw();
     });
-    QObject::connect(
-                opts, &Options::clipPlaneCappingHatchChanged,
-                [=](Aspect_HatchStyle hatch) {
+    QObject::connect(opts, &Options::clipPlaneCappingHatchChanged, [=](Aspect_HatchStyle hatch) {
         for (ClipPlaneData& data : m_vecClipPlaneData)
             GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, hatch);
         m_view->Redraw();
@@ -78,7 +78,7 @@ WidgetClipPlanes::~WidgetClipPlanes()
     delete m_ui;
 }
 
-void WidgetClipPlanes::setRanges(const Bnd_Box &bndBox)
+void WidgetClipPlanes::setRanges(const Bnd_Box& bndBox)
 {
     m_bndBox = bndBox;
     const bool isBndBoxVoid = bndBox.IsVoid();
@@ -90,6 +90,7 @@ void WidgetClipPlanes::setRanges(const Bnd_Box &bndBox)
         if (isBndBoxVoid)
             data.ui.check_On->setChecked(false);
     }
+
     m_view->Redraw();
 }
 
@@ -97,6 +98,7 @@ void WidgetClipPlanes::setClippingOn(bool on)
 {
     for (ClipPlaneData& data : m_vecClipPlaneData)
         data.gpx->SetOn(on ? data.ui.check_On->isChecked() : false);
+
     m_view->Redraw();
 }
 
@@ -106,8 +108,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     const Handle_Graphic3d_ClipPlane& gpx = data->gpx;
     QAbstractSlider* posSlider = ui.posSlider();
     QDoubleSpinBox* posSpin = ui.posSpin();
-    auto signalSpinValueChanged =
-            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+    auto signalSpinValueChanged = qOverload<double>(&QDoubleSpinBox::valueChanged);
 
     QObject::connect(ui.check_On, &QCheckBox::clicked, [=](bool on) {
         ui.widget_Control->setEnabled(on);
@@ -115,12 +116,11 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         m_view->Redraw();
     });
 
-    if (data->ui.customXDirSpin() != nullptr) {
+    if (data->ui.customXDirSpin()) {
         auto widgetDir = ui.widget_Control->findChild<QWidget*>("widget_CustomDir");
         QObject::connect(ui.check_On, &QAbstractButton::clicked, [=](bool on) {
             widgetDir->setVisible(on);
-            QWidget* panel =
-                    this->parentWidget() != nullptr ? this->parentWidget() : this;
+            QWidget* panel = this->parentWidget() ? this->parentWidget() : this;
             if (on) {
                 panel->adjustSize();
             }
@@ -174,7 +174,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
             }
         });
     };
-    if (customXDirSpin != nullptr) {
+    if (customXDirSpin) {
         funcConnectDirSpin(customXDirSpin);
         funcConnectDirSpin(customYDirSpin);
         funcConnectDirSpin(customZDirSpin);
@@ -197,7 +197,7 @@ void WidgetClipPlanes::setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool 
         m_view->AddClipPlane(plane);
 }
 
-void WidgetClipPlanes::setPlaneRange(ClipPlaneData *data, const Range& range)
+void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
 {
     const double rmin = range.first;
     const double rmax = range.second;
@@ -220,34 +220,34 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData *data, const Range& range)
     }
 }
 
-WidgetClipPlanes::UiClipPlane::UiClipPlane(QCheckBox *checkOn, QWidget *widgetControl)
+WidgetClipPlanes::UiClipPlane::UiClipPlane(QCheckBox* checkOn, QWidget* widgetControl)
     : check_On(checkOn), widget_Control(widgetControl)
 { }
 
-QDoubleSpinBox *WidgetClipPlanes::UiClipPlane::posSpin() const {
+QDoubleSpinBox* WidgetClipPlanes::UiClipPlane::posSpin() const {
     return this->widget_Control->findChild<QDoubleSpinBox*>(
                 QString(), Qt::FindDirectChildrenOnly);
 }
 
-QAbstractSlider *WidgetClipPlanes::UiClipPlane::posSlider() const {
+QAbstractSlider* WidgetClipPlanes::UiClipPlane::posSlider() const {
     return this->widget_Control->findChild<QSlider*>(
                 QString(), Qt::FindDirectChildrenOnly);
 }
 
-QAbstractButton *WidgetClipPlanes::UiClipPlane::inverseBtn() const {
+QAbstractButton* WidgetClipPlanes::UiClipPlane::inverseBtn() const {
     return this->widget_Control->findChild<QToolButton*>(
                 QString(), Qt::FindDirectChildrenOnly);
 }
 
-QDoubleSpinBox *WidgetClipPlanes::UiClipPlane::customXDirSpin() const {
+QDoubleSpinBox* WidgetClipPlanes::UiClipPlane::customXDirSpin() const {
     return this->widget_Control->findChild<QDoubleSpinBox*>("spin_CustomDirX");
 }
 
-QDoubleSpinBox *WidgetClipPlanes::UiClipPlane::customYDirSpin() const {
+QDoubleSpinBox* WidgetClipPlanes::UiClipPlane::customYDirSpin() const {
     return this->widget_Control->findChild<QDoubleSpinBox*>("spin_CustomDirY");
 }
 
-QDoubleSpinBox *WidgetClipPlanes::UiClipPlane::customZDirSpin() const {
+QDoubleSpinBox* WidgetClipPlanes::UiClipPlane::customZDirSpin() const {
     return this->widget_Control->findChild<QDoubleSpinBox*>("spin_CustomDirZ");
 }
 
@@ -255,14 +255,14 @@ double WidgetClipPlanes::UiClipPlane::spinValueToSliderValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
     return MathUtils::mappedValue(
-        val, spin->minimum(), spin->maximum(), slider->minimum(), slider->maximum());
+                val, spin->minimum(), spin->maximum(), slider->minimum(), slider->maximum());
 }
 
 double WidgetClipPlanes::UiClipPlane::sliderValueToSpinValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
     return MathUtils::mappedValue(
-        val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum());
+                val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum());
 }
 
 } // namespace Mayo
