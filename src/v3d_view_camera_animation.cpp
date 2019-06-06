@@ -10,7 +10,9 @@ namespace Mayo {
 
 V3dViewCameraAnimation::V3dViewCameraAnimation(const Handle_V3d_View& view, QObject* parent)
     : QAbstractAnimation(parent),
-      m_view(view)
+      m_view(view),
+      m_cameraStart(new Graphic3d_Camera),
+      m_cameraEnd(new Graphic3d_Camera)
 {
 }
 
@@ -26,12 +28,12 @@ void V3dViewCameraAnimation::setDuration(int msecs)
 
 void V3dViewCameraAnimation::setCameraStart(const Handle_Graphic3d_Camera& camera)
 {
-    m_cameraStart = camera;
+    m_cameraStart->Copy(camera);
 }
 
 void V3dViewCameraAnimation::setCameraEnd(const Handle_Graphic3d_Camera& camera)
 {
-    m_cameraEnd = camera;
+    m_cameraEnd->Copy(camera);
 }
 
 const QEasingCurve& V3dViewCameraAnimation::easingCurve() const
@@ -50,15 +52,11 @@ void V3dViewCameraAnimation::configure(const std::function<void(Handle_V3d_View)
         this->stop();
 
     const bool wasImmediateUpdateOn = m_view->SetImmediateUpdate(false);
-    Handle_Graphic3d_Camera cameraStart = new Graphic3d_Camera;
-    Handle_Graphic3d_Camera cameraEnd = new Graphic3d_Camera;
-    cameraStart->Copy(m_view->Camera());
+    m_cameraStart->Copy(m_view->Camera());
     fnViewChange(m_view);
-    cameraEnd->Copy(m_view->Camera());
-    m_view->Camera()->Copy(cameraStart); // Restore
+    m_cameraEnd->Copy(m_view->Camera());
+    m_view->Camera()->Copy(m_cameraStart); // Restore
     m_view->SetImmediateUpdate(wasImmediateUpdateOn);
-    this->setCameraStart(cameraStart);
-    this->setCameraEnd(cameraEnd);
 }
 
 void V3dViewCameraAnimation::updateCurrentTime(int currentTime)
