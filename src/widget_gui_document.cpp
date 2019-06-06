@@ -11,6 +11,7 @@
 #include "gui_document.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
+#include "v3d_view_camera_animation.h"
 #include "widget_occ_view.h"
 #include "widget_clip_planes.h"
 
@@ -38,11 +39,15 @@ static ButtonFlat* createViewBtn(
 }
 
 static void connectViewProjBtn(
-        ButtonFlat* btn, const Handle_V3d_View& view, V3d_TypeOfOrientation proj)
+        ButtonFlat* btn, V3dViewCameraAnimation* animation, V3d_TypeOfOrientation proj)
 {
+    auto fnViewSetProj = [=](Handle_V3d_View fnView){
+        fnView->SetProj(proj);
+        GpxUtils::V3dView_fitAll(fnView);
+    };
     QObject::connect(btn, &ButtonFlat::clicked, [=]{
-        view->SetProj(proj);
-        GpxUtils::V3dView_fitAll(view);
+        animation->configure(fnViewSetProj);
+        animation->start(QAbstractAnimation::KeepWhenStopped);
     });
 }
 
@@ -63,12 +68,14 @@ const int widgetMargin = 4;
 
 } // namespace Internal
 
-WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
+WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     : QWidget(parent),
       m_guiDoc(guiDoc),
-      m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this))
+      m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this)),
+      m_controller(new QtOccViewController(m_qtOccView)),
+      m_cameraAnimation(new V3dViewCameraAnimation(guiDoc->v3dView(), this))
 {
-    m_controller = new QtOccViewController(m_qtOccView);
+    m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
     auto layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_qtOccView);
@@ -95,17 +102,17 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipping, btnViewBottom, margin);
 
-    const Handle_V3d_View view3d = guiDoc->v3dView();
-    Internal::connectViewProjBtn(btnViewIso, view3d, V3d_XposYnegZpos);
-    Internal::connectViewProjBtn(btnViewBack, view3d, V3d_Xneg);
-    Internal::connectViewProjBtn(btnViewFront, view3d, V3d_Xpos);
-    Internal::connectViewProjBtn(btnViewLeft, view3d, V3d_Ypos);
-    Internal::connectViewProjBtn(btnViewRight, view3d, V3d_Yneg);
-    Internal::connectViewProjBtn(btnViewTop, view3d, V3d_Zpos);
-    Internal::connectViewProjBtn(btnViewBottom, view3d, V3d_Zneg);
-    QObject::connect(
-                btnFitAll, &ButtonFlat::clicked,
-                [=]{ GpxUtils::V3dView_fitAll(view3d); });
+    Internal::connectViewProjBtn(btnViewIso, m_cameraAnimation, V3d_XposYnegZpos);
+    Internal::connectViewProjBtn(btnViewBack, m_cameraAnimation, V3d_Xneg);
+    Internal::connectViewProjBtn(btnViewFront, m_cameraAnimation, V3d_Xpos);
+    Internal::connectViewProjBtn(btnViewLeft, m_cameraAnimation, V3d_Ypos);
+    Internal::connectViewProjBtn(btnViewRight, m_cameraAnimation, V3d_Yneg);
+    Internal::connectViewProjBtn(btnViewTop, m_cameraAnimation, V3d_Zpos);
+    Internal::connectViewProjBtn(btnViewBottom, m_cameraAnimation, V3d_Zneg);
+    QObject::connect(btnFitAll, &ButtonFlat::clicked, [=]{
+        m_cameraAnimation->configure(&GpxUtils::V3dView_fitAll);
+        m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
+    });
     QObject::connect(
                 btnEditClipping, &ButtonFlat::clicked,
                 this, &WidgetGuiDocument::toggleWidgetClipPlanes);
@@ -117,12 +124,12 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget *parent)
                 rectLastBtn.right(), rectLastBtn.bottom());
 }
 
-GuiDocument *WidgetGuiDocument::guiDocument() const
+GuiDocument* WidgetGuiDocument::guiDocument() const
 {
     return m_guiDoc;
 }
 
-BaseV3dViewController *WidgetGuiDocument::controller() const
+BaseV3dViewController* WidgetGuiDocument::controller() const
 {
     return m_controller;
 }
@@ -143,7 +150,7 @@ void WidgetGuiDocument::paintPanel(QWidget* widget)
 
 void WidgetGuiDocument::toggleWidgetClipPlanes()
 {
-    if (m_widgetClipPlanes == nullptr) {
+    if (!m_widgetClipPlanes) {
         auto panel = new Internal::PanelView3d(this);
         auto widget = new WidgetClipPlanes(m_guiDoc->v3dView(), panel);
         qtgui::QWidgetUtils::addContentsWidget(panel, widget);

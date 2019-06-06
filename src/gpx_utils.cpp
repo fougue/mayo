@@ -17,7 +17,7 @@ namespace Mayo {
 void GpxUtils::V3dView_fitAll(const Handle_V3d_View& view)
 {
     view->ZFitAll();
-    view->FitAll();
+    view->FitAll(0.01, false);
 }
 
 bool GpxUtils::V3dView_hasClipPlane(

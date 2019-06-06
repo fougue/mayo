@@ -12,6 +12,7 @@ namespace Mayo {
 
 class BaseV3dViewController;
 class GuiDocument;
+class V3dViewCameraAnimation;
 class WidgetClipPlanes;
 class WidgetOccView;
 
@@ -31,8 +32,9 @@ private:
     void toggleWidgetClipPlanes();
 
     GuiDocument* m_guiDoc = nullptr;
-    BaseV3dViewController* m_controller = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
+    BaseV3dViewController* m_controller = nullptr;
+    V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     QRect m_rectControls;
 };
