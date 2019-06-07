@@ -18,7 +18,6 @@
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtGui/QPainter>
 #include <QtWidgets/QBoxLayout>
-#include <V3d_TypeOfOrientation.hxx>
 
 namespace Mayo {
 
@@ -36,19 +35,6 @@ static ButtonFlat* createViewBtn(
     btn->setFixedSize(24, 24);
     btn->setToolTip(tooltip);
     return btn;
-}
-
-static void connectViewProjBtn(
-        ButtonFlat* btn, V3dViewCameraAnimation* animation, V3d_TypeOfOrientation proj)
-{
-    auto fnViewSetProj = [=](Handle_V3d_View fnView){
-        fnView->SetProj(proj);
-        GpxUtils::V3dView_fitAll(fnView);
-    };
-    QObject::connect(btn, &ButtonFlat::clicked, [=]{
-        animation->configure(fnViewSetProj);
-        animation->start(QAbstractAnimation::KeepWhenStopped);
-    });
 }
 
 class PanelView3d : public QWidget {
@@ -102,17 +88,24 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     qtgui::QWidgetUtils::moveWidgetRightTo(btnViewBottom, btnViewTop, margin);
     qtgui::QWidgetUtils::moveWidgetRightTo(btnEditClipping, btnViewBottom, margin);
 
-    Internal::connectViewProjBtn(btnViewIso, m_cameraAnimation, V3d_XposYnegZpos);
-    Internal::connectViewProjBtn(btnViewBack, m_cameraAnimation, V3d_Xneg);
-    Internal::connectViewProjBtn(btnViewFront, m_cameraAnimation, V3d_Xpos);
-    Internal::connectViewProjBtn(btnViewLeft, m_cameraAnimation, V3d_Ypos);
-    Internal::connectViewProjBtn(btnViewRight, m_cameraAnimation, V3d_Yneg);
-    Internal::connectViewProjBtn(btnViewTop, m_cameraAnimation, V3d_Zpos);
-    Internal::connectViewProjBtn(btnViewBottom, m_cameraAnimation, V3d_Zneg);
+    this->connectViewProjButton(btnViewIso, V3d_XposYnegZpos);
+    this->connectViewProjButton(btnViewIso, V3d_XposYnegZpos);
+    this->connectViewProjButton(btnViewBack, V3d_Xneg);
+    this->connectViewProjButton(btnViewFront, V3d_Xpos);
+    this->connectViewProjButton(btnViewLeft, V3d_Ypos);
+    this->connectViewProjButton(btnViewRight, V3d_Yneg);
+    this->connectViewProjButton(btnViewTop, V3d_Zpos);
+    this->connectViewProjButton(btnViewBottom, V3d_Zneg);
     QObject::connect(btnFitAll, &ButtonFlat::clicked, [=]{
         m_cameraAnimation->configure(&GpxUtils::V3dView_fitAll);
         m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
     });
+    QObject::connect(
+                m_controller, &BaseV3dViewController::dynamicActionStarted,
+                m_cameraAnimation, &V3dViewCameraAnimation::stop);
+    QObject::connect(
+                m_controller, &BaseV3dViewController::viewScaled,
+                m_cameraAnimation, &V3dViewCameraAnimation::stop);
     QObject::connect(
                 btnEditClipping, &ButtonFlat::clicked,
                 this, &WidgetGuiDocument::toggleWidgetClipPlanes);
@@ -146,6 +139,17 @@ void WidgetGuiDocument::paintPanel(QWidget* widget)
     const QRect surface(0, 0, frame.width(), frame.height());
     const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
     painter.fillRect(surface, panelColor);
+}
+
+void WidgetGuiDocument::connectViewProjButton(ButtonFlat* btn, V3d_TypeOfOrientation proj)
+{
+    QObject::connect(btn, &ButtonFlat::clicked, [=]{
+        m_cameraAnimation->configure([=](Handle_V3d_View view) {
+            view->SetProj(proj);
+            GpxUtils::V3dView_fitAll(view);
+        });
+        m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
+    });
 }
 
 void WidgetGuiDocument::toggleWidgetClipPlanes()

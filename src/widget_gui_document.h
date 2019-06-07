@@ -7,10 +7,12 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
+#include <V3d_TypeOfOrientation.hxx>
 
 namespace Mayo {
 
 class BaseV3dViewController;
+class ButtonFlat;
 class GuiDocument;
 class V3dViewCameraAnimation;
 class WidgetClipPlanes;
@@ -29,6 +31,7 @@ public:
     static void paintPanel(QWidget* widget);
 
 private:
+    void connectViewProjButton(ButtonFlat* btn, V3d_TypeOfOrientation proj);
     void toggleWidgetClipPlanes();
 
     GuiDocument* m_guiDoc = nullptr;
