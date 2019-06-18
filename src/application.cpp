@@ -311,26 +311,23 @@ bool matchToken(const char* buffer, const char (&token)[N])
 }
 
 Application::PartFormat findPartFormatFromContents(
-        const char *contentsBegin,
+        const char* contentsBegin,
         size_t contentsBeginSize,
         uint64_t fullContentsSizeHint)
 {
     // -- Binary STL ?
-    static const size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
+    constexpr size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
     if (contentsBeginSize >= binaryStlHeaderSize) {
-        const uint32_t offset = 80; // Skip header
+        constexpr uint32_t offset = 80; // Skip header
         const uint8_t* bytes = reinterpret_cast<const uint8_t*>(contentsBegin);
         const uint32_t facetsCount =
                 bytes[offset]
                 | (bytes[offset+1] << 8)
                 | (bytes[offset+2] << 16)
                 | (bytes[offset+3] << 24);
-        const unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
-        if ((facetSize * facetsCount + binaryStlHeaderSize)
-                == fullContentsSizeHint)
-        {
+        constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
+        if ((facetSize * facetsCount + binaryStlHeaderSize) == fullContentsSizeHint)
             return Application::PartFormat::Stl;
-        }
     }
 
     // -- IGES ?
@@ -339,13 +336,15 @@ Application::PartFormat findPartFormatFromContents(
         bool isIges = true;
         if (contentsBeginSize >= 80 && contentsBegin[72] == 'S') {
             for (int i = 73; i < 80 && isIges; ++i) {
-                if (contentsBegin[i] != ' ' && !std::isdigit(contentsBegin[i]))
+                if (contentsBegin[i] != ' '
+                        && !std::isdigit(static_cast<unsigned char>(contentsBegin[i])))
+                {
                     isIges = false;
+                }
             }
-            if (isIges && (contentsBegin[80] == '\n'
-                           || contentsBegin[80] == '\r'
-                           || contentsBegin[80] == '\f'))
-            {
+
+            const char c80 = contentsBegin[80];
+            if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
                 const int sVal = std::atoi(contentsBegin + 73);
                 if (sVal == 1)
                     return Application::PartFormat::Iges;
@@ -358,25 +357,20 @@ Application::PartFormat findPartFormatFromContents(
     // -- STEP ?
     {
         // regex : ^\s*ISO-10303-21\s*;\s*HEADER
-        static const char stepIsoId[] = "ISO-10303-21";
-        static const size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
-        static const char stepHeaderToken[] = "HEADER";
-        static const size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
+        constexpr char stepIsoId[] = "ISO-10303-21";
+        constexpr char stepHeaderToken[] = "HEADER";
+        constexpr size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
+        constexpr size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
         if (std::strncmp(contentsBegin, stepIsoId, stepIsoIdLen) == 0) {
-            auto charIt = StringUtils::skipWhiteSpaces(
+            const char* charIt = StringUtils::skipWhiteSpaces(
                         contentsBegin + stepIsoIdLen,
                         contentsBeginSize - stepIsoIdLen);
-            if (*charIt == ';'
-                    && (charIt - contentsBegin) < contentsBeginSize)
-            {
+            if (*charIt == ';' && (charIt - contentsBegin) < contentsBeginSize) {
                 charIt = StringUtils::skipWhiteSpaces(
                             charIt + 1,
                             contentsBeginSize - (charIt - contentsBegin));
-                if (std::strncmp(charIt, stepHeaderToken, stepHeaderTokenLen)
-                        == 0)
-                {
+                if (std::strncmp(charIt, stepHeaderToken, stepHeaderTokenLen) == 0)
                     return Application::PartFormat::Step;
-                }
             }
         }
     } // STEP
@@ -384,7 +378,7 @@ Application::PartFormat findPartFormatFromContents(
     // -- OpenCascade BREP ?
     {
         // regex : ^\s*DBRep_DrawableShape
-        static const char occBRepToken[] = "DBRep_DrawableShape";
+        constexpr char occBRepToken[] = "DBRep_DrawableShape";
         if (matchToken(contentsBegin, occBRepToken))
             return Application::PartFormat::OccBrep;
     }
@@ -392,7 +386,7 @@ Application::PartFormat findPartFormatFromContents(
     // -- ASCII STL ?
     {
         // regex : ^\s*solid
-        const char asciiStlToken[] = "solid";
+        constexpr char asciiStlToken[] = "solid";
         if (matchToken(contentsBegin, asciiStlToken))
             return Application::PartFormat::Stl;
     }

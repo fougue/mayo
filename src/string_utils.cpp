@@ -119,11 +119,12 @@ const char* StringUtils::rawText(IFSelect_ReturnStatus status)
     return "??";
 }
 
-const char *StringUtils::skipWhiteSpaces(const char *str, size_t len)
+const char* StringUtils::skipWhiteSpaces(const char* str, size_t len)
 {
     size_t pos = 0;
-    while (std::isspace(str[pos]) && pos < len)
+    while (std::isspace(static_cast<unsigned char>(str[pos])) && pos < len)
         ++pos;
+
     return str + pos;
 }
 
