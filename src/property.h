@@ -7,6 +7,8 @@
 #pragma once
 
 #include "span.h"
+#include "result.h"
+
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
 #include <QtCore/QString>
@@ -23,6 +25,7 @@ public:
 
 protected:
     virtual void onPropertyChanged(Property* prop);
+    virtual Result<void> isPropertyValid(const Property* prop) const;
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
 
@@ -58,6 +61,9 @@ public:
 
     const QString& label() const;
 
+    virtual QVariant valueAsVariant() const = 0;
+    virtual Result<void> setValueFromVariant(const QVariant& value) = 0;
+
     bool isUserReadOnly() const;
     void setUserReadOnly(bool on);
 
@@ -65,6 +71,12 @@ public:
 
 protected:
     void notifyChanged();
+    Result<void> isValid() const;
+    bool hasOwner() const;
+
+    template<typename T>
+    static Result<void> setValueHelper(
+            Property* prop, T* ptrValue, const T& newValue);
 
 private:
     PropertyOwner* const m_owner = nullptr;
@@ -110,6 +122,33 @@ private:
     Property* m_prop = nullptr;
     Storage m_storage = Pointer;
 };
+
+
+
+// --
+// -- Implementation
+// --
+
+template<typename T> Result<void> Property::setValueHelper(
+        Property* prop, T* ptrValue, const T& newValue)
+{
+    Result<void> result = Result<void>::ok();
+    if (prop->hasOwner()) {
+        const T previousValue = *ptrValue;
+        *ptrValue = newValue;
+        result = prop->isValid();
+        if (result.valid())
+            prop->notifyChanged();
+        else
+            *ptrValue = previousValue;
+    }
+    else {
+        *ptrValue = newValue;
+        prop->notifyChanged();
+    }
+
+    return result;
+}
 
 } // namespace Mayo
 

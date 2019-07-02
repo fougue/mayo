@@ -8,13 +8,12 @@
 
 #include "caf_utils.h"
 #include "options.h"
+#include "qmeta_tdf_label.h"
 #include "string_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
-
-#include <QtCore/QMetaType>
 
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
@@ -37,8 +36,6 @@
 
 #include <sstream>
 #include <tuple>
-
-Q_DECLARE_METATYPE(TDF_Label)
 
 namespace Mayo {
 

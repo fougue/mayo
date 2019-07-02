@@ -55,7 +55,6 @@ using QuantityAngle = Quantity<Unit::Angle>;
 using QuantityVelocity = Quantity<Unit::Velocity>;
 
 template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs);
-
 template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs);
 
 constexpr QuantityArea operator*(QuantityLength lhs, QuantityLength rhs);

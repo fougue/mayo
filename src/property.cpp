@@ -19,6 +19,11 @@ Span<Property* const> PropertyOwner::properties() const
 void PropertyOwner::onPropertyChanged(Property* /*prop*/)
 { }
 
+Result<void> PropertyOwner::isPropertyValid(const Property*) const
+{
+    return Result<void>::ok();
+}
+
 void PropertyOwner::blockPropertyChanged(bool on)
 {
     m_propertyChangedBlocked = on;
@@ -60,43 +65,55 @@ Property::Property(PropertyOwner* owner, const QString& label)
     : m_owner(owner),
       m_label(label)
 {
-    if (m_owner != nullptr)
+    if (m_owner)
         m_owner->addProperty(this);
 }
 
 void Property::notifyChanged()
 {
-    if (m_owner != nullptr && !m_owner->isPropertyChangedBlocked())
+    if (m_owner && !m_owner->isPropertyChangedBlocked())
         m_owner->onPropertyChanged(this);
 }
 
+Result<void> Property::isValid() const
+{
+    if (m_owner)
+        return m_owner->isPropertyValid(this);
+
+    return Result<void>::ok();
+}
+
+bool Property::hasOwner() const
+{
+    return m_owner != nullptr;
+}
 
 
-PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner *owner)
+PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner* owner)
     : m_owner(owner)
 {
-    if (m_owner != nullptr)
+    if (m_owner)
         m_owner->blockPropertyChanged(true);
 }
 
 PropertyChangedBlocker::~PropertyChangedBlocker()
 {
-    if (m_owner != nullptr)
+    if (m_owner)
         m_owner->blockPropertyChanged(false);
 }
 
-HandleProperty::HandleProperty(HandleProperty &&other)
+HandleProperty::HandleProperty(HandleProperty&& other)
 {
     this->swap(std::move(other));
 }
 
-HandleProperty &HandleProperty::operator=(HandleProperty &&other)
+HandleProperty &HandleProperty::operator=(HandleProperty&& other)
 {
     this->swap(std::move(other));
     return *this;
 }
 
-HandleProperty::HandleProperty(Property *prop, HandleProperty::Storage storage)
+HandleProperty::HandleProperty(Property* prop, HandleProperty::Storage storage)
     : m_prop(prop),
       m_storage(storage)
 {
@@ -108,12 +125,12 @@ HandleProperty::~HandleProperty()
         delete m_prop;
 }
 
-Property *HandleProperty::get() const
+Property* HandleProperty::get() const
 {
     return m_prop;
 }
 
-Property *HandleProperty::operator->() const
+Property* HandleProperty::operator->() const
 {
     return m_prop;
 }
@@ -123,7 +140,7 @@ HandleProperty::Storage HandleProperty::storage() const
     return m_storage;
 }
 
-void HandleProperty::swap(HandleProperty &&other)
+void HandleProperty::swap(HandleProperty&& other)
 {
     m_prop = other.m_prop;
     m_storage = other.m_storage;

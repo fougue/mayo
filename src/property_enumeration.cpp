@@ -100,11 +100,20 @@ Enumeration::Value PropertyEnumeration::value() const
     return m_value;
 }
 
-void PropertyEnumeration::setValue(Enumeration::Value v)
+Result<void> PropertyEnumeration::setValue(Enumeration::Value v)
 {
     // TODO: check v is an enumerated value of m_enumeration
-    m_value = v;
-    this->notifyChanged();
+    return Property::setValueHelper(this, &m_value, v);
+}
+
+QVariant PropertyEnumeration::valueAsVariant() const
+{
+    return QVariant::fromValue(m_value);
+}
+
+Result<void> PropertyEnumeration::setValueFromVariant(const QVariant& value)
+{
+    return this->setValue(value.toInt());
 }
 
 const char* PropertyEnumeration::dynTypeName() const

@@ -159,6 +159,7 @@ static QString propertyValueText(const PropertyEnumeration* prop)
         if (mapping.value == prop->value())
             return mapping.string;
     }
+
     return QString();
 }
 
@@ -168,6 +169,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
         auto propTime = static_cast<const PropertyTime*>(prop);
         return toStringDHMS(propTime->quantity());
     }
+
     const UnitSystem::TranslateResult trRes = unitTranslate(prop);
     return WidgetPropertiesEditor::tr("%1%2")
             .arg(StringUtils::text(trRes.value, Options::instance()->defaultTextOptions()))
@@ -182,6 +184,24 @@ static QString propertyValueText(
     return WidgetPropertiesEditor::tr("%1%2")
             .arg(StringUtils::text(trValue, Options::instance()->defaultTextOptions()))
             .arg(unitTr.strUnit);
+}
+
+static bool handlePropertyValidationError(
+        const Result<void>& resultValidation,
+        QWidget* propertyEditor,
+        const std::function<void()>& fnCallbackError = nullptr)
+{
+    if (!resultValidation) {
+        qtgui::QWidgetUtils::asyncMsgBoxCritical(
+                    propertyEditor->parentWidget(),
+                    WidgetPropertiesEditor::tr("Error"),
+                    resultValidation.errorText());
+        QSignalBlocker sigBlock(propertyEditor); Q_UNUSED(sigBlock);
+        if (fnCallbackError)
+            fnCallbackError();
+    }
+
+    return resultValidation.valid();
 }
 
 static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent)
@@ -202,8 +222,12 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
         double value = editor->value();
         const double f = trRes.factor;
         value = qFuzzyCompare(f, 1.) ? value : value * f;
-        if (!qFuzzyCompare(prop->quantityValue(), value))
-            prop->setQuantityValue(value);
+        if (!qFuzzyCompare(prop->quantityValue(), value)) {
+            const Result result = prop->setQuantityValue(value);
+            handlePropertyValidationError(result, editor, [=]{
+                editor->setValue(trRes.value);
+            });
+        }
     });
     return editor;
 }
@@ -224,8 +248,11 @@ static QWidget* createPropertyEditor(PropertyBool* prop, QWidget* parent)
     editor->setText(yesNoString(prop->value()));
     editor->setChecked(prop->value());
     QObject::connect(editor, &QCheckBox::toggled, [=](bool on) {
-        editor->setText(yesNoString(on));
-        prop->setValue(on);
+        const Result<void> result = prop->setValue(on);
+        handlePropertyValidationError(result, editor, [=]{
+            editor->setChecked(prop->value());
+        });
+        editor->setText(yesNoString(prop->value()));
     });
     return frame;
 }
@@ -237,11 +264,13 @@ static QWidget* createPropertyEditor(PropertyInt* prop, QWidget* parent)
         editor->setRange(prop->minimum(), prop->maximum());
         editor->setSingleStep(prop->singleStep());
     }
+
     editor->setValue(prop->value());
-    auto signalValueChanged =
-            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged);
-    QObject::connect(editor, signalValueChanged, [=](int val) {
-        prop->setValue(val);
+    QObject::connect(editor, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
+        const Result<void> result = prop->setValue(val);
+        handlePropertyValidationError(result, editor, [=]{
+            editor->setValue(prop->value());
+        });
     });
     return editor;
 }
@@ -255,10 +284,11 @@ static QWidget* createPropertyEditor(PropertyDouble* prop, QWidget* parent)
     }
     editor->setValue(prop->value());
     editor->setDecimals(Options::instance()->unitSystemDecimals());
-    auto signalValueChanged =
-            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
-    QObject::connect(editor, signalValueChanged, [=](double val) {
-        prop->setValue(val);
+    QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double val) {
+        const Result<void> result = prop->setValue(val);
+        handlePropertyValidationError(result, editor, [=]{
+            editor->setValue(prop->value());
+        });
     });
     return editor;
 }
@@ -268,7 +298,10 @@ static QWidget* createPropertyEditor(PropertyQString* prop, QWidget* parent)
     auto editor = new QLineEdit(parent);
     editor->setText(prop->value());
     QObject::connect(editor, &QLineEdit::textChanged, [=](const QString& text) {
-        prop->setValue(text);
+        const Result<void> result = prop->setValue(text);
+        handlePropertyValidationError(result, editor, [=]{
+            editor->setText(prop->value());
+        });
     });
     return editor;
 }
@@ -279,11 +312,13 @@ static QWidget* createPropertyEditor(PropertyEnumeration* prop, QWidget* parent)
     const Enumeration& enumDef = prop->enumeration();
     for (const Enumeration::Mapping& mapping : enumDef.mappings())
         editor->addItem(mapping.string, mapping.value);
+
     editor->setCurrentIndex(editor->findData(prop->value()));
-    auto signalActivated =
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::activated);
-    QObject::connect(editor, signalActivated, [=](int index) {
-        prop->setValue(editor->itemData(index).toInt());
+    QObject::connect(editor, qOverload<int>(&QComboBox::activated), [=](int index) {
+        const Result<void> result = prop->setValue(editor->itemData(index).toInt());
+        handlePropertyValidationError(result, editor, [=]{
+            editor->setCurrentIndex(editor->findData(prop->value()));
+        });
     });
     return editor;
 }
@@ -340,14 +375,13 @@ static QDoubleSpinBox* createOccPntCoordEditor(
     sp.setHorizontalPolicy(QSizePolicy::Expanding);
     editor->setSizePolicy(sp);
     editor->setMinimumWidth(25);
-    auto signalValueChanged =
-            static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
-    QObject::connect(editor, signalValueChanged, [=](double value) {
+    QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double value) {
         const double f = trRes.factor;
         value = qFuzzyCompare(f, 1.) ? value : value * f;
         gp_Pnt pnt = prop->value();
         (pnt.*funcSetCoord)(value);
-        prop->setValue(pnt);
+        const Result<void> result = prop->setValue(pnt);
+        handlePropertyValidationError(result, editor);
     });
     return editor;
 }

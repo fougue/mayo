@@ -53,7 +53,10 @@ public:
     const QString& string() const;
     Enumeration::Value value() const;
     template<typename T> T valueAs() const;
-    void setValue(Enumeration::Value v);
+    Result<void> setValue(Enumeration::Value v);
+
+    QVariant valueAsVariant() const override;
+    Result<void> setValueFromVariant(const QVariant& value) override;
 
     const char* dynTypeName() const override;
     static const char TypeName[];

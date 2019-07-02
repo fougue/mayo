@@ -98,7 +98,12 @@ HEADERS += \
     src/xde_shape_property_owner.h \
     src/gui_document_list_model.h \
     src/gpx_document_item_factory.h \
-    src/v3d_view_camera_animation.h
+    src/v3d_view_camera_animation.h \
+    src/qmeta_gp_pnt.h \
+    src/qmeta_gp_trsf.h \
+    src/qmeta_quantity_color.h \
+    src/qmeta_tdf_label.h \
+    src/qmeta_quantity.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \

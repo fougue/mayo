@@ -7,10 +7,14 @@
 #pragma once
 
 #include "property.h"
-#include "quantity.h"
+#include "result.h"
+#include "qmeta_gp_pnt.h"
+#include "qmeta_gp_trsf.h"
+#include "qmeta_quantity_color.h"
+#include "qmeta_quantity.h"
+
 #include <QtCore/QDateTime>
-#include <gp_Trsf.hxx>
-#include <Quantity_Color.hxx>
+#include <QtCore/QVariant>
 #include <type_traits>
 
 namespace Mayo {
@@ -23,7 +27,10 @@ public:
     GenericProperty(PropertyOwner* owner, const QString& label);
 
     const T& value() const;
-    void setValue(const T& val);
+    Result<void> setValue(const T& val);
+
+    QVariant valueAsVariant() const override;
+    Result<void> setValueFromVariant(const QVariant& variant) override;
 
     const char* dynTypeName() const override;
     static const char TypeName[];
@@ -82,7 +89,7 @@ class BasePropertyQuantity :
 public:
     virtual Unit quantityUnit() const = 0;
     virtual double quantityValue() const = 0;
-    virtual void setQuantityValue(double v) = 0;
+    virtual Result<void> setQuantityValue(double v) = 0;
 
     const char* dynTypeName() const override;
     static const char TypeName[];
@@ -100,10 +107,13 @@ public:
 
     Unit quantityUnit() const override;
     double quantityValue() const override;
-    void setQuantityValue(double v) override;
+    Result<void> setQuantityValue(double v) override;
+
+    QVariant valueAsVariant() const override;
+    Result<void> setValueFromVariant(const QVariant& variant) override;
 
     QuantityType quantity() const;
-    void setQuantity(QuantityType qty);
+    Result<void> setQuantity(QuantityType qty);
 
 private:
     QuantityType m_quantity = {};
@@ -141,10 +151,23 @@ GenericProperty<T>::GenericProperty(PropertyOwner* owner, const QString& label)
 template<typename T> const T& GenericProperty<T>::value() const
 { return m_value; }
 
-template<typename T> void GenericProperty<T>::setValue(const T& val)
+template<typename T> Result<void> GenericProperty<T>::setValue(const T& val)
 {
-    m_value = val;
-    this->notifyChanged();
+    return Property::setValueHelper(this, &m_value, val);
+}
+
+template<typename T> QVariant GenericProperty<T>::valueAsVariant() const
+{
+    return QVariant::fromValue(this->value());
+}
+
+template<typename T>
+Result<void> GenericProperty<T>::setValueFromVariant(const QVariant& variant)
+{
+    if (variant.canConvert<T>())
+        return this->setValue(variant.value<T>());
+    else
+        return Result<void>::error("Incompatible type");
 }
 
 template<typename T> const char* GenericProperty<T>::dynTypeName() const
@@ -222,13 +245,29 @@ Unit GenericPropertyQuantity<UNIT>::quantityUnit() const
 
 template<Unit UNIT>
 double GenericPropertyQuantity<UNIT>::quantityValue() const
-{ return this->quantity().value(); }
+{
+    return this->quantity().value();
+}
 
 template<Unit UNIT>
-void GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
+Result<void> GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 {
-    m_quantity.setValue(v);
-    this->notifyChanged();
+    return this->setQuantity(QuantityType(v));
+}
+
+template<Unit UNIT>
+QVariant GenericPropertyQuantity<UNIT>::valueAsVariant() const
+{
+    return QVariant::fromValue(this->quantity());
+}
+
+template<Unit UNIT>
+Result<void> GenericPropertyQuantity<UNIT>::setValueFromVariant(const QVariant& variant)
+{
+    if (variant.canConvert<QuantityType>())
+        return this->setQuantity(variant.value<QuantityType>());
+    else
+        return Result<void>::error("Incompatible quantity type");
 }
 
 template<Unit UNIT>
@@ -236,10 +275,9 @@ Quantity<UNIT> GenericPropertyQuantity<UNIT>::quantity() const
 { return m_quantity; }
 
 template<Unit UNIT>
-void GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
+Result<void> GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
 {
-    m_quantity = qty;
-    this->notifyChanged();
+    return Property::setValueHelper(this, &m_quantity, qty);
 }
 
 } // namespace Mayo
