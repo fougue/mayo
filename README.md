@@ -6,6 +6,7 @@ Current features are :
 * Support of IGES/STEP/BRep formats for import/export operations
 * Support of STEP/IGES assemblies (colors and tree structure)
 * Support of STL format with either OpenCascade or [gmio](https://github.com/fougue/gmio) (optional)
+* Perspective/orthographic 3D view projection
 * 3D clip planes with configurable capping
 * Save image(snapshot) of the current 3D view
 * Editable name of STEP/IGES entities

@@ -242,6 +242,22 @@ MainWindow::MainWindow(QWidget *parent)
                 m_ui->menu_File, &QMenu::aboutToShow,
                 this, &MainWindow::createMenuRecentFiles);
     // "Display" actions
+    {
+        auto group = new QActionGroup(m_ui->menu_Projection);
+        group->setExclusive(true);
+        group->addAction(m_ui->actionProjectionOrthographic);
+        group->addAction(m_ui->actionProjectionPerspective);
+    }
+    QObject::connect(m_ui->menu_Projection, &QMenu::triggered, this, [=](QAction* action){
+        if (this->currentWidgetGuiDocument()) {
+            const GuiDocument* guiDoc =  this->currentWidgetGuiDocument()->guiDocument();
+            guiDoc->v3dView()->Camera()->SetProjectionType(
+                        action == m_ui->actionProjectionOrthographic ?
+                            Graphic3d_Camera::Projection_Orthographic :
+                            Graphic3d_Camera::Projection_Perspective);
+            guiDoc->v3dView()->Update();
+        }
+    });
     QObject::connect(
                 m_ui->actionToggleOriginTrihedron, &QAction::toggled,
                 this, &MainWindow::toggleCurrentDocOriginTrihedron);
@@ -781,10 +797,26 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
     m_ui->widget_FileSystem->setLocation(docFilePath);
 
-    if (this->currentWidgetGuiDocument() != nullptr) {
-        QSignalBlocker sigBlock(m_ui->actionToggleOriginTrihedron); Q_UNUSED(sigBlock);
+    if (this->currentWidgetGuiDocument()) {
         const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
-        m_ui->actionToggleOriginTrihedron->setChecked(guiDoc->isOriginTrihedronVisible());
+        // Sync action with current visibility status of origin trihedron
+        {
+            QSignalBlocker sigBlk(m_ui->actionToggleOriginTrihedron); Q_UNUSED(sigBlk);
+            m_ui->actionToggleOriginTrihedron->setChecked(guiDoc->isOriginTrihedronVisible());
+        }
+        // Sync menu with current projection type
+        {
+            const Graphic3d_Camera::Projection viewProjectionType =
+                    guiDoc->v3dView()->Camera()->ProjectionType();
+            Q_ASSERT(viewProjectionType == Graphic3d_Camera::Projection_Perspective
+                     || viewProjectionType == Graphic3d_Camera::Projection_Orthographic);
+            QAction* actionProjection =
+                viewProjectionType == Graphic3d_Camera::Projection_Perspective ?
+                        m_ui->actionProjectionPerspective :
+                        m_ui->actionProjectionOrthographic;
+            QSignalBlocker sigBlk(m_ui->menu_Projection); Q_UNUSED(sigBlk);
+            actionProjection->setChecked(true);
+        }
     }
     else {
         m_ui->actionToggleOriginTrihedron->setChecked(false);
@@ -871,6 +903,9 @@ void MainWindow::updateControlsActivation()
     if (currMainPage != newMainPage)
         m_ui->stack_Main->setCurrentWidget(newMainPage);
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
+    m_ui->menu_Projection->setEnabled(!appDocumentsEmpty);
+    m_ui->actionProjectionOrthographic->setEnabled(!appDocumentsEmpty);
+    m_ui->actionProjectionPerspective->setEnabled(!appDocumentsEmpty);
     m_ui->actionToggleOriginTrihedron->setEnabled(!appDocumentsEmpty);
     m_ui->actionZoomIn->setEnabled(!appDocumentsEmpty);
     m_ui->actionZoomOut->setEnabled(!appDocumentsEmpty);
@@ -913,7 +948,7 @@ WidgetGuiDocument* MainWindow::widgetGuiDocument(int idx) const
                 m_ui->stack_GuiDocuments->widget(idx));
 }
 
-WidgetGuiDocument *MainWindow::currentWidgetGuiDocument() const
+WidgetGuiDocument* MainWindow::currentWidgetGuiDocument() const
 {
     return this->widgetGuiDocument(this->currentDocumentIndex());
 }

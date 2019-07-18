@@ -589,6 +589,14 @@
     <property name="title">
      <string>&amp;Display</string>
     </property>
+    <widget class="QMenu" name="menu_Projection">
+     <property name="title">
+      <string>Projection</string>
+     </property>
+     <addaction name="actionProjectionOrthographic"/>
+     <addaction name="actionProjectionPerspective"/>
+    </widget>
+    <addaction name="menu_Projection"/>
     <addaction name="actionToggleOriginTrihedron"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
@@ -777,6 +785,22 @@
   <action name="actionCloseAllExcept">
    <property name="text">
     <string>Close all except &quot;%1&quot;</string>
+   </property>
+  </action>
+  <action name="actionProjectionPerspective">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Perspective</string>
+   </property>
+  </action>
+  <action name="actionProjectionOrthographic">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Orthographic</string>
    </property>
   </action>
  </widget>
