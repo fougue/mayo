@@ -9,7 +9,7 @@
 #include <Poly_Triangulation.hxx>
 class gp_XYZ;
 
-namespace occ {
+namespace Mayo {
 
 struct MeshUtils {
     static double triangleSignedVolume(
@@ -21,4 +21,4 @@ struct MeshUtils {
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 };
 
-} // namespace occ
+} // namespace Mayo

@@ -10,10 +10,14 @@
 #include "test.h"
 #include "../src/brep_utils.h"
 #include "../src/libtree.h"
+#include "../src/mesh_utils.h"
 #include "../src/result.h"
 #include "../src/unit.h"
 #include "../src/unit_system.h"
 
+#include <BRep_Tool.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <QtCore/QtDebug>
 #include <cmath>
 #include <cstring>
@@ -54,6 +58,76 @@ void Test::BRepUtils_test()
 void Test::CafUtils_test()
 {
     // TODO Add CafUtils::labelTag() test for multi-threaded safety
+}
+
+void Test::MeshUtils_test()
+{
+    // Create box
+    QFETCH(double, boxDx);
+    QFETCH(double, boxDy);
+    QFETCH(double, boxDz);
+    const TopoDS_Shape shapeBox = BRepPrimAPI_MakeBox(boxDx, boxDy, boxDz);
+
+    // Mesh box
+    {
+        BRepMesh_IncrementalMesh mesher(shapeBox, 0.1);
+        mesher.Perform();
+        QVERIFY(mesher.IsDone());
+    }
+
+    // Count nodes and triangles
+    int countNode = 0;
+    int countTriangle = 0;
+    BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
+        TopLoc_Location loc;
+        const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+        if (!polyTri.IsNull()) {
+            countNode += polyTri->NbNodes();
+            countTriangle += polyTri->NbTriangles();
+        }
+    });
+
+    // Merge all face triangulations into one
+    Handle_Poly_Triangulation polyTriBox =
+            new Poly_Triangulation(countNode, countTriangle, false);
+    {
+        int idNodeOffset = 0;
+        int idTriangleOffset = 0;
+        BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
+            TopLoc_Location loc;
+            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+            if (!polyTri.IsNull()) {
+                for (int i = 1; i <= polyTri->NbNodes(); ++i)
+                    polyTriBox->ChangeNode(idNodeOffset + i) = polyTri->Node(i);
+
+                for (int i = 1; i <= polyTri->NbTriangles(); ++i) {
+                    int n1, n2, n3;
+                    polyTri->Triangle(i).Get(n1, n2, n3);
+                    polyTriBox->ChangeTriangle(idTriangleOffset + i).Set(
+                                idNodeOffset + n1, idNodeOffset + n2, idNodeOffset + n3);
+                }
+
+                idNodeOffset += polyTri->NbNodes();
+                idTriangleOffset += polyTri->NbTriangles();
+            }
+        });
+    }
+
+    // Checks
+    QCOMPARE(MeshUtils::triangulationVolume(polyTriBox),
+             double(boxDx * boxDy * boxDz));
+    QCOMPARE(MeshUtils::triangulationArea(polyTriBox),
+             double(2 * boxDx * boxDy + 2 * boxDy * boxDz + 2 * boxDx * boxDz));
+}
+
+void Test::MeshUtils_test_data()
+{
+    QTest::addColumn<double>("boxDx");
+    QTest::addColumn<double>("boxDy");
+    QTest::addColumn<double>("boxDz");
+
+    QTest::newRow("case1") << 10. << 15. << 20.;
+    QTest::newRow("case2") << 0.1 << 0.25 << 0.044;
 }
 
 void Test::Quantity_test()

@@ -7,20 +7,16 @@ QT += testlib
 
 HEADERS += \
     test.h \
-    ../src/brep_utils.h \
-    ../src/quantity.h \
-    ../src/result.h \
-    ../src/unit.h \
-    ../src/unit_system.h \
 
 SOURCES += \
     test.cpp \
     main.cpp \
     ../src/brep_utils.cpp \
+    ../src/mesh_utils.cpp \
     ../src/quantity.cpp \
     ../src/unit.cpp \
     ../src/unit_system.cpp \
 
 # OpenCascade
 include(../opencascade.pri)
-LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim
+LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim -lTKMesh

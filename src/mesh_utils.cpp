@@ -7,7 +7,7 @@
 #include "mesh_utils.h"
 #include <cmath>
 
-namespace occ {
+namespace Mayo {
 
 double MeshUtils::triangleSignedVolume(
         const gp_XYZ &p1, const gp_XYZ &p2, const gp_XYZ &p3)
@@ -35,10 +35,8 @@ double MeshUtils::triangulationVolume(
 {
     double volume = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
-    const Poly_Array1OfTriangle& vecTriangle = triangulation->Triangles();
     // TODO Parallelize computation
-    for (int i = 1; i < vecTriangle.Size(); ++i) {
-        const Poly_Triangle& tri = vecTriangle.Value(i);
+    for (const Poly_Triangle& tri : triangulation->Triangles()) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         volume += MeshUtils::triangleSignedVolume(
@@ -46,6 +44,7 @@ double MeshUtils::triangulationVolume(
                     vecNode.Value(v2).Coord(),
                     vecNode.Value(v3).Coord());
     }
+
     return std::abs(volume);
 }
 
@@ -54,10 +53,8 @@ double MeshUtils::triangulationArea(
 {
     double area = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
-    const Poly_Array1OfTriangle& vecTriangle = triangulation->Triangles();
     // TODO Parallelize computation
-    for (int i = 1; i < vecTriangle.Size(); ++i) {
-        const Poly_Triangle& tri = vecTriangle.Value(i);
+    for (const Poly_Triangle& tri : triangulation->Triangles()) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         area += MeshUtils::triangleArea(
@@ -65,7 +62,8 @@ double MeshUtils::triangulationArea(
                     vecNode.Value(v2).Coord(),
                     vecNode.Value(v3).Coord());
     }
+
     return area;
 }
 
-} // namespace occ
+} // namespace Mayo

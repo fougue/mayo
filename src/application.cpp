@@ -279,9 +279,9 @@ static MeshItem* createMeshItem(
     partItem->propertyNodeCount.setValue(mesh->NbNodes());
     partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
     partItem->propertyVolume.setQuantity(
-                occ::MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
+                MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
     partItem->propertyArea.setQuantity(
-                occ::MeshUtils::triangulationArea(mesh) * Quantity_SquaredMillimeter);
+                MeshUtils::triangulationArea(mesh) * Quantity_SquaredMillimeter);
     partItem->setTriangulation(mesh);
     return partItem;
 }
