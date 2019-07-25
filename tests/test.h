@@ -22,6 +22,7 @@ private slots:
     void Quantity_test();
     void Result_test();
     void UnitSystem_test();
+    void UnitSystem_test_data();
 
     void LibTree_test();
 };

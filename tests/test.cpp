@@ -17,13 +17,14 @@
 
 #include <BRep_Tool.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
 #include <QtCore/QtDebug>
 #include <cmath>
 #include <cstring>
 #include <utility>
 #include <iostream>
 #include <sstream>
+
+Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
 
 namespace Mayo {
 
@@ -193,24 +194,33 @@ void Test::Result_test()
 
 void Test::UnitSystem_test()
 {
-    const UnitSystem::Schema schemaSI = UnitSystem::SI;
-    using TranslateResult_Test =
-        std::pair<UnitSystem::TranslateResult, UnitSystem::TranslateResult>;
-    const TranslateResult_Test array[] = {
-        { UnitSystem::translate(schemaSI, 80 * Quantity_Millimeter), { 80., "mm", 1. } },
-        { UnitSystem::translate(schemaSI, 8 * Quantity_Centimeter),  { 80., "mm", 1. } },
-        { UnitSystem::translate(schemaSI, 8 * Quantity_Meter),  { 8000., "mm", 1. } },
-        { UnitSystem::translate(schemaSI, 0.5 * Quantity_SquaredCentimer), { 50., "mm²", 1. } }
-    };
-    for (const TranslateResult_Test& test : array) {
-        QCOMPARE(test.first, test.second);
-    }
+    QFETCH(UnitSystem::TranslateResult, trResultActual);
+    QFETCH(UnitSystem::TranslateResult, trResultExpected);
+    QCOMPARE(trResultActual, trResultExpected);
+}
 
-    {
-        const UnitSystem::TranslateResult tr =
-                UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian);
-        QCOMPARE(tr.value, 180.);
-    }
+void Test::UnitSystem_test_data()
+{
+    QTest::addColumn<UnitSystem::TranslateResult>("trResultActual");
+    QTest::addColumn<UnitSystem::TranslateResult>("trResultExpected");
+
+    const UnitSystem::Schema schemaSI = UnitSystem::SI;
+    QTest::newRow("80mm")
+            << UnitSystem::translate(schemaSI, 80 * Quantity_Millimeter)
+            << UnitSystem::TranslateResult{ 80., "mm", 1. };
+    QTest::newRow("8cm")
+            << UnitSystem::translate(schemaSI, 8 * Quantity_Centimeter)
+            << UnitSystem::TranslateResult{ 80., "mm", 1. };
+    QTest::newRow("8m")
+            << UnitSystem::translate(schemaSI, 8 * Quantity_Meter)
+            << UnitSystem::TranslateResult{ 8000., "mm", 1. };
+    QTest::newRow("50mm²")
+            << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquaredCentimer)
+            << UnitSystem::TranslateResult{ 50., "mm²", 1. };
+    constexpr double radDeg = Quantity_Degree.value();
+    QTest::newRow("degrees(PIrad)")
+            << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
+            << UnitSystem::TranslateResult{ 180., "°", radDeg };
 }
 
 void Test::LibTree_test()
