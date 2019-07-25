@@ -10,13 +10,13 @@
 namespace Mayo {
 
 double MeshUtils::triangleSignedVolume(
-        const gp_XYZ &p1, const gp_XYZ &p2, const gp_XYZ &p3)
+        const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     return p1.Dot(p2.Crossed(p3)) / 6.0f;
 }
 
 double MeshUtils::triangleArea(
-        const gp_XYZ &p1, const gp_XYZ &p2, const gp_XYZ &p3)
+        const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     const double ax = p2.X() - p1.X();
     const double ay = p2.Y() - p1.Y();
@@ -31,7 +31,7 @@ double MeshUtils::triangleArea(
 }
 
 double MeshUtils::triangulationVolume(
-        const Handle_Poly_Triangulation &triangulation)
+        const Handle_Poly_Triangulation& triangulation)
 {
     double volume = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
@@ -49,7 +49,7 @@ double MeshUtils::triangulationVolume(
 }
 
 double MeshUtils::triangulationArea(
-        const Handle_Poly_Triangulation &triangulation)
+        const Handle_Poly_Triangulation& triangulation)
 {
     double area = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();

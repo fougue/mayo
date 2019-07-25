@@ -38,6 +38,7 @@ static const char* symbol(Unit unit)
     case Unit::Density: return "kg/m" MAYO_CUBIC_SYMBOL;
     case Unit::Pressure: return "kg/m.s²";
     }
+
     return "?";
 }
 
@@ -54,6 +55,7 @@ template<size_t N> UnitSystem::TranslateResult translate(
         if (value < t.threshold)
             return { value / t.factor, t.str, t.factor };
     }
+
     return { value, nullptr, 1. };
 }
 
@@ -71,6 +73,7 @@ static UnitSystem::TranslateResult translateSI(double value, Unit unit)
         return { value, "kg/mm" MAYO_CUBIC_SYMBOL, 1. };
     else if (unit == Unit::Pressure)
         return { value, "kPa", 1. };
+
     return { value, symbol(unit), 1. };
 }
 
@@ -84,6 +87,7 @@ static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
         return { value / 16387.064, "in" MAYO_CUBIC_SYMBOL, 16387.064 };
     else if (unit == Unit::Velocity)
         return { value / (25.4 / 60.), "in/min", 25.4 / 60. };
+
     return { value, symbol(unit), 1. };
 }
 
@@ -138,6 +142,7 @@ static UnitSystem::TranslateResult translateSI_ranged(double value, Unit unit)
     else {
         // TODO
     }
+
     return { value, symbol(unit), 1. };
 }
 
@@ -153,8 +158,10 @@ static UnitSystem::TranslateResult translateImperialUK_ranged(double value, Unit
             { 1609344000, "mi", 1609344 },
             { DBL_MAX, "in", 25.4 } // > 1000 mi
         };
+
         return Internal::translate(value, array);
     }
+
     return translateImperialUK(value, unit);
 }
 
@@ -187,7 +194,8 @@ UnitSystem::TranslateResult UnitSystem::translate(
     case Schema::ImperialUK:
         return Internal::translateImperialUK(value, unit);
     }
-    Q_ASSERT(false);
+
+    Q_UNREACHABLE();
     return {};
 }
 
