@@ -21,6 +21,10 @@ private slots:
     void MeshUtils_test_data();
     void Quantity_test();
     void Result_test();
+    void StringUtils_text_test();
+    void StringUtils_text_test_data();
+    void StringUtils_skipWhiteSpaces_test();
+    void StringUtils_skipWhiteSpaces_test_data();
     void UnitSystem_test();
     void UnitSystem_test_data();
 

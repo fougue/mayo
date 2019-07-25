@@ -7,8 +7,8 @@
 #include "string_utils.h"
 
 #include "unit_system.h"
-#include <fougtools/occtools/qt_utils.h>
 #include <gp_Trsf.hxx>
+#include <Precision.hxx>
 #include <Quantity_Color.hxx>
 #include <cctype>
 
@@ -75,14 +75,14 @@ QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
     trsf.GetRotation(axisRotation, angleRotation);
     const UnitSystem::TranslateResult trAngleRotation =
             UnitSystem::degrees(angleRotation * Quantity_Radian);
-    return QStringLiteral("[%1; %2%3; %4")
+    return QStringLiteral("[%1; %2%3; %4]")
             .arg(coordsText(axisRotation, opt),
                  valueText(trAngleRotation.value, opt),
                  QString::fromUtf8(trAngleRotation.strUnit),
                  StringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
 }
 
-QString StringUtils::text(const Quantity_Color &color, const QString &format)
+QString StringUtils::text(const Quantity_Color& color, const QString& format)
 {
     const int red = color.Red() * 255;
     const int green = color.Green() * 255;

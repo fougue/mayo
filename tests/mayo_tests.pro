@@ -14,6 +14,7 @@ SOURCES += \
     ../src/brep_utils.cpp \
     ../src/mesh_utils.cpp \
     ../src/quantity.cpp \
+    ../src/string_utils.cpp \
     ../src/unit.cpp \
     ../src/unit_system.cpp \
 

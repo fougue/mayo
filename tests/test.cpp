@@ -12,6 +12,7 @@
 #include "../src/libtree.h"
 #include "../src/mesh_utils.h"
 #include "../src/result.h"
+#include "../src/string_utils.h"
 #include "../src/unit.h"
 #include "../src/unit_system.h"
 
@@ -129,6 +130,8 @@ void Test::MeshUtils_test_data()
 
     QTest::newRow("case1") << 10. << 15. << 20.;
     QTest::newRow("case2") << 0.1 << 0.25 << 0.044;
+    QTest::newRow("case3") << 1e5 << 1e6 << 1e7;
+    QTest::newRow("case4") << 40. << 50. << 70.;
 }
 
 void Test::Quantity_test()
@@ -190,6 +193,62 @@ void Test::Result_test()
         QVERIFY(res.get().foo == "FooData");
         QCOMPARE(sstr.str().c_str(), "0042");
     }
+}
+
+void Test::StringUtils_text_test()
+{
+    QFETCH(QString, strActual);
+    QFETCH(QString, strExpected);
+    QCOMPARE(strActual, strExpected);
+}
+
+void Test::StringUtils_text_test_data()
+{
+    QTest::addColumn<QString>("strActual");
+    QTest::addColumn<QString>("strExpected");
+
+    const StringUtils::TextOptions opts_c_si_2 = { QLocale::c(), UnitSystem::SI, 2 };
+    const StringUtils::TextOptions opts_fr_si_2 = {
+        QLocale(QLocale::French, QLocale::France), UnitSystem::SI, 2 };
+    QTest::newRow("c_0.1")
+            << StringUtils::text(0.1, opts_c_si_2)
+            << QStringLiteral("0.1");
+    QTest::newRow("c_0.155")
+            << StringUtils::text(0.155, opts_c_si_2)
+            << QStringLiteral("0.15");
+    QTest::newRow("c_0.159")
+            << StringUtils::text(0.159, opts_c_si_2)
+            << QStringLiteral("0.16");
+    QTest::newRow("fr_1.4995")
+            << StringUtils::text(1.4995, opts_fr_si_2)
+            << QStringLiteral("1,5");
+    QTest::newRow("c_pnt0.55,4.8977,15.1445")
+            << StringUtils::text(gp_Pnt(0.55, 4.8977, 15.1445), opts_c_si_2)
+            << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
+}
+
+void Test::StringUtils_skipWhiteSpaces_test()
+{
+    QFETCH(ptrdiff_t, ptrDiffActualExpected);
+    QCOMPARE(ptrDiffActualExpected, 0);
+}
+
+void Test::StringUtils_skipWhiteSpaces_test_data()
+{
+    QTest::addColumn<ptrdiff_t>("ptrDiffActualExpected");
+
+    const char str1[] = "test";
+    QTest::newRow("skipws_ident")
+            << StringUtils::skipWhiteSpaces(str1, sizeof(str1)) - str1;
+    const char str2[] = "    test";
+    QTest::newRow("skipws_4spaces")
+            << StringUtils::skipWhiteSpaces(str2, sizeof(str2)) - (str2 + 4);
+    const char str3[] = " \n\t test";
+    QTest::newRow("skipws_4mixed")
+            << StringUtils::skipWhiteSpaces(str3, sizeof(str3)) - (str3 + 4);
+    const char str4[] = "";
+    QTest::newRow("skipws_empty")
+            << StringUtils::skipWhiteSpaces(str4, sizeof(str4)) - str4;
 }
 
 void Test::UnitSystem_test()
