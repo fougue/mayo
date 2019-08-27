@@ -5,7 +5,9 @@
 ****************************************************************************/
 
 #include "dialog_task_manager.h"
+#include "options.h"
 #include "ui_dialog_task_manager.h"
+#include "string_utils.h"
 #include "theme.h"
 
 #include <fougtools/qttools/task/manager.h>
@@ -188,8 +190,9 @@ void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
         QString text = taskTitle;
         if (!name.isEmpty()) {
             if (!text.isEmpty())
-                text += " / ";
-            text += name;
+                StringUtils::append(&text, tr(" / "), Options::instance()->locale());
+
+            StringUtils::append(&text, name, Options::instance()->locale());
         }
 
         widget->m_label->setText(text);

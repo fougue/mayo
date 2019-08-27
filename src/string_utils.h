@@ -7,6 +7,7 @@
 #pragma once
 
 #include "unit_system.h"
+#include <QtCore/QCoreApplication>
 #include <QtCore/QLocale>
 #include <QtCore/QString>
 #include <IFSelect_ReturnStatus.hxx>
@@ -18,7 +19,9 @@ class gp_Trsf;
 
 namespace Mayo {
 
-struct StringUtils {
+class StringUtils {
+    Q_DECLARE_TR_FUNCTIONS(Mayo::StringUtils)
+public:
     struct TextOptions {
         QLocale locale;
         UnitSystem::Schema unitSchema;
@@ -36,6 +39,8 @@ struct StringUtils {
     static const char* rawText(IFSelect_ReturnStatus status);
 
     static const char* skipWhiteSpaces(const char* str, size_t len);
+
+    static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
 };
 
 } // namespace Mayo

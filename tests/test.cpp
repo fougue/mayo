@@ -195,6 +195,47 @@ void Test::Result_test()
     }
 }
 
+void Test::StringUtils_append_test()
+{
+    QFETCH(QString, strExpected);
+    QFETCH(QString, str1);
+    QFETCH(QString, str2);
+    QFETCH(QLocale, locale);
+
+    QString strActual = str1;
+    StringUtils::append(&strActual, str2, locale);
+    QCOMPARE(strActual, strExpected);
+}
+
+void Test::StringUtils_append_test_data()
+{
+    QTest::addColumn<QString>("strExpected");
+    QTest::addColumn<QString>("str1");
+    QTest::addColumn<QString>("str2");
+    QTest::addColumn<QLocale>("locale");
+
+    QTest::newRow("locale_c")
+            << QString("1234")
+            << QStringLiteral("12")
+            << QStringLiteral("34")
+            << QLocale::c();
+    QTest::newRow("locale_fr")
+            << QString("1234")
+            << QStringLiteral("12")
+            << QStringLiteral("34")
+            << QLocale(QLocale::French);
+    QTest::newRow("locale_arabic")
+            << QString("3412")
+            << QStringLiteral("12")
+            << QStringLiteral("34")
+            << QLocale(QLocale::Arabic);
+    QTest::newRow("locale_syriac")
+            << QString("3412")
+            << QStringLiteral("12")
+            << QStringLiteral("34")
+            << QLocale(QLocale::Syriac);
+}
+
 void Test::StringUtils_text_test()
 {
     QFETCH(QString, strActual);

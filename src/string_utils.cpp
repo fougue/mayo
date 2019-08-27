@@ -34,15 +34,15 @@ static QString valueText(double value, const StringUtils::TextOptions& opt)
     return str;
 }
 
-static QString coordsText(const gp_XYZ& coords, const StringUtils::TextOptions &opt)
+static QString coordsText(const gp_XYZ& coords, const StringUtils::TextOptions& opt)
 {
     const QString strX = valueText(coords.X(), opt);
     const QString strY = valueText(coords.Y(), opt);
     const QString strZ = valueText(coords.Z(), opt);
-    return "(" + strX + " " + strY + " " + strZ + ")";
+    return StringUtils::tr("(%1 %2 %3)").arg(strX, strY, strZ);
 }
 
-static QString pntCoordText(double coord, const StringUtils::TextOptions &opt)
+static QString pntCoordText(double coord, const StringUtils::TextOptions& opt)
 {
     const UnitSystem::TranslateResult trCoord =
             UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
@@ -60,7 +60,7 @@ QString StringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
     const QString strX = pntCoordText(pos.X(), opt);
     const QString strY = pntCoordText(pos.Y(), opt);
     const QString strZ = pntCoordText(pos.Z(), opt);
-    return "(" + strX + " " + strY + " " + strZ + ")";
+    return tr("(%1 %2 %3)").arg(strX, strY, strZ);
 }
 
 QString StringUtils::text(const gp_Dir& dir, const StringUtils::TextOptions& opt)
@@ -75,11 +75,11 @@ QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
     trsf.GetRotation(axisRotation, angleRotation);
     const UnitSystem::TranslateResult trAngleRotation =
             UnitSystem::degrees(angleRotation * Quantity_Radian);
-    return QStringLiteral("[%1; %2%3; %4]")
-            .arg(coordsText(axisRotation, opt),
-                 valueText(trAngleRotation.value, opt),
-                 QString::fromUtf8(trAngleRotation.strUnit),
-                 StringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
+    return tr("[%1; %2%3; %4]").arg(
+                coordsText(axisRotation, opt),
+                valueText(trAngleRotation.value, opt),
+                QString::fromUtf8(trAngleRotation.strUnit),
+                StringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
 }
 
 QString StringUtils::text(const Quantity_Color& color, const QString& format)
@@ -126,6 +126,14 @@ const char* StringUtils::skipWhiteSpaces(const char* str, size_t len)
         ++pos;
 
     return str + pos;
+}
+
+void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
+{
+    if (locale.textDirection() == Qt::LeftToRight)
+        dst->append(str);
+    else
+        dst->prepend(str);
 }
 
 } // namespace Mayo
