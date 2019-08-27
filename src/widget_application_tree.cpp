@@ -327,6 +327,7 @@ void WidgetApplicationTree::refreshItemText(const ApplicationItem& appItem)
         else {
             seqLabelRefresh.Append(xdeNode.label());
         }
+
         for (const TDF_Label& labelRefresh : seqLabelRefresh) {
             QTreeWidgetItem* treeItem =
                     this->findTreeItemXdeLabel(xdeNode.ownerDocItem, labelRefresh);

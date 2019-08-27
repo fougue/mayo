@@ -18,11 +18,11 @@
 
 namespace Mayo {
 
-namespace Internal {
+// --
+// -- DialogTaskManager::TaskWidget
+// --
 
-static const char TaskWidget_taskIdProp[] = "Mayo::TaskId";
-
-class TaskWidget : public QWidget {
+class DialogTaskManager::TaskWidget : public QWidget {
 public:
     TaskWidget(QWidget* parent = nullptr);
 
@@ -34,6 +34,8 @@ public:
     void stopUnboundedProgressTimer();
     bool hasUnboundedProgressTimer() const;
 
+    static const char TaskIdProp[];
+
 private:
     void onUnboundedProgressTimeout();
 
@@ -41,7 +43,9 @@ private:
     int m_unboundedProgressValue = 0;
 };
 
-TaskWidget::TaskWidget(QWidget *parent)
+const char DialogTaskManager::TaskWidget::TaskIdProp[] = "Mayo::TaskId";
+
+DialogTaskManager::TaskWidget::TaskWidget(QWidget* parent)
     : QWidget(parent),
       m_label(new QLabel(this)),
       m_progress(new QProgressBar(this)),
@@ -50,10 +54,8 @@ TaskWidget::TaskWidget(QWidget *parent)
     QFont labelFont = m_label->font();
     labelFont.setBold(true);
     m_label->setFont(labelFont);
-
     m_progress->setRange(0, 100);
     m_progress->setValue(0);
-
     m_interruptBtn->setIcon(mayoTheme()->icon(Theme::Icon::Stop));
     m_interruptBtn->setAutoRaise(true);
 
@@ -68,7 +70,7 @@ TaskWidget::TaskWidget(QWidget *parent)
     this->setLayout(mainLayout);
 }
 
-void TaskWidget::createUnboundedProgressTimer()
+void DialogTaskManager::TaskWidget::createUnboundedProgressTimer()
 {
     if (!this->hasUnboundedProgressTimer()) {
         m_unboundedProgressTimer = new QTimer(this);
@@ -79,33 +81,34 @@ void TaskWidget::createUnboundedProgressTimer()
     }
 }
 
-void TaskWidget::stopUnboundedProgressTimer()
+void DialogTaskManager::TaskWidget::stopUnboundedProgressTimer()
 {
-    if (m_unboundedProgressTimer != nullptr)
+    if (m_unboundedProgressTimer)
         m_unboundedProgressTimer->stop();
 }
 
-bool TaskWidget::hasUnboundedProgressTimer() const
+bool DialogTaskManager::TaskWidget::hasUnboundedProgressTimer() const
 {
     return m_unboundedProgressTimer != nullptr;
 }
 
-void TaskWidget::onUnboundedProgressTimeout()
+void DialogTaskManager::TaskWidget::onUnboundedProgressTimeout()
 {
     m_unboundedProgressValue += 5;
     m_progress->setValue(m_unboundedProgressValue % 100);
 }
 
-} // namespace Internal
+// --
+// -- DialogTaskManager
+// --
 
-DialogTaskManager::DialogTaskManager(QWidget *parent)
+DialogTaskManager::DialogTaskManager(QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogTaskManager)
 {
-    this->setWindowFlags(
-                Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-
     m_ui->setupUi(this);
+    this->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+    this->setWindowModality(Qt::WindowModal);
 
     auto taskMgr = qttask::Manager::globalInstance();
     QObject::connect(
@@ -120,7 +123,6 @@ DialogTaskManager::DialogTaskManager(QWidget *parent)
     QObject::connect(
                 taskMgr, &qttask::Manager::progressStep,
                 this, &DialogTaskManager::onTaskProgressStep);
-    this->setWindowModality(Qt::WindowModal);
 }
 
 DialogTaskManager::~DialogTaskManager()
@@ -128,50 +130,36 @@ DialogTaskManager::~DialogTaskManager()
     delete m_ui;
 }
 
-bool DialogTaskManager::isRunning() const
-{
-    return m_isRunning;
-}
-
-void DialogTaskManager::execWithTask(quint64 taskId)
-{
-    m_isRunning = true;
-    this->onTaskStarted(taskId, QString());
-    this->exec();
-}
-
 void DialogTaskManager::onTaskStarted(quint64 taskId, const QString& title)
 {
     if (!m_isRunning)
         this->show();
 
-    auto widget = new Internal::TaskWidget(m_ui->scrollAreaContents);
-    widget->m_interruptBtn->setProperty(Internal::TaskWidget_taskIdProp, taskId);
+    auto widget = new TaskWidget(m_ui->scrollAreaContents);
+    widget->m_interruptBtn->setProperty(TaskWidget::TaskIdProp, taskId);
     QObject::connect(
                 widget->m_interruptBtn, &QToolButton::clicked,
                 this, &DialogTaskManager::interruptTask);
     m_ui->contentsLayout->insertWidget(0, widget);
     m_taskIdToWidget.insert(taskId, widget);
-
     ++m_taskCount;
-
     if (!title.isEmpty())
         this->onTaskProgressStep(taskId, QString());
 }
 
 void DialogTaskManager::onTaskEnded(quint64 taskId)
 {
-    Internal::TaskWidget* widget = this->taskWidget(taskId);
-    if (widget != nullptr) {
+    TaskWidget* widget = this->taskWidget(taskId);
+    if (widget) {
         if (widget->hasUnboundedProgressTimer())
             widget->stopUnboundedProgressTimer();
+
         m_ui->contentsLayout->removeWidget(widget);
         delete widget;
         m_taskIdToWidget.remove(taskId);
     }
 
     --m_taskCount;
-
     if (m_taskCount == 0) {
         m_isRunning = false;
         this->accept();
@@ -180,8 +168,8 @@ void DialogTaskManager::onTaskEnded(quint64 taskId)
 
 void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
 {
-    Internal::TaskWidget* widget = this->taskWidget(taskId);
-    if (widget != nullptr) {
+    TaskWidget* widget = this->taskWidget(taskId);
+    if (widget) {
         if (percent >= 0) {
             widget->m_progress->setValue(percent);
         }
@@ -195,7 +183,7 @@ void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
 void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
 {
     const QString taskTitle = qttask::Manager::globalInstance()->taskTitle(taskId);
-    Internal::TaskWidget* widget = this->taskWidget(taskId);
+    TaskWidget* widget = this->taskWidget(taskId);
     if (widget) {
         QString text = taskTitle;
         if (!name.isEmpty()) {
@@ -203,6 +191,7 @@ void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
                 text += " / ";
             text += name;
         }
+
         widget->m_label->setText(text);
     }
 }
@@ -210,19 +199,18 @@ void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
 void DialogTaskManager::interruptTask()
 {
     auto interruptBtn = qobject_cast<QToolButton*>(this->sender());
-    if (interruptBtn != nullptr
-            && interruptBtn->dynamicPropertyNames().contains(Internal::TaskWidget_taskIdProp))
+    if (interruptBtn
+            && interruptBtn->dynamicPropertyNames().contains(TaskWidget::TaskIdProp))
     {
-        const quint64 taskId =
-                interruptBtn->property(Internal::TaskWidget_taskIdProp).toULongLong();
+        const quint64 taskId = interruptBtn->property(TaskWidget::TaskIdProp).toULongLong();
         qttask::Manager::globalInstance()->requestAbort(taskId);
     }
 }
 
-Internal::TaskWidget *DialogTaskManager::taskWidget(quint64 taskId)
+DialogTaskManager::TaskWidget* DialogTaskManager::taskWidget(quint64 taskId)
 {
     auto it = m_taskIdToWidget.find(taskId);
     return it != m_taskIdToWidget.end() ? it.value() : nullptr;
 }
 
-} // namespace RondPointApp
+} // namespace Mayo
