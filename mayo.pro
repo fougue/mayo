@@ -22,7 +22,7 @@ release_with_debuginfo:*msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
-*g++*{
+*g++* {
     QMAKE_CXXFLAGS += -std=c++17
 }
 
@@ -103,7 +103,7 @@ HEADERS += \
     src/qmeta_gp_trsf.h \
     src/qmeta_quantity_color.h \
     src/qmeta_tdf_label.h \
-    src/qmeta_quantity.h
+    src/qmeta_quantity.h \
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -162,7 +162,13 @@ SOURCES += \
     src/xde_shape_property_owner.cpp \
     src/gui_document_list_model.cpp \
     src/gpx_document_item_factory.cpp \
-    src/v3d_view_camera_animation.cpp
+    src/v3d_view_camera_animation.cpp \
+
+win* {
+    QT += winextras
+    HEADERS += src/win_taskbar_global_progress.h
+    SOURCES += src/win_taskbar_global_progress.cpp
+}
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 

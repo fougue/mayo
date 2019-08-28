@@ -33,6 +33,10 @@
 #include "xde_document_item.h"
 #include "xde_shape_property_owner.h"
 
+#ifdef Q_OS_WIN
+#  include "win_taskbar_global_progress.h"
+#endif
+
 #include <fougtools/qttools/gui/item_view_buttons.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/qttools/task/manager.h>
@@ -209,7 +213,7 @@ MainWindow::MainWindow(QWidget *parent)
                 QString("color:%1;").arg(qApp->palette().color(QPalette::Link).name()));
     m_ui->label_MainHome->setText(labelMainHomeText);
 
-    auto sigComboIndexChanged = QOverload<int>::of(&QComboBox::currentIndexChanged);
+    auto sigComboIndexChanged = qOverload<int>(&QComboBox::currentIndexChanged);
     // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
@@ -425,6 +429,18 @@ void MainWindow::dropEvent(QDropEvent* event)
     }
     event->acceptProposedAction();
     this->openDocumentsFromList(listFilePath);
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    QMainWindow::showEvent(event);
+#ifdef Q_OS_WIN
+    constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
+    auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
+    if (!winProgress)
+        winProgress = new WinTaskbarGlobalProgress(this);
+    winProgress->setWindow(this->windowHandle());
+#endif
 }
 
 void MainWindow::newDocument()
