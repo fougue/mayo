@@ -5,7 +5,7 @@
 ; Directory where is located mayo.exe
 #define AppBuildDir "C:\projects\mayo\build-mayo-Qt_5_11_1_MSVC_2017_x64\release"
 
-; Base directory of Qt(same as environement variable QTDIR)
+; Base directory of Qt(same as environment variable QTDIR)
 #define QtDir "C:\libs\Qt-5.11.1_msvc2017_x64\5.11.1\msvc2017_64"
 
 ; Directory for OpenCascade DLLs

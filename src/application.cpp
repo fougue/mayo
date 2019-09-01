@@ -790,7 +790,7 @@ Application::IoResult Application::exportStl_gmio(
         for (const DocumentItem* item : docItems) {
             if (progress != nullptr) {
                 progress->setStep(
-                            tr("Writting item %1")
+                            tr("Writing item %1")
                             .arg(item->propertyLabel.value()));
             }
             int error = GMIO_ERROR_OK;
