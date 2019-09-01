@@ -56,7 +56,7 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
                 MeshVS_DA_InteriorColor,
                 occ::QtUtils::toOccColor(opts->meshDefaultColor()));
     meshVisu->SetDisplayMode(MeshVS_DMF_Shading);
-    // -- Wireframe as default hilight mode
+    // -- Wireframe as default highlight mode
     meshVisu->SetHilightMode(MeshVS_DMF_WireFrame);
     meshVisu->SetMeshSelMethod(MeshVS_MSM_PRECISE);
 
