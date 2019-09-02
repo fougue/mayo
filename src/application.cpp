@@ -68,14 +68,14 @@ static std::mutex globalMutex;
 static bool gmio_qttask_is_stop_requested(void* cookie)
 {
     auto progress = static_cast<const qttask::Progress*>(cookie);
-    return progress != nullptr ? progress->isAbortRequested() : false;
+    return progress ? progress->isAbortRequested() : false;
 }
 
 static void gmio_qttask_handle_progress(
         void* cookie, intmax_t value, intmax_t maxValue)
 {
     auto progress = static_cast<qttask::Progress*>(cookie);
-    if (progress != nullptr && maxValue > 0) {
+    if (progress && maxValue > 0) {
         const auto pctNorm = value / static_cast<double>(maxValue);
         const auto pct = qRound(pctNorm * 100);
         if (pct >= (progress->value() + 5))
@@ -129,6 +129,7 @@ static QString gmioErrorToQString(int error)
     case GMIO_STL_ERROR_FACET_COUNT:
         return Application::tr("GMIO_STL_ERROR_FACET_COUNT");
     }
+
     return Application::tr("GMIO_ERROR_UNKNOWN");
 }
 #endif
@@ -142,23 +143,25 @@ public:
         this->SetScale(0., 100., 1.);
     }
 
-    Standard_Boolean Show(const Standard_Boolean /*force*/) override
+    bool Show(const bool /*force*/) override
     {
         const Handle_TCollection_HAsciiString name = this->GetScope(1).GetName();
-        if (!name.IsNull() && m_progress != nullptr)
+        if (!name.IsNull() && m_progress)
             m_progress->setStep(QString(name->ToCString()));
-        const Standard_Real pc = this->GetPosition(); // Always within [0,1]
+
+        const double pc = this->GetPosition(); // Always within [0,1]
         const int minVal = 0;
         const int maxVal = 100;
         const int val = minVal + pc * (maxVal - minVal);
-        if (m_progress != nullptr)
+        if (m_progress)
             m_progress->setValue(val);
-        return Standard_True;
+
+        return true;
     }
 
-    Standard_Boolean UserBreak() override
+    bool UserBreak() override
     {
-        return m_progress != nullptr ? m_progress->isAbortRequested() : false;
+        return m_progress ? m_progress->isAbortRequested() : false;
     }
 
 private:
@@ -226,9 +229,9 @@ void loadCafDocumentFromFile(
 {
     std::lock_guard<std::mutex> lock(globalMutex); Q_UNUSED(lock);
     Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-
     if (!indicator.IsNull())
         indicator->NewScope(30, "Loading file");
+
     CAF_READER reader;
     reader.SetColorMode(true);
     reader.SetNameMode(true);
@@ -237,15 +240,17 @@ void loadCafDocumentFromFile(
     *error = reader.ReadFile(filepath.toLocal8Bit().constData());
     if (!indicator.IsNull())
         indicator->EndScope();
+
     if (*error == IFSelect_RetDone) {
-        Handle_XSControl_WorkSession ws =
-                CafReaderTraits<CAF_READER>::workSession(reader);
+        Handle_XSControl_WorkSession ws = CafReaderTraits<CAF_READER>::workSession(reader);
         if (!indicator.IsNull()) {
             ws->MapReader()->SetProgress(indicator);
             indicator->NewScope(70, "Translating file");
         }
-        if (reader.Transfer(doc) == Standard_False)
+
+        if (!reader.Transfer(doc))
             *error = IFSelect_RetFail;
+
         if (!indicator.IsNull()) {
             indicator->EndScope();
             ws->MapReader()->SetProgress(nullptr);
@@ -268,6 +273,7 @@ static TopoDS_Shape xdeDocumentWholeShape(const XdeDocumentItem* xdeDocItem)
     else if (seqFreeShape.Size() == 1) {
         shape = XdeDocumentItem::shape(seqFreeShape.First());
     }
+
     return shape;
 }
 
@@ -478,7 +484,7 @@ int Application::indexOfDocument(const Document* doc) const
 Application::IoResult Application::importInDocument(
         Document* doc,
         PartFormat format,
-        const QString &filepath,
+        const QString& filepath,
         qttask::Progress* progress)
 {
     switch (format) {
@@ -494,9 +500,9 @@ Application::IoResult Application::importInDocument(
 Application::IoResult Application::exportApplicationItems(
         Span<const ApplicationItem> appItems,
         PartFormat format,
-        const ExportOptions &options,
-        const QString &filepath,
-        qttask::Progress *progress)
+        const ExportOptions& options,
+        const QString& filepath,
+        qttask::Progress* progress)
 {
     switch (format) {
     case PartFormat::Iges:
@@ -551,7 +557,7 @@ QStringList Application::partFormatFilters()
     return filters;
 }
 
-Application::PartFormat Application::findPartFormat(const QString &filepath)
+Application::PartFormat Application::findPartFormat(const QString& filepath)
 {
     QFile file(filepath);
     if (file.open(QIODevice::ReadOnly)) {
@@ -571,7 +577,7 @@ Application::PartFormat Application::findPartFormat(const QString &filepath)
 }
 
 Application::IoResult Application::importIges(
-        Document* doc, const QString &filepath, qttask::Progress* progress)
+        Document* doc, const QString& filepath, qttask::Progress* progress)
 {
     IGESControl_Controller::Init();
     Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
@@ -580,12 +586,13 @@ Application::IoResult Application::importIges(
                 filepath, cafDoc, &err, progress);
     if (err != IFSelect_RetDone)
         return IoResult::error(StringUtils::rawText(err));
+
     doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
     return IoResult::ok();
 }
 
 Application::IoResult Application::importStep(
-        Document* doc, const QString &filepath, qttask::Progress* progress)
+        Document* doc, const QString& filepath, qttask::Progress* progress)
 {
     Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
     Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
@@ -594,12 +601,13 @@ Application::IoResult Application::importStep(
                 filepath, cafDoc, &err, progress);
     if (err != IFSelect_RetDone)
         return IoResult::error(StringUtils::rawText(err));
+
     doc->addRootItem(Internal::createXdeDocumentItem(filepath, cafDoc));
     return IoResult::ok();
 }
 
 Application::IoResult Application::importOccBRep(
-        Document* doc, const QString &filepath, qttask::Progress* progress)
+        Document* doc, const QString& filepath, qttask::Progress* progress)
 {
     TopoDS_Shape shape;
     BRep_Builder brepBuilder;
@@ -608,6 +616,7 @@ Application::IoResult Application::importOccBRep(
             shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     if (!ok)
         return IoResult::error(tr("Unknown Error"));
+
     Handle_TDocStd_Document cafDoc = CafUtils::createXdeDocument();
     Handle_XCAFDoc_ShapeTool shapeTool =
             XCAFDoc_DocumentTool::ShapeTool(cafDoc->Main());
@@ -618,10 +627,9 @@ Application::IoResult Application::importOccBRep(
 }
 
 Application::IoResult Application::importStl(
-        Document* doc, const QString &filepath, qttask::Progress* progress)
+        Document* doc, const QString& filepath, qttask::Progress* progress)
 {
-    const Options::StlIoLibrary lib =
-            Options::instance()->stlIoLibrary();
+    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
     if (lib == Options::StlIoLibrary::Gmio) {
 #ifdef HAVE_GMIO
         QFile file(filepath);
@@ -645,8 +653,7 @@ Application::IoResult Application::importStl(
 #endif // HAVE_GMIO
     }
     else if (lib == Options::StlIoLibrary::OpenCascade) {
-        Handle_Message_ProgressIndicator indicator =
-                    new Internal::OccProgress(progress);
+        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
         const Handle_Poly_Triangulation mesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
         if (!mesh.IsNull())
@@ -660,17 +667,17 @@ Application::IoResult Application::importStl(
 Application::IoResult Application::exportIges(
         Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
-        const QString &filepath,
-        qttask::Progress *progress)
+        const QString& filepath,
+        qttask::Progress* progress)
 {
     std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
     Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
 
     IGESControl_Controller::Init();
     IGESCAFControl_Writer writer;
-    writer.SetColorMode(Standard_True);
-    writer.SetNameMode(Standard_True);
-    writer.SetLayerMode(Standard_True);
+    writer.SetColorMode(true);
+    writer.SetNameMode(true);
+    writer.SetLayerMode(true);
     if (!indicator.IsNull())
         writer.TransferProcess()->SetProgress(indicator);
     for (const ApplicationItem& item : appItems) {
@@ -684,7 +691,7 @@ Application::IoResult Application::exportIges(
     }
 
     writer.ComputeModel();
-    const Standard_Boolean ok = writer.Write(filepath.toLocal8Bit().constData());
+    const bool ok = writer.Write(filepath.toLocal8Bit().constData());
     writer.TransferProcess()->SetProgress(nullptr);
     return ok ? IoResult::ok() : IoResult::error(tr("Unknown error"));
 }
@@ -692,7 +699,7 @@ Application::IoResult Application::exportIges(
 Application::IoResult Application::exportStep(
         Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
-        const QString &filepath,
+        const QString& filepath,
         qttask::Progress *progress)
 {
     std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
@@ -701,6 +708,7 @@ Application::IoResult Application::exportStep(
     STEPCAFControl_Writer writer;
     if (!indicator.IsNull())
         writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
+
     for (const ApplicationItem& item : appItems) {
         if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
             auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
@@ -711,8 +719,7 @@ Application::IoResult Application::exportStep(
         }
     }
 
-    const IFSelect_ReturnStatus err =
-            writer.Write(filepath.toLocal8Bit().constData());
+    const IFSelect_ReturnStatus err = writer.Write(filepath.toLocal8Bit().constData());
     writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
     return err == IFSelect_RetDone ?
                 IoResult::ok() :
@@ -722,8 +729,8 @@ Application::IoResult Application::exportStep(
 Application::IoResult Application::exportOccBRep(
         Span<const ApplicationItem> appItems,
         const ExportOptions& /*options*/,
-        const QString &filepath,
-        qttask::Progress *progress)
+        const QString& filepath,
+        qttask::Progress* progress)
 {
     std::vector<TopoDS_Shape> vecShape;
     vecShape.reserve(appItems.size());
@@ -754,13 +761,14 @@ Application::IoResult Application::exportOccBRep(
     Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
     if (!BRepTools::Write(shape, filepath.toLocal8Bit().constData(), indicator))
         return IoResult::error(tr("Unknown Error"));
+
     return IoResult::ok();
 }
 
 Application::IoResult Application::exportStl(
         Span<const ApplicationItem> appItems,
         const ExportOptions& options,
-        const QString &filepath,
+        const QString& filepath,
         qttask::Progress *progress)
 {
     const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
@@ -768,14 +776,15 @@ Application::IoResult Application::exportStl(
         return this->exportStl_gmio(appItems, options, filepath, progress);
     else if (lib == Options::StlIoLibrary::OpenCascade)
         return this->exportStl_OCC(appItems, options, filepath, progress);
+
     return IoResult::error(tr("Unknown Error"));
 }
 
 Application::IoResult Application::exportStl_gmio(
         Span<const ApplicationItem> appItems,
-        const Application::ExportOptions &options,
-        const QString &filepath,
-        qttask::Progress *progress)
+        const Application::ExportOptions& options,
+        const QString& filepath,
+        qttask::Progress* progress)
 {
     QFile file(filepath);
 #ifdef HAVE_GMIO
@@ -788,11 +797,12 @@ Application::IoResult Application::exportStl_gmio(
         gmioOptions.task_iface =
                 Internal::gmio_qttask_create_task_iface(progress);
         for (const DocumentItem* item : docItems) {
-            if (progress != nullptr) {
+            if (progress) {
                 progress->setStep(
                             tr("Writing item %1")
                             .arg(item->propertyLabel.value()));
             }
+
             int error = GMIO_ERROR_OK;
             if (sameType<XdeDocumentItem>(item)) {
                 auto xdeDocItem = static_cast<const XdeDocumentItem*>(item);
@@ -807,20 +817,23 @@ Application::IoResult Application::exportStl_gmio(
                 error = gmio_stl_write(
                             options.stlFormat, &stream, &gmioMesh, &gmioOptions);
             }
+
             if (error != GMIO_ERROR_OK)
                 return IoResult::error(Internal::gmioErrorToQString(error));
         }
+
         return IoResult::ok();
     }
 #endif // HAVE_GMIO
+
     return IoResult::error(file.errorString());
 }
 
 Application::IoResult Application::exportStl_OCC(
         Span<const ApplicationItem> appItems,
-        const Application::ExportOptions &options,
-        const QString &filepath,
-        qttask::Progress *progress)
+        const Application::ExportOptions& options,
+        const QString& filepath,
+        qttask::Progress* progress)
 {
 #ifdef HAVE_GMIO
     const bool isAsciiFormat = options.stlFormat == GMIO_STL_FORMAT_ASCII;
@@ -851,8 +864,7 @@ Application::IoResult Application::exportStl_OCC(
                 return funcWriteShape(Internal::xdeDocumentWholeShape(xdeDocItem));
             }
             else if (sameType<MeshItem>(item.documentItem())) {
-                Handle_Message_ProgressIndicator indicator =
-                        new Internal::OccProgress(progress);
+                Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
                 bool ok = false;
                 auto meshItem = static_cast<const MeshItem*>(item.documentItem());
                 const QByteArray filepathLocal8b = filepath.toLocal8Bit();
