@@ -154,10 +154,9 @@ static QString propertyValueText(const PropertyOccTrsf* prop) {
 
 static QString propertyValueText(const PropertyEnumeration* prop)
 {
-    const auto& enumMappings = prop->enumeration().mappings();
-    for (const Enumeration::Mapping& mapping : enumMappings) {
-        if (mapping.value == prop->value())
-            return mapping.string;
+    for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
+        if (enumItem.value == prop->value())
+            return enumItem.name;
     }
 
     return QString();
@@ -310,8 +309,8 @@ static QWidget* createPropertyEditor(PropertyEnumeration* prop, QWidget* parent)
 {
     auto editor = new QComboBox(parent);
     const Enumeration& enumDef = prop->enumeration();
-    for (const Enumeration::Mapping& mapping : enumDef.mappings())
-        editor->addItem(mapping.string, mapping.value);
+    for (const Enumeration::Item& enumItem : enumDef.items())
+        editor->addItem(enumItem.name, enumItem.value);
 
     editor->setCurrentIndex(editor->findData(prop->value()));
     QObject::connect(editor, qOverload<int>(&QComboBox::activated), [=](int index) {

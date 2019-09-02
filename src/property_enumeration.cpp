@@ -5,72 +5,56 @@
 ****************************************************************************/
 
 #include "property_enumeration.h"
-
-#include "options.h"
-
-#include <cassert>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QVariant>
 
 namespace Mayo {
 
-void Enumeration::map(Value eval, const QString& str)
+void Enumeration::addItem(Value value, const QString& name)
 {
-    const Mapping mapping = { eval, str };
-    m_vecMapping.emplace_back(std::move(mapping));
+    const Item item = { value, name};
+    m_vecItem.emplace_back(std::move(item));
 }
 
-size_t Enumeration::size() const
+int Enumeration::size() const
 {
-    return m_vecMapping.size();
+    return int(m_vecItem.size());
 }
 
-size_t Enumeration::index(Value eval) const
+int Enumeration::findIndex(Value value) const
 {
-    return this->findCppSql(eval) - m_vecMapping.cbegin();
+    auto it = std::find_if(
+                m_vecItem.cbegin(),
+                m_vecItem.cend(),
+                [=](const Item& item) { return item.value == value; });
+    return it != m_vecItem.cend() ? it - m_vecItem.cbegin() : -1;
 }
 
-Enumeration::Value Enumeration::valueAt(size_t i) const
+Enumeration::Value Enumeration::findValue(const QString& name) const
 {
-    return m_vecMapping.at(i).value;
-}
-
-Enumeration::Value Enumeration::value(const QString& str) const
-{
-    for (const Mapping& mapping : m_vecMapping) {
-        if (mapping.string == str)
-            return mapping.value;
+    for (const Item& item : m_vecItem) {
+        if (item.name == name)
+            return item.value;
     }
-    assert(false);
+
+    Q_ASSERT(false);
     return -1;
 }
 
-const QString& Enumeration::string(Value eval) const
+QString Enumeration::findName(Value value) const
 {
-    auto it = this->findCppSql(eval);
-    assert(it != m_vecMapping.cend());
-    return it->string;
+    const int index = this->findIndex(value);
+    return index != -1 ? this->itemAt(index).name : QString();
 }
 
-Enumeration::Mapping Enumeration::mapping(size_t i) const
+Enumeration::Item Enumeration::itemAt(int index) const
 {
-    assert(i < m_vecMapping.size());
-    return m_vecMapping.at(i);
+    return m_vecItem.at(index);
 }
 
-Span<const Enumeration::Mapping> Enumeration::mappings() const
+Span<const Enumeration::Item> Enumeration::items() const
 {
-    return m_vecMapping;
-}
-
-std::vector<Enumeration::Mapping>::const_iterator
-Enumeration::findCppSql(Value eval) const
-{
-    auto it = std::find_if(
-                m_vecMapping.cbegin(),
-                m_vecMapping.cend(),
-                [=] (const Mapping& map) { return map.value == eval; } );
-    assert(it != m_vecMapping.cend());
-    return it;
+    return m_vecItem;
 }
 
 PropertyEnumeration::PropertyEnumeration(
@@ -80,9 +64,9 @@ PropertyEnumeration::PropertyEnumeration(
     : Property(owner, label),
       m_enumeration(enumeration)
 {
-    assert(m_enumeration != nullptr);
-    assert(m_enumeration->size() > 0);
-    m_value = m_enumeration->valueAt(0);
+    Q_ASSERT(m_enumeration != nullptr);
+    Q_ASSERT(m_enumeration->size() > 0);
+    m_value = m_enumeration->itemAt(0).value;
 }
 
 const Enumeration& PropertyEnumeration::enumeration() const
@@ -90,9 +74,9 @@ const Enumeration& PropertyEnumeration::enumeration() const
     return *m_enumeration;
 }
 
-const QString& PropertyEnumeration::string() const
+QString PropertyEnumeration::name() const
 {
-    return m_enumeration->string(m_value);
+    return m_enumeration->findName(m_value);
 }
 
 Enumeration::Value PropertyEnumeration::value() const
@@ -127,64 +111,64 @@ const Enumeration &enum_Graphic3dNameOfMaterial()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_BRASS,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Brass"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_BRONZE,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Bronze"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_COPPER,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Copper"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_GOLD,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Gold"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_PEWTER,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Pewter"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_PLASTER,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Plaster"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_PLASTIC,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Plastic"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_SILVER,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Silver"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_STEEL,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Steel"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_STONE,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Stone"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_SHINY_PLASTIC,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Shiny plastic"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_SATIN,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Satin"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_METALIZED,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Metalized"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_NEON_GNC,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Neon gnc"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_CHROME,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Chrome"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_ALUMINIUM,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Aluminium"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_OBSIDIAN,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Obsidian"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_NEON_PHC,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Neon phc"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_JADE,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Jade"));
-        enumeration.map(
+        enumeration.addItem(
                     Graphic3d_NOM_DEFAULT,
                     QCoreApplication::translate("Mayo::EnumGpxMaterial", "Default"));
     }
@@ -195,43 +179,43 @@ const Enumeration &enum_AspectHatchStyle()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_SOLID,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Solid"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_HORIZONTAL,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Horizontal"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_HORIZONTAL_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Horizontal sparse"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_VERTICAL,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Vertical"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_VERTICAL_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Vertical sparse"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_DIAGONAL_45,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_45"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_DIAGONAL_45_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_45 sparse"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_DIAGONAL_135,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_135"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_DIAGONAL_135_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Diagonal_135 sparse"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_GRID,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_GRID_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid sparse"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_GRID_DIAGONAL,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid diagonal"));
-        enumeration.map(
+        enumeration.addItem(
                     Aspect_HS_GRID_DIAGONAL_WIDE,
                     QCoreApplication::translate("Mayo::EnumHatchStyle", "Grid diagonal sparse"));
     }

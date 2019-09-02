@@ -178,9 +178,9 @@ const Enumeration& GpxXdeDocumentItem::enumDisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
-        enumeration.map(DisplayMode_Wireframe, tr("Wireframe"));
-        enumeration.map(DisplayMode_Shaded, tr("Shaded"));
-        enumeration.map(DisplayMode_ShadedWithFaceBoundary, tr("Shaded with face boundaries"));
+        enumeration.addItem(DisplayMode_Wireframe, tr("Wireframe"));
+        enumeration.addItem(DisplayMode_Shaded, tr("Shaded"));
+        enumeration.addItem(DisplayMode_ShadedWithFaceBoundary, tr("Shaded with face boundaries"));
     }
     return enumeration;
 }

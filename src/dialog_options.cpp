@@ -39,8 +39,6 @@ DialogOptions::DialogOptions(QWidget *parent)
 #endif
 
     const Options* opts = Options::instance();
-    const auto& vecGpxMaterialMapping =
-            Mayo::enum_Graphic3dNameOfMaterial().mappings();
 
     // STL import/export
     auto btnGrp_stlIoLib = new QButtonGroup(this);
@@ -55,15 +53,13 @@ DialogOptions::DialogOptions(QWidget *parent)
     m_ui->toolBtn_BRepShapeDefaultColor->setIcon(
                 Internal::colorPixmap(opts->brepShapeDefaultColor()));
     m_brepShapeDefaultColor = opts->brepShapeDefaultColor();
-    QObject::connect(
-                m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked,
-                [=] {
+    QObject::connect(m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked, [=]{
         this->chooseColor(opts->brepShapeDefaultColor(),
                           m_ui->toolBtn_BRepShapeDefaultColor,
                           &m_brepShapeDefaultColor);
     } );
-    for (const Enumeration::Mapping& m : vecGpxMaterialMapping)
-        m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.string, m.value);
+    for (const Enumeration::Item& m : enum_Graphic3dNameOfMaterial().items())
+        m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_BRepShapeDefaultMaterial->findData(
                     static_cast<int>(opts->brepShapeDefaultMaterial())));
@@ -72,15 +68,13 @@ DialogOptions::DialogOptions(QWidget *parent)
     m_ui->toolBtn_MeshDefaultColor->setIcon(
                 Internal::colorPixmap(opts->meshDefaultColor()));
     m_meshDefaultColor = opts->meshDefaultColor();
-    QObject::connect(
-                m_ui->toolBtn_MeshDefaultColor, &QAbstractButton::clicked,
-                [=] {
+    QObject::connect(m_ui->toolBtn_MeshDefaultColor, &QAbstractButton::clicked, [=]{
         this->chooseColor(opts->meshDefaultColor(),
                           m_ui->toolBtn_MeshDefaultColor,
                           &m_meshDefaultColor);
     } );
-    for (const Enumeration::Mapping& m : vecGpxMaterialMapping)
-        m_ui->comboBox_MeshDefaultMaterial->addItem(m.string, m.value);
+    for (const Enumeration::Item& m : enum_Graphic3dNameOfMaterial().items())
+        m_ui->comboBox_MeshDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_MeshDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_MeshDefaultMaterial->findData(
                     static_cast<int>(opts->meshDefaultMaterial())));
@@ -89,9 +83,8 @@ DialogOptions::DialogOptions(QWidget *parent)
 
     // Clip planes
     m_ui->checkBox_Capping->setChecked(opts->isClipPlaneCappingOn());
-    const auto& vecHatchStyle = Mayo::enum_AspectHatchStyle().mappings();
-    for (const Enumeration::Mapping& m : vecHatchStyle)
-        m_ui->comboBox_CappingHatch->addItem(m.string, m.value);
+    for (const Enumeration::Item& m : enum_AspectHatchStyle().items())
+        m_ui->comboBox_CappingHatch->addItem(m.name, m.value);
     m_ui->comboBox_CappingHatch->setCurrentIndex(
                 m_ui->comboBox_CappingHatch->findData(
                     static_cast<int>(opts->clipPlaneCappingHatch())));

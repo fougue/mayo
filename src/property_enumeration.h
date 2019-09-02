@@ -8,7 +8,6 @@
 
 #include "property.h"
 #include "span.h"
-#include <utility>
 #include <Aspect_HatchStyle.hxx>
 #include <Graphic3d_NameOfMaterial.hxx>
 
@@ -17,28 +16,25 @@ namespace Mayo {
 class Enumeration {
 public:
     using Value = int;
-    struct Mapping {
+    struct Item {
         Value value;
-        QString string;
+        QString name;
     };
 
     Enumeration() = default;
 
-    void map(int eval, const QString& str);
+    void addItem(Value value, const QString& name);
+    int size() const;
 
-    size_t size() const;
-    size_t index(int eval) const;
+    int findIndex(Value value) const;
+    QString findName(Value value) const;
+    Value findValue(const QString& name) const;
 
-    Value valueAt(size_t i) const;
-    Value value(const QString& str) const;
-    const QString& string(Value eval) const;
-
-    Mapping mapping(size_t i) const;
-    Span<const Mapping> mappings() const;
+    Item itemAt(int index) const;
+    Span<const Item> items() const;
 
 private:
-    std::vector<Mapping>::const_iterator findCppSql(Value eval) const;
-    std::vector<Mapping> m_vecMapping;
+    std::vector<Item> m_vecItem;
 };
 
 class PropertyEnumeration : public Property {
@@ -50,7 +46,7 @@ public:
 
     const Enumeration& enumeration() const;
 
-    const QString& string() const;
+    QString name() const;
     Enumeration::Value value() const;
     template<typename T> T valueAs() const;
     Result<void> setValue(Enumeration::Value v);

@@ -152,9 +152,9 @@ const Enumeration &GpxMeshItem::enum_DisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
-        enumeration.map(MeshVS_DMF_WireFrame, tr("Wireframe"));
-        enumeration.map(MeshVS_DMF_Shading, tr("Shaded"));
-        enumeration.map(MeshVS_DMF_Shrink, tr("Shrink"));
+        enumeration.addItem(MeshVS_DMF_WireFrame, tr("Wireframe"));
+        enumeration.addItem(MeshVS_DMF_Shading, tr("Shaded"));
+        enumeration.addItem(MeshVS_DMF_Shrink, tr("Shrink"));
     }
     return enumeration;
 }
