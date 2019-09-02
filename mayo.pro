@@ -104,6 +104,7 @@ HEADERS += \
     src/qmeta_quantity_color.h \
     src/qmeta_tdf_label.h \
     src/qmeta_quantity.h \
+    src/occt_enums.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -163,6 +164,7 @@ SOURCES += \
     src/gui_document_list_model.cpp \
     src/gpx_document_item_factory.cpp \
     src/v3d_view_camera_animation.cpp \
+    src/occt_enums.cpp
 
 win* {
     QT += winextras

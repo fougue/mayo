@@ -8,6 +8,7 @@
 
 #include "options.h"
 #include "property_enumeration.h"
+#include "occt_enums.h"
 #include "ui_dialog_options.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
@@ -57,8 +58,8 @@ DialogOptions::DialogOptions(QWidget *parent)
         this->chooseColor(opts->brepShapeDefaultColor(),
                           m_ui->toolBtn_BRepShapeDefaultColor,
                           &m_brepShapeDefaultColor);
-    } );
-    for (const Enumeration::Item& m : enum_Graphic3dNameOfMaterial().items())
+    });
+    for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
         m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_BRepShapeDefaultMaterial->findData(
@@ -72,8 +73,8 @@ DialogOptions::DialogOptions(QWidget *parent)
         this->chooseColor(opts->meshDefaultColor(),
                           m_ui->toolBtn_MeshDefaultColor,
                           &m_meshDefaultColor);
-    } );
-    for (const Enumeration::Item& m : enum_Graphic3dNameOfMaterial().items())
+    });
+    for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
         m_ui->comboBox_MeshDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_MeshDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_MeshDefaultMaterial->findData(
@@ -83,7 +84,7 @@ DialogOptions::DialogOptions(QWidget *parent)
 
     // Clip planes
     m_ui->checkBox_Capping->setChecked(opts->isClipPlaneCappingOn());
-    for (const Enumeration::Item& m : enum_AspectHatchStyle().items())
+    for (const Enumeration::Item& m : OcctEnums::Aspect_HatchStyle().items())
         m_ui->comboBox_CappingHatch->addItem(m.name, m.value);
     m_ui->comboBox_CappingHatch->setCurrentIndex(
                 m_ui->comboBox_CappingHatch->findData(

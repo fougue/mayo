@@ -8,8 +8,6 @@
 
 #include "property.h"
 #include "span.h"
-#include <Aspect_HatchStyle.hxx>
-#include <Graphic3d_NameOfMaterial.hxx>
 
 namespace Mayo {
 
@@ -61,9 +59,6 @@ private:
     Enumeration::Value m_value;
     const Enumeration* m_enumeration;
 };
-
-const Enumeration& enum_Graphic3dNameOfMaterial();
-const Enumeration& enum_AspectHatchStyle();
 
 
 
