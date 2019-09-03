@@ -25,7 +25,7 @@
 #include "options.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
-#include "widget_application_tree.h"
+#include "widget_model_tree.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
 #include "widget_properties_editor.h"
@@ -177,8 +177,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->splitter_Main->setStretchFactor(0, 1);
     m_ui->splitter_Main->setStretchFactor(1, 3);
 
-    m_ui->splitter_ApplicationTree->setStretchFactor(0, 1);
-    m_ui->splitter_ApplicationTree->setStretchFactor(1, 2);
+    m_ui->splitter_ModelTree->setStretchFactor(0, 1);
+    m_ui->splitter_ModelTree->setStretchFactor(1, 2);
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
@@ -374,7 +374,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     this->updateControlsActivation();
-    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+    m_ui->widget_ModelTree->setReferenceItemTextTemplate(
                 Options::instance()->referenceItemTextTemplate());
     m_ui->widget_MouseCoords->hide();
 
@@ -660,7 +660,7 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-    WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
+    WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     Span<const ApplicationItem> spanAppItem =
@@ -672,17 +672,17 @@ void MainWindow::onApplicationItemSelectionChanged()
             const TDF_Label xdeLabel = XdeDocumentItem::label(item.documentItemNode());
             using ShapePropsOption = XdeDocumentItem::ShapePropertiesOption;
             const ShapePropsOption opt =
-                    uiAppTree->isMergeXdeReferredShapeOn() ?
+                    uiModelTree->isMergeXdeReferredShapeOn() ?
                         ShapePropsOption::MergeReferred : ShapePropsOption::None;
             m_ptrXdeShapeProperties = xdeItem->shapeProperties(xdeLabel, opt);
             XdeShapePropertyOwner* shapeProps = m_ptrXdeShapeProperties.get();
             uiProps->editProperties(shapeProps);
             if (shapeProps) {
                 QObject::connect(shapeProps, &XdeShapePropertyOwner::nameChanged, [=]{
-                    uiAppTree->refreshItemText(item);
+                    uiModelTree->refreshItemText(item);
                 });
                 QObject::connect(shapeProps, &XdeShapePropertyOwner::referredNameChanged, [=]{
-                    uiAppTree->refreshItemText(item);
+                    uiModelTree->refreshItemText(item);
                 });
             }
         }
@@ -764,9 +764,7 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
 {
     m_ui->stack_LeftContents->setCurrentIndex(pageId);
     QWidget* placeHolder = this->recreateLeftHeaderPlaceHolder();
-    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree
-        && placeHolder != nullptr)
-    {
+    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ModelTree && placeHolder) {
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
         auto btnSettings = new QToolButton(placeHolder);
         btnSettings->setAutoRaise(true);
@@ -1037,7 +1035,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
                 if (std::get<0>(menuData) == action) {
                     const TextMode textMode = std::get<1>(menuData);
                     opts->setReferenceItemTextMode(textMode);
-                    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
+                    m_ui->widget_ModelTree->setReferenceItemTextTemplate(
                                 Options::toReferenceItemTextTemplate(textMode));
                 }
             }

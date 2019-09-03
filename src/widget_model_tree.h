@@ -16,13 +16,13 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
-class WidgetApplicationTree : public QWidget {
+class WidgetModelTree : public QWidget {
     Q_OBJECT
 public:
     using Item = ApplicationItem;
 
-    WidgetApplicationTree(QWidget* widget = nullptr);
-    ~WidgetApplicationTree();
+    WidgetModelTree(QWidget* widget = nullptr);
+    ~WidgetModelTree();
 
     bool isMergeXdeReferredShapeOn() const;
     void setMergeXdeReferredShape(bool on);
@@ -44,8 +44,7 @@ private:
             const QItemSelection &selected, const QItemSelection &deselected);
 
     QTreeWidgetItem* loadDocumentItem(DocumentItem* docItem);
-    void guiBuildXdeTree(
-            QTreeWidgetItem* treeDocItem, XdeDocumentItem* xdeDocItem);
+    void guiBuildXdeTree(QTreeWidgetItem* treeDocItem, XdeDocumentItem* xdeDocItem);
 
     QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
     QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
@@ -57,7 +56,7 @@ private:
 
     void refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item);
 
-    class Ui_WidgetApplicationTree* m_ui = nullptr;
+    class Ui_WidgetModelTree* m_ui = nullptr;
     bool m_isMergeXdeReferredShapeOn = true;
     QString m_refItemTextTemplate;
 };

@@ -52,7 +52,7 @@
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../mayo.qrc">:/images/appicon_128.png</pixmap>
+              <pixmap>:/images/appicon_128.png</pixmap>
              </property>
              <property name="alignment">
               <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -165,7 +165,7 @@
                     </property>
                     <item>
                      <property name="text">
-                      <string>Application tree</string>
+                      <string>Model tree</string>
                      </property>
                     </item>
                     <item>
@@ -212,7 +212,7 @@
                  <property name="currentIndex">
                   <number>0</number>
                  </property>
-                 <widget class="QWidget" name="page_ApplicationTree">
+                 <widget class="QWidget" name="page_ModelTree">
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <property name="leftMargin">
                     <number>0</number>
@@ -227,11 +227,11 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QSplitter" name="splitter_ApplicationTree">
+                    <widget class="QSplitter" name="splitter_ModelTree">
                      <property name="orientation">
                       <enum>Qt::Vertical</enum>
                      </property>
-                     <widget class="WidgetApplicationTree" name="widget_ApplicationTree" native="true">
+                     <widget class="WidgetModelTree" name="widget_ModelTree" native="true">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                         <horstretch>0</horstretch>
@@ -807,9 +807,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>WidgetApplicationTree</class>
+   <class>WidgetModelTree</class>
    <extends>QWidget</extends>
-   <header>widget_application_tree.h</header>
+   <header>widget_model_tree.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -825,8 +825,6 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../mayo.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

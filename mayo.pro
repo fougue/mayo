@@ -63,21 +63,29 @@ HEADERS += \
     src/document.h \
     src/document_item.h \
     src/gpx_document_item.h \
+    src/gpx_document_item_factory.h \
     src/gpx_mesh_item.h \
     src/gpx_utils.h \
     src/gpx_xde_document_item.h \
     src/gui_application.h \
     src/gui_document.h \
+    src/gui_document_list_model.h \
     src/libtree.h \
     src/mainwindow.h \
     src/math_utils.h \
     src/mesh_item.h \
     src/mesh_utils.h \
+    src/occt_enums.h \
     src/occt_window.h \
     src/options.h \
     src/property.h \
     src/property_builtins.h \
     src/property_enumeration.h \
+    src/qmeta_gp_pnt.h \
+    src/qmeta_gp_trsf.h \
+    src/qmeta_quantity.h \
+    src/qmeta_quantity_color.h \
+    src/qmeta_tdf_label.h \
     src/qt_occ_view_controller.h \
     src/quantity.h \
     src/result.h \
@@ -86,25 +94,17 @@ HEADERS += \
     src/theme.h \
     src/unit.h \
     src/unit_system.h \
-    src/widget_application_tree.h \
+    src/v3d_view_camera_animation.h \
     src/widget_clip_planes.h \
     src/widget_file_system.h \
     src/widget_gui_document.h \
     src/widget_message_indicator.h \
+    src/widget_model_tree.h \
     src/widget_occ_view.h \
     src/widget_properties_editor.h \
     src/widget_shape_selector.h \
     src/xde_document_item.h \
     src/xde_shape_property_owner.h \
-    src/gui_document_list_model.h \
-    src/gpx_document_item_factory.h \
-    src/v3d_view_camera_animation.h \
-    src/qmeta_gp_pnt.h \
-    src/qmeta_gp_trsf.h \
-    src/qmeta_quantity_color.h \
-    src/qmeta_tdf_label.h \
-    src/qmeta_quantity.h \
-    src/occt_enums.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -129,16 +129,19 @@ SOURCES += \
     src/document.cpp \
     src/document_item.cpp \
     src/gpx_document_item.cpp \
+    src/gpx_document_item_factory.cpp \
     src/gpx_mesh_item.cpp \
     src/gpx_utils.cpp \
     src/gpx_xde_document_item.cpp \
     src/gui_application.cpp \
     src/gui_document.cpp \
+    src/gui_document_list_model.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
     src/math_utils.cpp \
     src/mesh_item.cpp \
     src/mesh_utils.cpp \
+    src/occt_enums.cpp \
     src/occt_window.cpp \
     src/options.cpp \
     src/property.cpp \
@@ -151,20 +154,17 @@ SOURCES += \
     src/theme.cpp \
     src/unit.cpp \
     src/unit_system.cpp \
-    src/widget_application_tree.cpp \
+    src/v3d_view_camera_animation.cpp \
     src/widget_clip_planes.cpp \
     src/widget_file_system.cpp \
     src/widget_gui_document.cpp \
     src/widget_message_indicator.cpp \
+    src/widget_model_tree.cpp \
     src/widget_occ_view.cpp \
     src/widget_properties_editor.cpp \
     src/widget_shape_selector.cpp \
     src/xde_document_item.cpp \
     src/xde_shape_property_owner.cpp \
-    src/gui_document_list_model.cpp \
-    src/gpx_document_item_factory.cpp \
-    src/v3d_view_camera_animation.cpp \
-    src/occt_enums.cpp
 
 win* {
     QT += winextras
@@ -182,8 +182,8 @@ FORMS += \
     src/dialog_save_image_view.ui \
     src/dialog_task_manager.ui \
     src/mainwindow.ui \
-    src/widget_application_tree.ui \
     src/widget_clip_planes.ui \
+    src/widget_model_tree.ui \
     src/widget_properties_editor.ui \
 
 RESOURCES += mayo.qrc
