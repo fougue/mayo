@@ -7,7 +7,7 @@
 #pragma once
 
 #include <QtWidgets/QDialog>
-class QToolButton;
+#include <functional>
 
 namespace Mayo {
 
@@ -22,8 +22,7 @@ public:
 private:
     void chooseColor(
             const QColor& currentColor,
-            QToolButton* targetBtn,
-            QColor* targetColor);
+            const std::function<void(QColor)>& continuation);
 
     class Ui_DialogOptions* m_ui = nullptr;
     QColor m_brepShapeDefaultColor;

@@ -55,9 +55,10 @@ DialogOptions::DialogOptions(QWidget *parent)
                 Internal::colorPixmap(opts->brepShapeDefaultColor()));
     m_brepShapeDefaultColor = opts->brepShapeDefaultColor();
     QObject::connect(m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked, [=]{
-        this->chooseColor(opts->brepShapeDefaultColor(),
-                          m_ui->toolBtn_BRepShapeDefaultColor,
-                          &m_brepShapeDefaultColor);
+        this->chooseColor(opts->brepShapeDefaultColor(), [=](QColor color) {
+            m_ui->toolBtn_BRepShapeDefaultColor->setIcon(Internal::colorPixmap(color));
+            m_brepShapeDefaultColor = color;
+        });
     });
     for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
         m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.name, m.value);
@@ -70,9 +71,10 @@ DialogOptions::DialogOptions(QWidget *parent)
                 Internal::colorPixmap(opts->meshDefaultColor()));
     m_meshDefaultColor = opts->meshDefaultColor();
     QObject::connect(m_ui->toolBtn_MeshDefaultColor, &QAbstractButton::clicked, [=]{
-        this->chooseColor(opts->meshDefaultColor(),
-                          m_ui->toolBtn_MeshDefaultColor,
-                          &m_meshDefaultColor);
+        this->chooseColor(opts->meshDefaultColor(), [=](QColor color) {
+            m_ui->toolBtn_MeshDefaultColor->setIcon(Internal::colorPixmap(color));
+            m_meshDefaultColor = color;
+        });
     });
     for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
         m_ui->comboBox_MeshDefaultMaterial->addItem(m.name, m.value);
@@ -147,15 +149,14 @@ void DialogOptions::accept()
 }
 
 void DialogOptions::chooseColor(
-        const QColor& currentColor, QToolButton* targetBtn, QColor* targetColor)
+        const QColor& currentColor,
+        const std::function<void(QColor)>& continuation)
 {
     auto dlg = new QColorDialog(this);
     dlg->setCurrentColor(currentColor);
     QObject::connect(dlg, &QDialog::finished, [=](int result) {
-        if (result == QDialog::Accepted) {
-            targetBtn->setIcon(Internal::colorPixmap(dlg->selectedColor()));
-            *targetColor = dlg->selectedColor();
-        }
+        if (result == QDialog::Accepted)
+            continuation(dlg->selectedColor());
     });
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
