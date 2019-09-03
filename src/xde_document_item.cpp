@@ -239,6 +239,18 @@ const char *XdeDocumentItem::dynTypeName() const
     return XdeDocumentItem::TypeName;
 }
 
+TDF_Label XdeDocumentItem::label(const DocumentItemNode& docItemNode)
+{
+    if (!docItemNode.isValid())
+        return TDF_Label();
+
+    if (!sameType<XdeDocumentItem>(docItemNode.documentItem))
+        return TDF_Label();
+
+    auto xdeDocItem = static_cast<const XdeDocumentItem*>(docItemNode.documentItem);
+    return xdeDocItem->assemblyTree().nodeData(docItemNode.id);
+}
+
 void XdeDocumentItem::deepBuildAssemblyTree(
         AssemblyNodeId parentNode, const TDF_Label &label)
 {
@@ -263,31 +275,6 @@ std::unique_ptr<XdeShapePropertyOwner> XdeDocumentItem::shapeProperties(
     auto owner = new XdeShapePropertyOwner(this, label, opt);
     std::unique_ptr<XdeShapePropertyOwner> ptr(owner);
     return ptr;
-}
-
-XdeAssemblyNode::XdeAssemblyNode(
-        XdeDocumentItem* docItem, XdeDocumentItem::AssemblyNodeId nde)
-    : ownerDocItem(docItem),
-      nodeId(nde)
-{}
-
-bool XdeAssemblyNode::isValid() const
-{
-    return this->ownerDocItem != nullptr && this->nodeId != 0;
-}
-
-const TDF_Label &XdeAssemblyNode::label() const
-{
-    static const TDF_Label nullLabel;
-    return this->ownerDocItem != nullptr ?
-                this->ownerDocItem->assemblyTree().nodeData(this->nodeId) :
-                nullLabel;
-}
-
-const XdeAssemblyNode &XdeAssemblyNode::null()
-{
-    static const XdeAssemblyNode node = {};
-    return node;
 }
 
 } // namespace Mayo

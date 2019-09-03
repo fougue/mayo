@@ -667,10 +667,9 @@ void MainWindow::onApplicationItemSelectionChanged()
             GuiApplication::instance()->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
-        if (item.isXdeAssemblyNode()) {
-            const XdeAssemblyNode& xdeAsmNode = item.xdeAssemblyNode();
-            const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
-            const TDF_Label& xdeLabel = xdeAsmNode.label();
+        if (item.isDocumentItemNode() && sameType<XdeDocumentItem>(item.documentItem())) {
+            auto xdeItem = static_cast<const XdeDocumentItem*>(item.documentItem());
+            const TDF_Label xdeLabel = XdeDocumentItem::label(item.documentItemNode());
             using ShapePropsOption = XdeDocumentItem::ShapePropertiesOption;
             const ShapePropsOption opt =
                     uiAppTree->isMergeXdeReferredShapeOn() ?

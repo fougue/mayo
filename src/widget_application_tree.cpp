@@ -27,7 +27,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-Q_DECLARE_METATYPE(Mayo::XdeAssemblyNode)
+Q_DECLARE_METATYPE(Mayo::DocumentItemNode)
 
 namespace Mayo {
 namespace Internal {
@@ -42,7 +42,7 @@ public:
         return QTreeWidget::indexFromItem(item, column);
     }
 
-    QTreeWidgetItem* itemFromIndex(const QModelIndex &index) const {
+    QTreeWidgetItem* itemFromIndex(const QModelIndex& index) const {
         return QTreeWidget::itemFromIndex(index);
     }
 };
@@ -59,14 +59,14 @@ enum TreeItemRole {
     TreeItemTypeRole = Qt::UserRole + 1,
     TreeItemDocumentRole,
     TreeItemDocumentItemRole,
-    TreeItemXdeAssemblyNodeRole
+    TreeItemDocumentItemNodeRole
 };
 
 enum TreeItemType {
     TreeItemType_Unknown = 0,
     TreeItemType_Document = 1,
     TreeItemType_DocumentItem = 2,
-    TreeItemType_XdeAssemblyNode = 3
+    TreeItemType_DocumentItemNode = 3
 };
 
 template<typename T> T* qVariantToPtr(const QVariant& var) {
@@ -97,11 +97,10 @@ static DocumentItem* treeItemDocumentItem(const QTreeWidgetItem* treeItem)
     return var.isValid() ? qVariantToPtr<DocumentItem>(var) : nullptr;
 }
 
-static XdeAssemblyNode treeItemXdeAssemblyNode(const QTreeWidgetItem* treeItem)
+static DocumentItemNode treeItemDocumentItemNode(const QTreeWidgetItem* treeItem)
 {
-    const QVariant var = treeItem->data(0, TreeItemXdeAssemblyNodeRole);
-    return var.isValid() ?
-                var.value<XdeAssemblyNode>() : XdeAssemblyNode::null();
+    const QVariant var = treeItem->data(0, TreeItemDocumentItemNodeRole);
+    return var.isValid() ? var.value<DocumentItemNode>() : DocumentItemNode::null();
 }
 
 static void setTreeItemDocument(QTreeWidgetItem* treeItem, Document* doc)
@@ -116,11 +115,11 @@ static void setTreeItemDocumentItem(QTreeWidgetItem* treeItem, DocumentItem* doc
     treeItem->setData(0, TreeItemDocumentItemRole, ptrToQVariant(docItem));
 }
 
-static void setTreeItemXdeAssemblyNode(
-        QTreeWidgetItem* treeItem, const XdeAssemblyNode& lbl)
+static void setTreeItemDocumentItemNode(
+        QTreeWidgetItem* treeItem, const DocumentItemNode& node)
 {
-    treeItem->setData(0, TreeItemTypeRole, TreeItemType_XdeAssemblyNode);
-    treeItem->setData(0, TreeItemXdeAssemblyNodeRole, QVariant::fromValue(lbl));
+    treeItem->setData(0, TreeItemTypeRole, TreeItemType_DocumentItemNode);
+    treeItem->setData(0, TreeItemDocumentItemNodeRole, QVariant::fromValue(node));
 }
 
 static QIcon documentItemIcon(const DocumentItem* docItem)
@@ -129,6 +128,7 @@ static QIcon documentItemIcon(const DocumentItem* docItem)
         return mayoTheme()->icon(Theme::Icon::ItemXde);
     else if (sameType<MeshItem>(docItem))
         return mayoTheme()->icon(Theme::Icon::ItemMesh);
+
     return QIcon();
 }
 
@@ -140,6 +140,7 @@ static QIcon xdeShapeIcon(const TDF_Label& label)
         return QIcon(":/images/xde_reference_16.png");
     else if (XdeDocumentItem::isShapeSimple(label))
         return mayoTheme()->icon(Theme::Icon::XdeSimpleShape);
+
     return QIcon();
 }
 
@@ -157,10 +158,11 @@ static QTreeWidgetItem* guiCreateXdeTreeNode(
     auto guiNode = new QTreeWidgetItem(guiParentNode);
     const QString stdName = xdeDocItem->findLabelName(nodeId);
     guiNode->setText(0, stdName);
-    setTreeItemXdeAssemblyNode(guiNode, XdeAssemblyNode(xdeDocItem, nodeId));
+    setTreeItemDocumentItemNode(guiNode, DocumentItemNode(xdeDocItem, nodeId));
     const QIcon icon = xdeShapeIcon(xdeDocItem->assemblyTree().nodeData(nodeId));
     if (!icon.isNull())
         guiNode->setIcon(0, icon);
+
     return guiNode;
 }
 
@@ -171,14 +173,15 @@ static ApplicationItem toApplicationItem(const QTreeWidgetItem* treeItem)
         return ApplicationItem(Internal::treeItemDocument(treeItem));
     else if (type == Internal::TreeItemType_DocumentItem)
         return ApplicationItem(Internal::treeItemDocumentItem(treeItem));
-    else if (type == Internal::TreeItemType_XdeAssemblyNode)
-        return ApplicationItem(Internal::treeItemXdeAssemblyNode(treeItem));
+    else if (type == Internal::TreeItemType_DocumentItemNode)
+        return ApplicationItem(Internal::treeItemDocumentItemNode(treeItem));
+
     return ApplicationItem();
 }
 
 } // namespace Internal
 
-WidgetApplicationTree::WidgetApplicationTree(QWidget *widget)
+WidgetApplicationTree::WidgetApplicationTree(QWidget* widget)
     : QWidget(widget),
       m_ui(new Ui_WidgetApplicationTree)
 {
@@ -259,7 +262,7 @@ void WidgetApplicationTree::setMergeXdeReferredShape(bool on)
     // TODO : reload XDE documents
 }
 
-const QString &WidgetApplicationTree::referenceItemTextTemplate() const
+const QString& WidgetApplicationTree::referenceItemTextTemplate() const
 {
     return m_refItemTextTemplate;
 }
@@ -278,15 +281,19 @@ QString WidgetApplicationTree::referenceItemText(
 
 void WidgetApplicationTree::refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item)
 {
-    const XdeAssemblyNode asmNode = Internal::treeItemXdeAssemblyNode(item);
-    if (XdeDocumentItem::isShapeReference(asmNode.label())) {
-        const TDF_Label& refLabel = asmNode.label();
+    const DocumentItemNode docItemNode = Internal::treeItemDocumentItemNode(item);
+    if (!sameType<XdeDocumentItem>(docItemNode.documentItem))
+        return;
+
+    const TDF_Label label = XdeDocumentItem::label(docItemNode);
+    if (XdeDocumentItem::isShapeReference(label)) {
+        const TDF_Label& refLabel = label;
         const TDF_Label referredLabel = XdeDocumentItem::shapeReferred(refLabel);
         const QString itemText = this->referenceItemText(refLabel, referredLabel);
         item->setText(0, itemText);
     }
     else {
-        item->setText(0, XdeDocumentItem::findLabelName(asmNode.label()));
+        item->setText(0, XdeDocumentItem::findLabelName(label));
     }
 }
 
@@ -294,7 +301,7 @@ void WidgetApplicationTree::setReferenceItemTextTemplate(const QString& textTemp
 {
     m_refItemTextTemplate = textTemplate;
     for (QTreeWidgetItemIterator it(m_ui->treeWidget_App); *it; ++it) {
-        if (Internal::treeItemType(*it) == Internal::TreeItemType_XdeAssemblyNode)
+        if (Internal::treeItemType(*it) == Internal::TreeItemType_DocumentItemNode)
             this->refreshXdeAssemblyNodeItemText(*it);
     }
 }
@@ -313,24 +320,24 @@ void WidgetApplicationTree::refreshItemText(const ApplicationItem& appItem)
         if (treeItem)
             treeItem->setText(0, Internal::itemLabelText(docItem->propertyLabel));
     }
-    else if (appItem.isXdeAssemblyNode()) {
-        const XdeAssemblyNode& xdeNode = appItem.xdeAssemblyNode();
+    else if (appItem.isDocumentItemNode() && sameType<XdeDocumentItem>(appItem.documentItem())) {
+        const TDF_Label labelNode = XdeDocumentItem::label(appItem.documentItemNode());
         TDF_LabelSequence seqLabelRefresh;
-        if (XdeDocumentItem::isShapeReference(xdeNode.label())
+        if (XdeDocumentItem::isShapeReference(labelNode)
                 && m_refItemTextTemplate.contains("%referred"))
         {
             XCAFDoc_ShapeTool::GetUsers(
-                        XdeDocumentItem::shapeReferred(xdeNode.label()),
+                        XdeDocumentItem::shapeReferred(labelNode),
                         seqLabelRefresh,
                         false /* don't get sub children */);
         }
         else {
-            seqLabelRefresh.Append(xdeNode.label());
+            seqLabelRefresh.Append(labelNode);
         }
 
         for (const TDF_Label& labelRefresh : seqLabelRefresh) {
             QTreeWidgetItem* treeItem =
-                    this->findTreeItemXdeLabel(xdeNode.ownerDocItem, labelRefresh);
+                    this->findTreeItemXdeLabel(appItem.documentItem(), labelRefresh);
             if (treeItem)
                 this->refreshXdeAssemblyNodeItemText(treeItem);
         }
@@ -399,8 +406,8 @@ void WidgetApplicationTree::guiBuildXdeTree(
                     guiNodeId = nodeParentId;
                 }
                 guiNode->setText(0, guiNodeText);
-                Internal::setTreeItemXdeAssemblyNode(
-                            guiNode, XdeAssemblyNode(xdeDocItem, guiNodeId));
+                Internal::setTreeItemDocumentItemNode(
+                            guiNode, DocumentItemNode(xdeDocItem, guiNodeId));
                 const QIcon icon = Internal::xdeShapeIcon(nodeLabel);
                 if (!icon.isNull())
                     guiNode->setIcon(0, icon);
@@ -414,44 +421,43 @@ void WidgetApplicationTree::guiBuildXdeTree(
     });
 }
 
-QTreeWidgetItem *WidgetApplicationTree::findTreeItemDocument(const Document *doc) const
+QTreeWidgetItem* WidgetApplicationTree::findTreeItemDocument(const Document* doc) const
 {
     for (int i = 0; i < m_ui->treeWidget_App->topLevelItemCount(); ++i) {
         QTreeWidgetItem* treeItem = m_ui->treeWidget_App->topLevelItem(i);
         if (Internal::treeItemDocument(treeItem) == doc)
             return treeItem;
     }
+
     return nullptr;
 }
 
-QTreeWidgetItem *WidgetApplicationTree::findTreeItemDocumentItem(const DocumentItem *docItem) const
+QTreeWidgetItem* WidgetApplicationTree::findTreeItemDocumentItem(const DocumentItem* docItem) const
 {
     QTreeWidgetItem* treeItemDoc = this->findTreeItemDocument(docItem->document());
-    if (treeItemDoc != nullptr) {
+    if (treeItemDoc) {
         for (QTreeWidgetItemIterator it(treeItemDoc); *it; ++it) {
             if (Internal::treeItemDocumentItem(*it) == docItem)
                 return *it;
         }
     }
+
     return nullptr;
 }
 
-QTreeWidgetItem* WidgetApplicationTree::findTreeItemXdeAssemblyNode(
-        const XdeAssemblyNode& xdeNode) const
-{
-    return this->findTreeItemXdeLabel(xdeNode.ownerDocItem, xdeNode.label());
-}
-
-QTreeWidgetItem *WidgetApplicationTree::findTreeItemXdeLabel(
-        const XdeDocumentItem* docItem, const TDF_Label& label) const
+QTreeWidgetItem* WidgetApplicationTree::findTreeItemXdeLabel(
+        const DocumentItem* docItem, const TDF_Label& label) const
 {
     QTreeWidgetItem* treeItem = this->findTreeItemDocumentItem(docItem);
-    if (treeItem) {
-        for (QTreeWidgetItemIterator it(treeItem); *it; ++it) {
-            if (Internal::treeItemXdeAssemblyNode(*it).label() == label)
-                return *it;
-        }
+    if (!treeItem)
+        return nullptr;
+
+    for (QTreeWidgetItemIterator it(treeItem); *it; ++it) {
+        const DocumentItemNode docItemNode = Internal::treeItemDocumentItemNode(*it);
+        if (XdeDocumentItem::label(docItemNode) == label)
+            return *it;
     }
+
     return nullptr;
 }
 
@@ -462,8 +468,9 @@ void WidgetApplicationTree::onDocumentItemAdded(DocumentItem* docItem)
         auto xdeDocItem = static_cast<XdeDocumentItem*>(docItem);
         this->guiBuildXdeTree(treeDocItem, xdeDocItem);
     }
+
     QTreeWidgetItem* treeItemDoc = this->findTreeItemDocument(docItem->document());
-    if (treeItemDoc != nullptr) {
+    if (treeItemDoc) {
         treeItemDoc->addChild(treeDocItem);
         treeItemDoc->setExpanded(true);
     }
@@ -496,13 +503,14 @@ void WidgetApplicationTree::onTreeWidgetDocumentSelectionChanged(
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_App->itemFromIndex(index);
         vecSelected.push_back(std::move(Internal::toApplicationItem(treeItem)));
     }
+
     for (const QModelIndex& index : listDeselectedIndex) {
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_App->itemFromIndex(index);
         vecDeselected.push_back(std::move(Internal::toApplicationItem(treeItem)));
     }
+
     GuiApplication::instance()->selectionModel()->add(vecSelected);
     GuiApplication::instance()->selectionModel()->remove(vecDeselected);
-
     //emit selectionChanged();
 }
 

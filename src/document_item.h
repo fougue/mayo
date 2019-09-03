@@ -7,6 +7,7 @@
 #pragma once
 
 #include "property_builtins.h"
+#include "libtree.h"
 #include <cstring>
 #include <vector>
 
@@ -33,6 +34,17 @@ private:
     Document* m_document = nullptr;
 };
 
+struct DocumentItemNode {
+    DocumentItemNode() = default;
+    DocumentItemNode(DocumentItem* docItem, TreeNodeId nodeId);
+
+    bool isValid() const;
+    static const DocumentItemNode& null();
+
+    DocumentItem* documentItem;
+    TreeNodeId id;
+};
+
 class PartItem : public DocumentItem {
 public:
     PartItem();
@@ -50,9 +62,7 @@ bool sameType(const DocumentItem* lhs, const DocumentItem* rhs);
 
 template<typename T> bool sameType(const DocumentItem* item)
 {
-    return item != nullptr ?
-                std::strcmp(item->dynTypeName(), T::TypeName) == 0 :
-                false;
+    return item ? std::strcmp(item->dynTypeName(), T::TypeName) == 0 : false;
 }
 
 } // namespace Mayo

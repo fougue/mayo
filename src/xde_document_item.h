@@ -84,6 +84,8 @@ public:
     static const char TypeName[];
     const char* dynTypeName() const override;
 
+    static TDF_Label label(const DocumentItemNode& docItemNode);
+
 private:
     void deepBuildAssemblyTree(
             AssemblyNodeId parentNode, const TDF_Label& label);
@@ -92,17 +94,6 @@ private:
     Handle_XCAFDoc_ShapeTool m_shapeTool;
     Handle_XCAFDoc_ColorTool m_colorTool;
     Tree<TDF_Label> m_asmTree;
-};
-
-struct XdeAssemblyNode {
-    XdeAssemblyNode() = default;
-    XdeAssemblyNode(XdeDocumentItem* docItem,
-                    XdeDocumentItem::AssemblyNodeId nodeId);
-    static const XdeAssemblyNode& null();
-    bool isValid() const;
-    const TDF_Label& label() const;
-    XdeDocumentItem* ownerDocItem;
-    XdeDocumentItem::AssemblyNodeId nodeId;
 };
 
 } // namespace Mayo

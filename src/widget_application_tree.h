@@ -49,8 +49,7 @@ private:
 
     QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
     QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
-    QTreeWidgetItem* findTreeItemXdeAssemblyNode(const XdeAssemblyNode& xdeNode) const;
-    QTreeWidgetItem* findTreeItemXdeLabel(const XdeDocumentItem* docItem, const TDF_Label& label) const;
+    QTreeWidgetItem* findTreeItemXdeLabel(const DocumentItem* docItem, const TDF_Label& label) const;
 
     QString referenceItemText(
             const TDF_Label& refLabel,
