@@ -36,11 +36,6 @@ public:
         QuantityVolume volume;
     };
 
-    enum class ShapePropertiesOption {
-        None,
-        MergeReferred
-    };
-
     XdeDocumentItem(const Handle_TDocStd_Document& doc);
 
     const Handle_TDocStd_Document& cafDoc() const;
@@ -77,18 +72,18 @@ public:
     static TDF_Label shapeReferred(const TDF_Label& lbl);
 
     static ValidationProperties validationProperties(const TDF_Label& lbl);
-    std::unique_ptr<XdeShapePropertyOwner> shapeProperties(
-            const TDF_Label& label,
-            ShapePropertiesOption opt = ShapePropertiesOption::None) const;
+
+    std::unique_ptr<XdeShapePropertyOwner> shapeProperties(const TDF_Label& label) const;
+    std::unique_ptr<PropertyOwnerSignals> propertiesAtNode(TreeNodeId nodeId) const override;
 
     static const char TypeName[];
     const char* dynTypeName() const override;
 
     static TDF_Label label(const DocumentItemNode& docItemNode);
+    TDF_Label label(TreeNodeId nodeId) const;
 
 private:
-    void deepBuildAssemblyTree(
-            AssemblyNodeId parentNode, const TDF_Label& label);
+    void deepBuildAssemblyTree(AssemblyNodeId parentNode, const TDF_Label& label);
 
     Handle_TDocStd_Document m_cafDoc;
     Handle_XCAFDoc_ShapeTool m_shapeTool;

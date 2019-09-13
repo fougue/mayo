@@ -105,6 +105,9 @@ HEADERS += \
     src/widget_shape_selector.h \
     src/xde_document_item.h \
     src/xde_shape_property_owner.h \
+    src/widget_model_tree_builder_xde.h \
+    src/widget_model_tree_builder.h \
+    src/widget_model_tree_builder_mesh.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -165,6 +168,9 @@ SOURCES += \
     src/widget_shape_selector.cpp \
     src/xde_document_item.cpp \
     src/xde_shape_property_owner.cpp \
+    src/widget_model_tree_builder_xde.cpp \
+    src/widget_model_tree_builder.cpp \
+    src/widget_model_tree_builder_mesh.cpp
 
 win* {
     QT += winextras

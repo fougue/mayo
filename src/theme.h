@@ -57,8 +57,10 @@ public:
         View3dBottom,
         View3dFront,
         View3dBack,
+        //
         ItemMesh,
         ItemXde,
+        //
         XdeAssembly,
         XdeSimpleShape
     };

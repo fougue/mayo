@@ -8,13 +8,16 @@
 
 #include "application_item.h"
 #include "property.h"
-#include "xde_document_item.h"
 
 #include <QtWidgets/QWidget>
+class QSettings;
 class QItemSelection;
+class QTreeWidget;
 class QTreeWidgetItem;
 
 namespace Mayo {
+
+class WidgetModelTreeBuilder;
 
 class WidgetModelTree : public QWidget {
     Q_OBJECT
@@ -24,13 +27,22 @@ public:
     WidgetModelTree(QWidget* widget = nullptr);
     ~WidgetModelTree();
 
-    bool isMergeXdeReferredShapeOn() const;
-    void setMergeXdeReferredShape(bool on);
-
-    const QString& referenceItemTextTemplate() const;
-    void setReferenceItemTextTemplate(const QString& textTemplate);
-
     void refreshItemText(const ApplicationItem& appItem);
+
+    void loadConfiguration(const QSettings* settings, const QString& keyGroup);
+    void saveConfiguration(QSettings* settings, const QString& keyGroup);
+
+    std::vector<QAction*> createConfigurationActions(QObject* parent);
+
+    // For builders
+    static void addPrototypeBuilder(WidgetModelTreeBuilder* builder);
+
+    static DocumentItemNode documentItemNode(const QTreeWidgetItem* treeItem);
+    static void setDocumentItemNode(QTreeWidgetItem* treeItem, const DocumentItemNode& node);
+
+    static bool holdsDocument(const QTreeWidgetItem* treeItem);
+    static bool holdsDocumentItem(const QTreeWidgetItem* treeItem);
+    static bool holdsDocumentItemNode(const QTreeWidgetItem* treeItem);
 
 private:
     void onDocumentAdded(Document* doc);
@@ -41,23 +53,18 @@ private:
     void onDocumentItemPropertyChanged(DocumentItem* docItem, Property* prop);
 
     void onTreeWidgetDocumentSelectionChanged(
-            const QItemSelection &selected, const QItemSelection &deselected);
+            const QItemSelection& selected, const QItemSelection& deselected);
 
     QTreeWidgetItem* loadDocumentItem(DocumentItem* docItem);
-    void guiBuildXdeTree(QTreeWidgetItem* treeDocItem, XdeDocumentItem* xdeDocItem);
 
-    QTreeWidgetItem* findTreeItemDocument(const Document* doc) const;
-    QTreeWidgetItem* findTreeItemDocumentItem(const DocumentItem* docItem) const;
-    QTreeWidgetItem* findTreeItemXdeLabel(const DocumentItem* docItem, const TDF_Label& label) const;
+    QTreeWidgetItem* findTreeItem(const Document* doc) const;
+    QTreeWidgetItem* findTreeItem(const DocumentItem* docItem) const;
 
-    QString referenceItemText(
-            const TDF_Label& refLabel,
-            const TDF_Label& referredLabel) const;
-
-    void refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item);
+    WidgetModelTreeBuilder* findSupportBuilder(const Document* doc) const;
+    WidgetModelTreeBuilder* findSupportBuilder(const DocumentItem* docItem) const;
 
     class Ui_WidgetModelTree* m_ui = nullptr;
-    bool m_isMergeXdeReferredShapeOn = true;
+    std::vector<WidgetModelTreeBuilder*> m_vecBuilder;
     QString m_refItemTextTemplate;
 };
 

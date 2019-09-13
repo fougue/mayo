@@ -33,6 +33,11 @@ void DocumentItem::setDocument(Document* doc)
     m_document = doc;
 }
 
+std::unique_ptr<PropertyOwnerSignals> DocumentItem::propertiesAtNode(TreeNodeId) const
+{
+    return std::unique_ptr<PropertyOwnerSignals>();
+}
+
 void DocumentItem::onPropertyChanged(Property* prop)
 {
     if (m_document)

@@ -9,6 +9,7 @@
 #include "property_builtins.h"
 #include "libtree.h"
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace Mayo {
@@ -24,6 +25,8 @@ public:
     void setDocument(Document* doc);
 
     PropertyQString propertyLabel;
+
+    virtual std::unique_ptr<PropertyOwnerSignals> propertiesAtNode(TreeNodeId nodeId) const;
 
     virtual const char* dynTypeName() const = 0;
 

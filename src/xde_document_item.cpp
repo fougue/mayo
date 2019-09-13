@@ -248,7 +248,12 @@ TDF_Label XdeDocumentItem::label(const DocumentItemNode& docItemNode)
         return TDF_Label();
 
     auto xdeDocItem = static_cast<const XdeDocumentItem*>(docItemNode.documentItem);
-    return xdeDocItem->assemblyTree().nodeData(docItemNode.id);
+    return xdeDocItem->label(docItemNode.id);
+}
+
+TDF_Label XdeDocumentItem::label(TreeNodeId nodeId) const
+{
+    return this->assemblyTree().nodeData(nodeId);
 }
 
 void XdeDocumentItem::deepBuildAssemblyTree(
@@ -269,11 +274,17 @@ void XdeDocumentItem::deepBuildAssemblyTree(
     }
 }
 
-std::unique_ptr<XdeShapePropertyOwner> XdeDocumentItem::shapeProperties(
-        const TDF_Label& label, XdeDocumentItem::ShapePropertiesOption opt) const
+std::unique_ptr<XdeShapePropertyOwner> XdeDocumentItem::shapeProperties(const TDF_Label& label) const
 {
-    auto owner = new XdeShapePropertyOwner(this, label, opt);
+    auto owner = new XdeShapePropertyOwner(this, label);
     std::unique_ptr<XdeShapePropertyOwner> ptr(owner);
+    return ptr;
+}
+
+std::unique_ptr<PropertyOwnerSignals> XdeDocumentItem::propertiesAtNode(TreeNodeId nodeId) const
+{
+    std::unique_ptr<PropertyOwnerSignals> ptr(
+                new XdeShapePropertyOwner(this, this->label(nodeId)));
     return ptr;
 }
 
