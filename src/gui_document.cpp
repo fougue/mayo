@@ -76,7 +76,7 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 
 } // namespace Internal
 
-GuiDocument::GuiDocument(Document *doc)
+GuiDocument::GuiDocument(Document* doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
       m_v3dView(m_v3dViewer->CreateView()),
@@ -110,28 +110,28 @@ GuiDocument::GuiDocument(Document *doc)
     QObject::connect(doc, &Document::itemErased, this, &GuiDocument::onItemErased);
 }
 
-Document *GuiDocument::document() const
+Document* GuiDocument::document() const
 {
     return m_document;
 }
 
-const Handle_V3d_View &GuiDocument::v3dView() const
+const Handle_V3d_View& GuiDocument::v3dView() const
 {
     return m_v3dView;
 }
 
-const Handle_AIS_InteractiveContext &GuiDocument::aisInteractiveContext() const
+const Handle_AIS_InteractiveContext& GuiDocument::aisInteractiveContext() const
 {
     return m_aisContext;
 }
 
-GpxDocumentItem *GuiDocument::findItemGpx(const DocumentItem* item) const
+GpxDocumentItem* GuiDocument::findItemGpx(const DocumentItem* item) const
 {
     const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
     return guiDocItem ? guiDocItem->gpxDocItem.get() : nullptr;
 }
 
-const Bnd_Box &GuiDocument::gpxBoundingBox() const
+const Bnd_Box& GuiDocument::gpxBoundingBox() const
 {
     return m_gpxBoundingBox;
 }
@@ -141,15 +141,14 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
     if (appItem.document() != this->document())
         return;
 
-    if (appItem.isXdeAssemblyNode()) {
-        const XdeAssemblyNode& xdeAsmNode = appItem.xdeAssemblyNode();
-        const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
-        const GuiDocumentItem* guiItem = this->findGuiDocumentItem(xdeItem);
-        if (guiItem) {
-            const TopLoc_Location shapeLoc =
-                    xdeItem->shapeAbsoluteLocation(xdeAsmNode.nodeId);
-            const TopoDS_Shape shape =
-                    XdeDocumentItem::shape(xdeAsmNode.label()).Located(shapeLoc);
+    if (appItem.isDocumentItemNode()) {
+        const GuiDocumentItem* guiItem = this->findGuiDocumentItem(appItem.documentItem());
+        if (guiItem && sameType<XdeDocumentItem>(appItem.documentItem())) {
+            auto xdeItem = static_cast<const XdeDocumentItem*>(appItem.documentItem());
+            const DocumentItemNode& docItemNode = appItem.documentItemNode();
+            const TopLoc_Location shapeLoc = xdeItem->shapeAbsoluteLocation(docItemNode.id);
+            const TDF_Label labelNode = XdeDocumentItem::label(docItemNode);
+            const TopoDS_Shape shape = XdeDocumentItem::shape(labelNode).Located(shapeLoc);
             std::vector<TopoDS_Face> vecFace;
             if (BRepUtils::moreComplex(shape.ShapeType(), TopAbs_FACE)) {
                 BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
@@ -167,20 +166,6 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
             }
         }
     }
-#if 0
-    else if (appItem.isDocumentItem()) {
-        const GpxDocumentItem* gpxItem = this->findItemGpx(appItem.documentItem());
-        if (gpxItem != nullptr)
-            m_aisContext->AddOrRemoveSelected(gpxItem->handleGpxObject(), false);
-    }
-    else if (appItem.isDocument()) {
-        for (const DocumentItem* docItem : appItem.document()->rootItems()) {
-            const GpxDocumentItem* gpxItem = this->findItemGpx(docItem);
-            if (gpxItem != nullptr)
-                m_aisContext->AddOrRemoveSelected(gpxItem->handleGpxObject(), false);
-        }
-    }
-#endif
 }
 
 void GuiDocument::clearItemSelection()
@@ -223,7 +208,7 @@ void GuiDocument::onItemAdded(DocumentItem* item)
     emit gpxBoundingBoxChanged(m_gpxBoundingBox);
 }
 
-void GuiDocument::onItemErased(const DocumentItem *item)
+void GuiDocument::onItemErased(const DocumentItem* item)
 {
     auto itFound = std::find_if(
                 m_vecGuiDocumentItem.begin(),
@@ -244,7 +229,7 @@ void GuiDocument::onItemErased(const DocumentItem *item)
     }
 }
 
-void GuiDocument::mapGpxItem(DocumentItem *item)
+void GuiDocument::mapGpxItem(DocumentItem* item)
 {
     GpxDocumentItem* gpxItem = GpxDocumentItemFactory::instance()->create(item);
     GuiDocumentItem guiItem(item, gpxItem);
@@ -267,7 +252,7 @@ void GuiDocument::mapGpxItem(DocumentItem *item)
 }
 
 const GuiDocument::GuiDocumentItem*
-GuiDocument::findGuiDocumentItem(const DocumentItem *item) const
+GuiDocument::findGuiDocumentItem(const DocumentItem* item) const
 {
     for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
         if (guiItem.docItem == item)
@@ -276,7 +261,7 @@ GuiDocument::findGuiDocumentItem(const DocumentItem *item) const
     return nullptr;
 }
 
-GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem *item, GpxDocumentItem *gpx)
+GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem* item, GpxDocumentItem* gpx)
     : docItem(item), gpxDocItem(gpx)
 {
 }

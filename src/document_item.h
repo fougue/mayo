@@ -7,7 +7,9 @@
 #pragma once
 
 #include "property_builtins.h"
+#include "libtree.h"
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace Mayo {
@@ -24,6 +26,8 @@ public:
 
     PropertyQString propertyLabel;
 
+    virtual std::unique_ptr<PropertyOwnerSignals> propertiesAtNode(TreeNodeId nodeId) const;
+
     virtual const char* dynTypeName() const = 0;
 
 protected:
@@ -31,6 +35,17 @@ protected:
 
 private:
     Document* m_document = nullptr;
+};
+
+struct DocumentItemNode {
+    DocumentItemNode() = default;
+    DocumentItemNode(DocumentItem* docItem, TreeNodeId nodeId);
+
+    bool isValid() const;
+    static const DocumentItemNode& null();
+
+    DocumentItem* documentItem;
+    TreeNodeId id;
 };
 
 class PartItem : public DocumentItem {
@@ -50,9 +65,7 @@ bool sameType(const DocumentItem* lhs, const DocumentItem* rhs);
 
 template<typename T> bool sameType(const DocumentItem* item)
 {
-    return item != nullptr ?
-                std::strcmp(item->dynTypeName(), T::TypeName) == 0 :
-                false;
+    return item ? std::strcmp(item->dynTypeName(), T::TypeName) == 0 : false;
 }
 
 } // namespace Mayo

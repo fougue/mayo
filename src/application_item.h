@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "xde_document_item.h"
+#include "document_item.h"
 
 namespace Mayo {
 
@@ -15,23 +15,23 @@ public:
     ApplicationItem() = default;
     ApplicationItem(Document* doc);
     ApplicationItem(DocumentItem* docItem);
-    ApplicationItem(const XdeAssemblyNode& lbl);
+    ApplicationItem(const DocumentItemNode& node);
 
     bool isValid() const;
     bool isDocument() const;
     bool isDocumentItem() const;
-    bool isXdeAssemblyNode() const;
+    bool isDocumentItemNode() const;
 
     Document* document() const;
     DocumentItem* documentItem() const;
-    const XdeAssemblyNode& xdeAssemblyNode() const;
+    const DocumentItemNode& documentItemNode() const;
 
     bool operator==(const ApplicationItem& other) const;
 
 private:
     Document* m_doc;
     DocumentItem* m_docItem;
-    XdeAssemblyNode m_xdeAsmTreeNode;
+    DocumentItemNode m_docItemNode;
 };
 
 } // namespace Mayo

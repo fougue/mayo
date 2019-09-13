@@ -10,9 +10,7 @@
 namespace Mayo {
 
 XdeShapePropertyOwner::XdeShapePropertyOwner(
-        const XdeDocumentItem *docItem,
-        const TDF_Label &label,
-        XdeDocumentItem::ShapePropertiesOption opt)
+        const XdeDocumentItem* docItem, const TDF_Label& label)
     : m_propertyName(this, tr("Name")),
       m_propertyShapeType(this, tr("Shape")),
       m_propertyXdeShapeKind(this, tr("XDE shape")),
@@ -41,16 +39,22 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
     QStringList listXdeShapeKind;
     if (XdeDocumentItem::isShapeAssembly(label))
         listXdeShapeKind.push_back(tr("Assembly"));
+
     if (XdeDocumentItem::isShapeReference(label))
         listXdeShapeKind.push_back(tr("Reference"));
+
     if (XdeDocumentItem::isShapeComponent(label))
         listXdeShapeKind.push_back(tr("Component"));
+
     if (XdeDocumentItem::isShapeCompound(label))
         listXdeShapeKind.push_back(tr("Compound"));
+
     if (XdeDocumentItem::isShapeSimple(label))
         listXdeShapeKind.push_back(tr("Simple"));
+
     if (XdeDocumentItem::isShapeSub(label))
         listXdeShapeKind.push_back(tr("Sub"));
+
     m_propertyXdeShapeKind.setValue(listXdeShapeKind.join('+'));
 
     // Reference location
@@ -84,20 +88,19 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
     }
 
     // Referred entity's properties
-    if (XdeDocumentItem::isShapeReference(label)
-            && opt == XdeDocumentItem::ShapePropertiesOption::MergeReferred)
-    {
+    if (XdeDocumentItem::isShapeReference(label)) {
         m_labelReferred = XdeDocumentItem::shapeReferred(label);
         m_propertyReferredName.setValue(XdeDocumentItem::findLabelName(m_labelReferred));
-
         const XdeDocumentItem::ValidationProperties validProps =
                 XdeDocumentItem::validationProperties(m_labelReferred);
         m_propertyReferredValidationCentroid.setValue(validProps.centroid);
         if (!validProps.hasCentroid)
             this->removeProperty(&m_propertyReferredValidationCentroid);
+
         m_propertyReferredValidationArea.setQuantity(validProps.area);
         if (!validProps.hasArea)
             this->removeProperty(&m_propertyReferredValidationArea);
+
         m_propertyReferredValidationVolume.setQuantity(validProps.volume);
         if (!validProps.hasVolume)
             this->removeProperty(&m_propertyReferredValidationVolume);
@@ -117,26 +120,27 @@ XdeShapePropertyOwner::XdeShapePropertyOwner(
 
     for (Property* prop : this->properties())
         prop->setUserReadOnly(true);
+
     m_propertyName.setUserReadOnly(false);
     m_propertyReferredName.setUserReadOnly(false);
 }
 
-const XdeDocumentItem *XdeShapePropertyOwner::xdeDocumentItem() const
+const XdeDocumentItem* XdeShapePropertyOwner::xdeDocumentItem() const
 {
     return m_docItem;
 }
 
-const TDF_Label &XdeShapePropertyOwner::label() const
+const TDF_Label& XdeShapePropertyOwner::label() const
 {
     return m_label;
 }
 
-const TDF_Label &XdeShapePropertyOwner::referredLabel() const
+const TDF_Label& XdeShapePropertyOwner::referredLabel() const
 {
     return m_labelReferred;
 }
 
-void XdeShapePropertyOwner::onPropertyChanged(Property *prop)
+void XdeShapePropertyOwner::onPropertyChanged(Property* prop)
 {
     if (prop == &m_propertyName) {
         XdeDocumentItem::setLabelName(m_label, m_propertyName.value());
@@ -146,9 +150,8 @@ void XdeShapePropertyOwner::onPropertyChanged(Property *prop)
         XdeDocumentItem::setLabelName(m_labelReferred, m_propertyReferredName.value());
         emit referredNameChanged();
     }
-    else {
-        PropertyOwner::onPropertyChanged(prop);
-    }
+
+    PropertyOwnerSignals::onPropertyChanged(prop);
 }
 
 } // namespace Mayo

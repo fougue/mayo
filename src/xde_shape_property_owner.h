@@ -9,11 +9,10 @@
 #include "property.h"
 #include "property_builtins.h"
 #include "xde_document_item.h"
-#include <QtCore/QObject>
 
 namespace Mayo {
 
-class XdeShapePropertyOwner : public QObject, public PropertyOwner {
+class XdeShapePropertyOwner : public PropertyOwnerSignals {
     Q_OBJECT
 public:
     const XdeDocumentItem* xdeDocumentItem() const;
@@ -28,10 +27,7 @@ protected:
     void onPropertyChanged(Property* prop) override;
 
 private:
-    XdeShapePropertyOwner(
-            const XdeDocumentItem* docItem,
-            const TDF_Label& label,
-            XdeDocumentItem::ShapePropertiesOption opt);
+    XdeShapePropertyOwner(const XdeDocumentItem* docItem, const TDF_Label& label);
 
     friend class XdeDocumentItem;
 

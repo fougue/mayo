@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mayo::WidgetApplicationTree</class>
- <widget class="QWidget" name="Mayo::WidgetApplicationTree">
+ <class>Mayo::WidgetModelTree</class>
+ <widget class="QWidget" name="Mayo::WidgetModelTree">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -27,7 +27,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="Mayo::Internal::TreeWidget" name="treeWidget_App">
+    <widget class="Mayo::Internal::TreeWidget" name="treeWidget_Model">
      <property name="selectionMode">
       <enum>QAbstractItemView::ExtendedSelection</enum>
      </property>
@@ -50,7 +50,7 @@
   <customwidget>
    <class>Mayo::Internal::TreeWidget</class>
    <extends>QTreeWidget</extends>
-   <header>widget_application_tree.h</header>
+   <header>widget_model_tree.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

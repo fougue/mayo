@@ -27,6 +27,9 @@ public:
 
     static Options* instance();
 
+    const QSettings* settings() const;
+    QSettings* settings();
+
     const QLocale& locale() const;
     void setLocale(const QLocale& locale);
 
@@ -86,18 +89,6 @@ public:
         return UnitSystem::translate(Options::instance()->unitSystemSchema(), qty);
     }
     UnitSystem::TranslateResult unitSystemTranslate(double value, Unit unit);
-
-    // Model tree
-    enum class ReferenceItemTextMode {
-        ReferenceOnly,
-        ReferredOnly,
-        ReferenceAndReferred
-    };
-    static QString toReferenceItemTextTemplate(ReferenceItemTextMode mode);
-
-    QString referenceItemTextTemplate() const;
-    ReferenceItemTextMode referenceItemTextMode() const;
-    void setReferenceItemTextMode(ReferenceItemTextMode mode);
 
 signals:
     void clipPlaneCappingToggled(bool on);

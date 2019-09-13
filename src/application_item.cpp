@@ -11,25 +11,25 @@ namespace Mayo {
 ApplicationItem::ApplicationItem(Document *doc)
     : m_doc(doc),
       m_docItem(nullptr),
-      m_xdeAsmTreeNode(XdeAssemblyNode::null())
+      m_docItemNode(DocumentItemNode::null())
 { }
 
 ApplicationItem::ApplicationItem(DocumentItem *docItem)
     : m_doc(nullptr),
       m_docItem(docItem),
-      m_xdeAsmTreeNode(XdeAssemblyNode::null())
+      m_docItemNode(DocumentItemNode::null())
 { }
 
-ApplicationItem::ApplicationItem(const XdeAssemblyNode &node)
+ApplicationItem::ApplicationItem(const DocumentItemNode &node)
     : m_doc(nullptr),
       m_docItem(nullptr),
-      m_xdeAsmTreeNode(node)
+      m_docItemNode(node)
 { }
 
 bool ApplicationItem::isValid() const {
     return this->isDocument()
             || this->isDocumentItem()
-            || this->isXdeAssemblyNode();
+            || this->isDocumentItemNode();
 }
 
 bool ApplicationItem::isDocument() const {
@@ -40,42 +40,44 @@ bool ApplicationItem::isDocumentItem() const {
     return m_docItem != nullptr;
 }
 
-bool ApplicationItem::isXdeAssemblyNode() const {
-    return m_xdeAsmTreeNode.isValid();
+bool ApplicationItem::isDocumentItemNode() const {
+    return m_docItemNode.isValid();
 }
 
-Document *ApplicationItem::document() const
+Document* ApplicationItem::document() const
 {
     if (this->isDocument())
         return m_doc;
     else if (this->isDocumentItem())
         return m_docItem->document();
-    else if (this->isXdeAssemblyNode())
-        return m_xdeAsmTreeNode.ownerDocItem->document();
+    else if (this->isDocumentItemNode())
+        return m_docItemNode.documentItem->document();
+
     return nullptr;
 }
 
-DocumentItem *ApplicationItem::documentItem() const
+DocumentItem* ApplicationItem::documentItem() const
 {
     if (this->isDocumentItem())
         return m_docItem;
-    else if (this->isXdeAssemblyNode())
-        return m_xdeAsmTreeNode.ownerDocItem;
+    else if (this->isDocumentItemNode())
+        return m_docItemNode.documentItem;
+
     return nullptr;
 }
 
-const XdeAssemblyNode& ApplicationItem::xdeAssemblyNode() const
+const DocumentItemNode& ApplicationItem::documentItemNode() const
 {
-    return this->isXdeAssemblyNode() ?
-                m_xdeAsmTreeNode : XdeAssemblyNode::null();
+    return this->isDocumentItemNode() ?
+                m_docItemNode : DocumentItemNode::null();
 }
 
 bool ApplicationItem::operator==(const ApplicationItem &other) const
 {
     return m_doc == other.m_doc
             && m_docItem == other.m_docItem
-            && m_xdeAsmTreeNode.ownerDocItem == other.m_xdeAsmTreeNode.ownerDocItem
-            && m_xdeAsmTreeNode.nodeId == other.m_xdeAsmTreeNode.nodeId;
+            && m_docItemNode.documentItem == other.m_docItemNode.documentItem
+            && m_docItemNode.id == other.m_docItemNode.id;
 }
 
 } // namespace Mayo

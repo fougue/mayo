@@ -7,16 +7,15 @@
 #include "document_item.h"
 
 #include "document.h"
-#include <QtCore/QCoreApplication>
 
+#include <QtCore/QCoreApplication>
 #include <cassert>
 #include <limits>
 
 namespace Mayo {
 
 DocumentItem::DocumentItem()
-    : propertyLabel(
-          this, QCoreApplication::translate("Mayo::DocumentItem", "Label"))
+    : propertyLabel(this, QCoreApplication::translate("Mayo::DocumentItem", "Label"))
 {
 }
 
@@ -24,19 +23,24 @@ DocumentItem::~DocumentItem()
 {
 }
 
-Document *DocumentItem::document() const
+Document* DocumentItem::document() const
 {
     return m_document;
 }
 
-void DocumentItem::setDocument(Document *doc)
+void DocumentItem::setDocument(Document* doc)
 {
     m_document = doc;
 }
 
-void DocumentItem::onPropertyChanged(Property *prop)
+std::unique_ptr<PropertyOwnerSignals> DocumentItem::propertiesAtNode(TreeNodeId) const
 {
-    if (m_document != nullptr)
+    return std::unique_ptr<PropertyOwnerSignals>();
+}
+
+void DocumentItem::onPropertyChanged(Property* prop)
+{
+    if (m_document)
         emit m_document->itemPropertyChanged(this, prop);
 }
 
@@ -60,11 +64,29 @@ bool PartItem::isNull() const
 const char PartItem::TypeName[] = "247d246a-6316-4a99-b68e-bdcf565fa8aa";
 const char* PartItem::dynTypeName() const { return PartItem::TypeName; }
 
-bool sameType(const DocumentItem *lhs, const DocumentItem *rhs)
+bool sameType(const DocumentItem* lhs, const DocumentItem* rhs)
 {
-    if (lhs != nullptr && rhs != nullptr)
+    if (lhs && rhs)
         return std::strcmp(lhs->dynTypeName(), rhs->dynTypeName()) == 0;
+
     return false;
+}
+
+DocumentItemNode::DocumentItemNode(DocumentItem* docItem, TreeNodeId nodeId)
+    : documentItem(docItem),
+      id(nodeId)
+{
+}
+
+bool DocumentItemNode::isValid() const
+{
+    return this->documentItem && this->id != 0;
+}
+
+const DocumentItemNode& DocumentItemNode::null()
+{
+    static const DocumentItemNode node = {};
+    return node;
 }
 
 } // namespace Mayo

@@ -680,13 +680,14 @@ Application::IoResult Application::exportIges(
     writer.SetLayerMode(true);
     if (!indicator.IsNull())
         writer.TransferProcess()->SetProgress(indicator);
+
     for (const ApplicationItem& item : appItems) {
-        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+        if (sameType<XdeDocumentItem>(item.documentItem())) {
             auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
-            writer.Transfer(xdeDocItem->cafDoc());
-        }
-        else if (item.isXdeAssemblyNode()) {
-            writer.Transfer(item.xdeAssemblyNode().label());
+            if (item.isDocumentItem())
+                writer.Transfer(xdeDocItem->cafDoc());
+            else if (item.isDocumentItemNode())
+                writer.Transfer(XdeDocumentItem::label(item.documentItemNode()));
         }
     }
 
@@ -710,12 +711,12 @@ Application::IoResult Application::exportStep(
         writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
 
     for (const ApplicationItem& item : appItems) {
-        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+        if (sameType<XdeDocumentItem>(item.documentItem())) {
             auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
-            writer.Transfer(xdeDocItem->cafDoc());
-        }
-        else if (item.isXdeAssemblyNode()) {
-            writer.Transfer(item.xdeAssemblyNode().label());
+            if (item.isDocumentItem())
+                writer.Transfer(xdeDocItem->cafDoc());
+            else if (item.isDocumentItemNode())
+                writer.Transfer(XdeDocumentItem::label(item.documentItemNode()));
         }
     }
 
@@ -735,13 +736,16 @@ Application::IoResult Application::exportOccBRep(
     std::vector<TopoDS_Shape> vecShape;
     vecShape.reserve(appItems.size());
     for (const ApplicationItem& item : appItems) {
-        if (item.isDocumentItem() && sameType<XdeDocumentItem>(item.documentItem())) {
+        if (sameType<XdeDocumentItem>(item.documentItem())) {
             auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
-            for (const TDF_Label& label : xdeDocItem->topLevelFreeShapes())
-                vecShape.push_back(XdeDocumentItem::shape(label));
-        }
-        else if (item.isXdeAssemblyNode()) {
-            vecShape.push_back(XdeDocumentItem::shape(item.xdeAssemblyNode().label()));
+            if (item.isDocumentItem()) {
+                for (const TDF_Label& label : xdeDocItem->topLevelFreeShapes())
+                    vecShape.push_back(XdeDocumentItem::shape(label));
+            }
+            else if (item.isDocumentItemNode()) {
+                const TDF_Label labelNode = XdeDocumentItem::label(item.documentItemNode());
+                vecShape.push_back(XdeDocumentItem::shape(labelNode));
+            }
         }
     }
 
@@ -848,7 +852,7 @@ Application::IoResult Application::exportStl_OCC(
     if (appItems.size() > 1)
         return IoResult::error(tr("OpenCascade RWStl does not support multi-solids"));
 
-    auto funcWriteShape = [=](const TopoDS_Shape& shape) {
+    auto fnWriteShape = [=](const TopoDS_Shape& shape) {
         StlAPI_Writer writer;
         writer.ASCIIMode() = isAsciiFormat;
         if (!writer.Write(shape, filepath.toLocal8Bit().constData()))
@@ -858,30 +862,30 @@ Application::IoResult Application::exportStl_OCC(
 
     if (!appItems.empty()) {
         const ApplicationItem& item = appItems.at(0);
-        if (item.isDocumentItem()) {
-            if (sameType<XdeDocumentItem>(item.documentItem())) {
-                auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
-                return funcWriteShape(Internal::xdeDocumentWholeShape(xdeDocItem));
+        if (sameType<XdeDocumentItem>(item.documentItem())) {
+            auto xdeDocItem = static_cast<const XdeDocumentItem*>(item.documentItem());
+            if (item.isDocumentItem()) {
+                return fnWriteShape(Internal::xdeDocumentWholeShape(xdeDocItem));
             }
-            else if (sameType<MeshItem>(item.documentItem())) {
-                Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-                bool ok = false;
-                auto meshItem = static_cast<const MeshItem*>(item.documentItem());
-                const QByteArray filepathLocal8b = filepath.toLocal8Bit();
-                const OSD_Path osdFilepath(filepathLocal8b.constData());
-                const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
-                if (isAsciiFormat)
-                    ok = RWStl::WriteAscii(mesh, osdFilepath, indicator);
-                else
-                    ok = RWStl::WriteBinary(mesh, osdFilepath, indicator);
-
-                if (!ok)
-                    return IoResult::error(tr("Unknown error"));
+            else if (item.isDocumentItemNode()) {
+                const TDF_Label label = XdeDocumentItem::label(item.documentItemNode());
+                return fnWriteShape(XdeDocumentItem::shape(label));
             }
         }
-        else if (item.isXdeAssemblyNode()) {
-            const TDF_Label& labelShape = item.xdeAssemblyNode().label();
-            return funcWriteShape(XdeDocumentItem::shape(labelShape));
+        else if (sameType<MeshItem>(item.documentItem())) {
+            Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
+            bool ok = false;
+            auto meshItem = static_cast<const MeshItem*>(item.documentItem());
+            const QByteArray filepathLocal8b = filepath.toLocal8Bit();
+            const OSD_Path osdFilepath(filepathLocal8b.constData());
+            const Handle_Poly_Triangulation& mesh = meshItem->triangulation();
+            if (isAsciiFormat)
+                ok = RWStl::WriteAscii(mesh, osdFilepath, indicator);
+            else
+                ok = RWStl::WriteBinary(mesh, osdFilepath, indicator);
+
+            if (!ok)
+                return IoResult::error(tr("Unknown error"));
         }
     }
 

@@ -17,7 +17,6 @@ namespace Mayo {
 
 class Document;
 class GuiDocument;
-class XdeShapePropertyOwner;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
@@ -95,7 +94,7 @@ private:
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     QStringList m_listRecentFile;
-    std::unique_ptr<XdeShapePropertyOwner> m_ptrXdeShapeProperties;
+    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeProperties;
 };
 
 } // namespace Mayo

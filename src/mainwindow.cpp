@@ -9,7 +9,6 @@
 
 #include "application.h"
 #include "application_item_selection_model.h"
-#include "brep_utils.h"
 #include "dialog_about.h"
 #include "dialog_export_options.h"
 #include "dialog_inspect_xde.h"
@@ -25,13 +24,12 @@
 #include "options.h"
 #include "qt_occ_view_controller.h"
 #include "theme.h"
-#include "widget_application_tree.h"
+#include "widget_model_tree.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
 #include "widget_properties_editor.h"
 #include "widget_message_indicator.h"
 #include "xde_document_item.h"
-#include "xde_shape_property_owner.h"
 
 #ifdef Q_OS_WIN
 #  include "win_taskbar_global_progress.h"
@@ -45,16 +43,13 @@
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>
 #include <QtCore/QSettings>
-#include <QtCore/QStringListModel>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
 #include <QtWidgets/QActionGroup>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
-#include <QtWidgets/QWidgetAction>
 #include <QtDebug>
-#include <tuple>
 
 namespace Mayo {
 
@@ -71,6 +66,7 @@ static Application::PartFormat partFormatFromFilter(const QString& filter)
         if (filter == Application::partFormatFilter(format))
             return format;
     }
+
     return Application::PartFormat::Unknown;
 }
 
@@ -130,6 +126,7 @@ struct OpenFileNames {
                     QFileDialog::getOpenFileNames(
                         parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
         }
+
         if (!result.listFilepath.isEmpty()) {
             result.lastIoSettings.openDir =
                     QFileInfo(result.listFilepath.front()).canonicalPath();
@@ -139,6 +136,7 @@ struct OpenFileNames {
                         Application::PartFormat::Unknown;
             ImportExportSettings::save(result.lastIoSettings);
         }
+
         return result;
     }
 };
@@ -160,6 +158,7 @@ static void prependRecentFile(QStringList* listRecentFile, const QString& filepa
         if (recentFile == absFilepath)
             return;
     }
+
     listRecentFile->insert(listRecentFile->begin(), absFilepath);
     while (listRecentFile->size() > sizeLimit)
         listRecentFile->pop_back();
@@ -173,12 +172,14 @@ MainWindow::MainWindow(QWidget *parent)
       m_listRecentFile(Options::instance()->recentFiles())
 {
     m_ui->setupUi(this);
+    m_ui->widget_ModelTree->loadConfiguration(Options::instance()->settings(), "GUI/MainWindow");
+
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
     m_ui->splitter_Main->setStretchFactor(1, 3);
 
-    m_ui->splitter_ApplicationTree->setStretchFactor(0, 1);
-    m_ui->splitter_ApplicationTree->setStretchFactor(1, 2);
+    m_ui->splitter_ModelTree->setStretchFactor(0, 1);
+    m_ui->splitter_ModelTree->setStretchFactor(1, 2);
 
     m_ui->stack_LeftContents->setCurrentIndex(0);
 
@@ -254,7 +255,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
     QObject::connect(m_ui->menu_Projection, &QMenu::triggered, this, [=](QAction* action){
         if (this->currentWidgetGuiDocument()) {
-            const GuiDocument* guiDoc =  this->currentWidgetGuiDocument()->guiDocument();
+            const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
             guiDoc->v3dView()->Camera()->SetProjectionType(
                         action == m_ui->actionProjectionOrthographic ?
                             Graphic3d_Camera::Projection_Orthographic :
@@ -374,8 +375,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     this->updateControlsActivation();
-    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
-                Options::instance()->referenceItemTextTemplate());
     m_ui->widget_MouseCoords->hide();
 
     this->onCurrentDocumentIndexChanged(-1);
@@ -383,6 +382,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    m_ui->widget_ModelTree->saveConfiguration(Options::instance()->settings(), "GUI/MainWindow");
     delete m_ui;
     Options::instance()->setRecentFiles(m_listRecentFile);
 }
@@ -400,16 +400,19 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
         funcSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
         return true;
     }
+
     if (watched == m_ui->widget_LeftHeader && eventType == QEvent::Show) {
         funcSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
         return true;
     }
+
     if (watched == m_ui->stack_GuiDocuments) {
         if (eventType == QEvent::Enter || eventType == QEvent::Leave) {
             m_ui->widget_MouseCoords->setHidden(eventType == QEvent::Leave);
             return true;
         }
     }
+
     return false;
 }
 
@@ -427,6 +430,7 @@ void MainWindow::dropEvent(QDropEvent* event)
         if (url.isLocalFile())
             listFilePath.push_back(url.toLocalFile());
     }
+
     event->acceptProposedAction();
     this->openDocumentsFromList(listFilePath);
 }
@@ -461,7 +465,7 @@ void MainWindow::openDocuments()
 void MainWindow::importInCurrentDoc()
 {
     auto widgetGuiDoc = this->currentWidgetGuiDocument();
-    if (widgetGuiDoc != nullptr) {
+    if (widgetGuiDoc) {
         Document* doc = widgetGuiDoc->guiDocument()->document();
         const auto resFileNames = Internal::OpenFileNames::get(this);
         if (!resFileNames.listFilepath.isEmpty()) {
@@ -502,6 +506,7 @@ void MainWindow::runImportTask(
             msg = tr("Failed to import part:\n    %1\nError: %2")
                     .arg(filepath, result.errorText());
         }
+
         emit operationFinished(result.valid(), msg);
     });
 }
@@ -529,6 +534,7 @@ void MainWindow::runExportTask(
             msg = tr("Failed to export part:\n    %1\nError: %2")
                     .arg(filepath).arg(result.errorText());
         }
+
         emit operationFinished(result.valid(), msg);
     });
 }
@@ -616,10 +622,11 @@ void MainWindow::inspectXde()
     const XdeDocumentItem* xdeDocItem = nullptr;
     for (const ApplicationItem& appItem : spanAppItem) {
         xdeDocItem = dynamic_cast<const XdeDocumentItem*>(appItem.documentItem());
-        if (xdeDocItem != nullptr)
+        if (xdeDocItem)
             break;
     }
-    if (xdeDocItem != nullptr) {
+
+    if (xdeDocItem) {
         auto dlg = new DialogInspectXde(this);
         dlg->load(xdeDocItem->cafDoc());
         qtgui::QWidgetUtils::asyncDialogExec(dlg);
@@ -660,30 +667,22 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-    WidgetApplicationTree* uiAppTree = m_ui->widget_ApplicationTree;
+    WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
+    uiProps->clear();
     Span<const ApplicationItem> spanAppItem =
             GuiApplication::instance()->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
-        if (item.isXdeAssemblyNode()) {
-            const XdeAssemblyNode& xdeAsmNode = item.xdeAssemblyNode();
-            const XdeDocumentItem* xdeItem = xdeAsmNode.ownerDocItem;
-            const TDF_Label& xdeLabel = xdeAsmNode.label();
-            using ShapePropsOption = XdeDocumentItem::ShapePropertiesOption;
-            const ShapePropsOption opt =
-                    uiAppTree->isMergeXdeReferredShapeOn() ?
-                        ShapePropsOption::MergeReferred : ShapePropsOption::None;
-            m_ptrXdeShapeProperties = xdeItem->shapeProperties(xdeLabel, opt);
-            XdeShapePropertyOwner* shapeProps = m_ptrXdeShapeProperties.get();
-            uiProps->editProperties(shapeProps);
-            if (shapeProps) {
-                QObject::connect(shapeProps, &XdeShapePropertyOwner::nameChanged, [=]{
-                    uiAppTree->refreshItemText(item);
-                });
-                QObject::connect(shapeProps, &XdeShapePropertyOwner::referredNameChanged, [=]{
-                    uiAppTree->refreshItemText(item);
+        if (item.isDocumentItemNode()) {
+            m_ptrCurrentNodeProperties =
+                    item.documentItem()->propertiesAtNode(item.documentItemNode().id);
+            PropertyOwnerSignals* nodeProps = m_ptrCurrentNodeProperties.get();
+            uiProps->editProperties(nodeProps);
+            if (nodeProps) {
+                QObject::connect(nodeProps, &PropertyOwnerSignals::propertyChanged, [=]{
+                    uiModelTree->refreshItemText(item);
                 });
             }
         }
@@ -691,7 +690,7 @@ void MainWindow::onApplicationItemSelectionChanged()
             WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
             uiProps->editProperties(item.documentItem(), grpData);
             WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
-            const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
+            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
             GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
             uiProps->editProperties(gpxDocItem, grpGpx);
         }
@@ -699,7 +698,10 @@ void MainWindow::onApplicationItemSelectionChanged()
             uiProps->editProperties(item.document());
         }
 
-        if (QSettings().value(Internal::keyLinkWithDocumentSelector, false).toBool()) {
+        const QSettings* settings = Options::instance()->settings();
+        const bool isLinkWithDocumentSelectorOn =
+                settings->value(Internal::keyLinkWithDocumentSelector, false).toBool();
+        if (isLinkWithDocumentSelectorOn) {
             const Document* doc = item.document();
             const int index = Application::instance()->indexOfDocument(doc);
             if (index != -1)
@@ -710,6 +712,7 @@ void MainWindow::onApplicationItemSelectionChanged()
         // TODO
         uiProps->clear();
     }
+
     this->updateControlsActivation();
 }
 
@@ -765,9 +768,7 @@ void MainWindow::onLeftContentsPageChanged(int pageId)
 {
     m_ui->stack_LeftContents->setCurrentIndex(pageId);
     QWidget* placeHolder = this->recreateLeftHeaderPlaceHolder();
-    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ApplicationTree
-        && placeHolder != nullptr)
-    {
+    if (m_ui->stack_LeftContents->currentWidget() == m_ui->page_ModelTree && placeHolder) {
         const int btnSideLen = m_ui->combo_LeftContents->frameGeometry().height();
         auto btnSettings = new QToolButton(placeHolder);
         btnSettings->setAutoRaise(true);
@@ -800,15 +801,15 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     };
     const Document* doc = Application::instance()->documentAt(idx);
     const QString textActionClose =
-            doc != nullptr ?
+            doc ?
                 tr("Close %1").arg(funcFilepathQuoted(doc->label())) :
                 tr("Close");
     const QString textActionCloseAllExcept =
-            doc != nullptr ?
+            doc ?
                 tr("Close all except %1").arg(funcFilepathQuoted(doc->label())) :
                 tr("Close all except current");
     const QString docFilePath =
-            doc != nullptr ? doc->filePath() : QString();
+            doc ? doc->filePath() : QString();
     m_ui->actionCloseDoc->setText(textActionClose);
     m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
     m_ui->widget_FileSystem->setLocation(docFilePath);
@@ -846,7 +847,7 @@ void MainWindow::closeCurrentDocument()
 
 void MainWindow::closeDocument(WidgetGuiDocument *widget)
 {
-    if (widget != nullptr) {
+    if (widget) {
         Document* doc = widget->guiDocument()->document();
         m_ui->stack_GuiDocuments->removeWidget(widget);
         widget->deleteLater();
@@ -867,6 +868,7 @@ void MainWindow::closeAllDocumentsExceptCurrent()
     std::vector<WidgetGuiDocument*> vecWidget;
     for (int i = 0; i < m_ui->stack_GuiDocuments->count(); ++i)
         vecWidget.push_back(this->widgetGuiDocument(i));
+
     for (WidgetGuiDocument* widget : vecWidget) {
         if (widget != current)
             this->closeDocument(widget);
@@ -918,6 +920,7 @@ void MainWindow::updateControlsActivation()
             appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
     if (currMainPage != newMainPage)
         m_ui->stack_Main->setCurrentWidget(newMainPage);
+
     m_ui->actionImport->setEnabled(!appDocumentsEmpty);
     m_ui->menu_Projection->setEnabled(!appDocumentsEmpty);
     m_ui->actionProjectionOrthographic->setEnabled(!appDocumentsEmpty);
@@ -1006,44 +1009,10 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     }
 
     menu->addSeparator();
-    {   // Reference item text mode
-        auto group = new QActionGroup(menu);
-        group->setExclusive(true);
-        auto actionOnlyInstance =
-                new QAction(tr("Show only name of reference entities"), menu);
-        auto actionOnlyReferred =
-                new QAction(tr("Show only name of referred entities"), menu);
-        auto actionInstanceAndReferred =
-                new QAction(tr("Show name of both reference and referred entities"), menu);
-
-        Options* opts = Options::instance();
-        using TextMode = Options::ReferenceItemTextMode;
-        using MenuData = std::tuple<QAction*, TextMode>;
-        const std::vector<MenuData> arrayMenuData = {
-            { actionOnlyInstance, TextMode::ReferenceOnly },
-            { actionOnlyReferred, TextMode::ReferredOnly },
-            { actionInstanceAndReferred, TextMode::ReferenceAndReferred }
-        };
-        for (const MenuData& menuData : arrayMenuData) {
-            QAction* action = std::get<0>(menuData);
-            action->setCheckable(true);
-            group->addAction(action);
-            menu->addAction(action);
-            if (std::get<1>(menuData) == opts->referenceItemTextMode())
-                action->setChecked(true);
-        }
-
-        QObject::connect(group, &QActionGroup::triggered, [=](QAction* action){
-            for (const MenuData& menuData : arrayMenuData) {
-                if (std::get<0>(menuData) == action) {
-                    const TextMode textMode = std::get<1>(menuData);
-                    opts->setReferenceItemTextMode(textMode);
-                    m_ui->widget_ApplicationTree->setReferenceItemTextTemplate(
-                                Options::toReferenceItemTextTemplate(textMode));
-                }
-            }
-        });
-    }
+    const std::vector<QAction*> vecAction =
+            m_ui->widget_ModelTree->createConfigurationActions(menu);
+    for (QAction* action : vecAction)
+        menu->addAction(action);
 
     return menu;
 }
@@ -1051,8 +1020,9 @@ QMenu* MainWindow::createMenuModelTreeSettings()
 QMenu* MainWindow::createMenuRecentFiles()
 {
     QMenu* menu = m_ui->actionRecentFiles->menu();
-    if (menu == nullptr)
+    if (!menu)
         menu = new QMenu(this);
+
     menu->clear();
     int idFile = 0;
     for (const QString& file : m_listRecentFile) {
@@ -1061,6 +1031,7 @@ QMenu* MainWindow::createMenuRecentFiles()
             this->openDocumentsFromList(QStringList(file));
         });
     }
+
     if (!m_listRecentFile.empty()) {
         menu->addSeparator();
         menu->addAction(tr("Clear menu"), [=]{
@@ -1068,6 +1039,7 @@ QMenu* MainWindow::createMenuRecentFiles()
             m_listRecentFile.clear();
         });
     }
+
     m_ui->actionRecentFiles->setMenu(menu);
     return menu;
 }

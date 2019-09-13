@@ -10,6 +10,9 @@
 #include "mainwindow.h"
 #include "theme.h"
 #include "version.h"
+#include "widget_model_tree.h"
+#include "widget_model_tree_builder_xde.h"
+#include "widget_model_tree_builder_mesh.h"
 
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
@@ -77,6 +80,10 @@ static int runApp(QApplication* app)
     GpxDocumentItemFactory::instance()->registerCreatorFunction(
                 MeshItem::TypeName,
                 &GpxDocumentItemFactory::createGpx<MeshItem, GpxMeshItem>);
+
+    // Register WidgetModelTreeBuilter prototypes
+    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Mesh);
+    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Xde);
 
     // Create theme
     globalTheme.reset(createTheme(args.themeName));
