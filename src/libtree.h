@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "span.h"
 #include <vector>
 
 namespace Mayo {
@@ -22,7 +23,7 @@ public:
     TreeNodeId nodeChildLast(TreeNodeId id) const;
     TreeNodeId nodeParent(TreeNodeId id) const;
     const T& nodeData(TreeNodeId id) const;
-    const std::vector<TreeNodeId>& roots() const;
+    Span<const TreeNodeId> roots() const;
 
     void clear();
     TreeNodeId appendChild(TreeNodeId parentId, const T& data);
@@ -57,40 +58,37 @@ void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FUNC& func)
 // -- Implementation
 // --
 
-template<typename T>
-Tree<T>::Tree()
-{
-}
+template<typename T> Tree<T>::Tree() {}
 
 template<typename T> TreeNodeId Tree<T>::nodeSiblingPrevious(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->siblingPrevious : 0;
+    return node ? node->siblingPrevious : 0;
 }
 
 template<typename T> TreeNodeId Tree<T>::nodeSiblingNext(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->siblingNext : 0;
+    return node ? node->siblingNext : 0;
 }
 
 template<typename T> TreeNodeId Tree<T>::nodeChildFirst(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->childFirst : 0;
+    return node ? node->childFirst : 0;
 }
 
 template<typename T> TreeNodeId Tree<T>::nodeChildLast(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->childLast : 0;
+    return node ? node->childLast : 0;
 }
 
 template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->parent : 0;
+    return node ? node->parent : 0;
 }
 
 template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const {
     static const T nullObject = {};
     const TreeNode* node = this->ptrNode(id);
-    return node != nullptr ? node->data : nullObject;
+    return node ? node->data : nullObject;
 }
 
 template<typename T>
@@ -101,7 +99,7 @@ void Tree<T>::clear()
 }
 
 template<typename T>
-TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T &data)
+TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T& data)
 {
     m_vecNode.push_back({});
     const TreeNodeId nodeId = this->lastNodeId();
@@ -113,25 +111,26 @@ TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T &data)
         TreeNode* parentNode = this->ptrNode(parentId);
         if (parentNode->childFirst == 0)
             parentNode->childFirst = nodeId;
+
         if (parentNode->childLast != 0)
             this->ptrNode(parentNode->childLast)->siblingNext = nodeId;
+
         parentNode->childLast = nodeId;
     }
     else {
         m_vecRoot.push_back(nodeId);
     }
+
     return nodeId;
 }
 
 template<typename T>
-const std::vector<TreeNodeId>& Tree<T>::roots() const
-{
+Span<const TreeNodeId> Tree<T>::roots() const {
     return m_vecRoot;
 }
 
 template<typename T>
-TreeNodeId Tree<T>::lastNodeId() const
-{
+TreeNodeId Tree<T>::lastNodeId() const {
     return static_cast<TreeNodeId>(m_vecNode.size());
 }
 
