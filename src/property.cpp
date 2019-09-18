@@ -17,7 +17,8 @@ Span<Property* const> PropertyOwner::properties() const
 }
 
 void PropertyOwner::onPropertyChanged(Property* /*prop*/)
-{ }
+{
+}
 
 Result<void> PropertyOwner::isPropertyValid(const Property*) const
 {
@@ -102,50 +103,6 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
         m_owner->blockPropertyChanged(false);
 }
 
-HandleProperty::HandleProperty(HandleProperty&& other)
-{
-    this->swap(std::move(other));
-}
-
-HandleProperty &HandleProperty::operator=(HandleProperty&& other)
-{
-    this->swap(std::move(other));
-    return *this;
-}
-
-HandleProperty::HandleProperty(Property* prop, HandleProperty::Storage storage)
-    : m_prop(prop),
-      m_storage(storage)
-{
-}
-
-HandleProperty::~HandleProperty()
-{
-    if (m_storage == HandleProperty::Owner)
-        delete m_prop;
-}
-
-Property* HandleProperty::get() const
-{
-    return m_prop;
-}
-
-Property* HandleProperty::operator->() const
-{
-    return m_prop;
-}
-
-HandleProperty::Storage HandleProperty::storage() const
-{
-    return m_storage;
-}
-
-void HandleProperty::swap(HandleProperty&& other)
-{
-    m_prop = other.m_prop;
-    m_storage = other.m_storage;
-    other.m_prop = nullptr;
-}
 
 PropertyOwnerSignals::PropertyOwnerSignals(QObject* parent)
     : QObject(parent)

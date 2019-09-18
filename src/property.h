@@ -96,34 +96,6 @@ protected:
     void onPropertyChanged(Property* prop) override;
 };
 
-class HandleProperty {
-public:
-    enum Storage {
-        Pointer,
-        Owner
-    };
-
-    HandleProperty() = default;
-    HandleProperty(Property* prop, Storage storage);
-    HandleProperty(HandleProperty&& other);
-    HandleProperty(const HandleProperty&) = delete;
-    ~HandleProperty();
-
-    HandleProperty& operator=(HandleProperty&& other);
-    HandleProperty& operator=(const HandleProperty&) = delete;
-
-    Property* get() const;
-    Property* operator->() const;
-    Storage storage() const;
-
-private:
-    void swap(HandleProperty&& other);
-
-    Property* m_prop = nullptr;
-    Storage m_storage = Pointer;
-};
-
-
 
 // --
 // -- Implementation
