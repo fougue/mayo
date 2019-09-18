@@ -7,7 +7,7 @@
 #include "widget_shape_selector.h"
 #include "gui_document.h"
 #include "widget_gui_document.h"
-#include "qt_occ_view_controller.h"
+#include "widget_occ_view_controller.h"
 
 #include <AIS_InteractiveContext.hxx>
 #include <StdSelect_BRepOwner.hxx>
@@ -143,22 +143,22 @@ GpxShapeSelector::~GpxShapeSelector()
     this->context()->RemoveFilters();
 }
 
-BaseV3dViewController* GpxShapeSelector::viewController() const
+V3dViewController* GpxShapeSelector::viewController() const
 {
     return m_viewCtrl;
 }
 
-void GpxShapeSelector::setViewController(BaseV3dViewController *ctrl)
+void GpxShapeSelector::setViewController(V3dViewController *ctrl)
 {
     if (ctrl == m_viewCtrl)
         return;
 
     m_viewCtrl = ctrl;
     QObject::connect(
-                ctrl, &BaseV3dViewController::mouseMoved,
+                ctrl, &V3dViewController::mouseMoved,
                 this, &GpxShapeSelector::onView3dMouseMove);
     QObject::connect(
-                ctrl, &BaseV3dViewController::mouseClicked,
+                ctrl, &V3dViewController::mouseClicked,
                 this, &GpxShapeSelector::onView3dMouseClicked);
 }
 

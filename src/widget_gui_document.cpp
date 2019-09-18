@@ -9,7 +9,7 @@
 #include "button_flat.h"
 #include "gpx_utils.h"
 #include "gui_document.h"
-#include "qt_occ_view_controller.h"
+#include "widget_occ_view_controller.h"
 #include "theme.h"
 #include "v3d_view_camera_animation.h"
 #include "widget_occ_view.h"
@@ -58,7 +58,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     : QWidget(parent),
       m_guiDoc(guiDoc),
       m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this)),
-      m_controller(new QtOccViewController(m_qtOccView)),
+      m_controller(new WidgetOccViewController(m_qtOccView)),
       m_cameraAnimation(new V3dViewCameraAnimation(guiDoc->v3dView(), this))
 {
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
@@ -101,10 +101,10 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
     });
     QObject::connect(
-                m_controller, &BaseV3dViewController::dynamicActionStarted,
+                m_controller, &V3dViewController::dynamicActionStarted,
                 m_cameraAnimation, &V3dViewCameraAnimation::stop);
     QObject::connect(
-                m_controller, &BaseV3dViewController::viewScaled,
+                m_controller, &V3dViewController::viewScaled,
                 m_cameraAnimation, &V3dViewCameraAnimation::stop);
     QObject::connect(
                 btnEditClipping, &ButtonFlat::clicked,
@@ -122,7 +122,7 @@ GuiDocument* WidgetGuiDocument::guiDocument() const
     return m_guiDoc;
 }
 
-BaseV3dViewController* WidgetGuiDocument::controller() const
+V3dViewController* WidgetGuiDocument::controller() const
 {
     return m_controller;
 }

@@ -11,10 +11,10 @@
 
 namespace Mayo {
 
-class BaseV3dViewController;
 class ButtonFlat;
 class GuiDocument;
 class V3dViewCameraAnimation;
+class V3dViewController;
 class WidgetClipPlanes;
 class WidgetOccView;
 
@@ -24,7 +24,7 @@ public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
 
     GuiDocument* guiDocument() const;
-    BaseV3dViewController* controller() const;
+    V3dViewController* controller() const;
 
     QRect rectControls() const;
 
@@ -36,7 +36,7 @@ private:
 
     GuiDocument* m_guiDoc = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
-    BaseV3dViewController* m_controller = nullptr;
+    V3dViewController* m_controller = nullptr;
     V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     QRect m_rectControls;

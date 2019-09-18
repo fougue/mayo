@@ -22,13 +22,13 @@
 #include "gui_application.h"
 #include "gui_document.h"
 #include "options.h"
-#include "qt_occ_view_controller.h"
 #include "theme.h"
-#include "widget_model_tree.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
-#include "widget_properties_editor.h"
 #include "widget_message_indicator.h"
+#include "widget_model_tree.h"
+#include "widget_occ_view_controller.h"
+#include "widget_properties_editor.h"
 #include "xde_document_item.h"
 
 #ifdef Q_OS_WIN
@@ -740,8 +740,8 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         guiDoc->updateV3dViewer();
     }
 
-    BaseV3dViewController* ctrl = widget->controller();
-    QObject::connect(ctrl, &BaseV3dViewController::mouseMoved, [=](const QPoint& pos2d) {
+    V3dViewController* ctrl = widget->controller();
+    QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
         auto selector = guiDoc->aisInteractiveContext()->MainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =

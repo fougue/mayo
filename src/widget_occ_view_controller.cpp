@@ -4,8 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "qt_occ_view_controller.h"
-
+#include "widget_occ_view_controller.h"
 #include "widget_occ_view.h"
 
 #include <QtCore/QDebug>
@@ -13,9 +12,6 @@
 #include <QtGui/QCursor>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
-#include <V3d_View.hxx>
-
-// For QtOccViewController
 #include <QtWidgets/QRubberBand>
 #include <QtWidgets/QStyleFactory>
 
@@ -62,15 +58,15 @@ static const QCursor& rotateCursor()
 
 } // namespace Internal
 
-QtOccViewController::QtOccViewController(WidgetOccView* widgetView)
-    : BaseV3dViewController(widgetView->v3dView(), widgetView),
+WidgetOccViewController::WidgetOccViewController(WidgetOccView* widgetView)
+    : V3dViewController(widgetView->v3dView(), widgetView),
       m_widgetView(widgetView),
       m_prevCamera(new Graphic3d_Camera)
 {
     widgetView->installEventFilter(this);
 }
 
-bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
+bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched != m_widgetView)
         return false;
@@ -190,13 +186,13 @@ bool QtOccViewController::eventFilter(QObject* watched, QEvent* event)
     return false;
 }
 
-void QtOccViewController::setViewCursor(const QCursor &cursor)
+void WidgetOccViewController::setViewCursor(const QCursor &cursor)
 {
     if (m_widgetView)
         m_widgetView->setCursor(cursor);
 }
 
-struct QtOccViewController::RubberBand : public BaseV3dViewController::AbstractRubberBand {
+struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractRubberBand {
     RubberBand(QWidget* parent)
         : m_rubberBand(QRubberBand::Rectangle, parent)
     {
@@ -217,104 +213,9 @@ private:
     QRubberBand m_rubberBand;
 };
 
-BaseV3dViewController::AbstractRubberBand* QtOccViewController::createRubberBand()
+V3dViewController::AbstractRubberBand* WidgetOccViewController::createRubberBand()
 {
     return new RubberBand(m_widgetView);
-}
-
-BaseV3dViewController::BaseV3dViewController(
-        const Handle_V3d_View &view, QObject *parent)
-    : QObject(parent),
-      m_view(view)
-{
-}
-
-BaseV3dViewController::~BaseV3dViewController()
-{
-    delete m_rubberBand;
-}
-
-void BaseV3dViewController::zoomIn()
-{
-    m_view->SetScale(m_view->Scale() * 1.1); // +10%
-    emit viewScaled();
-}
-
-void BaseV3dViewController::zoomOut()
-{
-    m_view->SetScale(m_view->Scale() / 1.1); // -10%
-    emit viewScaled();
-}
-
-void BaseV3dViewController::startDynamicAction(DynamicAction dynAction)
-{
-    if (dynAction == DynamicAction::None)
-        return;
-
-    if (m_dynamicAction != DynamicAction::None)
-        return;
-
-    m_dynamicAction = dynAction;
-    emit dynamicActionStarted(dynAction);
-}
-
-void BaseV3dViewController::stopDynamicAction()
-{
-    if (m_dynamicAction != DynamicAction::None) {
-        emit dynamicActionEnded(m_dynamicAction);
-        m_dynamicAction = DynamicAction::None;
-    }
-}
-
-bool BaseV3dViewController::isRotationStarted() const
-{
-    return m_dynamicAction == DynamicAction::Rotation;
-}
-
-bool BaseV3dViewController::isPanningStarted() const
-{
-    return m_dynamicAction == DynamicAction::Panning;
-}
-
-bool BaseV3dViewController::isWindowZoomingStarted() const
-{
-    return m_dynamicAction == DynamicAction::WindowZoom;
-}
-
-void BaseV3dViewController::drawRubberBand(const QPoint& posMin, const QPoint& posMax)
-{
-    if (!m_rubberBand)
-        m_rubberBand = this->createRubberBand();
-
-    QRect rect;
-    rect.setX(std::min(posMin.x(), posMax.x()));
-    rect.setY(std::min(posMin.y(), posMax.y()));
-    rect.setWidth(std::abs(posMax.x() - posMin.x()));
-    rect.setHeight(std::abs(posMax.y() - posMin.y()));
-    m_rubberBand->updateGeometry(rect);
-    m_rubberBand->setVisible(true);
-}
-
-void BaseV3dViewController::hideRubberBand()
-{
-    if (m_rubberBand)
-        m_rubberBand->setVisible(false);
-}
-
-void BaseV3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
-{
-    if (std::abs(posMin.x() - posMax.x()) > 1 || std::abs(posMin.y() - posMax.y()) > 1)
-        m_view->WindowFitAll(posMin.x(), posMin.y(), posMax.x(), posMax.y());
-}
-
-BaseV3dViewController::DynamicAction BaseV3dViewController::currentDynamicAction() const
-{
-    return m_dynamicAction;
-}
-
-bool BaseV3dViewController::hasCurrentDynamicAction() const
-{
-    return m_dynamicAction != DynamicAction::None;
 }
 
 } // namespace Mayo

@@ -86,7 +86,6 @@ HEADERS += \
     src/qmeta_quantity.h \
     src/qmeta_quantity_color.h \
     src/qmeta_tdf_label.h \
-    src/qt_occ_view_controller.h \
     src/quantity.h \
     src/result.h \
     src/span.h \
@@ -107,7 +106,9 @@ HEADERS += \
     src/xde_shape_property_owner.h \
     src/widget_model_tree_builder_xde.h \
     src/widget_model_tree_builder.h \
-    src/widget_model_tree_builder_mesh.h
+    src/widget_model_tree_builder_mesh.h \
+    src/v3d_view_controller.h \
+    src/widget_occ_view_controller.h
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -150,7 +151,6 @@ SOURCES += \
     src/property.cpp \
     src/property_builtins.cpp \
     src/property_enumeration.cpp \
-    src/qt_occ_view_controller.cpp \
     src/quantity.cpp \
     src/result.cpp \
     src/string_utils.cpp \
@@ -170,7 +170,9 @@ SOURCES += \
     src/xde_shape_property_owner.cpp \
     src/widget_model_tree_builder_xde.cpp \
     src/widget_model_tree_builder.cpp \
-    src/widget_model_tree_builder_mesh.cpp
+    src/widget_model_tree_builder_mesh.cpp \
+    src/v3d_view_controller.cpp \
+    src/widget_occ_view_controller.cpp
 
 win* {
     QT += winextras

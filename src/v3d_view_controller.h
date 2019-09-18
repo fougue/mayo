@@ -6,17 +6,13 @@
 
 #pragma once
 
-#include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
-#include <map>
-class QCursor;
-class QRubberBand;
 
 namespace Mayo {
 
-class BaseV3dViewController : public QObject {
+class V3dViewController : public QObject {
     Q_OBJECT
 public:
     enum class DynamicAction {
@@ -33,8 +29,8 @@ public:
         virtual void setVisible(bool on) = 0;
     };
 
-    BaseV3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
-    virtual ~BaseV3dViewController();
+    V3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
+    virtual ~V3dViewController();
 
     DynamicAction currentDynamicAction() const;
     bool hasCurrentDynamicAction() const;
@@ -68,27 +64,6 @@ private:
     Handle_V3d_View m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;
     AbstractRubberBand* m_rubberBand = nullptr;
-};
-
-class WidgetOccView;
-
-class QtOccViewController : public BaseV3dViewController {
-    Q_OBJECT
-public:
-    QtOccViewController(WidgetOccView* widgetView = nullptr);
-
-    bool eventFilter(QObject* watched, QEvent* event) override;
-
-private:
-    void setViewCursor(const QCursor& cursor);
-
-    AbstractRubberBand* createRubberBand() override;
-    struct RubberBand;
-
-    WidgetOccView* m_widgetView = nullptr;
-    QPoint m_prevPos;
-    QPoint m_posRubberBandStart;
-    Handle_Graphic3d_Camera m_prevCamera;
 };
 
 } // namespace Mayo

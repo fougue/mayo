@@ -16,7 +16,7 @@ class TopoDS_Shape;
 
 namespace Mayo {
 
-class BaseV3dViewController;
+class V3dViewController;
 class GuiDocument;
 
 class GpxShapeSelector : public QObject {
@@ -25,8 +25,8 @@ public:
     GpxShapeSelector(GuiDocument* guiDoc);
     ~GpxShapeSelector();
 
-    BaseV3dViewController* viewController() const;
-    void setViewController(BaseV3dViewController* ctrl);
+    V3dViewController* viewController() const;
+    void setViewController(V3dViewController* ctrl);
 
     TopAbs_ShapeEnum shapeType() const;
     void setShapeType(TopAbs_ShapeEnum shapeEnum);
@@ -57,7 +57,7 @@ protected:
     bool hasSelectedShapes() const;
 
     GuiDocument* m_guiDocument = nullptr;
-    BaseV3dViewController* m_viewCtrl = nullptr;
+    V3dViewController* m_viewCtrl = nullptr;
     TopAbs_ShapeEnum m_shapeType;
     Mode m_mode = Mode::Multi;
 };
