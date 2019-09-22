@@ -24,6 +24,8 @@ struct DocumentItemNode;
 // TODO Rename Builder -> Extension ?
 class WidgetModelTreeBuilder {
 public:
+    virtual ~WidgetModelTreeBuilder();
+
     virtual bool supports(const Document*) const { return true; }
     virtual bool supports(const DocumentItem*) const { return true; }
 

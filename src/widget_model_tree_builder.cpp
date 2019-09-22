@@ -16,6 +16,10 @@
 
 namespace Mayo {
 
+WidgetModelTreeBuilder::~WidgetModelTreeBuilder()
+{
+}
+
 void WidgetModelTreeBuilder::refreshTextTreeItem(
         const Document* doc, QTreeWidgetItem* treeItem)
 {
