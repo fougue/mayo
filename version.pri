@@ -16,7 +16,7 @@ VERSION = \
 MAYO_VERSION = $${VERSION}-$$MAYO_VERSION_COMMIT
 
 # Generate version file
-QMAKE_SUBSTITUTES += $$PWD/src/version.h.in
+QMAKE_SUBSTITUTES += $$PWD/src/app/version.h.in
 
 INCLUDEPATH += $$OUT_PWD/src  # To allow inclusion as "version.h" from source code
-OTHER_FILES += $$PWD/src/version.h.in
+OTHER_FILES += $$PWD/src/app/version.h.in

@@ -34,7 +34,7 @@ CONFIG(debug, debug|release) {
 }
 
 INCLUDEPATH += \
-    src \
+    src/app \
     src/3rdparty
 
 HEADERS += \
@@ -46,69 +46,73 @@ HEADERS += \
     src/3rdparty/fougtools/qttools/gui/item_view_utils.h \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.h \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.h \
-    src/ais_text.h \
-    src/application.h \
-    src/application_item.h \
-    src/application_item_selection_model.h \
-    src/bnd_utils.h \
-    src/brep_utils.h \
-    src/button_flat.h \
-    src/caf_utils.h \
-    src/dialog_about.h \
-    src/dialog_export_options.h \
-    src/dialog_inspect_xde.h \
-    src/dialog_options.h \
-    src/dialog_save_image_view.h \
-    src/dialog_task_manager.h \
-    src/document.h \
-    src/document_item.h \
-    src/gpx_document_item.h \
-    src/gpx_document_item_factory.h \
-    src/gpx_mesh_item.h \
-    src/gpx_utils.h \
-    src/gpx_xde_document_item.h \
-    src/gui_application.h \
-    src/gui_document.h \
-    src/gui_document_list_model.h \
-    src/libtree.h \
-    src/mainwindow.h \
-    src/math_utils.h \
-    src/mesh_item.h \
-    src/mesh_utils.h \
-    src/occt_enums.h \
-    src/occt_window.h \
-    src/options.h \
-    src/property.h \
-    src/property_builtins.h \
-    src/property_enumeration.h \
-    src/qmeta_gp_pnt.h \
-    src/qmeta_gp_trsf.h \
-    src/qmeta_quantity.h \
-    src/qmeta_quantity_color.h \
-    src/qmeta_tdf_label.h \
-    src/quantity.h \
-    src/result.h \
-    src/span.h \
-    src/string_utils.h \
-    src/theme.h \
-    src/unit.h \
-    src/unit_system.h \
-    src/v3d_view_camera_animation.h \
-    src/widget_clip_planes.h \
-    src/widget_file_system.h \
-    src/widget_gui_document.h \
-    src/widget_message_indicator.h \
-    src/widget_model_tree.h \
-    src/widget_occ_view.h \
-    src/widget_properties_editor.h \
-    src/widget_shape_selector.h \
-    src/xde_document_item.h \
-    src/xde_shape_property_owner.h \
-    src/widget_model_tree_builder_xde.h \
-    src/widget_model_tree_builder.h \
-    src/widget_model_tree_builder_mesh.h \
-    src/v3d_view_controller.h \
-    src/widget_occ_view_controller.h
+    \
+    src/app/button_flat.h \
+    src/app/dialog_about.h \
+    src/app/dialog_export_options.h \
+    src/app/dialog_inspect_xde.h \
+    src/app/dialog_options.h \
+    src/app/dialog_save_image_view.h \
+    src/app/dialog_task_manager.h \
+    src/app/mainwindow.h \
+    src/app/occt_window.h \
+    src/app/options.h \
+    src/app/theme.h \
+    src/app/widget_clip_planes.h \
+    src/app/widget_file_system.h \
+    src/app/widget_gui_document.h \
+    src/app/widget_message_indicator.h \
+    src/app/widget_model_tree.h \
+    src/app/widget_model_tree_builder.h \
+    src/app/widget_model_tree_builder_mesh.h \
+    src/app/widget_model_tree_builder_xde.h \
+    src/app/widget_occ_view.h \
+    src/app/widget_occ_view_controller.h \
+    src/app/widget_properties_editor.h \
+    src/app/widget_shape_selector.h \
+    \
+    src/base/application.h \
+    src/base/application_item.h \
+    src/base/application_item_selection_model.h \
+    src/base/bnd_utils.h \
+    src/base/brep_utils.h \
+    src/base/caf_utils.h \
+    src/base/document.h \
+    src/base/document_item.h \
+    src/base/libtree.h \
+    src/base/math_utils.h \
+    src/base/mesh_item.h \
+    src/base/mesh_utils.h \
+    src/base/occt_enums.h \
+    src/base/property.h \
+    src/base/property_builtins.h \
+    src/base/property_enumeration.h \
+    src/base/qmeta_gp_pnt.h \
+    src/base/qmeta_gp_trsf.h \
+    src/base/qmeta_quantity.h \
+    src/base/qmeta_quantity_color.h \
+    src/base/qmeta_tdf_label.h \
+    src/base/quantity.h \
+    src/base/result.h \
+    src/base/span.h \
+    src/base/string_utils.h \
+    src/base/unit.h \
+    src/base/unit_system.h \
+    src/base/xde_document_item.h \
+    src/base/xde_shape_property_owner.h \
+    \
+    src/gpx/ais_text.h \
+    src/gpx/gpx_document_item.h \
+    src/gpx/gpx_document_item_factory.h \
+    src/gpx/gpx_mesh_item.h \
+    src/gpx/gpx_utils.h \
+    src/gpx/v3d_view_camera_animation.h \
+    src/gpx/v3d_view_controller.h \
+    src/gpx/gpx_xde_document_item.h \
+    \
+    src/gui/gui_application.h \
+    src/gui/gui_document.h \
+    src/gui/gui_document_list_model.h \
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -116,83 +120,88 @@ SOURCES += \
     src/3rdparty/fougtools/qttools/gui/item_view_utils.cpp \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.cpp \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.cpp \
-    src/ais_text.cpp \
-    src/application.cpp \
-    src/application_item.cpp \
-    src/application_item_selection_model.cpp \
-    src/bnd_utils.cpp \
-    src/brep_utils.cpp \
-    src/button_flat.cpp \
-    src/caf_utils.cpp \
-    src/dialog_about.cpp \
-    src/dialog_export_options.cpp \
-    src/dialog_inspect_xde.cpp \
-    src/dialog_options.cpp \
-    src/dialog_save_image_view.cpp \
-    src/dialog_task_manager.cpp \
-    src/document.cpp \
-    src/document_item.cpp \
-    src/gpx_document_item.cpp \
-    src/gpx_document_item_factory.cpp \
-    src/gpx_mesh_item.cpp \
-    src/gpx_utils.cpp \
-    src/gpx_xde_document_item.cpp \
-    src/gui_application.cpp \
-    src/gui_document.cpp \
-    src/gui_document_list_model.cpp \
-    src/main.cpp \
-    src/mainwindow.cpp \
-    src/math_utils.cpp \
-    src/mesh_item.cpp \
-    src/mesh_utils.cpp \
-    src/occt_enums.cpp \
-    src/occt_window.cpp \
-    src/options.cpp \
-    src/property.cpp \
-    src/property_builtins.cpp \
-    src/property_enumeration.cpp \
-    src/quantity.cpp \
-    src/result.cpp \
-    src/string_utils.cpp \
-    src/theme.cpp \
-    src/unit.cpp \
-    src/unit_system.cpp \
-    src/v3d_view_camera_animation.cpp \
-    src/widget_clip_planes.cpp \
-    src/widget_file_system.cpp \
-    src/widget_gui_document.cpp \
-    src/widget_message_indicator.cpp \
-    src/widget_model_tree.cpp \
-    src/widget_occ_view.cpp \
-    src/widget_properties_editor.cpp \
-    src/widget_shape_selector.cpp \
-    src/xde_document_item.cpp \
-    src/xde_shape_property_owner.cpp \
-    src/widget_model_tree_builder_xde.cpp \
-    src/widget_model_tree_builder.cpp \
-    src/widget_model_tree_builder_mesh.cpp \
-    src/v3d_view_controller.cpp \
-    src/widget_occ_view_controller.cpp
+    \
+    src/app/button_flat.cpp \
+    src/app/dialog_about.cpp \
+    src/app/dialog_export_options.cpp \
+    src/app/dialog_inspect_xde.cpp \
+    src/app/dialog_options.cpp \
+    src/app/dialog_save_image_view.cpp \
+    src/app/dialog_task_manager.cpp \
+    src/app/main.cpp \
+    src/app/mainwindow.cpp \
+    src/app/occt_window.cpp \
+    src/app/options.cpp \
+    src/app/theme.cpp \
+    src/app/widget_clip_planes.cpp \
+    src/app/widget_file_system.cpp \
+    src/app/widget_gui_document.cpp \
+    src/app/widget_message_indicator.cpp \
+    src/app/widget_model_tree.cpp \
+    src/app/widget_model_tree_builder.cpp \
+    src/app/widget_model_tree_builder_mesh.cpp \
+    src/app/widget_model_tree_builder_xde.cpp \
+    src/app/widget_occ_view.cpp \
+    src/app/widget_occ_view_controller.cpp \
+    src/app/widget_properties_editor.cpp \
+    src/app/widget_shape_selector.cpp \
+    \
+    src/base/application.cpp \
+    src/base/application_item.cpp \
+    src/base/application_item_selection_model.cpp \
+    src/base/bnd_utils.cpp \
+    src/base/brep_utils.cpp \
+    src/base/caf_utils.cpp \
+    src/base/document.cpp \
+    src/base/document_item.cpp \
+    src/base/math_utils.cpp \
+    src/base/mesh_item.cpp \
+    src/base/mesh_utils.cpp \
+    src/base/occt_enums.cpp \
+    src/base/property.cpp \
+    src/base/property_builtins.cpp \
+    src/base/property_enumeration.cpp \
+    src/base/quantity.cpp \
+    src/base/result.cpp \
+    src/base/string_utils.cpp \
+    src/base/unit.cpp \
+    src/base/unit_system.cpp \
+    src/base/xde_document_item.cpp \
+    src/base/xde_shape_property_owner.cpp \
+    \
+    src/gpx/ais_text.cpp \
+    src/gpx/gpx_document_item.cpp \
+    src/gpx/gpx_document_item_factory.cpp \
+    src/gpx/gpx_mesh_item.cpp \
+    src/gpx/gpx_utils.cpp \
+    src/gpx/gpx_xde_document_item.cpp \
+    src/gpx/v3d_view_camera_animation.cpp \
+    src/gpx/v3d_view_controller.cpp \
+    \
+    src/gui/gui_application.cpp \
+    src/gui/gui_document.cpp \
+    src/gui/gui_document_list_model.cpp \
+
 
 win* {
     QT += winextras
-    HEADERS += src/win_taskbar_global_progress.h
-    SOURCES += src/win_taskbar_global_progress.cpp
+    HEADERS += src/app/win_taskbar_global_progress.h
+    SOURCES += src/app/win_taskbar_global_progress.cpp
 }
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
 FORMS += \
-    src/dialog_about.ui \
-    src/dialog_export_options.ui \
-    src/dialog_inspect_xde.ui \
-    src/dialog_options.ui \
-    src/dialog_save_image_view.ui \
-    src/dialog_task_manager.ui \
-    src/mainwindow.ui \
-    src/widget_clip_planes.ui \
-    src/widget_model_tree.ui \
-    src/widget_properties_editor.ui \
+    src/app/dialog_about.ui \
+    src/app/dialog_export_options.ui \
+    src/app/dialog_inspect_xde.ui \
+    src/app/dialog_options.ui \
+    src/app/dialog_save_image_view.ui \
+    src/app/dialog_task_manager.ui \
+    src/app/mainwindow.ui \
+    src/app/widget_clip_planes.ui \
+    src/app/widget_model_tree.ui \
+    src/app/widget_properties_editor.ui \
 
 RESOURCES += mayo.qrc
 RC_ICONS = images/appicon.ico
@@ -211,6 +220,7 @@ isEmpty(GMIO_ROOT) {
     } else {
         GMIO_BIN_SUFFIX =
     }
+
     INCLUDEPATH += $$GMIO_ROOT/include
     LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
     SOURCES += \
