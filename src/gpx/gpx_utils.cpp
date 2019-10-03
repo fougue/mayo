@@ -11,6 +11,7 @@
 #include <ElSLib.hxx>
 #include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
+#include <Standard_Version.hxx>
 
 namespace Mayo {
 
@@ -26,10 +27,13 @@ bool GpxUtils::V3dView_hasClipPlane(
     const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
     if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
         return false;
-    for (const Handle_Graphic3d_ClipPlane& candidate : *seqClipPlane) {
+
+    for (Graphic3d_SequenceOfHClipPlane::Iterator it(*seqClipPlane); it.More(); it.Next()) {
+        const Handle_Graphic3d_ClipPlane& candidate = it.Value();
         if (candidate.operator->() == plane.operator->())
             return true;
     }
+
     return false;
 }
 
@@ -69,7 +73,6 @@ void GpxUtils::AisContext_eraseObject(
         context->Remove(object, false);
         context->ClearPrs(object, 0, false);
         context->SelectionManager()->Remove(object);
-
         Handle_AIS_InteractiveObject objectHCopy = object;
         while (!objectHCopy.IsNull())
             objectHCopy.Nullify();
@@ -93,6 +96,7 @@ int GpxUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
+
     int w, h;
     wnd->Size(w, h);
     return w;
@@ -102,6 +106,7 @@ int GpxUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
+
     int w, h;
     wnd->Size(w, h);
     return h;
@@ -114,6 +119,7 @@ void GpxUtils::Gpx3dClipPlane_setCappingHatch(
         plane->SetCappingHatchOff();
     else
         plane->SetCappingHatchOn();
+
     plane->SetCappingHatch(hatch);
 }
 
@@ -131,6 +137,7 @@ void GpxUtils::Gpx3dClipPlane_setPosition(
     const gp_Dir& n = plane->ToPlane().Axis().Direction();
     if (MathUtils::isReversedStandardDir(n))
         pos = -pos;
+
     const gp_Vec placement(pos * gp_Vec(n));
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
 }

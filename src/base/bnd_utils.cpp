@@ -6,6 +6,8 @@
 
 #include "bnd_utils.h"
 
+#include <Standard_Version.hxx>
+
 namespace Mayo {
 
 gp_Pnt BndBoxCoords::center() const
@@ -53,6 +55,12 @@ Bnd_Box BndUtils::get(const Handle_AIS_InteractiveObject &obj)
         return box;
 
     // Ensure bounding box is calculated
+#if OCC_VERSION_HEX >= 0x070400
+    for (Handle_PrsMgr_Presentation prs : obj->Presentations()) {
+        if (prs->Mode() == obj->DisplayMode() && !prs->CStructure()->BoundingBox().IsValid())
+            prs->CalculateBoundBox();
+    }
+#else
     for (PrsMgr_ModedPresentation& pres : obj->Presentations()) {
         if (pres.Mode() == obj->DisplayMode()) {
             const Handle_Prs3d_Presentation& pres3d = pres.Presentation()->Presentation();
@@ -60,6 +68,8 @@ Bnd_Box BndUtils::get(const Handle_AIS_InteractiveObject &obj)
                 pres3d->CalculateBoundBox();
         }
     }
+#endif
+
 
     obj->BoundingBox(box);
     return box;
