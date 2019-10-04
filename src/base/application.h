@@ -57,6 +57,11 @@ public:
 #endif
     };
 
+    enum class StlIoLibrary {
+        Gmio,
+        OpenCascade
+    };
+
     // -- API
     static Application* instance();
 
@@ -73,6 +78,9 @@ public:
     static QString partFormatFilter(PartFormat format);
     static QStringList partFormatFilters();
     static PartFormat findPartFormat(const QString& filepath);
+
+    Application::StlIoLibrary stlIoLibrary() const;
+    void setStlIoLibrary(Application::StlIoLibrary lib);
 
     IoResult importInDocument(
             Document* doc,
@@ -140,6 +148,7 @@ private:
             qttask::Progress* progress);
 
     std::vector<Document*> m_documents;
+    StlIoLibrary m_stlIoLibrary = StlIoLibrary::OpenCascade;
 };
 
 } // namespace Mayo

@@ -49,11 +49,11 @@ void WidgetModelTreeBuilder::fillTreeItem(QTreeWidgetItem* treeItem, DocumentIte
     treeItem->setText(0, WidgetModelTreeBuilder::labelText(docItem->propertyLabel));
 }
 
-void WidgetModelTreeBuilder::loadConfiguration(const QSettings*, const QString&)
+void WidgetModelTreeBuilder::loadConfiguration(const Settings*, const QString&)
 {
 }
 
-void WidgetModelTreeBuilder::saveConfiguration(QSettings*, const QString&)
+void WidgetModelTreeBuilder::saveConfiguration(Settings*, const QString&)
 {
 }
 

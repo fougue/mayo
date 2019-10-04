@@ -1,10 +1,10 @@
 #include "widget_model_tree_builder_xde.h"
 
 #include "../base/xde_document_item.h"
+#include "settings.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
-#include <QtCore/QSettings>
 #include <QtWidgets/QActionGroup>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
@@ -157,18 +157,16 @@ void WidgetModelTreeBuilder_Xde::setReferenceItemTextTemplate(const QString& tex
 }
 
 void WidgetModelTreeBuilder_Xde::loadConfiguration(
-        const QSettings* settings, const QString& keyGroup)
+        const Settings* settings, const QString& keyGroup)
 {
     const QString refTextTemplate =
-            settings->value(
-                keyGroup + Internal::keyRefItemTextTemplate,
-                Internal::textTemplateReferenceOnly)
-            .toString();
-    this->setReferenceItemTextTemplate(refTextTemplate);
+            settings->valueAs<QString>(keyGroup + Internal::keyRefItemTextTemplate);
+    this->setReferenceItemTextTemplate(
+                !refTextTemplate.isEmpty() ? refTextTemplate : Internal::textTemplateReferenceOnly);
 }
 
 void WidgetModelTreeBuilder_Xde::saveConfiguration(
-        QSettings* settings, const QString& keyGroup)
+        Settings* settings, const QString& keyGroup)
 {
     settings->setValue(
                 keyGroup + Internal::keyRefItemTextTemplate,

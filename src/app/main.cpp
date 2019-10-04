@@ -4,10 +4,13 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "../base/unit_system.h"
 #include "../gpx/gpx_document_item_factory.h"
 #include "../gpx/gpx_mesh_item.h"
 #include "../gpx/gpx_xde_document_item.h"
 #include "mainwindow.h"
+#include "settings.h"
+#include "settings_keys.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
@@ -80,6 +83,63 @@ static int runApp(QApplication* app)
     GpxDocumentItemFactory::instance()->registerCreatorFunction(
                 MeshItem::TypeName,
                 &GpxDocumentItemFactory::createGpx<MeshItem, GpxMeshItem>);
+
+    // Default values
+    auto settings = Settings::instance();
+    settings->setDefaultValue(Keys::App_RecentFiles, QStringList());
+    settings->setDefaultValue(Keys::App_MainWindowLastOpenDir, QString());
+    settings->setDefaultValue(Keys::App_MainWindowLastSelectedFilter, QString());
+    settings->setDefaultValue(Keys::App_MainWindowLinkWithDocumentSelector, false);
+    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(Application::StlIoLibrary::OpenCascade));
+    settings->setDefaultValue(Keys::Base_UnitSystemSchema, UnitSystem::SI);
+    settings->setDefaultValue(Keys::Base_UnitSystemDecimals, 2);
+    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultColor, QColor(Qt::gray));
+    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultMaterial, Graphic3d_NOM_PLASTIC);
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(Qt::gray));
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultMaterial, Graphic3d_NOM_PLASTIC);
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultShowEdges, false);
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultShowNodes, false);
+    settings->setDefaultValue(Keys::Gui_ClipPlaneCappingHatch, Aspect_HS_SOLID);
+    settings->setDefaultValue(Keys::Gui_ClipPlaneCappingOn, true);
+    settings->setDefaultValue(Keys::Gui_DefaultShowOriginTrihedron, true);
+
+    {
+        auto fnUpdateDefaults = [=]{
+            GpxMeshItem::DefaultValues defaults;
+            defaults.showEdges = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowEdges);
+            defaults.showNodes = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowNodes);
+            defaults.color = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
+            defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial);
+            GpxMeshItem::setDefaultValues(defaults);
+        };
+        fnUpdateDefaults();
+        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
+            if (key == Keys::Gpx_MeshDefaultShowEdges
+                    || key == Keys::Gpx_MeshDefaultShowNodes
+                    || key == Keys::Gpx_MeshDefaultColor
+                    || key == Keys::Gpx_MeshDefaultMaterial)
+            {
+                fnUpdateDefaults();
+            }
+        });
+    }
+
+    {
+        auto fnUpdateDefaults = [=]{
+            GpxXdeDocumentItem::DefaultValues defaults;
+            defaults.color = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
+            defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_BrepShapeDefaultMaterial);
+            GpxXdeDocumentItem::setDefaultValues(defaults);
+        };
+        fnUpdateDefaults();
+        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
+            if (key == Keys::Gpx_BrepShapeDefaultColor
+                    || key == Keys::Gpx_BrepShapeDefaultMaterial)
+            {
+                fnUpdateDefaults();
+            }
+        });
+    }
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Mesh);

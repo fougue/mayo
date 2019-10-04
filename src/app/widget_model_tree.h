@@ -10,13 +10,13 @@
 #include "../base/property.h"
 
 #include <QtWidgets/QWidget>
-class QSettings;
 class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
 
 namespace Mayo {
 
+class Settings;
 class WidgetModelTreeBuilder;
 
 class WidgetModelTree : public QWidget {
@@ -29,8 +29,8 @@ public:
 
     void refreshItemText(const ApplicationItem& appItem);
 
-    void loadConfiguration(const QSettings* settings, const QString& keyGroup);
-    void saveConfiguration(QSettings* settings, const QString& keyGroup);
+    void loadConfiguration(const Settings* settings, const QString& keyGroup);
+    void saveConfiguration(Settings* settings, const QString& keyGroup);
 
     std::vector<QAction*> createConfigurationActions(QObject* parent);
 

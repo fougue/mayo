@@ -9,6 +9,7 @@
 #include "gpx_document_item.h"
 #include "../base/mesh_item.h"
 #include <MeshVS_Mesh.hxx>
+#include <QtGui/QColor>
 
 namespace Mayo {
 
@@ -28,6 +29,16 @@ public:
     PropertyEnumeration propertyDisplayMode;
     PropertyBool propertyShowEdges;
     PropertyBool propertyShowNodes;
+
+    struct DefaultValues {
+        bool showEdges = false;
+        bool showNodes = false;
+        Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
+        QColor color = Qt::gray;
+    };
+
+    static const DefaultValues& defaultValues();
+    static void setDefaultValues(const DefaultValues& values);
 
 protected:
     void onPropertyChanged(Property* prop) override;

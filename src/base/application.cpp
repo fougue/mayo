@@ -11,7 +11,6 @@
 #include "caf_utils.h"
 #include "xde_document_item.h"
 #include "mesh_item.h"
-#include "../app/options.h" // TODO Remove this dependency
 #include "mesh_utils.h"
 #include "string_utils.h"
 
@@ -576,6 +575,16 @@ Application::PartFormat Application::findPartFormat(const QString& filepath)
     return PartFormat::Unknown;
 }
 
+Application::StlIoLibrary Application::stlIoLibrary() const
+{
+    return m_stlIoLibrary;
+}
+
+void Application::setStlIoLibrary(Application::StlIoLibrary lib)
+{
+    m_stlIoLibrary = lib;
+}
+
 Application::IoResult Application::importIges(
         Document* doc, const QString& filepath, qttask::Progress* progress)
 {
@@ -629,8 +638,7 @@ Application::IoResult Application::importOccBRep(
 Application::IoResult Application::importStl(
         Document* doc, const QString& filepath, qttask::Progress* progress)
 {
-    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
-    if (lib == Options::StlIoLibrary::Gmio) {
+    if (this->stlIoLibrary() == StlIoLibrary::Gmio) {
 #ifdef HAVE_GMIO
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
@@ -652,7 +660,7 @@ Application::IoResult Application::importStl(
         }
 #endif // HAVE_GMIO
     }
-    else if (lib == Options::StlIoLibrary::OpenCascade) {
+    else if (this->stlIoLibrary() == StlIoLibrary::OpenCascade) {
         Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
         const Handle_Poly_Triangulation mesh = RWStl::ReadFile(
                     OSD_Path(filepath.toLocal8Bit().constData()), indicator);
@@ -661,6 +669,7 @@ Application::IoResult Application::importStl(
         else
             return IoResult::error(tr("Imported STL mesh is null"));
     }
+
     return IoResult::ok();
 }
 
@@ -775,10 +784,9 @@ Application::IoResult Application::exportStl(
         const QString& filepath,
         qttask::Progress *progress)
 {
-    const Options::StlIoLibrary lib = Options::instance()->stlIoLibrary();
-    if (lib == Options::StlIoLibrary::Gmio)
+    if (this->stlIoLibrary() == StlIoLibrary::Gmio)
         return this->exportStl_gmio(appItems, options, filepath, progress);
-    else if (lib == Options::StlIoLibrary::OpenCascade)
+    else if (this->stlIoLibrary() == StlIoLibrary::OpenCascade)
         return this->exportStl_OCC(appItems, options, filepath, progress);
 
     return IoResult::error(tr("Unknown Error"));

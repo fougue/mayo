@@ -9,7 +9,8 @@
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
 #include "../gpx/gpx_utils.h"
-#include "options.h"
+#include "settings.h"
+#include "settings_keys.h"
 #include "ui_widget_clip_planes.h"
 
 #include <algorithm>
@@ -36,13 +37,16 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
           UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom) }
     };
 
-    const Options* opts = Options::instance();
+    const auto settings = Settings::instance();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
-        data.gpx->SetCapping(opts->isClipPlaneCappingOn());
-        if (data.gpx->IsCapping())
-            GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, opts->clipPlaneCappingHatch());
+        data.gpx->SetCapping(settings->valueAs<bool>(Keys::Gui_ClipPlaneCappingOn));
+        if (data.gpx->IsCapping()) {
+            GpxUtils::Gpx3dClipPlane_setCappingHatch(
+                        data.gpx,
+                        settings->valueAsEnum<Aspect_HatchStyle>(Keys::Gui_ClipPlaneCappingHatch));
+        }
 
         Graphic3d_MaterialAspect clipMaterial(Graphic3d_NOM_STEEL);
         Quantity_NameOfColor colorName;
@@ -59,15 +63,24 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         data.gpx->SetCappingMaterial(clipMaterial);
     }
 
-    QObject::connect(opts, &Options::clipPlaneCappingToggled, [=](bool on) {
-        for (ClipPlaneData& data : m_vecClipPlaneData)
-            data.gpx->SetCapping(on);
-        m_view->Redraw();
+    QObject::connect(
+                settings, &Settings::valueChanged,
+                this, [=](const QString& key, const QVariant& value) {
+        if (key == Keys::Gui_ClipPlaneCappingOn) {
+            for (ClipPlaneData& data : m_vecClipPlaneData)
+                data.gpx->SetCapping(value.toBool());
+            m_view->Redraw();
+        }
     });
-    QObject::connect(opts, &Options::clipPlaneCappingHatchChanged, [=](Aspect_HatchStyle hatch) {
-        for (ClipPlaneData& data : m_vecClipPlaneData)
-            GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, hatch);
-        m_view->Redraw();
+    QObject::connect(
+                settings, &Settings::valueChanged,
+                this, [=](const QString& key, const QVariant& value) {
+        if (key == Keys::Gui_ClipPlaneCappingHatch) {
+            const auto hatch = static_cast<Aspect_HatchStyle>(value.toInt());
+            for (ClipPlaneData& data : m_vecClipPlaneData)
+                GpxUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, hatch);
+            m_view->Redraw();
+        }
     });
 
     m_ui->widget_CustomDir->setVisible(false);

@@ -6,7 +6,6 @@
 
 #include "gpx_xde_document_item.h"
 
-#include "../app/options.h" // TODO Remove this dependency
 #include "../base/bnd_utils.h"
 #include "../base/span.h"
 #include "gpx_utils.h"
@@ -19,6 +18,12 @@
 #include <cassert>
 
 namespace Mayo {
+
+namespace Internal {
+
+Q_GLOBAL_STATIC(GpxXdeDocumentItem::DefaultValues, defaultValues)
+
+} // namespace Internal
 
 GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     : propertyTransparency(this, tr("Transparency"), 0, 100, 5),
@@ -36,22 +41,20 @@ GpxXdeDocumentItem::GpxXdeDocumentItem(XdeDocumentItem* item)
     const TDF_LabelSequence seqFreeShape = item->topLevelFreeShapes();
     if (!seqFreeShape.IsEmpty()) {
         m_vecXdeGpx.reserve(seqFreeShape.Size());
-        const Options* opts = Options::instance();
         Mayo_PropertyChangedBlocker(this);
         for (const TDF_Label& label : seqFreeShape) {
             Handle_XCAFPrs_AISObject gpx = new XCAFPrs_AISObject(label);
-            gpx->SetMaterial(opts->brepShapeDefaultMaterial());
+            gpx->SetMaterial(GpxXdeDocumentItem::defaultValues().material);
             gpx->SetDisplayMode(AIS_Shaded);
-            gpx->SetColor(occ::QtUtils::toOccColor(opts->brepShapeDefaultColor()));
+            gpx->SetColor(occ::QtUtils::toOccColor(GpxXdeDocumentItem::defaultValues().color));
             gpx->Attributes()->SetFaceBoundaryDraw(true);
             gpx->Attributes()->SetIsoOnTriangulation(true);
-            this->propertyMaterial.setValue(opts->brepShapeDefaultMaterial());
+            this->propertyMaterial.setValue(GpxXdeDocumentItem::defaultValues().material);
             Quantity_Color color;
             gpx->Color(color);
             this->propertyColor.setValue(color);
             this->propertyDisplayMode.setValue(DisplayMode_ShadedWithFaceBoundary);
-            this->propertyTransparency.setValue(
-                        static_cast<int>(gpx->Transparency() * 100));
+            this->propertyTransparency.setValue(static_cast<int>(gpx->Transparency() * 100));
             m_vecXdeGpx.push_back(gpx);
         }
     }
@@ -99,6 +102,7 @@ static int toAisShapeSelectionMode(GpxXdeDocumentItem::SelectionMode mode)
     case Gpx::SelectShell: return AIS_Shape::SelectionMode(TopAbs_SHELL);
     case Gpx::SelectSolid: return AIS_Shape::SelectionMode(TopAbs_SOLID);
     }
+
     return AIS_Shape::SelectionMode(TopAbs_SHAPE);
 }
 
@@ -121,6 +125,7 @@ std::vector<Handle_SelectMgr_EntityOwner> GpxXdeDocumentItem::entityOwners(int m
     std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
         GpxDocumentItem::getEntityOwners(this->context(), obj, aisMode, &vecOwner);
+
     return vecOwner;
 }
 
@@ -129,6 +134,7 @@ Bnd_Box GpxXdeDocumentItem::boundingBox() const
     Bnd_Box bndBox;
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
         bndBox.Add(BndUtils::get(obj));
+
     return bndBox;
 }
 
@@ -137,6 +143,7 @@ void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
     if (prop == &this->propertyMaterial) {
         for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
             obj->SetMaterial(this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>());
+
         this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyColor) {
@@ -147,12 +154,14 @@ void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
             if (showFaceBounds)
                 obj->Redisplay(true); // All modes
         }
+
         this->context()->UpdateCurrentViewer();
     }
     if (prop == &this->propertyTransparency) {
         const double factor = this->propertyTransparency.value() / 100.;
         for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
             this->context()->SetTransparency(obj, factor, false);
+
         this->context()->UpdateCurrentViewer();
     }
     else if (prop == &this->propertyDisplayMode) {
@@ -163,13 +172,16 @@ void GpxXdeDocumentItem::onPropertyChanged(Property* prop)
         for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx) {
             if (obj->DisplayMode() != aisDispMode)
                 this->context()->SetDisplayMode(obj, aisDispMode, false);
+
             if (obj->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
                 obj->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
                 obj->Redisplay(true);
             }
         }
+
         this->context()->UpdateCurrentViewer();
     }
+
     GpxDocumentItem::onPropertyChanged(prop);
 }
 
@@ -181,7 +193,18 @@ const Enumeration& GpxXdeDocumentItem::enumDisplayMode()
         enumeration.addItem(DisplayMode_Shaded, tr("Shaded"));
         enumeration.addItem(DisplayMode_ShadedWithFaceBoundary, tr("Shaded with face boundaries"));
     }
+
     return enumeration;
+}
+
+const GpxXdeDocumentItem::DefaultValues& GpxXdeDocumentItem::defaultValues()
+{
+    return *Internal::defaultValues;
+}
+
+void GpxXdeDocumentItem::setDefaultValues(const DefaultValues& values)
+{
+    *Internal::defaultValues = values;
 }
 
 } // namespace Mayo

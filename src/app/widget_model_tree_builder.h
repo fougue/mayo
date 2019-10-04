@@ -11,7 +11,6 @@
 #include <QtCore/QString>
 class QAction;
 class QObject;
-class QSettings;
 class QTreeWidget;
 class QTreeWidgetItem;
 
@@ -20,6 +19,7 @@ namespace Mayo {
 class Document;
 class DocumentItem;
 struct DocumentItemNode;
+class Settings;
 
 // TODO Rename Builder -> Extension ?
 class WidgetModelTreeBuilder {
@@ -39,8 +39,8 @@ public:
     QTreeWidget* treeWidget() const { return m_treeWidget; }
     void setTreeWidget(QTreeWidget* tree) { m_treeWidget = tree; }
 
-    virtual void loadConfiguration(const QSettings* settings, const QString& keyGroup);
-    virtual void saveConfiguration(QSettings* settings, const QString& keyGroup);
+    virtual void loadConfiguration(const Settings* settings, const QString& keyGroup);
+    virtual void saveConfiguration(Settings* settings, const QString& keyGroup);
 
     virtual std::vector<QAction*> createConfigurationActions(QObject* parent);
 

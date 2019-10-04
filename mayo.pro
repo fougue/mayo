@@ -56,7 +56,8 @@ HEADERS += \
     src/app/dialog_task_manager.h \
     src/app/mainwindow.h \
     src/app/occt_window.h \
-    src/app/options.h \
+    src/app/settings.h \
+    src/app/settings_keys.h \
     src/app/theme.h \
     src/app/widget_clip_planes.h \
     src/app/widget_file_system.h \
@@ -131,7 +132,7 @@ SOURCES += \
     src/app/main.cpp \
     src/app/mainwindow.cpp \
     src/app/occt_window.cpp \
-    src/app/options.cpp \
+    src/app/settings.cpp \
     src/app/theme.cpp \
     src/app/widget_clip_planes.cpp \
     src/app/widget_file_system.cpp \
@@ -181,7 +182,6 @@ SOURCES += \
     src/gui/gui_application.cpp \
     src/gui/gui_document.cpp \
     src/gui/gui_document_list_model.cpp \
-
 
 win* {
     QT += winextras

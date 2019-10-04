@@ -6,9 +6,12 @@
 
 #include "dialog_options.h"
 
+#include "../base/application.h"
 #include "../base/property_enumeration.h"
 #include "../base/occt_enums.h"
-#include "options.h"
+#include "../base/unit_system.h"
+#include "settings.h"
+#include "settings_keys.h"
 #include "ui_dialog_options.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
@@ -39,23 +42,23 @@ DialogOptions::DialogOptions(QWidget *parent)
     this->adjustSize();
 #endif
 
-    const Options* opts = Options::instance();
+    auto settings = Settings::instance();
 
     // STL import/export
     auto btnGrp_stlIoLib = new QButtonGroup(this);
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseGmio);
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseOcc);
 
-    const Options::StlIoLibrary lib = opts->stlIoLibrary();
-    m_ui->radioBtn_UseGmio->setChecked(lib == Options::StlIoLibrary::Gmio);
-    m_ui->radioBtn_UseOcc->setChecked(lib == Options::StlIoLibrary::OpenCascade);
+    const auto lib = settings->valueAsEnum<Application::StlIoLibrary>(Keys::Base_StlIoLibrary);
+    m_ui->radioBtn_UseGmio->setChecked(lib == Application::StlIoLibrary::Gmio);
+    m_ui->radioBtn_UseOcc->setChecked(lib == Application::StlIoLibrary::OpenCascade);
 
     // BRep shape defaults
-    m_ui->toolBtn_BRepShapeDefaultColor->setIcon(
-                Internal::colorPixmap(opts->brepShapeDefaultColor()));
-    m_brepShapeDefaultColor = opts->brepShapeDefaultColor();
+    m_brepShapeDefaultColor = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
+    m_ui->toolBtn_BRepShapeDefaultColor->setIcon(Internal::colorPixmap(m_brepShapeDefaultColor));
     QObject::connect(m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked, [=]{
-        this->chooseColor(opts->brepShapeDefaultColor(), [=](QColor color) {
+        const QColor startColor = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
+        this->chooseColor(startColor, [=](QColor color) {
             m_ui->toolBtn_BRepShapeDefaultColor->setIcon(Internal::colorPixmap(color));
             m_brepShapeDefaultColor = color;
         });
@@ -64,14 +67,14 @@ DialogOptions::DialogOptions(QWidget *parent)
         m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_BRepShapeDefaultMaterial->findData(
-                    static_cast<int>(opts->brepShapeDefaultMaterial())));
+                    settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_BrepShapeDefaultMaterial)));
 
     // Mesh defaults
-    m_ui->toolBtn_MeshDefaultColor->setIcon(
-                Internal::colorPixmap(opts->meshDefaultColor()));
-    m_meshDefaultColor = opts->meshDefaultColor();
+    m_meshDefaultColor = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
+    m_ui->toolBtn_MeshDefaultColor->setIcon(Internal::colorPixmap(m_meshDefaultColor));
     QObject::connect(m_ui->toolBtn_MeshDefaultColor, &QAbstractButton::clicked, [=]{
-        this->chooseColor(opts->meshDefaultColor(), [=](QColor color) {
+        const QColor startColor = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
+        this->chooseColor(startColor, [=](QColor color) {
             m_ui->toolBtn_MeshDefaultColor->setIcon(Internal::colorPixmap(color));
             m_meshDefaultColor = color;
         });
@@ -80,17 +83,17 @@ DialogOptions::DialogOptions(QWidget *parent)
         m_ui->comboBox_MeshDefaultMaterial->addItem(m.name, m.value);
     m_ui->comboBox_MeshDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_MeshDefaultMaterial->findData(
-                    static_cast<int>(opts->meshDefaultMaterial())));
-    m_ui->checkBox_MeshShowEdges->setChecked(opts->meshDefaultShowEdges());
-    m_ui->checkBox_MeshShowNodes->setChecked(opts->meshDefaultShowNodes());
+                    settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial)));
+    m_ui->checkBox_MeshShowEdges->setChecked(settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowEdges));
+    m_ui->checkBox_MeshShowNodes->setChecked(settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowNodes));
 
     // Clip planes
-    m_ui->checkBox_Capping->setChecked(opts->isClipPlaneCappingOn());
+    m_ui->checkBox_Capping->setChecked(settings->valueAs<bool>(Keys::Gui_ClipPlaneCappingOn));
     for (const Enumeration::Item& m : OcctEnums::Aspect_HatchStyle().items())
         m_ui->comboBox_CappingHatch->addItem(m.name, m.value);
     m_ui->comboBox_CappingHatch->setCurrentIndex(
                 m_ui->comboBox_CappingHatch->findData(
-                    static_cast<int>(opts->clipPlaneCappingHatch())));
+                    settings->valueAsEnum<Aspect_HatchStyle>(Keys::Gui_ClipPlaneCappingHatch)));
     QObject::connect(
                 m_ui->checkBox_Capping, &QAbstractButton::clicked,
                 m_ui->widget_CappingHatch, &QWidget::setEnabled);
@@ -100,8 +103,8 @@ DialogOptions::DialogOptions(QWidget *parent)
     m_ui->comboBox_UnitSystem->addItem(tr("SI"), UnitSystem::SI);
     m_ui->comboBox_UnitSystem->addItem(tr("Imperial UK"), UnitSystem::ImperialUK);
     m_ui->comboBox_UnitSystem->setCurrentIndex(
-                m_ui->comboBox_UnitSystem->findData(opts->unitSystemSchema()));
-    m_ui->spinBox_Decimals->setValue(opts->unitSystemDecimals());
+                m_ui->comboBox_UnitSystem->findData(settings->unitSystemSchema()));
+    m_ui->spinBox_Decimals->setValue(settings->unitSystemDecimals());
 }
 
 DialogOptions::~DialogOptions()
@@ -111,39 +114,31 @@ DialogOptions::~DialogOptions()
 
 void DialogOptions::accept()
 {
-    Options* opts = Options::instance();
+    auto settings = Settings::instance();
 
     // STL import/export
     if (m_ui->radioBtn_UseGmio->isChecked())
-        opts->setStlIoLibrary(Options::StlIoLibrary::Gmio);
+        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::Gmio));
     else if (m_ui->radioBtn_UseOcc->isChecked())
-        opts->setStlIoLibrary(Options::StlIoLibrary::OpenCascade);
+        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::OpenCascade));
 
     // BRep shape defaults
-    opts->setBrepShapeDefaultColor(m_brepShapeDefaultColor);
-    opts->setBrepShapeDefaultMaterial(
-                static_cast<Graphic3d_NameOfMaterial>(
-                    m_ui->comboBox_BRepShapeDefaultMaterial->currentData().toInt()));
+    settings->setValue(Keys::Gpx_BrepShapeDefaultColor, m_brepShapeDefaultColor);
+    settings->setValue( Keys::Gpx_BrepShapeDefaultMaterial, m_ui->comboBox_BRepShapeDefaultMaterial->currentData());
 
     // Mesh defaults
-    opts->setMeshDefaultColor(m_meshDefaultColor);
-    opts->setMeshDefaultMaterial(
-                static_cast<Graphic3d_NameOfMaterial>(
-                    m_ui->comboBox_MeshDefaultMaterial->currentData().toInt()));
-    opts->setMeshDefaultShowEdges(m_ui->checkBox_MeshShowEdges->isChecked());
-    opts->setMeshDefaultShowNodes(m_ui->checkBox_MeshShowNodes->isChecked());
+    settings->setValue(Keys::Gpx_MeshDefaultColor, m_meshDefaultColor);
+    settings->setValue(Keys::Gpx_MeshDefaultMaterial, m_ui->comboBox_MeshDefaultMaterial->currentData());
+    settings->setValue(Keys::Gpx_MeshDefaultShowEdges, m_ui->checkBox_MeshShowEdges->isChecked());
+    settings->setValue(Keys::Gpx_MeshDefaultShowNodes, m_ui->checkBox_MeshShowNodes->isChecked());
 
     // Clip planes
-    opts->setClipPlaneCapping(m_ui->checkBox_Capping->isChecked());
-    opts->setClipPlaneCappingHatch(
-                static_cast<Aspect_HatchStyle>(
-                    m_ui->comboBox_CappingHatch->currentData().toInt()));
+    settings->setValue(Keys::Gui_ClipPlaneCappingOn, m_ui->checkBox_Capping->isChecked());
+    settings->setValue(Keys::Gui_ClipPlaneCappingHatch, m_ui->comboBox_CappingHatch->currentData());
 
     // Units
-    opts->setUnitSystemSchema(
-                static_cast<UnitSystem::Schema>(
-                    m_ui->comboBox_UnitSystem->currentData().toInt()));
-    opts->setUnitSystemDecimals(m_ui->spinBox_Decimals->value());
+    settings->setValue(Keys::Base_UnitSystemSchema, m_ui->comboBox_UnitSystem->currentData());
+    settings->setValue(Keys::Base_UnitSystemDecimals, m_ui->spinBox_Decimals->value());
 
     QDialog::accept();
 }

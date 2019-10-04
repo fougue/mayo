@@ -9,7 +9,8 @@
 #include "../base/caf_utils.h"
 #include "../base/qmeta_tdf_label.h"
 #include "../base/string_utils.h"
-#include "options.h"
+#include "settings.h"
+#include "settings_keys.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
@@ -58,10 +59,8 @@ static const char* rawText(TNaming_Evolution evolution)
     return "??";
 }
 
-static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeItem)
+static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
-    auto options = Options::instance();
-    // if (label.HasAttribute())
     for (TDF_AttributeIterator it(label); it.More(); it.Next()) {
         const Handle_TDF_Attribute ptrAttr = it.Value();
         const Standard_GUID& attrId = ptrAttr->ID();
@@ -81,17 +80,17 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
         else if (attrId == XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             text = "XCAFDoc_Area";
-            value = StringUtils::text(area.Get(), options->defaultTextOptions());
+            value = StringUtils::text(area.Get(), Settings::instance()->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Centroid::GetID()) {
             const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);
             text = "XCAFDoc_Centroid";
-            value = StringUtils::text(centroid.Get(), options->defaultTextOptions());
+            value = StringUtils::text(centroid.Get(), Settings::instance()->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);
             text = "XCAFDoc_Volume";
-            value = StringUtils::text(volume.Get(), options->defaultTextOptions());
+            value = StringUtils::text(volume.Get(), Settings::instance()->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Color::GetID()) {
             const auto& color = static_cast<const XCAFDoc_Color&>(*ptrAttr);
@@ -101,9 +100,7 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
         else if (attrId == XCAFDoc_Location::GetID()) {
             const auto& location = static_cast<const XCAFDoc_Location&>(*ptrAttr);
             text = "XCAFDoc_Location";
-            value = StringUtils::text(
-                        location.Get().Transformation(),
-                        Options::instance()->defaultTextOptions());
+            value = StringUtils::text(location.Get().Transformation(), Settings::instance()->defaultTextOptions());
         }
         else if (attrId == TNaming_NamedShape::GetID()) {
             const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);
@@ -119,10 +116,13 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
 
             int i = 0;
             while (i < strDump.size() && strDump.at(i).isSpace()) ++i;
+
             const int wordStart = i;
             while (i < strDump.size() && !strDump.at(i).isSpace()) ++i;
+
             const int wordEnd = i;
             while (i < strDump.size() && strDump.at(i).isSpace()) ++i;
+
             const int dataStart = i;
             text = wordStart < strDump.size() ?
                         strDump.mid(wordStart, wordEnd - wordStart) :
@@ -130,6 +130,7 @@ static void loadLabelAttributes(const TDF_Label &label, QTreeWidgetItem *treeIte
             strDump = strDump.right(strDump.size() - dataStart);
             value = strDump.replace(QChar('\n'), QString("  "));
         }
+
         auto attrTreeItem = new QTreeWidgetItem;
         attrTreeItem->setText(0, text);
         attrTreeItem->setText(1, value);
@@ -177,10 +178,13 @@ static void loadLabelColorProperties(
     Quantity_Color color;
     if (colorTool->GetColor(label, color))
         listItemProp.push_back(createOccColorTreeItem("Color", color));
+
     if (colorTool->GetColor(label, XCAFDoc_ColorGen, color))
         listItemProp.push_back(createOccColorTreeItem("Color_ColorGen", color));
+
     if (colorTool->GetColor(label, XCAFDoc_ColorSurf, color))
         listItemProp.push_back(createOccColorTreeItem("Color_ColorSurf", color));
+
     if (colorTool->GetColor(label, XCAFDoc_ColorCurv, color))
         listItemProp.push_back(createOccColorTreeItem("Color_ColorCurv", color));
 
@@ -290,6 +294,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document &doc)
                     this, tr("Error"), tr("This document is not suitable for XDE"));
         return;
     }
+
     if (!doc.IsNull()) {
         const TDF_Label label = doc->Main();
         auto treeItem = new QTreeWidgetItem;
@@ -330,6 +335,7 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(
             Internal::loadLabelColorProperties(label, colorTool, itemColorProps);
         }
     }
+
     m_ui->treeWidget_LabelProps->expandAll();
     for (int i = 0; i < m_ui->treeWidget_LabelProps->columnCount(); ++i)
         m_ui->treeWidget_LabelProps->resizeColumnToContents(i);

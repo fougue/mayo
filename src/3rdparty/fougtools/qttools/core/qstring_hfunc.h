@@ -15,27 +15,27 @@
 
 #pragma once
 
-#include "core.h"
-
 #include <QtCore/QHash>
 #include <QtCore/QString>
 
 namespace boost {
 
-/*! Implementation of Boost's hash function for QString */
+//! Implementation of Boost's hash function for QString
 inline std::size_t hash_value(const QString& key)
-{ return qHash(key); }
+{
+    return qHash(key);
+}
 
 } // namespace boost
 
 namespace std {
 
-/*! Specialization of C++11 std::hash<> functor for QString */
-template<>
-struct hash<QString>
-{
+//! Specialization of C++11 std::hash<> functor for QString
+template<> struct hash<QString> {
     inline std::size_t operator()(const QString& key) const
-    { return qHash(key); }
+    {
+        return qHash(key);
+    }
 };
 
 } // namespace std

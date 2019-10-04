@@ -9,6 +9,7 @@
 #include "gpx_document_item.h"
 #include "../base/xde_document_item.h"
 #include <XCAFPrs_AISObject.hxx>
+#include <QtGui/QColor>
 #include <unordered_set>
 
 namespace Mayo {
@@ -44,6 +45,14 @@ public:
         DisplayMode_ShadedWithFaceBoundary
     };
     static const Enumeration& enumDisplayMode();
+
+    struct DefaultValues {
+        Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
+        QColor color = Qt::gray;
+    };
+
+    static const DefaultValues& defaultValues();
+    static void setDefaultValues(const DefaultValues& values);
 
 protected:
     void onPropertyChanged(Property* prop) override;

@@ -12,6 +12,7 @@
 #include "../base/document.h"
 #include "../base/document_item.h"
 #include "../gui/gui_application.h"
+#include "settings.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
@@ -253,14 +254,14 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
     }
 }
 
-void WidgetModelTree::loadConfiguration(const QSettings* settings, const QString& keyGroup)
+void WidgetModelTree::loadConfiguration(const Settings* settings, const QString& keyGroup)
 {
     const QString keyModel = keyGroup + "/" + this->objectName();
     for (WidgetModelTreeBuilder* builder : m_vecBuilder)
         builder->loadConfiguration(settings, keyModel);
 }
 
-void WidgetModelTree::saveConfiguration(QSettings* settings, const QString& keyGroup)
+void WidgetModelTree::saveConfiguration(Settings* settings, const QString& keyGroup)
 {
     const QString keyModel = keyGroup + "/" + this->objectName();
     for (WidgetModelTreeBuilder* builder : m_vecBuilder)

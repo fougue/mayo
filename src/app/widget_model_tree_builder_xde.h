@@ -24,8 +24,8 @@ public:
     void refreshTextTreeItem(const DocumentItemNode& node, QTreeWidgetItem* treeItemDocItem) override;
     void fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem) override;
 
-    void loadConfiguration(const QSettings* settings, const QString& keyGroup) override;
-    void saveConfiguration(QSettings* settings, const QString& keyGroup) override;
+    void loadConfiguration(const Settings* settings, const QString& keyGroup) override;
+    void saveConfiguration(Settings* settings, const QString& keyGroup) override;
     std::vector<QAction*> createConfigurationActions(QObject* parent) override;
 
     WidgetModelTreeBuilder* clone() const override;

@@ -8,7 +8,6 @@
 
 #include "gpx_utils.h"
 #include "../base/bnd_utils.h"
-#include "../app/options.h" // TODO Remove this dependency
 
 #include <fougtools/occtools/qt_utils.h>
 #include <AIS_InteractiveContext.hxx>
@@ -21,6 +20,8 @@
 namespace Mayo {
 
 namespace Internal {
+
+Q_GLOBAL_STATIC(GpxMeshItem::DefaultValues, defaultValues)
 
 static void redisplayAndUpdateViewer(const Handle_AIS_InteractiveObject& gpx)
 {
@@ -37,7 +38,6 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
       m_meshItem(item)
 {
     // Create the MeshVS_Mesh object
-    const Options* opts = Options::instance();
     Handle_XSDRAWSTLVRML_DataSource dataSource =
             new XSDRAWSTLVRML_DataSource(item->triangulation());
     Handle_MeshVS_Mesh meshVisu = new MeshVS_Mesh;
@@ -46,15 +46,15 @@ GpxMeshItem::GpxMeshItem(MeshItem *item)
     meshVisu->AddBuilder(new MeshVS_MeshPrsBuilder(meshVisu), true);
     // -- MeshVS_DrawerAttribute
     meshVisu->GetDrawer()->SetBoolean(
-                MeshVS_DA_ShowEdges, opts->meshDefaultShowEdges());
+                MeshVS_DA_ShowEdges, GpxMeshItem::defaultValues().showEdges);
     meshVisu->GetDrawer()->SetBoolean(
-                MeshVS_DA_DisplayNodes, opts->meshDefaultShowNodes());
+                MeshVS_DA_DisplayNodes, GpxMeshItem::defaultValues().showNodes);
     meshVisu->GetDrawer()->SetMaterial(
                 MeshVS_DA_FrontMaterial,
-                Graphic3d_MaterialAspect(opts->meshDefaultMaterial()));
+                Graphic3d_MaterialAspect(GpxMeshItem::defaultValues().material));
     meshVisu->GetDrawer()->SetColor(
                 MeshVS_DA_InteriorColor,
-                occ::QtUtils::toOccColor(opts->meshDefaultColor()));
+                occ::QtUtils::toOccColor(GpxMeshItem::defaultValues().color));
     meshVisu->SetDisplayMode(MeshVS_DMF_Shading);
     // -- Wireframe as default highlight mode
     meshVisu->SetHilightMode(MeshVS_DMF_WireFrame);
@@ -116,7 +116,17 @@ Bnd_Box GpxMeshItem::boundingBox() const
     return BndUtils::get(m_meshVisu);
 }
 
-void GpxMeshItem::onPropertyChanged(Property *prop)
+const GpxMeshItem::DefaultValues& GpxMeshItem::defaultValues()
+{
+    return *Internal::defaultValues;
+}
+
+void GpxMeshItem::setDefaultValues(const DefaultValues& values)
+{
+    *Internal::defaultValues = values;
+}
+
+void GpxMeshItem::onPropertyChanged(Property* prop)
 {
     if (prop == &this->propertyMaterial) {
         const Graphic3d_NameOfMaterial mat =
@@ -145,6 +155,7 @@ void GpxMeshItem::onPropertyChanged(Property *prop)
                     MeshVS_DA_DisplayNodes, this->propertyShowNodes.value());
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
+
     GpxDocumentItem::onPropertyChanged(prop);
 }
 
@@ -156,6 +167,7 @@ const Enumeration &GpxMeshItem::enum_DisplayMode()
         enumeration.addItem(MeshVS_DMF_Shading, tr("Shaded"));
         enumeration.addItem(MeshVS_DMF_Shrink, tr("Shrink"));
     }
+
     return enumeration;
 }
 

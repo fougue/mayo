@@ -22,7 +22,8 @@
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
-#include "options.h"
+#include "settings.h"
+#include "settings_keys.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
@@ -58,7 +59,6 @@ namespace Internal {
 static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
 static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
 static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
-static const char keyReferenceItemTextTemplateId[] = "GUI/MainWindow_ReferenceItemTextTemplateId";
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
@@ -77,16 +77,16 @@ struct ImportExportSettings {
 
     static ImportExportSettings load()
     {
-        QSettings settings;
-        return { settings.value(keyLastOpenDir, QString()).toString(),
-                 settings.value(keyLastSelectedFilter, QString()).toString() };
+        return {
+            Settings::instance()->valueAs<QString>(Keys::App_MainWindowLastOpenDir),
+            Settings::instance()->valueAs<QString>(Keys::App_MainWindowLastSelectedFilter)
+        };
     }
 
     static void save(const ImportExportSettings& sets)
     {
-        QSettings settings;
-        settings.setValue(keyLastOpenDir, sets.openDir);
-        settings.setValue(keyLastSelectedFilter, sets.selectedFilter);
+        Settings::instance()->setValue(Keys::App_MainWindowLastOpenDir, sets.openDir);
+        Settings::instance()->setValue(Keys::App_MainWindowLastSelectedFilter, sets.selectedFilter);
     }
 };
 
@@ -169,10 +169,10 @@ static void prependRecentFile(QStringList* listRecentFile, const QString& filepa
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       m_ui(new Ui_MainWindow),
-      m_listRecentFile(Options::instance()->recentFiles())
+      m_listRecentFile(Settings::instance()->valueAs<QStringList>(Keys::App_RecentFiles))
 {
     m_ui->setupUi(this);
-    m_ui->widget_ModelTree->loadConfiguration(Options::instance()->settings(), "GUI/MainWindow");
+    m_ui->widget_ModelTree->loadConfiguration(Settings::instance(), "GUI/MainWindow");
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
@@ -382,9 +382,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    m_ui->widget_ModelTree->saveConfiguration(Options::instance()->settings(), "GUI/MainWindow");
+    m_ui->widget_ModelTree->saveConfiguration(Settings::instance(), "GUI/MainWindow");
     delete m_ui;
-    Options::instance()->setRecentFiles(m_listRecentFile);
+    Settings::instance()->setValue(Keys::App_RecentFiles, m_listRecentFile);
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
@@ -698,9 +698,8 @@ void MainWindow::onApplicationItemSelectionChanged()
             uiProps->editProperties(item.document());
         }
 
-        const QSettings* settings = Options::instance()->settings();
         const bool isLinkWithDocumentSelectorOn =
-                settings->value(Internal::keyLinkWithDocumentSelector, false).toBool();
+                Settings::instance()->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         if (isLinkWithDocumentSelectorOn) {
             const Document* doc = item.document();
             const int index = Application::instance()->indexOfDocument(doc);
@@ -735,7 +734,7 @@ void MainWindow::onHomePageLinkActivated(const QString &link)
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto widget = new WidgetGuiDocument(guiDoc);
-    if (Options::instance()->defaultShowOriginTrihedron()) {
+    if (Settings::instance()->valueAs<bool>(Keys::Gui_DefaultShowOriginTrihedron)) {
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->updateV3dViewer();
     }
