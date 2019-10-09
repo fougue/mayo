@@ -113,10 +113,11 @@ QString XdeDocumentItem::findLabelName(const TDF_Label& lbl)
             name = QString("[[%1]]").arg(CafUtils::labelTag(lbl));
         }
     }
+
     return name;
 }
 
-QString XdeDocumentItem::findLabelName(AssemblyNodeId nodeId) const
+QString XdeDocumentItem::findLabelName(TreeNodeId nodeId) const
 {
     return XdeDocumentItem::findLabelName(m_asmTree.nodeData(nodeId));
 }
@@ -126,7 +127,7 @@ void XdeDocumentItem::setLabelName(const TDF_Label& lbl, const QString& name)
     TDataStd_Name::Set(lbl, occ::QtUtils::toOccExtendedString(name));
 }
 
-void XdeDocumentItem::setLabelName(AssemblyNodeId nodeId, const QString& name)
+void XdeDocumentItem::setLabelName(TreeNodeId nodeId, const QString& name)
 {
     XdeDocumentItem::setLabelName(m_asmTree.nodeData(nodeId), name);
 }
@@ -173,10 +174,13 @@ Quantity_Color XdeDocumentItem::shapeColor(const TDF_Label &lbl) const
     Quantity_Color color;
     if (m_colorTool->GetColor(lbl, XCAFDoc_ColorGen, color))
         return color;
+
     if (m_colorTool->GetColor(lbl, XCAFDoc_ColorSurf, color))
         return color;
+
     if (m_colorTool->GetColor(lbl, XCAFDoc_ColorCurv, color))
         return color;
+
     return color;
 }
 
@@ -192,16 +196,17 @@ TDF_Label XdeDocumentItem::shapeReferred(const TDF_Label &lbl)
     return referred;
 }
 
-TopLoc_Location XdeDocumentItem::shapeAbsoluteLocation(AssemblyNodeId nodeId) const
+TopLoc_Location XdeDocumentItem::shapeAbsoluteLocation(TreeNodeId nodeId) const
 {
     TopLoc_Location absoluteLoc;
-    AssemblyNodeId it = nodeId;
+    TreeNodeId it = nodeId;
     while (it != 0) {
         const TDF_Label& nodeLabel = m_asmTree.nodeData(it);
         const TopLoc_Location nodeLoc = XdeDocumentItem::shapeReferenceLocation(nodeLabel);
         absoluteLoc = nodeLoc * absoluteLoc;
         it = m_asmTree.nodeParent(it);
     }
+
     return absoluteLoc;
 }
 
@@ -227,9 +232,11 @@ XdeDocumentItem::ValidationProperties XdeDocumentItem::validationProperties(
             props.hasVolume = true;
             props.volume = volume.Get() * Quantity_CubicMillimeter;
         }
+
         if (props.hasCentroid && props.hasArea && props.hasVolume)
             break;
     }
+
     return props;
 }
 
@@ -257,9 +264,9 @@ TDF_Label XdeDocumentItem::label(TreeNodeId nodeId) const
 }
 
 void XdeDocumentItem::deepBuildAssemblyTree(
-        AssemblyNodeId parentNode, const TDF_Label &label)
+        TreeNodeId parentNode, const TDF_Label &label)
 {
-    const AssemblyNodeId node = m_asmTree.appendChild(parentNode, label);
+    const TreeNodeId node = m_asmTree.appendChild(parentNode, label);
     if (XdeDocumentItem::isShapeAssembly(label)) {
         for (const TDF_Label& child : XdeDocumentItem::shapeComponents(label))
             this->deepBuildAssemblyTree(node, child);

@@ -25,8 +25,6 @@ class XdeShapePropertyOwner;
 class XdeDocumentItem : public PartItem {
     Q_DECLARE_TR_FUNCTIONS(XdeDocumentItem)
 public:
-    using AssemblyNodeId = TreeNodeId;
-
     struct ValidationProperties {
         bool hasCentroid;
         bool hasArea;
@@ -50,9 +48,9 @@ public:
     static TDF_LabelSequence shapeSubs(const TDF_Label& lbl);
 
     static QString findLabelName(const TDF_Label& lbl);
-    QString findLabelName(AssemblyNodeId nodeId) const;
+    QString findLabelName(TreeNodeId nodeId) const;
     static void setLabelName(const TDF_Label& lbl, const QString& name);
-    void setLabelName(AssemblyNodeId nodeId, const QString& name);
+    void setLabelName(TreeNodeId nodeId, const QString& name);
 
     static TopoDS_Shape shape(const TDF_Label& lbl);
     static bool isShape(const TDF_Label& lbl);
@@ -67,7 +65,7 @@ public:
     bool hasShapeColor(const TDF_Label& lbl) const;
     Quantity_Color shapeColor(const TDF_Label& lbl) const;
 
-    TopLoc_Location shapeAbsoluteLocation(AssemblyNodeId nodeId) const;
+    TopLoc_Location shapeAbsoluteLocation(TreeNodeId nodeId) const;
     static TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl);
     static TDF_Label shapeReferred(const TDF_Label& lbl);
 
@@ -83,7 +81,7 @@ public:
     TDF_Label label(TreeNodeId nodeId) const;
 
 private:
-    void deepBuildAssemblyTree(AssemblyNodeId parentNode, const TDF_Label& label);
+    void deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label);
 
     Handle_TDocStd_Document m_cafDoc;
     Handle_XCAFDoc_ShapeTool m_shapeTool;

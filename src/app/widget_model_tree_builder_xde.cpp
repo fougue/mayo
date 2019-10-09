@@ -115,7 +115,7 @@ void WidgetModelTreeBuilder_Xde::buildXdeTree(
             else {
                 auto guiNode = new QTreeWidgetItem(guiParentNode);
                 QString guiNodeText = XdeDocumentItem::findLabelName(nodeLabel);
-                XdeDocumentItem::AssemblyNodeId guiNodeId = nodeId;
+                TreeNodeId guiNodeId = nodeId;
                 if (setRefNodeId.find(nodeParentId) != setRefNodeId.cend()) {
                     const TDF_Label& refLabel = asmTree.nodeData(nodeParentId);
                     guiNodeText = this->referenceItemText(refLabel, nodeLabel);
