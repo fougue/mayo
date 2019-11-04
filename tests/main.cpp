@@ -6,11 +6,16 @@
 
 #include "test.h"
 
-#include <QtCore/QCoreApplication>
+#include <memory>
+#include <vector>
 
 int main(int argc, char** argv)
 {
-    //QCoreApplication app(argv, argv);
-    Mayo::Test test;
-    return QTest::qExec(&test, argc, argv);
+    int retcode = 0;
+    std::vector<std::unique_ptr<QObject>> vecTest;
+    vecTest.emplace_back(new Mayo::Test);
+    for (const std::unique_ptr<QObject>& test : vecTest)
+        retcode += QTest::qExec(test.get(), argc, argv);
+
+    return retcode;
 }
