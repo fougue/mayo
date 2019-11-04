@@ -6,7 +6,6 @@
 
 #include "gpx_xde_document_item.h"
 
-#include "../base/bnd_utils.h"
 #include "../base/span.h"
 #include "gpx_utils.h"
 
@@ -133,7 +132,7 @@ Bnd_Box GpxXdeDocumentItem::boundingBox() const
 {
     Bnd_Box bndBox;
     for (const Handle_XCAFPrs_AISObject& obj : m_vecXdeGpx)
-        bndBox.Add(BndUtils::get(obj));
+        bndBox.Add(GpxUtils::AisObject_boundingBox(obj));
 
     return bndBox;
 }

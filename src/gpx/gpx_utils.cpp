@@ -5,9 +5,11 @@
 ****************************************************************************/
 
 #include "gpx_utils.h"
+#include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
 
 #include <algorithm>
+#include <Bnd_Box.hxx>
 #include <ElSLib.hxx>
 #include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
@@ -90,6 +92,32 @@ void GpxUtils::AisContext_setObjectVisible(
         else
             context->Erase(object, false);
     }
+}
+
+Bnd_Box GpxUtils::AisObject_boundingBox(const Handle_AIS_InteractiveObject& object)
+{
+    Bnd_Box box;
+    if (object.IsNull())
+        return box;
+
+    // Ensure bounding box is calculated
+#if OCC_VERSION_HEX >= 0x070400
+    for (Handle_PrsMgr_Presentation prs : object->Presentations()) {
+        if (prs->Mode() == object->DisplayMode() && !prs->CStructure()->BoundingBox().IsValid())
+            prs->CalculateBoundBox();
+    }
+#else
+    for (PrsMgr_ModedPresentation& pres : object->Presentations()) {
+        if (pres.Mode() == object->DisplayMode()) {
+            const Handle_Prs3d_Presentation& pres3d = pres.Presentation()->Presentation();
+            if (!pres3d->CStructure()->BoundingBox().IsValid())
+                pres3d->CalculateBoundBox();
+        }
+    }
+#endif
+
+    object->BoundingBox(box);
+    return box;
 }
 
 int GpxUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)

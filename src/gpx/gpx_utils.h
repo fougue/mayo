@@ -28,6 +28,7 @@ struct GpxUtils {
             const Handle_AIS_InteractiveContext& context,
             const Handle_AIS_InteractiveObject& object,
             bool on);
+    static Bnd_Box AisObject_boundingBox(const Handle_AIS_InteractiveObject& object);
 
     static int AspectWindow_width(const Handle_Aspect_Window& wnd);
     static int AspectWindow_height(const Handle_Aspect_Window& wnd);

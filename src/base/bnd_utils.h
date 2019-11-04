@@ -7,7 +7,6 @@
 #pragma once
 
 #include <array>
-#include <AIS_InteractiveObject.hxx>
 #include <Bnd_Box.hxx>
 #include <gp_Pnt.hxx>
 
@@ -15,7 +14,6 @@ namespace Mayo {
 
 struct BndUtils {
     static void add(Bnd_Box* box, const Bnd_Box& other);
-    static Bnd_Box get(const Handle_AIS_InteractiveObject& obj);
 };
 
 struct BndBoxCoords {

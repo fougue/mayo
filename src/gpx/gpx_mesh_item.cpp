@@ -5,9 +5,7 @@
 ****************************************************************************/
 
 #include "gpx_mesh_item.h"
-
 #include "gpx_utils.h"
-#include "../base/bnd_utils.h"
 
 #include <fougtools/occtools/qt_utils.h>
 #include <AIS_InteractiveContext.hxx>
@@ -113,7 +111,7 @@ std::vector<Handle_SelectMgr_EntityOwner> GpxMeshItem::entityOwners(int mode) co
 
 Bnd_Box GpxMeshItem::boundingBox() const
 {
-    return BndUtils::get(m_meshVisu);
+    return GpxUtils::AisObject_boundingBox(m_meshVisu);
 }
 
 const GpxMeshItem::DefaultValues& GpxMeshItem::defaultValues()
