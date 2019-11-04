@@ -8,13 +8,13 @@
 #include <BRepPrimAPI_MakeBox.hxx>
 
 #include "test.h"
-#include "../src/brep_utils.h"
-#include "../src/libtree.h"
-#include "../src/mesh_utils.h"
-#include "../src/result.h"
-#include "../src/string_utils.h"
-#include "../src/unit.h"
-#include "../src/unit_system.h"
+#include "../src/base/brep_utils.h"
+#include "../src/base/libtree.h"
+#include "../src/base/mesh_utils.h"
+#include "../src/base/result.h"
+#include "../src/base/string_utils.h"
+#include "../src/base/unit.h"
+#include "../src/base/unit_system.h"
 
 #include <BRep_Tool.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>

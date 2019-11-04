@@ -1,9 +1,12 @@
 TARGET = mayo_tests
 TEMPLATE = app
 
-CONFIG += c++14 no_batch
+CONFIG += c++17 no_batch
 
 QT += testlib
+
+INCLUDEPATH += \
+    ../src/3rdparty
 
 HEADERS += \
     test.h \
@@ -11,12 +14,12 @@ HEADERS += \
 SOURCES += \
     test.cpp \
     main.cpp \
-    ../src/brep_utils.cpp \
-    ../src/mesh_utils.cpp \
-    ../src/quantity.cpp \
-    ../src/string_utils.cpp \
-    ../src/unit.cpp \
-    ../src/unit_system.cpp \
+    ../src/base/brep_utils.cpp \
+    ../src/base/mesh_utils.cpp \
+    ../src/base/quantity.cpp \
+    ../src/base/string_utils.cpp \
+    ../src/base/unit.cpp \
+    ../src/base/unit_system.cpp \
 
 # OpenCascade
 include(../opencascade.pri)
