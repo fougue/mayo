@@ -271,7 +271,7 @@ void Test::StringUtils_text_test_data()
 void Test::StringUtils_skipWhiteSpaces_test()
 {
     QFETCH(ptrdiff_t, ptrDiffActualExpected);
-    QCOMPARE(ptrDiffActualExpected, 0);
+    QCOMPARE(ptrDiffActualExpected, ptrdiff_t(0));
 }
 
 void Test::StringUtils_skipWhiteSpaces_test_data()

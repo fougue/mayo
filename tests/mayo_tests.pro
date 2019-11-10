@@ -23,4 +23,4 @@ SOURCES += \
 
 # OpenCascade
 include(../opencascade.pri)
-LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim -lTKMesh
+LIBS += -lTKernel -lTKMath -lTKBRep -lTKTopAlgo -lTKPrim -lTKMesh -lTKG3d
