@@ -80,6 +80,7 @@ HEADERS += \
     src/base/caf_utils.h \
     src/base/document.h \
     src/base/document_item.h \
+    src/base/geom_utils.h \
     src/base/libtree.h \
     src/base/math_utils.h \
     src/base/mesh_item.h \
@@ -155,6 +156,7 @@ SOURCES += \
     src/base/caf_utils.cpp \
     src/base/document.cpp \
     src/base/document_item.cpp \
+    src/base/geom_utils.cpp \
     src/base/math_utils.cpp \
     src/base/mesh_item.cpp \
     src/base/mesh_utils.cpp \
