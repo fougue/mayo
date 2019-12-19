@@ -115,6 +115,7 @@ HEADERS += \
     src/gui/gui_application.h \
     src/gui/gui_document.h \
     src/gui/gui_document_list_model.h \
+    src/gui/qtgui_utils.h \
 
 SOURCES += \
     src/3rdparty/fougtools/occtools/qt_utils.cpp \
@@ -184,6 +185,7 @@ SOURCES += \
     src/gui/gui_application.cpp \
     src/gui/gui_document.cpp \
     src/gui/gui_document_list_model.cpp \
+    src/gui/qtgui_utils.cpp \
 
 win* {
     QT += winextras
