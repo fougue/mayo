@@ -418,9 +418,9 @@ int Application::documentCount() const
     return static_cast<int>(m_documents.size());
 }
 
-Document *Application::documentAt(int index) const
+Document* Application::documentAt(int index) const
 {
-    const bool validIndex = (0 <= index) && (index < m_documents.size());
+    const bool validIndex = (0 <= index) && (index < this->documentCount());
     return validIndex ? m_documents.at(index) : nullptr;
 }
 
