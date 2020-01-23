@@ -51,6 +51,7 @@ Source: "{#QtDir}\bin\Qt5Core.dll"; DestDir: "{app}\3rdparty"; Flags: ignorevers
 Source: "{#QtDir}\bin\Qt5Gui.dll"; DestDir: "{app}\3rdparty"; Flags: ignoreversion;
 Source: "{#QtDir}\bin\Qt5Svg.dll"; DestDir: "{app}\3rdparty"; Flags: ignoreversion;
 Source: "{#QtDir}\bin\Qt5Widgets.dll"; DestDir: "{app}\3rdparty"; Flags: ignoreversion;
+Source: "{#QtDir}\bin\Qt5WinExtras.dll"; DestDir: "{app}\3rdparty"; Flags: ignoreversion;
 Source: "{#QtDir}\plugins\iconengines\qsvgicon.dll";  DestDir: "{app}\3rdparty\plugins\iconengines"; Flags: ignoreversion
 Source: "{#QtDir}\plugins\imageformats\qsvg.dll";  DestDir: "{app}\3rdparty\plugins\imageformats"; Flags: ignoreversion
 Source: "{#QtDir}\plugins\platforms\qwindows.dll";  DestDir: "{app}\3rdparty\plugins\platforms"; Flags: ignoreversion
