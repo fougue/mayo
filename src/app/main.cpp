@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "../base/application.h"
 #include "../base/unit_system.h"
 #include "../gpx/gpx_document_item_factory.h"
 #include "../gpx/gpx_mesh_item.h"
@@ -75,6 +76,7 @@ Theme* mayoTheme()
 static int runApp(QApplication* app)
 {
     const CommandLineArguments args = processCommandLine();
+    Mayo::Application::setOpenCascadeEnvironment("opencascade.conf");
 
     // Register Gpx factory functions
     GpxDocumentItemFactory::instance()->registerCreatorFunction(

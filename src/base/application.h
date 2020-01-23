@@ -95,6 +95,8 @@ public:
             qttask::Progress* progress = nullptr);
     static bool hasExportOptionsForFormat(PartFormat format);
 
+    static void setOpenCascadeEnvironment(const QString& settingsFilepath);
+
 signals:
     void documentAdded(Document* doc);
     void documentErased(const Document* doc);

@@ -108,9 +108,9 @@ HEADERS += \
     src/gpx/gpx_document_item_factory.h \
     src/gpx/gpx_mesh_item.h \
     src/gpx/gpx_utils.h \
+    src/gpx/gpx_xde_document_item.h \
     src/gpx/v3d_view_camera_animation.h \
     src/gpx/v3d_view_controller.h \
-    src/gpx/gpx_xde_document_item.h \
     \
     src/gui/gui_application.h \
     src/gui/gui_document.h \

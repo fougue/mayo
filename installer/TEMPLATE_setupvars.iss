@@ -1,5 +1,4 @@
-; This file is a template for creating your own local setupvars.iss file that is
-; included by setup.iss
+; This file is a template for creating your own local setupvars.iss file included by setup.iss
 ; setupvars.iss is not versioned control as it is user-specific
 
 ; Directory where is located mayo.exe

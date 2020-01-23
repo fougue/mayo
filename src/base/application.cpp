@@ -16,8 +16,12 @@
 
 #include <fougtools/qttools/task/progress.h>
 
+#include <QtCore/QCoreApplication>
+#include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSettings>
 
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -521,6 +525,71 @@ Application::IoResult Application::exportApplicationItems(
 bool Application::hasExportOptionsForFormat(Application::PartFormat format)
 {
     return format == PartFormat::Stl;
+}
+
+void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
+{
+    const QFileInfo fiSettingsFilepath(settingsFilepath);
+    if (!fiSettingsFilepath.exists() || !fiSettingsFilepath.isReadable()) {
+        qDebug() << settingsFilepath << "doesn't exist or is not readable";
+        return;
+    }
+
+    const QSettings occSettings(settingsFilepath, QSettings::IniFormat);
+    if (occSettings.status() != QSettings::NoError) {
+        qDebug() << settingsFilepath << "could not be loaded by QSettings";
+        return;
+    }
+
+    const char* arrayOptionName[] = {
+        "MMGT_OPT",
+        "MMGT_CLEAR",
+        "MMGT_REENTRANT",
+        "CSF_LANGUAGE",
+        "CSF_EXCEPTION_PROMPT"
+    };
+    const char* arrayPathName[] = {
+        "CSF_SHMessage",
+        "CSF_MDTVTexturesDirectory",
+        "CSF_ShadersDirectory",
+        "CSF_XSMessage",
+        "CSF_TObjMessage",
+        "CSF_StandardDefaults",
+        "CSF_PluginDefaults",
+        "CSF_XCAFDefaults",
+        "CSF_TObjDefaults",
+        "CSF_StandardLiteDefaults",
+        "CSF_IGESDefaults",
+        "CSF_STEPDefaults",
+        "CSF_XmlOcafResource",
+        "CSF_MIGRATION_TYPES"
+    };
+
+    // Process options
+    for (const char* varName : arrayOptionName) {
+        const QLatin1String qVarName(varName);
+        if (!occSettings.contains(qVarName))
+            continue;
+
+        const QString strValue = occSettings.value(qVarName).toString();
+        qputenv(varName, strValue.toUtf8());
+        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
+    }
+
+    // Process paths
+    for (const char* varName : arrayPathName) {
+        const QLatin1String qVarName(varName);
+        if (!occSettings.contains(qVarName))
+            continue;
+
+        QString strPath = occSettings.value(qVarName).toString();
+        if (QFileInfo(strPath).isRelative())
+            strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
+
+        strPath = QDir::toNativeSeparators(strPath);
+        qputenv(varName, strPath.toUtf8());
+        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
+    }
 }
 
 Span<const Application::PartFormat> Application::partFormats()
