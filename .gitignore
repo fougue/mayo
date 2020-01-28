@@ -1,0 +1,5 @@
+build-*
+*.user
+*.user.*
+installer/setupvars.iss
+installer/Output
