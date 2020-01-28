@@ -1,38 +1,34 @@
-; #define MsvcVersionName StringChange(GetEnv("QMAKESPEC"), "win32-", "")
-#define MsvcVersionName "msvc2017-x64"
-#define TargetArch "x64"
-#define VersionNumber "0.1.0"
-
 #include "setupvars.iss"
+#include "version.iss"
 
 [Setup]
 ArchitecturesInstallIn64BitMode=x64
 AppId={{F1978C7C-3C90-477F-B634-B99746AA153D}
-AppName=Mayo
-AppVerName=Mayo v{#VersionNumber}
-AppPublisher=Fougue
-DefaultGroupName=Fougue
-DefaultDirName={pf}\Fougue\Mayo
-OutputBaseFilename=mayo_v{#VersionNumber}_win{#TargetArch}_installer
+AppName={#TargetProduct}
+AppVerName={#TargetProduct} v{#VersionNumber}
+AppPublisher={#TargetCompany}
+DefaultGroupName={#TargetCompany}
+DefaultDirName={pf}\{#TargetCompany}\{#TargetProduct}
+OutputBaseFilename={#TargetName}_v{#VersionNumber}_win{#TargetArch}_installer
 Compression=lzma
 SolidCompression=yes
 
 [Icons]
-Name: "{group}\Mayo"; Filename: "{app}\mayo.exe"; WorkingDir: "{app}"; IconFileName: "{app}\mayo.exe"
-Name: "{commondesktop}\Mayo"; Filename: "{app}\mayo.exe"; Tasks: desktopicon; WorkingDir: "{app}"; IconFileName: "{app}\mayo.exe"
+Name: "{group}\{#TargetProduct}"; Filename: "{app}\{#TargetName}.exe"; WorkingDir: "{app}"; IconFileName: "{app}\{#TargetName}.exe"
+Name: "{commondesktop}\{#TargetProduct}"; Filename: "{app}\{#TargetName}.exe"; Tasks: desktopicon; WorkingDir: "{app}"; IconFileName: "{app}\{#TargetName}.exe"
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 [CustomMessages]
-en.installVcRuntime = Installing redistributable {#MsvcVersionName} runtime ...
-fr.installVcRuntime = Installation du package redistribuable {#MsvcVersionName} ...
+en.installVcRuntime = Installing redistributable Visual Studio runtime ...
+fr.installVcRuntime = Installation du package redistribuable Visual Studio ...
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#AppBuildDir}\mayo.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#AppBuildDir}\{#TargetName}.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; Source: "{#AppBuildDir}\i18n\*.qm"; DestDir: "{app}\i18n"; Flags: ignoreversion
 
 ; First clear the setup folder (in case of a setup overwrite)

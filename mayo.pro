@@ -4,6 +4,7 @@ TEMPLATE = app
 QT += core gui widgets
 
 CONFIG += c++17
+CONFIG += file_copies
 
 CONFIG(debug, debug|release) {
     CONFIG += console
@@ -31,6 +32,13 @@ CONFIG(debug, debug|release) {
     message(Mayo version $$MAYO_VERSION debug)
 } else {
     message(Mayo version $$MAYO_VERSION release)
+}
+
+win* {
+    COPIES += WinInstallerFiles
+    WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
+    WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
+    WinInstallerFiles.path = $$OUT_PWD/installer
 }
 
 INCLUDEPATH += \
