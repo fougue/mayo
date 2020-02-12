@@ -10,6 +10,7 @@
 #include "test.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/libtree.h"
+#include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
@@ -17,7 +18,10 @@
 #include "../src/base/unit_system.h"
 
 #include <BRep_Tool.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
+#include <GCPnts_TangentialDeflection.hxx>
+#include <QtCore/QFile>
 #include <QtCore/QtDebug>
 #include <cmath>
 #include <cstring>
@@ -26,6 +30,9 @@
 #include <sstream>
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
+// For MeshUtils_orientation_test()
+Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
+Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
 
 namespace Mayo {
 
@@ -60,6 +67,83 @@ void Test::BRepUtils_test()
 void Test::CafUtils_test()
 {
     // TODO Add CafUtils::labelTag() test for multi-threaded safety
+}
+
+void Test::MeshUtils_orientation_test()
+{
+    struct BasicPolyline2d : public Mayo::MeshUtils::AdaptorPolyline2d {
+        gp_Pnt2d pointAt(int index) const override { return this->vecPoint.at(index); }
+        int pointCount() const override { return this->vecPoint.size(); }
+        std::vector<gp_Pnt2d> vecPoint;
+    };
+
+    QFETCH(std::vector<gp_Pnt2d>, vecPoint);
+    QFETCH(Mayo::MeshUtils::Orientation, orientation);
+    BasicPolyline2d polyline2d;
+    polyline2d.vecPoint = std::move(vecPoint);
+    QCOMPARE(Mayo::MeshUtils::orientation(polyline2d), orientation);
+}
+
+void Test::MeshUtils_orientation_test_data()
+{
+    QTest::addColumn<std::vector<gp_Pnt2d>>("vecPoint");
+    QTest::addColumn<Mayo::MeshUtils::Orientation>("orientation");
+
+    std::vector<gp_Pnt2d> vecPoint;
+    vecPoint.push_back(gp_Pnt2d(0, 0));
+    vecPoint.push_back(gp_Pnt2d(0, 10));
+    vecPoint.push_back(gp_Pnt2d(10, 10));
+    vecPoint.push_back(gp_Pnt2d(10, 0));
+    vecPoint.push_back(gp_Pnt2d(0, 0)); // Closed polyline
+    QTest::newRow("case1") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+
+    vecPoint.erase(std::prev(vecPoint.end())); // Open polyline
+    QTest::newRow("case2") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+
+    std::reverse(vecPoint.begin(), vecPoint.end());
+    QTest::newRow("case3") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
+
+    vecPoint.clear();
+    vecPoint.push_back(gp_Pnt2d(0, 0));
+    vecPoint.push_back(gp_Pnt2d(0, 10));
+    vecPoint.push_back(gp_Pnt2d(10, 10));
+    QTest::newRow("case4") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+
+    vecPoint.clear();
+    vecPoint.push_back(gp_Pnt2d(0, 0));
+    vecPoint.push_back(gp_Pnt2d(0, 10));
+    vecPoint.push_back(gp_Pnt2d(-10, 10));
+    vecPoint.push_back(gp_Pnt2d(-10, 0));
+    QTest::newRow("case5") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
+
+    std::reverse(vecPoint.begin(), vecPoint.end());
+    QTest::newRow("case6") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+
+    {
+        QFile file("inputs/mayo_bezier_curve.brep");
+        QVERIFY(file.open(QIODevice::ReadOnly));
+
+        const TopoDS_Shape shape = BRepUtils::shapeFromString(file.readAll().toStdString());
+        QVERIFY(!shape.IsNull());
+
+        TopoDS_Edge edge;
+        BRepUtils::forEachSubShape(shape, TopAbs_EDGE, [&](const TopoDS_Shape& subShape) {
+            edge = TopoDS::Edge(subShape);
+        });
+        QVERIFY(!edge.IsNull());
+
+        const GCPnts_TangentialDeflection discr(BRepAdaptor_Curve(edge), 0.1, 0.1);
+        vecPoint.clear();
+        for (int i = 1; i <= discr.NbPoints(); ++i) {
+            const gp_Pnt pnt = discr.Value(i);
+            vecPoint.push_back(gp_Pnt2d(pnt.X(), pnt.Y()));
+        }
+
+        QTest::newRow("case7") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
+
+        std::reverse(vecPoint.begin(), vecPoint.end());
+        QTest::newRow("case8") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
 }
 
 void Test::MeshUtils_test()

@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "mesh_utils.h"
+#include <QtCore/QtGlobal>
 #include <cmath>
 
 namespace Mayo {
@@ -64,6 +65,80 @@ double MeshUtils::triangulationArea(
     }
 
     return area;
+}
+
+// Adapted from http://cs.smith.edu/~jorourke/Code/polyorient.C
+MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
+{
+    const int pntCount = polyline.pointCount();
+    if (pntCount < 2)
+        return Orientation::Unknown;
+
+    gp_Pnt2d pntExtreme = polyline.pointAt(0);
+    int indexPntExtreme = 0;
+    for (int i = 1; i < pntCount; ++i) {
+        const gp_Pnt2d pnt = polyline.pointAt(i);
+        if (pnt.Y() < pntExtreme.Y()
+                || (qFuzzyCompare(pnt.Y(), pntExtreme.Y()) && (pnt.X() > pntExtreme.X())))
+        {
+            pntExtreme = pnt;
+            indexPntExtreme = i;
+        }
+    }
+
+    const gp_Pnt2d beforeExtremePnt = polyline.pointAt((indexPntExtreme + (pntCount - 1)) % pntCount);
+    const gp_Pnt2d afterExtremePnt = polyline.pointAt((indexPntExtreme + 1) % pntCount);
+    const gp_Pnt2d& a = beforeExtremePnt;
+    const gp_Pnt2d& b = pntExtreme;
+    const gp_Pnt2d& c = afterExtremePnt;
+    const double triangleArea =
+            a.X() * b.Y() - a.Y() * b.X()
+            + a.Y() * c.X() - a.X() * c.Y()
+            + b.Y() * c.X() - c.X() * b.Y();
+
+    auto fnQualifyArea = [](double area) {
+        if (area > 0)
+            return Orientation::CounterClockwise;
+        else if (area < 0)
+            return Orientation::Clockwise;
+        else
+            return Orientation::Unknown;
+    };
+
+    const Orientation orientation = fnQualifyArea(triangleArea);
+    if (orientation != Orientation::Unknown) {
+        return orientation;
+    }
+    else {
+        double polylineArea = 0.;
+        for (int i = 0; i < pntCount; ++i) {
+            const gp_Pnt2d pntBefore = polyline.pointAt((i + (pntCount - 1)) % pntCount);
+            const gp_Pnt2d pntCurrent = polyline.pointAt(i);
+            const gp_Pnt2d pntAfter = polyline.pointAt((i + 1) % pntCount);
+            polylineArea += pntCurrent.X() * (pntAfter.Y() - pntBefore.Y());
+        }
+
+        return fnQualifyArea(polylineArea);
+    }
+}
+
+gp_Vec MeshUtils::directionAt(const MeshUtils::AdaptorPolyline3d& polyline, int i)
+{
+    const int pntCount = polyline.pointCount();
+    if (pntCount > 1) {
+        const gp_Pnt& pnt = polyline.pointAt(i);
+        const int indexLastPos = pntCount - 1;
+        if (i < indexLastPos) {
+            const gp_Pnt& nextPnt = polyline.pointAt(i + 1);
+            return gp_Vec(pnt, nextPnt);
+        }
+        else if (i == indexLastPos) {
+            const gp_Pnt& prevPnt = polyline.pointAt(i - 1);
+            return gp_Vec(prevPnt, pnt);
+        }
+    }
+
+    return gp_Vec();
 }
 
 } // namespace Mayo

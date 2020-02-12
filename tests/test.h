@@ -19,6 +19,8 @@ private slots:
     void CafUtils_test();
     void MeshUtils_test();
     void MeshUtils_test_data();
+    void MeshUtils_orientation_test();
+    void MeshUtils_orientation_test_data();
     void Quantity_test();
     void Result_test();
     void StringUtils_append_test();

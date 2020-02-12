@@ -19,6 +19,29 @@ struct MeshUtils {
 
     static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
+
+    enum class Orientation {
+        Unknown,
+        Clockwise,
+        CounterClockwise
+    };
+
+    class AdaptorPolyline2d {
+    public:
+        virtual gp_Pnt2d pointAt(int index) const = 0;
+        virtual int pointCount() const = 0;
+        virtual bool empty() const { return this->pointCount() <= 0; }
+    };
+
+    class AdaptorPolyline3d {
+    public:
+        virtual const gp_Pnt& pointAt(int i) const = 0;
+        virtual int pointCount() const = 0;
+        virtual int empty() const { return this->pointCount() <= 0; }
+    };
+
+    static Orientation orientation(const AdaptorPolyline2d& polyline);
+    static gp_Vec directionAt(const AdaptorPolyline3d& polyline, int i);
 };
 
 } // namespace Mayo
