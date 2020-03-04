@@ -27,6 +27,11 @@ SOURCES += \
     ../src/base/unit.cpp \
     ../src/base/unit_system.cpp \
 
+CONFIG += file_copies
+COPIES += MayoInputs
+MayoInputs.files = $$files(inputs/*.*)
+MayoInputs.path = $$OUT_PWD/inputs
+
 # OpenCascade
 include(../opencascade.pri)
 
