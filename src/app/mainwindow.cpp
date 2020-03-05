@@ -33,7 +33,7 @@
 #include "widget_properties_editor.h"
 
 #ifdef Q_OS_WIN
-#  include "win_taskbar_global_progress.h"
+#  include "windows/win_taskbar_global_progress.h"
 #endif
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
