@@ -65,6 +65,7 @@ void Test::Application_test_data()
     QTest::newRow("cube.step") << "inputs/cube.step" << Application::PartFormat::Step;
     QTest::newRow("cube.iges") << "inputs/cube.iges" << Application::PartFormat::Iges;
     QTest::newRow("cube.brep") << "inputs/cube.brep" << Application::PartFormat::OccBrep;
+    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << Application::PartFormat::OccBrep;
     QTest::newRow("cube.stla") << "inputs/cube.stla" << Application::PartFormat::Stl;
     QTest::newRow("cube.stlb") << "inputs/cube.stlb" << Application::PartFormat::Stl;
 }
