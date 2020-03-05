@@ -13,19 +13,16 @@ INCLUDEPATH += \
 
 HEADERS += \
     test.h \
+    $$files(../src/base/*.h) \
 
 SOURCES += \
     test.cpp \
     main.cpp \
-    ../src/base/bnd_utils.cpp \
-    ../src/base/brep_utils.cpp \
-    ../src/base/geom_utils.cpp \
-    ../src/base/math_utils.cpp \
-    ../src/base/mesh_utils.cpp \
-    ../src/base/quantity.cpp \
-    ../src/base/string_utils.cpp \
-    ../src/base/unit.cpp \
-    ../src/base/unit_system.cpp \
+    \
+    ../src/3rdparty/fougtools/occtools/qt_utils.cpp \
+    $$files(../src/base/*.cpp) \
+
+include(../src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
 CONFIG += file_copies
 COPIES += MayoInputs
@@ -36,3 +33,6 @@ MayoInputs.path = $$OUT_PWD/inputs
 include(../opencascade.pri)
 
 LIBS += -lTKernel -lTKMath -lTKBRep -lTKGeomBase -lTKTopAlgo -lTKPrim -lTKMesh -lTKG3d
+LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+LIBS += -lTKLCAF -lTKXCAF -lTKCAF
+LIBS += -lTKSTL

@@ -15,6 +15,8 @@ class Test : public QObject {
     Q_OBJECT
 
 private slots:
+    void Application_test();
+    void Application_test_data();
     void BRepUtils_test();
     void CafUtils_test();
     void MeshUtils_test();
