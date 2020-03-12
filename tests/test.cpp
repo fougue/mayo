@@ -376,30 +376,6 @@ void Test::StringUtils_text_test_data()
             << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
 }
 
-void Test::StringUtils_skipWhiteSpaces_test()
-{
-    QFETCH(ptrdiff_t, ptrDiffActualExpected);
-    QCOMPARE(ptrDiffActualExpected, ptrdiff_t(0));
-}
-
-void Test::StringUtils_skipWhiteSpaces_test_data()
-{
-    QTest::addColumn<ptrdiff_t>("ptrDiffActualExpected");
-
-    const char str1[] = "test";
-    QTest::newRow("skipws_ident")
-            << StringUtils::skipWhiteSpaces(str1, sizeof(str1)) - str1;
-    const char str2[] = "    test";
-    QTest::newRow("skipws_4spaces")
-            << StringUtils::skipWhiteSpaces(str2, sizeof(str2)) - (str2 + 4);
-    const char str3[] = " \n\t test";
-    QTest::newRow("skipws_4mixed")
-            << StringUtils::skipWhiteSpaces(str3, sizeof(str3)) - (str3 + 4);
-    const char str4[] = "";
-    QTest::newRow("skipws_empty")
-            << StringUtils::skipWhiteSpaces(str4, sizeof(str4)) - str4;
-}
-
 void Test::UnitSystem_test()
 {
     QFETCH(UnitSystem::TranslateResult, trResultActual);

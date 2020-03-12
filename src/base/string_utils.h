@@ -38,8 +38,6 @@ public:
     static const char* rawText(TopAbs_ShapeEnum shapeType);
     static const char* rawText(IFSelect_ReturnStatus status);
 
-    static const char* skipWhiteSpaces(const char* str, size_t len);
-
     static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
 };
 

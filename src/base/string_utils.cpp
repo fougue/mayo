@@ -119,15 +119,6 @@ const char* StringUtils::rawText(IFSelect_ReturnStatus status)
     return "??";
 }
 
-const char* StringUtils::skipWhiteSpaces(const char* str, size_t len)
-{
-    size_t pos = 0;
-    while (std::isspace(static_cast<unsigned char>(str[pos])) && pos < len)
-        ++pos;
-
-    return str + pos;
-}
-
 void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
 {
     if (locale.textDirection() == Qt::LeftToRight)

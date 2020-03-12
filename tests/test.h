@@ -29,8 +29,6 @@ private slots:
     void StringUtils_append_test_data();
     void StringUtils_text_test();
     void StringUtils_text_test_data();
-    void StringUtils_skipWhiteSpaces_test();
-    void StringUtils_skipWhiteSpaces_test_data();
     void UnitSystem_test();
     void UnitSystem_test_data();
 

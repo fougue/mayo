@@ -34,13 +34,6 @@ CONFIG(debug, debug|release) {
     message(Mayo version $$MAYO_VERSION release)
 }
 
-win* {
-    COPIES += WinInstallerFiles
-    WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
-    WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
-    WinInstallerFiles.path = $$OUT_PWD/installer
-}
-
 INCLUDEPATH += \
     src/app \
     src/3rdparty
@@ -70,6 +63,11 @@ win* {
     QT += winextras
     HEADERS += $$files(src/app/windows/*.h)
     SOURCES += $$files(src/app/windows/*.cpp)
+
+    COPIES += WinInstallerFiles
+    WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
+    WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
+    WinInstallerFiles.path = $$OUT_PWD/installer
 }
 
 include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)

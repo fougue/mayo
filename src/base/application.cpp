@@ -58,6 +58,7 @@
 
 #include <algorithm>
 #include <array>
+#include <locale>
 #include <fstream>
 #include <mutex>
 
@@ -313,29 +314,22 @@ static XdeDocumentItem* createXdeDocumentItem(
     return xdeDocItem;
 }
 
-template<size_t N>
-bool matchToken(const char* buffer, const char (&token)[N])
-{
-    return std::strncmp(buffer, token, N - 1) == 0;
-}
-
-Application::PartFormat findPartFormatFromContents(
-        const char* contentsBegin,
-        size_t contentsBeginSize,
-        uint64_t fullContentsSizeHint)
+static Application::PartFormat findPartFormatFromContents(
+        std::string_view contentsBegin,
+        uint64_t hintFullContentsSize)
 {
     // -- Binary STL ?
     constexpr size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
-    if (contentsBeginSize >= binaryStlHeaderSize) {
+    if (contentsBegin.size() >= binaryStlHeaderSize) {
         constexpr uint32_t offset = 80; // Skip header
-        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(contentsBegin);
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(contentsBegin.data());
         const uint32_t facetsCount =
                 bytes[offset]
                 | (bytes[offset+1] << 8)
                 | (bytes[offset+2] << 16)
                 | (bytes[offset+3] << 24);
         constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
-        if ((facetSize * facetsCount + binaryStlHeaderSize) == fullContentsSizeHint)
+        if ((facetSize * facetsCount + binaryStlHeaderSize) == hintFullContentsSize)
             return Application::PartFormat::Stl;
     }
 
@@ -343,42 +337,38 @@ Application::PartFormat findPartFormatFromContents(
     {
         // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
         bool isIges = true;
-        if (contentsBeginSize >= 80 && contentsBegin[72] == 'S') {
+        if (contentsBegin.size() >= 80 && contentsBegin[72] == 'S') {
             for (int i = 73; i < 80 && isIges; ++i) {
-                if (contentsBegin[i] != ' '
-                        && !std::isdigit(static_cast<unsigned char>(contentsBegin[i])))
-                {
+                if (contentsBegin[i] != ' ' && !std::isdigit(static_cast<unsigned char>(contentsBegin[i])))
                     isIges = false;
-                }
             }
 
             const char c80 = contentsBegin[80];
             if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
-                const int sVal = std::atoi(contentsBegin + 73);
+                const int sVal = std::atoi(contentsBegin.data() + 73);
                 if (sVal == 1)
                     return Application::PartFormat::Iges;
             }
         }
     } // IGES
 
-    contentsBegin = StringUtils::skipWhiteSpaces(contentsBegin, contentsBeginSize);
+    const std::locale& cLocale = std::locale::classic();
+    auto fnIsSpace = [&](char c) { return std::isspace(c, cLocale); };
+    auto fnMatchToken = [](std::string_view::const_iterator itBegin, std::string_view token) {
+        return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
+    };
+    auto itContentsBegin = std::find_if_not(contentsBegin.cbegin(), contentsBegin.cend(), fnIsSpace);
 
     // -- STEP ?
     {
         // regex : ^\s*ISO-10303-21\s*;\s*HEADER
-        constexpr char stepIsoId[] = "ISO-10303-21";
-        constexpr char stepHeaderToken[] = "HEADER";
-        constexpr size_t stepIsoIdLen = sizeof(stepIsoId) - 1;
-        constexpr size_t stepHeaderTokenLen = sizeof(stepHeaderToken) - 1;
-        if (std::strncmp(contentsBegin, stepIsoId, stepIsoIdLen) == 0) {
-            const char* charIt = StringUtils::skipWhiteSpaces(
-                        contentsBegin + stepIsoIdLen,
-                        contentsBeginSize - stepIsoIdLen);
-            if (*charIt == ';' && (charIt - contentsBegin) < contentsBeginSize) {
-                charIt = StringUtils::skipWhiteSpaces(
-                            charIt + 1,
-                            contentsBeginSize - (charIt - contentsBegin));
-                if (std::strncmp(charIt, stepHeaderToken, stepHeaderTokenLen) == 0)
+        constexpr std::string_view stepIsoId = "ISO-10303-21";
+        constexpr std::string_view stepHeaderToken = "HEADER";
+        if (fnMatchToken(itContentsBegin, stepIsoId)) {
+            auto itChar = std::find_if_not(itContentsBegin + stepIsoId.size(), contentsBegin.cend(), fnIsSpace);
+            if (itChar != contentsBegin.cend() && *itChar == ';') {
+                itChar = std::find_if_not(itChar + 1, contentsBegin.cend(), fnIsSpace);
+                if (fnMatchToken(itChar, stepHeaderToken))
                     return Application::PartFormat::Step;
             }
         }
@@ -387,16 +377,16 @@ Application::PartFormat findPartFormatFromContents(
     // -- OpenCascade BREP ?
     {
         // regex : ^\s*DBRep_DrawableShape
-        constexpr char occBRepToken[] = "DBRep_DrawableShape";
-        if (matchToken(contentsBegin, occBRepToken))
+        constexpr std::string_view occBRepToken = "DBRep_DrawableShape";
+        if (fnMatchToken(itContentsBegin, occBRepToken))
             return Application::PartFormat::OccBrep;
     }
 
     // -- ASCII STL ?
     {
         // regex : ^\s*solid
-        constexpr char asciiStlToken[] = "solid";
-        if (matchToken(contentsBegin, asciiStlToken))
+        constexpr std::string_view asciiStlToken = "solid";
+        if (fnMatchToken(itContentsBegin, asciiStlToken))
             return Application::PartFormat::Stl;
     }
 
@@ -639,7 +629,8 @@ Application::PartFormat Application::findPartFormat(const QString& filepath)
         contentsBegin.fill(0);
         file.read(contentsBegin.data(), contentsBegin.size());
         return Internal::findPartFormatFromContents(
-                    contentsBegin.data(), contentsBegin.size(), file.size());
+                    std::string_view(contentsBegin.data(), contentsBegin.size()),
+                    file.size());
     }
     return PartFormat::Unknown;
 }
