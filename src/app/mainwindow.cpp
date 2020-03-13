@@ -388,7 +388,7 @@ MainWindow::~MainWindow()
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
-    auto funcSizeBtn = [](const QWidget* container, const QWidget* widgetHeightRef) {
+    auto fnSizeBtn = [](const QWidget* container, const QWidget* widgetHeightRef) {
         const int btnSideLen = widgetHeightRef->frameGeometry().height();
         const QList<QAbstractButton*> listBtn = container->findChildren<QAbstractButton*>();
         for (QAbstractButton* btn : listBtn)
@@ -396,12 +396,12 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
     };
     const QEvent::Type eventType = event->type();
     if (watched == m_ui->widget_ControlGuiDocuments && eventType == QEvent::Show) {
-        funcSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
+        fnSizeBtn(m_ui->widget_ControlGuiDocuments, m_ui->combo_GuiDocuments);
         return true;
     }
 
     if (watched == m_ui->widget_LeftHeader && eventType == QEvent::Show) {
-        funcSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
+        fnSizeBtn(m_ui->widget_LeftHeader, m_ui->combo_LeftContents);
         return true;
     }
 
@@ -660,8 +660,7 @@ void MainWindow::aboutMayo()
 
 void MainWindow::reportbug()
 {
-    QDesktopServices::openUrl(
-                QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://github.com/fougue/mayo/issues")));
 }
 
 void MainWindow::onApplicationItemSelectionChanged()
@@ -670,13 +669,11 @@ void MainWindow::onApplicationItemSelectionChanged()
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     uiProps->clear();
-    Span<const ApplicationItem> spanAppItem =
-            GuiApplication::instance()->selectionModel()->selectedItems();
+    Span<const ApplicationItem> spanAppItem = GuiApplication::instance()->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
         if (item.isDocumentItemNode()) {
-            m_ptrCurrentNodeProperties =
-                    item.documentItem()->propertiesAtNode(item.documentItemNode().id);
+            m_ptrCurrentNodeProperties = item.documentItem()->propertiesAtNode(item.documentItemNode().id);
             PropertyOwnerSignals* nodeProps = m_ptrCurrentNodeProperties.get();
             uiProps->editProperties(nodeProps);
             if (nodeProps) {
@@ -886,10 +883,8 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
         const QFileInfo loc(filePath);
         const int docId = app->findDocumentByLocation(loc);
         if (docId == -1) {
-            const QString locAbsoluteFilePath =
-                    QDir::toNativeSeparators(loc.absoluteFilePath());
-            const Application::PartFormat fileFormat =
-                    Application::findPartFormat(locAbsoluteFilePath);
+            const QString locAbsoluteFilePath = QDir::toNativeSeparators(loc.absoluteFilePath());
+            const Application::PartFormat fileFormat = Application::findPartFormat(locAbsoluteFilePath);
             if (fileFormat != Application::PartFormat::Unknown) {
                 auto doc = new Document;
                 doc->setLabel(loc.fileName());
@@ -914,8 +909,7 @@ void MainWindow::updateControlsActivation()
     const QWidget* currMainPage = m_ui->stack_Main->currentWidget();
     const int appDocumentsCount = Application::instance()->documentCount();
     const bool appDocumentsEmpty = appDocumentsCount == 0;
-    QWidget* newMainPage =
-            appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
+    QWidget* newMainPage = appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
     if (currMainPage != newMainPage)
         m_ui->stack_Main->setCurrentWidget(newMainPage);
 
@@ -931,10 +925,8 @@ void MainWindow::updateControlsActivation()
     m_ui->actionCloseAllDocuments->setEnabled(!appDocumentsEmpty);
     m_ui->actionCloseAllExcept->setEnabled(!appDocumentsEmpty);
     const int currentDocIndex = this->currentDocumentIndex();
-    m_ui->actionPreviousDoc->setEnabled(
-                !appDocumentsEmpty && currentDocIndex > 0);
-    m_ui->actionNextDoc->setEnabled(
-                !appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
+    m_ui->actionPreviousDoc->setEnabled(!appDocumentsEmpty && currentDocIndex > 0);
+    m_ui->actionNextDoc->setEnabled(!appDocumentsEmpty && currentDocIndex < appDocumentsCount - 1);
     m_ui->actionExportSelectedItems->setEnabled(!appDocumentsEmpty);
     m_ui->actionToggleLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
@@ -961,8 +953,7 @@ void MainWindow::setCurrentDocumentIndex(int idx)
 
 WidgetGuiDocument* MainWindow::widgetGuiDocument(int idx) const
 {
-    return qobject_cast<WidgetGuiDocument*>(
-                m_ui->stack_GuiDocuments->widget(idx));
+    return qobject_cast<WidgetGuiDocument*>(m_ui->stack_GuiDocuments->widget(idx));
 }
 
 WidgetGuiDocument* MainWindow::currentWidgetGuiDocument() const
@@ -973,7 +964,7 @@ WidgetGuiDocument* MainWindow::currentWidgetGuiDocument() const
 QWidget* MainWindow::findLeftHeaderPlaceHolder() const
 {
     return m_ui->widget_LeftHeader->findChild<QWidget*>(
-        "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
+                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
 }
 
 QWidget* MainWindow::recreateLeftHeaderPlaceHolder()
@@ -1023,9 +1014,7 @@ QMenu* MainWindow::createMenuRecentFiles()
     int idFile = 0;
     for (const QString& file : m_listRecentFile) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(file);
-        menu->addAction(entryRecentFile, [=]{
-            this->openDocumentsFromList(QStringList(file));
-        });
+        menu->addAction(entryRecentFile, [=]{ this->openDocumentsFromList(QStringList(file)); });
     }
 
     if (!m_listRecentFile.empty()) {
