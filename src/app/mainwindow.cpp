@@ -58,7 +58,6 @@ namespace Internal {
 
 static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
 static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
-static const char keyLinkWithDocumentSelector[] = "GUI/MainWindow_LinkWithDocumentSelector";
 
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
@@ -996,20 +995,18 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     menu->setToolTipsVisible(true);
 
     {   // Link with document selector
-        const bool isLinked =
-                QSettings().value(Internal::keyLinkWithDocumentSelector, false)
-                .toBool();
+        auto settings = Settings::instance();
+        const bool isLinked = settings->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         QAction* action = menu->addAction(tr("Link With Document Selector"));
         action->setCheckable(true);
         action->setChecked(isLinked);
         QObject::connect(action, &QAction::triggered, [=](bool on) {
-            QSettings().setValue(Internal::keyLinkWithDocumentSelector, on);
+            settings->setValue(Keys::App_MainWindowLinkWithDocumentSelector, on);
         });
     }
 
     menu->addSeparator();
-    const std::vector<QAction*> vecAction =
-            m_ui->widget_ModelTree->createConfigurationActions(menu);
+    const std::vector<QAction*> vecAction = m_ui->widget_ModelTree->createConfigurationActions(menu);
     for (QAction* action : vecAction)
         menu->addAction(action);
 
