@@ -56,9 +56,6 @@ namespace Mayo {
 
 namespace Internal {
 
-static const char keyLastOpenDir[] = "GUI/MainWindow_lastOpenDir";
-static const char keyLastSelectedFilter[] = "GUI/MainWindow_lastSelectedFilter";
-
 static Application::PartFormat partFormatFromFilter(const QString& filter)
 {
     for (Application::PartFormat format : Application::partFormats()) {
