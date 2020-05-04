@@ -165,8 +165,7 @@ static UnitSystem::TranslateResult translateImperialUK_ranged(double value, Unit
     return translateImperialUK(value, unit);
 }
 
-static std::string toLocaleString(
-        const QLocale& locale, double value, const char* strUnit)
+static std::string toLocaleString(const QLocale& locale, double value, const char* strUnit)
 {
     return QCoreApplication::translate("Mayo::UnitSystem", "%1%2")
             .arg(locale.toString(value), QString::fromUtf8(strUnit))

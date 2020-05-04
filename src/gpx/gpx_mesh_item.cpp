@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "gpx_mesh_item.h"
 #include "gpx_utils.h"
 
@@ -127,37 +128,31 @@ void GpxMeshItem::setDefaultValues(const DefaultValues& values)
 void GpxMeshItem::onPropertyChanged(Property* prop)
 {
     if (prop == &this->propertyMaterial) {
-        const Graphic3d_NameOfMaterial mat =
-                this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>();
-        m_meshVisu->GetDrawer()->SetMaterial(
-                    MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(mat));
+        const auto mat = this->propertyMaterial.valueAs<Graphic3d_NameOfMaterial>();
+        m_meshVisu->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(mat));
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyColor) {
-        m_meshVisu->GetDrawer()->SetColor(
-                    MeshVS_DA_InteriorColor, this->propertyColor.value());
+        m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, this->propertyColor.value());
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyDisplayMode) {
-        this->context()->SetDisplayMode(
-                    m_meshVisu, this->propertyDisplayMode.value(), true);
+        this->context()->SetDisplayMode(m_meshVisu, this->propertyDisplayMode.value(), true);
         //ptrGpx->SetDisplayMode(this->propertyDisplayMode.value());
     }
     else if (prop == &this->propertyShowEdges) {
-        m_meshVisu->GetDrawer()->SetBoolean(
-                    MeshVS_DA_ShowEdges, this->propertyShowEdges.value());
+        m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, this->propertyShowEdges.value());
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
     else if (prop == &this->propertyShowNodes) {
-        m_meshVisu->GetDrawer()->SetBoolean(
-                    MeshVS_DA_DisplayNodes, this->propertyShowNodes.value());
+        m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, this->propertyShowNodes.value());
         Internal::redisplayAndUpdateViewer(m_meshVisu);
     }
 
     GpxDocumentItem::onPropertyChanged(prop);
 }
 
-const Enumeration &GpxMeshItem::enum_DisplayMode()
+const Enumeration& GpxMeshItem::enum_DisplayMode()
 {
     static Enumeration enumeration;
     if (enumeration.size() == 0) {
@@ -170,3 +165,4 @@ const Enumeration &GpxMeshItem::enum_DisplayMode()
 }
 
 } // namespace Mayo
+#endif

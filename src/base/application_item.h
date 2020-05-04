@@ -6,32 +6,29 @@
 
 #pragma once
 
-#include "document_item.h"
+#include "document.h"
+#include "document_tree_node.h"
 
 namespace Mayo {
 
 class ApplicationItem {
 public:
     ApplicationItem() = default;
-    ApplicationItem(Document* doc);
-    ApplicationItem(DocumentItem* docItem);
-    ApplicationItem(const DocumentItemNode& node);
+    ApplicationItem(const DocumentPtr& doc);
+    ApplicationItem(const DocumentTreeNode& node);
 
     bool isValid() const;
     bool isDocument() const;
-    bool isDocumentItem() const;
-    bool isDocumentItemNode() const;
+    bool isDocumentTreeNode() const;
 
-    Document* document() const;
-    DocumentItem* documentItem() const;
-    const DocumentItemNode& documentItemNode() const;
+    DocumentPtr document() const;
+    const DocumentTreeNode& documentTreeNode() const;
 
     bool operator==(const ApplicationItem& other) const;
 
 private:
-    Document* m_doc;
-    DocumentItem* m_docItem;
-    DocumentItemNode m_docItemNode;
+    DocumentPtr m_doc;
+    DocumentTreeNode m_docTreeNode;
 };
 
 } // namespace Mayo

@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "xde_shape_property_owner.h"
 #include "string_utils.h"
 
@@ -155,3 +156,4 @@ void XdeShapePropertyOwner::onPropertyChanged(Property* prop)
 }
 
 } // namespace Mayo
+#endif

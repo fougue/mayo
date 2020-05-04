@@ -7,10 +7,10 @@
 #include "widget_properties_editor.h"
 
 #include "../base/document.h"
-#include "../base/document_item.h"
+#include "../base/property_enumeration.h"
 #include "../base/string_utils.h"
 #include "../base/unit_system.h"
-#include "../gpx/gpx_document_item.h"
+#include "../gpx/gpx_document.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "settings.h"

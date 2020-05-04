@@ -20,13 +20,13 @@ GuiApplication::GuiApplication(QObject *parent)
 {
     m_selectionModel = new ApplicationItemSelectionModel(this);
 
-    auto app = Application::instance();
+    auto app = Application::instance().get();
     QObject::connect(
                 app, &Application::documentAdded,
                 this, &GuiApplication::onDocumentAdded);
     QObject::connect(
-                app, &Application::documentErased,
-                this, &GuiApplication::onDocumentErased);
+                app, &Application::documentAboutToClose,
+                this, &GuiApplication::onDocumentAboutToClose);
 
     QObject::connect(
                 m_selectionModel, &ApplicationItemSelectionModel::changed,
@@ -36,7 +36,7 @@ GuiApplication::GuiApplication(QObject *parent)
                 this, &GuiApplication::onApplicationItemSelectionCleared);
 }
 
-GuiApplication *GuiApplication::instance()
+GuiApplication* GuiApplication::instance()
 {
     static GuiApplication app;
     return &app;
@@ -44,28 +44,18 @@ GuiApplication *GuiApplication::instance()
 
 GuiApplication::~GuiApplication()
 {
-    for (Doc_GuiDoc& pair : m_vecDocGuiDoc) {
-        delete pair.guiDoc;
-        pair.guiDoc = nullptr;
-    }
+    for (GuiDocument* guiDoc : m_vecGuiDocument)
+        delete guiDoc;
 }
 
-GuiDocument *GuiApplication::findGuiDocument(const Document *doc) const
+GuiDocument* GuiApplication::findGuiDocument(const DocumentPtr& doc) const
 {
-    for (const Doc_GuiDoc& pair : m_vecDocGuiDoc) {
-        if (pair.doc == doc)
-            return pair.guiDoc;
+    for (GuiDocument* guiDoc : m_vecGuiDocument) {
+        if (guiDoc->document() == doc)
+            return guiDoc;
     }
+
     return nullptr;
-}
-
-std::vector<GuiDocument*> GuiApplication::guiDocuments() const
-{
-    std::vector<GuiDocument*> vecGuiDoc;
-    vecGuiDoc.reserve(m_vecDocGuiDoc.size());
-    for (const Doc_GuiDoc& pair : m_vecDocGuiDoc)
-        vecGuiDoc.push_back(pair.guiDoc);
-    return vecGuiDoc;
 }
 
 ApplicationItemSelectionModel* GuiApplication::selectionModel() const
@@ -73,32 +63,31 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
     return m_selectionModel;
 }
 
-void GuiApplication::onDocumentAdded(Document *doc)
+void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
-    const Doc_GuiDoc pair = { doc, new GuiDocument(doc) }; // TODO: set container widget
-    m_vecDocGuiDoc.emplace_back(std::move(pair));
-    emit guiDocumentAdded(pair.guiDoc);
+    m_vecGuiDocument.push_back(new GuiDocument(doc));
+    emit guiDocumentAdded(m_vecGuiDocument.back());
 }
 
-void GuiApplication::onDocumentErased(const Document *doc)
+void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
 {
     auto itFound = std::find_if(
-                m_vecDocGuiDoc.begin(),
-                m_vecDocGuiDoc.end(),
-                [=](const Doc_GuiDoc& pair) { return pair.doc == doc; });
-    if (itFound != m_vecDocGuiDoc.end()) {
-        const GuiDocument* guiDoc = itFound->guiDoc;
+                m_vecGuiDocument.begin(),
+                m_vecGuiDocument.end(),
+                [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; });
+    if (itFound != m_vecGuiDocument.end()) {
+        const GuiDocument* guiDoc = *itFound;
         delete guiDoc;
-        m_vecDocGuiDoc.erase(itFound);
+        m_vecGuiDocument.erase(itFound);
         emit guiDocumentErased(guiDoc);
     }
 }
 
 void GuiApplication::onApplicationItemSelectionCleared()
 {
-    for (Doc_GuiDoc pair : m_vecDocGuiDoc) {
-        pair.guiDoc->clearItemSelection();
-        pair.guiDoc->updateV3dViewer();
+    for (GuiDocument* guiDoc : m_vecGuiDocument) {
+        guiDoc->clearItemSelection();
+        guiDoc->updateV3dViewer();
     }
 }
 
@@ -108,15 +97,17 @@ void GuiApplication::onApplicationItemSelectionChanged(
     std::unordered_set<GuiDocument*> setGuiDocDirty;
     auto funcToggleItemSelected = [&](const ApplicationItem& item) {
         GuiDocument* guiDoc = this->findGuiDocument(item.document());
-        if (guiDoc != nullptr) {
+        if (guiDoc) {
             guiDoc->toggleItemSelected(item);
             setGuiDocDirty.insert(guiDoc);
         }
     };
     for (const ApplicationItem& item : selected)
         funcToggleItemSelected(item);
+
     for (const ApplicationItem& item : deselected)
         funcToggleItemSelected(item);
+
     for (GuiDocument* guiDoc : setGuiDocDirty)
         guiDoc->updateV3dViewer();
 }

@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "gpx_document_item_factory.h"
 #include "../base/document_item.h"
 
@@ -24,6 +25,7 @@ GpxDocumentItem* GpxDocumentItemFactory::create(DocumentItem* docItem)
         if (creatorData.strDocumentItemTypeName == strDocItemTypeName)
             return creatorData.func(docItem);
     }
+
     return nullptr;
 }
 
@@ -41,3 +43,4 @@ void GpxDocumentItemFactory::registerCreatorFunction(
 }
 
 } // namespace Mayo
+#endif

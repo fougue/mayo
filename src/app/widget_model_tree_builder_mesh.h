@@ -12,9 +12,8 @@ namespace Mayo {
 
 class WidgetModelTreeBuilder_Mesh : public WidgetModelTreeBuilder {
 public:
-    bool supports(const DocumentItem* docItem) const override;
-    void fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem) override;
-
+    bool supportsEntity(const DocumentTreeNode& node) const override;
+    QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
     WidgetModelTreeBuilder* clone() const override;
 };
 

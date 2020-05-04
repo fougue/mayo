@@ -75,8 +75,7 @@ protected:
     bool hasOwner() const;
 
     template<typename T>
-    static Result<void> setValueHelper(
-            Property* prop, T* ptrValue, const T& newValue);
+    static Result<void> setValueHelper(Property* prop, T* ptrValue, const T& newValue);
 
 private:
     PropertyOwner* const m_owner = nullptr;

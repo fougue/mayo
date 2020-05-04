@@ -5,25 +5,27 @@
 ****************************************************************************/
 
 #include "widget_model_tree_builder_mesh.h"
-
-#include "../base/mesh_item.h"
+#include "../base/caf_utils.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
 #include <QtWidgets/QTreeWidgetItem>
+#include <TDataXtd_Triangulation.hxx>
 
 namespace Mayo {
 
-bool WidgetModelTreeBuilder_Mesh::supports(const DocumentItem* docItem) const
+bool WidgetModelTreeBuilder_Mesh::supportsEntity(const DocumentTreeNode& node) const
 {
-    return sameType<MeshItem>(docItem);
+    return CafUtils::hasAttribute<TDataXtd_Triangulation>(node.label());
 }
 
-void WidgetModelTreeBuilder_Mesh::fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem)
+QTreeWidgetItem* WidgetModelTreeBuilder_Mesh::createTreeItem(const DocumentTreeNode& node)
 {
-    WidgetModelTreeBuilder::fillTreeItem(treeItem, docItem);
-    Q_ASSERT(this->supports(docItem));
+    Expects(this->supportsEntity(node));
+
+    auto treeItem = WidgetModelTreeBuilder::createTreeItem(node);
     treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::ItemMesh));
+    return treeItem;
 }
 
 WidgetModelTreeBuilder* WidgetModelTreeBuilder_Mesh::clone() const

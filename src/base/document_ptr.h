@@ -6,18 +6,12 @@
 
 #pragma once
 
-#include "property_enumeration.h"
-#include <QtCore/QCoreApplication>
-#include <Aspect_HatchStyle.hxx>
-#include <Graphic3d_NameOfMaterial.hxx>
+#include <TDocStd_Document.hxx>
 
 namespace Mayo {
 
-class OcctEnums {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::OcctEnums)
-public:
-    static const Enumeration& Graphic3d_NameOfMaterial();
-    static const Enumeration& Aspect_HatchStyle();
-};
+class Document;
+DEFINE_STANDARD_HANDLE(Document, TDocStd_Document)
+using DocumentPtr = opencascade::handle<Document>;
 
 } // namespace Mayo

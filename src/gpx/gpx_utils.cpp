@@ -24,7 +24,7 @@ void GpxUtils::V3dView_fitAll(const Handle_V3d_View& view)
 }
 
 bool GpxUtils::V3dView_hasClipPlane(
-        const Handle_V3d_View &view, const Handle_Graphic3d_ClipPlane& plane)
+        const Handle_V3d_View& view, const Handle_Graphic3d_ClipPlane& plane)
 {
     const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
     if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
@@ -32,15 +32,14 @@ bool GpxUtils::V3dView_hasClipPlane(
 
     for (Graphic3d_SequenceOfHClipPlane::Iterator it(*seqClipPlane); it.More(); it.Next()) {
         const Handle_Graphic3d_ClipPlane& candidate = it.Value();
-        if (candidate.operator->() == plane.operator->())
+        if (candidate.get() == plane.get())
             return true;
     }
 
     return false;
 }
 
-gp_Pnt GpxUtils::V3dView_to3dPosition(
-        const Handle_V3d_View& view, double x, double y)
+gp_Pnt GpxUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x, double y)
 {
     double xEye, yEye, zEye, xAt, yAt, zAt;
     view->Eye(xEye, yEye, zEye);
@@ -151,16 +150,14 @@ void GpxUtils::Gpx3dClipPlane_setCappingHatch(
     plane->SetCappingHatch(hatch);
 }
 
-void GpxUtils::Gpx3dClipPlane_setNormal(
-        const Handle_Graphic3d_ClipPlane& plane, const gp_Dir &n)
+void GpxUtils::Gpx3dClipPlane_setNormal(const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n)
 {
     const double planePos = MathUtils::planePosition(plane->ToPlane());
     const gp_Vec placement(planePos * gp_Vec(n));
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
 }
 
-void GpxUtils::Gpx3dClipPlane_setPosition(
-        const Handle_Graphic3d_ClipPlane& plane, double pos)
+void GpxUtils::Gpx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane& plane, double pos)
 {
     const gp_Dir& n = plane->ToPlane().Axis().Direction();
     if (MathUtils::isReversedStandardDir(n))

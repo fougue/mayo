@@ -6,9 +6,8 @@
 
 #include "../base/application.h"
 #include "../base/unit_system.h"
-#include "../gpx/gpx_document_item_factory.h"
-#include "../gpx/gpx_mesh_item.h"
-#include "../gpx/gpx_xde_document_item.h"
+#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_entity_driver_table.h"
 #include "mainwindow.h"
 #include "settings.h"
 #include "settings_keys.h"
@@ -78,13 +77,9 @@ static int runApp(QApplication* app)
     const CommandLineArguments args = processCommandLine();
     Mayo::Application::setOpenCascadeEnvironment("opencascade.conf");
 
-    // Register Gpx factory functions
-    GpxDocumentItemFactory::instance()->registerCreatorFunction(
-                XdeDocumentItem::TypeName,
-                &GpxDocumentItemFactory::createGpx<XdeDocumentItem, GpxXdeDocumentItem>);
-    GpxDocumentItemFactory::instance()->registerCreatorFunction(
-                MeshItem::TypeName,
-                &GpxDocumentItemFactory::createGpx<MeshItem, GpxMeshItem>);
+    // Register Graphics entity drivers
+    Mayo::GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<Mayo::GraphicsMeshEntityDriver>());
+    Mayo::GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<Mayo::GraphicsShapeEntityDriver>());
 
     // Default values
     auto settings = Settings::instance();
@@ -92,7 +87,7 @@ static int runApp(QApplication* app)
     settings->setDefaultValue(Keys::App_MainWindowLastOpenDir, QString());
     settings->setDefaultValue(Keys::App_MainWindowLastSelectedFilter, QString());
     settings->setDefaultValue(Keys::App_MainWindowLinkWithDocumentSelector, false);
-    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(Application::StlIoLibrary::OpenCascade));
+    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(IO::StlIoLibrary::OpenCascade));
     settings->setDefaultValue(Keys::Base_UnitSystemSchema, UnitSystem::SI);
     settings->setDefaultValue(Keys::Base_UnitSystemDecimals, 2);
     settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultColor, QColor(Qt::gray));
@@ -105,6 +100,7 @@ static int runApp(QApplication* app)
     settings->setDefaultValue(Keys::Gui_ClipPlaneCappingOn, true);
     settings->setDefaultValue(Keys::Gui_DefaultShowOriginTrihedron, true);
 
+#if 0
     {
         auto fnUpdateDefaults = [=]{
             GpxMeshItem::DefaultValues defaults;
@@ -142,6 +138,7 @@ static int runApp(QApplication* app)
             }
         });
     }
+#endif
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Mesh);

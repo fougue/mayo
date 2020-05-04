@@ -49,9 +49,9 @@ DialogOptions::DialogOptions(QWidget *parent)
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseGmio);
     btnGrp_stlIoLib->addButton(m_ui->radioBtn_UseOcc);
 
-    const auto lib = settings->valueAsEnum<Application::StlIoLibrary>(Keys::Base_StlIoLibrary);
-    m_ui->radioBtn_UseGmio->setChecked(lib == Application::StlIoLibrary::Gmio);
-    m_ui->radioBtn_UseOcc->setChecked(lib == Application::StlIoLibrary::OpenCascade);
+//    const auto lib = settings->valueAsEnum<Application::StlIoLibrary>(Keys::Base_StlIoLibrary);
+//    m_ui->radioBtn_UseGmio->setChecked(lib == Application::StlIoLibrary::Gmio);
+//    m_ui->radioBtn_UseOcc->setChecked(lib == Application::StlIoLibrary::OpenCascade);
 
     // BRep shape defaults
     m_brepShapeDefaultColor = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
@@ -116,11 +116,11 @@ void DialogOptions::accept()
 {
     auto settings = Settings::instance();
 
-    // STL import/export
-    if (m_ui->radioBtn_UseGmio->isChecked())
-        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::Gmio));
-    else if (m_ui->radioBtn_UseOcc->isChecked())
-        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::OpenCascade));
+//    // STL import/export
+//    if (m_ui->radioBtn_UseGmio->isChecked())
+//        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::Gmio));
+//    else if (m_ui->radioBtn_UseOcc->isChecked())
+//        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::OpenCascade));
 
     // BRep shape defaults
     settings->setValue(Keys::Gpx_BrepShapeDefaultColor, m_brepShapeDefaultColor);

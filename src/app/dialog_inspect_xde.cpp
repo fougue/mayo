@@ -248,7 +248,7 @@ static void loadLabelShapeProperties(
     treeItem->addChildren(listItemProp);
 }
 
-static void loadLabel(const TDF_Label &label, QTreeWidgetItem *treeItem)
+static void loadLabel(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
     treeItem->setData(0, TreeWidgetItem_TdfLabelRole, QVariant::fromValue(label));
     treeItem->setText(0, CafUtils::labelTag(label));
@@ -258,8 +258,7 @@ static void loadLabel(const TDF_Label &label, QTreeWidgetItem *treeItem)
         treeItem->setText(0, treeItem->text(0) + " " + stdName);
 }
 
-static void deepLoadChildrenLabels(
-        const TDF_Label &label, QTreeWidgetItem *treeItem)
+static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
     for (TDF_ChildIterator it(label, Standard_False); it.More(); it.Next()) {
         const TDF_Label childLabel = it.Value();
@@ -286,7 +285,7 @@ DialogInspectXde::~DialogInspectXde()
     delete m_ui;
 }
 
-void DialogInspectXde::load(const Handle_TDocStd_Document &doc)
+void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
 {
     m_doc = doc;
     if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc)) {

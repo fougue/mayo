@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #pragma once
 
 #include "property_builtins.h"
@@ -69,3 +70,4 @@ template<typename T> bool sameType(const DocumentItem* item)
 }
 
 } // namespace Mayo
+#endif

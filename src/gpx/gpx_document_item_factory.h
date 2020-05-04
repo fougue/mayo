@@ -4,6 +4,9 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
+#pragma once
+
 #include <functional>
 #include <vector>
 
@@ -21,8 +24,7 @@ public:
     GpxDocumentItem* create(DocumentItem* docItem);
 
     using CreatorFunction = std::function<GpxDocumentItem* (DocumentItem*)>;
-    void registerCreatorFunction(
-            const char* strDocumentItemTypeName, const CreatorFunction& func);
+    void registerCreatorFunction(const char* strDocumentItemTypeName, const CreatorFunction& func);
 
     // Helper for GpxDocumentItem creator function
     template<typename DOC_ITEM, typename GPX_DOC_ITEM>
@@ -42,3 +44,4 @@ private:
 };
 
 } // namespace Mayo
+#endif

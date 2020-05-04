@@ -13,16 +13,14 @@ class TDF_Label;
 
 namespace Mayo {
 
-class XdeDocumentItem;
-
 class WidgetModelTreeBuilder_Xde : public WidgetModelTreeBuilder {
     Q_DECLARE_TR_FUNCTIONS(WidgetModelTreeBuilder_Xde)
 public:
     WidgetModelTreeBuilder_Xde();
 
-    bool supports(const DocumentItem* docItem) const override;
-    void refreshTextTreeItem(const DocumentItemNode& node, QTreeWidgetItem* treeItemDocItem) override;
-    void fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem) override;
+    bool supportsEntity(const DocumentTreeNode& node) const override;
+    void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem) override;
+    QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
 
     void loadConfiguration(const Settings* settings, const QString& keyGroup) override;
     void saveConfiguration(Settings* settings, const QString& keyGroup) override;
@@ -38,17 +36,12 @@ private:
     using ParentType = WidgetModelTreeBuilder;
 
     static QTreeWidgetItem* guiCreateXdeTreeNode(
-            QTreeWidgetItem* guiParentNode,
-            TreeNodeId nodeId,
-            XdeDocumentItem* docItem);
+            QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node);
 
-    void buildXdeTree(QTreeWidgetItem* treeItem, XdeDocumentItem* docItem);
+    QTreeWidgetItem* buildXdeTree(QTreeWidgetItem* treeItem, const DocumentTreeNode& node);
     void refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item);
-    QString referenceItemText(
-            const TDF_Label& refLabel,
-            const TDF_Label& referredLabel) const;
-    QTreeWidgetItem* findTreeItem(
-            QTreeWidgetItem* parentTreeItem, const TDF_Label& label) const;
+    QString referenceItemText(const TDF_Label& refLabel, const TDF_Label& referredLabel) const;
+    QTreeWidgetItem* findTreeItem(QTreeWidgetItem* parentTreeItem, const TDF_Label& label) const;
 
     bool m_isMergeXdeReferredShapeOn = true;
     QString m_refItemTextTemplate;
