@@ -31,7 +31,7 @@ std::array<gp_Pnt, 8> BndBoxCoords::vertices() const
         }};
 }
 
-BndBoxCoords BndBoxCoords::get(const Bnd_Box &box)
+BndBoxCoords BndBoxCoords::get(const Bnd_Box& box)
 {
     BndBoxCoords bbc = {};
     if (!box.IsVoid())
@@ -39,7 +39,7 @@ BndBoxCoords BndBoxCoords::get(const Bnd_Box &box)
     return bbc;
 }
 
-void BndUtils::add(Bnd_Box *box, const Bnd_Box &other)
+void BndUtils::add(Bnd_Box* box, const Bnd_Box& other)
 {
     const auto bbc = BndBoxCoords::get(other);
     for (const gp_Pnt& pnt : bbc.vertices())

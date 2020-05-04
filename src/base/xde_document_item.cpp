@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "xde_document_item.h"
 #include "xde_shape_property_owner.h"
 #include "caf_utils.h"
@@ -296,3 +297,4 @@ std::unique_ptr<PropertyOwnerSignals> XdeDocumentItem::propertiesAtNode(TreeNode
 }
 
 } // namespace Mayo
+#endif

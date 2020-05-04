@@ -4,9 +4,10 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #pragma once
 
-#include "gpx_document_item.h"
+#include "gpx_document.h"
 #include "../base/xde_document_item.h"
 #include <XCAFPrs_AISObject.hxx>
 #include <QtGui/QColor>
@@ -65,3 +66,4 @@ private:
 };
 
 } // namespace Mayo
+#endif

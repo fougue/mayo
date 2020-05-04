@@ -9,15 +9,27 @@
 
 namespace Mayo {
 
-void Enumeration::addItem(Value value, const QString& name)
+Enumeration::Enumeration(std::initializer_list<Item> listItem)
+    : m_vecItem(listItem)
 {
-    const Item item = { value, name};
+}
+
+void Enumeration::addItem(Value value, const QByteArray& name, const QString& text)
+{
+    const Item item = { value, name, text };
     m_vecItem.emplace_back(std::move(item));
 }
 
 int Enumeration::size() const
 {
     return int(m_vecItem.size());
+}
+
+const Enumeration::Item& Enumeration::findItem(Enumeration::Value value) const
+{
+    const int index = this->findIndex(value);
+    Expects(index != -1);
+    return this->itemAt(index);
 }
 
 int Enumeration::findIndex(Value value) const
@@ -29,7 +41,7 @@ int Enumeration::findIndex(Value value) const
     return it != m_vecItem.cend() ? it - m_vecItem.cbegin() : -1;
 }
 
-Enumeration::Value Enumeration::findValue(const QString& name) const
+Enumeration::Value Enumeration::findValue(const QByteArray& name) const
 {
     for (const Item& item : m_vecItem) {
         if (item.name == name)
@@ -40,10 +52,10 @@ Enumeration::Value Enumeration::findValue(const QString& name) const
     return -1;
 }
 
-QString Enumeration::findName(Value value) const
+QByteArray Enumeration::findName(Value value) const
 {
     const int index = this->findIndex(value);
-    return index != -1 ? this->itemAt(index).name : QString();
+    return index != -1 ? this->itemAt(index).name : QByteArray();
 }
 
 Enumeration::Item Enumeration::itemAt(int index) const

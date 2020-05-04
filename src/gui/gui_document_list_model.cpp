@@ -17,6 +17,7 @@ GuiDocumentListModel::GuiDocumentListModel(GuiApplication* app)
 {
     for (const GuiDocument* doc : app->guiDocuments())
         this->appendGuiDocument(doc);
+
     QObject::connect(
                 app, &GuiApplication::guiDocumentAdded,
                 this, &GuiDocumentListModel::appendGuiDocument);
@@ -29,7 +30,8 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
 {
     if (index.isValid() && role == Qt::ToolTipRole)
         return m_vecGuiDocument.at(index.row())->document()->filePath();
-    return QStringListModel::data(index, role);
+    else
+        return QStringListModel::data(index, role);
 }
 
 void GuiDocumentListModel::appendGuiDocument(const GuiDocument* guiDoc)
@@ -37,7 +39,7 @@ void GuiDocumentListModel::appendGuiDocument(const GuiDocument* guiDoc)
     const int rowId = this->rowCount();
     this->insertRow(rowId);
     const QModelIndex indexRow = this->index(rowId);
-    this->setData(indexRow, guiDoc->document()->label());
+    this->setData(indexRow, guiDoc->document()->name());
     m_vecGuiDocument.emplace_back(guiDoc);
 }
 

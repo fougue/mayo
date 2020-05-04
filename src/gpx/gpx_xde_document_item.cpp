@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "gpx_xde_document_item.h"
 
 #include "../base/span.h"
@@ -207,3 +208,4 @@ void GpxXdeDocumentItem::setDefaultValues(const DefaultValues& values)
 }
 
 } // namespace Mayo
+#endif

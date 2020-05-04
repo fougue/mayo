@@ -10,6 +10,8 @@
 #include "test.h"
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
+#include "../src/base/caf_utils.h"
+#include "../src/base/io.h"
 #include "../src/base/libtree.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"
@@ -24,6 +26,7 @@
 #include <GCPnts_TangentialDeflection.hxx>
 #include <QtCore/QFile>
 #include <QtCore/QtDebug>
+#include <QtTest/QSignalSpy>
 #include <cmath>
 #include <cstring>
 #include <utility>
@@ -32,7 +35,7 @@
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
 // For Application_test()
-Q_DECLARE_METATYPE(Mayo::Application::PartFormat)
+Q_DECLARE_METATYPE(Mayo::IO::PartFormat)
 // For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
@@ -51,23 +54,62 @@ static bool operator==(
 
 void Test::Application_test()
 {
-    QFETCH(QString, filePath);
-    QFETCH(Application::PartFormat, expectedPartFormat);
+    auto app = Application::instance();
+    QCOMPARE(app->documentCount(), 0);
 
-    QCOMPARE(Application::findPartFormat(filePath), expectedPartFormat);
+    {   // Add & remove a document
+        QSignalSpy sigSpy_documentAdded(app.get(), &Application::documentAdded);
+        DocumentPtr doc = app->newDocument();
+        QVERIFY(!doc.IsNull());
+        QCOMPARE(sigSpy_documentAdded.count(), 1);
+        QCOMPARE(app->documentCount(), 1);
+        QCOMPARE(app->findIndexOfDocument(doc), 0);
+        QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
+        QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
+
+        QSignalSpy sigSpy_documentAboutToClose(app.get(), &Application::documentAboutToClose);
+        app->closeDocument(doc);
+        QCOMPARE(sigSpy_documentAboutToClose.count(), 1);
+        QCOMPARE(app->documentCount(), 0);
+    }
+
+    {   // Add & remove an entity
+        DocumentPtr doc = app->newDocument();
+        QCOMPARE(doc->entityCount(), 0);
+        QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
+        const IO::Result ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Step, "inputs/cube.step");
+        QVERIFY(ioRes.valid());
+        QCOMPARE(sigSpy_docEntityAdded.count(), 1);
+        QCOMPARE(doc->entityCount(), 1);
+        QVERIFY(XCaf::isShape(doc->entityLabel(0)));
+        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), "Cube");
+
+        QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(sigSpy_docEntityAboutToBeDestroyed.count(), 1);
+        QCOMPARE(doc->entityCount(), 0);
+    }
 }
 
-void Test::Application_test_data()
+void Test::IO_test()
+{
+    QFETCH(QString, filePath);
+    QFETCH(IO::PartFormat, expectedPartFormat);
+
+    QCOMPARE(IO::findPartFormat(filePath), expectedPartFormat);
+}
+
+void Test::IO_test_data()
 {
     QTest::addColumn<QString>("filePath");
-    QTest::addColumn<Application::PartFormat>("expectedPartFormat");
+    QTest::addColumn<IO::PartFormat>("expectedPartFormat");
 
-    QTest::newRow("cube.step") << "inputs/cube.step" << Application::PartFormat::Step;
-    QTest::newRow("cube.iges") << "inputs/cube.iges" << Application::PartFormat::Iges;
-    QTest::newRow("cube.brep") << "inputs/cube.brep" << Application::PartFormat::OccBrep;
-    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << Application::PartFormat::OccBrep;
-    QTest::newRow("cube.stla") << "inputs/cube.stla" << Application::PartFormat::Stl;
-    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << Application::PartFormat::Stl;
+    QTest::newRow("cube.step") << "inputs/cube.step" << IO::PartFormat::Step;
+    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::PartFormat::Iges;
+    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::PartFormat::OccBrep;
+    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::PartFormat::OccBrep;
+    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::PartFormat::Stl;
+    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::PartFormat::Stl;
 }
 
 void Test::BRepUtils_test()

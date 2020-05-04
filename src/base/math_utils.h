@@ -15,13 +15,11 @@ namespace Mayo {
 struct BndBoxCoords;
 
 struct MathUtils {
-    static double mappedValue(
-            double val, double omin, double omax, double nmin, double nmax);
+    static double mappedValue(double val, double omin, double omax, double nmin, double nmax);
 
     static bool isReversedStandardDir(const gp_Dir& n);
     static double planePosition(const gp_Pln& plane);
-    static std::pair<double, double> planeRange(
-            const BndBoxCoords& bbc, const gp_Dir& planeNormal);
+    static std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal);
 
     template<typename T, typename U> static T lerp(T a, T b, U t);
 };

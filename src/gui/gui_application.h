@@ -12,8 +12,6 @@
 
 namespace Mayo {
 
-class Document;
-class DocumentItem;
 class GuiDocument;
 
 class GuiApplication : public QObject {
@@ -22,8 +20,9 @@ public:
     static GuiApplication* instance();
     ~GuiApplication();
 
-    std::vector<GuiDocument*> guiDocuments() const;
-    GuiDocument* findGuiDocument(const Document* doc) const;
+    Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
+    Span<const GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
+    GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
 
@@ -32,8 +31,8 @@ signals:
     void guiDocumentErased(const GuiDocument* guiDoc);
 
 protected:
-    void onDocumentAdded(Document* doc);
-    void onDocumentErased(const Document* doc);
+    void onDocumentAdded(const DocumentPtr& doc);
+    void onDocumentAboutToClose(const DocumentPtr& doc);
 
 private:
     void onApplicationItemSelectionCleared();
@@ -42,12 +41,7 @@ private:
 
     GuiApplication(QObject* parent = nullptr);
 
-    struct Doc_GuiDoc {
-        Document* doc;
-        GuiDocument* guiDoc;
-    };
-
-    std::vector<Doc_GuiDoc> m_vecDocGuiDoc;
+    std::vector<GuiDocument*> m_vecGuiDocument;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
 };
 

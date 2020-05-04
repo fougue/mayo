@@ -28,6 +28,7 @@ inline std::size_t hash_value(const QString& key)
 
 } // namespace boost
 
+#if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0)) // <- ADD_THIS
 namespace std {
 
 //! Specialization of C++11 std::hash<> functor for QString
@@ -37,5 +38,6 @@ template<> struct hash<QString> {
         return qHash(key);
     }
 };
+#endif // <- ADD_THIS
 
 } // namespace std

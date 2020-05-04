@@ -13,8 +13,7 @@
 
 namespace Mayo {
 
-double MathUtils::mappedValue(
-        double val, double omin, double omax, double nmin, double nmax)
+double MathUtils::mappedValue(double val, double omin, double omax, double nmin, double nmax)
 {
     return (((val - omin) * (nmax - nmin)) / (omax - omin)) + nmin;
 }
@@ -26,6 +25,7 @@ bool MathUtils::isReversedStandardDir(const gp_Dir& n)
         if (c < 0 && (std::abs(c) - 1) < Precision::Confusion())
             return true;
     }
+
     return false;
 }
 
@@ -36,8 +36,7 @@ double MathUtils::planePosition(const gp_Pln& plane)
     return vecLoc.Dot(vecNormal);
 }
 
-std::pair<double, double> MathUtils::planeRange(
-        const BndBoxCoords &bbc, const gp_Dir &planeNormal)
+std::pair<double, double> MathUtils::planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal)
 {
     const gp_Vec n(MathUtils::isReversedStandardDir(planeNormal) ?
                        planeNormal.Reversed() :
@@ -54,6 +53,7 @@ std::pair<double, double> MathUtils::planeRange(
         isMaxValid = true;
         isMinValid = true;
     }
+
     if (isMaxValid && isMinValid)
         return { rmin, rmax };
     return {};

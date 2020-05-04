@@ -9,6 +9,8 @@
 #include "../base/application.h"
 #include "../base/application_item.h"
 #include "../base/application_item_selection_model.h"
+#include "../base/io.h"
+#include "../base/property.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
 class QFileInfo;
@@ -70,13 +72,13 @@ private:
     void closeAllDocuments();
 
     void runImportTask(
-            Document* doc,
-            Application::PartFormat format,
+            DocumentPtr doc,
+            IO::PartFormat format,
             const QString& filepath);
     void runExportTask(
             Span<const ApplicationItem> appItems,
-            Application::PartFormat format,
-            const Application::ExportOptions& opts,
+            IO::PartFormat format,
+            const IO::ExportOptions& opts,
             const QString& filepath);
 
     void updateControlsActivation();

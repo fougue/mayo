@@ -8,76 +8,50 @@
 
 namespace Mayo {
 
-ApplicationItem::ApplicationItem(Document *doc)
+ApplicationItem::ApplicationItem(const DocumentPtr& doc)
     : m_doc(doc),
-      m_docItem(nullptr),
-      m_docItemNode(DocumentItemNode::null())
+      m_docTreeNode(DocumentTreeNode::null())
 { }
 
-ApplicationItem::ApplicationItem(DocumentItem *docItem)
-    : m_doc(nullptr),
-      m_docItem(docItem),
-      m_docItemNode(DocumentItemNode::null())
+ApplicationItem::ApplicationItem(const DocumentTreeNode& node)
+    : m_docTreeNode(node)
 { }
 
-ApplicationItem::ApplicationItem(const DocumentItemNode &node)
-    : m_doc(nullptr),
-      m_docItem(nullptr),
-      m_docItemNode(node)
-{ }
-
-bool ApplicationItem::isValid() const {
-    return this->isDocument()
-            || this->isDocumentItem()
-            || this->isDocumentItemNode();
+bool ApplicationItem::isValid() const
+{
+    return this->isDocument() || this->isDocumentTreeNode();
 }
 
-bool ApplicationItem::isDocument() const {
-    return m_doc != nullptr;
+bool ApplicationItem::isDocument() const
+{
+    return !m_doc.IsNull();
 }
 
-bool ApplicationItem::isDocumentItem() const {
-    return m_docItem != nullptr;
+bool ApplicationItem::isDocumentTreeNode() const
+{
+    return m_docTreeNode.isValid();
 }
 
-bool ApplicationItem::isDocumentItemNode() const {
-    return m_docItemNode.isValid();
-}
-
-Document* ApplicationItem::document() const
+DocumentPtr ApplicationItem::document() const
 {
     if (this->isDocument())
         return m_doc;
-    else if (this->isDocumentItem())
-        return m_docItem->document();
-    else if (this->isDocumentItemNode())
-        return m_docItemNode.documentItem->document();
+    else if (this->isDocumentTreeNode())
+        return m_docTreeNode.document();
 
-    return nullptr;
+    return DocumentPtr();
 }
 
-DocumentItem* ApplicationItem::documentItem() const
+const DocumentTreeNode& ApplicationItem::documentTreeNode() const
 {
-    if (this->isDocumentItem())
-        return m_docItem;
-    else if (this->isDocumentItemNode())
-        return m_docItemNode.documentItem;
-
-    return nullptr;
+    return this->isDocumentTreeNode() ? m_docTreeNode : DocumentTreeNode::null();
 }
 
-const DocumentItemNode& ApplicationItem::documentItemNode() const
-{
-    return this->isDocumentItemNode() ?
-                m_docItemNode : DocumentItemNode::null();
-}
-
-bool ApplicationItem::operator==(const ApplicationItem &other) const
+bool ApplicationItem::operator==(const ApplicationItem& other) const
 {
     return m_doc == other.m_doc
-            && m_docItem == other.m_docItem
-            && m_docItemNode.documentItem == other.m_docItemNode.documentItem
-            && m_docItemNode.id == other.m_docItemNode.id;
+            && m_docTreeNode.document() == other.m_docTreeNode.document()
+            && m_docTreeNode.id() == other.m_docTreeNode.id();
 }
 
 } // namespace Mayo

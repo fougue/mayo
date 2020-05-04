@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "document_item.h"
 
 #include "document.h"
@@ -90,3 +91,4 @@ const DocumentItemNode& DocumentItemNode::null()
 }
 
 } // namespace Mayo
+#endif

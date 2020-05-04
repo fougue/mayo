@@ -10,14 +10,12 @@
 
 namespace Mayo {
 
-double MeshUtils::triangleSignedVolume(
-        const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
+double MeshUtils::triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     return p1.Dot(p2.Crossed(p3)) / 6.0f;
 }
 
-double MeshUtils::triangleArea(
-        const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
+double MeshUtils::triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     const double ax = p2.X() - p1.X();
     const double ay = p2.Y() - p1.Y();
@@ -31,8 +29,7 @@ double MeshUtils::triangleArea(
     return 0.5 * std::sqrt(cx*cx + cy*cy + cz*cz);
 }
 
-double MeshUtils::triangulationVolume(
-        const Handle_Poly_Triangulation& triangulation)
+double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangulation)
 {
     double volume = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
@@ -49,8 +46,7 @@ double MeshUtils::triangulationVolume(
     return std::abs(volume);
 }
 
-double MeshUtils::triangulationArea(
-        const Handle_Poly_Triangulation& triangulation)
+double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulation)
 {
     double area = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
@@ -122,7 +118,7 @@ MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
     }
 }
 
-gp_Vec MeshUtils::directionAt(const MeshUtils::AdaptorPolyline3d& polyline, int i)
+gp_Vec MeshUtils::directionAt(const AdaptorPolyline3d& polyline, int i)
 {
     const int pntCount = polyline.pointCount();
     if (pntCount > 1) {

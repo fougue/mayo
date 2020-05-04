@@ -63,7 +63,7 @@ QString StringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
     return tr("(%1 %2 %3)").arg(strX, strY, strZ);
 }
 
-QString StringUtils::text(const gp_Dir& dir, const StringUtils::TextOptions& opt)
+QString StringUtils::text(const gp_Dir& dir, const TextOptions& opt)
 {
     return coordsText(dir.XYZ(), opt);
 }

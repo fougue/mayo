@@ -4,6 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #include "mesh_item.h"
 
 #include <QtCore/QCoreApplication>
@@ -39,3 +40,4 @@ const char MeshItem::TypeName[] = "2d441323-48db-4222-91b4-bdb7b5460c3f";
 const char* MeshItem::dynTypeName() const { return MeshItem::TypeName; }
 
 } // namespace Mayo
+#endif

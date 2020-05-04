@@ -4,26 +4,27 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#if 0
 #pragma once
 
+#include "../base/document.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 
 #include <QtCore/QCoreApplication>
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
+#include <Standard_Version.hxx>
 
 namespace Mayo {
 
-class DocumentItem;
-
-class GpxDocumentItem : public PropertyOwner {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxDocumentItem)
+class GpxDocument : public PropertyOwner {
+    Q_DECLARE_TR_FUNCTIONS(Mayo::GpxDocument)
 public:
-    GpxDocumentItem();
-    virtual ~GpxDocumentItem() = default;
+    GpxDocument(const DocumentPtr& docPtr);
+    virtual ~GpxDocument() = default;
 
-    virtual DocumentItem* documentItem() const = 0;
+    DocumentPtr document() const;
 
     const Handle_AIS_InteractiveContext& context() const { return m_ctx; }
     void setContext(const Handle_AIS_InteractiveContext& ctx) { m_ctx = ctx; }
@@ -47,6 +48,8 @@ protected:
 
 private:
     Handle_AIS_InteractiveContext m_ctx;
+    DocumentPtr m_docPtr;
 };
 
 } // namespace Mayo
+#endif

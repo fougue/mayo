@@ -27,7 +27,8 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ****************************************************************************/
 
-#include "gpx_document_item.h"
+#if 0
+#include "gpx_document.h"
 #include "../base/occt_enums.h"
 
 #include <AIS_InteractiveContext.hxx>
@@ -35,7 +36,7 @@
 
 namespace Mayo {
 
-GpxDocumentItem::GpxDocumentItem()
+GpxDocument::GpxDocument()
     : propertyIsVisible(this, tr("Visible")),
       propertyMaterial(this, tr("Material"), &OcctEnums::Graphic3d_NameOfMaterial()),
       propertyColor(this, tr("Color"))
@@ -44,22 +45,27 @@ GpxDocumentItem::GpxDocumentItem()
     this->propertyIsVisible.setValue(true);
 }
 
-void GpxDocumentItem::setVisible(bool on)
+DocumentPtr GpxDocument::document() const
+{
+    return m_docPtr;
+}
+
+void GpxDocument::setVisible(bool on)
 {
     Mayo_PropertyChangedBlocker(this);
     this->propertyIsVisible.setValue(on);
 }
 
-void GpxDocumentItem::activateSelection(int /*mode*/)
+void GpxDocument::activateSelection(int /*mode*/)
 {
 }
 
-std::vector<Handle_SelectMgr_EntityOwner> GpxDocumentItem::entityOwners(int /*mode*/) const
+std::vector<Handle_SelectMgr_EntityOwner> GpxDocument::entityOwners(int /*mode*/) const
 {
     return std::vector<Handle_SelectMgr_EntityOwner>();
 }
 
-void GpxDocumentItem::onPropertyChanged(Property *prop)
+void GpxDocument::onPropertyChanged(Property* prop)
 {
     if (prop == &this->propertyIsVisible) {
         this->setVisible(this->propertyIsVisible.value());
@@ -67,7 +73,7 @@ void GpxDocumentItem::onPropertyChanged(Property *prop)
     }
 }
 
-void GpxDocumentItem::getEntityOwners(
+void GpxDocument::getEntityOwners(
                     const Handle_AIS_InteractiveContext& ctx,
                     const Handle_AIS_InteractiveObject& obj,
                     int mode,
@@ -81,3 +87,4 @@ void GpxDocumentItem::getEntityOwners(
 }
 
 } // namespace Mayo
+#endif

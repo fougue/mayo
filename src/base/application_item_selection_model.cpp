@@ -10,8 +10,7 @@ namespace Mayo {
 
 namespace Internal {
 
-static bool hasApplicationItem(
-        Span<ApplicationItem> vec, const ApplicationItem& item)
+static bool hasApplicationItem(Span<ApplicationItem> vec, const ApplicationItem& item)
 {
     auto itFound = std::find(vec.cbegin(), vec.cend(), item);
     return itFound != vec.cend();
@@ -35,27 +34,7 @@ Span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
     return m_vecSelectedItem;
 }
 
-bool ApplicationItemSelectionModel::hasSelectedDocumentItems() const
-{
-    for (const ApplicationItem& item : m_vecSelectedItem) {
-        if (item.isDocumentItem())
-            return true;
-    }
-    return false;
-}
-
-std::vector<DocumentItem*> ApplicationItemSelectionModel::selectedDocumentItems() const
-{
-    std::vector<DocumentItem*> vecDocItem;
-    vecDocItem.reserve(m_vecSelectedItem.size());
-    for (const ApplicationItem& item : m_vecSelectedItem) {
-        if (item.isDocumentItem())
-            vecDocItem.push_back(item.documentItem());
-    }
-    return vecDocItem;
-}
-
-void ApplicationItemSelectionModel::add(const ApplicationItem &item)
+void ApplicationItemSelectionModel::add(const ApplicationItem& item)
 {
     if (!Internal::hasApplicationItem(m_vecSelectedItem, item)) {
         m_vecSelectedItem.push_back(item);
@@ -73,11 +52,12 @@ void ApplicationItemSelectionModel::add(Span<ApplicationItem> vecItem)
             signalVecItem.push_back(item);
         }
     }
+
     if (!signalVecItem.empty())
         emit changed(signalVecItem, {});
 }
 
-void ApplicationItemSelectionModel::remove(const ApplicationItem &item)
+void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
 {
     auto itFound = Internal::findApplicationItem(m_vecSelectedItem, item);
     if (itFound != m_vecSelectedItem.end()) {
@@ -97,6 +77,7 @@ void ApplicationItemSelectionModel::remove(Span<ApplicationItem> vecItem)
             signalVecItem.push_back(item);
         }
     }
+
     if (!signalVecItem.empty())
         emit changed({}, signalVecItem);
 }
