@@ -27,6 +27,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QtDebug>
 #include <QtTest/QSignalSpy>
+#include <gsl/gsl_util>
 #include <cmath>
 #include <cstring>
 #include <utility>
@@ -75,6 +76,7 @@ void Test::Application_test()
 
     {   // Add & remove an entity
         DocumentPtr doc = app->newDocument();
+        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
         const IO::Result ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Step, "inputs/cube.step");
@@ -89,6 +91,30 @@ void Test::Application_test()
         QCOMPARE(sigSpy_docEntityAboutToBeDestroyed.count(), 1);
         QCOMPARE(doc->entityCount(), 0);
     }
+
+    {   // Add mesh entity
+        // Add XCAF entity
+        // Try to remove mesh and XCAF entities
+        // Note: order of entities matters
+        QCOMPARE(app->documentCount(), 0);
+        DocumentPtr doc = app->newDocument();
+        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
+        IO::Result ioRes = IO::Result::ok();
+        ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Stl, "inputs/cube.stlb");
+        QVERIFY(ioRes.valid());
+        QCOMPARE(doc->entityCount(), 1);
+
+        ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Step, "inputs/cube.step");
+        QVERIFY(ioRes.valid());
+        QCOMPARE(doc->entityCount(), 2);
+
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(doc->entityCount(), 1);
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(doc->entityCount(), 0);
+    }
+
+    QCOMPARE(app->documentCount(), 0);
 }
 
 void Test::IO_test()

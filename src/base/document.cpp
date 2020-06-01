@@ -9,6 +9,7 @@
 #include "document.h"
 #include <fougtools/occtools/qt_utils.h>
 #include <TDF_ChildIterator.hxx>
+#include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <set>
 
@@ -18,6 +19,7 @@ Document::Document()
     : QObject(nullptr),
       TDocStd_Document(NameFormatBinary)
 {
+    TDF_TagSource::Set(this->rootLabel());
 }
 
 void Document::initXCaf()
@@ -152,8 +154,12 @@ void Document::xcafImport(const std::function<bool()>& fnImport)
 
 void Document::singleImport(const std::function<bool(TDF_Label)>& fnImport)
 {
+    Handle_TDF_TagSource tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
+    Expects(!tagSrc.IsNull());
+    if (tagSrc->Get() == 0)
+        this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
+
     TDF_Label labelNewEntity = this->rootLabel().NewChild();
-    Expects(!labelNewEntity.IsNull());
     if (fnImport(labelNewEntity)) {
         // TODO Allow custom population of the model tree for the new entity
         const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, labelNewEntity);
