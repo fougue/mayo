@@ -355,7 +355,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
-    auto guiDocModel = new GuiDocumentListModel(GuiApplication::instance());
+    auto guiDocModel = new GuiDocumentListModel(this);
     m_ui->combo_GuiDocuments->setModel(guiDocModel);
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
 

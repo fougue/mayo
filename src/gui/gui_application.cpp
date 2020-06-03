@@ -77,9 +77,9 @@ void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
                 [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; });
     if (itFound != m_vecGuiDocument.end()) {
         const GuiDocument* guiDoc = *itFound;
-        delete guiDoc;
         m_vecGuiDocument.erase(itFound);
         emit guiDocumentErased(guiDoc);
+        delete guiDoc;
     }
 }
 
@@ -95,7 +95,7 @@ void GuiApplication::onApplicationItemSelectionChanged(
         Span<ApplicationItem> selected, Span<ApplicationItem> deselected)
 {
     std::unordered_set<GuiDocument*> setGuiDocDirty;
-    auto funcToggleItemSelected = [&](const ApplicationItem& item) {
+    auto fnToggleItemSelected = [&](const ApplicationItem& item) {
         GuiDocument* guiDoc = this->findGuiDocument(item.document());
         if (guiDoc) {
             guiDoc->toggleItemSelected(item);
@@ -103,10 +103,10 @@ void GuiApplication::onApplicationItemSelectionChanged(
         }
     };
     for (const ApplicationItem& item : selected)
-        funcToggleItemSelected(item);
+        fnToggleItemSelected(item);
 
     for (const ApplicationItem& item : deselected)
-        funcToggleItemSelected(item);
+        fnToggleItemSelected(item);
 
     for (GuiDocument* guiDoc : setGuiDocDirty)
         guiDoc->updateV3dViewer();
