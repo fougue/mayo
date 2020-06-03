@@ -26,7 +26,7 @@ public:
     void saveConfiguration(Settings* settings, const QString& keyGroup) override;
     std::vector<QAction*> createConfigurationActions(QObject* parent) override;
 
-    WidgetModelTreeBuilder* clone() const override;
+    std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
 
     const QString& referenceItemTextTemplate() const;
     void setReferenceItemTextTemplate(const QString& textTemplate);

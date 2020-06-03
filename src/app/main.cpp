@@ -141,8 +141,8 @@ static int runApp(QApplication* app)
 #endif
 
     // Register WidgetModelTreeBuilter prototypes
-    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Mesh);
-    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Xde);
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
     // Create theme
     globalTheme.reset(createTheme(args.themeName));

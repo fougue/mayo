@@ -31,12 +31,11 @@ Q_DECLARE_METATYPE(Mayo::DocumentTreeNode)
 namespace Mayo {
 namespace Internal {
 
-using PtrBuilder = std::unique_ptr<WidgetModelTreeBuilder>;
-static std::vector<PtrBuilder>& arrayPrototypeBuilder()
+static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
 {
-    static std::vector<PtrBuilder> vecPtrBuilder;
+    static std::vector<WidgetModelTree::BuilderPtr> vecPtrBuilder;
     if (vecPtrBuilder.empty())
-        vecPtrBuilder.emplace_back(new WidgetModelTreeBuilder); // Fallback
+        vecPtrBuilder.emplace_back(std::make_unique<WidgetModelTreeBuilder>()); // Fallback
 
     return vecPtrBuilder;
 }
@@ -152,8 +151,8 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
 {
     m_ui->setupUi(this);
     m_ui->treeWidget_Model->setUniformRowHeights(true);
-    for (const Internal::PtrBuilder& ptrBuilder : Internal::arrayPrototypeBuilder()) {
-        m_vecBuilder.push_back(ptrBuilder->clone());
+    for (const BuilderPtr& ptrBuilder : Internal::arrayPrototypeBuilder()) {
+        m_vecBuilder.push_back(std::move(ptrBuilder->clone()));
         m_vecBuilder.back()->setTreeWidget(m_ui->treeWidget_Model);
     }
 
@@ -214,8 +213,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
 WidgetModelTree::~WidgetModelTree()
 {
     delete m_ui;
-    for (WidgetModelTreeBuilder* builder : m_vecBuilder)
-        delete builder;
 }
 
 void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
@@ -237,21 +234,21 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
 void WidgetModelTree::loadConfiguration(const Settings* settings, const QString& keyGroup)
 {
     const QString keyModel = keyGroup + "/" + this->objectName();
-    for (WidgetModelTreeBuilder* builder : m_vecBuilder)
+    for (const BuilderPtr& builder : m_vecBuilder)
         builder->loadConfiguration(settings, keyModel);
 }
 
 void WidgetModelTree::saveConfiguration(Settings* settings, const QString& keyGroup)
 {
     const QString keyModel = keyGroup + "/" + this->objectName();
-    for (WidgetModelTreeBuilder* builder : m_vecBuilder)
+    for (const BuilderPtr& builder : m_vecBuilder)
         builder->saveConfiguration(settings, keyModel);
 }
 
 std::vector<QAction*> WidgetModelTree::createConfigurationActions(QObject* parent)
 {
     std::vector<QAction*> vecAction;
-    for (WidgetModelTreeBuilder* builder : m_vecBuilder) {
+    for (const BuilderPtr& builder : m_vecBuilder) {
         for (QAction* action : builder->createConfigurationActions(parent))
             vecAction.push_back(action);
     }
@@ -259,9 +256,9 @@ std::vector<QAction*> WidgetModelTree::createConfigurationActions(QObject* paren
     return vecAction;
 }
 
-void WidgetModelTree::addPrototypeBuilder(WidgetModelTreeBuilder* builder)
+void WidgetModelTree::addPrototypeBuilder(BuilderPtr builder)
 {
-    Internal::arrayPrototypeBuilder().emplace_back(builder);
+    Internal::arrayPrototypeBuilder().push_back(std::move(builder));
 }
 
 DocumentTreeNode WidgetModelTree::documentTreeNode(const QTreeWidgetItem* treeItem)
@@ -353,8 +350,8 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentPtr& d
     auto it = std::find_if(
                 std::next(m_vecBuilder.cbegin()),
                 m_vecBuilder.cend(),
-                [=](WidgetModelTreeBuilder* builder) { return builder->supportsDocument(doc); });
-    return it != m_vecBuilder.cend() ? *it : m_vecBuilder.front();
+                [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); });
+    return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
 WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNode& node) const
@@ -363,8 +360,8 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNo
     auto it = std::find_if(
                 std::next(m_vecBuilder.cbegin()),
                 m_vecBuilder.cend(),
-                [=](WidgetModelTreeBuilder* builder) { return builder->supportsEntity(node); });
-    return it != m_vecBuilder.cend() ? *it : m_vecBuilder.front();
+                [=](const BuilderPtr& builder) { return builder->supportsEntity(node); });
+    return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
 void WidgetModelTree::onDocumentEntityAdded(const DocumentPtr& doc, TreeNodeId entityId)

@@ -28,9 +28,9 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Mesh::createTreeItem(const DocumentTreeN
     return treeItem;
 }
 
-WidgetModelTreeBuilder* WidgetModelTreeBuilder_Mesh::clone() const
+std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder_Mesh::clone() const
 {
-    return new WidgetModelTreeBuilder_Mesh;
+    return std::make_unique<WidgetModelTreeBuilder_Mesh>();
 }
 
 } // namespace Mayo

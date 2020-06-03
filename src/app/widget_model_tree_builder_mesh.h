@@ -14,7 +14,7 @@ class WidgetModelTreeBuilder_Mesh : public WidgetModelTreeBuilder {
 public:
     bool supportsEntity(const DocumentTreeNode& node) const override;
     QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
-    WidgetModelTreeBuilder* clone() const override;
+    std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
 };
 
 } // namespace Mayo

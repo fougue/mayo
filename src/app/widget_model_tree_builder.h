@@ -9,6 +9,7 @@
 #include "../base/document_ptr.h"
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
+#include <memory>
 #include <vector>
 #include <QtCore/QString>
 class QAction;
@@ -42,7 +43,7 @@ public:
 
     virtual std::vector<QAction*> createConfigurationActions(QObject* parent);
 
-    virtual WidgetModelTreeBuilder* clone() const;
+    virtual std::unique_ptr<WidgetModelTreeBuilder> clone() const;
 
 protected:
     static QString labelText(const PropertyQString& propLabel);
