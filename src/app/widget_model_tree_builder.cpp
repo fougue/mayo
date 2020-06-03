@@ -59,9 +59,9 @@ std::vector<QAction*> WidgetModelTreeBuilder::createConfigurationActions(QObject
     return {};
 }
 
-WidgetModelTreeBuilder* WidgetModelTreeBuilder::clone() const
+std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder::clone() const
 {
-    return new WidgetModelTreeBuilder;
+    return std::make_unique<WidgetModelTreeBuilder>();
 }
 
 QString WidgetModelTreeBuilder::labelText(const PropertyQString& propLabel)

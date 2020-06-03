@@ -200,9 +200,9 @@ std::vector<QAction*> WidgetModelTreeBuilder_Xde::createConfigurationActions(QOb
     return vecAction;
 }
 
-WidgetModelTreeBuilder* WidgetModelTreeBuilder_Xde::clone() const
+std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder_Xde::clone() const
 {
-    auto builder = new WidgetModelTreeBuilder_Xde;
+    auto builder = std::make_unique<WidgetModelTreeBuilder_Xde>();
     builder->m_isMergeXdeReferredShapeOn = this->m_isMergeXdeReferredShapeOn;
     builder->m_refItemTextTemplate = this->m_refItemTextTemplate;
     return builder;

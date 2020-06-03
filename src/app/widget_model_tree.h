@@ -14,6 +14,8 @@ class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
 
+#include <memory>
+
 namespace Mayo {
 
 class Settings;
@@ -23,6 +25,7 @@ class WidgetModelTree : public QWidget {
     Q_OBJECT
 public:
     using Item = ApplicationItem;
+    using BuilderPtr = std::unique_ptr<WidgetModelTreeBuilder>;
 
     WidgetModelTree(QWidget* widget = nullptr);
     ~WidgetModelTree();
@@ -35,7 +38,7 @@ public:
     std::vector<QAction*> createConfigurationActions(QObject* parent);
 
     // For builders
-    static void addPrototypeBuilder(WidgetModelTreeBuilder* builder);
+    static void addPrototypeBuilder(BuilderPtr builder);
 
     static DocumentTreeNode documentTreeNode(const QTreeWidgetItem* treeItem);
     static void setDocumentTreeNode(QTreeWidgetItem* treeItem, const DocumentTreeNode& node);
@@ -65,7 +68,7 @@ private:
     WidgetModelTreeBuilder* findSupportBuilder(const DocumentTreeNode& entityNode) const;
 
     class Ui_WidgetModelTree* m_ui = nullptr;
-    std::vector<WidgetModelTreeBuilder*> m_vecBuilder;
+    std::vector<BuilderPtr> m_vecBuilder;
     QString m_refItemTextTemplate;
 };
 
