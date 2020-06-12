@@ -7,6 +7,7 @@
 #pragma once
 
 #include "application_item.h"
+#include "messenger.h"
 #include "result.h"
 #include "span.h"
 #ifdef HAVE_GMIO
@@ -15,10 +16,18 @@
 #endif
 
 #include <QtCore/QCoreApplication>
+#include <memory>
 
 namespace qttask { class Progress; }
 
 namespace Mayo {
+
+class Reader {
+public:
+    //struct Error { int code; QString text; };
+    virtual bool readFile(const QString& filepath, qttask::Progress* progress = nullptr) = 0;
+    virtual bool transfer(DocumentPtr doc, qttask::Progress* progress = nullptr) = 0;
+};
 
 class IO {
     Q_DECLARE_TR_FUNCTIONS(Mayo::IO)
@@ -64,6 +73,14 @@ public:
     StlIoLibrary stlIoLibrary() const;
     void setStlIoLibrary(StlIoLibrary lib);
 
+    std::unique_ptr<Reader> createReader(IO::PartFormat format) const;
+
+    bool importInDocument(
+            DocumentPtr doc,
+            const QStringList& listFilepath,
+            Messenger* messenger = NullMessenger::instance(),
+            qttask::Progress* progress = nullptr);
+
     IO::Result importInDocument(
             DocumentPtr doc,
             PartFormat format,
@@ -78,7 +95,7 @@ public:
     static bool hasExportOptionsForFormat(PartFormat format);
 
 private:
-    IO() = default;
+    IO();
 
     struct ImportData {
         DocumentPtr doc;

@@ -10,6 +10,7 @@
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
 #include "../base/document.h"
+#include "../base/libtask.h"
 #include "../gpx/gpx_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
@@ -146,8 +147,7 @@ static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
 static void prependRecentFile(QStringList* listRecentFile, const QString& filepath)
 {
     constexpr int sizeLimit = 10;
-    const QString absFilepath =
-            QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
+    const QString absFilepath = QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
     for (const QString& recentFile : *listRecentFile) {
         if (recentFile == absFilepath)
             return;
@@ -156,6 +156,23 @@ static void prependRecentFile(QStringList* listRecentFile, const QString& filepa
     listRecentFile->insert(listRecentFile->begin(), absFilepath);
     while (listRecentFile->size() > sizeLimit)
         listRecentFile->pop_back();
+}
+
+static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
+{
+    switch (msgType) {
+    case Messenger::MessageType::Trace:
+        break;
+    case Messenger::MessageType::Info:
+        WidgetMessageIndicator::showMessage(text, mainWnd);
+        break;
+    case Messenger::MessageType::Warning:
+        qtgui::QWidgetUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
+        break;
+    case Messenger::MessageType::Error:
+        qtgui::QWidgetUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
+        break;
+    }
 }
 
 } // namespace Internal
@@ -317,19 +334,16 @@ MainWindow::MainWindow(QWidget *parent)
                 GuiApplication::instance(), &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                GuiApplication::instance()->selectionModel(),
-                &ApplicationItemSelectionModel::changed,
-                this,
-                &MainWindow::onApplicationItemSelectionChanged);
+                GuiApplication::instance()->selectionModel(), &ApplicationItemSelectionModel::changed,
+                this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
-                [=](const QModelIndex& index) {
-        this->setCurrentDocumentIndex(index.row());
-    });
+                [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
-                this, &MainWindow::operationFinished,
-                this, &MainWindow::onOperationFinished);
-
+                Messenger::defaultInstance(), &Messenger::message,
+                this, [=](Messenger::MessageType msgType, const QString& text) {
+        Internal::handleMessage(msgType, text, this);
+    });
     // Creation of annex objects
     {
         // Opened documents GUI
@@ -455,30 +469,32 @@ void MainWindow::openDocuments()
 void MainWindow::importInCurrentDoc()
 {
     auto widgetGuiDoc = this->currentWidgetGuiDocument();
-    if (widgetGuiDoc) {
-        const DocumentPtr& doc = widgetGuiDoc->guiDocument()->document();
-        const auto resFileNames = Internal::OpenFileNames::get(this);
-        if (!resFileNames.listFilepath.isEmpty()) {
-            const IO::PartFormat userFormat = resFileNames.selectedFormat;
-            const bool hasUserFormat = userFormat != IO::PartFormat::Unknown;
-            for (const QString& filepath : resFileNames.listFilepath) {
-                const IO::PartFormat fileFormat =
-                        hasUserFormat ? userFormat : IO::findPartFormat(filepath);
-                if (fileFormat != IO::PartFormat::Unknown) {
-                    this->runImportTask(doc, fileFormat, filepath);
-                    Internal::prependRecentFile(&m_listRecentFile, filepath);
-                }
-                else {
-                    Internal::msgBoxErrorFileFormat(this, filepath);
-                }
-            }
-        }
-    }
+    if (!widgetGuiDoc)
+        return;
+
+    const auto resFileNames = Internal::OpenFileNames::get(this);
+    if (resFileNames.listFilepath.isEmpty())
+        return;
+
+    const DocumentPtr& doc = widgetGuiDoc->guiDocument()->document();
+    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
+    //task->setTaskTitle(QFileInfo(filepath).fileName());
+    task->run([=]{
+        QTime chrono;
+        chrono.start();
+        const bool ok = IO::instance()->importInDocument(
+                    doc, resFileNames.listFilepath, Messenger::defaultInstance(), nullptr);
+        if (ok)
+            Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+    });
+
+    for (const QString& filepath : resFileNames.listFilepath)
+        Internal::prependRecentFile(&m_listRecentFile, filepath);
 }
 
 void MainWindow::runImportTask(DocumentPtr doc, IO::PartFormat format, const QString& filepath)
 {
-    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
+    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
     task->setTaskTitle(QFileInfo(filepath).fileName());
     task->run([=]{
         QTime chrono;
@@ -494,8 +510,6 @@ void MainWindow::runImportTask(DocumentPtr doc, IO::PartFormat format, const QSt
             msg = tr("Failed to import part:\n    %1\nError: %2")
                     .arg(filepath, result.errorText());
         }
-
-        emit operationFinished(result.valid(), msg);
     });
 }
 
@@ -505,7 +519,7 @@ void MainWindow::runExportTask(
         const IO::ExportOptions& opts,
         const QString& filepath)
 {
-    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
+    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
     task->setTaskTitle(QFileInfo(filepath).fileName());
     task->run([=]{
         QTime chrono;
@@ -522,7 +536,8 @@ void MainWindow::runExportTask(
                     .arg(filepath).arg(result.errorText());
         }
 
-        emit operationFinished(result.valid(), msg);
+        const auto msgType = result ? Messenger::MessageType::Info : Messenger::MessageType::Error;
+        Messenger::defaultInstance()->emitMessage(msgType, msg);
     });
 }
 

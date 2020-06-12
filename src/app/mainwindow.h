@@ -32,7 +32,6 @@ public:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
-    void operationFinished(bool ok, const QString& msg);
     void currentDocumentIndexChanged(int docIdx);
 
 protected:
