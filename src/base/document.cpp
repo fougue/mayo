@@ -123,12 +123,10 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
     return DocumentPtr::DownCast(TDocStd_Document::Get(label));
 }
 
-void Document::xcafImport(const std::function<bool()>& fnImport)
+void Document::xcafImport(const std::function<void()>& fnImport)
 {
     const TDF_LabelSequence seqBefore = m_xcaf.topLevelFreeShapes();
-    if (!fnImport())
-        return;
-
+    fnImport();
     TDF_LabelSequence seqDiff;
     {
         const TDF_LabelSequence seqAfter = m_xcaf.topLevelFreeShapes();
@@ -152,7 +150,7 @@ void Document::xcafImport(const std::function<bool()>& fnImport)
     }
 }
 
-void Document::singleImport(const std::function<bool(TDF_Label)>& fnImport)
+void Document::singleImport(const std::function<void(TDF_Label)>& fnImport)
 {
     Handle_TDF_TagSource tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
     Expects(!tagSrc.IsNull());
@@ -160,16 +158,14 @@ void Document::singleImport(const std::function<bool(TDF_Label)>& fnImport)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
 
     TDF_Label labelNewEntity = this->rootLabel().NewChild();
-    if (fnImport(labelNewEntity)) {
-        // TODO Allow custom population of the model tree for the new entity
-        const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, labelNewEntity);
-        emit this->entityAdded(nodeNewEntity);
-    }
-    else {
-        // Remove 'labelNewEntity'
-        labelNewEntity.ForgetAllAttributes();
-        labelNewEntity.Nullify();
-    }
+    fnImport(labelNewEntity);
+    // TODO Allow custom population of the model tree for the new entity
+    const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, labelNewEntity);
+    emit this->entityAdded(nodeNewEntity);
+
+//    // Remove 'labelNewEntity'
+//    labelNewEntity.ForgetAllAttributes();
+//    labelNewEntity.Nullify();
 }
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)

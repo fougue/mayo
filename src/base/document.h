@@ -58,22 +58,22 @@ public:
 
     static DocumentPtr findFrom(const TDF_Label& label);
 
-    void xcafImport(const std::function<bool()>& fnImport);
-    void singleImport(const std::function<bool(TDF_Label)>& fnImport);
+    void xcafImport(const std::function<void()>& fnImport);
+    void singleImport(const std::function<void(TDF_Label)>& fnImport);
 
     void destroyEntity(TreeNodeId entityTreeNodeId);
-
-public: // -- from TDocStd_Document
-    void BeforeClose() override;
-    void ChangeStorageFormat(const TCollection_ExtendedString& newStorageFormat) override;
-
-    DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 signals:
     void nameChanged(const QString& name);
     void entityAdded(TreeNodeId entityTreeNodeId);
     void entityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
     //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+
+public: // -- from TDocStd_Document
+    void BeforeClose() override;
+    void ChangeStorageFormat(const TCollection_ExtendedString& newStorageFormat) override;
+
+    DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 private:
     friend class Application;

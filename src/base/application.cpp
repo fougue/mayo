@@ -256,7 +256,6 @@ Application::DocumentIterator::DocumentIterator(const ApplicationPtr&)
 Application::DocumentIterator::DocumentIterator(const Application*)
     : CDF_DirectoryIterator(CDF_Session::CurrentSession()->Directory())
 {
-
 }
 
 bool Application::DocumentIterator::hasNext() const

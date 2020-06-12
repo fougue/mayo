@@ -37,6 +37,7 @@
 #include <IGESCAFControl_Writer.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
+#include <STEPCAFControl_Controller.hxx>
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
@@ -54,6 +55,7 @@
 
 #include <algorithm>
 #include <array>
+#include <future>
 #include <locale>
 #include <fstream>
 #include <mutex>
@@ -168,95 +170,206 @@ private:
     qttask::Progress* m_progress = nullptr;
 };
 
-template<typename READER> // Either IGESControl_Reader or STEPControl_Reader
-TopoDS_Shape loadShapeFromFile(
-        const QString& filepath,
-        IFSelect_ReturnStatus* error,
-        qttask::Progress* progress)
-{
-    std::lock_guard<std::mutex> lock(globalMutex); Q_UNUSED(lock);
-    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-    TopoDS_Shape result;
+namespace OccCafIO {
 
-    if (!indicator.IsNull())
-        indicator->NewScope(30, "Loading file");
-    READER reader;
-    *error = reader.ReadFile(filepath.toLocal8Bit().constData());
-    if (!indicator.IsNull())
-        indicator->EndScope();
-    if (*error == IFSelect_RetDone) {
-        if (!indicator.IsNull()) {
-            reader.WS()->MapReader()->SetProgress(indicator);
-            indicator->NewScope(70, "Translating file");
-        }
-        reader.NbRootsForTransfer();
-        reader.TransferRoots();
-        result = reader.OneShape();
-        if (!indicator.IsNull()) {
-            indicator->EndScope();
-            reader.WS()->MapReader()->SetProgress(nullptr);
-        }
-    }
-    return result;
+static std::mutex mutex;
+
+Handle_XSControl_WorkSession workSession(const STEPCAFControl_Reader& reader) {
+    return reader.Reader().WS();
 }
 
-template<typename CAF_READER> struct CafReaderTraits {};
-
-template<> struct CafReaderTraits<IGESCAFControl_Reader> {
-    using ReaderType = IGESCAFControl_Reader;
-    static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
-        return reader.WS();
-    }
-    static void setPropsMode(ReaderType*, bool) { /* N/A */ }
-};
-
-template<> struct CafReaderTraits<STEPCAFControl_Reader> {
-    using ReaderType = STEPCAFControl_Reader;
-    static Handle_XSControl_WorkSession workSession(const ReaderType& reader) {
-        return reader.Reader().WS();
-    }
-    static void setPropsMode(ReaderType* reader, bool on) {
-        reader->SetPropsMode(on);
-    }
-};
-
-template<typename CAF_READER> // Either IGESCAFControl_Reader or STEPCAFControl_Reader
-void loadCafDocumentFromFile(
-        const QString& filepath,
-        Handle_TDocStd_Document doc,
-        IFSelect_ReturnStatus* error,
-        qttask::Progress* progress)
-{
-    std::lock_guard<std::mutex> lock(globalMutex); Q_UNUSED(lock);
-    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-    if (!indicator.IsNull())
-        indicator->NewScope(30, "Loading file");
-
-    CAF_READER reader;
-    reader.SetColorMode(true);
-    reader.SetNameMode(true);
-    reader.SetLayerMode(true);
-    CafReaderTraits<CAF_READER>::setPropsMode(&reader, true);
-    *error = reader.ReadFile(filepath.toLocal8Bit().constData());
-    if (!indicator.IsNull())
-        indicator->EndScope();
-
-    if (*error == IFSelect_RetDone) {
-        Handle_XSControl_WorkSession ws = CafReaderTraits<CAF_READER>::workSession(reader);
-        if (!indicator.IsNull()) {
-            ws->MapReader()->SetProgress(indicator);
-            indicator->NewScope(70, "Translating file");
-        }
-
-        if (!reader.Transfer(doc))
-            *error = IFSelect_RetFail;
-
-        if (!indicator.IsNull()) {
-            indicator->EndScope();
-            ws->MapReader()->SetProgress(nullptr);
-        }
-    }
+Handle_XSControl_WorkSession workSession(const IGESCAFControl_Reader& reader) {
+    return reader.WS();
 }
+
+void readFile_prepare(const STEPCAFControl_Reader&) {
+    Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
+}
+
+void readFile_prepare(const IGESCAFControl_Reader&) {
+}
+
+template<typename CAF_READER>
+bool readFile(CAF_READER& reader, const QString& filepath, qttask::Progress* progress)
+{
+    std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
+    readFile_prepare(reader);
+    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
+    indicator->NewScope(30, "Loading file");
+    auto _ = gsl::finally([&]{ indicator->EndScope(); });
+    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toLocal8Bit().constData());
+    return error == IFSelect_RetDone;
+}
+
+template<typename CAF_READER>
+bool transfer(CAF_READER& reader, DocumentPtr doc, qttask::Progress* progress)
+{
+    std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
+    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
+    indicator->NewScope(70, "Translating file");
+    Handle_XSControl_WorkSession ws = workSession(reader);
+    ws->MapReader()->SetProgress(indicator);
+    auto _ = gsl::finally([&]{
+        indicator->EndScope();
+        ws->MapReader()->SetProgress(nullptr);
+    });
+    bool ok = false;
+    doc->xcafImport([&]{
+        Handle_TDocStd_Document stdDoc = doc;
+        ok = reader.Transfer(stdDoc);
+    });
+    return ok;
+}
+
+} // namespace OccCafIO
+
+class OccStepReader : public Reader {
+public:
+    OccStepReader()
+    {
+        m_reader.SetColorMode(true);
+        m_reader.SetNameMode(true);
+        m_reader.SetLayerMode(true);
+        m_reader.SetPropsMode(true);
+    }
+
+    bool readFile(const QString& filepath, qttask::Progress* progress) override {
+        return OccCafIO::readFile(m_reader, filepath, progress);
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* progress) override {
+        return OccCafIO::transfer(m_reader, doc, progress);
+    }
+
+private:
+    STEPCAFControl_Reader m_reader;
+};
+
+class OccIgesReader : public Reader {
+public:
+    OccIgesReader()
+    {
+        m_reader.SetColorMode(true);
+        m_reader.SetNameMode(true);
+        m_reader.SetLayerMode(true);
+        //m_reader.SetPropsMode(true);
+    }
+
+    bool readFile(const QString& filepath, qttask::Progress* progress) override {
+        return OccCafIO::readFile(m_reader, filepath, progress);
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* progress) override {
+        return OccCafIO::transfer(m_reader, doc, progress);
+    }
+
+private:
+    IGESCAFControl_Reader m_reader;
+};
+
+class OccBRepReader : public Reader {
+public:
+    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    {
+        m_shape.Nullify();
+        m_baseFilename = QFileInfo(filepath).baseName();
+        BRep_Builder brepBuilder;
+        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
+        return BRepTools::Read(m_shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    {
+        if (m_shape.IsNull())
+            return false;
+
+        doc->xcafImport([&]{
+            const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+            const TDF_Label labelShape = shapeTool->NewShape();
+            shapeTool->SetShape(labelShape, m_shape);
+            CafUtils::setLabelAttrStdName(labelShape, m_baseFilename);
+        });
+        return true;
+    }
+
+private:
+    TopoDS_Shape m_shape;
+    QString m_baseFilename;
+};
+
+class OccStlReader : public Reader {
+public:
+    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    {
+        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
+        m_baseFilename = QFileInfo(filepath).baseName();
+        m_mesh = RWStl::ReadFile(OSD_Path(filepath.toLocal8Bit().constData()), indicator);
+        return !m_mesh.IsNull();
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    {
+        if (m_mesh.IsNull())
+            return false;
+
+        doc->singleImport([&](TDF_Label labelNewEntity) {
+            TDataXtd_Triangulation::Set(labelNewEntity, m_mesh);
+            CafUtils::setLabelAttrStdName(labelNewEntity, m_baseFilename);
+        });
+        return true;
+    }
+
+private:
+    Handle_Poly_Triangulation m_mesh;
+    QString m_baseFilename;
+};
+
+#ifdef HAVE_GMIO
+class GmioStlReader : public Reader {
+public:
+    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    {
+        m_vecMesh.clear();
+        QFile file(filepath);
+        if (file.open(QIODevice::ReadOnly)) {
+            gmio_stream stream = gmio_stream_qiodevice(&file);
+            gmio_stl_read_options options = {};
+            options.func_stla_get_streamsize = &gmio_stla_infos_probe_streamsize;
+            options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
+            int err = GMIO_ERROR_OK;
+            while (gmio_no_error(err) && !file.atEnd()) {
+                gmio_stl_mesh_creator_occpolytri meshcreator;
+                err = gmio_stl_read(&stream, &meshcreator, &options);
+                if (gmio_no_error(err))
+                    m_vecMesh.push_back(meshcreator.polytri(meshcreator.polytri()));
+                else
+                    return false;
+            }
+        }
+
+//        if (err != GMIO_ERROR_OK)
+//            return Result::error(Internal::gmioErrorToQString(err));
+        return true;
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    {
+        if (m_vecMesh.empty())
+            return false;
+
+        for (const Handle_Poly_Triangulation& mesh : m_vecMesh) {
+            doc->singleImport([&](TDF_Label labelNewEntity) {
+                TDataXtd_Triangulation::Set(labelNewEntity, mesh);
+            });
+        }
+
+        return true;
+    }
+
+private:
+    std::vector<Handle_Poly_Triangulation> m_vecMesh;
+};
+#endif // HAVE_GMIO
 
 static TopoDS_Shape xdeDocumentWholeShape(const DocumentPtr& doc)
 {
@@ -465,22 +578,128 @@ void IO::setStlIoLibrary(IO::StlIoLibrary lib)
     m_stlIoLibrary = lib;
 }
 
+std::unique_ptr<Reader> IO::createReader(IO::PartFormat format) const
+{
+    switch (format) {
+    case IO::PartFormat::Iges: return std::make_unique<Internal::OccIgesReader>();
+    case IO::PartFormat::Step: return std::make_unique<Internal::OccStepReader>();
+    case IO::PartFormat::OccBrep: return std::make_unique<Internal::OccBRepReader>();
+    case IO::PartFormat::Stl: return std::make_unique<Internal::OccStlReader>();
+    case IO::PartFormat::Unknown: return std::unique_ptr<Reader>();
+    }
+
+    return std::unique_ptr<Reader>();
+}
+
+bool IO::importInDocument(
+        DocumentPtr doc,
+        const QStringList& listFilepath,
+        Messenger* messenger,
+        qttask::Progress* progress)
+{
+    bool ok = true;
+
+    struct ReadFileResult {
+        std::unique_ptr<Reader> reader;
+        QString filepath;
+    };
+    auto fnAddError = [&](const QString& filepath, const QString& errorText) {
+        ok = false;
+        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorText));
+    };
+    auto fnReadFileError = [=](const QString& filepath, const QString& errorText) {
+        ReadFileResult result;
+        result.filepath = filepath;
+        fnAddError(filepath, errorText);
+        return result;
+    };
+    auto fnReadFileOk = [](const QString& filepath, std::unique_ptr<Reader> reader) {
+        ReadFileResult result;
+        result.filepath = filepath;
+        result.reader = std::move(reader);
+        return result;
+    };
+
+    // Read files
+    using ReaderPtr = std::unique_ptr<Reader>;
+    std::vector<std::future<ReadFileResult>> vecReadFileResult;
+    for (const QString& filepath : listFilepath) {
+        auto future = std::async([=] {
+            const IO::PartFormat fileFormat = IO::findPartFormat(filepath);
+            if (fileFormat == IO::PartFormat::Unknown)
+                return fnReadFileError(filepath, tr("Unknown format"));
+
+            std::unique_ptr<Reader> reader = IO::instance()->createReader(fileFormat);
+            if (!reader)
+                return fnReadFileError(filepath, tr("No supporting reader"));
+
+            if (!reader->readFile(filepath, progress))
+                return fnReadFileError(filepath, tr("File read problem"));
+
+            return fnReadFileOk(filepath, std::move(reader));
+        });
+        vecReadFileResult.push_back(std::move(future));
+    } // endfor
+
+#if 1
+    // Transfer to document
+    while (!vecReadFileResult.empty() && (!progress || !progress->isAbortRequested())) {
+        auto itFutureReady = std::find_if(
+                    vecReadFileResult.begin(),
+                    vecReadFileResult.end(),
+                    [](const std::future<ReadFileResult>& future) {
+            return future.wait_for(std::chrono::seconds(10)) == std::future_status::ready;
+        });
+        if (itFutureReady == vecReadFileResult.end()) {
+            if (vecReadFileResult.front().wait_for(std::chrono::milliseconds(100))
+                    == std::future_status::ready)
+            {
+                itFutureReady = vecReadFileResult.begin();
+            }
+        }
+
+        if (itFutureReady != vecReadFileResult.end()) {
+            ReadFileResult readFileResult = itFutureReady->get();
+            Reader* reader = readFileResult.reader.get();
+            if (reader) {
+                if (!reader->transfer(doc, progress))
+                    fnAddError(readFileResult.filepath, tr("File transfer problem"));
+            }
+
+            vecReadFileResult.erase(itFutureReady);
+        }
+    } // endwhile
+#else
+    for (auto& future : vecReadFileResult) {
+        ReadFileResult readFileResult = future.get();
+        Reader* reader = readFileResult.reader.get();
+        if (reader) {
+            if (!reader->transfer(doc, progress))
+                fnAddError(readFileResult.filepath, tr("File transfer problem"));
+        }
+    }
+#endif
+
+    return ok;
+}
+
 IO::Result IO::importInDocument(
         DocumentPtr doc,
         IO::PartFormat format,
         const QString& filepath,
         qttask::Progress* progress)
 {
-    const ImportData data = { doc, filepath, progress };
-    switch (format) {
-    case PartFormat::Iges: return this->importIges(data);
-    case PartFormat::Step: return this->importStep(data);
-    case PartFormat::OccBrep: return this->importOccBRep(data);
-    case PartFormat::Stl: return this->importStl(data);
-    case PartFormat::Unknown: break;
-    }
+    std::unique_ptr<Reader> reader = this->createReader(format);
+    if (!reader)
+        return Result::error(tr("Unknown error"));
 
-    return Result::error(tr("Unknown error"));
+    if (!reader->readFile(filepath, progress))
+        return Result::error(tr("IGES read failed"));
+
+    if (!reader->transfer(doc))
+        return Result::error(tr("IGES transfer failed"));
+
+    return Result::ok();
 }
 
 IO::Result IO::exportApplicationItems(
@@ -507,92 +726,10 @@ bool IO::hasExportOptionsForFormat(PartFormat format)
     return format == PartFormat::Stl;
 }
 
-IO::Result IO::importIges(ImportData data)
+IO::IO()
 {
     IGESControl_Controller::Init();
-    IFSelect_ReturnStatus err;
-    data.doc->xcafImport([&]{
-        Internal::loadCafDocumentFromFile<IGESCAFControl_Reader>(data.filepath, data.doc, &err, data.progress);
-        return err == IFSelect_RetDone;
-    });
-    if (err == IFSelect_RetDone)
-        return Result::ok();
-    else
-        return Result::error(StringUtils::rawText(err));
-}
-
-IO::Result IO::importStep(ImportData data)
-{
-    Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
-    IFSelect_ReturnStatus err;
-    data.doc->xcafImport([&]{
-        Internal::loadCafDocumentFromFile<STEPCAFControl_Reader>(data.filepath, data.doc, &err, data.progress);
-        return err == IFSelect_RetDone;
-    });
-    if (err == IFSelect_RetDone)
-        return Result::ok();
-    else
-        return Result::error(StringUtils::rawText(err));
-}
-
-IO::Result IO::importOccBRep(ImportData data)
-{
-    TopoDS_Shape shape;
-    BRep_Builder brepBuilder;
-    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-    const bool ok = BRepTools::Read(shape, data.filepath.toLocal8Bit().constData(), brepBuilder, indicator);
-    if (!ok)
-        return Result::error(tr("Unknown Error"));
-
-    data.doc->xcafImport([&]{
-        const Handle_XCAFDoc_ShapeTool shapeTool = data.doc->xcaf().shapeTool();
-        const TDF_Label labelShape = shapeTool->NewShape();
-        shapeTool->SetShape(labelShape, shape);
-        return true;
-    });
-    return Result::ok();
-}
-
-IO::Result IO::importStl(ImportData data)
-{
-    if (this->stlIoLibrary() == StlIoLibrary::Gmio) {
-#ifdef HAVE_GMIO
-        QFile file(filepath);
-        if (file.open(QIODevice::ReadOnly)) {
-            gmio_stream stream = gmio_stream_qiodevice(&file);
-            gmio_stl_read_options options = {};
-            options.func_stla_get_streamsize = &gmio_stla_infos_probe_streamsize;
-            options.task_iface = Internal::gmio_qttask_create_task_iface(data.progress);
-            int err = GMIO_ERROR_OK;
-            while (gmio_no_error(err) && !file.atEnd()) {
-                gmio_stl_mesh_creator_occpolytri meshcreator;
-                err = gmio_stl_read(&stream, &meshcreator, &options);
-                if (gmio_no_error(err)) {
-                    const Handle_Poly_Triangulation& mesh = meshcreator.polytri();
-                    doc->addRootItem(Internal::createMeshItem(data.filepath, mesh));
-                }
-            }
-            if (err != GMIO_ERROR_OK)
-                return Result::error(Internal::gmioErrorToQString(err));
-        }
-#endif // HAVE_GMIO
-    }
-    else if (this->stlIoLibrary() == StlIoLibrary::OpenCascade) {
-        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-        const Handle_Poly_Triangulation mesh = RWStl::ReadFile(
-                    OSD_Path(data.filepath.toLocal8Bit().constData()), indicator);
-        if (!mesh.IsNull()) {
-            data.doc->singleImport([&](TDF_Label labelNewEntity) {
-                TDataXtd_Triangulation::Set(labelNewEntity, mesh);
-                return true;
-            });
-        }
-        else {
-            return Result::error(tr("Imported STL mesh is null"));
-        }
-    }
-
-    return Result::ok();
+    STEPCAFControl_Controller::Init();
 }
 
 IO::Result IO::exportIges(ExportData data)
