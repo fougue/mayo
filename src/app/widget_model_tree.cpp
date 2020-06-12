@@ -175,8 +175,8 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     modelTreeBtns->installDefaultItemDelegate();
     QObject::connect(
                 modelTreeBtns, &qtgui::ItemViewButtons::buttonClicked,
-                [=](int btnId, const QModelIndex& index) {
-        if (btnId == idBtnRemove) {
+                this, [=](int btnId, const QModelIndex& index) {
+        if (btnId == idBtnRemove && index.isValid()) {
             const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
             const DocumentTreeNode entityNode = Internal::treeItemDocumentTreeNode(treeItem);
             entityNode.document()->destroyEntity(entityNode.id());
