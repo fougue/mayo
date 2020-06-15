@@ -33,7 +33,7 @@ public:
     QByteArray findName(Value value) const;
     Value findValue(const QByteArray& name) const;
 
-    Item itemAt(int index) const;
+    const Item& itemAt(int index) const;
     Span<const Item> items() const;
 
 private:

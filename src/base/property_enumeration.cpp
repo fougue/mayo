@@ -58,7 +58,7 @@ QByteArray Enumeration::findName(Value value) const
     return index != -1 ? this->itemAt(index).name : QByteArray();
 }
 
-Enumeration::Item Enumeration::itemAt(int index) const
+const Enumeration::Item& Enumeration::itemAt(int index) const
 {
     return m_vecItem.at(index);
 }
