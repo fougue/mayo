@@ -31,9 +31,11 @@ MayoInputs.path = $$OUT_PWD/inputs
 
 # OpenCascade
 include(../opencascade.pri)
-
 LIBS += -lTKernel -lTKMath -lTKBRep -lTKGeomBase -lTKTopAlgo -lTKPrim -lTKMesh -lTKG3d
 LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKSTL
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+minOpenCascadeVersion(7, 4, 0) {
+    LIBS += -lTKRWMesh
+}

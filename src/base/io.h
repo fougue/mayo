@@ -37,7 +37,8 @@ public:
         Iges,
         Step,
         OccBrep,
-        Stl
+        Stl,
+        Obj
     };
 
     using Result = Result<void>;
