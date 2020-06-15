@@ -10,6 +10,7 @@
 #include "document.h"
 #include "string_utils.h"
 #include <fougtools/qttools/task/progress.h>
+#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
@@ -42,6 +43,11 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
+#include <Standard_Version.hxx>
+#if OCC_VERSION_HEX >= 0x070400
+#  include <RWObj_CafReader.hxx>
+#endif
+
 #ifdef HAVE_GMIO
 #  include <gmio_core/error.h>
 #  include <gmio_stl/stl_error.h>
@@ -59,6 +65,7 @@
 #include <locale>
 #include <fstream>
 #include <mutex>
+#include <regex>
 #include <set>
 
 namespace Mayo {
@@ -371,6 +378,32 @@ private:
 };
 #endif // HAVE_GMIO
 
+#if OCC_VERSION_HEX >= 0x070400
+class OccObjReader : public Reader {
+public:
+    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    {
+        m_filepath = filepath;
+        return true;
+    }
+
+    bool transfer(DocumentPtr doc, qttask::Progress* progress) override
+    {
+        m_reader.SetDocument(doc);
+        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
+        bool ok = true;
+        doc->xcafImport([&]{
+            ok = m_reader.Perform(occ::QtUtils::toOccUtf8String(m_filepath), indicator);
+        });
+        return ok;
+    }
+
+private:
+    QString m_filepath;
+    RWObj_CafReader m_reader;
+};
+#endif
+
 static TopoDS_Shape xdeDocumentWholeShape(const DocumentPtr& doc)
 {
     TopoDS_Shape shape;
@@ -500,6 +533,13 @@ static IO::PartFormat findPartFormatFromContents(
             return IO::PartFormat::Stl;
     }
 
+    // -- OBJ ?
+    {
+        const std::regex rx("^\\s*(v|vt|vn|vp|surf)\\s+[-\\+]?[0-9\\.]+\\s");
+        if (std::regex_search(contentsBegin.cbegin(), contentsBegin.cend(), rx))
+            return IO::PartFormat::Obj;
+    }
+
     // Fallback case
     return IO::PartFormat::Unknown;
 }
@@ -518,7 +558,8 @@ Span<const IO::PartFormat> IO::partFormats()
         PartFormat::Iges,
         PartFormat::Step,
         PartFormat::OccBrep,
-        PartFormat::Stl
+        PartFormat::Stl,
+        PartFormat::Obj
     };
 
     return vecFormat;
@@ -531,6 +572,7 @@ QString IO::partFormatFilter(IO::PartFormat format)
     case PartFormat::Step: return tr("STEP files(*.step *.stp)");
     case PartFormat::OccBrep: return tr("OpenCascade BREP files(*.brep *.occ)");
     case PartFormat::Stl: return tr("STL files(*.stl *.stla)");
+    case PartFormat::Obj: return tr("OBJ files(*.obj)");
     case PartFormat::Unknown: break;
     }
 
@@ -540,10 +582,9 @@ QString IO::partFormatFilter(IO::PartFormat format)
 QStringList IO::partFormatFilters()
 {
     QStringList filters;
-    filters << IO::partFormatFilter(PartFormat::Iges)
-            << IO::partFormatFilter(PartFormat::Step)
-            << IO::partFormatFilter(PartFormat::OccBrep)
-            << IO::partFormatFilter(PartFormat::Stl);
+    for (IO::PartFormat format : IO::partFormats())
+        filters << IO::partFormatFilter(format);
+
     return filters;
 }
 
@@ -581,11 +622,20 @@ void IO::setStlIoLibrary(IO::StlIoLibrary lib)
 std::unique_ptr<Reader> IO::createReader(IO::PartFormat format) const
 {
     switch (format) {
-    case IO::PartFormat::Iges: return std::make_unique<Internal::OccIgesReader>();
-    case IO::PartFormat::Step: return std::make_unique<Internal::OccStepReader>();
-    case IO::PartFormat::OccBrep: return std::make_unique<Internal::OccBRepReader>();
-    case IO::PartFormat::Stl: return std::make_unique<Internal::OccStlReader>();
-    case IO::PartFormat::Unknown: return std::unique_ptr<Reader>();
+    case PartFormat::Iges:
+        return std::make_unique<Internal::OccIgesReader>();
+    case PartFormat::Step:
+        return std::make_unique<Internal::OccStepReader>();
+    case PartFormat::OccBrep:
+        return std::make_unique<Internal::OccBRepReader>();
+    case PartFormat::Stl:
+        return std::make_unique<Internal::OccStlReader>();
+    case PartFormat::Obj:
+#if OCC_VERSION_HEX >= 0x070400
+        return std::make_unique<Internal::OccObjReader>();
+#endif
+    case PartFormat::Unknown:
+        return std::unique_ptr<Reader>();
     }
 
     return std::unique_ptr<Reader>();
@@ -641,7 +691,6 @@ bool IO::importInDocument(
         vecReadFileResult.push_back(std::move(future));
     } // endfor
 
-#if 1
     // Transfer to document
     while (!vecReadFileResult.empty() && (!progress || !progress->isAbortRequested())) {
         auto itFutureReady = std::find_if(
@@ -669,16 +718,6 @@ bool IO::importInDocument(
             vecReadFileResult.erase(itFutureReady);
         }
     } // endwhile
-#else
-    for (auto& future : vecReadFileResult) {
-        ReadFileResult readFileResult = future.get();
-        Reader* reader = readFileResult.reader.get();
-        if (reader) {
-            if (!reader->transfer(doc, progress))
-                fnAddError(readFileResult.filepath, tr("File transfer problem"));
-        }
-    }
-#endif
 
     return ok;
 }
@@ -694,10 +733,10 @@ IO::Result IO::importInDocument(
         return Result::error(tr("Unknown error"));
 
     if (!reader->readFile(filepath, progress))
-        return Result::error(tr("IGES read failed"));
+        return Result::error(tr("Read file failed"));
 
     if (!reader->transfer(doc))
-        return Result::error(tr("IGES transfer failed"));
+        return Result::error(tr("Transfer failed"));
 
     return Result::ok();
 }

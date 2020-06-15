@@ -136,6 +136,7 @@ void Test::IO_test_data()
     QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::PartFormat::OccBrep;
     QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::PartFormat::Stl;
     QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::PartFormat::Stl;
+    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::PartFormat::Obj;
 }
 
 void Test::BRepUtils_test()

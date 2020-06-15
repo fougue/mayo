@@ -120,3 +120,6 @@ LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKG3d
 LIBS += -lTKGeomBase
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+minOpenCascadeVersion(7, 4, 0) {
+    LIBS += -lTKRWMesh
+}
