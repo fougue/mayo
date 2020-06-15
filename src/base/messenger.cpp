@@ -11,6 +11,11 @@ namespace Mayo {
 Messenger::Messenger(QObject* parent)
     : QObject(parent)
 {
+    static bool metaTypesRegistered = false;
+    if (!metaTypesRegistered) {
+        qRegisterMetaType<MessageType>("Messenger::MessageType");
+        metaTypesRegistered = true;
+    }
 }
 
 Messenger* Messenger::defaultInstance()

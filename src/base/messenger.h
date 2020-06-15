@@ -30,7 +30,7 @@ public:
     virtual void emitMessage(MessageType msgType, const QString& text);
 
 signals:
-    void message(MessageType msgType, const QString& text);
+    void message(Messenger::MessageType msgType, const QString& text);
 };
 
 class NullMessenger : public Messenger {
@@ -43,3 +43,6 @@ private:
 };
 
 } // namespace Mayo
+
+#include <QtCore/QMetaType>
+Q_DECLARE_METATYPE(Mayo::Messenger::MessageType)
