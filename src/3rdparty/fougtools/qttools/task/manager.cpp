@@ -29,6 +29,14 @@ Manager::Manager(QObject *parent)
 Manager::~Manager()
 { }
 
+void Manager::destroyTask(BaseRunner* task)
+{
+    if (task) {
+        m_taskIdToRunner.erase(task->taskId());
+        task->destroy();
+    }
+}
+
 QString Manager::taskTitle(quint64 taskId) const
 {
     auto runner = this->getRunner(taskId);
@@ -58,12 +66,6 @@ Manager *Manager::globalInstance()
 void Manager::onAboutToRun(BaseRunner *runner)
 {
     m_taskIdToRunner.emplace(runner->m_taskId, runner);
-}
-
-void Manager::onDestroyRequest(BaseRunner *runner)
-{
-    m_taskIdToRunner.erase(runner->taskId());
-    runner->destroy();
 }
 
 BaseRunner *Manager::getRunner(quint64 taskId)

@@ -41,7 +41,10 @@ public:
     Progress& progress();
     const Progress& progress() const;
 
-    void run(std::function<void()>&& func);
+    void run(std::function<void()> func);
+
+    virtual bool isAbortRequested() const;
+    virtual void requestAbort();
 
 protected:
     BaseRunner(const Manager* mgr);
@@ -50,8 +53,6 @@ protected:
 
     void execRunnableFunc();
 
-    virtual bool isAbortRequested();
-    virtual void requestAbort();
     virtual void launch();
     virtual void destroy();
 

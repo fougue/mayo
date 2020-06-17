@@ -36,9 +36,9 @@ public:
 
     void emitAboutToRun();
     void emitStarted(const QString& title);
-    void emitProgressStep(const QString &title);
+    void emitProgressStep(const QString& title);
     void emitProgress(int pct);
-    void emitMessage(const QString &msg);
+    void emitMessage(const QString& msg);
     void emitEnded();
     void emitDestroyRequest();
 

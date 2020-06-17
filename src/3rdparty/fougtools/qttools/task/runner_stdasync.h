@@ -24,8 +24,7 @@ namespace qttask {
 struct StdAsync {};
 
 //! Task runner based on std::async()
-template<> class Runner<StdAsync> : public BaseRunner
-{
+template<> class Runner<StdAsync> : public BaseRunner {
 public:
     Runner<StdAsync>(const Manager* mgr, std::launch policy = std::launch::async)
         : BaseRunner(mgr),
@@ -33,15 +32,16 @@ public:
           m_policy(policy)
     {}
 
+    bool isAbortRequested() const override {
+        return m_isAbortRequested;
+    }
+
+    void requestAbort() override {
+        m_isAbortRequested = true;
+    }
+
 protected:
-    bool isAbortRequested() override
-    { return m_isAbortRequested; }
-
-    void requestAbort() override
-    { m_isAbortRequested = true; }
-
-    void launch() override
-    {
+    void launch() override {
         m_future = std::async(m_policy, [=]{ this->execRunnableFunc(); });
     }
 

@@ -19,7 +19,7 @@
 
 namespace qttask {
 
-BaseRunner::BaseRunner(const Manager *mgr)
+BaseRunner::BaseRunner(const Manager* mgr)
     : m_mgr(mgr),
       m_signals(this),
       m_progress(this)
@@ -33,32 +33,32 @@ quint64 BaseRunner::taskId() const
     return m_taskId;
 }
 
-const QString &BaseRunner::taskTitle() const
+const QString& BaseRunner::taskTitle() const
 {
     return m_taskTitle;
 }
 
-void BaseRunner::setTaskTitle(const QString &title)
+void BaseRunner::setTaskTitle(const QString& title)
 {
     m_taskTitle = title;
 }
 
-Progress &BaseRunner::progress()
+Progress& BaseRunner::progress()
 {
     return m_progress;
 }
 
-const Progress &BaseRunner::progress() const
+const Progress& BaseRunner::progress() const
 {
     return m_progress;
 }
 
-void BaseRunner::run(std::function<void()>&& func)
+void BaseRunner::run(std::function<void()> func)
 {
-    m_func = func;
+    m_func = std::move(func);
     if (m_func) {
         m_signals.emitAboutToRun();
-        launch();
+        this->launch();
     }
 }
 
@@ -75,7 +75,7 @@ void BaseRunner::execRunnableFunc()
     m_signals.emitDestroyRequest();
 }
 
-bool BaseRunner::isAbortRequested()
+bool BaseRunner::isAbortRequested() const
 {
     return false;
 }
