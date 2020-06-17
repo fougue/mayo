@@ -8,6 +8,7 @@
 
 #include "caf_utils.h"
 #include "document.h"
+#include "libtask.h"
 #include "string_utils.h"
 #include <fougtools/qttools/task/progress.h>
 #include <fougtools/occtools/qt_utils.h>
@@ -645,79 +646,80 @@ bool IO::importInDocument(
         DocumentPtr doc,
         const QStringList& listFilepath,
         Messenger* messenger,
-        qttask::Progress* progress)
+        TaskProgress* progress)
 {
+
     bool ok = true;
 
     struct ReadFileResult {
         std::unique_ptr<Reader> reader;
         QString filepath;
     };
-    auto fnAddError = [&](const QString& filepath, const QString& errorText) {
+    auto fnAddError = [&](const QString& filepath, const QString& errorMsg) {
         ok = false;
-        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorText));
+        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorMsg));
     };
-    auto fnReadFileError = [=](const QString& filepath, const QString& errorText) {
-        ReadFileResult result;
-        result.filepath = filepath;
-        fnAddError(filepath, errorText);
-        return result;
-    };
-    auto fnReadFileOk = [](const QString& filepath, std::unique_ptr<Reader> reader) {
-        ReadFileResult result;
-        result.filepath = filepath;
-        result.reader = std::move(reader);
-        return result;
+    auto fnReadFileError = [&](const QString& filepath, const QString& errorMsg) -> ReadFileResult {
+        fnAddError(filepath, errorMsg);
+        return { {}, filepath };
     };
 
-    // Read files
-    using ReaderPtr = std::unique_ptr<Reader>;
-    std::vector<std::future<ReadFileResult>> vecReadFileResult;
-    for (const QString& filepath : listFilepath) {
-        auto future = std::async([=] {
-            const IO::PartFormat fileFormat = IO::findPartFormat(filepath);
-            if (fileFormat == IO::PartFormat::Unknown)
-                return fnReadFileError(filepath, tr("Unknown format"));
+    auto fnReadFile = [&](const QString& filepath, TaskProgress* subProgress) -> ReadFileResult {
+        const IO::PartFormat fileFormat = IO::findPartFormat(filepath);
+        if (fileFormat == IO::PartFormat::Unknown)
+            return fnReadFileError(filepath, tr("Unknown format"));
 
-            std::unique_ptr<Reader> reader = IO::instance()->createReader(fileFormat);
-            if (!reader)
-                return fnReadFileError(filepath, tr("No supporting reader"));
+        std::unique_ptr<Reader> reader = IO::instance()->createReader(fileFormat);
+        if (!reader)
+            return fnReadFileError(filepath, tr("No supporting reader"));
 
-            if (!reader->readFile(filepath, progress))
-                return fnReadFileError(filepath, tr("File read problem"));
+        if (!reader->readFile(filepath, subProgress))
+            return fnReadFileError(filepath, tr("File read problem"));
 
-            return fnReadFileOk(filepath, std::move(reader));
-        });
-        vecReadFileResult.push_back(std::move(future));
-    } // endfor
-
-    // Transfer to document
-    while (!vecReadFileResult.empty() && (!progress || !progress->isAbortRequested())) {
-        auto itFutureReady = std::find_if(
-                    vecReadFileResult.begin(),
-                    vecReadFileResult.end(),
-                    [](const std::future<ReadFileResult>& future) {
-            return future.wait_for(std::chrono::seconds(10)) == std::future_status::ready;
-        });
-        if (itFutureReady == vecReadFileResult.end()) {
-            if (vecReadFileResult.front().wait_for(std::chrono::milliseconds(100))
-                    == std::future_status::ready)
-            {
-                itFutureReady = vecReadFileResult.begin();
-            }
+        return { std::move(reader), filepath };
+    };
+    auto fnTransfer = [&](const ReadFileResult& readFileResult, TaskProgress* subProgress) {
+        Reader* reader = readFileResult.reader.get();
+        if (reader) {
+            if (!reader->transfer(doc, subProgress))
+                fnAddError(readFileResult.filepath, tr("File transfer problem"));
         }
+    };
 
-        if (itFutureReady != vecReadFileResult.end()) {
-            ReadFileResult readFileResult = itFutureReady->get();
-            Reader* reader = readFileResult.reader.get();
-            if (reader) {
-                if (!reader->transfer(doc, progress))
-                    fnAddError(readFileResult.filepath, tr("File transfer problem"));
+    if (listFilepath.size() == 1) { // Single file case
+        const ReadFileResult readFileResult = fnReadFile(listFilepath.front(), nullptr);
+        fnTransfer(readFileResult, nullptr);
+    }
+    else { // Many files case
+        using ReaderPtr = std::unique_ptr<Reader>;
+        std::vector<std::future<ReadFileResult>> vecReadFileResult;
+        for (const QString& filepath : listFilepath) {
+            auto future = std::async([=] { return fnReadFile(filepath, nullptr); });
+            vecReadFileResult.push_back(std::move(future));
+        } // endfor
+
+        // Transfer to document
+        while (!vecReadFileResult.empty() && (!progress || !progress->isAbortRequested())) {
+            auto itFutureReady = std::find_if(
+                        vecReadFileResult.begin(),
+                        vecReadFileResult.end(),
+                        [](const std::future<ReadFileResult>& future) {
+                return future.wait_for(std::chrono::milliseconds(10)) == std::future_status::ready;
+            });
+            if (itFutureReady == vecReadFileResult.end()) {
+                if (vecReadFileResult.front().wait_for(std::chrono::milliseconds(100))
+                        == std::future_status::ready)
+                {
+                    itFutureReady = vecReadFileResult.begin();
+                }
             }
 
-            vecReadFileResult.erase(itFutureReady);
-        }
-    } // endwhile
+            if (itFutureReady != vecReadFileResult.end()) {
+                fnTransfer(itFutureReady->get(), nullptr);
+                vecReadFileResult.erase(itFutureReady);
+            }
+        } // endwhile
+    }
 
     return ok;
 }
