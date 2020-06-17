@@ -25,35 +25,36 @@ namespace qttask {
 /*! \brief Task runner based on QThread
  */
 template<>
-class Runner<QThread> : public QThread, public BaseRunner
-{
+class Runner<QThread> : public QThread, public BaseRunner {
 public:
-    Runner<QThread>(const Manager* mgr,
-                    QThread::Priority priority = QThread::InheritPriority)
+    Runner<QThread>(const Manager* mgr, QThread::Priority priority = QThread::InheritPriority)
         : QThread(nullptr),
           BaseRunner(mgr),
           m_priority(priority)
-    { }
+    {}
+
+    bool isAbortRequested() const override {
+        return this->isInterruptionRequested();
+    }
+
+    void requestAbort() override {
+        this->requestInterruption();
+    }
 
 protected:
-    bool isAbortRequested() override
-    { return this->isInterruptionRequested(); }
+    void launch() override {
+        this->start(m_priority);
+    }
 
-    void requestAbort() override
-    { this->requestInterruption(); }
+    void destroy() override {
+        this->deleteLater();
+    }
 
-    void launch() override
-    { this->start(m_priority); }
-
-    void destroy() override
-    { this->deleteLater(); }
-
-    void run() override // -- QThread
-    {
+    void run() override { // -- QThread
         QTimer::singleShot(0, [=] {
             this->execRunnableFunc();
             this->quit();
-        } );
+        });
 
         this->exec();
     }

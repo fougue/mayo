@@ -42,7 +42,7 @@ public:
      *  Typical use:
      *  \code
      *      auto task = qttask::Manager::globalInstance()->newTask();
-     *      task->run( [=] { someFunction(task->progress()); } );
+     *      task->run([=]{ someFunction(task->progress()); });
      *  \endcode
      *
      *  The created Runner object will be automatically deleted at the end
@@ -76,7 +76,7 @@ private:
     friend class BaseRunnerSignals;
 
     void onAboutToRun(BaseRunner* runner);
-    void onDestroyRequest(BaseRunner* runner);
+    void destroyTask(BaseRunner* task);
     BaseRunner* getRunner(quint64 taskId);
     const BaseRunner* getRunner(quint64 taskId) const;
 

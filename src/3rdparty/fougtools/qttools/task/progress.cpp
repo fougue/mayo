@@ -19,7 +19,7 @@
 
 namespace qttask {
 
-Progress::Progress(BaseRunner *runner)
+Progress::Progress(BaseRunner* runner)
     : m_runner(runner)
 { }
 
@@ -42,7 +42,7 @@ const QString& Progress::step() const
     return m_step;
 }
 
-void Progress::setStep(const QString &title)
+void Progress::setStep(const QString& title)
 {
     m_step = title;
     m_runner->qtSignals()->emitProgressStep(title);
@@ -70,7 +70,7 @@ QVariant Progress::data(int key) const
  * Custom progress data is useful for storing arbitrary properties for any item. TaskManager does
  * not use this feature for storing data; it is provided solely for the convenience of the user.
  */
-void Progress::setData(int key, const QVariant &value)
+void Progress::setData(int key, const QVariant& value)
 {
     m_dataHash.emplace(key, value);
 }
