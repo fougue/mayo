@@ -147,6 +147,15 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
         gpx->SetDataSource(dataSource);
         // meshVisu->AddBuilder(..., false); -> No selection
         gpx->AddBuilder(new MeshVS_MeshPrsBuilder(gpx), true);
+
+        // -- MeshVS_DrawerAttribute
+        gpx->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, true);
+        gpx->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, false);
+        gpx->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTIC);
+        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, Quantity_NOC_BISQUE);
+        gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, Quantity_NOC_BLACK);
+        gpx->SetDisplayMode(MeshVS_DMF_Shading);
+
         gpx->SetHilightMode(MeshVS_DMF_WireFrame);
         gpx->SetMeshSelMethod(MeshVS_MSM_PRECISE);
         GraphicsEntityDriver::setEntityAisObject(&entity, gpx);
