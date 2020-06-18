@@ -9,6 +9,7 @@
 #include <MeshVS_Drawer.hxx>
 #include <MeshVS_Mesh.hxx>
 #include <MeshVS_MeshPrsBuilder.hxx>
+#include <Prs3d_LineAspect.hxx>
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
@@ -68,6 +69,8 @@ GraphicsEntity GraphicsShapeEntityDriver::createEntity(const TDF_Label& label) c
         Handle_XCAFPrs_AISObject gpx = new XCAFPrs_AISObject(label);
         gpx->SetDisplayMode(AIS_Shaded);
         gpx->Attributes()->SetFaceBoundaryDraw(true);
+        gpx->Attributes()->SetFaceBoundaryAspect(
+                    new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.));
         gpx->Attributes()->SetIsoOnTriangulation(true);
         GraphicsEntityDriver::setEntityAisObject(&entity, gpx);
     }
