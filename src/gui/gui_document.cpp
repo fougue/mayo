@@ -94,11 +94,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc)
                     mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
                 Aspect_GFM_VER);
     // 3D view - Add shaded trihedron located in the bottom-left corner
-    m_v3dView->TriedronDisplay(
-                Aspect_TOTP_LEFT_LOWER,
-                Quantity_NOC_GRAY50,
-                0.075,
-                V3d_ZBUFFER);
+    m_v3dView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_GRAY50, 0.075, V3d_ZBUFFER);
 
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapGraphics(doc->entityTreeNodeId(i));
@@ -234,6 +230,9 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     GraphicsItem item;
     const TDF_Label entityLabel = m_document->modelTree().nodeData(entityTreeNodeId);
     item.graphicsEntity = GraphicsEntityDriverTable::instance()->createEntity(entityLabel);
+    if (item.graphicsEntity.aisObject().IsNull())
+        return;
+
     item.graphicsEntity.setAisContext(m_aisContext);
     item.graphicsEntity.setVisible(true);
     item.entityTreeNodeId = entityTreeNodeId;
