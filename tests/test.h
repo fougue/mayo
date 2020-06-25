@@ -13,7 +13,6 @@ namespace Mayo {
 
 class Test : public QObject {
     Q_OBJECT
-
 private slots:
     void Application_test();
     void IO_test();
@@ -33,6 +32,7 @@ private slots:
     void UnitSystem_test();
     void UnitSystem_test_data();
 
+    void LibTask_test();
     void LibTree_test();
 };
 

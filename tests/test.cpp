@@ -17,6 +17,7 @@
 #include "../src/base/mesh_utils.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
+#include "../src/base/task_manager.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
 
@@ -474,6 +475,51 @@ void Test::UnitSystem_test_data()
     QTest::newRow("degrees(PIrad)")
             << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
             << UnitSystem::TranslateResult{ 180., "°", radDeg };
+}
+
+void Test::LibTask_test()
+{
+    struct ProgressRecord {
+        quint64 taskId;
+        int value;
+    };
+
+    TaskManager taskMgr;
+    const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
+        progress->beginScope(40);
+        for (int i = 0; i <= 100; ++i)
+            progress->setValue(i);
+        progress->endScope();
+
+        progress->beginScope(60);
+        for (int i = 0; i <= 100; ++i)
+            progress->setValue(i);
+        progress->endScope();
+    });
+    std::vector<ProgressRecord> vecProgressRec;
+    QObject::connect(
+                &taskMgr, &TaskManager::progressChanged,
+                [&](TaskId taskId, int pct) { vecProgressRec.push_back({ taskId, pct }); });
+
+    QSignalSpy sigSpy_started(&taskMgr, &TaskManager::started);
+    QSignalSpy sigSpy_ended(&taskMgr, &TaskManager::ended);
+    taskMgr.run(taskId);
+    taskMgr.waitForDone(taskId);
+
+    QCOMPARE(sigSpy_started.count(), 1);
+    QCOMPARE(sigSpy_ended.count(), 1);
+    QCOMPARE(sigSpy_started.front().at(0).toULongLong(), taskId);
+    QCOMPARE(sigSpy_ended.front().at(0).toULongLong(), taskId);
+    QVERIFY(!vecProgressRec.empty());
+    int prevPct = 0;
+    for (const ProgressRecord& rec : vecProgressRec) {
+        QCOMPARE(rec.taskId, taskId);
+        QVERIFY(prevPct <= rec.value);
+        prevPct = rec.value;
+    }
+
+    QCOMPARE(vecProgressRec.front().value, 0);
+    QCOMPARE(vecProgressRec.back().value, 100);
 }
 
 void Test::LibTree_test()
