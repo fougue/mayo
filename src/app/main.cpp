@@ -75,11 +75,11 @@ Theme* mayoTheme()
 static int runApp(QApplication* app)
 {
     const CommandLineArguments args = processCommandLine();
-    Mayo::Application::setOpenCascadeEnvironment("opencascade.conf");
+    Application::setOpenCascadeEnvironment("opencascade.conf");
 
     // Register Graphics entity drivers
-    Mayo::GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<Mayo::GraphicsMeshEntityDriver>());
-    Mayo::GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<Mayo::GraphicsShapeEntityDriver>());
+    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
+    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
 
     // Default values
     auto settings = Settings::instance();
@@ -159,9 +159,7 @@ static int runApp(QApplication* app)
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
     if (!args.listFileToOpen.empty()) {
-        QTimer::singleShot(0, [&]{
-            mainWindow.openDocumentsFromList(args.listFileToOpen);
-        });
+        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
     }
 
     return app->exec();
