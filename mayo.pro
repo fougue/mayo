@@ -78,8 +78,6 @@ win* {
     WinInstallerFiles.path = $$OUT_PWD/installer
 }
 
-include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
-
 FORMS += $$files(src/app/*.ui)
 
 RESOURCES += mayo.qrc

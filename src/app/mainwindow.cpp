@@ -10,7 +10,7 @@
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
 #include "../base/document.h"
-#include "../base/libtask.h"
+#include "../base/task_manager.h"
 #include "../gpx/gpx_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
@@ -37,11 +37,10 @@
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
-#include <fougtools/qttools/task/manager.h>
-#include <fougtools/qttools/task/runner_stdasync.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>
+#include <QtCore/QTimer>
 #include <QtCore/QSettings>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
@@ -365,7 +364,7 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
-    new DialogTaskManager(this);
+    new DialogTaskManager(TaskManager::globalInstance(), this);
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
@@ -447,7 +446,7 @@ void MainWindow::showEvent(QShowEvent* event)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
     auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
     if (!winProgress)
-        winProgress = new WinTaskbarGlobalProgress(this);
+        winProgress = new WinTaskbarGlobalProgress(TaskManager::globalInstance(), this);
     winProgress->setWindow(this->windowHandle());
 #endif
 }
@@ -476,24 +475,29 @@ void MainWindow::importInCurrentDoc()
     if (resFileNames.listFilepath.isEmpty())
         return;
 
+    auto taskMgr = TaskManager::globalInstance();
     const DocumentPtr& doc = widgetGuiDoc->guiDocument()->document();
-    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
-    //task->setTaskTitle(QFileInfo(filepath).fileName());
-    task->run([=]{
+    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
         const bool ok = IO::instance()->importInDocument(
-                    doc, resFileNames.listFilepath, Messenger::defaultInstance(), nullptr);
+                    doc, resFileNames.listFilepath, Messenger::defaultInstance(), progress);
         if (ok)
             Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
     });
-
+    const QString taskTitle =
+            resFileNames.listFilepath.size() > 1 ?
+                tr("Import") :
+                QFileInfo(resFileNames.listFilepath.front()).fileName();
+    taskMgr->setTitle(taskId, taskTitle);
+    taskMgr->run(taskId);
     for (const QString& filepath : resFileNames.listFilepath)
         Internal::prependRecentFile(&m_listRecentFile, filepath);
 }
 
 void MainWindow::runImportTask(DocumentPtr doc, IO::PartFormat format, const QString& filepath)
 {
+#if 0
     auto task = TaskManager::globalInstance()->newTask<StdAsync>();
     task->setTaskTitle(QFileInfo(filepath).fileName());
     task->run([=]{
@@ -511,6 +515,7 @@ void MainWindow::runImportTask(DocumentPtr doc, IO::PartFormat format, const QSt
                     .arg(filepath, result.errorText());
         }
     });
+#endif
 }
 
 void MainWindow::runExportTask(
@@ -519,13 +524,12 @@ void MainWindow::runExportTask(
         const IO::ExportOptions& opts,
         const QString& filepath)
 {
-    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
-    task->setTaskTitle(QFileInfo(filepath).fileName());
-    task->run([=]{
+    auto taskMgr = TaskManager::globalInstance();
+    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
         const IO::Result result =
-                IO::instance()->exportApplicationItems(appItems, format, opts, filepath, &task->progress());
+                IO::instance()->exportApplicationItems(appItems, format, opts, filepath, progress);
         QString msg;
         if (result) {
             msg = tr("Export time '%1': %2ms")
@@ -539,6 +543,8 @@ void MainWindow::runExportTask(
         const auto msgType = result ? Messenger::MessageType::Info : Messenger::MessageType::Error;
         Messenger::defaultInstance()->emitMessage(msgType, msg);
     });
+    taskMgr->setTitle(taskId, QFileInfo(filepath).fileName());
+    taskMgr->run(taskId);
 }
 
 void MainWindow::exportSelectedItems()
