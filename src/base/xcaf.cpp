@@ -231,21 +231,23 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
 
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)
 {
-    Expects(m_modelTree);
+    Expects(m_modelTree != nullptr);
 
     const TreeNodeId node = m_modelTree->appendChild(parentNode, label);
     if (XCaf::isShapeAssembly(label)) {
         for (const TDF_Label& child : XCaf::shapeComponents(label))
             this->deepBuildAssemblyTree(node, child);
     }
-    else if (XCaf::isShapeSimple(label)) {
-        for (const TDF_Label& child : XCaf::shapeSubs(label))
-            this->deepBuildAssemblyTree(node, child);
-    }
     else if (XCaf::isShapeReference(label)) {
         const TDF_Label referred = XCaf::shapeReferred(label);
         this->deepBuildAssemblyTree(node, referred);
     }
+#if 0
+    else if (XCaf::isShapeSimple(label)) {
+        for (const TDF_Label& child : XCaf::shapeSubs(label))
+            this->deepBuildAssemblyTree(node, child);
+    }
+#endif
 
     return node;
 }
