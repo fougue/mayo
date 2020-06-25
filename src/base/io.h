@@ -18,15 +18,15 @@
 #include <QtCore/QCoreApplication>
 #include <memory>
 
-namespace qttask { class Progress; }
-
 namespace Mayo {
+
+class TaskProgress;
 
 class Reader {
 public:
     //struct Error { int code; QString text; };
-    virtual bool readFile(const QString& filepath, qttask::Progress* progress = nullptr) = 0;
-    virtual bool transfer(DocumentPtr doc, qttask::Progress* progress = nullptr) = 0;
+    virtual bool readFile(const QString& filepath, TaskProgress* progress = nullptr) = 0;
+    virtual bool transfer(DocumentPtr doc, TaskProgress* progress = nullptr) = 0;
 };
 
 class IO {
@@ -47,8 +47,7 @@ public:
 #ifdef HAVE_GMIO
         gmio_stl_format stlFormat = GMIO_STL_FORMAT_UNKNOWN;
         std::string stlaSolidName;
-        gmio_float_text_format stlaFloat32Format =
-                GMIO_FLOAT_TEXT_FORMAT_SHORTEST_LOWERCASE;
+        gmio_float_text_format stlaFloat32Format = GMIO_FLOAT_TEXT_FORMAT_SHORTEST_LOWERCASE;
         uint8_t stlaFloat32Precision = 9;
 #else
         enum class StlFormat {
@@ -80,19 +79,19 @@ public:
             DocumentPtr doc,
             const QStringList& listFilepath,
             Messenger* messenger = NullMessenger::instance(),
-            qttask::Progress* progress = nullptr);
+            TaskProgress* progress = nullptr);
 
     IO::Result importInDocument(
             DocumentPtr doc,
             PartFormat format,
             const QString& filepath,
-            qttask::Progress* progress = nullptr);
+            TaskProgress* progress = nullptr);
     IO::Result exportApplicationItems(
             Span<const ApplicationItem> appItems,
             PartFormat format,
             const ExportOptions& options,
             const QString& filepath,
-            qttask::Progress* progress = nullptr);
+            TaskProgress* progress = nullptr);
     static bool hasExportOptionsForFormat(PartFormat format);
 
 private:
@@ -101,14 +100,14 @@ private:
     struct ImportData {
         DocumentPtr doc;
         QString filepath;
-        qttask::Progress* progress;
+        TaskProgress* progress;
     };
 
     struct ExportData {
         Span<const ApplicationItem> appItems;
         ExportOptions options;
         QString filepath;
-        qttask::Progress* progress;
+        TaskProgress* progress;
     };
 
     Result importIges(ImportData data);

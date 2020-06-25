@@ -7,12 +7,11 @@
 #include "dialog_task_manager.h"
 
 #include "../base/string_utils.h"
+#include "../base/task_manager.h"
 #include "settings.h"
 #include "ui_dialog_task_manager.h"
 #include "theme.h"
 
-#include <fougtools/qttools/task/manager.h>
-#include <fougtools/qttools/task/progress.h>
 #include <QtCore/QTimer>
 #include <QtCore/QtDebug>
 #include <QtWidgets/QLabel>
@@ -105,27 +104,19 @@ void DialogTaskManager::TaskWidget::onUnboundedProgressTimeout()
 // -- DialogTaskManager
 // --
 
-DialogTaskManager::DialogTaskManager(QWidget* parent)
+DialogTaskManager::DialogTaskManager(TaskManager* taskMgr, QWidget* parent)
     : QDialog(parent),
-      m_ui(new Ui_DialogTaskManager)
+      m_ui(new Ui_DialogTaskManager),
+      m_taskMgr(taskMgr)
 {
     m_ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
     this->setWindowModality(Qt::WindowModal);
 
-    auto taskMgr = qttask::Manager::globalInstance();
-    QObject::connect(
-                taskMgr, &qttask::Manager::started,
-                this, &DialogTaskManager::onTaskStarted);
-    QObject::connect(
-                taskMgr, &qttask::Manager::ended,
-                this, &DialogTaskManager::onTaskEnded);
-    QObject::connect(
-                taskMgr, &qttask::Manager::progress,
-                this, &DialogTaskManager::onTaskProgress);
-    QObject::connect(
-                taskMgr, &qttask::Manager::progressStep,
-                this, &DialogTaskManager::onTaskProgressStep);
+    QObject::connect(taskMgr, &TaskManager::started, this, &DialogTaskManager::onTaskStarted);
+    QObject::connect(taskMgr, &TaskManager::ended, this, &DialogTaskManager::onTaskEnded);
+    QObject::connect(taskMgr, &TaskManager::progressChanged, this, &DialogTaskManager::onTaskProgress);
+    QObject::connect(taskMgr, &TaskManager::progressStep, this, &DialogTaskManager::onTaskProgressStep);
 }
 
 DialogTaskManager::~DialogTaskManager()
@@ -133,7 +124,7 @@ DialogTaskManager::~DialogTaskManager()
     delete m_ui;
 }
 
-void DialogTaskManager::onTaskStarted(quint64 taskId, const QString& title)
+void DialogTaskManager::onTaskStarted(TaskId taskId)
 {
     if (!m_isRunning)
         this->show();
@@ -146,11 +137,10 @@ void DialogTaskManager::onTaskStarted(quint64 taskId, const QString& title)
     m_ui->contentsLayout->insertWidget(0, widget);
     m_taskIdToWidget.insert(taskId, widget);
     ++m_taskCount;
-    if (!title.isEmpty())
-        this->onTaskProgressStep(taskId, QString());
+    this->onTaskProgressStep(taskId, QString());
 }
 
-void DialogTaskManager::onTaskEnded(quint64 taskId)
+void DialogTaskManager::onTaskEnded(TaskId taskId)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (widget) {
@@ -169,7 +159,7 @@ void DialogTaskManager::onTaskEnded(quint64 taskId)
     }
 }
 
-void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
+void DialogTaskManager::onTaskProgress(TaskId taskId, int percent)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (widget) {
@@ -183,35 +173,34 @@ void DialogTaskManager::onTaskProgress(quint64 taskId, int percent)
     }
 }
 
-void DialogTaskManager::onTaskProgressStep(quint64 taskId, const QString& name)
+void DialogTaskManager::onTaskProgressStep(TaskId taskId, const QString& name)
 {
-    const QString taskTitle = qttask::Manager::globalInstance()->taskTitle(taskId);
     TaskWidget* widget = this->taskWidget(taskId);
-    if (widget) {
-        QString text = taskTitle;
-        if (!name.isEmpty()) {
-            if (!text.isEmpty())
-                StringUtils::append(&text, tr(" / "), Settings::instance()->locale());
+    if (!widget)
+        return;
 
-            StringUtils::append(&text, name, Settings::instance()->locale());
-        }
+    const QString taskTitle = m_taskMgr->title(taskId);
+    QString text = taskTitle;
+    if (!name.isEmpty()) {
+        if (!text.isEmpty())
+            StringUtils::append(&text, tr(" / "), Settings::instance()->locale());
 
-        widget->m_label->setText(text);
+        StringUtils::append(&text, name, Settings::instance()->locale());
     }
+
+    widget->m_label->setText(text);
 }
 
 void DialogTaskManager::interruptTask()
 {
     auto interruptBtn = qobject_cast<QToolButton*>(this->sender());
-    if (interruptBtn
-            && interruptBtn->dynamicPropertyNames().contains(TaskWidget::TaskIdProp))
-    {
+    if (interruptBtn && interruptBtn->dynamicPropertyNames().contains(TaskWidget::TaskIdProp)) {
         const quint64 taskId = interruptBtn->property(TaskWidget::TaskIdProp).toULongLong();
-        qttask::Manager::globalInstance()->requestAbort(taskId);
+        m_taskMgr->requestAbort(taskId);
     }
 }
 
-DialogTaskManager::TaskWidget* DialogTaskManager::taskWidget(quint64 taskId)
+DialogTaskManager::TaskWidget* DialogTaskManager::taskWidget(TaskId taskId)
 {
     auto it = m_taskIdToWidget.find(taskId);
     return it != m_taskIdToWidget.end() ? it.value() : nullptr;

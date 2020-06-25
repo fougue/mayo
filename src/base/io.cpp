@@ -8,9 +8,11 @@
 
 #include "caf_utils.h"
 #include "document.h"
-#include "libtask.h"
+#include "math_utils.h"
 #include "string_utils.h"
-#include <fougtools/qttools/task/progress.h>
+#include "task_manager.h"
+#include "task_progress.h"
+#include "tkernel_utils.h"
 #include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QCoreApplication>
@@ -44,8 +46,7 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
-#include <Standard_Version.hxx>
-#if OCC_VERSION_HEX >= 0x070400
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include <RWObj_CafReader.hxx>
 #endif
 
@@ -65,6 +66,7 @@
 #include <future>
 #include <locale>
 #include <fstream>
+#include <memory>
 #include <mutex>
 #include <regex>
 #include <set>
@@ -78,14 +80,14 @@ static std::mutex globalMutex;
 #ifdef HAVE_GMIO
 static bool gmio_qttask_is_stop_requested(void* cookie)
 {
-    auto progress = static_cast<const qttask::Progress*>(cookie);
+    auto progress = static_cast<const TaskProgress*>(cookie);
     return progress ? progress->isAbortRequested() : false;
 }
 
 static void gmio_qttask_handle_progress(
         void* cookie, intmax_t value, intmax_t maxValue)
 {
-    auto progress = static_cast<qttask::Progress*>(cookie);
+    auto progress = static_cast<TaskProgress*>(cookie);
     if (progress && maxValue > 0) {
         const auto pctNorm = value / static_cast<double>(maxValue);
         const auto pct = qRound(pctNorm * 100);
@@ -94,7 +96,7 @@ static void gmio_qttask_handle_progress(
     }
 }
 
-static gmio_task_iface gmio_qttask_create_task_iface(qttask::Progress* progress)
+static gmio_task_iface gmio_qttask_create_task_iface(TaskProgress* progress)
 {
     gmio_task_iface task = {};
     task.cookie = progress;
@@ -147,7 +149,7 @@ static QString gmioErrorToQString(int error)
 
 class OccProgress : public Message_ProgressIndicator {
 public:
-    OccProgress(qttask::Progress* progress)
+    OccProgress(TaskProgress* progress)
         : m_progress(progress)
     {
         this->SetScale(0., 100., 1.);
@@ -155,16 +157,17 @@ public:
 
     bool Show(const bool /*force*/) override
     {
-        const Handle_TCollection_HAsciiString name = this->GetScope(1).GetName();
-        if (!name.IsNull() && m_progress)
-            m_progress->setStep(QString(name->ToCString()));
+        if (m_progress) {
+            const Handle_TCollection_HAsciiString name = this->GetScope(1).GetName();
+            if (!name.IsNull())
+                m_progress->setStep(occ::QtUtils::fromUtf8ToQString(name->String()));
 
-        const double pc = this->GetPosition(); // Always within [0,1]
-        const int minVal = 0;
-        const int maxVal = 100;
-        const int val = minVal + pc * (maxVal - minVal);
-        if (m_progress)
+            const double pc = this->GetPosition(); // Always within [0,1]
+            const int minVal = 0;
+            const int maxVal = 100;
+            const int val = minVal + pc * (maxVal - minVal);
             m_progress->setValue(val);
+        }
 
         return true;
     }
@@ -175,7 +178,7 @@ public:
     }
 
 private:
-    qttask::Progress* m_progress = nullptr;
+    TaskProgress* m_progress = nullptr;
 };
 
 namespace OccCafIO {
@@ -191,36 +194,32 @@ Handle_XSControl_WorkSession workSession(const IGESCAFControl_Reader& reader) {
 }
 
 void readFile_prepare(const STEPCAFControl_Reader&) {
+#if 0
+    // Causes crash with models "RMX-10 ASSY.STEP" and "io1-cm-214.stp"
     Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
+#endif
 }
 
 void readFile_prepare(const IGESCAFControl_Reader&) {
 }
 
 template<typename CAF_READER>
-bool readFile(CAF_READER& reader, const QString& filepath, qttask::Progress* progress)
+bool readFile(CAF_READER& reader, const QString& filepath, TaskProgress* /*progress*/)
 {
     std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
     readFile_prepare(reader);
-    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-    indicator->NewScope(30, "Loading file");
-    auto _ = gsl::finally([&]{ indicator->EndScope(); });
     const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toLocal8Bit().constData());
     return error == IFSelect_RetDone;
 }
 
 template<typename CAF_READER>
-bool transfer(CAF_READER& reader, DocumentPtr doc, qttask::Progress* progress)
+bool transfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
 {
     std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
     Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-    indicator->NewScope(70, "Translating file");
     Handle_XSControl_WorkSession ws = workSession(reader);
     ws->MapReader()->SetProgress(indicator);
-    auto _ = gsl::finally([&]{
-        indicator->EndScope();
-        ws->MapReader()->SetProgress(nullptr);
-    });
+    auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
     bool ok = false;
     doc->xcafImport([&]{
         Handle_TDocStd_Document stdDoc = doc;
@@ -241,11 +240,11 @@ public:
         m_reader.SetPropsMode(true);
     }
 
-    bool readFile(const QString& filepath, qttask::Progress* progress) override {
+    bool readFile(const QString& filepath, TaskProgress* progress) override {
         return OccCafIO::readFile(m_reader, filepath, progress);
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* progress) override {
+    bool transfer(DocumentPtr doc, TaskProgress* progress) override {
         return OccCafIO::transfer(m_reader, doc, progress);
     }
 
@@ -263,11 +262,11 @@ public:
         //m_reader.SetPropsMode(true);
     }
 
-    bool readFile(const QString& filepath, qttask::Progress* progress) override {
+    bool readFile(const QString& filepath, TaskProgress* progress) override {
         return OccCafIO::readFile(m_reader, filepath, progress);
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* progress) override {
+    bool transfer(DocumentPtr doc, TaskProgress* progress) override {
         return OccCafIO::transfer(m_reader, doc, progress);
     }
 
@@ -277,7 +276,7 @@ private:
 
 class OccBRepReader : public Reader {
 public:
-    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    bool readFile(const QString& filepath, TaskProgress* progress) override
     {
         m_shape.Nullify();
         m_baseFilename = QFileInfo(filepath).baseName();
@@ -286,7 +285,7 @@ public:
         return BRepTools::Read(m_shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
     {
         if (m_shape.IsNull())
             return false;
@@ -307,7 +306,7 @@ private:
 
 class OccStlReader : public Reader {
 public:
-    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    bool readFile(const QString& filepath, TaskProgress* progress) override
     {
         Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
         m_baseFilename = QFileInfo(filepath).baseName();
@@ -315,7 +314,7 @@ public:
         return !m_mesh.IsNull();
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
     {
         if (m_mesh.IsNull())
             return false;
@@ -335,7 +334,7 @@ private:
 #ifdef HAVE_GMIO
 class GmioStlReader : public Reader {
 public:
-    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    bool readFile(const QString& filepath, TaskProgress* progress) override
     {
         m_vecMesh.clear();
         QFile file(filepath);
@@ -360,7 +359,7 @@ public:
         return true;
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* /*progress*/) override
+    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
     {
         if (m_vecMesh.empty())
             return false;
@@ -379,16 +378,16 @@ private:
 };
 #endif // HAVE_GMIO
 
-#if OCC_VERSION_HEX >= 0x070400
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 class OccObjReader : public Reader {
 public:
-    bool readFile(const QString& filepath, qttask::Progress* progress) override
+    bool readFile(const QString& filepath, TaskProgress* progress) override
     {
         m_filepath = filepath;
         return true;
     }
 
-    bool transfer(DocumentPtr doc, qttask::Progress* progress) override
+    bool transfer(DocumentPtr doc, TaskProgress* progress) override
     {
         m_reader.SetDocument(doc);
         Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
@@ -555,7 +554,7 @@ IO* IO::instance()
 
 Span<const IO::PartFormat> IO::partFormats()
 {
-    const static std::vector<PartFormat> vecFormat = {
+    const static PartFormat arrayFormat[] = {
         PartFormat::Iges,
         PartFormat::Step,
         PartFormat::OccBrep,
@@ -563,7 +562,7 @@ Span<const IO::PartFormat> IO::partFormats()
         PartFormat::Obj
     };
 
-    return vecFormat;
+    return arrayFormat;
 }
 
 QString IO::partFormatFilter(IO::PartFormat format)
@@ -632,7 +631,7 @@ std::unique_ptr<Reader> IO::createReader(IO::PartFormat format) const
     case PartFormat::Stl:
         return std::make_unique<Internal::OccStlReader>();
     case PartFormat::Obj:
-#if OCC_VERSION_HEX >= 0x070400
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         return std::make_unique<Internal::OccObjReader>();
 #endif
     case PartFormat::Unknown:
@@ -648,23 +647,20 @@ bool IO::importInDocument(
         Messenger* messenger,
         TaskProgress* progress)
 {
-
     bool ok = true;
 
-    struct ReadFileResult {
-        std::unique_ptr<Reader> reader;
-        QString filepath;
-    };
-    auto fnAddError = [&](const QString& filepath, const QString& errorMsg) {
+    using ReaderPtr = std::unique_ptr<Reader>;
+    auto fnAddError = [&](QString filepath, QString errorMsg) {
         ok = false;
         messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorMsg));
     };
-    auto fnReadFileError = [&](const QString& filepath, const QString& errorMsg) -> ReadFileResult {
+    auto fnReadFileError = [&](QString filepath, QString errorMsg) -> ReaderPtr {
         fnAddError(filepath, errorMsg);
-        return { {}, filepath };
+        return {};
     };
-
-    auto fnReadFile = [&](const QString& filepath, TaskProgress* subProgress) -> ReadFileResult {
+    auto fnReadFile = [&](QString filepath, TaskProgress* subProgress) -> ReaderPtr {
+        subProgress->beginScope(40, tr("Reading file"));
+        auto _ = gsl::finally([=]{ subProgress->endScope(); });
         const IO::PartFormat fileFormat = IO::findPartFormat(filepath);
         if (fileFormat == IO::PartFormat::Unknown)
             return fnReadFileError(filepath, tr("Unknown format"));
@@ -676,47 +672,70 @@ bool IO::importInDocument(
         if (!reader->readFile(filepath, subProgress))
             return fnReadFileError(filepath, tr("File read problem"));
 
-        return { std::move(reader), filepath };
+        return reader;
     };
-    auto fnTransfer = [&](const ReadFileResult& readFileResult, TaskProgress* subProgress) {
-        Reader* reader = readFileResult.reader.get();
+    auto fnTransfer = [&](QString filepath, const ReaderPtr& reader, TaskProgress* subProgress) {
+        subProgress->beginScope(60, tr("Transferring file"));
         if (reader) {
             if (!reader->transfer(doc, subProgress))
-                fnAddError(readFileResult.filepath, tr("File transfer problem"));
+                fnAddError(filepath, tr("File transfer problem"));
         }
+
+        subProgress->endScope();
     };
 
     if (listFilepath.size() == 1) { // Single file case
-        const ReadFileResult readFileResult = fnReadFile(listFilepath.front(), nullptr);
-        fnTransfer(readFileResult, nullptr);
+        const ReaderPtr reader = fnReadFile(listFilepath.front(), progress);
+        fnTransfer(listFilepath.front(), reader, progress);
     }
     else { // Many files case
-        using ReaderPtr = std::unique_ptr<Reader>;
-        std::vector<std::future<ReadFileResult>> vecReadFileResult;
-        for (const QString& filepath : listFilepath) {
-            auto future = std::async([=] { return fnReadFile(filepath, nullptr); });
-            vecReadFileResult.push_back(std::move(future));
-        } // endfor
+        struct TaskData {
+            std::unique_ptr<Reader> reader;
+            QString filepath;
+            TaskProgress* progress = nullptr;
+            TaskId taskId = 0;
+            bool transferred = false;
+        };
+        std::vector<TaskData> vecTaskData;
+        vecTaskData.resize(listFilepath.size());
+
+        TaskManager childTaskManager;
+        QObject::connect(
+                    &childTaskManager, &TaskManager::progressChanged,
+                    [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
+
+        for (int i = 0; i < listFilepath.size(); ++i) {
+            TaskData& taskData = vecTaskData.at(i);
+            taskData.filepath = listFilepath.at(i);
+            const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
+                taskData.progress = progressChild;
+                taskData.reader = fnReadFile(taskData.filepath, progressChild);
+            });
+            taskData.taskId = childTaskId;
+            childTaskManager.run(childTaskId, TaskAutoDestroy::Off);
+        }
 
         // Transfer to document
-        while (!vecReadFileResult.empty() && (!progress || !progress->isAbortRequested())) {
-            auto itFutureReady = std::find_if(
-                        vecReadFileResult.begin(),
-                        vecReadFileResult.end(),
-                        [](const std::future<ReadFileResult>& future) {
-                return future.wait_for(std::chrono::milliseconds(10)) == std::future_status::ready;
+        int taskDataCount = vecTaskData.size();
+        while (taskDataCount > 0 && (!progress || !progress->isAbortRequested())) {
+            auto itTaskData = std::find_if(
+                        vecTaskData.begin(), vecTaskData.end(),
+                        [&](const TaskData& taskData) {
+                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 10);
             });
-            if (itFutureReady == vecReadFileResult.end()) {
-                if (vecReadFileResult.front().wait_for(std::chrono::milliseconds(100))
-                        == std::future_status::ready)
-                {
-                    itFutureReady = vecReadFileResult.begin();
-                }
+            if (itTaskData == vecTaskData.end()) {
+                itTaskData = std::find_if(
+                            vecTaskData.begin(), vecTaskData.end(),
+                            [&](const TaskData& taskData) { return !taskData.transferred; });
+                if (itTaskData != vecTaskData.end())
+                    if (!childTaskManager.waitForDone(itTaskData->taskId, 100))
+                        itTaskData = vecTaskData.end();
             }
 
-            if (itFutureReady != vecReadFileResult.end()) {
-                fnTransfer(itFutureReady->get(), nullptr);
-                vecReadFileResult.erase(itFutureReady);
+            if (itTaskData != vecTaskData.end()) {
+                fnTransfer(itTaskData->filepath, itTaskData->reader, itTaskData->progress);
+                itTaskData->transferred = true;
+                --taskDataCount;
             }
         } // endwhile
     }
@@ -728,7 +747,7 @@ IO::Result IO::importInDocument(
         DocumentPtr doc,
         IO::PartFormat format,
         const QString& filepath,
-        qttask::Progress* progress)
+        TaskProgress* progress)
 {
     std::unique_ptr<Reader> reader = this->createReader(format);
     if (!reader)
@@ -748,7 +767,7 @@ IO::Result IO::exportApplicationItems(
         PartFormat format,
         const ExportOptions& options,
         const QString& filepath,
-        qttask::Progress* progress)
+        TaskProgress* progress)
 {
     const ExportData data = { appItems, options, filepath, progress };
     switch (format) {

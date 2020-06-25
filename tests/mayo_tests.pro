@@ -22,8 +22,6 @@ SOURCES += \
     ../src/3rdparty/fougtools/occtools/qt_utils.cpp \
     $$files(../src/base/*.cpp) \
 
-include(../src/3rdparty/fougtools/qttools/task/qttools_task.pri)
-
 CONFIG += file_copies
 COPIES += MayoInputs
 MayoInputs.files = $$files(inputs/*.*)

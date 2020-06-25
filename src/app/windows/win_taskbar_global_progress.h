@@ -8,6 +8,8 @@
 
 // Module : GUI
 
+#include "../../base/task_common.h"
+
 #include <unordered_map>
 #include <QtCore/QObject>
 class QWindow;
@@ -15,19 +17,22 @@ class QWinTaskbarButton;
 
 namespace Mayo {
 
+class TaskManager;
+
 class WinTaskbarGlobalProgress : public QObject {
     Q_OBJECT
 public:
-    WinTaskbarGlobalProgress(QObject* parent = nullptr);
+    WinTaskbarGlobalProgress(const TaskManager* taskMgr, QObject* parent = nullptr);
 
     void setWindow(QWindow* window);
 
 private:
-    void onTaskProgress(quint64 taskId, int percent);
-    void onTaskEnded(quint64 taskId);
+    void onTaskProgress(TaskId taskId, int percent);
+    void onTaskEnded(TaskId taskId);
     void updateTaskbar();
 
-    std::unordered_map<quint64, int> m_mapTaskIdProgress;
+    const TaskManager* m_taskMgr = nullptr;
+    std::unordered_map<TaskId, int> m_mapTaskIdProgress;
     QWinTaskbarButton* m_taskbarBtn = nullptr;
     int m_globalPct = 0;
 };
