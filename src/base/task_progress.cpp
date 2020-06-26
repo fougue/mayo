@@ -8,6 +8,8 @@
 #include "task.h"
 #include "task_manager.h"
 
+#include <limits>
+
 namespace Mayo {
 
 TaskProgress::TaskProgress(const Task& task)
@@ -17,8 +19,7 @@ TaskProgress::TaskProgress(const Task& task)
 
 TaskId TaskProgress::taskId() const
 {
-    assert(m_task != nullptr);
-    return m_task->id();
+    return m_task ? m_task->id() : std::numeric_limits<TaskId>::max();
 }
 
 void TaskProgress::setValue(int pct)
@@ -27,13 +28,20 @@ void TaskProgress::setValue(int pct)
         pct = m_currentScopeValueStart + pct * (m_currentScopeSize / 100.);
 
     m_value = pct;
-    emit m_task->manager()->progressChanged(m_task->id(), pct);
+    if (m_task)
+        emit m_task->manager()->progressChanged(m_task->id(), pct);
 }
 
 void TaskProgress::setStep(const QString& title)
 {
     m_step = title;
-    emit m_task->manager()->progressStep(m_task->id(), title);
+    if (m_task)
+        emit m_task->manager()->progressStep(m_task->id(), title);
+}
+
+bool TaskProgress::isAbortRequested(const TaskProgress* progress)
+{
+    return progress ? progress->isAbortRequested() : false;
 }
 
 void TaskProgress::beginScope(int scopeSize, const QString &stepTitle)
