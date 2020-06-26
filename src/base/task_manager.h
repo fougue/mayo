@@ -17,8 +17,6 @@
 
 namespace Mayo {
 
-class TaskAbstractRunEngine;
-
 class TaskManager : public QObject {
     Q_OBJECT
 public:

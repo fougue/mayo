@@ -15,6 +15,8 @@ class Task;
 
 class TaskProgress {
 public:
+    TaskProgress() = default;
+
     TaskId taskId() const;
 
     int value() const { return m_value; }
@@ -24,18 +26,18 @@ public:
     void setStep(const QString& title);
 
     bool isAbortRequested() const { return m_isAbortRequested; }
+    static bool isAbortRequested(const TaskProgress* progress);
 
     void beginScope(int scopeSize, const QString& stepTitle = QString());
     void endScope();
 
 private:
-    TaskProgress() = default;
     TaskProgress(const Task& task);
 
     void requestAbort();
 
     friend class TaskManager;
-    const Task* m_task;
+    const Task* m_task = nullptr;
     int m_value = 0;
     QString m_step;
     int m_currentScopeSize = -1;
