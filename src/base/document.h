@@ -11,7 +11,6 @@
 #include "libtree.h"
 #include "xcaf.h"
 #include <QtCore/QObject>
-#include <functional>
 
 namespace Mayo {
 
@@ -58,9 +57,7 @@ public:
 
     static DocumentPtr findFrom(const TDF_Label& label);
 
-    void xcafImport(const std::function<void()>& fnImport);
-    void singleImport(const std::function<void(TDF_Label)>& fnImport);
-
+    TDF_Label newEntityLabel();
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
 signals:
@@ -80,9 +77,14 @@ private:
     class FormatBinaryRetrievalDriver;
     class FormatXmlRetrievalDriver;
 
+    friend class XCafScopeImport;
+    friend class SingleScopeImport;
+
     Document();
     void initXCaf();
     void setIdentifier(Identifier ident) { m_identifier = ident; }
+    void notifyNewXCafEntities(const TDF_LabelSequence& seqEntityBefore);
+    void notifyNewEntity(const TDF_Label& label);
 
     Identifier m_identifier = -1;
     QString m_name;

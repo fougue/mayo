@@ -9,6 +9,7 @@
 #include "caf_utils.h"
 #include "document.h"
 #include "math_utils.h"
+#include "scope_import.h"
 #include "string_utils.h"
 #include "task_manager.h"
 #include "task_progress.h"
@@ -174,7 +175,7 @@ public:
 
     bool UserBreak() override
     {
-        return m_progress ? m_progress->isAbortRequested() : false;
+        return TaskProgress::isAbortRequested(m_progress);
     }
 
 private:
@@ -220,12 +221,12 @@ bool transfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
     Handle_XSControl_WorkSession ws = workSession(reader);
     ws->MapReader()->SetProgress(indicator);
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
-    bool ok = false;
-    doc->xcafImport([&]{
-        Handle_TDocStd_Document stdDoc = doc;
-        ok = reader.Transfer(stdDoc);
-    });
-    return ok;
+
+    XCafScopeImport import(doc);
+    Handle_TDocStd_Document stdDoc = doc;
+    const bool okTransfer = reader.Transfer(stdDoc);
+    import.setConfirmation(okTransfer && !TaskProgress::isAbortRequested(progress));
+    return okTransfer;
 }
 
 } // namespace OccCafIO
@@ -290,12 +291,11 @@ public:
         if (m_shape.IsNull())
             return false;
 
-        doc->xcafImport([&]{
-            const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
-            const TDF_Label labelShape = shapeTool->NewShape();
-            shapeTool->SetShape(labelShape, m_shape);
-            CafUtils::setLabelAttrStdName(labelShape, m_baseFilename);
-        });
+        XCafScopeImport import(doc);
+        const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+        const TDF_Label labelShape = shapeTool->NewShape();
+        shapeTool->SetShape(labelShape, m_shape);
+        CafUtils::setLabelAttrStdName(labelShape, m_baseFilename);
         return true;
     }
 
@@ -319,10 +319,9 @@ public:
         if (m_mesh.IsNull())
             return false;
 
-        doc->singleImport([&](TDF_Label labelNewEntity) {
-            TDataXtd_Triangulation::Set(labelNewEntity, m_mesh);
-            CafUtils::setLabelAttrStdName(labelNewEntity, m_baseFilename);
-        });
+        SingleScopeImport import(doc);
+        TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
+        CafUtils::setLabelAttrStdName(import.entityLabel(), m_baseFilename);
         return true;
     }
 
@@ -336,6 +335,7 @@ class GmioStlReader : public Reader {
 public:
     bool readFile(const QString& filepath, TaskProgress* progress) override
     {
+        m_baseFilename = filepath;
         m_vecMesh.clear();
         QFile file(filepath);
         if (file.open(QIODevice::ReadOnly)) {
@@ -365,9 +365,9 @@ public:
             return false;
 
         for (const Handle_Poly_Triangulation& mesh : m_vecMesh) {
-            doc->singleImport([&](TDF_Label labelNewEntity) {
-                TDataXtd_Triangulation::Set(labelNewEntity, mesh);
-            });
+            SingleScopeImport import(doc);
+            TDataXtd_Triangulation::Set(import.entityLabel(), mesh);
+            CafUtils::setLabelAttrStdName(import.entityLabel(), m_baseFilename);
         }
 
         return true;
@@ -375,6 +375,7 @@ public:
 
 private:
     std::vector<Handle_Poly_Triangulation> m_vecMesh;
+    QString m_baseFilename;
 };
 #endif // HAVE_GMIO
 
@@ -391,11 +392,10 @@ public:
     {
         m_reader.SetDocument(doc);
         Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-        bool ok = true;
-        doc->xcafImport([&]{
-            ok = m_reader.Perform(occ::QtUtils::toOccUtf8String(m_filepath), indicator);
-        });
-        return ok;
+        XCafScopeImport import(doc);
+        const bool okPerform = m_reader.Perform(occ::QtUtils::toOccUtf8String(m_filepath), indicator);
+        import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
+        return okPerform;
     }
 
 private:
@@ -647,6 +647,9 @@ bool IO::importInDocument(
         Messenger* messenger,
         TaskProgress* progress)
 {
+    TaskProgress nullProgress;
+    progress = progress ? progress : &nullProgress;
+
     bool ok = true;
 
     using ReaderPtr = std::unique_ptr<Reader>;
@@ -677,7 +680,7 @@ bool IO::importInDocument(
     auto fnTransfer = [&](QString filepath, const ReaderPtr& reader, TaskProgress* subProgress) {
         subProgress->beginScope(60, tr("Transferring file"));
         if (reader) {
-            if (!reader->transfer(doc, subProgress))
+            if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
                 fnAddError(filepath, tr("File transfer problem"));
         }
 
@@ -741,25 +744,6 @@ bool IO::importInDocument(
     }
 
     return ok;
-}
-
-IO::Result IO::importInDocument(
-        DocumentPtr doc,
-        IO::PartFormat format,
-        const QString& filepath,
-        TaskProgress* progress)
-{
-    std::unique_ptr<Reader> reader = this->createReader(format);
-    if (!reader)
-        return Result::error(tr("Unknown error"));
-
-    if (!reader->readFile(filepath, progress))
-        return Result::error(tr("Read file failed"));
-
-    if (!reader->transfer(doc))
-        return Result::error(tr("Transfer failed"));
-
-    return Result::ok();
 }
 
 IO::Result IO::exportApplicationItems(
