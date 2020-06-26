@@ -28,6 +28,45 @@ void Document::initXCaf()
     m_xcaf.setModelTree(m_modelTree);
 }
 
+void Document::notifyNewXCafEntities(const TDF_LabelSequence& seqEntityBefore)
+{
+    TDF_LabelSequence seqDiff;
+    {
+        const TDF_LabelSequence& seqBefore = seqEntityBefore;
+        const TDF_LabelSequence seqAfter = m_xcaf.topLevelFreeShapes();
+        std::set<int> setBeforeTag;
+        const TDF_Label firstBeforeLabel = !seqBefore.IsEmpty() ? seqBefore.First() : TDF_Label();
+        for (const TDF_Label& label : seqBefore) {
+            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
+            setBeforeTag.insert(label.Tag());
+        }
+
+        for (const TDF_Label& label : seqAfter) {
+            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
+            if (setBeforeTag.find(label.Tag()) == setBeforeTag.cend())
+                seqDiff.Append(label);
+        }
+    }
+
+    for (const TDF_Label& label : seqDiff) {
+        const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
+        emit this->entityAdded(nodeId);
+    }
+}
+
+void Document::notifyNewEntity(const TDF_Label& label)
+{
+    // TODO Allow custom population of the model tree for the new entity
+    const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, label);
+    emit this->entityAdded(nodeNewEntity);
+
+#if 0
+    // Remove 'label'
+    label.ForgetAllAttributes();
+    label.Nullify();
+#endif
+}
+
 QString Document::name() const
 {
     return m_name;
@@ -123,49 +162,14 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
     return DocumentPtr::DownCast(TDocStd_Document::Get(label));
 }
 
-void Document::xcafImport(const std::function<void()>& fnImport)
-{
-    const TDF_LabelSequence seqBefore = m_xcaf.topLevelFreeShapes();
-    fnImport();
-    TDF_LabelSequence seqDiff;
-    {
-        const TDF_LabelSequence seqAfter = m_xcaf.topLevelFreeShapes();
-        std::set<int> setBeforeTag;
-        const TDF_Label firstBeforeLabel = !seqBefore.IsEmpty() ? seqBefore.First() : TDF_Label();
-        for (const TDF_Label& label : seqBefore) {
-            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
-            setBeforeTag.insert(label.Tag());
-        }
-
-        for (const TDF_Label& label : seqAfter) {
-            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
-            if (setBeforeTag.find(label.Tag()) == setBeforeTag.cend())
-                seqDiff.Append(label);
-        }
-    }
-
-    for (const TDF_Label& label : seqDiff) {
-        const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
-        emit this->entityAdded(nodeId);
-    }
-}
-
-void Document::singleImport(const std::function<void(TDF_Label)>& fnImport)
+TDF_Label Document::newEntityLabel()
 {
     Handle_TDF_TagSource tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
     Expects(!tagSrc.IsNull());
     if (tagSrc->Get() == 0)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
 
-    TDF_Label labelNewEntity = this->rootLabel().NewChild();
-    fnImport(labelNewEntity);
-    // TODO Allow custom population of the model tree for the new entity
-    const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, labelNewEntity);
-    emit this->entityAdded(nodeNewEntity);
-
-//    // Remove 'labelNewEntity'
-//    labelNewEntity.ForgetAllAttributes();
-//    labelNewEntity.Nullify();
+    return this->rootLabel().NewChild();
 }
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)

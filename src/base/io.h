@@ -80,12 +80,6 @@ public:
             const QStringList& listFilepath,
             Messenger* messenger = NullMessenger::instance(),
             TaskProgress* progress = nullptr);
-
-    IO::Result importInDocument(
-            DocumentPtr doc,
-            PartFormat format,
-            const QString& filepath,
-            TaskProgress* progress = nullptr);
     IO::Result exportApplicationItems(
             Span<const ApplicationItem> appItems,
             PartFormat format,

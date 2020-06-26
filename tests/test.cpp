@@ -80,8 +80,8 @@ void Test::Application_test()
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
-        const IO::Result ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Step, "inputs/cube.step");
-        QVERIFY(ioRes.valid());
+        const bool okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        QVERIFY(okImport);
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
         QVERIFY(XCaf::isShape(doc->entityLabel(0)));
@@ -100,13 +100,13 @@ void Test::Application_test()
         QCOMPARE(app->documentCount(), 0);
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
-        IO::Result ioRes = IO::Result::ok();
-        ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Stl, "inputs/cube.stlb");
-        QVERIFY(ioRes.valid());
+        bool okImport = true;
+        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.stlb" });
+        QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
 
-        ioRes = IO::instance()->importInDocument(doc, IO::PartFormat::Step, "inputs/cube.step");
-        QVERIFY(ioRes.valid());
+        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 2);
 
         doc->destroyEntity(doc->entityTreeNodeId(0));
