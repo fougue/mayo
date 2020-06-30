@@ -28,11 +28,7 @@ public:
     const Enumeration& displayModes() const { return m_enumDisplayModes; }
     virtual void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const = 0;
 
-//    Span<Property* const> properties() const { return m_propertyOwner->properties(); }
-//    virtual void applyProperties(GraphicsEntity* entity) const = 0;
-
 protected:
-//    void setPropertyOwner(PropertyOwner* propertyOwner) { m_propertyOwner = propertyOwner; }
     void setDisplayModes(const Enumeration& enumeration) { m_enumDisplayModes = enumeration; }
     void throwIf_invalidDisplayMode(Enumeration::Value mode) const;
 
@@ -40,7 +36,6 @@ protected:
     static void setEntityAisObject(GraphicsEntity* ptrEntity, const Handle_AIS_InteractiveObject& obj);
 
 private:
-    //PropertyOwner* m_propertyOwner = nullptr;
     Enumeration m_enumDisplayModes;
 };
 

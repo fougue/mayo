@@ -7,6 +7,8 @@
 #pragma once
 
 #include "../base/application_item_selection_model.h"
+#include "../graphics/graphics_tree_node_mapping.h"
+#include "gui_document.h"
 #include <QtCore/QObject>
 #include <vector>
 
@@ -26,6 +28,10 @@ public:
 
     ApplicationItemSelectionModel* selectionModel() const;
 
+    using GraphicsTreeNodeMappingDriverPtr = std::unique_ptr<GraphicsTreeNodeMappingDriver>;
+    void addGraphicsTreeNodeMappingDriver(GraphicsTreeNodeMappingDriverPtr driver);
+    Span<const GraphicsTreeNodeMappingDriverPtr> graphicsTreeNodeMappingDrivers() const;
+
 signals:
     void guiDocumentAdded(GuiDocument* guiDoc);
     void guiDocumentErased(const GuiDocument* guiDoc);
@@ -42,6 +48,7 @@ private:
     GuiApplication(QObject* parent = nullptr);
 
     std::vector<GuiDocument*> m_vecGuiDocument;
+    std::vector<GraphicsTreeNodeMappingDriverPtr> m_vecGraphicsTreeNodeMappingDriver;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
 };
 

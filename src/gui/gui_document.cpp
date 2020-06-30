@@ -9,8 +9,8 @@
 #include "../app/theme.h" // TODO Remove this dependency
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
-#include "../base/brep_utils.h"
 #include "../base/document.h"
+#include "../gui/gui_application.h"
 #include "../gpx/gpx_utils.h"
 #include "../graphics/graphics_entity_driver_table.h"
 
@@ -22,7 +22,7 @@
 #include <Graphic3d_GraphicDriver.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <StdSelect_BRepOwner.hxx>
+#include <QtCore/QtDebug>
 
 namespace Mayo {
 
@@ -105,58 +105,25 @@ GuiDocument::GuiDocument(const DocumentPtr& doc)
                 this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
 }
 
-const DocumentPtr& GuiDocument::document() const
-{
-    return m_document;
-}
-
-const Handle_V3d_View& GuiDocument::v3dView() const
-{
-    return m_v3dView;
-}
-
-const Handle_AIS_InteractiveContext& GuiDocument::aisInteractiveContext() const
-{
-    return m_aisContext;
-}
-
-//GpxDocumentItem* GuiDocument::findItemGpx(const DocumentItem* item) const
-//{
-//    const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
-//    return guiDocItem ? guiDocItem->gpxDocItem.get() : nullptr;
-//}
-
-const Bnd_Box& GuiDocument::gpxBoundingBox() const
-{
-    return m_gpxBoundingBox;
-}
-
 void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
 {
-    if (appItem.document() != this->document())
+    const DocumentPtr doc = appItem.document();
+    if (doc != this->document())
         return;
 
     if (appItem.isDocumentTreeNode()) {
-        const DocumentPtr doc = appItem.document();
+        // Find root entity tree node
         const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-        if (!doc.IsNull() && XCaf::isShape(docTreeNode.label())) {
-            const TopLoc_Location shapeLoc = doc->xcaf().shapeAbsoluteLocation(docTreeNode.id());
-            const TopoDS_Shape shape = XCaf::shape(docTreeNode.label()).Located(shapeLoc);
-            std::vector<TopoDS_Face> vecFace;
-            if (BRepUtils::moreComplex(shape.ShapeType(), TopAbs_FACE)) {
-                BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
-                    vecFace.push_back(face);
-                });
-            }
-            else if (shape.ShapeType() == TopAbs_FACE) {
-                vecFace.push_back(TopoDS::Face(shape));
-            }
+        TreeNodeId entityNodeId = docTreeNode.id();
+        while (!doc->modelTree().nodeIsRoot(entityNodeId))
+            entityNodeId = doc->modelTree().nodeParent(entityNodeId);
 
-//            for (const TopoDS_Face& face : vecFace) {
-//                auto brepOwner = guiItem->findBrepOwner(face);
-//                if (!brepOwner.IsNull())
-//                    m_aisContext->AddOrRemoveSelected(brepOwner, false);
-//            }
+        // Add/remove graphics owner
+        const GraphicsItem* gfxItem = this->findGraphicsItem(entityNodeId);
+        if (gfxItem && gfxItem->gpxTreeNodeMapping) {
+            auto vecGfxOwner = gfxItem->gpxTreeNodeMapping->findGraphicsOwners(docTreeNode);
+            for (const GraphicsOwnerPtr& gfxOwner : vecGfxOwner)
+                m_aisContext->AddOrRemoveSelected(gfxOwner, false);
         }
     }
 }
@@ -192,14 +159,11 @@ void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
 {
-    auto itFound = std::find_if(
-                m_vecGraphicsItem.begin(),
-                m_vecGraphicsItem.end(),
-                [=](const GraphicsItem& item) { return item.entityTreeNodeId == entityTreeNodeId; });
-    if (itFound != m_vecGraphicsItem.end()) {
-        const GraphicsEntity& gfxEntity = itFound->graphicsEntity;
+    const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
+    if (gfxItem) {
+        const GraphicsEntity& gfxEntity = gfxItem->graphicsEntity;
         GpxUtils::AisContext_eraseObject(m_aisContext, gfxEntity.aisObject());
-        m_vecGraphicsItem.erase(itFound);
+        m_vecGraphicsItem.erase(m_vecGraphicsItem.begin() + (gfxItem - &m_vecGraphicsItem.front()));
         this->updateV3dViewer();
 
         // Recompute bounding box
@@ -229,23 +193,35 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
 {
     GraphicsItem item;
     const TDF_Label entityLabel = m_document->modelTree().nodeData(entityTreeNodeId);
-    item.graphicsEntity = GraphicsEntityDriverTable::instance()->createEntity(entityLabel);
-    if (item.graphicsEntity.aisObject().IsNull())
+    GraphicsEntity& gfxEntity = item.graphicsEntity;
+    gfxEntity = GraphicsEntityDriverTable::instance()->createEntity(entityLabel);
+    if (gfxEntity.aisObject().IsNull())
         return;
 
-    item.graphicsEntity.setAisContext(m_aisContext);
-    item.graphicsEntity.setVisible(true);
+    gfxEntity.setAisContext(m_aisContext);
+    gfxEntity.setVisible(true);
     item.entityTreeNodeId = entityTreeNodeId;
     m_aisContext->UpdateCurrentViewer();
-//    if (sameType<XdeDocumentItem>(item)) {
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectVertex);
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectEdge);
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectWire);
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectFace);
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectShell);
-//        gpxItem->activateSelection(GpxXdeDocumentItem::SelectSolid);
-//        guiItem.vecGpxEntityOwner = gpxItem->entityOwners(GpxXdeDocumentItem::SelectFace);
-//    }
+
+    for (const auto& mappingDriver : GuiApplication::instance()->graphicsTreeNodeMappingDrivers()) {
+        if (mappingDriver->supportsEntity(entityLabel)) {
+            item.gpxTreeNodeMapping = mappingDriver->createMapping();
+            break;
+        }
+    }
+
+    if (item.gpxTreeNodeMapping) {
+        const int selectMode = item.gpxTreeNodeMapping->selectionMode();
+        if (selectMode != -1) {
+            m_aisContext->Activate(gfxEntity.aisObject(), selectMode);
+            opencascade::handle<SelectMgr_IndexedMapOfOwner> occMapEntityOwner;
+            m_aisContext->EntityOwners(occMapEntityOwner, gfxEntity.aisObject(), selectMode);
+            for (auto it = occMapEntityOwner->cbegin(); it != occMapEntityOwner->cend(); ++it) {
+                if (!item.gpxTreeNodeMapping->mapGraphicsOwner(*it))
+                    qDebug() << "Insertion failed";
+            }
+        }
+    }
 
     GpxUtils::V3dView_fitAll(m_v3dView);
     const Bnd_Box itemBndBox = GpxUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
@@ -253,16 +229,13 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     m_vecGraphicsItem.emplace_back(std::move(item));
 }
 
-//Handle_SelectMgr_EntityOwner
-//GuiDocument::GuiDocumentItem::findBrepOwner(const TopoDS_Face& face) const
-//{
-//    for (const Handle_SelectMgr_EntityOwner& owner : vecGpxEntityOwner) {
-//        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
-//        if (!brepOwner.IsNull() && brepOwner->Shape() == face)
-//            return owner;
-//    }
-
-//    return Handle_SelectMgr_EntityOwner();
-//}
+const GuiDocument::GraphicsItem* GuiDocument::findGraphicsItem(TreeNodeId entityTreeNodeId) const
+{
+    auto itFound = std::find_if(
+                m_vecGraphicsItem.cbegin(),
+                m_vecGraphicsItem.cend(),
+                [=](const GraphicsItem& item) { return item.entityTreeNodeId == entityTreeNodeId; });
+    return itFound != m_vecGraphicsItem.end() ? &(*itFound) : nullptr;
+}
 
 } // namespace Mayo

@@ -8,6 +8,7 @@
 
 #include "../base/document.h"
 #include "../graphics/graphics_entity.h"
+#include "../graphics/graphics_tree_node_mapping.h"
 
 #include <QtCore/QObject>
 #include <AIS_InteractiveContext.hxx>
@@ -15,8 +16,8 @@
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
 #include <memory>
+#include <unordered_map>
 #include <vector>
-class TopoDS_Face;
 
 namespace Mayo {
 
@@ -27,12 +28,10 @@ class GuiDocument : public QObject {
 public:
     GuiDocument(const DocumentPtr& doc);
 
-    const DocumentPtr& document() const;
-    const Handle_V3d_View& v3dView() const;
-    const Handle_AIS_InteractiveContext& aisInteractiveContext() const;
-    //GpxDocumentItem* findItemGpx(const DocumentItem* item) const;
-
-    const Bnd_Box& gpxBoundingBox() const;
+    const DocumentPtr& document() const { return m_document; }
+    const Handle_V3d_View& v3dView() const { return m_v3dView; }
+    const Handle_AIS_InteractiveContext& aisInteractiveContext() const { return m_aisContext; }
+    const Bnd_Box& gpxBoundingBox() const { return m_gpxBoundingBox; }
 
     std::vector<Handle_SelectMgr_EntityOwner> selectedEntityOwners() const;
     void toggleItemSelected(const ApplicationItem& appItem);
@@ -52,13 +51,13 @@ private:
 
     void mapGraphics(TreeNodeId entityTreeNodeId);
 
-    using ArrayGraphicsEntityOwner = std::vector<Handle_SelectMgr_EntityOwner>;
     struct GraphicsItem {
         GraphicsEntity graphicsEntity;
         TreeNodeId entityTreeNodeId;
-        ArrayGraphicsEntityOwner vecGpxEntityOwner;
-        Handle_SelectMgr_EntityOwner findBrepOwner(const TopoDS_Face& face) const;
+        std::unique_ptr<GraphicsTreeNodeMapping> gpxTreeNodeMapping;
     };
+
+    const GraphicsItem* findGraphicsItem(TreeNodeId entityTreeNodeId) const;
 
     DocumentPtr m_document;
     Handle_V3d_Viewer m_v3dViewer;
