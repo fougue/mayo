@@ -495,29 +495,6 @@ void MainWindow::importInCurrentDoc()
         Internal::prependRecentFile(&m_listRecentFile, filepath);
 }
 
-void MainWindow::runImportTask(DocumentPtr doc, IO::PartFormat format, const QString& filepath)
-{
-#if 0
-    auto task = TaskManager::globalInstance()->newTask<StdAsync>();
-    task->setTaskTitle(QFileInfo(filepath).fileName());
-    task->run([=]{
-        QTime chrono;
-        chrono.start();
-        const IO::Result result =
-                IO::instance()->importInDocument(doc, format, filepath, &task->progress());
-        QString msg;
-        if (result) {
-            msg = tr("Import time '%1': %2ms")
-                    .arg(QFileInfo(filepath).fileName())
-                    .arg(chrono.elapsed());
-        } else {
-            msg = tr("Failed to import part:\n    %1\nError: %2")
-                    .arg(filepath, result.errorText());
-        }
-    });
-#endif
-}
-
 void MainWindow::runExportTask(
         Span<const ApplicationItem> appItems,
         IO::PartFormat format,
@@ -889,22 +866,32 @@ void MainWindow::closeAllDocuments()
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
     auto app = Application::instance();
+    auto taskMgr = TaskManager::globalInstance();
+    static std::mutex mutexApp;
     for (const QString& filePath : listFilePath) {
         const QFileInfo loc(filePath);
         const DocumentPtr docPtr = app->findDocumentByLocation(loc);
         if (docPtr.IsNull()) {
             const QString locAbsoluteFilePath = QDir::toNativeSeparators(loc.absoluteFilePath());
-            const IO::PartFormat fileFormat = IO::findPartFormat(locAbsoluteFilePath);
-            if (fileFormat != IO::PartFormat::Unknown) {
-                DocumentPtr doc = app->newDocument();
+            const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
+                QTime chrono;
+                chrono.start();
+                DocumentPtr doc;
+                {
+                    std::lock_guard<std::mutex> lock(mutexApp);
+                    doc = app->newDocument();
+                }
+
                 doc->setName(loc.fileName());
                 doc->setFilePath(locAbsoluteFilePath);
-                this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
-                Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
-            }
-            else {
-                Internal::msgBoxErrorFileFormat(this, locAbsoluteFilePath);
-            }
+                const bool ok = IO::instance()->importInDocument(
+                            doc, { locAbsoluteFilePath }, Messenger::defaultInstance(), progress);
+                if (ok)
+                    Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+            });
+            taskMgr->setTitle(taskId, loc.fileName());
+            taskMgr->run(taskId);
+            Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
         }
         else {
             if (listFilePath.size() == 1)

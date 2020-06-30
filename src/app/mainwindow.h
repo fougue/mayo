@@ -70,10 +70,6 @@ private:
     void closeAllDocumentsExceptCurrent();
     void closeAllDocuments();
 
-    void runImportTask(
-            DocumentPtr doc,
-            IO::PartFormat format,
-            const QString& filepath);
     void runExportTask(
             Span<const ApplicationItem> appItems,
             IO::PartFormat format,
