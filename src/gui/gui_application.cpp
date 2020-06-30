@@ -63,6 +63,17 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
     return m_selectionModel;
 }
 
+void GuiApplication::addGraphicsTreeNodeMappingDriver(GraphicsTreeNodeMappingDriverPtr driver)
+{
+    if (driver)
+        m_vecGraphicsTreeNodeMappingDriver.push_back(std::move(driver));
+}
+
+Span<const GuiApplication::GraphicsTreeNodeMappingDriverPtr> GuiApplication::graphicsTreeNodeMappingDrivers() const
+{
+    return m_vecGraphicsTreeNodeMappingDriver;
+}
+
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
     m_vecGuiDocument.push_back(new GuiDocument(doc));

@@ -6,6 +6,7 @@
 
 #include "../base/application.h"
 #include "../base/unit_system.h"
+#include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"
 #include "../graphics/graphics_entity_driver_table.h"
 #include "mainwindow.h"
@@ -80,6 +81,10 @@ static int runApp(QApplication* app)
     // Register Graphics entity drivers
     GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
     GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
+
+    // Register Graphics/TreeNode mapping drivers
+    GuiApplication::instance()->addGraphicsTreeNodeMappingDriver(
+                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
     // Default values
     auto settings = Settings::instance();
