@@ -192,9 +192,9 @@ std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() co
 void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
 {
     GraphicsItem item;
-    const TDF_Label entityLabel = m_document->modelTree().nodeData(entityTreeNodeId);
+    const DocumentTreeNode entityTreeNode(m_document, entityTreeNodeId);
     GraphicsEntity& gfxEntity = item.graphicsEntity;
-    gfxEntity = GraphicsEntityDriverTable::instance()->createEntity(entityLabel);
+    gfxEntity = GraphicsEntityDriverTable::instance()->createEntity(entityTreeNode.label());
     if (gfxEntity.aisObject().IsNull())
         return;
 
@@ -204,10 +204,9 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     m_aisContext->UpdateCurrentViewer();
 
     for (const auto& mappingDriver : GuiApplication::instance()->graphicsTreeNodeMappingDrivers()) {
-        if (mappingDriver->supportsEntity(entityLabel)) {
-            item.gpxTreeNodeMapping = mappingDriver->createMapping();
+        item.gpxTreeNodeMapping = mappingDriver->createMapping(entityTreeNode);
+        if (item.gpxTreeNodeMapping)
             break;
-        }
     }
 
     if (item.gpxTreeNodeMapping) {

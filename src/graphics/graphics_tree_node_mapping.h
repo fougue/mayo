@@ -7,9 +7,9 @@
 #pragma once
 
 #include "graphics_owner_ptr.h"
+#include <TopAbs_ShapeEnum.hxx>
 #include <memory>
 #include <unordered_map>
-class TDF_Label;
 
 namespace Mayo {
 
@@ -24,24 +24,25 @@ public:
 
 class GraphicsTreeNodeMappingDriver {
 public:
-    virtual bool supportsEntity(const TDF_Label& label) const = 0;
-    virtual std::unique_ptr<GraphicsTreeNodeMapping> createMapping() const = 0;
+    virtual std::unique_ptr<GraphicsTreeNodeMapping> createMapping(const DocumentTreeNode& entityTreeNode) const = 0;
 };
 
 class GraphicsShapeTreeNodeMapping : public GraphicsTreeNodeMapping {
 public:
+    GraphicsShapeTreeNodeMapping(TopAbs_ShapeEnum shapeType);
+
     int selectionMode() const override;
     std::vector<GraphicsOwnerPtr> findGraphicsOwners(const DocumentTreeNode& treeNode) const override;
     bool mapGraphicsOwner(const GraphicsOwnerPtr& gfxOwner) override;
 
 private:
     std::unordered_map<int, GraphicsOwnerPtr> m_mapGfxOwner;
+    TopAbs_ShapeEnum m_shapeType;
 };
 
 class GraphicsShapeTreeNodeMappingDriver : public GraphicsTreeNodeMappingDriver {
 public:
-    bool supportsEntity(const TDF_Label& label) const override;
-    std::unique_ptr<GraphicsTreeNodeMapping> createMapping() const override;
+    std::unique_ptr<GraphicsTreeNodeMapping> createMapping(const DocumentTreeNode& entityTreeNode) const override;
 };
 
-} // namespace Mayo {
+} // namespace Mayo
