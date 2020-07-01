@@ -98,28 +98,30 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
     Expects(node.isEntity());
 
     std::unordered_map<TreeNodeId, QTreeWidgetItem*> mapNodeIdToTreeItem;
-    std::unordered_set<TreeNodeId> setRefNodeId;
+    std::unordered_set<TreeNodeId> setReferenceNodeId;
     const DocumentPtr doc = node.document();
     const Tree<TDF_Label>& modelTree = doc->modelTree();
     deepForeachTreeNode(node.id(), modelTree, [&](TreeNodeId itNodeId) {
         const TreeNodeId nodeParentId = modelTree.nodeParent(itNodeId);
-        const TDF_Label& nodeLabel = modelTree.nodeData(itNodeId);
         auto itParentFound = mapNodeIdToTreeItem.find(nodeParentId);
         QTreeWidgetItem* guiParentNode =
                 itParentFound != mapNodeIdToTreeItem.end() ? itParentFound->second : treeItem;
         if (m_isMergeXdeReferredShapeOn) {
+            const TDF_Label& nodeLabel = modelTree.nodeData(itNodeId);
             if (XCaf::isShapeReference(nodeLabel)) {
                 mapNodeIdToTreeItem.insert({ itNodeId, guiParentNode });
-                setRefNodeId.insert(itNodeId);
+                setReferenceNodeId.insert(itNodeId);
             }
             else {
                 auto guiNode = new QTreeWidgetItem(guiParentNode);
                 QString guiNodeText = CafUtils::labelAttrStdName(nodeLabel);
                 TreeNodeId guiNodeId = itNodeId;
-                if (setRefNodeId.find(nodeParentId) != setRefNodeId.cend()) {
+                if (setReferenceNodeId.find(nodeParentId) != setReferenceNodeId.cend()) {
                     const TDF_Label& refLabel = modelTree.nodeData(nodeParentId);
                     guiNodeText = this->referenceItemText(refLabel, nodeLabel);
                     guiNodeId = nodeParentId;
+                    if (!guiParentNode)
+                        mapNodeIdToTreeItem.insert_or_assign(nodeParentId, guiNode);
                 }
 
                 guiNode->setText(0, guiNodeText);

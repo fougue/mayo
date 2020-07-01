@@ -409,7 +409,6 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
 
     GuiApplication::instance()->selectionModel()->add(vecSelected);
     GuiApplication::instance()->selectionModel()->remove(vecDeselected);
-    //emit selectionChanged();
 }
 
 } // namespace Mayo
