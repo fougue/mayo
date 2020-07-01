@@ -28,6 +28,7 @@ public:
 
     void clear();
     TreeNodeId appendChild(TreeNodeId parentId, const T& data);
+    TreeNodeId appendChild(TreeNodeId parentId, T&& data);
     void removeRoot(TreeNodeId id);
 
 private:
@@ -47,6 +48,7 @@ private:
     TreeNodeId lastNodeId() const;
     TreeNode* ptrNode(TreeNodeId id);
     const TreeNode* ptrNode(TreeNodeId id) const;
+    TreeNode* appendChild(TreeNodeId parentId);
 
     std::vector<TreeNode> m_vecNode;
     std::vector<TreeNodeId> m_vecRoot;
@@ -112,10 +114,25 @@ template<typename T> void Tree<T>::clear()
 template<typename T>
 TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T& data)
 {
+    TreeNode* node = this->appendChild(parentId);
+    node->data = data;
+    return this->lastNodeId();
+}
+
+template<typename T>
+TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, T&& data)
+{
+    TreeNode* node = this->appendChild(parentId);
+    node->data = std::forward<T>(data);
+    return this->lastNodeId();
+}
+
+template<typename T>
+typename Tree<T>::TreeNode* Tree<T>::appendChild(TreeNodeId parentId)
+{
     m_vecNode.push_back({});
     const TreeNodeId nodeId = this->lastNodeId();
     TreeNode* node = &m_vecNode.back();
-    node->data = data;
     node->parent = parentId;
     node->siblingPrevious = this->nodeChildLast(parentId);
     if (parentId != 0) {
@@ -132,7 +149,7 @@ TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T& data)
         m_vecRoot.push_back(nodeId);
     }
 
-    return nodeId;
+    return node;
 }
 
 template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
