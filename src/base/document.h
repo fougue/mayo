@@ -21,6 +21,7 @@ class Document : public QObject, public TDocStd_Document {
     Q_OBJECT
     Q_PROPERTY(int identifier READ identifier)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString filePath READ filePath WRITE setFilePath)
     Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
 public:
     using Identifier = int;
