@@ -9,6 +9,7 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
+#include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/task_manager.h"
 #include "../gpx/gpx_utils.h"
@@ -21,6 +22,7 @@
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
+#include "document_tree_node_properties_providers.h"
 #include "settings.h"
 #include "settings_keys.h"
 #include "theme.h"
@@ -366,6 +368,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     new DialogTaskManager(TaskManager::globalInstance(), this);
 
+    m_vecPropertiesProvider.push_back(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    m_vecPropertiesProvider.push_back(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
     auto guiDocModel = new GuiDocumentListModel(this);
@@ -651,7 +656,13 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-#if 0
+    auto fnFindPropertiesProvider = [=](const DocumentTreeNode& treeNode) {
+        for (const auto& ptrProvider : m_vecPropertiesProvider) {
+            if (ptrProvider->supports(treeNode))
+                return ptrProvider->properties(treeNode);
+        }
+        return std::unique_ptr<PropertyOwnerSignals>();
+    };
     WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
@@ -660,32 +671,32 @@ void MainWindow::onApplicationItemSelectionChanged()
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
         if (item.isDocumentTreeNode()) {
-            m_ptrCurrentNodeProperties = item.documentItem()->propertiesAtNode(item.documentItemNode().id);
+            m_ptrCurrentNodeProperties = fnFindPropertiesProvider(item.documentTreeNode());
             PropertyOwnerSignals* nodeProps = m_ptrCurrentNodeProperties.get();
             uiProps->editProperties(nodeProps);
             if (nodeProps) {
-                QObject::connect(nodeProps, &PropertyOwnerSignals::propertyChanged, [=]{
+                QObject::connect(nodeProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
                     uiModelTree->refreshItemText(item);
                 });
             }
         }
-        else if (item.isDocumentItem()) {
-            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
-            uiProps->editProperties(item.documentItem(), grpData);
-            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
-            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
-            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
-            uiProps->editProperties(gpxDocItem, grpGpx);
-        }
-        else if (item.isDocument()) {
-            uiProps->editProperties(item.document());
-        }
+//        else if (item.isDocumentItem()) {
+//            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
+//            uiProps->editProperties(item.documentItem(), grpData);
+//            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
+//            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
+//            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
+//            uiProps->editProperties(gpxDocItem, grpGpx);
+//        }
+//        else if (item.isDocument()) {
+//            uiProps->editProperties(item.document());
+//        }
 
         const bool isLinkWithDocumentSelectorOn =
                 Settings::instance()->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         if (isLinkWithDocumentSelectorOn) {
-            const Document* doc = item.document();
-            const int index = Application::instance()->indexOfDocument(doc);
+            DocumentPtr doc = item.document();
+            const int index = Application::instance()->findIndexOfDocument(doc);
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
         }
@@ -694,7 +705,6 @@ void MainWindow::onApplicationItemSelectionChanged()
         // TODO
         uiProps->clear();
     }
-#endif
 
     this->updateControlsActivation();
 }
@@ -725,6 +735,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
+        //guiDoc->aisInteractiveContext()->MoveTo(pos2d.x(), pos2d.y(), widget->guiDocument()->v3dView(), true);
         auto selector = guiDoc->aisInteractiveContext()->MainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =

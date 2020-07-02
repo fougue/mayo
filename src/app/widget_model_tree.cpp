@@ -356,11 +356,11 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentPtr& d
 
 WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNode& node) const
 {
-    Expects(node.isEntity());
+    Expects(node.isValid());
     auto it = std::find_if(
                 std::next(m_vecBuilder.cbegin()),
                 m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsEntity(node); });
+                [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); });
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 

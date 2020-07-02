@@ -44,9 +44,8 @@ WidgetModelTreeBuilder_Xde::WidgetModelTreeBuilder_Xde()
 {
 }
 
-bool WidgetModelTreeBuilder_Xde::supportsEntity(const DocumentTreeNode& node) const
+bool WidgetModelTreeBuilder_Xde::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
-    Expects(node.isEntity());
     return XCaf::isShape(node.label());
 }
 
@@ -74,7 +73,7 @@ void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::createTreeItem(const DocumentTreeNode& node)
 {
-    Expects(this->supportsEntity(node));
+    Expects(this->supportsDocumentTreeNode(node));
     return this->buildXdeTree(nullptr, node);
 }
 

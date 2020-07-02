@@ -6,15 +6,19 @@
 
 #pragma once
 
-#include "widget_model_tree_builder.h"
+#include "property.h"
+#include "property_builtins.h"
+#include <memory>
 
 namespace Mayo {
 
-class WidgetModelTreeBuilder_Mesh : public WidgetModelTreeBuilder {
+class DocumentTreeNode;
+class PropertyOwnerSignals;
+
+class DocumentTreeNodePropertiesProvider {
 public:
-    bool supportsDocumentTreeNode(const DocumentTreeNode& node) const override;
-    QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
-    std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
+    virtual bool supports(const DocumentTreeNode& treeNode) const = 0;
+    virtual std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const = 0;
 };
 
 } // namespace Mayo
