@@ -99,8 +99,7 @@ template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const {
     return node ? node->data : nullObject;
 }
 
-template<typename T> bool Tree<T>::nodeIsRoot(TreeNodeId id) const
-{
+template<typename T> bool Tree<T>::nodeIsRoot(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
     return node ? node->parent == 0 : false;
 }
@@ -165,13 +164,11 @@ template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
     }
 }
 
-template<typename T>
-Span<const TreeNodeId> Tree<T>::roots() const {
+template<typename T> Span<const TreeNodeId> Tree<T>::roots() const {
     return m_vecRoot;
 }
 
-template<typename T>
-TreeNodeId Tree<T>::lastNodeId() const {
+template<typename T> TreeNodeId Tree<T>::lastNodeId() const {
     return static_cast<TreeNodeId>(m_vecNode.size());
 }
 

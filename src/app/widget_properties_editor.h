@@ -42,8 +42,7 @@ public:
       const char* strUnit; // UTF8
       double factor;
     };
-    bool overridePropertyUnitTranslation(
-            const BasePropertyQuantity* prop, UnitTranslation unitTr);
+    bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
 private:
     class Private;
