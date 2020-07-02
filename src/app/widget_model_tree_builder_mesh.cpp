@@ -14,14 +14,14 @@
 
 namespace Mayo {
 
-bool WidgetModelTreeBuilder_Mesh::supportsEntity(const DocumentTreeNode& node) const
+bool WidgetModelTreeBuilder_Mesh::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
     return CafUtils::hasAttribute<TDataXtd_Triangulation>(node.label());
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Mesh::createTreeItem(const DocumentTreeNode& node)
 {
-    Expects(this->supportsEntity(node));
+    Expects(this->supportsDocumentTreeNode(node));
 
     auto treeItem = WidgetModelTreeBuilder::createTreeItem(node);
     treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::ItemMesh));

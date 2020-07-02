@@ -18,7 +18,7 @@ class WidgetModelTreeBuilder_Xde : public WidgetModelTreeBuilder {
 public:
     WidgetModelTreeBuilder_Xde();
 
-    bool supportsEntity(const DocumentTreeNode& node) const override;
+    bool supportsDocumentTreeNode(const DocumentTreeNode& node) const override;
     void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem) override;
     QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
 
@@ -43,7 +43,7 @@ private:
     QString referenceItemText(const TDF_Label& refLabel, const TDF_Label& referredLabel) const;
     QTreeWidgetItem* findTreeItem(QTreeWidgetItem* parentTreeItem, const TDF_Label& label) const;
 
-    bool m_isMergeXdeReferredShapeOn = true;
+    bool m_isMergeXdeReferredShapeOn = false;
     QString m_refItemTextTemplate;
 };
 

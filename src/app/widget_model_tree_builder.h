@@ -27,7 +27,7 @@ public:
     virtual ~WidgetModelTreeBuilder();
 
     virtual bool supportsDocument(const DocumentPtr&) const { return true; }
-    virtual bool supportsEntity(const DocumentTreeNode&) const { return true; }
+    virtual bool supportsDocumentTreeNode(const DocumentTreeNode&) const { return true; }
 
     virtual void refreshTextTreeItem(const DocumentPtr& doc, QTreeWidgetItem* treeItem);
     virtual void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem);

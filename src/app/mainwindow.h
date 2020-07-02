@@ -18,6 +18,7 @@ class QFileInfo;
 namespace Mayo {
 
 class Document;
+class DocumentTreeNodePropertiesProvider;
 class GuiDocument;
 class WidgetGuiDocument;
 
@@ -92,6 +93,7 @@ private:
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     QStringList m_listRecentFile;
     std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeProperties;
+    std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecPropertiesProvider;
 };
 
 } // namespace Mayo
