@@ -3,9 +3,7 @@ Mayo is a basic 3D viewer inspired by FreeCad.
 
 Current features are :
 * Multi-documents support, user can open many parts in the session
-* Support of IGES/STEP/BRep formats for import/export operations
 * Support of STEP/IGES assemblies (colors and tree structure)
-* Support of STL format with either OpenCascade or [gmio](https://github.com/fougue/gmio) (optional)
 * Perspective/orthographic 3D view projection
 * 3D clip planes with configurable capping
 * Save image(snapshot) of the current 3D view
@@ -19,6 +17,15 @@ Current features are :
 * Zoom : mouse wheel(scroll)
 * Window zoom : mouse wheel + move
 * Instant zoom : space bar
+
+# Supported formats
+  Formats                 |  Import   |  Export  | Notes
+--------------------------|-----------|----------|------------------------------
+STEP                      |  &#10004; | &#10004; | AP203, 214, 242(some parts)
+IGES                      |  &#10004; | &#10004; | v5.3
+OpenCascade BREP          |  &#10004; | &#10004; |
+OBJ                       |  &#10004; | &#10007; |
+STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
 Mayo requires Qt5 and OpenCascade-7.2.0.  
