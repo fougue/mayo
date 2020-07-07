@@ -137,14 +137,6 @@ struct OpenFileNames {
     }
 };
 
-static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
-{
-    qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                parent,
-                MainWindow::tr("Error"),
-                MainWindow::tr("'%1'\nUnknown file format").arg(filepath));
-}
-
 static void prependRecentFile(QStringList* listRecentFile, const QString& filepath)
 {
     constexpr int sizeLimit = 10;
