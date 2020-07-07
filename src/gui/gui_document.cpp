@@ -177,9 +177,9 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     }
 }
 
-std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() const
+std::vector<GraphicsOwnerPtr> GuiDocument::selectedGraphicsOwners() const
 {
-    std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
+    std::vector<GraphicsOwnerPtr> vecOwner;
     m_aisContext->InitSelected();
     while (m_aisContext->MoreSelected()) {
         vecOwner.push_back(m_aisContext->SelectedOwner());
