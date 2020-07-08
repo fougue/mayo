@@ -24,7 +24,7 @@ Current features are :
 STEP                      |  &#10004; | &#10004; | AP203, 214, 242(some parts)
 IGES                      |  &#10004; | &#10004; | v5.3
 OpenCascade BREP          |  &#10004; | &#10004; |
-OBJ                       |  &#10004; | &#10007; |
+OBJ                       |  &#10004; | &#10007; | Requires OpenCascade &#8805; v7.4.0
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
