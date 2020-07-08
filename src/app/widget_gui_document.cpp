@@ -6,8 +6,8 @@
 
 #include "widget_gui_document.h"
 
-#include "../gpx/gpx_utils.h"
-#include "../gpx/v3d_view_camera_animation.h"
+#include "../graphics/graphics_utils.h"
+#include "../graphics/v3d_view_camera_animation.h"
 #include "../gui/gui_document.h"
 #include "button_flat.h"
 #include "theme.h"
@@ -97,7 +97,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     this->connectViewProjButton(btnViewTop, V3d_Zpos);
     this->connectViewProjButton(btnViewBottom, V3d_Zneg);
     QObject::connect(btnFitAll, &ButtonFlat::clicked, [=]{
-        m_cameraAnimation->configure(&GpxUtils::V3dView_fitAll);
+        m_cameraAnimation->configure(&GraphicsUtils::V3dView_fitAll);
         m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
     });
     QObject::connect(
@@ -146,7 +146,7 @@ void WidgetGuiDocument::connectViewProjButton(ButtonFlat* btn, V3d_TypeOfOrienta
     QObject::connect(btn, &ButtonFlat::clicked, [=]{
         m_cameraAnimation->configure([=](Handle_V3d_View view) {
             view->SetProj(proj);
-            GpxUtils::V3dView_fitAll(view);
+            GraphicsUtils::V3dView_fitAll(view);
         });
         m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
     });

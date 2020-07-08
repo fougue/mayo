@@ -6,7 +6,7 @@
 
 #include "graphics_entity.h"
 
-#include "../gpx/gpx_utils.h"
+#include "../graphics/graphics_utils.h"
 
 #include <gsl/gsl_assert>
 #include <Standard_Version.hxx>
@@ -55,7 +55,7 @@ bool GraphicsEntity::isVisible() const
 void GraphicsEntity::setVisible(bool on)
 {
     Expects(this->aisContextNotNull());
-    GpxUtils::AisContext_setObjectVisible(this->aisContext(), this->aisObject(), on);
+    GraphicsUtils::AisContext_setObjectVisible(this->aisContext(), this->aisObject(), on);
 }
 
 } // namespace Mayo

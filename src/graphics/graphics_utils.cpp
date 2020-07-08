@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "gpx_utils.h"
+#include "graphics_utils.h"
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
 
@@ -17,13 +17,13 @@
 
 namespace Mayo {
 
-void GpxUtils::V3dView_fitAll(const Handle_V3d_View& view)
+void GraphicsUtils::V3dView_fitAll(const Handle_V3d_View& view)
 {
     view->ZFitAll();
     view->FitAll(0.01, false);
 }
 
-bool GpxUtils::V3dView_hasClipPlane(
+bool GraphicsUtils::V3dView_hasClipPlane(
         const Handle_V3d_View& view, const Handle_Graphic3d_ClipPlane& plane)
 {
     const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
@@ -39,7 +39,7 @@ bool GpxUtils::V3dView_hasClipPlane(
     return false;
 }
 
-gp_Pnt GpxUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x, double y)
+gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x, double y)
 {
     double xEye, yEye, zEye, xAt, yAt, zAt;
     view->Eye(xEye, yEye, zEye);
@@ -65,7 +65,7 @@ gp_Pnt GpxUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x, dou
     return pntResult;
 }
 
-void GpxUtils::AisContext_eraseObject(
+void GraphicsUtils::AisContext_eraseObject(
         const Handle_AIS_InteractiveContext& context,
         const Handle_AIS_InteractiveObject& object)
 {
@@ -80,7 +80,7 @@ void GpxUtils::AisContext_eraseObject(
     }
 }
 
-void GpxUtils::AisContext_setObjectVisible(
+void GraphicsUtils::AisContext_setObjectVisible(
         const Handle_AIS_InteractiveContext& context,
         const Handle_AIS_InteractiveObject& object,
         bool on)
@@ -93,7 +93,7 @@ void GpxUtils::AisContext_setObjectVisible(
     }
 }
 
-Bnd_Box GpxUtils::AisObject_boundingBox(const Handle_AIS_InteractiveObject& object)
+Bnd_Box GraphicsUtils::AisObject_boundingBox(const Handle_AIS_InteractiveObject& object)
 {
     Bnd_Box box;
     if (object.IsNull())
@@ -119,7 +119,7 @@ Bnd_Box GpxUtils::AisObject_boundingBox(const Handle_AIS_InteractiveObject& obje
     return box;
 }
 
-int GpxUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
+int GraphicsUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -129,7 +129,7 @@ int GpxUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
     return w;
 }
 
-int GpxUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
+int GraphicsUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -139,7 +139,7 @@ int GpxUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
     return h;
 }
 
-void GpxUtils::Gpx3dClipPlane_setCappingHatch(
+void GraphicsUtils::Gpx3dClipPlane_setCappingHatch(
         const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch)
 {
     if (hatch == Aspect_HS_SOLID)
@@ -150,14 +150,14 @@ void GpxUtils::Gpx3dClipPlane_setCappingHatch(
     plane->SetCappingHatch(hatch);
 }
 
-void GpxUtils::Gpx3dClipPlane_setNormal(const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n)
+void GraphicsUtils::Gpx3dClipPlane_setNormal(const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n)
 {
     const double planePos = MathUtils::planePosition(plane->ToPlane());
     const gp_Vec placement(planePos * gp_Vec(n));
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
 }
 
-void GpxUtils::Gpx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane& plane, double pos)
+void GraphicsUtils::Gpx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane& plane, double pos)
 {
     const gp_Dir& n = plane->ToPlane().Axis().Direction();
     if (MathUtils::isReversedStandardDir(n))

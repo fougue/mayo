@@ -11,8 +11,8 @@
 #include "../base/bnd_utils.h"
 #include "../base/document.h"
 #include "../gui/gui_application.h"
-#include "../gpx/gpx_utils.h"
 #include "../graphics/graphics_entity_driver_table.h"
+#include "../graphics/graphics_utils.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
@@ -165,14 +165,14 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
     if (gfxItem) {
         const GraphicsEntity& gfxEntity = gfxItem->graphicsEntity;
-        GpxUtils::AisContext_eraseObject(m_aisContext, gfxEntity.aisObject());
+        GraphicsUtils::AisContext_eraseObject(m_aisContext, gfxEntity.aisObject());
         m_vecGraphicsItem.erase(m_vecGraphicsItem.begin() + (gfxItem - &m_vecGraphicsItem.front()));
         this->updateV3dViewer();
 
         // Recompute bounding box
         m_gpxBoundingBox.SetVoid();
         for (const GraphicsItem& item : m_vecGraphicsItem) {
-            const Bnd_Box entityBndBox = GpxUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
+            const Bnd_Box entityBndBox = GraphicsUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
             BndUtils::add(&m_gpxBoundingBox, entityBndBox);
         }
 
@@ -225,8 +225,8 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
         }
     }
 
-    GpxUtils::V3dView_fitAll(m_v3dView);
-    const Bnd_Box itemBndBox = GpxUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
+    GraphicsUtils::V3dView_fitAll(m_v3dView);
+    const Bnd_Box itemBndBox = GraphicsUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
     BndUtils::add(&m_gpxBoundingBox, itemBndBox);
     m_vecGraphicsItem.emplace_back(std::move(item));
 }

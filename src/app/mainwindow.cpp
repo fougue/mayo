@@ -14,7 +14,7 @@
 #include "../base/task_manager.h"
 #include "../graphics/graphics_entity_driver.h"
 #include "../graphics/graphics_entity_driver_table.h"
-#include "../gpx/gpx_utils.h"
+#include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/gui_document_list_model.h"
@@ -752,7 +752,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         const gp_Pnt pos3d =
                 selector->NbPicked() > 0 ?
                     selector->PickedPoint(1) :
-                    GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
+                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
         m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));

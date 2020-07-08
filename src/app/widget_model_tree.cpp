@@ -10,7 +10,6 @@
 #include "../base/application_item_selection_model.h"
 #include "../base/string_utils.h"
 #include "../base/document.h"
-#include "../base/document_item.h"
 #include "../gui/gui_application.h"
 #include "settings.h"
 #include "theme.h"

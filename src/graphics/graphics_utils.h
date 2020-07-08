@@ -13,7 +13,7 @@
 
 namespace Mayo {
 
-struct GpxUtils {
+struct GraphicsUtils {
     static void V3dView_fitAll(const Handle_V3d_View& view);
     static bool V3dView_hasClipPlane(
             const Handle_V3d_View& view,
