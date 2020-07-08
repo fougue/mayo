@@ -95,9 +95,7 @@ static int runApp(QApplication* app)
     settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(IO::StlIoLibrary::OpenCascade));
     settings->setDefaultValue(Keys::Base_UnitSystemSchema, UnitSystem::SI);
     settings->setDefaultValue(Keys::Base_UnitSystemDecimals, 2);
-    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultColor, QColor(Qt::gray));
-    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultMaterial, Graphic3d_NOM_PLASTIC);
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(Qt::gray));
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(255, 228, 196));
     settings->setDefaultValue(Keys::Gpx_MeshDefaultMaterial, Graphic3d_NOM_PLASTIC);
     settings->setDefaultValue(Keys::Gpx_MeshDefaultShowEdges, false);
     settings->setDefaultValue(Keys::Gpx_MeshDefaultShowNodes, false);
@@ -105,15 +103,14 @@ static int runApp(QApplication* app)
     settings->setDefaultValue(Keys::Gui_ClipPlaneCappingOn, true);
     settings->setDefaultValue(Keys::Gui_DefaultShowOriginTrihedron, true);
 
-#if 0
     {
         auto fnUpdateDefaults = [=]{
-            GpxMeshItem::DefaultValues defaults;
+            GraphicsMeshEntityDriver::DefaultValues defaults;
             defaults.showEdges = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowEdges);
             defaults.showNodes = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowNodes);
             defaults.color = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
             defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial);
-            GpxMeshItem::setDefaultValues(defaults);
+            GraphicsMeshEntityDriver::setDefaultValues(defaults);
         };
         fnUpdateDefaults();
         QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
@@ -126,24 +123,6 @@ static int runApp(QApplication* app)
             }
         });
     }
-
-    {
-        auto fnUpdateDefaults = [=]{
-            GpxXdeDocumentItem::DefaultValues defaults;
-            defaults.color = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
-            defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_BrepShapeDefaultMaterial);
-            GpxXdeDocumentItem::setDefaultValues(defaults);
-        };
-        fnUpdateDefaults();
-        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
-            if (key == Keys::Gpx_BrepShapeDefaultColor
-                    || key == Keys::Gpx_BrepShapeDefaultMaterial)
-            {
-                fnUpdateDefaults();
-            }
-        });
-    }
-#endif
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());

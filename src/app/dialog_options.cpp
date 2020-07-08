@@ -53,22 +53,6 @@ DialogOptions::DialogOptions(QWidget *parent)
 //    m_ui->radioBtn_UseGmio->setChecked(lib == Application::StlIoLibrary::Gmio);
 //    m_ui->radioBtn_UseOcc->setChecked(lib == Application::StlIoLibrary::OpenCascade);
 
-    // BRep shape defaults
-    m_brepShapeDefaultColor = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
-    m_ui->toolBtn_BRepShapeDefaultColor->setIcon(Internal::colorPixmap(m_brepShapeDefaultColor));
-    QObject::connect(m_ui->toolBtn_BRepShapeDefaultColor, &QAbstractButton::clicked, [=]{
-        const QColor startColor = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
-        this->chooseColor(startColor, [=](QColor color) {
-            m_ui->toolBtn_BRepShapeDefaultColor->setIcon(Internal::colorPixmap(color));
-            m_brepShapeDefaultColor = color;
-        });
-    });
-    for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
-        m_ui->comboBox_BRepShapeDefaultMaterial->addItem(m.name, m.value);
-    m_ui->comboBox_BRepShapeDefaultMaterial->setCurrentIndex(
-                m_ui->comboBox_BRepShapeDefaultMaterial->findData(
-                    settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_BrepShapeDefaultMaterial)));
-
     // Mesh defaults
     m_meshDefaultColor = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
     m_ui->toolBtn_MeshDefaultColor->setIcon(Internal::colorPixmap(m_meshDefaultColor));
@@ -80,7 +64,8 @@ DialogOptions::DialogOptions(QWidget *parent)
         });
     });
     for (const Enumeration::Item& m : OcctEnums::Graphic3d_NameOfMaterial().items())
-        m_ui->comboBox_MeshDefaultMaterial->addItem(m.name, m.value);
+        m_ui->comboBox_MeshDefaultMaterial->addItem(m.text, m.value);
+
     m_ui->comboBox_MeshDefaultMaterial->setCurrentIndex(
                 m_ui->comboBox_MeshDefaultMaterial->findData(
                     settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial)));
@@ -91,6 +76,7 @@ DialogOptions::DialogOptions(QWidget *parent)
     m_ui->checkBox_Capping->setChecked(settings->valueAs<bool>(Keys::Gui_ClipPlaneCappingOn));
     for (const Enumeration::Item& m : OcctEnums::Aspect_HatchStyle().items())
         m_ui->comboBox_CappingHatch->addItem(m.name, m.value);
+
     m_ui->comboBox_CappingHatch->setCurrentIndex(
                 m_ui->comboBox_CappingHatch->findData(
                     settings->valueAsEnum<Aspect_HatchStyle>(Keys::Gui_ClipPlaneCappingHatch)));
@@ -121,10 +107,6 @@ void DialogOptions::accept()
 //        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::Gmio));
 //    else if (m_ui->radioBtn_UseOcc->isChecked())
 //        settings->setValue(Keys::Base_StlIoLibrary, int(Application::StlIoLibrary::OpenCascade));
-
-    // BRep shape defaults
-    settings->setValue(Keys::Gpx_BrepShapeDefaultColor, m_brepShapeDefaultColor);
-    settings->setValue( Keys::Gpx_BrepShapeDefaultMaterial, m_ui->comboBox_BRepShapeDefaultMaterial->currentData());
 
     // Mesh defaults
     settings->setValue(Keys::Gpx_MeshDefaultColor, m_meshDefaultColor);

@@ -9,6 +9,7 @@
 #include "graphics_entity.h"
 #include "../base/property_enumeration.h"
 #include <QtCore/QCoreApplication>
+#include <QtGui/QColor>
 #include <memory>
 
 namespace Mayo {
@@ -71,6 +72,15 @@ public:
     void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
     std::unique_ptr<PropertyOwnerSignals> properties(const GraphicsEntity& entity) const override;
+
+    struct DefaultValues {
+        bool showEdges = false;
+        bool showNodes = false;
+        Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
+        QColor color{ 255, 228, 196 }; // Bisque
+    };
+    static const DefaultValues& defaultValues();
+    static void setDefaultValues(const DefaultValues& values);
 };
 
 } // namespace Mayo

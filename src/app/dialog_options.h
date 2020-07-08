@@ -25,7 +25,6 @@ private:
             const std::function<void(QColor)>& continuation);
 
     class Ui_DialogOptions* m_ui = nullptr;
-    QColor m_brepShapeDefaultColor;
     QColor m_meshDefaultColor;
 };
 

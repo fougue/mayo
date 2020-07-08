@@ -14,6 +14,7 @@
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
+#include <fougtools/occtools/qt_utils.h>
 #include <stdexcept>
 
 namespace Mayo {
@@ -179,14 +180,16 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
         gpx->AddBuilder(new MeshVS_MeshPrsBuilder(gpx), true);
 
         // -- MeshVS_DrawerAttribute
-        gpx->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, true);
-        gpx->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, false);
+        gpx->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, defaultValues().showEdges);
+        gpx->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
         gpx->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTIC);
-        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, Quantity_NOC_BISQUE);
+        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, occ::QtUtils::toOccColor(defaultValues().color));
+        gpx->GetDrawer()->SetMaterial(
+                    MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));
         gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, Quantity_NOC_BLACK);
         gpx->SetDisplayMode(MeshVS_DMF_Shading);
 
-        gpx->SetHilightMode(MeshVS_DMF_WireFrame);
+        //gpx->SetHilightMode(MeshVS_DMF_WireFrame);
         gpx->SetMeshSelMethod(MeshVS_MSM_PRECISE);
         GraphicsEntityDriver::setEntityAisObject(&entity, gpx);
     }
@@ -199,7 +202,6 @@ void GraphicsMeshEntityDriver::applyDisplayMode(const GraphicsEntity& entity, En
     this->throwIf_differentDriver(entity);
     this->throwIf_invalidDisplayMode(mode);
     entity.aisContextPtr()->SetDisplayMode(entity.aisObject(), mode, false);
-    //entity->aisContext()->UpdateCurrentViewer();
 }
 
 Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
@@ -265,6 +267,22 @@ std::unique_ptr<PropertyOwnerSignals> GraphicsMeshEntityDriver::properties(const
 {
     this->throwIf_differentDriver(entity);
     return std::make_unique<GraphicsMeshEntityProperties>(entity);
+}
+
+namespace Internal {
+
+Q_GLOBAL_STATIC(GraphicsMeshEntityDriver::DefaultValues, graphicsMeshDefaultValues)
+
+} // namespace Internal
+
+const GraphicsMeshEntityDriver::DefaultValues& GraphicsMeshEntityDriver::defaultValues()
+{
+    return *Internal::graphicsMeshDefaultValues;
+}
+
+void GraphicsMeshEntityDriver::setDefaultValues(const DefaultValues& values)
+{
+    *Internal::graphicsMeshDefaultValues = values;
 }
 
 } // namespace Mayo
