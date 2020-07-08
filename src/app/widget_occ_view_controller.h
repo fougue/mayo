@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../gpx/v3d_view_controller.h"
+#include "../graphics/v3d_view_controller.h"
 
 #include <Graphic3d_Camera.hxx>
 class QCursor;

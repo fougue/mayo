@@ -6,7 +6,7 @@
 
 #include "dialog_save_image_view.h"
 #include "ui_dialog_save_image_view.h"
-#include "../gpx/gpx_utils.h"
+#include "../graphics/graphics_utils.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtCore/QHash>
@@ -56,8 +56,8 @@ DialogSaveImageView::DialogSaveImageView(const Handle_V3d_View& view, QWidget *p
                 previewBtn, &QAbstractButton::clicked,
                 this, &DialogSaveImageView::preview);
 
-    m_ui->edit_Width->setValue(GpxUtils::AspectWindow_width(view->Window()));
-    m_ui->edit_Height->setValue(GpxUtils::AspectWindow_height(view->Window()));
+    m_ui->edit_Width->setValue(GraphicsUtils::AspectWindow_width(view->Window()));
+    m_ui->edit_Height->setValue(GraphicsUtils::AspectWindow_height(view->Window()));
 }
 
 DialogSaveImageView::~DialogSaveImageView()
