@@ -105,6 +105,12 @@ GuiDocument::GuiDocument(const DocumentPtr& doc)
                 this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
 }
 
+GraphicsEntity GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const
+{
+    const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
+    return gfxItem ? gfxItem->graphicsEntity : GraphicsEntity();
+}
+
 void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
 {
     const DocumentPtr doc = appItem.document();
@@ -112,11 +118,8 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
         return;
 
     if (appItem.isDocumentTreeNode()) {
-        // Find root entity tree node
         const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-        TreeNodeId entityNodeId = docTreeNode.id();
-        while (!doc->modelTree().nodeIsRoot(entityNodeId))
-            entityNodeId = doc->modelTree().nodeParent(entityNodeId);
+        const TreeNodeId entityNodeId = doc->modelTree().nodeRoot(docTreeNode.id());
 
         // Add/remove graphics owner
         const GraphicsItem* gfxItem = this->findGraphicsItem(entityNodeId);

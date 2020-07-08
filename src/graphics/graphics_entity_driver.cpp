@@ -2,6 +2,7 @@
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/property_builtins.h"
 
 #include <BRep_TFace.hxx>
 #include <MeshVS_DisplayModeFlags.hxx>
@@ -17,10 +18,56 @@
 
 namespace Mayo {
 
+class GraphicsEntityPropertyOwner : public PropertyOwnerSignals {
+    Q_DECLARE_TR_FUNCTIONS(GraphicsEntityPropertyOwner)
+public:
+    GraphicsEntityPropertyOwner(const GraphicsEntity& gfxEntity)
+        : m_gfxEntity(gfxEntity),
+          m_propertyIsVisible(this, tr("Visible")),
+          m_propertyDisplayMode(this, tr("Display mode"), displayModesEnum(gfxEntity))
+    {
+        // Init properties
+        Mayo_PropertyChangedBlocker(this);
+
+        m_propertyIsVisible.setValue(gfxEntity.isVisible());
+        m_propertyDisplayMode.setValue(currentDisplayMode(gfxEntity));
+    }
+
+    void onPropertyChanged(Property* prop) override {
+        if (prop == &m_propertyIsVisible)
+            m_gfxEntity.setVisible(m_propertyIsVisible.value());
+        else if (prop == &m_propertyDisplayMode)
+            m_gfxEntity.driverPtr()->applyDisplayMode(m_gfxEntity, m_propertyDisplayMode.value());
+
+        PropertyOwnerSignals::onPropertyChanged(prop);
+    }
+
+protected:
+    static const Enumeration* displayModesEnum(const GraphicsEntity& gfxEntity) {
+        const GraphicsEntityDriver* driverPtr = gfxEntity.driverPtr();
+        return driverPtr ? &(driverPtr->displayModes()) : nullptr;
+    }
+
+    static Enumeration::Value currentDisplayMode(const GraphicsEntity& gfxEntity) {
+        const GraphicsEntityDriver* driverPtr = gfxEntity.driverPtr();
+        return driverPtr ? driverPtr->currentDisplayMode(gfxEntity) : -1;
+    }
+
+    PropertyBool m_propertyIsVisible;
+    PropertyEnumeration m_propertyDisplayMode;
+    GraphicsEntity m_gfxEntity;
+};
+
 void GraphicsEntityDriver::throwIf_invalidDisplayMode(Enumeration::Value mode) const
 {
     if (this->displayModes().findIndex(mode) == -1)
         throw std::invalid_argument("Invalid display mode");
+}
+
+void GraphicsEntityDriver::throwIf_differentDriver(const GraphicsEntity& entity) const
+{
+    if (entity.driverPtr() != this)
+        throw std::invalid_argument("Invalid driver for graphics entity");
 }
 
 void GraphicsEntityDriver::initEntity(GraphicsEntity* ptrEntity, const TDF_Label& label) const
@@ -82,6 +129,7 @@ GraphicsEntity GraphicsShapeEntityDriver::createEntity(const TDF_Label& label) c
 
 void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const
 {
+    this->throwIf_differentDriver(entity);
     this->throwIf_invalidDisplayMode(mode);
     const AIS_DisplayMode aisDispMode = mode == DisplayMode_Wireframe ? AIS_WireFrame : AIS_Shaded;
     const bool showFaceBounds = mode == DisplayMode_ShadedWithFaceBoundary;
@@ -95,6 +143,28 @@ void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, E
     }
 
     //entity->aisContext()->UpdateCurrentViewer();
+}
+
+Enumeration::Value GraphicsShapeEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
+{
+    this->throwIf_differentDriver(entity);
+    const int displayMode = entity.aisObject()->DisplayMode();
+    if (displayMode == AIS_WireFrame)
+        return DisplayMode_Wireframe;
+
+    if (displayMode == AIS_Shaded) {
+        return entity.aisObject()->Attributes()->FaceBoundaryDraw() ?
+                    DisplayMode_ShadedWithFaceBoundary :
+                    DisplayMode_Shaded;
+    }
+
+    return -1;
+}
+
+std::unique_ptr<PropertyOwnerSignals> GraphicsShapeEntityDriver::properties(const GraphicsEntity& entity) const
+{
+    this->throwIf_differentDriver(entity);
+    return std::make_unique<GraphicsEntityPropertyOwner>(entity);
 }
 
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
@@ -166,9 +236,75 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
 
 void GraphicsMeshEntityDriver::applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const
 {
+    this->throwIf_differentDriver(entity);
     this->throwIf_invalidDisplayMode(mode);
     entity.aisContextPtr()->SetDisplayMode(entity.aisObject(), mode, false);
     //entity->aisContext()->UpdateCurrentViewer();
+}
+
+Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
+{
+    this->throwIf_differentDriver(entity);
+    return entity.aisObject()->DisplayMode();
+}
+
+class GraphicsMeshEntityProperties : public GraphicsEntityPropertyOwner {
+    Q_DECLARE_TR_FUNCTIONS(GraphicsMeshEntityProperties)
+public:
+    GraphicsMeshEntityProperties(const GraphicsEntity& entity)
+        : GraphicsEntityPropertyOwner(entity),
+          m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
+          m_propertyColor(this, tr("Color")),
+          m_propertyShowEdges(this, tr("Show edges")),
+          m_propertyShowNodes(this, tr("Show nodes"))
+    {
+        // Init properties
+        Mayo_PropertyChangedBlocker(this);
+
+        // -- Color
+        Quantity_Color color;
+        m_meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, color);
+        m_propertyColor.setValue(color);
+        // -- Show edges
+        bool boolVal;
+        m_meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
+        m_propertyShowEdges.setValue(boolVal);
+        // -- Show nodes
+        m_meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_DisplayNodes, boolVal);
+        m_propertyShowNodes.setValue(boolVal);
+    }
+
+    void onPropertyChanged(Property* prop) override {
+        auto fnRedisplay = [](const Handle_AIS_InteractiveObject& gfx) {
+            gfx->Redisplay(true); // All modes
+        };
+
+        if (prop == &m_propertyShowEdges) {
+            m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges.value());
+            fnRedisplay(m_meshVisu);
+        }
+        else if (prop == &m_propertyShowNodes) {
+            m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes.value());
+            fnRedisplay(m_meshVisu);
+        }
+        else if (prop == &m_propertyColor) {
+            m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, m_propertyColor.value());
+            fnRedisplay(m_meshVisu);
+        }
+
+        GraphicsEntityPropertyOwner::onPropertyChanged(prop);
+    }
+
+    Handle_MeshVS_Mesh m_meshVisu;
+    PropertyOccColor m_propertyColor;
+    PropertyBool m_propertyShowEdges;
+    PropertyBool m_propertyShowNodes;
+};
+
+std::unique_ptr<PropertyOwnerSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
+{
+    this->throwIf_differentDriver(entity);
+    return std::make_unique<GraphicsMeshEntityProperties>(entity);
 }
 
 } // namespace Mayo

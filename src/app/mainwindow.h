@@ -92,7 +92,8 @@ private:
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     QStringList m_listRecentFile;
-    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeProperties;
+    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeDataProperties;
+    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeGraphicsProperties;
     std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecPropertiesProvider;
 };
 

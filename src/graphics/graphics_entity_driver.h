@@ -9,6 +9,7 @@
 #include "graphics_entity.h"
 #include "../base/property_enumeration.h"
 #include <QtCore/QCoreApplication>
+#include <memory>
 
 namespace Mayo {
 
@@ -27,10 +28,14 @@ public:
 
     const Enumeration& displayModes() const { return m_enumDisplayModes; }
     virtual void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const = 0;
+    virtual Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const = 0;
+
+    virtual std::unique_ptr<PropertyOwnerSignals> properties(const GraphicsEntity& entity) const = 0;
 
 protected:
     void setDisplayModes(const Enumeration& enumeration) { m_enumDisplayModes = enumeration; }
     void throwIf_invalidDisplayMode(Enumeration::Value mode) const;
+    void throwIf_differentDriver(const GraphicsEntity& entity) const;
 
     void initEntity(GraphicsEntity* ptrEntity, const TDF_Label& label) const;
     static void setEntityAisObject(GraphicsEntity* ptrEntity, const Handle_AIS_InteractiveObject& obj);
@@ -47,6 +52,8 @@ public:
     Support supportStatus(const TDF_Label& label) const override;
     GraphicsEntity createEntity(const TDF_Label& label) const override;
     void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const override;
+    Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
+    std::unique_ptr<PropertyOwnerSignals> properties(const GraphicsEntity& entity) const override;
 
 protected:
     enum DisplayMode {
@@ -62,6 +69,8 @@ public:
     Support supportStatus(const TDF_Label& label) const override;
     GraphicsEntity createEntity(const TDF_Label& label) const override;
     void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const override;
+    Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
+    std::unique_ptr<PropertyOwnerSignals> properties(const GraphicsEntity& entity) const override;
 };
 
 } // namespace Mayo

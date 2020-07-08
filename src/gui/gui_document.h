@@ -33,6 +33,8 @@ public:
     const Handle_AIS_InteractiveContext& aisInteractiveContext() const { return m_aisContext; }
     const Bnd_Box& gpxBoundingBox() const { return m_gpxBoundingBox; }
 
+    GraphicsEntity findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
+
     std::vector<GraphicsOwnerPtr> selectedGraphicsOwners() const;
     void toggleItemSelected(const ApplicationItem& appItem);
     void clearItemSelection();
