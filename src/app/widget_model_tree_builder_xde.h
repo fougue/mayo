@@ -43,7 +43,7 @@ private:
     QString referenceItemText(const TDF_Label& refLabel, const TDF_Label& referredLabel) const;
     QTreeWidgetItem* findTreeItem(QTreeWidgetItem* parentTreeItem, const TDF_Label& label) const;
 
-    bool m_isMergeXdeReferredShapeOn = false;
+    bool m_isMergeXdeReferredShapeOn = true;
     QString m_refItemTextTemplate;
 };
 

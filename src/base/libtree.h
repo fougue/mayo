@@ -22,6 +22,7 @@ public:
     TreeNodeId nodeChildFirst(TreeNodeId id) const;
     TreeNodeId nodeChildLast(TreeNodeId id) const;
     TreeNodeId nodeParent(TreeNodeId id) const;
+    TreeNodeId nodeRoot(TreeNodeId id) const;
     const T& nodeData(TreeNodeId id) const;
     bool nodeIsRoot(TreeNodeId id) const;
     Span<const TreeNodeId> roots() const;
@@ -91,6 +92,13 @@ template<typename T> TreeNodeId Tree<T>::nodeChildLast(TreeNodeId id) const {
 template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const {
     const TreeNode* node = this->ptrNode(id);
     return node ? node->parent : 0;
+}
+
+template<typename T> TreeNodeId Tree<T>::nodeRoot(TreeNodeId id) const {
+    while (!this->nodeIsRoot(id))
+        id = this->nodeParent(id);
+
+    return id;
 }
 
 template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const {

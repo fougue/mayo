@@ -12,6 +12,8 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/task_manager.h"
+#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_entity_driver_table.h"
 #include "../gpx/gpx_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
@@ -648,13 +650,14 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-    auto fnFindPropertiesProvider = [=](const DocumentTreeNode& treeNode) {
+    auto fnFindDataPropertiesProvider = [=](const DocumentTreeNode& treeNode) {
         for (const auto& ptrProvider : m_vecPropertiesProvider) {
             if (ptrProvider->supports(treeNode))
                 return ptrProvider->properties(treeNode);
         }
         return std::unique_ptr<PropertyOwnerSignals>();
     };
+
     WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
@@ -662,15 +665,31 @@ void MainWindow::onApplicationItemSelectionChanged()
     Span<const ApplicationItem> spanAppItem = GuiApplication::instance()->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
+        const DocumentTreeNode& docTreeNode = item.documentTreeNode();
         if (item.isDocumentTreeNode()) {
-            m_ptrCurrentNodeProperties = fnFindPropertiesProvider(item.documentTreeNode());
-            PropertyOwnerSignals* nodeProps = m_ptrCurrentNodeProperties.get();
-            uiProps->editProperties(nodeProps);
-            if (nodeProps) {
-                QObject::connect(nodeProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
+            m_ptrCurrentNodeDataProperties = fnFindDataPropertiesProvider(docTreeNode);
+            PropertyOwnerSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
+            if (dataProps) {
+                uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
+                QObject::connect(dataProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
                     uiModelTree->refreshItemText(item);
                 });
             }
+
+            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
+            const TreeNodeId entityNodeId = item.document()->modelTree().nodeRoot(docTreeNode.id());
+            GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
+            if (gfxEntity.driverPtr()) {
+                m_ptrCurrentNodeGraphicsProperties = gfxEntity.driverPtr()->properties(gfxEntity);
+                PropertyOwnerSignals* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
+                if (gfxProps) {
+                    uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
+                    QObject::connect(gfxProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
+                        gfxEntity.aisContextPtr()->UpdateCurrentViewer();
+                    });
+                }
+            }
+
         }
 //        else if (item.isDocumentItem()) {
 //            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
