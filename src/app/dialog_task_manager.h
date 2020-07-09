@@ -6,29 +6,34 @@
 
 #pragma once
 
+#include "../base/task_common.h"
+
 #include <QtCore/QHash>
 #include <QtWidgets/QDialog>
 
 namespace Mayo {
 
+class TaskManager;
+
 class DialogTaskManager : public QDialog {
     Q_OBJECT
 public:
-    DialogTaskManager(QWidget* parent = nullptr);
+    DialogTaskManager(TaskManager* taskMgr, QWidget* parent = nullptr);
     ~DialogTaskManager();
 
 private:
     class TaskWidget;
-    TaskWidget* taskWidget(quint64 taskId);
+    TaskWidget* taskWidget(TaskId taskId);
 
-    void onTaskStarted(quint64 taskId, const QString& title);
-    void onTaskEnded(quint64 taskId);
-    void onTaskProgress(quint64 taskId, int percent);
-    void onTaskProgressStep(quint64 taskId, const QString& name);
+    void onTaskStarted(TaskId taskId);
+    void onTaskEnded(TaskId taskId);
+    void onTaskProgress(TaskId taskId, int percent);
+    void onTaskProgressStep(TaskId taskId, const QString& name);
     void interruptTask();
 
     class Ui_DialogTaskManager* m_ui = nullptr;
-    QHash<quint64, TaskWidget*> m_taskIdToWidget;
+    TaskManager* m_taskMgr = nullptr;
+    QHash<TaskId, TaskWidget*> m_taskIdToWidget;
     bool m_isRunning = false;
     unsigned m_taskCount = 0;
 };

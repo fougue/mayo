@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <QtCore/QStringListModel>
+#include "../base/document_ptr.h"
+#include <QtCore/QAbstractListModel>
 #include <vector>
 
 namespace Mayo {
@@ -14,15 +15,17 @@ namespace Mayo {
 class GuiApplication;
 class GuiDocument;
 
-class GuiDocumentListModel : public QStringListModel {
+class GuiDocumentListModel : public QAbstractListModel {
 public:
-    GuiDocumentListModel(GuiApplication* app);
+    GuiDocumentListModel(QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
 private:
     void appendGuiDocument(const GuiDocument* guiDoc);
     void removeGuiDocument(const GuiDocument* guiDoc);
+    void onDocumentNameChanged(const DocumentPtr& doc, const QString& name);
 
     std::vector<const GuiDocument*> m_vecGuiDocument;
 };

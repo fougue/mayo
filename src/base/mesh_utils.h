@@ -12,10 +12,8 @@ class gp_XYZ;
 namespace Mayo {
 
 struct MeshUtils {
-    static double triangleSignedVolume(
-            const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
-    static double triangleArea(
-            const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
+    static double triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
+    static double triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
 
     static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);

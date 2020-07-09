@@ -23,12 +23,11 @@ static const QCursor& rotateCursor()
 {
     static QCursor cursor;
     if (!cursor.bitmap()) {
-        const int rotateCursorWidth = 16;
-        const int rotateCursorHeight = 16;
-        const int rotateCursorByteCount =
-                ((rotateCursorWidth + 7) / 8) * rotateCursorHeight;
-        const int rotateCursorHotX = 6;
-        const int rotateCursorHotY = 8;
+        constexpr int rotateCursorWidth = 16;
+        constexpr int rotateCursorHeight = 16;
+        constexpr int rotateCursorByteCount = ((rotateCursorWidth + 7) / 8) * rotateCursorHeight;
+        constexpr int rotateCursorHotX = 6;
+        constexpr int rotateCursorHotY = 8;
 
         static unsigned char rotateCursorBitmap[rotateCursorByteCount] = {
             0xf0, 0xef, 0x18, 0xb8, 0x0c, 0x90, 0xe4, 0x83,
@@ -49,10 +48,10 @@ static const QCursor& rotateCursor()
         const QBitmap maskBmp = QBitmap::fromData(
                     QSize(rotateCursorWidth, rotateCursorHeight),
                     rotateCursorMaskBitmap);
-        const QCursor tempCursor(
-                    cursorBmp, maskBmp, rotateCursorHotX, rotateCursorHotY);
+        const QCursor tempCursor(cursorBmp, maskBmp, rotateCursorHotX, rotateCursorHotY);
         cursor = std::move(tempCursor);
     }
+
     return cursor;
 }
 

@@ -6,49 +6,92 @@
 
 #pragma once
 
-#include "application.h"
-#include "property_builtins.h"
+#include "document_ptr.h"
+#include "document_tree_node.h"
+#include "libtree.h"
+#include "xcaf.h"
 #include <QtCore/QObject>
-#include <vector>
 
 namespace Mayo {
 
-class DocumentItem;
+class Application;
+class DocumentTreeNode;
 
-class Document : public PropertyOwnerSignals {
+class Document : public QObject, public TDocStd_Document {
     Q_OBJECT
+    Q_PROPERTY(int identifier READ identifier)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString filePath READ filePath WRITE setFilePath)
+    Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
 public:
-    Document(QObject* parent = Application::instance());
-    virtual ~Document();
+    using Identifier = int;
+    enum class Format { Binary, Xml };
 
-    const QString& label() const;
-    void setLabel(const QString& v);
+    Identifier identifier() const { return m_identifier; }
 
-    const QString& filePath() const;
+    QString name() const;
+    void setName(const QString& name);
+
+    QString filePath() const;
     void setFilePath(const QString& filepath);
 
-    void addRootItem(DocumentItem* item);
-    bool eraseRootItem(DocumentItem* docItem);
-
-    Span<DocumentItem* const> rootItems() const;
-    bool isEmpty() const;
-
-    PropertyQString propertyLabel;
-    PropertyQString propertyFilePath;
+    static const char NameFormatBinary[];
+    static const char NameFormatXml[];
+    static const char* toNameFormat(Format format);
 
     static const char TypeName[];
-    virtual const char* dynTypeName() const;
+    virtual const char* dynTypeName() const { return Document::TypeName; }
+
+    bool isXCafDocument() const;
+    XCaf& xcaf() { return m_xcaf; }
+    const XCaf& xcaf() const { return m_xcaf; }
+
+    TDF_Label rootLabel() const;
+    bool isEntity(TreeNodeId nodeId);
+    int entityCount() const;
+    TDF_Label entityLabel(int index) const;
+    TreeNodeId entityTreeNodeId(int index) const;
+    DocumentTreeNode entityTreeNode(int index) const;
+
+    const Tree<TDF_Label>& modelTree() const { return m_modelTree; }
+    void rebuildModelTree();
+
+    static DocumentPtr findFrom(const TDF_Label& label);
+
+    TDF_Label newEntityLabel();
+    void destroyEntity(TreeNodeId entityTreeNodeId);
 
 signals:
-    void itemAdded(DocumentItem* docItem);
-    void itemErased(const DocumentItem* docItem);
-    void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+    void nameChanged(const QString& name);
+    void entityAdded(TreeNodeId entityTreeNodeId);
+    void entityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
+    //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+
+public: // -- from TDocStd_Document
+    void BeforeClose() override;
+    void ChangeStorageFormat(const TCollection_ExtendedString& newStorageFormat) override;
+
+    DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 private:
     friend class Application;
-    friend class DocumentItem;
+    class FormatBinaryRetrievalDriver;
+    class FormatXmlRetrievalDriver;
 
-    std::vector<DocumentItem*> m_rootItems;
+    friend class XCafScopeImport;
+    friend class SingleScopeImport;
+
+    Document();
+    void initXCaf();
+    void setIdentifier(Identifier ident) { m_identifier = ident; }
+    void notifyNewXCafEntities(const TDF_LabelSequence& seqEntityBefore);
+    void notifyNewEntity(const TDF_Label& label);
+
+    Identifier m_identifier = -1;
+    QString m_name;
+    QString m_filePath;
+    XCaf m_xcaf;
+    Tree<TDF_Label> m_modelTree;
 };
 
 } // namespace Mayo

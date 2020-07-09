@@ -12,10 +12,9 @@ namespace Mayo {
 
 class WidgetModelTreeBuilder_Mesh : public WidgetModelTreeBuilder {
 public:
-    bool supports(const DocumentItem* docItem) const override;
-    void fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem) override;
-
-    WidgetModelTreeBuilder* clone() const override;
+    bool supportsDocumentTreeNode(const DocumentTreeNode& node) const override;
+    QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
+    std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
 };
 
 } // namespace Mayo

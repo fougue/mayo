@@ -9,13 +9,10 @@
 #include "../app/theme.h" // TODO Remove this dependency
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
-#include "../base/brep_utils.h"
 #include "../base/document.h"
-#include "../base/document_item.h"
-#include "../base/xde_document_item.h"
-#include "../gpx/gpx_document_item_factory.h"
-#include "../gpx/gpx_utils.h"
-#include "../gpx/gpx_xde_document_item.h"
+#include "../gui/gui_application.h"
+#include "../graphics/graphics_entity_driver_table.h"
+#include "../graphics/graphics_utils.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
@@ -25,7 +22,7 @@
 #include <Graphic3d_GraphicDriver.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <StdSelect_BRepOwner.hxx>
+#include <QtCore/QtDebug>
 
 namespace Mayo {
 
@@ -76,14 +73,14 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 
 } // namespace Internal
 
-GuiDocument::GuiDocument(Document* doc)
+GuiDocument::GuiDocument(const DocumentPtr& doc)
     : m_document(doc),
       m_v3dViewer(Internal::createOccViewer()),
       m_v3dView(m_v3dViewer->CreateView()),
       m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
       m_aisOriginTrihedron(Internal::createOriginTrihedron())
 {
-    Q_ASSERT(doc != nullptr);
+    Expects(!doc.IsNull());
 
     //m_v3dView->SetShadingModel(V3d_PHONG);
     // 3D view - Enable anti-aliasing with MSAA
@@ -97,73 +94,39 @@ GuiDocument::GuiDocument(Document* doc)
                     mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
                 Aspect_GFM_VER);
     // 3D view - Add shaded trihedron located in the bottom-left corner
-    m_v3dView->TriedronDisplay(
-                Aspect_TOTP_LEFT_LOWER,
-                Quantity_NOC_GRAY50,
-                0.075,
-                V3d_ZBUFFER);
+    m_v3dView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_GRAY50, 0.075, V3d_ZBUFFER);
 
-    for (DocumentItem* docItem : doc->rootItems())
-        this->mapGpxItem(docItem);
+    for (int i = 0; i < doc->entityCount(); ++i)
+        this->mapGraphics(doc->entityTreeNodeId(i));
 
-    QObject::connect(doc, &Document::itemAdded, this, &GuiDocument::onItemAdded);
-    QObject::connect(doc, &Document::itemErased, this, &GuiDocument::onItemErased);
+    QObject::connect(doc.get(), &Document::entityAdded, this, &GuiDocument::onDocumentEntityAdded);
+    QObject::connect(
+                doc.get(), &Document::entityAboutToBeDestroyed,
+                this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
 }
 
-Document* GuiDocument::document() const
+GraphicsEntity GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const
 {
-    return m_document;
-}
-
-const Handle_V3d_View& GuiDocument::v3dView() const
-{
-    return m_v3dView;
-}
-
-const Handle_AIS_InteractiveContext& GuiDocument::aisInteractiveContext() const
-{
-    return m_aisContext;
-}
-
-GpxDocumentItem* GuiDocument::findItemGpx(const DocumentItem* item) const
-{
-    const GuiDocumentItem* guiDocItem = this->findGuiDocumentItem(item);
-    return guiDocItem ? guiDocItem->gpxDocItem.get() : nullptr;
-}
-
-const Bnd_Box& GuiDocument::gpxBoundingBox() const
-{
-    return m_gpxBoundingBox;
+    const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
+    return gfxItem ? gfxItem->graphicsEntity : GraphicsEntity();
 }
 
 void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
 {
-    if (appItem.document() != this->document())
+    const DocumentPtr doc = appItem.document();
+    if (doc != this->document())
         return;
 
-    if (appItem.isDocumentItemNode()) {
-        const GuiDocumentItem* guiItem = this->findGuiDocumentItem(appItem.documentItem());
-        if (guiItem && sameType<XdeDocumentItem>(appItem.documentItem())) {
-            auto xdeItem = static_cast<const XdeDocumentItem*>(appItem.documentItem());
-            const DocumentItemNode& docItemNode = appItem.documentItemNode();
-            const TopLoc_Location shapeLoc = xdeItem->shapeAbsoluteLocation(docItemNode.id);
-            const TDF_Label labelNode = XdeDocumentItem::label(docItemNode);
-            const TopoDS_Shape shape = XdeDocumentItem::shape(labelNode).Located(shapeLoc);
-            std::vector<TopoDS_Face> vecFace;
-            if (BRepUtils::moreComplex(shape.ShapeType(), TopAbs_FACE)) {
-                BRepUtils::forEachSubFace(shape, [&](const TopoDS_Face& face) {
-                    vecFace.push_back(face);
-                });
-            }
-            else if (shape.ShapeType() == TopAbs_FACE) {
-                vecFace.push_back(TopoDS::Face(shape));
-            }
+    if (appItem.isDocumentTreeNode()) {
+        const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
+        const TreeNodeId entityNodeId = doc->modelTree().nodeRoot(docTreeNode.id());
 
-            for (const TopoDS_Face& face : vecFace) {
-                auto brepOwner = guiItem->findBrepOwner(face);
-                if (!brepOwner.IsNull())
-                    m_aisContext->AddOrRemoveSelected(brepOwner, false);
-            }
+        // Add/remove graphics owner
+        const GraphicsItem* gfxItem = this->findGraphicsItem(entityNodeId);
+        if (gfxItem && gfxItem->gpxTreeNodeMapping) {
+            auto vecGfxOwner = gfxItem->gpxTreeNodeMapping->findGraphicsOwners(docTreeNode);
+            for (const GraphicsOwnerPtr& gfxOwner : vecGfxOwner)
+                m_aisContext->AddOrRemoveSelected(gfxOwner, false);
         }
     }
 }
@@ -191,90 +154,90 @@ void GuiDocument::updateV3dViewer()
     m_aisContext->UpdateCurrentViewer();
 }
 
-std::vector<Handle_SelectMgr_EntityOwner> GuiDocument::selectedEntityOwners() const
+void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
-    std::vector<Handle_SelectMgr_EntityOwner> vecOwner;
+    this->mapGraphics(entityTreeNodeId);
+    emit gpxBoundingBoxChanged(m_gpxBoundingBox);
+}
+
+void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
+{
+    const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
+    if (gfxItem) {
+        const GraphicsEntity& gfxEntity = gfxItem->graphicsEntity;
+        GraphicsUtils::AisContext_eraseObject(m_aisContext, gfxEntity.aisObject());
+        m_vecGraphicsItem.erase(m_vecGraphicsItem.begin() + (gfxItem - &m_vecGraphicsItem.front()));
+        this->updateV3dViewer();
+
+        // Recompute bounding box
+        m_gpxBoundingBox.SetVoid();
+        for (const GraphicsItem& item : m_vecGraphicsItem) {
+            const Bnd_Box entityBndBox = GraphicsUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
+            BndUtils::add(&m_gpxBoundingBox, entityBndBox);
+        }
+
+        emit gpxBoundingBoxChanged(m_gpxBoundingBox);
+    }
+}
+
+std::vector<GraphicsOwnerPtr> GuiDocument::selectedGraphicsOwners() const
+{
+    std::vector<GraphicsOwnerPtr> vecOwner;
     m_aisContext->InitSelected();
     while (m_aisContext->MoreSelected()) {
         vecOwner.push_back(m_aisContext->SelectedOwner());
         m_aisContext->NextSelected();
     }
+
     return vecOwner;
 }
 
-void GuiDocument::onItemAdded(DocumentItem* item)
+void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
 {
-    this->mapGpxItem(item);
-    emit gpxBoundingBoxChanged(m_gpxBoundingBox);
+    GraphicsItem item;
+    const DocumentTreeNode entityTreeNode(m_document, entityTreeNodeId);
+    GraphicsEntity& gfxEntity = item.graphicsEntity;
+    gfxEntity = GraphicsEntityDriverTable::instance()->createEntity(entityTreeNode.label());
+    if (gfxEntity.aisObject().IsNull())
+        return;
+
+    gfxEntity.setAisContext(m_aisContext);
+    gfxEntity.setVisible(true);
+    item.entityTreeNodeId = entityTreeNodeId;
+    m_aisContext->UpdateCurrentViewer();
+
+    for (const auto& mappingDriver : GuiApplication::instance()->graphicsTreeNodeMappingDrivers()) {
+        item.gpxTreeNodeMapping = mappingDriver->createMapping(entityTreeNode);
+        if (item.gpxTreeNodeMapping)
+            break;
+    }
+
+    if (item.gpxTreeNodeMapping) {
+        const int selectMode = item.gpxTreeNodeMapping->selectionMode();
+        if (selectMode != -1) {
+            m_aisContext->Activate(gfxEntity.aisObject(), selectMode);
+            opencascade::handle<SelectMgr_IndexedMapOfOwner> occMapEntityOwner;
+            m_aisContext->EntityOwners(occMapEntityOwner, gfxEntity.aisObject(), selectMode);
+            for (auto it = occMapEntityOwner->cbegin(); it != occMapEntityOwner->cend(); ++it) {
+                if (!item.gpxTreeNodeMapping->mapGraphicsOwner(*it))
+                    qDebug() << "Insertion failed";
+            }
+        }
+    }
+
+    GraphicsUtils::V3dView_fitAll(m_v3dView);
+    const Bnd_Box itemBndBox = GraphicsUtils::AisObject_boundingBox(item.graphicsEntity.aisObject());
+    BndUtils::add(&m_gpxBoundingBox, itemBndBox);
+    m_vecGraphicsItem.emplace_back(std::move(item));
 }
 
-void GuiDocument::onItemErased(const DocumentItem* item)
+const GuiDocument::GraphicsItem* GuiDocument::findGraphicsItem(TreeNodeId entityTreeNodeId) const
 {
     auto itFound = std::find_if(
-                m_vecGuiDocumentItem.begin(),
-                m_vecGuiDocumentItem.end(),
-                [=](const GuiDocumentItem& guiItem) { return guiItem.docItem == item; });
-    if (itFound != m_vecGuiDocumentItem.end()) {
-        // Delete gpx item
-        m_vecGuiDocumentItem.erase(itFound);
-        this->updateV3dViewer();
-
-        // Recompute bounding box
-        m_gpxBoundingBox.SetVoid();
-        for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
-            const Bnd_Box otherBox = guiItem.gpxDocItem->boundingBox();
-            BndUtils::add(&m_gpxBoundingBox, otherBox);
-        }
-        emit gpxBoundingBoxChanged(m_gpxBoundingBox);
-    }
-}
-
-void GuiDocument::mapGpxItem(DocumentItem* item)
-{
-    GpxDocumentItem* gpxItem = GpxDocumentItemFactory::instance()->create(item);
-    GuiDocumentItem guiItem(item, gpxItem);
-    gpxItem->setContext(m_aisContext);
-    gpxItem->setVisible(true);
-    m_aisContext->UpdateCurrentViewer();
-    if (sameType<XdeDocumentItem>(item)) {
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectVertex);
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectEdge);
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectWire);
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectFace);
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectShell);
-        gpxItem->activateSelection(GpxXdeDocumentItem::SelectSolid);
-        guiItem.vecGpxEntityOwner = gpxItem->entityOwners(GpxXdeDocumentItem::SelectFace);
-    }
-
-    GpxUtils::V3dView_fitAll(m_v3dView);
-    BndUtils::add(&m_gpxBoundingBox, gpxItem->boundingBox());
-    m_vecGuiDocumentItem.emplace_back(std::move(guiItem));
-}
-
-const GuiDocument::GuiDocumentItem*
-GuiDocument::findGuiDocumentItem(const DocumentItem* item) const
-{
-    for (const GuiDocumentItem& guiItem : m_vecGuiDocumentItem) {
-        if (guiItem.docItem == item)
-            return &guiItem;
-    }
-    return nullptr;
-}
-
-GuiDocument::GuiDocumentItem::GuiDocumentItem(DocumentItem* item, GpxDocumentItem* gpx)
-    : docItem(item), gpxDocItem(gpx)
-{
-}
-
-Handle_SelectMgr_EntityOwner
-GuiDocument::GuiDocumentItem::findBrepOwner(const TopoDS_Face& face) const
-{
-    for (const Handle_SelectMgr_EntityOwner& owner : vecGpxEntityOwner) {
-        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
-        if (!brepOwner.IsNull() && brepOwner->Shape() == face)
-            return owner;
-    }
-    return Handle_SelectMgr_EntityOwner();
+                m_vecGraphicsItem.cbegin(),
+                m_vecGraphicsItem.cend(),
+                [=](const GraphicsItem& item) { return item.entityTreeNodeId == entityTreeNodeId; });
+    return itFound != m_vecGraphicsItem.end() ? &(*itFound) : nullptr;
 }
 
 } // namespace Mayo

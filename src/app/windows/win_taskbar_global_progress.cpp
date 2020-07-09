@@ -7,26 +7,26 @@
 #include "win_taskbar_global_progress.h"
 
 #include "../base/math_utils.h"
+#include "../base/task_manager.h"
 
-#include <fougtools/qttools/task/manager.h>
 #include <QtWinExtras/QWinTaskbarButton>
 #include <QtWinExtras/QWinTaskbarProgress>
 
 namespace Mayo {
 
-WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(QObject* parent)
+WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(const TaskManager* taskMgr, QObject* parent)
     : QObject(parent),
-      m_taskbarBtn(new QWinTaskbarButton(this))
+      m_taskbarBtn(new QWinTaskbarButton(this)),
+      m_taskMgr(taskMgr)
 {
-    auto taskMgr = qttask::Manager::globalInstance();
     QObject::connect(
-                taskMgr, &qttask::Manager::started,
-                this, [=](quint64 taskId) { this->onTaskProgress(taskId, 0); });
+                taskMgr, &TaskManager::started,
+                this, [=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
     QObject::connect(
-                taskMgr, &qttask::Manager::progress,
+                taskMgr, &TaskManager::progressChanged,
                 this, &WinTaskbarGlobalProgress::onTaskProgress);
     QObject::connect(
-                taskMgr, &qttask::Manager::ended,
+                taskMgr, &TaskManager::ended,
                 this, &WinTaskbarGlobalProgress::onTaskEnded);
 }
 
@@ -35,7 +35,7 @@ void WinTaskbarGlobalProgress::setWindow(QWindow* window)
     m_taskbarBtn->setWindow(window);
 }
 
-void WinTaskbarGlobalProgress::onTaskProgress(quint64 taskId, int percent)
+void WinTaskbarGlobalProgress::onTaskProgress(TaskId taskId, int percent)
 {
     auto it = m_mapTaskIdProgress.find(taskId);
     if (it != m_mapTaskIdProgress.end())
@@ -46,7 +46,7 @@ void WinTaskbarGlobalProgress::onTaskProgress(quint64 taskId, int percent)
     this->updateTaskbar();
 }
 
-void WinTaskbarGlobalProgress::onTaskEnded(quint64 taskId)
+void WinTaskbarGlobalProgress::onTaskEnded(TaskId taskId)
 {
     m_mapTaskIdProgress.erase(taskId);
     this->updateTaskbar();

@@ -9,6 +9,8 @@
 #include "property.h"
 #include "span.h"
 
+#include <initializer_list>
+
 namespace Mayo {
 
 class Enumeration {
@@ -16,19 +18,22 @@ public:
     using Value = int;
     struct Item {
         Value value;
-        QString name;
+        QByteArray name;
+        QString text;
     };
 
     Enumeration() = default;
+    Enumeration(std::initializer_list<Item> listItem);
 
-    void addItem(Value value, const QString& name);
+    void addItem(Value value, const QByteArray& name, const QString& text = QString());
     int size() const;
 
+    const Item& findItem(Value value) const;
     int findIndex(Value value) const;
-    QString findName(Value value) const;
-    Value findValue(const QString& name) const;
+    QByteArray findName(Value value) const;
+    Value findValue(const QByteArray& name) const;
 
-    Item itemAt(int index) const;
+    const Item& itemAt(int index) const;
     Span<const Item> items() const;
 
 private:

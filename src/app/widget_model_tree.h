@@ -14,6 +14,8 @@ class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
 
+#include <memory>
+
 namespace Mayo {
 
 class Settings;
@@ -23,6 +25,7 @@ class WidgetModelTree : public QWidget {
     Q_OBJECT
 public:
     using Item = ApplicationItem;
+    using BuilderPtr = std::unique_ptr<WidgetModelTreeBuilder>;
 
     WidgetModelTree(QWidget* widget = nullptr);
     ~WidgetModelTree();
@@ -35,36 +38,37 @@ public:
     std::vector<QAction*> createConfigurationActions(QObject* parent);
 
     // For builders
-    static void addPrototypeBuilder(WidgetModelTreeBuilder* builder);
+    static void addPrototypeBuilder(BuilderPtr builder);
 
-    static DocumentItemNode documentItemNode(const QTreeWidgetItem* treeItem);
-    static void setDocumentItemNode(QTreeWidgetItem* treeItem, const DocumentItemNode& node);
+    static DocumentTreeNode documentTreeNode(const QTreeWidgetItem* treeItem);
+    static void setDocumentTreeNode(QTreeWidgetItem* treeItem, const DocumentTreeNode& node);
+    static void setDocument(QTreeWidgetItem* treeItem, const DocumentPtr& doc);
 
     static bool holdsDocument(const QTreeWidgetItem* treeItem);
-    static bool holdsDocumentItem(const QTreeWidgetItem* treeItem);
-    static bool holdsDocumentItemNode(const QTreeWidgetItem* treeItem);
+    static bool holdsDocumentTreeNode(const QTreeWidgetItem* treeItem);
 
 private:
-    void onDocumentAdded(Document* doc);
-    void onDocumentErased(const Document* doc);
-    void onDocumentPropertyChanged(Document* doc, Property* prop);
-    void onDocumentItemAdded(DocumentItem* docItem);
-    void onDocumentItemErased(const DocumentItem* docItem);
-    void onDocumentItemPropertyChanged(DocumentItem* docItem, Property* prop);
+    void onDocumentAdded(const DocumentPtr& doc);
+    void onDocumentAboutToClose(const DocumentPtr& doc);
+    //void onDocumentPropertyChanged(Document* doc, Property* prop);
+    void onDocumentNameChanged(const DocumentPtr& doc, const QString& name);
+    void onDocumentEntityAdded(const DocumentPtr& doc, TreeNodeId entityId);
+    void onDocumentEntityAboutToBeDestroyed(const DocumentPtr& doc, TreeNodeId entityId);
+    //void onDocumentEntityPropertyChanged(DocumentItem* docItem, Property* prop);
 
     void onTreeWidgetDocumentSelectionChanged(
             const QItemSelection& selected, const QItemSelection& deselected);
 
-    QTreeWidgetItem* loadDocumentItem(DocumentItem* docItem);
+    QTreeWidgetItem* loadDocumentEntity(const DocumentTreeNode& entityNode);
 
-    QTreeWidgetItem* findTreeItem(const Document* doc) const;
-    QTreeWidgetItem* findTreeItem(const DocumentItem* docItem) const;
+    QTreeWidgetItem* findTreeItem(const DocumentPtr& doc) const;
+    QTreeWidgetItem* findTreeItem(const DocumentTreeNode& node) const;
 
-    WidgetModelTreeBuilder* findSupportBuilder(const Document* doc) const;
-    WidgetModelTreeBuilder* findSupportBuilder(const DocumentItem* docItem) const;
+    WidgetModelTreeBuilder* findSupportBuilder(const DocumentPtr& doc) const;
+    WidgetModelTreeBuilder* findSupportBuilder(const DocumentTreeNode& entityNode) const;
 
     class Ui_WidgetModelTree* m_ui = nullptr;
-    std::vector<WidgetModelTreeBuilder*> m_vecBuilder;
+    std::vector<BuilderPtr> m_vecBuilder;
     QString m_refItemTextTemplate;
 };
 

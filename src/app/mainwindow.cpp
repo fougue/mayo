@@ -9,10 +9,12 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
+#include "../base/caf_utils.h"
 #include "../base/document.h"
-#include "../base/document_item.h"
-#include "../base/xde_document_item.h"
-#include "../gpx/gpx_utils.h"
+#include "../base/task_manager.h"
+#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_entity_driver_table.h"
+#include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/gui_document_list_model.h"
@@ -22,6 +24,7 @@
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
+#include "document_tree_node_properties_providers.h"
 #include "settings.h"
 #include "settings_keys.h"
 #include "theme.h"
@@ -38,11 +41,10 @@
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
-#include <fougtools/qttools/task/manager.h>
-#include <fougtools/qttools/task/runner_stdasync.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>
+#include <QtCore/QTimer>
 #include <QtCore/QSettings>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
@@ -56,14 +58,14 @@ namespace Mayo {
 
 namespace Internal {
 
-static Application::PartFormat partFormatFromFilter(const QString& filter)
+static IO::PartFormat partFormatFromFilter(const QString& filter)
 {
-    for (Application::PartFormat format : Application::partFormats()) {
-        if (filter == Application::partFormatFilter(format))
+    for (IO::PartFormat format : IO::partFormats()) {
+        if (filter == IO::partFormatFilter(format))
             return format;
     }
 
-    return Application::PartFormat::Unknown;
+    return IO::PartFormat::Unknown;
 }
 
 // TODO: move in Options
@@ -89,7 +91,7 @@ struct ImportExportSettings {
 struct OpenFileNames {
     QStringList listFilepath;
     ImportExportSettings lastIoSettings;
-    Application::PartFormat selectedFormat;
+    IO::PartFormat selectedFormat;
 
     enum GetOption {
         GetOne,
@@ -101,9 +103,9 @@ struct OpenFileNames {
             OpenFileNames::GetOption option = OpenFileNames::GetMany)
     {
         OpenFileNames result;
-        result.selectedFormat = Application::PartFormat::Unknown;
+        result.selectedFormat = IO::PartFormat::Unknown;
         result.lastIoSettings = ImportExportSettings::load();
-        QStringList listPartFormatFilter = Application::partFormatFilters();
+        QStringList listPartFormatFilter = IO::partFormatFilters();
         const QString allFilesFilter = Application::tr("All files(*.*)");
         listPartFormatFilter.append(allFilesFilter);
         const QString dlgTitle = Application::tr("Select Part File");
@@ -129,7 +131,7 @@ struct OpenFileNames {
             result.selectedFormat =
                     result.lastIoSettings.selectedFilter != allFilesFilter ?
                         partFormatFromFilter(result.lastIoSettings.selectedFilter) :
-                        Application::PartFormat::Unknown;
+                        IO::PartFormat::Unknown;
             ImportExportSettings::save(result.lastIoSettings);
         }
 
@@ -137,19 +139,10 @@ struct OpenFileNames {
     }
 };
 
-static void msgBoxErrorFileFormat(QWidget* parent, const QString& filepath)
-{
-    qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                parent,
-                MainWindow::tr("Error"),
-                MainWindow::tr("'%1'\nUnknown file format").arg(filepath));
-}
-
 static void prependRecentFile(QStringList* listRecentFile, const QString& filepath)
 {
     constexpr int sizeLimit = 10;
-    const QString absFilepath =
-            QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
+    const QString absFilepath = QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
     for (const QString& recentFile : *listRecentFile) {
         if (recentFile == absFilepath)
             return;
@@ -158,6 +151,23 @@ static void prependRecentFile(QStringList* listRecentFile, const QString& filepa
     listRecentFile->insert(listRecentFile->begin(), absFilepath);
     while (listRecentFile->size() > sizeLimit)
         listRecentFile->pop_back();
+}
+
+static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
+{
+    switch (msgType) {
+    case Messenger::MessageType::Trace:
+        break;
+    case Messenger::MessageType::Info:
+        WidgetMessageIndicator::showMessage(text, mainWnd);
+        break;
+    case Messenger::MessageType::Warning:
+        qtgui::QWidgetUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
+        break;
+    case Messenger::MessageType::Error:
+        qtgui::QWidgetUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
+        break;
+    }
 }
 
 } // namespace Internal
@@ -319,32 +329,26 @@ MainWindow::MainWindow(QWidget *parent)
                 GuiApplication::instance(), &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                GuiApplication::instance()->selectionModel(),
-                &ApplicationItemSelectionModel::changed,
-                this,
-                &MainWindow::onApplicationItemSelectionChanged);
+                GuiApplication::instance()->selectionModel(), &ApplicationItemSelectionModel::changed,
+                this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
-                [=](const QModelIndex& index) {
-        this->setCurrentDocumentIndex(index.row());
-    });
+                [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
-                this, &MainWindow::operationFinished,
-                this, &MainWindow::onOperationFinished);
-
+                Messenger::defaultInstance(), &Messenger::message,
+                this, [=](Messenger::MessageType msgType, const QString& text) {
+        Internal::handleMessage(msgType, text, this);
+    });
     // Creation of annex objects
     {
         // Opened documents GUI
-        auto listViewBtns =
-                new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+        auto listViewBtns = new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
         listViewBtns->addButton(
                     1, mayoTheme()->icon(Theme::Icon::Cross), m_ui->actionCloseDoc->toolTip());
         listViewBtns->setButtonDetection(1, -1, QVariant());
         listViewBtns->setButtonDisplayColumn(1, 0);
-        listViewBtns->setButtonDisplayModes(
-                    1, qtgui::ItemViewButtons::DisplayOnDetection);
-        listViewBtns->setButtonItemSide(
-                    1, qtgui::ItemViewButtons::ItemRightSide);
+        listViewBtns->setButtonDisplayModes(1, qtgui::ItemViewButtons::DisplayOnDetection);
+        listViewBtns->setButtonItemSide(1, qtgui::ItemViewButtons::ItemRightSide);
         const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
         listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
         listViewBtns->installDefaultItemDelegate();
@@ -356,11 +360,11 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
-    new DialogTaskManager(this);
+    new DialogTaskManager(TaskManager::globalInstance(), this);
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
-    auto guiDocModel = new GuiDocumentListModel(GuiApplication::instance());
+    auto guiDocModel = new GuiDocumentListModel(this);
     m_ui->combo_GuiDocuments->setModel(guiDocModel);
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
 
@@ -438,7 +442,7 @@ void MainWindow::showEvent(QShowEvent* event)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
     auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
     if (!winProgress)
-        winProgress = new WinTaskbarGlobalProgress(this);
+        winProgress = new WinTaskbarGlobalProgress(TaskManager::globalInstance(), this);
     winProgress->setWindow(this->windowHandle());
 #endif
 }
@@ -446,9 +450,8 @@ void MainWindow::showEvent(QShowEvent* event)
 void MainWindow::newDocument()
 {
     static unsigned docSequenceId = 0;
-    auto doc = new Document;
-    doc->setLabel(tr("Anonymous%1").arg(++docSequenceId));
-    Application::instance()->addDocument(doc);
+    auto docPtr = Application::instance()->newDocument(Document::Format::Binary);
+    docPtr->setName(tr("Anonymous%1").arg(++docSequenceId));
 }
 
 void MainWindow::openDocuments()
@@ -461,66 +464,45 @@ void MainWindow::openDocuments()
 void MainWindow::importInCurrentDoc()
 {
     auto widgetGuiDoc = this->currentWidgetGuiDocument();
-    if (widgetGuiDoc) {
-        Document* doc = widgetGuiDoc->guiDocument()->document();
-        const auto resFileNames = Internal::OpenFileNames::get(this);
-        if (!resFileNames.listFilepath.isEmpty()) {
-            const Application::PartFormat userFormat = resFileNames.selectedFormat;
-            const bool hasUserFormat = userFormat != Application::PartFormat::Unknown;
-            for (const QString& filepath : resFileNames.listFilepath) {
-                const Application::PartFormat fileFormat =
-                        hasUserFormat ? userFormat : Application::findPartFormat(filepath);
-                if (fileFormat != Application::PartFormat::Unknown) {
-                    this->runImportTask(doc, fileFormat, filepath);
-                    Internal::prependRecentFile(&m_listRecentFile, filepath);
-                }
-                else {
-                    Internal::msgBoxErrorFileFormat(this, filepath);
-                }
-            }
-        }
-    }
-}
+    if (!widgetGuiDoc)
+        return;
 
-void MainWindow::runImportTask(
-        Document* doc, Application::PartFormat format, const QString& filepath)
-{
-    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
-    task->setTaskTitle(QFileInfo(filepath).fileName());
-    task->run([=]{
+    const auto resFileNames = Internal::OpenFileNames::get(this);
+    if (resFileNames.listFilepath.isEmpty())
+        return;
+
+    auto taskMgr = TaskManager::globalInstance();
+    const DocumentPtr& doc = widgetGuiDoc->guiDocument()->document();
+    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
-        const Application::IoResult result =
-                Application::instance()->importInDocument(
-                    doc, format, filepath, &task->progress());
-        QString msg;
-        if (result) {
-            msg = tr("Import time '%1': %2ms")
-                    .arg(QFileInfo(filepath).fileName())
-                    .arg(chrono.elapsed());
-        } else {
-            msg = tr("Failed to import part:\n    %1\nError: %2")
-                    .arg(filepath, result.errorText());
-        }
-
-        emit operationFinished(result.valid(), msg);
+        const bool ok = IO::instance()->importInDocument(
+                    doc, resFileNames.listFilepath, Messenger::defaultInstance(), progress);
+        if (ok)
+            Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
     });
+    const QString taskTitle =
+            resFileNames.listFilepath.size() > 1 ?
+                tr("Import") :
+                QFileInfo(resFileNames.listFilepath.front()).fileName();
+    taskMgr->setTitle(taskId, taskTitle);
+    taskMgr->run(taskId);
+    for (const QString& filepath : resFileNames.listFilepath)
+        Internal::prependRecentFile(&m_listRecentFile, filepath);
 }
 
 void MainWindow::runExportTask(
         Span<const ApplicationItem> appItems,
-        Application::PartFormat format,
-        const Application::ExportOptions& opts,
+        IO::PartFormat format,
+        const IO::ExportOptions& opts,
         const QString& filepath)
 {
-    auto task = qttask::Manager::globalInstance()->newTask<qttask::StdAsync>();
-    task->setTaskTitle(QFileInfo(filepath).fileName());
-    task->run([=]{
+    auto taskMgr = TaskManager::globalInstance();
+    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
-        const Application::IoResult result =
-                Application::instance()->exportApplicationItems(
-                    appItems, format, opts, filepath, &task->progress());
+        const IO::Result result =
+                IO::instance()->exportApplicationItems(appItems, format, opts, filepath, progress);
         QString msg;
         if (result) {
             msg = tr("Export time '%1': %2ms")
@@ -531,33 +513,35 @@ void MainWindow::runExportTask(
                     .arg(filepath).arg(result.errorText());
         }
 
-        emit operationFinished(result.valid(), msg);
+        const auto msgType = result ? Messenger::MessageType::Info : Messenger::MessageType::Error;
+        Messenger::defaultInstance()->emitMessage(msgType, msg);
     });
+    taskMgr->setTitle(taskId, QFileInfo(filepath).fileName());
+    taskMgr->run(taskId);
 }
 
 void MainWindow::exportSelectedItems()
 {
-    static const Application::ExportOptions defaultOpts;
+    static const IO::ExportOptions defaultOpts;
     auto lastSettings = Internal::ImportExportSettings::load();
     const QString filepath =
             QFileDialog::getSaveFileName(
                 this,
                 tr("Select Output File"),
                 lastSettings.openDir,
-                Application::partFormatFilters().join(QLatin1String(";;")),
+                IO::partFormatFilters().join(QLatin1String(";;")),
                 &lastSettings.selectedFilter);
     if (!filepath.isEmpty()) {
         lastSettings.openDir = QFileInfo(filepath).canonicalPath();
-        const Application::PartFormat format =
-                Internal::partFormatFromFilter(lastSettings.selectedFilter);
+        const IO::PartFormat format = Internal::partFormatFromFilter(lastSettings.selectedFilter);
         Span<const ApplicationItem> spanAppItem =
                 GuiApplication::instance()->selectionModel()->selectedItems();
-        if (Application::hasExportOptionsForFormat(format)) {
+        if (IO::hasExportOptionsForFormat(format)) {
 #ifdef HAVE_GMIO
             auto dlg = new DialogExportOptions(this);
             dlg->setPartFormat(format);
             QObject::connect(dlg, &QDialog::accepted, [=]{
-                const Application::ExportOptions opts = dlg->currentExportOptions();
+                const IO::ExportOptions opts = dlg->currentExportOptions();
                 this->runExportTask(vecDocItem, format, opts, filepath);
                 Internal::ImportExportSettings::save(lastSettings);
             });
@@ -615,16 +599,17 @@ void MainWindow::inspectXde()
 {
     const Span<const ApplicationItem> spanAppItem =
             GuiApplication::instance()->selectionModel()->selectedItems();
-    const XdeDocumentItem* xdeDocItem = nullptr;
+    DocumentPtr xcafDoc;
     for (const ApplicationItem& appItem : spanAppItem) {
-        xdeDocItem = dynamic_cast<const XdeDocumentItem*>(appItem.documentItem());
-        if (xdeDocItem)
+        if (appItem.document()->isXCafDocument()) {
+            xcafDoc = appItem.document();
             break;
+        }
     }
 
-    if (xdeDocItem) {
+    if (!xcafDoc.IsNull()) {
         auto dlg = new DialogInspectXde(this);
-        dlg->load(xdeDocItem->cafDoc());
+        dlg->load(xcafDoc);
         qtgui::QWidgetUtils::asyncDialogExec(dlg);
     }
 }
@@ -669,33 +654,50 @@ void MainWindow::onApplicationItemSelectionChanged()
     Span<const ApplicationItem> spanAppItem = GuiApplication::instance()->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
-        if (item.isDocumentItemNode()) {
-            m_ptrCurrentNodeProperties = item.documentItem()->propertiesAtNode(item.documentItemNode().id);
-            PropertyOwnerSignals* nodeProps = m_ptrCurrentNodeProperties.get();
-            uiProps->editProperties(nodeProps);
-            if (nodeProps) {
-                QObject::connect(nodeProps, &PropertyOwnerSignals::propertyChanged, [=]{
+        const DocumentTreeNode& docTreeNode = item.documentTreeNode();
+        if (item.isDocumentTreeNode()) {
+            auto providerTable = DocumentTreeNodePropertiesProviderTable::instance();
+            m_ptrCurrentNodeDataProperties = providerTable->properties(docTreeNode);
+            PropertyOwnerSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
+            if (dataProps) {
+                uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
+                QObject::connect(dataProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
                     uiModelTree->refreshItemText(item);
                 });
             }
-        }
-        else if (item.isDocumentItem()) {
-            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
-            uiProps->editProperties(item.documentItem(), grpData);
-            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
+
             const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
-            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
-            uiProps->editProperties(gpxDocItem, grpGpx);
+            const TreeNodeId entityNodeId = item.document()->modelTree().nodeRoot(docTreeNode.id());
+            GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
+            if (gfxEntity.driverPtr()) {
+                m_ptrCurrentNodeGraphicsProperties = gfxEntity.driverPtr()->properties(gfxEntity);
+                PropertyOwnerSignals* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
+                if (gfxProps) {
+                    uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
+                    QObject::connect(gfxProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
+                        gfxEntity.aisContextPtr()->UpdateCurrentViewer();
+                    });
+                }
+            }
+
         }
-        else if (item.isDocument()) {
-            uiProps->editProperties(item.document());
-        }
+//        else if (item.isDocumentItem()) {
+//            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
+//            uiProps->editProperties(item.documentItem(), grpData);
+//            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
+//            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
+//            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
+//            uiProps->editProperties(gpxDocItem, grpGpx);
+//        }
+//        else if (item.isDocument()) {
+//            uiProps->editProperties(item.document());
+//        }
 
         const bool isLinkWithDocumentSelectorOn =
                 Settings::instance()->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         if (isLinkWithDocumentSelectorOn) {
-            const Document* doc = item.document();
-            const int index = Application::instance()->indexOfDocument(doc);
+            DocumentPtr doc = item.document();
+            const int index = Application::instance()->findIndexOfDocument(doc);
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
         }
@@ -734,12 +736,13 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
+        //guiDoc->aisInteractiveContext()->MoveTo(pos2d.x(), pos2d.y(), widget->guiDocument()->v3dView(), true);
         auto selector = guiDoc->aisInteractiveContext()->MainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
                 selector->NbPicked() > 0 ?
                     selector->PickedPoint(1) :
-                    GpxUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
+                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
         m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
@@ -751,7 +754,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     QTimer::singleShot(0, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 
-void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo &loc)
+void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)
 {
     this->openDocumentsFromList(QStringList(loc.absoluteFilePath()));
 }
@@ -791,17 +794,16 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
         }
         return filepath;
     };
-    const Document* doc = Application::instance()->documentAt(idx);
+    const DocumentPtr docPtr = Application::instance()->findDocumentByIndex(idx);
     const QString textActionClose =
-            doc ?
-                tr("Close %1").arg(funcFilepathQuoted(doc->label())) :
+            docPtr ?
+                tr("Close %1").arg(funcFilepathQuoted(docPtr->name())) :
                 tr("Close");
     const QString textActionCloseAllExcept =
-            doc ?
-                tr("Close all except %1").arg(funcFilepathQuoted(doc->label())) :
+            docPtr ?
+                tr("Close all except %1").arg(funcFilepathQuoted(docPtr->name())) :
                 tr("Close all except current");
-    const QString docFilePath =
-            doc ? doc->filePath() : QString();
+    const QString docFilePath = docPtr ? docPtr->filePath() : QString();
     m_ui->actionCloseDoc->setText(textActionClose);
     m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
     m_ui->widget_FileSystem->setLocation(docFilePath);
@@ -837,13 +839,13 @@ void MainWindow::closeCurrentDocument()
     this->closeDocument(this->currentDocumentIndex());
 }
 
-void MainWindow::closeDocument(WidgetGuiDocument *widget)
+void MainWindow::closeDocument(WidgetGuiDocument* widget)
 {
     if (widget) {
-        Document* doc = widget->guiDocument()->document();
+        const DocumentPtr& doc = widget->guiDocument()->document();
         m_ui->stack_GuiDocuments->removeWidget(widget);
         widget->deleteLater();
-        Application::instance()->eraseDocument(doc);
+        Application::instance()->closeDocument(doc);
         this->updateControlsActivation();
     }
 }
@@ -876,27 +878,36 @@ void MainWindow::closeAllDocuments()
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
     auto app = Application::instance();
+    auto taskMgr = TaskManager::globalInstance();
+    static std::mutex mutexApp;
     for (const QString& filePath : listFilePath) {
         const QFileInfo loc(filePath);
-        const int docId = app->findDocumentByLocation(loc);
-        if (docId == -1) {
+        const DocumentPtr docPtr = app->findDocumentByLocation(loc);
+        if (docPtr.IsNull()) {
             const QString locAbsoluteFilePath = QDir::toNativeSeparators(loc.absoluteFilePath());
-            const Application::PartFormat fileFormat = Application::findPartFormat(locAbsoluteFilePath);
-            if (fileFormat != Application::PartFormat::Unknown) {
-                auto doc = new Document;
-                doc->setLabel(loc.fileName());
+            const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
+                QTime chrono;
+                chrono.start();
+                DocumentPtr doc;
+                {
+                    std::lock_guard<std::mutex> lock(mutexApp);
+                    doc = app->newDocument();
+                }
+
+                doc->setName(loc.fileName());
                 doc->setFilePath(locAbsoluteFilePath);
-                app->addDocument(doc);
-                this->runImportTask(doc, fileFormat, locAbsoluteFilePath);
-                Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
-            }
-            else {
-                Internal::msgBoxErrorFileFormat(this, locAbsoluteFilePath);
-            }
+                const bool ok = IO::instance()->importInDocument(
+                            doc, { locAbsoluteFilePath }, Messenger::defaultInstance(), progress);
+                if (ok)
+                    Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+            });
+            taskMgr->setTitle(taskId, loc.fileName());
+            taskMgr->run(taskId);
+            Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
         }
         else {
             if (listFilePath.size() == 1)
-                this->setCurrentDocumentIndex(docId);
+                this->setCurrentDocumentIndex(app->findIndexOfDocument(docPtr));
         }
     }
 }
@@ -931,11 +942,11 @@ void MainWindow::updateControlsActivation()
     Span<const ApplicationItem> spanSelectedAppItem =
             GuiApplication::instance()->selectionModel()->selectedItems();
     const ApplicationItem firstAppItem =
-            !spanSelectedAppItem.empty() ?
-                spanSelectedAppItem.at(0) : ApplicationItem();
+            !spanSelectedAppItem.empty() ? spanSelectedAppItem.at(0) : ApplicationItem();
     m_ui->actionInspectXDE->setEnabled(
                 spanSelectedAppItem.size() == 1
-                && sameType<XdeDocumentItem>(firstAppItem.documentItem()));
+                && firstAppItem.isValid()
+                && firstAppItem.document()->isXCafDocument());
 }
 
 int MainWindow::currentDocumentIndex() const

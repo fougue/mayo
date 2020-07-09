@@ -10,11 +10,14 @@
 #include "test.h"
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
+#include "../src/base/caf_utils.h"
+#include "../src/base/io.h"
 #include "../src/base/libtree.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
+#include "../src/base/task_manager.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
 
@@ -24,6 +27,8 @@
 #include <GCPnts_TangentialDeflection.hxx>
 #include <QtCore/QFile>
 #include <QtCore/QtDebug>
+#include <QtTest/QSignalSpy>
+#include <gsl/gsl_util>
 #include <cmath>
 #include <cstring>
 #include <utility>
@@ -32,7 +37,7 @@
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
 // For Application_test()
-Q_DECLARE_METATYPE(Mayo::Application::PartFormat)
+Q_DECLARE_METATYPE(Mayo::IO::PartFormat)
 // For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
@@ -51,23 +56,88 @@ static bool operator==(
 
 void Test::Application_test()
 {
-    QFETCH(QString, filePath);
-    QFETCH(Application::PartFormat, expectedPartFormat);
+    auto app = Application::instance();
+    QCOMPARE(app->documentCount(), 0);
 
-    QCOMPARE(Application::findPartFormat(filePath), expectedPartFormat);
+    {   // Add & remove a document
+        QSignalSpy sigSpy_documentAdded(app.get(), &Application::documentAdded);
+        DocumentPtr doc = app->newDocument();
+        QVERIFY(!doc.IsNull());
+        QCOMPARE(sigSpy_documentAdded.count(), 1);
+        QCOMPARE(app->documentCount(), 1);
+        QCOMPARE(app->findIndexOfDocument(doc), 0);
+        QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
+        QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
+
+        QSignalSpy sigSpy_documentAboutToClose(app.get(), &Application::documentAboutToClose);
+        app->closeDocument(doc);
+        QCOMPARE(sigSpy_documentAboutToClose.count(), 1);
+        QCOMPARE(app->documentCount(), 0);
+    }
+
+    {   // Add & remove an entity
+        DocumentPtr doc = app->newDocument();
+        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
+        QCOMPARE(doc->entityCount(), 0);
+        QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
+        const bool okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        QVERIFY(okImport);
+        QCOMPARE(sigSpy_docEntityAdded.count(), 1);
+        QCOMPARE(doc->entityCount(), 1);
+        QVERIFY(XCaf::isShape(doc->entityLabel(0)));
+        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), "Cube");
+
+        QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(sigSpy_docEntityAboutToBeDestroyed.count(), 1);
+        QCOMPARE(doc->entityCount(), 0);
+    }
+
+    {   // Add mesh entity
+        // Add XCAF entity
+        // Try to remove mesh and XCAF entities
+        // Note: order of entities matters
+        QCOMPARE(app->documentCount(), 0);
+        DocumentPtr doc = app->newDocument();
+        auto _ = gsl::finally([=]{ app->closeDocument(doc); });
+        bool okImport = true;
+        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.stlb" });
+        QVERIFY(okImport);
+        QCOMPARE(doc->entityCount(), 1);
+
+        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        QVERIFY(okImport);
+        QCOMPARE(doc->entityCount(), 2);
+
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(doc->entityCount(), 1);
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+        QCOMPARE(doc->entityCount(), 0);
+    }
+
+    QCOMPARE(app->documentCount(), 0);
 }
 
-void Test::Application_test_data()
+void Test::IO_test()
+{
+    QFETCH(QString, filePath);
+    QFETCH(IO::PartFormat, expectedPartFormat);
+
+    QCOMPARE(IO::findPartFormat(filePath), expectedPartFormat);
+}
+
+void Test::IO_test_data()
 {
     QTest::addColumn<QString>("filePath");
-    QTest::addColumn<Application::PartFormat>("expectedPartFormat");
+    QTest::addColumn<IO::PartFormat>("expectedPartFormat");
 
-    QTest::newRow("cube.step") << "inputs/cube.step" << Application::PartFormat::Step;
-    QTest::newRow("cube.iges") << "inputs/cube.iges" << Application::PartFormat::Iges;
-    QTest::newRow("cube.brep") << "inputs/cube.brep" << Application::PartFormat::OccBrep;
-    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << Application::PartFormat::OccBrep;
-    QTest::newRow("cube.stla") << "inputs/cube.stla" << Application::PartFormat::Stl;
-    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << Application::PartFormat::Stl;
+    QTest::newRow("cube.step") << "inputs/cube.step" << IO::PartFormat::Step;
+    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::PartFormat::Iges;
+    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::PartFormat::OccBrep;
+    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::PartFormat::OccBrep;
+    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::PartFormat::Stl;
+    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::PartFormat::Stl;
+    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::PartFormat::Obj;
 }
 
 void Test::BRepUtils_test()
@@ -405,6 +475,51 @@ void Test::UnitSystem_test_data()
     QTest::newRow("degrees(PIrad)")
             << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
             << UnitSystem::TranslateResult{ 180., "°", radDeg };
+}
+
+void Test::LibTask_test()
+{
+    struct ProgressRecord {
+        quint64 taskId;
+        int value;
+    };
+
+    TaskManager taskMgr;
+    const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
+        progress->beginScope(40);
+        for (int i = 0; i <= 100; ++i)
+            progress->setValue(i);
+        progress->endScope();
+
+        progress->beginScope(60);
+        for (int i = 0; i <= 100; ++i)
+            progress->setValue(i);
+        progress->endScope();
+    });
+    std::vector<ProgressRecord> vecProgressRec;
+    QObject::connect(
+                &taskMgr, &TaskManager::progressChanged,
+                [&](TaskId taskId, int pct) { vecProgressRec.push_back({ taskId, pct }); });
+
+    QSignalSpy sigSpy_started(&taskMgr, &TaskManager::started);
+    QSignalSpy sigSpy_ended(&taskMgr, &TaskManager::ended);
+    taskMgr.run(taskId);
+    taskMgr.waitForDone(taskId);
+
+    QCOMPARE(sigSpy_started.count(), 1);
+    QCOMPARE(sigSpy_ended.count(), 1);
+    QCOMPARE(sigSpy_started.front().at(0).toULongLong(), taskId);
+    QCOMPARE(sigSpy_ended.front().at(0).toULongLong(), taskId);
+    QVERIFY(!vecProgressRec.empty());
+    int prevPct = 0;
+    for (const ProgressRecord& rec : vecProgressRec) {
+        QCOMPARE(rec.taskId, taskId);
+        QVERIFY(prevPct <= rec.value);
+        prevPct = rec.value;
+    }
+
+    QCOMPARE(vecProgressRec.front().value, 0);
+    QCOMPARE(vecProgressRec.back().value, 100);
 }
 
 void Test::LibTree_test()

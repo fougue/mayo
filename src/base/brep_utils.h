@@ -18,8 +18,7 @@ struct BRepUtils {
     static void forEachSubShape(TopExp_Explorer& explorer, FUNC fn);
 
     template<typename FUNC>
-    static void forEachSubShape(
-            const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn);
+    static void forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn);
 
     template<typename FUNC>
     static void forEachSubFace(const TopoDS_Shape& shape, FUNC fn);
@@ -48,8 +47,7 @@ void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, FUNC fn)
 }
 
 template<typename FUNC>
-void BRepUtils::forEachSubShape(
-        const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn)
+void BRepUtils::forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn)
 {
     TopExp_Explorer expl(shape, shapeType);
     BRepUtils::forEachSubShape(expl, std::move(fn));

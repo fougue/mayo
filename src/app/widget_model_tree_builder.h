@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include "../base/document_ptr.h"
+#include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
+#include <memory>
 #include <vector>
 #include <QtCore/QString>
 class QAction;
@@ -16,9 +19,6 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
-class Document;
-class DocumentItem;
-struct DocumentItemNode;
 class Settings;
 
 // TODO Rename Builder -> Extension ?
@@ -26,15 +26,14 @@ class WidgetModelTreeBuilder {
 public:
     virtual ~WidgetModelTreeBuilder();
 
-    virtual bool supports(const Document*) const { return true; }
-    virtual bool supports(const DocumentItem*) const { return true; }
+    virtual bool supportsDocument(const DocumentPtr&) const { return true; }
+    virtual bool supportsDocumentTreeNode(const DocumentTreeNode&) const { return true; }
 
-    virtual void refreshTextTreeItem(const Document* doc, QTreeWidgetItem* treeItem);
-    virtual void refreshTextTreeItem(const DocumentItem* docItem, QTreeWidgetItem* treeItem);
-    virtual void refreshTextTreeItem(const DocumentItemNode& node, QTreeWidgetItem* treeItemDocItem);
+    virtual void refreshTextTreeItem(const DocumentPtr& doc, QTreeWidgetItem* treeItem);
+    virtual void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem);
 
-    virtual void fillTreeItem(QTreeWidgetItem* treeItem, Document* doc);
-    virtual void fillTreeItem(QTreeWidgetItem* treeItem, DocumentItem* docItem);
+    virtual QTreeWidgetItem* createTreeItem(const DocumentPtr& doc);
+    virtual QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node);
 
     QTreeWidget* treeWidget() const { return m_treeWidget; }
     void setTreeWidget(QTreeWidget* tree) { m_treeWidget = tree; }
@@ -44,10 +43,12 @@ public:
 
     virtual std::vector<QAction*> createConfigurationActions(QObject* parent);
 
-    virtual WidgetModelTreeBuilder* clone() const;
+    virtual std::unique_ptr<WidgetModelTreeBuilder> clone() const;
 
 protected:
     static QString labelText(const PropertyQString& propLabel);
+    static QString labelText(const QString& label);
+    static QString labelText(const TDF_Label& label);
 
 private:
     QTreeWidget* m_treeWidget = nullptr;

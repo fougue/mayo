@@ -5,10 +5,12 @@
 ****************************************************************************/
 
 #include "../base/application.h"
+#include "../base/document_tree_node_properties_provider.h"
 #include "../base/unit_system.h"
-#include "../gpx/gpx_document_item_factory.h"
-#include "../gpx/gpx_mesh_item.h"
-#include "../gpx/gpx_xde_document_item.h"
+#include "../gui/gui_application.h"
+#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_entity_driver_table.h"
+#include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "settings.h"
 #include "settings_keys.h"
@@ -76,15 +78,25 @@ Theme* mayoTheme()
 static int runApp(QApplication* app)
 {
     const CommandLineArguments args = processCommandLine();
-    Mayo::Application::setOpenCascadeEnvironment("opencascade.conf");
+    Application::setOpenCascadeEnvironment("opencascade.conf");
 
-    // Register Gpx factory functions
-    GpxDocumentItemFactory::instance()->registerCreatorFunction(
-                XdeDocumentItem::TypeName,
-                &GpxDocumentItemFactory::createGpx<XdeDocumentItem, GpxXdeDocumentItem>);
-    GpxDocumentItemFactory::instance()->registerCreatorFunction(
-                MeshItem::TypeName,
-                &GpxDocumentItemFactory::createGpx<MeshItem, GpxMeshItem>);
+    // Register Graphics entity drivers
+    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
+    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
+
+    // Register Graphics/TreeNode mapping drivers
+    GuiApplication::instance()->addGraphicsTreeNodeMappingDriver(
+                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
+
+    // Register document tree node providers
+    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+
+    // Register WidgetModelTreeBuilter prototypes
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
     // Default values
     auto settings = Settings::instance();
@@ -92,12 +104,10 @@ static int runApp(QApplication* app)
     settings->setDefaultValue(Keys::App_MainWindowLastOpenDir, QString());
     settings->setDefaultValue(Keys::App_MainWindowLastSelectedFilter, QString());
     settings->setDefaultValue(Keys::App_MainWindowLinkWithDocumentSelector, false);
-    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(Application::StlIoLibrary::OpenCascade));
+    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(IO::StlIoLibrary::OpenCascade));
     settings->setDefaultValue(Keys::Base_UnitSystemSchema, UnitSystem::SI);
     settings->setDefaultValue(Keys::Base_UnitSystemDecimals, 2);
-    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultColor, QColor(Qt::gray));
-    settings->setDefaultValue(Keys::Gpx_BrepShapeDefaultMaterial, Graphic3d_NOM_PLASTIC);
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(Qt::gray));
+    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(255, 228, 196));
     settings->setDefaultValue(Keys::Gpx_MeshDefaultMaterial, Graphic3d_NOM_PLASTIC);
     settings->setDefaultValue(Keys::Gpx_MeshDefaultShowEdges, false);
     settings->setDefaultValue(Keys::Gpx_MeshDefaultShowNodes, false);
@@ -107,12 +117,12 @@ static int runApp(QApplication* app)
 
     {
         auto fnUpdateDefaults = [=]{
-            GpxMeshItem::DefaultValues defaults;
+            GraphicsMeshEntityDriver::DefaultValues defaults;
             defaults.showEdges = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowEdges);
             defaults.showNodes = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowNodes);
             defaults.color = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
             defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial);
-            GpxMeshItem::setDefaultValues(defaults);
+            GraphicsMeshEntityDriver::setDefaultValues(defaults);
         };
         fnUpdateDefaults();
         QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
@@ -125,27 +135,6 @@ static int runApp(QApplication* app)
             }
         });
     }
-
-    {
-        auto fnUpdateDefaults = [=]{
-            GpxXdeDocumentItem::DefaultValues defaults;
-            defaults.color = settings->valueAs<QColor>(Keys::Gpx_BrepShapeDefaultColor);
-            defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_BrepShapeDefaultMaterial);
-            GpxXdeDocumentItem::setDefaultValues(defaults);
-        };
-        fnUpdateDefaults();
-        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
-            if (key == Keys::Gpx_BrepShapeDefaultColor
-                    || key == Keys::Gpx_BrepShapeDefaultMaterial)
-            {
-                fnUpdateDefaults();
-            }
-        });
-    }
-
-    // Register WidgetModelTreeBuilter prototypes
-    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Mesh);
-    WidgetModelTree::addPrototypeBuilder(new WidgetModelTreeBuilder_Xde);
 
     // Create theme
     globalTheme.reset(createTheme(args.themeName));
@@ -162,9 +151,7 @@ static int runApp(QApplication* app)
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
     if (!args.listFileToOpen.empty()) {
-        QTimer::singleShot(0, [&]{
-            mainWindow.openDocumentsFromList(args.listFileToOpen);
-        });
+        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
     }
 
     return app->exec();

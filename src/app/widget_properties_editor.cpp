@@ -7,10 +7,9 @@
 #include "widget_properties_editor.h"
 
 #include "../base/document.h"
-#include "../base/document_item.h"
+#include "../base/property_enumeration.h"
 #include "../base/string_utils.h"
 #include "../base/unit_system.h"
-#include "../gpx/gpx_document_item.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "settings.h"
@@ -160,7 +159,7 @@ static QString propertyValueText(const PropertyEnumeration* prop)
 {
     for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
-            return enumItem.name;
+            return enumItem.text;
     }
 
     return QString();
@@ -314,7 +313,7 @@ static QWidget* createPropertyEditor(PropertyEnumeration* prop, QWidget* parent)
     auto editor = new QComboBox(parent);
     const Enumeration& enumDef = prop->enumeration();
     for (const Enumeration::Item& enumItem : enumDef.items())
-        editor->addItem(enumItem.name, enumItem.value);
+        editor->addItem(enumItem.text, enumItem.value);
 
     editor->setCurrentIndex(editor->findData(prop->value()));
     QObject::connect(editor, qOverload<int>(&QComboBox::activated), [=](int index) {

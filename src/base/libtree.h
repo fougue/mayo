@@ -22,11 +22,15 @@ public:
     TreeNodeId nodeChildFirst(TreeNodeId id) const;
     TreeNodeId nodeChildLast(TreeNodeId id) const;
     TreeNodeId nodeParent(TreeNodeId id) const;
+    TreeNodeId nodeRoot(TreeNodeId id) const;
     const T& nodeData(TreeNodeId id) const;
+    bool nodeIsRoot(TreeNodeId id) const;
     Span<const TreeNodeId> roots() const;
 
     void clear();
     TreeNodeId appendChild(TreeNodeId parentId, const T& data);
+    TreeNodeId appendChild(TreeNodeId parentId, T&& data);
+    void removeRoot(TreeNodeId id);
 
 private:
     struct TreeNode {
@@ -36,21 +40,26 @@ private:
         TreeNodeId childLast;
         TreeNodeId parent;
         T data;
+        bool isDeleted;
     };
+
+    template<typename T, typename FN>
+    friend void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FN& callback);
 
     TreeNodeId lastNodeId() const;
     TreeNode* ptrNode(TreeNodeId id);
     const TreeNode* ptrNode(TreeNodeId id) const;
+    TreeNode* appendChild(TreeNodeId parentId);
 
     std::vector<TreeNode> m_vecNode;
     std::vector<TreeNodeId> m_vecRoot;
 };
 
-template<typename T, typename FUNC>
-void deepForeachTreeNode(const Tree<T>& tree, const FUNC& func);
+template<typename T, typename FN>
+void deepForeachTreeNode(const Tree<T>& tree, const FN& callback);
 
-template<typename T, typename FUNC>
-void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FUNC& func);
+template<typename T, typename FN>
+void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FN& callback);
 
 
 
@@ -85,14 +94,25 @@ template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const {
     return node ? node->parent : 0;
 }
 
+template<typename T> TreeNodeId Tree<T>::nodeRoot(TreeNodeId id) const {
+    while (!this->nodeIsRoot(id))
+        id = this->nodeParent(id);
+
+    return id;
+}
+
 template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const {
     static const T nullObject = {};
     const TreeNode* node = this->ptrNode(id);
     return node ? node->data : nullObject;
 }
 
-template<typename T>
-void Tree<T>::clear()
+template<typename T> bool Tree<T>::nodeIsRoot(TreeNodeId id) const {
+    const TreeNode* node = this->ptrNode(id);
+    return node ? node->parent == 0 : false;
+}
+
+template<typename T> void Tree<T>::clear()
 {
     m_vecNode.clear();
     m_vecRoot.clear();
@@ -101,10 +121,25 @@ void Tree<T>::clear()
 template<typename T>
 TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T& data)
 {
+    TreeNode* node = this->appendChild(parentId);
+    node->data = data;
+    return this->lastNodeId();
+}
+
+template<typename T>
+TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, T&& data)
+{
+    TreeNode* node = this->appendChild(parentId);
+    node->data = std::forward<T>(data);
+    return this->lastNodeId();
+}
+
+template<typename T>
+typename Tree<T>::TreeNode* Tree<T>::appendChild(TreeNodeId parentId)
+{
     m_vecNode.push_back({});
     const TreeNodeId nodeId = this->lastNodeId();
     TreeNode* node = &m_vecNode.back();
-    node->data = data;
     node->parent = parentId;
     node->siblingPrevious = this->nodeChildLast(parentId);
     if (parentId != 0) {
@@ -121,16 +156,27 @@ TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, const T& data)
         m_vecRoot.push_back(nodeId);
     }
 
-    return nodeId;
+    return node;
 }
 
-template<typename T>
-Span<const TreeNodeId> Tree<T>::roots() const {
+template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
+{
+    Expects(this->nodeIsRoot(id));
+
+    auto it = std::find(m_vecRoot.begin(), m_vecRoot.end(), id);
+    if (it != m_vecRoot.end()) {
+        TreeNode* node = this->ptrNode(id);
+        Expects(node != nullptr);
+        node->isDeleted = true;
+        m_vecRoot.erase(it);
+    }
+}
+
+template<typename T> Span<const TreeNodeId> Tree<T>::roots() const {
     return m_vecRoot;
 }
 
-template<typename T>
-TreeNodeId Tree<T>::lastNodeId() const {
+template<typename T> TreeNodeId Tree<T>::lastNodeId() const {
     return static_cast<TreeNodeId>(m_vecNode.size());
 }
 
@@ -146,20 +192,23 @@ const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const
     return id != 0 && id <= m_vecNode.size() ? &m_vecNode.at(id - 1) : nullptr;
 }
 
-template<typename T, typename FUNC>
-void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FUNC& func)
+template<typename T, typename FN>
+void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FN& callback)
 {
-    func(node);
+    const Tree<T>::TreeNode* ptrNode = tree.ptrNode(node);
+    if (ptrNode && !ptrNode->isDeleted)
+        callback(node);
+
     const TreeNodeId childFirst = tree.nodeChildFirst(node);
     for (auto it = childFirst; it != 0; it = tree.nodeSiblingNext(it))
-        deepForeachTreeNode(it, tree, func);
+        deepForeachTreeNode(it, tree, callback);
 }
 
-template<typename T, typename FUNC>
-void deepForeachTreeNode(const Tree<T>& tree, const FUNC& func)
+template<typename T, typename FN>
+void deepForeachTreeNode(const Tree<T>& tree, const FN& callback)
 {
     for (TreeNodeId node : tree.roots())
-        deepForeachTreeNode(node, tree, func);
+        deepForeachTreeNode(node, tree, callback);
 }
 
 } // namespace Mayo

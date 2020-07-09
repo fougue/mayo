@@ -7,13 +7,13 @@
 #pragma once
 
 #include "../base/application_item_selection_model.h"
+#include "../graphics/graphics_tree_node_mapping.h"
+#include "gui_document.h"
 #include <QtCore/QObject>
 #include <vector>
 
 namespace Mayo {
 
-class Document;
-class DocumentItem;
 class GuiDocument;
 
 class GuiApplication : public QObject {
@@ -22,18 +22,23 @@ public:
     static GuiApplication* instance();
     ~GuiApplication();
 
-    std::vector<GuiDocument*> guiDocuments() const;
-    GuiDocument* findGuiDocument(const Document* doc) const;
+    Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
+    Span<const GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
+    GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
+
+    using GraphicsTreeNodeMappingDriverPtr = std::unique_ptr<GraphicsTreeNodeMappingDriver>;
+    void addGraphicsTreeNodeMappingDriver(GraphicsTreeNodeMappingDriverPtr driver);
+    Span<const GraphicsTreeNodeMappingDriverPtr> graphicsTreeNodeMappingDrivers() const;
 
 signals:
     void guiDocumentAdded(GuiDocument* guiDoc);
     void guiDocumentErased(const GuiDocument* guiDoc);
 
 protected:
-    void onDocumentAdded(Document* doc);
-    void onDocumentErased(const Document* doc);
+    void onDocumentAdded(const DocumentPtr& doc);
+    void onDocumentAboutToClose(const DocumentPtr& doc);
 
 private:
     void onApplicationItemSelectionCleared();
@@ -42,12 +47,8 @@ private:
 
     GuiApplication(QObject* parent = nullptr);
 
-    struct Doc_GuiDoc {
-        Document* doc;
-        GuiDocument* guiDoc;
-    };
-
-    std::vector<Doc_GuiDoc> m_vecDocGuiDoc;
+    std::vector<GuiDocument*> m_vecGuiDocument;
+    std::vector<GraphicsTreeNodeMappingDriverPtr> m_vecGraphicsTreeNodeMappingDriver;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
 };
 

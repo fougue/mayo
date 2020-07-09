@@ -1,3 +1,9 @@
+#****************************************************************************
+#* Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+#* All rights reserved.
+#* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+#****************************************************************************
+
 TARGET = mayo
 TEMPLATE = app
 
@@ -44,6 +50,7 @@ HEADERS += \
     \
     $$files(src/base/*.h) \
     $$files(src/gpx/*.h) \
+    $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
 
@@ -56,6 +63,7 @@ SOURCES += \
     \
     $$files(src/base/*.cpp) \
     $$files(src/gpx/*.cpp) \
+    $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
 
@@ -69,8 +77,6 @@ win* {
     WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
     WinInstallerFiles.path = $$OUT_PWD/installer
 }
-
-include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
 FORMS += $$files(src/app/*.ui)
 
@@ -111,3 +117,7 @@ LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKG3d
 LIBS += -lTKGeomBase
+LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+minOpenCascadeVersion(7, 4, 0) {
+    LIBS += -lTKRWMesh
+}

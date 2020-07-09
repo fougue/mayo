@@ -9,6 +9,8 @@
 #include "../base/application.h"
 #include "../base/application_item.h"
 #include "../base/application_item_selection_model.h"
+#include "../base/io.h"
+#include "../base/property.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
 class QFileInfo;
@@ -16,6 +18,7 @@ class QFileInfo;
 namespace Mayo {
 
 class Document;
+class DocumentTreeNodePropertiesProvider;
 class GuiDocument;
 class WidgetGuiDocument;
 
@@ -30,7 +33,6 @@ public:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
-    void operationFinished(bool ok, const QString& msg);
     void currentDocumentIndexChanged(int docIdx);
 
 protected:
@@ -69,14 +71,10 @@ private:
     void closeAllDocumentsExceptCurrent();
     void closeAllDocuments();
 
-    void runImportTask(
-            Document* doc,
-            Application::PartFormat format,
-            const QString& filepath);
     void runExportTask(
             Span<const ApplicationItem> appItems,
-            Application::PartFormat format,
-            const Application::ExportOptions& opts,
+            IO::PartFormat format,
+            const IO::ExportOptions& opts,
             const QString& filepath);
 
     void updateControlsActivation();
@@ -94,7 +92,8 @@ private:
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     QStringList m_listRecentFile;
-    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeProperties;
+    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeDataProperties;
+    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeGraphicsProperties;
 };
 
 } // namespace Mayo
