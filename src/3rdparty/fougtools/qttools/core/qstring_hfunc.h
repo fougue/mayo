@@ -21,23 +21,21 @@
 namespace boost {
 
 //! Implementation of Boost's hash function for QString
-inline std::size_t hash_value(const QString& key)
-{
+inline std::size_t hash_value(const QString& key) {
     return qHash(key);
 }
 
 } // namespace boost
 
-#if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0)) // <- ADD_THIS
+#if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0))
 namespace std {
 
 //! Specialization of C++11 std::hash<> functor for QString
 template<> struct hash<QString> {
-    inline std::size_t operator()(const QString& key) const
-    {
+    inline std::size_t operator()(const QString& key) const {
         return qHash(key);
     }
 };
-#endif // <- ADD_THIS
 
 } // namespace std
+#endif
