@@ -4,14 +4,20 @@
 #* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 #****************************************************************************
 
-TARGET = mayo
 TEMPLATE = app
+TARGET = mayo
+include(version.pri)
+CONFIG(debug, debug|release) {
+    message(Mayo version $$MAYO_VERSION debug)
+} else {
+    message(Mayo version $$MAYO_VERSION release)
+}
 
 QT += core gui widgets
+message(Qt version $$QT_VERSION)
 
 CONFIG += c++17
 CONFIG += file_copies
-
 CONFIG(debug, debug|release) {
     CONFIG += console
 } else {
@@ -31,13 +37,6 @@ release_with_debuginfo:*msvc* {
 }
 *g++* {
     QMAKE_CXXFLAGS += -std=c++17
-}
-
-include(version.pri)
-CONFIG(debug, debug|release) {
-    message(Mayo version $$MAYO_VERSION debug)
-} else {
-    message(Mayo version $$MAYO_VERSION release)
 }
 
 INCLUDEPATH += \
@@ -109,6 +108,7 @@ isEmpty(GMIO_ROOT) {
 
 # OpenCascade
 include(opencascade.pri)
+message(OpenCascade version $$OCC_VERSION_STR)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
 LIBS += -lTKG2d
 LIBS += -lTKBRep -lTKSTL
