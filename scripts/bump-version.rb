@@ -29,17 +29,8 @@ script_dir_name = File.expand_path(File.dirname(__FILE__))
 # ../version.pri
 path_version_pri = "#{script_dir_name}/../version.pri"
 version_pri = File.open(path_version_pri, "r").read
-version_pri.sub!(/(VER_MAJ\s*=\s*)\d+/, "\\1#{major}")
-version_pri.sub!(/(VER_MIN\s*=\s*)\d+/, "\\1#{minor}")
-version_pri.sub!(/(VER_PAT\s*=\s*)\d+/, "\\1#{patch}")
+version_pri.sub!(/(MAYO_VERSION_MAJ\s*=\s*)\d+/, "\\1#{major}")
+version_pri.sub!(/(MAYO_VERSION_MIN\s*=\s*)\d+/, "\\1#{minor}")
+version_pri.sub!(/(MAYO_VERSION_PAT\s*=\s*)\d+/, "\\1#{patch}")
 File.open(path_version_pri, "w").write(version_pri)
 puts "Bumped #{path_version_pri}"
-
-# installer/setup.iss
-path_setup_iss = "#{script_dir_name}/../installer/setup.iss"
-setup_iss = File.open(path_setup_iss, "r").read
-setup_iss.sub!(
-    /(define\s+VersionNumber\s+)".*"/,
-    "\\1\"#{version_str}\"")
-File.open(path_setup_iss, "w").write(setup_iss)
-puts "Bumped #{path_setup_iss}"
