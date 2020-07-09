@@ -94,7 +94,6 @@ private:
     QStringList m_listRecentFile;
     std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeDataProperties;
     std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeGraphicsProperties;
-    std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecPropertiesProvider;
 };
 
 } // namespace Mayo

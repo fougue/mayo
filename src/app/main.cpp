@@ -5,10 +5,12 @@
 ****************************************************************************/
 
 #include "../base/application.h"
+#include "../base/document_tree_node_properties_provider.h"
 #include "../base/unit_system.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"
 #include "../graphics/graphics_entity_driver_table.h"
+#include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "settings.h"
 #include "settings_keys.h"
@@ -86,6 +88,16 @@ static int runApp(QApplication* app)
     GuiApplication::instance()->addGraphicsTreeNodeMappingDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
+    // Register document tree node providers
+    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+
+    // Register WidgetModelTreeBuilter prototypes
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
+    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
+
     // Default values
     auto settings = Settings::instance();
     settings->setDefaultValue(Keys::App_RecentFiles, QStringList());
@@ -123,10 +135,6 @@ static int runApp(QApplication* app)
             }
         });
     }
-
-    // Register WidgetModelTreeBuilter prototypes
-    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
-    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
     // Create theme
     globalTheme.reset(createTheme(args.themeName));

@@ -362,9 +362,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     new DialogTaskManager(TaskManager::globalInstance(), this);
 
-    m_vecPropertiesProvider.push_back(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    m_vecPropertiesProvider.push_back(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
-
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
     auto guiDocModel = new GuiDocumentListModel(this);
@@ -650,14 +647,6 @@ void MainWindow::reportbug()
 
 void MainWindow::onApplicationItemSelectionChanged()
 {
-    auto fnFindDataPropertiesProvider = [=](const DocumentTreeNode& treeNode) {
-        for (const auto& ptrProvider : m_vecPropertiesProvider) {
-            if (ptrProvider->supports(treeNode))
-                return ptrProvider->properties(treeNode);
-        }
-        return std::unique_ptr<PropertyOwnerSignals>();
-    };
-
     WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
@@ -667,7 +656,8 @@ void MainWindow::onApplicationItemSelectionChanged()
         const ApplicationItem& item = spanAppItem.at(0);
         const DocumentTreeNode& docTreeNode = item.documentTreeNode();
         if (item.isDocumentTreeNode()) {
-            m_ptrCurrentNodeDataProperties = fnFindDataPropertiesProvider(docTreeNode);
+            auto providerTable = DocumentTreeNodePropertiesProviderTable::instance();
+            m_ptrCurrentNodeDataProperties = providerTable->properties(docTreeNode);
             PropertyOwnerSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
             if (dataProps) {
                 uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));

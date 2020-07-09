@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/document_tree_node_properties_provider.h"
+#include "../base/property_builtins.h"
 
 #include <QtCore/QCoreApplication>
 #include <TDF_Label.hxx>
@@ -46,7 +47,7 @@ private:
 };
 
 class Mesh_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
-    Q_DECLARE_TR_FUNCTIONS(XMesh_DocumentTreeNodePropertiesProvider)
+    Q_DECLARE_TR_FUNCTIONS(Mesh_DocumentTreeNodePropertiesProvider)
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const override;
