@@ -34,8 +34,6 @@ OCC_VERSION_PATCH = $$section(OCC_VERSION_PATCH, " ", -1)
 
 OCC_VERSION_STR = $$join($$list($$OCC_VERSION_MAJOR, $$OCC_VERSION_MINOR, $$OCC_VERSION_PATCH), .)
 
-message(OpenCascade version $$OCC_VERSION_STR)
-
 # Platform dependent config
 equals(QT_ARCH, i386) {
     ARCH_BITS_SIZE = 32
