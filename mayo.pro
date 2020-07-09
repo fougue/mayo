@@ -3,116 +3,111 @@ TEMPLATE = app
 
 QT += core gui widgets
 
+CONFIG += c++17
+CONFIG += file_copies
+
+CONFIG(debug, debug|release) {
+    CONFIG += console
+} else {
+    CONFIG -= console
+    CONFIG += release_with_debuginfo
+}
+
+release_with_debuginfo:*msvc* {
+    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
+    QMAKE_CXXFLAGS_RELEASE += /Zi
+    QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
+}
+
 *msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
+    QMAKE_CXXFLAGS += /std:c++17
 }
+*g++* {
+    QMAKE_CXXFLAGS += -std=c++17
+}
+
+include(version.pri)
+CONFIG(debug, debug|release) {
+    message(Mayo version $$MAYO_VERSION debug)
+} else {
+    message(Mayo version $$MAYO_VERSION release)
+}
+
+INCLUDEPATH += \
+    src/app \
+    src/3rdparty
 
 HEADERS += \
-    src/brep_shape_item.h \
-    src/document.h \
-    src/document_item.h \
-    src/fougtools/qttools/gui/qwidget_utils.h \
-    src/mainwindow.h \
-    src/occt_window.h \
-    src/qt_occ_view_controller.h \
-    src/stl_mesh_item.h \
-    src/fougtools/qttools/gui/gui.h \
-    src/fougtools/qttools/gui/item_view_utils.h \
-    src/fougtools/occtools/occtools.h \
-    src/fougtools/occtools/qt_utils.h \
-    src/options.h \
-    src/application.h \
-    src/property.h \
-    src/property_enumeration.h \
-    src/property_builtins.h \
-    src/gui_document.h \
-    src/gui_application.h \
-    src/gpx_document_item.h \
-    src/gpx_brep_shape_item.h \
-    src/gpx_stl_mesh_item.h \
-    src/dialog_about.h \
-    src/dialog_options.h \
-    src/dialog_task_manager.h \
-    src/dialog_save_image_view.h \
-    src/widget_application_tree.h \
-    src/widget_document_item_props.h \
-    src/widget_message_indicator.h \
-    src/widget_gui_document_view3d.h \
-    src/widget_occ_view.h \
-    src/dialog_export_options.h
+    src/3rdparty/fougtools/qttools/gui/item_view_buttons.h \
+    src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.h \
+    \
+    $$files(src/base/*.h) \
+    $$files(src/gpx/*.h) \
+    $$files(src/gui/*.h) \
+    $$files(src/app/*.h) \
 
 SOURCES += \
-    src/brep_shape_item.cpp \
-    src/document.cpp \
-    src/document_item.cpp \
-    src/fougtools/qttools/gui/qwidget_utils.cpp \
-    src/main.cpp \
-    src/mainwindow.cpp \
-    src/occt_window.cpp \
-    src/qt_occ_view_controller.cpp \
-    src/stl_mesh_item.cpp \
-    src/fougtools/qttools/gui/item_view_utils.cpp \
-    src/fougtools/occtools/qt_utils.cpp \
-    src/options.cpp \
-    src/application.cpp \
-    src/property.cpp \
-    src/property_enumeration.cpp \
-    src/gui_document.cpp \
-    src/gui_application.cpp \
-    src/gpx_document_item.cpp \
-    src/gpx_brep_shape_item.cpp \
-    src/gpx_stl_mesh_item.cpp \
-    src/dialog_about.cpp \
-    src/dialog_options.cpp \
-    src/dialog_task_manager.cpp \
-    src/dialog_save_image_view.cpp \
-    src/widget_application_tree.cpp \
-    src/widget_document_item_props.cpp \
-    src/widget_message_indicator.cpp \
-    src/widget_gui_document_view3d.cpp \
-    src/widget_occ_view.cpp \
-    src/dialog_export_options.cpp
+    src/3rdparty/fougtools/occtools/qt_utils.cpp \
+    src/3rdparty/fougtools/qttools/gui/item_view_buttons.cpp \
+    src/3rdparty/fougtools/qttools/gui/item_view_utils.cpp \
+    src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.cpp \
+    src/3rdparty/fougtools/qttools/gui/qwidget_utils.cpp \
+    \
+    $$files(src/base/*.cpp) \
+    $$files(src/gpx/*.cpp) \
+    $$files(src/gui/*.cpp) \
+    $$files(src/app/*.cpp) \
 
-include(src/fougtools/qttools/task/qttools_task.pri)
-include(src/qt-solutions/qtpropertybrowser/src/qtpropertybrowser.pri)
-INCLUDEPATH += src/qt-solutions/qtpropertybrowser/src
+win* {
+    QT += winextras
+    HEADERS += $$files(src/app/windows/*.h)
+    SOURCES += $$files(src/app/windows/*.cpp)
 
-FORMS += \
-    src/mainwindow.ui \
-    src/dialog_about.ui \
-    src/dialog_options.ui \
-    src/dialog_task_manager.ui \
-    src/dialog_save_image_view.ui \
-    src/widget_application_tree.ui \
-    src/widget_document_item_props.ui \
-    src/dialog_export_options.ui
-
-# gmio
-isEmpty(GMIO_ROOT):error(Variable GMIO_ROOT is empty)
-CONFIG(debug, debug|release) {
-    GMIO_BIN_SUFFIX = _d
-} else {
-    GMIO_BIN_SUFFIX =
+    COPIES += WinInstallerFiles
+    WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
+    WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
+    WinInstallerFiles.path = $$OUT_PWD/installer
 }
-INCLUDEPATH += $$GMIO_ROOT/include
-LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
-SOURCES += \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_mesh.cpp \
-    $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
-    $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
 
-# OpenCascade
-#CASCADE_ROOT=C:/dev/libs/OpenCASCADE6.9.1-vc12-64/opencascade-6.9.1
-#CASCADE_ROOT=C:/dev/libs/OpenCASCADE7.0.0-vc12-64/opencascade-7.0.0
-isEmpty(CASCADE_ROOT):error(Variable CASCADE_ROOT is empty)
-include(occ.pri)
-LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
-LIBS += -lTKBRep -lTKSTL
-LIBS += -lTKXSBase -lTKIGES -lTKSTEP
-LIBS += -lTKMeshVS -lTKXSDRAW
+include(src/3rdparty/fougtools/qttools/task/qttools_task.pri)
 
-OCCT_DEFINES = $$(CSF_DEFINES)
-DEFINES += $$split(OCCT_DEFINES, ;)
+FORMS += $$files(src/app/*.ui)
 
 RESOURCES += mayo.qrc
+RC_ICONS = images/appicon.ico
+
+OTHER_FILES += \
+    README.md \
+    images/credits.txt
+
+# gmio
+isEmpty(GMIO_ROOT) {
+    message(gmio OFF)
+} else {
+    message(gmio ON)
+    CONFIG(debug, debug|release) {
+        GMIO_BIN_SUFFIX = d
+    } else {
+        GMIO_BIN_SUFFIX =
+    }
+
+    INCLUDEPATH += $$GMIO_ROOT/include
+    LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
+    SOURCES += \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
+        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
+    DEFINES += HAVE_GMIO
+}
+
+# OpenCascade
+include(opencascade.pri)
+LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
+LIBS += -lTKG2d
+LIBS += -lTKBRep -lTKSTL
+LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+LIBS += -lTKMeshVS -lTKXSDRAW
+LIBS += -lTKLCAF -lTKXCAF -lTKCAF
+LIBS += -lTKG3d
+LIBS += -lTKGeomBase

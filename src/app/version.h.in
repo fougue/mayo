@@ -1,0 +1,12 @@
+#pragma once
+
+namespace Mayo {
+
+const char strVersion[] = \"$$MAYO_VERSION\";
+const char strVersionCommitId[] = \"$$MAYO_VERSION_COMMIT\";
+const unsigned versionRevisionNumber = $$MAYO_VERSION_REVNUM;
+const unsigned versionMajor = $$MAYO_VERSION_MAJ;
+const unsigned versionMinor = $$MAYO_VERSION_MIN;
+const unsigned versionPatch = $$MAYO_VERSION_PAT;
+
+} // namespace Mayo

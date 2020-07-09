@@ -1,0 +1,118 @@
+/****************************************************************************
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
+#include "property.h"
+
+#include "property_enumeration.h"
+#include <cassert>
+
+namespace Mayo {
+
+Span<Property* const> PropertyOwner::properties() const
+{
+    return m_properties;
+}
+
+void PropertyOwner::onPropertyChanged(Property* /*prop*/)
+{
+}
+
+Result<void> PropertyOwner::isPropertyValid(const Property*) const
+{
+    return Result<void>::ok();
+}
+
+void PropertyOwner::blockPropertyChanged(bool on)
+{
+    m_propertyChangedBlocked = on;
+}
+
+bool PropertyOwner::isPropertyChangedBlocked() const
+{
+    return m_propertyChangedBlocked;
+}
+
+void PropertyOwner::addProperty(Property* prop)
+{
+    m_properties.emplace_back(prop);
+}
+
+void PropertyOwner::removeProperty(Property* prop)
+{
+    auto it = std::find(m_properties.begin(), m_properties.end(), prop);
+    if (it != m_properties.end())
+        m_properties.erase(it);
+}
+
+const QString &Property::label() const
+{
+    return m_label;
+}
+
+bool Property::isUserReadOnly() const
+{
+    return m_isUserReadOnly;
+}
+
+void Property::setUserReadOnly(bool on)
+{
+    m_isUserReadOnly = on;
+}
+
+Property::Property(PropertyOwner* owner, const QString& label)
+    : m_owner(owner),
+      m_label(label)
+{
+    if (m_owner)
+        m_owner->addProperty(this);
+}
+
+void Property::notifyChanged()
+{
+    if (m_owner && !m_owner->isPropertyChangedBlocked())
+        m_owner->onPropertyChanged(this);
+}
+
+Result<void> Property::isValid() const
+{
+    if (m_owner)
+        return m_owner->isPropertyValid(this);
+
+    return Result<void>::ok();
+}
+
+bool Property::hasOwner() const
+{
+    return m_owner != nullptr;
+}
+
+
+PropertyChangedBlocker::PropertyChangedBlocker(PropertyOwner* owner)
+    : m_owner(owner)
+{
+    if (m_owner)
+        m_owner->blockPropertyChanged(true);
+}
+
+PropertyChangedBlocker::~PropertyChangedBlocker()
+{
+    if (m_owner)
+        m_owner->blockPropertyChanged(false);
+}
+
+
+PropertyOwnerSignals::PropertyOwnerSignals(QObject* parent)
+    : QObject(parent)
+{
+}
+
+void PropertyOwnerSignals::onPropertyChanged(Property* prop)
+{
+    PropertyOwner::onPropertyChanged(prop);
+    emit propertyChanged(prop);
+}
+
+} // namespace Mayo
