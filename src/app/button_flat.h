@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
+#include <QtCore/QVariant>
 #include <QtGui/QIcon>
 #include <QtGui/QBrush>
+#include <QtWidgets/QWidget>
 class QAction;
 
 namespace Mayo {
@@ -42,6 +43,9 @@ public:
     const QBrush& backgroundBrush() const;
     void setBackgroundBrush(const QBrush& brush);
 
+    const QVariant& data() const { return m_data; }
+    void setData(const QVariant& var) { m_data = var; }
+
 signals:
     void clicked();
 
@@ -62,6 +66,7 @@ private:
     QBrush m_hoverBrush;
     QBrush m_checkedBrush;
     QAction* m_defaultAction = nullptr;
+    QVariant m_data;
 };
 
 } // namespace Mayo

@@ -44,13 +44,15 @@ bool ButtonFlat::isChecked() const
 
 void ButtonFlat::setChecked(bool on)
 {
-    if (m_isCheckable) {
-        if (m_defaultAction != nullptr)
-            m_defaultAction->setChecked(on);
-        else
-            m_isChecked = on;
-        this->update();
-    }
+    if (!m_isCheckable)
+        return;
+
+    if (m_defaultAction != nullptr)
+        m_defaultAction->setChecked(on);
+    else
+        m_isChecked = on;
+
+    this->update();
 }
 
 const QIcon &ButtonFlat::icon() const
@@ -134,6 +136,7 @@ void ButtonFlat::paintEvent(QPaintEvent*)
         painter.fillRect(surface, m_hoverBrush);
     else
         painter.fillRect(surface, this->backgroundBrush());
+
     const QRect iconRect(
                 (surface.width() - m_iconSize.width()) / 2,
                 (surface.height() - m_iconSize.height()) / 2,
@@ -164,10 +167,12 @@ void ButtonFlat::mouseReleaseEvent(QMouseEvent *event)
             QSignalBlocker sigBlock(this); Q_UNUSED(sigBlock);
             m_defaultAction->trigger();
         }
+
         if (m_isCheckable)
             this->setChecked(!m_isChecked);
         emit clicked();
     }
+
     QWidget::mouseReleaseEvent(event);
 }
 
