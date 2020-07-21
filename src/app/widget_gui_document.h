@@ -8,12 +8,12 @@
 
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
+#include <vector>
 
 namespace Mayo {
 
 class ButtonFlat;
 class GuiDocument;
-class V3dViewCameraAnimation;
 class V3dViewController;
 class WidgetClipPlanes;
 class WidgetOccView;
@@ -23,23 +23,31 @@ class WidgetGuiDocument : public QWidget {
 public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
 
-    GuiDocument* guiDocument() const;
-    V3dViewController* controller() const;
-
-    QRect rectControls() const;
+    GuiDocument* guiDocument() const { return m_guiDoc; }
+    V3dViewController* controller() const { return m_controller; }
 
     static void paintPanel(QWidget* widget);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
-    void connectViewProjButton(ButtonFlat* btn, V3d_TypeOfOrientation proj);
     void toggleWidgetClipPlanes();
+    void layoutWidgetClipPlanes();
+
+    void recreateViewControls();
+    QRect viewControlsRect() const;
+    void layoutViewControls();
 
     GuiDocument* m_guiDoc = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
     V3dViewController* m_controller = nullptr;
-    V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     QRect m_rectControls;
+
+    ButtonFlat* m_btnFitAll = nullptr;
+    ButtonFlat* m_btnEditClipping = nullptr;
+    std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 
 } // namespace Mayo
