@@ -736,7 +736,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
-        //guiDoc->aisInteractiveContext()->MoveTo(pos2d.x(), pos2d.y(), widget->guiDocument()->v3dView(), true);
+        guiDoc->aisInteractiveContext()->MoveTo(pos2d.x(), pos2d.y(), widget->guiDocument()->v3dView(), true);
         auto selector = guiDoc->aisInteractiveContext()->MainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
