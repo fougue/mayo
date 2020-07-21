@@ -10,13 +10,16 @@
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
 #include "../base/document.h"
+#include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver_table.h"
 #include "../graphics/graphics_utils.h"
+#include "../graphics/v3d_view_camera_animation.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
 #include <AIS_Trihedron.hxx>
+#include <AIS_ViewCube.hxx>
 #include <Aspect_DisplayConnection.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
@@ -38,8 +41,8 @@ static Handle_V3d_Viewer createOccViewer()
     Handle_V3d_Viewer viewer = new V3d_Viewer(gpxDriver);
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
-    viewer->SetComputedMode(Standard_True);
-    viewer->SetDefaultComputedMode(Standard_True);
+    viewer->SetComputedMode(true);
+    //viewer->SetDefaultComputedMode(true);
 //    viewer->SetDefaultVisualization(V3d_ZBUFFER);
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
@@ -64,9 +67,9 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     aisTrihedron->SetLabel(Prs3d_DP_ZAxis, "");
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
-    Handle_Graphic3d_TransformPers trsf =
-            new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location());
-    aisTrihedron->SetTransformPersistence(trsf);
+    aisTrihedron->SetTransformPersistence(
+                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location()));
+    aisTrihedron->Attributes()->SetZLayer(Graphic3d_ZLayerId_Topmost);
     aisTrihedron->SetInfiniteState(true);
     return aisTrihedron;
 }
@@ -78,9 +81,18 @@ GuiDocument::GuiDocument(const DocumentPtr& doc)
       m_v3dViewer(Internal::createOccViewer()),
       m_v3dView(m_v3dViewer->CreateView()),
       m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
-      m_aisOriginTrihedron(Internal::createOriginTrihedron())
+      m_aisOriginTrihedron(Internal::createOriginTrihedron()),
+      m_cameraAnimation(new V3dViewCameraAnimation(m_v3dView, this))
 {
     Expects(!doc.IsNull());
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    this->setViewTrihedronMode(ViewTrihedronMode::AisViewCube);
+    this->setViewTrihedronCorner(Qt::TopLeftCorner);
+#else
+    this->setViewTrihedronMode(ViewTrihedronMode::V3dViewZBuffer);
+    this->setViewTrihedronCorner(Qt::BottomLeftCorner);
+#endif
 
     //m_v3dView->SetShadingModel(V3d_PHONG);
     // 3D view - Enable anti-aliasing with MSAA
@@ -93,8 +105,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc)
                 occ::QtUtils::toOccColor(
                     mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
                 Aspect_GFM_VER);
-    // 3D view - Add shaded trihedron located in the bottom-left corner
-    m_v3dView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_GRAY50, 0.075, V3d_ZBUFFER);
+
+    m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
 
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapGraphics(doc->entityTreeNodeId(i));
@@ -152,6 +164,144 @@ void GuiDocument::toggleOriginTrihedronVisibility()
 void GuiDocument::updateV3dViewer()
 {
     m_aisContext->UpdateCurrentViewer();
+}
+
+void GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
+{
+    if (graphicsOwner.IsNull())
+        return;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(graphicsOwner);
+    if (!viewCubeOwner.IsNull())
+        this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
+#endif
+}
+
+void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
+{
+    this->runViewCameraAnimation([=](Handle_V3d_View view) {
+        view->SetProj(projection);
+        GraphicsUtils::V3dView_fitAll(view);
+    });
+}
+
+void GuiDocument::runViewCameraAnimation(const std::function<void (Handle_V3d_View)>& fnViewChange)
+{
+    m_cameraAnimation->configure(fnViewChange);
+    m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
+}
+
+void GuiDocument::stopViewCameraAnimation()
+{
+    m_cameraAnimation->stop();
+}
+
+static Aspect_TypeOfTriedronPosition toOccCorner(Qt::Corner corner)
+{
+    switch (corner) {
+    case Qt::TopLeftCorner: return Aspect_TOTP_LEFT_UPPER;
+    case Qt::TopRightCorner: return Aspect_TOTP_RIGHT_UPPER;
+    case Qt::BottomLeftCorner: return Aspect_TOTP_LEFT_LOWER;
+    case Qt::BottomRightCorner: return Aspect_TOTP_RIGHT_LOWER;
+    }
+
+    return Aspect_TOTP_LEFT_UPPER; // Fallback
+}
+
+void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
+{
+    if (mode == m_viewTrihedronMode)
+        return;
+
+    auto fnViewCubeSetVisible = [&](bool on) {
+        GraphicsUtils::AisContext_setObjectVisible(m_aisContext, m_aisViewCube, on);
+    };
+
+    switch (mode) {
+    case ViewTrihedronMode::None: {
+        m_v3dView->TriedronErase();
+        fnViewCubeSetVisible(false);
+        break;
+    }
+    case ViewTrihedronMode::V3dViewZBuffer: {
+        this->v3dViewTrihedronDisplay(m_viewTrihedronCorner);
+        fnViewCubeSetVisible(false);
+        break;
+    }
+    case ViewTrihedronMode::AisViewCube: {
+        if (m_aisViewCube.IsNull()) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+            opencascade::handle<AIS_ViewCube> aisViewCube = new AIS_ViewCube;
+            aisViewCube->SetBoxColor(Quantity_NOC_GRAY75);
+            //aisViewCube->SetFixedAnimationLoop(false);
+            aisViewCube->SetSize(55);
+            aisViewCube->SetFontHeight(12);
+            aisViewCube->SetTransformPersistence(
+                        new Graphic3d_TransformPers(
+                            Graphic3d_TMF_TriedronPers,
+                            toOccCorner(m_viewTrihedronCorner),
+                            Graphic3d_Vec2i(85, 85)));
+            m_aisContext->Display(aisViewCube, false);
+            //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
+            const Handle_Prs3d_DatumAspect& datumAspect = aisViewCube->Attributes()->DatumAspect();
+            datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
+            datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
+            datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
+            m_aisViewCube = aisViewCube;
+        }
+#endif
+
+        m_v3dView->TriedronErase();
+        fnViewCubeSetVisible(true);
+        break;
+    }
+    } // endswitch
+
+    m_viewTrihedronMode = mode;
+    emit this->viewTrihedronModeChanged(mode);
+}
+
+void GuiDocument::setViewTrihedronCorner(Qt::Corner corner)
+{
+    if (corner == m_viewTrihedronCorner)
+        return;
+
+    switch (m_viewTrihedronMode) {
+    case ViewTrihedronMode::V3dViewZBuffer: {
+        this->v3dViewTrihedronDisplay(corner);
+        break;
+    }
+    case ViewTrihedronMode::AisViewCube: {
+        if (m_aisViewCube)
+            m_aisViewCube->TransformPersistence()->SetCorner2d(toOccCorner(corner));
+
+        break;
+    }
+    } // endswitch
+
+    m_viewTrihedronCorner = corner;
+    emit this->viewTrihedronCornerChanged(corner);
+}
+
+int GuiDocument::aisViewCubeBoundingSize() const
+{
+    if (m_aisViewCube.IsNull())
+        return 0;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    auto hnd = opencascade::handle<AIS_ViewCube>::DownCast(m_aisViewCube);
+    return 2 * (hnd->Size()
+                + hnd->BoxFacetExtension()
+                + hnd->BoxEdgeGap()
+                + hnd->BoxEdgeMinSize()
+                + hnd->BoxCornerMinSize()
+                + hnd->RoundRadius())
+            + hnd->AxesPadding()
+            + hnd->FontHeight();
+#else
+    return 0;
+#endif
 }
 
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
@@ -222,6 +372,8 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
                 if (!item.gpxTreeNodeMapping->mapGraphicsOwner(*it))
                     qDebug() << "Insertion failed";
             }
+
+            //m_aisContext->Deactivate(gfxEntity.aisObject(), selectMode);
         }
     }
 
@@ -238,6 +390,12 @@ const GuiDocument::GraphicsItem* GuiDocument::findGraphicsItem(TreeNodeId entity
                 m_vecGraphicsItem.cend(),
                 [=](const GraphicsItem& item) { return item.entityTreeNodeId == entityTreeNodeId; });
     return itFound != m_vecGraphicsItem.end() ? &(*itFound) : nullptr;
+}
+
+void GuiDocument::v3dViewTrihedronDisplay(Qt::Corner corner)
+{
+    constexpr double scale = 0.075;
+    m_v3dView->TriedronDisplay(toOccCorner(corner), Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
 }
 
 } // namespace Mayo

@@ -15,6 +15,7 @@
 #include <Bnd_Box.hxx>
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -22,6 +23,7 @@
 namespace Mayo {
 
 class ApplicationItem;
+class V3dViewCameraAnimation;
 
 class GuiDocument : public QObject {
     Q_OBJECT
@@ -44,8 +46,30 @@ public:
 
     void updateV3dViewer();
 
+    void processAction(const GraphicsOwnerPtr& graphicsOwner);
+
+    V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
+    void setViewCameraOrientation(V3d_TypeOfOrientation projection);
+    void runViewCameraAnimation(const std::function<void(Handle_V3d_View)>& fnViewChange);
+    void stopViewCameraAnimation();
+
+    enum class ViewTrihedronMode {
+        None,
+        V3dViewZBuffer,
+        AisViewCube // Requires OpenCascade >= v7.4.0
+    };
+    ViewTrihedronMode viewTrihedronMode() const { return m_viewTrihedronMode; }
+    void setViewTrihedronMode(ViewTrihedronMode mode);
+
+    Qt::Corner viewTrihedronCorner() const { return m_viewTrihedronCorner; }
+    void setViewTrihedronCorner(Qt::Corner corner);
+
+    int aisViewCubeBoundingSize() const;
+
 signals:
     void gpxBoundingBoxChanged(const Bnd_Box& bndBox);
+    void viewTrihedronModeChanged(ViewTrihedronMode mode);
+    void viewTrihedronCornerChanged(Qt::Corner corner);
 
 private:
     void onDocumentEntityAdded(TreeNodeId entityTreeNodeId);
@@ -61,11 +85,19 @@ private:
 
     const GraphicsItem* findGraphicsItem(TreeNodeId entityTreeNodeId) const;
 
+    void v3dViewTrihedronDisplay(Qt::Corner corner);
+
     DocumentPtr m_document;
     Handle_V3d_Viewer m_v3dViewer;
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveContext m_aisContext;
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
+
+    V3dViewCameraAnimation* m_cameraAnimation;
+    ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;
+    Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
+    Handle_AIS_InteractiveObject m_aisViewCube;
+
     std::vector<GraphicsItem> m_vecGraphicsItem;
     Bnd_Box m_gpxBoundingBox;
 };
