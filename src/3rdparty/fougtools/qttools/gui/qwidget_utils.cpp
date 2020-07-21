@@ -103,19 +103,17 @@ QPoint QWidgetUtils::globalPos(const QWidget *widget, Qt::Corner widgetCorner)
 }
 
 //! Move position of 'widget' so it's displayed stuck to the right of 'nextTo'
-void QWidgetUtils::moveWidgetRightTo(
-        QWidget* widget, const QWidget* nextTo, int margin)
+void QWidgetUtils::moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin)
 {
     const QRect frameGeom = nextTo->frameGeometry();
-    widget->move(nextTo->mapToGlobal(QPoint(frameGeom.width() + margin, 0)));
+    widget->move(nextTo->mapToParent(QPoint(frameGeom.width() + margin, 0)));
 }
 
 //! Move position of 'widget' so it's displayed stuck to the left of 'nextTo'
-void QWidgetUtils::moveWidgetLeftTo(
-        QWidget* widget, const QWidget* nextTo, int margin)
+void QWidgetUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin)
 {
     const QRect frameGeom = widget->frameGeometry();
-    widget->move(nextTo->mapToGlobal(QPoint(-frameGeom.width() - margin, 0)));
+    widget->move(nextTo->mapToParent(QPoint(-frameGeom.width() - margin, 0)));
 }
 
 //! Current slide positions of the horizontal and vertical scroll bars
