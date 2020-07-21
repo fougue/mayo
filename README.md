@@ -6,6 +6,7 @@ Current features are :
 * Support of STEP/IGES assemblies (colors and tree structure)
 * Perspective/orthographic 3D view projection
 * 3D clip planes with configurable capping
+* 3D view cube providing intuitive camera manipulation
 * Save image(snapshot) of the current 3D view
 * Editable name of STEP/IGES entities
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
@@ -28,7 +29,7 @@ OBJ                       |  &#10004; | &#10007; | Requires OpenCascade &#8805; 
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
-Mayo requires Qt5 and OpenCascade-7.2.0.  
+Mayo requires Qt5 and OpenCascade-7.3.0
 Although only tested with VC++/Windows it should build fine on Linux and MacOS.  
 It uses the `CSF_OCCTIncludePath` and `CSF_OCCTLibPath` environment variables to locate
 OpenCascade include and lib paths. On Windows these two variables are set by the `env.bat`
@@ -44,6 +45,6 @@ variables instead :
 To enable optional gmio library, add this option to the qmake command line:  
 `"GMIO_ROOT=path_to_gmio"`
 
-# Screencast
+# Screenshots
 
-<img src="doc/screencast.gif"/>
+<img src="doc/screenshot_1.png"/>
