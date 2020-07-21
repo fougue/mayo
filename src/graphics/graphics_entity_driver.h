@@ -59,6 +59,7 @@ public:
 protected:
     enum DisplayMode {
         DisplayMode_Wireframe,
+        DisplayMode_HiddenLineRemoval,
         DisplayMode_Shaded,
         DisplayMode_ShadedWithFaceBoundary
     };
