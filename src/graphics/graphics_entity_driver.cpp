@@ -11,6 +11,8 @@
 #include <MeshVS_Mesh.hxx>
 #include <MeshVS_MeshPrsBuilder.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <V3d_View.hxx>
+#include <V3d_Viewer.hxx>
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
@@ -49,6 +51,7 @@ GraphicsShapeEntityDriver::GraphicsShapeEntityDriver()
 {
     this->setDisplayModes({
         { DisplayMode_Wireframe, "WIREFRAME", tr("Wireframe") },
+        { DisplayMode_HiddenLineRemoval, "HLR", tr("Hidden Line Removal") },
         { DisplayMode_Shaded, "SHADED", tr("Shaded") },
         { DisplayMode_ShadedWithFaceBoundary, "SHADED_FACE_BNDS", tr("Shaded with face boundaries") }
     });
@@ -92,15 +95,33 @@ void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, E
 {
     this->throwIf_differentDriver(entity);
     this->throwIf_invalidDisplayMode(mode);
-    const AIS_DisplayMode aisDispMode = mode == DisplayMode_Wireframe ? AIS_WireFrame : AIS_Shaded;
-    const bool showFaceBounds = mode == DisplayMode_ShadedWithFaceBoundary;
-    const Handle_AIS_InteractiveObject& aisObject = entity.aisObject();
-    if (aisObject->DisplayMode() != aisDispMode)
-        entity.aisContextPtr()->SetDisplayMode(aisObject, aisDispMode, false);
+    AIS_InteractiveContext* aisContext = entity.aisContextPtr();
+    auto fnSetViewComputedMode = [=](bool on) {
+        V3d_ListOfViewIterator viewIter = aisContext->CurrentViewer()->DefinedViewIterator();
+        while (viewIter.More()) {
+            viewIter.Value()->SetComputedMode(on);
+            viewIter.Next();
+        }
+    };
+    if (mode == DisplayMode_HiddenLineRemoval) {
+        aisContext->DefaultDrawer()->SetTypeOfHLR(Prs3d_TOH_PolyAlgo);
+        aisContext->DefaultDrawer()->EnableDrawHiddenLine();
+        fnSetViewComputedMode(true);
+    }
+    else {
+        aisContext->DefaultDrawer()->SetTypeOfHLR(Prs3d_TOH_NotSet);
+        aisContext->DefaultDrawer()->DisableDrawHiddenLine();
+        fnSetViewComputedMode(false);
+        const AIS_DisplayMode aisDispMode = mode == DisplayMode_Wireframe ? AIS_WireFrame : AIS_Shaded;
+        const bool showFaceBounds = mode == DisplayMode_ShadedWithFaceBoundary;
+        const Handle_AIS_InteractiveObject& aisObject = entity.aisObject();
+        if (aisObject->DisplayMode() != aisDispMode)
+            entity.aisContextPtr()->SetDisplayMode(aisObject, aisDispMode, false);
 
-    if (aisObject->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
-        aisObject->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
-        aisObject->Redisplay(true);
+        if (aisObject->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
+            aisObject->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
+            aisObject->Redisplay(true);
+        }
     }
 
     //entity->aisContext()->UpdateCurrentViewer();
@@ -109,6 +130,9 @@ void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, E
 Enumeration::Value GraphicsShapeEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
+    if (entity.aisContextPtr()->DrawHiddenLine())
+        return DisplayMode_HiddenLineRemoval;
+
     const int displayMode = entity.aisObject()->DisplayMode();
     if (displayMode == AIS_WireFrame)
         return DisplayMode_Wireframe;
