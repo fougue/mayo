@@ -54,14 +54,12 @@ private:
 // -- Implementation
 // --
 
-template<typename ENUM> ENUM Settings::valueAsEnum(const QString& key) const
-{
+template<typename ENUM> ENUM Settings::valueAsEnum(const QString& key) const {
     // TODO Check returned value is QVariant-convertible to 'int'
     return static_cast<ENUM>(this->value(key).toInt());
 }
 
-template<typename T> T Settings::valueAs(const QString& key) const
-{
+template<typename T> T Settings::valueAs(const QString& key) const {
     // TODO Check returned value is QVariant-convertible to 'T'
     return this->value(key).value<T>();
 }
