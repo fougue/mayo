@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/appicon_256.png" align="center" />
+  <img src="images/appicon_256.png" width="200px" align="center" />
 </p>
 
 # What is Mayo
