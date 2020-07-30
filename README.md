@@ -1,4 +1,8 @@
-# Mayo
+<p align="center">
+  <img src="images/appicon_256.png" align="center" />
+</p>
+
+# What is Mayo
 Mayo is a basic 3D viewer inspired by FreeCad.  
 
 Current features are :
