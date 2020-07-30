@@ -48,7 +48,6 @@ HEADERS += \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.h \
     \
     $$files(src/base/*.h) \
-    $$files(src/gpx/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
@@ -61,7 +60,6 @@ SOURCES += \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.cpp \
     \
     $$files(src/base/*.cpp) \
-    $$files(src/gpx/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
