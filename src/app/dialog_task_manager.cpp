@@ -130,7 +130,7 @@ void DialogTaskManager::onTaskStarted(TaskId taskId)
         this->show();
 
     auto widget = new TaskWidget(m_ui->scrollAreaContents);
-    widget->m_interruptBtn->setProperty(TaskWidget::TaskIdProp, taskId);
+    widget->m_interruptBtn->setProperty(TaskWidget::TaskIdProp, quint64(taskId));
     QObject::connect(
                 widget->m_interruptBtn, &QToolButton::clicked,
                 this, &DialogTaskManager::interruptTask);
