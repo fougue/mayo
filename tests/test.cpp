@@ -85,7 +85,7 @@ void Test::Application_test()
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
         QVERIFY(XCaf::isShape(doc->entityLabel(0)));
-        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), "Cube");
+        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), QLatin1String("Cube"));
 
         QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
         doc->destroyEntity(doc->entityTreeNodeId(0));
@@ -480,7 +480,7 @@ void Test::UnitSystem_test_data()
 void Test::LibTask_test()
 {
     struct ProgressRecord {
-        quint64 taskId;
+        TaskId taskId;
         int value;
     };
 
@@ -508,8 +508,8 @@ void Test::LibTask_test()
 
     QCOMPARE(sigSpy_started.count(), 1);
     QCOMPARE(sigSpy_ended.count(), 1);
-    QCOMPARE(sigSpy_started.front().at(0).toULongLong(), taskId);
-    QCOMPARE(sigSpy_ended.front().at(0).toULongLong(), taskId);
+    QCOMPARE(qvariant_cast<TaskId>(sigSpy_started.front().at(0)), taskId);
+    QCOMPARE(qvariant_cast<TaskId>(sigSpy_ended.front().at(0)), taskId);
     QVERIFY(!vecProgressRec.empty());
     int prevPct = 0;
     for (const ProgressRecord& rec : vecProgressRec) {

@@ -43,8 +43,8 @@ private:
         bool isDeleted;
     };
 
-    template<typename T, typename FN>
-    friend void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FN& callback);
+    template<typename U, typename FN>
+    friend void deepForeachTreeNode(TreeNodeId node, const Tree<U>& tree, const FN& callback);
 
     TreeNodeId lastNodeId() const;
     TreeNode* ptrNode(TreeNodeId id);
@@ -195,7 +195,7 @@ const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const
 template<typename T, typename FN>
 void deepForeachTreeNode(TreeNodeId node, const Tree<T>& tree, const FN& callback)
 {
-    const Tree<T>::TreeNode* ptrNode = tree.ptrNode(node);
+    const typename Tree<T>::TreeNode* ptrNode = tree.ptrNode(node);
     if (ptrNode && !ptrNode->isDeleted)
         callback(node);
 

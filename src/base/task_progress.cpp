@@ -8,6 +8,7 @@
 #include "task.h"
 #include "task_manager.h"
 
+#include <cassert>
 #include <limits>
 
 namespace Mayo {

@@ -41,7 +41,7 @@ public:
         Obj
     };
 
-    using Result = Result<void>;
+    using Result = Mayo::Result<void>;
 
     struct ExportOptions {
 #ifdef HAVE_GMIO

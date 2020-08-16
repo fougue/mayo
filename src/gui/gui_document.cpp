@@ -18,31 +18,29 @@
 
 #include <fougtools/occtools/qt_utils.h>
 
+#include <QtCore/QtDebug>
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+#  include <AIS_ViewCube.hxx>
+#endif
 #include <AIS_Trihedron.hxx>
-#include <AIS_ViewCube.hxx>
-#include <Aspect_DisplayConnection.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
-#include <OpenGl_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <QtCore/QtDebug>
 
 namespace Mayo {
 
 namespace Internal {
 
+// Defined in gui_create_gfx_driver.cpp
+Handle_Graphic3d_GraphicDriver createGfxDriver();
+
 static Handle_V3d_Viewer createOccViewer()
 {
-    Handle_Aspect_DisplayConnection dispConnection;
-#if (!defined(Q_OS_WIN32) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    dispConnection = new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#endif
-    Handle_Graphic3d_GraphicDriver gpxDriver = new OpenGl_GraphicDriver(dispConnection);
-    Handle_V3d_Viewer viewer = new V3d_Viewer(gpxDriver);
+    Handle_V3d_Viewer viewer = new V3d_Viewer(createGfxDriver());
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);
-    //viewer->SetDefaultComputedMode(true);
+//    viewer->SetDefaultComputedMode(true);
 //    viewer->SetDefaultVisualization(V3d_ZBUFFER);
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
@@ -249,8 +247,8 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
             datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
             m_aisViewCube = aisViewCube;
-        }
 #endif
+        }
 
         m_v3dView->TriedronErase();
         fnViewCubeSetVisible(true);
@@ -268,6 +266,9 @@ void GuiDocument::setViewTrihedronCorner(Qt::Corner corner)
         return;
 
     switch (m_viewTrihedronMode) {
+    case ViewTrihedronMode::None: {
+        break; // Nothing to do
+    }
     case ViewTrihedronMode::V3dViewZBuffer: {
         this->v3dViewTrihedronDisplay(corner);
         break;
