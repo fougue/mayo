@@ -33,7 +33,7 @@ GuiDocumentListModel::GuiDocumentListModel(QObject* parent)
 
 QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_vecGuiDocument.size())
+    if (!index.isValid() || index.row() >= this->rowCount())
         return QVariant();
 
     const DocumentPtr& doc = m_vecGuiDocument.at(index.row())->document();

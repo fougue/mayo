@@ -184,7 +184,7 @@ void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
 }
 
 void Application::NewDocument(
-        const TCollection_ExtendedString& format,
+        const TCollection_ExtendedString& /*format*/,
         opencascade::handle<TDocStd_Document>& outDocument)
 {
     //std::lock_guard<std::mutex> lock(Internal::mutex_XCAFApplication);

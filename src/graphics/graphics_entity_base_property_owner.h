@@ -21,9 +21,9 @@ public:
     void onPropertyChanged(Property* prop) override;
 
 private:
+    GraphicsEntity m_gfxEntity;
     PropertyBool m_propertyIsVisible;
     PropertyEnumeration m_propertyDisplayMode;
-    GraphicsEntity m_gfxEntity;
 };
 
 } // namespace Mayo
