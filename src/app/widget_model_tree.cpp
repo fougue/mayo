@@ -8,10 +8,10 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
-#include "../base/string_utils.h"
 #include "../base/document.h"
+#include "../base/settings.h"
+#include "../base/string_utils.h"
 #include "../gui/gui_application.h"
-#include "settings.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 

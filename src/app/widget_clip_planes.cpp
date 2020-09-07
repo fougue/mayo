@@ -9,9 +9,9 @@
 #include "../base/application.h"
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
+#include "../base/settings.h"
+#include "../base/settings_keys.h"
 #include "../graphics/graphics_utils.h"
-#include "settings.h"
-#include "settings_keys.h"
 #include "ui_widget_clip_planes.h"
 
 #include <algorithm>

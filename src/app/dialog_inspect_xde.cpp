@@ -9,9 +9,9 @@
 #include "../base/application.h"
 #include "../base/caf_utils.h"
 #include "../base/qmeta_tdf_label.h"
+#include "../base/settings.h"
+#include "../base/settings_keys.h"
 #include "../base/string_utils.h"
-#include "settings.h"
-#include "settings_keys.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
