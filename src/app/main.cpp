@@ -99,7 +99,7 @@ static int runApp(QApplication* app)
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
     // Default values
-    auto settings = Settings::instance();
+    auto settings = Application::instance()->settings();
     settings->setDefaultValue(Keys::App_RecentFiles, QStringList());
     settings->setDefaultValue(Keys::App_MainWindowLastOpenDir, QString());
     settings->setDefaultValue(Keys::App_MainWindowLastSelectedFilter, QString());
@@ -125,7 +125,8 @@ static int runApp(QApplication* app)
             GraphicsMeshEntityDriver::setDefaultValues(defaults);
         };
         fnUpdateDefaults();
-        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
+        auto settings = Application::instance()->settings();
+        QObject::connect(settings, &Settings::valueChanged, [=](const QString& key) {
             if (key == Keys::Gpx_MeshDefaultShowEdges
                     || key == Keys::Gpx_MeshDefaultShowNodes
                     || key == Keys::Gpx_MeshDefaultColor

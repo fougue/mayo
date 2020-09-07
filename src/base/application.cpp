@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "application.h"
+#include "settings.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
@@ -32,6 +33,11 @@ class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetriev
 public:
     opencascade::handle<CDM_Document> CreateDocument() override { return new Document; }
 };
+
+Application::~Application()
+{
+    delete m_settings;
+}
 
 ApplicationPtr Application::instance()
 {
@@ -116,6 +122,16 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 void Application::closeDocument(const DocumentPtr& doc)
 {
     TDocStd_Application::Close(doc);
+}
+
+Settings* Application::settings()
+{
+    return m_settings;
+}
+
+const Settings* Application::settings() const
+{
+    return m_settings;
 }
 
 void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
@@ -206,7 +222,8 @@ void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc)
 }
 
 Application::Application()
-    : QObject(nullptr)
+    : QObject(nullptr),
+      m_settings(new Settings(this))
 {
     qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
     qRegisterMetaType<TreeNodeId>("TreeNodeId");

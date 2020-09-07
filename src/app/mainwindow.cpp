@@ -76,15 +76,15 @@ struct ImportExportSettings {
     static ImportExportSettings load()
     {
         return {
-            Settings::instance()->valueAs<QString>(Keys::App_MainWindowLastOpenDir),
-            Settings::instance()->valueAs<QString>(Keys::App_MainWindowLastSelectedFilter)
+            Application::instance()->settings()->valueAs<QString>(Keys::App_MainWindowLastOpenDir),
+            Application::instance()->settings()->valueAs<QString>(Keys::App_MainWindowLastSelectedFilter)
         };
     }
 
     static void save(const ImportExportSettings& sets)
     {
-        Settings::instance()->setValue(Keys::App_MainWindowLastOpenDir, sets.openDir);
-        Settings::instance()->setValue(Keys::App_MainWindowLastSelectedFilter, sets.selectedFilter);
+        Application::instance()->settings()->setValue(Keys::App_MainWindowLastOpenDir, sets.openDir);
+        Application::instance()->settings()->setValue(Keys::App_MainWindowLastSelectedFilter, sets.selectedFilter);
     }
 };
 
@@ -175,10 +175,10 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       m_ui(new Ui_MainWindow),
-      m_listRecentFile(Settings::instance()->valueAs<QStringList>(Keys::App_RecentFiles))
+      m_listRecentFile(Application::instance()->settings()->valueAs<QStringList>(Keys::App_RecentFiles))
 {
     m_ui->setupUi(this);
-    m_ui->widget_ModelTree->loadConfiguration(Settings::instance(), "GUI/MainWindow");
+    m_ui->widget_ModelTree->loadConfiguration(Application::instance()->settings(), "GUI/MainWindow");
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
@@ -382,9 +382,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    m_ui->widget_ModelTree->saveConfiguration(Settings::instance(), "GUI/MainWindow");
+    m_ui->widget_ModelTree->saveConfiguration(Application::instance()->settings(), "GUI/MainWindow");
     delete m_ui;
-    Settings::instance()->setValue(Keys::App_RecentFiles, m_listRecentFile);
+    Application::instance()->settings()->setValue(Keys::App_RecentFiles, m_listRecentFile);
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
@@ -694,7 +694,7 @@ void MainWindow::onApplicationItemSelectionChanged()
 //        }
 
         const bool isLinkWithDocumentSelectorOn =
-                Settings::instance()->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
+                Application::instance()->settings()->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         if (isLinkWithDocumentSelectorOn) {
             DocumentPtr doc = item.document();
             const int index = Application::instance()->findIndexOfDocument(doc);
@@ -729,7 +729,7 @@ void MainWindow::onHomePageLinkActivated(const QString &link)
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto widget = new WidgetGuiDocument(guiDoc);
-    if (Settings::instance()->valueAs<bool>(Keys::Gui_DefaultShowOriginTrihedron)) {
+    if (Application::instance()->settings()->valueAs<bool>(Keys::Gui_DefaultShowOriginTrihedron)) {
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->updateV3dViewer();
     }
@@ -994,7 +994,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     menu->setToolTipsVisible(true);
 
     {   // Link with document selector
-        auto settings = Settings::instance();
+        auto settings = Application::instance()->settings();
         const bool isLinked = settings->valueAs<bool>(Keys::App_MainWindowLinkWithDocumentSelector);
         QAction* action = menu->addAction(tr("Link With Document Selector"));
         action->setCheckable(true);

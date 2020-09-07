@@ -20,9 +20,13 @@ DEFINE_STANDARD_HANDLE(Application, TDocStd_Application)
 
 using ApplicationPtr = opencascade::handle<Application>;
 
+class Settings;
+
 class Application : public QObject, public TDocStd_Application {
     Q_OBJECT
 public:
+    ~Application();
+
     static ApplicationPtr instance();
 
     struct DocumentIterator : private CDF_DirectoryIterator {
@@ -45,6 +49,9 @@ public:
     int findIndexOfDocument(const DocumentPtr& doc) const;
 
     void closeDocument(const DocumentPtr& doc);
+
+    Settings* settings();
+    const Settings* settings() const;
 
     static void setOpenCascadeEnvironment(const QString& settingsFilepath);
 
@@ -78,6 +85,7 @@ private: // Implementation
 
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+    Settings* m_settings = nullptr;
 };
 
 } // namespace Mayo
