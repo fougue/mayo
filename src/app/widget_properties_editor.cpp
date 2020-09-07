@@ -6,6 +6,7 @@
 
 #include "widget_properties_editor.h"
 
+#include "../base/application.h"
 #include "../base/document.h"
 #include "../base/property_enumeration.h"
 #include "../base/string_utils.h"
@@ -114,7 +115,7 @@ static UnitSystem::TranslateResult unitTranslate(const BasePropertyQuantity* pro
     }
 
     return UnitSystem::translate(
-                Settings::instance()->unitSystemSchema(),
+                Application::instance()->settings()->unitSystemSchema(),
                 prop->quantityValue(),
                 prop->quantityUnit());
 }
@@ -124,11 +125,11 @@ static QString propertyValueText(const PropertyBool* prop) {
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return Settings::instance()->locale().toString(prop->value());
+    return Application::instance()->settings()->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
-    return StringUtils::text(prop->value(), Settings::instance()->defaultTextOptions());
+    return StringUtils::text(prop->value(), Application::instance()->settings()->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyQByteArray* prop) {
@@ -140,7 +141,7 @@ static QString propertyValueText(const PropertyQString* prop) {
 }
 
 static QString propertyValueText(const PropertyQDateTime* prop) {
-    return Settings::instance()->locale().toString(prop->value());
+    return Application::instance()->settings()->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
@@ -148,11 +149,11 @@ static QString propertyValueText(const PropertyOccColor* prop) {
 }
 
 static QString propertyValueText(const PropertyOccPnt* prop) {
-    return StringUtils::text(prop->value(), Settings::instance()->defaultTextOptions());
+    return StringUtils::text(prop->value(), Application::instance()->settings()->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyOccTrsf* prop) {
-    return StringUtils::text(prop->value(), Settings::instance()->defaultTextOptions());
+    return StringUtils::text(prop->value(), Application::instance()->settings()->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyEnumeration* prop)
@@ -174,7 +175,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
 
     const UnitSystem::TranslateResult trRes = unitTranslate(prop);
     return WidgetPropertiesEditor::tr("%1%2")
-            .arg(StringUtils::text(trRes.value, Settings::instance()->defaultTextOptions()))
+            .arg(StringUtils::text(trRes.value, Application::instance()->settings()->defaultTextOptions()))
             .arg(trRes.strUnit);
 }
 
@@ -184,7 +185,7 @@ static QString propertyValueText(
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return WidgetPropertiesEditor::tr("%1%2")
-            .arg(StringUtils::text(trValue, Settings::instance()->defaultTextOptions()))
+            .arg(StringUtils::text(trValue, Application::instance()->settings()->defaultTextOptions()))
             .arg(unitTr.strUnit);
 }
 
@@ -211,7 +212,7 @@ static QWidget* createPropertyEditor(BasePropertyQuantity* prop, QWidget* parent
     auto editor = new QDoubleSpinBox(parent);
     const UnitSystem::TranslateResult trRes = unitTranslate(prop);
     editor->setSuffix(QString::fromUtf8(trRes.strUnit));
-    editor->setDecimals(Settings::instance()->unitSystemDecimals());
+    editor->setDecimals(Application::instance()->settings()->unitSystemDecimals());
     const double rangeMin =
             prop->constraintsEnabled() ?
                 prop->minimum() : std::numeric_limits<double>::min();
@@ -285,7 +286,7 @@ static QWidget* createPropertyEditor(PropertyDouble* prop, QWidget* parent)
         editor->setSingleStep(prop->singleStep());
     }
     editor->setValue(prop->value());
-    editor->setDecimals(Settings::instance()->unitSystemDecimals());
+    editor->setDecimals(Application::instance()->settings()->unitSystemDecimals());
     QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double val) {
         const Result<void> result = prop->setValue(val);
         handlePropertyValidationError(result, editor, [=]{
@@ -366,9 +367,9 @@ static QDoubleSpinBox* createOccPntCoordEditor(
     auto editor = new QDoubleSpinBox(parent);
     const QuantityLength lenCoord = ((prop->value()).*funcGetCoord)() * Quantity_Millimeter;
     const UnitSystem::TranslateResult trRes =
-            UnitSystem::translate(Settings::instance()->unitSystemSchema(), lenCoord);
+            UnitSystem::translate(Application::instance()->settings()->unitSystemSchema(), lenCoord);
     //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
-    editor->setDecimals(Settings::instance()->unitSystemDecimals());
+    editor->setDecimals(Application::instance()->settings()->unitSystemDecimals());
     editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
     editor->setRange(std::numeric_limits<double>::min(),
                      std::numeric_limits<double>::max());

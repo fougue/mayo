@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "../base/unit_system.h"
-#include "../base/string_utils.h"
 #include "settings_index.h"
+#include "string_utils.h"
+#include "unit_system.h"
 
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
@@ -34,7 +34,7 @@ public:
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
 
-    static Settings* instance();
+    Settings(QObject* parent = nullptr);
     ~Settings();
 
     int groupCount() const;
@@ -76,8 +76,6 @@ signals:
     void valueChanged(const QString& key, const QVariant& value);
 
 private:
-    Settings();
-
     class Private;
     Private* const d = nullptr;
 };

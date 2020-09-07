@@ -6,6 +6,7 @@
 
 #include "widget_clip_planes.h"
 
+#include "../base/application.h"
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
 #include "../graphics/graphics_utils.h"
@@ -37,7 +38,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
           UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom) }
     };
 
-    const auto settings = Settings::instance();
+    const auto settings = Application::instance()->settings();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);

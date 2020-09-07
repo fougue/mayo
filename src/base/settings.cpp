@@ -7,8 +7,8 @@
 #include "settings.h"
 
 #include <fougtools/qttools/core/qstring_hfunc.h>
-#include <gsl/gsl_util>
 #include <QtCore/QSettings>
+#include <gsl/gsl_util>
 #include <unordered_map>
 
 namespace Mayo {
@@ -50,6 +50,12 @@ public:
     std::unordered_map<QString, QVariant> m_mapDefaultValue;
     std::vector<Settings_Group> m_vecGroup;
 };
+
+Settings::Settings(QObject* parent)
+    : QObject(parent),
+      d(new Private)
+{
+}
 
 Settings::~Settings()
 {
@@ -163,12 +169,6 @@ Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex ind
     return SettingIndex(index, int(section.vecSetting.size()) - 1);
 }
 
-Settings* Settings::instance()
-{
-    static Settings settings;
-    return &settings;
-}
-
 const QLocale& Settings::locale() const
 {
     return d->m_locale;
@@ -226,11 +226,6 @@ StringUtils::TextOptions Settings::defaultTextOptions() const
     opts.unitDecimals = this->unitSystemDecimals();
     opts.unitSchema = this->unitSystemSchema();
     return opts;
-}
-
-Settings::Settings()
-    : d(new Private)
-{
 }
 
 } // namespace Mayo

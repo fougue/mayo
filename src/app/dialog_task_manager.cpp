@@ -6,6 +6,7 @@
 
 #include "dialog_task_manager.h"
 
+#include "../base/application.h"
 #include "../base/string_utils.h"
 #include "../base/task_manager.h"
 #include "settings.h"
@@ -183,9 +184,9 @@ void DialogTaskManager::onTaskProgressStep(TaskId taskId, const QString& name)
     QString text = taskTitle;
     if (!name.isEmpty()) {
         if (!text.isEmpty())
-            StringUtils::append(&text, tr(" / "), Settings::instance()->locale());
+            StringUtils::append(&text, tr(" / "), Application::instance()->settings()->locale());
 
-        StringUtils::append(&text, name, Settings::instance()->locale());
+        StringUtils::append(&text, name, Application::instance()->settings()->locale());
     }
 
     widget->m_label->setText(text);

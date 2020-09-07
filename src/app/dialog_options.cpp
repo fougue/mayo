@@ -42,7 +42,7 @@ DialogOptions::DialogOptions(QWidget *parent)
     this->adjustSize();
 #endif
 
-    auto settings = Settings::instance();
+    auto settings = Application::instance()->settings();
 
     // STL import/export
     auto btnGrp_stlIoLib = new QButtonGroup(this);
@@ -100,7 +100,7 @@ DialogOptions::~DialogOptions()
 
 void DialogOptions::accept()
 {
-    auto settings = Settings::instance();
+    auto settings = Application::instance()->settings();
 
 //    // STL import/export
 //    if (m_ui->radioBtn_UseGmio->isChecked())
