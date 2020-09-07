@@ -12,6 +12,7 @@
 
 #include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <QtCore/QtGlobal>
 
 namespace Mayo {
 namespace Internal {
