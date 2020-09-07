@@ -9,9 +9,9 @@
 #include "../base/application.h"
 #include "../base/property_enumeration.h"
 #include "../base/occt_enums.h"
+#include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "settings.h"
-#include "settings_keys.h"
+#include "../base/settings_keys.h"
 #include "ui_dialog_options.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>

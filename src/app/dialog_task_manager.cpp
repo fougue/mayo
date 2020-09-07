@@ -7,9 +7,9 @@
 #include "dialog_task_manager.h"
 
 #include "../base/application.h"
+#include "../base/settings.h"
 #include "../base/string_utils.h"
 #include "../base/task_manager.h"
-#include "settings.h"
 #include "ui_dialog_task_manager.h"
 #include "theme.h"
 
