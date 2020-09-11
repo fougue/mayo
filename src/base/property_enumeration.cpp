@@ -72,22 +72,26 @@ PropertyEnumeration::PropertyEnumeration(
         PropertyOwner* owner,
         const QString& label,
         const Enumeration* enumeration)
-    : Property(owner, label),
-      m_enumeration(enumeration)
+    : Property(owner, label)
 {
-    Q_ASSERT(m_enumeration != nullptr);
-    Q_ASSERT(m_enumeration->size() > 0);
-    m_value = m_enumeration->itemAt(0).value;
+    this->setEnumeration(enumeration);
 }
 
-const Enumeration& PropertyEnumeration::enumeration() const
+const Enumeration* PropertyEnumeration::enumeration() const
 {
-    return *m_enumeration;
+    return m_enumeration;
+}
+
+void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
+{
+    m_enumeration = enumeration;
+    if (m_enumeration && m_enumeration->size() > 0)
+        m_value = m_enumeration->itemAt(0).value;
 }
 
 QString PropertyEnumeration::name() const
 {
-    return m_enumeration->findName(m_value);
+    return m_enumeration ? m_enumeration->findName(m_value) : QString();
 }
 
 Enumeration::Value PropertyEnumeration::value() const

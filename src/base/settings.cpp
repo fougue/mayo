@@ -11,27 +11,68 @@
 #include <gsl/gsl_util>
 #include <unordered_map>
 
+
+#include "application.h"
+#include "property_builtins.h"
+#include "property_enumeration.h"
+#include "unit_system.h"
+
 namespace Mayo {
 
 namespace {
 
+class BaseModule : public QObject {
+public:
+    BaseModule()
+        : QObject(Application::instance().get()),
+          settingsGroupId(Application::instance()->settings()->addGroup("SYSTEM")),
+          unitSystemDecimals(Application::instance()->settings(), tr("Count of decimals")),
+          unitSystemSchema(Application::instance()->settings(), tr("System"))
+    {
+        auto settings = Application::instance()->settings();
+        settings->setGroupTitle(this->settingsGroupId, tr("System"));
+        const Settings::SectionIndex unitSectionId = settings->addSection(this->settingsGroupId, "UNITS");
+        settings->setSectionTitle(unitSectionId, tr("Units"));
+        this->unitSystemDecimals.setRange(1, 99);
+        this->unitSystemDecimals.setSingleStep(1);
+        this->unitSystemDecimals.setConstraintsEnabled(true);
+        settings->addSetting(&this->unitSystemDecimals, "DECIMAL_COUNT", unitSectionId);
+
+        static const Enumeration enumUnitSchema = {
+            { UnitSystem::SI, "SI", tr("SI") },
+            { UnitSystem::ImperialUK, "IMPERIAL_UK", tr("Imperial UK") }
+        };
+        this->unitSystemSchema.setEnumeration(&enumUnitSchema);
+        settings->addSetting(&this->unitSystemSchema, "SYSTEM", unitSectionId);
+    }
+
+    const Settings::GroupIndex settingsGroupId;
+    PropertyInt unitSystemDecimals;
+    PropertyEnumeration unitSystemSchema;
+};
+
+struct Settings_Setting {
+    QByteArray identifier; // Must be unique in the context of the parent section
+    Property* property;
+};
+
 struct Settings_Section {
-    QByteArray id; // Must be unique in the context of the parent group
+    QByteArray identifier; // Must be unique in the context of the parent group
     QString title;
     bool isDefault; // Default section in parent group
-    std::vector<Property*> vecSetting;
+    std::vector<Settings_Setting> vecSetting;
 };
 
 struct Settings_Group {
-    QByteArray id; // Must be unique in the context of the parent Settings object
+    QByteArray identifier; // Must be unique in the context of the parent Settings object
     QString title;
     std::vector<Settings_Section> vecSection;
     Settings_Section defaultSection;
 };
 
-static bool isValidIdentifier(const QByteArray& id)
+static bool isValidIdentifier(const QByteArray& identifier)
 {
-    return !id.isEmpty() && !id.simplified().isEmpty();
+    return !identifier.isEmpty() && !identifier.simplified().isEmpty();
 }
 
 } // namespace
@@ -67,9 +108,9 @@ int Settings::groupCount() const
     return int(d->m_vecGroup.size());
 }
 
-QByteArray Settings::groupId(GroupIndex index) const
+QByteArray Settings::groupIdentifier(GroupIndex index) const
 {
-    return d->group(index).id;
+    return d->group(index).identifier;
 }
 
 QString Settings::groupTitle(GroupIndex index) const
@@ -85,11 +126,15 @@ void Settings::setGroupTitle(GroupIndex index, const QString& title) const
 Settings::GroupIndex Settings::addGroup(QByteArray identifier)
 {
     Expects(isValidIdentifier(identifier));
-    // TODO Check identifier is unique
+
+    for (const Settings_Group& group : d->m_vecGroup) {
+        if (group.identifier == identifier)
+            return GroupIndex(&group - &d->m_vecGroup.front());
+    }
 
     d->m_vecGroup.push_back({});
     Settings_Group& group = d->m_vecGroup.back();
-    group.id = identifier;
+    group.identifier = identifier;
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
 }
 
@@ -100,7 +145,7 @@ int Settings::sectionCount(GroupIndex index) const
 
 QByteArray Settings::sectionIdentifier(SectionIndex index) const
 {
-    return d->section(index).id;
+    return d->section(index).identifier;
 }
 
 QString Settings::sectionTitle(SectionIndex index) const
@@ -125,7 +170,7 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identif
 
     d->group(index).vecSection.push_back({});
     Settings_Section& section = d->group(index).vecSection.back();
-    section.id = identifier;
+    section.identifier = identifier;
     return SectionIndex(index, int(d->group(index).vecSection.size()) - 1);
 }
 
@@ -136,10 +181,10 @@ int Settings::settingCount(SectionIndex index) const
 
 Property* Settings::property(SettingIndex index) const
 {
-    return d->section(index.section()).vecSetting.at(index.get());
+    return d->section(index.section()).vecSetting.at(index.get()).property;
 }
 
-Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex groupId)
+Settings::SettingIndex Settings::addSetting(Property* property, QByteArray identifier, GroupIndex groupId)
 {
     Settings_Group& group = d->group(groupId);
     Settings_Section* sectionDefault = nullptr;
@@ -157,15 +202,20 @@ Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex group
         }
     }
 
-    sectionDefault->id = "DEFAULT";
+    sectionDefault->identifier = "DEFAULT";
     sectionDefault->isDefault = true;
-    return this->addSetting(property, SectionIndex(groupId, sectionDefault - &group.vecSection.front()));
+    const SectionIndex sectionId(groupId, sectionDefault - &group.vecSection.front());
+    return this->addSetting(property, identifier, sectionId);
 }
 
-Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex index)
+Settings::SettingIndex Settings::addSetting(Property* property, QByteArray identifier, SectionIndex index)
 {
+    // TODO Check identifier is unique
     Settings_Section& section = d->section(index);
-    section.vecSetting.push_back(property);
+    section.vecSetting.push_back({});
+    Settings_Setting& setting = section.vecSetting.back();
+    setting.identifier = identifier;
+    setting.property = property;
     return SettingIndex(index, int(section.vecSetting.size()) - 1);
 }
 

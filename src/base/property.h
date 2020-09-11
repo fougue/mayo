@@ -18,9 +18,10 @@ namespace Mayo {
 
 class Property;
 
+// TODO Rename to PropertyGroup
 class PropertyOwner {
 public:
-    // TODO change to computed properties, remove member m_properties
+    // TODO Rename to get() or items() ?
     Span<Property* const> properties() const;
 
 protected:

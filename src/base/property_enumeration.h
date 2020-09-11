@@ -45,9 +45,10 @@ public:
     PropertyEnumeration(
             PropertyOwner* owner,
             const QString& label,
-            const Enumeration* enumeration);
+            const Enumeration* enumeration = nullptr);
 
-    const Enumeration& enumeration() const;
+    const Enumeration* enumeration() const;
+    void setEnumeration(const Enumeration* enumeration);
 
     QString name() const;
     Enumeration::Value value() const;
