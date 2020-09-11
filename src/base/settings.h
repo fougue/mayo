@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "property.h"
 #include "settings_index.h"
 #include "string_utils.h"
 #include "unit_system.h"
@@ -14,8 +15,6 @@
 #include <QtCore/QObject>
 
 namespace Mayo {
-
-class Property;
 
 //class Module {
 //public:
@@ -27,7 +26,7 @@ class Property;
 //    static void init();
 //};
 
-class Settings : public QObject {
+class Settings : public QObject, public PropertyOwner {
     Q_OBJECT
 public:
     using GroupIndex = Settings_GroupIndex;
@@ -38,7 +37,7 @@ public:
     ~Settings();
 
     int groupCount() const;
-    QByteArray groupId(GroupIndex index) const;
+    QByteArray groupIdentifier(GroupIndex index) const;
     QString groupTitle(GroupIndex index) const;
     void setGroupTitle(GroupIndex index, const QString& title) const;
     GroupIndex addGroup(QByteArray identifier);
@@ -52,8 +51,8 @@ public:
 
     int settingCount(SectionIndex index) const;
     Property* property(SettingIndex index) const;
-    SettingIndex addSetting(Property* property, GroupIndex index);
-    SettingIndex addSetting(Property* property, SectionIndex index);
+    SettingIndex addSetting(Property* property, QByteArray identifier, GroupIndex index);
+    SettingIndex addSetting(Property* property, QByteArray identifier, SectionIndex index);
 
     // Helpers
 

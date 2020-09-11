@@ -2,8 +2,8 @@
 
 #include "../base/caf_utils.h"
 #include "../base/document.h"
+#include "../base/settings.h"
 #include "../base/xcaf.h"
-#include "settings.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
