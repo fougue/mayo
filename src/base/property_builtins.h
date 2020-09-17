@@ -24,7 +24,7 @@ class GenericProperty : public Property {
 public:
     using ValueType = T;
 
-    GenericProperty(PropertyOwner* owner, const QString& label);
+    GenericProperty(PropertyGroup* grp, const QString& label);
 
     const T& value() const;
     Result<void> setValue(const T& val);
@@ -76,9 +76,9 @@ class GenericScalarProperty :
 {
 public:
     using ValueType = T;
-    GenericScalarProperty(PropertyOwner* owner, const QString& label);
+    GenericScalarProperty(PropertyGroup* grp, const QString& label);
     GenericScalarProperty(
-            PropertyOwner* owner, const QString& label,
+            PropertyGroup* grp, const QString& label,
             T minimum, T maximum, T singleStep);
 };
 
@@ -95,7 +95,7 @@ public:
     static const char TypeName[];
 
 protected:
-    BasePropertyQuantity(PropertyOwner* owner, const QString& label);
+    BasePropertyQuantity(PropertyGroup* grp, const QString& label);
 };
 
 template<Unit UNIT>
@@ -103,7 +103,7 @@ class GenericPropertyQuantity : public BasePropertyQuantity {
 public:
     using QuantityType = Quantity<UNIT>;
 
-    GenericPropertyQuantity(PropertyOwner* owner, const QString& label);
+    GenericPropertyQuantity(PropertyGroup* grp, const QString& label);
 
     Unit quantityUnit() const override;
     double quantityValue() const override;
@@ -144,8 +144,8 @@ using PropertyVelocity = GenericPropertyQuantity<Unit::Velocity>;
 // GenericProperty<>
 
 template<typename T>
-GenericProperty<T>::GenericProperty(PropertyOwner* owner, const QString& label)
-    : Property(owner, label)
+GenericProperty<T>::GenericProperty(PropertyGroup* grp, const QString& label)
+    : Property(grp, label)
 { }
 
 template<typename T> const T& GenericProperty<T>::value() const
@@ -218,25 +218,23 @@ template<typename T> void PropertyScalarConstraints<T>::setSingleStep(T step)
 // GenericScalarProperty<>
 
 template<typename T>
-GenericScalarProperty<T>::GenericScalarProperty(
-        PropertyOwner* owner, const QString& label)
-    : GenericProperty<T>(owner, label)
+GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const QString& label)
+    : GenericProperty<T>(grp, label)
 { }
 
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
-            PropertyOwner* owner, const QString& label,
+            PropertyGroup* grp, const QString& label,
             T minimum, T maximum, T singleStep)
-    : GenericProperty<T>(owner, label),
+    : GenericProperty<T>(grp, label),
       PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }
 
 // GenericPropertyQuantity<>
 
 template<Unit UNIT>
-GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(
-        PropertyOwner* owner, const QString& label)
-    : BasePropertyQuantity(owner, label)
+GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const QString& label)
+    : BasePropertyQuantity(grp, label)
 { }
 
 template<Unit UNIT>

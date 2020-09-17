@@ -2,7 +2,7 @@
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
-#include "graphics_entity_base_property_owner.h"
+#include "graphics_entity_base_property_group.h"
 
 #include <BRep_TFace.hxx>
 #include <MeshVS_DisplayModeFlags.hxx>
@@ -146,10 +146,10 @@ Enumeration::Value GraphicsShapeEntityDriver::currentDisplayMode(const GraphicsE
     return -1;
 }
 
-std::unique_ptr<PropertyOwnerSignals> GraphicsShapeEntityDriver::properties(const GraphicsEntity& entity) const
+std::unique_ptr<PropertyGroupSignals> GraphicsShapeEntityDriver::properties(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
-    return std::make_unique<GraphicsEntityBasePropertyOwner>(entity);
+    return std::make_unique<GraphicsEntityBasePropertyGroup>(entity);
 }
 
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
@@ -234,11 +234,11 @@ Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEn
     return entity.aisObject()->DisplayMode();
 }
 
-class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyOwner {
+class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyGroup {
     Q_DECLARE_TR_FUNCTIONS(GraphicsMeshEntityProperties)
 public:
     GraphicsMeshEntityProperties(const GraphicsEntity& entity)
-        : GraphicsEntityBasePropertyOwner(entity),
+        : GraphicsEntityBasePropertyGroup(entity),
           m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
           m_propertyColor(this, tr("Color")),
           m_propertyShowEdges(this, tr("Show edges")),
@@ -278,7 +278,7 @@ public:
             fnRedisplay(m_meshVisu);
         }
 
-        GraphicsEntityBasePropertyOwner::onPropertyChanged(prop);
+        GraphicsEntityBasePropertyGroup::onPropertyChanged(prop);
     }
 
     Handle_MeshVS_Mesh m_meshVisu;
@@ -287,7 +287,7 @@ public:
     PropertyBool m_propertyShowNodes;
 };
 
-std::unique_ptr<PropertyOwnerSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
+std::unique_ptr<PropertyGroupSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
     return std::make_unique<GraphicsMeshEntityProperties>(entity);

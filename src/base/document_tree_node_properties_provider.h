@@ -12,12 +12,12 @@
 namespace Mayo {
 
 class DocumentTreeNode;
-class PropertyOwnerSignals;
+class PropertyGroupSignals;
 
 class DocumentTreeNodePropertiesProvider {
 public:
     virtual bool supports(const DocumentTreeNode& treeNode) const = 0;
-    virtual std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const = 0;
+    virtual std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const = 0;
 };
 
 class DocumentTreeNodePropertiesProviderTable {
@@ -29,7 +29,7 @@ public:
     void addProvider(ProviderPtr provider);
     Span<const ProviderPtr> providers() const { return m_vecProvider; }
 
-    std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const;
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
 
 private:
     DocumentTreeNodePropertiesProviderTable() = default;

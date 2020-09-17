@@ -632,13 +632,14 @@ void WidgetPropertiesEditor::setGroupName(Group* group, const QString& name)
         group->treeItem->setText(0, name);
 }
 
-void WidgetPropertiesEditor::editProperties(PropertyOwner* propOwner, Group* grp)
+void WidgetPropertiesEditor::editProperties(PropertyGroup* propGroup, Group* grp)
 {
-    if (propOwner) {
+    if (propGroup) {
         d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
         QTreeWidgetItem* parentTreeItem = d->hasGroup(grp) ? grp->treeItem : nullptr;
-        for (Property* prop : propOwner->properties())
+        for (Property* prop : propGroup->properties())
             d->createQtProperty(prop, parentTreeItem);
+
         d->ui->treeWidget_Browser->resizeColumnToContents(0);
         d->ui->treeWidget_Browser->resizeColumnToContents(1);
     }

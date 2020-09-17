@@ -20,16 +20,16 @@ bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return XCaf::isShape(treeNode.label());
 }
 
-std::unique_ptr<PropertyOwnerSignals>
+std::unique_ptr<PropertyGroupSignals>
 XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};
 
-    return std::make_unique<InternalPropertyOwner>(treeNode);
+    return std::make_unique<InternalPropertyGroup>(treeNode);
 }
 
-XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalPropertyOwner(const DocumentTreeNode& treeNode)
+XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
     : m_propertyName(this, tr("Name")),
       m_propertyShapeType(this, tr("Shape")),
       m_propertyXdeShapeKind(this, tr("XDE shape")),
@@ -145,14 +145,14 @@ XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalProperty
     m_propertyReferredName.setUserReadOnly(false);
 }
 
-void XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::onPropertyChanged(Property* prop)
+void XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::onPropertyChanged(Property* prop)
 {
     if (prop == &m_propertyName)
         CafUtils::setLabelAttrStdName(m_label, m_propertyName.value());
     else if (prop == &m_propertyReferredName)
         CafUtils::setLabelAttrStdName(m_labelReferred, m_propertyReferredName.value());
 
-    PropertyOwnerSignals::onPropertyChanged(prop);
+    PropertyGroupSignals::onPropertyChanged(prop);
 }
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
@@ -160,16 +160,16 @@ bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return CafUtils::hasAttribute<TDataXtd_Triangulation>(treeNode.label());
 }
 
-std::unique_ptr<PropertyOwnerSignals>
+std::unique_ptr<PropertyGroupSignals>
 Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};
 
-    return std::make_unique<InternalPropertyOwner>(treeNode);
+    return std::make_unique<InternalPropertyGroup>(treeNode);
 }
 
-Mesh_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalPropertyOwner(const DocumentTreeNode& treeNode)
+Mesh_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
     : m_propertyNodeCount(this, tr("Node count")),
       m_propertyTriangleCount(this, tr("Triangle count"))
 {

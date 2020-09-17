@@ -43,7 +43,7 @@ private:
 class PropertyEnumeration : public Property {
 public:
     PropertyEnumeration(
-            PropertyOwner* owner,
+            PropertyGroup* grp,
             const QString& label,
             const Enumeration* enumeration = nullptr);
 

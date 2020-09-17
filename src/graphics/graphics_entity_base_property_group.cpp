@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "graphics_entity_base_property_owner.h"
+#include "graphics_entity_base_property_group.h"
 #include "graphics_entity_driver.h"
 
 namespace Mayo {
@@ -23,7 +23,7 @@ static Enumeration::Value currentDisplayMode(const GraphicsEntity& gfxEntity) {
 
 } // namespace Internal
 
-GraphicsEntityBasePropertyOwner::GraphicsEntityBasePropertyOwner(const GraphicsEntity& gfxEntity)
+GraphicsEntityBasePropertyGroup::GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity)
     : m_gfxEntity(gfxEntity),
       m_propertyIsVisible(this, tr("Visible")),
       m_propertyDisplayMode(this, tr("Display mode"), Internal::displayModesEnum(gfxEntity))
@@ -35,14 +35,14 @@ GraphicsEntityBasePropertyOwner::GraphicsEntityBasePropertyOwner(const GraphicsE
     m_propertyDisplayMode.setValue(Internal::currentDisplayMode(gfxEntity));
 }
 
-void GraphicsEntityBasePropertyOwner::onPropertyChanged(Property *prop)
+void GraphicsEntityBasePropertyGroup::onPropertyChanged(Property *prop)
 {
     if (prop == &m_propertyIsVisible)
         m_gfxEntity.setVisible(m_propertyIsVisible.value());
     else if (prop == &m_propertyDisplayMode)
         m_gfxEntity.driverPtr()->applyDisplayMode(m_gfxEntity, m_propertyDisplayMode.value());
 
-    PropertyOwnerSignals::onPropertyChanged(prop);
+    PropertyGroupSignals::onPropertyChanged(prop);
 }
 
 } // namespace Mayo
