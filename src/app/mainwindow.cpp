@@ -658,10 +658,10 @@ void MainWindow::onApplicationItemSelectionChanged()
         if (item.isDocumentTreeNode()) {
             auto providerTable = DocumentTreeNodePropertiesProviderTable::instance();
             m_ptrCurrentNodeDataProperties = providerTable->properties(docTreeNode);
-            PropertyOwnerSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
+            PropertyGroupSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
             if (dataProps) {
                 uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
-                QObject::connect(dataProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
+                QObject::connect(dataProps, &PropertyGroupSignals::propertyChanged, this, [=]{
                     uiModelTree->refreshItemText(item);
                 });
             }
@@ -671,10 +671,10 @@ void MainWindow::onApplicationItemSelectionChanged()
             GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
             if (gfxEntity.driverPtr()) {
                 m_ptrCurrentNodeGraphicsProperties = gfxEntity.driverPtr()->properties(gfxEntity);
-                PropertyOwnerSignals* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
+                PropertyGroupSignals* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
-                    QObject::connect(gfxProps, &PropertyOwnerSignals::propertyChanged, this, [=]{
+                    QObject::connect(gfxProps, &PropertyGroupSignals::propertyChanged, this, [=]{
                         gfxEntity.aisContextPtr()->UpdateCurrentViewer();
                     });
                 }

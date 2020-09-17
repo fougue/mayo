@@ -13,8 +13,8 @@ const char *BasePropertyQuantity::dynTypeName() const
     return BasePropertyQuantity::TypeName;
 }
 
-BasePropertyQuantity::BasePropertyQuantity(PropertyOwner *owner, const QString &label)
-    : Property(owner, label)
+BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const QString& label)
+    : Property(grp, label)
 {
 }
 

@@ -14,10 +14,10 @@
 
 namespace Mayo {
 
-class GraphicsEntityBasePropertyOwner : public PropertyOwnerSignals {
-    Q_DECLARE_TR_FUNCTIONS(GraphicsEntityBasePropertyOwner)
+class GraphicsEntityBasePropertyGroup : public PropertyGroupSignals {
+    Q_DECLARE_TR_FUNCTIONS(GraphicsEntityBasePropertyGroup)
 public:
-    GraphicsEntityBasePropertyOwner(const GraphicsEntity& gfxEntity);
+    GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity);
     void onPropertyChanged(Property* prop) override;
 
 private:

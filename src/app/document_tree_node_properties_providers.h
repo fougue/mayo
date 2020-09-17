@@ -18,11 +18,11 @@ class XCaf_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertie
     Q_DECLARE_TR_FUNCTIONS(XCaf_DocumentTreeNodePropertiesProvider)
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
-    std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
 
 private:
-    struct InternalPropertyOwner : public PropertyOwnerSignals {
-        InternalPropertyOwner(const DocumentTreeNode& treeNode);
+    struct InternalPropertyGroup : public PropertyGroupSignals {
+        InternalPropertyGroup(const DocumentTreeNode& treeNode);
 
         void onPropertyChanged(Property* prop) override;
 
@@ -50,11 +50,11 @@ class Mesh_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertie
     Q_DECLARE_TR_FUNCTIONS(Mesh_DocumentTreeNodePropertiesProvider)
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
-    std::unique_ptr<PropertyOwnerSignals> properties(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
 
 private:
-    struct InternalPropertyOwner : public PropertyOwnerSignals {
-        InternalPropertyOwner(const DocumentTreeNode& treeNode);
+    struct InternalPropertyGroup : public PropertyGroupSignals {
+        InternalPropertyGroup(const DocumentTreeNode& treeNode);
         PropertyInt m_propertyNodeCount; // Read-only
         PropertyInt m_propertyTriangleCount; // Read-only
     };

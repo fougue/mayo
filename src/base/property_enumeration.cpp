@@ -69,10 +69,10 @@ Span<const Enumeration::Item> Enumeration::items() const
 }
 
 PropertyEnumeration::PropertyEnumeration(
-        PropertyOwner* owner,
+        PropertyGroup* grp,
         const QString& label,
         const Enumeration* enumeration)
-    : Property(owner, label)
+    : Property(grp, label)
 {
     this->setEnumeration(enumeration);
 }

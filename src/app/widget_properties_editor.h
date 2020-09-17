@@ -23,7 +23,7 @@ public:
     Group* addGroup(const QString& name);
     void setGroupName(Group* group, const QString& name);
 
-    void editProperties(PropertyOwner* propOwner, Group* grp = nullptr);
+    void editProperties(PropertyGroup* propGroup, Group* grp = nullptr);
     void editProperty(Property* prop, Group* grp = nullptr);
     void clear();
 

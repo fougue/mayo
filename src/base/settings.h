@@ -16,17 +16,7 @@
 
 namespace Mayo {
 
-//class Module {
-//public:
-//    virtual void registerSettings() = 0;
-//};
-
-//class GuiModule {
-//public:
-//    static void init();
-//};
-
-class Settings : public QObject, public PropertyOwner {
+class Settings : public QObject, public PropertyGroup {
     Q_OBJECT
 public:
     using GroupIndex = Settings_GroupIndex;

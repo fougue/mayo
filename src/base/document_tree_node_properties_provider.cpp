@@ -20,7 +20,7 @@ void DocumentTreeNodePropertiesProviderTable::addProvider(ProviderPtr provider)
     m_vecProvider.push_back(std::move(provider));
 }
 
-std::unique_ptr<PropertyOwnerSignals>
+std::unique_ptr<PropertyGroupSignals>
 DocumentTreeNodePropertiesProviderTable::properties(const DocumentTreeNode& treeNode) const
 {
     for (const ProviderPtr& provider : m_vecProvider) {
@@ -28,7 +28,7 @@ DocumentTreeNodePropertiesProviderTable::properties(const DocumentTreeNode& tree
             return provider->properties(treeNode);
     }
 
-    return std::unique_ptr<PropertyOwnerSignals>();
+    return std::unique_ptr<PropertyGroupSignals>();
 }
 
 } // namespace Mayo
