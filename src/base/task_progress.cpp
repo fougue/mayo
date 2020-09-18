@@ -45,7 +45,7 @@ bool TaskProgress::isAbortRequested(const TaskProgress* progress)
     return progress ? progress->isAbortRequested() : false;
 }
 
-void TaskProgress::beginScope(int scopeSize, const QString &stepTitle)
+void TaskProgress::beginScope(int scopeSize, const QString& stepTitle)
 {
     assert(m_currentScopeSize == -1);
     assert(scopeSize > 1);

@@ -45,7 +45,7 @@ bool PropertyGroup::isPropertyChangedBlocked() const
 void PropertyGroup::addProperty(Property* prop)
 {
     Expects(prop != nullptr);
-    Expects(prop->m_group == this);
+    Expects(prop->group() == this);
     m_properties.emplace_back(prop);
 }
 
