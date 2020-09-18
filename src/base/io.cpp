@@ -73,7 +73,7 @@
 #include <set>
 
 namespace Mayo {
-
+#if 0
 namespace Internal {
 
 static std::mutex globalMutex;
@@ -546,230 +546,6 @@ static IO::PartFormat findPartFormatFromContents(
 
 } // namespace Internal
 
-IO* IO::instance()
-{
-    static IO io;
-    return &io;
-}
-
-Span<const IO::PartFormat> IO::partFormats()
-{
-    const static PartFormat arrayFormat[] = {
-        PartFormat::Iges,
-        PartFormat::Step,
-        PartFormat::OccBrep,
-        PartFormat::Stl,
-        PartFormat::Obj
-    };
-
-    return arrayFormat;
-}
-
-QString IO::partFormatFilter(IO::PartFormat format)
-{
-    switch (format) {
-    case PartFormat::Iges: return tr("IGES files(*.iges *.igs)");
-    case PartFormat::Step: return tr("STEP files(*.step *.stp)");
-    case PartFormat::OccBrep: return tr("OpenCascade BREP files(*.brep *.occ)");
-    case PartFormat::Stl: return tr("STL files(*.stl *.stla)");
-    case PartFormat::Obj: return tr("OBJ files(*.obj)");
-    case PartFormat::Unknown: break;
-    }
-
-    return QString();
-}
-
-QStringList IO::partFormatFilters()
-{
-    QStringList filters;
-    for (IO::PartFormat format : IO::partFormats())
-        filters << IO::partFormatFilter(format);
-
-    return filters;
-}
-
-IO::PartFormat IO::findPartFormat(const QString& filepath)
-{
-    QFile file(filepath);
-    if (file.open(QIODevice::ReadOnly)) {
-#ifdef HAVE_GMIO
-        gmio_stream qtstream = gmio_stream_qiodevice(&file);
-        const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
-        if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
-            return IO::PartFormat::Stl;
-#endif
-        std::array<char, 2048> contentsBegin;
-        contentsBegin.fill(0);
-        file.read(contentsBegin.data(), contentsBegin.size());
-        return Internal::findPartFormatFromContents(
-                    std::string_view(contentsBegin.data(), contentsBegin.size()),
-                    file.size());
-    }
-
-    return PartFormat::Unknown;
-}
-
-IO::StlIoLibrary IO::stlIoLibrary() const
-{
-    return m_stlIoLibrary;
-}
-
-void IO::setStlIoLibrary(IO::StlIoLibrary lib)
-{
-    m_stlIoLibrary = lib;
-}
-
-std::unique_ptr<Reader> IO::createReader(IO::PartFormat format) const
-{
-    switch (format) {
-    case PartFormat::Iges:
-        return std::make_unique<Internal::OccIgesReader>();
-    case PartFormat::Step:
-        return std::make_unique<Internal::OccStepReader>();
-    case PartFormat::OccBrep:
-        return std::make_unique<Internal::OccBRepReader>();
-    case PartFormat::Stl:
-        return std::make_unique<Internal::OccStlReader>();
-    case PartFormat::Obj:
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        return std::make_unique<Internal::OccObjReader>();
-#endif
-    case PartFormat::Unknown:
-        return std::unique_ptr<Reader>();
-    }
-
-    return std::unique_ptr<Reader>();
-}
-
-bool IO::importInDocument(
-        DocumentPtr doc,
-        const QStringList& listFilepath,
-        Messenger* messenger,
-        TaskProgress* progress)
-{
-    TaskProgress nullProgress;
-    progress = progress ? progress : &nullProgress;
-
-    bool ok = true;
-
-    using ReaderPtr = std::unique_ptr<Reader>;
-    auto fnAddError = [&](QString filepath, QString errorMsg) {
-        ok = false;
-        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorMsg));
-    };
-    auto fnReadFileError = [&](QString filepath, QString errorMsg) -> ReaderPtr {
-        fnAddError(filepath, errorMsg);
-        return {};
-    };
-    auto fnReadFile = [&](QString filepath, TaskProgress* subProgress) -> ReaderPtr {
-        subProgress->beginScope(40, tr("Reading file"));
-        auto _ = gsl::finally([=]{ subProgress->endScope(); });
-        const IO::PartFormat fileFormat = IO::findPartFormat(filepath);
-        if (fileFormat == IO::PartFormat::Unknown)
-            return fnReadFileError(filepath, tr("Unknown format"));
-
-        std::unique_ptr<Reader> reader = IO::instance()->createReader(fileFormat);
-        if (!reader)
-            return fnReadFileError(filepath, tr("No supporting reader"));
-
-        if (!reader->readFile(filepath, subProgress))
-            return fnReadFileError(filepath, tr("File read problem"));
-
-        return reader;
-    };
-    auto fnTransfer = [&](QString filepath, const ReaderPtr& reader, TaskProgress* subProgress) {
-        subProgress->beginScope(60, tr("Transferring file"));
-        if (reader) {
-            if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
-                fnAddError(filepath, tr("File transfer problem"));
-        }
-
-        subProgress->endScope();
-    };
-
-    if (listFilepath.size() == 1) { // Single file case
-        const ReaderPtr reader = fnReadFile(listFilepath.front(), progress);
-        fnTransfer(listFilepath.front(), reader, progress);
-    }
-    else { // Many files case
-        struct TaskData {
-            std::unique_ptr<Reader> reader;
-            QString filepath;
-            TaskProgress* progress = nullptr;
-            TaskId taskId = 0;
-            bool transferred = false;
-        };
-        std::vector<TaskData> vecTaskData;
-        vecTaskData.resize(listFilepath.size());
-
-        TaskManager childTaskManager;
-        QObject::connect(
-                    &childTaskManager, &TaskManager::progressChanged,
-                    [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
-
-        for (int i = 0; i < listFilepath.size(); ++i) {
-            TaskData& taskData = vecTaskData.at(i);
-            taskData.filepath = listFilepath.at(i);
-            const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
-                taskData.progress = progressChild;
-                taskData.reader = fnReadFile(taskData.filepath, progressChild);
-            });
-            taskData.taskId = childTaskId;
-            childTaskManager.run(childTaskId, TaskAutoDestroy::Off);
-        }
-
-        // Transfer to document
-        int taskDataCount = vecTaskData.size();
-        while (taskDataCount > 0 && (!progress || !progress->isAbortRequested())) {
-            auto itTaskData = std::find_if(
-                        vecTaskData.begin(), vecTaskData.end(),
-                        [&](const TaskData& taskData) {
-                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 10);
-            });
-            if (itTaskData == vecTaskData.end()) {
-                itTaskData = std::find_if(
-                            vecTaskData.begin(), vecTaskData.end(),
-                            [&](const TaskData& taskData) { return !taskData.transferred; });
-                if (itTaskData != vecTaskData.end())
-                    if (!childTaskManager.waitForDone(itTaskData->taskId, 100))
-                        itTaskData = vecTaskData.end();
-            }
-
-            if (itTaskData != vecTaskData.end()) {
-                fnTransfer(itTaskData->filepath, itTaskData->reader, itTaskData->progress);
-                itTaskData->transferred = true;
-                --taskDataCount;
-            }
-        } // endwhile
-    }
-
-    return ok;
-}
-
-IO::Result IO::exportApplicationItems(
-        Span<const ApplicationItem> appItems,
-        PartFormat format,
-        const ExportOptions& options,
-        const QString& filepath,
-        TaskProgress* progress)
-{
-    const ExportData data = { appItems, options, filepath, progress };
-    switch (format) {
-    case PartFormat::Iges: return this->exportIges(data);
-    case PartFormat::Step: return this->exportStep(data);
-    case PartFormat::OccBrep: return this->exportOccBRep(data);
-    case PartFormat::Stl: return this->exportStl(data);
-    case PartFormat::Unknown:
-        break;
-    }
-    return Result::error(tr("Unknown error"));
-}
-
-bool IO::hasExportOptionsForFormat(PartFormat format)
-{
-    return format == PartFormat::Stl;
-}
-
 IO::IO()
 {
     IGESControl_Controller::Init();
@@ -970,5 +746,373 @@ IO::Result IO::exportStl_OCC(ExportData data)
 
     return Result::ok();
 }
+#endif
+
+namespace IO {
+
+namespace {
+
+TaskProgress* nullTaskProgress()
+{
+    static TaskProgress null;
+    return &null;
+}
+
+Messenger* nullMessenger()
+{
+    return NullMessenger::instance();
+}
+
+bool containsFormat(Span<const Format> spanFormat, const Format& format)
+{
+    auto itFormat = std::find(spanFormat.cbegin(), spanFormat.cend(), format);
+    return itFormat != spanFormat.cend();
+}
+
+} // namespace
+
+void System::addFactoryReader(std::unique_ptr<FactoryReader> ptr)
+{
+    if (!ptr)
+        return;
+
+    auto itFactory = std::find(m_vecFactoryReader.cbegin(), m_vecFactoryReader.cend(), ptr);
+    if (itFactory != m_vecFactoryReader.cend())
+        return;
+
+    for (const Format& format : ptr->formats()) {
+        auto itFormat = std::find(m_vecReaderFormat.cbegin(), m_vecReaderFormat.cend(), format);
+        if (itFormat == m_vecReaderFormat.cend())
+            m_vecReaderFormat.push_back(format);
+    }
+
+    m_vecFactoryReader.push_back(std::move(ptr));
+}
+
+void System::addFactoryWriter(std::unique_ptr<FactoryWriter> ptr)
+{
+    if (!ptr)
+        return;
+
+    auto itFactory = std::find(m_vecFactoryWriter.cbegin(), m_vecFactoryWriter.cend(), ptr);
+    if (itFactory != m_vecFactoryWriter.cend())
+        return;
+
+    for (const IO::Format& format : ptr->formats()) {
+        auto itFormat = std::find(m_vecWriterFormat.cbegin(), m_vecWriterFormat.cend(), format);
+        if (itFormat == m_vecWriterFormat.cend())
+            m_vecWriterFormat.push_back(format);
+    }
+
+    m_vecFactoryWriter.push_back(std::move(ptr));
+}
+
+const FactoryReader* System::findFactoryReader(const Format& format) const
+{
+    for (const std::unique_ptr<FactoryReader>& ptr : m_vecFactoryReader) {
+        if (containsFormat(ptr->formats(), format))
+            return ptr.get();
+    }
+
+    return nullptr;
+}
+
+const FactoryWriter* System::findFactoryWriter(const Format& format) const
+{
+    for (const std::unique_ptr<FactoryWriter>& ptr : m_vecFactoryWriter) {
+        if (containsFormat(ptr->formats(), format))
+            return ptr.get();
+    }
+
+    return nullptr;
+}
+
+std::unique_ptr<Reader> System::createReader(const Format& format) const
+{
+    const FactoryReader* ptr = this->findFactoryReader(format);
+    if (ptr)
+        return ptr->create(format);
+
+    return {};
+}
+
+std::unique_ptr<Writer> System::createWriter(const Format& format) const
+{
+    const FactoryWriter* ptr = this->findFactoryWriter(format);
+    if (ptr)
+        return ptr->create(format);
+
+    return {};
+}
+
+Format System::findFileFormat(const QString& filepath) const
+{
+    QFile file(filepath);
+    if (file.open(QIODevice::ReadOnly)) {
+//#ifdef HAVE_GMIO
+//        gmio_stream qtstream = gmio_stream_qiodevice(&file);
+//        const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
+//        if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
+//            return IO::PartFormat::Stl;
+//#endif
+        std::array<char, 2048> buff;
+        buff.fill(0);
+        file.read(buff.data(), buff.size());
+        const uint64_t hintFileSize = file.size();
+        const QByteArray fileContentsBegin = QByteArray::fromRawData(buff.data(), buff.size());
+        for (const std::unique_ptr<FactoryReader>& ptr : m_vecFactoryReader) {
+            const Format format = ptr->findFormatFromContents(fileContentsBegin, hintFileSize);
+            if (format != Format_Unknown)
+                return format;
+        }
+    }
+
+    return Format_Unknown;
+}
+
+QString System::fileFilter(const Format& format)
+{
+    if (format == Format_Unknown)
+        return QString();
+
+    QString filter;
+    for (const QString& suffix : format.fileSuffixes) {
+        if (&suffix != &format.fileSuffixes.front())
+            filter += " ";
+
+        filter += "*." + suffix;
+    }
+
+    //: %1 is the format identifier and %2 is the file filters string
+    return tr("%1 files(%2)")
+            .arg(QString::fromLatin1(format.identifier))
+            .arg(filter);
+}
+
+bool System::importInDocument(const Args_ImportInDocument& args)
+{
+    DocumentPtr doc = args.targetDocument;
+    const QStringList listFilepath = args.filepaths;
+    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
+    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+
+    bool ok = true;
+
+    using ReaderPtr = std::unique_ptr<Reader>;
+    auto fnAddError = [&](QString filepath, QString errorMsg) {
+        ok = false;
+        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorMsg));
+    };
+    auto fnReadFileError = [&](QString filepath, QString errorMsg) -> ReaderPtr {
+        fnAddError(filepath, errorMsg);
+        return {};
+    };
+    auto fnReadFile = [&](QString filepath, TaskProgress* subProgress) -> ReaderPtr {
+        subProgress->beginScope(40, tr("Reading file"));
+        auto _ = gsl::finally([=]{ subProgress->endScope(); });
+        const Format fileFormat = this->findFileFormat(filepath);
+        if (fileFormat == Format_Unknown)
+            return fnReadFileError(filepath, tr("Unknown format"));
+
+        std::unique_ptr<Reader> reader = this->createReader(fileFormat);
+        if (!reader)
+            return fnReadFileError(filepath, tr("No supporting reader"));
+
+        if (!reader->readFile(filepath, subProgress))
+            return fnReadFileError(filepath, tr("File read problem"));
+
+        return reader;
+    };
+    auto fnTransfer = [&](QString filepath, const ReaderPtr& reader, TaskProgress* subProgress) {
+        subProgress->beginScope(60, tr("Transferring file"));
+        if (reader) {
+            if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
+                fnAddError(filepath, tr("File transfer problem"));
+        }
+
+        subProgress->endScope();
+    };
+
+    if (listFilepath.size() == 1) { // Single file case
+        const ReaderPtr reader = fnReadFile(listFilepath.front(), progress);
+        fnTransfer(listFilepath.front(), reader, progress);
+    }
+    else { // Many files case
+        struct TaskData {
+            std::unique_ptr<Reader> reader;
+            QString filepath;
+            TaskProgress* progress = nullptr;
+            TaskId taskId = 0;
+            bool transferred = false;
+        };
+        std::vector<TaskData> vecTaskData;
+        vecTaskData.resize(listFilepath.size());
+
+        TaskManager childTaskManager;
+        QObject::connect(
+                    &childTaskManager, &TaskManager::progressChanged,
+                    [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
+
+        for (int i = 0; i < listFilepath.size(); ++i) {
+            TaskData& taskData = vecTaskData.at(i);
+            taskData.filepath = listFilepath.at(i);
+            const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
+                taskData.progress = progressChild;
+                taskData.reader = fnReadFile(taskData.filepath, progressChild);
+            });
+            taskData.taskId = childTaskId;
+            childTaskManager.run(childTaskId, TaskAutoDestroy::Off);
+        }
+
+        // Transfer to document
+        int taskDataCount = vecTaskData.size();
+        while (taskDataCount > 0 && (!progress || !progress->isAbortRequested())) {
+            auto itTaskData = std::find_if(
+                        vecTaskData.begin(), vecTaskData.end(),
+                        [&](const TaskData& taskData) {
+                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 10);
+            });
+            if (itTaskData == vecTaskData.end()) {
+                itTaskData = std::find_if(
+                            vecTaskData.begin(), vecTaskData.end(),
+                            [&](const TaskData& taskData) { return !taskData.transferred; });
+                if (itTaskData != vecTaskData.end())
+                    if (!childTaskManager.waitForDone(itTaskData->taskId, 100))
+                        itTaskData = vecTaskData.end();
+            }
+
+            if (itTaskData != vecTaskData.end()) {
+                fnTransfer(itTaskData->filepath, itTaskData->reader, itTaskData->progress);
+                itTaskData->transferred = true;
+                --taskDataCount;
+            }
+        } // endwhile
+    }
+
+    return ok;
+}
+
+System::Operation_ImportInDocument System::importInDocument() {
+    return Operation_ImportInDocument(*this);
+}
+
+bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
+{
+    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
+    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    auto fnError = [=](const QString& errorMsg) {
+        messenger->emitError(tr("Error during export to '%1'\n%2").arg(args.targetFilepath, errorMsg));
+        return false;
+    };
+
+    std::unique_ptr<Writer> writer = this->createWriter(args.targetFormat);
+    if (!writer)
+        return fnError(tr("No supporting writer"));
+
+    auto _ = gsl::finally([=]{ progress->endScope(); });
+    progress->beginScope(40, tr("Transfer"));
+    const bool okTransfer = writer->transfer(args.applicationItems, progress);
+    if (!okTransfer)
+        return fnError(tr("File transfer problem"));
+
+    progress->endScope();
+    progress->beginScope(60, tr("Write"));
+    const bool okWriteFile = writer->writeFile(args.targetFilepath, progress);
+    if (!okWriteFile)
+        return fnError(tr("File write problem"));
+
+    return true;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::targetFile(const QString& filepath) {
+    m_args.targetFilepath = filepath;
+    return *this;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::targetFormat(const Format& format) {
+    m_args.targetFormat = format;
+    return *this;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems) {
+    m_args.applicationItems = appItems;
+    return *this;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withParameters(const PropertyGroup& parameters) {
+    m_args.parameters = &parameters;
+    return *this;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger) {
+    m_args.messenger = messenger;
+    return *this;
+}
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress) {
+    m_args.progress = progress;
+    return *this;
+}
+
+bool System::Operation_ExportApplicationItems::execute() {
+    return m_system.exportApplicationItems(m_args);
+}
+
+System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(System& system)
+    : m_system(system)
+{
+}
+
+System::Operation_ExportApplicationItems System::exportApplicationItems()
+{
+    return Operation_ExportApplicationItems(*this);
+}
+
+System::Operation_ImportInDocument&
+System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document) {
+    m_args.targetDocument = document;
+    return *this;
+}
+
+System::Operation_ImportInDocument&
+System::Operation_ImportInDocument::withFilepaths(const QStringList& filepaths) {
+    m_args.filepaths = filepaths;
+    return *this;
+}
+
+System::Operation_ImportInDocument&
+System::Operation_ImportInDocument::withParameters(const PropertyGroup& parameters) {
+    m_args.parameters = &parameters;
+    return *this;
+}
+
+System::Operation_ImportInDocument&
+System::Operation_ImportInDocument::withMessenger(Messenger* messenger) {
+    m_args.messenger = messenger;
+    return *this;
+}
+
+System::Operation_ImportInDocument&
+System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
+    m_args.progress = progress;
+    return *this;
+}
+
+bool System::Operation_ImportInDocument::execute() {
+    return m_system.importInDocument(m_args);
+}
+
+System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
+    : m_system(system)
+{
+}
+
+} // namespace IO
 
 } // namespace Mayo

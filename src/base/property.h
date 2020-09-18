@@ -25,6 +25,8 @@ public:
     // TODO Rename to get() or items() ?
     Span<Property* const> properties() const;
 
+    PropertyGroup* parentGroup() const { return m_parentGroup; }
+
 protected:
     virtual void onPropertyChanged(Property* prop);
     virtual Result<void> isPropertyValid(const Property* prop) const;
@@ -61,6 +63,8 @@ public:
     Property& operator=(const Property&) = delete;
     Property& operator=(Property&&) = delete;
     virtual ~Property() = default;
+
+    PropertyGroup* group() const { return m_group; }
 
     const QString& label() const;
 
