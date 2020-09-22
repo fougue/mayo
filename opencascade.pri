@@ -1,3 +1,9 @@
+#****************************************************************************
+#* Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+#* All rights reserved.
+#* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+#****************************************************************************
+
 # Return the input path re-written using the system-dependent separator
 defineReplace(sysPath) {
     win*:result = $$replace(1, /, \\)
