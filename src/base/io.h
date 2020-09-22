@@ -53,12 +53,14 @@ class Reader {
 public:
     virtual bool readFile(const QString& filepath, TaskProgress* progress) = 0;
     virtual bool transfer(DocumentPtr doc, TaskProgress* progress) = 0;
+    virtual void applyParameters(const PropertyGroup& /*params*/) {}
 };
 
 class Writer {
 public:
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
     virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
+    virtual void applyParameters(const PropertyGroup& /*params*/) {}
 };
 
 class FactoryReader {
@@ -72,7 +74,6 @@ public:
     virtual std::unique_ptr<PropertyGroup> createParameters(
             const Format& format,
             PropertyGroup* parentGroup) const = 0;
-    virtual bool applyParameters(const PropertyGroup& params, Reader* reader) const = 0;
 };
 
 class FactoryWriter {
@@ -82,7 +83,6 @@ public:
     virtual std::unique_ptr<PropertyGroup> createParameters(
             const Format& format,
             PropertyGroup* parentGroup) const = 0;
-    virtual bool applyParameters(const PropertyGroup& params, Writer* writer) const = 0;
 };
 
 class System {
