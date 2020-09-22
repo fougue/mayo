@@ -8,6 +8,7 @@
 #include "io_occ_brep.h"
 #include "io_occ_iges.h"
 #include "io_occ_step.h"
+#include "io_occ_stl.h"
 #include "tkernel_utils.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
@@ -15,10 +16,59 @@
 #endif
 
 #include <fougtools/occtools/qt_utils.h>
+#include <functional>
 #include <regex>
 
 namespace Mayo {
 namespace IO {
+
+namespace {
+
+struct Occ { Q_DECLARE_TR_FUNCTIONS(Mayo::IO::Occ) };
+
+// Helper for the creation of readers/writers
+
+template<typename KEY, typename PRODUCT, typename... ARGS>
+struct Generator {
+    using KeyType = KEY;
+    using ProductType = PRODUCT;
+
+    KEY key;
+    std::function<PRODUCT (const ARGS&...)> fn;
+
+    static const auto& null() {
+        static const Generator<KEY, PRODUCT, ARGS...> object = {
+            Format_Unknown, [](const ARGS&...) { return PRODUCT(); }
+        };
+        return object;
+    }
+};
+
+template<typename GENERATOR>
+const GENERATOR& findGenerator(
+        const typename GENERATOR::KeyType& key, Span<const GENERATOR> spanGenerator)
+{
+    for (const GENERATOR& generator : spanGenerator) {
+        if (generator.key == key)
+            return generator;
+    }
+
+    return GENERATOR::null();
+}
+
+template<typename PRODUCT>
+std::unique_ptr<PRODUCT> createProduct()
+{
+    return std::make_unique<PRODUCT>();
+}
+
+using ReaderGenerator = Generator<Format, std::unique_ptr<Reader>>;
+using WriterGenerator = Generator<Format, std::unique_ptr<Writer>>;
+
+using ReaderParametersGenerator = Generator<Format, std::unique_ptr<PropertyGroup>, PropertyGroup*>;
+using WriterParametersGenerator = Generator<Format, std::unique_ptr<PropertyGroup>, PropertyGroup*>;
+
+} // namespace
 
 Span<const Format> OccFactoryReader::formats() const
 {
@@ -121,18 +171,16 @@ Format OccFactoryReader::findFormatFromContents(QByteArray contentsBegin, uint64
 
 std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
 {
-    if (format == Format_STEP)
-        return std::make_unique<OccStepReader>();
-    else if (format == Format_IGES)
-        return std::make_unique<OccIgesReader>();
-    else if (format == Format_OCCBREP)
-        return std::make_unique<OccBRepReader>();
+    static const ReaderGenerator array[] = {
+        { Format_STEP, createProduct<OccStepReader> },
+        { Format_IGES, createProduct<OccIgesReader> },
+        { Format_OCCBREP, createProduct<OccBRepReader> },
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    else if (format == Format_OBJ)
-        return std::make_unique<OccObjReader>();
+        { Format_OBJ, createProduct<OccObjReader> },
 #endif
-
-    return {};
+        { Format_STL, createProduct<OccStlReader> }
+    };
+    return findGenerator<ReaderGenerator>(format, array).fn();
 }
 
 std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
@@ -141,9 +189,30 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
     return {};
 }
 
-bool OccFactoryReader::applyParameters(const PropertyGroup& params, Reader* reader) const
+Span<const Format> OccFactoryWriter::formats() const
 {
-    return false;
+    static const Format array[] = { Format_STEP, Format_IGES, Format_OCCBREP, Format_STL };
+    return array;
+}
+
+std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
+{
+    static const WriterGenerator array[] = {
+        { Format_STEP, createProduct<OccStepWriter> },
+        { Format_IGES, createProduct<OccIgesWriter> },
+        { Format_OCCBREP, createProduct<OccBRepWriter> },
+        { Format_STL, createProduct<OccStlWriter> }
+    };
+    return findGenerator<WriterGenerator>(format, array).fn();
+}
+
+std::unique_ptr<PropertyGroup> OccFactoryWriter::createParameters(
+        const Format& format, PropertyGroup* parentGroup) const
+{
+    static const WriterParametersGenerator array[] = {
+        { Format_STL, &OccStlWriter::createParameters }
+    };
+    return findGenerator<WriterParametersGenerator>(format, array).fn(parentGroup);
 }
 
 } // namespace IO
