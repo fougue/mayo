@@ -28,12 +28,13 @@ public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const QString& filepath, TaskProgress* progress) override;
 
+    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
+    void applyParameters(const PropertyGroup* params) override;
+
+    // Parameters
     enum class Format { Ascii, Binary };
     Format targetFormat() const { return m_targetFormat; }
     void setTargetFormat(Format format) { m_targetFormat = format; }
-
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup& params) override;
 
 private:
     Format m_targetFormat = Format::Binary;

@@ -15,6 +15,7 @@
 
 #include <QtCore/QDateTime>
 #include <QtCore/QVariant>
+#include <QtGui/QColor> // TODO move in gui/
 #include <type_traits>
 
 namespace Mayo {
@@ -24,7 +25,7 @@ class GenericProperty : public Property {
 public:
     using ValueType = T;
 
-    GenericProperty(PropertyGroup* grp, const QString& label);
+    GenericProperty(PropertyGroup* grp, const TextId& name);
 
     const T& value() const;
     Result<void> setValue(const T& val);
@@ -76,9 +77,9 @@ class GenericScalarProperty :
 {
 public:
     using ValueType = T;
-    GenericScalarProperty(PropertyGroup* grp, const QString& label);
+    GenericScalarProperty(PropertyGroup* grp, const TextId& name);
     GenericScalarProperty(
-            PropertyGroup* grp, const QString& label,
+            PropertyGroup* grp, const TextId& name,
             T minimum, T maximum, T singleStep);
 };
 
@@ -95,7 +96,7 @@ public:
     static const char TypeName[];
 
 protected:
-    BasePropertyQuantity(PropertyGroup* grp, const QString& label);
+    BasePropertyQuantity(PropertyGroup* grp, const TextId& name);
 };
 
 template<Unit UNIT>
@@ -103,7 +104,7 @@ class GenericPropertyQuantity : public BasePropertyQuantity {
 public:
     using QuantityType = Quantity<UNIT>;
 
-    GenericPropertyQuantity(PropertyGroup* grp, const QString& label);
+    GenericPropertyQuantity(PropertyGroup* grp, const TextId& name);
 
     Unit quantityUnit() const override;
     double quantityValue() const override;
@@ -123,7 +124,9 @@ using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
 using PropertyQByteArray = GenericProperty<QByteArray>;
+using PropertyQColor = GenericProperty<QColor>;
 using PropertyQString = GenericProperty<QString>;
+using PropertyQStringList = GenericProperty<QStringList>;
 using PropertyQDateTime = GenericProperty<QDateTime>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
@@ -144,8 +147,8 @@ using PropertyVelocity = GenericPropertyQuantity<Unit::Velocity>;
 // GenericProperty<>
 
 template<typename T>
-GenericProperty<T>::GenericProperty(PropertyGroup* grp, const QString& label)
-    : Property(grp, label)
+GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
+    : Property(grp, name)
 { }
 
 template<typename T> const T& GenericProperty<T>::value() const
@@ -218,23 +221,23 @@ template<typename T> void PropertyScalarConstraints<T>::setSingleStep(T step)
 // GenericScalarProperty<>
 
 template<typename T>
-GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const QString& label)
-    : GenericProperty<T>(grp, label)
+GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const TextId& name)
+    : GenericProperty<T>(grp, name)
 { }
 
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
-            PropertyGroup* grp, const QString& label,
+            PropertyGroup* grp, const TextId& name,
             T minimum, T maximum, T singleStep)
-    : GenericProperty<T>(grp, label),
+    : GenericProperty<T>(grp, name),
       PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }
 
 // GenericPropertyQuantity<>
 
 template<Unit UNIT>
-GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const QString& label)
-    : BasePropertyQuantity(grp, label)
+GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const TextId& name)
+    : BasePropertyQuantity(grp, name)
 { }
 
 template<Unit UNIT>

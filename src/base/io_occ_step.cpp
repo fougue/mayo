@@ -7,12 +7,14 @@
 #include "io_occ_step.h"
 #include "io_occ_caf.h"
 #include "task_progress.h"
+#include <STEPCAFControl_Controller.hxx>
 
 namespace Mayo {
 namespace IO {
 
 OccStepReader::OccStepReader()
 {
+    STEPCAFControl_Controller::Init();
     m_reader.SetColorMode(true);
     m_reader.SetNameMode(true);
     m_reader.SetLayerMode(true);
@@ -25,6 +27,11 @@ bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress) {
 
 bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress) {
     return cafTransfer(m_reader, doc, progress);
+}
+
+OccStepWriter::OccStepWriter()
+{
+    STEPCAFControl_Controller::Init();
 }
 
 bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) {

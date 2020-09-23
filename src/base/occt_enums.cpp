@@ -11,26 +11,26 @@ namespace Mayo {
 const Enumeration& OcctEnums::Graphic3d_NameOfMaterial()
 {
     static const Enumeration enumeration = {
-        { Graphic3d_NOM_BRASS,   "BRASS",   tr("Brass", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_BRONZE,  "BRONZE",  tr("Bronze", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_COPPER,  "COPPER",  tr("Copper", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_GOLD,    "GOLD",    tr("Gold", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_PEWTER,  "PEWTER",  tr("Pewter", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_PLASTER, "PLASTER", tr("Plaster", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_PLASTER, "PLASTIC", tr("Plastic", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_SILVER,  "SILVER",  tr("Silver", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_STEEL,   "STEEL",   tr("Steel", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_STONE,   "STONE",   tr("Stone", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_SHINY_PLASTIC, "SHINY_PLASTIC", tr("Shiny plastic", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_SATIN,     "SATIN",     tr("Satin", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_METALIZED, "METALIZED", tr("Metalized", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_NEON_GNC,  "NEON_GNC",  tr("Neon gnc", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_CHROME,    "CHROME",    tr("Chrome", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_ALUMINIUM, "ALUMINIUM", tr("Aluminium", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_OBSIDIAN,  "OBSIDIAN",  tr("Obsidian", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_NEON_PHC,  "NEON_PHC",  tr("Neon phc", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_JADE,      "JADE",      tr("Jade", "Graphic3d_NameOfMaterial") },
-        { Graphic3d_NOM_DEFAULT,   "DEFAULT",   tr("Defaukt", "Graphic3d_NameOfMaterial") }
+        { Graphic3d_NOM_BRASS,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Brass") },
+        { Graphic3d_NOM_BRONZE,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Bronze") },
+        { Graphic3d_NOM_COPPER,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Copper") },
+        { Graphic3d_NOM_GOLD,    MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Gold") },
+        { Graphic3d_NOM_PEWTER,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Pewter") },
+        { Graphic3d_NOM_PLASTER, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Plaster") },
+        { Graphic3d_NOM_PLASTER, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Plastic") },
+        { Graphic3d_NOM_SILVER,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Silver") },
+        { Graphic3d_NOM_STEEL,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Steel") },
+        { Graphic3d_NOM_STONE,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Stone") },
+        { Graphic3d_NOM_SHINY_PLASTIC, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Shiny plastic") },
+        { Graphic3d_NOM_SATIN,     MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Satin") },
+        { Graphic3d_NOM_METALIZED, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Metalized") },
+        { Graphic3d_NOM_NEON_GNC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Neon gnc") },
+        { Graphic3d_NOM_CHROME,    MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Chrome") },
+        { Graphic3d_NOM_ALUMINIUM, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Aluminium") },
+        { Graphic3d_NOM_OBSIDIAN,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Obsidian") },
+        { Graphic3d_NOM_NEON_PHC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Neon phc") },
+        { Graphic3d_NOM_JADE,      MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Jade") },
+        { Graphic3d_NOM_DEFAULT,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Defaukt") }
     };
     return enumeration;
 }
@@ -38,19 +38,19 @@ const Enumeration& OcctEnums::Graphic3d_NameOfMaterial()
 const Enumeration& OcctEnums::Aspect_HatchStyle()
 {
     static const Enumeration enumeration = {
-        { Aspect_HS_SOLID,              "SOLID",              tr("Solid", "Aspect_HatchStyle") },
-        { Aspect_HS_HORIZONTAL,         "HORIZONTAL",         tr("Horizontal", "Aspect_HatchStyle") },
-        { Aspect_HS_HORIZONTAL_WIDE,    "HORIZONTAL_WIDE",    tr("Horizontal sparse", "Aspect_HatchStyle") },
-        { Aspect_HS_VERTICAL,           "VERTICAL",           tr("Vertical", "Aspect_HatchStyle") },
-        { Aspect_HS_VERTICAL_WIDE,      "VERTICAL_WIDE",      tr("Vertical sparse", "Aspect_HatchStyle") },
-        { Aspect_HS_DIAGONAL_45,        "DIAGONAL_45",        tr("Diagonal/45", "Aspect_HatchStyle") },
-        { Aspect_HS_DIAGONAL_45_WIDE,   "DIAGONAL_45_WIDE",   tr("Diagonal/45 sparse", "Aspect_HatchStyle") },
-        { Aspect_HS_DIAGONAL_135,       "DIAGONAL_135",       tr("Diagonal/135", "Aspect_HatchStyle") },
-        { Aspect_HS_DIAGONAL_135_WIDE,  "DIAGONAL_135_WIDE",  tr("Diagonal/135 sparse", "Aspect_HatchStyle") },
-        { Aspect_HS_GRID,               "GRID",               tr("Grid", "Aspect_HatchStyle") },
-        { Aspect_HS_GRID_WIDE,          "GRID_WIDE",          tr("Grid sparse", "Aspect_HatchStyle") },
-        { Aspect_HS_GRID_DIAGONAL,      "GRID_DIAGONAL",      tr("Grid diagonal", "Aspect_HatchStyle") },
-        { Aspect_HS_GRID_DIAGONAL_WIDE, "GRID_DIAGONAL_WIDE", tr("Grid diagonal sparse", "Aspect_HatchStyle") }
+        { Aspect_HS_SOLID,              MAYO_TEXT_ID("Aspect_HatchStyle", "Solid") },
+        { Aspect_HS_HORIZONTAL,         MAYO_TEXT_ID("Aspect_HatchStyle", "Horizontal") },
+        { Aspect_HS_HORIZONTAL_WIDE,    MAYO_TEXT_ID("Aspect_HatchStyle", "HorizontalSparse") },
+        { Aspect_HS_VERTICAL,           MAYO_TEXT_ID("Aspect_HatchStyle", "Vertical") },
+        { Aspect_HS_VERTICAL_WIDE,      MAYO_TEXT_ID("Aspect_HatchStyle", "VerticalSparse") },
+        { Aspect_HS_DIAGONAL_45,        MAYO_TEXT_ID("Aspect_HatchStyle", "Diagonal45") },
+        { Aspect_HS_DIAGONAL_45_WIDE,   MAYO_TEXT_ID("Aspect_HatchStyle", "Diagonal45Sparse") },
+        { Aspect_HS_DIAGONAL_135,       MAYO_TEXT_ID("Aspect_HatchStyle", "Diagonal135") },
+        { Aspect_HS_DIAGONAL_135_WIDE,  MAYO_TEXT_ID("Aspect_HatchStyle", "Diagonal135Sparse") },
+        { Aspect_HS_GRID,               MAYO_TEXT_ID("Aspect_HatchStyle", "Grid") },
+        { Aspect_HS_GRID_WIDE,          MAYO_TEXT_ID("Aspect_HatchStyle", "GridSparse") },
+        { Aspect_HS_GRID_DIAGONAL,      MAYO_TEXT_ID("Aspect_HatchStyle", "GridDiagonal") },
+        { Aspect_HS_GRID_DIAGONAL_WIDE, MAYO_TEXT_ID("Aspect_HatchStyle", "GridDiagonalSparse") }
     };
     return enumeration;
 }

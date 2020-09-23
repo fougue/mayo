@@ -9,13 +9,11 @@
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/property_builtins.h"
 
-#include <QtCore/QCoreApplication>
 #include <TDF_Label.hxx>
 
 namespace Mayo {
 
 class XCaf_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
-    Q_DECLARE_TR_FUNCTIONS(XCaf_DocumentTreeNodePropertiesProvider)
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
@@ -47,7 +45,6 @@ private:
 };
 
 class Mesh_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
-    Q_DECLARE_TR_FUNCTIONS(Mesh_DocumentTreeNodePropertiesProvider)
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;

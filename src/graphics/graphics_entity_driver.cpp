@@ -1,3 +1,9 @@
+/****************************************************************************
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
 #include "graphics_entity_driver.h"
 
 #include "../base/document.h"
@@ -50,10 +56,10 @@ void GraphicsEntityDriver::setEntityAisObject(
 GraphicsShapeEntityDriver::GraphicsShapeEntityDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, "WIREFRAME", tr("Wireframe") },
-        { DisplayMode_HiddenLineRemoval, "HLR", tr("Hidden Line Removal") },
-        { DisplayMode_Shaded, "SHADED", tr("Shaded") },
-        { DisplayMode_ShadedWithFaceBoundary, "SHADED_FACE_BNDS", tr("Shaded with face boundaries") }
+        { DisplayMode_Wireframe, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "WIREFRAME") },
+        { DisplayMode_HiddenLineRemoval, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "HLR") },
+        { DisplayMode_Shaded, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED") },
+        { DisplayMode_ShadedWithFaceBoundary, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED_FACE_BNDS") }
     });
 }
 
@@ -155,9 +161,9 @@ std::unique_ptr<PropertyGroupSignals> GraphicsShapeEntityDriver::properties(cons
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, "WIREFRAME", tr("Wireframe") },
-        { MeshVS_DMF_Shading, "SHADED", tr("Shaded") },
-        { MeshVS_DMF_Shrink, "SHRINK", tr("Shrink") } // MeshVS_DA_ShrinkCoeff
+        { MeshVS_DMF_WireFrame, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "WIREFRAME") },
+        { MeshVS_DMF_Shading, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHADED") },
+        { MeshVS_DMF_Shrink, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHRINK") } // MeshVS_DA_ShrinkCoeff
     });
 }
 
@@ -235,14 +241,13 @@ Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEn
 }
 
 class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyGroup {
-    Q_DECLARE_TR_FUNCTIONS(GraphicsMeshEntityProperties)
 public:
     GraphicsMeshEntityProperties(const GraphicsEntity& entity)
         : GraphicsEntityBasePropertyGroup(entity),
           m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
-          m_propertyColor(this, tr("Color")),
-          m_propertyShowEdges(this, tr("Show edges")),
-          m_propertyShowNodes(this, tr("Show nodes"))
+          m_propertyColor(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "color")),
+          m_propertyShowEdges(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showEdges")),
+          m_propertyShowNodes(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showNodes"))
     {
         // Init properties
         Mayo_PropertyChangedBlocker(this);

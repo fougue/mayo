@@ -6,6 +6,7 @@
 
 #include "graphics_entity_base_property_group.h"
 #include "graphics_entity_driver.h"
+#include "../base/text_id.h"
 
 namespace Mayo {
 
@@ -25,8 +26,11 @@ static Enumeration::Value currentDisplayMode(const GraphicsEntity& gfxEntity) {
 
 GraphicsEntityBasePropertyGroup::GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity)
     : m_gfxEntity(gfxEntity),
-      m_propertyIsVisible(this, tr("Visible")),
-      m_propertyDisplayMode(this, tr("Display mode"), Internal::displayModesEnum(gfxEntity))
+      m_propertyIsVisible(this, MAYO_TEXT_ID("Mayo::GraphicsEntityBasePropertyGroup", "visible")),
+      m_propertyDisplayMode(
+          this,
+          MAYO_TEXT_ID("Mayo::GraphicsEntityBasePropertyGroup", "displayMode"),
+          Internal::displayModesEnum(gfxEntity))
 {
     // Init properties
     Mayo_PropertyChangedBlocker(this);

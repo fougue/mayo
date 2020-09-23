@@ -14,9 +14,9 @@ Enumeration::Enumeration(std::initializer_list<Item> listItem)
 {
 }
 
-void Enumeration::addItem(Value value, const QByteArray& name, const QString& text)
+void Enumeration::addItem(Value value, const TextId& name)
 {
-    const Item item = { value, name, text };
+    const Item item = { value, name };
     m_vecItem.emplace_back(std::move(item));
 }
 
@@ -44,7 +44,7 @@ int Enumeration::findIndex(Value value) const
 Enumeration::Value Enumeration::findValue(const QByteArray& name) const
 {
     for (const Item& item : m_vecItem) {
-        if (item.name == name)
+        if (name == static_cast<QByteArray>(item.name))
             return item.value;
     }
 
@@ -55,7 +55,10 @@ Enumeration::Value Enumeration::findValue(const QByteArray& name) const
 QByteArray Enumeration::findName(Value value) const
 {
     const int index = this->findIndex(value);
-    return index != -1 ? this->itemAt(index).name : QByteArray();
+    if (index != -1)
+        return static_cast<QByteArray>(this->itemAt(index).name);
+
+    return QByteArray();
 }
 
 const Enumeration::Item& Enumeration::itemAt(int index) const
@@ -69,10 +72,8 @@ Span<const Enumeration::Item> Enumeration::items() const
 }
 
 PropertyEnumeration::PropertyEnumeration(
-        PropertyGroup* grp,
-        const QString& label,
-        const Enumeration* enumeration)
-    : Property(grp, label)
+        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration)
+    : Property(grp, name)
 {
     this->setEnumeration(enumeration);
 }
@@ -89,9 +90,9 @@ void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
         m_value = m_enumeration->itemAt(0).value;
 }
 
-QString PropertyEnumeration::name() const
+QByteArray PropertyEnumeration::name() const
 {
-    return m_enumeration ? m_enumeration->findName(m_value) : QString();
+    return m_enumeration ? m_enumeration->findName(m_value) : QByteArray();
 }
 
 Enumeration::Value PropertyEnumeration::value() const

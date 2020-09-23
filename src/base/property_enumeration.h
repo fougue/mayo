@@ -18,14 +18,13 @@ public:
     using Value = int;
     struct Item {
         Value value;
-        QByteArray name;
-        QString text;
+        TextId name;
     };
 
     Enumeration() = default;
     Enumeration(std::initializer_list<Item> listItem);
 
-    void addItem(Value value, const QByteArray& name, const QString& text = QString());
+    void addItem(Value value, const TextId& name);
     int size() const;
 
     const Item& findItem(Value value) const;
@@ -44,13 +43,13 @@ class PropertyEnumeration : public Property {
 public:
     PropertyEnumeration(
             PropertyGroup* grp,
-            const QString& label,
+            const TextId& name,
             const Enumeration* enumeration = nullptr);
 
     const Enumeration* enumeration() const;
     void setEnumeration(const Enumeration* enumeration);
 
-    QString name() const;
+    QByteArray name() const;
     Enumeration::Value value() const;
     template<typename T> T valueAs() const;
     Result<void> setValue(Enumeration::Value v);

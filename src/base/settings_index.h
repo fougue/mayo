@@ -21,13 +21,14 @@ class Settings_SectionIndex : public TypedScalar<int, Settings_SectionTag> {
 public:
     Settings_SectionIndex() = default;
     explicit Settings_SectionIndex(Settings_GroupIndex group, ScalarType section)
-        : m_group(group), m_section(section) {}
+        : TypedScalar<ScalarType, Settings_SectionTag>(section),
+          m_group(group)
+    {}
 
     Settings_GroupIndex group() const { return m_group; }
 
 private:
     Settings_GroupIndex m_group;
-    ScalarType m_section;
 };
 
 
@@ -37,14 +38,15 @@ class Settings_SettingIndex : public TypedScalar<int, Settings_SettingTag> {
 public:
     Settings_SettingIndex() = default;
     explicit Settings_SettingIndex(Settings_SectionIndex section, ScalarType setting)
-        : m_section(section), m_setting(setting) {}
+        : TypedScalar<ScalarType, Settings_SettingTag>(setting),
+          m_section(section)
+    {}
 
     Settings_GroupIndex group() const { return m_section.group(); }
     Settings_SectionIndex section() const { return m_section; }
 
 private:
     Settings_SectionIndex m_section;
-    ScalarType m_setting;
 };
 
 } // namespace Mayo

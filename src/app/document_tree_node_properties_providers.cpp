@@ -30,19 +30,19 @@ XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
 }
 
 XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
-    : m_propertyName(this, tr("Name")),
-      m_propertyShapeType(this, tr("Shape")),
-      m_propertyXdeShapeKind(this, tr("XDE shape")),
-      m_propertyColor(this, tr("Color")),
-      m_propertyReferenceLocation(this, tr("Location")),
-      m_propertyValidationCentroid(this, tr("Centroid")),
-      m_propertyValidationArea(this, tr("Area")),
-      m_propertyValidationVolume(this, tr("Volume")),
-      m_propertyReferredName(this, tr("[Referred]Name")),
-      m_propertyReferredColor(this, tr("[Referred]Color")),
-      m_propertyReferredValidationCentroid(this, tr("[Referred]Centroid")),
-      m_propertyReferredValidationArea(this, tr("[Referred]Area")),
-      m_propertyReferredValidationVolume(this, tr("[Referred]Volume")),
+    : m_propertyName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Name")),
+      m_propertyShapeType(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Shape")),
+      m_propertyXdeShapeKind(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "XdeShape")),
+      m_propertyColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Color")),
+      m_propertyReferenceLocation(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Location")),
+      m_propertyValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Centroid")),
+      m_propertyValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Area")),
+      m_propertyValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Volume")),
+      m_propertyReferredName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredName")),
+      m_propertyReferredColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredColor")),
+      m_propertyReferredValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredCentroid")),
+      m_propertyReferredValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredArea")),
+      m_propertyReferredValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredVolume")),
       m_label(treeNode.label())
 {
     const TDF_Label& label = m_label;
@@ -170,8 +170,8 @@ Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
 }
 
 Mesh_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
-    : m_propertyNodeCount(this, tr("Node count")),
-      m_propertyTriangleCount(this, tr("Triangle count"))
+    : m_propertyNodeCount(this, MAYO_TEXT_ID("Mayo::Mesh_DocumentTreeNodeProps", "NodeCount")),
+      m_propertyTriangleCount(this, MAYO_TEXT_ID("Mayo::Mesh_DocumentTreeNodeProps", "TriangleCount"))
 {
     auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(treeNode.label());
     Handle_Poly_Triangulation polyTri;

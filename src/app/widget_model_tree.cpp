@@ -87,14 +87,6 @@ enum TreeItemType {
     TreeItemType_DocumentEntity = 0x10 | TreeItemType_DocumentTreeNode
 };
 
-//template<typename T> T* qVariantToPtr(const QVariant& var) {
-//    return static_cast<T*>(var.value<void*>());
-//}
-
-//template<typename T> QVariant ptrToQVariant(T* ptr) {
-//    return qVariantFromValue(reinterpret_cast<void*>(ptr));
-//}
-
 static TreeItemType treeItemType(const QTreeWidgetItem* treeItem)
 {
     const QVariant varType = treeItem->data(0, TreeItemTypeRole);
@@ -189,9 +181,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     QObject::connect(
                 app.get(), &Application::documentAboutToClose,
                 this, &WidgetModelTree::onDocumentAboutToClose);
-//    QObject::connect(
-//                app, &Application::documentPropertyChanged,
-//                this, &WidgetModelTree::onDocumentPropertyChanged);
     QObject::connect(
                 app.get(), &Application::documentNameChanged,
                 this, &WidgetModelTree::onDocumentNameChanged);
@@ -201,9 +190,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     QObject::connect(
                 app.get(), &Application::documentEntityAboutToBeDestroyed,
                 this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
-//    QObject::connect(
-//                app, &Application::documentItemPropertyChanged,
-//                this, &WidgetModelTree::onDocumentItemPropertyChanged);
     QObject::connect(
                 m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
@@ -304,13 +290,6 @@ void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const QStrin
     if (treeItem)
         this->findSupportBuilder(doc)->refreshTextTreeItem(doc, treeItem);
 }
-
-//void WidgetModelTree::onDocumentPropertyChanged(Document* doc, Property* prop)
-//{
-//    QTreeWidgetItem* treeItem = this->findTreeItem(doc);
-//    if (treeItem && prop == &doc->propertyLabel)
-//        this->findSupportBuilder(doc)->refreshTextTreeItem(doc, treeItem);
-//}
 
 QTreeWidgetItem* WidgetModelTree::loadDocumentEntity(const DocumentTreeNode& node)
 {

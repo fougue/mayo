@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "application.h"
+#include "io.h"
 #include "settings.h"
 
 #include <fougtools/occtools/qt_utils.h>
@@ -12,7 +13,6 @@
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
 #include <CDF_Session.hxx>
-#include <STEPCAFControl_Controller.hxx>
 #include <XCAFApp_Application.hxx>
 #include <XmlXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <XmlXCAFDrivers_DocumentStorageDriver.hxx>
@@ -37,6 +37,7 @@ public:
 Application::~Application()
 {
     delete m_settings;
+    delete m_ioSystem;
 }
 
 ApplicationPtr Application::instance()
@@ -44,7 +45,6 @@ ApplicationPtr Application::instance()
     static ApplicationPtr appPtr;
     if (appPtr.IsNull()) {
         appPtr = new Application;
-        STEPCAFControl_Controller::Init();
         const char strFougueCopyright[] = "Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>";
         appPtr->DefineFormat(
                     Document::NameFormatBinary, qUtf8Printable(tr("Binary Mayo Document Format")), "myb",
@@ -223,7 +223,8 @@ void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc)
 
 Application::Application()
     : QObject(nullptr),
-      m_settings(new Settings(this))
+      m_settings(new Settings(this)),
+      m_ioSystem(new IO::System)
 {
     qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
     qRegisterMetaType<TreeNodeId>("TreeNodeId");

@@ -22,6 +22,8 @@ using ApplicationPtr = opencascade::handle<Application>;
 
 class Settings;
 
+namespace IO { class System; }
+
 class Application : public QObject, public TDocStd_Application {
     Q_OBJECT
 public:
@@ -52,6 +54,9 @@ public:
 
     Settings* settings();
     const Settings* settings() const;
+
+    IO::System* ioSystem() { return m_ioSystem; }
+    const IO::System* ioSystem() const { return m_ioSystem; }
 
     static void setOpenCascadeEnvironment(const QString& settingsFilepath);
 
@@ -86,6 +91,7 @@ private: // Implementation
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
     Settings* m_settings = nullptr;
+    IO::System* m_ioSystem = nullptr;
 };
 
 } // namespace Mayo

@@ -26,6 +26,7 @@ private:
 
 class OccStepWriter : public Writer {
 public:
+    OccStepWriter();
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const QString& filepath, TaskProgress* progress) override;
 
