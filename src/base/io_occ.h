@@ -17,10 +17,6 @@ namespace IO {
 class OccFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
-    Format findFormatFromContents(
-            QByteArray contentsBegin,
-            uint64_t hintFullContentsSize) const override;
-
     std::unique_ptr<Reader> create(const Format& format) const override;
     std::unique_ptr<PropertyGroup> createParameters(
             const Format& format,

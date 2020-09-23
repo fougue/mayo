@@ -11,48 +11,11 @@
 #include <gsl/gsl_util>
 #include <unordered_map>
 
-
-#include "application.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
-#include "unit_system.h"
-
 namespace Mayo {
 
 namespace {
 
-class BaseModule : public QObject {
-public:
-    BaseModule()
-        : QObject(Application::instance().get()),
-          settingsGroupId(Application::instance()->settings()->addGroup("SYSTEM")),
-          unitSystemDecimals(Application::instance()->settings(), tr("Count of decimals")),
-          unitSystemSchema(Application::instance()->settings(), tr("System"))
-    {
-        auto settings = Application::instance()->settings();
-        settings->setGroupTitle(this->settingsGroupId, tr("System"));
-        const Settings::SectionIndex unitSectionId = settings->addSection(this->settingsGroupId, "UNITS");
-        settings->setSectionTitle(unitSectionId, tr("Units"));
-        this->unitSystemDecimals.setRange(1, 99);
-        this->unitSystemDecimals.setSingleStep(1);
-        this->unitSystemDecimals.setConstraintsEnabled(true);
-        settings->addSetting(&this->unitSystemDecimals, "DECIMAL_COUNT", unitSectionId);
-
-        static const Enumeration enumUnitSchema = {
-            { UnitSystem::SI, "SI", tr("SI") },
-            { UnitSystem::ImperialUK, "IMPERIAL_UK", tr("Imperial UK") }
-        };
-        this->unitSystemSchema.setEnumeration(&enumUnitSchema);
-        settings->addSetting(&this->unitSystemSchema, "SYSTEM", unitSectionId);
-    }
-
-    const Settings::GroupIndex settingsGroupId;
-    PropertyInt unitSystemDecimals;
-    PropertyEnumeration unitSystemSchema;
-};
-
 struct Settings_Setting {
-    QByteArray identifier; // Must be unique in the context of the parent section
     Property* property;
 };
 
@@ -68,6 +31,7 @@ struct Settings_Group {
     QString title;
     std::vector<Settings_Section> vecSection;
     Settings_Section defaultSection;
+    std::function<void()> fnReset;
 };
 
 static bool isValidIdentifier(const QByteArray& identifier)
@@ -83,12 +47,16 @@ public:
         : m_locale(QLocale::system())
     {}
 
-    Settings_Group& group(GroupIndex index) { return m_vecGroup.at(index.get()); }
-    Settings_Section& section(SectionIndex index) { return this->group(index.group()).vecSection.at(index.get()); }
+    Settings_Group& group(Settings::GroupIndex index) {
+        return m_vecGroup.at(index.get());
+    }
+
+    Settings_Section& section(Settings::SectionIndex index) {
+        return this->group(index.group()).vecSection.at(index.get());
+    }
 
     QSettings m_settings;
     QLocale m_locale;
-    std::unordered_map<QString, QVariant> m_mapDefaultValue;
     std::vector<Settings_Group> m_vecGroup;
 };
 
@@ -118,9 +86,16 @@ QString Settings::groupTitle(GroupIndex index) const
     return d->group(index).title;
 }
 
-void Settings::setGroupTitle(GroupIndex index, const QString& title) const
+void Settings::setGroupResetFunction(GroupIndex index, std::function<void()> fn)
 {
-    d->group(index).title = title;
+    d->group(index).fnReset = std::move(fn);
+}
+
+Settings::GroupIndex Settings::addGroup(TextId identifier)
+{
+    auto index = this->addGroup(static_cast<QByteArray>(identifier));
+    this->setGroupTitle(index, identifier.tr());
+    return index;
 }
 
 Settings::GroupIndex Settings::addGroup(QByteArray identifier)
@@ -135,7 +110,13 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
     d->m_vecGroup.push_back({});
     Settings_Group& group = d->m_vecGroup.back();
     group.identifier = identifier;
+    group.title = QString::fromUtf8(identifier);
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
+}
+
+void Settings::setGroupTitle(GroupIndex index, const QString& title)
+{
+    d->group(index).title = title;
 }
 
 int Settings::sectionCount(GroupIndex index) const
@@ -153,14 +134,16 @@ QString Settings::sectionTitle(SectionIndex index) const
     return d->section(index).title;
 }
 
-void Settings::setSectionTitle(SectionIndex index, const QString& title) const
-{
-    d->section(index).title = title;
-}
-
 bool Settings::isDefaultGroupSection(SectionIndex index) const
 {
     return d->section(index).isDefault;
+}
+
+Settings::SectionIndex Settings::addSection(GroupIndex index, TextId identifier)
+{
+    auto sectionIndex = this->addSection(index, static_cast<QByteArray>(identifier));
+    this->setSectionTitle(sectionIndex, identifier.tr());
+    return sectionIndex;
 }
 
 Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identifier)
@@ -168,10 +151,17 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identif
     Expects(isValidIdentifier(identifier));
     // TODO Check identifier is unique
 
-    d->group(index).vecSection.push_back({});
-    Settings_Section& section = d->group(index).vecSection.back();
+    Settings_Group& group = d->group(index);
+    group.vecSection.push_back({});
+    Settings_Section& section = group.vecSection.back();
     section.identifier = identifier;
-    return SectionIndex(index, int(d->group(index).vecSection.size()) - 1);
+    section.title = QString::fromUtf8(identifier);
+    return SectionIndex(index, int(group.vecSection.size()) - 1);
+}
+
+void Settings::setSectionTitle(SectionIndex index, const QString& title)
+{
+    d->section(index).title = title;
 }
 
 int Settings::settingCount(SectionIndex index) const
@@ -184,12 +174,12 @@ Property* Settings::property(SettingIndex index) const
     return d->section(index.section()).vecSetting.at(index.get()).property;
 }
 
-Settings::SettingIndex Settings::addSetting(Property* property, QByteArray identifier, GroupIndex groupId)
+Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex groupId)
 {
     Settings_Group& group = d->group(groupId);
     Settings_Section* sectionDefault = nullptr;
     if (group.vecSection.empty()) {
-        const SectionIndex sectionId = this->addSection(groupId, "DEFAULT");
+        const SectionIndex sectionId = this->addSection(groupId, MAYO_TEXT_ID("Mayo::Settings", "DEFAULT"));
         sectionDefault = &d->section(sectionId);
     }
     else {
@@ -202,21 +192,34 @@ Settings::SettingIndex Settings::addSetting(Property* property, QByteArray ident
         }
     }
 
-    sectionDefault->identifier = "DEFAULT";
+//    sectionDefault->identifier = "DEFAULT";
+//    sectionDefault->title = tr("DEFAULT");
     sectionDefault->isDefault = true;
     const SectionIndex sectionId(groupId, sectionDefault - &group.vecSection.front());
-    return this->addSetting(property, identifier, sectionId);
+    return this->addSetting(property, sectionId);
 }
 
-Settings::SettingIndex Settings::addSetting(Property* property, QByteArray identifier, SectionIndex index)
+Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex index)
 {
     // TODO Check identifier is unique
     Settings_Section& section = d->section(index);
     section.vecSetting.push_back({});
     Settings_Setting& setting = section.vecSetting.back();
-    setting.identifier = identifier;
     setting.property = property;
     return SettingIndex(index, int(section.vecSetting.size()) - 1);
+}
+
+void Settings::resetGroup(GroupIndex index)
+{
+    Settings_Group& group = d->group(index);
+    if (group.fnReset)
+        group.fnReset();
+}
+
+void Settings::resetAll()
+{
+    for (Settings_Group& group : d->m_vecGroup)
+        this->resetGroup(GroupIndex(&group - &d->m_vecGroup.front()));
 }
 
 const QLocale& Settings::locale() const
@@ -229,53 +232,10 @@ void Settings::setLocale(const QLocale& locale)
     d->m_locale = locale;
 }
 
-QVariant Settings::value(const QString& key) const
+void Settings::onPropertyChanged(Property* prop)
 {
-    return d->m_settings.value(key, this->defaultValue(key));
-}
-
-void Settings::setValue(const QString& key, const QVariant& value)
-{
-    const QVariant oldValue = d->m_settings.value(key);
-    if (value != oldValue) {
-        d->m_settings.setValue(key, value);
-        emit valueChanged(key, value);
-    }
-}
-
-const QVariant& Settings::defaultValue(const QString& key) const
-{
-    static const QVariant nullVar;
-    auto it = d->m_mapDefaultValue.find(key);
-    return it != d->m_mapDefaultValue.cend() ? it->second : nullVar;
-}
-
-void Settings::setDefaultValue(const QString& key, const QVariant& value)
-{
-    auto it = d->m_mapDefaultValue.find(key);
-    if (it != d->m_mapDefaultValue.end())
-        it->second = value;
-    else
-        d->m_mapDefaultValue.insert({ key, value });
-}
-
-UnitSystem::Schema Settings::unitSystemSchema() const
-{
-    return this->valueAsEnum<UnitSystem::Schema>("Base/UnitSystemSchema");
-}
-
-int Settings::unitSystemDecimals() const
-{
-    return this->valueAs<int>("Base/UnitSystemDecimals");
-}
-
-StringUtils::TextOptions Settings::defaultTextOptions() const
-{
-    StringUtils::TextOptions opts;
-    opts.locale = this->locale();
-    opts.unitDecimals = this->unitSystemDecimals();
-    opts.unitSchema = this->unitSystemSchema();
-    return opts;
+    PropertyGroup::onPropertyChanged(prop);
+    emit this->changed(prop);
 }
 
 } // namespace Mayo

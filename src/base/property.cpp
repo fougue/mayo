@@ -56,9 +56,14 @@ void PropertyGroup::removeProperty(Property* prop)
         m_properties.erase(it);
 }
 
-const QString& Property::label() const
+const TextId& Property::name() const
 {
-    return m_label;
+    return m_name;
+}
+
+QString Property::label() const
+{
+    return m_name.tr();
 }
 
 bool Property::isUserReadOnly() const
@@ -71,9 +76,9 @@ void Property::setUserReadOnly(bool on)
     m_isUserReadOnly = on;
 }
 
-Property::Property(PropertyGroup* group, const QString& label)
+Property::Property(PropertyGroup* group, const TextId& name)
     : m_group(group),
-      m_label(label)
+      m_name(name)
 {
     if (m_group)
         m_group->addProperty(this);

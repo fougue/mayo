@@ -7,69 +7,38 @@
 #pragma once
 
 #include "application_item.h"
+#include "io_format.h"
 #include "messenger.h"
+#include "property.h"
 #include "result.h"
 #include "span.h"
-#ifdef HAVE_GMIO
-#  include <gmio_core/text_format.h>
-#  include <gmio_stl/stl_format.h>
-#endif
 
 #include <QtCore/QCoreApplication>
+#include <functional>
 #include <memory>
 
-#include "property.h"
+namespace Mayo { class TaskProgress; }
 
 namespace Mayo {
-
-class TaskProgress;
-
 namespace IO {
-
-struct Format {
-    QByteArray identifier;
-    QString name;
-    QStringList fileSuffixes;
-};
-
-bool operator==(const Format& lhs, const Format& rhs) {
-    return lhs.identifier.compare(rhs.identifier, Qt::CaseInsensitive) == 0;
-}
-
-bool operator!=(const Format& lhs, const Format& rhs) {
-    return lhs.identifier.compare(rhs.identifier, Qt::CaseInsensitive) != 0;
-}
-
-const Format Format_Unknown = { "", "Format_Unknown", {} };
-const Format Format_STEP = { "STEP", "STEP(ISO 10303)", { "stp", "step" } };
-const Format Format_IGES = { "IGES", "IGES(ASME Y14.26M))", { "igs", "iges" } };
-const Format Format_OCCBREP = { "OCCBREP", "OpenCascade BREP", { "brep", "rle", "occ" } };
-const Format Format_STL = { "STL", "STL(STereo-Lithography)", { "stl" } };
-const Format Format_OBJ = { "OBJ", "Wavefront OBJ", { "obj" } };
-const Format Format_GLTF = { "GLTF", "glTF(GL Transmission Format)", { "gltf", "glb" } };
-const Format Format_VRML = { "VRML", "VRML(ISO/CEI 14772-2)", { "wrl", "wrz", "vrml" } };
 
 class Reader {
 public:
     virtual bool readFile(const QString& filepath, TaskProgress* progress) = 0;
     virtual bool transfer(DocumentPtr doc, TaskProgress* progress) = 0;
-    virtual void applyParameters(const PropertyGroup& /*params*/) {}
+    virtual void applyParameters(const PropertyGroup* /*params*/) {}
 };
 
 class Writer {
 public:
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
     virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
-    virtual void applyParameters(const PropertyGroup& /*params*/) {}
+    virtual void applyParameters(const PropertyGroup* /*params*/) {}
 };
 
 class FactoryReader {
 public:
     virtual Span<const Format> formats() const = 0;
-    virtual Format findFormatFromContents(
-            QByteArray contentsBegin,
-            uint64_t hintFullContentsSize) const = 0;
-
     virtual std::unique_ptr<Reader> create(const Format& format) const = 0;    
     virtual std::unique_ptr<PropertyGroup> createParameters(
             const Format& format,
@@ -85,9 +54,24 @@ public:
             PropertyGroup* parentGroup) const = 0;
 };
 
+class ParametersProvider {
+public:
+    virtual const PropertyGroup* findReaderParameters(const Format& format) const = 0;
+    virtual const PropertyGroup* findWriterParameters(const Format& format) const = 0;
+};
+
 class System {
     Q_DECLARE_TR_FUNCTIONS(Mayo::IO::System)
 public:
+    struct FormatProbeInput {
+        QString filepath;
+        QByteArray contentsBegin;
+        uint64_t hintFullSize;
+    };
+    using FormatProbe = std::function<Format (const FormatProbeInput&)>;
+    void addFormatProbe(const FormatProbe& probe);
+    Format probeFormat(const QString& filepath) const;
+
     void addFactoryReader(std::unique_ptr<FactoryReader> ptr);
     void addFactoryWriter(std::unique_ptr<FactoryWriter> ptr);
 
@@ -99,13 +83,11 @@ public:
 
     Span<const Format> readerFormats() const { return m_vecReaderFormat; }
     Span<const Format> writerFormats() const { return m_vecWriterFormat; }
-    Format findFileFormat(const QString& filepath) const;
     static QString fileFilter(const Format& format);
 
     // BASE
 
     struct Args_BaseImportExport {
-        const PropertyGroup* parameters = nullptr;
         Messenger* messenger = nullptr;
         TaskProgress* progress = nullptr;
     };
@@ -115,13 +97,15 @@ public:
     struct Args_ImportInDocument : public Args_BaseImportExport {
         DocumentPtr targetDocument;
         QStringList filepaths;
+        const ParametersProvider* parametersProvider = nullptr;
     };
 
     struct Operation_ImportInDocument {
         using Operation = Operation_ImportInDocument;
         Operation& targetDocument(const DocumentPtr& document);
+        Operation& withFilepath(const QString& filepath);
         Operation& withFilepaths(const QStringList& filepaths);
-        Operation& withParameters(const PropertyGroup& parameters);
+        Operation& withParametersProvider(const ParametersProvider* provider);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
         bool execute();
@@ -142,6 +126,7 @@ public:
         Span<const ApplicationItem> applicationItems;
         QString targetFilepath;
         Format targetFormat = Format_Unknown;
+        const PropertyGroup* parameters = nullptr;
     };
 
     struct Operation_ExportApplicationItems {
@@ -149,7 +134,7 @@ public:
         Operation& targetFile(const QString& filepath);
         Operation& targetFormat(const Format& format);
         Operation& withItems(Span<const ApplicationItem> appItems);
-        Operation& withParameters(const PropertyGroup& parameters);
+        Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
         bool execute();
@@ -166,11 +151,20 @@ public:
 
     // Implementation
 private:
+    std::vector<FormatProbe> m_vecFormatProbe;
     std::vector<Format> m_vecReaderFormat;
     std::vector<Format> m_vecWriterFormat;
     std::vector<std::unique_ptr<FactoryReader>> m_vecFactoryReader;
     std::vector<std::unique_ptr<FactoryWriter>> m_vecFactoryWriter;
 };
+
+// Predefined
+Format probeFormat_STEP(const System::FormatProbeInput& input);
+Format probeFormat_IGES(const System::FormatProbeInput& input);
+Format probeFormat_OCCBREP(const System::FormatProbeInput& input);
+Format probeFormat_STL(const System::FormatProbeInput& input);
+Format probeFormat_OBJ(const System::FormatProbeInput& input);
+void addPredefinedFormatProbes(System* system);
 
 } // namespace IO
 

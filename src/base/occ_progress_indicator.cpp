@@ -5,6 +5,8 @@
 ****************************************************************************/
 
 #include "occ_progress_indicator.h"
+#include "task_progress.h"
+#include <fougtools/occtools/qt_utils.h>
 
 namespace Mayo {
 

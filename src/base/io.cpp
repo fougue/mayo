@@ -73,10 +73,7 @@
 #include <set>
 
 namespace Mayo {
-#if 0
-namespace Internal {
-
-static std::mutex globalMutex;
+namespace IO {
 
 #ifdef HAVE_GMIO
 static bool gmio_qttask_is_stop_requested(void* cookie)
@@ -146,509 +143,10 @@ static QString gmioErrorToQString(int error)
 
     return IO::tr("GMIO_ERROR_UNKNOWN");
 }
-#endif
-
-class OccProgress : public Message_ProgressIndicator {
-public:
-    OccProgress(TaskProgress* progress)
-        : m_progress(progress)
-    {
-        this->SetScale(0., 100., 1.);
-    }
-
-    bool Show(const bool /*force*/) override
-    {
-        if (m_progress) {
-            const Handle_TCollection_HAsciiString name = this->GetScope(1).GetName();
-            if (!name.IsNull())
-                m_progress->setStep(occ::QtUtils::fromUtf8ToQString(name->String()));
-
-            const double pc = this->GetPosition(); // Always within [0,1]
-            const int minVal = 0;
-            const int maxVal = 100;
-            const int val = minVal + pc * (maxVal - minVal);
-            m_progress->setValue(val);
-        }
-
-        return true;
-    }
-
-    bool UserBreak() override
-    {
-        return TaskProgress::isAbortRequested(m_progress);
-    }
-
-private:
-    TaskProgress* m_progress = nullptr;
-};
-
-namespace OccCafIO {
-
-static std::mutex mutex;
-
-Handle_XSControl_WorkSession workSession(const STEPCAFControl_Reader& reader) {
-    return reader.Reader().WS();
-}
-
-Handle_XSControl_WorkSession workSession(const IGESCAFControl_Reader& reader) {
-    return reader.WS();
-}
-
-void readFile_prepare(const STEPCAFControl_Reader&) {
-#if 0
-    // Causes crash with models "RMX-10 ASSY.STEP" and "io1-cm-214.stp"
-    Interface_Static::SetIVal("read.stepcaf.subshapes.name", 1);
-#endif
-}
-
-void readFile_prepare(const IGESCAFControl_Reader&) {
-}
-
-template<typename CAF_READER>
-bool readFile(CAF_READER& reader, const QString& filepath, TaskProgress* /*progress*/)
-{
-    std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
-    readFile_prepare(reader);
-    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toLocal8Bit().constData());
-    return error == IFSelect_RetDone;
-}
-
-template<typename CAF_READER>
-bool transfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
-{
-    std::lock_guard<std::mutex> lock(OccCafIO::mutex); Q_UNUSED(lock);
-    Handle_Message_ProgressIndicator indicator = new OccProgress(progress);
-    Handle_XSControl_WorkSession ws = workSession(reader);
-    ws->MapReader()->SetProgress(indicator);
-    auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
-
-    XCafScopeImport import(doc);
-    Handle_TDocStd_Document stdDoc = doc;
-    const bool okTransfer = reader.Transfer(stdDoc);
-    import.setConfirmation(okTransfer && !TaskProgress::isAbortRequested(progress));
-    return okTransfer;
-}
-
-} // namespace OccCafIO
-
-class OccStepReader : public Reader {
-public:
-    OccStepReader()
-    {
-        m_reader.SetColorMode(true);
-        m_reader.SetNameMode(true);
-        m_reader.SetLayerMode(true);
-        m_reader.SetPropsMode(true);
-    }
-
-    bool readFile(const QString& filepath, TaskProgress* progress) override {
-        return OccCafIO::readFile(m_reader, filepath, progress);
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override {
-        return OccCafIO::transfer(m_reader, doc, progress);
-    }
-
-private:
-    STEPCAFControl_Reader m_reader;
-};
-
-class OccIgesReader : public Reader {
-public:
-    OccIgesReader()
-    {
-        m_reader.SetColorMode(true);
-        m_reader.SetNameMode(true);
-        m_reader.SetLayerMode(true);
-        //m_reader.SetPropsMode(true);
-    }
-
-    bool readFile(const QString& filepath, TaskProgress* progress) override {
-        return OccCafIO::readFile(m_reader, filepath, progress);
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override {
-        return OccCafIO::transfer(m_reader, doc, progress);
-    }
-
-private:
-    IGESCAFControl_Reader m_reader;
-};
-
-class OccBRepReader : public Reader {
-public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override
-    {
-        m_shape.Nullify();
-        m_baseFilename = QFileInfo(filepath).baseName();
-        BRep_Builder brepBuilder;
-        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-        return BRepTools::Read(m_shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
-    {
-        if (m_shape.IsNull())
-            return false;
-
-        XCafScopeImport import(doc);
-        const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
-        const TDF_Label labelShape = shapeTool->NewShape();
-        shapeTool->SetShape(labelShape, m_shape);
-        CafUtils::setLabelAttrStdName(labelShape, m_baseFilename);
-        return true;
-    }
-
-private:
-    TopoDS_Shape m_shape;
-    QString m_baseFilename;
-};
-
-class OccStlReader : public Reader {
-public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override
-    {
-        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-        m_baseFilename = QFileInfo(filepath).baseName();
-        m_mesh = RWStl::ReadFile(OSD_Path(filepath.toLocal8Bit().constData()), indicator);
-        return !m_mesh.IsNull();
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
-    {
-        if (m_mesh.IsNull())
-            return false;
-
-        SingleScopeImport import(doc);
-        TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
-        CafUtils::setLabelAttrStdName(import.entityLabel(), m_baseFilename);
-        return true;
-    }
-
-private:
-    Handle_Poly_Triangulation m_mesh;
-    QString m_baseFilename;
-};
-
-#ifdef HAVE_GMIO
-class GmioStlReader : public Reader {
-public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override
-    {
-        m_baseFilename = filepath;
-        m_vecMesh.clear();
-        QFile file(filepath);
-        if (file.open(QIODevice::ReadOnly)) {
-            gmio_stream stream = gmio_stream_qiodevice(&file);
-            gmio_stl_read_options options = {};
-            options.func_stla_get_streamsize = &gmio_stla_infos_probe_streamsize;
-            options.task_iface = Internal::gmio_qttask_create_task_iface(progress);
-            int err = GMIO_ERROR_OK;
-            while (gmio_no_error(err) && !file.atEnd()) {
-                gmio_stl_mesh_creator_occpolytri meshcreator;
-                err = gmio_stl_read(&stream, &meshcreator, &options);
-                if (gmio_no_error(err))
-                    m_vecMesh.push_back(meshcreator.polytri(meshcreator.polytri()));
-                else
-                    return false;
-            }
-        }
-
-//        if (err != GMIO_ERROR_OK)
-//            return Result::error(Internal::gmioErrorToQString(err));
-        return true;
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* /*progress*/) override
-    {
-        if (m_vecMesh.empty())
-            return false;
-
-        for (const Handle_Poly_Triangulation& mesh : m_vecMesh) {
-            SingleScopeImport import(doc);
-            TDataXtd_Triangulation::Set(import.entityLabel(), mesh);
-            CafUtils::setLabelAttrStdName(import.entityLabel(), m_baseFilename);
-        }
-
-        return true;
-    }
-
-private:
-    std::vector<Handle_Poly_Triangulation> m_vecMesh;
-    QString m_baseFilename;
-};
-#endif // HAVE_GMIO
-
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-class OccObjReader : public Reader {
-public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override
-    {
-        m_filepath = filepath;
-        return true;
-    }
-
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override
-    {
-        m_reader.SetDocument(doc);
-        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(progress);
-        XCafScopeImport import(doc);
-        const bool okPerform = m_reader.Perform(occ::QtUtils::toOccUtf8String(m_filepath), indicator);
-        import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
-        return okPerform;
-    }
-
-private:
-    QString m_filepath;
-    RWObj_CafReader m_reader;
-};
-#endif
-
-static TopoDS_Shape xdeDocumentWholeShape(const DocumentPtr& doc)
-{
-    TopoDS_Shape shape;
-    const TDF_LabelSequence seqFreeShape = doc->xcaf().topLevelFreeShapes();
-    if (seqFreeShape.Size() > 1) {
-        TopoDS_Compound cmpd;
-        BRep_Builder builder;
-        builder.MakeCompound(cmpd);
-        for (const TDF_Label& label : seqFreeShape)
-            builder.Add(cmpd, XCaf::shape(label));
-
-        shape = cmpd;
-    }
-    else if (seqFreeShape.Size() == 1) {
-        shape = XCaf::shape(seqFreeShape.First());
-    }
-
-    return shape;
-}
-
-//static MeshItem* createMeshItem(
-//        const QString& filepath, const Handle_Poly_Triangulation& mesh)
-//{
-//    auto partItem = new MeshItem;
-//    partItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-//    partItem->propertyNodeCount.setValue(mesh->NbNodes());
-//    partItem->propertyTriangleCount.setValue(mesh->NbTriangles());
-//    partItem->propertyVolume.setQuantity(
-//                MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
-//    partItem->propertyArea.setQuantity(
-//                MeshUtils::triangulationArea(mesh) * Quantity_SquaredMillimeter);
-//    partItem->setTriangulation(mesh);
-//    return partItem;
-//}
-
-//static XdeDocumentItem* createXdeDocumentItem(
-//        const QString& filepath, const Handle_TDocStd_Document& cafDoc)
-//{
-//    auto xdeDocItem = new XdeDocumentItem(cafDoc);
-//    xdeDocItem->propertyLabel.setValue(QFileInfo(filepath).baseName());
-
-//    const TopoDS_Shape shape = xdeDocumentWholeShape(xdeDocItem);
-//    GProp_GProps system;
-//    BRepGProp::VolumeProperties(shape, system);
-//    xdeDocItem->propertyVolume.setQuantity(
-//                std::max(system.Mass(), 0.) * Quantity_CubicMillimeter);
-//    BRepGProp::SurfaceProperties(shape, system);
-//    xdeDocItem->propertyArea.setQuantity(
-//                std::max(system.Mass(), 0.) * Quantity_SquaredMillimeter);
-
-//    return xdeDocItem;
-//}
-
-static IO::PartFormat findPartFormatFromContents(
-        std::string_view contentsBegin,
-        uint64_t hintFullContentsSize)
-{
-    // -- Binary STL ?
-    constexpr size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
-    if (contentsBegin.size() >= binaryStlHeaderSize) {
-        constexpr uint32_t offset = 80; // Skip header
-        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(contentsBegin.data());
-        const uint32_t facetsCount =
-                bytes[offset]
-                | (bytes[offset+1] << 8)
-                | (bytes[offset+2] << 16)
-                | (bytes[offset+3] << 24);
-        constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
-        if ((facetSize * facetsCount + binaryStlHeaderSize) == hintFullContentsSize)
-            return IO::PartFormat::Stl;
-    }
-
-    // -- IGES ?
-    {
-        // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
-        bool isIges = true;
-        if (contentsBegin.size() >= 80 && contentsBegin[72] == 'S') {
-            for (int i = 73; i < 80 && isIges; ++i) {
-                if (contentsBegin[i] != ' ' && !std::isdigit(static_cast<unsigned char>(contentsBegin[i])))
-                    isIges = false;
-            }
-
-            const char c80 = contentsBegin[80];
-            if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
-                const int sVal = std::atoi(contentsBegin.data() + 73);
-                if (sVal == 1)
-                    return IO::PartFormat::Iges;
-            }
-        }
-    } // IGES
-
-    const std::locale& cLocale = std::locale::classic();
-    auto fnIsSpace = [&](char c) { return std::isspace(c, cLocale); };
-    auto fnMatchToken = [](std::string_view::const_iterator itBegin, std::string_view token) {
-        return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
-    };
-    auto itContentsBegin = std::find_if_not(contentsBegin.cbegin(), contentsBegin.cend(), fnIsSpace);
-
-    // -- STEP ?
-    {
-        // regex : ^\s*ISO-10303-21\s*;\s*HEADER
-        constexpr std::string_view stepIsoId = "ISO-10303-21";
-        constexpr std::string_view stepHeaderToken = "HEADER";
-        if (fnMatchToken(itContentsBegin, stepIsoId)) {
-            auto itChar = std::find_if_not(itContentsBegin + stepIsoId.size(), contentsBegin.cend(), fnIsSpace);
-            if (itChar != contentsBegin.cend() && *itChar == ';') {
-                itChar = std::find_if_not(itChar + 1, contentsBegin.cend(), fnIsSpace);
-                if (fnMatchToken(itChar, stepHeaderToken))
-                    return IO::PartFormat::Step;
-            }
-        }
-    } // STEP
-
-    // -- OpenCascade BREP ?
-    {
-        // regex : ^\s*DBRep_DrawableShape
-        constexpr std::string_view occBRepToken = "DBRep_DrawableShape";
-        if (fnMatchToken(itContentsBegin, occBRepToken))
-            return IO::PartFormat::OccBrep;
-    }
-
-    // -- ASCII STL ?
-    {
-        // regex : ^\s*solid
-        constexpr std::string_view asciiStlToken = "solid";
-        if (fnMatchToken(itContentsBegin, asciiStlToken))
-            return IO::PartFormat::Stl;
-    }
-
-    // -- OBJ ?
-    {
-        const std::regex rx("^\\s*(v|vt|vn|vp|surf)\\s+[-\\+]?[0-9\\.]+\\s");
-        if (std::regex_search(contentsBegin.cbegin(), contentsBegin.cend(), rx))
-            return IO::PartFormat::Obj;
-    }
-
-    // Fallback case
-    return IO::PartFormat::Unknown;
-}
-
-} // namespace Internal
-
-IO::IO()
-{
-    IGESControl_Controller::Init();
-    STEPCAFControl_Controller::Init();
-}
-
-IO::Result IO::exportIges(ExportData data)
-{
-    std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
-    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-
-    IGESControl_Controller::Init();
-    IGESCAFControl_Writer writer;
-    writer.SetColorMode(true);
-    writer.SetNameMode(true);
-    writer.SetLayerMode(true);
-    if (!indicator.IsNull())
-        writer.TransferProcess()->SetProgress(indicator);
-
-    for (const ApplicationItem& item : data.appItems) {
-        if (item.isDocument())
-            writer.Transfer(item.document());
-        else if (item.isDocumentTreeNode())
-            writer.Transfer(item.documentTreeNode().label());
-    }
-
-    writer.ComputeModel();
-    const bool ok = writer.Write(data.filepath.toLocal8Bit().constData());
-    writer.TransferProcess()->SetProgress(nullptr);
-    return ok ? Result::ok() : Result::error(tr("Unknown error"));
-}
-
-IO::Result IO::exportStep(ExportData data)
-{
-    std::lock_guard<std::mutex> lock(Internal::globalMutex); Q_UNUSED(lock);
-    Interface_Static::SetIVal("write.stepcaf.subshapes.name", 1);
-    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-    STEPCAFControl_Writer writer;
-    if (!indicator.IsNull())
-        writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(indicator);
-
-    for (const ApplicationItem& item : data.appItems) {
-        if (item.isDocument())
-            writer.Transfer(item.document());
-        else if (item.isDocumentTreeNode())
-            writer.Transfer(item.documentTreeNode().label());
-    }
-
-    const IFSelect_ReturnStatus err = writer.Write(data.filepath.toLocal8Bit().constData());
-    writer.ChangeWriter().WS()->TransferWriter()->FinderProcess()->SetProgress(nullptr);
-    return err == IFSelect_RetDone ? Result::ok() : Result::error(StringUtils::rawText(err));
-}
-
-IO::Result IO::exportOccBRep(ExportData data)
-{
-    std::vector<TopoDS_Shape> vecShape;
-    vecShape.reserve(data.appItems.size());
-    for (const ApplicationItem& item : data.appItems) {
-        if (item.isDocument()) {
-            for (const TDF_Label& label : item.document()->xcaf().topLevelFreeShapes())
-                vecShape.push_back(XCaf::shape(label));
-        }
-        else if (item.isDocumentTreeNode()) {
-            const TDF_Label labelNode = item.documentTreeNode().label();
-            vecShape.push_back(XCaf::shape(labelNode));
-        }
-    }
-
-    TopoDS_Shape shape;
-    if (vecShape.size() > 1) {
-        TopoDS_Compound cmpd;
-        BRep_Builder builder;
-        builder.MakeCompound(cmpd);
-        for (const TopoDS_Shape& subShape : vecShape)
-            builder.Add(cmpd, subShape);
-
-        shape = cmpd;
-    }
-    else if (vecShape.size() == 1) {
-        shape = vecShape.front();
-    }
-
-    Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-    if (!BRepTools::Write(shape, data.filepath.toLocal8Bit().constData(), indicator))
-        return Result::error(tr("Unknown Error"));
-
-    return Result::ok();
-}
-
-IO::Result IO::exportStl(ExportData data)
-{
-    if (this->stlIoLibrary() == StlIoLibrary::Gmio)
-        return this->exportStl_gmio(data);
-    else if (this->stlIoLibrary() == StlIoLibrary::OpenCascade)
-        return this->exportStl_OCC(data);
-
-    return Result::error(tr("Unknown Error"));
-}
 
 IO::Result IO::exportStl_gmio(ExportData data)
 {
     QFile file(data.filepath);
-#ifdef HAVE_GMIO
     if (file.open(QIODevice::WriteOnly)) {
         gmio_stream stream = gmio_stream_qiodevice(&file);
         gmio_stl_write_options gmioOptions = {};
@@ -684,71 +182,10 @@ IO::Result IO::exportStl_gmio(ExportData data)
 
         return IoResult::ok();
     }
-#endif // HAVE_GMIO
 
     return Result::error(file.errorString());
 }
-
-IO::Result IO::exportStl_OCC(ExportData data)
-{
-#ifdef HAVE_GMIO
-    const bool isAsciiFormat = data.options.stlFormat == GMIO_STL_FORMAT_ASCII;
-    if (data.options.stlFormat != GMIO_STL_FORMAT_ASCII
-            && data.options.stlFormat != GMIO_STL_FORMAT_BINARY_LE)
-    {
-        return Result::error(tr("Format not supported"));
-    }
-#else
-    const bool isAsciiFormat = data.options.stlFormat == ExportOptions::StlFormat::Ascii;
-#endif
-    if (data.appItems.size() > 1)
-        return Result::error(tr("OpenCascade RWStl does not support multi-solids"));
-
-    auto fnWriteShape = [=](const TopoDS_Shape& shape) {
-        StlAPI_Writer writer;
-        writer.ASCIIMode() = isAsciiFormat;
-        if (!writer.Write(shape, data.filepath.toLocal8Bit().constData()))
-            return Result::error(tr("Unknown StlAPI_Writer failure"));
-        else
-            return Result::ok();
-    };
-
-    auto fnWriteMesh = [=](const Handle_Poly_Triangulation& mesh) {
-        Handle_Message_ProgressIndicator indicator = new Internal::OccProgress(data.progress);
-        bool ok = false;
-        const QByteArray filepathLocal8b = data.filepath.toLocal8Bit();
-        const OSD_Path osdFilepath(filepathLocal8b.constData());
-        if (isAsciiFormat)
-            ok = RWStl::WriteAscii(mesh, osdFilepath, indicator);
-        else
-            ok = RWStl::WriteBinary(mesh, osdFilepath, indicator);
-
-        return ok ? Result::ok() : Result::error(tr("Unknown error"));
-    };
-
-    if (!data.appItems.empty()) {
-        const ApplicationItem& item = data.appItems.at(0);
-        if (item.isDocument()) {
-            return fnWriteShape(Internal::xdeDocumentWholeShape(item.document()));
-        }
-        else if (item.isDocumentTreeNode()) {
-            const TDF_Label label = item.documentTreeNode().label();
-            if (XCaf::isShape(label)) {
-                return fnWriteShape(XCaf::shape(label));
-            }
-            else {
-                auto attrPolyTri = CafUtils::findAttribute<TDataXtd_Triangulation>(label);
-                if (!attrPolyTri.IsNull())
-                    return fnWriteMesh(attrPolyTri->Get());
-            }
-        }
-    }
-
-    return Result::ok();
-}
-#endif
-
-namespace IO {
+#endif // HAVE_GMIO
 
 namespace {
 
@@ -770,6 +207,53 @@ bool containsFormat(Span<const Format> spanFormat, const Format& format)
 }
 
 } // namespace
+
+void System::addFormatProbe(const FormatProbe& probe)
+{
+    m_vecFormatProbe.push_back(probe);
+}
+
+Format System::probeFormat(const QString& filepath) const
+{
+    QFile file(filepath);
+    if (file.open(QIODevice::ReadOnly)) {
+#ifdef HAVE_GMIO
+        gmio_stream qtstream = gmio_stream_qiodevice(&file);
+       const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
+        if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
+            return Format_STL;
+#endif
+        std::array<char, 2048> buff;
+        buff.fill(0);
+        file.read(buff.data(), buff.size());
+        FormatProbeInput probeInput = {};
+        probeInput.filepath = filepath;
+        probeInput.contentsBegin = QByteArray::fromRawData(buff.data(), buff.size());
+        probeInput.hintFullSize = file.size();
+        for (const FormatProbe& fnProbe : m_vecFormatProbe) {
+            const Format format = fnProbe(probeInput);
+            if (format != Format_Unknown)
+                return format;
+        }
+
+        // Try to guess from file suffix
+        const QString fileSuffix = QFileInfo(file).suffix();
+        auto fnMatchFileSuffix = [=](const Format& format) {
+            return format.fileSuffixes.contains(fileSuffix, Qt::CaseInsensitive);
+        };
+        for (const Format& format : m_vecReaderFormat) {
+            if (fnMatchFileSuffix(format))
+                return format;
+        }
+
+        for (const Format& format : m_vecWriterFormat) {
+            if (fnMatchFileSuffix(format))
+                return format;
+        }
+    }
+
+    return Format_Unknown;
+}
 
 void System::addFactoryReader(std::unique_ptr<FactoryReader> ptr)
 {
@@ -845,31 +329,6 @@ std::unique_ptr<Writer> System::createWriter(const Format& format) const
     return {};
 }
 
-Format System::findFileFormat(const QString& filepath) const
-{
-    QFile file(filepath);
-    if (file.open(QIODevice::ReadOnly)) {
-//#ifdef HAVE_GMIO
-//        gmio_stream qtstream = gmio_stream_qiodevice(&file);
-//        const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
-//        if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
-//            return IO::PartFormat::Stl;
-//#endif
-        std::array<char, 2048> buff;
-        buff.fill(0);
-        file.read(buff.data(), buff.size());
-        const uint64_t hintFileSize = file.size();
-        const QByteArray fileContentsBegin = QByteArray::fromRawData(buff.data(), buff.size());
-        for (const std::unique_ptr<FactoryReader>& ptr : m_vecFactoryReader) {
-            const Format format = ptr->findFormatFromContents(fileContentsBegin, hintFileSize);
-            if (format != Format_Unknown)
-                return format;
-        }
-    }
-
-    return Format_Unknown;
-}
-
 QString System::fileFilter(const Format& format)
 {
     if (format == Format_Unknown)
@@ -881,6 +340,9 @@ QString System::fileFilter(const Format& format)
             filter += " ";
 
         filter += "*." + suffix;
+#ifdef Q_OS_UNIX
+        filter += " *." + suffix.toUpper();
+#endif
     }
 
     //: %1 is the format identifier and %2 is the file filters string
@@ -910,13 +372,16 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     auto fnReadFile = [&](QString filepath, TaskProgress* subProgress) -> ReaderPtr {
         subProgress->beginScope(40, tr("Reading file"));
         auto _ = gsl::finally([=]{ subProgress->endScope(); });
-        const Format fileFormat = this->findFileFormat(filepath);
+        const Format fileFormat = this->probeFormat(filepath);
         if (fileFormat == Format_Unknown)
             return fnReadFileError(filepath, tr("Unknown format"));
 
         std::unique_ptr<Reader> reader = this->createReader(fileFormat);
         if (!reader)
             return fnReadFileError(filepath, tr("No supporting reader"));
+
+        if (args.parametersProvider)
+            reader->applyParameters(args.parametersProvider->findReaderParameters(fileFormat));
 
         if (!reader->readFile(filepath, subProgress))
             return fnReadFileError(filepath, tr("File read problem"));
@@ -1009,6 +474,7 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
     if (!writer)
         return fnError(tr("No supporting writer"));
 
+    writer->applyParameters(args.parameters);
     auto _ = gsl::finally([=]{ progress->endScope(); });
     progress->beginScope(40, tr("Transfer"));
     const bool okTransfer = writer->transfer(args.applicationItems, progress);
@@ -1043,8 +509,8 @@ System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> 
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup& parameters) {
-    m_args.parameters = &parameters;
+System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters) {
+    m_args.parameters = parameters;
     return *this;
 }
 
@@ -1087,8 +553,8 @@ System::Operation_ImportInDocument::withFilepaths(const QStringList& filepaths) 
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withParameters(const PropertyGroup& parameters) {
-    m_args.parameters = &parameters;
+System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider) {
+    m_args.parametersProvider = provider;
     return *this;
 }
 
@@ -1104,6 +570,12 @@ System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
     return *this;
 }
 
+System::Operation_ImportInDocument::Operation&
+System::Operation_ImportInDocument::withFilepath(const QString& filepath)
+{
+    return this->withFilepaths({ filepath });
+}
+
 bool System::Operation_ImportInDocument::execute() {
     return m_system.importInDocument(m_args);
 }
@@ -1113,6 +585,127 @@ System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
 {
 }
 
-} // namespace IO
+namespace {
 
+bool isSpace(char c) {
+    return std::isspace(c, std::locale::classic());
+}
+
+bool matchToken(QByteArray::const_iterator itBegin, std::string_view token) {
+    return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
+}
+
+auto findFirstNonSpace(const QByteArray& str) {
+    return std::find_if_not(str.cbegin(), str.cend(), isSpace);
+}
+
+} // namespace
+
+Format probeFormat_STEP(const System::FormatProbeInput& input)
+{
+    const QByteArray& sample = input.contentsBegin;
+    // regex : ^\s*ISO-10303-21\s*;\s*HEADER
+    constexpr std::string_view stepIsoId = "ISO-10303-21";
+    constexpr std::string_view stepHeaderToken = "HEADER";
+    auto itContentsBegin = findFirstNonSpace(sample);
+    if (matchToken(itContentsBegin, stepIsoId)) {
+        auto itChar = std::find_if_not(itContentsBegin + stepIsoId.size(), sample.cend(), isSpace);
+        if (itChar != sample.cend() && *itChar == ';') {
+            itChar = std::find_if_not(itChar + 1, sample.cend(), isSpace);
+            if (matchToken(itChar, stepHeaderToken))
+                return Format_STEP;
+        }
+    }
+
+    return Format_Unknown;
+}
+
+Format probeFormat_IGES(const System::FormatProbeInput& input)
+{
+    const QByteArray& sample = input.contentsBegin;
+    // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
+    bool isIges = true;
+    if (sample.size() >= 80 && sample[72] == 'S') {
+        for (int i = 73; i < 80 && isIges; ++i) {
+            if (sample[i] != ' ' && !std::isdigit(static_cast<unsigned char>(sample[i])))
+                isIges = false;
+        }
+
+        const char c80 = sample[80];
+        if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
+            const int sVal = std::atoi(sample.data() + 73);
+            if (sVal == 1)
+                return Format_IGES;
+        }
+    }
+
+    return Format_Unknown;
+}
+
+Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
+{
+    // regex : ^\s*DBRep_DrawableShape
+    auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
+    constexpr std::string_view occBRepToken = "DBRep_DrawableShape";
+    if (matchToken(itContentsBegin, occBRepToken))
+        return Format_OCCBREP;
+
+    return Format_Unknown;
+}
+
+Format probeFormat_STL(const System::FormatProbeInput& input)
+{
+    const QByteArray& sample = input.contentsBegin;
+    // Binary STL ?
+    {
+        constexpr size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
+        if (sample.size() >= binaryStlHeaderSize) {
+            constexpr uint32_t offset = 80; // Skip header
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(sample.data());
+            const uint32_t facetsCount =
+                    bytes[offset]
+                    | (bytes[offset+1] << 8)
+                    | (bytes[offset+2] << 16)
+                    | (bytes[offset+3] << 24);
+            constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
+            if ((facetSize * facetsCount + binaryStlHeaderSize) == input.hintFullSize)
+                return Format_STL;
+        }
+    }
+
+    // ASCII STL ?
+    {
+        // regex : ^\s*solid
+        constexpr std::string_view asciiStlToken = "solid";
+        auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
+        if (matchToken(itContentsBegin, asciiStlToken))
+            return Format_STL;
+    }
+
+    return Format_Unknown;
+}
+
+Format probeFormat_OBJ(const System::FormatProbeInput& input)
+{
+    const QByteArray& sample = input.contentsBegin;
+    const std::regex rx("^\\s*(v|vt|vn|vp|surf)\\s+[-\\+]?[0-9\\.]+\\s");
+    if (std::regex_search(sample.cbegin(), sample.cend(), rx))
+        return Format_OBJ;
+
+    return Format_Unknown;
+}
+
+void addPredefinedFormatProbes(System* system)
+{
+    if (!system)
+        return;
+
+    system->addFormatProbe(probeFormat_STEP);
+    system->addFormatProbe(probeFormat_IGES);
+    system->addFormatProbe(probeFormat_OCCBREP);
+    system->addFormatProbe(probeFormat_STL);
+    system->addFormatProbe(probeFormat_OBJ);
+}
+
+} // namespace IO
 } // namespace Mayo

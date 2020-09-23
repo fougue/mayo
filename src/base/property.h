@@ -8,6 +8,7 @@
 
 #include "span.h"
 #include "result.h"
+#include "text_id.h"
 
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
@@ -56,7 +57,7 @@ struct PropertyChangedBlocker {
 
 class Property {
 public:
-    Property(PropertyGroup* group, const QString& label);
+    Property(PropertyGroup* group, const TextId& name);
     Property() = delete;
     Property(const Property&) = delete;
     Property(Property&&) = delete;
@@ -66,7 +67,8 @@ public:
 
     PropertyGroup* group() const { return m_group; }
 
-    const QString& label() const;
+    const TextId& name() const;
+    QString label() const;
 
     virtual QVariant valueAsVariant() const = 0;
     virtual Result<void> setValueFromVariant(const QVariant& value) = 0;
@@ -86,7 +88,7 @@ protected:
 
 private:
     PropertyGroup* const m_group = nullptr;
-    const QString m_label;
+    const TextId m_name;
     bool m_isUserReadOnly = false;
 };
 

@@ -71,12 +71,6 @@ private:
     void closeAllDocumentsExceptCurrent();
     void closeAllDocuments();
 
-    void runExportTask(
-            Span<const ApplicationItem> appItems,
-            IO::PartFormat format,
-            const IO::ExportOptions& opts,
-            const QString& filepath);
-
     void updateControlsActivation();
 
     int currentDocumentIndex() const;

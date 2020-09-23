@@ -47,19 +47,20 @@ static TopoDS_Shape asShape(const DocumentPtr& doc)
 struct StlWriterParameters : public PropertyGroup {
     StlWriterParameters(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          propTargetFormat(this, System::tr("Format"), &enumFormat())
+          targetFormat(this, MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "targetFormat"), &enumFormat())
     {
+        this->targetFormat.setValue(int(OccStlWriter::Format::Binary));
     }
 
     static const Enumeration& enumFormat() {
         static const Enumeration values = {
-            { int(OccStlWriter::Format::Ascii), "STL_ASCII", System::tr("Text") },
-            { int(OccStlWriter::Format::Binary), "STL_BINARY", System::tr("Binary") }
+            { int(OccStlWriter::Format::Ascii), MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "StlAscii") },
+            { int(OccStlWriter::Format::Binary), MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "StlBinary") }
         };
         return values;
     }
 
-    PropertyEnumeration propTargetFormat;
+    PropertyEnumeration targetFormat;
 };
 
 } // namespace
@@ -84,7 +85,7 @@ bool OccStlReader::transfer(DocumentPtr doc, TaskProgress* progress)
     return true;
 }
 
-bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
 //    if (appItems.size() > 1)
 //        return Result::error(tr("OpenCascade RWStl does not support multi-solids"));
@@ -121,7 +122,6 @@ bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
     }
     else if (!m_mesh.IsNull()) {
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-        bool ok = false;
         const QByteArray filepathLocal8b = filepath.toLocal8Bit();
         const OSD_Path osdFilepath(filepathLocal8b.constData());
         if (m_targetFormat == Format::Ascii)
@@ -138,11 +138,11 @@ std::unique_ptr<PropertyGroup> OccStlWriter::createParameters(PropertyGroup* par
     return std::make_unique<StlWriterParameters>(parentGroup);
 }
 
-void OccStlWriter::applyParameters(const PropertyGroup& params)
+void OccStlWriter::applyParameters(const PropertyGroup* params)
 {
-    auto ptr = dynamic_cast<const StlWriterParameters*>(&params);
+    auto ptr = dynamic_cast<const StlWriterParameters*>(params);
     if (ptr)
-        this->setTargetFormat(ptr->propTargetFormat.valueAs<OccStlWriter::Format>());
+        this->setTargetFormat(ptr->targetFormat.valueAs<OccStlWriter::Format>());
 }
 
 } // namespace IO
