@@ -23,6 +23,7 @@ public:
     using GroupIndex = Settings_GroupIndex;
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
+    using GroupResetFunction = std::function<void()>;
 
     Settings(QObject* parent = nullptr);
     ~Settings();
@@ -30,10 +31,10 @@ public:
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;
     QString groupTitle(GroupIndex index) const;
-    void setGroupResetFunction(GroupIndex index, std::function<void()> fn);
     GroupIndex addGroup(TextId identifier);
     GroupIndex addGroup(QByteArray identifier);
     void setGroupTitle(GroupIndex index, const QString& title);
+    void addGroupResetFunction(GroupIndex index, GroupResetFunction fn);
 
     int sectionCount(GroupIndex index) const;
     QByteArray sectionIdentifier(SectionIndex index) const;

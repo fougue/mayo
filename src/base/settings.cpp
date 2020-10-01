@@ -31,7 +31,7 @@ struct Settings_Group {
     QString title;
     std::vector<Settings_Section> vecSection;
     Settings_Section defaultSection;
-    std::function<void()> fnReset;
+    std::vector<Settings::GroupResetFunction> vecFnReset;
 };
 
 static bool isValidIdentifier(const QByteArray& identifier)
@@ -86,11 +86,6 @@ QString Settings::groupTitle(GroupIndex index) const
     return d->group(index).title;
 }
 
-void Settings::setGroupResetFunction(GroupIndex index, std::function<void()> fn)
-{
-    d->group(index).fnReset = std::move(fn);
-}
-
 Settings::GroupIndex Settings::addGroup(TextId identifier)
 {
     auto index = this->addGroup(static_cast<QByteArray>(identifier));
@@ -117,6 +112,12 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
 void Settings::setGroupTitle(GroupIndex index, const QString& title)
 {
     d->group(index).title = title;
+}
+
+void Settings::addGroupResetFunction(GroupIndex index, GroupResetFunction fn)
+{
+    if (fn)
+        d->group(index).vecFnReset.push_back(std::move(fn));
 }
 
 int Settings::sectionCount(GroupIndex index) const
@@ -212,8 +213,8 @@ Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex ind
 void Settings::resetGroup(GroupIndex index)
 {
     Settings_Group& group = d->group(index);
-    if (group.fnReset)
-        group.fnReset();
+    for (const GroupResetFunction& fnReset : group.vecFnReset)
+        fnReset();
 }
 
 void Settings::resetAll()
