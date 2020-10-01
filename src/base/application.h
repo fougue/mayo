@@ -6,19 +6,14 @@
 
 #pragma once
 
+#include "application_ptr.h"
 #include "document.h"
 #include <CDF_DirectoryIterator.hxx>
-#include <TDocStd_Application.hxx>
 #include <QtCore/QFileInfo>
 #include <atomic>
 #include <unordered_map>
 
 namespace Mayo {
-
-class Application;
-DEFINE_STANDARD_HANDLE(Application, TDocStd_Application)
-
-using ApplicationPtr = opencascade::handle<Application>;
 
 class Settings;
 
