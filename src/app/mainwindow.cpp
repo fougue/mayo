@@ -985,20 +985,26 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     auto menu = new QMenu(this->findLeftHeaderPlaceHolder());
     menu->setToolTipsVisible(true);
 
-    {   // Link with document selector
-        auto appModule = AppModule::get(Application::instance());
-        QAction* action = menu->addAction(appModule->linkWithDocumentSelector.name().tr());
-        action->setCheckable(true);
-        action->setChecked(appModule->linkWithDocumentSelector.value());
-        QObject::connect(action, &QAction::triggered, [=](bool on) {
-            appModule->linkWithDocumentSelector.setValue(on);
-        });
-    }
+    // Link with document selector
+    auto appModule = AppModule::get(Application::instance());
+    QAction* action = menu->addAction(appModule->linkWithDocumentSelector.name().tr());
+    action->setCheckable(true);
+    QObject::connect(action, &QAction::triggered, [=](bool on) {
+        appModule->linkWithDocumentSelector.setValue(on);
+    });
 
+    // Model tree user actions
     menu->addSeparator();
-    const std::vector<QAction*> vecAction = m_ui->widget_ModelTree->createConfigurationActions(menu);
-    for (QAction* action : vecAction)
+    const WidgetModelTree_UserActions userActions = m_ui->widget_ModelTree->createUserActions(menu);
+    for (QAction* action : userActions.items)
         menu->addAction(action);
+
+    // Sync before menu show
+    QObject::connect(menu, &QMenu::aboutToShow, [=]{
+        action->setChecked(appModule->linkWithDocumentSelector.value());
+        if (userActions.fnSyncItems)
+            userActions.fnSyncItems();
+    });
 
     return menu;
 }

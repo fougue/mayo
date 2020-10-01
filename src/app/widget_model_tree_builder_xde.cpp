@@ -135,6 +135,33 @@ void WidgetModelTreeBuilder_Xde::registerApplication(ApplicationPtr app)
         m_module = new Module(app);
 }
 
+WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObject *parent)
+{
+    WidgetModelTree_UserActions userActions;
+    auto group = new QActionGroup(parent);
+    group->setExclusive(true);
+    for (const Enumeration::Item& item : Module::enumInstanceNameFormat().items()) {
+        auto action = new QAction(item.name.tr(), parent);
+        action->setCheckable(true);
+        action->setData(static_cast<QByteArray>(item.name));
+        userActions.items.push_back(action);
+        group->addAction(action);
+    }
+
+    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
+        this->setInstanceNameFormat(action->data().toByteArray());
+    });
+
+    userActions.fnSyncItems = [=]{
+        for (QAction* action : userActions.items) {
+            if (action->data().toByteArray() == this->instanceNameFormat())
+                action->setChecked(true);
+        }
+    };
+
+    return userActions;
+}
+
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
         QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node)
 {
@@ -214,31 +241,6 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);
     }
-}
-
-std::vector<QAction*> WidgetModelTreeBuilder_Xde::createConfigurationActions(QObject* parent)
-{
-    std::vector<QAction*> vecAction;
-    for (const Enumeration::Item& item : Module::enumInstanceNameFormat().items()) {
-        auto action = new QAction(item.name.tr(), parent);
-        action->setCheckable(true);
-        action->setData(static_cast<QByteArray>(item.name));
-        vecAction.push_back(action);
-    }
-
-    auto group = new QActionGroup(parent);
-    group->setExclusive(true);
-    for (QAction* action : vecAction) {
-        group->addAction(action);
-        if (action->data().toByteArray() == this->instanceNameFormat())
-            action->setChecked(true);
-    }
-
-    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
-        this->setInstanceNameFormat(action->data().toByteArray());
-    });
-
-    return vecAction;
 }
 
 std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder_Xde::clone() const

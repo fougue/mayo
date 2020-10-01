@@ -10,6 +10,7 @@
 #include "../base/document_ptr.h"
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
+#include "widget_model_tree.h"
 #include <memory>
 #include <vector>
 #include <QtCore/QString>
@@ -39,7 +40,7 @@ public:
 
     virtual void registerApplication(ApplicationPtr /*app*/) {}
 
-    virtual std::vector<QAction*> createConfigurationActions(QObject* parent);
+    virtual WidgetModelTree_UserActions createUserActions(QObject* /*parent*/) { return {}; }
 
     virtual std::unique_ptr<WidgetModelTreeBuilder> clone() const;
 

@@ -8,6 +8,7 @@
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io.h"
 #include "../base/io_occ.h"
+#include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"
 #include "../graphics/graphics_entity_driver_table.h"
@@ -124,7 +125,11 @@ static int runApp(QApplication* app)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
     }
 
-    return app->exec();
+    Application::instance()->settings()->resetAll();
+    Application::instance()->settings()->load();
+    const int code = app->exec();
+    Application::instance()->settings()->save();
+    return code;
 }
 
 } // namespace Mayo
