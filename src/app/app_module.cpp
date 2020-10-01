@@ -112,17 +112,17 @@ AppModule::AppModule(Application* app)
     }
 
     // Register reset functions
-    settings->setGroupResetFunction(this->groupId_system, [&]{
+    settings->addGroupResetFunction(this->groupId_system, [&]{
         this->unitSystemDecimals.setValue(2);
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
-    settings->setGroupResetFunction(this->groupId_application, [&]{
+    settings->addGroupResetFunction(this->groupId_application, [&]{
         this->recentFiles.setValue(QStringList());
         this->lastOpenDir.setValue(QString());
         this->lastSelectedFormatFilter.setValue(QString());
         this->linkWithDocumentSelector.setValue(true);
     });
-    settings->setGroupResetFunction(this->groupId_graphics, [&]{
+    settings->addGroupResetFunction(this->groupId_graphics, [&]{
         this->defaultShowOriginTrihedron.setValue(true);
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatch.setValue(Aspect_HS_SOLID);
