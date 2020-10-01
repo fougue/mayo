@@ -2,8 +2,10 @@
 
 #include "../base/caf_utils.h"
 #include "../base/document.h"
+#include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/xcaf.h"
+#include "app_module.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
@@ -16,33 +18,79 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
-static QIcon shapeIcon(const TDF_Label& label)
-{
-    if (XCaf::isShapeAssembly(label))
-        return mayoTheme()->icon(Theme::Icon::XdeAssembly);
-    else if (XCaf::isShapeReference(label))
-        return QIcon(":/images/xde_reference_16.png"); // TODO move in Theme
-    else if (XCaf::isShapeSimple(label))
-        return mayoTheme()->icon(Theme::Icon::XdeSimpleShape);
-
-    return QIcon();
+template<size_t N>
+QByteArray QByteArray_frowRawData(const char (&str)[N]) {
+    return QByteArray::fromRawData(str, N);
 }
 
-static const char textTemplateReferenceOnly[] = "%instance";
-static const char textTemplateReferredOnly[] = "%referred";
-// UTF8 rightwards arrow : \xe2\x86\x92
-static const char textTemplateReferenceAndReferred[] = "%instance \xe2\x86\x92 %referred";
+} // namespace
 
-static const char keyRefItemTextTemplate[] = "/xde/reference_item_text_template";
+class WidgetModelTreeBuilder_Xde::Module : public QObject, public PropertyGroup {
+public:
+    Module(ApplicationPtr app)
+        : QObject(app.get()),
+          PropertyGroup(app->settings()),
+          instanceNameFormat(this, MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "InstanceNameFormat"))
+    {
+        this->instanceNameFormat.setEnumeration(&enumInstanceNameFormat());
+        this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
+        auto settings = app->settings();
+        settings->addSetting(&this->instanceNameFormat, AppModule::get(app)->groupId_application);
+        settings->addGroupResetFunction(AppModule::get(app)->groupId_application, [&]{
+            this->instanceNameFormat.setValue(enumInstanceNameFormat().itemAt(0).value);
+        });
+    }
 
-} // namespace Internal
+    static Module* get(ApplicationPtr app) {
+        return app->findChild<Module*>("WidgetModelTreeBuilder_Xde::Module", Qt::FindDirectChildrenOnly);
+    }
 
-WidgetModelTreeBuilder_Xde::WidgetModelTreeBuilder_Xde()
-    : m_refItemTextTemplate("%instance")
-{
-}
+    enum class NameFormat { Instance, Product, Both };
+
+    static const Enumeration& enumInstanceNameFormat()
+    {
+        static const Enumeration enumFormat = {
+            { int(NameFormat::Instance), MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameInstance") },
+            { int(NameFormat::Product),  MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameProduct") },
+            { int(NameFormat::Both),     MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameBoth") }
+        };
+        return enumFormat;
+    }
+
+    static QByteArray toInstanceNameTemplate(NameFormat format)
+    {
+        static const char templateInstance[] = "%instance";
+        static const char templateProduct[] = "%product";
+        // UTF8 rightwards arrow : \xe2\x86\x92
+        static const char templateBoth[] = "%instance \xe2\x86\x92 %product";
+        switch (format) {
+        case NameFormat::Instance: return QByteArray_frowRawData(templateInstance);
+        case NameFormat::Product: return QByteArray_frowRawData(templateProduct);
+        case NameFormat::Both: return QByteArray_frowRawData(templateBoth);
+        }
+        return QByteArray();
+    }
+
+    QByteArray instanceNameTemplate() const {
+        return Module::toInstanceNameTemplate(this->instanceNameFormat.valueAs<Module::NameFormat>());
+    }
+
+    static QIcon shapeIcon(const TDF_Label& label)
+    {
+        if (XCaf::isShapeAssembly(label))
+            return mayoTheme()->icon(Theme::Icon::XdeAssembly);
+        else if (XCaf::isShapeReference(label))
+            return QIcon(":/images/xde_reference_16.png"); // TODO move in Theme
+        else if (XCaf::isShapeSimple(label))
+            return mayoTheme()->icon(Theme::Icon::XdeSimpleShape);
+
+        return QIcon();
+    }
+
+    PropertyEnumeration instanceNameFormat;
+};
 
 bool WidgetModelTreeBuilder_Xde::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
@@ -54,7 +102,9 @@ void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(
 {
     const TDF_Label labelNode = node.label();
     TDF_LabelSequence seqLabelRefresh;
-    if (XCaf::isShapeReference(labelNode) && m_refItemTextTemplate.contains("%referred")) {
+    if (XCaf::isShapeReference(labelNode)
+            && m_module->instanceNameTemplate().contains("%product"))
+    {
         XCAFDoc_ShapeTool::GetUsers(
                     XCaf::shapeReferred(labelNode),
                     seqLabelRefresh,
@@ -77,6 +127,14 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::createTreeItem(const DocumentTreeNo
     return this->buildXdeTree(nullptr, node);
 }
 
+// BEWARE Not thread-safe, should be called from main(GUI) thread
+void WidgetModelTreeBuilder_Xde::registerApplication(ApplicationPtr app)
+{
+    m_module = Module::get(app);
+    if (!m_module)
+        m_module = new Module(app);
+}
+
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
         QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node)
 {
@@ -84,7 +142,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
     const QString stdName = CafUtils::labelAttrStdName(node.label());
     guiNode->setText(0, stdName);
     WidgetModelTree::setDocumentTreeNode(guiNode, node);
-    const QIcon icon = Internal::shapeIcon(node.label());
+    const QIcon icon = Module::shapeIcon(node.label());
     if (!icon.isNull())
         guiNode->setIcon(0, icon);
 
@@ -125,7 +183,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
                 guiNode->setText(0, guiNodeText);
                 WidgetModelTree::setDocumentTreeNode(guiNode, DocumentTreeNode(doc, guiNodeId));
-                const QIcon icon = Internal::shapeIcon(nodeLabel);
+                const QIcon icon = Module::shapeIcon(nodeLabel);
                 if (!icon.isNull())
                     guiNode->setIcon(0, icon);
 
@@ -141,61 +199,43 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
     return mapNodeIdToTreeItem.find(node.id())->second;
 }
 
-const QString& WidgetModelTreeBuilder_Xde::referenceItemTextTemplate() const
+QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return m_refItemTextTemplate;
+    return m_module->instanceNameFormat.name();
 }
 
-void WidgetModelTreeBuilder_Xde::setReferenceItemTextTemplate(const QString& textTemplate)
+void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
 {
-    if (textTemplate == m_refItemTextTemplate)
+    if (format == this->instanceNameFormat())
         return;
 
-    m_refItemTextTemplate = textTemplate;
+    m_module->instanceNameFormat.setValue(Module::enumInstanceNameFormat().findValue(format));
     for (QTreeWidgetItemIterator it(this->treeWidget()); *it; ++it) {
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);
     }
 }
 
-void WidgetModelTreeBuilder_Xde::loadConfiguration(const Settings* settings, const QString& keyGroup)
-{
-    const QString refTextTemplate =
-            settings->valueAs<QString>(keyGroup + Internal::keyRefItemTextTemplate);
-    this->setReferenceItemTextTemplate(
-                !refTextTemplate.isEmpty() ? refTextTemplate : Internal::textTemplateReferenceOnly);
-}
-
-void WidgetModelTreeBuilder_Xde::saveConfiguration(Settings* settings, const QString& keyGroup)
-{
-    settings->setValue(
-                keyGroup + Internal::keyRefItemTextTemplate,
-                m_refItemTextTemplate);
-}
-
 std::vector<QAction*> WidgetModelTreeBuilder_Xde::createConfigurationActions(QObject* parent)
 {
-    // Note
-    // UTF8 rightwards arrow : \xe2\x86\x92
-
     std::vector<QAction*> vecAction;
-    vecAction.push_back(new QAction(tr("Show only name of reference entities"), parent));
-    vecAction.push_back(new QAction(tr("Show only name of referred entities"), parent));
-    vecAction.push_back(new QAction(tr("Show name of both reference and referred entities"), parent));
-    vecAction.at(0)->setData(Internal::textTemplateReferenceOnly);
-    vecAction.at(1)->setData(Internal::textTemplateReferredOnly);
-    vecAction.at(2)->setData(Internal::textTemplateReferenceAndReferred);
+    for (const Enumeration::Item& item : Module::enumInstanceNameFormat().items()) {
+        auto action = new QAction(item.name.tr(), parent);
+        action->setCheckable(true);
+        action->setData(static_cast<QByteArray>(item.name));
+        vecAction.push_back(action);
+    }
+
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
     for (QAction* action : vecAction) {
-        action->setCheckable(true);
         group->addAction(action);
-        if (action->data().toString() == m_refItemTextTemplate)
+        if (action->data().toByteArray() == this->instanceNameFormat())
             action->setChecked(true);
     }
 
     QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
-        this->setReferenceItemTextTemplate(action->data().toString());
+        this->setInstanceNameFormat(action->data().toByteArray());
     });
 
     return vecAction;
@@ -204,8 +244,8 @@ std::vector<QAction*> WidgetModelTreeBuilder_Xde::createConfigurationActions(QOb
 std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder_Xde::clone() const
 {
     auto builder = std::make_unique<WidgetModelTreeBuilder_Xde>();
+    builder->m_module = this->m_module;
     builder->m_isMergeXdeReferredShapeOn = this->m_isMergeXdeReferredShapeOn;
-    builder->m_refItemTextTemplate = this->m_refItemTextTemplate;
     return builder;
 }
 
@@ -214,9 +254,9 @@ void WidgetModelTreeBuilder_Xde::refreshXdeAssemblyNodeItemText(QTreeWidgetItem*
     const DocumentTreeNode docTreeNode = WidgetModelTree::documentTreeNode(item);
     const TDF_Label label = docTreeNode.label();
     if (XCaf::isShapeReference(label)) {
-        const TDF_Label& refLabel = label;
-        const TDF_Label referredLabel = XCaf::shapeReferred(refLabel);
-        const QString itemText = this->referenceItemText(refLabel, referredLabel);
+        const TDF_Label& instanceLabel = label;
+        const TDF_Label productLabel = XCaf::shapeReferred(instanceLabel);
+        const QString itemText = this->referenceItemText(instanceLabel, productLabel);
         item->setText(0, itemText);
     }
     else {
@@ -225,13 +265,15 @@ void WidgetModelTreeBuilder_Xde::refreshXdeAssemblyNodeItemText(QTreeWidgetItem*
 }
 
 QString WidgetModelTreeBuilder_Xde::referenceItemText(
-        const TDF_Label& refLabel, const TDF_Label& referredLabel) const
+        const TDF_Label& instanceLabel, const TDF_Label& productLabel) const
 {
-    const QString refName = CafUtils::labelAttrStdName(refLabel).trimmed();
-    const QString referredName = CafUtils::labelAttrStdName(referredLabel).trimmed();
-    QString itemText = m_refItemTextTemplate;
-    itemText.replace("%instance", refName)
-            .replace("%referred", referredName);
+    const QString instanceName = CafUtils::labelAttrStdName(instanceLabel).trimmed();
+    const QString productName = CafUtils::labelAttrStdName(productLabel).trimmed();
+    const auto format = m_module->instanceNameFormat.valueAs<Module::NameFormat>();
+    const QByteArray strTemplate = Module::toInstanceNameTemplate(format);
+    QString itemText = QString::fromUtf8(strTemplate);
+    itemText.replace("%instance", instanceName)
+            .replace("%product", productName);
     return itemText;
 }
 

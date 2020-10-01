@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/document_ptr.h"
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
@@ -18,8 +19,6 @@ class QTreeWidget;
 class QTreeWidgetItem;
 
 namespace Mayo {
-
-class Settings;
 
 // TODO Rename Builder -> Extension ?
 class WidgetModelTreeBuilder {
@@ -38,8 +37,7 @@ public:
     QTreeWidget* treeWidget() const { return m_treeWidget; }
     void setTreeWidget(QTreeWidget* tree) { m_treeWidget = tree; }
 
-    virtual void loadConfiguration(const Settings* settings, const QString& keyGroup);
-    virtual void saveConfiguration(Settings* settings, const QString& keyGroup);
+    virtual void registerApplication(ApplicationPtr /*app*/) {}
 
     virtual std::vector<QAction*> createConfigurationActions(QObject* parent);
 

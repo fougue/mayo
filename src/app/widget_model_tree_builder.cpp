@@ -46,14 +46,6 @@ QTreeWidgetItem* WidgetModelTreeBuilder::createTreeItem(const DocumentTreeNode& 
     return treeItem;
 }
 
-void WidgetModelTreeBuilder::loadConfiguration(const Settings*, const QString&)
-{
-}
-
-void WidgetModelTreeBuilder::saveConfiguration(Settings*, const QString&)
-{
-}
-
 std::vector<QAction*> WidgetModelTreeBuilder::createConfigurationActions(QObject*)
 {
     return {};

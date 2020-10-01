@@ -186,7 +186,7 @@ MainWindow::MainWindow(QWidget *parent)
       m_listRecentFile(AppModule::get(Application::instance())->recentFiles.value())
 {
     m_ui->setupUi(this);
-    m_ui->widget_ModelTree->loadConfiguration(Application::instance()->settings(), "GUI/MainWindow");
+    m_ui->widget_ModelTree->registerApplication(Application::instance());
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
@@ -390,7 +390,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    m_ui->widget_ModelTree->saveConfiguration(Application::instance()->settings(), "GUI/MainWindow");
     delete m_ui;
     AppModule::get(Application::instance())->recentFiles.setValue(m_listRecentFile);
 }

@@ -216,18 +216,10 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
     }
 }
 
-void WidgetModelTree::loadConfiguration(const Settings* settings, const QString& keyGroup)
+void WidgetModelTree::registerApplication(ApplicationPtr app)
 {
-    const QString keyModel = keyGroup + "/" + this->objectName();
     for (const BuilderPtr& builder : m_vecBuilder)
-        builder->loadConfiguration(settings, keyModel);
-}
-
-void WidgetModelTree::saveConfiguration(Settings* settings, const QString& keyGroup)
-{
-    const QString keyModel = keyGroup + "/" + this->objectName();
-    for (const BuilderPtr& builder : m_vecBuilder)
-        builder->saveConfiguration(settings, keyModel);
+        builder->registerApplication(app);
 }
 
 std::vector<QAction*> WidgetModelTree::createConfigurationActions(QObject* parent)

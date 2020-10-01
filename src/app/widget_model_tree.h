@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/application_item.h"
 #include "../base/property.h"
 
@@ -32,8 +33,7 @@ public:
 
     void refreshItemText(const ApplicationItem& appItem);
 
-    void loadConfiguration(const Settings* settings, const QString& keyGroup);
-    void saveConfiguration(Settings* settings, const QString& keyGroup);
+    void registerApplication(ApplicationPtr app);
 
     std::vector<QAction*> createConfigurationActions(QObject* parent);
 
