@@ -18,7 +18,7 @@ public:
     QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
 
     void registerApplication(ApplicationPtr app) override;
-    std::vector<QAction*> createConfigurationActions(QObject* parent) override;
+    WidgetModelTree_UserActions createUserActions(QObject* parent) override;
 
     std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
 

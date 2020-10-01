@@ -55,6 +55,10 @@ public:
         return this->group(index.group()).vecSection.at(index.get());
     }
 
+    QString sectionPath(const Settings_Group& group, const Settings_Section& section) const {
+        return QString::fromUtf8(group.identifier) + "/" + QString::fromUtf8(section.identifier);
+    }
+
     QSettings m_settings;
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
@@ -68,7 +72,39 @@ Settings::Settings(QObject* parent)
 
 Settings::~Settings()
 {
+    this->save();
     delete d;
+}
+
+void Settings::load()
+{
+    for (const Settings_Group& group : d->m_vecGroup) {
+        for (const Settings_Section& section : group.vecSection) {
+            const QString sectionPath = d->sectionPath(group, section);
+            for (const Settings_Setting& setting : section.vecSetting) {
+                Property* prop = setting.property;
+                const QByteArray propKey = static_cast<QByteArray>(prop->name());
+                const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
+                const QVariant value = d->m_settings.value(settingPath);
+                prop->setValueFromVariant(value);
+            } // endfor(settings)
+        } // endfor(sections)
+    } // endfor(groups)
+}
+
+void Settings::save()
+{
+    for (const Settings_Group& group : d->m_vecGroup) {
+        for (const Settings_Section& section : group.vecSection) {
+            const QString sectionPath = d->sectionPath(group, section);
+            for (const Settings_Setting& setting : section.vecSetting) {
+                Property* prop = setting.property;
+                const QByteArray propKey = static_cast<QByteArray>(prop->name());
+                const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
+                d->m_settings.setValue(settingPath, prop->valueAsVariant());
+            } // endfor(settings)
+        } // endfor(sections)
+    } // endfor(groups)
 }
 
 int Settings::groupCount() const

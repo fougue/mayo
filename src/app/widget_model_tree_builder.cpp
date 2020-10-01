@@ -46,11 +46,6 @@ QTreeWidgetItem* WidgetModelTreeBuilder::createTreeItem(const DocumentTreeNode& 
     return treeItem;
 }
 
-std::vector<QAction*> WidgetModelTreeBuilder::createConfigurationActions(QObject*)
-{
-    return {};
-}
-
 std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder::clone() const
 {
     return std::make_unique<WidgetModelTreeBuilder>();

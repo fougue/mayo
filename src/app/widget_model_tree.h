@@ -11,6 +11,7 @@
 #include "../base/property.h"
 
 #include <QtWidgets/QWidget>
+#include <functional>
 class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -21,6 +22,12 @@ namespace Mayo {
 
 class Settings;
 class WidgetModelTreeBuilder;
+
+struct WidgetModelTree_UserActions {
+    using FunctionSyncItems = std::function<void()>;
+    std::vector<QAction*> items;
+    FunctionSyncItems fnSyncItems;
+};
 
 class WidgetModelTree : public QWidget {
     Q_OBJECT
@@ -35,7 +42,7 @@ public:
 
     void registerApplication(ApplicationPtr app);
 
-    std::vector<QAction*> createConfigurationActions(QObject* parent);
+    WidgetModelTree_UserActions createUserActions(QObject* parent);
 
     // For builders
     static void addPrototypeBuilder(BuilderPtr builder);

@@ -32,7 +32,7 @@ AppModule::AppModule(Application* app)
       sectionId_systemUnits(
           app->settings()->addSection(this->groupId_system, MAYO_TEXT_ID("Mayo::AppModule", "units"))),
       unitSystemDecimals(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "decimalCount")),
-      unitSystemSchema(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "system"), &enumUnitSchemas()),
+      unitSystemSchema(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "schema"), &enumUnitSchemas()),
       // Application
       groupId_application(app->settings()->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "application"))),
       recentFiles(this, MAYO_TEXT_ID("Mayo::AppModule", "recentFiles")),

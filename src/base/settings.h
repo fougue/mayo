@@ -28,6 +28,9 @@ public:
     Settings(QObject* parent = nullptr);
     ~Settings();
 
+    void load();
+    void save();
+
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;
     QString groupTitle(GroupIndex index) const;

@@ -222,15 +222,24 @@ void WidgetModelTree::registerApplication(ApplicationPtr app)
         builder->registerApplication(app);
 }
 
-std::vector<QAction*> WidgetModelTree::createConfigurationActions(QObject* parent)
+WidgetModelTree_UserActions WidgetModelTree::createUserActions(QObject* parent)
 {
-    std::vector<QAction*> vecAction;
+    WidgetModelTree_UserActions userActions;
+    std::vector<WidgetModelTree_UserActions::FunctionSyncItems> vecFnSyncItems;
     for (const BuilderPtr& builder : m_vecBuilder) {
-        for (QAction* action : builder->createConfigurationActions(parent))
-            vecAction.push_back(action);
+        const WidgetModelTree_UserActions subUserActions = builder->createUserActions(parent);
+        for (QAction* action : subUserActions.items)
+            userActions.items.push_back(action);
+
+        if (subUserActions.fnSyncItems)
+            vecFnSyncItems.push_back(std::move(subUserActions.fnSyncItems));
     }
 
-    return vecAction;
+    userActions.fnSyncItems = [=]{
+        for (const WidgetModelTree_UserActions::FunctionSyncItems& fn : vecFnSyncItems)
+            fn();
+    };
+    return userActions;
 }
 
 void WidgetModelTree::addPrototypeBuilder(BuilderPtr builder)
