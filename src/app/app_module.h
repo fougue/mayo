@@ -6,22 +6,19 @@
 
 #pragma once
 
-#include "../base/application.h"
+#include "../base/application_ptr.h"
 #include "../base/io.h"
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
-#include "../base/unit_system.h"
 
 #include <QtCore/QObject>
 #include <unordered_map>
 #include <vector>
 
 namespace Mayo {
-
-class Application;
 
 class AppModule :
         public QObject,

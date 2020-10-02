@@ -1,5 +1,6 @@
 #include "widget_model_tree_builder_xde.h"
 
+#include "../base/application.h"
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/property_enumeration.h"

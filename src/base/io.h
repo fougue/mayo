@@ -8,16 +8,17 @@
 
 #include "application_item.h"
 #include "io_format.h"
-#include "messenger.h"
 #include "property.h"
-#include "result.h"
 #include "span.h"
 
 #include <QtCore/QCoreApplication>
 #include <functional>
 #include <memory>
 
-namespace Mayo { class TaskProgress; }
+namespace Mayo {
+class Messenger;
+class TaskProgress;
+}
 
 namespace Mayo {
 namespace IO {
@@ -65,8 +66,8 @@ class System {
 public:
     struct FormatProbeInput {
         QString filepath;
-        QByteArray contentsBegin;
-        uint64_t hintFullSize;
+        QByteArray contentsBegin; // Excerpt of the file(from start)
+        uint64_t hintFullSize; // Full file size in bytes
     };
     using FormatProbe = std::function<Format (const FormatProbeInput&)>;
     void addFormatProbe(const FormatProbe& probe);
@@ -167,97 +168,4 @@ Format probeFormat_OBJ(const System::FormatProbeInput& input);
 void addPredefinedFormatProbes(System* system);
 
 } // namespace IO
-
-#if 0
-class IO {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO)
-public:
-    enum class PartFormat {
-        Unknown,
-        Iges,
-        Step,
-        OccBrep,
-        Stl,
-        Obj
-    };
-
-    using Result = Mayo::Result<void>;
-
-    struct ExportOptions {
-#ifdef HAVE_GMIO
-        gmio_stl_format stlFormat = GMIO_STL_FORMAT_UNKNOWN;
-        std::string stlaSolidName;
-        gmio_float_text_format stlaFloat32Format = GMIO_FLOAT_TEXT_FORMAT_SHORTEST_LOWERCASE;
-        uint8_t stlaFloat32Precision = 9;
-#else
-        enum class StlFormat {
-            Ascii,
-            Binary
-        };
-        StlFormat stlFormat = StlFormat::Binary;
-#endif
-    };
-
-    enum class StlIoLibrary {
-        Gmio,
-        OpenCascade
-    };
-
-    static IO* instance();
-
-    static Span<const PartFormat> partFormats();
-    static QString partFormatFilter(PartFormat format);
-    static QStringList partFormatFilters();
-    static PartFormat findPartFormat(const QString& filepath);
-
-    StlIoLibrary stlIoLibrary() const;
-    void setStlIoLibrary(StlIoLibrary lib);
-
-    std::unique_ptr<Reader> createReader(IO::PartFormat format) const;
-
-    bool importInDocument(
-            DocumentPtr doc,
-            const QStringList& listFilepath,
-            Messenger* messenger = NullMessenger::instance(),
-            TaskProgress* progress = nullptr);
-    IO::Result exportApplicationItems(
-            Span<const ApplicationItem> appItems,
-            PartFormat format,
-            const ExportOptions& options,
-            const QString& filepath,
-            TaskProgress* progress = nullptr);
-    static bool hasExportOptionsForFormat(PartFormat format);
-
-private:
-    IO();
-
-    struct ImportData {
-        DocumentPtr doc;
-        QString filepath;
-        TaskProgress* progress;
-    };
-
-    struct ExportData {
-        Span<const ApplicationItem> appItems;
-        ExportOptions options;
-        QString filepath;
-        TaskProgress* progress;
-    };
-
-    Result importIges(ImportData data);
-    Result importStep(ImportData data);
-    Result importOccBRep(ImportData data);
-    Result importStl(ImportData data);
-
-    Result exportIges(ExportData data);
-    Result exportStep(ExportData data);
-    Result exportOccBRep(ExportData data);
-    Result exportStl(ExportData data);
-    Result exportStl_gmio(ExportData data);
-    Result exportStl_OCC(ExportData data);
-
-    StlIoLibrary m_stlIoLibrary = StlIoLibrary::OpenCascade;
-};
-#endif
-
 } // namespace Mayo
