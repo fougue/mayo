@@ -9,19 +9,17 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
-#include "../base/caf_utils.h"
 #include "../base/document.h"
+#include "../base/messenger.h"
 #include "../base/settings.h"
 #include "../base/task_manager.h"
 #include "../graphics/graphics_entity_driver.h"
-#include "../graphics/graphics_entity_driver_table.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/gui_document_list_model.h"
 #include "app_module.h"
 #include "dialog_about.h"
-#include "dialog_export_options.h"
 #include "dialog_inspect_xde.h"
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
@@ -147,18 +145,22 @@ struct OpenFileNames {
     }
 };
 
-static void prependRecentFile(QStringList* listRecentFile, const QString& filepath)
+static void prependRecentFile(const QString& filepath)
 {
     constexpr int sizeLimit = 10;
+    auto appModule = AppModule::get(Application::instance());
+    QStringList listFiles = appModule->recentFiles.value();
     const QString absFilepath = QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
-    for (const QString& recentFile : *listRecentFile) {
+    for (const QString& recentFile : listFiles) {
         if (recentFile == absFilepath)
             return;
     }
 
-    listRecentFile->insert(listRecentFile->begin(), absFilepath);
-    while (listRecentFile->size() > sizeLimit)
-        listRecentFile->pop_back();
+    listFiles.insert(listFiles.begin(), absFilepath);
+    while (listFiles.size() > sizeLimit)
+        listFiles.pop_back();
+
+    appModule->recentFiles.setValue(listFiles);
 }
 
 static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
@@ -182,8 +184,7 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-      m_ui(new Ui_MainWindow),
-      m_listRecentFile(AppModule::get(Application::instance())->recentFiles.value())
+      m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
     m_ui->widget_ModelTree->registerApplication(Application::instance());
@@ -391,7 +392,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete m_ui;
-    AppModule::get(Application::instance())->recentFiles.setValue(m_listRecentFile);
 }
 
 bool MainWindow::eventFilter(QObject* watched, QEvent* event)
@@ -500,7 +500,7 @@ void MainWindow::importInCurrentDoc()
     taskMgr->setTitle(taskId, taskTitle);
     taskMgr->run(taskId);
     for (const QString& filepath : resFileNames.listFilepath)
-        Internal::prependRecentFile(&m_listRecentFile, filepath);
+        Internal::prependRecentFile(filepath);
 }
 
 void MainWindow::exportSelectedItems()
@@ -895,7 +895,7 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
             });
             taskMgr->setTitle(taskId, loc.fileName());
             taskMgr->run(taskId);
-            Internal::prependRecentFile(&m_listRecentFile, locAbsoluteFilePath);
+            Internal::prependRecentFile(locAbsoluteFilePath);
         }
         else {
             if (listFilePath.size() == 1)
@@ -1017,16 +1017,18 @@ QMenu* MainWindow::createMenuRecentFiles()
 
     menu->clear();
     int idFile = 0;
-    for (const QString& file : m_listRecentFile) {
+    auto appModule = AppModule::get(Application::instance());
+    const QStringList& listRecentFile = appModule->recentFiles.value();
+    for (const QString& file : listRecentFile) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(file);
         menu->addAction(entryRecentFile, [=]{ this->openDocumentsFromList(QStringList(file)); });
     }
 
-    if (!m_listRecentFile.empty()) {
+    if (!listRecentFile.empty()) {
         menu->addSeparator();
         menu->addAction(tr("Clear menu"), [=]{
             menu->clear();
-            m_listRecentFile.clear();
+            appModule->recentFiles.setValue({});
         });
     }
 
