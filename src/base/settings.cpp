@@ -72,7 +72,6 @@ Settings::Settings(QObject* parent)
 
 Settings::~Settings()
 {
-    this->save();
     delete d;
 }
 
@@ -85,8 +84,10 @@ void Settings::load()
                 Property* prop = setting.property;
                 const QByteArray propKey = static_cast<QByteArray>(prop->name());
                 const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                const QVariant value = d->m_settings.value(settingPath);
-                prop->setValueFromVariant(value);
+                if (d->m_settings.contains(settingPath)) {
+                    const QVariant value = d->m_settings.value(settingPath);
+                    prop->setValueFromVariant(value);
+                }
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)

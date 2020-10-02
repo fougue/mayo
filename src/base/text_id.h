@@ -16,8 +16,8 @@
 namespace Mayo {
 
 struct TextId {
-    Span<const char> trContext;
-    Span<const char> key;
+    Span<const char> trContext; // TODO Change to QByteArray(from raw data)
+    Span<const char> key; // TODO Change to QByteArray(from raw data)
 
     QString tr() const;
     bool isEmpty() const;

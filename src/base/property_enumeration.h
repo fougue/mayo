@@ -31,6 +31,7 @@ public:
     int findIndex(Value value) const;
     QByteArray findName(Value value) const;
     Value findValue(const QByteArray& name) const;
+    bool contains(const QByteArray& name) const;
 
     const Item& itemAt(int index) const;
     Span<const Item> items() const;

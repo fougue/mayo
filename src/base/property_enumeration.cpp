@@ -9,6 +9,22 @@
 
 namespace Mayo {
 
+namespace {
+
+const Enumeration::Item* findEnumerationItem(const Enumeration& enumeration, const QByteArray& name)
+{
+    Span<const Enumeration::Item> spanItems = enumeration.items();
+    auto itFound = std::find_if(
+                spanItems.cbegin(),
+                spanItems.cend(),
+                [&](const Enumeration::Item& enumItem) {
+        return name == static_cast<QByteArray>(enumItem.name);
+    });
+    return itFound != spanItems.cend() ? &(*itFound) : nullptr;
+}
+
+} // namespace
+
 Enumeration::Enumeration(std::initializer_list<Item> listItem)
     : m_vecItem(listItem)
 {
@@ -43,13 +59,14 @@ int Enumeration::findIndex(Value value) const
 
 Enumeration::Value Enumeration::findValue(const QByteArray& name) const
 {
-    for (const Item& item : m_vecItem) {
-        if (name == static_cast<QByteArray>(item.name))
-            return item.value;
-    }
+    const Enumeration::Item* ptrItem = findEnumerationItem(*this, name);
+    Q_ASSERT(ptrItem != nullptr);
+    return ptrItem ? ptrItem->value : -1;
+}
 
-    Q_ASSERT(false);
-    return -1;
+bool Enumeration::contains(const QByteArray& name) const
+{
+    return findEnumerationItem(*this, name) != nullptr;
 }
 
 QByteArray Enumeration::findName(Value value) const
@@ -108,12 +125,19 @@ Result<void> PropertyEnumeration::setValue(Enumeration::Value v)
 
 QVariant PropertyEnumeration::valueAsVariant() const
 {
-    return QVariant::fromValue(m_value);
+    return QVariant::fromValue(this->name());
 }
 
 Result<void> PropertyEnumeration::setValueFromVariant(const QVariant& value)
 {
-    return this->setValue(value.toInt());
+    if (m_enumeration) {
+        const QByteArray name = value.toByteArray();
+        const Enumeration::Item* ptrItem = findEnumerationItem(*m_enumeration, name);
+        if (ptrItem)
+            return this->setValue(ptrItem->value);
+    }
+
+    return Result<void>::error();
 }
 
 const char* PropertyEnumeration::dynTypeName() const
