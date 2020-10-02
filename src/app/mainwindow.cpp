@@ -570,8 +570,8 @@ void MainWindow::zoomOutCurrentDoc()
 
 void MainWindow::editOptions()
 {
-    //auto dlg = new DialogOptions(this);
-    //qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    auto dlg = new DialogOptions(Application::instance()->settings(), this);
+    qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::saveImageView()
