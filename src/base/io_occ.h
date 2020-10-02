@@ -8,9 +8,6 @@
 
 #include "io.h"
 
-#include <IGESCAFControl_Reader.hxx>
-#include <STEPCAFControl_Reader.hxx>
-
 namespace Mayo {
 namespace IO {
 

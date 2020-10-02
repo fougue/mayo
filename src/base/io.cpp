@@ -6,50 +6,21 @@
 
 #include "io.h"
 
-#include "caf_utils.h"
 #include "document.h"
-#include "math_utils.h"
-#include "scope_import.h"
-#include "string_utils.h"
+#include "messenger.h"
 #include "task_manager.h"
 #include "task_progress.h"
-#include "tkernel_utils.h"
-#include <fougtools/occtools/qt_utils.h>
 
-#include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
-#include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
-#include <QtCore/QSettings>
 
-#include <BRepGProp.hxx>
-#include <GProp_GProps.hxx>
-#include <BRep_Builder.hxx>
-#include <BRepTools.hxx>
-#include <IGESControl_Controller.hxx>
-#include <Interface_Static.hxx>
-#include <Message_ProgressIndicator.hxx>
-#include <OSD_Path.hxx>
-#include <RWStl.hxx>
-#include <StlAPI_Writer.hxx>
-#include <Transfer_FinderProcess.hxx>
-#include <Transfer_TransientProcess.hxx>
-#include <XSControl_TransferWriter.hxx>
-#include <XSControl_WorkSession.hxx>
-
-#include <IGESCAFControl_Reader.hxx>
-#include <IGESCAFControl_Writer.hxx>
-#include <STEPCAFControl_Reader.hxx>
-#include <STEPCAFControl_Writer.hxx>
-#include <STEPCAFControl_Controller.hxx>
-#include <TDataXtd_Triangulation.hxx>
-#include <XCAFDoc_DocumentTool.hxx>
-#include <XCAFDoc_ShapeTool.hxx>
-
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-#  include <RWObj_CafReader.hxx>
-#endif
+#include <algorithm>
+#include <array>
+#include <future>
+#include <locale>
+#include <mutex>
+#include <regex>
 
 #ifdef HAVE_GMIO
 #  include <gmio_core/error.h>
@@ -61,16 +32,6 @@
 #  include <gmio_support/stl_occ_brep.h>
 #  include <gmio_support/stl_occ_polytri.h>
 #endif
-
-#include <algorithm>
-#include <array>
-#include <future>
-#include <locale>
-#include <fstream>
-#include <memory>
-#include <mutex>
-#include <regex>
-#include <set>
 
 namespace Mayo {
 namespace IO {
