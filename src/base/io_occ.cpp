@@ -15,16 +15,12 @@
 #  include "io_occ_obj.h"
 #endif
 
-#include <fougtools/occtools/qt_utils.h>
 #include <functional>
-#include <regex>
 
 namespace Mayo {
 namespace IO {
 
 namespace {
-
-struct Occ { Q_DECLARE_TR_FUNCTIONS(Mayo::IO::Occ) };
 
 // Helper for the creation of readers/writers
 
@@ -56,9 +52,7 @@ const GENERATOR& findGenerator(
     return GENERATOR::null();
 }
 
-template<typename PRODUCT>
-std::unique_ptr<PRODUCT> createProduct()
-{
+template<typename PRODUCT> std::unique_ptr<PRODUCT> createProduct() {
     return std::make_unique<PRODUCT>();
 }
 
@@ -104,6 +98,8 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
     static const ReaderParametersGenerator array[] = {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         { Format_OBJ, &OccObjReader::createParameters }
+#else
+        { Format_Unknown, nullptr } // To prevent compilation error with empty C array
 #endif
     };
     return findGenerator<ReaderParametersGenerator>(format, array).fn(parentGroup);
