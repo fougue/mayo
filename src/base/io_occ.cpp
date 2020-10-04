@@ -99,7 +99,7 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         { Format_OBJ, &OccObjReader::createParameters }
 #else
-        { Format_Unknown, nullptr } // To prevent compilation error with empty C array
+        ReaderParametersGenerator::null() // To prevent compilation error with empty C array
 #endif
     };
     return findGenerator<ReaderParametersGenerator>(format, array).fn(parentGroup);
