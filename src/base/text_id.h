@@ -11,6 +11,7 @@
 
 // NOTE Use this command-line for generating/updating .ts files:
 // $> lupdate -tr-function-alias QT_TRANSLATE_NOOP+=MAYO_TEXT_ID file.pro
+// TODO Expand to { QByteArrayLiteral(trContext), QByteArrayLiteral(key) }
 #define MAYO_TEXT_ID(trContext, key) { trContext, key }
 
 namespace Mayo {
