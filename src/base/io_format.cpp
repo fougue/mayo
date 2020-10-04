@@ -12,11 +12,15 @@ namespace Mayo {
 namespace IO {
 
 bool operator==(const Format& lhs, const Format& rhs) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
     return lhs.identifier.compare(rhs.identifier, Qt::CaseInsensitive) == 0;
+#else
+    return qstrnicmp(lhs.identifier.constData(), rhs.identifier.constData(), lhs.identifier.size()) == 0;
+#endif
 }
 
 bool operator!=(const Format& lhs, const Format& rhs) {
-    return lhs.identifier.compare(rhs.identifier, Qt::CaseInsensitive) != 0;
+    return !(lhs == rhs);
 }
 
 unsigned hash(const Format& key)
