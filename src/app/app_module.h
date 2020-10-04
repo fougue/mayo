@@ -14,6 +14,7 @@
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
 
+#include <fougtools/qttools/core/qbytearray_hfunc.h>
 #include <QtCore/QObject>
 #include <unordered_map>
 #include <vector>

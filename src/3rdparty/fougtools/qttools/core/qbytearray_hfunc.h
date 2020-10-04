@@ -1,0 +1,32 @@
+/****************************************************************************
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
+#pragma once
+
+#include <QtCore/QHash>
+#include <QtCore/QByteArray>
+
+namespace boost {
+
+//! Implementation of Boost's hash function for QByteArray
+inline std::size_t hash_value(const QByteArray& key) {
+    return qHash(key);
+}
+
+} // namespace boost
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 14, 0))
+namespace std {
+
+//! Specialization of C++11 std::hash<> functor for QByteArray
+template<> struct hash<QByteArray> {
+    inline std::size_t operator()(const QByteArray& key) const {
+        return qHash(key);
+    }
+};
+
+} // namespace std
+#endif
