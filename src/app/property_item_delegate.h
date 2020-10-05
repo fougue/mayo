@@ -4,11 +4,16 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
+#include "../base/unit.h"
 #include <QtWidgets/QStyledItemDelegate>
+#include <unordered_map>
 
 namespace Mayo {
 
-#if 0
+class BasePropertyQuantity;
+
 class PropertyItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
@@ -17,7 +22,11 @@ public:
     double rowHeightFactor() const { return m_rowHeightFactor; }
     void setRowHeightFactor(double v) { m_rowHeightFactor = v; }
 
-    using UnitTranslation = WidgetPropertiesEditor::UnitTranslation;
+    struct UnitTranslation {
+      Unit unit;
+      const char* strUnit; // UTF8
+      double factor;
+    };
     bool overridePropertyUnitTranslation(
             const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
@@ -43,6 +52,5 @@ private:
     double m_rowHeightFactor = 1.;
     std::unordered_map<const BasePropertyQuantity*, UnitTranslation> m_mapPropUnitTr;
 };
-#endif
 
 } // namespace Mayo

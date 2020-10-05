@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "../base/property_builtins.h"
+#include "property_item_delegate.h"
+#include "../base/property.h"
 #include "../base/span.h"
 #include "../base/unit.h"
 
@@ -37,11 +38,7 @@ public:
     double rowHeightFactor() const;
     void setRowHeightFactor(double v);
 
-    struct UnitTranslation {
-      Unit unit;
-      const char* strUnit; // UTF8
-      double factor;
-    };
+    using UnitTranslation = PropertyItemDelegate::UnitTranslation;
     bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
 private:
