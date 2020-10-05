@@ -15,11 +15,20 @@ namespace Mayo {
 
 static const Enumeration& enumUnitSchemas()
 {
-    static const Enumeration enumUnitSchema = {
+    static const Enumeration enumeration = {
         { UnitSystem::SI, MAYO_TEXT_ID("Mayo::AppModule", "SI") },
         { UnitSystem::ImperialUK, MAYO_TEXT_ID("Mayo::AppModule", "IMPERIAL_UK") }
     };
-    return enumUnitSchema;
+    return enumeration;
+}
+
+static const Enumeration& enumLanguages()
+{
+    static Enumeration enumeration = {
+        { 0, MAYO_TEXT_ID("Mayo::AppModule", "en") },
+        { 1, MAYO_TEXT_ID("Mayo::AppModule", "fr") }
+    };
+    return enumeration;
 }
 
 AppModule::AppModule(Application* app)
@@ -35,6 +44,7 @@ AppModule::AppModule(Application* app)
       unitSystemSchema(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "schema"), &enumUnitSchemas()),
       // Application
       groupId_application(app->settings()->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "application"))),
+      language(this, MAYO_TEXT_ID("Mayo::AppModule", "language"), &enumLanguages()),
       recentFiles(this, MAYO_TEXT_ID("Mayo::AppModule", "recentFiles")),
       lastOpenDir(this, MAYO_TEXT_ID("Mayo::AppModule", "lastOpenFolder")),
       lastSelectedFormatFilter(this, MAYO_TEXT_ID("Mayo::AppModule", "lastSelectedFormatFilter")),
@@ -66,6 +76,7 @@ AppModule::AppModule(Application* app)
     this->unitSystemDecimals.setConstraintsEnabled(true);
 
     // Application
+    settings->addSetting(&this->language, this->groupId_application);
     settings->addSetting(&this->recentFiles, this->groupId_application);
     settings->addSetting(&this->lastOpenDir, this->groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, this->groupId_application);
@@ -120,6 +131,7 @@ AppModule::AppModule(Application* app)
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
     settings->addGroupResetFunction(this->groupId_application, [&]{
+        this->language.setValue(enumLanguages().findValue("en"));
         this->recentFiles.setValue(QStringList());
         this->lastOpenDir.setValue(QString());
         this->lastSelectedFormatFilter.setValue(QString());
@@ -144,6 +156,11 @@ StringUtils::TextOptions AppModule::defaultTextOptions() const
     opts.unitDecimals = this->unitSystemDecimals.value();
     opts.unitSchema = this->unitSystemSchema.valueAs<UnitSystem::Schema>();
     return opts;
+}
+
+QString AppModule::qmFilePath(const QByteArray& languageCode)
+{
+    return QString(":/i18n/mayo_%1.qm").arg(QString::fromUtf8(languageCode));
 }
 
 const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) const

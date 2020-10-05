@@ -9,6 +9,7 @@
 #include <fougtools/qttools/core/qstring_hfunc.h>
 #include <QtCore/QSettings>
 #include <gsl/gsl_util>
+#include <regex>
 #include <unordered_map>
 
 namespace Mayo {
@@ -59,6 +60,22 @@ public:
         return QString::fromUtf8(group.identifier) + "/" + QString::fromUtf8(section.identifier);
     }
 
+    QString sectionPath(Settings::SectionIndex index) {
+        return this->sectionPath(this->group(index.group()), this->section(index));
+    }
+
+    void loadProperty(const QString& sectionPath, Property* property) {
+        if (!property)
+            return;
+
+        const QByteArray propertyKey = property->name().key;
+        const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
+        if (m_settings.contains(settingPath)) {
+            const QVariant value = m_settings.value(settingPath);
+            property->setValueFromVariant(value);
+        }
+    }
+
     QSettings m_settings;
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
@@ -80,17 +97,19 @@ void Settings::load()
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
             const QString sectionPath = d->sectionPath(group, section);
-            for (const Settings_Setting& setting : section.vecSetting) {
-                Property* prop = setting.property;
-                const QByteArray propKey = static_cast<QByteArray>(prop->name());
-                const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                if (d->m_settings.contains(settingPath)) {
-                    const QVariant value = d->m_settings.value(settingPath);
-                    prop->setValueFromVariant(value);
-                }
-            } // endfor(settings)
-        } // endfor(sections)
-    } // endfor(groups)
+            for (const Settings_Setting& setting : section.vecSetting)
+                d->loadProperty(sectionPath, setting.property);
+        }
+    }
+}
+
+void Settings::loadProperty(Settings::SettingIndex index)
+{
+    Property* prop = this->property(index);
+    if (prop) {
+        const QString sectionPath = d->sectionPath(index.section());
+        d->loadProperty(sectionPath, prop);
+    }
 }
 
 void Settings::save()
@@ -100,7 +119,7 @@ void Settings::save()
             const QString sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 Property* prop = setting.property;
-                const QByteArray propKey = static_cast<QByteArray>(prop->name());
+                const QByteArray propKey = prop->name().key;
                 const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
                 d->m_settings.setValue(settingPath, prop->valueAsVariant());
             } // endfor(settings)
@@ -125,7 +144,7 @@ QString Settings::groupTitle(GroupIndex index) const
 
 Settings::GroupIndex Settings::addGroup(TextId identifier)
 {
-    auto index = this->addGroup(static_cast<QByteArray>(identifier));
+    auto index = this->addGroup(identifier.key);
     this->setGroupTitle(index, identifier.tr());
     return index;
 }
@@ -179,7 +198,7 @@ bool Settings::isDefaultGroupSection(SectionIndex index) const
 
 Settings::SectionIndex Settings::addSection(GroupIndex index, TextId identifier)
 {
-    auto sectionIndex = this->addSection(index, static_cast<QByteArray>(identifier));
+    auto sectionIndex = this->addSection(index, identifier.key);
     this->setSectionTitle(sectionIndex, identifier.tr());
     return sectionIndex;
 }
@@ -210,6 +229,24 @@ int Settings::settingCount(SectionIndex index) const
 Property* Settings::property(SettingIndex index) const
 {
     return d->section(index.section()).vecSetting.at(index.get()).property;
+}
+
+Settings::SettingIndex Settings::findProperty(const Property* property) const
+{
+    for (const Settings_Group& group : d->m_vecGroup) {
+        for (const Settings_Section& section : group.vecSection) {
+            for (const Settings_Setting& setting : section.vecSetting) {
+                if (setting.property == property) {
+                    const int idSetting = &setting - &section.vecSetting.front();
+                    const int idSection = &section - &group.vecSection.front();
+                    const int idGroup = &group - &d->m_vecGroup.front();
+                    return SettingIndex(SectionIndex(GroupIndex(idGroup), idSection), idSetting);
+                }
+            }
+        }
+    }
+
+    return {};
 }
 
 Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex groupId)
@@ -258,6 +295,17 @@ void Settings::resetAll()
 {
     for (Settings_Group& group : d->m_vecGroup)
         this->resetGroup(GroupIndex(&group - &d->m_vecGroup.front()));
+}
+
+QByteArray Settings::defautLocaleLanguageCode()
+{
+    const QByteArray localeName = QLocale().name().toUtf8();
+    const std::regex rxLang("([a-z]+)_");
+    std::cmatch rxLangMatch;
+    if (std::regex_match(localeName.cbegin(), localeName.cend(), rxLangMatch, rxLang))
+        return QByteArray::fromStdString(rxLangMatch.str(1));
+
+    return QByteArrayLiteral("en");
 }
 
 const QLocale& Settings::locale() const

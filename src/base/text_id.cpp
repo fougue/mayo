@@ -18,12 +18,7 @@ QString TextId::tr() const
 
 bool TextId::isEmpty() const
 {
-    return this->key.empty();
-}
-
-bool TextId::sameKey(const TextId& lhs, const TextId& rhs)
-{
-    return lhs.key == rhs.key;
+    return this->key.isEmpty();
 }
 
 } // namespace Mayo

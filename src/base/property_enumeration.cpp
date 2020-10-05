@@ -17,9 +17,7 @@ const Enumeration::Item* findEnumerationItem(const Enumeration& enumeration, con
     auto itFound = std::find_if(
                 spanItems.cbegin(),
                 spanItems.cend(),
-                [&](const Enumeration::Item& enumItem) {
-        return name == static_cast<QByteArray>(enumItem.name);
-    });
+                [&](const Enumeration::Item& enumItem) { return name == enumItem.name.key; });
     return itFound != spanItems.cend() ? &(*itFound) : nullptr;
 }
 
@@ -73,7 +71,7 @@ QByteArray Enumeration::findName(Value value) const
 {
     const int index = this->findIndex(value);
     if (index != -1)
-        return static_cast<QByteArray>(this->itemAt(index).name);
+        return this->itemAt(index).name.key;
 
     return QByteArray();
 }
