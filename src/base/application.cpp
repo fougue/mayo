@@ -6,6 +6,8 @@
 
 #include "application.h"
 #include "io.h"
+#include "property_builtins.h"
+#include "qmeta_quantity_color.h"
 #include "settings.h"
 
 #include <fougtools/occtools/qt_utils.h>
@@ -54,6 +56,12 @@ ApplicationPtr Application::instance()
                     Document::NameFormatXml, qUtf8Printable(tr("XML Mayo Document Format")), "myx",
                     new Document::FormatXmlRetrievalDriver,
                     new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright));
+
+        qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
+        qRegisterMetaType<TreeNodeId>("TreeNodeId");
+        qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
+        qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qtRegisterMetaType_OccColor();
     }
 
     return appPtr;
@@ -226,10 +234,6 @@ Application::Application()
       m_settings(new Settings(this)),
       m_ioSystem(new IO::System)
 {
-    qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
-    qRegisterMetaType<TreeNodeId>("TreeNodeId");
-    qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
-    qRegisterMetaType<DocumentPtr>("DocumentPtr");
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)
