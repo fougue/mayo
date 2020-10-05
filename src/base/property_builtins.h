@@ -15,7 +15,6 @@
 
 #include <QtCore/QDateTime>
 #include <QtCore/QVariant>
-#include <QtGui/QColor> // TODO move in gui/
 #include <type_traits>
 
 namespace Mayo {
@@ -124,7 +123,6 @@ using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
 using PropertyQByteArray = GenericProperty<QByteArray>;
-using PropertyQColor = GenericProperty<QColor>;
 using PropertyQString = GenericProperty<QString>;
 using PropertyQStringList = GenericProperty<QStringList>;
 using PropertyQDateTime = GenericProperty<QDateTime>;

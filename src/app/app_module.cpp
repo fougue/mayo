@@ -91,8 +91,8 @@ AppModule::AppModule(Application* app)
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);
 
-            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
             m_mapFormatReaderParameters.insert({ format.identifier, ptrGroup.get() });
+            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 
@@ -106,8 +106,8 @@ AppModule::AppModule(Application* app)
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);
 
-            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
             m_mapFormatWriterParameters.insert({ format.identifier, ptrGroup.get() });
+            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 

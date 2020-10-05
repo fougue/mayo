@@ -56,7 +56,7 @@ public:
     PropertyEnumeration clipPlanesCappingHatch;
     // -- MeshDefaults
     const Settings_SectionIndex sectionId_graphicsMeshDefaults;
-    PropertyQColor meshDefaultsColor;
+    PropertyOccColor meshDefaultsColor;
     PropertyEnumeration meshDefaultsMaterial;
     PropertyBool meshDefaultsShowEdges;
     PropertyBool meshDefaultsShowNodes;

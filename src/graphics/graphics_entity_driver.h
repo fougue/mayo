@@ -9,7 +9,6 @@
 #include "graphics_entity.h"
 #include "../base/property_enumeration.h"
 #include <QtCore/QCoreApplication>
-#include <QtGui/QColor>
 #include <memory>
 
 namespace Mayo {
@@ -78,7 +77,7 @@ public:
         bool showEdges = false;
         bool showNodes = false;
         Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
-        QColor color{ 255, 228, 196 }; // Bisque
+        Quantity_Color color = Quantity_NOC_BISQUE;
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);

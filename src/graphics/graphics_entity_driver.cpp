@@ -22,7 +22,6 @@
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
-#include <fougtools/occtools/qt_utils.h>
 #include <stdexcept>
 
 namespace Mayo {
@@ -213,7 +212,7 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
         gpx->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, defaultValues().showEdges);
         gpx->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
         gpx->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTIC);
-        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, occ::QtUtils::toOccColor(defaultValues().color));
+        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         gpx->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));
         gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, Quantity_NOC_BLACK);

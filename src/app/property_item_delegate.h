@@ -30,9 +30,10 @@ public:
     bool overridePropertyUnitTranslation(
             const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
-    void paint(QPainter* painter,
-               const QStyleOptionViewItem& option,
-               const QModelIndex& index) const override;
+    void paint(
+            QPainter* painter,
+            const QStyleOptionViewItem& option,
+            const QModelIndex& index) const override;
 
     QString displayText(const QVariant& value, const QLocale&) const override;
 
