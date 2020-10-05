@@ -29,6 +29,7 @@ public:
     ~Settings();
 
     void load();
+    void loadProperty(SettingIndex index);
     void save();
 
     int groupCount() const;
@@ -49,6 +50,7 @@ public:
 
     int settingCount(SectionIndex index) const;
     Property* property(SettingIndex index) const;
+    SettingIndex findProperty(const Property* property) const;
     SettingIndex addSetting(Property* property, GroupIndex index);
     SettingIndex addSetting(Property* property, SectionIndex index);
 
@@ -57,6 +59,7 @@ public:
 
     // Helpers
 
+    static QByteArray defautLocaleLanguageCode();
     const QLocale& locale() const;
     void setLocale(const QLocale& locale);
 

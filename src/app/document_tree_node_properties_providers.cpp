@@ -38,11 +38,11 @@ XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalProperty
       m_propertyValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Centroid")),
       m_propertyValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Area")),
       m_propertyValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Volume")),
-      m_propertyReferredName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredName")),
-      m_propertyReferredColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredColor")),
-      m_propertyReferredValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredCentroid")),
-      m_propertyReferredValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredArea")),
-      m_propertyReferredValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ReferredVolume")),
+      m_propertyReferredName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductName")),
+      m_propertyReferredColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductColor")),
+      m_propertyReferredValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductCentroid")),
+      m_propertyReferredValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductArea")),
+      m_propertyReferredValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductVolume")),
       m_label(treeNode.label())
 {
     const TDF_Label& label = m_label;
@@ -58,22 +58,22 @@ XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalProperty
     // XDE shape kind
     QStringList listXdeShapeKind;
     if (XCaf::isShapeAssembly(label))
-        listXdeShapeKind.push_back(tr("Assembly"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Assembly").tr());
 
     if (XCaf::isShapeReference(label))
-        listXdeShapeKind.push_back(tr("Reference"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Reference").tr());
 
     if (XCaf::isShapeComponent(label))
-        listXdeShapeKind.push_back(tr("Component"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Component").tr());
 
     if (XCaf::isShapeCompound(label))
-        listXdeShapeKind.push_back(tr("Compound"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Compound").tr());
 
     if (XCaf::isShapeSimple(label))
-        listXdeShapeKind.push_back(tr("Simple"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Simple").tr());
 
     if (XCaf::isShapeSub(label))
-        listXdeShapeKind.push_back(tr("Sub"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Sub").tr());
 
     m_propertyXdeShapeKind.setValue(listXdeShapeKind.join('+'));
 

@@ -21,8 +21,10 @@
 #include "widget_model_tree_builder_xde.h"
 #include "widget_model_tree_builder_mesh.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
+#include <QtCore/QTranslator>
 #include <QtWidgets/QApplication>
 #include <iostream>
 #include <memory>
@@ -63,6 +65,7 @@ static CommandLineArguments processCommandLine()
     args.themeName = "dark";
     if (cmdParser.isSet(cmdOptionTheme))
         args.themeName = cmdParser.value(cmdOptionTheme);
+
     args.listFileToOpen = cmdParser.positionalArguments();
 
     return args;
@@ -96,7 +99,7 @@ static int runApp(QApplication* app)
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
     // Register AppModule
-    new AppModule(Application::instance().get());
+    auto appModule = new AppModule(Application::instance().get());
 
     // Register document tree node providers
     DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
@@ -116,6 +119,18 @@ static int runApp(QApplication* app)
         return -1;
     }
     mayoTheme()->setup();
+
+    // Load translation files before UI creation
+    {
+        auto settings = Application::instance()->settings();
+        settings->loadProperty(settings->findProperty(&appModule->language));
+        const QString qmFilePath = AppModule::qmFilePath(appModule->language.name());
+        auto translator = new QTranslator(app);
+        if (translator->load(qmFilePath))
+            app->installTranslator(translator);
+        else
+            std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
+    }
 
     // Create MainWindow
     MainWindow mainWindow;

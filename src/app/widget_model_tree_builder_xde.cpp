@@ -142,9 +142,11 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
     for (const Enumeration::Item& item : Module::enumInstanceNameFormat().items()) {
-        auto action = new QAction(item.name.tr(), parent);
+        const QString actionText =
+                MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "Show %1").tr().arg(item.name.tr());
+        auto action = new QAction(actionText, parent);
         action->setCheckable(true);
-        action->setData(static_cast<QByteArray>(item.name));
+        action->setData(item.name.key);
         userActions.items.push_back(action);
         group->addAction(action);
     }

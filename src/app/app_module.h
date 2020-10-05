@@ -33,6 +33,8 @@ public:
 
     StringUtils::TextOptions defaultTextOptions() const;
 
+    static QString qmFilePath(const QByteArray& languageCode);
+
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
@@ -43,6 +45,7 @@ public:
     PropertyEnumeration unitSystemSchema;
     // Application
     const Settings_GroupIndex groupId_application;
+    PropertyEnumeration language;
     PropertyQStringList recentFiles;
     PropertyQString lastOpenDir;
     PropertyQString lastSelectedFormatFilter;

@@ -21,16 +21,16 @@ const Enumeration& OcctEnums::Graphic3d_NameOfMaterial()
         { Graphic3d_NOM_SILVER,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Silver") },
         { Graphic3d_NOM_STEEL,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Steel") },
         { Graphic3d_NOM_STONE,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Stone") },
-        { Graphic3d_NOM_SHINY_PLASTIC, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Shiny plastic") },
+        { Graphic3d_NOM_SHINY_PLASTIC, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "ShinyPlastic") },
         { Graphic3d_NOM_SATIN,     MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Satin") },
         { Graphic3d_NOM_METALIZED, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Metalized") },
-        { Graphic3d_NOM_NEON_GNC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Neon gnc") },
+        { Graphic3d_NOM_NEON_GNC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "NeonGnc") },
         { Graphic3d_NOM_CHROME,    MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Chrome") },
         { Graphic3d_NOM_ALUMINIUM, MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Aluminium") },
         { Graphic3d_NOM_OBSIDIAN,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Obsidian") },
-        { Graphic3d_NOM_NEON_PHC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Neon phc") },
+        { Graphic3d_NOM_NEON_PHC,  MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "NeonPhc") },
         { Graphic3d_NOM_JADE,      MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Jade") },
-        { Graphic3d_NOM_DEFAULT,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Defaukt") }
+        { Graphic3d_NOM_DEFAULT,   MAYO_TEXT_ID("Graphic3d_NameOfMaterial", "Default") }
     };
     return enumeration;
 }
