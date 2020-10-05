@@ -33,7 +33,7 @@ public:
     Module(ApplicationPtr app)
         : QObject(app.get()),
           PropertyGroup(app->settings()),
-          instanceNameFormat(this, MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "InstanceNameFormat"))
+          instanceNameFormat(this, MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "instanceNameFormat"))
     {
         this->instanceNameFormat.setEnumeration(&enumInstanceNameFormat());
         this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
