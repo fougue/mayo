@@ -21,10 +21,19 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = settings->groupTitle(indexGroup);
-        WidgetPropertiesEditor::Group* group = m_ui->widgetEditor->addGroup(titleGroup);
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
             const Settings::SectionIndex indexSection(indexGroup, iSection);
-            for (int iSetting = 0; iSetting < settings->settingCount(indexSection); ++iSetting) {
+            const int settingCount = settings->settingCount(indexSection);
+            if (settingCount == 0)
+                continue; // Skip empty section
+
+            const QString titleSection = settings->sectionTitle(indexSection);
+            const QString uiTitleSection =
+                    !settings->isDefaultGroupSection(indexSection) ?
+                        tr("/%1").arg(titleSection) :
+                        QString();
+            WidgetPropertiesEditor::Group* group = m_ui->widgetEditor->addGroup(titleGroup + uiTitleSection);
+            for (int iSetting = 0; iSetting < settingCount; ++iSetting) {
                 Property* property = settings->property(Settings::SettingIndex(indexSection, iSetting));
                 m_ui->widgetEditor->editProperty(property, group);
             }
