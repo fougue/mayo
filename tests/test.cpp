@@ -128,8 +128,8 @@ void Test::Application_test()
 
 void Test::TextId_test()
 {
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == Span<const char>("foobar"));
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == Span<const char>("Mayo::Test"));
+    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == "foobar");
+    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
 }
 
 void Test::IO_test()
