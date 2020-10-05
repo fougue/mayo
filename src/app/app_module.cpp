@@ -70,6 +70,9 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->lastOpenDir, this->groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, this->groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, this->groupId_application);
+    this->recentFiles.setUserVisible(false);
+    this->lastOpenDir.setUserVisible(false);
+    this->lastSelectedFormatFilter.setUserVisible(false);
 
     // Graphics
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);

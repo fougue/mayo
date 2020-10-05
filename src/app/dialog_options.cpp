@@ -35,7 +35,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             WidgetPropertiesEditor::Group* group = m_ui->widgetEditor->addGroup(titleGroup + uiTitleSection);
             for (int iSetting = 0; iSetting < settingCount; ++iSetting) {
                 Property* property = settings->property(Settings::SettingIndex(indexSection, iSetting));
-                m_ui->widgetEditor->editProperty(property, group);
+                if (property->isUserVisible())
+                    m_ui->widgetEditor->editProperty(property, group);
             }
         }
     }

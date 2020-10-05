@@ -73,8 +73,11 @@ public:
     virtual QVariant valueAsVariant() const = 0;
     virtual Result<void> setValueFromVariant(const QVariant& value) = 0;
 
-    bool isUserReadOnly() const;
-    void setUserReadOnly(bool on);
+    bool isUserReadOnly() const { return m_isUserReadOnly; }
+    void setUserReadOnly(bool on) { m_isUserReadOnly = on; }
+
+    bool isUserVisible() const { return m_isUserVisible; }
+    void setUserVisible(bool on) { m_isUserVisible = on; }
 
     virtual const char* dynTypeName() const = 0;
 
@@ -90,6 +93,7 @@ private:
     PropertyGroup* const m_group = nullptr;
     const TextId m_name;
     bool m_isUserReadOnly = false;
+    bool m_isUserVisible = true;
 };
 
 class PropertyGroupSignals : public QObject, public PropertyGroup {

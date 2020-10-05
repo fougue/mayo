@@ -66,16 +66,6 @@ QString Property::label() const
     return m_name.tr();
 }
 
-bool Property::isUserReadOnly() const
-{
-    return m_isUserReadOnly;
-}
-
-void Property::setUserReadOnly(bool on)
-{
-    m_isUserReadOnly = on;
-}
-
 Property::Property(PropertyGroup* group, const TextId& name)
     : m_group(group),
       m_name(name)
