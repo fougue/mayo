@@ -96,7 +96,7 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->meshDefaultsShowEdges, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
     // Import
-    auto groupId_Import = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "Import"));
+    auto groupId_Import = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "import"));
     for (const IO::Format& format : app->ioSystem()->readerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Import, format.identifier);
         const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
@@ -111,7 +111,7 @@ AppModule::AppModule(Application* app)
     }
 
     // Export
-    auto groupId_Export = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "Export"));
+    auto groupId_Export = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "export"));
     for (const IO::Format& format : app->ioSystem()->writerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Export, format.identifier);
         const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
