@@ -5,13 +5,16 @@
 ****************************************************************************/
 
 #include "application.h"
+#include "io.h"
+#include "property_builtins.h"
+#include "qmeta_quantity_color.h"
+#include "settings.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
 #include <CDF_Session.hxx>
-#include <STEPCAFControl_Controller.hxx>
 #include <XCAFApp_Application.hxx>
 #include <XmlXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <XmlXCAFDrivers_DocumentStorageDriver.hxx>
@@ -33,12 +36,17 @@ public:
     opencascade::handle<CDM_Document> CreateDocument() override { return new Document; }
 };
 
+Application::~Application()
+{
+    delete m_settings;
+    delete m_ioSystem;
+}
+
 ApplicationPtr Application::instance()
 {
     static ApplicationPtr appPtr;
     if (appPtr.IsNull()) {
         appPtr = new Application;
-        STEPCAFControl_Controller::Init();
         const char strFougueCopyright[] = "Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>";
         appPtr->DefineFormat(
                     Document::NameFormatBinary, qUtf8Printable(tr("Binary Mayo Document Format")), "myb",
@@ -48,6 +56,12 @@ ApplicationPtr Application::instance()
                     Document::NameFormatXml, qUtf8Printable(tr("XML Mayo Document Format")), "myx",
                     new Document::FormatXmlRetrievalDriver,
                     new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright));
+
+        qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
+        qRegisterMetaType<TreeNodeId>("TreeNodeId");
+        qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
+        qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qtRegisterMetaType_OccColor();
     }
 
     return appPtr;
@@ -116,6 +130,16 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 void Application::closeDocument(const DocumentPtr& doc)
 {
     TDocStd_Application::Close(doc);
+}
+
+Settings* Application::settings()
+{
+    return m_settings;
+}
+
+const Settings* Application::settings() const
+{
+    return m_settings;
 }
 
 void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
@@ -206,12 +230,10 @@ void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc)
 }
 
 Application::Application()
-    : QObject(nullptr)
+    : QObject(nullptr),
+      m_settings(new Settings(this)),
+      m_ioSystem(new IO::System)
 {
-    qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
-    qRegisterMetaType<TreeNodeId>("TreeNodeId");
-    qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
-    qRegisterMetaType<DocumentPtr>("DocumentPtr");
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)

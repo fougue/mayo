@@ -1,8 +1,14 @@
+/****************************************************************************
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
 #include "graphics_entity_driver.h"
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
-#include "graphics_entity_base_property_owner.h"
+#include "graphics_entity_base_property_group.h"
 
 #include <BRep_TFace.hxx>
 #include <MeshVS_DisplayModeFlags.hxx>
@@ -16,7 +22,6 @@
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <XSDRAWSTLVRML_DataSource.hxx>
-#include <fougtools/occtools/qt_utils.h>
 #include <stdexcept>
 
 namespace Mayo {
@@ -50,10 +55,10 @@ void GraphicsEntityDriver::setEntityAisObject(
 GraphicsShapeEntityDriver::GraphicsShapeEntityDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, "WIREFRAME", tr("Wireframe") },
-        { DisplayMode_HiddenLineRemoval, "HLR", tr("Hidden Line Removal") },
-        { DisplayMode_Shaded, "SHADED", tr("Shaded") },
-        { DisplayMode_ShadedWithFaceBoundary, "SHADED_FACE_BNDS", tr("Shaded with face boundaries") }
+        { DisplayMode_Wireframe, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "WIREFRAME") },
+        { DisplayMode_HiddenLineRemoval, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "HLR") },
+        { DisplayMode_Shaded, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED") },
+        { DisplayMode_ShadedWithFaceBoundary, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED_FACE_BNDS") }
     });
 }
 
@@ -146,18 +151,18 @@ Enumeration::Value GraphicsShapeEntityDriver::currentDisplayMode(const GraphicsE
     return -1;
 }
 
-std::unique_ptr<PropertyOwnerSignals> GraphicsShapeEntityDriver::properties(const GraphicsEntity& entity) const
+std::unique_ptr<PropertyGroupSignals> GraphicsShapeEntityDriver::properties(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
-    return std::make_unique<GraphicsEntityBasePropertyOwner>(entity);
+    return std::make_unique<GraphicsEntityBasePropertyGroup>(entity);
 }
 
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, "WIREFRAME", tr("Wireframe") },
-        { MeshVS_DMF_Shading, "SHADED", tr("Shaded") },
-        { MeshVS_DMF_Shrink, "SHRINK", tr("Shrink") } // MeshVS_DA_ShrinkCoeff
+        { MeshVS_DMF_WireFrame, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "WIREFRAME") },
+        { MeshVS_DMF_Shading, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHADED") },
+        { MeshVS_DMF_Shrink, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHRINK") } // MeshVS_DA_ShrinkCoeff
     });
 }
 
@@ -207,7 +212,7 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
         gpx->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, defaultValues().showEdges);
         gpx->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
         gpx->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTIC);
-        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, occ::QtUtils::toOccColor(defaultValues().color));
+        gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         gpx->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));
         gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, Quantity_NOC_BLACK);
@@ -234,15 +239,14 @@ Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEn
     return entity.aisObject()->DisplayMode();
 }
 
-class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyOwner {
-    Q_DECLARE_TR_FUNCTIONS(GraphicsMeshEntityProperties)
+class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyGroup {
 public:
     GraphicsMeshEntityProperties(const GraphicsEntity& entity)
-        : GraphicsEntityBasePropertyOwner(entity),
+        : GraphicsEntityBasePropertyGroup(entity),
           m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
-          m_propertyColor(this, tr("Color")),
-          m_propertyShowEdges(this, tr("Show edges")),
-          m_propertyShowNodes(this, tr("Show nodes"))
+          m_propertyColor(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "color")),
+          m_propertyShowEdges(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showEdges")),
+          m_propertyShowNodes(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showNodes"))
     {
         // Init properties
         Mayo_PropertyChangedBlocker(this);
@@ -278,7 +282,7 @@ public:
             fnRedisplay(m_meshVisu);
         }
 
-        GraphicsEntityBasePropertyOwner::onPropertyChanged(prop);
+        GraphicsEntityBasePropertyGroup::onPropertyChanged(prop);
     }
 
     Handle_MeshVS_Mesh m_meshVisu;
@@ -287,7 +291,7 @@ public:
     PropertyBool m_propertyShowNodes;
 };
 
-std::unique_ptr<PropertyOwnerSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
+std::unique_ptr<PropertyGroupSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
     return std::make_unique<GraphicsMeshEntityProperties>(entity);

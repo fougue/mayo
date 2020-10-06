@@ -15,6 +15,7 @@
 #include "../src/base/libtree.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"
+#include "../src/base/io_occ.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
@@ -37,7 +38,7 @@
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
 // For Application_test()
-Q_DECLARE_METATYPE(Mayo::IO::PartFormat)
+Q_DECLARE_METATYPE(Mayo::IO::Format)
 // For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
@@ -57,6 +58,13 @@ static bool operator==(
 void Test::Application_test()
 {
     auto app = Application::instance();
+    auto ioSystem = Application::instance()->ioSystem();
+    auto fnImportInDocument = [=](const DocumentPtr& doc, const QString& filepath) {
+        return ioSystem->importInDocument()
+                .targetDocument(doc)
+                .withFilepaths({ filepath })
+                .execute();
+    };
     QCOMPARE(app->documentCount(), 0);
 
     {   // Add & remove a document
@@ -80,7 +88,7 @@ void Test::Application_test()
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
-        const bool okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        const bool okImport = fnImportInDocument(doc, "inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
@@ -101,11 +109,11 @@ void Test::Application_test()
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         bool okImport = true;
-        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.stlb" });
+        okImport = fnImportInDocument(doc, "inputs/cube.stlb");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
 
-        okImport = IO::instance()->importInDocument(doc, { "inputs/cube.step" });
+        okImport = fnImportInDocument(doc, "inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 2);
 
@@ -118,26 +126,33 @@ void Test::Application_test()
     QCOMPARE(app->documentCount(), 0);
 }
 
+void Test::TextId_test()
+{
+    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == "foobar");
+    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
+}
+
 void Test::IO_test()
 {
     QFETCH(QString, filePath);
-    QFETCH(IO::PartFormat, expectedPartFormat);
+    QFETCH(IO::Format, expectedPartFormat);
 
-    QCOMPARE(IO::findPartFormat(filePath), expectedPartFormat);
+    auto ioSystem = Application::instance()->ioSystem();
+    QCOMPARE(ioSystem->probeFormat(filePath), expectedPartFormat);
 }
 
 void Test::IO_test_data()
 {
     QTest::addColumn<QString>("filePath");
-    QTest::addColumn<IO::PartFormat>("expectedPartFormat");
+    QTest::addColumn<IO::Format>("expectedPartFormat");
 
-    QTest::newRow("cube.step") << "inputs/cube.step" << IO::PartFormat::Step;
-    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::PartFormat::Iges;
-    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::PartFormat::OccBrep;
-    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::PartFormat::OccBrep;
-    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::PartFormat::Stl;
-    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::PartFormat::Stl;
-    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::PartFormat::Obj;
+    QTest::newRow("cube.step") << "inputs/cube.step" << IO::Format_STEP;
+    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::Format_IGES;
+    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::Format_OCCBREP;
+    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
+    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::Format_STL;
+    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::Format_STL;
+    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
 }
 
 void Test::BRepUtils_test()
@@ -541,6 +556,14 @@ void Test::LibTree_test()
     QCOMPARE(tree.nodeSiblingNext(n0_1_1), n0_1_2);
     QCOMPARE(tree.nodeSiblingPrevious(n0_1_2), n0_1_1);
     QCOMPARE(tree.nodeSiblingNext(n0_1_2), nullptrId);
+}
+
+void Test::initTestCase()
+{
+    IO::System* ioSystem = Application::instance()->ioSystem();
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    IO::addPredefinedFormatProbes(ioSystem);
 }
 
 } // namespace Mayo

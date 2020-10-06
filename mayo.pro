@@ -48,7 +48,6 @@ HEADERS += \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.h \
     \
     $$files(src/base/*.h) \
-    $$files(src/gpx/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
@@ -61,7 +60,6 @@ SOURCES += \
     src/3rdparty/fougtools/qttools/gui/qwidget_utils.cpp \
     \
     $$files(src/base/*.cpp) \
-    $$files(src/gpx/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
@@ -78,6 +76,10 @@ win* {
 }
 
 FORMS += $$files(src/app/*.ui)
+
+TRANSLATIONS += \
+    i18n/mayo_en.ts \
+    i18n/mayo_fr.ts
 
 RESOURCES += mayo.qrc
 RC_ICONS = images/appicon.ico
@@ -120,4 +122,6 @@ LIBS += -lTKGeomBase
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
 minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
+} else {
+    SOURCES -= src/base/io_occ_obj.cpp
 }

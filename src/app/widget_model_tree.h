@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/application_item.h"
 #include "../base/property.h"
 
 #include <QtWidgets/QWidget>
+#include <functional>
 class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -20,6 +22,12 @@ namespace Mayo {
 
 class Settings;
 class WidgetModelTreeBuilder;
+
+struct WidgetModelTree_UserActions {
+    using FunctionSyncItems = std::function<void()>;
+    std::vector<QAction*> items;
+    FunctionSyncItems fnSyncItems;
+};
 
 class WidgetModelTree : public QWidget {
     Q_OBJECT
@@ -32,10 +40,9 @@ public:
 
     void refreshItemText(const ApplicationItem& appItem);
 
-    void loadConfiguration(const Settings* settings, const QString& keyGroup);
-    void saveConfiguration(Settings* settings, const QString& keyGroup);
+    void registerApplication(ApplicationPtr app);
 
-    std::vector<QAction*> createConfigurationActions(QObject* parent);
+    WidgetModelTree_UserActions createUserActions(QObject* parent);
 
     // For builders
     static void addPrototypeBuilder(BuilderPtr builder);

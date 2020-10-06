@@ -11,21 +11,16 @@
 
 namespace Mayo {
 
+class Settings;
+
 class DialogOptions : public QDialog {
     Q_OBJECT
 public:
-    DialogOptions(QWidget *parent = nullptr);
+    DialogOptions(Settings* settings, QWidget *parent = nullptr);
     ~DialogOptions();
 
-    void accept() override;
-
 private:
-    void chooseColor(
-            const QColor& currentColor,
-            const std::function<void(QColor)>& continuation);
-
     class Ui_DialogOptions* m_ui = nullptr;
-    QColor m_meshDefaultColor;
 };
 
 } // namespace Mayo

@@ -18,20 +18,20 @@ public:
     using Value = int;
     struct Item {
         Value value;
-        QByteArray name;
-        QString text;
+        TextId name;
     };
 
     Enumeration() = default;
     Enumeration(std::initializer_list<Item> listItem);
 
-    void addItem(Value value, const QByteArray& name, const QString& text = QString());
+    void addItem(Value value, const TextId& name);
     int size() const;
 
     const Item& findItem(Value value) const;
     int findIndex(Value value) const;
     QByteArray findName(Value value) const;
     Value findValue(const QByteArray& name) const;
+    bool contains(const QByteArray& name) const;
 
     const Item& itemAt(int index) const;
     Span<const Item> items() const;
@@ -43,13 +43,14 @@ private:
 class PropertyEnumeration : public Property {
 public:
     PropertyEnumeration(
-            PropertyOwner* owner,
-            const QString& label,
-            const Enumeration* enumeration);
+            PropertyGroup* grp,
+            const TextId& name,
+            const Enumeration* enumeration = nullptr);
 
-    const Enumeration& enumeration() const;
+    const Enumeration* enumeration() const;
+    void setEnumeration(const Enumeration* enumeration);
 
-    QString name() const;
+    QByteArray name() const;
     Enumeration::Value value() const;
     template<typename T> T valueAs() const;
     Result<void> setValue(Enumeration::Value v);

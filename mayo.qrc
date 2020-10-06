@@ -67,5 +67,7 @@
         <file>images/themes/classic/xde-simple-shape.svg</file>
         <file>images/themes/classic/edit.svg</file>
         <file>images/themes/dark/edit.svg</file>
+        <file>i18n/mayo_en.qm</file>
+        <file>i18n/mayo_fr.qm</file>
     </qresource>
 </RCC>

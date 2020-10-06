@@ -20,29 +20,29 @@ bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return XCaf::isShape(treeNode.label());
 }
 
-std::unique_ptr<PropertyOwnerSignals>
+std::unique_ptr<PropertyGroupSignals>
 XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};
 
-    return std::make_unique<InternalPropertyOwner>(treeNode);
+    return std::make_unique<InternalPropertyGroup>(treeNode);
 }
 
-XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalPropertyOwner(const DocumentTreeNode& treeNode)
-    : m_propertyName(this, tr("Name")),
-      m_propertyShapeType(this, tr("Shape")),
-      m_propertyXdeShapeKind(this, tr("XDE shape")),
-      m_propertyColor(this, tr("Color")),
-      m_propertyReferenceLocation(this, tr("Location")),
-      m_propertyValidationCentroid(this, tr("Centroid")),
-      m_propertyValidationArea(this, tr("Area")),
-      m_propertyValidationVolume(this, tr("Volume")),
-      m_propertyReferredName(this, tr("[Referred]Name")),
-      m_propertyReferredColor(this, tr("[Referred]Color")),
-      m_propertyReferredValidationCentroid(this, tr("[Referred]Centroid")),
-      m_propertyReferredValidationArea(this, tr("[Referred]Area")),
-      m_propertyReferredValidationVolume(this, tr("[Referred]Volume")),
+XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
+    : m_propertyName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Name")),
+      m_propertyShapeType(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Shape")),
+      m_propertyXdeShapeKind(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "XdeShape")),
+      m_propertyColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Color")),
+      m_propertyReferenceLocation(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Location")),
+      m_propertyValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Centroid")),
+      m_propertyValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Area")),
+      m_propertyValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Volume")),
+      m_propertyReferredName(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductName")),
+      m_propertyReferredColor(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductColor")),
+      m_propertyReferredValidationCentroid(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductCentroid")),
+      m_propertyReferredValidationArea(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductArea")),
+      m_propertyReferredValidationVolume(this, MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "ProductVolume")),
       m_label(treeNode.label())
 {
     const TDF_Label& label = m_label;
@@ -58,22 +58,22 @@ XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalProperty
     // XDE shape kind
     QStringList listXdeShapeKind;
     if (XCaf::isShapeAssembly(label))
-        listXdeShapeKind.push_back(tr("Assembly"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Assembly").tr());
 
     if (XCaf::isShapeReference(label))
-        listXdeShapeKind.push_back(tr("Reference"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Reference").tr());
 
     if (XCaf::isShapeComponent(label))
-        listXdeShapeKind.push_back(tr("Component"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Component").tr());
 
     if (XCaf::isShapeCompound(label))
-        listXdeShapeKind.push_back(tr("Compound"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Compound").tr());
 
     if (XCaf::isShapeSimple(label))
-        listXdeShapeKind.push_back(tr("Simple"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Simple").tr());
 
     if (XCaf::isShapeSub(label))
-        listXdeShapeKind.push_back(tr("Sub"));
+        listXdeShapeKind.push_back(MAYO_TEXT_ID("Mayo::XCaf_DocumentTreeNodeProps", "Sub").tr());
 
     m_propertyXdeShapeKind.setValue(listXdeShapeKind.join('+'));
 
@@ -145,14 +145,14 @@ XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalProperty
     m_propertyReferredName.setUserReadOnly(false);
 }
 
-void XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::onPropertyChanged(Property* prop)
+void XCaf_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::onPropertyChanged(Property* prop)
 {
     if (prop == &m_propertyName)
         CafUtils::setLabelAttrStdName(m_label, m_propertyName.value());
     else if (prop == &m_propertyReferredName)
         CafUtils::setLabelAttrStdName(m_labelReferred, m_propertyReferredName.value());
 
-    PropertyOwnerSignals::onPropertyChanged(prop);
+    PropertyGroupSignals::onPropertyChanged(prop);
 }
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
@@ -160,18 +160,18 @@ bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return CafUtils::hasAttribute<TDataXtd_Triangulation>(treeNode.label());
 }
 
-std::unique_ptr<PropertyOwnerSignals>
+std::unique_ptr<PropertyGroupSignals>
 Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};
 
-    return std::make_unique<InternalPropertyOwner>(treeNode);
+    return std::make_unique<InternalPropertyGroup>(treeNode);
 }
 
-Mesh_DocumentTreeNodePropertiesProvider::InternalPropertyOwner::InternalPropertyOwner(const DocumentTreeNode& treeNode)
-    : m_propertyNodeCount(this, tr("Node count")),
-      m_propertyTriangleCount(this, tr("Triangle count"))
+Mesh_DocumentTreeNodePropertiesProvider::InternalPropertyGroup::InternalPropertyGroup(const DocumentTreeNode& treeNode)
+    : m_propertyNodeCount(this, MAYO_TEXT_ID("Mayo::Mesh_DocumentTreeNodeProps", "NodeCount")),
+      m_propertyTriangleCount(this, MAYO_TEXT_ID("Mayo::Mesh_DocumentTreeNodeProps", "TriangleCount"))
 {
     auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(treeNode.label());
     Handle_Poly_Triangulation polyTri;

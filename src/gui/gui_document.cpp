@@ -45,7 +45,6 @@ static Handle_V3d_Viewer createOccViewer()
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
     viewer->SetLightOn();
-
     return viewer;
 }
 

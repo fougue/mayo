@@ -10,14 +10,11 @@
 #include "../base/property_enumeration.h"
 #include "graphics_entity.h"
 
-#include <QtCore/QCoreApplication>
-
 namespace Mayo {
 
-class GraphicsEntityBasePropertyOwner : public PropertyOwnerSignals {
-    Q_DECLARE_TR_FUNCTIONS(GraphicsEntityBasePropertyOwner)
+class GraphicsEntityBasePropertyGroup : public PropertyGroupSignals {
 public:
-    GraphicsEntityBasePropertyOwner(const GraphicsEntity& gfxEntity);
+    GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity);
     void onPropertyChanged(Property* prop) override;
 
 private:

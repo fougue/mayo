@@ -8,13 +8,13 @@
 
 namespace Mayo {
 
-const char *BasePropertyQuantity::dynTypeName() const
+const char* BasePropertyQuantity::dynTypeName() const
 {
     return BasePropertyQuantity::TypeName;
 }
 
-BasePropertyQuantity::BasePropertyQuantity(PropertyOwner *owner, const QString &label)
-    : Property(owner, label)
+BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const TextId& name)
+    : Property(grp, name)
 {
 }
 
@@ -23,6 +23,7 @@ template<> const char GenericProperty<int>/*PropertyInt*/::TypeName[] = "Mayo::P
 template<> const char GenericProperty<double>/*PropertyDouble*/::TypeName[] = "Mayo::PropertyDouble";
 template<> const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray";
 template<> const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
+template<> const char PropertyQStringList::TypeName[] = "Mayo::PropertyQStringList";
 template<> const char PropertyQDateTime::TypeName[] = "Mayo::PropertyQDateTime";
 template<> const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";

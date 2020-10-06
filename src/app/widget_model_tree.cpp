@@ -8,10 +8,10 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
-#include "../base/string_utils.h"
 #include "../base/document.h"
+#include "../base/settings.h"
+#include "../base/string_utils.h"
 #include "../gui/gui_application.h"
-#include "settings.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
@@ -86,14 +86,6 @@ enum TreeItemType {
     TreeItemType_DocumentTreeNode = 0x02,
     TreeItemType_DocumentEntity = 0x10 | TreeItemType_DocumentTreeNode
 };
-
-//template<typename T> T* qVariantToPtr(const QVariant& var) {
-//    return static_cast<T*>(var.value<void*>());
-//}
-
-//template<typename T> QVariant ptrToQVariant(T* ptr) {
-//    return qVariantFromValue(reinterpret_cast<void*>(ptr));
-//}
 
 static TreeItemType treeItemType(const QTreeWidgetItem* treeItem)
 {
@@ -189,9 +181,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     QObject::connect(
                 app.get(), &Application::documentAboutToClose,
                 this, &WidgetModelTree::onDocumentAboutToClose);
-//    QObject::connect(
-//                app, &Application::documentPropertyChanged,
-//                this, &WidgetModelTree::onDocumentPropertyChanged);
     QObject::connect(
                 app.get(), &Application::documentNameChanged,
                 this, &WidgetModelTree::onDocumentNameChanged);
@@ -201,9 +190,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     QObject::connect(
                 app.get(), &Application::documentEntityAboutToBeDestroyed,
                 this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
-//    QObject::connect(
-//                app, &Application::documentItemPropertyChanged,
-//                this, &WidgetModelTree::onDocumentItemPropertyChanged);
     QObject::connect(
                 m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
@@ -230,29 +216,30 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
     }
 }
 
-void WidgetModelTree::loadConfiguration(const Settings* settings, const QString& keyGroup)
+void WidgetModelTree::registerApplication(ApplicationPtr app)
 {
-    const QString keyModel = keyGroup + "/" + this->objectName();
     for (const BuilderPtr& builder : m_vecBuilder)
-        builder->loadConfiguration(settings, keyModel);
+        builder->registerApplication(app);
 }
 
-void WidgetModelTree::saveConfiguration(Settings* settings, const QString& keyGroup)
+WidgetModelTree_UserActions WidgetModelTree::createUserActions(QObject* parent)
 {
-    const QString keyModel = keyGroup + "/" + this->objectName();
-    for (const BuilderPtr& builder : m_vecBuilder)
-        builder->saveConfiguration(settings, keyModel);
-}
-
-std::vector<QAction*> WidgetModelTree::createConfigurationActions(QObject* parent)
-{
-    std::vector<QAction*> vecAction;
+    WidgetModelTree_UserActions userActions;
+    std::vector<WidgetModelTree_UserActions::FunctionSyncItems> vecFnSyncItems;
     for (const BuilderPtr& builder : m_vecBuilder) {
-        for (QAction* action : builder->createConfigurationActions(parent))
-            vecAction.push_back(action);
+        const WidgetModelTree_UserActions subUserActions = builder->createUserActions(parent);
+        for (QAction* action : subUserActions.items)
+            userActions.items.push_back(action);
+
+        if (subUserActions.fnSyncItems)
+            vecFnSyncItems.push_back(std::move(subUserActions.fnSyncItems));
     }
 
-    return vecAction;
+    userActions.fnSyncItems = [=]{
+        for (const WidgetModelTree_UserActions::FunctionSyncItems& fn : vecFnSyncItems)
+            fn();
+    };
+    return userActions;
 }
 
 void WidgetModelTree::addPrototypeBuilder(BuilderPtr builder)
@@ -304,13 +291,6 @@ void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const QStrin
     if (treeItem)
         this->findSupportBuilder(doc)->refreshTextTreeItem(doc, treeItem);
 }
-
-//void WidgetModelTree::onDocumentPropertyChanged(Document* doc, Property* prop)
-//{
-//    QTreeWidgetItem* treeItem = this->findTreeItem(doc);
-//    if (treeItem && prop == &doc->propertyLabel)
-//        this->findSupportBuilder(doc)->refreshTextTreeItem(doc, treeItem);
-//}
 
 QTreeWidgetItem* WidgetModelTree::loadDocumentEntity(const DocumentTreeNode& node)
 {

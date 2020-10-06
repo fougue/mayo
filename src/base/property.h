@@ -8,6 +8,7 @@
 
 #include "span.h"
 #include "result.h"
+#include "text_id.h"
 
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
@@ -18,10 +19,14 @@ namespace Mayo {
 
 class Property;
 
-class PropertyOwner {
+class PropertyGroup {
 public:
-    // TODO change to computed properties, remove member m_properties
+    PropertyGroup(PropertyGroup* parentGroup = nullptr);
+
+    // TODO Rename to get() or items() ?
     Span<Property* const> properties() const;
+
+    PropertyGroup* parentGroup() const { return m_parentGroup; }
 
 protected:
     virtual void onPropertyChanged(Property* prop);
@@ -35,23 +40,24 @@ protected:
 private:
     friend class Property;
     friend struct PropertyChangedBlocker;
-    std::vector<Property*> m_properties;
+    PropertyGroup* m_parentGroup = nullptr;
+    std::vector<Property*> m_properties; // TODO Replace by QVarLengthArray<Property*> ?
     bool m_propertyChangedBlocked = false;
 };
 
 struct PropertyChangedBlocker {
-    PropertyChangedBlocker(PropertyOwner* owner);
+    PropertyChangedBlocker(PropertyGroup* group);
     ~PropertyChangedBlocker();
-    PropertyOwner* const m_owner;
+    PropertyGroup* const m_group = nullptr;
 };
 
-#define Mayo_PropertyChangedBlocker(owner) \
-            Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(owner); \
+#define Mayo_PropertyChangedBlocker(group) \
+            Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group); \
             Q_UNUSED(__Mayo_PropertyChangedBlocker);
 
 class Property {
 public:
-    Property(PropertyOwner* owner, const QString& label);
+    Property(PropertyGroup* group, const TextId& name);
     Property() = delete;
     Property(const Property&) = delete;
     Property(Property&&) = delete;
@@ -59,34 +65,41 @@ public:
     Property& operator=(Property&&) = delete;
     virtual ~Property() = default;
 
-    const QString& label() const;
+    PropertyGroup* group() const { return m_group; }
+
+    const TextId& name() const;
+    QString label() const;
 
     virtual QVariant valueAsVariant() const = 0;
     virtual Result<void> setValueFromVariant(const QVariant& value) = 0;
 
-    bool isUserReadOnly() const;
-    void setUserReadOnly(bool on);
+    bool isUserReadOnly() const { return m_isUserReadOnly; }
+    void setUserReadOnly(bool on) { m_isUserReadOnly = on; }
+
+    bool isUserVisible() const { return m_isUserVisible; }
+    void setUserVisible(bool on) { m_isUserVisible = on; }
 
     virtual const char* dynTypeName() const = 0;
 
 protected:
     void notifyChanged();
     Result<void> isValid() const;
-    bool hasOwner() const;
+    bool hasGroup() const;
 
     template<typename T>
     static Result<void> setValueHelper(Property* prop, T* ptrValue, const T& newValue);
 
 private:
-    PropertyOwner* const m_owner = nullptr;
-    const QString m_label;
+    PropertyGroup* const m_group = nullptr;
+    const TextId m_name;
     bool m_isUserReadOnly = false;
+    bool m_isUserVisible = true;
 };
 
-class PropertyOwnerSignals : public QObject, public PropertyOwner {
+class PropertyGroupSignals : public QObject, public PropertyGroup {
     Q_OBJECT
 public:
-    PropertyOwnerSignals(QObject* parent = nullptr);
+    PropertyGroupSignals(QObject* parent = nullptr);
 
 signals:
     void propertyChanged(Property* prop);
@@ -104,7 +117,7 @@ template<typename T> Result<void> Property::setValueHelper(
         Property* prop, T* ptrValue, const T& newValue)
 {
     Result<void> result = Result<void>::ok();
-    if (prop->hasOwner()) {
+    if (prop->hasGroup()) {
         const T previousValue = *ptrValue;
         *ptrValue = newValue;
         result = prop->isValid();

@@ -9,14 +9,28 @@
 
 namespace Mayo {
 
+namespace {
+
+const Enumeration::Item* findEnumerationItem(const Enumeration& enumeration, const QByteArray& name)
+{
+    Span<const Enumeration::Item> spanItems = enumeration.items();
+    auto itFound = std::find_if(
+                spanItems.cbegin(),
+                spanItems.cend(),
+                [&](const Enumeration::Item& enumItem) { return name == enumItem.name.key; });
+    return itFound != spanItems.cend() ? &(*itFound) : nullptr;
+}
+
+} // namespace
+
 Enumeration::Enumeration(std::initializer_list<Item> listItem)
     : m_vecItem(listItem)
 {
 }
 
-void Enumeration::addItem(Value value, const QByteArray& name, const QString& text)
+void Enumeration::addItem(Value value, const TextId& name)
 {
-    const Item item = { value, name, text };
+    const Item item = { value, name };
     m_vecItem.emplace_back(std::move(item));
 }
 
@@ -43,19 +57,23 @@ int Enumeration::findIndex(Value value) const
 
 Enumeration::Value Enumeration::findValue(const QByteArray& name) const
 {
-    for (const Item& item : m_vecItem) {
-        if (item.name == name)
-            return item.value;
-    }
+    const Enumeration::Item* ptrItem = findEnumerationItem(*this, name);
+    Q_ASSERT(ptrItem != nullptr);
+    return ptrItem ? ptrItem->value : -1;
+}
 
-    Q_ASSERT(false);
-    return -1;
+bool Enumeration::contains(const QByteArray& name) const
+{
+    return findEnumerationItem(*this, name) != nullptr;
 }
 
 QByteArray Enumeration::findName(Value value) const
 {
     const int index = this->findIndex(value);
-    return index != -1 ? this->itemAt(index).name : QByteArray();
+    if (index != -1)
+        return this->itemAt(index).name.key;
+
+    return QByteArray();
 }
 
 const Enumeration::Item& Enumeration::itemAt(int index) const
@@ -69,25 +87,27 @@ Span<const Enumeration::Item> Enumeration::items() const
 }
 
 PropertyEnumeration::PropertyEnumeration(
-        PropertyOwner* owner,
-        const QString& label,
-        const Enumeration* enumeration)
-    : Property(owner, label),
-      m_enumeration(enumeration)
+        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration)
+    : Property(grp, name)
 {
-    Q_ASSERT(m_enumeration != nullptr);
-    Q_ASSERT(m_enumeration->size() > 0);
-    m_value = m_enumeration->itemAt(0).value;
+    this->setEnumeration(enumeration);
 }
 
-const Enumeration& PropertyEnumeration::enumeration() const
+const Enumeration* PropertyEnumeration::enumeration() const
 {
-    return *m_enumeration;
+    return m_enumeration;
 }
 
-QString PropertyEnumeration::name() const
+void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
 {
-    return m_enumeration->findName(m_value);
+    m_enumeration = enumeration;
+    if (m_enumeration && m_enumeration->size() > 0)
+        m_value = m_enumeration->itemAt(0).value;
+}
+
+QByteArray PropertyEnumeration::name() const
+{
+    return m_enumeration ? m_enumeration->findName(m_value) : QByteArray();
 }
 
 Enumeration::Value PropertyEnumeration::value() const
@@ -103,12 +123,19 @@ Result<void> PropertyEnumeration::setValue(Enumeration::Value v)
 
 QVariant PropertyEnumeration::valueAsVariant() const
 {
-    return QVariant::fromValue(m_value);
+    return QVariant::fromValue(this->name());
 }
 
 Result<void> PropertyEnumeration::setValueFromVariant(const QVariant& value)
 {
-    return this->setValue(value.toInt());
+    if (m_enumeration) {
+        const QByteArray name = value.toByteArray();
+        const Enumeration::Item* ptrItem = findEnumerationItem(*m_enumeration, name);
+        if (ptrItem)
+            return this->setValue(ptrItem->value);
+    }
+
+    return Result<void>::error();
 }
 
 const char* PropertyEnumeration::dynTypeName() const

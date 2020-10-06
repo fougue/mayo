@@ -15,6 +15,7 @@ class Test : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+    void TextId_test();
     void IO_test();
     void IO_test_data();
     void BRepUtils_test();
@@ -34,6 +35,8 @@ private slots:
 
     void LibTask_test();
     void LibTree_test();
+
+    void initTestCase();
 };
 
 } // namespace Mayo

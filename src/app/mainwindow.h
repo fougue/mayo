@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include "../base/application.h"
-#include "../base/application_item.h"
-#include "../base/application_item_selection_model.h"
-#include "../base/io.h"
 #include "../base/property.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
@@ -71,12 +67,6 @@ private:
     void closeAllDocumentsExceptCurrent();
     void closeAllDocuments();
 
-    void runExportTask(
-            Span<const ApplicationItem> appItems,
-            IO::PartFormat format,
-            const IO::ExportOptions& opts,
-            const QString& filepath);
-
     void updateControlsActivation();
 
     int currentDocumentIndex() const;
@@ -91,9 +81,8 @@ private:
 
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
-    QStringList m_listRecentFile;
-    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyOwnerSignals> m_ptrCurrentNodeGraphicsProperties;
+    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeDataProperties;
+    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
 };
 
 } // namespace Mayo

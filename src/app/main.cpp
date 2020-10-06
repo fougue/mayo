@@ -6,22 +6,25 @@
 
 #include "../base/application.h"
 #include "../base/document_tree_node_properties_provider.h"
-#include "../base/unit_system.h"
+#include "../base/io.h"
+#include "../base/io_occ.h"
+#include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"
 #include "../graphics/graphics_entity_driver_table.h"
+#include "app_module.h"
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
-#include "settings.h"
-#include "settings_keys.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_xde.h"
 #include "widget_model_tree_builder_mesh.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
+#include <QtCore/QTranslator>
 #include <QtWidgets/QApplication>
 #include <iostream>
 #include <memory>
@@ -62,6 +65,7 @@ static CommandLineArguments processCommandLine()
     args.themeName = "dark";
     if (cmdParser.isSet(cmdOptionTheme))
         args.themeName = cmdParser.value(cmdOptionTheme);
+
     args.listFileToOpen = cmdParser.positionalArguments();
 
     return args;
@@ -80,6 +84,12 @@ static int runApp(QApplication* app)
     const CommandLineArguments args = processCommandLine();
     Application::setOpenCascadeEnvironment("opencascade.conf");
 
+    // Register IO OpenCascade objects
+    auto ioSystem = Application::instance()->ioSystem();
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    IO::addPredefinedFormatProbes(ioSystem);
+
     // Register Graphics entity drivers
     GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
     GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
@@ -87,6 +97,9 @@ static int runApp(QApplication* app)
     // Register Graphics/TreeNode mapping drivers
     GuiApplication::instance()->addGraphicsTreeNodeMappingDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
+
+    // Register AppModule
+    auto appModule = new AppModule(Application::instance().get());
 
     // Register document tree node providers
     DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
@@ -98,53 +111,26 @@ static int runApp(QApplication* app)
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
-    // Default values
-    auto settings = Settings::instance();
-    settings->setDefaultValue(Keys::App_RecentFiles, QStringList());
-    settings->setDefaultValue(Keys::App_MainWindowLastOpenDir, QString());
-    settings->setDefaultValue(Keys::App_MainWindowLastSelectedFilter, QString());
-    settings->setDefaultValue(Keys::App_MainWindowLinkWithDocumentSelector, false);
-    settings->setDefaultValue(Keys::Base_StlIoLibrary, static_cast<int>(IO::StlIoLibrary::OpenCascade));
-    settings->setDefaultValue(Keys::Base_UnitSystemSchema, UnitSystem::SI);
-    settings->setDefaultValue(Keys::Base_UnitSystemDecimals, 2);
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultColor, QColor(255, 228, 196));
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultMaterial, Graphic3d_NOM_PLASTIC);
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultShowEdges, false);
-    settings->setDefaultValue(Keys::Gpx_MeshDefaultShowNodes, false);
-    settings->setDefaultValue(Keys::Gui_ClipPlaneCappingHatch, Aspect_HS_SOLID);
-    settings->setDefaultValue(Keys::Gui_ClipPlaneCappingOn, true);
-    settings->setDefaultValue(Keys::Gui_DefaultShowOriginTrihedron, true);
-
-    {
-        auto fnUpdateDefaults = [=]{
-            GraphicsMeshEntityDriver::DefaultValues defaults;
-            defaults.showEdges = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowEdges);
-            defaults.showNodes = settings->valueAs<bool>(Keys::Gpx_MeshDefaultShowNodes);
-            defaults.color = settings->valueAs<QColor>(Keys::Gpx_MeshDefaultColor);
-            defaults.material = settings->valueAsEnum<Graphic3d_NameOfMaterial>(Keys::Gpx_MeshDefaultMaterial);
-            GraphicsMeshEntityDriver::setDefaultValues(defaults);
-        };
-        fnUpdateDefaults();
-        QObject::connect(Settings::instance(), &Settings::valueChanged, [=](const QString& key) {
-            if (key == Keys::Gpx_MeshDefaultShowEdges
-                    || key == Keys::Gpx_MeshDefaultShowNodes
-                    || key == Keys::Gpx_MeshDefaultColor
-                    || key == Keys::Gpx_MeshDefaultMaterial)
-            {
-                fnUpdateDefaults();
-            }
-        });
-    }
-
     // Create theme
     globalTheme.reset(createTheme(args.themeName));
     if (!globalTheme) {
-        const QString errorText =
-                Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
+        const QString errorText = Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
         std::cerr << qUtf8Printable(errorText) << std::endl;
         return -1;
     }
     mayoTheme()->setup();
+
+    // Load translation files before UI creation
+    {
+        auto settings = Application::instance()->settings();
+        settings->loadProperty(settings->findProperty(&appModule->language));
+        const QString qmFilePath = AppModule::qmFilePath(appModule->language.name());
+        auto translator = new QTranslator(app);
+        if (translator->load(qmFilePath))
+            app->installTranslator(translator);
+        else
+            std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
+    }
 
     // Create MainWindow
     MainWindow mainWindow;
@@ -154,7 +140,11 @@ static int runApp(QApplication* app)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
     }
 
-    return app->exec();
+    Application::instance()->settings()->resetAll();
+    Application::instance()->settings()->load();
+    const int code = app->exec();
+    Application::instance()->settings()->save();
+    return code;
 }
 
 } // namespace Mayo
