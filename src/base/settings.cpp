@@ -21,15 +21,15 @@ struct Settings_Setting {
 };
 
 struct Settings_Section {
-    QByteArray identifier; // Must be unique in the context of the parent group
-    QString title;
+    TextId identifier; // Must be unique in the context of the parent group
+    QString overridenTitle;
     bool isDefault; // Default section in parent group
     std::vector<Settings_Setting> vecSetting;
 };
 
 struct Settings_Group {
-    QByteArray identifier; // Must be unique in the context of the parent Settings object
-    QString title;
+    TextId identifier; // Must be unique in the context of the parent Settings object
+    QString overridenTitle;
     std::vector<Settings_Section> vecSection;
     Settings_Section defaultSection;
     std::vector<Settings::GroupResetFunction> vecFnReset;
@@ -57,7 +57,7 @@ public:
     }
 
     QString sectionPath(const Settings_Group& group, const Settings_Section& section) const {
-        return QString::fromUtf8(group.identifier) + "/" + QString::fromUtf8(section.identifier);
+        return QString::fromUtf8(group.identifier.key) + "/" + QString::fromUtf8(section.identifier.key);
     }
 
     QString sectionPath(Settings::SectionIndex index) {
@@ -134,18 +134,19 @@ int Settings::groupCount() const
 
 QByteArray Settings::groupIdentifier(GroupIndex index) const
 {
-    return d->group(index).identifier;
+    return d->group(index).identifier.key;
 }
 
 QString Settings::groupTitle(GroupIndex index) const
 {
-    return d->group(index).title;
+    const Settings_Group& group = d->group(index);
+    return !group.overridenTitle.isEmpty() ? group.overridenTitle : group.identifier.tr();
 }
 
 Settings::GroupIndex Settings::addGroup(TextId identifier)
 {
     auto index = this->addGroup(identifier.key);
-    this->setGroupTitle(index, identifier.tr());
+    d->group(index).identifier = identifier;
     return index;
 }
 
@@ -154,20 +155,19 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
     Expects(isValidIdentifier(identifier));
 
     for (const Settings_Group& group : d->m_vecGroup) {
-        if (group.identifier == identifier)
+        if (group.identifier.key == identifier)
             return GroupIndex(&group - &d->m_vecGroup.front());
     }
 
     d->m_vecGroup.push_back({});
     Settings_Group& group = d->m_vecGroup.back();
-    group.identifier = identifier;
-    group.title = QString::fromUtf8(identifier);
+    group.identifier.key = identifier;
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
 }
 
 void Settings::setGroupTitle(GroupIndex index, const QString& title)
 {
-    d->group(index).title = title;
+    d->group(index).overridenTitle = title;
 }
 
 void Settings::addGroupResetFunction(GroupIndex index, GroupResetFunction fn)
@@ -183,12 +183,13 @@ int Settings::sectionCount(GroupIndex index) const
 
 QByteArray Settings::sectionIdentifier(SectionIndex index) const
 {
-    return d->section(index).identifier;
+    return d->section(index).identifier.key;
 }
 
 QString Settings::sectionTitle(SectionIndex index) const
 {
-    return d->section(index).title;
+    const Settings_Section& section = d->section(index);
+    return !section.overridenTitle.isEmpty() ? section.overridenTitle : section.identifier.tr();
 }
 
 bool Settings::isDefaultGroupSection(SectionIndex index) const
@@ -199,7 +200,7 @@ bool Settings::isDefaultGroupSection(SectionIndex index) const
 Settings::SectionIndex Settings::addSection(GroupIndex index, TextId identifier)
 {
     auto sectionIndex = this->addSection(index, identifier.key);
-    this->setSectionTitle(sectionIndex, identifier.tr());
+    d->section(sectionIndex).identifier = identifier;
     return sectionIndex;
 }
 
@@ -211,14 +212,13 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identif
     Settings_Group& group = d->group(index);
     group.vecSection.push_back({});
     Settings_Section& section = group.vecSection.back();
-    section.identifier = identifier;
-    section.title = QString::fromUtf8(identifier);
+    section.identifier.key = identifier;
     return SectionIndex(index, int(group.vecSection.size()) - 1);
 }
 
 void Settings::setSectionTitle(SectionIndex index, const QString& title)
 {
-    d->section(index).title = title;
+    d->section(index).overridenTitle = title;
 }
 
 int Settings::settingCount(SectionIndex index) const
