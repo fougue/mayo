@@ -12,6 +12,7 @@
 #include "tkernel_utils.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+#  include "io_occ_gltf.h"
 #  include "io_occ_obj.h"
 #endif
 
@@ -71,6 +72,7 @@ Span<const Format> OccFactoryReader::formats() const
         Format_IGES,
         Format_OCCBREP,
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        Format_GLTF,
         Format_OBJ,
 #endif
         Format_STL
@@ -85,6 +87,7 @@ std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
         { Format_IGES, createProduct<OccIgesReader> },
         { Format_OCCBREP, createProduct<OccBRepReader> },
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        { Format_GLTF, createProduct<OccGltfReader> },
         { Format_OBJ, createProduct<OccObjReader> },
 #endif
         { Format_STL, createProduct<OccStlReader> }
@@ -97,6 +100,7 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
 {
     static const ReaderParametersGenerator array[] = {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        { Format_GLTF, &OccGltfReader::createParameters },
         { Format_OBJ, &OccObjReader::createParameters }
 #else
         ReaderParametersGenerator::null() // To prevent compilation error with empty C array
