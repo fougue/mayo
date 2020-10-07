@@ -5,6 +5,8 @@
 ****************************************************************************/
 
 #include "io_occ.h"
+
+#include "io_format.h"
 #include "io_occ_brep.h"
 #include "io_occ_iges.h"
 #include "io_occ_step.h"

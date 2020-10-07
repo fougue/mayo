@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "io.h"
+#include "io_reader.h"
+#include "io_writer.h"
 #include <NCollection_Vector.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>

@@ -6,8 +6,8 @@
 
 #include "../base/application.h"
 #include "../base/document_tree_node_properties_provider.h"
-#include "../base/io.h"
 #include "../base/io_occ.h"
+#include "../base/io_system.h"
 #include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"

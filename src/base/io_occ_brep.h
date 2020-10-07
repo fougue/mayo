@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "io.h"
+#include "io_reader.h"
+#include "io_writer.h"
 #include <TopoDS_Shape.hxx>
+#include <QtCore/QString>
 
 namespace Mayo {
 namespace IO {

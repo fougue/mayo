@@ -5,7 +5,10 @@
 ****************************************************************************/
 
 #include "io_occ_brep.h"
+
+#include "application_item.h"
 #include "caf_utils.h"
+#include "document.h"
 #include "occ_progress_indicator.h"
 #include "scope_import.h"
 #include "task_progress.h"

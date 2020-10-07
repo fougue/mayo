@@ -7,7 +7,7 @@
 #pragma once
 
 #include "../base/application_ptr.h"
-#include "../base/io.h"
+#include "../base/io_parameters_provider.h"
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"

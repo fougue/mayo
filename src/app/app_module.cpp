@@ -7,6 +7,9 @@
 #include "app_module.h"
 
 #include "../base/application.h"
+#include "../base/io_reader.h"
+#include "../base/io_writer.h"
+#include "../base/io_system.h"
 #include "../base/occt_enums.h"
 #include "../base/settings.h"
 #include "../graphics/graphics_entity_driver.h"

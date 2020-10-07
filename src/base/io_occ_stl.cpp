@@ -5,6 +5,9 @@
 ****************************************************************************/
 
 #include "io_occ_stl.h"
+
+#include "application_item.h"
+#include "document.h"
 #include "caf_utils.h"
 #include "occ_progress_indicator.h"
 #include "property_enumeration.h"

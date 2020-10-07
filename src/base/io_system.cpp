@@ -4,9 +4,12 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "io.h"
+#include "io_system.h"
 
 #include "document.h"
+#include "io_parameters_provider.h"
+#include "io_reader.h"
+#include "io_writer.h"
 #include "messenger.h"
 #include "task_manager.h"
 #include "task_progress.h"
