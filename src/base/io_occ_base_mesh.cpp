@@ -6,6 +6,7 @@
 
 #include "io_occ_base_mesh.h"
 
+#include "document.h"
 #include "scope_import.h"
 #include "occ_progress_indicator.h"
 #include "task_progress.h"

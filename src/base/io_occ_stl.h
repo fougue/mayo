@@ -6,9 +6,11 @@
 
 #pragma once
 
-#include "io.h"
-
+#include "io_reader.h"
+#include "io_writer.h"
 #include <Poly_Triangulation.hxx>
+#include <TopoDS_Shape.hxx>
+#include <QtCore/QString>
 
 namespace Mayo {
 namespace IO {

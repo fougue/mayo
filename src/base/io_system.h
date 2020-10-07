@@ -8,6 +8,8 @@
 
 #include "application_item.h"
 #include "io_format.h"
+#include "io_reader.h"
+#include "io_writer.h"
 #include "property.h"
 #include "span.h"
 
@@ -23,47 +25,13 @@ class TaskProgress;
 namespace Mayo {
 namespace IO {
 
-class Reader {
-public:
-    virtual bool readFile(const QString& filepath, TaskProgress* progress) = 0;
-    virtual bool transfer(DocumentPtr doc, TaskProgress* progress) = 0;
-    virtual void applyParameters(const PropertyGroup* /*params*/) {}
-};
-
-class Writer {
-public:
-    virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
-    virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
-    virtual void applyParameters(const PropertyGroup* /*params*/) {}
-};
-
-class FactoryReader {
-public:
-    virtual Span<const Format> formats() const = 0;
-    virtual std::unique_ptr<Reader> create(const Format& format) const = 0;    
-    virtual std::unique_ptr<PropertyGroup> createParameters(
-            const Format& format,
-            PropertyGroup* parentGroup) const = 0;
-};
-
-class FactoryWriter {
-public:
-    virtual Span<const Format> formats() const = 0;
-    virtual std::unique_ptr<Writer> create(const Format& format) const = 0;
-    virtual std::unique_ptr<PropertyGroup> createParameters(
-            const Format& format,
-            PropertyGroup* parentGroup) const = 0;
-};
-
-class ParametersProvider {
-public:
-    virtual const PropertyGroup* findReaderParameters(const Format& format) const = 0;
-    virtual const PropertyGroup* findWriterParameters(const Format& format) const = 0;
-};
+class ParametersProvider;
 
 class System {
     Q_DECLARE_TR_FUNCTIONS(Mayo::IO::System)
 public:
+    ~System() = default;
+
     struct FormatProbeInput {
         QString filepath;
         QByteArray contentsBegin; // Excerpt of the file(from start)

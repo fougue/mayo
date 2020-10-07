@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "io.h"
+#include "io_reader.h"
+#include "io_writer.h"
 #include <IGESCAFControl_Reader.hxx>
 #include <IGESCAFControl_Writer.hxx>
 
