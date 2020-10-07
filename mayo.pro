@@ -123,5 +123,7 @@ LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
 minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
 } else {
-    SOURCES -= src/base/io_occ_obj.cpp
+    SOURCES -= \
+        src/base/io_occ_gltf.cpp \
+        src/base/io_occ_obj.cpp
 }
