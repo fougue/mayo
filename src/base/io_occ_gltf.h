@@ -7,26 +7,28 @@
 #pragma once
 
 #include "io_occ_base_mesh.h"
-#include <RWObj_CafReader.hxx>
+#include <RWGltf_CafReader.hxx>
 
 namespace Mayo {
 namespace IO {
 
-class OccObjReader : public OccBaseMeshReader {
+class OccGltfReader : public OccBaseMeshReader {
 public:
-    OccObjReader();
+    OccGltfReader();
 
     static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
     void applyParameters(const PropertyGroup* params) override;
 
     // Parameters
 
-    bool isSinglePrecisionVertexCoords() const { return m_reader.IsSinglePrecision(); }
-    void setSinglePrecisionVertexCoords(bool on) { m_reader.SetSinglePrecision(on); }
+    bool skipEmptyNodesOn() const { return m_reader.ToSkipEmptyNodes(); }
+    void setSkipEmptyNodes(bool on) { m_reader.SetSkipEmptyNodes(on); }
+
+    bool meshNameAsFallbackOn() const { return m_reader.ToUseMeshNameAsFallback(); }
+    void setMeshNameAsFallback(bool on) { m_reader.SetMeshNameAsFallback(on); }
 
 private:
-    QString m_filepath;
-    RWObj_CafReader m_reader;
+    mutable RWGltf_CafReader m_reader;
 };
 
 } // namespace IO
