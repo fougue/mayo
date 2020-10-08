@@ -11,6 +11,7 @@
 #include "io_occ_iges.h"
 #include "io_occ_step.h"
 #include "io_occ_stl.h"
+#include "io_occ_vrml.h"
 #include "tkernel_utils.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
@@ -113,7 +114,13 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
 
 Span<const Format> OccFactoryWriter::formats() const
 {
-    static const Format array[] = { Format_STEP, Format_IGES, Format_OCCBREP, Format_STL };
+    static const Format array[] = {
+        Format_STEP,
+        Format_IGES,
+        Format_OCCBREP,
+        Format_STL,
+        Format_VRML
+    };
     return array;
 }
 
@@ -123,7 +130,8 @@ std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
         { Format_STEP, createProduct<OccStepWriter> },
         { Format_IGES, createProduct<OccIgesWriter> },
         { Format_OCCBREP, createProduct<OccBRepWriter> },
-        { Format_STL, createProduct<OccStlWriter> }
+        { Format_STL, createProduct<OccStlWriter> },
+        { Format_VRML, createProduct<OccVrmlWriter> }
     };
     return findGenerator<WriterGenerator>(format, array).fn();
 }
@@ -132,7 +140,8 @@ std::unique_ptr<PropertyGroup> OccFactoryWriter::createParameters(
         const Format& format, PropertyGroup* parentGroup) const
 {
     static const WriterParametersGenerator array[] = {
-        { Format_STL, &OccStlWriter::createParameters }
+        { Format_STL, &OccStlWriter::createParameters },
+        { Format_VRML, &OccVrmlWriter::createParameters },
     };
     return findGenerator<WriterParametersGenerator>(format, array).fn(parentGroup);
 }

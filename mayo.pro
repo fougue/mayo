@@ -111,15 +111,19 @@ isEmpty(GMIO_ROOT) {
 # OpenCascade
 include(opencascade.pri)
 message(OpenCascade version $$OCC_VERSION_STR)
-LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKV3d -lTKOpenGl -lTKService
-LIBS += -lTKG2d
-LIBS += -lTKBRep -lTKSTL
-LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKService
+LIBS += -lTKG2d -lTKG3d -lTKV3d -lTKOpenGl
+LIBS += -lTKBRep -lTKXSBase -lTKGeomBase
 LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
-LIBS += -lTKG3d
-LIBS += -lTKGeomBase
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+# -- IGES support
+LIBS += -lTKIGES
+# -- STEP support
+LIBS += -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+# -- STL support
+LIBS += -lTKSTL
+# -- OBJ/glTF support
 minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
 } else {
@@ -128,3 +132,5 @@ minOpenCascadeVersion(7, 4, 0) {
         src/base/io_occ_gltf.cpp \
         src/base/io_occ_obj.cpp
 }
+# -- VRML support
+LIBS += -lTKVRML

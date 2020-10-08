@@ -175,7 +175,7 @@
 <context>
     <name>IO</name>
     <message>
-        <location filename="../src/base/io.cpp" line="121"/>
+        <location filename="../src/base/io_system.cpp" line="124"/>
         <source>Writing item %1</source>
         <translation>Écriture élément %1</translation>
     </message>
@@ -226,132 +226,132 @@
 <context>
     <name>Mayo::AppModule</name>
     <message>
-        <location filename="../src/app/app_module.cpp" line="19"/>
+        <location filename="../src/app/app_module.cpp" line="22"/>
         <source>SI</source>
         <translation>SI</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="20"/>
+        <location filename="../src/app/app_module.cpp" line="23"/>
         <source>IMPERIAL_UK</source>
         <translation>Anglo-saxon</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="28"/>
+        <location filename="../src/app/app_module.cpp" line="31"/>
         <source>en</source>
         <translation>Anglais</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="29"/>
+        <location filename="../src/app/app_module.cpp" line="32"/>
         <source>fr</source>
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="39"/>
+        <location filename="../src/app/app_module.cpp" line="42"/>
         <source>system</source>
         <translation>Système</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="42"/>
+        <location filename="../src/app/app_module.cpp" line="45"/>
         <source>units</source>
         <translation>Unités</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="43"/>
+        <location filename="../src/app/app_module.cpp" line="46"/>
         <source>decimalCount</source>
         <translation>Nombre de décimales</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="44"/>
+        <location filename="../src/app/app_module.cpp" line="47"/>
         <source>schema</source>
         <translation>Schéma</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="46"/>
+        <location filename="../src/app/app_module.cpp" line="49"/>
         <source>application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="47"/>
+        <location filename="../src/app/app_module.cpp" line="50"/>
         <source>language</source>
         <translation>Langue</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="48"/>
+        <location filename="../src/app/app_module.cpp" line="51"/>
         <source>recentFiles</source>
         <translation>Fichiers récents</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="49"/>
+        <location filename="../src/app/app_module.cpp" line="52"/>
         <source>lastOpenFolder</source>
         <translation>Dernier répertoire ouvert</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="50"/>
+        <location filename="../src/app/app_module.cpp" line="53"/>
         <source>lastSelectedFormatFilter</source>
         <translation>Dernier filtre de format sélectionné</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="51"/>
+        <location filename="../src/app/app_module.cpp" line="54"/>
         <source>linkWithDocumentSelector</source>
         <translation>Lier au sélecteur de documents</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="53"/>
+        <location filename="../src/app/app_module.cpp" line="56"/>
         <source>graphics</source>
         <translation>Graphisme</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="54"/>
+        <location filename="../src/app/app_module.cpp" line="57"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Afficher le trihèdre Origine par défaut</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="57"/>
+        <location filename="../src/app/app_module.cpp" line="60"/>
         <source>clipPlanes</source>
         <translation>Plans de coupe</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="58"/>
+        <location filename="../src/app/app_module.cpp" line="61"/>
         <source>cappingOn</source>
         <translation>Bouchage</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="59"/>
+        <location filename="../src/app/app_module.cpp" line="62"/>
         <source>cappingHatch</source>
         <translation>Style d&apos;hachure du bouchage</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="62"/>
+        <location filename="../src/app/app_module.cpp" line="65"/>
         <source>meshDefaults</source>
         <translation>Maillage par défauts</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="63"/>
+        <location filename="../src/app/app_module.cpp" line="66"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="64"/>
+        <location filename="../src/app/app_module.cpp" line="67"/>
         <source>material</source>
         <translation>Matériau</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="65"/>
+        <location filename="../src/app/app_module.cpp" line="68"/>
         <source>showEgesOn</source>
         <translation>Afficher les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="66"/>
+        <location filename="../src/app/app_module.cpp" line="69"/>
         <source>showNodesOn</source>
         <translation>Afficher les nœuds</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="99"/>
+        <location filename="../src/app/app_module.cpp" line="102"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="114"/>
+        <location filename="../src/app/app_module.cpp" line="117"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -653,73 +653,73 @@
 <context>
     <name>Mayo::IO</name>
     <message>
-        <location filename="../src/base/io.cpp" line="74"/>
-        <location filename="../src/base/io.cpp" line="105"/>
+        <location filename="../src/base/io_system.cpp" line="77"/>
+        <location filename="../src/base/io_system.cpp" line="108"/>
         <source>GMIO_ERROR_UNKNOWN</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="76"/>
+        <location filename="../src/base/io_system.cpp" line="79"/>
         <source>GMIO_ERROR_NULL_MEMBLOCK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="78"/>
+        <location filename="../src/base/io_system.cpp" line="81"/>
         <source>GMIO_ERROR_INVALID_MEMBLOCK_SIZE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="80"/>
+        <location filename="../src/base/io_system.cpp" line="83"/>
         <source>GMIO_ERROR_STREAM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="82"/>
+        <location filename="../src/base/io_system.cpp" line="85"/>
         <source>GMIO_ERROR_TASK_STOPPED</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="84"/>
+        <location filename="../src/base/io_system.cpp" line="87"/>
         <source>GMIO_ERROR_STDIO</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="86"/>
+        <location filename="../src/base/io_system.cpp" line="89"/>
         <source>GMIO_ERROR_BAD_LC_NUMERIC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="90"/>
+        <location filename="../src/base/io_system.cpp" line="93"/>
         <source>GMIO_STL_ERROR_UNKNOWN_FORMAT</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="92"/>
+        <location filename="../src/base/io_system.cpp" line="95"/>
         <source>GMIO_STL_ERROR_NULL_FUNC_GET_TRIANGLE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="94"/>
+        <location filename="../src/base/io_system.cpp" line="97"/>
         <source>GMIO_STL_ERROR_PARSING</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="96"/>
+        <location filename="../src/base/io_system.cpp" line="99"/>
         <source>GMIO_STL_ERROR_INVALID_FLOAT32_PREC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="98"/>
+        <location filename="../src/base/io_system.cpp" line="101"/>
         <source>GMIO_STL_ERROR_UNSUPPORTED_BYTE_ORDER</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="100"/>
+        <location filename="../src/base/io_system.cpp" line="103"/>
         <source>GMIO_STL_ERROR_HEADER_WRONG_SIZE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="102"/>
+        <location filename="../src/base/io_system.cpp" line="105"/>
         <source>GMIO_STL_ERROR_FACET_COUNT</source>
         <translation type="unfinished"></translation>
     </message>
@@ -727,77 +727,77 @@
 <context>
     <name>Mayo::IO::OccBaseMeshReader</name>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="21"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="22"/>
         <source>rootPrefix</source>
         <translation>Préfixe racine</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="23"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="24"/>
         <source>systemCoordinatesConverter</source>
         <translation>Conversion coordonnées système</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="25"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="26"/>
         <source>systemLengthUnit</source>
         <translation>Unité longueur du système</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="65"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="66"/>
         <source>UnitUndefined</source>
         <translation>Indéfini</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="66"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="67"/>
         <source>UnitMicrometer</source>
         <translation>Micromètre (µm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="67"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="68"/>
         <source>UnitMillimeter</source>
         <translation>Millimètre (mm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="68"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="69"/>
         <source>UnitCentimeter</source>
         <translation>Centimètre (cm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="69"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="70"/>
         <source>UnitMeter</source>
         <translation>Mètre (m)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="70"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="71"/>
         <source>UnitKilometer</source>
         <translation>Kilomètre (km)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="71"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
         <source>UnitInch</source>
         <translation>Pouce (in)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
         <source>UnitFoot</source>
         <translation>Pied (ft)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
         <source>UnitMile</source>
         <translation>Mille (mi)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="81"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="82"/>
         <source>SystemUndefined</source>
         <translation>Indéfini</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="82"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="83"/>
         <source>SystemPosZUp</source>
         <translation>+Z up</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="83"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="84"/>
         <source>SystemPosYUp</source>
         <translation>+Y up</translation>
     </message>
@@ -826,17 +826,17 @@
 <context>
     <name>Mayo::IO::OccStlWriter</name>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="50"/>
+        <location filename="../src/base/io_occ_stl.cpp" line="53"/>
         <source>targetFormat</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="57"/>
+        <location filename="../src/base/io_occ_stl.cpp" line="60"/>
         <source>StlAscii</source>
         <translation>Texte</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="58"/>
+        <location filename="../src/base/io_occ_stl.cpp" line="61"/>
         <source>StlBinary</source>
         <translation>Binaire</translation>
     </message>
@@ -844,73 +844,96 @@
 <context>
     <name>Mayo::IO::System</name>
     <message>
-        <location filename="../src/base/io.cpp" line="310"/>
+        <location filename="../src/base/io_system.cpp" line="313"/>
         <source>%1 files(%2)</source>
         <extracomment>%1 is the format identifier and %2 is the file filters string</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="327"/>
+        <location filename="../src/base/io_system.cpp" line="330"/>
         <source>Error during import of &apos;%1&apos;
 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="334"/>
+        <location filename="../src/base/io_system.cpp" line="337"/>
         <source>Reading file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="338"/>
+        <location filename="../src/base/io_system.cpp" line="341"/>
         <source>Unknown format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="342"/>
+        <location filename="../src/base/io_system.cpp" line="345"/>
         <source>No supporting reader</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="348"/>
+        <location filename="../src/base/io_system.cpp" line="351"/>
         <source>File read problem</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="353"/>
+        <location filename="../src/base/io_system.cpp" line="356"/>
         <source>Transferring file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="356"/>
-        <location filename="../src/base/io.cpp" line="443"/>
+        <location filename="../src/base/io_system.cpp" line="359"/>
+        <location filename="../src/base/io_system.cpp" line="446"/>
         <source>File transfer problem</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="430"/>
+        <location filename="../src/base/io_system.cpp" line="433"/>
         <source>Error during export to &apos;%1&apos;
 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="436"/>
+        <location filename="../src/base/io_system.cpp" line="439"/>
         <source>No supporting writer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="440"/>
+        <location filename="../src/base/io_system.cpp" line="443"/>
         <source>Transfer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="446"/>
+        <location filename="../src/base/io_system.cpp" line="449"/>
         <source>Write</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io.cpp" line="449"/>
+        <location filename="../src/base/io_system.cpp" line="452"/>
         <source>File write problem</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::VrmlStlWriter</name>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="30"/>
+        <source>shapeRepresentation</source>
+        <translation>Représentation des formes</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="37"/>
+        <source>RepresentationShaded</source>
+        <translation>Ombrée</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="38"/>
+        <source>RepresentationWireframe</source>
+        <translation>Filaire</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="39"/>
+        <source>RepresentationBoth</source>
+        <translation>Les deux</translation>
     </message>
 </context>
 <context>
@@ -1009,7 +1032,7 @@
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="621"/>
-        <location filename="../src/app/mainwindow.cpp" line="498"/>
+        <location filename="../src/app/mainwindow.cpp" line="500"/>
         <source>Import</source>
         <translation>Importer</translation>
     </message>
@@ -1040,7 +1063,7 @@
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="649"/>
-        <location filename="../src/app/mainwindow.cpp" line="758"/>
+        <location filename="../src/app/mainwindow.cpp" line="760"/>
         <source>Options</source>
         <translation></translation>
     </message>
@@ -1182,89 +1205,89 @@
         <translation>Orthographique</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="115"/>
+        <location filename="../src/app/mainwindow.cpp" line="117"/>
         <source>All files(*.*)</source>
         <translation>Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="117"/>
+        <location filename="../src/app/mainwindow.cpp" line="119"/>
         <source>Select Part File</source>
         <translation>Selectionner fichier pièce</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="175"/>
+        <location filename="../src/app/mainwindow.cpp" line="177"/>
         <source>Warning</source>
         <translation>Avertissement</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="178"/>
-        <location filename="../src/app/mainwindow.cpp" line="703"/>
+        <location filename="../src/app/mainwindow.cpp" line="180"/>
+        <location filename="../src/app/mainwindow.cpp" line="705"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="208"/>
+        <location filename="../src/app/mainwindow.cpp" line="210"/>
         <source>About %1</source>
         <translation>À propos %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="461"/>
+        <location filename="../src/app/mainwindow.cpp" line="463"/>
         <source>Anonymous%1</source>
         <translation>Anonyme%1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="494"/>
-        <location filename="../src/app/mainwindow.cpp" line="894"/>
+        <location filename="../src/app/mainwindow.cpp" line="496"/>
+        <location filename="../src/app/mainwindow.cpp" line="896"/>
         <source>Import time: %1ms</source>
         <translation>Temps import : %1ms</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="516"/>
+        <location filename="../src/app/mainwindow.cpp" line="518"/>
         <source>Select Output File</source>
         <translation>Sélection fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="540"/>
+        <location filename="../src/app/mainwindow.cpp" line="542"/>
         <source>Export time: %1ms</source>
         <translation>Temps export : %1ms</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="649"/>
+        <location filename="../src/app/mainwindow.cpp" line="651"/>
         <source>Data</source>
         <translation>Données</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="662"/>
+        <location filename="../src/app/mainwindow.cpp" line="664"/>
         <source>Graphics</source>
         <translation>Graphismes</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="786"/>
+        <location filename="../src/app/mainwindow.cpp" line="788"/>
         <source>Close %1</source>
         <translation>Fermer %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="787"/>
+        <location filename="../src/app/mainwindow.cpp" line="789"/>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="790"/>
+        <location filename="../src/app/mainwindow.cpp" line="792"/>
         <source>Close all except %1</source>
         <translation>Tout fermer sauf %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="791"/>
+        <location filename="../src/app/mainwindow.cpp" line="793"/>
         <source>Close all except current</source>
         <translation>Tout fermer sauf document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1023"/>
+        <location filename="../src/app/mainwindow.cpp" line="1025"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1029"/>
+        <location filename="../src/app/mainwindow.cpp" line="1031"/>
         <source>Clear menu</source>
         <translation>Vider le menu</translation>
     </message>
@@ -1339,7 +1362,7 @@
 <context>
     <name>Mayo::Settings</name>
     <message>
-        <location filename="../src/base/settings.cpp" line="257"/>
+        <location filename="../src/base/settings.cpp" line="259"/>
         <source>DEFAULT</source>
         <translation type="unfinished"></translation>
     </message>

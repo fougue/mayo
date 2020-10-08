@@ -31,15 +31,16 @@ IGES                      |  &#10004; | &#10004; | v5.3
 OpenCascade BREP          |  &#10004; | &#10004; |
 OBJ                       |  &#10004; | &#10007; | Requires OpenCascade &#8805; v7.4.0
 glTF                      |  &#10004; | &#10007; | Requires OpenCascade &#8805; v7.4.0 (supports 1.0, 2.0 and GLB)
+VRML                      |  &#10007; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
-Mayo requires Qt5 and OpenCascade-7.3.0
-Although only tested with VC++/Windows it should build fine on Linux and MacOS.  
+Mayo requires Qt5 and OpenCascade &#8805; 7.3.0
+Although only tested with VC++/Windows it should build fine on Linux and MacOS.
 It uses the `CSF_OCCTIncludePath` and `CSF_OCCTLibPath` environment variables to locate
 OpenCascade include and lib paths. On Windows these two variables are set by the `env.bat`
 script which can be found within OpenCascade's base folder. You should run this batch before
-building mayo :  
+building mayo :
 `cd .../mayo`  
 `qmake`  
 `(n)make`  
