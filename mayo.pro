@@ -124,6 +124,7 @@ minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
 } else {
     SOURCES -= \
+        src/base/io_occ_base_mesh.cpp \
         src/base/io_occ_gltf.cpp \
         src/base/io_occ_obj.cpp
 }
