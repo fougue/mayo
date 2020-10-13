@@ -12,6 +12,7 @@
 namespace Mayo {
 namespace IO {
 
+// Provides factory for OpenCascade-based Reader objects
 class OccFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
@@ -21,6 +22,7 @@ public:
             PropertyGroup* parentGroup) const override;
 };
 
+// Provides factory for OpenCascade-based Writer objects
 class OccFactoryWriter : public FactoryWriter {
 public:
     Span<const Format> formats() const override;

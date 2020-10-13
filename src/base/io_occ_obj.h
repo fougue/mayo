@@ -12,6 +12,8 @@
 namespace Mayo {
 namespace IO {
 
+// OpenCascade-based reader for Wavefront OBJ format
+// Requires OpenCascade >= v7.4.0
 class OccObjReader : public OccBaseMeshReader {
 public:
     OccObjReader();
@@ -25,7 +27,6 @@ public:
     void setSinglePrecisionVertexCoords(bool on) { m_reader.SetSinglePrecision(on); }
 
 private:
-    QString m_filepath;
     RWObj_CafReader m_reader;
 };
 

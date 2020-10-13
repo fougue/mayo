@@ -13,6 +13,7 @@ namespace IO {
 
 struct Format;
 
+// Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
 public:
     virtual const PropertyGroup* findReaderParameters(const Format& format) const = 0;
