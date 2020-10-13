@@ -16,7 +16,7 @@ class Settings;
 class DialogOptions : public QDialog {
     Q_OBJECT
 public:
-    DialogOptions(Settings* settings, QWidget *parent = nullptr);
+    DialogOptions(Settings* settings, QWidget* parent = nullptr);
     ~DialogOptions();
 
 private:
