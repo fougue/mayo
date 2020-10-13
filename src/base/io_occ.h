@@ -8,6 +8,7 @@
 
 #include "io_reader.h"
 #include "io_writer.h"
+#include "property.h"
 
 namespace Mayo {
 namespace IO {

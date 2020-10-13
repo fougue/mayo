@@ -125,6 +125,8 @@ void Settings::save()
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)
+
+    d->m_settings.sync();
 }
 
 int Settings::groupCount() const
