@@ -14,6 +14,7 @@
 namespace Mayo {
 namespace IO {
 
+// Reader for OpenCascade BRep file format
 class OccBRepReader : public Reader {
 public:
     bool readFile(const QString& filepath, TaskProgress* progress) override;
@@ -24,6 +25,7 @@ private:
     QString m_baseFilename;
 };
 
+// Writer for OpenCascade BRep file format
 class OccBRepWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;

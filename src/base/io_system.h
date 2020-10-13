@@ -27,6 +27,8 @@ namespace IO {
 
 class ParametersProvider;
 
+// Main class to centralize access to FactoryReader/FactoryWriter objects
+// Provides also high-level import/export services
 class System {
     Q_DECLARE_TR_FUNCTIONS(Mayo::IO::System)
 public:
@@ -54,20 +56,30 @@ public:
     Span<const Format> writerFormats() const { return m_vecWriterFormat; }
     static QString fileFilter(const Format& format);
 
-    // BASE
+    // Import service
 
-    struct Args_BaseImportExport {
-        Messenger* messenger = nullptr;
-        TaskProgress* progress = nullptr;
-    };
-
-    // IMPORT
-
-    struct Args_ImportInDocument : public Args_BaseImportExport {
+    struct Args_ImportInDocument {
         DocumentPtr targetDocument;
         QStringList filepaths;
         const ParametersProvider* parametersProvider = nullptr;
+        Messenger* messenger = nullptr;
+        TaskProgress* progress = nullptr;
     };
+    bool importInDocument(const Args_ImportInDocument& args);
+
+    // Export service
+
+    struct Args_ExportApplicationItems {
+        Span<const ApplicationItem> applicationItems;
+        QString targetFilepath;
+        Format targetFormat = Format_Unknown;
+        const PropertyGroup* parameters = nullptr;
+        Messenger* messenger = nullptr;
+        TaskProgress* progress = nullptr;
+    };
+    bool exportApplicationItems(const Args_ExportApplicationItems& args);
+
+    // Fluent API: import service
 
     struct Operation_ImportInDocument {
         using Operation = Operation_ImportInDocument;
@@ -85,18 +97,9 @@ public:
         System& m_system;
         Args_ImportInDocument m_args;
     };
+    Operation_ImportInDocument importInDocument();
 
-    bool importInDocument(const Args_ImportInDocument& args);
-    Operation_ImportInDocument importInDocument(); // Fluent API
-
-    // EXPORT
-
-    struct Args_ExportApplicationItems : public Args_BaseImportExport {
-        Span<const ApplicationItem> applicationItems;
-        QString targetFilepath;
-        Format targetFormat = Format_Unknown;
-        const PropertyGroup* parameters = nullptr;
-    };
+    // Fluent API: export service
 
     struct Operation_ExportApplicationItems {
         using Operation = Operation_ExportApplicationItems;
@@ -114,9 +117,7 @@ public:
         System& m_system;
         Args_ExportApplicationItems m_args;
     };
-
-    bool exportApplicationItems(const Args_ExportApplicationItems& args);
-    Operation_ExportApplicationItems exportApplicationItems(); // Fluent API
+    Operation_ExportApplicationItems exportApplicationItems();
 
     // Implementation
 private:

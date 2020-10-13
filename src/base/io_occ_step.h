@@ -15,6 +15,7 @@
 namespace Mayo {
 namespace IO {
 
+// Opencascade-based reader for STEP file format
 class OccStepReader : public Reader {
 public:
     OccStepReader();
@@ -25,6 +26,7 @@ private:
     STEPCAFControl_Reader m_reader;
 };
 
+// Opencascade-based reader for STEP file format
 class OccStepWriter : public Writer {
 public:
     OccStepWriter();

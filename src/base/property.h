@@ -71,7 +71,7 @@ public:
     QString label() const;
 
     virtual QVariant valueAsVariant() const = 0;
-    virtual Result<void> setValueFromVariant(const QVariant& value) = 0;
+    virtual Result<void> setValueFromVariant(const QVariant& value) = 0; // TODO Remove use of Result<>
 
     bool isUserReadOnly() const { return m_isUserReadOnly; }
     void setUserReadOnly(bool on) { m_isUserReadOnly = on; }

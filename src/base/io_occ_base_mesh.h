@@ -16,6 +16,7 @@ class RWMesh_CafReader;
 namespace Mayo {
 namespace IO {
 
+// Base class around OpenCascade RWMesh_CafReader
 class OccBaseMeshReader : public Reader {
 public:
     bool readFile(const QString& filepath, TaskProgress* progress) override;
@@ -54,7 +55,7 @@ private:
     RWMesh_CafReader& m_reader;
 };
 
-
+// Common parameters for OccBaseMeshReader
 struct OccBaseMeshReaderParameters : public PropertyGroup {
     OccBaseMeshReaderParameters(PropertyGroup* parentGroup);
 

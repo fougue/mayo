@@ -15,6 +15,7 @@
 namespace Mayo {
 namespace IO {
 
+// Opencascade-based reader for STL file format
 class OccStlReader : public Reader {
 public:
     bool readFile(const QString& filepath, TaskProgress* progress) override;
@@ -25,6 +26,7 @@ private:
     QString m_baseFilename;
 };
 
+// Opencascade-based writer for STL file format
 class OccStlWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;

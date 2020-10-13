@@ -14,6 +14,7 @@
 namespace Mayo {
 namespace IO {
 
+// Opencascade-based reader for IGES file format
 class OccIgesReader : public Reader {
 public:
     OccIgesReader();
@@ -24,6 +25,7 @@ private:
     IGESCAFControl_Reader m_reader;
 };
 
+// Opencascade-based writer for IGES file format
 class OccIgesWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
