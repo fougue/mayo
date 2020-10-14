@@ -40,7 +40,7 @@ public:
         auto settings = app->settings();
         settings->addSetting(&this->instanceNameFormat, AppModule::get(app)->groupId_application);
         settings->addGroupResetFunction(AppModule::get(app)->groupId_application, [&]{
-            this->instanceNameFormat.setValue(enumInstanceNameFormat().itemAt(0).value);
+            this->instanceNameFormat.setValue(int(NameFormat::Product));
         });
     }
 
