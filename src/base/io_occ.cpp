@@ -141,7 +141,7 @@ std::unique_ptr<PropertyGroup> OccFactoryWriter::createProperties(
     static const WriterParametersGenerator array[] = {
         { Format_STEP, &OccStepWriter::createProperties },
         { Format_STL, &OccStlWriter::createProperties },
-        { Format_VRML, &OccVrmlWriter::createProperties },
+        { Format_VRML, &OccVrmlWriter::createProperties }
     };
     return findGenerator<WriterParametersGenerator>(format, array).fn(parentGroup);
 }
