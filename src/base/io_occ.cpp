@@ -102,11 +102,10 @@ std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
         const Format& format, PropertyGroup* parentGroup) const
 {
     static const ReaderParametersGenerator array[] = {
+        { Format_STEP, &OccStepReader::createParameters },
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         { Format_GLTF, &OccGltfReader::createParameters },
         { Format_OBJ, &OccObjReader::createParameters }
-#else
-        ReaderParametersGenerator::null() // To prevent compilation error with empty C array
 #endif
     };
     return findGenerator<ReaderParametersGenerator>(format, array).fn(parentGroup);
@@ -140,6 +139,7 @@ std::unique_ptr<PropertyGroup> OccFactoryWriter::createParameters(
         const Format& format, PropertyGroup* parentGroup) const
 {
     static const WriterParametersGenerator array[] = {
+        { Format_STEP, &OccStepWriter::createParameters },
         { Format_STL, &OccStlWriter::createParameters },
         { Format_VRML, &OccVrmlWriter::createParameters },
     };

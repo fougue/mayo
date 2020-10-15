@@ -28,6 +28,8 @@ public:
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 
+    virtual void restoreDefaults();
+
 protected:
     virtual void onPropertyChanged(Property* prop);
     virtual Result<void> isPropertyValid(const Property* prop) const;

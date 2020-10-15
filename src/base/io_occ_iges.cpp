@@ -18,21 +18,27 @@ OccIgesReader::OccIgesReader()
     m_reader.SetLayerMode(true);
 }
 
-bool OccIgesReader::readFile(const QString& filepath, TaskProgress* progress) {
+bool OccIgesReader::readFile(const QString& filepath, TaskProgress* progress)
+{
+    MayoIO_CafGlobalScopedLock(cafLock);
     return cafReadFile(m_reader, filepath, progress);
 }
 
-bool OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress) {
+bool OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
+{
+    MayoIO_CafGlobalScopedLock(cafLock);
     return cafTransfer(m_reader, doc, progress);
 }
 
-bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+{
+    MayoIO_CafGlobalScopedLock(cafLock);
     return cafTransfer(m_writer, appItems, progress);
 }
 
 bool OccIgesWriter::writeFile(const QString& filepath, TaskProgress* progress)
 {
-    std::lock_guard<std::mutex> lock(cafGlobalMutex()); Q_UNUSED(lock);
+    MayoIO_CafGlobalScopedLock(cafLock);
     m_writer.ComputeModel();
     const bool ok = m_writer.Write(filepath.toLocal8Bit().constData());
     progress->setValue(100);

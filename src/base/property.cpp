@@ -21,6 +21,10 @@ Span<Property* const> PropertyGroup::properties() const
     return m_properties;
 }
 
+void PropertyGroup::restoreDefaults()
+{
+}
+
 void PropertyGroup::onPropertyChanged(Property* prop)
 {
     if (m_parentGroup)

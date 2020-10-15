@@ -34,6 +34,10 @@ namespace IO {
 
 std::mutex& cafGlobalMutex();
 
+#define MayoIO_CafGlobalScopedLock(name) \
+    std::lock_guard<std::mutex> name(cafGlobalMutex()); \
+    Q_UNUSED(name);
+
 Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader);
 Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader);
 
