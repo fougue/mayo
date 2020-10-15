@@ -3,18 +3,24 @@
 </p>
 
 # What is Mayo
-Mayo is a basic 3D viewer inspired by FreeCad.  
+Mayo is a 3D viewer and converter inspired by FreeCad
 
-Current features are :
-* Multi-documents support, user can open many parts in the session
-* Support of STEP/IGES assemblies (colors and tree structure)
-* Perspective/orthographic 3D view projection
-* 3D clip planes with configurable capping
-* 3D view cube providing intuitive camera manipulation
-* Save image(snapshot) of the current 3D view
+# Overview
+* View and convert 3D files in different formats
+* Explore assembly trees and view properties
+* Cross platform: runs on Windows and Linux
+* Underlying toolkits: OpenCascade and Qt
+
+# Current features
+* Support of multi-documents, user can open many files in the session
+* Support of STEP/IGES assemblies(product structure and colors)
+* Area and volume properties for meshes and shapes
 * Editable name of STEP/IGES entities
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
-* Area and volume properties for meshes and shapes
+* 3D clip planes with configurable capping
+* 3D view cube providing intuitive camera manipulation
+* Perspective/orthographic 3D view projection
+* Save image(snapshot) of the current 3D view
 
 3D viewer operations :
 * Rotate : mouse left + move
@@ -35,21 +41,20 @@ VRML                      |  &#10007; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
-Mayo requires Qt5 and OpenCascade &#8805; 7.3.0
-Although only tested with VC++/Windows it should build fine on Linux and MacOS.
+Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
+* [Qt installer](https://www.qt.io/download-qt-installer)
+* [OpenCascade Download Center](https://old.opencascade.com/content/latest-release)
+
 It uses the `CSF_OCCTIncludePath` and `CSF_OCCTLibPath` environment variables to locate
-OpenCascade include and lib paths. On Windows these two variables are set by the `env.bat`
-script which can be found within OpenCascade's base folder. You should run this batch before
-building mayo :
+OpenCascade include and library paths. On Windows these two variables are set by the `env.bat`
+script which can be found within OpenCascade's base folder, it is recommended to run this script
+and then build Mayo :  
 `cd .../mayo`  
 `qmake`  
 `(n)make`  
-In case you don't want to run this file you can use the `CASCADE_INC_DIR` and `CASCADE_LIB_DIR` qmake
-variables instead :  
+In case you don't want to run OpenCascade `env.bat` you can use the `CASCADE_INC_DIR`and `CASCADE_LIB_DIR`
+qmake variables instead :  
 `qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"`  
-
-To enable optional gmio library, add this option to the qmake command line:  
-`"GMIO_ROOT=path_to_gmio"`
 
 # Screenshots
 
