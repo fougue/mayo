@@ -57,9 +57,6 @@ public:
 
     // Parameters
 
-    // NOTE
-    // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
-    // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
     enum class Schema {
         AP203,
         AP214_CD,
@@ -81,7 +78,7 @@ public:
     };
 
     Schema schema() const { return m_schema; }
-    void setSchema(Schema schema) { m_schema = schema; }
+    void setSchema(Schema schema);
 
     AssemblyMode assemblyMode() const { return m_assemblyMode; }
     void setAssemblyMode(AssemblyMode mode) { m_assemblyMode = mode; }

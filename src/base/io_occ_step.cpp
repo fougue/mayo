@@ -173,13 +173,22 @@ void OccStepWriter::applyParameters(const PropertyGroup* params)
     auto ptr = dynamic_cast<const StepWriterParameters*>(params);
     if (ptr) {
         this->setSchema(ptr->schema.valueAs<Schema>());
-        this->setAssemblyMode(ptr->schema.valueAs<AssemblyMode>());
-        this->setFreeVertexMode(ptr->schema.valueAs<FreeVertexMode>());
+        this->setAssemblyMode(ptr->assemblyMode.valueAs<AssemblyMode>());
+        this->setFreeVertexMode(ptr->freeVertexMode.valueAs<FreeVertexMode>());
         this->setParametricCurvesMode(
                     ptr->writePCurves.value() ?
                         ParametricCurvesMode::Write :
                         ParametricCurvesMode::Skip);
     }
+}
+
+void OccStepWriter::setSchema(OccStepWriter::Schema schema)
+{
+    m_schema = schema;
+    // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
+    // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
+    // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
+    m_writer.ChangeWriter().Model(true);
 }
 
 void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) const
