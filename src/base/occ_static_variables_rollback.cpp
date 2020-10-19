@@ -72,6 +72,22 @@ void OccStaticVariablesRollback::change(const char* strKey, int newValue)
         m_vecRecord.push_back(std::move(record));
 }
 
+void OccStaticVariablesRollback::change(const char* strKey, double newValue)
+{
+    const auto record = Private::createStaticVariableRecord<double>(strKey);
+    Private::changeStaticVariable(strKey, newValue);
+    if (record.isValid())
+        m_vecRecord.push_back(std::move(record));
+}
+
+void OccStaticVariablesRollback::change(const char* strKey, const char* newValue)
+{
+    const auto record = Private::createStaticVariableRecord<const char*>(strKey);
+    Private::changeStaticVariable(strKey, newValue);
+    if (record.isValid())
+        m_vecRecord.push_back(std::move(record));
+}
+
 OccStaticVariablesRollback::~OccStaticVariablesRollback()
 {
     for (const StaticVariableRecord& record : m_vecRecord) {
