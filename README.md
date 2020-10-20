@@ -35,9 +35,9 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 STEP                      |  &#10004; | &#10004; | AP203, 214, 242(some parts)
 IGES                      |  &#10004; | &#10004; | v5.3
 OpenCascade BREP          |  &#10004; | &#10004; |
-OBJ                       |  &#10004; | &#10007; | Requires OpenCascade &#8805; v7.4.0
-glTF                      |  &#10004; | &#10007; | Requires OpenCascade &#8805; v7.4.0 (supports 1.0, 2.0 and GLB)
-VRML                      |  &#10007; | &#10004; | v2.0 UTF8
+OBJ                       |  &#10004; | &#10060; | Requires OpenCascade &#8805; v7.4.0
+glTF                      |  &#10004; | &#10060; | Requires OpenCascade &#8805; v7.4.0 (supports 1.0, 2.0 and GLB)
+VRML                      |  &#10060; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
 # Build instructions
@@ -49,12 +49,16 @@ It uses the `CSF_OCCTIncludePath` and `CSF_OCCTLibPath` environment variables to
 OpenCascade include and library paths. On Windows these two variables are set by the `env.bat`
 script which can be found within OpenCascade's base folder, it is recommended to run this script
 and then build Mayo :  
-`cd .../mayo`  
-`qmake`  
-`(n)make`  
+```bash
+cd .../mayo
+qmake
+(n)make
+```
 In case you don't want to run OpenCascade `env.bat` you can use the `CASCADE_INC_DIR`and `CASCADE_LIB_DIR`
 qmake variables instead :  
-`qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"`  
+```bash
+qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"
+```
 
 # Screenshots
 
