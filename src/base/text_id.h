@@ -9,9 +9,18 @@
 #include "span.h"
 #include <QtCore/QString>
 
+#include <cstring>
+
 // NOTE Use this command-line for generating/updating .ts files:
-// $> lupdate -tr-function-alias QT_TRANSLATE_NOOP+=MAYO_TEXT_ID file.pro
+// $> lupdate -tr-function-alias QT_TRANSLATE_NOOP+=MAYO_TEXT_ID,Q_DECLARE_TR_FUNCTIONS+=MAYO_DECLARE_TEXT_ID_FUNCTIONS,tr+=textId file.pro
 #define MAYO_TEXT_ID(trContext, key) Mayo::TextId{ QByteArrayLiteral(trContext), QByteArrayLiteral(key) }
+#define MAYO_DECLARE_TEXT_ID_FUNCTIONS(context) \
+public: \
+    static inline QByteArray textIdContext() { return QByteArrayLiteral(#context); } \
+    static inline Mayo::TextId textId(const char* sourceText) { \
+        return Mayo::TextId{ QByteArrayLiteral(#context), QByteArray::fromRawData(sourceText, int(std::strlen(sourceText))) }; \
+    } \
+private:
 
 namespace Mayo {
 
