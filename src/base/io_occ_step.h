@@ -8,6 +8,7 @@
 
 #include "io_reader.h"
 #include "io_writer.h"
+#include <QtCore/QObject>
 #include <NCollection_Vector.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
@@ -38,13 +39,47 @@ public:
         All, Assembly, Structure, Shape
     };
 
-    // TODO ...
+    enum class ShapeRepresentation {
+        All,
+        AdvancedBRep,
+        ManifoldSurface,
+        GeometricallyBoundedSurface,
+        FacettedBRep,
+        EdgeBasedWireframe,
+        GeometricallyBoundedWireframe
+    };
+
+    // Maps to OpenCascade's Resource_FormatType
+    enum class Encoding {
+        Shift_JIS, // Shift Japanese Industrial Standards
+        EUC, // (Extended Unix Code) multi-byte encoding primarily for Japanese, Korean, and simplified Chinese
+        ANSI,
+        GB, // (Guobiao) encoding for Simplified Chinese
+        UTF8
+    };
+
+    struct Options {
+        ProductContext productContext = ProductContext::All;
+        AssemblyLevel assemblyLevel = AssemblyLevel::All;
+        ShapeRepresentation preferredShapeRepresentation = ShapeRepresentation::All;
+        bool readShapeAspect = true;
+        Encoding encoding = Encoding::UTF8;
+    };
+    const Options& options() const { return m_options; }
+    void setOptions(const Options& options) { m_options = options; }
 
 private:
+    Q_GADGET
+    Q_ENUM(Encoding)
+
+    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
+
+    class Parameters;
     STEPCAFControl_Reader m_reader;
+    Options m_options;
 };
 
-// Opencascade-based reader for STEP file format
+// Opencascade-based writer for STEP file format
 class OccStepWriter : public Writer {
 public:
     OccStepWriter();
@@ -90,8 +125,15 @@ public:
     void setParametricCurvesMode(ParametricCurvesMode mode) { m_pcurvesMode = mode; }
 
 private:
+    Q_GADGET
+    Q_ENUM(Schema)
+    Q_ENUM(AssemblyMode)
+    Q_ENUM(FreeVertexMode)
+    Q_ENUM(ParametricCurvesMode)
+
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
+    class Parameters;
     STEPCAFControl_Writer m_writer;
     Schema m_schema = Schema::AP214_CD;
     AssemblyMode m_assemblyMode = AssemblyMode::Skip;

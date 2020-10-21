@@ -11,98 +11,133 @@
 #include "property_enumeration.h"
 #include "task_progress.h"
 
+#include <QtCore/QCoreApplication>
 #include <STEPCAFControl_Controller.hxx>
 
 namespace Mayo {
 namespace IO {
 
-namespace {
-
-struct StepReaderParameters : public PropertyGroup {
-    StepReaderParameters(PropertyGroup* parentGroup)
+class OccStepReader::Parameters : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccStepReader)
+public:
+    Parameters(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          productContext(this, MAYO_TEXT_ID("Mayo::IO::OccStepReader", "productContext"), &enumProductContext),
-          assemblyLevel(this, MAYO_TEXT_ID("Mayo::IO::OccStepReader", "assemblyLevel"), &enumAssemblyLevel),
-          readShapeAspect(this, MAYO_TEXT_ID("Mayo::IO::OccStepReader", "readShapeAspect"))
+          productContext(this, textId("productContext"), &enumProductContext()),
+          assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel()),
+          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation()),
+          readShapeAspect(this, textId("readShapeAspect")),
+          encoding(this, textId("encoding"), &enumEncoding())
     {
     }
 
     void restoreDefaults() override {
-        this->productContext.setValue(int(ProductContext::All));
-        this->assemblyLevel.setValue(int(AssemblyLevel::All));
+        this->productContext.setValue(ProductContext::All);
+        this->assemblyLevel.setValue(AssemblyLevel::All);
         this->readShapeAspect.setValue(true);
+        this->encoding.setValue(Encoding::UTF8);
     }
 
-    using ProductContext = OccStepReader::ProductContext;
-    inline static const Enumeration enumProductContext = {
-        { int(ProductContext::All), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "All") },
-        { int(ProductContext::Design), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "Design") },
-        { int(ProductContext::Analysis), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "Analysis") }
-    };
+    static const Enumeration& enumProductContext() {
+        static Enumeration enumObject;
+        if (enumObject.empty()) {
+            enumObject.addItem(ProductContext::All, textId("All"), tr("Translates all products"));
+            enumObject.addItem(
+                        ProductContext::Design, textId("Design"),
+                        tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
+                           "life_cycle_stage set to ‘design'"));
+            enumObject.addItem(
+                        ProductContext::Analysis, textId("Analysis"),
+                        tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
+                           "life_cycle_stage set to ‘analysis'"));
+        }
 
-    using AssemblyLevel = OccStepReader::AssemblyLevel;
-    inline static const Enumeration enumAssemblyLevel = {
-        { int(AssemblyLevel::All), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "All") },
-        { int(AssemblyLevel::Assembly), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "Assembly") },
-        { int(AssemblyLevel::Structure), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "Structure") },
-        { int(AssemblyLevel::Shape), MAYO_TEXT_ID("Mayo::IO::OccStepReader", "Shape") },
-    };
+        return enumObject;
+    }
+
+    static const Enumeration& enumAssemblyLevel() {
+        static Enumeration enumObject;
+        if (enumObject.empty()) {
+            enumObject.addItem(
+                        AssemblyLevel::All, textId("All"),
+                        tr("Translate both the assembly structure and all associated shapes. "
+                           "If both shape and sub-assemblies are associated with the same product, "
+                           "all of them are read and put in a single compound"));
+            enumObject.addItem(
+                        AssemblyLevel::Assembly, textId("Assembly"),
+                        tr("Translate the assembly structure and shapes associated with parts only "
+                           "(not with sub-assemblies)"));
+            enumObject.addItem(
+                        AssemblyLevel::Structure, textId("Structure"),
+                        tr("Translate only the assembly structure without shapes (a structure of "
+                           "empty compounds). This mode can be useful as an intermediate step in "
+                           "applications requiring specialized processing of assembly parts"));
+            enumObject.addItem(
+                        AssemblyLevel::Shape, textId("Shape"),
+                        tr("Translate only shapes associated with the product, ignoring the assembly "
+                           "structure (if any). This can be useful to translate only a shape associated "
+                           "with specific product, as a complement to assembly mode"));
+        }
+
+        return enumObject;
+    }
+
+    static const Enumeration& enumShapeRepresentation() {
+        static Enumeration enumObject;
+        if (enumObject.empty()) {
+            enumObject.addItem(
+                        ShapeRepresentation::All, textId("All"),
+                        tr("Translate all representations (if more than one, put in compound)"));
+            enumObject.addItem(
+                        ShapeRepresentation::AdvancedBRep, textId("AdvancedBRep"),
+                        tr("Prefer ADVANCED_BREP_SHAPE_REPRESENTATION"));
+            enumObject.addItem(
+                        ShapeRepresentation::ManifoldSurface, textId("ManifoldSurface"),
+                        tr("Prefer MANIFOLD_SURFACE_SHAPE_REPRESENTATION"));
+            enumObject.addItem(
+                        ShapeRepresentation::GeometricallyBoundedSurface, textId("GeometricallyBoundedSurface"),
+                        tr("Prefer GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"));
+            enumObject.addItem(
+                        ShapeRepresentation::FacettedBRep, textId("FacettedBRep"),
+                        tr("Prefer FACETTED_BREP_SHAPE_REPRESENTATION"));
+            enumObject.addItem(
+                        ShapeRepresentation::EdgeBasedWireframe, textId("EdgeBasedWireframe"),
+                        tr("Prefer EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION"));
+            enumObject.addItem(
+                        ShapeRepresentation::GeometricallyBoundedWireframe, textId("GeometricallyBoundedWireframe"),
+                        tr("Prefer GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"));
+        }
+
+        return enumObject;
+    }
+
+    static const Enumeration& enumEncoding() {
+        static Enumeration enumObject = Enumeration::fromQENUM<Encoding>(textIdContext());
+        if (enumObject.descriptionsEmpty()) {
+            enumObject.setDescription(Encoding::Shift_JIS, tr("Shift Japanese Industrial Standards"));
+            enumObject.setDescription(
+                        Encoding::EUC,
+                        tr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
+                           "and simplified Chinese"));
+            enumObject.setDescription(Encoding::GB, tr("GB (Guobiao) encoding for Simplified Chinese"));
+        }
+
+        return enumObject;
+    }
 
     PropertyEnumeration productContext;
     PropertyEnumeration assemblyLevel;
+    PropertyEnumeration preferredShapeRepresentation;
     PropertyBool readShapeAspect;
+    PropertyEnumeration encoding;
 };
 
-struct StepWriterParameters : public PropertyGroup {
-    StepWriterParameters(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          schema(this, MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "schema"), &enumSchema),
-          assemblyMode(this, MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "assemblyMode"), &enumAssemblyMode),
-          freeVertexMode(this, MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "freeVertexMode"), &enumFreeVertexMode),
-          writePCurves(this, MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "writeParametericCurves"))
-    {
-    }
-
-    void restoreDefaults() override {
-        this->schema.setValue(int(Schema::AP214_CD));
-        this->assemblyMode.setValue(int(AssemblyMode::Skip));
-        this->freeVertexMode.setValue(int(FreeVertexMode::Compound));
-        this->writePCurves.setValue(true);
-    }
-
-    using Schema = OccStepWriter::Schema;
-    inline static const Enumeration enumSchema = {
-        { int(Schema::AP203), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "AP203") },
-        { int(Schema::AP214_CD), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "AP214_CD") },
-        { int(Schema::AP214_DIS), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "AP214_DIS") },
-        { int(Schema::AP214_IS), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "AP214_IS") },
-        { int(Schema::AP242_DIS), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "AP242_DIS") }
-    };
-
-    using AssemblyMode = OccStepWriter::AssemblyMode;
-    inline static const Enumeration enumAssemblyMode = {
-        { int(AssemblyMode::Skip), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "Skip") },
-        { int(AssemblyMode::Write), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "Write") },
-        { int(AssemblyMode::Auto), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "Auto") }
-    };
-
-    using FreeVertexMode = OccStepWriter::FreeVertexMode;
-    inline static const Enumeration enumFreeVertexMode = {
-        { int(FreeVertexMode::Compound), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "Compound") },
-        { int(FreeVertexMode::Single), MAYO_TEXT_ID("Mayo::IO::OccStepWriter", "Single") }
-    };
-
-    PropertyEnumeration schema;
-    PropertyEnumeration assemblyMode;
-    PropertyEnumeration freeVertexMode;
-    PropertyBool writePCurves;
-};
-
-const char Key_writeStepSchema[] = "write.step.schema";
-const char Key_writeStepAssembly[] = "write.step.assembly";
-const char Key_writePCurvesMode[] = "write.surfacecurve.mode";
-const char Key_writeStepVertexMode[] = "write.step.vertex.mode";
-
+namespace {
+const char Key_readStepProductContext[] = "read.step.product.context";
+const char Key_readStepAssemblyLevel[] = "read.step.assembly.level";
+const char Key_readStepShapeRepr[] = "read.step.shape.repr";
+const char Key_readStepShapeAspect[] = "read.step.shape.aspect";
+const char Key_readStepCafCodepage[] = "read.stepcaf.codepage";
 } // namespace
 
 OccStepReader::OccStepReader()
@@ -117,28 +152,122 @@ OccStepReader::OccStepReader()
 bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
+    OccStaticVariablesRollback rollback;
+    this->changeStaticVariables(&rollback);
     // "read.stepcaf.subshapes.name"
-    // "read.stepcaf.codepage"
     return cafReadFile(m_reader, filepath, progress);
 }
 
 bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
+    OccStaticVariablesRollback rollback;
+    this->changeStaticVariables(&rollback);
     return cafTransfer(m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccStepReader::createParameters(PropertyGroup* parentGroup)
 {
-    return std::make_unique<StepReaderParameters>(parentGroup);
+    return std::make_unique<Parameters>(parentGroup);
 }
 
 void OccStepReader::applyParameters(const PropertyGroup *params)
 {
-    auto ptr = dynamic_cast<const StepWriterParameters*>(params);
+    auto ptr = dynamic_cast<const Parameters*>(params);
     if (ptr) {
+        Options options;
+        options.productContext = ptr->productContext.valueAs<ProductContext>();
+        options.assemblyLevel = ptr->assemblyLevel.valueAs<AssemblyLevel>();
+        options.preferredShapeRepresentation = ptr->preferredShapeRepresentation.valueAs<ShapeRepresentation>();
+        options.readShapeAspect = ptr->readShapeAspect.value();
+        options.encoding = ptr->encoding.valueAs<Encoding>();
+        this->setOptions(options);
     }
 }
+
+void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) const
+{
+    auto fnOccProductContext = [](ProductContext context) {
+        switch (context) {
+        case ProductContext::All: return 1;
+        case ProductContext::Design: return 2;
+        case ProductContext::Analysis: return 3;
+        }
+        Q_UNREACHABLE();
+    };
+    auto fnOccAssemblyLevel = [](AssemblyLevel level) {
+        switch (level) {
+        case AssemblyLevel::All: return 1;
+        case AssemblyLevel::Assembly: return 2;
+        case AssemblyLevel::Structure: return 3;
+        case AssemblyLevel::Shape: return 4;
+        }
+        Q_UNREACHABLE();
+    };
+    auto fnOccShapeRepresentation = [](ShapeRepresentation repr) {
+        switch (repr) {
+        case ShapeRepresentation::All: return 1;
+        case ShapeRepresentation::AdvancedBRep: return 2;
+        case ShapeRepresentation::ManifoldSurface: return 3;
+        case ShapeRepresentation::GeometricallyBoundedSurface: return 4;
+        case ShapeRepresentation::FacettedBRep: return 5;
+        case ShapeRepresentation::EdgeBasedWireframe: return 6;
+        case ShapeRepresentation::GeometricallyBoundedWireframe: return 7;
+        }
+        Q_UNREACHABLE();
+    };
+    auto fnOccEncoding = [](Encoding code) {
+        switch (code) {
+        case Encoding::Shift_JIS: return "SJIS";
+        case Encoding::EUC: return "EUC";
+        case Encoding::ANSI: return "ANSI";
+        case Encoding::GB: return "GB";
+        case Encoding::UTF8: return "UTF8";
+        }
+        Q_UNREACHABLE();
+    };
+
+    rollback->change(Key_readStepProductContext, fnOccProductContext(m_options.productContext));
+    rollback->change(Key_readStepAssemblyLevel, fnOccAssemblyLevel(m_options.assemblyLevel));
+    rollback->change(Key_readStepShapeRepr, fnOccShapeRepresentation(m_options.preferredShapeRepresentation));
+    rollback->change(Key_readStepShapeAspect, int(m_options.readShapeAspect ? 1 : 0));
+    rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_options.encoding));
+}
+
+class OccStepWriter::Parameters : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter)
+public:
+    Parameters(PropertyGroup* parentGroup)
+        : PropertyGroup(parentGroup),
+          schema(this, textId("schema"), &enumSchema),
+          assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
+          freeVertexMode(this, textId("freeVertexMode"), &enumFreeVertexMode),
+          writePCurves(this, textId("writeParametericCurves"))
+    {}
+
+    void restoreDefaults() override {
+        this->schema.setValue(int(Schema::AP214_CD));
+        this->assemblyMode.setValue(int(AssemblyMode::Skip));
+        this->freeVertexMode.setValue(int(FreeVertexMode::Compound));
+        this->writePCurves.setValue(true);
+    }
+
+    inline static const auto enumSchema = Enumeration::fromQENUM<Schema>(textIdContext());
+    inline static const auto enumAssemblyMode = Enumeration::fromQENUM<AssemblyMode>(textIdContext());
+    inline static const auto enumFreeVertexMode = Enumeration::fromQENUM<FreeVertexMode>(textIdContext());
+
+    PropertyEnumeration schema;
+    PropertyEnumeration assemblyMode;
+    PropertyEnumeration freeVertexMode;
+    PropertyBool writePCurves;
+};
+
+namespace {
+const char Key_writeStepSchema[] = "write.step.schema";
+const char Key_writeStepAssembly[] = "write.step.assembly";
+const char Key_writePCurvesMode[] = "write.surfacecurve.mode";
+const char Key_writeStepVertexMode[] = "write.step.vertex.mode";
+} // namespace
 
 OccStepWriter::OccStepWriter()
 {
@@ -165,12 +294,12 @@ bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
 
 std::unique_ptr<PropertyGroup> OccStepWriter::createParameters(PropertyGroup* parentGroup)
 {
-    return std::make_unique<StepWriterParameters>(parentGroup);
+    return std::make_unique<Parameters>(parentGroup);
 }
 
 void OccStepWriter::applyParameters(const PropertyGroup* params)
 {
-    auto ptr = dynamic_cast<const StepWriterParameters*>(params);
+    auto ptr = dynamic_cast<const Parameters*>(params);
     if (ptr) {
         this->setSchema(ptr->schema.valueAs<Schema>());
         this->setAssemblyMode(ptr->assemblyMode.valueAs<AssemblyMode>());
