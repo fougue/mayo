@@ -28,15 +28,19 @@ Enumeration::Enumeration(std::initializer_list<Item> listItem)
 {
 }
 
-void Enumeration::addItem(Value value, const TextId& name)
-{
-    const Item item = { value, name };
-    m_vecItem.emplace_back(std::move(item));
-}
-
 int Enumeration::size() const
 {
     return int(m_vecItem.size());
+}
+
+bool Enumeration::descriptionsEmpty() const
+{
+    for (const Item& item : m_vecItem) {
+        if (!item.description.isEmpty())
+            return false;
+    }
+
+    return true;
 }
 
 const Enumeration::Item& Enumeration::findItem(Enumeration::Value value) const
@@ -113,12 +117,6 @@ QByteArray PropertyEnumeration::name() const
 Enumeration::Value PropertyEnumeration::value() const
 {
     return m_value;
-}
-
-Result<void> PropertyEnumeration::setValue(Enumeration::Value v)
-{
-    // TODO: check v is an enumerated value of m_enumeration
-    return Property::setValueHelper(this, &m_value, v);
 }
 
 QVariant PropertyEnumeration::valueAsVariant() const
