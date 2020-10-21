@@ -37,13 +37,13 @@ public:
     };
 
     enum class ShapeRepresentation {
+        All,
         AdvancedBRep,
         ManifoldSurface,
         GeometricallyBoundedSurface,
         FacettedBRep,
         EdgeBasedWireframe,
-        GeometricallyBoundedWireframe,
-        All
+        GeometricallyBoundedWireframe
     };
 
     // Maps to OpenCascade's Resource_FormatType

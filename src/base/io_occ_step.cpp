@@ -132,7 +132,6 @@ const char Key_readStepAssemblyLevel[] = "read.step.assembly.level";
 const char Key_readStepShapeRepr[] = "read.step.shape.repr";
 const char Key_readStepShapeAspect[] = "read.step.shape.aspect";
 const char Key_readStepCafCodepage[] = "read.stepcaf.codepage";
-
 } // namespace
 
 OccStepReader::OccStepReader()
@@ -150,7 +149,6 @@ bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
     // "read.stepcaf.subshapes.name"
-    // "read.stepcaf.codepage"
     return cafReadFile(m_reader, filepath, progress);
 }
 
