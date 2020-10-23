@@ -24,20 +24,22 @@ namespace IO {
 
 namespace {
 
-struct VrmlWriterParameters : public PropertyGroup {
+class VrmlWriterParameters : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader)
+public:
     VrmlWriterParameters(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
           shapeRepresentation(
-              this, MAYO_TEXT_ID("Mayo::IO::VrmlStlWriter", "shapeRepresentation"), &enumShapeRepresentation())
+              this, textId("shapeRepresentation"), &enumShapeRepresentation())
     {
         this->shapeRepresentation.setValue(VrmlAPI_BothRepresentation);
     }
 
     static const Enumeration& enumShapeRepresentation() {
         static const Enumeration values = {
-            { VrmlAPI_ShadedRepresentation, MAYO_TEXT_ID("Mayo::IO::VrmlStlWriter", "RepresentationShaded") },
-            { VrmlAPI_WireFrameRepresentation, MAYO_TEXT_ID("Mayo::IO::VrmlStlWriter", "RepresentationWireframe") },
-            { VrmlAPI_BothRepresentation, MAYO_TEXT_ID("Mayo::IO::VrmlStlWriter", "RepresentationBoth") },
+            { VrmlAPI_ShadedRepresentation, textId("RepresentationShaded") },
+            { VrmlAPI_WireFrameRepresentation, textId("RepresentationWireframe") },
+            { VrmlAPI_BothRepresentation, textId("RepresentationBoth") },
         };
         return values;
     }
