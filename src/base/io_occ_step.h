@@ -32,21 +32,21 @@ public:
     // Parameters
 
     enum class ProductContext {
-        All, Design, Analysis
+        Design, Analysis, Both
     };
 
     enum class AssemblyLevel {
-        All, Assembly, Structure, Shape
+        Assembly, Structure, Shape, All
     };
 
     enum class ShapeRepresentation {
-        All,
         AdvancedBRep,
         ManifoldSurface,
         GeometricallyBoundedSurface,
         FacettedBRep,
         EdgeBasedWireframe,
-        GeometricallyBoundedWireframe
+        GeometricallyBoundedWireframe,
+        All
     };
 
     // Maps to OpenCascade's Resource_FormatType
@@ -59,7 +59,7 @@ public:
     };
 
     struct Options {
-        ProductContext productContext = ProductContext::All;
+        ProductContext productContext = ProductContext::Both;
         AssemblyLevel assemblyLevel = AssemblyLevel::All;
         ShapeRepresentation preferredShapeRepresentation = ShapeRepresentation::All;
         bool readShapeAspect = true;

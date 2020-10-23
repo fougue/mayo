@@ -23,93 +23,85 @@ class OccStepReader::Parameters : public PropertyGroup {
 public:
     Parameters(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          productContext(this, textId("productContext"), &enumProductContext()),
-          assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel()),
-          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation()),
+          productContext(this, textId("productContext"), &enumProductContext),
+          assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel),
+          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation),
           readShapeAspect(this, textId("readShapeAspect")),
           encoding(this, textId("encoding"), &enumEncoding())
     {
+        this->productContext.setDescription(
+                    tr("When reading AP 209 STEP files, allows selecting either only `design` or "
+                       "`analysis', or both types of products for translation\n"
+                       "Note that in AP 203 and AP214 files all products should be marked as `design`, "
+                       "so if this mode is set to `analysis`, nothing will be read"));
+        this->assemblyLevel.setDescription(
+                    tr("Specifies which data should be read for the products found in the STEP file"));
+        this->preferredShapeRepresentation.setDescription(
+                    tr("Specifies preferred type of representation of the shape of the product, in "
+                       "case if a STEP file contains more than one representation (i.e. multiple "
+                       "PRODUCT_DEFINITION_SHAPE entities) for a single product"));
+        this->readShapeAspect.setDescription(
+                    tr("Defines whether shapes associated with the PRODUCT_DEFINITION_SHAPE entity "
+                       "of the product via SHAPE_ASPECT should be translated. This kind of "
+                       "association was used for the representation of hybrid models (i.e. models "
+                       "whose shape is composed of different types of representations) in AP 203 files "
+                       "before 1998, but it is also used to associate auxiliary information with the "
+                       "sub-shapes of the part. Though STEP translator tries to recognize such cases "
+                       "correctly, this parameter may be useful to avoid unconditionally translation "
+                       "of shapes associated via SHAPE_ASPECT entities."));
     }
 
     void restoreDefaults() override {
-        this->productContext.setValue(ProductContext::All);
+        this->productContext.setValue(ProductContext::Both);
         this->assemblyLevel.setValue(AssemblyLevel::All);
         this->readShapeAspect.setValue(true);
         this->encoding.setValue(Encoding::UTF8);
     }
 
-    static const Enumeration& enumProductContext() {
-        static Enumeration enumObject;
-        if (enumObject.empty()) {
-            enumObject.addItem(ProductContext::All, textId("All"), tr("Translates all products"));
-            enumObject.addItem(
-                        ProductContext::Design, textId("Design"),
-                        tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
-                           "life_cycle_stage set to ‘design'"));
-            enumObject.addItem(
-                        ProductContext::Analysis, textId("Analysis"),
-                        tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
-                           "life_cycle_stage set to ‘analysis'"));
-        }
+    inline static const Enumeration enumProductContext = {
+        { int(ProductContext::Design), textId("Design"),
+          tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
+             "life_cycle_stage set to `design`") },
+        { int(ProductContext::Analysis), textId("Analysis"),
+          tr("Translate only products that have PRODUCT_DEFINITION_CONTEXT with field "
+             "life_cycle_stage set to `analysis`") },
+        { int(ProductContext::Both), textId("Both"), tr("Translates all products") }
+    };
 
-        return enumObject;
-    }
+    inline static const Enumeration enumAssemblyLevel = {
+        { int(AssemblyLevel::Assembly), textId("Assembly"),
+          tr("Translate the assembly structure and shapes associated with parts only "
+             "(not with sub-assemblies)") },
+        { int(AssemblyLevel::Structure), textId("Structure"),
+          tr("Translate only the assembly structure without shapes (a structure of "
+             "empty compounds). This mode can be useful as an intermediate step in "
+             "applications requiring specialized processing of assembly parts") },
+        { int(AssemblyLevel::Shape), textId("Shape"),
+          tr("Translate only shapes associated with the product, ignoring the assembly "
+             "structure (if any). This can be useful to translate only a shape associated "
+             "with specific product, as a complement to assembly mode") },
+        { int(AssemblyLevel::All), textId("All"),
+          tr("Translate both the assembly structure and all associated shapes. "
+             "If both shape and sub-assemblies are associated with the same product, "
+             "all of them are read and put in a single compound") }
+    };
 
-    static const Enumeration& enumAssemblyLevel() {
-        static Enumeration enumObject;
-        if (enumObject.empty()) {
-            enumObject.addItem(
-                        AssemblyLevel::All, textId("All"),
-                        tr("Translate both the assembly structure and all associated shapes. "
-                           "If both shape and sub-assemblies are associated with the same product, "
-                           "all of them are read and put in a single compound"));
-            enumObject.addItem(
-                        AssemblyLevel::Assembly, textId("Assembly"),
-                        tr("Translate the assembly structure and shapes associated with parts only "
-                           "(not with sub-assemblies)"));
-            enumObject.addItem(
-                        AssemblyLevel::Structure, textId("Structure"),
-                        tr("Translate only the assembly structure without shapes (a structure of "
-                           "empty compounds). This mode can be useful as an intermediate step in "
-                           "applications requiring specialized processing of assembly parts"));
-            enumObject.addItem(
-                        AssemblyLevel::Shape, textId("Shape"),
-                        tr("Translate only shapes associated with the product, ignoring the assembly "
-                           "structure (if any). This can be useful to translate only a shape associated "
-                           "with specific product, as a complement to assembly mode"));
-        }
-
-        return enumObject;
-    }
-
-    static const Enumeration& enumShapeRepresentation() {
-        static Enumeration enumObject;
-        if (enumObject.empty()) {
-            enumObject.addItem(
-                        ShapeRepresentation::All, textId("All"),
-                        tr("Translate all representations (if more than one, put in compound)"));
-            enumObject.addItem(
-                        ShapeRepresentation::AdvancedBRep, textId("AdvancedBRep"),
-                        tr("Prefer ADVANCED_BREP_SHAPE_REPRESENTATION"));
-            enumObject.addItem(
-                        ShapeRepresentation::ManifoldSurface, textId("ManifoldSurface"),
-                        tr("Prefer MANIFOLD_SURFACE_SHAPE_REPRESENTATION"));
-            enumObject.addItem(
-                        ShapeRepresentation::GeometricallyBoundedSurface, textId("GeometricallyBoundedSurface"),
-                        tr("Prefer GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"));
-            enumObject.addItem(
-                        ShapeRepresentation::FacettedBRep, textId("FacettedBRep"),
-                        tr("Prefer FACETTED_BREP_SHAPE_REPRESENTATION"));
-            enumObject.addItem(
-                        ShapeRepresentation::EdgeBasedWireframe, textId("EdgeBasedWireframe"),
-                        tr("Prefer EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION"));
-            enumObject.addItem(
-                        ShapeRepresentation::GeometricallyBoundedWireframe, textId("GeometricallyBoundedWireframe"),
-                        tr("Prefer GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"));
-        }
-
-        return enumObject;
-    }
+    inline static const Enumeration enumShapeRepresentation = {
+        { int(ShapeRepresentation::AdvancedBRep), textId("AdvancedBRep"),
+          tr("Prefer ADVANCED_BREP_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::ManifoldSurface), textId("ManifoldSurface"),
+          tr("Prefer MANIFOLD_SURFACE_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::GeometricallyBoundedSurface), textId("GeometricallyBoundedSurface"),
+          tr("Prefer GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::FacettedBRep), textId("FacettedBRep"),
+          tr("Prefer FACETTED_BREP_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::EdgeBasedWireframe), textId("EdgeBasedWireframe"),
+          tr("Prefer EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::GeometricallyBoundedWireframe), textId("GeometricallyBoundedWireframe"),
+          tr("Prefer GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION") },
+        { int(ShapeRepresentation::All), textId("All"),
+          tr("Translate all representations (if more than one, put in compound)") },
+    };
 
     static const Enumeration& enumEncoding() {
         static Enumeration enumObject = Enumeration::fromQENUM<Encoding>(textIdContext());
@@ -189,7 +181,7 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 {
     auto fnOccProductContext = [](ProductContext context) {
         switch (context) {
-        case ProductContext::All: return 1;
+        case ProductContext::Both: return 1;
         case ProductContext::Design: return 2;
         case ProductContext::Analysis: return 3;
         }
