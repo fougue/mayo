@@ -59,7 +59,7 @@ AppModule::AppModule(Application* app)
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, MAYO_TEXT_ID("Mayo::AppModule", "clipPlanes"))),
       clipPlanesCappingOn(this, MAYO_TEXT_ID("Mayo::AppModule", "cappingOn")),
-      clipPlanesCappingHatch(this, MAYO_TEXT_ID("Mayo::AppModule", "cappingHatch"), &OcctEnums::Aspect_HatchStyle()),
+      clipPlanesCappingHatchOn(this, MAYO_TEXT_ID("Mayo::AppModule", "cappingHatchOn")),
       // -- Mesh defaults
       sectionId_graphicsMeshDefaults(
           app->settings()->addSection(this->groupId_graphics, MAYO_TEXT_ID("Mayo::AppModule", "meshDefaults"))),
@@ -92,7 +92,7 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
     // -- Clip planes
     settings->addSetting(&this->clipPlanesCappingOn, this->sectionId_graphicsClipPlanes);
-    settings->addSetting(&this->clipPlanesCappingHatch, this->sectionId_graphicsClipPlanes);
+    settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
     // -- Mesh defaults
     settings->addSetting(&this->meshDefaultsColor, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsMaterial, this->sectionId_graphicsMeshDefaults);
@@ -143,7 +143,7 @@ AppModule::AppModule(Application* app)
     settings->addGroupResetFunction(this->groupId_graphics, [&]{
         this->defaultShowOriginTrihedron.setValue(true);
         this->clipPlanesCappingOn.setValue(true);
-        this->clipPlanesCappingHatch.setValue(Aspect_HS_SOLID);
+        this->clipPlanesCappingHatchOn.setValue(true);
         const GraphicsMeshEntityDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
         this->meshDefaultsMaterial.setValue(meshDefaults.material);
