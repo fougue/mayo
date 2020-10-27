@@ -222,6 +222,7 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             //aisViewCube->SetFixedAnimationLoop(false);
             aisViewCube->SetSize(55);
             aisViewCube->SetFontHeight(12);
+            aisViewCube->SetAxesLabels("", "", "");
             aisViewCube->SetTransformPersistence(
                         new Graphic3d_TransformPers(
                             Graphic3d_TMF_TriedronPers,
