@@ -44,7 +44,7 @@ void GraphicsEntityBasePropertyGroup::onPropertyChanged(Property *prop)
     if (prop == &m_propertyIsVisible)
         m_gfxEntity.setVisible(m_propertyIsVisible.value());
     else if (prop == &m_propertyDisplayMode)
-        m_gfxEntity.driverPtr()->applyDisplayMode(m_gfxEntity, m_propertyDisplayMode.value());
+        m_gfxEntity.driverPtr()->applyDisplayMode(&m_gfxEntity, m_propertyDisplayMode.value());
 
     PropertyGroupSignals::onPropertyChanged(prop);
 }

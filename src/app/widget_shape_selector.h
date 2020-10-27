@@ -6,8 +6,9 @@
 
 #pragma once
 
+#if 0
 #include "../base/span.h"
-#include <AIS_InteractiveContext.hxx>
+#include "../graphics/graphics_scene.h"
 #include <TopAbs_ShapeEnum.hxx>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QWidget>
@@ -52,7 +53,7 @@ protected:
     virtual void onView3dMouseMove(const QPoint& pos);
     virtual void onView3dMouseClicked(Qt::MouseButton btn);
 
-    const Handle_AIS_InteractiveContext& context() const;
+    const GraphicsScene* graphicsScene() const;
 
     bool hasSelectedShapes() const;
 
@@ -94,3 +95,4 @@ private:
 };
 
 } // namespace Mayo
+#endif

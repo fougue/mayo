@@ -6,6 +6,7 @@
 
 #include "widget_shape_selector.h"
 
+#if 0
 #include "../gui/gui_document.h"
 #include "widget_gui_document.h"
 #include "widget_occ_view_controller.h"
@@ -186,27 +187,24 @@ void GpxShapeSelector::setMode(GpxShapeSelector::Mode mode)
     this->clearSelection();
 }
 
-const Handle_AIS_InteractiveContext &GpxShapeSelector::context() const
+const GraphicsScene* GpxShapeSelector::graphicsScene() const
 {
-    return m_guiDocument->aisInteractiveContext();
+    return m_guiDocument->graphicsScene();
 }
 
 bool GpxShapeSelector::hasSelectedShapes() const
 {
-    this->context()->InitSelected();
-    while (this->context()->MoreSelected()) {
-        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(this->context()->SelectedOwner());
-        if (!brepOwner.IsNull() && brepOwner->HasShape())
-            return true;
-        this->context()->NextSelected();
-    }
-    return false;
+    auto gfxScene = m_guiDocument->graphicsScene();
+    auto foundOwner = gfxScene->findSelectedGraphicsOwner([](const GraphicsObjectPtr& ptr) {
+        auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(ptr);
+        return !brepOwner.IsNull() && brepOwner->HasShape();
+    });
+    return !foundOwner.IsNull();
 }
 
 void GpxShapeSelector::clearSelection()
 {
-    this->context()->ClearDetected(true);
-    this->context()->ClearSelected(true);
+    this->graphicsScene()->clearSelection();
     emit shapeSelectionCleared();
 }
 
@@ -220,7 +218,7 @@ void GpxShapeSelector::onShapeTypeChanged(TopAbs_ShapeEnum shapeEnum)
 
 void GpxShapeSelector::onView3dMouseMove(const QPoint& pos)
 {
-    this->context()->MoveTo(pos.x(), pos.y(), m_guiDocument->v3dView(), true);
+    this->graphicsScene()->highlightAt(pos, m_guiDocument->v3dView());
 }
 
 void GpxShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
@@ -257,3 +255,4 @@ void GpxShapeSelector::onView3dMouseClicked(Qt::MouseButton btn)
 }
 
 } // namespace Mayo
+#endif

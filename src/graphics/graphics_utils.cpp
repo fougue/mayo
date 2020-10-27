@@ -74,9 +74,6 @@ void GraphicsUtils::AisContext_eraseObject(
         context->Remove(object, false);
         context->ClearPrs(object, 0, false);
         context->SelectionManager()->Remove(object);
-        Handle_AIS_InteractiveObject objectHCopy = object;
-        while (!objectHCopy.IsNull())
-            objectHCopy.Nullify();
     }
 }
 

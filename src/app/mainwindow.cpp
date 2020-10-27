@@ -556,7 +556,7 @@ void MainWindow::toggleCurrentDocOriginTrihedron()
     WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
     if (widget) {
         widget->guiDocument()->toggleOriginTrihedronVisibility();
-        widget->guiDocument()->updateV3dViewer();
+        widget->guiDocument()->graphicsScene()->redraw();
     }
 }
 
@@ -654,7 +654,7 @@ void MainWindow::onApplicationItemSelectionChanged()
                 });
             }
 
-            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
+            GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
             const TreeNodeId entityNodeId = item.document()->modelTree().nodeRoot(docTreeNode.id());
             GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
             if (gfxEntity.driverPtr()) {
@@ -663,23 +663,12 @@ void MainWindow::onApplicationItemSelectionChanged()
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
                     QObject::connect(gfxProps, &PropertyGroupSignals::propertyChanged, this, [=]{
-                        gfxEntity.aisContextPtr()->UpdateCurrentViewer();
+                        guiDoc->graphicsScene()->redraw();
                     });
                 }
             }
 
         }
-//        else if (item.isDocumentItem()) {
-//            WidgetPropertiesEditor::Group* grpData = uiProps->addGroup(tr("Data"));
-//            uiProps->editProperties(item.documentItem(), grpData);
-//            WidgetPropertiesEditor::Group* grpGpx = uiProps->addGroup(tr("Graphics"));
-//            const GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
-//            GpxDocumentItem* gpxDocItem = guiDoc->findItemGpx(item.documentItem());
-//            uiProps->editProperties(gpxDocItem, grpGpx);
-//        }
-//        else if (item.isDocument()) {
-//            uiProps->editProperties(item.document());
-//        }
 
         auto app = Application::instance();
         if (AppModule::get(app)->linkWithDocumentSelector.value()) {
@@ -719,13 +708,13 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto widget = new WidgetGuiDocument(guiDoc);
     if (AppModule::get(app)->defaultShowOriginTrihedron.value()) {
         guiDoc->toggleOriginTrihedronVisibility();
-        guiDoc->updateV3dViewer();
+        guiDoc->graphicsScene()->redraw();
     }
 
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
-        guiDoc->aisInteractiveContext()->MoveTo(pos2d.x(), pos2d.y(), widget->guiDocument()->v3dView(), true);
-        auto selector = guiDoc->aisInteractiveContext()->MainSelector();
+        guiDoc->graphicsScene()->highlightAt(pos2d, widget->guiDocument()->v3dView());
+        auto selector = guiDoc->graphicsScene()->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
                 selector->NbPicked() > 0 ?

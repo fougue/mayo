@@ -8,6 +8,7 @@
 
 #include "../base/document.h"
 #include "../graphics/graphics_entity.h"
+#include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 
 #include <QtCore/QObject>
@@ -32,19 +33,14 @@ public:
 
     const DocumentPtr& document() const { return m_document; }
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
-    const Handle_AIS_InteractiveContext& aisInteractiveContext() const { return m_aisContext; }
-    const Bnd_Box& gpxBoundingBox() const { return m_gpxBoundingBox; }
-
+    GraphicsScene* graphicsScene() { return &m_gfxScene; }
+    const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
     GraphicsEntity findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
-    std::vector<GraphicsOwnerPtr> selectedGraphicsOwners() const;
     void toggleItemSelected(const ApplicationItem& appItem);
-    void clearItemSelection();
 
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
-
-    void updateV3dViewer();
 
     void processAction(const GraphicsOwnerPtr& graphicsOwner);
 
@@ -67,7 +63,7 @@ public:
     int aisViewCubeBoundingSize() const;
 
 signals:
-    void gpxBoundingBoxChanged(const Bnd_Box& bndBox);
+    void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
     void viewTrihedronModeChanged(ViewTrihedronMode mode);
     void viewTrihedronCornerChanged(Qt::Corner corner);
 
@@ -88,9 +84,8 @@ private:
     void v3dViewTrihedronDisplay(Qt::Corner corner);
 
     DocumentPtr m_document;
-    Handle_V3d_Viewer m_v3dViewer;
+    GraphicsScene m_gfxScene;
     Handle_V3d_View m_v3dView;
-    Handle_AIS_InteractiveContext m_aisContext;
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
 
     V3dViewCameraAnimation* m_cameraAnimation;

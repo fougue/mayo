@@ -97,8 +97,8 @@ void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
 void GuiApplication::onApplicationItemSelectionCleared()
 {
     for (GuiDocument* guiDoc : m_vecGuiDocument) {
-        guiDoc->clearItemSelection();
-        guiDoc->updateV3dViewer();
+        guiDoc->graphicsScene()->clearSelection();
+        guiDoc->graphicsScene()->redraw();
     }
 }
 
@@ -120,7 +120,7 @@ void GuiApplication::onApplicationItemSelectionChanged(
         fnToggleItemSelected(item);
 
     for (GuiDocument* guiDoc : setGuiDocDirty)
-        guiDoc->updateV3dViewer();
+        guiDoc->graphicsScene()->redraw();
 }
 
 } // namespace Mayo
