@@ -31,7 +31,6 @@ struct Settings_Group {
     TextId identifier; // Must be unique in the context of the parent Settings object
     QString overridenTitle;
     std::vector<Settings_Section> vecSection;
-    Settings_Section defaultSection;
     std::vector<Settings::GroupResetFunction> vecFnReset;
 };
 
@@ -164,6 +163,11 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
     d->m_vecGroup.push_back({});
     Settings_Group& group = d->m_vecGroup.back();
     group.identifier.key = identifier;
+
+    Settings_Section defaultSection;
+    defaultSection.isDefault = true;
+    group.vecSection.push_back(std::move(defaultSection));
+
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
 }
 
