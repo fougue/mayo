@@ -52,10 +52,11 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 {
     Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
     Handle_AIS_Trihedron aisTrihedron = new AIS_Trihedron(axis);
-    aisTrihedron->SetDatumDisplayMode(Prs3d_DM_Shaded);
-    aisTrihedron->SetDatumPartColor(Prs3d_DP_XArrow, Quantity_NOC_RED2);
-    aisTrihedron->SetDatumPartColor(Prs3d_DP_YArrow, Quantity_NOC_GREEN2);
-    aisTrihedron->SetDatumPartColor(Prs3d_DP_ZArrow, Quantity_NOC_BLUE2);
+    aisTrihedron->SetDatumDisplayMode(Prs3d_DM_WireFrame);
+    aisTrihedron->SetDrawArrows(false);
+    aisTrihedron->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetWidth(2.5);
+    aisTrihedron->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_YAxis)->SetWidth(2.5);
+    aisTrihedron->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_ZAxis)->SetWidth(2.5);
     aisTrihedron->SetDatumPartColor(Prs3d_DP_XAxis, Quantity_NOC_RED2);
     aisTrihedron->SetDatumPartColor(Prs3d_DP_YAxis, Quantity_NOC_GREEN2);
     aisTrihedron->SetDatumPartColor(Prs3d_DP_ZAxis, Quantity_NOC_BLUE2);
