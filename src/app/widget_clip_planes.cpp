@@ -15,8 +15,11 @@
 #include "ui_widget_clip_planes.h"
 
 #include <algorithm>
+#include <QtCore/QFile>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
+#include <Graphic3d_Texture2Dmanual.hxx>
+#include <Image_AlienPixMap.hxx>
 
 namespace Mayo {
 
@@ -26,54 +29,65 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
       m_view(view3d)
 {
     m_ui->setupUi(this);
+    this->createPlaneCappingTexture();
 
     m_vecClipPlaneData = {
-        { new Graphic3d_ClipPlane(gp_Pln({}, gp_Dir(1, 0, 0))),
-          UiClipPlane(m_ui->check_X, m_ui->widget_X) },
-        { new Graphic3d_ClipPlane(gp_Pln({}, gp_Dir(0, 1, 0))),
-          UiClipPlane(m_ui->check_Y, m_ui->widget_Y) },
-        { new Graphic3d_ClipPlane(gp_Pln({}, gp_Dir(0, 0, 1))),
-          UiClipPlane(m_ui->check_Z, m_ui->widget_Z) },
-        { new Graphic3d_ClipPlane(gp_Pln({}, gp_Dir(1, 1, 1))),
-          UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom) }
+        {
+            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DX())),
+            UiClipPlane(m_ui->check_X, m_ui->widget_X)
+        },
+        {
+            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DY())),
+            UiClipPlane(m_ui->check_Y, m_ui->widget_Y)
+        },
+        {
+            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DZ())),
+            UiClipPlane(m_ui->check_Z, m_ui->widget_Z)
+        },
+        {
+            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp_Dir(1, 1, 1))),
+            UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom)
+        }
     };
+
+    auto fnGetCappingColor = [=](const ClipPlaneData& data) {
+        if (&data == &m_vecClipPlaneData.at(0))
+            return Quantity_NOC_RED1;
+        else if (&data == &m_vecClipPlaneData.at(1))
+            return Quantity_NOC_GREEN1;
+        else if (&data == &m_vecClipPlaneData.at(2))
+            return Quantity_NOC_BLUE1;
+        else
+            return Quantity_NOC_GRAY;
+    };
+
 
     const auto appModule = AppModule::get(Application::instance());
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
-        data.gpx->SetCapping(appModule->clipPlanesCappingOn.value());
-        if (data.gpx->IsCapping()) {
-            GraphicsUtils::Gpx3dClipPlane_setCappingHatch(
-                        data.gpx, appModule->clipPlanesCappingHatch.valueAs<Aspect_HatchStyle>());
-        }
-
-        Graphic3d_MaterialAspect clipMaterial(Graphic3d_NOM_STEEL);
-        Quantity_NameOfColor colorName;
-        if (&data == &m_vecClipPlaneData.at(0))
-            colorName = Quantity_NOC_RED1;
-        else if (&data == &m_vecClipPlaneData.at(1))
-            colorName = Quantity_NOC_GREEN1;
-        else if (&data == &m_vecClipPlaneData.at(2))
-            colorName = Quantity_NOC_BLUE1;
-        else
-            colorName = Quantity_NOC_GRAY;
-
-        clipMaterial.SetColor(Quantity_Color(colorName));
-        data.gpx->SetCappingMaterial(clipMaterial);
+        data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+        data.graphics->SetCappingColor(fnGetCappingColor(data));
+        if (!m_textureCapping.IsNull() && appModule->clipPlanesCappingHatchOn.value())
+            data.graphics->SetCappingTexture(m_textureCapping);
     }
 
     const auto settings = Application::instance()->settings();
     QObject::connect(settings, &Settings::changed, this, [=](Property* property) {
         if (property == &appModule->clipPlanesCappingOn) {
             for (ClipPlaneData& data : m_vecClipPlaneData)
-                data.gpx->SetCapping(appModule->clipPlanesCappingOn.value());
+                data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+
             m_view->Redraw();
         }
-        else if (property == &appModule->clipPlanesCappingHatch) {
-            const auto hatch = appModule->clipPlanesCappingHatch.valueAs<Aspect_HatchStyle>();
+        else if (property == &appModule->clipPlanesCappingHatchOn) {
+            Handle_Graphic3d_TextureMap hatchTexture;
+            if (!m_textureCapping.IsNull() && appModule->clipPlanesCappingHatchOn.value())
+                hatchTexture = m_textureCapping;
+
             for (ClipPlaneData& data : m_vecClipPlaneData)
-                GraphicsUtils::Gpx3dClipPlane_setCappingHatch(data.gpx, hatch);
+                data.graphics->SetCappingTexture(hatchTexture);
+
             m_view->Redraw();
         }
     });
@@ -91,7 +105,7 @@ void WidgetClipPlanes::setRanges(const Bnd_Box& bndBox)
     const bool isBndBoxVoid = bndBox.IsVoid();
     const auto bbc = BndBoxCoords::get(bndBox);
     for (ClipPlaneData& data : m_vecClipPlaneData) {
-        const gp_Dir& n = data.gpx->ToPlane().Axis().Direction();
+        const gp_Dir& n = data.graphics->ToPlane().Axis().Direction();
         this->setPlaneRange(&data, MathUtils::planeRange(bbc, n));
         data.ui.check_On->setEnabled(!isBndBoxVoid);
         if (isBndBoxVoid)
@@ -104,7 +118,7 @@ void WidgetClipPlanes::setRanges(const Bnd_Box& bndBox)
 void WidgetClipPlanes::setClippingOn(bool on)
 {
     for (ClipPlaneData& data : m_vecClipPlaneData)
-        data.gpx->SetOn(on ? data.ui.check_On->isChecked() : false);
+        data.graphics->SetOn(on ? data.ui.check_On->isChecked() : false);
 
     m_view->Redraw();
 }
@@ -112,14 +126,14 @@ void WidgetClipPlanes::setClippingOn(bool on)
 void WidgetClipPlanes::connectUi(ClipPlaneData* data)
 {
     UiClipPlane& ui = data->ui;
-    const Handle_Graphic3d_ClipPlane& gpx = data->gpx;
+    const Handle_Graphic3d_ClipPlane& gfx = data->graphics;
     QAbstractSlider* posSlider = ui.posSlider();
     QDoubleSpinBox* posSpin = ui.posSpin();
     auto signalSpinValueChanged = qOverload<double>(&QDoubleSpinBox::valueChanged);
 
     QObject::connect(ui.check_On, &QCheckBox::clicked, [=](bool on) {
         ui.widget_Control->setEnabled(on);
-        this->setPlaneOn(gpx, on);
+        this->setPlaneOn(gfx, on);
         m_view->Redraw();
     });
 
@@ -143,7 +157,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         QSignalBlocker sigBlock(posSlider); Q_UNUSED(sigBlock);
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gpx, pos);
+        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
@@ -151,14 +165,14 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         const double pos = ui.sliderValueToSpinValue(pct);
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gpx, pos);
+        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
     QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, [=]{
-        const gp_Dir invNormal = gpx->ToPlane().Axis().Direction().Reversed();
-        GraphicsUtils::Gpx3dClipPlane_setNormal(gpx, invNormal);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gpx, data->ui.posSpin()->value());
+        const gp_Dir invNormal = gfx->ToPlane().Axis().Direction().Reversed();
+        GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, invNormal);
+        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
         m_view->Redraw();
     });
 
@@ -176,7 +190,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
                 this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));
-                GraphicsUtils::Gpx3dClipPlane_setNormal(gpx, normal);
+                GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, normal);
                 m_view->Redraw();
             }
         });
@@ -189,7 +203,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
             QSignalBlocker sigBlockX(customXDirSpin); Q_UNUSED(sigBlockX);
             QSignalBlocker sigBlockY(customYDirSpin); Q_UNUSED(sigBlockY);
             QSignalBlocker sigBlockZ(customZDirSpin); Q_UNUSED(sigBlockZ);
-            const gp_Dir& n = gpx->ToPlane().Axis().Direction();
+            const gp_Dir& n = gfx->ToPlane().Axis().Direction();
             customXDirSpin->setValue(n.X());
             customYDirSpin->setValue(n.Y());
             customZDirSpin->setValue(n.Z());
@@ -221,9 +235,28 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
     posSpin->setRange(rmin - gap, rmax + gap);
     posSpin->setSingleStep(std::abs(posSpin->maximum() - posSpin->minimum()) / 100.);
     if (useMidValue) {
-        GraphicsUtils::Gpx3dClipPlane_setPosition(data->gpx, newPlanePos);
+        GraphicsUtils::Gpx3dClipPlane_setPosition(data->graphics, newPlanePos);
         posSpin->setValue(newPlanePos);
         posSlider->setValue(data->ui.spinValueToSliderValue(newPlanePos));
+    }
+}
+
+void WidgetClipPlanes::createPlaneCappingTexture()
+{
+    if (!m_textureCapping.IsNull())
+        return;
+
+    QFile file(":/images/graphics/opencascade_hatch_1.png");
+    if (file.open(QIODevice::ReadOnly)) {
+        const QByteArray fileContents = file.readAll();
+        const QByteArray filenameUtf8 = file.fileName().toUtf8();
+        auto fileContentsData = reinterpret_cast<const Standard_Byte*>(fileContents.constData());
+        Handle_Image_AlienPixMap imageCapping = new Image_AlienPixMap;
+        imageCapping->Load(fileContentsData, fileContents.size(), filenameUtf8.constData());
+        m_textureCapping = new Graphic3d_Texture2Dmanual(imageCapping);
+        m_textureCapping->EnableModulate();
+        m_textureCapping->EnableRepeat();
+        m_textureCapping->GetParams()->SetScale(Graphic3d_Vec2(0.05f, -0.05f));
     }
 }
 

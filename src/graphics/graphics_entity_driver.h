@@ -27,7 +27,7 @@ public:
     virtual GraphicsEntity createEntity(const TDF_Label& label) const = 0;
 
     const Enumeration& displayModes() const { return m_enumDisplayModes; }
-    virtual void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const = 0;
+    virtual void applyDisplayMode(GraphicsEntity* entity, Enumeration::Value mode) const = 0;
     virtual Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const = 0;
 
     virtual std::unique_ptr<PropertyGroupSignals> properties(const GraphicsEntity& entity) const = 0;
@@ -51,7 +51,7 @@ public:
 
     Support supportStatus(const TDF_Label& label) const override;
     GraphicsEntity createEntity(const TDF_Label& label) const override;
-    void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const override;
+    void applyDisplayMode(GraphicsEntity* entity, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
     std::unique_ptr<PropertyGroupSignals> properties(const GraphicsEntity& entity) const override;
 
@@ -69,7 +69,7 @@ public:
     GraphicsMeshEntityDriver();
     Support supportStatus(const TDF_Label& label) const override;
     GraphicsEntity createEntity(const TDF_Label& label) const override;
-    void applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const override;
+    void applyDisplayMode(GraphicsEntity* entity, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
     std::unique_ptr<PropertyGroupSignals> properties(const GraphicsEntity& entity) const override;
 

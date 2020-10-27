@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <SelectMgr_EntityOwner.hxx>
+#include <AIS_InteractiveObject.hxx>
 
 namespace Mayo {
 
-using GraphicsOwnerPtr = opencascade::handle<SelectMgr_EntityOwner>;
+using GraphicsObjectPtr = opencascade::handle<AIS_InteractiveObject>;
 
 } // namespace Mayo

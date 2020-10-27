@@ -9,7 +9,9 @@
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "graphics_entity_base_property_group.h"
+#include "graphics_scene.h"
 
+#include <AIS_DisplayMode.hxx>
 #include <BRep_TFace.hxx>
 #include <MeshVS_DisplayModeFlags.hxx>
 #include <MeshVS_DrawerAttribute.hxx>
@@ -96,32 +98,32 @@ GraphicsEntity GraphicsShapeEntityDriver::createEntity(const TDF_Label& label) c
     return entity;
 }
 
-void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const
+void GraphicsShapeEntityDriver::applyDisplayMode(GraphicsEntity* entity, Enumeration::Value mode) const
 {
-    this->throwIf_differentDriver(entity);
+    this->throwIf_differentDriver(*entity);
     this->throwIf_invalidDisplayMode(mode);
-    AIS_InteractiveContext* aisContext = entity.aisContextPtr();
+    const GraphicsScene* gfxScene = entity->graphicsScene();
     auto fnSetViewComputedMode = [=](bool on) {
-        V3d_ListOfViewIterator viewIter = aisContext->CurrentViewer()->DefinedViewIterator();
+        V3d_ListOfViewIterator viewIter = gfxScene->v3dViewer()->DefinedViewIterator();
         while (viewIter.More()) {
             viewIter.Value()->SetComputedMode(on);
             viewIter.Next();
         }
     };
     if (mode == DisplayMode_HiddenLineRemoval) {
-        aisContext->DefaultDrawer()->SetTypeOfHLR(Prs3d_TOH_PolyAlgo);
-        aisContext->DefaultDrawer()->EnableDrawHiddenLine();
+        gfxScene->defaultPrs3dDrawer()->SetTypeOfHLR(Prs3d_TOH_PolyAlgo);
+        gfxScene->defaultPrs3dDrawer()->EnableDrawHiddenLine();
         fnSetViewComputedMode(true);
     }
     else {
-        aisContext->DefaultDrawer()->SetTypeOfHLR(Prs3d_TOH_NotSet);
-        aisContext->DefaultDrawer()->DisableDrawHiddenLine();
+        gfxScene->defaultPrs3dDrawer()->SetTypeOfHLR(Prs3d_TOH_NotSet);
+        gfxScene->defaultPrs3dDrawer()->DisableDrawHiddenLine();
         fnSetViewComputedMode(false);
         const AIS_DisplayMode aisDispMode = mode == DisplayMode_Wireframe ? AIS_WireFrame : AIS_Shaded;
         const bool showFaceBounds = mode == DisplayMode_ShadedWithFaceBoundary;
-        const Handle_AIS_InteractiveObject& aisObject = entity.aisObject();
+        const Handle_AIS_InteractiveObject& aisObject = entity->aisObject();
         if (aisObject->DisplayMode() != aisDispMode)
-            entity.aisContextPtr()->SetDisplayMode(aisObject, aisDispMode, false);
+            entity->setDisplayMode(aisDispMode);
 
         if (aisObject->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
             aisObject->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
@@ -135,10 +137,10 @@ void GraphicsShapeEntityDriver::applyDisplayMode(const GraphicsEntity& entity, E
 Enumeration::Value GraphicsShapeEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
-    if (entity.aisContextPtr()->DrawHiddenLine())
+    if (entity.graphicsScene()->hiddenLineDrawingOn())
         return DisplayMode_HiddenLineRemoval;
 
-    const int displayMode = entity.aisObject()->DisplayMode();
+    const int displayMode = entity.displayMode();
     if (displayMode == AIS_WireFrame)
         return DisplayMode_Wireframe;
 
@@ -226,17 +228,17 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
     return entity;
 }
 
-void GraphicsMeshEntityDriver::applyDisplayMode(const GraphicsEntity& entity, Enumeration::Value mode) const
+void GraphicsMeshEntityDriver::applyDisplayMode(GraphicsEntity* entity, Enumeration::Value mode) const
 {
-    this->throwIf_differentDriver(entity);
+    this->throwIf_differentDriver(*entity);
     this->throwIf_invalidDisplayMode(mode);
-    entity.aisContextPtr()->SetDisplayMode(entity.aisObject(), mode, false);
+    entity->setDisplayMode(mode);
 }
 
 Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
-    return entity.aisObject()->DisplayMode();
+    return entity.displayMode();
 }
 
 class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyGroup {

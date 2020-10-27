@@ -56,7 +56,7 @@ public:
     // -- ClipPlanes
     const Settings_SectionIndex sectionId_graphicsClipPlanes;
     PropertyBool clipPlanesCappingOn;
-    PropertyEnumeration clipPlanesCappingHatch;
+    PropertyBool clipPlanesCappingHatchOn;
     // -- MeshDefaults
     const Settings_SectionIndex sectionId_graphicsMeshDefaults;
     PropertyOccColor meshDefaultsColor;

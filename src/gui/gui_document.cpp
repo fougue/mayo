@@ -75,9 +75,8 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 
 GuiDocument::GuiDocument(const DocumentPtr& doc)
     : m_document(doc),
-      m_v3dViewer(Internal::createOccViewer()),
-      m_v3dView(m_v3dViewer->CreateView()),
-      m_aisContext(new AIS_InteractiveContext(m_v3dViewer)),
+      m_gfxScene(this),
+      m_v3dView(m_gfxScene.createV3dView()),
       m_aisOriginTrihedron(Internal::createOriginTrihedron()),
       m_cameraAnimation(new V3dViewCameraAnimation(m_v3dView, this))
 {
@@ -135,32 +134,20 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
         if (gfxItem && gfxItem->gpxTreeNodeMapping) {
             auto vecGfxOwner = gfxItem->gpxTreeNodeMapping->findGraphicsOwners(docTreeNode);
             for (const GraphicsOwnerPtr& gfxOwner : vecGfxOwner)
-                m_aisContext->AddOrRemoveSelected(gfxOwner, false);
+                m_gfxScene.toggleOwnerSelection(gfxOwner);
         }
     }
 }
 
-void GuiDocument::clearItemSelection()
-{
-    m_aisContext->ClearSelected(false);
-}
-
 bool GuiDocument::isOriginTrihedronVisible() const
 {
-    return m_aisContext->IsDisplayed(m_aisOriginTrihedron);
+    return m_gfxScene.isObjectVisible(m_aisOriginTrihedron);
 }
 
 void GuiDocument::toggleOriginTrihedronVisibility()
 {
-    if (this->isOriginTrihedronVisible())
-        m_aisContext->Erase(m_aisOriginTrihedron, false);
-    else
-        m_aisContext->Display(m_aisOriginTrihedron, false);
-}
-
-void GuiDocument::updateV3dViewer()
-{
-    m_aisContext->UpdateCurrentViewer();
+    const bool visible = !this->isOriginTrihedronVisible();
+    m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
 }
 
 void GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
@@ -212,7 +199,7 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
         return;
 
     auto fnViewCubeSetVisible = [&](bool on) {
-        GraphicsUtils::AisContext_setObjectVisible(m_aisContext, m_aisViewCube, on);
+        m_gfxScene.setObjectVisible(m_aisViewCube, on);
     };
 
     switch (mode) {
@@ -239,7 +226,7 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
                             Graphic3d_TMF_TriedronPers,
                             toOccCorner(m_viewTrihedronCorner),
                             Graphic3d_Vec2i(85, 85)));
-            m_aisContext->Display(aisViewCube, false);
+            m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             const Handle_Prs3d_DatumAspect& datumAspect = aisViewCube->Attributes()->DatumAspect();
             datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
@@ -307,7 +294,7 @@ int GuiDocument::aisViewCubeBoundingSize() const
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapGraphics(entityTreeNodeId);
-    emit gpxBoundingBoxChanged(m_gpxBoundingBox);
+    emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
 }
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
@@ -315,9 +302,9 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     const GraphicsItem* gfxItem = this->findGraphicsItem(entityTreeNodeId);
     if (gfxItem) {
         const GraphicsEntity& gfxEntity = gfxItem->graphicsEntity;
-        GraphicsUtils::AisContext_eraseObject(m_aisContext, gfxEntity.aisObject());
+        m_gfxScene.eraseObject(gfxEntity.aisObject());
         m_vecGraphicsItem.erase(m_vecGraphicsItem.begin() + (gfxItem - &m_vecGraphicsItem.front()));
-        this->updateV3dViewer();
+        m_gfxScene.redraw();
 
         // Recompute bounding box
         m_gpxBoundingBox.SetVoid();
@@ -326,20 +313,8 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
             BndUtils::add(&m_gpxBoundingBox, entityBndBox);
         }
 
-        emit gpxBoundingBoxChanged(m_gpxBoundingBox);
+        emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
     }
-}
-
-std::vector<GraphicsOwnerPtr> GuiDocument::selectedGraphicsOwners() const
-{
-    std::vector<GraphicsOwnerPtr> vecOwner;
-    m_aisContext->InitSelected();
-    while (m_aisContext->MoreSelected()) {
-        vecOwner.push_back(m_aisContext->SelectedOwner());
-        m_aisContext->NextSelected();
-    }
-
-    return vecOwner;
 }
 
 void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
@@ -351,10 +326,10 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     if (gfxEntity.aisObject().IsNull())
         return;
 
-    gfxEntity.setAisContext(m_aisContext);
+    gfxEntity.setScene(&m_gfxScene);
     gfxEntity.setVisible(true);
     item.entityTreeNodeId = entityTreeNodeId;
-    m_aisContext->UpdateCurrentViewer();
+    m_gfxScene.redraw();
 
     for (const auto& mappingDriver : GuiApplication::instance()->graphicsTreeNodeMappingDrivers()) {
         item.gpxTreeNodeMapping = mappingDriver->createMapping(entityTreeNode);
@@ -365,13 +340,11 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     if (item.gpxTreeNodeMapping) {
         const int selectMode = item.gpxTreeNodeMapping->selectionMode();
         if (selectMode != -1) {
-            m_aisContext->Activate(gfxEntity.aisObject(), selectMode);
-            opencascade::handle<SelectMgr_IndexedMapOfOwner> occMapEntityOwner;
-            m_aisContext->EntityOwners(occMapEntityOwner, gfxEntity.aisObject(), selectMode);
-            for (auto it = occMapEntityOwner->cbegin(); it != occMapEntityOwner->cend(); ++it) {
-                if (!item.gpxTreeNodeMapping->mapGraphicsOwner(*it))
+            m_gfxScene.activateObjectSelection(gfxEntity.aisObject(), selectMode);
+            m_gfxScene.foreachOwner(gfxEntity.aisObject(), selectMode, [&](const GraphicsOwnerPtr& ptr) {
+                if (!item.gpxTreeNodeMapping->mapGraphicsOwner(ptr))
                     qDebug() << "Insertion failed";
-            }
+            });
 
             //m_aisContext->Deactivate(gfxEntity.aisObject(), selectMode);
         }

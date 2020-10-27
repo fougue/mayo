@@ -106,7 +106,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     QObject::connect(
                 m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
         if (btn == Qt::MouseButton::LeftButton)
-            m_guiDoc->processAction(m_guiDoc->aisInteractiveContext()->DetectedOwner());
+            m_guiDoc->processAction(m_guiDoc->graphicsScene()->currentHighlightedOwner());
     });
     QObject::connect(
                 m_guiDoc, &GuiDocument::viewTrihedronModeChanged,
@@ -141,9 +141,9 @@ void WidgetGuiDocument::toggleWidgetClipPlanes()
         panel->adjustSize();
         m_widgetClipPlanes = widget;
         QObject::connect(
-                    m_guiDoc, &GuiDocument::gpxBoundingBoxChanged,
+                    m_guiDoc, &GuiDocument::graphicsBoundingBoxChanged,
                     widget, &WidgetClipPlanes::setRanges);
-        widget->setRanges(m_guiDoc->gpxBoundingBox());
+        widget->setRanges(m_guiDoc->graphicsBoundingBox());
     }
     else {
         QWidget* panel = m_widgetClipPlanes->parentWidget();

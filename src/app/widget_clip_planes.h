@@ -9,6 +9,7 @@
 #include <QtWidgets/QWidget>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
+#include <Graphic3d_TextureMap.hxx>
 #include <V3d_View.hxx>
 #include <vector>
 class QCheckBox;
@@ -44,7 +45,7 @@ private:
     };
 
     struct ClipPlaneData {
-        Handle_Graphic3d_ClipPlane gpx;
+        Handle_Graphic3d_ClipPlane graphics;
         UiClipPlane ui;
     };
 
@@ -55,10 +56,13 @@ private:
     void setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on);
     void setPlaneRange(ClipPlaneData* data, const Range& range);
 
+    void createPlaneCappingTexture();
+
     class Ui_WidgetClipPlanes* m_ui;
     Handle_V3d_View m_view;
     std::vector<ClipPlaneData> m_vecClipPlaneData;
     Bnd_Box m_bndBox;
+    Handle_Graphic3d_TextureMap m_textureCapping;
 };
 
 } // namespace Mayo

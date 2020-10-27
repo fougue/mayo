@@ -6,56 +6,41 @@
 
 #include "graphics_entity.h"
 
-#include "../graphics/graphics_utils.h"
+#include "../graphics/graphics_scene.h"
 
 #include <gsl/gsl_assert>
-#include <Standard_Version.hxx>
 
 namespace Mayo {
 
-bool GraphicsEntity::aisContextNotNull() const
+bool GraphicsEntity::sceneNotNull() const
 {
-    return this->aisObjectNotNull() && m_aisObject->HasInteractiveContext();
-}
-
-Handle_AIS_InteractiveContext GraphicsEntity::aisContext() const
-{
-    Expects(this->aisObjectNotNull());
-    return m_aisObject->GetContext();
-}
-
-AIS_InteractiveContext* GraphicsEntity::aisContextPtr() const
-{
-    Expects(this->aisObjectNotNull());
-#if OCC_VERSION_HEX >= 0x070400
-    return m_aisObject->InteractiveContext();
-#else
-    return m_aisObject->GetContext().get();
-#endif
-}
-
-void GraphicsEntity::setAisContext(const Handle_AIS_InteractiveContext& context)
-{
-    Expects(this->aisObjectNotNull());
-    Expects(!m_aisObject->HasInteractiveContext());
-
-    m_aisObject->SetContext(context);
-
-    Ensures(this->aisContextNotNull());
+    return m_gfxScene != nullptr;
 }
 
 bool GraphicsEntity::isVisible() const
 {
-    if (this->aisContextNotNull())
-        return this->aisContextPtr()->IsDisplayed(this->aisObject());
+    if (this->sceneNotNull())
+        return m_gfxScene->isObjectVisible(m_aisObject);
     else
         return false;
 }
 
 void GraphicsEntity::setVisible(bool on)
 {
-    Expects(this->aisContextNotNull());
-    GraphicsUtils::AisContext_setObjectVisible(this->aisContext(), this->aisObject(), on);
+    Expects(this->sceneNotNull());
+    m_gfxScene->setObjectVisible(this->aisObject(), on);
+}
+
+int GraphicsEntity::displayMode() const
+{
+    Expects(this->aisObjectNotNull());
+    return m_aisObject->DisplayMode();
+}
+
+void GraphicsEntity::setDisplayMode(int mode)
+{
+    Expects(this->sceneNotNull());
+    m_gfxScene->setObjectDisplayMode(m_aisObject, mode);
 }
 
 } // namespace Mayo
