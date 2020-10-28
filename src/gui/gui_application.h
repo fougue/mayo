@@ -8,14 +8,16 @@
 
 #include "../base/application_ptr.h"
 #include "../base/application_item_selection_model.h"
-#include "../graphics/graphics_tree_node_mapping.h"
+#include "../base/span.h"
+#include "../graphics/graphics_entity_driver_table.h"
+#include "../graphics/graphics_tree_node_mapping_driver_table.h"
 #include "gui_document.h"
+
 #include <QtCore/QObject>
-#include <vector>
+#include <memory>
 
 namespace Mayo {
 
-class Application;
 class GuiDocument;
 
 class GuiApplication : public QObject {
@@ -32,9 +34,8 @@ public:
 
     ApplicationItemSelectionModel* selectionModel() const;
 
-    using GraphicsTreeNodeMappingDriverPtr = std::unique_ptr<GraphicsTreeNodeMappingDriver>;
-    void addGraphicsTreeNodeMappingDriver(GraphicsTreeNodeMappingDriverPtr driver);
-    Span<const GraphicsTreeNodeMappingDriverPtr> graphicsTreeNodeMappingDrivers() const;
+    GraphicsEntityDriverTable* graphicsEntityDriverTable() const;
+    GraphicsTreeNodeMappingDriverTable* graphicsTreeNodeMappingDriverTable() const;
 
 signals:
     void guiDocumentAdded(GuiDocument* guiDoc);
@@ -51,8 +52,9 @@ private:
 
     ApplicationPtr m_app;
     std::vector<GuiDocument*> m_vecGuiDocument;
-    std::vector<GraphicsTreeNodeMappingDriverPtr> m_vecGraphicsTreeNodeMappingDriver;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
+    std::unique_ptr<GraphicsEntityDriverTable> m_gfxEntityDriverTable;
+    std::unique_ptr<GraphicsTreeNodeMappingDriverTable> m_gfxTreeNodeMappingDriverTable;
 };
 
 } // namespace Mayo

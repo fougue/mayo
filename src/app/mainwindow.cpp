@@ -460,7 +460,7 @@ void MainWindow::showEvent(QShowEvent* event)
 void MainWindow::newDocument()
 {
     static unsigned docSequenceId = 0;
-    auto docPtr = Application::instance()->newDocument(Document::Format::Binary);
+    auto docPtr = m_guiApp->application()->newDocument(Document::Format::Binary);
     docPtr->setName(tr("Anonymous%1").arg(++docSequenceId));
 }
 
@@ -481,7 +481,7 @@ void MainWindow::importInCurrentDoc()
     if (resFileNames.listFilepath.isEmpty())
         return;
 
-    auto app = Application::instance();
+    auto app = m_guiApp->application();
     auto taskMgr = TaskManager::globalInstance();
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
@@ -574,7 +574,7 @@ void MainWindow::zoomOutCurrentDoc()
 
 void MainWindow::editOptions()
 {
-    auto dlg = new DialogOptions(Application::instance()->settings(), this);
+    auto dlg = new DialogOptions(m_guiApp->application()->settings(), this);
     qtgui::QWidgetUtils::asyncDialogExec(dlg);
 }
 
@@ -645,7 +645,7 @@ void MainWindow::onApplicationItemSelectionChanged()
         const ApplicationItem& item = spanAppItem.at(0);
         const DocumentTreeNode& docTreeNode = item.documentTreeNode();
         if (item.isDocumentTreeNode()) {
-            auto providerTable = DocumentTreeNodePropertiesProviderTable::instance();
+            auto providerTable = m_guiApp->application()->documentTreeNodePropertiesProviderTable();
             m_ptrCurrentNodeDataProperties = providerTable->properties(docTreeNode);
             PropertyGroupSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
             if (dataProps) {
@@ -671,7 +671,7 @@ void MainWindow::onApplicationItemSelectionChanged()
 
         }
 
-        auto app = Application::instance();
+        auto app = m_guiApp->application();
         if (AppModule::get(app)->linkWithDocumentSelector.value()) {
             DocumentPtr doc = item.document();
             const int index = app->findIndexOfDocument(doc);
@@ -705,7 +705,7 @@ void MainWindow::onHomePageLinkActivated(const QString &link)
 
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
-    auto app = Application::instance();
+    auto app = m_guiApp->application();
     auto widget = new WidgetGuiDocument(guiDoc);
     if (AppModule::get(app)->defaultShowOriginTrihedron.value()) {
         guiDoc->toggleOriginTrihedronVisibility();
@@ -772,7 +772,7 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
         }
         return filepath;
     };
-    const DocumentPtr docPtr = Application::instance()->findDocumentByIndex(idx);
+    const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
     const QString textActionClose =
             docPtr ?
                 tr("Close %1").arg(fnFilepathQuoted(docPtr->name())) :
@@ -823,7 +823,7 @@ void MainWindow::closeDocument(WidgetGuiDocument* widget)
         const DocumentPtr& doc = widget->guiDocument()->document();
         m_ui->stack_GuiDocuments->removeWidget(widget);
         widget->deleteLater();
-        Application::instance()->closeDocument(doc);
+        m_guiApp->application()->closeDocument(doc);
         this->updateControlsActivation();
     }
 }
@@ -855,7 +855,7 @@ void MainWindow::closeAllDocuments()
 
 void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 {
-    auto app = Application::instance();
+    auto app = m_guiApp->application();
     auto taskMgr = TaskManager::globalInstance();
     static std::mutex mutexApp;
     for (const QString& filePath : listFilePath) {
@@ -899,7 +899,7 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
 void MainWindow::updateControlsActivation()
 {
     const QWidget* currMainPage = m_ui->stack_Main->currentWidget();
-    const int appDocumentsCount = Application::instance()->documentCount();
+    const int appDocumentsCount = m_guiApp->application()->documentCount();
     const bool appDocumentsEmpty = appDocumentsCount == 0;
     QWidget* newMainPage = appDocumentsEmpty ? m_ui->page_MainHome : m_ui->page_MainControl;
     if (currMainPage != newMainPage)
@@ -977,7 +977,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     menu->setToolTipsVisible(true);
 
     // Link with document selector
-    auto appModule = AppModule::get(Application::instance());
+    auto appModule = AppModule::get(m_guiApp->application());
     QAction* action = menu->addAction(appModule->linkWithDocumentSelector.name().tr());
     action->setCheckable(true);
     QObject::connect(action, &QAction::triggered, [=](bool on) {
@@ -1008,7 +1008,7 @@ QMenu* MainWindow::createMenuRecentFiles()
 
     menu->clear();
     int idFile = 0;
-    auto appModule = AppModule::get(Application::instance());
+    auto appModule = AppModule::get(m_guiApp->application());
     const QStringList& listRecentFile = appModule->recentFiles.value();
     for (const QString& file : listRecentFile) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(file);

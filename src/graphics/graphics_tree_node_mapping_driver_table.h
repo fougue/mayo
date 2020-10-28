@@ -6,24 +6,21 @@
 
 #pragma once
 
-#include "graphics_entity.h"
-#include "graphics_entity_driver.h"
+#include "graphics_tree_node_mapping_driver.h"
 #include "../base/span.h"
 #include <memory>
 #include <vector>
 
 namespace Mayo {
 
-class GraphicsEntityDriver;
-
-class GraphicsEntityDriverTable {
+class GraphicsTreeNodeMappingDriverTable {
 public:
-    using DriverPtr = std::unique_ptr<GraphicsEntityDriver>;
+    using DriverPtr = std::unique_ptr<GraphicsTreeNodeMappingDriver>;
 
     void addDriver(DriverPtr driver);
     Span<const DriverPtr> drivers() const { return m_vecDriver; }
 
-    GraphicsEntity createEntity(const TDF_Label& label) const;
+    std::unique_ptr<GraphicsTreeNodeMapping> createMapping(const DocumentTreeNode& entityTreeNode) const;
 
 private:
     std::vector<DriverPtr> m_vecDriver;

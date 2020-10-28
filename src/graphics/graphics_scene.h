@@ -86,7 +86,7 @@ private:
     AIS_InteractiveContext* aisContextPtr() const;
 
     class Private;
-    Private* d;
+    Private* const d;
 };
 
 class GraphicsSceneRedrawBlocker {

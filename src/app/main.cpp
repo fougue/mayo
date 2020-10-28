@@ -11,7 +11,6 @@
 #include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_entity_driver.h"
-#include "../graphics/graphics_entity_driver_table.h"
 #include "app_module.h"
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
@@ -85,28 +84,28 @@ static int runApp(QApplication* qtApp)
     Application::setOpenCascadeEnvironment("opencascade.conf");
 
     auto app = Application::instance().get();
+    auto guiApp = new GuiApplication(app);
 
     // Register IO OpenCascade objects
-    auto ioSystem = app->ioSystem();
-    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    IO::addPredefinedFormatProbes(ioSystem);
-
-    // Register Graphics entity drivers
-    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
-    GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
+    app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    IO::addPredefinedFormatProbes(app->ioSystem());
 
     // Register Graphics/TreeNode mapping drivers
-    auto guiApp = new GuiApplication(app);
-    guiApp->addGraphicsTreeNodeMappingDriver(std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
+    guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
+                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
+
+    // Register Graphics entity drivers
+    guiApp->graphicsEntityDriverTable()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
+    guiApp->graphicsEntityDriverTable()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
 
     // Register AppModule
     auto appModule = new AppModule(app);
 
     // Register document tree node providers
-    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+    app->documentTreeNodePropertiesProviderTable()->addProvider(
                 std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
+    app->documentTreeNodePropertiesProviderTable()->addProvider(
                 std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 
     // Register WidgetModelTreeBuilter prototypes
@@ -124,8 +123,7 @@ static int runApp(QApplication* qtApp)
 
     // Load translation files before UI creation
     {
-        auto settings = Application::instance()->settings();
-        settings->loadProperty(settings->findProperty(&appModule->language));
+        app->settings()->loadProperty(app->settings()->findProperty(&appModule->language));
         const QString qmFilePath = AppModule::qmFilePath(appModule->language.name());
         auto translator = new QTranslator(app);
         if (translator->load(qmFilePath))
@@ -142,10 +140,10 @@ static int runApp(QApplication* qtApp)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
     }
 
-    Application::instance()->settings()->resetAll();
-    Application::instance()->settings()->load();
+    app->settings()->resetAll();
+    app->settings()->load();
     const int code = qtApp->exec();
-    Application::instance()->settings()->save();
+    app->settings()->save();
     return code;
 }
 

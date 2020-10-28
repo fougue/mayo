@@ -326,7 +326,7 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     GraphicsItem item;
     const DocumentTreeNode entityTreeNode(m_document, entityTreeNodeId);
     GraphicsEntity& gfxEntity = item.graphicsEntity;
-    gfxEntity = GraphicsEntityDriverTable::instance()->createEntity(entityTreeNode.label());
+    gfxEntity = m_guiApp->graphicsEntityDriverTable()->createEntity(entityTreeNode.label());
     if (gfxEntity.aisObject().IsNull())
         return;
 
@@ -335,12 +335,7 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     item.entityTreeNodeId = entityTreeNodeId;
     m_gfxScene.redraw();
 
-    for (const auto& mappingDriver : m_guiApp->graphicsTreeNodeMappingDrivers()) {
-        item.gpxTreeNodeMapping = mappingDriver->createMapping(entityTreeNode);
-        if (item.gpxTreeNodeMapping)
-            break;
-    }
-
+    item.gpxTreeNodeMapping = m_guiApp->graphicsTreeNodeMappingDriverTable()->createMapping(entityTreeNode);
     if (item.gpxTreeNodeMapping) {
         const int selectMode = item.gpxTreeNodeMapping->selectionMode();
         if (selectMode != -1) {

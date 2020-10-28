@@ -22,11 +22,6 @@ public:
     virtual bool mapGraphicsOwner(const GraphicsOwnerPtr& gfxOwner) = 0;
 };
 
-class GraphicsTreeNodeMappingDriver {
-public:
-    virtual std::unique_ptr<GraphicsTreeNodeMapping> createMapping(const DocumentTreeNode& entityTreeNode) const = 0;
-};
-
 class GraphicsShapeTreeNodeMapping : public GraphicsTreeNodeMapping {
 public:
     GraphicsShapeTreeNodeMapping(TopAbs_ShapeEnum shapeType);
@@ -38,11 +33,6 @@ public:
 private:
     std::unordered_map<int, GraphicsOwnerPtr> m_mapGfxOwner;
     TopAbs_ShapeEnum m_shapeType;
-};
-
-class GraphicsShapeTreeNodeMappingDriver : public GraphicsTreeNodeMappingDriver {
-public:
-    std::unique_ptr<GraphicsTreeNodeMapping> createMapping(const DocumentTreeNode& entityTreeNode) const override;
 };
 
 } // namespace Mayo

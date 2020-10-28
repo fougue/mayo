@@ -178,7 +178,7 @@ const PropertyGroup *AppModule::findWriterParameters(const IO::Format& format) c
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
-AppModule* AppModule::get(ApplicationPtr app)
+AppModule* AppModule::get(const ApplicationPtr& app)
 {
     if (app)
         return app->findChild<AppModule*>(QString(), Qt::FindDirectChildrenOnly);

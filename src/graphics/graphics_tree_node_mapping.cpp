@@ -64,31 +64,4 @@ bool GraphicsShapeTreeNodeMapping::mapGraphicsOwner(const GraphicsOwnerPtr& gfxO
     return result.second;
 }
 
-std::unique_ptr<GraphicsTreeNodeMapping>
-GraphicsShapeTreeNodeMappingDriver::createMapping(const DocumentTreeNode& entityTreeNode) const
-{
-    if (!entityTreeNode.isEntity())
-        return {};
-
-    if (!entityTreeNode.isValid())
-        return {};
-
-    if (!XCaf::isShape(entityTreeNode.label()))
-        return {};
-
-    int solidCount = 0;
-    int faceCount = 0;
-    const DocumentPtr doc = entityTreeNode.document();
-    deepForeachTreeNode(entityTreeNode.id(), doc->modelTree(), [&](TreeNodeId treeNodeId) {
-        const TopoDS_Shape shape = XCaf::shape(doc->modelTree().nodeData(treeNodeId));
-        if (shape.ShapeType() == TopAbs_SOLID)
-            ++solidCount;
-        else if (shape.ShapeType() == TopAbs_FACE)
-            ++faceCount;
-    });
-
-    const TopAbs_ShapeEnum shapeType = solidCount > faceCount ? TopAbs_SOLID : TopAbs_FACE;
-    return std::make_unique<GraphicsShapeTreeNodeMapping>(shapeType);
-}
-
 } // namespace Mayo

@@ -173,26 +173,6 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
             entityNode.document()->destroyEntity(entityNode.id());
         }
     });
-
-    auto app = Application::instance();
-    QObject::connect(
-                app.get(), &Application::documentAdded,
-                this, &WidgetModelTree::onDocumentAdded);
-    QObject::connect(
-                app.get(), &Application::documentAboutToClose,
-                this, &WidgetModelTree::onDocumentAboutToClose);
-    QObject::connect(
-                app.get(), &Application::documentNameChanged,
-                this, &WidgetModelTree::onDocumentNameChanged);
-    QObject::connect(
-                app.get(), &Application::documentEntityAdded,
-                this, &WidgetModelTree::onDocumentEntityAdded);
-    QObject::connect(
-                app.get(), &Application::documentEntityAboutToBeDestroyed,
-                this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
-    QObject::connect(
-                m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
-                this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
 }
 
 WidgetModelTree::~WidgetModelTree()
@@ -218,9 +198,32 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
 
 void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
 {
+    if (m_guiApp == guiApp)
+        return;
+
     m_guiApp = guiApp;
     for (const BuilderPtr& builder : m_vecBuilder)
         builder->registerGuiApplication(guiApp);
+
+    auto app = guiApp->application();
+    QObject::connect(
+                app.get(), &Application::documentAdded,
+                this, &WidgetModelTree::onDocumentAdded);
+    QObject::connect(
+                app.get(), &Application::documentAboutToClose,
+                this, &WidgetModelTree::onDocumentAboutToClose);
+    QObject::connect(
+                app.get(), &Application::documentNameChanged,
+                this, &WidgetModelTree::onDocumentNameChanged);
+    QObject::connect(
+                app.get(), &Application::documentEntityAdded,
+                this, &WidgetModelTree::onDocumentEntityAdded);
+    QObject::connect(
+                app.get(), &Application::documentEntityAboutToBeDestroyed,
+                this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
+    QObject::connect(
+                m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
+                this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
 }
 
 WidgetModelTree_UserActions WidgetModelTree::createUserActions(QObject* parent)

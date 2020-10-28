@@ -24,16 +24,12 @@ class DocumentTreeNodePropertiesProviderTable {
 public:
     using ProviderPtr = std::unique_ptr<DocumentTreeNodePropertiesProvider>;
 
-    static DocumentTreeNodePropertiesProviderTable* instance();
-
     void addProvider(ProviderPtr provider);
     Span<const ProviderPtr> providers() const { return m_vecProvider; }
 
     std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
 
 private:
-    DocumentTreeNodePropertiesProviderTable() = default;
-
     std::vector<ProviderPtr> m_vecProvider;
 };
 

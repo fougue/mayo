@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "application.h"
+#include "document_tree_node_properties_provider.h"
 #include "io_system.h"
 #include "property_builtins.h"
 #include "qmeta_quantity_color.h"
@@ -21,8 +22,12 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
+#include <QtCore/QFileInfo>
 #include <QtCore/QSettings>
 #include <QtCore/QtDebug>
+
+#include <atomic>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -36,10 +41,17 @@ public:
     opencascade::handle<CDM_Document> CreateDocument() override { return new Document; }
 };
 
+struct Application::Private {
+    std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
+    std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+    Settings m_settings;
+    IO::System m_ioSystem;
+    DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
+};
+
 Application::~Application()
 {
-    delete m_settings;
-    delete m_ioSystem;
+    delete d;
 }
 
 const ApplicationPtr& Application::instance()
@@ -101,14 +113,14 @@ DocumentPtr Application::findDocumentByIndex(int docIndex) const
 
 DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent) const
 {
-    auto itFound = m_mapIdentifierDocument.find(docIdent);
-    return itFound != m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr();
+    auto itFound = d->m_mapIdentifierDocument.find(docIdent);
+    return itFound != d->m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr();
 }
 
 DocumentPtr Application::findDocumentByLocation(const QFileInfo& loc) const
 {
     const QString locAbsoluteFilePath = loc.absoluteFilePath();
-    for (const auto& mapPair : m_mapIdentifierDocument) {
+    for (const auto& mapPair : d->m_mapIdentifierDocument) {
         const DocumentPtr& docPtr = mapPair.second;
         if (QFileInfo(docPtr->filePath()).absoluteFilePath() == locAbsoluteFilePath)
             return docPtr;
@@ -132,14 +144,19 @@ void Application::closeDocument(const DocumentPtr& doc)
     TDocStd_Application::Close(doc);
 }
 
-Settings* Application::settings()
+Settings* Application::settings() const
 {
-    return m_settings;
+    return &(d->m_settings);
 }
 
-const Settings* Application::settings() const
+IO::System *Application::ioSystem() const
 {
-    return m_settings;
+    return &(d->m_ioSystem);
+}
+
+DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodePropertiesProviderTable() const
+{
+    return &(d->m_documentTreeNodePropertiesProviderTable);
 }
 
 void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
@@ -231,25 +248,25 @@ void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc)
 
 Application::Application()
     : QObject(nullptr),
-      m_settings(new Settings(this)),
-      m_ioSystem(new IO::System)
+      d(new Private)
 {
+    d->m_settings.setParent(this);
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)
 {
-    auto itFound = m_mapIdentifierDocument.find(docIdent);
-    if (itFound != m_mapIdentifierDocument.end()) {
+    auto itFound = d->m_mapIdentifierDocument.find(docIdent);
+    if (itFound != d->m_mapIdentifierDocument.end()) {
         emit this->documentAboutToClose(itFound->second);
-        m_mapIdentifierDocument.erase(itFound);
+        d->m_mapIdentifierDocument.erase(itFound);
     }
 }
 
 void Application::addDocument(const DocumentPtr& doc)
 {
     if (!doc.IsNull()) {
-        doc->setIdentifier(m_seqDocumentIdentifier.fetch_add(1));
-        m_mapIdentifierDocument.insert({ doc->identifier(), doc });
+        doc->setIdentifier(d->m_seqDocumentIdentifier.fetch_add(1));
+        d->m_mapIdentifierDocument.insert({ doc->identifier(), doc });
         this->InitDocument(doc);
         doc->initXCaf();
 

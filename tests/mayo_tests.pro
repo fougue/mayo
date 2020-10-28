@@ -30,10 +30,23 @@ MayoInputs.path = $$OUT_PWD/inputs
 # OpenCascade
 include(../opencascade.pri)
 LIBS += -lTKernel -lTKMath -lTKBRep -lTKGeomBase -lTKTopAlgo -lTKPrim -lTKMesh -lTKG3d
-LIBS += -lTKXSBase -lTKIGES -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+LIBS += -lTKXSBase
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
-LIBS += -lTKSTL
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+# -- IGES support
+LIBS += -lTKIGES -lTKXDEIGES
+# -- STEP support
+LIBS += -lTKSTEP -lTKXDESTEP
+# -- STL support
+LIBS += -lTKSTL
+# -- OBJ/glTF support
 minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
+} else {
+    SOURCES -= \
+        ../src/base/io_occ_base_mesh.cpp \
+        ../src/base/io_occ_gltf.cpp \
+        ../src/base/io_occ_obj.cpp
 }
+# -- VRML support
+LIBS += -lTKVRML

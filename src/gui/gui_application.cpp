@@ -17,10 +17,11 @@ namespace Mayo {
 
 GuiApplication::GuiApplication(const ApplicationPtr& app)
     : QObject(app.get()),
-      m_app(app)
+      m_app(app),
+      m_selectionModel(new ApplicationItemSelectionModel(this)),
+      m_gfxEntityDriverTable(new GraphicsEntityDriverTable),
+      m_gfxTreeNodeMappingDriverTable(new GraphicsTreeNodeMappingDriverTable)
 {
-    m_selectionModel = new ApplicationItemSelectionModel(this);
-
     QObject::connect(
                 app.get(), &Application::documentAdded,
                 this, &GuiApplication::onDocumentAdded);
@@ -57,15 +58,14 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
     return m_selectionModel;
 }
 
-void GuiApplication::addGraphicsTreeNodeMappingDriver(GraphicsTreeNodeMappingDriverPtr driver)
+GraphicsEntityDriverTable* GuiApplication::graphicsEntityDriverTable() const
 {
-    if (driver)
-        m_vecGraphicsTreeNodeMappingDriver.push_back(std::move(driver));
+    return m_gfxEntityDriverTable.get();
 }
 
-Span<const GuiApplication::GraphicsTreeNodeMappingDriverPtr> GuiApplication::graphicsTreeNodeMappingDrivers() const
+GraphicsTreeNodeMappingDriverTable* GuiApplication::graphicsTreeNodeMappingDriverTable() const
 {
-    return m_vecGraphicsTreeNodeMappingDriver;
+    return m_gfxTreeNodeMappingDriverTable.get();
 }
 
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)

@@ -118,9 +118,9 @@ LIBS += -lTKMeshVS -lTKXSDRAW
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
 # -- IGES support
-LIBS += -lTKIGES
+LIBS += -lTKIGES -lTKXDEIGES
 # -- STEP support
-LIBS += -lTKSTEP -lTKXDESTEP -lTKXDEIGES
+LIBS += -lTKSTEP -lTKXDESTEP
 # -- STL support
 LIBS += -lTKSTL
 # -- OBJ/glTF support

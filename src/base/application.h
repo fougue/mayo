@@ -9,13 +9,12 @@
 #include "application_ptr.h"
 #include "document.h"
 #include <CDF_DirectoryIterator.hxx>
-#include <QtCore/QFileInfo>
-#include <atomic>
-#include <unordered_map>
+class QFileInfo;
 
 namespace Mayo {
 
 class Settings;
+class DocumentTreeNodePropertiesProviderTable;
 
 namespace IO { class System; }
 
@@ -47,11 +46,9 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
-    Settings* settings();
-    const Settings* settings() const;
-
-    IO::System* ioSystem() { return m_ioSystem; }
-    const IO::System* ioSystem() const { return m_ioSystem; }
+    Settings* settings() const;
+    IO::System* ioSystem() const;
+    DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 
     static void setOpenCascadeEnvironment(const QString& settingsFilepath);
 
@@ -83,10 +80,8 @@ private: // Implementation
     void notifyDocumentAboutToClose(Document::Identifier docIdent);
     void addDocument(const DocumentPtr& doc);
 
-    std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
-    std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
-    Settings* m_settings = nullptr;
-    IO::System* m_ioSystem = nullptr;
+    struct Private;
+    Private* const d;
 };
 
 } // namespace Mayo

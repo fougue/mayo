@@ -9,12 +9,6 @@
 
 namespace Mayo {
 
-GraphicsEntityDriverTable* GraphicsEntityDriverTable::instance()
-{
-    static GraphicsEntityDriverTable table;
-    return &table;
-}
-
 void GraphicsEntityDriverTable::addDriver(DriverPtr driver)
 {
     m_vecDriver.push_back(std::move(driver));

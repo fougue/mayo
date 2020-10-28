@@ -29,7 +29,7 @@ class AppModule :
     Q_OBJECT
 public:
     AppModule(Application* app);
-    static AppModule* get(ApplicationPtr app);
+    static AppModule* get(const ApplicationPtr& app);
 
     StringUtils::TextOptions defaultTextOptions() const;
 

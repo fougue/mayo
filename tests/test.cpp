@@ -11,7 +11,7 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
-#include "../src/base/io.h"
+#include "../src/base/io_system.h"
 #include "../src/base/libtree.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"

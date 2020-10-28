@@ -9,12 +9,6 @@
 
 namespace Mayo {
 
-DocumentTreeNodePropertiesProviderTable* DocumentTreeNodePropertiesProviderTable::instance()
-{
-    static DocumentTreeNodePropertiesProviderTable table;
-    return &table;
-}
-
 void DocumentTreeNodePropertiesProviderTable::addProvider(ProviderPtr provider)
 {
     m_vecProvider.push_back(std::move(provider));
