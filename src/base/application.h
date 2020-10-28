@@ -24,7 +24,7 @@ class Application : public QObject, public TDocStd_Application {
 public:
     ~Application();
 
-    static ApplicationPtr instance();
+    static const ApplicationPtr& instance();
 
     struct DocumentIterator : private CDF_DirectoryIterator {
         DocumentIterator(const ApplicationPtr& app);

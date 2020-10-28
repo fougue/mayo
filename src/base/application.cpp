@@ -42,7 +42,7 @@ Application::~Application()
     delete m_ioSystem;
 }
 
-ApplicationPtr Application::instance()
+const ApplicationPtr& Application::instance()
 {
     static ApplicationPtr appPtr;
     if (appPtr.IsNull()) {
