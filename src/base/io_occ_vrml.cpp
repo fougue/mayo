@@ -97,12 +97,12 @@ bool OccVrmlWriter::writeFile(const QString& filepath, TaskProgress*)
     return false;
 }
 
-std::unique_ptr<PropertyGroup> OccVrmlWriter::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccVrmlWriter::createProperties(PropertyGroup* parentGroup)
 {
     return std::make_unique<VrmlWriterParameters>(parentGroup);
 }
 
-void OccVrmlWriter::applyParameters(const PropertyGroup* params)
+void OccVrmlWriter::applyProperties(const PropertyGroup* params)
 {
     auto ptr = dynamic_cast<const VrmlWriterParameters*>(params);
     if (ptr) {

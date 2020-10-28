@@ -18,8 +18,8 @@ class OccGltfReader : public OccBaseMeshReader {
 public:
     OccGltfReader();
 
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup* params) override;
+    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    void applyProperties(const PropertyGroup* params) override;
 
     // Parameters
 

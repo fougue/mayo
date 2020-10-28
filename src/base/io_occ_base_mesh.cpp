@@ -103,7 +103,7 @@ bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
     return okPerform;
 }
 
-void OccBaseMeshReader::applyParameters(const PropertyGroup *params)
+void OccBaseMeshReader::applyProperties(const PropertyGroup *params)
 {
     auto ptr = dynamic_cast<const OccBaseMeshReaderParameters*>(params);
     if (ptr) {

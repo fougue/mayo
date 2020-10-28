@@ -136,12 +136,12 @@ bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
     return false;
 }
 
-std::unique_ptr<PropertyGroup> OccStlWriter::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccStlWriter::createProperties(PropertyGroup* parentGroup)
 {
     return std::make_unique<StlWriterParameters>(parentGroup);
 }
 
-void OccStlWriter::applyParameters(const PropertyGroup* params)
+void OccStlWriter::applyProperties(const PropertyGroup* params)
 {
     auto ptr = dynamic_cast<const StlWriterParameters*>(params);
     if (ptr)

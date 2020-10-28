@@ -103,7 +103,7 @@ AppModule::AppModule(Application* app)
     for (const IO::Format& format : app->ioSystem()->readerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Import, format.identifier);
         const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format, settings);
+        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);
@@ -118,7 +118,7 @@ AppModule::AppModule(Application* app)
     for (const IO::Format& format : app->ioSystem()->writerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Export, format.identifier);
         const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format, settings);
+        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);

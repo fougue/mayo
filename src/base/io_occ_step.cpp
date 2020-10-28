@@ -12,16 +12,17 @@
 #include "task_progress.h"
 
 #include <QtCore/QCoreApplication>
+#include <Interface_Static.hxx>
 #include <STEPCAFControl_Controller.hxx>
 
 namespace Mayo {
 namespace IO {
 
-class OccStepReader::Parameters : public PropertyGroup {
+class OccStepReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader)
     Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccStepReader)
 public:
-    Parameters(PropertyGroup* parentGroup)
+    Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
           productContext(this, textId("productContext"), &enumProductContext),
           assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel),
@@ -158,22 +159,22 @@ bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
     return cafTransfer(m_reader, doc, progress);
 }
 
-std::unique_ptr<PropertyGroup> OccStepReader::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccStepReader::createProperties(PropertyGroup* parentGroup)
 {
-    return std::make_unique<Parameters>(parentGroup);
+    return std::make_unique<Properties>(parentGroup);
 }
 
-void OccStepReader::applyParameters(const PropertyGroup *params)
+void OccStepReader::applyProperties(const PropertyGroup* group)
 {
-    auto ptr = dynamic_cast<const Parameters*>(params);
+    auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        Options options;
-        options.productContext = ptr->productContext.valueAs<ProductContext>();
-        options.assemblyLevel = ptr->assemblyLevel.valueAs<AssemblyLevel>();
-        options.preferredShapeRepresentation = ptr->preferredShapeRepresentation.valueAs<ShapeRepresentation>();
-        options.readShapeAspect = ptr->readShapeAspect.value();
-        options.encoding = ptr->encoding.valueAs<Encoding>();
-        this->setOptions(options);
+        Parameters params;
+        params.productContext = ptr->productContext.valueAs<ProductContext>();
+        params.assemblyLevel = ptr->assemblyLevel.valueAs<AssemblyLevel>();
+        params.preferredShapeRepresentation = ptr->preferredShapeRepresentation.valueAs<ShapeRepresentation>();
+        params.readShapeAspect = ptr->readShapeAspect.value();
+        params.encoding = ptr->encoding.valueAs<Encoding>();
+        this->setParameters(params);
     }
 }
 
@@ -219,17 +220,17 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         Q_UNREACHABLE();
     };
 
-    rollback->change(Key_readStepProductContext, fnOccProductContext(m_options.productContext));
-    rollback->change(Key_readStepAssemblyLevel, fnOccAssemblyLevel(m_options.assemblyLevel));
-    rollback->change(Key_readStepShapeRepr, fnOccShapeRepresentation(m_options.preferredShapeRepresentation));
-    rollback->change(Key_readStepShapeAspect, int(m_options.readShapeAspect ? 1 : 0));
-    rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_options.encoding));
+    rollback->change(Key_readStepProductContext, fnOccProductContext(m_params.productContext));
+    rollback->change(Key_readStepAssemblyLevel, fnOccAssemblyLevel(m_params.assemblyLevel));
+    rollback->change(Key_readStepShapeRepr, fnOccShapeRepresentation(m_params.preferredShapeRepresentation));
+    rollback->change(Key_readStepShapeAspect, int(m_params.readShapeAspect ? 1 : 0));
+    rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_params.encoding));
 }
 
-class OccStepWriter::Parameters : public PropertyGroup {
+class OccStepWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter)
 public:
-    Parameters(PropertyGroup* parentGroup)
+    Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
           schema(this, textId("schema"), &enumSchema),
           assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
@@ -284,35 +285,25 @@ bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
     return err == IFSelect_RetDone;
 }
 
-std::unique_ptr<PropertyGroup> OccStepWriter::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccStepWriter::createProperties(PropertyGroup* parentGroup)
 {
-    return std::make_unique<Parameters>(parentGroup);
+    return std::make_unique<Properties>(parentGroup);
 }
 
-void OccStepWriter::applyParameters(const PropertyGroup* params)
+void OccStepWriter::applyProperties(const PropertyGroup* group)
 {
-    auto ptr = dynamic_cast<const Parameters*>(params);
+    auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        this->setSchema(ptr->schema.valueAs<Schema>());
-        this->setAssemblyMode(ptr->assemblyMode.valueAs<AssemblyMode>());
-        this->setFreeVertexMode(ptr->freeVertexMode.valueAs<FreeVertexMode>());
-        this->setParametricCurvesMode(
-                    ptr->writePCurves.value() ?
-                        ParametricCurvesMode::Write :
-                        ParametricCurvesMode::Skip);
+        Parameters params;
+        params.schema = ptr->schema.valueAs<Schema>();
+        params.assemblyMode = ptr->assemblyMode.valueAs<AssemblyMode>();
+        params.freeVertexMode = ptr->freeVertexMode.valueAs<FreeVertexMode>();
+        params.writeParametricCurves = ptr->writePCurves.value();
+        this->setParameters(params);
     }
 }
 
-void OccStepWriter::setSchema(OccStepWriter::Schema schema)
-{
-    m_schema = schema;
-    // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
-    // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
-    // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
-    m_writer.ChangeWriter().Model(true);
-}
-
-void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) const
+void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
 {
     // TODO handle these parameters
     // "write.step.unit"
@@ -336,13 +327,6 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         }
         Q_UNREACHABLE();
     };
-    auto fnOccPCurvesMode = [](ParametricCurvesMode mode) {
-        switch (mode) {
-        case ParametricCurvesMode::Skip: return 0;
-        case ParametricCurvesMode::Write: return 1;
-        }
-        Q_UNREACHABLE();
-    };
     auto fnOccVertexMode = [](FreeVertexMode mode) {
         switch (mode) {
         case FreeVertexMode::Compound: return 0;
@@ -351,10 +335,18 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         Q_UNREACHABLE();
     };
 
-    rollback->change(Key_writeStepSchema, fnOccSchema(m_schema));
-    rollback->change(Key_writeStepAssembly, fnOccAssemblyMode(m_assemblyMode));
-    rollback->change(Key_writePCurvesMode, fnOccPCurvesMode(m_pcurvesMode));
-    rollback->change(Key_writeStepVertexMode, fnOccVertexMode(m_freeVertexMode));
+    const int previousSchema = Interface_Static::IVal(Key_writeStepSchema);
+    rollback->change(Key_writeStepSchema, fnOccSchema(m_params.schema));
+    if (fnOccSchema(m_params.schema) != previousSchema) {
+        // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
+        // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
+        // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
+        m_writer.ChangeWriter().Model(true);
+    }
+
+    rollback->change(Key_writeStepAssembly, fnOccAssemblyMode(m_params.assemblyMode));
+    rollback->change(Key_writePCurvesMode, m_params.writeParametricCurves ? 1 : 0);
+    rollback->change(Key_writeStepVertexMode, fnOccVertexMode(m_params.freeVertexMode));
 }
 
 } // namespace IO

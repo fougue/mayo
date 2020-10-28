@@ -26,9 +26,6 @@ public:
     bool readFile(const QString& filepath, TaskProgress* progress) override;
     bool transfer(DocumentPtr doc, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup* params) override;
-
     // Parameters
 
     enum class ProductContext {
@@ -58,15 +55,18 @@ public:
         UTF8
     };
 
-    struct Options {
+    struct Parameters {
         ProductContext productContext = ProductContext::Both;
         AssemblyLevel assemblyLevel = AssemblyLevel::All;
         ShapeRepresentation preferredShapeRepresentation = ShapeRepresentation::All;
         bool readShapeAspect = true;
         Encoding encoding = Encoding::UTF8;
     };
-    const Options& options() const { return m_options; }
-    void setOptions(const Options& options) { m_options = options; }
+    const Parameters& parameters() const { return m_params; }
+    void setParameters(const Parameters& params) { m_params = params; }
+
+    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    void applyProperties(const PropertyGroup* params) override;
 
 private:
     Q_GADGET
@@ -74,9 +74,9 @@ private:
 
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
-    class Parameters;
+    class Properties;
     STEPCAFControl_Reader m_reader;
-    Options m_options;
+    Parameters m_params;
 };
 
 // Opencascade-based writer for STEP file format
@@ -86,9 +86,6 @@ public:
 
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const QString& filepath, TaskProgress* progress) override;
-
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup* params) override;
 
     // Parameters
 
@@ -108,37 +105,29 @@ public:
         Compound, Single
     };
 
-    enum class ParametricCurvesMode {
-        Skip, Write
+    struct Parameters {
+        Schema schema = Schema::AP214_CD;
+        AssemblyMode assemblyMode = AssemblyMode::Skip;
+        FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
+        bool writeParametricCurves = true;
     };
+    const Parameters& parameters() const { return m_params; }
+    void setParameters(const Parameters& params) { m_params = params; }
 
-    Schema schema() const { return m_schema; }
-    void setSchema(Schema schema);
-
-    AssemblyMode assemblyMode() const { return m_assemblyMode; }
-    void setAssemblyMode(AssemblyMode mode) { m_assemblyMode = mode; }
-
-    FreeVertexMode freeVertexMode() const { return m_freeVertexMode; }
-    void setFreeVertexMode(FreeVertexMode mode) { m_freeVertexMode = mode; }
-
-    ParametricCurvesMode parametricCurvesMode() const { return m_pcurvesMode; }
-    void setParametricCurvesMode(ParametricCurvesMode mode) { m_pcurvesMode = mode; }
+    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    void applyProperties(const PropertyGroup* params) override;
 
 private:
     Q_GADGET
     Q_ENUM(Schema)
     Q_ENUM(AssemblyMode)
     Q_ENUM(FreeVertexMode)
-    Q_ENUM(ParametricCurvesMode)
 
-    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
+    void changeStaticVariables(OccStaticVariablesRollback* rollback);
 
-    class Parameters;
+    class Properties;
     STEPCAFControl_Writer m_writer;
-    Schema m_schema = Schema::AP214_CD;
-    AssemblyMode m_assemblyMode = AssemblyMode::Skip;
-    FreeVertexMode m_freeVertexMode = FreeVertexMode::Compound;
-    ParametricCurvesMode m_pcurvesMode = ParametricCurvesMode::Write;
+    Parameters m_params;
 };
 
 } // namespace IO

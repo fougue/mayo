@@ -22,7 +22,7 @@ public:
     bool readFile(const QString& filepath, TaskProgress* progress) override;
     bool transfer(DocumentPtr doc, TaskProgress* progress) override;
 
-    void applyParameters(const PropertyGroup* params) override;
+    void applyProperties(const PropertyGroup* params) override;
 
     enum class LengthUnit {
         Undefined = -1,

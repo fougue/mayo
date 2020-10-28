@@ -31,14 +31,14 @@ OccGltfReader::OccGltfReader()
 {
 }
 
-std::unique_ptr<PropertyGroup> OccGltfReader::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccGltfReader::createProperties(PropertyGroup* parentGroup)
 {
     return std::make_unique<GltfReaderParameters>(parentGroup);
 }
 
-void OccGltfReader::applyParameters(const PropertyGroup* params)
+void OccGltfReader::applyProperties(const PropertyGroup* params)
 {
-    OccBaseMeshReader::applyParameters(params);
+    OccBaseMeshReader::applyProperties(params);
     auto ptr = dynamic_cast<const GltfReaderParameters*>(params);
     if (ptr) {
         this->setMeshNameAsFallback(ptr->useMeshNameAsFallback.value());

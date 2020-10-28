@@ -23,14 +23,14 @@ class Writer {
 public:
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
     virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
-    virtual void applyParameters(const PropertyGroup* /*params*/) {}
+    virtual void applyProperties(const PropertyGroup* /*params*/) {}
 };
 
 class FactoryWriter {
 public:
     virtual Span<const Format> formats() const = 0;
     virtual std::unique_ptr<Writer> create(const Format& format) const = 0;
-    virtual std::unique_ptr<PropertyGroup> createParameters(
+    virtual std::unique_ptr<PropertyGroup> createProperties(
             const Format& format,
             PropertyGroup* parentGroup) const = 0;
 };

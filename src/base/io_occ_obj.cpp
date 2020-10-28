@@ -29,14 +29,14 @@ OccObjReader::OccObjReader()
 {
 }
 
-std::unique_ptr<PropertyGroup> OccObjReader::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccObjReader::createProperties(PropertyGroup* parentGroup)
 {
     return std::make_unique<ObjReaderParameters>(parentGroup);
 }
 
-void OccObjReader::applyParameters(const PropertyGroup* params)
+void OccObjReader::applyProperties(const PropertyGroup* params)
 {
-    OccBaseMeshReader::applyParameters(params);
+    OccBaseMeshReader::applyProperties(params);
     auto ptr = dynamic_cast<const ObjReaderParameters*>(params);
     if (ptr) {
         this->setSinglePrecisionVertexCoords(ptr->singlePrecisionVertexCoords.value());
