@@ -10,6 +10,6 @@
 
 namespace Mayo {
 
-using GraphicsOwnerPtr = opencascade::handle<SelectMgr_EntityOwner>;
+using GraphicsOwnerPtr = Handle(SelectMgr_EntityOwner);
 
 } // namespace Mayo

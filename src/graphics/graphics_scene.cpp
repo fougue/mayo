@@ -6,6 +6,7 @@
 
 #include "graphics_scene.h"
 
+#include "../base/tkernel_utils.h"
 #include "graphics_utils.h"
 
 #include <Graphic3d_GraphicDriver.hxx>
@@ -34,68 +35,128 @@ static Handle_V3d_Viewer createOccViewer()
 
 } // namespace Internal
 
+namespace {
+
+class InteractiveContext : public AIS_InteractiveContext {
+    DEFINE_STANDARD_RTTI_INLINE(InteractiveContext, AIS_InteractiveContext)
+public:
+    InteractiveContext(const Handle_V3d_Viewer& viewer)
+        : AIS_InteractiveContext(viewer)
+    {}
+
+    constexpr const GraphicsOwnerPtr& member_myLastPicked() const { return myLastPicked; }
+};
+
+DEFINE_STANDARD_HANDLE(InteractiveContext, AIS_InteractiveContext)
+
+} // namespace
+
+class GraphicsScene::Private {
+public:
+    Handle_V3d_Viewer m_v3dViewer;
+    Handle_InteractiveContext m_aisContext;
+    std::unordered_set<const AIS_InteractiveObject*> m_setClipPlaneSensitive;
+    bool m_isRedrawBlocked = false;
+};
+
 GraphicsScene::GraphicsScene(QObject* parent)
     : QObject(parent),
-      m_v3dViewer(Mayo::Internal::createOccViewer()),
-      m_aisContext(new AIS_InteractiveContext(m_v3dViewer))
+      d(new Private)
 {
+    d->m_v3dViewer = Internal::createOccViewer();
+    d->m_aisContext = new InteractiveContext(d->m_v3dViewer);
+}
+
+GraphicsScene::~GraphicsScene()
+{
+    delete d;
 }
 
 opencascade::handle<V3d_View> GraphicsScene::createV3dView()
 {
-    return m_v3dViewer->CreateView();
+    return d->m_v3dViewer->CreateView();
+}
+
+const opencascade::handle<V3d_Viewer>& GraphicsScene::v3dViewer() const
+{
+    return d->m_v3dViewer;
+}
+
+const opencascade::handle<Prs3d_Drawer>& GraphicsScene::defaultPrs3dDrawer() const
+{
+    return d->m_aisContext->DefaultDrawer();
+}
+
+const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelector() const
+{
+    return d->m_aisContext->MainSelector();
+}
+
+bool GraphicsScene::hiddenLineDrawingOn() const
+{
+    return d->m_aisContext->DrawHiddenLine();
 }
 
 void GraphicsScene::addObject(const GraphicsObjectPtr& object)
 {
-    m_aisContext->Display(object, false);
+    d->m_aisContext->Display(object, false);
 }
 
 void GraphicsScene::eraseObject(const GraphicsObjectPtr& object)
 {
-    Mayo::GraphicsUtils::AisContext_eraseObject(m_aisContext, object);
-    m_setClipPlaneSensitive.erase(object.get());
+    GraphicsUtils::AisContext_eraseObject(d->m_aisContext, object);
+    d->m_setClipPlaneSensitive.erase(object.get());
 }
 
 void GraphicsScene::redraw()
 {
-    if (!m_isRedrawBlocked)
-        m_aisContext->UpdateCurrentViewer();
+    if (!d->m_isRedrawBlocked)
+        d->m_aisContext->UpdateCurrentViewer();
+}
+
+bool GraphicsScene::isRedrawBlocked() const
+{
+    return d->m_isRedrawBlocked;
+}
+
+void GraphicsScene::blockRedraw(bool on)
+{
+    d->m_isRedrawBlocked = on;
 }
 
 void GraphicsScene::recomputeObjectPresentation(const GraphicsObjectPtr& object)
 {
-    m_aisContext->Redisplay(object, false);
+    d->m_aisContext->Redisplay(object, false);
 }
 
 void GraphicsScene::activateObjectSelection(const GraphicsObjectPtr& object, int mode)
 {
-    m_aisContext->Activate(object, mode);
+    d->m_aisContext->Activate(object, mode);
 }
 
 void GraphicsScene::deactivateObjectSelection(const Mayo::GraphicsObjectPtr &object, int mode)
 {
-    m_aisContext->Deactivate(object, mode);
+    d->m_aisContext->Deactivate(object, mode);
 }
 
 void GraphicsScene::addSelectionFilter(const Handle_SelectMgr_Filter& filter)
 {
-    m_aisContext->AddFilter(filter);
+    d->m_aisContext->AddFilter(filter);
 }
 
 void GraphicsScene::removeSelectionFilter(const Handle_SelectMgr_Filter& filter)
 {
-    m_aisContext->RemoveFilter(filter);
+    d->m_aisContext->RemoveFilter(filter);
 }
 
 void GraphicsScene::clearSelectionFilters()
 {
-    m_aisContext->RemoveFilters();
+    d->m_aisContext->RemoveFilters();
 }
 
 void GraphicsScene::setObjectDisplayMode(const GraphicsObjectPtr& object, int displayMode)
 {
-    m_aisContext->SetDisplayMode(object, displayMode, false);
+    d->m_aisContext->SetDisplayMode(object, displayMode, false);
 }
 
 bool GraphicsScene::isObjectClipPlaneSensitive(const GraphicsObjectPtr& object) const
@@ -103,7 +164,7 @@ bool GraphicsScene::isObjectClipPlaneSensitive(const GraphicsObjectPtr& object) 
     if (object.IsNull())
         return false;
 
-    return m_setClipPlaneSensitive.find(object.get()) != m_setClipPlaneSensitive.cend();
+    return d->m_setClipPlaneSensitive.find(object.get()) != d->m_setClipPlaneSensitive.cend();
 }
 
 void GraphicsScene::setObjectClipPlaneSensitive(const GraphicsObjectPtr& object, bool on)
@@ -112,53 +173,67 @@ void GraphicsScene::setObjectClipPlaneSensitive(const GraphicsObjectPtr& object,
         return;
 
     if (on)
-        m_setClipPlaneSensitive.insert(object.get());
+        d->m_setClipPlaneSensitive.insert(object.get());
     else
-        m_setClipPlaneSensitive.erase(object.get());
+        d->m_setClipPlaneSensitive.erase(object.get());
 }
 
 bool GraphicsScene::isObjectVisible(const GraphicsObjectPtr& object) const
 {
-    return m_aisContext->IsDisplayed(object);
+    return d->m_aisContext->IsDisplayed(object);
 }
 
 void GraphicsScene::setObjectVisible(const GraphicsObjectPtr& object, bool on)
 {
-    GraphicsUtils::AisContext_setObjectVisible(m_aisContext, object, on);
+    GraphicsUtils::AisContext_setObjectVisible(d->m_aisContext, object, on);
 }
 
 GraphicsOwnerPtr GraphicsScene::firstSelectedOwner() const
 {
-    m_aisContext->InitSelected();
-    if (m_aisContext->MoreSelected())
-        return m_aisContext->SelectedOwner();
+    d->m_aisContext->InitSelected();
+    if (d->m_aisContext->MoreSelected())
+        return d->m_aisContext->SelectedOwner();
 
     return {};
 }
 
 void GraphicsScene::clearSelection()
 {
-    m_aisContext->ClearDetected(false);
-    m_aisContext->ClearSelected(false);
+    d->m_aisContext->ClearDetected(false);
+    d->m_aisContext->ClearSelected(false);
+}
+
+AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
+{
+    return d->m_aisContext.get();
 }
 
 void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 {
-    m_aisContext->AddOrRemoveSelected(gfxOwner, false);
+    d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }
 
 void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
 {
-    m_aisContext->MoveTo(pos.x(), pos.y(), view, true);
+    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, true);
 }
 
 void GraphicsScene::selectCurrentHighlighted()
 {
-    const AIS_StatusOfPick pick = m_aisContext->Select(true);
+    const AIS_StatusOfPick pick = d->m_aisContext->Select(true);
     if (pick == AIS_SOP_NothingSelected)
         emit this->selectionCleared();
     else if (pick == AIS_SOP_OneSelected)
         emit this->singleItemSelected();
+}
+
+const GraphicsOwnerPtr& GraphicsScene::currentHighlightedOwner() const
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return d->m_aisContext->DetectedOwner();
+#else
+    return d->m_aisContext->member_myLastPicked();
+#endif
 }
 
 GraphicsSceneRedrawBlocker::GraphicsSceneRedrawBlocker(GraphicsScene* scene)

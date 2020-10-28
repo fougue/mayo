@@ -10,6 +10,6 @@
 
 namespace Mayo {
 
-using GraphicsObjectPtr = opencascade::handle<AIS_InteractiveObject>;
+using GraphicsObjectPtr = Handle(AIS_InteractiveObject);
 
 } // namespace Mayo

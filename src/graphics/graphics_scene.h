@@ -24,20 +24,21 @@ class GraphicsScene : public QObject {
     Q_OBJECT
 public:
     GraphicsScene(QObject* parent = nullptr);
+    ~GraphicsScene();
 
     opencascade::handle<V3d_View> createV3dView();
 
-    const opencascade::handle<V3d_Viewer>& v3dViewer() const { return m_v3dViewer; }
-    const opencascade::handle<Prs3d_Drawer>& defaultPrs3dDrawer() const { return m_aisContext->DefaultDrawer(); }
-    const opencascade::handle<StdSelect_ViewerSelector3d>& mainSelector() const { return m_aisContext->MainSelector(); }
-    bool hiddenLineDrawingOn() const { return m_aisContext->DrawHiddenLine(); }
+    const opencascade::handle<V3d_Viewer>& v3dViewer() const;
+    const opencascade::handle<Prs3d_Drawer>& defaultPrs3dDrawer() const;
+    const opencascade::handle<StdSelect_ViewerSelector3d>& mainSelector() const;
+    bool hiddenLineDrawingOn() const;
 
     void addObject(const GraphicsObjectPtr& object);
     void eraseObject(const GraphicsObjectPtr& object);
 
     void redraw();
-    bool isRedrawBlocked() const { return m_isRedrawBlocked; }
-    void blockRedraw(bool on) { m_isRedrawBlocked = on; }
+    bool isRedrawBlocked() const;
+    void blockRedraw(bool on);
 
     void recomputeObjectPresentation(const GraphicsObjectPtr& object);
 
@@ -59,7 +60,7 @@ public:
     void highlightAt(const QPoint& pos, const Handle_V3d_View& view);
     void selectCurrentHighlighted();
 
-    const GraphicsOwnerPtr& currentHighlightedOwner() const { return m_aisContext->DetectedOwner(); }
+    const GraphicsOwnerPtr& currentHighlightedOwner() const;
 
     GraphicsOwnerPtr firstSelectedOwner() const;
     void toggleOwnerSelection(const GraphicsOwnerPtr& owner);
@@ -82,10 +83,10 @@ signals:
     void singleItemSelected();
 
 private:
-    Handle_V3d_Viewer m_v3dViewer;
-    Handle_AIS_InteractiveContext m_aisContext;
-    std::unordered_set<const AIS_InteractiveObject*> m_setClipPlaneSensitive;
-    bool m_isRedrawBlocked = false;
+    AIS_InteractiveContext* aisContextPtr() const;
+
+    class Private;
+    Private* d;
 };
 
 class GraphicsSceneRedrawBlocker {
@@ -114,7 +115,7 @@ template<typename FUNCTION>
 void GraphicsScene::foreachDisplayedObject(FUNCTION fn) const
 {
     AIS_ListOfInteractive listObject;
-    m_aisContext->DisplayedObjects(listObject);
+    this->aisContextPtr()->DisplayedObjects(listObject);
     for (const GraphicsObjectPtr& ptr : listObject)
         fn(ptr);
 }
@@ -123,7 +124,7 @@ template<typename FUNCTION>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, FUNCTION fn) const
 {
     opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
-    m_aisContext->EntityOwners(mapEntityOwner, object, selectionMode);
+    this->aisContextPtr()->EntityOwners(mapEntityOwner, object, selectionMode);
     for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
         fn(*it);
 }
@@ -131,22 +132,24 @@ void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionM
 template<typename FUNCTION>
 void GraphicsScene::foreachSelectedOwner(FUNCTION fn) const
 {
-    m_aisContext->InitSelected();
-    while (m_aisContext->MoreSelected()) {
-        fn(m_aisContext->SelectedOwner());
-        m_aisContext->NextSelected();
+    auto context = this->aisContextPtr();
+    context->InitSelected();
+    while (context->MoreSelected()) {
+        fn(context->SelectedOwner());
+        context->NextSelected();
     }
 }
 
 template<typename PREDICATE>
 GraphicsOwnerPtr GraphicsScene::findSelectedOwner(PREDICATE fn) const
 {
-    m_aisContext->InitSelected();
-    while (m_aisContext->MoreSelected()) {
-        if (fn(m_aisContext->SelectedOwner()))
-            return m_aisContext->SelectedOwner();
+    auto context = this->aisContextPtr();
+    context->InitSelected();
+    while (context->MoreSelected()) {
+        if (fn(context->SelectedOwner()))
+            return context->SelectedOwner();
 
-        m_aisContext->NextSelected();
+        context->NextSelected();
     }
 
     return GraphicsOwnerPtr();

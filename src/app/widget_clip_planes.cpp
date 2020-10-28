@@ -10,6 +10,7 @@
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
 #include "../base/settings.h"
+#include "../base/tkernel_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "app_module.h"
 #include "ui_widget_clip_planes.h"
@@ -67,7 +68,13 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
         data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         data.graphics->SetCappingColor(fnGetCappingColor(data));
+#else
+        Graphic3d_MaterialAspect cappingMaterial(Graphic3d_NOM_STEEL);
+        cappingMaterial.SetColor(fnGetCappingColor(data));
+        data.graphics->SetCappingMaterial(cappingMaterial);
+#endif
         if (!m_textureCapping.IsNull() && appModule->clipPlanesCappingHatchOn.value())
             data.graphics->SetCappingTexture(m_textureCapping);
     }
@@ -246,6 +253,7 @@ void WidgetClipPlanes::createPlaneCappingTexture()
     if (!m_textureCapping.IsNull())
         return;
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     QFile file(":/images/graphics/opencascade_hatch_1.png");
     if (file.open(QIODevice::ReadOnly)) {
         const QByteArray fileContents = file.readAll();
@@ -258,6 +266,9 @@ void WidgetClipPlanes::createPlaneCappingTexture()
         m_textureCapping->EnableRepeat();
         m_textureCapping->GetParams()->SetScale(Graphic3d_Vec2(0.05f, -0.05f));
     }
+#else
+    // TODO Copy the image resource to a temporary file and call Image_AlienPixMap::Load(tempFilePath)
+#endif
 }
 
 WidgetClipPlanes::UiClipPlane::UiClipPlane(QCheckBox* checkOn, QWidget* widgetControl)
