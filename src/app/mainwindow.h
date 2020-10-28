@@ -15,13 +15,14 @@ namespace Mayo {
 
 class Document;
 class DocumentTreeNodePropertiesProvider;
+class GuiApplication;
 class GuiDocument;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
     void openDocumentsFromList(const QStringList& listFilePath);
@@ -79,6 +80,7 @@ private:
     QMenu* createMenuModelTreeSettings();
     QMenu* createMenuRecentFiles();
 
+    GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeDataProperties;

@@ -79,13 +79,15 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
-static int runApp(QApplication* app)
+static int runApp(QApplication* qtApp)
 {
     const CommandLineArguments args = processCommandLine();
     Application::setOpenCascadeEnvironment("opencascade.conf");
 
+    auto app = Application::instance().get();
+
     // Register IO OpenCascade objects
-    auto ioSystem = Application::instance()->ioSystem();
+    auto ioSystem = app->ioSystem();
     ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     IO::addPredefinedFormatProbes(ioSystem);
@@ -95,11 +97,11 @@ static int runApp(QApplication* app)
     GraphicsEntityDriverTable::instance()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
 
     // Register Graphics/TreeNode mapping drivers
-    GuiApplication::instance()->addGraphicsTreeNodeMappingDriver(
-                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
+    auto guiApp = new GuiApplication(app);
+    guiApp->addGraphicsTreeNodeMappingDriver(std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
     // Register AppModule
-    auto appModule = new AppModule(Application::instance().get());
+    auto appModule = new AppModule(app);
 
     // Register document tree node providers
     DocumentTreeNodePropertiesProviderTable::instance()->addProvider(
@@ -127,13 +129,13 @@ static int runApp(QApplication* app)
         const QString qmFilePath = AppModule::qmFilePath(appModule->language.name());
         auto translator = new QTranslator(app);
         if (translator->load(qmFilePath))
-            app->installTranslator(translator);
+            qtApp->installTranslator(translator);
         else
             std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
     }
 
     // Create MainWindow
-    MainWindow mainWindow;
+    MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
     if (!args.listFileToOpen.empty()) {
@@ -142,7 +144,7 @@ static int runApp(QApplication* app)
 
     Application::instance()->settings()->resetAll();
     Application::instance()->settings()->load();
-    const int code = app->exec();
+    const int code = qtApp->exec();
     Application::instance()->settings()->save();
     return code;
 }

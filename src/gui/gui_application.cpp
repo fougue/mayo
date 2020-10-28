@@ -15,17 +15,17 @@
 
 namespace Mayo {
 
-GuiApplication::GuiApplication(QObject *parent)
-    : QObject(parent)
+GuiApplication::GuiApplication(const ApplicationPtr& app)
+    : QObject(app.get()),
+      m_app(app)
 {
     m_selectionModel = new ApplicationItemSelectionModel(this);
 
-    auto app = Application::instance().get();
     QObject::connect(
-                app, &Application::documentAdded,
+                app.get(), &Application::documentAdded,
                 this, &GuiApplication::onDocumentAdded);
     QObject::connect(
-                app, &Application::documentAboutToClose,
+                app.get(), &Application::documentAboutToClose,
                 this, &GuiApplication::onDocumentAboutToClose);
 
     QObject::connect(
@@ -34,12 +34,6 @@ GuiApplication::GuiApplication(QObject *parent)
     QObject::connect(
                 m_selectionModel, &ApplicationItemSelectionModel::cleared,
                 this, &GuiApplication::onApplicationItemSelectionCleared);
-}
-
-GuiApplication* GuiApplication::instance()
-{
-    static GuiApplication app;
-    return &app;
 }
 
 GuiApplication::~GuiApplication()
@@ -76,7 +70,7 @@ Span<const GuiApplication::GraphicsTreeNodeMappingDriverPtr> GuiApplication::gra
 
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
-    m_vecGuiDocument.push_back(new GuiDocument(doc));
+    m_vecGuiDocument.push_back(new GuiDocument(doc, this));
     emit guiDocumentAdded(m_vecGuiDocument.back());
 }
 

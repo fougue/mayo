@@ -13,21 +13,20 @@
 
 namespace Mayo {
 
-GuiDocumentListModel::GuiDocumentListModel(QObject* parent)
+GuiDocumentListModel::GuiDocumentListModel(const GuiApplication* guiApp, QObject* parent)
     : QAbstractListModel(parent)
 {
-    auto app = GuiApplication::instance();
-    for (const GuiDocument* doc : app->guiDocuments())
+    for (const GuiDocument* doc : guiApp->guiDocuments())
         this->appendGuiDocument(doc);
 
     QObject::connect(
-                app, &GuiApplication::guiDocumentAdded,
+                guiApp, &GuiApplication::guiDocumentAdded,
                 this, &GuiDocumentListModel::appendGuiDocument);
     QObject::connect(
-                app, &GuiApplication::guiDocumentErased,
+                guiApp, &GuiApplication::guiDocumentErased,
                 this, &GuiDocumentListModel::removeGuiDocument);
     QObject::connect(
-                Application::instance().get(), &Application::documentNameChanged,
+                guiApp->application().get(), &Application::documentNameChanged,
                 this, &GuiDocumentListModel::onDocumentNameChanged);
 }
 
@@ -50,7 +49,7 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
 
 int GuiDocumentListModel::rowCount(const QModelIndex& /*parent*/) const
 {
-    return m_vecGuiDocument.size();
+    return int(m_vecGuiDocument.size());
 }
 
 void GuiDocumentListModel::appendGuiDocument(const GuiDocument* guiDoc)

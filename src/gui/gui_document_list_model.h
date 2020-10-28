@@ -17,7 +17,7 @@ class GuiDocument;
 
 class GuiDocumentListModel : public QAbstractListModel {
 public:
-    GuiDocumentListModel(QObject* parent = nullptr);
+    GuiDocumentListModel(const GuiApplication* guiApp, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;

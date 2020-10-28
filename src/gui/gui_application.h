@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/application_item_selection_model.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 #include "gui_document.h"
@@ -14,13 +15,16 @@
 
 namespace Mayo {
 
+class Application;
 class GuiDocument;
 
 class GuiApplication : public QObject {
     Q_OBJECT
 public:
-    static GuiApplication* instance();
+    GuiApplication(const ApplicationPtr& app);
     ~GuiApplication();
+
+    const ApplicationPtr& application() const { return m_app; }
 
     Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
     Span<const GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
@@ -45,8 +49,7 @@ private:
     void onApplicationItemSelectionChanged(
             Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
 
-    GuiApplication(QObject* parent = nullptr);
-
+    ApplicationPtr m_app;
     std::vector<GuiDocument*> m_vecGuiDocument;
     std::vector<GraphicsTreeNodeMappingDriverPtr> m_vecGraphicsTreeNodeMappingDriver;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;

@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include "../base/application_ptr.h"
 #include "../base/document_ptr.h"
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
 #include "widget_model_tree.h"
-#include <memory>
 #include <vector>
 #include <QtCore/QString>
 class QAction;
@@ -38,7 +36,7 @@ public:
     QTreeWidget* treeWidget() const { return m_treeWidget; }
     void setTreeWidget(QTreeWidget* tree) { m_treeWidget = tree; }
 
-    virtual void registerApplication(ApplicationPtr /*app*/) {}
+    virtual void registerGuiApplication(GuiApplication* /*guiApp*/) {}
 
     virtual WidgetModelTree_UserActions createUserActions(QObject* /*parent*/) { return {}; }
 

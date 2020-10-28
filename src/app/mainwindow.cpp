@@ -184,12 +184,13 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 
 } // namespace Internal
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     : QMainWindow(parent),
+      m_guiApp(guiApp),
       m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
-    m_ui->widget_ModelTree->registerApplication(Application::instance());
+    m_ui->widget_ModelTree->registerGuiApplication(guiApp);
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
     m_ui->splitter_Main->setStretchFactor(0, 1);
@@ -337,10 +338,10 @@ MainWindow::MainWindow(QWidget *parent)
                 m_ui->combo_LeftContents, sigComboIndexChanged,
                 this, &MainWindow::onLeftContentsPageChanged);
     QObject::connect(
-                GuiApplication::instance(), &GuiApplication::guiDocumentAdded,
+                guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                GuiApplication::instance()->selectionModel(), &ApplicationItemSelectionModel::changed,
+                guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
                 this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
@@ -375,7 +376,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
-    auto guiDocModel = new GuiDocumentListModel(this);
+    auto guiDocModel = new GuiDocumentListModel(guiApp, this);
     m_ui->combo_GuiDocuments->setModel(guiDocModel);
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
 
@@ -507,8 +508,10 @@ void MainWindow::importInCurrentDoc()
 
 void MainWindow::exportSelectedItems()
 {
+    auto app = m_guiApp->application();
+
     QStringList listWriterFileFilter;
-    for (const IO::Format& format : Application::instance()->ioSystem()->writerFormats())
+    for (const IO::Format& format : app->ioSystem()->writerFormats())
         listWriterFileFilter.append(IO::System::fileFilter(format));
 
     auto lastSettings = Internal::ImportExportSettings::load();
@@ -523,7 +526,6 @@ void MainWindow::exportSelectedItems()
         return;
 
     lastSettings.openDir = QFileInfo(filepath).canonicalPath();
-    auto app = Application::instance();
     auto taskMgr = TaskManager::globalInstance();
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
@@ -533,7 +535,7 @@ void MainWindow::exportSelectedItems()
                 app->ioSystem()->exportApplicationItems()
                 .targetFile(filepath)
                 .targetFormat(format)
-                .withItems(GuiApplication::instance()->selectionModel()->selectedItems())
+                .withItems(m_guiApp->selectionModel()->selectedItems())
                 .withParameters(AppModule::get(app)->findWriterParameters(format))
                 .withMessenger(Messenger::defaultInstance())
                 .withTaskProgress(progress)
@@ -585,8 +587,7 @@ void MainWindow::saveImageView()
 
 void MainWindow::inspectXde()
 {
-    const Span<const ApplicationItem> spanAppItem =
-            GuiApplication::instance()->selectionModel()->selectedItems();
+    const Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     DocumentPtr xcafDoc;
     for (const ApplicationItem& appItem : spanAppItem) {
         if (appItem.document()->isXCafDocument()) {
@@ -639,7 +640,7 @@ void MainWindow::onApplicationItemSelectionChanged()
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     uiProps->clear();
-    Span<const ApplicationItem> spanAppItem = GuiApplication::instance()->selectionModel()->selectedItems();
+    Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& item = spanAppItem.at(0);
         const DocumentTreeNode& docTreeNode = item.documentTreeNode();
@@ -654,7 +655,7 @@ void MainWindow::onApplicationItemSelectionChanged()
                 });
             }
 
-            GuiDocument* guiDoc = GuiApplication::instance()->findGuiDocument(item.document());
+            GuiDocument* guiDoc = m_guiApp->findGuiDocument(item.document());
             const TreeNodeId entityNodeId = item.document()->modelTree().nodeRoot(docTreeNode.id());
             GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
             if (gfxEntity.driverPtr()) {
@@ -922,8 +923,7 @@ void MainWindow::updateControlsActivation()
     m_ui->actionToggleLeftSidebar->setEnabled(newMainPage != m_ui->page_MainHome);
     m_ui->combo_GuiDocuments->setEnabled(!appDocumentsEmpty);
 
-    Span<const ApplicationItem> spanSelectedAppItem =
-            GuiApplication::instance()->selectionModel()->selectedItems();
+    Span<const ApplicationItem> spanSelectedAppItem = m_guiApp->selectionModel()->selectedItems();
     const ApplicationItem firstAppItem =
             !spanSelectedAppItem.empty() ? spanSelectedAppItem.at(0) : ApplicationItem();
     m_ui->actionInspectXDE->setEnabled(

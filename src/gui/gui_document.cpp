@@ -74,8 +74,10 @@ static Handle_AIS_Trihedron createOriginTrihedron()
 
 } // namespace Internal
 
-GuiDocument::GuiDocument(const DocumentPtr& doc)
-    : m_document(doc),
+GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
+    : QObject(guiApp),
+      m_guiApp(guiApp),
+      m_document(doc),
       m_gfxScene(this),
       m_v3dView(m_gfxScene.createV3dView()),
       m_aisOriginTrihedron(Internal::createOriginTrihedron()),
@@ -333,7 +335,7 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     item.entityTreeNodeId = entityTreeNodeId;
     m_gfxScene.redraw();
 
-    for (const auto& mappingDriver : GuiApplication::instance()->graphicsTreeNodeMappingDrivers()) {
+    for (const auto& mappingDriver : m_guiApp->graphicsTreeNodeMappingDrivers()) {
         item.gpxTreeNodeMapping = mappingDriver->createMapping(entityTreeNode);
         if (item.gpxTreeNodeMapping)
             break;

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "../base/application_ptr.h"
 #include "../base/application_item.h"
 #include "../base/property.h"
 
@@ -20,7 +19,7 @@ class QTreeWidgetItem;
 
 namespace Mayo {
 
-class Settings;
+class GuiApplication;
 class WidgetModelTreeBuilder;
 
 struct WidgetModelTree_UserActions {
@@ -40,7 +39,7 @@ public:
 
     void refreshItemText(const ApplicationItem& appItem);
 
-    void registerApplication(ApplicationPtr app);
+    void registerGuiApplication(GuiApplication* guiApp);
 
     WidgetModelTree_UserActions createUserActions(QObject* parent);
 
@@ -75,6 +74,7 @@ private:
     WidgetModelTreeBuilder* findSupportBuilder(const DocumentTreeNode& entityNode) const;
 
     class Ui_WidgetModelTree* m_ui = nullptr;
+    GuiApplication* m_guiApp = nullptr;
     std::vector<BuilderPtr> m_vecBuilder;
     QString m_refItemTextTemplate;
 };

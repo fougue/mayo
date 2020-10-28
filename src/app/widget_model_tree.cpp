@@ -216,10 +216,11 @@ void WidgetModelTree::refreshItemText(const ApplicationItem& appItem)
     }
 }
 
-void WidgetModelTree::registerApplication(ApplicationPtr app)
+void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
 {
+    m_guiApp = guiApp;
     for (const BuilderPtr& builder : m_vecBuilder)
-        builder->registerApplication(app);
+        builder->registerGuiApplication(guiApp);
 }
 
 WidgetModelTree_UserActions WidgetModelTree::createUserActions(QObject* parent)
@@ -386,8 +387,8 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
         vecDeselected.push_back(std::move(Internal::toApplicationItem(treeItem)));
     }
 
-    GuiApplication::instance()->selectionModel()->add(vecSelected);
-    GuiApplication::instance()->selectionModel()->remove(vecDeselected);
+    m_guiApp->selectionModel()->add(vecSelected);
+    m_guiApp->selectionModel()->remove(vecDeselected);
 }
 
 } // namespace Mayo

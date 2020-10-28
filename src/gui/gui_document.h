@@ -24,12 +24,15 @@
 namespace Mayo {
 
 class ApplicationItem;
+class GuiApplication;
 class V3dViewCameraAnimation;
 
 class GuiDocument : public QObject {
     Q_OBJECT
 public:
-    GuiDocument(const DocumentPtr& doc);
+    GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
+
+    GuiApplication* guiApplication() const { return m_guiApp; }
 
     const DocumentPtr& document() const { return m_document; }
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
@@ -83,6 +86,7 @@ private:
 
     void v3dViewTrihedronDisplay(Qt::Corner corner);
 
+    GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;
     GraphicsScene m_gfxScene;
     Handle_V3d_View m_v3dView;

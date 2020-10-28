@@ -6,6 +6,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/xcaf.h"
+#include "../gui/gui_application.h"
 #include "app_module.h"
 #include "theme.h"
 #include "widget_model_tree.h"
@@ -30,7 +31,7 @@ QByteArray QByteArray_frowRawData(const char (&str)[N]) {
 
 class WidgetModelTreeBuilder_Xde::Module : public QObject, public PropertyGroup {
 public:
-    Module(ApplicationPtr app)
+    Module(const ApplicationPtr& app)
         : QObject(app.get()),
           PropertyGroup(app->settings()),
           instanceNameFormat(this, MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "instanceNameFormat"))
@@ -44,7 +45,7 @@ public:
         });
     }
 
-    static Module* get(ApplicationPtr app) {
+    static Module* get(const ApplicationPtr& app) {
         return app->findChild<Module*>("WidgetModelTreeBuilder_Xde::Module", Qt::FindDirectChildrenOnly);
     }
 
@@ -129,11 +130,11 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::createTreeItem(const DocumentTreeNo
 }
 
 // BEWARE Not thread-safe, should be called from main(GUI) thread
-void WidgetModelTreeBuilder_Xde::registerApplication(ApplicationPtr app)
+void WidgetModelTreeBuilder_Xde::registerGuiApplication(GuiApplication* guiApp)
 {
-    m_module = Module::get(app);
+    m_module = Module::get(guiApp->application());
     if (!m_module)
-        m_module = new Module(app);
+        m_module = new Module(guiApp->application());
 }
 
 WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObject *parent)
