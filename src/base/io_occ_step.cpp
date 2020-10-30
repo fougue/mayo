@@ -31,25 +31,26 @@ public:
           encoding(this, textId("encoding"), &enumEncoding())
     {
         this->productContext.setDescription(
-                    tr("When reading AP 209 STEP files, allows selecting either only `design` or "
-                       "`analysis', or both types of products for translation\n"
-                       "Note that in AP 203 and AP214 files all products should be marked as `design`, "
-                       "so if this mode is set to `analysis`, nothing will be read"));
+                    tr("When reading AP 209 STEP files, allows selecting either only <tt>design</tt> or "
+                       "<tt>analysis</tt>, or both types of products for translation\n"
+                       "Note that in AP 203 and AP214 files all products should be marked as <tt>design</tt>, "
+                       "so if this mode is set to <tt>analysis</tt>, nothing will be read"));
         this->assemblyLevel.setDescription(
                     tr("Specifies which data should be read for the products found in the STEP file"));
         this->preferredShapeRepresentation.setDescription(
                     tr("Specifies preferred type of representation of the shape of the product, in "
                        "case if a STEP file contains more than one representation (i.e. multiple "
-                       "PRODUCT_DEFINITION_SHAPE entities) for a single product"));
+                       "<tt>PRODUCT_DEFINITION_SHAPE</tt> entities) for a single product"));
         this->readShapeAspect.setDescription(
-                    tr("Defines whether shapes associated with the PRODUCT_DEFINITION_SHAPE entity "
-                       "of the product via SHAPE_ASPECT should be translated. This kind of "
+                    tr("Defines whether shapes associated with the <tt>PRODUCT_DEFINITION_SHAPE</tt> entity "
+                       "of the product via <tt>SHAPE_ASPECT</tt> should be translated.\n"
+                       "This kind of "
                        "association was used for the representation of hybrid models (i.e. models "
                        "whose shape is composed of different types of representations) in AP 203 files "
                        "before 1998, but it is also used to associate auxiliary information with the "
                        "sub-shapes of the part. Though STEP translator tries to recognize such cases "
                        "correctly, this parameter may be useful to avoid unconditionally translation "
-                       "of shapes associated via SHAPE_ASPECT entities."));
+                       "of shapes associated via <tt>SHAPE_ASPECT</tt> entities."));
     }
 
     void restoreDefaults() override {
@@ -229,6 +230,7 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 
 class OccStepWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccStepWriter)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
@@ -236,7 +238,16 @@ public:
           assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
           freeVertexMode(this, textId("freeVertexMode"), &enumFreeVertexMode),
           writePCurves(this, textId("writeParametericCurves"))
-    {}
+    {
+        this->schema.setDescription(
+                    tr("version of schema used for the output STEP file"));
+        this->assemblyMode.setDescription(
+                    tr("version of schema used for the output STEP file"));
+        this->writePCurves.setDescription(
+                    tr("Whether parametric curves (curves in parametric space of surface) should be "
+                       "written into the STEP file.\n"
+                       "It can be disabled in order to minimize the size of the resulting file."));
+    }
 
     void restoreDefaults() override {
         this->schema.setValue(int(Schema::AP214_CD));
