@@ -34,20 +34,6 @@ namespace Internal {
 // Defined in gui_create_gfx_driver.cpp
 Handle_Graphic3d_GraphicDriver createGfxDriver();
 
-static Handle_V3d_Viewer createOccViewer()
-{
-    Handle_V3d_Viewer viewer = new V3d_Viewer(createGfxDriver());
-    viewer->SetDefaultViewSize(1000.);
-    viewer->SetDefaultViewProj(V3d_XposYnegZpos);
-    viewer->SetComputedMode(true);
-//    viewer->SetDefaultComputedMode(true);
-//    viewer->SetDefaultVisualization(V3d_ZBUFFER);
-//    viewer->SetDefaultShadingModel(V3d_GOURAUD);
-    viewer->SetDefaultLights();
-    viewer->SetLightOn();
-    return viewer;
-}
-
 static Handle_AIS_Trihedron createOriginTrihedron()
 {
     Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
