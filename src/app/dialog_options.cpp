@@ -21,6 +21,22 @@ namespace Mayo {
 
 namespace {
 
+using SettingNodeId = uint32_t;
+
+SettingNodeId toSettingNodeId(Settings::GroupIndex indexGroup)
+{
+    return uint16_t(indexGroup.get()) << 16;
+}
+
+SettingNodeId toSettingNodeId(Settings::SectionIndex indexSection)
+{
+    const auto groupId = uint16_t(indexSection.group().get());
+    const auto sectionId = uint16_t(indexSection.get());
+    return (groupId << 16) | sectionId;
+}
+
+enum { ItemSettingNodeId_Role = Qt::UserRole + 1 };
+
 QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* parent = nullptr)
 {
     auto model = new QStandardItemModel(parent);
@@ -29,13 +45,18 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = settings->groupTitle(indexGroup);
         auto itemGroup = new QStandardItem(titleGroup);
+        itemGroup->setData(toSettingNodeId(indexGroup), ItemSettingNodeId_Role);
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
             const Settings::SectionIndex indexSection(indexGroup, iSection);
             if (settings->isDefaultGroupSection(indexSection))
                 continue;
 
+            if (settings->settingCount(indexSection) == 0)
+                continue;
+
             const QString titleSection = settings->sectionTitle(indexSection);
             auto itemSection = new QStandardItem(titleSection);
+            itemSection->setData(toSettingNodeId(indexSection), ItemSettingNodeId_Role);
             itemGroup->appendRow(itemSection);
         }
 
@@ -211,6 +232,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         const QString titleGroup = settings->groupTitle(indexGroup);
         auto listItemGroup = new QListWidgetItem(titleGroup, m_ui->listWidget_Settings);
         listItemGroup->setFont(fontItemGroupSection);
+        listItemGroup->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
             const Settings::SectionIndex indexSection(indexGroup, iSection);
             const int settingCount = settings->settingCount(indexSection);
@@ -222,6 +244,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                         tr("%1 / %2").arg(titleGroup).arg(settings->sectionTitle(indexSection));
                 auto listItemSection = new QListWidgetItem(titleSection, m_ui->listWidget_Settings);
                 listItemSection->setFont(fontItemGroupSection);
+                listItemSection->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
             }
 
             for (int iSetting = 0; iSetting < settingCount; ++iSetting) {
@@ -231,12 +254,29 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
                 auto widget = createPropertyEditor(property, nullptr);
                 auto listItemSetting = new QListWidgetItem;
+                listItemSetting->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
                 listItemSetting->setSizeHint(widget->sizeHint());
                 m_ui->listWidget_Settings->addItem(listItemSetting);
                 m_ui->listWidget_Settings->setItemWidget(listItemSetting, widget);
             } // endfor(setting)
         } // endfor(section)
     }
+
+    QObject::connect(
+                m_ui->treeView_GroupSections->selectionModel(), &QItemSelectionModel::currentChanged,
+                [=](const QModelIndex& current) {
+        if (current.isValid()) {
+            const SettingNodeId nodeId = treeModel->data(current, ItemSettingNodeId_Role).toUInt();
+            for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
+                const QListWidgetItem* item = m_ui->listWidget_Settings->item(i);
+                const QVariant variantSettingNodeId = item->data(ItemSettingNodeId_Role);
+                if (variantSettingNodeId.isValid() && variantSettingNodeId.toUInt() == nodeId) {
+                    m_ui->listWidget_Settings->scrollToItem(item, QListWidget::PositionAtTop);
+                    return;
+                }
+            }
+        }
+    });
 
 #if 0
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {

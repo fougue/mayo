@@ -7,7 +7,6 @@
 #pragma once
 
 #include <QtWidgets/QDialog>
-#include <functional>
 
 namespace Mayo {
 
