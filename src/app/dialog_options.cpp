@@ -11,11 +11,11 @@
 #include "../base/property_enumeration.h"
 #include "ui_dialog_options.h"
 #include <QtGui/QStandardItemModel>
-#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QAbstractSpinBox>
 
 namespace Mayo {
 
@@ -66,156 +66,12 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     return model;
 }
 
-QString stringYesNo(bool on)
-{
-    return on ? DialogOptions::tr("Yes") : DialogOptions::tr("No");
-}
-
-QLabel* createPropertyDescriptionLabel(Property* property, QWidget* parentWidget)
-{
-    QLabel* label = new QLabel(parentWidget);
-    if (!property->description().isEmpty()) {
-        label->setText(property->description());
-        label->setMinimumWidth(600);
-        label->setWordWrap(true);
-        label->setAlignment(Qt::AlignLeft);
-    }
-
-//    if (parentWidget && parentWidget->layout())
-//        parentWidget->layout()->addWidget(label);
-
-    return label;
-}
-
-QBoxLayout* createPropertyHBoxLayout(QWidget* widget)
-{
-    auto layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 10);
-    return layout;
-}
-
-QBoxLayout* createPropertyVBoxLayout(QWidget* widget)
-{
-    auto layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 10);
-    return layout;
-}
-
-QWidget* createPropertyEditor(PropertyBool* property, QWidget* parentWidget)
-{
-    auto panel = new QWidget(parentWidget);
-    auto editor = new QCheckBox(panel);
-    auto label = createPropertyDescriptionLabel(property, panel);
-
-    auto panelLayout = createPropertyHBoxLayout(panel);
-    panelLayout->addWidget(editor);
-    panelLayout->addWidget(label);
-    panelLayout->itemAt(0)->setAlignment(Qt::AlignTop);
-    panelLayout->itemAt(1)->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    panelLayout->addSpacerItem(new QSpacerItem(20, 5, QSizePolicy::Expanding));
-
-    editor->setChecked(property->value());
-    if (!property->description().isEmpty())
-        label->setText(property->description());
-    else
-        label->setText(stringYesNo(property->value()));
-
-    QObject::connect(editor, &QCheckBox::toggled, [=](bool on) {
-        property->setValue(on);
-        editor->setChecked(on);
-        if (property->description().isEmpty())
-            label->setText(stringYesNo(on));
-    });
-    return panel;
-}
-
-static QWidget* createPropertyEditor(PropertyInt* property, QWidget* parentWidget)
-{
-    auto panel = new QWidget(parentWidget);
-
-    auto editor = new QSpinBox(panel);
-    editor->setMaximumWidth(150);
-    if (property->constraintsEnabled()) {
-        editor->setRange(property->minimum(), property->maximum());
-        editor->setSingleStep(property->singleStep());
-    }
-
-    auto panelLayout = createPropertyVBoxLayout(panel);
-    panelLayout->addWidget(createPropertyDescriptionLabel(property, panel));
-    panelLayout->addWidget(editor);
-
-    editor->setValue(property->value());
-    QObject::connect(editor, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
-        property->setValue(val);
-    });
-
-    return panel;
-}
-
-QWidget* createPropertyEditor(PropertyEnumeration* property, QWidget* parentWidget)
-{
-    auto panel = new QWidget(parentWidget);
-
-    auto panelLayout = createPropertyVBoxLayout(panel);
-    if (!property->description().isEmpty()) {
-        auto label = new QLabel(property->description(), panel);
-        label->setMinimumWidth(600);
-        label->setWordWrap(true);
-        label->setAlignment(Qt::AlignLeft);
-        panelLayout->addWidget(label);
-        //panelLayout->itemAt(1)->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    }
-
-    auto editor = new QComboBox(panel);
-    editor->setMaximumWidth(250);
-    panelLayout->addWidget(editor);
-
-    const Enumeration* enumDef = property->enumeration();
-    if (!enumDef)
-        return panel;
-
-    for (const Enumeration::Item& enumItem : enumDef->items())
-        editor->addItem(enumItem.name.tr(), enumItem.value);
-
-    editor->setCurrentIndex(editor->findData(property->value()));
-    QObject::connect(editor, qOverload<int>(&QComboBox::activated), [=](int index) {
-        property->setValue(editor->itemData(index).toInt());
-        editor->setCurrentIndex(editor->findData(property->value()));
-    });
-    return panel;
-}
-
-QWidget* createPropertyEditor(Property* property, QWidget* parentWidget)
-{
-    if (!property)
-        return nullptr;
-
-    auto widget = new QWidget(parentWidget);
-    auto labelProperty = new QLabel(QString("<b>%1</b>").arg(property->label()), widget);
-    auto widgetLayout = new QVBoxLayout(widget);
-    widgetLayout->addWidget(labelProperty);
-
-    QWidget* editor = nullptr;
-    const char* propertyTypeName = property->dynTypeName();
-    if (propertyTypeName == PropertyBool::TypeName)
-        editor = createPropertyEditor(static_cast<PropertyBool*>(property), widget);
-    if (propertyTypeName == PropertyInt::TypeName)
-        editor = createPropertyEditor(static_cast<PropertyInt*>(property), widget);
-    if (propertyTypeName == PropertyEnumeration::TypeName)
-        editor = createPropertyEditor(static_cast<PropertyEnumeration*>(property), widget);
-
-    if (editor)
-        widgetLayout->addWidget(editor);
-
-    widgetLayout->setSizeConstraint(QLayout::SetMaximumSize);
-    return widget;
-}
-
 } // namespace
 
 DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     : QDialog(parent),
-      m_ui(new Ui_DialogOptions)
+      m_ui(new Ui_DialogOptions),
+      m_editorFactory(new DefaultPropertyEditorFactory)
 {
     m_ui->setupUi(this);
 
@@ -252,7 +108,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 if (!property->isUserVisible())
                     continue;
 
-                auto widget = createPropertyEditor(property, nullptr);
+                auto widget = this->createEditor(property, nullptr);
                 auto listItemSetting = new QListWidgetItem;
                 listItemSetting->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
                 listItemSetting->setSizeHint(widget->sizeHint());
@@ -278,31 +134,6 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         }
     });
 
-#if 0
-    for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
-        const Settings::GroupIndex indexGroup(iGroup);
-        const QString titleGroup = settings->groupTitle(indexGroup);
-        for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
-            const Settings::SectionIndex indexSection(indexGroup, iSection);
-            const int settingCount = settings->settingCount(indexSection);
-            if (settingCount == 0)
-                continue; // Skip empty section
-
-            const QString titleSection = settings->sectionTitle(indexSection);
-            const QString uiTitleSection =
-                    !settings->isDefaultGroupSection(indexSection) ?
-                        tr("/%1").arg(titleSection) :
-                        QString();
-            WidgetPropertiesEditor::Group* group = m_ui->widgetEditor->addGroup(titleGroup + uiTitleSection);
-            for (int iSetting = 0; iSetting < settingCount; ++iSetting) {
-                Property* property = settings->property(Settings::SettingIndex(indexSection, iSetting));
-                if (property->isUserVisible())
-                    m_ui->widgetEditor->editProperty(property, group);
-            }
-        }
-    }
-#endif
-
     auto btnResetAll = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
     QObject::connect(btnResetAll, &QPushButton::clicked, settings, &Settings::resetAll);
 }
@@ -310,6 +141,62 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 DialogOptions::~DialogOptions()
 {
     delete m_ui;
+}
+
+void DialogOptions::setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory)
+{
+    m_editorFactory = std::move(editorFactory);
+}
+
+QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) const
+{
+    if (!property)
+        return nullptr;
+
+    auto widget = new QWidget(parentWidget);
+    auto labelName = new QLabel(QString("<b>%1</b>").arg(property->label()), widget);
+    auto widgetLayout = new QVBoxLayout(widget);
+    widgetLayout->addWidget(labelName);
+
+    auto panelEditor = new QWidget(widget);
+    widgetLayout->addWidget(panelEditor);
+    {
+        auto panelEditorLayout = new QVBoxLayout(panelEditor);
+        panelEditorLayout->setContentsMargins(0, 0, 0, 10);
+        if (!property->description().isEmpty()) {
+            auto labelDescription = new QLabel(property->description(), panelEditor);
+            labelDescription->setMinimumWidth(600);
+            labelDescription->setWordWrap(true);
+            labelDescription->setAlignment(Qt::AlignLeft);
+            panelEditorLayout->addWidget(labelDescription);
+            //panelLayout->itemAt(1)->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+        }
+
+        auto editor = m_editorFactory->createEditor(property, panelEditor);
+        if (editor) {
+            panelEditorLayout->addWidget(editor);
+            QList<QWidget*> listEditorWidgets = editor->findChildren<QWidget*>();
+            listEditorWidgets.push_back(editor);
+            for (QWidget* editorWidget : listEditorWidgets) {
+                auto comboBox = qobject_cast<QComboBox*>(editorWidget);
+                if (comboBox)
+                    comboBox->setMaximumWidth(250);
+
+                auto lineEdit = qobject_cast<QLineEdit*>(editorWidget);
+                if (lineEdit)
+                    lineEdit->setMaximumWidth(250);
+
+                auto spinBox = qobject_cast<QAbstractSpinBox*>(editorWidget);
+                if (spinBox)
+                    spinBox->setMaximumWidth(150);
+            }
+
+            panelEditorLayout->addWidget(editor);
+        }
+    }
+
+    widgetLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    return widget;
 }
 
 } // namespace Mayo

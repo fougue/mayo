@@ -14,7 +14,6 @@ class QFileInfo;
 namespace Mayo {
 
 class Document;
-class DocumentTreeNodePropertiesProvider;
 class GuiApplication;
 class GuiDocument;
 class WidgetGuiDocument;
