@@ -25,10 +25,15 @@ public:
 
     // Parameters
 
-    VrmlAPI_RepresentationOfShape shapeRepresentation() const { return m_shapeRepresentation; }
-    void setShapeRepresentation(VrmlAPI_RepresentationOfShape rep) { m_shapeRepresentation = rep; }
+    struct Parameters {
+        VrmlAPI_RepresentationOfShape shapeRepresentation = VrmlAPI_BothRepresentation;
+    };
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
 private:
+    class Properties;
+    Parameters m_params;
     std::unique_ptr<VrmlData_Scene> m_scene;
     VrmlAPI_RepresentationOfShape m_shapeRepresentation = VrmlAPI_BothRepresentation;
 };

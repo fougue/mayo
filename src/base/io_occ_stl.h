@@ -37,11 +37,16 @@ public:
 
     // Parameters
     enum class Format { Ascii, Binary };
-    Format targetFormat() const { return m_targetFormat; }
-    void setTargetFormat(Format format) { m_targetFormat = format; }
+
+    struct Parameters {
+        Format format = Format::Binary;
+    };
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
 private:
-    Format m_targetFormat = Format::Binary;
+    class Properties;
+    Parameters m_params;
     TopoDS_Shape m_shape;
     Handle_Poly_Triangulation m_mesh;
 };

@@ -13,6 +13,8 @@
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;
 
+#include <QtCore/QCoreApplication>
+
 namespace Mayo {
 namespace IO {
 
@@ -36,17 +38,17 @@ public:
         Mile
     };
 
-    QString rootPrefix() const;
-    void setRootPrefix(const QString& prefix);
-
-    LengthUnit systemLengthUnit() const;
-    void setSystemLengthUnit(LengthUnit len);
-
-    RWMesh_CoordinateSystem systemCoordinatesConverter() const;
-    void setSystemCoordinatesConverter(RWMesh_CoordinateSystem system);
+    struct Parameters {
+        QString rootPrefix;
+        LengthUnit systemLengthUnit = LengthUnit::Undefined;
+        RWMesh_CoordinateSystem systemCoordinatesConverter = RWMesh_CoordinateSystem_Undefined;
+    };
+    virtual Parameters& parameters() = 0;
+    virtual const Parameters& constParameters() const = 0;
 
 protected:
     OccBaseMeshReader(RWMesh_CafReader& reader);
+    virtual void applyParameters();
 
 private:
     QString m_filepath;
@@ -55,9 +57,14 @@ private:
     RWMesh_CafReader& m_reader;
 };
 
-// Common parameters for OccBaseMeshReader
-struct OccBaseMeshReaderParameters : public PropertyGroup {
-    OccBaseMeshReaderParameters(PropertyGroup* parentGroup);
+// Common properties for OccBaseMeshReader
+class OccBaseMeshReaderProperties : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
+public:
+    OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
+
+    void restoreDefaults() override;
 
     using LengthUnit = OccBaseMeshReader::LengthUnit;
     static double lengthUnitFactor(LengthUnit lenUnit);

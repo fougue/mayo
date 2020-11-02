@@ -17,17 +17,22 @@
 namespace Mayo {
 namespace IO {
 
-OccBaseMeshReaderParameters::OccBaseMeshReaderParameters(PropertyGroup* parentGroup)
+OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGroup)
     : PropertyGroup(parentGroup),
-      rootPrefix(this, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "rootPrefix")),
-      systemCoordinatesConverter(
-          this, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "systemCoordinatesConverter"), &enumCoordinateSystem()),
-      systemLengthUnit(
-          this, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "systemLengthUnit"), &enumLengthUnit())
+      rootPrefix(this, textId("rootPrefix")),
+      systemCoordinatesConverter(this, textId("systemCoordinatesConverter"), &enumCoordinateSystem()),
+      systemLengthUnit(this, textId("systemLengthUnit"), &enumLengthUnit())
 {
 }
 
-double OccBaseMeshReaderParameters::lengthUnitFactor(OccBaseMeshReaderParameters::LengthUnit lenUnit)
+void OccBaseMeshReaderProperties::restoreDefaults()
+{
+    this->rootPrefix.setValue(QString());
+    this->systemCoordinatesConverter.setValue(RWMesh_CoordinateSystem_Undefined);
+    this->systemLengthUnit.setValue(int(LengthUnit::Undefined));
+}
+
+double OccBaseMeshReaderProperties::lengthUnitFactor(OccBaseMeshReaderProperties::LengthUnit lenUnit)
 {
     switch (lenUnit) {
     case LengthUnit::Undefined: return -1;
@@ -44,14 +49,14 @@ double OccBaseMeshReaderParameters::lengthUnitFactor(OccBaseMeshReaderParameters
     return -1;
 }
 
-OccBaseMeshReaderParameters::LengthUnit OccBaseMeshReaderParameters::lengthUnit(double factor)
+OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(double factor)
 {
     if (factor < 0)
         return LengthUnit::Undefined;
 
-    for (const Enumeration::Item& enumItem : OccBaseMeshReaderParameters::enumLengthUnit().items()) {
+    for (const Enumeration::Item& enumItem : OccBaseMeshReaderProperties::enumLengthUnit().items()) {
         const auto lenUnit = static_cast<LengthUnit>(enumItem.value);
-        const double lenUnitFactor = OccBaseMeshReaderParameters::lengthUnitFactor(lenUnit);
+        const double lenUnitFactor = OccBaseMeshReaderProperties::lengthUnitFactor(lenUnit);
         if (factor == lenUnitFactor)
             return lenUnit;
     }
@@ -59,29 +64,29 @@ OccBaseMeshReaderParameters::LengthUnit OccBaseMeshReaderParameters::lengthUnit(
     return LengthUnit::Undefined;
 }
 
-const Enumeration& OccBaseMeshReaderParameters::enumLengthUnit()
+const Enumeration& OccBaseMeshReaderProperties::enumLengthUnit()
 {
     using LengthUnit = LengthUnit;
     static const Enumeration enumeration = {
-        { int(LengthUnit::Undefined), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitUndefined") },
-        { int(LengthUnit::Micrometer), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitMicrometer") },
-        { int(LengthUnit::Millimeter), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitMillimeter") },
-        { int(LengthUnit::Centimeter), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitCentimeter") },
-        { int(LengthUnit::Meter), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitMeter") },
-        { int(LengthUnit::Kilometer), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitKilometer") },
-        { int(LengthUnit::Inch), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitInch") },
-        { int(LengthUnit::Foot), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitFoot") },
-        { int(LengthUnit::Mile), MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "UnitMile") }
+        { int(LengthUnit::Undefined), textId("UnitUndefined") },
+        { int(LengthUnit::Micrometer), textId("UnitMicrometer") },
+        { int(LengthUnit::Millimeter), textId("UnitMillimeter") },
+        { int(LengthUnit::Centimeter), textId("UnitCentimeter") },
+        { int(LengthUnit::Meter), textId("UnitMeter") },
+        { int(LengthUnit::Kilometer), textId("UnitKilometer") },
+        { int(LengthUnit::Inch), textId("UnitInch") },
+        { int(LengthUnit::Foot), textId("UnitFoot") },
+        { int(LengthUnit::Mile), textId("UnitMile") }
     };
     return enumeration;
 }
 
-const Enumeration& OccBaseMeshReaderParameters::enumCoordinateSystem()
+const Enumeration& OccBaseMeshReaderProperties::enumCoordinateSystem()
 {
     static const Enumeration enumeration = {
-        { RWMesh_CoordinateSystem_Undefined, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "SystemUndefined") },
-        { RWMesh_CoordinateSystem_Zup, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "SystemPosZUp") },
-        { RWMesh_CoordinateSystem_Yup, MAYO_TEXT_ID("Mayo::IO::OccBaseMeshReader", "SystemPosYUp") }
+        { RWMesh_CoordinateSystem_Undefined, textId("SystemUndefined") },
+        { RWMesh_CoordinateSystem_Zup, textId("SystemPosZUp") },
+        { RWMesh_CoordinateSystem_Yup, textId("SystemPosYUp") }
     };
     return enumeration;
 }
@@ -95,6 +100,7 @@ bool OccBaseMeshReader::readFile(const QString& filepath, TaskProgress* progress
 
 bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
+    this->applyParameters();
     m_reader.SetDocument(doc);
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     XCafScopeImport import(doc);
@@ -103,51 +109,27 @@ bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
     return okPerform;
 }
 
-void OccBaseMeshReader::applyProperties(const PropertyGroup *params)
+void OccBaseMeshReader::applyProperties(const PropertyGroup* params)
 {
-    auto ptr = dynamic_cast<const OccBaseMeshReaderParameters*>(params);
+    auto ptr = dynamic_cast<const OccBaseMeshReaderProperties*>(params);
     if (ptr) {
-        this->setSystemCoordinatesConverter(
-                    ptr->systemCoordinatesConverter.valueAs<RWMesh_CoordinateSystem>());
-        this->setSystemLengthUnit(ptr->systemLengthUnit.valueAs<LengthUnit>());
-        this->setRootPrefix(ptr->rootPrefix.value());
+        this->parameters().systemCoordinatesConverter =
+                ptr->systemCoordinatesConverter.valueAs<RWMesh_CoordinateSystem>();
+        this->parameters().systemLengthUnit = ptr->systemLengthUnit.valueAs<LengthUnit>();
+        this->parameters().rootPrefix = ptr->rootPrefix.value();
     }
-}
-
-QString OccBaseMeshReader::rootPrefix() const
-{
-    return occ::QtUtils::fromLatin1ToQString(m_reader.RootPrefix());
-}
-
-void OccBaseMeshReader::setRootPrefix(const QString& prefix)
-{
-    m_reader.SetRootPrefix(occ::QtUtils::toOccUtf8String(prefix));
-}
-
-OccBaseMeshReader::LengthUnit OccBaseMeshReader::systemLengthUnit() const
-{
-    return OccBaseMeshReaderParameters::lengthUnit(m_reader.SystemLengthUnit());
-}
-
-void OccBaseMeshReader::setSystemLengthUnit(LengthUnit len)
-{
-    m_reader.SetSystemLengthUnit(OccBaseMeshReaderParameters::lengthUnitFactor(len));
-}
-
-RWMesh_CoordinateSystem OccBaseMeshReader::systemCoordinatesConverter() const
-{
-    return m_systemCoordsConverter;
-}
-
-void OccBaseMeshReader::setSystemCoordinatesConverter(RWMesh_CoordinateSystem system)
-{
-    m_systemCoordsConverter = system;
-    m_reader.SetSystemCoordinateSystem(system);
 }
 
 OccBaseMeshReader::OccBaseMeshReader(RWMesh_CafReader& reader)
     : m_reader(reader)
 {
+}
+
+void OccBaseMeshReader::applyParameters()
+{
+    m_reader.SetRootPrefix(occ::QtUtils::toOccUtf8String(this->constParameters().rootPrefix));
+    m_reader.SetSystemLengthUnit(OccBaseMeshReaderProperties::lengthUnitFactor(this->constParameters().systemLengthUnit));
+    m_reader.SetSystemCoordinateSystem(this->constParameters().systemCoordinatesConverter);
 }
 
 } // namespace IO

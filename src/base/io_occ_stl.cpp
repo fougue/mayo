@@ -47,18 +47,25 @@ static TopoDS_Shape asShape(const DocumentPtr& doc)
     return shape;
 }
 
-struct StlWriterParameters : public PropertyGroup {
-    StlWriterParameters(PropertyGroup* parentGroup)
+} // namespace
+
+class OccStlWriter::Properties : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStlWriter_Properties)
+public:
+    Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          targetFormat(this, MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "targetFormat"), &enumFormat())
+          targetFormat(this, textId("targetFormat"), &enumFormat())
     {
-        this->targetFormat.setValue(int(OccStlWriter::Format::Binary));
+    }
+
+    void restoreDefaults() override {
+        this->targetFormat.setValue(int(Format::Binary));
     }
 
     static const Enumeration& enumFormat() {
         static const Enumeration values = {
-            { int(OccStlWriter::Format::Ascii), MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "StlAscii") },
-            { int(OccStlWriter::Format::Binary), MAYO_TEXT_ID("Mayo::IO::OccStlWriter", "StlBinary") }
+            { int(OccStlWriter::Format::Ascii), textId("Ascii") },
+            { int(OccStlWriter::Format::Binary), textId("Binary") }
         };
         return values;
     }
@@ -66,7 +73,6 @@ struct StlWriterParameters : public PropertyGroup {
     PropertyEnumeration targetFormat;
 };
 
-} // namespace
 
 bool OccStlReader::readFile(const QString& filepath, TaskProgress* progress)
 {
@@ -120,14 +126,14 @@ bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
         StlAPI_Writer writer;
-        writer.ASCIIMode() = m_targetFormat == Format::Ascii;
+        writer.ASCIIMode() = m_params.format == Format::Ascii;
         return writer.Write(m_shape, filepath.toLocal8Bit().constData());
     }
     else if (!m_mesh.IsNull()) {
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
         const QByteArray filepathLocal8b = filepath.toLocal8Bit();
         const OSD_Path osdFilepath(filepathLocal8b.constData());
-        if (m_targetFormat == Format::Ascii)
+        if (m_params.format == Format::Ascii)
             return RWStl::WriteAscii(m_mesh, osdFilepath, indicator);
         else
             return RWStl::WriteBinary(m_mesh, osdFilepath, indicator);
@@ -138,14 +144,14 @@ bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
 
 std::unique_ptr<PropertyGroup> OccStlWriter::createProperties(PropertyGroup* parentGroup)
 {
-    return std::make_unique<StlWriterParameters>(parentGroup);
+    return std::make_unique<Properties>(parentGroup);
 }
 
 void OccStlWriter::applyProperties(const PropertyGroup* params)
 {
-    auto ptr = dynamic_cast<const StlWriterParameters*>(params);
+    auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr)
-        this->setTargetFormat(ptr->targetFormat.valueAs<OccStlWriter::Format>());
+        m_params.format = ptr->targetFormat.valueAs<OccStlWriter::Format>();
 }
 
 } // namespace IO

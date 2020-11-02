@@ -10,19 +10,24 @@
 namespace Mayo {
 namespace IO {
 
-namespace {
-
-struct ObjReaderParameters : public OccBaseMeshReaderParameters {
-    ObjReaderParameters(PropertyGroup* parentGroup)
-        : OccBaseMeshReaderParameters(parentGroup),
-          singlePrecisionVertexCoords(this, MAYO_TEXT_ID("Mayo::IO::OccObjReader", "singlePrecisionVertexCoords"))
+class OccObjReader::Properties : public OccBaseMeshReaderProperties {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader_Properties)
+public:
+    Properties(PropertyGroup* parentGroup)
+        : OccBaseMeshReaderProperties(parentGroup),
+          singlePrecisionVertexCoords(this, textId("singlePrecisionVertexCoords"))
     {
+        this->singlePrecisionVertexCoords.setDescription(
+                    textId("Single precision flag for reading vertex data(coordinates)").tr());
+    }
+
+    void restoreDefaults() override {
+        OccBaseMeshReaderProperties::restoreDefaults();
+        this->singlePrecisionVertexCoords.setValue(false);
     }
 
     PropertyBool singlePrecisionVertexCoords;
 };
-
-} // namespace
 
 OccObjReader::OccObjReader()
     : OccBaseMeshReader(m_reader)
@@ -31,16 +36,22 @@ OccObjReader::OccObjReader()
 
 std::unique_ptr<PropertyGroup> OccObjReader::createProperties(PropertyGroup* parentGroup)
 {
-    return std::make_unique<ObjReaderParameters>(parentGroup);
+    return std::make_unique<Properties>(parentGroup);
 }
 
 void OccObjReader::applyProperties(const PropertyGroup* params)
 {
     OccBaseMeshReader::applyProperties(params);
-    auto ptr = dynamic_cast<const ObjReaderParameters*>(params);
+    auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        this->setSinglePrecisionVertexCoords(ptr->singlePrecisionVertexCoords.value());
+        m_params.singlePrecisionVertexCoords = ptr->singlePrecisionVertexCoords.value();
     }
+}
+
+void OccObjReader::applyParameters()
+{
+    OccBaseMeshReader::applyParameters();
+    m_reader.SetSinglePrecision(m_params.singlePrecisionVertexCoords);
 }
 
 } // namespace IO

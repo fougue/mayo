@@ -8,7 +8,6 @@
 
 #include "io_reader.h"
 #include "io_writer.h"
-#include <QtCore/QObject>
 #include <NCollection_Vector.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
@@ -62,16 +61,13 @@ public:
         bool readShapeAspect = true;
         Encoding encoding = Encoding::UTF8;
     };
-    const Parameters& parameters() const { return m_params; }
-    void setParameters(const Parameters& params) { m_params = params; }
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;
 
 private:
-    Q_GADGET
-    Q_ENUM(Encoding)
-
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
@@ -111,18 +107,13 @@ public:
         FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
         bool writeParametricCurves = true;
     };
-    const Parameters& parameters() const { return m_params; }
-    void setParameters(const Parameters& params) { m_params = params; }
+    Parameters& parameters() { return m_params; }
+    const Parameters& constParameters() const { return m_params; }
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;
 
 private:
-    Q_GADGET
-    Q_ENUM(Schema)
-    Q_ENUM(AssemblyMode)
-    Q_ENUM(FreeVertexMode)
-
     void changeStaticVariables(OccStaticVariablesRollback* rollback);
 
     class Properties;
