@@ -46,6 +46,9 @@ public:
     template<typename QENUM>
     static Enumeration fromQENUM(const QByteArray& textIdContext);
 
+    template<typename ENUM>
+    static Enumeration fromEnum(const QByteArray& textIdContext);
+
 private:
     std::vector<Item> m_vecItem;
 };
@@ -83,8 +86,6 @@ private:
 
 // -- Implementation
 
-#include <QtCore/QMetaEnum>
-
 namespace Mayo {
 
 template<typename VALUE> void Enumeration::addItem(
@@ -99,24 +100,6 @@ template<typename VALUE> void Enumeration::setDescription(VALUE value, const QSt
     const int index = this->findIndex(Enumeration::Value(value));
     if (index != -1)
         m_vecItem.at(index).description = descr;
-}
-
-template<typename QENUM>
-Enumeration Enumeration::fromQENUM(const QByteArray& textIdContext)
-{
-    auto fnQByteArrayFrowRawData = [](const char* str) {
-        return QByteArray::fromRawData(str, int(std::strlen(str)));
-    };
-
-    Enumeration enumObject;
-    const QMetaEnum metaEnum = QMetaEnum::fromType<QENUM>();
-    for (int i = 0; i < metaEnum.keyCount(); ++i) {
-        const char* strKey = metaEnum.key(i);
-        const TextId keyTextId = { textIdContext, fnQByteArrayFrowRawData(strKey) };
-        enumObject.addItem(metaEnum.value(i), keyTextId);
-    }
-
-    return enumObject;
 }
 
 template<typename T> T PropertyEnumeration::valueAs() const {
