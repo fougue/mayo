@@ -25,9 +25,11 @@ public:
 
 private:
     QWidget* createEditor(Property* property, QWidget* parentWidget) const;
+    void restoreDefaults();
 
     class Ui_DialogOptions* m_ui = nullptr;
     std::unique_ptr<PropertyEditorFactory> m_editorFactory;
+    Settings* m_settings = nullptr;
 };
 
 } // namespace Mayo

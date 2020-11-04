@@ -208,15 +208,17 @@ struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
     }
 
     void syncWithProperty() override {
-        auto fnTrCoord = [](double coord){
+        auto fnSetEditorCoord = [](QDoubleSpinBox* editor, double coord){
             auto appModule = AppModule::get(Application::instance());
             auto unitSchema = appModule->unitSystemSchema.valueAs<UnitSystem::Schema>();
-            return UnitSystem::translate(unitSchema, coord * Quantity_Millimeter);
+            auto trRes = UnitSystem::translate(unitSchema, coord * Quantity_Millimeter);
+            QSignalBlocker sigBlock(editor); Q_UNUSED(sigBlock);
+            editor->setValue(trRes.value);
         };
 
-        m_xCoordEditor->setValue(fnTrCoord(m_property->value().X()));
-        m_yCoordEditor->setValue(fnTrCoord(m_property->value().Y()));
-        m_zCoordEditor->setValue(fnTrCoord(m_property->value().Z()));
+        fnSetEditorCoord(m_xCoordEditor, m_property->value().X());
+        fnSetEditorCoord(m_yCoordEditor, m_property->value().Y());
+        fnSetEditorCoord(m_zCoordEditor, m_property->value().Z());
     }
 
     static QDoubleSpinBox* createCoordEditor(

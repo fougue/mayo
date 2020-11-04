@@ -66,12 +66,15 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     return model;
 }
 
+static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
+
 } // namespace
 
 DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogOptions),
-      m_editorFactory(new DefaultPropertyEditorFactory)
+      m_editorFactory(new DefaultPropertyEditorFactory),
+      m_settings(settings)
 {
     m_ui->setupUi(this);
 
@@ -135,7 +138,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     });
 
     auto btnResetAll = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnResetAll, &QPushButton::clicked, settings, &Settings::resetAll);
+    QObject::connect(btnResetAll, &QPushButton::clicked, this, &DialogOptions::restoreDefaults);
 }
 
 DialogOptions::~DialogOptions()
@@ -167,6 +170,12 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
             auto labelDescription = new QLabel(property->description(), panelEditor);
             labelDescription->setMinimumWidth(600);
             labelDescription->setWordWrap(true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+            labelDescription->setTextFormat(Qt::MarkdownText);
+#else
+            // TODO Convert property description from markdown to HTML
+            labelDescription->setTextFormat(Qt::RichText);
+#endif
             labelDescription->setAlignment(Qt::AlignLeft);
             panelEditorLayout->addWidget(labelDescription);
             //panelLayout->itemAt(1)->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -174,7 +183,7 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
 
         auto editor = m_editorFactory->createEditor(property, panelEditor);
         if (editor) {
-            editor->setObjectName("__Mayo_propertyEditor");
+            editor->setObjectName(reservedPropertyEditorName);
             panelEditorLayout->addWidget(editor);
             for (QWidget* childWidget : panelEditor->findChildren<QWidget*>()) {
                 if (qobject_cast<QComboBox*>(childWidget) || qobject_cast<QLineEdit*>(childWidget))
@@ -190,6 +199,19 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
 
     widgetLayout->setSizeConstraint(QLayout::SetMaximumSize);
     return widget;
+}
+
+void DialogOptions::restoreDefaults()
+{
+    m_settings->resetAll();
+    for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
+        QListWidgetItem* listItem = m_ui->listWidget_Settings->item(i);
+        QWidget* itemWidget = m_ui->listWidget_Settings->itemWidget(listItem);
+        if (itemWidget) {
+            auto editorWidget = itemWidget->findChild<QWidget*>(reservedPropertyEditorName);
+            m_editorFactory->syncEditorWithProperty(editorWidget);
+        }
+    }
 }
 
 } // namespace Mayo
