@@ -174,21 +174,14 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
 
         auto editor = m_editorFactory->createEditor(property, panelEditor);
         if (editor) {
+            editor->setObjectName("__Mayo_propertyEditor");
             panelEditorLayout->addWidget(editor);
-            QList<QWidget*> listEditorWidgets = editor->findChildren<QWidget*>();
-            listEditorWidgets.push_back(editor);
-            for (QWidget* editorWidget : listEditorWidgets) {
-                auto comboBox = qobject_cast<QComboBox*>(editorWidget);
-                if (comboBox)
-                    comboBox->setMaximumWidth(250);
+            for (QWidget* childWidget : panelEditor->findChildren<QWidget*>()) {
+                if (qobject_cast<QComboBox*>(childWidget) || qobject_cast<QLineEdit*>(childWidget))
+                    childWidget->setMaximumWidth(250);
 
-                auto lineEdit = qobject_cast<QLineEdit*>(editorWidget);
-                if (lineEdit)
-                    lineEdit->setMaximumWidth(250);
-
-                auto spinBox = qobject_cast<QAbstractSpinBox*>(editorWidget);
-                if (spinBox)
-                    spinBox->setMaximumWidth(150);
+                if (qobject_cast<QAbstractSpinBox*>(childWidget))
+                    childWidget->setMaximumWidth(150);
             }
 
             panelEditorLayout->addWidget(editor);

@@ -45,242 +45,285 @@ static QString stringYesNo(bool on)
     return on ? PropertyEditorI18N::tr("Yes") : PropertyEditorI18N::tr("No");
 }
 
-static bool handlePropertyValidationError(
-        const Result<void>& resultValidation,
-        QWidget* propertyEditor,
-        const std::function<void()>& fnCallbackError = nullptr)
-{
-    if (!resultValidation) {
-        qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                    propertyEditor->parentWidget(),
-                    PropertyEditorI18N::tr("Error"),
-                    resultValidation.errorText());
-        QSignalBlocker sigBlock(propertyEditor); Q_UNUSED(sigBlock);
-        if (fnCallbackError)
-            fnCallbackError();
+struct InterfacePropertyEditor {
+    virtual void syncWithProperty() = 0;
+};
+
+struct PropertyBoolEditor : public InterfacePropertyEditor, public QCheckBox {
+    PropertyBoolEditor(PropertyBool* property, QWidget* parentWidget)
+        : QCheckBox(parentWidget), m_property(property)
+    {
+        QObject::connect(this, &QCheckBox::toggled, [=](bool on) {
+            property->setValue(on);
+            this->setText(stringYesNo(on));
+        });
     }
 
-    return resultValidation.valid();
-}
+    void syncWithProperty() override {
+        this->setText(stringYesNo(m_property->value()));
+        this->setChecked(m_property->value());
+    }
 
-static QWidget* createPropertyEditor(BasePropertyQuantity* property, QWidget* parentWidget)
-{
-    auto editor = new QDoubleSpinBox(parentWidget);
-    const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(property);
-    editor->setSuffix(QString::fromUtf8(trRes.strUnit));
-    editor->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
-    const double rangeMin =
-            property->constraintsEnabled() ?
-                property->minimum() : std::numeric_limits<double>::min();
-    const double rangeMax =
-            property->constraintsEnabled() ?
-                property->maximum() : std::numeric_limits<double>::max();
-    editor->setRange(rangeMin, rangeMax);
-    editor->setValue(trRes.value);
-    QObject::connect(editor, &QDoubleSpinBox::editingFinished, [=]{
-        double value = editor->value();
-        const double f = trRes.factor;
-        value = qFuzzyCompare(f, 1.) ? value : value * f;
-        if (!qFuzzyCompare(property->quantityValue(), value)) {
-            const Result result = property->setQuantityValue(value);
-            handlePropertyValidationError(result, editor, [=]{
-                editor->setValue(trRes.value);
+    PropertyBool* m_property;
+};
+
+struct PropertyIntEditor : public InterfacePropertyEditor, public QSpinBox {
+    PropertyIntEditor(PropertyInt* property, QWidget* parentWidget)
+        : QSpinBox(parentWidget), m_property(property)
+    {
+        if (property->constraintsEnabled()) {
+            this->setRange(property->minimum(), property->maximum());
+            this->setSingleStep(property->singleStep());
+        }
+
+        QObject::connect(this, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
+            property->setValue(val);
+        });
+    }
+
+    void syncWithProperty() override {
+        this->setValue(m_property->value());
+    }
+
+    PropertyInt* m_property;
+};
+
+struct PropertyDoubleEditor : public InterfacePropertyEditor, public QDoubleSpinBox {
+    PropertyDoubleEditor(PropertyDouble* property, QWidget* parentWidget)
+        : QDoubleSpinBox(parentWidget), m_property(property)
+    {
+        if (property->constraintsEnabled()) {
+            this->setRange(property->minimum(), property->maximum());
+            this->setSingleStep(property->singleStep());
+        }
+
+        this->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
+        QObject::connect(this, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double val) {
+            property->setValue(val);
+        });
+    }
+
+    void syncWithProperty() override {
+        this->setValue(m_property->value());
+    }
+
+    PropertyDouble* m_property;
+};
+
+struct PropertyQStringEditor : public InterfacePropertyEditor, public QLineEdit {
+    PropertyQStringEditor(PropertyQString* property, QWidget* parentWidget)
+        : QLineEdit(parentWidget), m_property(property)
+    {
+        QObject::connect(this, &QLineEdit::textChanged, [=](const QString& text) {
+            property->setValue(text);
+        });
+    }
+
+    void syncWithProperty() override {
+        this->setText(m_property->value());
+    }
+
+    PropertyQString* m_property;
+};
+
+struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QComboBox {
+    PropertyEnumerationEditor(PropertyEnumeration* property, QWidget* parentWidget)
+        : QComboBox(parentWidget), m_property(property)
+    {
+        const Enumeration* enumDef = property->enumeration();
+        if (enumDef) {
+            for (const Enumeration::Item& enumItem : enumDef->items())
+                this->addItem(enumItem.name.tr(), enumItem.value);
+
+            QObject::connect(this, qOverload<int>(&QComboBox::activated), [=](int index) {
+                property->setValue(this->itemData(index).toInt());
             });
         }
-    });
-    return editor;
-}
+    }
 
-static QWidget* createPropertyEditor(PropertyBool* property, QWidget* parentWidget)
-{
-    auto editor = new QCheckBox(parentWidget);
-    editor->setText(stringYesNo(property->value()));
-    editor->setChecked(property->value());
-    QObject::connect(editor, &QCheckBox::toggled, [=](bool on) {
-        const Result<void> result = property->setValue(on);
-        handlePropertyValidationError(result, editor, [=]{
-            editor->setChecked(property->value());
+    void syncWithProperty() override {
+        this->setCurrentIndex(this->findData(m_property->value()));
+    }
+
+    PropertyEnumeration* m_property;
+};
+
+struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
+    PropertyOccColorEditor(PropertyOccColor* property, QWidget* parentWidget)
+        : QWidget(parentWidget), m_property(property)
+    {
+        QWidget* frame = this;
+        auto frameLayout = new QHBoxLayout(frame);
+        frameLayout->setContentsMargins(0, 0, 0, 0);
+
+        m_labelColor = new QLabel(frame);
+        m_labelRgb = new QLabel(frame);
+        auto btnColor = new QToolButton(frame);
+        btnColor->setText("...");
+        btnColor->setToolTip(PropertyEditorI18N::tr("Choose color ..."));
+
+        QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
+            auto dlg = new QColorDialog(frame);
+            dlg->setCurrentColor(occ::QtUtils::toQColor(property->value()));
+            QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
+                property->setValue(occ::QtUtils::toOccColor(c));
+                this->syncWithProperty();
+            });
+            qtgui::QWidgetUtils::asyncDialogExec(dlg);
         });
-        editor->setText(stringYesNo(property->value()));
-    });
-    return editor;
-}
 
-static QWidget* createPropertyEditor(PropertyInt* property, QWidget* parentWidget)
-{
-    auto editor = new QSpinBox(parentWidget);
-    if (property->constraintsEnabled()) {
-        editor->setRange(property->minimum(), property->maximum());
-        editor->setSingleStep(property->singleStep());
+        frameLayout->addWidget(m_labelColor);
+        frameLayout->addWidget(m_labelRgb);
+        frameLayout->addWidget(btnColor);
+        frameLayout->addWidget(hSpacerWidget(frame));
     }
 
-    editor->setValue(property->value());
-    QObject::connect(editor, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
-        const Result<void> result = property->setValue(val);
-        handlePropertyValidationError(result, editor, [=]{ editor->setValue(val); });
-    });
-    return editor;
-}
-
-static QWidget* createPropertyEditor(PropertyDouble* property, QWidget* parentWidget)
-{
-    auto editor = new QDoubleSpinBox(parentWidget);
-    if (property->constraintsEnabled()) {
-        editor->setRange(property->minimum(), property->maximum());
-        editor->setSingleStep(property->singleStep());
+    void syncWithProperty() override {
+        const QColor qtColor = occ::QtUtils::toQColor(m_property->value());
+        m_labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(qtColor));
+        m_labelRgb->setText(StringUtils::text(m_property->value()));
     }
-    editor->setValue(property->value());
-    editor->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
-    QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double val) {
-        const Result<void> result = property->setValue(val);
-        handlePropertyValidationError(result, editor, [=]{ editor->setValue(val); });
-    });
-    return editor;
-}
 
-static QWidget* createPropertyEditor(PropertyQString* property, QWidget* parentWidget)
-{
-    auto editor = new QLineEdit(parentWidget);
-    editor->setText(property->value());
-    QObject::connect(editor, &QLineEdit::textChanged, [=](const QString& text) {
-        const Result<void> result = property->setValue(text);
-        handlePropertyValidationError(result, editor, [=]{ editor->setText(text); });
-    });
-    return editor;
-}
+    PropertyOccColor* m_property;
+    QLabel* m_labelColor = nullptr;
+    QLabel* m_labelRgb = nullptr;
+};
 
-static QWidget* createPropertyEditor(PropertyEnumeration* property, QWidget* parentWidget)
-{
-    auto editor = new QComboBox(parentWidget);
-    const Enumeration* enumDef = property->enumeration();
-    if (!enumDef)
+struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
+    PropertyOccPntEditor(PropertyOccPnt* property, QWidget* parentWidget)
+        : QWidget(parentWidget), m_property(property)
+    {
+        QWidget* frame = this;
+        auto frameLayout = new QHBoxLayout(frame);
+        frameLayout->setContentsMargins(0, 0, 0, 0);
+        m_xCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetX);
+        m_yCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetY);
+        m_zCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetZ);
+        frameLayout->addWidget(new QLabel("X", frame));
+        frameLayout->addWidget(m_xCoordEditor);
+        frameLayout->addWidget(new QLabel("Y", frame));
+        frameLayout->addWidget(m_yCoordEditor);
+        frameLayout->addWidget(new QLabel("Z", frame));
+        frameLayout->addWidget(m_zCoordEditor);
+    }
+
+    void syncWithProperty() override {
+        auto fnTrCoord = [](double coord){
+            auto appModule = AppModule::get(Application::instance());
+            auto unitSchema = appModule->unitSystemSchema.valueAs<UnitSystem::Schema>();
+            return UnitSystem::translate(unitSchema, coord * Quantity_Millimeter);
+        };
+
+        m_xCoordEditor->setValue(fnTrCoord(m_property->value().X()));
+        m_yCoordEditor->setValue(fnTrCoord(m_property->value().Y()));
+        m_zCoordEditor->setValue(fnTrCoord(m_property->value().Z()));
+    }
+
+    static QDoubleSpinBox* createCoordEditor(
+            QWidget* parentWidget,
+            PropertyOccPnt* property,
+            void (gp_Pnt::*funcSetCoord)(double))
+    {
+        auto editor = new QDoubleSpinBox(parentWidget);
+        auto appModule = AppModule::get(Application::instance());
+        auto unitSchema = appModule->unitSystemSchema.valueAs<UnitSystem::Schema>();
+        auto trRes = UnitSystem::translate(unitSchema, 1., Unit::Length);
+        //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
+        editor->setDecimals(appModule->unitSystemDecimals.value());
+        editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
+        editor->setRange(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
+        QSizePolicy sp = editor->sizePolicy();
+        sp.setHorizontalPolicy(QSizePolicy::Expanding);
+        editor->setSizePolicy(sp);
+        editor->setMinimumWidth(25);
+        QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double value) {
+            const double f = trRes.factor;
+            value = qFuzzyCompare(f, 1.) ? value : value * f;
+            gp_Pnt pnt = property->value();
+            (pnt.*funcSetCoord)(value);
+            property->setValue(pnt);
+        });
         return editor;
+    }
 
-    for (const Enumeration::Item& enumItem : enumDef->items())
-        editor->addItem(enumItem.name.tr(), enumItem.value);
+    PropertyOccPnt* m_property;
+    QDoubleSpinBox* m_xCoordEditor = nullptr;
+    QDoubleSpinBox* m_yCoordEditor = nullptr;
+    QDoubleSpinBox* m_zCoordEditor = nullptr;
+};
 
-    editor->setCurrentIndex(editor->findData(property->value()));
-    QObject::connect(editor, qOverload<int>(&QComboBox::activated), [=](int index) {
-        const Result<void> result = property->setValue(editor->itemData(index).toInt());
-        const int indexComboBox = editor->findData(property->value());
-        handlePropertyValidationError(result, editor, [=]{ editor->setCurrentIndex(indexComboBox); });
-    });
-    return editor;
-}
-
-static QWidget* createPropertyEditor(PropertyOccColor* property, QWidget* parentWidget)
-{
-    auto frame = new QWidget(parentWidget);
-    auto frameLayout = new QHBoxLayout(frame);
-    frameLayout->setContentsMargins(0, 0, 0, 0);
-
-    auto labelColor = new QLabel(frame);
-    const QColor inputColor = occ::QtUtils::toQColor(property->value());
-    labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(inputColor));
-
-    auto labelRgb = new QLabel(frame);
-    labelRgb->setText(StringUtils::text(property->value()));
-
-    auto btnColor = new QToolButton(frame);
-    btnColor->setText("...");
-    btnColor->setToolTip(PropertyEditorI18N::tr("Choose color ..."));
-    QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
-        auto dlg = new QColorDialog(frame);
-        dlg->setCurrentColor(inputColor);
-        QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
-            property->setValue(occ::QtUtils::toOccColor(c));
-            labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(c));
+struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSpinBox {
+    PropertyQuantityEditor(BasePropertyQuantity* property, QWidget* parentWidget)
+        : QDoubleSpinBox(parentWidget), m_property(property)
+    {
+        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(property);
+        this->setSuffix(QString::fromUtf8(trRes.strUnit));
+        this->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
+        const double rangeMin =
+                property->constraintsEnabled() ?
+                    property->minimum() : std::numeric_limits<double>::min();
+        const double rangeMax =
+                property->constraintsEnabled() ?
+                    property->maximum() : std::numeric_limits<double>::max();
+        this->setRange(rangeMin, rangeMax);
+        QObject::connect(this, &QDoubleSpinBox::editingFinished, [=]{
+            double value = this->value();
+            const double f = trRes.factor;
+            value = qFuzzyCompare(f, 1.) ? value : value * f;
+            if (!qFuzzyCompare(property->quantityValue(), value))
+                property->setQuantityValue(value);
         });
-        qtgui::QWidgetUtils::asyncDialogExec(dlg);
-    });
+    }
 
-    frameLayout->addWidget(labelColor);
-    frameLayout->addWidget(labelRgb);
-    frameLayout->addWidget(btnColor);
-    frameLayout->addWidget(hSpacerWidget(frame));
-    return frame;
-}
+    void syncWithProperty() override {
+        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(m_property);
+        this->setValue(trRes.value);
+    }
 
-static QDoubleSpinBox* createOccPntCoordEditor(
-        QWidget* parentWidget,
-        PropertyOccPnt* property,
-        double (gp_Pnt::*funcGetCoord)() const,
-        void (gp_Pnt::*funcSetCoord)(double))
-{
-    auto editor = new QDoubleSpinBox(parentWidget);
-    const QuantityLength lenCoord = ((property->value()).*funcGetCoord)() * Quantity_Millimeter;
-    const UnitSystem::TranslateResult trRes =
-            UnitSystem::translate(
-                AppModule::get(Application::instance())->unitSystemSchema.valueAs<UnitSystem::Schema>(),
-                lenCoord);
-    //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
-    editor->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
-    editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
-    editor->setRange(std::numeric_limits<double>::min(),
-                     std::numeric_limits<double>::max());
-    editor->setValue(trRes.value);
-    QSizePolicy sp = editor->sizePolicy();
-    sp.setHorizontalPolicy(QSizePolicy::Expanding);
-    editor->setSizePolicy(sp);
-    editor->setMinimumWidth(25);
-    QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double value) {
-        const double f = trRes.factor;
-        value = qFuzzyCompare(f, 1.) ? value : value * f;
-        gp_Pnt pnt = property->value();
-        (pnt.*funcSetCoord)(value);
-        const Result<void> result = property->setValue(pnt);
-        handlePropertyValidationError(result, editor);
-    });
-    return editor;
-}
-
-static QWidget* createPropertyEditor(PropertyOccPnt* prop, QWidget* parentWidget)
-{
-    auto frame = new QWidget(parentWidget);
-    auto frameLayout = new QHBoxLayout(frame);
-    frameLayout->setContentsMargins(0, 0, 0, 0);
-    frameLayout->addWidget(new QLabel("X", frame));
-    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::X, &gp_Pnt::SetX));
-    frameLayout->addWidget(new QLabel("Y", frame));
-    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::Y, &gp_Pnt::SetY));
-    frameLayout->addWidget(new QLabel("Z", frame));
-    frameLayout->addWidget(createOccPntCoordEditor(frame, prop, &gp_Pnt::Z, &gp_Pnt::SetZ));
-    return frame;
-}
+    BasePropertyQuantity* m_property;
+};
 
 } // namespace
 
 QWidget* DefaultPropertyEditorFactory::createEditor(Property* property, QWidget* parentWidget) const
 {
-    if (!property)
-        return nullptr;
-
-    const char* propTypeName = property->dynTypeName();
+    QWidget* editor = nullptr;
+    const char* propTypeName = property ? property->dynTypeName() : nullptr;
     if (propTypeName == PropertyBool::TypeName)
-        return createPropertyEditor(static_cast<PropertyBool*>(property), parentWidget);
+        editor = new PropertyBoolEditor(static_cast<PropertyBool*>(property), parentWidget);
 
     if (propTypeName == PropertyInt::TypeName)
-        return createPropertyEditor(static_cast<PropertyInt*>(property), parentWidget);
+        editor = new PropertyIntEditor(static_cast<PropertyInt*>(property), parentWidget);
 
     if (propTypeName == PropertyDouble::TypeName)
-        return createPropertyEditor(static_cast<PropertyDouble*>(property), parentWidget);
+        editor = new PropertyDoubleEditor(static_cast<PropertyDouble*>(property), parentWidget);
 
     if (propTypeName == PropertyQString::TypeName)
-        return createPropertyEditor(static_cast<PropertyQString*>(property), parentWidget);
+        editor = new PropertyQStringEditor(static_cast<PropertyQString*>(property), parentWidget);
 
     if (propTypeName == PropertyOccColor::TypeName)
-        return createPropertyEditor(static_cast<PropertyOccColor*>(property), parentWidget);
+        editor = new PropertyOccColorEditor(static_cast<PropertyOccColor*>(property), parentWidget);
 
     if (propTypeName == PropertyOccPnt::TypeName)
-        return createPropertyEditor(static_cast<PropertyOccPnt*>(property), parentWidget);
+        editor = new PropertyOccPntEditor(static_cast<PropertyOccPnt*>(property), parentWidget);
 
     if (propTypeName == PropertyEnumeration::TypeName)
-        return createPropertyEditor(static_cast<PropertyEnumeration*>(property), parentWidget);
+        editor = new PropertyEnumerationEditor(static_cast<PropertyEnumeration*>(property), parentWidget);
 
     if (propTypeName == BasePropertyQuantity::TypeName)
-        return createPropertyEditor(static_cast<BasePropertyQuantity*>(property), parentWidget);
+        editor = new PropertyQuantityEditor(static_cast<BasePropertyQuantity*>(property), parentWidget);
 
-    return nullptr;
+    this->syncEditorWithProperty(editor);
+    return editor;
+}
+
+void DefaultPropertyEditorFactory::syncEditorWithProperty(QWidget* editor) const
+{
+    auto intf = dynamic_cast<InterfacePropertyEditor*>(editor);
+    if (intf) {
+        QSignalBlocker sigBlocker(editor); Q_UNUSED(sigBlocker);
+        intf->syncWithProperty();
+    }
 }
 
 UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePropertyQuantity* property)

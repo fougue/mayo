@@ -20,6 +20,7 @@ class Property;
 class PropertyEditorFactory {
 public:
     virtual QWidget* createEditor(Property* property, QWidget* parentWidget) const = 0;
+    virtual void syncEditorWithProperty(QWidget* editor) const = 0;
 
     // Helpers
     static UnitSystem::TranslateResult unitTranslate(const BasePropertyQuantity* property);
@@ -29,6 +30,7 @@ public:
 class DefaultPropertyEditorFactory : public PropertyEditorFactory {
 public:
     QWidget* createEditor(Property* property, QWidget* parentWidget) const override;
+    void syncEditorWithProperty(QWidget* editor) const override;
 };
 
 } // namespace Mayo
