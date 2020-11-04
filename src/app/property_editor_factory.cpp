@@ -132,8 +132,13 @@ struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QCombo
     {
         const Enumeration* enumDef = property->enumeration();
         if (enumDef) {
-            for (const Enumeration::Item& enumItem : enumDef->items())
+            for (const Enumeration::Item& enumItem : enumDef->items()) {
                 this->addItem(enumItem.name.tr(), enumItem.value);
+                if (!enumItem.description.isEmpty()) {
+                    const int itemIndex = this->count() - 1;
+                    this->setItemData(itemIndex, enumItem.description, Qt::ToolTipRole);
+                }
+            }
 
             QObject::connect(this, qOverload<int>(&QComboBox::activated), [=](int index) {
                 property->setValue(this->itemData(index).toInt());
