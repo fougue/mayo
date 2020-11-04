@@ -30,7 +30,7 @@
 
 namespace Mayo {
 
-class Main { Q_DECLARE_TR_FUNCTIONS(Main) };
+class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
 
 struct CommandLineArguments {
     QString themeName;

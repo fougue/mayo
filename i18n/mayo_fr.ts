@@ -181,49 +181,6 @@
     </message>
 </context>
 <context>
-    <name>Main</name>
-    <message>
-        <location filename="../src/app/main.cpp" line="48"/>
-        <source>Mayo, an open-source 3D viewer based on Qt5/OpenCascade</source>
-        <translation>Mayo, une visionneuse 3D en code libre basée surQt5/OpenCascade</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="53"/>
-        <source>Theme for the UI(classic|dark)</source>
-        <translation>Thème de l&apos;IHM (classic|dark)</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="54"/>
-        <source>name</source>
-        <translation>nom</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="58"/>
-        <source>files</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="59"/>
-        <source>Files to open at startup, optionally</source>
-        <translation>Fichiers à ouvrir au démarrage, optionnel</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="60"/>
-        <source>[files...]</source>
-        <translation>[fichiers ...]</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="117"/>
-        <source>ERROR: Failed to load theme &apos;%1&apos;</source>
-        <translation>ERREUR : impossible de charger le tème &apos;%1&apos;</translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="132"/>
-        <source>Failed to load translation for &apos;%1&apos;</source>
-        <translation>Impossible de charger la traduction pour &apos;%1&apos;</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::AppModule</name>
     <message>
         <location filename="../src/app/app_module.cpp" line="22"/>
@@ -317,8 +274,8 @@
     </message>
     <message>
         <location filename="../src/app/app_module.cpp" line="62"/>
-        <source>cappingHatch</source>
-        <translation>Style d&apos;hachure du bouchage</translation>
+        <source>cappingHatchOn</source>
+        <translation>Bouchages avec hachures</translation>
     </message>
     <message>
         <location filename="../src/app/app_module.cpp" line="65"/>
@@ -351,7 +308,7 @@
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="117"/>
+        <location filename="../src/app/app_module.cpp" line="119"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -359,12 +316,12 @@
 <context>
     <name>Mayo::Application</name>
     <message>
-        <location filename="../src/base/application.cpp" line="52"/>
+        <location filename="../src/base/application.cpp" line="64"/>
         <source>Binary Mayo Document Format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/application.cpp" line="56"/>
+        <location filename="../src/base/application.cpp" line="68"/>
         <source>XML Mayo Document Format</source>
         <translation type="unfinished"></translation>
     </message>
@@ -480,8 +437,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="33"/>
-        <source>/%1</source>
+        <location filename="../src/app/dialog_options.cpp" line="103"/>
+        <source>%1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -594,17 +551,17 @@
 <context>
     <name>Mayo::GraphicsMeshEntityDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="163"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="165"/>
         <source>WIREFRAME</source>
         <translation>Filaire</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="164"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="166"/>
         <source>SHADED</source>
         <translation>Ombré</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="165"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="167"/>
         <source>SHRINK</source>
         <translation>Contracté</translation>
     </message>
@@ -612,17 +569,17 @@
 <context>
     <name>Mayo::GraphicsMeshEntityProperties</name>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="247"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="249"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="248"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="250"/>
         <source>showEdges</source>
         <translation>Montrer les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="249"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="251"/>
         <source>showNodes</source>
         <translation>Montrer les nœuds</translation>
     </message>
@@ -630,22 +587,22 @@
 <context>
     <name>Mayo::GraphicsShapeEntityDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="58"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="60"/>
         <source>WIREFRAME</source>
         <translation>Filaire</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="59"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="61"/>
         <source>HLR</source>
         <translation>Suppression des lignes cachées</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="60"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="62"/>
         <source>SHADED</source>
         <translation>Ombré</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="61"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="63"/>
         <source>SHADED_FACE_BNDS</source>
         <translation>Ombré avec arêtes</translation>
     </message>
@@ -725,120 +682,393 @@
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccBaseMeshReader</name>
+    <name>Mayo::IO::OccBaseMeshReaderProperties</name>
     <message>
         <location filename="../src/base/io_occ_base_mesh.cpp" line="22"/>
         <source>rootPrefix</source>
         <translation>Préfixe racine</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="24"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="23"/>
         <source>systemCoordinatesConverter</source>
         <translation>Conversion coordonnées système</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="26"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="24"/>
         <source>systemLengthUnit</source>
         <translation>Unité longueur du système</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="66"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="71"/>
         <source>UnitUndefined</source>
         <translation>Indéfini</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="67"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
         <source>UnitMicrometer</source>
         <translation>Micromètre (µm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="68"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
         <source>UnitMillimeter</source>
         <translation>Millimètre (mm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="69"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
         <source>UnitCentimeter</source>
         <translation>Centimètre (cm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="70"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="75"/>
         <source>UnitMeter</source>
         <translation>Mètre (m)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="71"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="76"/>
         <source>UnitKilometer</source>
         <translation>Kilomètre (km)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="77"/>
         <source>UnitInch</source>
         <translation>Pouce (in)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="78"/>
         <source>UnitFoot</source>
         <translation>Pied (ft)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="79"/>
         <source>UnitMile</source>
         <translation>Mille (mi)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="82"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="87"/>
         <source>SystemUndefined</source>
         <translation>Indéfini</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="83"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="88"/>
         <source>SystemPosZUp</source>
         <translation>+Z up</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="84"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="89"/>
         <source>SystemPosYUp</source>
         <translation>+Y up</translation>
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccGltfReader</name>
+    <name>Mayo::IO::OccGltfReader_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="18"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="21"/>
         <source>skipEmptyNodes</source>
         <translation>Éviter les nœuds vides</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="19"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="22"/>
         <source>useMeshNameAsFallback</source>
         <translation>Utiliser nom du maillage comme secours</translation>
     </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf.cpp" line="25"/>
+        <source>Whether if nodes without geometry should be ignored(`Yes` by default)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf.cpp" line="27"/>
+        <source>Use mesh name in case if node name is empty(`Yes` by default)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
-    <name>Mayo::IO::OccObjReader</name>
+    <name>Mayo::IO::OccObjReader_Properties</name>
     <message>
         <location filename="../src/base/io_occ_obj.cpp" line="18"/>
         <source>singlePrecisionVertexCoords</source>
         <translation>Coordonnées sommet en précision simple</translation>
     </message>
+    <message>
+        <location filename="../src/base/io_occ_obj.cpp" line="21"/>
+        <source>Single precision flag for reading vertex data(coordinates)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
-    <name>Mayo::IO::OccStlWriter</name>
+    <name>Mayo::IO::OccStepReader_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="53"/>
+        <location filename="../src/base/io_occ_step.cpp" line="28"/>
+        <source>productContext</source>
+        <translation>Context du produit</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="29"/>
+        <source>assemblyLevel</source>
+        <translation>Niveau assemblage</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="30"/>
+        <source>preferredShapeRepresentation</source>
+        <translation>Représentation des formes préférée</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="31"/>
+        <source>readShapeAspect</source>
+        <translation>Lire l&apos;aspect des formes</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="32"/>
+        <source>encoding</source>
+        <translation>Encodage</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="35"/>
+        <source>When reading AP 209 STEP files, allows selecting either only `design` or `analysis`, or both types of products for translation
+Note that in AP 203 and AP214 files all products should be marked as `design`, so if this mode is set to `analysis`, nothing will be read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="40"/>
+        <source>Specifies which data should be read for the products found in the STEP file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="42"/>
+        <source>Specifies preferred type of representation of the shape of the product, in case if a STEP file contains more than one representation (i.e. multiple `PRODUCT_DEFINITION_SHAPE` entities) for a single product</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="46"/>
+        <source>Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity of the product via `SHAPE_ASPECT` should be translated.
+This kind of association was used for the representation of hybrid models (i.e. models whose shape is composed of different types of representations) in AP 203 files before 1998, but it is also used to associate auxiliary information with the sub-shapes of the part. Though STEP translator tries to recognize such cases correctly, this parameter may be useful to avoid unconditionally translation of shapes associated via `SHAPE_ASPECT` entities.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="64"/>
+        <source>Design</source>
+        <translation>Conception</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="65"/>
+        <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="67"/>
+        <source>Analysis</source>
+        <translation>Analyse</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="68"/>
+        <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="70"/>
+        <source>Both</source>
+        <translation>Les deux</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="70"/>
+        <source>Translates all products</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="74"/>
+        <source>Assembly</source>
+        <translation>Assemblage</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="75"/>
+        <source>Translate the assembly structure and shapes associated with parts only (not with sub-assemblies)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="77"/>
+        <source>Structure</source>
+        <translation>Structure</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="78"/>
+        <source>Translate only the assembly structure without shapes (a structure of empty compounds). This mode can be useful as an intermediate step in applications requiring specialized processing of assembly parts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="81"/>
+        <source>Shape</source>
+        <translation>Forme</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="82"/>
+        <source>Translate only shapes associated with the product, ignoring the assembly structure (if any). This can be useful to translate only a shape associated with specific product, as a complement to assembly mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="85"/>
+        <location filename="../src/base/io_occ_step.cpp" line="104"/>
+        <source>All</source>
+        <translation>Tout</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="86"/>
+        <source>Translate both the assembly structure and all associated shapes. If both shape and sub-assemblies are associated with the same product, all of them are read and put in a single compound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="92"/>
+        <source>AdvancedBRep</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="93"/>
+        <source>Prefer `ADVANCED_BREP_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="94"/>
+        <source>ManifoldSurface</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="95"/>
+        <source>Prefer `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="96"/>
+        <source>GeometricallyBoundedSurface</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="97"/>
+        <source>Prefer `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="98"/>
+        <source>FacettedBRep</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="99"/>
+        <source>Prefer `FACETTED_BREP_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="100"/>
+        <source>EdgeBasedWireframe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="101"/>
+        <source>Prefer `EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="102"/>
+        <source>GeometricallyBoundedWireframe</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="103"/>
+        <source>Prefer `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="105"/>
+        <source>Translate all representations (if more than one, put in compound)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="111"/>
+        <source>Shift Japanese Industrial Standards</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="114"/>
+        <source>EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, and simplified Chinese</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="116"/>
+        <source>GB (Guobiao) encoding for Simplified Chinese</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccStepWriter_Properties</name>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="235"/>
+        <source>schema</source>
+        <translation>Schéma</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="236"/>
+        <source>assemblyMode</source>
+        <translation>Mode de l&apos;assemblage</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="237"/>
+        <source>freeVertexMode</source>
+        <translation>Mode des sommets libres</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="238"/>
+        <source>writeParametericCurves</source>
+        <translation>Écrire les courbes paramétriques</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="241"/>
+        <source>Version of schema used for the output STEP file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="243"/>
+        <source>Whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
+It can be disabled in order to minimize the size of the resulting file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccStlWriter_Properties</name>
+    <message>
+        <location filename="../src/base/io_occ_stl.cpp" line="57"/>
         <source>targetFormat</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="60"/>
-        <source>StlAscii</source>
+        <location filename="../src/base/io_occ_stl.cpp" line="67"/>
+        <source>Ascii</source>
         <translation>Texte</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="61"/>
-        <source>StlBinary</source>
+        <location filename="../src/base/io_occ_stl.cpp" line="68"/>
+        <source>Binary</source>
         <translation>Binaire</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccVrmlWriter_Properties</name>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="30"/>
+        <source>shapeRepresentation</source>
+        <translation>Représentation des formes</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="40"/>
+        <source>RepresentationShaded</source>
+        <translation>Ombrée</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="41"/>
+        <source>RepresentationWireframe</source>
+        <translation>Filaire</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_vrml.cpp" line="42"/>
+        <source>RepresentationBoth</source>
+        <translation>Les deux</translation>
     </message>
 </context>
 <context>
@@ -914,26 +1144,46 @@
     </message>
 </context>
 <context>
-    <name>Mayo::IO::VrmlStlWriter</name>
+    <name>Mayo::Main</name>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="30"/>
-        <source>shapeRepresentation</source>
-        <translation>Représentation des formes</translation>
+        <location filename="../src/app/main.cpp" line="47"/>
+        <source>Mayo, an open-source 3D viewer based on Qt5/OpenCascade</source>
+        <translation type="unfinished">Mayo, une visionneuse 3D en code libre basée surQt5/OpenCascade</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="37"/>
-        <source>RepresentationShaded</source>
-        <translation>Ombrée</translation>
+        <location filename="../src/app/main.cpp" line="52"/>
+        <source>Theme for the UI(classic|dark)</source>
+        <translation type="unfinished">Thème de l&apos;IHM (classic|dark)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="38"/>
-        <source>RepresentationWireframe</source>
-        <translation>Filaire</translation>
+        <location filename="../src/app/main.cpp" line="53"/>
+        <source>name</source>
+        <translation type="unfinished">nom</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="39"/>
-        <source>RepresentationBoth</source>
-        <translation>Les deux</translation>
+        <location filename="../src/app/main.cpp" line="57"/>
+        <source>files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="58"/>
+        <source>Files to open at startup, optionally</source>
+        <translation type="unfinished">Fichiers à ouvrir au démarrage, optionnel</translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="59"/>
+        <source>[files...]</source>
+        <translation type="unfinished">[fichiers ...]</translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="118"/>
+        <source>ERROR: Failed to load theme &apos;%1&apos;</source>
+        <translation type="unfinished">ERREUR : impossible de charger le tème &apos;%1&apos;</translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="132"/>
+        <source>Failed to load translation for &apos;%1&apos;</source>
+        <translation type="unfinished">Impossible de charger la traduction pour &apos;%1&apos;</translation>
     </message>
 </context>
 <context>
@@ -1032,7 +1282,7 @@
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="621"/>
-        <location filename="../src/app/mainwindow.cpp" line="500"/>
+        <location filename="../src/app/mainwindow.cpp" line="501"/>
         <source>Import</source>
         <translation>Importer</translation>
     </message>
@@ -1063,7 +1313,7 @@
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="649"/>
-        <location filename="../src/app/mainwindow.cpp" line="760"/>
+        <location filename="../src/app/mainwindow.cpp" line="750"/>
         <source>Options</source>
         <translation></translation>
     </message>
@@ -1221,73 +1471,73 @@
     </message>
     <message>
         <location filename="../src/app/mainwindow.cpp" line="180"/>
-        <location filename="../src/app/mainwindow.cpp" line="705"/>
+        <location filename="../src/app/mainwindow.cpp" line="695"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="210"/>
+        <location filename="../src/app/mainwindow.cpp" line="211"/>
         <source>About %1</source>
         <translation>À propos %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="463"/>
+        <location filename="../src/app/mainwindow.cpp" line="464"/>
         <source>Anonymous%1</source>
         <translation>Anonyme%1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="496"/>
-        <location filename="../src/app/mainwindow.cpp" line="896"/>
+        <location filename="../src/app/mainwindow.cpp" line="497"/>
+        <location filename="../src/app/mainwindow.cpp" line="886"/>
         <source>Import time: %1ms</source>
         <translation>Temps import : %1ms</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="518"/>
+        <location filename="../src/app/mainwindow.cpp" line="521"/>
         <source>Select Output File</source>
         <translation>Sélection fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="542"/>
+        <location filename="../src/app/mainwindow.cpp" line="544"/>
         <source>Export time: %1ms</source>
         <translation>Temps export : %1ms</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="651"/>
+        <location filename="../src/app/mainwindow.cpp" line="652"/>
         <source>Data</source>
         <translation>Données</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="664"/>
+        <location filename="../src/app/mainwindow.cpp" line="665"/>
         <source>Graphics</source>
         <translation>Graphismes</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="788"/>
+        <location filename="../src/app/mainwindow.cpp" line="778"/>
         <source>Close %1</source>
         <translation>Fermer %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="789"/>
+        <location filename="../src/app/mainwindow.cpp" line="779"/>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="792"/>
+        <location filename="../src/app/mainwindow.cpp" line="782"/>
         <source>Close all except %1</source>
         <translation>Tout fermer sauf %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="793"/>
+        <location filename="../src/app/mainwindow.cpp" line="783"/>
         <source>Close all except current</source>
         <translation>Tout fermer sauf document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1025"/>
+        <location filename="../src/app/mainwindow.cpp" line="1014"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1031"/>
+        <location filename="../src/app/mainwindow.cpp" line="1020"/>
         <source>Clear menu</source>
         <translation>Vider le menu</translation>
     </message>
@@ -1306,55 +1556,63 @@
     </message>
 </context>
 <context>
-    <name>Mayo::PropertyItemDelegate</name>
+    <name>Mayo::PropertyEditorI18N</name>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="75"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="45"/>
         <source>Yes</source>
         <translation>Oui</translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="75"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="45"/>
         <source>No</source>
         <translation>Non</translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="91"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="163"/>
+        <source>Choose color ...</source>
+        <translation>Choix couleur ...</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::PropertyItemDelegate</name>
+    <message>
+        <location filename="../src/app/property_item_delegate.cpp" line="81"/>
+        <source>Yes</source>
+        <translation>Oui</translation>
+    </message>
+    <message>
+        <location filename="../src/app/property_item_delegate.cpp" line="81"/>
+        <source>No</source>
+        <translation>Non</translation>
+    </message>
+    <message>
+        <location filename="../src/app/property_item_delegate.cpp" line="69"/>
         <source>%1d </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="93"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="71"/>
         <source>%1h </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="95"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="73"/>
         <source>%1min </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="97"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="75"/>
         <source>%1s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="172"/>
-        <location filename="../src/app/property_item_delegate.cpp" line="182"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="137"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="147"/>
         <source>%1%2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="195"/>
-        <source>Error</source>
-        <translation type="unfinished">Erreur</translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="340"/>
-        <source>Choose color ...</source>
-        <translation>Choix couleur ...</translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="512"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="275"/>
         <source>ERROR no stringifier for property type &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1362,7 +1620,7 @@
 <context>
     <name>Mayo::Settings</name>
     <message>
-        <location filename="../src/base/settings.cpp" line="259"/>
+        <location filename="../src/base/settings.cpp" line="263"/>
         <source>DEFAULT</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1470,7 +1728,9 @@
         <source>%1
 Size: %2%3
 Last modified: %4</source>
-        <translation type="unfinished"></translation>
+        <translation>%1
+Taille: %2%3
+Modifié le: %4</translation>
     </message>
 </context>
 <context>
@@ -1548,27 +1808,27 @@ Last modified: %4</source>
 <context>
     <name>Mayo::WidgetModelTreeBuilder_Xde</name>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="36"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="37"/>
         <source>instanceNameFormat</source>
         <translation>Format des noms d&apos;instance</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="56"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="57"/>
         <source>nameInstance</source>
         <translation>Instance</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="57"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="58"/>
         <source>nameProduct</source>
         <translation>Produit</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="58"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="59"/>
         <source>nameBoth</source>
         <translation>Les deux</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="146"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="147"/>
         <source>Show %1</source>
         <translation>Montrer %1</translation>
     </message>
@@ -1594,52 +1854,52 @@ Last modified: %4</source>
 <context>
     <name>Mayo::WidgetShapeSelector</name>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="28"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="29"/>
         <source>Vertices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="29"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="30"/>
         <source>Edges</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="30"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="31"/>
         <source>Wires</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="31"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="32"/>
         <source>Faces</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="32"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="33"/>
         <source>Shells</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="33"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="34"/>
         <source>Solids</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="34"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="35"/>
         <source>Compounds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="35"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="36"/>
         <source>Connected solids</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="36"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="37"/>
         <source>?Shapes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_shape_selector.cpp" line="63"/>
+        <location filename="../src/app/widget_shape_selector.cpp" line="64"/>
         <source>Select %1</source>
         <translation type="unfinished"></translation>
     </message>

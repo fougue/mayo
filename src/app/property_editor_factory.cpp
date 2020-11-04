@@ -27,7 +27,7 @@
 
 namespace Mayo {
 
-class PropertyEditorI18N { Q_DECLARE_TR_FUNCTIONS(PropertyEditorI18N) };
+class PropertyEditorI18N { Q_DECLARE_TR_FUNCTIONS(Mayo::PropertyEditorI18N) };
 
 namespace {
 
