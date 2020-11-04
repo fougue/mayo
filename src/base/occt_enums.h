@@ -7,14 +7,12 @@
 #pragma once
 
 #include "property_enumeration.h"
-#include <QtCore/QCoreApplication>
 #include <Aspect_HatchStyle.hxx>
 #include <Graphic3d_NameOfMaterial.hxx>
 
 namespace Mayo {
 
 class OcctEnums {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::OcctEnums)
 public:
     static const Enumeration& Graphic3d_NameOfMaterial();
     static const Enumeration& Aspect_HatchStyle();

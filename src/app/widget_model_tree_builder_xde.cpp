@@ -30,13 +30,13 @@ QByteArray QByteArray_frowRawData(const char (&str)[N]) {
 } // namespace
 
 class WidgetModelTreeBuilder_Xde::Module : public QObject, public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::WidgetModelTreeBuilder_Xde_Module)
 public:
     Module(const ApplicationPtr& app)
         : QObject(app.get()),
           PropertyGroup(app->settings()),
-          instanceNameFormat(this, MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "instanceNameFormat"))
+          instanceNameFormat(this, textId("instanceNameFormat"), &enumInstanceNameFormat)
     {
-        this->instanceNameFormat.setEnumeration(&enumInstanceNameFormat());
         this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
         auto settings = app->settings();
         settings->addSetting(&this->instanceNameFormat, AppModule::get(app)->groupId_application);
@@ -51,15 +51,11 @@ public:
 
     enum class NameFormat { Instance, Product, Both };
 
-    static const Enumeration& enumInstanceNameFormat()
-    {
-        static const Enumeration enumFormat = {
-            { int(NameFormat::Instance), MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameInstance") },
-            { int(NameFormat::Product),  MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameProduct") },
-            { int(NameFormat::Both),     MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "nameBoth") }
-        };
-        return enumFormat;
-    }
+    static inline const Enumeration enumInstanceNameFormat = {
+        { int(NameFormat::Instance), textId("nameInstance"), {} },
+        { int(NameFormat::Product),  textId("nameProduct"), {} },
+        { int(NameFormat::Both),     textId("nameBoth"), {} }
+    };
 
     static QByteArray toInstanceNameTemplate(NameFormat format)
     {
@@ -142,7 +138,7 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
     WidgetModelTree_UserActions userActions;
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
-    for (const Enumeration::Item& item : Module::enumInstanceNameFormat().items()) {
+    for (const Enumeration::Item& item : Module::enumInstanceNameFormat.items()) {
         const QString actionText =
                 MAYO_TEXT_ID("Mayo::WidgetModelTreeBuilder_Xde", "Show %1").tr().arg(item.name.tr());
         auto action = new QAction(actionText, parent);
@@ -240,7 +236,7 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
     if (format == this->instanceNameFormat())
         return;
 
-    m_module->instanceNameFormat.setValue(Module::enumInstanceNameFormat().findValue(format));
+    m_module->instanceNameFormat.setValue(Module::enumInstanceNameFormat.findValue(format));
     for (QTreeWidgetItemIterator it(this->treeWidget()); *it; ++it) {
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);

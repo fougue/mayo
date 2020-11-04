@@ -79,6 +79,11 @@ AppModule::AppModule(Application* app)
     this->unitSystemDecimals.setConstraintsEnabled(true);
 
     // Application
+    this->language.setDescription(
+                tr("Language used for the application. Change will take effect after application restart"));
+    this->linkWithDocumentSelector.setDescription(
+                tr("In case where multiple documents are opened, make sure the document displayed in "
+                   "the 3D view corresponds to what is selected in the model tree"));
     settings->addSetting(&this->language, this->groupId_application);
     settings->addSetting(&this->recentFiles, this->groupId_application);
     settings->addSetting(&this->lastOpenDir, this->groupId_application);
@@ -89,8 +94,15 @@ AppModule::AppModule(Application* app)
     this->lastSelectedFormatFilter.setUserVisible(false);
 
     // Graphics
+    this->defaultShowOriginTrihedron.setDescription(
+                tr("Show or hide by default the trihedron centered at world origin. "
+                   "This doesn't affect 3D view of currently opened documents"));
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
     // -- Clip planes
+    this->clipPlanesCappingOn.setDescription(
+                tr("Enable capping of currently clipped graphics"));
+    this->clipPlanesCappingHatchOn.setDescription(
+                tr("Enable capping hatch texture of currently clipped graphics"));
     settings->addSetting(&this->clipPlanesCappingOn, this->sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
     // -- Mesh defaults

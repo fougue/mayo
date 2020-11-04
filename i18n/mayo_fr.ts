@@ -2,177 +2,6 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
 <context>
-    <name>Aspect_HatchStyle</name>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="41"/>
-        <source>Solid</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="42"/>
-        <source>Horizontal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="43"/>
-        <source>HorizontalSparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="44"/>
-        <source>Vertical</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="45"/>
-        <source>VerticalSparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="46"/>
-        <source>Diagonal45</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="47"/>
-        <source>Diagonal45Sparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="48"/>
-        <source>Diagonal135</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="49"/>
-        <source>Diagonal135Sparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="50"/>
-        <source>Grid</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="51"/>
-        <source>GridSparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="52"/>
-        <source>GridDiagonal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="53"/>
-        <source>GridDiagonalSparse</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Graphic3d_NameOfMaterial</name>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="14"/>
-        <source>Brass</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="15"/>
-        <source>Bronze</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="16"/>
-        <source>Copper</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="17"/>
-        <source>Gold</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="18"/>
-        <source>Pewter</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="19"/>
-        <source>Plaster</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="20"/>
-        <source>Plastic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="21"/>
-        <source>Silver</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="22"/>
-        <source>Steel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="23"/>
-        <source>Stone</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="24"/>
-        <source>ShinyPlastic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="27"/>
-        <source>NeonGnc</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="31"/>
-        <source>NeonPhc</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="33"/>
-        <source>Default</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="25"/>
-        <source>Satin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="26"/>
-        <source>Metalized</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="28"/>
-        <source>Chrome</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="29"/>
-        <source>Aluminium</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="30"/>
-        <source>Obsidian</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/occt_enums.cpp" line="32"/>
-        <source>Jade</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>IO</name>
     <message>
         <location filename="../src/base/io_system.cpp" line="124"/>
@@ -303,12 +132,37 @@
         <translation>Afficher les nœuds</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="102"/>
+        <location filename="../src/app/app_module.cpp" line="83"/>
+        <source>Language used for the application. Change will take effect after application restart</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.cpp" line="85"/>
+        <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.cpp" line="98"/>
+        <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.cpp" line="103"/>
+        <source>Enable capping of currently clipped graphics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.cpp" line="105"/>
+        <source>Enable capping hatch texture of currently clipped graphics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.cpp" line="114"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="119"/>
+        <location filename="../src/app/app_module.cpp" line="131"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -1568,7 +1422,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Non</translation>
     </message>
     <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="163"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="168"/>
         <source>Choose color ...</source>
         <translation>Choix couleur ...</translation>
     </message>
@@ -1808,29 +1662,32 @@ Modifié le: %4</translation>
 <context>
     <name>Mayo::WidgetModelTreeBuilder_Xde</name>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="37"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="143"/>
+        <source>Show %1</source>
+        <translation>Montrer %1</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::WidgetModelTreeBuilder_Xde_Module</name>
+    <message>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="38"/>
         <source>instanceNameFormat</source>
         <translation>Format des noms d&apos;instance</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="57"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="55"/>
         <source>nameInstance</source>
         <translation>Instance</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="58"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="56"/>
         <source>nameProduct</source>
         <translation>Produit</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="59"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="57"/>
         <source>nameBoth</source>
         <translation>Les deux</translation>
-    </message>
-    <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="147"/>
-        <source>Show %1</source>
-        <translation>Montrer %1</translation>
     </message>
 </context>
 <context>
@@ -2000,6 +1857,177 @@ Modifié le: %4</translation>
         <location filename="../src/app/document_tree_node_properties_providers.cpp" line="76"/>
         <source>Sub</source>
         <translation>Sub</translation>
+    </message>
+</context>
+<context>
+    <name>OpenCascade::Aspect_HatchStyle</name>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="46"/>
+        <source>Solid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="47"/>
+        <source>Horizontal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="48"/>
+        <source>HorizontalSparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="49"/>
+        <source>Vertical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="50"/>
+        <source>VerticalSparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="51"/>
+        <source>Diagonal45</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="52"/>
+        <source>Diagonal45Sparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="53"/>
+        <source>Diagonal135</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="54"/>
+        <source>Diagonal135Sparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="55"/>
+        <source>Grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="56"/>
+        <source>GridSparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="57"/>
+        <source>GridDiagonal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="58"/>
+        <source>GridDiagonalSparse</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>OpenCascade::Graphic3d_NameOfMaterial</name>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="19"/>
+        <source>Brass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="20"/>
+        <source>Bronze</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="21"/>
+        <source>Copper</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="22"/>
+        <source>Gold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="23"/>
+        <source>Pewter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="24"/>
+        <source>Plaster</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="25"/>
+        <source>Plastic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="26"/>
+        <source>Silver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="27"/>
+        <source>Steel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="28"/>
+        <source>Stone</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="29"/>
+        <source>ShinyPlastic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="30"/>
+        <source>Satin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="31"/>
+        <source>Metalized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="32"/>
+        <source>NeonGnc</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="33"/>
+        <source>Chrome</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="34"/>
+        <source>Aluminium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="35"/>
+        <source>Obsidian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="36"/>
+        <source>NeonPhc</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="37"/>
+        <source>Jade</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/occt_enums.cpp" line="38"/>
+        <source>Default</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
