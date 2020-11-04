@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include "property_editor_factory.h"
 #include <QtWidgets/QDialog>
-#include <functional>
+#include <memory>
 
 namespace Mayo {
 
@@ -19,8 +20,16 @@ public:
     DialogOptions(Settings* settings, QWidget* parent = nullptr);
     ~DialogOptions();
 
+    PropertyEditorFactory* editorFactory() const { return m_editorFactory.get(); }
+    void setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory);
+
 private:
+    QWidget* createEditor(Property* property, QWidget* parentWidget) const;
+    void restoreDefaults();
+
     class Ui_DialogOptions* m_ui = nullptr;
+    std::unique_ptr<PropertyEditorFactory> m_editorFactory;
+    Settings* m_settings = nullptr;
 };
 
 } // namespace Mayo

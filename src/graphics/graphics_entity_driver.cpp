@@ -187,7 +187,7 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
     GraphicsEntity entity;
     this->initEntity(&entity, label);
     Handle_Poly_Triangulation polyTri;
-    const TopLoc_Location* ptrLocationPolyTri = nullptr;
+    //const TopLoc_Location* ptrLocationPolyTri = nullptr;
     auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(label);
     if (!attrTriangulation.IsNull()) {
         polyTri = attrTriangulation->Get();
@@ -198,7 +198,7 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
             const auto& tface = Handle_BRep_TFace::DownCast(shape.TShape());
             if (!tface.IsNull()) {
                 polyTri = tface->Triangulation();
-                ptrLocationPolyTri = &shape.Location();
+                //ptrLocationPolyTri = &shape.Location();
             }
         }
     }

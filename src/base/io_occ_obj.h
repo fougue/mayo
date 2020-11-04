@@ -18,15 +18,23 @@ class OccObjReader : public OccBaseMeshReader {
 public:
     OccObjReader();
 
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup* params) override;
+    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    void applyProperties(const PropertyGroup* params) override;
 
     // Parameters
 
-    bool isSinglePrecisionVertexCoords() const { return m_reader.IsSinglePrecision(); }
-    void setSinglePrecisionVertexCoords(bool on) { m_reader.SetSinglePrecision(on); }
+    struct Parameters : public OccBaseMeshReader::Parameters {
+        bool singlePrecisionVertexCoords = false;
+    };
+    OccObjReader::Parameters& parameters() override { return m_params; }
+    const OccObjReader::Parameters& constParameters() const override { return m_params; }
+
+protected:
+    void applyParameters() override;
 
 private:
+    class Properties;
+    Parameters m_params;
     RWObj_CafReader m_reader;
 };
 

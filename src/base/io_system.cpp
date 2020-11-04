@@ -345,7 +345,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             return fnReadFileError(filepath, tr("No supporting reader"));
 
         if (args.parametersProvider)
-            reader->applyParameters(args.parametersProvider->findReaderParameters(fileFormat));
+            reader->applyProperties(args.parametersProvider->findReaderParameters(fileFormat));
 
         if (!reader->readFile(filepath, subProgress))
             return fnReadFileError(filepath, tr("File read problem"));
@@ -438,7 +438,7 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
     if (!writer)
         return fnError(tr("No supporting writer"));
 
-    writer->applyParameters(args.parameters);
+    writer->applyProperties(args.parameters);
     auto _ = gsl::finally([=]{ progress->endScope(); });
     progress->beginScope(40, tr("Transfer"));
     const bool okTransfer = writer->transfer(args.applicationItems, progress);

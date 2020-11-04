@@ -28,6 +28,8 @@ public:
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 
+    virtual void restoreDefaults();
+
 protected:
     virtual void onPropertyChanged(Property* prop);
     virtual Result<void> isPropertyValid(const Property* prop) const;
@@ -73,6 +75,9 @@ public:
     virtual QVariant valueAsVariant() const = 0;
     virtual Result<void> setValueFromVariant(const QVariant& value) = 0; // TODO Remove use of Result<>
 
+    const QString& description() const { return m_description; }
+    void setDescription(const QString& text) { m_description = text; }
+
     bool isUserReadOnly() const { return m_isUserReadOnly; }
     void setUserReadOnly(bool on) { m_isUserReadOnly = on; }
 
@@ -92,6 +97,7 @@ protected:
 private:
     PropertyGroup* const m_group = nullptr;
     const TextId m_name;
+    QString m_description;
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
 };

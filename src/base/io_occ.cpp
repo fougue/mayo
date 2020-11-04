@@ -98,15 +98,14 @@ std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
     return findGenerator<ReaderGenerator>(format, array).fn();
 }
 
-std::unique_ptr<PropertyGroup> OccFactoryReader::createParameters(
+std::unique_ptr<PropertyGroup> OccFactoryReader::createProperties(
         const Format& format, PropertyGroup* parentGroup) const
 {
     static const ReaderParametersGenerator array[] = {
+        { Format_STEP, &OccStepReader::createProperties },
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        { Format_GLTF, &OccGltfReader::createParameters },
-        { Format_OBJ, &OccObjReader::createParameters }
-#else
-        ReaderParametersGenerator::null() // To prevent compilation error with empty C array
+        { Format_GLTF, &OccGltfReader::createProperties },
+        { Format_OBJ, &OccObjReader::createProperties }
 #endif
     };
     return findGenerator<ReaderParametersGenerator>(format, array).fn(parentGroup);
@@ -136,12 +135,13 @@ std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
     return findGenerator<WriterGenerator>(format, array).fn();
 }
 
-std::unique_ptr<PropertyGroup> OccFactoryWriter::createParameters(
+std::unique_ptr<PropertyGroup> OccFactoryWriter::createProperties(
         const Format& format, PropertyGroup* parentGroup) const
 {
     static const WriterParametersGenerator array[] = {
-        { Format_STL, &OccStlWriter::createParameters },
-        { Format_VRML, &OccVrmlWriter::createParameters },
+        { Format_STEP, &OccStepWriter::createProperties },
+        { Format_STL, &OccStlWriter::createProperties },
+        { Format_VRML, &OccVrmlWriter::createProperties }
     };
     return findGenerator<WriterParametersGenerator>(format, array).fn(parentGroup);
 }

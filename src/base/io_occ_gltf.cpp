@@ -7,43 +7,61 @@
 #include "io_occ_gltf.h"
 #include "property_builtins.h"
 
+#include <QtCore/QCoreApplication>
+
 namespace Mayo {
 namespace IO {
 
-namespace {
-
-struct GltfReaderParameters : public OccBaseMeshReaderParameters {
-    GltfReaderParameters(PropertyGroup* parentGroup)
-        : OccBaseMeshReaderParameters(parentGroup),
-          skipEmptyNodes(this, MAYO_TEXT_ID("Mayo::IO::OccGltfReader", "skipEmptyNodes")),
-          useMeshNameAsFallback(this, MAYO_TEXT_ID("Mayo::IO::OccGltfReader", "useMeshNameAsFallback"))
+class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader_Properties)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccGltfReader_Properties)
+public:
+    Properties(PropertyGroup* parentGroup)
+        : OccBaseMeshReaderProperties(parentGroup),
+          skipEmptyNodes(this, textId("skipEmptyNodes")),
+          useMeshNameAsFallback(this, textId("useMeshNameAsFallback"))
     {
+       this->skipEmptyNodes.setDescription(
+                    tr("Whether if nodes without geometry should be ignored(`Yes` by default)"));
+        this->useMeshNameAsFallback.setDescription(
+                    tr("Use mesh name in case if node name is empty(`Yes` by default)"));
+    }
+
+    void restoreDefaults() override {
+        OccBaseMeshReaderProperties::restoreDefaults();
+        this->skipEmptyNodes.setValue(true);
+        this->useMeshNameAsFallback.setValue(true);
     }
 
     PropertyBool skipEmptyNodes;
     PropertyBool useMeshNameAsFallback;
 };
 
-} // namespace
-
 OccGltfReader::OccGltfReader()
     : OccBaseMeshReader(m_reader)
 {
 }
 
-std::unique_ptr<PropertyGroup> OccGltfReader::createParameters(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> OccGltfReader::createProperties(PropertyGroup* parentGroup)
 {
-    return std::make_unique<GltfReaderParameters>(parentGroup);
+    return std::make_unique<Properties>(parentGroup);
 }
 
-void OccGltfReader::applyParameters(const PropertyGroup* params)
+void OccGltfReader::applyProperties(const PropertyGroup* params)
 {
-    OccBaseMeshReader::applyParameters(params);
-    auto ptr = dynamic_cast<const GltfReaderParameters*>(params);
+    OccBaseMeshReader::applyProperties(params);
+    auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        this->setMeshNameAsFallback(ptr->useMeshNameAsFallback.value());
-        this->setSkipEmptyNodes(ptr->skipEmptyNodes.value());
+        m_params.useMeshNameAsFallback = ptr->useMeshNameAsFallback.value();
+        m_params.skipEmptyNodes = ptr->skipEmptyNodes.value();
     }
+}
+
+void OccGltfReader::applyParameters()
+{
+    OccBaseMeshReader::applyParameters();
+    m_reader.SetSkipEmptyNodes(m_params.skipEmptyNodes);
+    m_reader.SetMeshNameAsFallback(m_params.useMeshNameAsFallback);
 }
 
 } // namespace IO

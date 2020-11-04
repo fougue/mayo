@@ -19,8 +19,8 @@ namespace Mayo {
 static const Enumeration& enumUnitSchemas()
 {
     static const Enumeration enumeration = {
-        { UnitSystem::SI, MAYO_TEXT_ID("Mayo::AppModule", "SI") },
-        { UnitSystem::ImperialUK, MAYO_TEXT_ID("Mayo::AppModule", "IMPERIAL_UK") }
+        { UnitSystem::SI, AppModule::textId("SI") },
+        { UnitSystem::ImperialUK, AppModule::textId("IMPERIAL_UK") }
     };
     return enumeration;
 }
@@ -28,8 +28,8 @@ static const Enumeration& enumUnitSchemas()
 static const Enumeration& enumLanguages()
 {
     static Enumeration enumeration = {
-        { 0, MAYO_TEXT_ID("Mayo::AppModule", "en") },
-        { 1, MAYO_TEXT_ID("Mayo::AppModule", "fr") }
+        { 0, AppModule::textId("en") },
+        { 1, AppModule::textId("fr") }
     };
     return enumeration;
 }
@@ -39,34 +39,34 @@ AppModule::AppModule(Application* app)
       PropertyGroup(app->settings()),
       m_app(app),
       // System
-      groupId_system(app->settings()->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "system"))),
+      groupId_system(app->settings()->addGroup(textId("system"))),
       // -- Units
       sectionId_systemUnits(
-          app->settings()->addSection(this->groupId_system, MAYO_TEXT_ID("Mayo::AppModule", "units"))),
-      unitSystemDecimals(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "decimalCount")),
-      unitSystemSchema(app->settings(), MAYO_TEXT_ID("Mayo::AppModule", "schema"), &enumUnitSchemas()),
+          app->settings()->addSection(this->groupId_system, textId("units"))),
+      unitSystemDecimals(app->settings(), textId("decimalCount")),
+      unitSystemSchema(app->settings(), textId("schema"), &enumUnitSchemas()),
       // Application
-      groupId_application(app->settings()->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "application"))),
-      language(this, MAYO_TEXT_ID("Mayo::AppModule", "language"), &enumLanguages()),
-      recentFiles(this, MAYO_TEXT_ID("Mayo::AppModule", "recentFiles")),
-      lastOpenDir(this, MAYO_TEXT_ID("Mayo::AppModule", "lastOpenFolder")),
-      lastSelectedFormatFilter(this, MAYO_TEXT_ID("Mayo::AppModule", "lastSelectedFormatFilter")),
-      linkWithDocumentSelector(this, MAYO_TEXT_ID("Mayo::AppModule", "linkWithDocumentSelector")),
+      groupId_application(app->settings()->addGroup(textId("application"))),
+      language(this, textId("language"), &enumLanguages()),
+      recentFiles(this, textId("recentFiles")),
+      lastOpenDir(this, textId("lastOpenFolder")),
+      lastSelectedFormatFilter(this, textId("lastSelectedFormatFilter")),
+      linkWithDocumentSelector(this, textId("linkWithDocumentSelector")),
       // Graphics
-      groupId_graphics(app->settings()->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "graphics"))),
-      defaultShowOriginTrihedron(this, MAYO_TEXT_ID("Mayo::AppModule", "defaultShowOriginTrihedron")),
+      groupId_graphics(app->settings()->addGroup(textId("graphics"))),
+      defaultShowOriginTrihedron(this, textId("defaultShowOriginTrihedron")),
       // -- Clip planes
       sectionId_graphicsClipPlanes(
-          app->settings()->addSection(this->groupId_graphics, MAYO_TEXT_ID("Mayo::AppModule", "clipPlanes"))),
-      clipPlanesCappingOn(this, MAYO_TEXT_ID("Mayo::AppModule", "cappingOn")),
-      clipPlanesCappingHatchOn(this, MAYO_TEXT_ID("Mayo::AppModule", "cappingHatchOn")),
+          app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
+      clipPlanesCappingOn(this, textId("cappingOn")),
+      clipPlanesCappingHatchOn(this, textId("cappingHatchOn")),
       // -- Mesh defaults
       sectionId_graphicsMeshDefaults(
-          app->settings()->addSection(this->groupId_graphics, MAYO_TEXT_ID("Mayo::AppModule", "meshDefaults"))),
-      meshDefaultsColor(this, MAYO_TEXT_ID("Mayo::AppModule", "color")),
-      meshDefaultsMaterial(this, MAYO_TEXT_ID("Mayo::AppModule", "material"), &OcctEnums::Graphic3d_NameOfMaterial()),
-      meshDefaultsShowEdges(this, MAYO_TEXT_ID("Mayo::AppModule", "showEgesOn")),
-      meshDefaultsShowNodes(this, MAYO_TEXT_ID("Mayo::AppModule", "showNodesOn"))
+          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
+      meshDefaultsColor(this, textId("color")),
+      meshDefaultsMaterial(this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial()),
+      meshDefaultsShowEdges(this, textId("showEgesOn")),
+      meshDefaultsShowNodes(this, textId("showNodesOn"))
 {
     auto settings = app->settings();
 
@@ -99,30 +99,34 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->meshDefaultsShowEdges, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
     // Import
-    auto groupId_Import = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "import"));
+    auto groupId_Import = settings->addGroup(textId("import"));
     for (const IO::Format& format : app->ioSystem()->readerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Import, format.identifier);
         const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format, settings);
+        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);
 
-            m_mapFormatReaderParameters.insert({ format.identifier, ptrGroup.get() });
+            PropertyGroup* rawPtrGroup = ptrGroup.get();
+            settings->addGroupResetFunction(groupId_Import, [=]{ rawPtrGroup->restoreDefaults(); });
+            m_mapFormatReaderParameters.insert({ format.identifier, rawPtrGroup });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 
     // Export
-    auto groupId_Export = settings->addGroup(MAYO_TEXT_ID("Mayo::AppModule", "export"));
+    auto groupId_Export = settings->addGroup(textId("export"));
     for (const IO::Format& format : app->ioSystem()->writerFormats()) {
         auto sectionId_format = settings->addSection(groupId_Export, format.identifier);
         const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createParameters(format, settings);
+        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
             for (Property* property : ptrGroup->properties())
                 settings->addSetting(property, sectionId_format);
 
+            PropertyGroup* rawPtrGroup = ptrGroup.get();
+            settings->addGroupResetFunction(groupId_Export, [=]{ rawPtrGroup->restoreDefaults(); });
             m_mapFormatWriterParameters.insert({ format.identifier, ptrGroup.get() });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }

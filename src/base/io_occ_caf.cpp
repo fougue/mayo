@@ -39,7 +39,6 @@ namespace {
 template<typename CAF_READER>
 bool cafGenericReadFile(CAF_READER& reader, const QString& filepath, TaskProgress* progress)
 {
-    std::lock_guard<std::mutex> lock(cafGlobalMutex()); Q_UNUSED(lock);
     //readFile_prepare(reader);
     const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toLocal8Bit().constData());
     progress->setValue(100);
@@ -49,7 +48,6 @@ bool cafGenericReadFile(CAF_READER& reader, const QString& filepath, TaskProgres
 template<typename CAF_READER>
 bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
 {
-    std::lock_guard<std::mutex> lock(cafGlobalMutex()); Q_UNUSED(lock);
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     Handle_XSControl_WorkSession ws = cafWorkSession(reader);
     ws->MapReader()->SetProgress(indicator);
@@ -65,7 +63,6 @@ bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* p
 template<typename CAF_WRITER>
 bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
 {
-    std::lock_guard<std::mutex> lock(cafGlobalMutex()); Q_UNUSED(lock);
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     cafFinderProcess(writer)->SetProgress(indicator);
     auto _ = gsl::finally([&]{ cafFinderProcess(writer)->SetProgress(nullptr); });

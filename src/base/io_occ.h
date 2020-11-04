@@ -18,7 +18,7 @@ class OccFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
     std::unique_ptr<Reader> create(const Format& format) const override;
-    std::unique_ptr<PropertyGroup> createParameters(
+    std::unique_ptr<PropertyGroup> createProperties(
             const Format& format,
             PropertyGroup* parentGroup) const override;
 };
@@ -28,7 +28,7 @@ class OccFactoryWriter : public FactoryWriter {
 public:
     Span<const Format> formats() const override;
     std::unique_ptr<Writer> create(const Format& format) const override;
-    std::unique_ptr<PropertyGroup> createParameters(
+    std::unique_ptr<PropertyGroup> createProperties(
             const Format& format,
             PropertyGroup* parentGroup) const override;
 };

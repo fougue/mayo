@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <future>
-#include <unordered_map>
+#include <cstdint>
 
 namespace Mayo {
 

@@ -27,6 +27,7 @@ class AppModule :
         public IO::ParametersProvider
 {
     Q_OBJECT
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
     AppModule(Application* app);
     static AppModule* get(const ApplicationPtr& app);

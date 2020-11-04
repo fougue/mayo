@@ -18,18 +18,24 @@ class OccGltfReader : public OccBaseMeshReader {
 public:
     OccGltfReader();
 
-    static std::unique_ptr<PropertyGroup> createParameters(PropertyGroup* parentGroup);
-    void applyParameters(const PropertyGroup* params) override;
+    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    void applyProperties(const PropertyGroup* params) override;
 
     // Parameters
 
-    bool skipEmptyNodesOn() const { return m_reader.ToSkipEmptyNodes(); }
-    void setSkipEmptyNodes(bool on) { m_reader.SetSkipEmptyNodes(on); }
+    struct Parameters : public OccBaseMeshReader::Parameters {
+        bool skipEmptyNodes = true;
+        bool useMeshNameAsFallback = true;
+    };
+    OccGltfReader::Parameters& parameters() override { return m_params; }
+    const OccGltfReader::Parameters& constParameters() const override { return m_params; }
 
-    bool meshNameAsFallbackOn() const { return m_reader.ToUseMeshNameAsFallback(); }
-    void setMeshNameAsFallback(bool on) { m_reader.SetMeshNameAsFallback(on); }
+protected:
+    void applyParameters() override;
 
 private:
+    class Properties;
+    Parameters m_params;
     mutable RWGltf_CafReader m_reader;
 };
 
