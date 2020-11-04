@@ -238,9 +238,7 @@ public:
           writePCurves(this, textId("writeParametericCurves"))
     {
         this->schema.setDescription(
-                    tr("version of schema used for the output STEP file"));
-        this->assemblyMode.setDescription(
-                    tr("version of schema used for the output STEP file"));
+                    tr("Version of schema used for the output STEP file"));
         this->writePCurves.setDescription(
                     tr("Whether parametric curves (curves in parametric space of surface) should be "
                        "written into the STEP file.\n"
