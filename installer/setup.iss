@@ -92,11 +92,11 @@ Source: "{#OpenCascade_BinDir}\TKXSDRAW.dll"; DestDir: "{app}"; Flags: ignorever
 
 ; OpenCascade resources
 Source: "{#OpenCascade_SrcDir}\SHMessage\*.*"; DestDir: "{app}\OpenCascade\SHMessage"; Flags: ignoreversion
-Source: "{#OpenCascade_SrcDir}\Textures\*.*"; DestDir: "{app}\OpenCascade\Textures"; Flags: ignoreversion
 Source: "{#OpenCascade_SrcDir}\Shaders\*.*"; DestDir: "{app}\OpenCascade\Shaders"; Flags: ignoreversion
-Source: "{#OpenCascade_SrcDir}\XSMessage\*.*"; DestDir: "{app}\OpenCascade\XSMessage"; Flags: ignoreversion
-Source: "{#OpenCascade_SrcDir}\TObj\*.msg"; DestDir: "{app}\OpenCascade\TObj"; Flags: ignoreversion
 Source: "{#OpenCascade_SrcDir}\StdResource\*.*"; DestDir: "{app}\OpenCascade\StdResource"; Flags: ignoreversion
+Source: "{#OpenCascade_SrcDir}\TObj\*.msg"; DestDir: "{app}\OpenCascade\TObj"; Flags: ignoreversion
+Source: "{#OpenCascade_SrcDir}\Textures\*.*"; DestDir: "{app}\OpenCascade\Textures"; Flags: ignoreversion
+Source: "{#OpenCascade_SrcDir}\XSMessage\*.*"; DestDir: "{app}\OpenCascade\XSMessage"; Flags: ignoreversion
 Source: "{#OpenCascade_SrcDir}\XSTEPResource\*.*"; DestDir: "{app}\OpenCascade\XSTEPResource"; Flags: ignoreversion
 Source: "{#OpenCascade_SrcDir}\XmlOcafResource\*.*"; DestDir: "{app}\OpenCascade\XmlOcafResource"; Flags: ignoreversion
 
