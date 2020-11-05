@@ -62,6 +62,7 @@ protected:
         DisplayMode_Shaded,
         DisplayMode_ShadedWithFaceBoundary
     };
+
 };
 
 class GraphicsMeshEntityDriver : public GraphicsEntityDriver {
@@ -81,6 +82,9 @@ public:
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);
+
+private:
+    class EntityProperties;
 };
 
 } // namespace Mayo

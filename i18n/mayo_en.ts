@@ -403,62 +403,51 @@
     </message>
 </context>
 <context>
-    <name>Mayo::GraphicsMeshEntityDriver</name>
+    <name>Mayo::GraphicsEntityDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="165"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="62"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="167"/>
         <source>WIREFRAME</source>
         <translation>Wireframe</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="166"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="63"/>
+        <source>HLR</source>
+        <translation>Hidden Line Removal</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="64"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="168"/>
         <source>SHADED</source>
         <translation>Shaded</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="167"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="65"/>
+        <source>SHADED_FACE_BNDS</source>
+        <translation>Shaded With Face Boundaries</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="169"/>
         <source>SHRINK</source>
         <translation>Shrink</translation>
     </message>
 </context>
 <context>
-    <name>Mayo::GraphicsMeshEntityProperties</name>
+    <name>Mayo::GraphicsMeshEntityDriver_EntityProperties</name>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="249"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="252"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="250"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="253"/>
         <source>showEdges</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="251"/>
+        <location filename="../src/graphics/graphics_entity_driver.cpp" line="254"/>
         <source>showNodes</source>
         <translation>Show Nodes</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::GraphicsShapeEntityDriver</name>
-    <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="60"/>
-        <source>WIREFRAME</source>
-        <translation>Wireframe</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="61"/>
-        <source>HLR</source>
-        <translation>Hidden Line Removal</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="62"/>
-        <source>SHADED</source>
-        <translation>Shaded</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_entity_driver.cpp" line="63"/>
-        <source>SHADED_FACE_BNDS</source>
-        <translation>Shaded With Face Boundaries</translation>
     </message>
 </context>
 <context>
@@ -550,65 +539,75 @@
     <message>
         <location filename="../src/base/io_occ_base_mesh.cpp" line="24"/>
         <source>systemLengthUnit</source>
-        <translation>SystemLength Unit</translation>
+        <translation>System Length Unit</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="71"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="26"/>
+        <source>Prefix for generating root labels name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="27"/>
+        <source>System length units to convert into while reading files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
         <source>UnitUndefined</source>
         <translation>Undefined</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
         <source>UnitMicrometer</source>
         <translation>Micrometer(µm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="75"/>
         <source>UnitMillimeter</source>
         <translation>Millimeter(mm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="76"/>
         <source>UnitCentimeter</source>
         <translation>Centimer(cm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="75"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="77"/>
         <source>UnitMeter</source>
         <translation>Meter(m)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="76"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="78"/>
         <source>UnitKilometer</source>
         <translation>Kilometer(km)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="77"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="79"/>
         <source>UnitInch</source>
         <translation>Inch(in)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="78"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="80"/>
         <source>UnitFoot</source>
         <translation>Foot(ft)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="79"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="81"/>
         <source>UnitMile</source>
         <translation>Mile(mi)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="87"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="89"/>
         <source>SystemUndefined</source>
         <translation>Undefined</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="88"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="90"/>
         <source>SystemPosZUp</source>
         <translation>+Z up</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="89"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="91"/>
         <source>SystemPosYUp</source>
         <translation>+Y up</translation>
     </message>
@@ -1397,14 +1396,14 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
 </context>
 <context>
-    <name>Mayo::Mesh_DocumentTreeNodeProps</name>
+    <name>Mayo::Mesh_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="173"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="185"/>
         <source>NodeCount</source>
         <translation>Count Of Nodes</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="174"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="186"/>
         <source>TriangleCount</source>
         <translation>Count Of Triangles</translation>
     </message>
@@ -1760,99 +1759,99 @@ Last modified: %4</source>
     </message>
 </context>
 <context>
-    <name>Mayo::XCaf_DocumentTreeNodeProps</name>
+    <name>Mayo::XCaf_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="33"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="23"/>
         <source>Name</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="34"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="24"/>
         <source>Shape</source>
         <translation>Shape</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="35"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="25"/>
         <source>XdeShape</source>
         <translation>XDE Shape Type</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="36"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="26"/>
         <source>Color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="37"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="27"/>
         <source>Location</source>
         <translation>Location</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="38"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="28"/>
         <source>Centroid</source>
         <translation>Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="39"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="29"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="40"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="30"/>
         <source>Volume</source>
         <translation>Volume</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="41"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="31"/>
         <source>ProductName</source>
         <translation>Product Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="42"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="32"/>
         <source>ProductColor</source>
         <translation>Product Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="43"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="33"/>
         <source>ProductCentroid</source>
         <translation>Product Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="44"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="34"/>
         <source>ProductArea</source>
         <translation>Product Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="45"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="35"/>
         <source>ProductVolume</source>
         <translation>Product Volume</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="61"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="51"/>
         <source>Assembly</source>
         <translation>Assembly</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="64"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="54"/>
         <source>Reference</source>
         <translation>Instance</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="67"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="57"/>
         <source>Component</source>
         <translation>Component</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="70"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="60"/>
         <source>Compound</source>
         <translation>Compound</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="73"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="63"/>
         <source>Simple</source>
         <translation>Simple</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="76"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="66"/>
         <source>Sub</source>
         <translation>Sub</translation>
     </message>
@@ -1862,67 +1861,67 @@ Last modified: %4</source>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="46"/>
         <source>Solid</source>
-        <translation type="unfinished">Solid</translation>
+        <translation>Solid</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="47"/>
         <source>Horizontal</source>
-        <translation type="unfinished">Horizontal</translation>
+        <translation>Horizontal</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="48"/>
         <source>HorizontalSparse</source>
-        <translation type="unfinished">Horizontal Sparse</translation>
+        <translation>Horizontal Sparse</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="49"/>
         <source>Vertical</source>
-        <translation type="unfinished">Vertical</translation>
+        <translation>Vertical</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="50"/>
         <source>VerticalSparse</source>
-        <translation type="unfinished">Vertical Sparse</translation>
+        <translation>Vertical Sparse</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="51"/>
         <source>Diagonal45</source>
-        <translation type="unfinished">Diagonal 45°</translation>
+        <translation>Diagonal 45°</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="52"/>
         <source>Diagonal45Sparse</source>
-        <translation type="unfinished">Diagonal 45° Sparse</translation>
+        <translation>Diagonal 45° Sparse</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="53"/>
         <source>Diagonal135</source>
-        <translation type="unfinished">Diagonal 135°</translation>
+        <translation>Diagonal 135°</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="54"/>
         <source>Diagonal135Sparse</source>
-        <translation type="unfinished">Diagonal 135° Sparse</translation>
+        <translation>Diagonal 135° Sparse</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="55"/>
         <source>Grid</source>
-        <translation type="unfinished">Grid</translation>
+        <translation>Grid</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="56"/>
         <source>GridSparse</source>
-        <translation type="unfinished">Grid Sparse</translation>
+        <translation>Grid Sparse</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="57"/>
         <source>GridDiagonal</source>
-        <translation type="unfinished">Grid Diagonal</translation>
+        <translation>Grid Diagonal</translation>
     </message>
     <message>
         <location filename="../src/base/occt_enums.cpp" line="58"/>
         <source>GridDiagonalSparse</source>
-        <translation type="unfinished">Grid Diagonal Sparse</translation>
+        <translation>Grid Diagonal Sparse</translation>
     </message>
 </context>
 <context>

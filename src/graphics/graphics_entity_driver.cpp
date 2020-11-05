@@ -28,6 +28,8 @@
 
 namespace Mayo {
 
+namespace { struct GraphicsEntityDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsEntityDriver) }; }
+
 void GraphicsEntityDriver::throwIf_invalidDisplayMode(Enumeration::Value mode) const
 {
     if (this->displayModes().findIndex(mode) == -1)
@@ -57,10 +59,10 @@ void GraphicsEntityDriver::setEntityAisObject(
 GraphicsShapeEntityDriver::GraphicsShapeEntityDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "WIREFRAME") },
-        { DisplayMode_HiddenLineRemoval, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "HLR") },
-        { DisplayMode_Shaded, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED") },
-        { DisplayMode_ShadedWithFaceBoundary, MAYO_TEXT_ID("Mayo::GraphicsShapeEntityDriver", "SHADED_FACE_BNDS") }
+        { DisplayMode_Wireframe, GraphicsEntityDriverI18N::textId("WIREFRAME"), {} },
+        { DisplayMode_HiddenLineRemoval, GraphicsEntityDriverI18N::textId("HLR"), {} },
+        { DisplayMode_Shaded, GraphicsEntityDriverI18N::textId("SHADED"), {} },
+        { DisplayMode_ShadedWithFaceBoundary, GraphicsEntityDriverI18N::textId("SHADED_FACE_BNDS"), {} }
     });
 }
 
@@ -162,9 +164,9 @@ std::unique_ptr<PropertyGroupSignals> GraphicsShapeEntityDriver::properties(cons
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "WIREFRAME") },
-        { MeshVS_DMF_Shading, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHADED") },
-        { MeshVS_DMF_Shrink, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityDriver", "SHRINK") } // MeshVS_DA_ShrinkCoeff
+        { MeshVS_DMF_WireFrame, GraphicsEntityDriverI18N::textId("WIREFRAME"), {} },
+        { MeshVS_DMF_Shading, GraphicsEntityDriverI18N::textId("SHADED"), {} },
+        { MeshVS_DMF_Shrink, GraphicsEntityDriverI18N::textId("SHRINK"), {} } // MeshVS_DA_ShrinkCoeff
     });
 }
 
@@ -241,14 +243,15 @@ Enumeration::Value GraphicsMeshEntityDriver::currentDisplayMode(const GraphicsEn
     return entity.displayMode();
 }
 
-class GraphicsMeshEntityProperties : public GraphicsEntityBasePropertyGroup {
+class GraphicsMeshEntityDriver::EntityProperties : public GraphicsEntityBasePropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsMeshEntityDriver_EntityProperties)
 public:
-    GraphicsMeshEntityProperties(const GraphicsEntity& entity)
+    EntityProperties(const GraphicsEntity& entity)
         : GraphicsEntityBasePropertyGroup(entity),
           m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
-          m_propertyColor(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "color")),
-          m_propertyShowEdges(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showEdges")),
-          m_propertyShowNodes(this, MAYO_TEXT_ID("Mayo::GraphicsMeshEntityProperties", "showNodes"))
+          m_propertyColor(this, textId("color")),
+          m_propertyShowEdges(this, textId("showEdges")),
+          m_propertyShowNodes(this, textId("showNodes"))
     {
         // Init properties
         Mayo_PropertyChangedBlocker(this);
@@ -296,7 +299,7 @@ public:
 std::unique_ptr<PropertyGroupSignals> GraphicsMeshEntityDriver::properties(const GraphicsEntity& entity) const
 {
     this->throwIf_differentDriver(entity);
-    return std::make_unique<GraphicsMeshEntityProperties>(entity);
+    return std::make_unique<EntityProperties>(entity);
 }
 
 namespace Internal {
