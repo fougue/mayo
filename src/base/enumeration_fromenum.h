@@ -11,6 +11,10 @@
 #include <QtCore/QMetaEnum>
 #include <magic_enum/magic_enum.hpp>
 
+// --
+// -- Implementation of template functions Enumeration::fromQENUM() and Enumeration::fromQENUM()
+// --
+
 namespace Mayo {
 
 template<typename QENUM>
