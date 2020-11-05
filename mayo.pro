@@ -86,6 +86,7 @@ RC_ICONS = images/appicon.ico
 
 OTHER_FILES += \
     README.md \
+    appveyor.yml \
     images/credits.txt
 
 # gmio
