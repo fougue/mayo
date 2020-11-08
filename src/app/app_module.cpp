@@ -16,23 +16,15 @@
 
 namespace Mayo {
 
-static const Enumeration& enumUnitSchemas()
-{
-    static const Enumeration enumeration = {
-        { UnitSystem::SI, AppModule::textId("SI") },
-        { UnitSystem::ImperialUK, AppModule::textId("IMPERIAL_UK") }
-    };
-    return enumeration;
-}
+static inline const Enumeration enumUnitSchemas = {
+    { UnitSystem::SI, AppModule::textId("SI"), {} },
+    { UnitSystem::ImperialUK, AppModule::textId("IMPERIAL_UK"), {} }
+};
 
-static const Enumeration& enumLanguages()
-{
-    static Enumeration enumeration = {
-        { 0, AppModule::textId("en") },
-        { 1, AppModule::textId("fr") }
-    };
-    return enumeration;
-}
+static inline const Enumeration enumLanguages = {
+    { 0, AppModule::textId("en"), {} },
+    { 1, AppModule::textId("fr"), {} }
+};
 
 AppModule::AppModule(Application* app)
     : QObject(app),
@@ -44,10 +36,10 @@ AppModule::AppModule(Application* app)
       sectionId_systemUnits(
           app->settings()->addSection(this->groupId_system, textId("units"))),
       unitSystemDecimals(app->settings(), textId("decimalCount")),
-      unitSystemSchema(app->settings(), textId("schema"), &enumUnitSchemas()),
+      unitSystemSchema(app->settings(), textId("schema"), &enumUnitSchemas),
       // Application
       groupId_application(app->settings()->addGroup(textId("application"))),
-      language(this, textId("language"), &enumLanguages()),
+      language(this, textId("language"), &enumLanguages),
       recentFiles(this, textId("recentFiles")),
       lastOpenDir(this, textId("lastOpenFolder")),
       lastSelectedFormatFilter(this, textId("lastSelectedFormatFilter")),
@@ -150,7 +142,7 @@ AppModule::AppModule(Application* app)
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
     settings->addGroupResetFunction(this->groupId_application, [&]{
-        this->language.setValue(enumLanguages().findValue("en"));
+        this->language.setValue(enumLanguages.findValue("en"));
         this->recentFiles.setValue(QStringList());
         this->lastOpenDir.setValue(QString());
         this->lastSelectedFormatFilter.setValue(QString());

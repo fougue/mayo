@@ -20,6 +20,9 @@ public: \
     static inline Mayo::TextId textId(const char* sourceText) { \
         return Mayo::TextId{ QByteArrayLiteral(#context), QByteArray::fromRawData(sourceText, int(std::strlen(sourceText))) }; \
     } \
+    static inline QString textIdTr(const char* sourceText) { \
+        return textId(sourceText).tr(); \
+    } \
 private:
 
 namespace Mayo {

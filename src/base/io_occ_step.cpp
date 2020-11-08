@@ -12,7 +12,6 @@
 #include "task_progress.h"
 #include "enumeration_fromenum.h"
 
-#include <QtCore/QCoreApplication>
 #include <Interface_Static.hxx>
 #include <STEPCAFControl_Controller.hxx>
 
@@ -21,7 +20,6 @@ namespace IO {
 
 class OccStepReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader_Properties)
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccStepReader_Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
@@ -32,25 +30,25 @@ public:
           encoding(this, textId("encoding"), &enumEncoding())
     {
         this->productContext.setDescription(
-                    tr("When reading AP 209 STEP files, allows selecting either only `design` or "
-                       "`analysis`, or both types of products for translation\n"
-                       "Note that in AP 203 and AP214 files all products should be marked as `design`, "
-                       "so if this mode is set to `analysis`, nothing will be read"));
+                    textIdTr("When reading AP 209 STEP files, allows selecting either only `design` "
+                             "or `analysis`, or both types of products for translation\n"
+                             "Note that in AP 203 and AP214 files all products should be marked as "
+                             "`design`, so if this mode is set to `analysis`, nothing will be read"));
         this->assemblyLevel.setDescription(
-                    tr("Specifies which data should be read for the products found in the STEP file"));
+                    textIdTr("Specifies which data should be read for the products found in the STEP file"));
         this->preferredShapeRepresentation.setDescription(
-                    tr("Specifies preferred type of representation of the shape of the product, in "
-                       "case if a STEP file contains more than one representation (i.e. multiple "
-                       "`PRODUCT_DEFINITION_SHAPE` entities) for a single product"));
+                    textIdTr("Specifies preferred type of representation of the shape of the product, in "
+                             "case if a STEP file contains more than one representation (i.e. multiple "
+                             "`PRODUCT_DEFINITION_SHAPE` entities) for a single product"));
         this->readShapeAspect.setDescription(
-                    tr("Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity "
-                       "of the product via `SHAPE_ASPECT` should be translated.\n"
-                       "This kind of association was used for the representation of hybrid models (i.e. models "
-                       "whose shape is composed of different types of representations) in AP 203 files "
-                       "before 1998, but it is also used to associate auxiliary information with the "
-                       "sub-shapes of the part. Though STEP translator tries to recognize such cases "
-                       "correctly, this parameter may be useful to avoid unconditionally translation "
-                       "of shapes associated via `SHAPE_ASPECT` entities."));
+                    textIdTr("Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity "
+                             "of the product via `SHAPE_ASPECT` should be translated.\n"
+                             "This kind of association was used for the representation of hybrid models (i.e. models "
+                             "whose shape is composed of different types of representations) in AP 203 files "
+                             "before 1998, but it is also used to associate auxiliary information with the "
+                             "sub-shapes of the part. Though STEP translator tries to recognize such cases "
+                             "correctly, this parameter may be useful to avoid unconditionally translation "
+                             "of shapes associated via `SHAPE_ASPECT` entities."));
     }
 
     void restoreDefaults() override {
@@ -62,58 +60,58 @@ public:
 
     inline static const Enumeration enumProductContext = {
         { int(ProductContext::Design), textId("Design"),
-          tr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
-             "`life_cycle_stage` set to `design`") },
+          textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
+                   "`life_cycle_stage` set to `design`") },
         { int(ProductContext::Analysis), textId("Analysis"),
-          tr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
-             "`life_cycle_stage` set to `analysis`") },
-        { int(ProductContext::Both), textId("Both"), tr("Translates all products") }
+          textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
+                   "`life_cycle_stage` set to `analysis`") },
+        { int(ProductContext::Both), textId("Both"), textIdTr("Translates all products") }
     };
 
     inline static const Enumeration enumAssemblyLevel = {
         { int(AssemblyLevel::Assembly), textId("Assembly"),
-          tr("Translate the assembly structure and shapes associated with parts only "
-             "(not with sub-assemblies)") },
+          textIdTr("Translate the assembly structure and shapes associated with parts only "
+                   "(not with sub-assemblies)") },
         { int(AssemblyLevel::Structure), textId("Structure"),
-          tr("Translate only the assembly structure without shapes (a structure of "
-             "empty compounds). This mode can be useful as an intermediate step in "
-             "applications requiring specialized processing of assembly parts") },
+          textIdTr("Translate only the assembly structure without shapes (a structure of "
+                   "empty compounds). This mode can be useful as an intermediate step in "
+                   "applications requiring specialized processing of assembly parts") },
         { int(AssemblyLevel::Shape), textId("Shape"),
-          tr("Translate only shapes associated with the product, ignoring the assembly "
-             "structure (if any). This can be useful to translate only a shape associated "
-             "with specific product, as a complement to assembly mode") },
+          textIdTr("Translate only shapes associated with the product, ignoring the assembly "
+                   "structure (if any). This can be useful to translate only a shape associated "
+                   "with specific product, as a complement to assembly mode") },
         { int(AssemblyLevel::All), textId("All"),
-          tr("Translate both the assembly structure and all associated shapes. "
-             "If both shape and sub-assemblies are associated with the same product, "
-             "all of them are read and put in a single compound") }
+          textIdTr("Translate both the assembly structure and all associated shapes. "
+                   "If both shape and sub-assemblies are associated with the same product, "
+                   "all of them are read and put in a single compound") }
     };
 
     inline static const Enumeration enumShapeRepresentation = {
         { int(ShapeRepresentation::AdvancedBRep), textId("AdvancedBRep"),
-          tr("Prefer `ADVANCED_BREP_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `ADVANCED_BREP_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::ManifoldSurface), textId("ManifoldSurface"),
-          tr("Prefer `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::GeometricallyBoundedSurface), textId("GeometricallyBoundedSurface"),
-          tr("Prefer `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::FacettedBRep), textId("FacettedBRep"),
-          tr("Prefer `FACETTED_BREP_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `FACETTED_BREP_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::EdgeBasedWireframe), textId("EdgeBasedWireframe"),
-          tr("Prefer `EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::GeometricallyBoundedWireframe), textId("GeometricallyBoundedWireframe"),
-          tr("Prefer `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`") },
+          textIdTr("Prefer `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`") },
         { int(ShapeRepresentation::All), textId("All"),
-          tr("Translate all representations (if more than one, put in compound)") },
+          textIdTr("Translate all representations (if more than one, put in compound)") },
     };
 
     static const Enumeration& enumEncoding() {
         static Enumeration enumObject = Enumeration::fromEnum<Encoding>(textIdContext());
         if (enumObject.descriptionsEmpty()) {
-            enumObject.setDescription(Encoding::Shift_JIS, tr("Shift Japanese Industrial Standards"));
+            enumObject.setDescription(Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards"));
             enumObject.setDescription(
                         Encoding::EUC,
-                        tr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
-                           "and simplified Chinese"));
-            enumObject.setDescription(Encoding::GB, tr("GB (Guobiao) encoding for Simplified Chinese"));
+                        textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
+                                 "and simplified Chinese"));
+            enumObject.setDescription(Encoding::GB, textIdTr("GB (Guobiao) encoding for Simplified Chinese"));
         }
 
         return enumObject;
@@ -228,7 +226,6 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 
 class OccStepWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter_Properties)
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccStepWriter_Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
@@ -238,11 +235,11 @@ public:
           writePCurves(this, textId("writeParametericCurves"))
     {
         this->schema.setDescription(
-                    tr("Version of schema used for the output STEP file"));
+                    textIdTr("Version of schema used for the output STEP file"));
         this->writePCurves.setDescription(
-                    tr("Whether parametric curves (curves in parametric space of surface) should be "
-                       "written into the STEP file.\n"
-                       "It can be disabled in order to minimize the size of the resulting file."));
+                    textIdTr("Whether parametric curves (curves in parametric space of surface) should be "
+                             "written into the STEP file.\n"
+                             "It can be disabled in order to minimize the size of the resulting file."));
     }
 
     void restoreDefaults() override {

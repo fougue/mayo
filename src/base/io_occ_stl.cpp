@@ -54,7 +54,7 @@ class OccStlWriter::Properties : public PropertyGroup {
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          targetFormat(this, textId("targetFormat"), &enumFormat())
+          targetFormat(this, textId("targetFormat"), &enumFormat)
     {
     }
 
@@ -62,13 +62,10 @@ public:
         this->targetFormat.setValue(int(Format::Binary));
     }
 
-    static const Enumeration& enumFormat() {
-        static const Enumeration values = {
-            { int(OccStlWriter::Format::Ascii), textId("Ascii") },
-            { int(OccStlWriter::Format::Binary), textId("Binary") }
-        };
-        return values;
-    }
+    static inline const Enumeration enumFormat = {
+        { int(OccStlWriter::Format::Ascii), textId("Ascii"), {} },
+        { int(OccStlWriter::Format::Binary), textId("Binary"), {} }
+    };
 
     PropertyEnumeration targetFormat;
 };

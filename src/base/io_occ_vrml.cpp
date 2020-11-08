@@ -27,7 +27,7 @@ class OccVrmlWriter::Properties : public PropertyGroup {
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          shapeRepresentation(this, textId("shapeRepresentation"), &enumShapeRepresentation())
+          shapeRepresentation(this, textId("shapeRepresentation"), &enumShapeRepresentation)
     {
     }
 
@@ -35,14 +35,11 @@ public:
         this->shapeRepresentation.setValue(VrmlAPI_BothRepresentation);
     }
 
-    static const Enumeration& enumShapeRepresentation() {
-        static const Enumeration values = {
-            { VrmlAPI_ShadedRepresentation, textId("RepresentationShaded") },
-            { VrmlAPI_WireFrameRepresentation, textId("RepresentationWireframe") },
-            { VrmlAPI_BothRepresentation, textId("RepresentationBoth") },
-        };
-        return values;
-    }
+    static inline const Enumeration enumShapeRepresentation = {
+        { VrmlAPI_ShadedRepresentation, textId("RepresentationShaded"), {} },
+        { VrmlAPI_WireFrameRepresentation, textId("RepresentationWireframe"), {} },
+        { VrmlAPI_BothRepresentation, textId("RepresentationBoth"), {} },
+    };
 
 //    PropertyBool m_meshDeflectionFromShapeRelativeSize;
 //    PropertyDouble m_meshDeflection;

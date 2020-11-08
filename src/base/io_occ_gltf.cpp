@@ -7,14 +7,11 @@
 #include "io_occ_gltf.h"
 #include "property_builtins.h"
 
-#include <QtCore/QCoreApplication>
-
 namespace Mayo {
 namespace IO {
 
 class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader_Properties)
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccGltfReader_Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup),
@@ -22,9 +19,9 @@ public:
           useMeshNameAsFallback(this, textId("useMeshNameAsFallback"))
     {
        this->skipEmptyNodes.setDescription(
-                    tr("Whether if nodes without geometry should be ignored(`Yes` by default)"));
+                    textIdTr("Whether if nodes without geometry should be ignored(`Yes` by default)"));
         this->useMeshNameAsFallback.setDescription(
-                    tr("Use mesh name in case if node name is empty(`Yes` by default)"));
+                    textIdTr("Use mesh name in case if node name is empty(`Yes` by default)"));
     }
 
     void restoreDefaults() override {
