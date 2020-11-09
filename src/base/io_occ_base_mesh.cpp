@@ -10,6 +10,7 @@
 #include "scope_import.h"
 #include "occ_progress_indicator.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 #include <fougtools/occtools/qt_utils.h>
 
 #include <RWMesh_CafReader.hxx>
@@ -89,7 +90,8 @@ bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
     m_reader.SetDocument(doc);
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     XCafScopeImport import(doc);
-    const bool okPerform = m_reader.Perform(occ::QtUtils::toOccUtf8String(m_filepath), indicator);
+    const bool okPerform = m_reader.Perform(
+                occ::QtUtils::toOccUtf8String(m_filepath), TKernelUtils::start(indicator));
     import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
     return okPerform;
 }

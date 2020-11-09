@@ -8,7 +8,6 @@
 
 // --
 // -- Provides helper tools for IGESCAF/STEPCAF reader/writer
-// -- TODO Should be explicitely internal(eg move corresponding files into internal/ subfolder
 // --
 
 #include "application_item.h"

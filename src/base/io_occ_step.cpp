@@ -10,6 +10,7 @@
 #include "property_builtins.h"
 #include "property_enumeration.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 #include "enumeration_fromenum.h"
 
 #include <Interface_Static.hxx>
@@ -105,8 +106,8 @@ public:
         enumObject.setDescription(Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards"));
         enumObject.setDescription(
                     Encoding::EUC,
-                    textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
-                             "and simplified Chinese"));
+                    textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, "
+                             "Korean, and simplified Chinese"));
         enumObject.setDescription(Encoding::GB, textIdTr("GB (Guobiao) encoding for Simplified Chinese"));
         return enumObject;
     }
@@ -171,16 +172,45 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         case Encoding::ANSI: return "ANSI";
         case Encoding::GB: return "GB";
         case Encoding::UTF8: return "UTF8";
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+        // Windows-native ("ANSI") 8-bit code pages
+        case Encoding::CP_1250: return "CP1250";
+        case Encoding::CP_1251: return "CP1251";
+        case Encoding::CP_1252: return "CP1252";
+        case Encoding::CP_1253: return "CP1253";
+        case Encoding::CP_1254: return "CP1254";
+        case Encoding::CP_1255: return "CP1255";
+        case Encoding::CP_1256: return "CP1256";
+        case Encoding::CP_1257: return "CP1257";
+        case Encoding::CP_1258: return "CP1258";
+        // ISO8859 8-bit code pages
+        case Encoding::ISO_8859_1: return "iso8859-1";
+        case Encoding::ISO_8859_2: return "iso8859-2";
+        case Encoding::ISO_8859_3: return "iso8859-3";
+        case Encoding::ISO_8859_4: return "iso8859-4";
+        case Encoding::ISO_8859_5: return "iso8859-5";
+        case Encoding::ISO_8859_6: return "iso8859-6";
+        case Encoding::ISO_8859_7: return "iso8859-7";
+        case Encoding::ISO_8859_8: return "iso8859-8";
+        case Encoding::ISO_8859_9: return "iso8859-9";
+#endif
         }
         Q_UNREACHABLE();
     };
+
+    const char strKeyReadStepCodePage[] =
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+        "read.step.codepage";
+#else
+        "read.stepcaf.codepage";
+#endif
 
     rollback->change("read.step.product.context", int(m_params.productContext));
     rollback->change("read.step.assembly.level", int(m_params.assemblyLevel));
     rollback->change("read.step.shape.repr", int(m_params.preferredShapeRepresentation));
     rollback->change("read.step.shape.aspect", int(m_params.readShapeAspect ? 1 : 0));
     rollback->change("read.stepcaf.subshapes.name", int(m_params.readSubShapesNames ? 1 : 0));
-    rollback->change("read.stepcaf.codepage", fnOccEncoding(m_params.encoding));
+    rollback->change(strKeyReadStepCodePage, fnOccEncoding(m_params.encoding));
 }
 
 class OccStepWriter::Properties : public PropertyGroup {

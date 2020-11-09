@@ -10,12 +10,32 @@
 
 namespace Mayo {
 
-OccProgressIndicator::OccProgressIndicator(TaskProgress *progress)
+OccProgressIndicator::OccProgressIndicator(TaskProgress* progress)
     : m_progress(progress)
 {
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
     this->SetScale(0., 100., 1.);
+#endif
 }
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool isForce)
+{
+    if (m_progress) {
+        if (scope.Name() && (scope.Name() != m_lastStepName || isForce)) {
+            m_progress->setStep(QString::fromUtf8(scope.Name()));
+            m_lastStepName = scope.Name();
+        }
+
+        const double pc = scope.GetPortion(); // Always within [0,1]
+        const int val = pc * 100;
+        if (m_lastProgress != val || isForce) {
+            m_progress->setValue(val);
+            m_lastProgress = val;
+        }
+    }
+}
+#else
 bool OccProgressIndicator::Show(const bool /*force*/)
 {
     if (m_progress) {
@@ -24,14 +44,13 @@ bool OccProgressIndicator::Show(const bool /*force*/)
             m_progress->setStep(occ::QtUtils::fromUtf8ToQString(name->String()));
 
         const double pc = this->GetPosition(); // Always within [0,1]
-        const int minVal = 0;
-        const int maxVal = 100;
-        const int val = minVal + pc * (maxVal - minVal);
+        const int val = pc * 100;
         m_progress->setValue(val);
     }
 
     return true;
 }
+#endif
 
 bool OccProgressIndicator::UserBreak()
 {

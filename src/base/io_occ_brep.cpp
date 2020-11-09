@@ -12,6 +12,7 @@
 #include "occ_progress_indicator.h"
 #include "scope_import.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 
 #include <QtCore/QFileInfo>
 #include <BRep_Builder.hxx>
@@ -26,7 +27,11 @@ bool OccBRepReader::readFile(const QString& filepath, TaskProgress* progress)
     m_baseFilename = QFileInfo(filepath).baseName();
     BRep_Builder brepBuilder;
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    return BRepTools::Read(m_shape, filepath.toLocal8Bit().constData(), brepBuilder, indicator);
+    return BRepTools::Read(
+                m_shape,
+                filepath.toLocal8Bit().constData(),
+                brepBuilder,
+                TKernelUtils::start(indicator));
 }
 
 bool OccBRepReader::transfer(DocumentPtr doc, TaskProgress* progress)
@@ -80,7 +85,7 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
 bool OccBRepWriter::writeFile(const QString& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    return BRepTools::Write(m_shape, filepath.toLocal8Bit().constData(), indicator);
+    return BRepTools::Write(m_shape, filepath.toLocal8Bit().constData(), TKernelUtils::start(indicator));
 }
 
 } // namespace IO

@@ -9,6 +9,7 @@
 #include "io_occ_common.h"
 #include "io_reader.h"
 #include "io_writer.h"
+#include "tkernel_utils.h"
 #include <NCollection_Vector.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
@@ -52,7 +53,29 @@ public:
         EUC,       // (Extended Unix Code) multi-byte encoding primarily for Japanese, Korean, and simplified Chinese
         ANSI,
         GB,        // (Guobiao) encoding for Simplified Chinese
-        UTF8
+        UTF8,
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+        // Windows-native ("ANSI") 8-bit code pages
+        CP_1250, // Central European
+        CP_1251, // Cyrillic
+        CP_1252, // Western European
+        CP_1253, // Greek
+        CP_1254, // Turkish
+        CP_1255, // Hebrew
+        CP_1256, // Arabic
+        CP_1257, // Baltic
+        CP_1258, // Vietnamese
+        // ISO8859 8-bit code pages
+        ISO_8859_1, //Western European
+        ISO_8859_2, //Central European
+        ISO_8859_3, //Turkish
+        ISO_8859_4, //Northern European
+        ISO_8859_5, //Cyrillic
+        ISO_8859_6, //Arabic
+        ISO_8859_7, //Greek
+        ISO_8859_8, //Hebrew
+        ISO_8859_9, // Turkish
+#endif
     };
 
     struct Parameters {

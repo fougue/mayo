@@ -1,5 +1,10 @@
-// Excerpted from $OCC/samples/qt/Common/src
-#include "occt_window.h"
+#include <Standard_Version.hxx>
+#if OCC_VERSION_HEX <= 0x070400
+#include "occt_window_740.h"
+
+// --
+// -- Copy from $OCC7.4.0/samples/qt/Common/src/OcctWindow.h
+// --
 
 IMPLEMENT_STANDARD_RTTIEXT(OcctWindow,Aspect_Window)
 
@@ -169,3 +174,5 @@ void OcctWindow::Position ( Standard_Integer& theX1, Standard_Integer& theY1,
   theY1 = myWidget->rect().top();
   theY2 = myWidget->rect().bottom();
 }
+
+#endif // OCC <= v7.4.0

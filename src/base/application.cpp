@@ -10,15 +10,18 @@
 #include "property_builtins.h"
 #include "qmeta_quantity_color.h"
 #include "settings.h"
+#include "tkernel_utils.h"
 
 #include <fougtools/occtools/qt_utils.h>
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
-#include <CDF_Session.hxx>
 #include <XCAFApp_Application.hxx>
 #include <XmlXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <XmlXCAFDrivers_DocumentStorageDriver.hxx>
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
+#  include <CDF_Session.hxx>
+#endif
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -286,13 +289,17 @@ void Application::addDocument(const DocumentPtr& doc)
     }
 }
 
-Application::DocumentIterator::DocumentIterator(const ApplicationPtr&)
-    : CDF_DirectoryIterator(CDF_Session::CurrentSession()->Directory())
+Application::DocumentIterator::DocumentIterator(const ApplicationPtr& app)
+    : DocumentIterator(app.get())
 {
 }
 
-Application::DocumentIterator::DocumentIterator(const Application*)
+Application::DocumentIterator::DocumentIterator(const Application* app)
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    : CDF_DirectoryIterator(app->myDirectory)
+#else
     : CDF_DirectoryIterator(CDF_Session::CurrentSession()->Directory())
+#endif
 {
 }
 

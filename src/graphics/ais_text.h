@@ -6,18 +6,23 @@
 
 #pragma once
 
+#include "../base/tkernel_utils.h"
+
 #include <AIS_InteractiveObject.hxx>
 #include <Aspect_TypeOfDisplayText.hxx>
 #include <Aspect_TypeOfStyleText.hxx>
 #include <gp_Pnt.hxx>
 #include <Graphic3d_AspectText3d.hxx>
 #include <Prs3d_Presentation.hxx>
-#include <Prs3d_Projector.hxx>
 #include <Prs3d_TextAspect.hxx>
 #include <PrsMgr_PresentationManager3d.hxx>
 #include <SelectMgr_Selection.hxx>
 #include <Quantity_Color.hxx>
 #include <TCollection_ExtendedString.hxx>
+
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
+#  include <Prs3d_Projector.hxx>
+#endif
 
 namespace Mayo {
 
@@ -58,9 +63,13 @@ protected:
             const opencascade::handle<PrsMgr_PresentationManager3d>& pm,
             const opencascade::handle<Prs3d_Presentation>& pres,
             const int mode) override;
+
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
     void Compute(
-            const opencascade::handle<Prs3d_Projector>& proj,
-            const opencascade::handle<Prs3d_Presentation>& pres) override;
+            const opencascade::handle<Prs3d_Projector>&,
+            const opencascade::handle<Prs3d_Presentation>&) override
+    {}
+#endif
 
 private:
     struct TextProperties {

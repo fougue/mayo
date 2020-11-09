@@ -157,12 +157,6 @@ void AIS_Text::Compute(
     }
 }
 
-void AIS_Text::Compute(
-        const opencascade::handle<Prs3d_Projector>&,
-        const opencascade::handle<Prs3d_Presentation>&)
-{
-}
-
 void AIS_Text::ComputeSelection(
         const opencascade::handle<SelectMgr_Selection>&, const int)
 {
