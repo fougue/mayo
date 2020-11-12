@@ -147,7 +147,7 @@ bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
     // "read.stepcaf.subshapes.name"
-    return cafReadFile(m_reader, filepath, progress);
+    return Private::cafReadFile(m_reader, filepath, progress);
 }
 
 bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
@@ -155,7 +155,7 @@ bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return cafTransfer(m_reader, doc, progress);
+    return Private::cafTransfer(m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccStepReader::createProperties(PropertyGroup* parentGroup)
@@ -276,7 +276,7 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return cafTransfer(m_writer, appItems, progress);
+    return Private::cafTransfer(m_writer, appItems, progress);
 }
 
 bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)

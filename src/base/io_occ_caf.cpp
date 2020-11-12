@@ -20,20 +20,6 @@
 namespace Mayo {
 namespace IO {
 
-std::mutex& cafGlobalMutex()
-{
-    static std::mutex mutex;
-    return mutex;
-}
-
-Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader) {
-    return reader.Reader().WS();
-}
-
-Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader) {
-    return reader.WS();
-}
-
 namespace {
 
 template<typename CAF_READER>
@@ -49,7 +35,7 @@ template<typename CAF_READER>
 bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    Handle_XSControl_WorkSession ws = cafWorkSession(reader);
+    Handle_XSControl_WorkSession ws = Private::cafWorkSession(reader);
     ws->MapReader()->SetProgress(indicator);
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
 
@@ -64,8 +50,8 @@ template<typename CAF_WRITER>
 bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    cafFinderProcess(writer)->SetProgress(indicator);
-    auto _ = gsl::finally([&]{ cafFinderProcess(writer)->SetProgress(nullptr); });
+    Private::cafFinderProcess(writer)->SetProgress(indicator);
+    auto _ = gsl::finally([&]{ Private::cafFinderProcess(writer)->SetProgress(nullptr); });
     for (const ApplicationItem& item : appItems) {
         bool okItemTransfer = false;
         if (item.isDocument())
@@ -81,6 +67,22 @@ bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> app
 }
 
 } // namespace
+
+namespace Private {
+
+std::mutex& cafGlobalMutex()
+{
+    static std::mutex mutex;
+    return mutex;
+}
+
+Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader) {
+    return reader.Reader().WS();
+}
+
+Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader) {
+    return reader.WS();
+}
 
 bool cafReadFile(IGESCAFControl_Reader& reader, const QString& filepath, TaskProgress* progress) {
     return cafGenericReadFile(reader, filepath, progress);
@@ -114,5 +116,6 @@ bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appI
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
+} // namespace Private
 } // namespace IO
 } // namespace Mayo

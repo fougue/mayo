@@ -31,11 +31,12 @@ namespace Mayo {
 class TaskProgress;
 
 namespace IO {
+namespace Private {
 
 std::mutex& cafGlobalMutex();
 
 #define MayoIO_CafGlobalScopedLock(name) \
-    std::lock_guard<std::mutex> name(cafGlobalMutex()); \
+    std::lock_guard<std::mutex> name(Mayo::IO::Private::cafGlobalMutex()); \
     Q_UNUSED(name);
 
 Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader);
@@ -53,5 +54,6 @@ bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* p
 bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
 bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
 
+} // namespace Private
 } // namespace IO
 } // namespace Mayo
