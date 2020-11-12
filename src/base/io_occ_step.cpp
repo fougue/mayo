@@ -25,7 +25,7 @@ public:
         : PropertyGroup(parentGroup),
           productContext(this, textId("productContext"), &enumProductContext),
           assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel),
-          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation),
+          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation()),
           readShapeAspect(this, textId("readShapeAspect")),
           readSubShapesNames(this, textId("readSubShapesNames")),
           encoding(this, textId("encoding"), &enumEncoding())
@@ -92,34 +92,22 @@ public:
                    "all of them are read and put in a single compound") }
     };
 
-    inline static const Enumeration enumShapeRepresentation = {
-        { int(ShapeRepresentation::AdvancedBRep), textId("AdvancedBRep"),
-          textIdTr("Prefer `ADVANCED_BREP_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::ManifoldSurface), textId("ManifoldSurface"),
-          textIdTr("Prefer `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::GeometricallyBoundedSurface), textId("GeometricallyBoundedSurface"),
-          textIdTr("Prefer `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::FacettedBRep), textId("FacettedBRep"),
-          textIdTr("Prefer `FACETTED_BREP_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::EdgeBasedWireframe), textId("EdgeBasedWireframe"),
-          textIdTr("Prefer `EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::GeometricallyBoundedWireframe), textId("GeometricallyBoundedWireframe"),
-          textIdTr("Prefer `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`") },
-        { int(ShapeRepresentation::All), textId("All"),
-          textIdTr("Translate all representations (if more than one, put in compound)") },
-    };
+    static const Enumeration& enumShapeRepresentation() {
+        static Enumeration enumObject = Enumeration::fromEnum<ShapeRepresentation>(textIdContext());
+        enumObject.setDescription(
+                    int(ShapeRepresentation::All),
+                    textIdTr("Translate all representations(if more than one, put in compound)"));
+        return enumObject;
+    }
 
     static const Enumeration& enumEncoding() {
         static Enumeration enumObject = Enumeration::fromEnum<Encoding>(textIdContext());
-        if (enumObject.descriptionsEmpty()) {
-            enumObject.setDescription(Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards"));
-            enumObject.setDescription(
-                        Encoding::EUC,
-                        textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
-                                 "and simplified Chinese"));
-            enumObject.setDescription(Encoding::GB, textIdTr("GB (Guobiao) encoding for Simplified Chinese"));
-        }
-
+        enumObject.setDescription(Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards"));
+        enumObject.setDescription(
+                    Encoding::EUC,
+                    textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, "
+                             "and simplified Chinese"));
+        enumObject.setDescription(Encoding::GB, textIdTr("GB (Guobiao) encoding for Simplified Chinese"));
         return enumObject;
     }
 
