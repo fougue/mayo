@@ -27,6 +27,7 @@ public:
           assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel),
           preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation),
           readShapeAspect(this, textId("readShapeAspect")),
+          readSubShapesNames(this, textId("readSubShapesNames")),
           encoding(this, textId("encoding"), &enumEncoding())
     {
         this->productContext.setDescription(
@@ -49,13 +50,18 @@ public:
                              "sub-shapes of the part. Though STEP translator tries to recognize such cases "
                              "correctly, this parameter may be useful to avoid unconditionally translation "
                              "of shapes associated via `SHAPE_ASPECT` entities."));
+        this->readSubShapesNames.setDescription(
+                    textIdTr("Indicates whether to read sub-shape names from 'Name' attributes of"
+                             "STEP Representation Items"));
     }
 
     void restoreDefaults() override {
-        this->productContext.setValue(ProductContext::Both);
-        this->assemblyLevel.setValue(AssemblyLevel::All);
-        this->readShapeAspect.setValue(true);
-        this->encoding.setValue(Encoding::UTF8);
+        const OccStepReader::Parameters params;
+        this->productContext.setValue(params.productContext);
+        this->assemblyLevel.setValue(params.assemblyLevel);
+        this->readShapeAspect.setValue(params.readShapeAspect);
+        this->readSubShapesNames.setValue(params.readSubShapesNames);
+        this->encoding.setValue(params.encoding);
     }
 
     inline static const Enumeration enumProductContext = {
@@ -121,6 +127,7 @@ public:
     PropertyEnumeration assemblyLevel;
     PropertyEnumeration preferredShapeRepresentation;
     PropertyBool readShapeAspect;
+    PropertyBool readSubShapesNames;
     PropertyEnumeration encoding;
 };
 
@@ -130,6 +137,7 @@ const char Key_readStepAssemblyLevel[] = "read.step.assembly.level";
 const char Key_readStepShapeRepr[] = "read.step.shape.repr";
 const char Key_readStepShapeAspect[] = "read.step.shape.aspect";
 const char Key_readStepCafCodepage[] = "read.stepcaf.codepage";
+const char Key_readStepReadSubShapesNames[] = "read.stepcaf.subshapes.name";
 } // namespace
 
 OccStepReader::OccStepReader()
@@ -146,7 +154,6 @@ bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    // "read.stepcaf.subshapes.name"
     return Private::cafReadFile(m_reader, filepath, progress);
 }
 
@@ -171,6 +178,7 @@ void OccStepReader::applyProperties(const PropertyGroup* group)
         m_params.assemblyLevel = ptr->assemblyLevel.valueAs<AssemblyLevel>();
         m_params.preferredShapeRepresentation = ptr->preferredShapeRepresentation.valueAs<ShapeRepresentation>();
         m_params.readShapeAspect = ptr->readShapeAspect.value();
+        m_params.readSubShapesNames = ptr->readSubShapesNames.value();
         m_params.encoding = ptr->encoding.valueAs<Encoding>();
     }
 }
@@ -192,6 +200,7 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
     rollback->change(Key_readStepAssemblyLevel, int(m_params.assemblyLevel));
     rollback->change(Key_readStepShapeRepr, int(m_params.preferredShapeRepresentation));
     rollback->change(Key_readStepShapeAspect, int(m_params.readShapeAspect ? 1 : 0));
+    rollback->change(Key_readStepReadSubShapesNames, int(m_params.readSubShapesNames ? 1 : 0));
     rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_params.encoding));
 }
 
@@ -203,7 +212,8 @@ public:
           schema(this, textId("schema"), &enumSchema),
           assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
           freeVertexMode(this, textId("freeVertexMode"), &enumFreeVertexMode),
-          writePCurves(this, textId("writeParametericCurves"))
+          writePCurves(this, textId("writeParametericCurves")),
+          writeSubShapesNames(this, textId("writeSubShapesNames"))
     {
         this->schema.setDescription(
                     textIdTr("Version of schema used for the output STEP file"));
@@ -215,13 +225,18 @@ public:
                     textIdTr("Whether parametric curves (curves in parametric space of surface) should be "
                              "written into the STEP file.\n"
                              "It can be disabled in order to minimize the size of the resulting file."));
+        this->writeSubShapesNames.setDescription(
+                    textIdTr("Indicates whether to write sub-shape names to 'Name' attributes of "
+                             "STEP Representation Items"));
     }
 
     void restoreDefaults() override {
-        this->schema.setValue(int(Schema::AP214_CD));
-        this->assemblyMode.setValue(int(AssemblyMode::Skip));
-        this->freeVertexMode.setValue(int(FreeVertexMode::Compound));
-        this->writePCurves.setValue(true);
+        const OccStepWriter::Parameters params;
+        this->schema.setValue(params.schema);
+        this->assemblyMode.setValue(params.assemblyMode);
+        this->freeVertexMode.setValue(params.freeVertexMode);
+        this->writePCurves.setValue(params.writeParametricCurves);
+        this->writeSubShapesNames.setValue(params.writeSubShapesNames);
     }
 
     inline static const auto enumSchema = Enumeration::fromEnum<Schema>(textIdContext());
@@ -232,6 +247,7 @@ public:
     PropertyEnumeration assemblyMode;
     PropertyEnumeration freeVertexMode;
     PropertyBool writePCurves;
+    PropertyBool writeSubShapesNames;
 };
 
 namespace {
@@ -239,6 +255,7 @@ const char Key_writeStepSchema[] = "write.step.schema";
 const char Key_writeStepAssembly[] = "write.step.assembly";
 const char Key_writePCurvesMode[] = "write.surfacecurve.mode";
 const char Key_writeStepVertexMode[] = "write.step.vertex.mode";
+const char Key_writeStepSubShapesNames[] = "write.stepcaf.subshapes.name";
 } // namespace
 
 OccStepWriter::OccStepWriter()
@@ -277,14 +294,14 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
         m_params.assemblyMode = ptr->assemblyMode.valueAs<AssemblyMode>();
         m_params.freeVertexMode = ptr->freeVertexMode.valueAs<FreeVertexMode>();
         m_params.writeParametricCurves = ptr->writePCurves.value();
+        m_params.writeSubShapesNames = ptr->writeSubShapesNames.value();
     }
 }
 
 void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
 {
-    // TODO handle these parameters
+    // TODO handle these parameters:
     // "write.step.unit"
-    // "write.stepcaf.subshapes.name"
 
     const int previousSchema = Interface_Static::IVal(Key_writeStepSchema);
     rollback->change(Key_writeStepSchema, int(m_params.schema));
@@ -296,8 +313,9 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
     }
 
     rollback->change(Key_writeStepAssembly, int(m_params.assemblyMode));
-    rollback->change(Key_writePCurvesMode, int(m_params.writeParametricCurves));
     rollback->change(Key_writeStepVertexMode, int(m_params.freeVertexMode));
+    rollback->change(Key_writePCurvesMode, int(m_params.writeParametricCurves ? 1 : 0));
+    rollback->change(Key_writeStepSubShapesNames, int(m_params.writeSubShapesNames ? 1 : 0));
 }
 
 } // namespace IO

@@ -59,6 +59,7 @@ public:
         AssemblyLevel assemblyLevel = AssemblyLevel::All;
         ShapeRepresentation preferredShapeRepresentation = ShapeRepresentation::All;
         bool readShapeAspect = true;
+        bool readSubShapesNames = false;
         Encoding encoding = Encoding::UTF8;
     };
     Parameters& parameters() { return m_params; }
@@ -106,6 +107,7 @@ public:
         AssemblyMode assemblyMode = AssemblyMode::Skip;
         FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
         bool writeParametricCurves = true;
+        bool writeSubShapesNames = false;
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }
