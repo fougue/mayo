@@ -21,7 +21,7 @@ OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGr
     : PropertyGroup(parentGroup),
       rootPrefix(this, textId("rootPrefix")),
       systemCoordinatesConverter(this, textId("systemCoordinatesConverter"), &enumCoordinateSystem()),
-      systemLengthUnit(this, textId("systemLengthUnit"), &enumLengthUnit())
+      systemLengthUnit(this, textId("systemLengthUnit"), &OccCommon::enumerationLengthUnit())
 {
     this->rootPrefix.setDescription(tr("Prefix for generating root labels name"));
     this->systemLengthUnit.setDescription(tr("System length units to convert into while reading files"));
@@ -34,7 +34,7 @@ void OccBaseMeshReaderProperties::restoreDefaults()
     this->systemLengthUnit.setValue(int(LengthUnit::Undefined));
 }
 
-double OccBaseMeshReaderProperties::lengthUnitFactor(OccBaseMeshReaderProperties::LengthUnit lenUnit)
+double OccBaseMeshReaderProperties::lengthUnitFactor(LengthUnit lenUnit)
 {
     switch (lenUnit) {
     case LengthUnit::Undefined: return -1;
@@ -56,7 +56,7 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     if (factor < 0)
         return LengthUnit::Undefined;
 
-    for (const Enumeration::Item& enumItem : OccBaseMeshReaderProperties::enumLengthUnit().items()) {
+    for (const Enumeration::Item& enumItem : OccCommon::enumerationLengthUnit().items()) {
         const auto lenUnit = static_cast<LengthUnit>(enumItem.value);
         const double lenUnitFactor = OccBaseMeshReaderProperties::lengthUnitFactor(lenUnit);
         if (factor == lenUnitFactor)
@@ -64,23 +64,6 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     }
 
     return LengthUnit::Undefined;
-}
-
-const Enumeration& OccBaseMeshReaderProperties::enumLengthUnit()
-{
-    using LengthUnit = LengthUnit;
-    static const Enumeration enumeration = {
-        { int(LengthUnit::Undefined), textId("UnitUndefined") },
-        { int(LengthUnit::Micrometer), textId("UnitMicrometer") },
-        { int(LengthUnit::Millimeter), textId("UnitMillimeter") },
-        { int(LengthUnit::Centimeter), textId("UnitCentimeter") },
-        { int(LengthUnit::Meter), textId("UnitMeter") },
-        { int(LengthUnit::Kilometer), textId("UnitKilometer") },
-        { int(LengthUnit::Inch), textId("UnitInch") },
-        { int(LengthUnit::Foot), textId("UnitFoot") },
-        { int(LengthUnit::Mile), textId("UnitMile") }
-    };
-    return enumeration;
 }
 
 const Enumeration& OccBaseMeshReaderProperties::enumCoordinateSystem()

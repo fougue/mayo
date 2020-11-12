@@ -51,7 +51,7 @@ public:
                              "correctly, this parameter may be useful to avoid unconditionally translation "
                              "of shapes associated via `SHAPE_ASPECT` entities."));
         this->readSubShapesNames.setDescription(
-                    textIdTr("Indicates whether to read sub-shape names from 'Name' attributes of"
+                    textIdTr("Indicates whether to read sub-shape names from 'Name' attributes of "
                              "STEP Representation Items"));
     }
 
@@ -119,15 +119,6 @@ public:
     PropertyEnumeration encoding;
 };
 
-namespace {
-const char Key_readStepProductContext[] = "read.step.product.context";
-const char Key_readStepAssemblyLevel[] = "read.step.assembly.level";
-const char Key_readStepShapeRepr[] = "read.step.shape.repr";
-const char Key_readStepShapeAspect[] = "read.step.shape.aspect";
-const char Key_readStepCafCodepage[] = "read.stepcaf.codepage";
-const char Key_readStepReadSubShapesNames[] = "read.stepcaf.subshapes.name";
-} // namespace
-
 OccStepReader::OccStepReader()
 {
     STEPCAFControl_Controller::Init();
@@ -184,12 +175,12 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         Q_UNREACHABLE();
     };
 
-    rollback->change(Key_readStepProductContext, int(m_params.productContext));
-    rollback->change(Key_readStepAssemblyLevel, int(m_params.assemblyLevel));
-    rollback->change(Key_readStepShapeRepr, int(m_params.preferredShapeRepresentation));
-    rollback->change(Key_readStepShapeAspect, int(m_params.readShapeAspect ? 1 : 0));
-    rollback->change(Key_readStepReadSubShapesNames, int(m_params.readSubShapesNames ? 1 : 0));
-    rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_params.encoding));
+    rollback->change("read.step.product.context", int(m_params.productContext));
+    rollback->change("read.step.assembly.level", int(m_params.assemblyLevel));
+    rollback->change("read.step.shape.repr", int(m_params.preferredShapeRepresentation));
+    rollback->change("read.step.shape.aspect", int(m_params.readShapeAspect ? 1 : 0));
+    rollback->change("read.stepcaf.subshapes.name", int(m_params.readSubShapesNames ? 1 : 0));
+    rollback->change("read.stepcaf.codepage", fnOccEncoding(m_params.encoding));
 }
 
 class OccStepWriter::Properties : public PropertyGroup {
@@ -198,6 +189,7 @@ public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
           schema(this, textId("schema"), &enumSchema),
+          lengthUnit(this, textId("lengthUnit"), &OccCommon::enumerationLengthUnit()),
           assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
           freeVertexMode(this, textId("freeVertexMode"), &enumFreeVertexMode),
           writePCurves(this, textId("writeParametericCurves")),
@@ -205,6 +197,10 @@ public:
     {
         this->schema.setDescription(
                     textIdTr("Version of schema used for the output STEP file"));
+        this->lengthUnit.setDescription(
+                    textIdTr("Defines a unit in which the STEP file should be written. If set to "
+                             "unit other than millimeter, the model is converted to these units "
+                             "during the translation"));
         this->freeVertexMode.setDescription(
                     textIdTr("Parameter to write all free vertices in one SDR (name and style of "
                              "vertex are lost) or each vertex in its own SDR (name and style of "
@@ -221,6 +217,7 @@ public:
     void restoreDefaults() override {
         const OccStepWriter::Parameters params;
         this->schema.setValue(params.schema);
+        this->lengthUnit.setValue(params.lengthUnit);
         this->assemblyMode.setValue(params.assemblyMode);
         this->freeVertexMode.setValue(params.freeVertexMode);
         this->writePCurves.setValue(params.writeParametricCurves);
@@ -232,19 +229,12 @@ public:
     inline static const auto enumFreeVertexMode = Enumeration::fromEnum<FreeVertexMode>(textIdContext());
 
     PropertyEnumeration schema;
+    PropertyEnumeration lengthUnit;
     PropertyEnumeration assemblyMode;
     PropertyEnumeration freeVertexMode;
     PropertyBool writePCurves;
     PropertyBool writeSubShapesNames;
 };
-
-namespace {
-const char Key_writeStepSchema[] = "write.step.schema";
-const char Key_writeStepAssembly[] = "write.step.assembly";
-const char Key_writePCurvesMode[] = "write.surfacecurve.mode";
-const char Key_writeStepVertexMode[] = "write.step.vertex.mode";
-const char Key_writeStepSubShapesNames[] = "write.stepcaf.subshapes.name";
-} // namespace
 
 OccStepWriter::OccStepWriter()
 {
@@ -279,6 +269,7 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
     auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
         m_params.schema = ptr->schema.valueAs<Schema>();
+        m_params.lengthUnit = ptr->lengthUnit.valueAs<LengthUnit>();
         m_params.assemblyMode = ptr->assemblyMode.valueAs<AssemblyMode>();
         m_params.freeVertexMode = ptr->freeVertexMode.valueAs<FreeVertexMode>();
         m_params.writeParametricCurves = ptr->writePCurves.value();
@@ -288,11 +279,23 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
 
 void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
 {
-    // TODO handle these parameters:
-    // "write.step.unit"
+    auto fnOccLengthUnit = [](LengthUnit unit) {
+        switch (unit) {
+        case LengthUnit::Undefined: return "??";
+        case LengthUnit::Micrometer: return "UM";
+        case LengthUnit::Millimeter: return "MM";
+        case LengthUnit::Centimeter: return "CM";
+        case LengthUnit::Meter: return "M";
+        case LengthUnit::Kilometer: return "KM";
+        case LengthUnit::Inch: return "INCH";
+        case LengthUnit::Foot: return "FT";
+        case LengthUnit::Mile: return "MI";
+        }
+        Q_UNREACHABLE();
+    };
 
-    const int previousSchema = Interface_Static::IVal(Key_writeStepSchema);
-    rollback->change(Key_writeStepSchema, int(m_params.schema));
+    const int previousSchema = Interface_Static::IVal("write.step.schema");
+    rollback->change("write.step.schema", int(m_params.schema));
     if (int(m_params.schema) != previousSchema) {
         // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
         // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
@@ -300,10 +303,11 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
         m_writer.ChangeWriter().Model(true);
     }
 
-    rollback->change(Key_writeStepAssembly, int(m_params.assemblyMode));
-    rollback->change(Key_writeStepVertexMode, int(m_params.freeVertexMode));
-    rollback->change(Key_writePCurvesMode, int(m_params.writeParametricCurves ? 1 : 0));
-    rollback->change(Key_writeStepSubShapesNames, int(m_params.writeSubShapesNames ? 1 : 0));
+    rollback->change("write.step.unit", fnOccLengthUnit(m_params.lengthUnit));
+    rollback->change("write.step.assembly", int(m_params.assemblyMode));
+    rollback->change("write.step.vertex.mode", int(m_params.freeVertexMode));
+    rollback->change("write.surfacecurve.mode", int(m_params.writeParametricCurves ? 1 : 0));
+    rollback->change("write.stepcaf.subshapes.name", int(m_params.writeSubShapesNames ? 1 : 0));
 }
 
 } // namespace IO

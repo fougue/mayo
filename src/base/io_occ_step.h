@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "io_occ_common.h"
 #include "io_reader.h"
 #include "io_writer.h"
 #include <NCollection_Vector.hxx>
@@ -102,8 +103,10 @@ public:
         Compound = 0, Single = 1
     };
 
+    using LengthUnit = OccCommon::LengthUnit;
     struct Parameters {
         Schema schema = Schema::AP214_CD;
+        LengthUnit lengthUnit = LengthUnit::Millimeter;
         AssemblyMode assemblyMode = AssemblyMode::Skip;
         FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
         bool writeParametricCurves = true;

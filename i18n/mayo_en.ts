@@ -12,157 +12,157 @@
 <context>
     <name>Mayo::AppModule</name>
     <message>
-        <location filename="../src/app/app_module.cpp" line="22"/>
+        <location filename="../src/app/app_module.cpp" line="20"/>
         <source>SI</source>
         <translation>SI</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="23"/>
+        <location filename="../src/app/app_module.cpp" line="21"/>
         <source>IMPERIAL_UK</source>
         <translation>Imperial UK</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="31"/>
+        <location filename="../src/app/app_module.cpp" line="25"/>
         <source>en</source>
         <translation>English</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="32"/>
+        <location filename="../src/app/app_module.cpp" line="26"/>
         <source>fr</source>
         <translation>French</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="42"/>
+        <location filename="../src/app/app_module.cpp" line="34"/>
         <source>system</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="45"/>
+        <location filename="../src/app/app_module.cpp" line="37"/>
         <source>units</source>
         <translation>Units</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="46"/>
+        <location filename="../src/app/app_module.cpp" line="38"/>
         <source>decimalCount</source>
         <translation>Count Of Decimals</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="47"/>
+        <location filename="../src/app/app_module.cpp" line="39"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="49"/>
+        <location filename="../src/app/app_module.cpp" line="41"/>
         <source>application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="50"/>
+        <location filename="../src/app/app_module.cpp" line="42"/>
         <source>language</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="51"/>
+        <location filename="../src/app/app_module.cpp" line="43"/>
         <source>recentFiles</source>
         <translation>Recent Files</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="52"/>
+        <location filename="../src/app/app_module.cpp" line="44"/>
         <source>lastOpenFolder</source>
         <translation>Last Open Folder</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="53"/>
+        <location filename="../src/app/app_module.cpp" line="45"/>
         <source>lastSelectedFormatFilter</source>
         <translation>Last Selected Format Filter</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="54"/>
+        <location filename="../src/app/app_module.cpp" line="46"/>
         <source>linkWithDocumentSelector</source>
         <translation>Link With Document Selector</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="56"/>
+        <location filename="../src/app/app_module.cpp" line="48"/>
         <source>graphics</source>
         <translation>Graphics</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="57"/>
+        <location filename="../src/app/app_module.cpp" line="49"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Show Origin Trihedron By Default</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="60"/>
+        <location filename="../src/app/app_module.cpp" line="52"/>
         <source>clipPlanes</source>
         <translation>Clip planes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="61"/>
+        <location filename="../src/app/app_module.cpp" line="53"/>
         <source>cappingOn</source>
         <translation>Capping</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="62"/>
+        <location filename="../src/app/app_module.cpp" line="54"/>
         <source>cappingHatchOn</source>
         <translation>Capping Hatch</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="65"/>
+        <location filename="../src/app/app_module.cpp" line="57"/>
         <source>meshDefaults</source>
         <translation>Mesh Defaults</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="66"/>
+        <location filename="../src/app/app_module.cpp" line="58"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="67"/>
+        <location filename="../src/app/app_module.cpp" line="59"/>
         <source>material</source>
         <translation>Material</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="68"/>
+        <location filename="../src/app/app_module.cpp" line="60"/>
         <source>showEgesOn</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="69"/>
+        <location filename="../src/app/app_module.cpp" line="61"/>
         <source>showNodesOn</source>
         <translation>Show Nodes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="83"/>
+        <location filename="../src/app/app_module.cpp" line="75"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="85"/>
+        <location filename="../src/app/app_module.cpp" line="77"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="98"/>
+        <location filename="../src/app/app_module.cpp" line="90"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="103"/>
+        <location filename="../src/app/app_module.cpp" line="95"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="105"/>
+        <location filename="../src/app/app_module.cpp" line="97"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="114"/>
+        <location filename="../src/app/app_module.cpp" line="106"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="131"/>
+        <location filename="../src/app/app_module.cpp" line="123"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -552,85 +552,88 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
-        <source>UnitUndefined</source>
-        <translation>Undefined</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
-        <source>UnitMicrometer</source>
-        <translation>Micrometer(µm)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="75"/>
-        <source>UnitMillimeter</source>
-        <translation>Millimeter(mm)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="76"/>
-        <source>UnitCentimeter</source>
-        <translation>Centimer(cm)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="77"/>
-        <source>UnitMeter</source>
-        <translation>Meter(m)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="78"/>
-        <source>UnitKilometer</source>
-        <translation>Kilometer(km)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="79"/>
-        <source>UnitInch</source>
-        <translation>Inch(in)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="80"/>
-        <source>UnitFoot</source>
-        <translation>Foot(ft)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="81"/>
-        <source>UnitMile</source>
-        <translation>Mile(mi)</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="89"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="72"/>
         <source>SystemUndefined</source>
         <translation>Undefined</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="90"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="73"/>
         <source>SystemPosZUp</source>
         <translation>+Z up</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_base_mesh.cpp" line="91"/>
+        <location filename="../src/base/io_occ_base_mesh.cpp" line="74"/>
         <source>SystemPosYUp</source>
         <translation>+Y up</translation>
     </message>
 </context>
 <context>
+    <name>Mayo::IO::OccCommonI18N</name>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="20"/>
+        <source>UnitUndefined</source>
+        <translation>Undefined</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="21"/>
+        <source>UnitMicrometer</source>
+        <translation>Micrometer(µm)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="22"/>
+        <source>UnitMillimeter</source>
+        <translation>Millimeter(mm)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="23"/>
+        <source>UnitCentimeter</source>
+        <translation>Centimer(cm)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="24"/>
+        <source>UnitMeter</source>
+        <translation>Meter(m)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="25"/>
+        <source>UnitKilometer</source>
+        <translation>Kilometer(km)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="26"/>
+        <source>UnitInch</source>
+        <translation>Inch(in)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="27"/>
+        <source>UnitFoot</source>
+        <translation>Foot(ft)</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_common.cpp" line="28"/>
+        <source>UnitMile</source>
+        <translation>Mile(mi)</translation>
+    </message>
+</context>
+<context>
     <name>Mayo::IO::OccGltfReader_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="21"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="18"/>
         <source>skipEmptyNodes</source>
         <translation>Skip Empty Nodes</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="22"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="19"/>
         <source>useMeshNameAsFallback</source>
         <translation>Use Mesh Name As Fallback</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="25"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="22"/>
         <source>Whether if nodes without geometry should be ignored(`Yes` by default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_gltf.cpp" line="27"/>
+        <location filename="../src/base/io_occ_gltf.cpp" line="24"/>
         <source>Use mesh name in case if node name is empty(`Yes` by default)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -651,200 +654,149 @@
 <context>
     <name>Mayo::IO::OccStepReader_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="28"/>
+        <location filename="../src/base/io_occ_step.cpp" line="26"/>
         <source>productContext</source>
         <translation>Product Context</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="29"/>
+        <location filename="../src/base/io_occ_step.cpp" line="27"/>
         <source>assemblyLevel</source>
         <translation>Assembly Level</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="30"/>
+        <location filename="../src/base/io_occ_step.cpp" line="28"/>
         <source>preferredShapeRepresentation</source>
         <translation>Preferred Shape Representation</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="31"/>
+        <location filename="../src/base/io_occ_step.cpp" line="29"/>
         <source>readShapeAspect</source>
         <translation>Read Shape Aspect</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="32"/>
+        <location filename="../src/base/io_occ_step.cpp" line="30"/>
+        <source>readSubShapesNames</source>
+        <translation>Read Names of sub Shapes</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="31"/>
         <source>encoding</source>
         <translation>Encoding</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="35"/>
+        <location filename="../src/base/io_occ_step.cpp" line="34"/>
         <source>When reading AP 209 STEP files, allows selecting either only `design` or `analysis`, or both types of products for translation
 Note that in AP 203 and AP214 files all products should be marked as `design`, so if this mode is set to `analysis`, nothing will be read</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="40"/>
+        <location filename="../src/base/io_occ_step.cpp" line="39"/>
         <source>Specifies which data should be read for the products found in the STEP file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="42"/>
+        <location filename="../src/base/io_occ_step.cpp" line="41"/>
         <source>Specifies preferred type of representation of the shape of the product, in case if a STEP file contains more than one representation (i.e. multiple `PRODUCT_DEFINITION_SHAPE` entities) for a single product</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="46"/>
+        <location filename="../src/base/io_occ_step.cpp" line="45"/>
         <source>Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity of the product via `SHAPE_ASPECT` should be translated.
 This kind of association was used for the representation of hybrid models (i.e. models whose shape is composed of different types of representations) in AP 203 files before 1998, but it is also used to associate auxiliary information with the sub-shapes of the part. Though STEP translator tries to recognize such cases correctly, this parameter may be useful to avoid unconditionally translation of shapes associated via `SHAPE_ASPECT` entities.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="64"/>
-        <source>Design</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="65"/>
-        <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="67"/>
-        <source>Analysis</source>
+        <location filename="../src/base/io_occ_step.cpp" line="54"/>
+        <source>Indicates whether to read sub-shape names from &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/base/io_occ_step.cpp" line="68"/>
+        <source>Design</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="69"/>
+        <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="71"/>
+        <source>Analysis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="72"/>
         <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="70"/>
+        <location filename="../src/base/io_occ_step.cpp" line="74"/>
         <source>Both</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="70"/>
+        <location filename="../src/base/io_occ_step.cpp" line="74"/>
         <source>Translates all products</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="74"/>
+        <location filename="../src/base/io_occ_step.cpp" line="78"/>
         <source>Assembly</source>
         <translation>Assembly</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="75"/>
+        <location filename="../src/base/io_occ_step.cpp" line="79"/>
         <source>Translate the assembly structure and shapes associated with parts only (not with sub-assemblies)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="77"/>
+        <location filename="../src/base/io_occ_step.cpp" line="81"/>
         <source>Structure</source>
         <translation>Structure</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="78"/>
+        <location filename="../src/base/io_occ_step.cpp" line="82"/>
         <source>Translate only the assembly structure without shapes (a structure of empty compounds). This mode can be useful as an intermediate step in applications requiring specialized processing of assembly parts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="81"/>
+        <location filename="../src/base/io_occ_step.cpp" line="85"/>
         <source>Shape</source>
         <translation>Shape</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="82"/>
+        <location filename="../src/base/io_occ_step.cpp" line="86"/>
         <source>Translate only shapes associated with the product, ignoring the assembly structure (if any). This can be useful to translate only a shape associated with specific product, as a complement to assembly mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="85"/>
-        <location filename="../src/base/io_occ_step.cpp" line="104"/>
+        <location filename="../src/base/io_occ_step.cpp" line="89"/>
         <source>All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="86"/>
+        <location filename="../src/base/io_occ_step.cpp" line="90"/>
         <source>Translate both the assembly structure and all associated shapes. If both shape and sub-assemblies are associated with the same product, all of them are read and put in a single compound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="92"/>
-        <source>AdvancedBRep</source>
-        <translation>Advanced BRep</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="93"/>
-        <source>Prefer `ADVANCED_BREP_SHAPE_REPRESENTATION`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="94"/>
-        <source>ManifoldSurface</source>
-        <translation>Manifold Surface</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="95"/>
-        <source>Prefer `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="96"/>
-        <source>GeometricallyBoundedSurface</source>
-        <translation>Geometrically Bounded Surface</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="97"/>
-        <source>Prefer `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="98"/>
-        <source>FacettedBRep</source>
-        <translation>Facetted BRep</translation>
-    </message>
-    <message>
         <location filename="../src/base/io_occ_step.cpp" line="99"/>
-        <source>Prefer `FACETTED_BREP_SHAPE_REPRESENTATION`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="100"/>
-        <source>EdgeBasedWireframe</source>
-        <translation>Edge-based Wireframe</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="101"/>
-        <source>Prefer `EDGE_BASED_WIREFRAME_SHAPE_REPRESENTATION`</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="102"/>
-        <source>GeometricallyBoundedWireframe</source>
-        <translation>Geometrically Bounded Wireframe</translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="103"/>
-        <source>Prefer `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`</source>
+        <source>Translate all representations(if more than one, put in compound)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/base/io_occ_step.cpp" line="105"/>
-        <source>Translate all representations (if more than one, put in compound)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_occ_step.cpp" line="111"/>
         <source>Shift Japanese Industrial Standards</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="114"/>
+        <location filename="../src/base/io_occ_step.cpp" line="108"/>
         <source>EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, and simplified Chinese</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="116"/>
+        <location filename="../src/base/io_occ_step.cpp" line="110"/>
         <source>GB (Guobiao) encoding for Simplified Chinese</source>
         <translation type="unfinished"></translation>
     </message>
@@ -852,34 +804,59 @@ This kind of association was used for the representation of hybrid models (i.e. 
 <context>
     <name>Mayo::IO::OccStepWriter_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="235"/>
+        <location filename="../src/base/io_occ_step.cpp" line="191"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="236"/>
+        <location filename="../src/base/io_occ_step.cpp" line="192"/>
+        <source>lengthUnit</source>
+        <translation>Length Unit</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="193"/>
         <source>assemblyMode</source>
         <translation>Assembly Mode</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="237"/>
+        <location filename="../src/base/io_occ_step.cpp" line="194"/>
         <source>freeVertexMode</source>
         <translation>Mode for Free Vertices</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="238"/>
+        <location filename="../src/base/io_occ_step.cpp" line="195"/>
         <source>writeParametericCurves</source>
         <translation>Write Parametric Curves</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="241"/>
+        <location filename="../src/base/io_occ_step.cpp" line="196"/>
+        <source>writeSubShapesNames</source>
+        <translation>Write Names of sub Shapes</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="199"/>
         <source>Version of schema used for the output STEP file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="243"/>
+        <location filename="../src/base/io_occ_step.cpp" line="201"/>
+        <source>Defines a unit in which the STEP file should be written. If set to unit other than millimeter, the model is converted to these units during the translation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="205"/>
+        <source>Parameter to write all free vertices in one SDR (name and style of vertex are lost) or each vertex in its own SDR (name and style of vertex are exported)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="209"/>
         <source>Whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
 It can be disabled in order to minimize the size of the resulting file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_step.cpp" line="213"/>
+        <source>Indicates whether to write sub-shape names to &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -891,12 +868,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Target Format</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="67"/>
+        <location filename="../src/base/io_occ_stl.cpp" line="66"/>
         <source>Ascii</source>
         <translation>Text</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_stl.cpp" line="68"/>
+        <location filename="../src/base/io_occ_stl.cpp" line="67"/>
         <source>Binary</source>
         <translation>Binary</translation>
     </message>
@@ -909,17 +886,17 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Shape Representation</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="40"/>
+        <location filename="../src/base/io_occ_vrml.cpp" line="39"/>
         <source>RepresentationShaded</source>
         <translation>Shaded</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="41"/>
+        <location filename="../src/base/io_occ_vrml.cpp" line="40"/>
         <source>RepresentationWireframe</source>
         <translation>Wireframe</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_vrml.cpp" line="42"/>
+        <location filename="../src/base/io_occ_vrml.cpp" line="41"/>
         <source>RepresentationBoth</source>
         <translation>Both</translation>
     </message>
@@ -1137,7 +1114,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <location filename="../src/app/mainwindow.ui" line="621"/>
         <location filename="../src/app/mainwindow.cpp" line="501"/>
         <source>Import</source>
-        <translation type="unfinished">Import</translation>
+        <translation>Import</translation>
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="626"/>

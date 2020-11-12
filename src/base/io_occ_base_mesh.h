@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "io_occ_common.h"
 #include "io_reader.h"
 #include "property_builtins.h"
 #include "property_enumeration.h"
@@ -26,18 +27,7 @@ public:
 
     void applyProperties(const PropertyGroup* params) override;
 
-    enum class LengthUnit {
-        Undefined = -1,
-        Micrometer,
-        Millimeter,
-        Centimeter,
-        Meter,
-        Kilometer,
-        Inch,
-        Foot,
-        Mile
-    };
-
+    using LengthUnit = OccCommon::LengthUnit;
     struct Parameters {
         QString rootPrefix;
         LengthUnit systemLengthUnit = LengthUnit::Undefined;
@@ -69,7 +59,6 @@ public:
     using LengthUnit = OccBaseMeshReader::LengthUnit;
     static double lengthUnitFactor(LengthUnit lenUnit);
     static LengthUnit lengthUnit(double factor);
-    static const Enumeration& enumLengthUnit();
 
     static const Enumeration& enumCoordinateSystem();
 
