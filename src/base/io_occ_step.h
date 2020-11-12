@@ -28,21 +28,21 @@ public:
     // Parameters
 
     enum class ProductContext {
-        Design, Analysis, Both
+        Design = 2, Analysis = 3, Both = 1
     };
 
     enum class AssemblyLevel {
-        Assembly, Structure, Shape, All
+        Assembly = 2, Structure = 3, Shape = 4, All = 1
     };
 
     enum class ShapeRepresentation {
-        AdvancedBRep,
-        ManifoldSurface,
-        GeometricallyBoundedSurface,
-        FacettedBRep,
-        EdgeBasedWireframe,
-        GeometricallyBoundedWireframe,
-        All
+        AdvancedBRep = 2,
+        ManifoldSurface = 3,
+        GeometricallyBoundedSurface = 4,
+        FacettedBRep = 5,
+        EdgeBasedWireframe = 6,
+        GeometricallyBoundedWireframe = 7,
+        All = 1
     };
 
     // Maps to OpenCascade's Resource_FormatType
@@ -86,19 +86,19 @@ public:
     // Parameters
 
     enum class Schema {
-        AP203,
-        AP214_CD,
-        AP214_DIS,
-        AP214_IS,
-        AP242_DIS
+        AP203 = 3,
+        AP214_CD = 1,
+        AP214_DIS = 2,
+        AP214_IS = 4,
+        AP242_DIS = 5
     };
 
     enum class AssemblyMode {
-        Skip, Write, Auto
+        Skip = 0, Write = 1, Auto = 2
     };
 
     enum class FreeVertexMode {
-        Compound, Single
+        Compound = 0, Single = 1
     };
 
     struct Parameters {

@@ -177,35 +177,6 @@ void OccStepReader::applyProperties(const PropertyGroup* group)
 
 void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) const
 {
-    auto fnOccProductContext = [](ProductContext context) {
-        switch (context) {
-        case ProductContext::Both: return 1;
-        case ProductContext::Design: return 2;
-        case ProductContext::Analysis: return 3;
-        }
-        Q_UNREACHABLE();
-    };
-    auto fnOccAssemblyLevel = [](AssemblyLevel level) {
-        switch (level) {
-        case AssemblyLevel::All: return 1;
-        case AssemblyLevel::Assembly: return 2;
-        case AssemblyLevel::Structure: return 3;
-        case AssemblyLevel::Shape: return 4;
-        }
-        Q_UNREACHABLE();
-    };
-    auto fnOccShapeRepresentation = [](ShapeRepresentation repr) {
-        switch (repr) {
-        case ShapeRepresentation::All: return 1;
-        case ShapeRepresentation::AdvancedBRep: return 2;
-        case ShapeRepresentation::ManifoldSurface: return 3;
-        case ShapeRepresentation::GeometricallyBoundedSurface: return 4;
-        case ShapeRepresentation::FacettedBRep: return 5;
-        case ShapeRepresentation::EdgeBasedWireframe: return 6;
-        case ShapeRepresentation::GeometricallyBoundedWireframe: return 7;
-        }
-        Q_UNREACHABLE();
-    };
     auto fnOccEncoding = [](Encoding code) {
         switch (code) {
         case Encoding::Shift_JIS: return "SJIS";
@@ -217,9 +188,9 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         Q_UNREACHABLE();
     };
 
-    rollback->change(Key_readStepProductContext, fnOccProductContext(m_params.productContext));
-    rollback->change(Key_readStepAssemblyLevel, fnOccAssemblyLevel(m_params.assemblyLevel));
-    rollback->change(Key_readStepShapeRepr, fnOccShapeRepresentation(m_params.preferredShapeRepresentation));
+    rollback->change(Key_readStepProductContext, int(m_params.productContext));
+    rollback->change(Key_readStepAssemblyLevel, int(m_params.assemblyLevel));
+    rollback->change(Key_readStepShapeRepr, int(m_params.preferredShapeRepresentation));
     rollback->change(Key_readStepShapeAspect, int(m_params.readShapeAspect ? 1 : 0));
     rollback->change(Key_readStepCafCodepage, fnOccEncoding(m_params.encoding));
 }
@@ -236,6 +207,10 @@ public:
     {
         this->schema.setDescription(
                     textIdTr("Version of schema used for the output STEP file"));
+        this->freeVertexMode.setDescription(
+                    textIdTr("Parameter to write all free vertices in one SDR (name and style of "
+                             "vertex are lost) or each vertex in its own SDR (name and style of "
+                             "vertex are exported)"));
         this->writePCurves.setDescription(
                     textIdTr("Whether parametric curves (curves in parametric space of surface) should be "
                              "written into the STEP file.\n"
@@ -311,44 +286,18 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
     // "write.step.unit"
     // "write.stepcaf.subshapes.name"
 
-    auto fnOccSchema = [](Schema schema) {
-        switch (schema) {
-        case Schema::AP203: return 3;
-        case Schema::AP214_CD: return 1;
-        case Schema::AP214_DIS: return 2;
-        case Schema::AP214_IS: return 4;
-        case Schema::AP242_DIS: return 5;
-        }
-        Q_UNREACHABLE();
-    };
-    auto fnOccAssemblyMode = [](AssemblyMode mode) {
-        switch (mode) {
-        case AssemblyMode::Skip: return 0;
-        case AssemblyMode::Write: return 1;
-        case AssemblyMode::Auto: return 2;
-        }
-        Q_UNREACHABLE();
-    };
-    auto fnOccVertexMode = [](FreeVertexMode mode) {
-        switch (mode) {
-        case FreeVertexMode::Compound: return 0;
-        case FreeVertexMode::Single: return 1;
-        }
-        Q_UNREACHABLE();
-    };
-
     const int previousSchema = Interface_Static::IVal(Key_writeStepSchema);
-    rollback->change(Key_writeStepSchema, fnOccSchema(m_params.schema));
-    if (fnOccSchema(m_params.schema) != previousSchema) {
+    rollback->change(Key_writeStepSchema, int(m_params.schema));
+    if (int(m_params.schema) != previousSchema) {
         // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
         // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
         // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
         m_writer.ChangeWriter().Model(true);
     }
 
-    rollback->change(Key_writeStepAssembly, fnOccAssemblyMode(m_params.assemblyMode));
-    rollback->change(Key_writePCurvesMode, m_params.writeParametricCurves ? 1 : 0);
-    rollback->change(Key_writeStepVertexMode, fnOccVertexMode(m_params.freeVertexMode));
+    rollback->change(Key_writeStepAssembly, int(m_params.assemblyMode));
+    rollback->change(Key_writePCurvesMode, int(m_params.writeParametricCurves));
+    rollback->change(Key_writeStepVertexMode, int(m_params.freeVertexMode));
 }
 
 } // namespace IO
