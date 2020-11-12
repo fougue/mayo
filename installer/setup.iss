@@ -56,7 +56,6 @@ Source: "{#OpenCascade_BinDir}\TKBOOL.dll"; DestDir: "{app}"; Flags: ignoreversi
 Source: "{#OpenCascade_BinDir}\TKBRep.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKCAF.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKCDF.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#OpenCascade_BinDir}\TKDraw.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKernel.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKFillet.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKG2d.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -82,13 +81,11 @@ Source: "{#OpenCascade_BinDir}\TKSTL.dll"; DestDir: "{app}"; Flags: ignoreversio
 Source: "{#OpenCascade_BinDir}\TKTopAlgo.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKV3d.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKVCAF.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#OpenCascade_BinDir}\TKViewerTest.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKVRML.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKXCAF.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKXDEIGES.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKXDESTEP.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#OpenCascade_BinDir}\TKXSBase.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#OpenCascade_BinDir}\TKXSDRAW.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ; OpenCascade resources
 Source: "{#OpenCascade_SrcDir}\SHMessage\*.*"; DestDir: "{app}\OpenCascade\SHMessage"; Flags: ignoreversion

@@ -115,7 +115,7 @@ message(OpenCascade version $$OCC_VERSION_STR)
 LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKService
 LIBS += -lTKG2d -lTKG3d -lTKV3d -lTKOpenGl
 LIBS += -lTKBRep -lTKXSBase -lTKGeomBase
-LIBS += -lTKMeshVS -lTKXSDRAW
+LIBS += -lTKMeshVS
 LIBS += -lTKLCAF -lTKXCAF -lTKCAF
 LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
 # -- IGES support

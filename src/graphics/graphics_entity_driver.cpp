@@ -9,6 +9,7 @@
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "graphics_entity_base_property_group.h"
+#include "graphics_mesh_data_source.h"
 #include "graphics_scene.h"
 
 #include <AIS_DisplayMode.hxx>
@@ -206,9 +207,8 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
     }
 
     if (!polyTri.IsNull()) {
-        Handle_XSDRAWSTLVRML_DataSource dataSource = new XSDRAWSTLVRML_DataSource(polyTri);
         Handle_MeshVS_Mesh gpx = new MeshVS_Mesh;
-        gpx->SetDataSource(dataSource);
+        gpx->SetDataSource(new GraphicsMeshDataSource(polyTri));
         // meshVisu->AddBuilder(..., false); -> No selection
         gpx->AddBuilder(new MeshVS_MeshPrsBuilder(gpx), true);
 

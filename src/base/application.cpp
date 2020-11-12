@@ -149,7 +149,7 @@ Settings* Application::settings() const
     return &(d->m_settings);
 }
 
-IO::System *Application::ioSystem() const
+IO::System* Application::ioSystem() const
 {
     return &(d->m_ioSystem);
 }
