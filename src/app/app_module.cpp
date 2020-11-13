@@ -56,6 +56,7 @@ AppModule::AppModule(Application* app)
       sectionId_graphicsMeshDefaults(
           app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
       meshDefaultsColor(this, textId("color")),
+      meshDefaultsEdgeColor(this, textId("edgeColor")),
       meshDefaultsMaterial(this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial()),
       meshDefaultsShowEdges(this, textId("showEgesOn")),
       meshDefaultsShowNodes(this, textId("showNodesOn"))
@@ -99,6 +100,7 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
     // -- Mesh defaults
     settings->addSetting(&this->meshDefaultsColor, this->sectionId_graphicsMeshDefaults);
+    settings->addSetting(&this->meshDefaultsEdgeColor, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsMaterial, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowEdges, this->sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
@@ -154,6 +156,7 @@ AppModule::AppModule(Application* app)
         this->clipPlanesCappingHatchOn.setValue(true);
         const GraphicsMeshEntityDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
+        this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
         this->meshDefaultsMaterial.setValue(meshDefaults.material);
         this->meshDefaultsShowEdges.setValue(meshDefaults.showEdges);
         this->meshDefaultsShowNodes.setValue(meshDefaults.showNodes);
@@ -197,12 +200,14 @@ AppModule* AppModule::get(const ApplicationPtr& app)
 void AppModule::onPropertyChanged(Property *prop)
 {
     if (prop == &this->meshDefaultsColor
+            || prop == &this->meshDefaultsEdgeColor
             || prop == &this->meshDefaultsMaterial
             || prop == &this->meshDefaultsShowEdges
             || prop == &this->meshDefaultsShowNodes)
     {
         auto values = GraphicsMeshEntityDriver::defaultValues();
         values.color = this->meshDefaultsColor.value();
+        values.edgeColor = this->meshDefaultsEdgeColor.value();
         values.material = this->meshDefaultsMaterial.valueAs<Graphic3d_NameOfMaterial>();
         values.showEdges = this->meshDefaultsShowEdges.value();
         values.showNodes = this->meshDefaultsShowNodes.value();

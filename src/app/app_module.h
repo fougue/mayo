@@ -61,6 +61,7 @@ public:
     // -- MeshDefaults
     const Settings_SectionIndex sectionId_graphicsMeshDefaults;
     PropertyOccColor meshDefaultsColor;
+    PropertyOccColor meshDefaultsEdgeColor;
     PropertyEnumeration meshDefaultsMaterial;
     PropertyBool meshDefaultsShowEdges;
     PropertyBool meshDefaultsShowNodes;

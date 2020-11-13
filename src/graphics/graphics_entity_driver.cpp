@@ -219,7 +219,7 @@ GraphicsEntity GraphicsMeshEntityDriver::createEntity(const TDF_Label& label) co
         gpx->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         gpx->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));
-        gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, Quantity_NOC_BLACK);
+        gpx->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, defaultValues().edgeColor);
         gpx->SetDisplayMode(MeshVS_DMF_Shading);
 
         //gpx->SetHilightMode(MeshVS_DMF_WireFrame);
@@ -250,6 +250,7 @@ public:
         : GraphicsEntityBasePropertyGroup(entity),
           m_meshVisu(Handle_MeshVS_Mesh::DownCast(entity.aisObject())),
           m_propertyColor(this, textId("color")),
+          m_propertyEdgeColor(this, textId("edgeColor")),
           m_propertyShowEdges(this, textId("showEdges")),
           m_propertyShowNodes(this, textId("showNodes"))
     {
@@ -260,6 +261,10 @@ public:
         Quantity_Color color;
         m_meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, color);
         m_propertyColor.setValue(color);
+        // -- Edge color
+        Quantity_Color edgeColor;
+        m_meshVisu->GetDrawer()->GetColor(MeshVS_DA_EdgeColor, edgeColor);
+        m_propertyEdgeColor.setValue(edgeColor);
         // -- Show edges
         bool boolVal;
         m_meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
@@ -286,12 +291,17 @@ public:
             m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, m_propertyColor.value());
             fnRedisplay(m_meshVisu);
         }
+        else if (prop == &m_propertyEdgeColor) {
+            m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, m_propertyEdgeColor.value());
+            fnRedisplay(m_meshVisu);
+        }
 
         GraphicsEntityBasePropertyGroup::onPropertyChanged(prop);
     }
 
     Handle_MeshVS_Mesh m_meshVisu;
     PropertyOccColor m_propertyColor;
+    PropertyOccColor m_propertyEdgeColor;
     PropertyBool m_propertyShowEdges;
     PropertyBool m_propertyShowNodes;
 };

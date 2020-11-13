@@ -79,6 +79,7 @@ public:
         bool showNodes = false;
         Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
         Quantity_Color color = Quantity_NOC_BISQUE;
+        Quantity_Color edgeColor = Quantity_NOC_BLACK;
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);
