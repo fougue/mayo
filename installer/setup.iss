@@ -28,8 +28,7 @@ fr.installVcRuntime = Installation du package redistribuable Visual Studio ...
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#AppBuildDir}\{#TargetName}.exe"; DestDir: "{app}"; Flags: ignoreversion
-; Source: "{#AppBuildDir}\i18n\*.qm"; DestDir: "{app}\i18n"; Flags: ignoreversion
+Source: "{#AppBuildDir}\release\{#TargetName}.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 ; First clear the setup folder (in case of a setup overwrite)
 [InstallDelete]
@@ -100,17 +99,12 @@ Source: "{#OpenCascade_SrcDir}\XmlOcafResource\*.*"; DestDir: "{app}\OpenCascade
 ; OpenCascade 3rdparty
 Source: "{#Tbb_BinDir}\tbb.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Tbb_BinDir}\tbbmalloc.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#FFMPEG_BinDir}\avcodec*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#FFMPEG_BinDir}\avformat*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#FFMPEG_BinDir}\avutil*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#FFMPEG_BinDir}\swresample*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#FFMPEG_BinDir}\swscale*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FFMPEG_BinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeImage_BinDir}\freeimage.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeImage_BinDir}\freeimageplus.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeType_BinDir}\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#TclTk_BinDir}\tcl86.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#TclTk_BinDir}\tk86.dll"; DestDir: "{app}"; Flags: ignoreversion
-; Source: "{#TclTk_BinDir}\zlib1.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "{#TclTk_BinDir}\tcl86.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "{#TclTk_BinDir}\tk86.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
 Filename: "{app}\vcredist_{#TargetArch}.exe"; Parameters: "/q"; StatusMsg: "{cm:installVcRuntime}"

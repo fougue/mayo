@@ -11,8 +11,17 @@ defineReplace(sysPath) {
     return($$result)
 }
 
+# Declare pure QMake variables out of OCC envvars
 isEmpty(CASCADE_INC_DIR):CASCADE_INC_DIR = $$(CSF_OCCTIncludePath)
 isEmpty(CASCADE_LIB_DIR):CASCADE_LIB_DIR = $$(CSF_OCCTLibPath)
+isEmpty(CASCADE_BIN_DIR):CASCADE_BIN_DIR = $$(CSF_OCCTBinPath)
+isEmpty(CASCADE_SRC_DIR):CASCADE_SRC_DIR = $$(CSF_OCCTResourcePath)
+equals(QT_ARCH, i386) {
+    isEmpty(CASCADE_OPTBIN_DIRS):CASCADE_OPTBIN_DIRS = $$(CSF_OPT_BIN32)
+} else:equals(QT_ARCH, x86_64) {
+    isEmpty(CASCADE_OPTBIN_DIRS):CASCADE_OPTBIN_DIRS = $$(CSF_OPT_BIN64)
+}
+isEmpty(CASCADE_DEFINES):CASCADE_DEFINES = $$(CSF_DEFINES)
 
 INCLUDEPATH += $$CASCADE_INC_DIR
 
@@ -23,8 +32,7 @@ linux-*:DEFINES += \
     HAVE_IOMANIP \
     HAVE_LIMITS_H
 
-CASCADE_DEFINES = $$(CSF_DEFINES)
-DEFINES += $$split(OCCT_DEFINES, ;)
+DEFINES += $$split(CASCADE_DEFINES, ;)
 DEFINES += OCCT_HANDLE_NOCAST
 linux-*:DEFINES += LIN LININTEL OCC_CONVERT_SIGNALS
 
@@ -42,9 +50,8 @@ OCC_VERSION_STR = $$join($$list($$OCC_VERSION_MAJOR, $$OCC_VERSION_MINOR, $$OCC_
 
 # Platform dependent config
 equals(QT_ARCH, i386) {
-    ARCH_BITS_SIZE = 32
+    # NOP
 } else:equals(QT_ARCH, x86_64) {
-    ARCH_BITS_SIZE = 64
     DEFINES += _OCC64
 } else {
     error(Platform architecture not supported (QT_ARCH = $$QT_ARCH))

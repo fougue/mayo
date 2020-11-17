@@ -89,6 +89,8 @@ OTHER_FILES += \
     appveyor.yml \
     images/credits.txt
 
+QMAKE_SUBSTITUTES += $$PWD/installer/setupvars.iss.in
+
 # gmio
 isEmpty(GMIO_ROOT) {
     message(gmio OFF)
@@ -135,3 +137,17 @@ minOpenCascadeVersion(7, 4, 0) {
 }
 # -- VRML support
 LIBS += -lTKVRML
+
+CASCADE_LIST_OPTBIN_DIR = $$split(CASCADE_OPTBIN_DIRS, ;)
+for(binPath, CASCADE_LIST_OPTBIN_DIR) {
+    lowerBinPath = $$lower($${binPath})
+    findLib = $$find(lowerBinPath, "ffmpeg")
+    !isEmpty(findLib):FFMPEG_BIN_DIR = $${binPath}
+    findLib = $$find(lowerBinPath, "freeimage")
+    !isEmpty(findLib):FREEIMAGE_BIN_DIR = $${binPath}
+    findLib = $$find(lowerBinPath, "freetype")
+    !isEmpty(findLib):FREETYPE_BIN_DIR = $${binPath}
+    findLib = $$find(lowerBinPath, "tbb")
+    !isEmpty(findLib):TBB_BIN_DIR = $${binPath}
+}
+
