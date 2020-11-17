@@ -4,13 +4,6 @@
 #* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 #****************************************************************************
 
-# Return the input path re-written using the system-dependent separator
-defineReplace(sysPath) {
-    win*:result = $$replace(1, /, \\)
-    else:result = $$1
-    return($$result)
-}
-
 # Declare pure QMake variables out of OCC envvars
 isEmpty(CASCADE_INC_DIR):CASCADE_INC_DIR = $$(CSF_OCCTIncludePath)
 isEmpty(CASCADE_LIB_DIR):CASCADE_LIB_DIR = $$(CSF_OCCTLibPath)
@@ -57,7 +50,7 @@ equals(QT_ARCH, i386) {
     error(Platform architecture not supported (QT_ARCH = $$QT_ARCH))
 }
 
-LIBS += $$sysPath($$join(CASCADE_LIB_DIR, " -L", -L))
+LIBS += $$system_path($$join(CASCADE_LIB_DIR, " -L", -L))
 QMAKE_RPATHDIR += $$CASCADE_LIB_DIR
 
 defineTest(minOpenCascadeVersion) {

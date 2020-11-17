@@ -73,6 +73,8 @@ win* {
     WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
     WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
     WinInstallerFiles.path = $$OUT_PWD/installer
+
+    QMAKE_SUBSTITUTES += $$PWD/installer/setupvars.iss.in
 }
 
 FORMS += $$files(src/app/*.ui)
@@ -89,41 +91,45 @@ OTHER_FILES += \
     appveyor.yml \
     images/credits.txt
 
-QMAKE_SUBSTITUTES += $$PWD/installer/setupvars.iss.in
-
-# gmio
-isEmpty(GMIO_ROOT) {
-    message(gmio OFF)
-} else {
-    message(gmio ON)
-    CONFIG(debug, debug|release) {
-        GMIO_BIN_SUFFIX = d
-    } else {
-        GMIO_BIN_SUFFIX =
-    }
-
-    INCLUDEPATH += $$GMIO_ROOT/include
-    LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
-    SOURCES += \
-        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
-        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
-    DEFINES += HAVE_GMIO
-}
-
 # OpenCascade
 include(opencascade.pri)
 message(OpenCascade version $$OCC_VERSION_STR)
-LIBS += -lTKernel -lTKMath -lTKTopAlgo -lTKService
-LIBS += -lTKG2d -lTKG3d -lTKV3d -lTKOpenGl
-LIBS += -lTKBRep -lTKXSBase -lTKGeomBase
-LIBS += -lTKMeshVS
-LIBS += -lTKLCAF -lTKXCAF -lTKCAF
-LIBS += -lTKCDF -lTKBin -lTKBinL -lTKBinXCAF -lTKXml -lTKXmlL -lTKXmlXCAF
+LIBS += \
+    -lTKBin \
+    -lTKBinL \
+    -lTKBinXCAF \
+    -lTKBO \
+    -lTKBool \
+    -lTKBRep \
+    -lTKCAF \
+    -lTKCDF \
+    -lTKernel \
+    -lTKG2d \
+    -lTKG3d \
+    -lTKGeomAlgo \
+    -lTKGeomBase \
+    -lTKHLR \
+    -lTKLCAF \
+    -lTKMath \
+    -lTKMesh \
+    -lTKMeshVS \
+    -lTKOpenGl \
+    -lTKPrim \
+    -lTKService \
+    -lTKShHealing \
+    -lTKTopAlgo  \
+    -lTKV3d  \
+    -lTKVCAF \
+    -lTKXCAF \
+    -lTKXml \
+    -lTKXmlL \
+    -lTKXmlXCAF \
+    -lTKXSBase \
+
 # -- IGES support
 LIBS += -lTKIGES -lTKXDEIGES
 # -- STEP support
-LIBS += -lTKSTEP -lTKXDESTEP
+LIBS += -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKXDESTEP
 # -- STL support
 LIBS += -lTKSTL
 # -- OBJ/glTF support
@@ -151,3 +157,37 @@ for(binPath, CASCADE_LIST_OPTBIN_DIR) {
     !isEmpty(findLib):TBB_BIN_DIR = $${binPath}
 }
 
+# -- Create file "opencascade_dlls.iss" that will contain the required OpenCascade DLL files to be
+# -- added in the InnoSetup [Files] section
+# -- The list of OpenCascade libraries is retrieved from the LIBS QMake variable
+win* {
+    for(lib, LIBS) {
+        findTK = $$find(lib, "-lTK")
+        !isEmpty(findTK) {
+            lib = $$replace(lib, "-l", "")
+            CASCADE_INNOSETUP_DLLS += "Source: \"$$CASCADE_BIN_DIR\\$${lib}.dll\"; DestDir: \"{app}\"; Flags: ignoreversion"
+        }
+    }
+
+    write_file($$OUT_PWD/installer/opencascade_dlls.iss, CASCADE_INNOSETUP_DLLS)
+}
+
+# gmio
+isEmpty(GMIO_ROOT) {
+    message(gmio OFF)
+} else {
+    message(gmio ON)
+    CONFIG(debug, debug|release) {
+        GMIO_BIN_SUFFIX = d
+    } else {
+        GMIO_BIN_SUFFIX =
+    }
+
+    INCLUDEPATH += $$GMIO_ROOT/include
+    LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
+    SOURCES += \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
+        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
+        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
+    DEFINES += HAVE_GMIO
+}
