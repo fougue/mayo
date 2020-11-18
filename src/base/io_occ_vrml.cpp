@@ -32,7 +32,8 @@ public:
     }
 
     void restoreDefaults() override {
-        this->shapeRepresentation.setValue(VrmlAPI_BothRepresentation);
+        const OccVrmlWriter::Parameters params;
+        this->shapeRepresentation.setValue(params.shapeRepresentation);
     }
 
     static inline const Enumeration enumShapeRepresentation = {

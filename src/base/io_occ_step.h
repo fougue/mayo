@@ -49,9 +49,9 @@ public:
     // Maps to OpenCascade's Resource_FormatType
     enum class Encoding {
         Shift_JIS, // Shift Japanese Industrial Standards
-        EUC, // (Extended Unix Code) multi-byte encoding primarily for Japanese, Korean, and simplified Chinese
+        EUC,       // (Extended Unix Code) multi-byte encoding primarily for Japanese, Korean, and simplified Chinese
         ANSI,
-        GB, // (Guobiao) encoding for Simplified Chinese
+        GB,        // (Guobiao) encoding for Simplified Chinese
         UTF8
     };
 
