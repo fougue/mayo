@@ -11,11 +11,13 @@
 #include "../base/qmeta_tdf_label.h"
 #include "../base/settings.h"
 #include "../base/string_utils.h"
+#include "../base/tkernel_utils.h"
 #include "app_module.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
+#include <magic_enum/magic_enum.hpp>
 
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
@@ -35,9 +37,14 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+#  include <Image_Texture.hxx>
+#  include <XCAFDoc_VisMaterial.hxx>
+#  include <XCAFDoc_VisMaterialCommon.hxx>
+#  include <XCAFDoc_VisMaterialTool.hxx>
+#endif
 
 #include <sstream>
-#include <tuple>
 
 namespace Mayo {
 
@@ -144,8 +151,35 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
     }
 }
 
-static QTreeWidgetItem* createOccColorTreeItem(
-        const QString& text, const Quantity_Color& color)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, bool isPropertyOn)
+{
+    auto itemProperty = new QTreeWidgetItem;
+    itemProperty->setText(0, text);
+    const QString strYes = DialogInspectXde::tr("Yes");
+    const QString strNo = DialogInspectXde::tr("No");
+    itemProperty->setText(1, isPropertyOn ? strYes : strNo);
+    itemProperty->setForeground(1, isPropertyOn ? Qt::green : QColor(Qt::red).lighter());
+    return itemProperty;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, double propertyValue)
+{
+    auto itemProperty = new QTreeWidgetItem;
+    itemProperty->setText(0, text);
+    const StringUtils::TextOptions textOptions = AppModule::get(Application::instance())->defaultTextOptions();
+    itemProperty->setText(1, StringUtils::text(propertyValue, textOptions));
+    return itemProperty;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QString& propertyValue)
+{
+    auto itemProperty = new QTreeWidgetItem;
+    itemProperty->setText(0, text);
+    itemProperty->setText(1, propertyValue);
+    return itemProperty;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_Color& color)
 {
     auto itemColor = new QTreeWidgetItem;
     itemColor->setText(0, text);
@@ -156,50 +190,129 @@ static QTreeWidgetItem* createOccColorTreeItem(
     return itemColor;
 }
 
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_ColorRGBA& color)
+{
+    auto itemColor = createPropertyTreeItem(text, color.GetRGB());
+    itemColor->setText(1, itemColor->text(1) + QString(" A:%1").arg(int(color.Alpha() * 255)));
+    return itemColor;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(
+        const QString& text, const opencascade::handle<Image_Texture>& imgTexture)
+{
+    if (imgTexture.IsNull())
+        return static_cast<QTreeWidgetItem*>(nullptr);
+
+    auto item = new QTreeWidgetItem;
+    item->setText(0, text);
+    item->setText(1, occ::QtUtils::fromUtf8ToQString(imgTexture->FilePath()));
+    return item;
+}
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+static void loadLabelVisMaterialProperties(
+        const TDF_Label& label,
+        const Handle_XCAFDoc_VisMaterialTool& visMaterialTool,
+        QTreeWidgetItem* treeItem)
+{
+    QList<QTreeWidgetItem*> listItemProp;
+    listItemProp.push_back(createPropertyTreeItem("IsMaterial", visMaterialTool->IsMaterial(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsSetShapeMaterial", visMaterialTool->IsSetShapeMaterial(label)));
+
+    auto fnCreateVisMaterialTreeItem = [&](const QString& text, const Handle_XCAFDoc_VisMaterial& material) {
+        auto item = new QTreeWidgetItem;
+        item->setText(0, text);
+        item->addChild(createPropertyTreeItem("HasPbrMaterial", material->HasPbrMaterial()));
+        item->addChild(createPropertyTreeItem("HasCommonMaterial", material->HasCommonMaterial()));
+        item->addChild(createPropertyTreeItem("BaseColor", material->BaseColor()));
+        item->addChild(createPropertyTreeItem("AlphaMode", magic_enum::enum_name(material->AlphaMode()).data()));
+        item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
+        item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
+        if (!material->RawName().IsNull())
+            item->addChild(createPropertyTreeItem("RawName", occ::QtUtils::fromUtf8ToQString(material->RawName()->String())));
+
+        if (material->HasPbrMaterial()) {
+            const XCAFDoc_VisMaterialPBR& pbrMaterial = material->PbrMaterial();
+            auto itemPbr = new QTreeWidgetItem;
+            itemPbr->setText(0, "PbrMaterial");
+            itemPbr->addChild(createPropertyTreeItem("BaseColorTexture", pbrMaterial.BaseColorTexture));
+            itemPbr->addChild(createPropertyTreeItem("MetallicRoughnessTexture", pbrMaterial.MetallicRoughnessTexture));
+            itemPbr->addChild(createPropertyTreeItem("EmissiveTexture", pbrMaterial.EmissiveTexture));
+            itemPbr->addChild(createPropertyTreeItem("OcclusionTexture", pbrMaterial.OcclusionTexture));
+            itemPbr->addChild(createPropertyTreeItem("NormalTexture", pbrMaterial.NormalTexture));
+            itemPbr->addChild(createPropertyTreeItem("BaseColor", pbrMaterial.BaseColor));
+            itemPbr->addChild(createPropertyTreeItem("Metallic", pbrMaterial.Metallic));
+            itemPbr->addChild(createPropertyTreeItem("Roughness", pbrMaterial.Roughness));
+            itemPbr->addChild(createPropertyTreeItem("RefractionIndex", pbrMaterial.RefractionIndex));
+            itemPbr->addChild(createPropertyTreeItem("IsDefined", pbrMaterial.IsDefined));
+            item->addChild(itemPbr);
+        }
+
+        if (material->HasCommonMaterial()) {
+            const XCAFDoc_VisMaterialCommon& commonMaterial = material->CommonMaterial();
+            auto itemCommon = new QTreeWidgetItem;
+            itemCommon->setText(0, "CommonMaterial");
+            itemCommon->addChild(createPropertyTreeItem("DiffuseTexture", commonMaterial.DiffuseTexture));
+            itemCommon->addChild(createPropertyTreeItem("AmbientColor", commonMaterial.AmbientColor));
+            itemCommon->addChild(createPropertyTreeItem("DiffuseColor", commonMaterial.DiffuseColor));
+            itemCommon->addChild(createPropertyTreeItem("SpecularColor", commonMaterial.SpecularColor));
+            itemCommon->addChild(createPropertyTreeItem("EmissiveColor", commonMaterial.EmissiveColor));
+            itemCommon->addChild(createPropertyTreeItem("Shininess", commonMaterial.Shininess));
+            itemCommon->addChild(createPropertyTreeItem("Transparency", commonMaterial.Transparency));
+            itemCommon->addChild(createPropertyTreeItem("IsDefined", commonMaterial.IsDefined));
+            item->addChild(itemCommon);
+        }
+
+        return item;
+    };
+
+    if (visMaterialTool->IsMaterial(label)) {
+        Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetMaterial(label);
+        if (!visMaterial.IsNull() && !visMaterial->IsEmpty())
+            listItemProp.push_back(fnCreateVisMaterialTreeItem("Material", visMaterial));
+    }
+
+    if (visMaterialTool->IsSetShapeMaterial(label)) {
+        Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetShapeMaterial(label);
+        if (!visMaterial.IsNull() && !visMaterial->IsEmpty())
+            listItemProp.push_back(fnCreateVisMaterialTreeItem("ShapeMaterial", visMaterial));
+    }
+
+    treeItem->addChildren(listItemProp);
+}
+#endif
+
 static void loadLabelColorProperties(
         const TDF_Label& label,
         const Handle_XCAFDoc_ColorTool& colorTool,
         QTreeWidgetItem* treeItem)
 {
-    using ColorProperty = std::tuple<QString, bool>;
-    auto listColorProperty = {
-        ColorProperty("IsColor", colorTool->IsColor(label)),
-        ColorProperty("IsSet_ColorGen", colorTool->IsSet(label, XCAFDoc_ColorGen)),
-        ColorProperty("IsSet_ColorSurf", colorTool->IsSet(label, XCAFDoc_ColorSurf)),
-        ColorProperty("IsSet_ColorCurv", colorTool->IsSet(label, XCAFDoc_ColorCurv)),
-        ColorProperty("IsVisible", colorTool->IsVisible(label))
-    };
     QList<QTreeWidgetItem*> listItemProp;
-    const QString strYes = DialogInspectXde::tr("Yes");
-    const QString strNo = DialogInspectXde::tr("No");
-    for (const ColorProperty& prop : listColorProperty) {
-        auto itemProp = new QTreeWidgetItem;
-        const bool isPropOn = std::get<1>(prop);
-        itemProp->setText(0, std::get<0>(prop));
-        itemProp->setText(1, isPropOn ? strYes : strNo);
-        itemProp->setForeground(1, isPropOn ? Qt::green : Qt::red);
-        listItemProp.push_back(itemProp);
-    }
+    listItemProp.push_back(createPropertyTreeItem("IsColor", colorTool->IsColor(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorGen", colorTool->IsSet(label, XCAFDoc_ColorGen)));
+    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorSurf", colorTool->IsSet(label, XCAFDoc_ColorSurf)));
+    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorCurv", colorTool->IsSet(label, XCAFDoc_ColorCurv)));
+    listItemProp.push_back(createPropertyTreeItem("IsVisible", colorTool->IsColor(label)));
 
     Quantity_Color color;
     if (colorTool->GetColor(label, color))
-        listItemProp.push_back(createOccColorTreeItem("Color", color));
+        listItemProp.push_back(createPropertyTreeItem("Color", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorGen, color))
-        listItemProp.push_back(createOccColorTreeItem("Color_ColorGen", color));
+        listItemProp.push_back(createPropertyTreeItem("Color_ColorGen", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorSurf, color))
-        listItemProp.push_back(createOccColorTreeItem("Color_ColorSurf", color));
+        listItemProp.push_back(createPropertyTreeItem("Color_ColorSurf", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorCurv, color))
-        listItemProp.push_back(createOccColorTreeItem("Color_ColorCurv", color));
+        listItemProp.push_back(createPropertyTreeItem("Color_ColorCurv", color));
 
     treeItem->addChildren(listItemProp);
 }
 
 static void loadLabelShapeProperties(
         const TDF_Label& label,
-        const Handle_XCAFDoc_ShapeTool shapeTool,
+        const Handle_XCAFDoc_ShapeTool& shapeTool,
         QTreeWidgetItem* treeItem)
 {
     QList<QTreeWidgetItem*> listItemProp;
@@ -213,29 +326,16 @@ static void loadLabelShapeProperties(
         listItemProp.push_back(itemShapeType);
     }
 
-    using ShapeProperty = std::tuple<QString, bool>;
-    auto listShapeProperty = {
-        ShapeProperty("IsShape", XCAFDoc_ShapeTool::IsShape(label)),
-        ShapeProperty("IsTopLevel", shapeTool->IsTopLevel(label)),
-        ShapeProperty("IsFree", XCAFDoc_ShapeTool::IsFree(label)),
-        ShapeProperty("IsAssembly", XCAFDoc_ShapeTool::IsAssembly(label)),
-        ShapeProperty("IsComponent", XCAFDoc_ShapeTool::IsComponent(label)),
-        ShapeProperty("IsSimpleShape", XCAFDoc_ShapeTool::IsSimpleShape(label)),
-        ShapeProperty("IsCompound", XCAFDoc_ShapeTool::IsCompound(label)),
-        ShapeProperty("IsSubShape", XCAFDoc_ShapeTool::IsSubShape(label)),
-        ShapeProperty("IsExternRef", XCAFDoc_ShapeTool::IsExternRef(label)),
-        ShapeProperty("IsReference", XCAFDoc_ShapeTool::IsReference(label))
-    };
-    const QString strYes = DialogInspectXde::tr("Yes");
-    const QString strNo = DialogInspectXde::tr("No");
-    for (const ShapeProperty& prop : listShapeProperty) {
-        auto itemProp = new QTreeWidgetItem;
-        const bool isPropOn = std::get<1>(prop);
-        itemProp->setText(0, std::get<0>(prop));
-        itemProp->setText(1, isPropOn ? strYes : strNo);
-        itemProp->setForeground(1, isPropOn ? Qt::green : Qt::red);
-        listItemProp.push_back(itemProp);
-    }
+    listItemProp.push_back(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsFree", shapeTool->IsFree(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsAssembly", shapeTool->IsAssembly(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsComponent", shapeTool->IsComponent(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsSimpleShape", shapeTool->IsSimpleShape(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsCompound", shapeTool->IsCompound(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsSubShape", shapeTool->IsSubShape(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
+    listItemProp.push_back(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
 
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
@@ -281,6 +381,8 @@ DialogInspectXde::DialogInspectXde(QWidget *parent)
       m_ui(new Ui_DialogInspectXde)
 {
     m_ui->setupUi(this);
+    m_ui->splitter->setStretchFactor(0, 1);
+    m_ui->splitter->setStretchFactor(1, 4);
     QObject::connect(
                 m_ui->treeWidget_Document, &QTreeWidget::itemClicked,
                 this, &DialogInspectXde::onLabelTreeWidgetItemClicked);
@@ -310,8 +412,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
     }
 }
 
-void DialogInspectXde::onLabelTreeWidgetItemClicked(
-        QTreeWidgetItem *item, int /*column*/)
+void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem *item, int /*column*/)
 {
     const QVariant varLabel = item->data(0, Internal::TreeWidgetItem_TdfLabelRole);
     if (varLabel.isValid()) {
@@ -324,21 +425,29 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(
             m_ui->treeWidget_LabelProps->addTopLevelItem(itemAttrs);
         }
 
-        if (XCAFDoc_ShapeTool::IsShape(label)) {
-            const Handle_XCAFDoc_ShapeTool shapeTool =
-                    XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
+        const bool isShapeLabel = XCAFDoc_ShapeTool::IsShape(label);
+        if (isShapeLabel) {
+            auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
             auto itemShapeProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
-            itemShapeProps->setText(0, tr("Shape specific"));
+            itemShapeProps->setText(0, tr("Shape"));
             Internal::loadLabelShapeProperties(label, shapeTool, itemShapeProps);
         }
 
-        const Handle_XCAFDoc_ColorTool colorTool =
-                XCAFDoc_DocumentTool::ColorTool(m_doc->Main());
-        if (colorTool->IsColor(label) || XCAFDoc_ShapeTool::IsShape(label)) {
+        auto colorTool = XCAFDoc_DocumentTool::ColorTool(m_doc->Main());
+        if (colorTool->IsColor(label) || isShapeLabel) {
             auto itemColorProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
-            itemColorProps->setText(0, tr("Color specific"));
+            itemColorProps->setText(0, tr("Color"));
             Internal::loadLabelColorProperties(label, colorTool, itemColorProps);
         }
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+        auto visMaterialTool = XCAFDoc_DocumentTool::VisMaterialTool(m_doc->Main());
+        if (visMaterialTool->IsMaterial(label) || isShapeLabel) {
+            auto itemVisMaterialProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
+            itemVisMaterialProps->setText(0, tr("VisMaterial"));
+            Internal::loadLabelVisMaterialProperties(label, visMaterialTool, itemVisMaterialProps);
+        }
+#endif
     }
 
     m_ui->treeWidget_LabelProps->expandAll();
