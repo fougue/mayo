@@ -19,6 +19,7 @@
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
 
+#include <Image_Texture.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
 #include <TDF_LabelSequence.hxx>
@@ -38,7 +39,6 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-#  include <Image_Texture.hxx>
 #  include <XCAFDoc_VisMaterial.hxx>
 #  include <XCAFDoc_VisMaterialCommon.hxx>
 #  include <XCAFDoc_VisMaterialTool.hxx>
