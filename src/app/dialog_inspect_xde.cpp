@@ -8,6 +8,7 @@
 
 #include "../base/application.h"
 #include "../base/caf_utils.h"
+#include "../base/meta_enum.h"
 #include "../base/qmeta_tdf_label.h"
 #include "../base/settings.h"
 #include "../base/string_utils.h"
@@ -17,7 +18,6 @@
 
 #include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
-#include <magic_enum/magic_enum.hpp>
 
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
@@ -53,19 +53,6 @@ namespace Internal {
 enum TreeWidgetItemRole {
     TreeWidgetItem_TdfLabelRole = Qt::UserRole + 1
 };
-
-static const char* rawText(TNaming_Evolution evolution)
-{
-    switch (evolution) {
-    case TNaming_PRIMITIVE : return "PRIMITIVE";
-    case TNaming_GENERATED : return "GENERATED";
-    case TNaming_MODIFY : return "MODIFY";
-    case TNaming_DELETE : return "DELETE";
-    case TNaming_REPLACE : return "REPLACE";
-    case TNaming_SELECTED : return "SELECTED";
-    }
-    return "??";
-}
 
 static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
@@ -119,8 +106,8 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
             const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);
             text = "TNaming_NamedShape";
             value = DialogInspectXde::tr("ShapeType=%1, Evolution=%2")
-                    .arg(StringUtils::rawText(namedShape.Get().ShapeType()))
-                    .arg(rawText(namedShape.Evolution()));
+                    .arg(MetaEnum::name(namedShape.Get().ShapeType()).data())
+                    .arg(MetaEnum::name(namedShape.Evolution()).data());
         }
         else {
             std::stringstream sstream;
@@ -179,6 +166,11 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QStrin
     return itemProperty;
 }
 
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_view propertyValue)
+{
+    return createPropertyTreeItem(text, QString::fromUtf8(propertyValue.data()));
+}
+
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_Color& color)
 {
     auto itemColor = new QTreeWidgetItem;
@@ -219,13 +211,13 @@ static void loadLabelVisMaterialProperties(
     listItemProp.push_back(createPropertyTreeItem("IsMaterial", visMaterialTool->IsMaterial(label)));
     listItemProp.push_back(createPropertyTreeItem("IsSetShapeMaterial", visMaterialTool->IsSetShapeMaterial(label)));
 
-    auto fnCreateVisMaterialTreeItem = [&](const QString& text, const Handle_XCAFDoc_VisMaterial& material) {
+    auto fnCreateVisMaterialTreeItem = [](const QString& text, const Handle_XCAFDoc_VisMaterial& material) {
         auto item = new QTreeWidgetItem;
         item->setText(0, text);
         item->addChild(createPropertyTreeItem("HasPbrMaterial", material->HasPbrMaterial()));
         item->addChild(createPropertyTreeItem("HasCommonMaterial", material->HasCommonMaterial()));
         item->addChild(createPropertyTreeItem("BaseColor", material->BaseColor()));
-        item->addChild(createPropertyTreeItem("AlphaMode", magic_enum::enum_name(material->AlphaMode()).data()));
+        item->addChild(createPropertyTreeItem("AlphaMode", MetaEnum::name(material->AlphaMode())));
         item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
         item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
         if (!material->RawName().IsNull())
@@ -318,13 +310,8 @@ static void loadLabelShapeProperties(
     QList<QTreeWidgetItem*> listItemProp;
 
     TopoDS_Shape shape;
-    if (XCAFDoc_ShapeTool::GetShape(label, shape)) {
-        auto itemShapeType = new QTreeWidgetItem;
-        itemShapeType->setText(0, DialogInspectXde::tr("ShapeType"));
-        const char* cstrShapeType = StringUtils::rawText(shape.ShapeType());
-        itemShapeType->setText(1, QString::fromLatin1(cstrShapeType));
-        listItemProp.push_back(itemShapeType);
-    }
+    if (XCAFDoc_ShapeTool::GetShape(label, shape))
+        listItemProp.push_back(createPropertyTreeItem("ShapeType", MetaEnum::name(shape.ShapeType())));
 
     listItemProp.push_back(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
     listItemProp.push_back(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
@@ -340,14 +327,9 @@ static void loadLabelShapeProperties(
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
         if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
-            auto itemRefShape = new QTreeWidgetItem;
-            itemRefShape->setText(0, DialogInspectXde::tr("ReferredShape"));
             const QString textItemRefShape =
-                    CafUtils::labelTag(labelRef)
-                    + " "
-                    + CafUtils::labelAttrStdName(labelRef);
-            itemRefShape->setText(1, textItemRefShape);
-            listItemProp.push_back(itemRefShape);
+                    CafUtils::labelTag(labelRef) + " " + CafUtils::labelAttrStdName(labelRef);
+            listItemProp.push_back(createPropertyTreeItem("ReferredShape", textItemRefShape));
         }
     }
 

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "meta_enum.h"
 #include "property_enumeration.h"
 
 #include <QtCore/QMetaEnum>
-#include <magic_enum/magic_enum.hpp>
 
 // --
 // -- Implementation of template functions Enumeration::fromQENUM() and Enumeration::fromQENUM()
@@ -38,13 +38,13 @@ Enumeration Enumeration::fromQENUM(const QByteArray& textIdContext)
 template<typename ENUM>
 Enumeration Enumeration::fromEnum(const QByteArray& textIdContext)
 {
-    auto fnQByteArrayFrowRawData = [](const char* str) {
-        return QByteArray::fromRawData(str, int(std::strlen(str)));
+    auto fnQByteArrayFrowRawData = [](std::string_view str) {
+        return QByteArray::fromRawData(str.data(), int(str.size()));
     };
 
     Enumeration enumObject;
-    for (const auto& entry : magic_enum::enum_entries<ENUM>()) {
-        const TextId keyTextId = { textIdContext, fnQByteArrayFrowRawData(entry.second.data()) };
+    for (const auto& entry : MetaEnum::entries<ENUM>()) {
+        const TextId keyTextId = { textIdContext, fnQByteArrayFrowRawData(entry.second) };
         enumObject.addItem(int(entry.first), keyTextId);
     }
 

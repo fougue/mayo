@@ -9,6 +9,7 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
+#include "../base/meta_enum.h"
 #include "../base/string_utils.h"
 #include "../base/xcaf.h"
 
@@ -43,7 +44,7 @@ public:
 
         // Shape type
         const TopAbs_ShapeEnum shapeType = XCAFDoc_ShapeTool::GetShape(label).ShapeType();
-        m_propertyShapeType.setValue(QString(StringUtils::rawText(shapeType)).remove("TopAbs_"));
+        m_propertyShapeType.setValue(MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_").data());
 
         // XDE shape kind
         QStringList listXdeShapeKind;

@@ -90,35 +90,6 @@ QString StringUtils::text(const Quantity_Color& color, const QString& format)
     return format.arg(red).arg(green).arg(blue);
 }
 
-const char* StringUtils::rawText(TopAbs_ShapeEnum shapeType)
-{
-    // TODO Replace maybe by TopAbs::ShapeTypeToString()
-    switch (shapeType) {
-    case TopAbs_COMPOUND: return "TopAbs_COMPOUND";
-    case TopAbs_COMPSOLID: return "TopAbs_COMPSOLID";
-    case TopAbs_SOLID: return "TopAbs_SOLID";
-    case TopAbs_SHELL: return "TopAbs_SHELL";
-    case TopAbs_FACE: return "TopAbs_FACE";
-    case TopAbs_WIRE: return "TopAbs_WIRE";
-    case TopAbs_EDGE: return "TopAbs_EDGE";
-    case TopAbs_VERTEX: return "TopAbs_VERTEX";
-    case TopAbs_SHAPE: return "TopAbs_SHAPE";
-    }
-    return "??";
-}
-
-const char* StringUtils::rawText(IFSelect_ReturnStatus status)
-{
-    switch (status) {
-    case IFSelect_RetVoid: return "IFSelect_RetVoid";
-    case IFSelect_RetDone: return "IFSelect_RetDone";
-    case IFSelect_RetError: return "IFSelect_RetError";
-    case IFSelect_RetFail: return "IFSelect_RetFail";
-    case IFSelect_RetStop: return "IFSelect_RetStop";
-    }
-    return "??";
-}
-
 void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
 {
     if (locale.textDirection() == Qt::LeftToRight)

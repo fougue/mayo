@@ -11,11 +11,12 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/geom_utils.h"
+#include "../src/base/io_occ.h"
 #include "../src/base/io_system.h"
 #include "../src/base/libtree.h"
-#include "../src/base/geom_utils.h"
 #include "../src/base/mesh_utils.h"
-#include "../src/base/io_occ.h"
+#include "../src/base/meta_enum.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
@@ -26,6 +27,7 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
+#include <TopAbs_ShapeEnum.hxx>
 #include <QtCore/QFile>
 #include <QtCore/QtDebug>
 #include <QtTest/QSignalSpy>
@@ -253,6 +255,20 @@ void Test::MeshUtils_orientation_test_data()
         std::reverse(vecPoint.begin(), vecPoint.end());
         QTest::newRow("case8") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
     }
+}
+
+void Test::MetaEnum_test()
+{
+    QCOMPARE(MetaEnum::name(TopAbs_VERTEX), "TopAbs_VERTEX");
+    QCOMPARE(MetaEnum::name(TopAbs_EDGE), "TopAbs_EDGE");
+    QCOMPARE(MetaEnum::name(TopAbs_WIRE), "TopAbs_WIRE");
+    QCOMPARE(MetaEnum::name(TopAbs_FACE), "TopAbs_FACE");
+    QCOMPARE(MetaEnum::name(TopAbs_SHELL), "TopAbs_SHELL");
+    QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_SOLID, "TopAbs_"), "SOLID");
+    QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_COMPOUND, "TopAbs_"), "COMPOUND");
+
+    QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_VERTEX, "Abs"), "TopAbs_VERTEX");
+    QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_VERTEX, ""), "TopAbs_VERTEX");
 }
 
 void Test::MeshUtils_test()
