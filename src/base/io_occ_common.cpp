@@ -9,6 +9,8 @@
 #include "io_occ_common.h"
 #include "text_id.h"
 
+#include <RWMesh_CoordinateSystem.hxx>
+
 namespace Mayo {
 namespace IO {
 
@@ -26,6 +28,16 @@ const Enumeration& OccCommon::enumerationLengthUnit()
         { int(LengthUnit::Inch), OccCommonI18N::textId("UnitInch"), {} },
         { int(LengthUnit::Foot), OccCommonI18N::textId("UnitFoot"), {} },
         { int(LengthUnit::Mile), OccCommonI18N::textId("UnitMile"), {} }
+    };
+    return enumeration;
+}
+
+const Enumeration& OccCommon::enumMeshCoordinateSystem()
+{
+    static const Enumeration enumeration = {
+        { RWMesh_CoordinateSystem_Undefined, OccCommonI18N::textId("SystemUndefined") },
+        { RWMesh_CoordinateSystem_Zup, OccCommonI18N::textId("SystemPosZUp") },
+        { RWMesh_CoordinateSystem_Yup, OccCommonI18N::textId("SystemPosYUp") }
     };
     return enumeration;
 }

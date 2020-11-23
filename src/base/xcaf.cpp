@@ -36,6 +36,13 @@ Handle_XCAFDoc_ColorTool XCaf::colorTool() const
     return XCAFDoc_DocumentTool::ColorTool(m_labelMain);
 }
 
+#if OCC_VERSION_HEX >= 0x070500
+Handle_XCAFDoc_VisMaterialTool XCaf::visMaterialTool() const
+{
+    return XCAFDoc_DocumentTool::VisMaterialTool(m_labelMain);
+}
+#endif
+
 TDF_LabelSequence XCaf::topLevelFreeShapes() const
 {
     TDF_LabelSequence seq;

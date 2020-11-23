@@ -9,8 +9,12 @@
 #include "libtree.h"
 #include "quantity.h"
 #include <Quantity_Color.hxx>
+#include <Standard_Version.hxx>
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#if OCC_VERSION_HEX >= 0x070500
+#  include <XCAFDoc_VisMaterialTool.hxx>
+#endif
 
 namespace Mayo {
 
@@ -30,6 +34,9 @@ public:
 
     Handle_XCAFDoc_ShapeTool shapeTool() const;
     Handle_XCAFDoc_ColorTool colorTool() const;
+#if OCC_VERSION_HEX >= 0x070500
+    Handle_XCAFDoc_VisMaterialTool visMaterialTool() const;
+#endif
 
     TDF_LabelSequence topLevelFreeShapes() const;
     static TDF_LabelSequence shapeComponents(const TDF_Label& lbl);

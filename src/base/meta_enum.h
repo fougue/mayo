@@ -24,8 +24,7 @@ public:
     template<typename ENUM>
     static std::string_view nameWithoutPrefix(ENUM enumValue, std::string_view strPrefix) {
         std::string_view strEnumValueName = MetaEnum::name(enumValue);
-        const size_t pos = strEnumValueName.find(strPrefix);
-        if (pos == 0)
+        if (strEnumValueName.find(strPrefix) == 0)
             return strEnumValueName.substr(strPrefix.size());
         else
             return strEnumValueName;

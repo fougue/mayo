@@ -23,6 +23,7 @@ struct Format;
 
 class Reader {
 public:
+    // TODO Replace QString with std::filesystem::path
     virtual bool readFile(const QString& filepath, TaskProgress* progress) = 0;
     virtual bool transfer(DocumentPtr doc, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}

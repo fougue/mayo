@@ -60,8 +60,6 @@ public:
     static double lengthUnitFactor(LengthUnit lenUnit);
     static LengthUnit lengthUnit(double factor);
 
-    static const Enumeration& enumCoordinateSystem();
-
     PropertyQString rootPrefix;
     PropertyEnumeration systemCoordinatesConverter;
     PropertyEnumeration systemLengthUnit;

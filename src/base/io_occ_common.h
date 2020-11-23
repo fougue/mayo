@@ -26,6 +26,7 @@ public:
     };
 
     static const Enumeration& enumerationLengthUnit();
+    static const Enumeration& enumMeshCoordinateSystem();
 };
 
 } // namespace IO

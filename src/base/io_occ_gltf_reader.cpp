@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "io_occ_gltf.h"
+#include "io_occ_gltf_reader.h"
 #include "property_builtins.h"
 
 namespace Mayo {
@@ -19,7 +19,7 @@ public:
           useMeshNameAsFallback(this, textId("useMeshNameAsFallback"))
     {
        this->skipEmptyNodes.setDescription(
-                    textIdTr("Whether if nodes without geometry should be ignored(`Yes` by default)"));
+                    textIdTr("Ignore nodes without geometry(`Yes` by default)"));
         this->useMeshNameAsFallback.setDescription(
                     textIdTr("Use mesh name in case if node name is empty(`Yes` by default)"));
     }

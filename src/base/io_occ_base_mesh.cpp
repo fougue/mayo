@@ -21,7 +21,7 @@ namespace IO {
 OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGroup)
     : PropertyGroup(parentGroup),
       rootPrefix(this, textId("rootPrefix")),
-      systemCoordinatesConverter(this, textId("systemCoordinatesConverter"), &enumCoordinateSystem()),
+      systemCoordinatesConverter(this, textId("systemCoordinatesConverter"), &OccCommon::enumMeshCoordinateSystem()),
       systemLengthUnit(this, textId("systemLengthUnit"), &OccCommon::enumerationLengthUnit())
 {
     this->rootPrefix.setDescription(tr("Prefix for generating root labels name"));
@@ -30,9 +30,10 @@ OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGr
 
 void OccBaseMeshReaderProperties::restoreDefaults()
 {
-    this->rootPrefix.setValue(QString());
-    this->systemCoordinatesConverter.setValue(RWMesh_CoordinateSystem_Undefined);
-    this->systemLengthUnit.setValue(int(LengthUnit::Undefined));
+    const OccBaseMeshReader::Parameters defaults;
+    this->rootPrefix.setValue(defaults.rootPrefix);
+    this->systemCoordinatesConverter.setValue(defaults.systemCoordinatesConverter);
+    this->systemLengthUnit.setValue(defaults.systemLengthUnit);
 }
 
 double OccBaseMeshReaderProperties::lengthUnitFactor(LengthUnit lenUnit)
@@ -65,16 +66,6 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     }
 
     return LengthUnit::Undefined;
-}
-
-const Enumeration& OccBaseMeshReaderProperties::enumCoordinateSystem()
-{
-    static const Enumeration enumeration = {
-        { RWMesh_CoordinateSystem_Undefined, textId("SystemUndefined") },
-        { RWMesh_CoordinateSystem_Zup, textId("SystemPosZUp") },
-        { RWMesh_CoordinateSystem_Yup, textId("SystemPosYUp") }
-    };
-    return enumeration;
 }
 
 bool OccBaseMeshReader::readFile(const QString& filepath, TaskProgress* progress)

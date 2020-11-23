@@ -71,7 +71,6 @@ public:
     PropertyEnumeration targetFormat;
 };
 
-
 bool OccStlReader::readFile(const QString& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);

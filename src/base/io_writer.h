@@ -22,6 +22,7 @@ namespace IO {
 class Writer {
 public:
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
+    // TODO Replace QString with std::filesystem::path
     virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
 };
