@@ -43,6 +43,16 @@ glTF                      |  &#10004; | &#10004; | Import requires OpenCascade &
 VRML                      |  &#10060; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
 
+# Gallery
+
+<img src="doc/screenshot_1.png"/>
+
+<img src="doc/screenshot_2.png"/>
+
+<img src="doc/screenshot_3.png"/>
+
+<img src="doc/screenshot_4.png"/>
+
 # Build instructions
 Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
 * [Qt installer](https://www.qt.io/download-qt-installer)
@@ -62,7 +72,3 @@ qmake variables instead :
 ```bash
 qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"
 ```
-
-# Screenshots
-
-<img src="doc/screenshot_1.png"/>
