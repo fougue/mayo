@@ -9,31 +9,55 @@ clone_folder: c:\projects\mayo
 matrix:
   fast_finish: true
 
+environment:
+  matrix:
+    - APPVEYOR_OCC_VERSION: 7.4.0
+
+    - APPVEYOR_OCC_VERSION: 7.5.0
+
+cache:
+  - OpenCASCADE-7.4.0-vc14-64.rar
+  - OpenCASCADE-7.5.0-vc14-64.rar
+
 install:
-  - ps: Invoke-WebRequest -Uri http://www.fougue.pro/share/bin/OpenCASCADE-7.4.0-vc14-64.rar -OutFile .\OpenCASCADE-7.4.0-vc14-64.rar
-  - 7z x OpenCASCADE-7.4.0-vc14-64.rar
+  - if not exist OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar
+      appveyor DownloadFile http://www.fougue.pro/share/bin/OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar -FileName OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar
+  - 7z x OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar
 
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - call "OpenCASCADE-7.4.0-vc14-64\opencascade-7.4.0\env.bat"
+  - call "OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64\opencascade-%APPVEYOR_OCC_VERSION%\env.bat"
   - set PATH=C:\Qt\5.13\msvc2017_64\bin;%PATH%
   - set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
+  - set PATH="C:\Program Files (x86)\Inno Setup 5";%PATH%
   - qmake --version
   - echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
 
 build_script:
-  - mkdir build
-  - cd build
+  - mkdir build-%APPVEYOR_OCC_VERSION%
+  - cd build-%APPVEYOR_OCC_VERSION%
   - qmake ..\mayo.pro
   - jom -j%NUMBER_OF_PROCESSORS%
   - cd ..
 
 test_script:
-  - mkdir build-tests
-  - cd build-tests
+  - mkdir build-tests-%APPVEYOR_OCC_VERSION%
+  - cd build-tests-%APPVEYOR_OCC_VERSION%
   - qmake ..\tests\mayo_tests.pro
   - jom -j%NUMBER_OF_PROCESSORS%
   - release\mayo_tests.exe
+  - cd ..
+
+after_test:
+  - if "%APPVEYOR_OCC_VERSION%"=="7.5.0" (
+      cd build-%APPVEYOR_OCC_VERSION%\installer &&
+      iscc setup.iss &&
+      cd ..\..
+    )
+
+artifacts:
+  - path: build-%APPVEYOR_OCC_VERSION%\installer\Output\mayo_*_installer.exe
+    name: Mayo Installer
 
 on_success:
   - ps: >-
