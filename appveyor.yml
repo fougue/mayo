@@ -25,6 +25,7 @@ install:
   - 7z x OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar
 
 before_build:
+  - echo JOB_NAME=%APPVEYOR_JOB_NAME%
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
   - call "OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64\opencascade-%APPVEYOR_OCC_VERSION%\env.bat"
   - set PATH=C:\Qt\5.13\msvc2017_64\bin;%PATH%
@@ -57,7 +58,7 @@ after_test:
 
 artifacts:
   - path: build-%APPVEYOR_OCC_VERSION%\installer\Output\mayo_*_installer.exe
-    name: Mayo Installer
+    name: MayoInstallerWin64
 
 on_success:
   - ps: >-
