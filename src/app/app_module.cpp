@@ -13,6 +13,11 @@
 #include "../base/occt_enums.h"
 #include "../base/settings.h"
 #include "../graphics/graphics_entity_driver.h"
+#include "../gui/gui_application.h"
+#include "../gui/gui_document.h"
+
+#include <QtCore/QDir>
+#include <iterator>
 
 namespace Mayo {
 
@@ -62,6 +67,9 @@ AppModule::AppModule(Application* app)
       meshDefaultsShowNodes(this, textId("showNodesOn"))
 {
     auto settings = app->settings();
+
+    qRegisterMetaTypeStreamOperators<RecentFiles>("RecentFiles");
+    qRegisterMetaTypeStreamOperators<RecentFiles>("Mayo::RecentFiles");
 
     // System
     // -- Units
@@ -145,7 +153,7 @@ AppModule::AppModule(Application* app)
     });
     settings->addGroupResetFunction(this->groupId_application, [&]{
         this->language.setValue(enumLanguages.findValue("en"));
-        this->recentFiles.setValue(QStringList());
+        this->recentFiles.setValue({});
         this->lastOpenDir.setValue(QString());
         this->lastSelectedFormatFilter.setValue(QString());
         this->linkWithDocumentSelector.setValue(true);
@@ -189,6 +197,87 @@ const PropertyGroup *AppModule::findWriterParameters(const IO::Format& format) c
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
+void AppModule::prependRecentFile(const QString& filepath)
+{
+    const RecentFile* ptrRecentFile = this->findRecentFile(filepath);
+    RecentFiles newRecentFiles = this->recentFiles.value();
+    if (ptrRecentFile) {
+        RecentFile& firstRecentFile = newRecentFiles.front();
+        RecentFile& recentFile = newRecentFiles.at(ptrRecentFile - &this->recentFiles.value().front());
+        std::swap(firstRecentFile, recentFile);
+    }
+    else {
+        RecentFile recentFile;
+        recentFile.filepath = filepath;
+        newRecentFiles.insert(newRecentFiles.begin(), std::move(recentFile));
+        constexpr int sizeLimit = 15;
+        while (newRecentFiles.size() > sizeLimit)
+            newRecentFiles.pop_back();
+    }
+
+    this->recentFiles.setValue(newRecentFiles);
+}
+
+const RecentFile* AppModule::findRecentFile(const QString& filepath) const
+{
+    const QFileInfo fileInfo(filepath);
+    const RecentFiles& listRecentFile = this->recentFiles.value();
+    auto itFound =
+            std::find_if(
+                listRecentFile.cbegin(),
+                listRecentFile.cend(),
+                [=](const RecentFile& recentFile) {
+        return fileInfo == QFileInfo(recentFile.filepath);
+    });
+    return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
+}
+
+void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
+{
+    if (!guiDoc)
+        return;
+
+    const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
+    if (!recentFile)
+        return;
+
+    if (!recentFile->isThumbnailOutOfSync())
+        return;
+
+    RecentFile newRecentFile = *recentFile;
+    const bool okRecord = newRecentFile.recordThumbnail(guiDoc, this->recentFileThumbnailSize());
+    if (!okRecord)
+        return;
+
+    const RecentFiles& listRecentFile = this->recentFiles.value();
+    RecentFiles newListRecentFile = listRecentFile;
+    const auto indexRecentFile = std::distance(&listRecentFile.front(), recentFile);
+    newListRecentFile.at(indexRecentFile) = newRecentFile;
+    this->recentFiles.setValue(newListRecentFile);
+}
+
+void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
+{
+    if (!guiApp)
+        return;
+
+    const RecentFiles& listRecentFile = this->recentFiles.value();
+    RecentFiles newListRecentFile = listRecentFile;
+    for (GuiDocument* guiDoc : guiApp->guiDocuments()) {
+        const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
+        if (!recentFile || !recentFile->isThumbnailOutOfSync())
+            continue; // Skip
+
+        RecentFile newRecentFile = *recentFile;
+        if (newRecentFile.recordThumbnail(guiDoc, this->recentFileThumbnailSize())) {
+            auto indexRecentFile = std::distance(&listRecentFile.front(), recentFile);
+            newListRecentFile.at(indexRecentFile) = newRecentFile;
+        }
+    }
+
+    this->recentFiles.setValue(newListRecentFile);
+}
+
 AppModule* AppModule::get(const ApplicationPtr& app)
 {
     if (app)
@@ -197,7 +286,7 @@ AppModule* AppModule::get(const ApplicationPtr& app)
     return nullptr;
 }
 
-void AppModule::onPropertyChanged(Property *prop)
+void AppModule::onPropertyChanged(Property* prop)
 {
     if (prop == &this->meshDefaultsColor
             || prop == &this->meshDefaultsEdgeColor

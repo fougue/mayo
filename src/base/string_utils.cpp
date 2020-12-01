@@ -90,6 +90,21 @@ QString StringUtils::text(const Quantity_Color& color, const QString& format)
     return format.arg(red).arg(green).arg(blue);
 }
 
+QString StringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
+{
+    constexpr int oneMB = 1024 * 1024;
+    if (sizeBytes < 1024 )
+        return tr("%1%2").arg(locale.toString(sizeBytes), tr("B"));
+    else if (sizeBytes < oneMB)
+        return tr("%1%2").arg(locale.toString(sizeBytes / 1024), tr("KB"));
+    else if (sizeBytes < (10 * oneMB))
+        return tr("%1%2").arg(locale.toString(sizeBytes / double(oneMB), 'f', 2), tr("MB"));
+    else if (sizeBytes < (100 * oneMB))
+        return tr("%1%2").arg(locale.toString(sizeBytes / double(oneMB), 'f', 1), tr("MB"));
+    else
+        return tr("%1%2").arg(locale.toString(sizeBytes / oneMB), tr("MB"));
+}
+
 void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
 {
     if (locale.textDirection() == Qt::LeftToRight)

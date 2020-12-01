@@ -101,6 +101,9 @@ static int runApp(QApplication* qtApp)
 
     // Register AppModule
     auto appModule = new AppModule(app);
+    QObject::connect(
+                guiApp, &GuiApplication::guiDocumentErased,
+                appModule, &AppModule::recordRecentFileThumbnail);
 
     // Register document tree node providers
     app->documentTreeNodePropertiesProviderTable()->addProvider(
@@ -133,6 +136,7 @@ static int runApp(QApplication* qtApp)
     }
 
     // Create MainWindow
+    app->settings()->loadProperty(app->settings()->findProperty(&appModule->recentFiles));
     MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
@@ -143,6 +147,7 @@ static int runApp(QApplication* qtApp)
     app->settings()->resetAll();
     app->settings()->load();
     const int code = qtApp->exec();
+    appModule->recordRecentFileThumbnails(guiApp);
     app->settings()->save();
     return code;
 }

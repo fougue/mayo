@@ -37,6 +37,8 @@ private slots:
     void LibTask_test();
     void LibTree_test();
 
+    void OccQtUtils_test();
+
     void initTestCase();
 };
 

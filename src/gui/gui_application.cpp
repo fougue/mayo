@@ -81,7 +81,7 @@ void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
                 m_vecGuiDocument.end(),
                 [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; });
     if (itFound != m_vecGuiDocument.end()) {
-        const GuiDocument* guiDoc = *itFound;
+        GuiDocument* guiDoc = *itFound;
         m_vecGuiDocument.erase(itFound);
         emit guiDocumentErased(guiDoc);
         delete guiDoc;

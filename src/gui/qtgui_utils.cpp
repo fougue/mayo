@@ -6,10 +6,12 @@
 
 #include "qtgui_utils.h"
 #include "../base/math_utils.h"
-#include "../3rdparty/gsl/gsl_assert"
+
+#include <gsl/gsl_assert>
 #include <algorithm>
 
 namespace Mayo {
+namespace QtGuiUtils {
 
 namespace {
 
@@ -24,7 +26,7 @@ constexpr bool isInRange(double v, double start, double end) {
 
 } // namespace
 
-QColor QtGuiUtils::lerp(const QColor& a, const QColor& b, double t)
+QColor lerp(const QColor& a, const QColor& b, double t)
 {
     Expects(isInRange(t, 0, 1));
     return QColor(
@@ -34,7 +36,7 @@ QColor QtGuiUtils::lerp(const QColor& a, const QColor& b, double t)
                 MathUtils::lerp(a.alpha(), b.alpha(), t));
 }
 
-QColor QtGuiUtils::linearColorAt(const QGradient& gradient, double t)
+QColor linearColorAt(const QGradient& gradient, double t)
 {
     Expects(gradient.type() == QGradient::LinearGradient);
     Expects(isInRange(t, 0, 1));
@@ -61,7 +63,7 @@ QColor QtGuiUtils::linearColorAt(const QGradient& gradient, double t)
     return !stops.empty() ? stops.back().second : QColor();
 }
 
-QGradient QtGuiUtils::gradientEndsAdded(const QGradient& gradient)
+QGradient gradientEndsAdded(const QGradient& gradient)
 {
     QGradient newGradient = gradient;
     const QGradientStops stops = gradient.stops();
@@ -74,7 +76,7 @@ QGradient QtGuiUtils::gradientEndsAdded(const QGradient& gradient)
     return newGradient;
 }
 
-QGradient QtGuiUtils::subGradient(const QGradient& gradient, double t1, double t2)
+QGradient subGradient(const QGradient& gradient, double t1, double t2)
 {
     if (qFuzzyCompare(t1, 0) && qFuzzyCompare(t2, 1))
         return gradient;
@@ -103,4 +105,30 @@ QGradient QtGuiUtils::subGradient(const QGradient& gradient, double t1, double t
     return subGradient;
 }
 
+FontChange::FontChange(const QFont& font)
+    : m_font(font)
+{}
+
+FontChange& FontChange::size(int size) {
+    m_font.setPixelSize(size);
+    return *this;
+}
+
+FontChange& FontChange::adjustSize(int offset) {
+    const int pixelSize = m_font.pixelSize() > 0 ? m_font.pixelSize() : 12;
+    m_font.setPixelSize(pixelSize + offset);
+    return *this;
+}
+
+FontChange& FontChange::bold(bool on) {
+    m_font.setBold(on);
+    return *this;
+}
+
+FontChange& FontChange::fixedPitch(bool on) {
+    m_font.setFixedPitch(on);
+    return *this;
+}
+
+} // namespace QtGuiUtils
 } // namespace Mayo

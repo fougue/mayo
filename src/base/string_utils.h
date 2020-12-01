@@ -12,6 +12,7 @@
 #include <QtCore/QString>
 #include <IFSelect_ReturnStatus.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <utility>
 class Quantity_Color;
 class gp_Pnt;
 class gp_Dir;
@@ -33,6 +34,8 @@ public:
     static QString text(const gp_Dir& pos, const TextOptions& opt);
     static QString text(const gp_Trsf& trsf, const TextOptions& opt);
     static QString text(const Quantity_Color& color, const QString& format = "R:%1 G:%2 B:%3");
+
+    static QString bytesText(uint64_t sizeBytes, const QLocale& locale = QLocale());
 
     static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
 };

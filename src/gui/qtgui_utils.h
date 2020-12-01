@@ -7,23 +7,38 @@
 #pragma once
 
 #include <QtGui/QColor>
+#include <QtGui/QFont>
 #include <QtGui/QGradient>
 
 namespace Mayo {
+namespace QtGuiUtils {
 
-class QtGuiUtils {
+// Returns linear interpolated color between 'a' and 'b' at parameter 't'
+QColor lerp(const QColor& a, const QColor& b, double t);
+
+// Returns color at normalized pos 't' from linear gradient
+// Note: assumes that gradient stops array contains keys 0 and 1
+QColor linearColorAt(const QGradient& gradient, double t);
+
+// Returns version of 'gradient' having stop keys 0 and 1
+QGradient gradientEndsAdded(const QGradient& gradient);
+
+QGradient subGradient(const QGradient& gradient, double t1, double t2);
+
+class FontChange {
 public:
-    // Returns linear interpolated color between 'a' and 'b' at parameter 't'
-    static QColor lerp(const QColor& a, const QColor& b, double t);
+    FontChange(const QFont& font);
 
-    // Returns color at normalized pos 't' from linear gradient
-    // Note: assumes that gradient stops array contains keys 0 and 1
-    static QColor linearColorAt(const QGradient& gradient, double t);
+    FontChange& size(int size);
+    FontChange& adjustSize(int offset);
+    FontChange& bold(bool on);
+    FontChange& fixedPitch(bool on);
 
-    // Returns version of 'gradient' having stop keys 0 and 1
-    static QGradient gradientEndsAdded(const QGradient& gradient);
+    constexpr operator const QFont&() const { return m_font; }
 
-    static QGradient subGradient(const QGradient& gradient, double t1, double t2);
+private:
+    QFont m_font;
 };
 
+} // namespace QtGuiUtils
 } // namespace Mayo

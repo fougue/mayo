@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "recent_files.h"
+
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/property.h"
@@ -20,6 +22,9 @@
 #include <vector>
 
 namespace Mayo {
+
+class GuiApplication;
+class GuiDocument;
 
 class AppModule :
         public QObject,
@@ -39,6 +44,12 @@ public:
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
+    void prependRecentFile(const QString& filepath);
+    const RecentFile* findRecentFile(const QString& filepath) const;
+    void recordRecentFileThumbnail(GuiDocument* guiDoc);
+    void recordRecentFileThumbnails(GuiApplication* guiApp);
+    QSize recentFileThumbnailSize() const { return { 190, 150 }; }
+
     // System
     const Settings_GroupIndex groupId_system;
     const Settings_SectionIndex sectionId_systemUnits;
@@ -47,7 +58,7 @@ public:
     // Application
     const Settings_GroupIndex groupId_application;
     PropertyEnumeration language;
-    PropertyQStringList recentFiles;
+    PropertyRecentFiles recentFiles;
     PropertyQString lastOpenDir;
     PropertyQString lastSelectedFormatFilter;
     PropertyBool linkWithDocumentSelector;

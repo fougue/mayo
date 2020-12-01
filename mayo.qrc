@@ -70,5 +70,7 @@
         <file>images/themes/dark/edit.svg</file>
         <file>i18n/mayo_en.qm</file>
         <file>i18n/mayo_fr.qm</file>
+        <file>images/themes/classic/add-file.svg</file>
+        <file>images/themes/classic/open-files.svg</file>
     </qresource>
 </RCC>
