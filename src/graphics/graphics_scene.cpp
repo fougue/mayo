@@ -25,7 +25,7 @@ static Handle_V3d_Viewer createOccViewer()
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);
-//    viewer->SetDefaultComputedMode(true);
+    viewer->SetDefaultComputedMode(true);
 //    viewer->SetDefaultVisualization(V3d_ZBUFFER);
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();

@@ -24,9 +24,9 @@ namespace Internal {
 static QImage qtImageTemp(const Image_PixMap& occImg)
 {
     const QImage img(occImg.Data(),
-                     static_cast<int>(occImg.Width()),
-                     static_cast<int>(occImg.Height()),
-                     static_cast<int>(occImg.SizeRowBytes()),
+                     int(occImg.Width()),
+                     int(occImg.Height()),
+                     int(occImg.SizeRowBytes()),
                      QImage::Format_RGBA8888);
     return img;
 }

@@ -39,7 +39,7 @@ public:
 
 signals:
     void guiDocumentAdded(GuiDocument* guiDoc);
-    void guiDocumentErased(const GuiDocument* guiDoc);
+    void guiDocumentErased(GuiDocument* guiDoc);
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);

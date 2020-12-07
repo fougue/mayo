@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>764</width>
-    <height>572</height>
+    <width>950</width>
+    <height>791</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,7 @@
     <item>
      <widget class="QStackedWidget" name="stack_Main">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_MainHome">
        <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -43,8 +43,17 @@
         <item>
          <widget class="QWidget" name="widget_MainHome" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_9">
-           <property name="spacing">
-            <number>20</number>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
            </property>
            <item>
             <widget class="QLabel" name="label_AppIcon">
@@ -52,22 +61,31 @@
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap>:/images/appicon_128.png</pixmap>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_MainHome">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;You can create a &lt;/span&gt;&lt;a href=&quot;NewDocument&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;New Document&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;or &lt;/span&gt;&lt;a href=&quot;OpenDocuments&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Open Existing Documents&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <pixmap resource="../../mayo.qrc">:/images/appicon_128.png</pixmap>
              </property>
              <property name="alignment">
               <set>Qt::AlignHCenter|Qt::AlignTop</set>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="WidgetHomeFiles" name="widget_HomeFiles" native="true"/>
            </item>
           </layout>
          </widget>
@@ -537,7 +555,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>764</width>
+     <width>950</width>
      <height>21</height>
     </rect>
    </property>
@@ -824,7 +842,15 @@
    <header>widget_properties_editor.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>WidgetHomeFiles</class>
+   <extends>QWidget</extends>
+   <header>widget_home_files.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../mayo.qrc"/>
+ </resources>
  <connections/>
 </ui>

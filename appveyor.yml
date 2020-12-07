@@ -12,7 +12,6 @@ matrix:
 environment:
   matrix:
     - APPVEYOR_OCC_VERSION: 7.4.0
-
     - APPVEYOR_OCC_VERSION: 7.5.0
 
 cache:

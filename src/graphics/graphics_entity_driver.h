@@ -62,7 +62,6 @@ protected:
         DisplayMode_Shaded,
         DisplayMode_ShadedWithFaceBoundary
     };
-
 };
 
 class GraphicsMeshEntityDriver : public GraphicsEntityDriver {

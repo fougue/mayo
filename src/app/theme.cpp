@@ -62,7 +62,9 @@ static QPixmap invertedPixmap(const QPixmap& pix)
 static QString iconFileName(Theme::Icon icn)
 {
     switch (icn) {
+    case Theme::Icon::AddFile: return "add-file.svg";
     case Theme::Icon::File: return "file.svg";
+    case Theme::Icon::OpenFiles: return "open-files.svg";
     case Theme::Icon::Import: return "import.svg";
     case Theme::Icon::Edit: return "edit.svg";
     case Theme::Icon::Export: return "export.svg";
@@ -98,7 +100,9 @@ static QString iconFileName(Theme::Icon icn)
 static Span<const Theme::Icon> themeIcons()
 {
     static const Theme::Icon arrayIcons[] = {
+        Theme::Icon::AddFile,
         Theme::Icon::File,
+        Theme::Icon::OpenFiles,
         Theme::Icon::Import,
         Theme::Icon::Edit,
         Theme::Icon::Export,
@@ -175,7 +179,7 @@ public:
     void setup() override
     {
         const QString icnBasePath = ":/images/themes/classic/";
-        for (const Icon icn : themeIcons()) {
+        for (const Icon& icn : themeIcons()) {
             const QString icnFileName = iconFileName(icn);
             m_mapIcon.emplace(icn, QIcon(QPixmap(icnBasePath + icnFileName)));
         }
@@ -234,12 +238,19 @@ public:
 
     void setup() override
     {
-        const QString icnBasePath = ":/images/themes/dark/";
+        auto fnIsNeutralIcon = [](Icon icn) {
+            return icn == Icon::AddFile || icn == Icon::OpenFiles || icn == Icon::Stop;
+        };
         for (const Icon icn : themeIcons()) {
             const QString icnFileName = iconFileName(icn);
+            const QString icnBasePath =
+                    !fnIsNeutralIcon(icn) ?
+                        ":/images/themes/dark/" :
+                        ":/images/themes/classic/";
             QPixmap pix(icnBasePath + icnFileName);
-            if (icn != Icon::Stop)
+            if (!fnIsNeutralIcon(icn))
                 pix = invertedPixmap(pix);
+
             m_mapIcon.emplace(icn, pix);
         }
 
@@ -269,7 +280,7 @@ public:
 
         const QString css =
                 "QFrame[frameShape=\"5\"] { color: gray; margin-top: 2px; margin-bottom: 2px; } "
-                "QAbstractItemView { background: #505050; } "
+                "QAbstractItemView { background: rgb(53,53,53); } "
                 "QAbstractItemView::item:hover { background: #606060; }"
                 "QLineEdit { background: #505050; }"
                 "QMenu { background: #505050; border: 1px solid rgb(100,100,100); }"
@@ -305,8 +316,10 @@ Theme* createTheme(const QString& key)
 {
     if (key == "classic")
         return new Internal::ThemeClassic;
+
     if (key == "dark")
         return new Internal::ThemeDark;
+
     return nullptr;
 }
 

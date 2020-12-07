@@ -32,7 +32,9 @@ public:
     };
 
     enum class Icon {
+        AddFile,
         File,
+        OpenFiles,
         Import,
         Edit,
         Export,

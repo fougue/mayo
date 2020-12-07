@@ -41,6 +41,7 @@
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
 #include <fougtools/qttools/gui/qwidget_utils.h>
+#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>
@@ -149,20 +150,8 @@ struct OpenFileNames {
 
 static void prependRecentFile(const QString& filepath)
 {
-    constexpr int sizeLimit = 10;
     auto appModule = AppModule::get(Application::instance());
-    QStringList listFiles = appModule->recentFiles.value();
-    const QString absFilepath = QDir::toNativeSeparators(QFileInfo(filepath).absoluteFilePath());
-    for (const QString& recentFile : listFiles) {
-        if (recentFile == absFilepath)
-            return;
-    }
-
-    listFiles.insert(listFiles.begin(), absFilepath);
-    while (listFiles.size() > sizeLimit)
-        listFiles.pop_back();
-
-    appModule->recentFiles.setValue(listFiles);
+    appModule->prependRecentFile(filepath);
 }
 
 static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
@@ -226,13 +215,20 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
 
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
-    QString labelMainHomeText = m_ui->label_MainHome->text();
-    labelMainHomeText.replace(
-                QRegularExpression("color:#[0-9a-fA-F]{6,6};"), // ex: color:#0000ff
-                QString("color:%1;").arg(qApp->palette().color(QPalette::Link).name()));
-    m_ui->label_MainHome->setText(labelMainHomeText);
 
     auto sigComboIndexChanged = qOverload<int>(&QComboBox::currentIndexChanged);
+    // "HomeFiles" actions
+    QObject::connect(
+                m_ui->widget_HomeFiles, &WidgetHomeFiles::newDocumentRequested,
+                m_ui->actionNewDoc, &QAction::trigger);
+    QObject::connect(
+                m_ui->widget_HomeFiles, &WidgetHomeFiles::openDocumentsRequested,
+                m_ui->actionOpen, &QAction::trigger);
+    QObject::connect(
+                m_ui->widget_HomeFiles, &WidgetHomeFiles::recentFileOpenRequested,
+                this, [=](const QString& filepath) {
+        this->openDocumentsFromList(QStringList(filepath));
+    });
     // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
@@ -258,9 +254,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionQuit, &QAction::triggered,
                 this, &MainWindow::quitApp);
-    QObject::connect(
-                m_ui->label_MainHome, &QLabel::linkActivated,
-                this, &MainWindow::onHomePageLinkActivated);
     QObject::connect(
                 m_ui->menu_File, &QMenu::aboutToShow,
                 this, &MainWindow::createMenuRecentFiles);
@@ -340,6 +333,9 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
+    QObject::connect(
+                guiApp, &GuiApplication::guiDocumentErased,
+                this, &MainWindow::onGuiDocumentErased);
     QObject::connect(
                 guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
                 this, &MainWindow::onApplicationItemSelectionChanged);
@@ -695,14 +691,6 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
         qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
-void MainWindow::onHomePageLinkActivated(const QString &link)
-{
-    if (link == "NewDocument")
-        m_ui->actionNewDoc->trigger();
-    else if (link == "OpenDocuments")
-        m_ui->actionOpen->trigger();
-}
-
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto app = m_guiApp->application();
@@ -730,6 +718,11 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     this->updateControlsActivation();
     const int newDocIndex = app->documentCount() - 1;
     QTimer::singleShot(0, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+}
+
+void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
+{
+    AppModule::get(Application::instance())->recordRecentFileThumbnail(guiDoc);
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)
@@ -1009,13 +1002,13 @@ QMenu* MainWindow::createMenuRecentFiles()
     menu->clear();
     int idFile = 0;
     auto appModule = AppModule::get(m_guiApp->application());
-    const QStringList& listRecentFile = appModule->recentFiles.value();
-    for (const QString& file : listRecentFile) {
-        const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(file);
-        menu->addAction(entryRecentFile, [=]{ this->openDocumentsFromList(QStringList(file)); });
+    const RecentFiles& recentFiles = appModule->recentFiles.value();
+    for (const RecentFile& recentFile : recentFiles) {
+        const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(recentFile.filepath);
+        menu->addAction(entryRecentFile, [=]{ this->openDocumentsFromList({ recentFile.filepath }); });
     }
 
-    if (!listRecentFile.empty()) {
+    if (!recentFiles.empty()) {
         menu->addSeparator();
         menu->addAction(tr("Clear menu"), [=]{
             menu->clear();

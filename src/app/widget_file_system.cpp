@@ -6,6 +6,8 @@
 
 #include "widget_file_system.h"
 
+#include "../base/string_utils.h"
+
 #include <QtCore/QDateTime>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -16,16 +18,6 @@ namespace Mayo {
 
 namespace Internal {
 
-static std::pair<uint64_t, QString> fileSizeQuantity(uint64_t sizeBytes)
-{
-    if (sizeBytes < 1024 )
-        return { sizeBytes, WidgetFileSystem::tr("B") };
-    else if (sizeBytes < 1024*1024)
-        return { sizeBytes / 1024, WidgetFileSystem::tr("KB") };
-    else
-        return { sizeBytes / (1024*1024), WidgetFileSystem::tr("MB") };
-}
-
 static QString absolutePath(const QFileInfo& fi)
 {
     return fi.isDir() ? fi.absoluteFilePath() : fi.absolutePath();
@@ -33,7 +25,7 @@ static QString absolutePath(const QFileInfo& fi)
 
 } // namespace Internal
 
-WidgetFileSystem::WidgetFileSystem(QWidget *parent)
+WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     : QWidget(parent),
       m_treeWidget(new QTreeWidget(this))
 {
@@ -56,7 +48,7 @@ QFileInfo WidgetFileSystem::currentLocation() const
     return m_location;
 }
 
-void WidgetFileSystem::setLocation(const QFileInfo &fiLoc)
+void WidgetFileSystem::setLocation(const QFileInfo& fiLoc)
 {
     const QString pathCurrLocation = Internal::absolutePath(m_location);
     const QString pathLoc = Internal::absolutePath(fiLoc);
@@ -85,11 +77,10 @@ void WidgetFileSystem::setLocation(const QFileInfo &fiLoc)
                 if (fi.fileName() != QLatin1String(".")) {
                     item->setText(0, fi.fileName());
                     item->setIcon(0, m_fileIconProvider.icon(fi));
-                    const auto sizeQty = Internal::fileSizeQuantity(fi.size());
                     const QString itemTooltip =
-                            tr("%1\nSize: %2%3\nLast modified: %4")
+                            tr("%1\nSize: %2\nLast modified: %3")
                             .arg(QDir::toNativeSeparators(fi.absoluteFilePath()))
-                            .arg(sizeQty.first).arg(sizeQty.second)
+                            .arg(StringUtils::bytesText(fi.size()))
                             .arg(fi.lastModified().toString(Qt::SystemLocaleShortDate));
                     item->setToolTip(0, itemTooltip);
                     if (fi.fileName() == fiLoc.fileName())
@@ -106,7 +97,7 @@ void WidgetFileSystem::setLocation(const QFileInfo &fiLoc)
     m_location = fiLoc;
 }
 
-void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem *item, int column)
+void WidgetFileSystem::onTreeItemActivated(QTreeWidgetItem* item, int column)
 {
     if (item != nullptr && column == 0) {
         if (item->text(0) == QLatin1String("..")) {

@@ -23,6 +23,8 @@
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
 
+#include <fougtools/occtools/qt_utils.h>
+
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
@@ -572,6 +574,14 @@ void Test::LibTree_test()
     QCOMPARE(tree.nodeSiblingNext(n0_1_1), n0_1_2);
     QCOMPARE(tree.nodeSiblingPrevious(n0_1_2), n0_1_1);
     QCOMPARE(tree.nodeSiblingNext(n0_1_2), nullptrId);
+}
+
+void Test::OccQtUtils_test()
+{
+    const QColor qtColor(51, 75, 128);
+    const Quantity_Color occColor = occ::QtUtils::toOccColor(qtColor);
+    const QColor backQtColor = occ::QtUtils::toQColor(occColor);
+    QCOMPARE(qtColor, backQtColor);
 }
 
 void Test::initTestCase()
