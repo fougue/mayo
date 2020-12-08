@@ -27,10 +27,10 @@ struct OccStaticVariablesRollback::Private {
         if constexpr(std::is_same<int, T>::value) {
             record.value = Interface_Static::IVal(strKey);
         }
-        else if constexpr(std::is_same<int, double>::value) {
+        else if constexpr(std::is_same<double, T>::value) {
             record.value = Interface_Static::RVal(strKey);
         }
-        else if constexpr(std::is_same<int, const char*>::value) {
+        else if constexpr(std::is_same<const char*, T>::value) {
             record.value = Interface_Static::CVal(strKey);
         }
 
@@ -60,7 +60,8 @@ struct OccStaticVariablesRollback::Private {
     }
 };
 
-bool OccStaticVariablesRollback::StaticVariableRecord::isValid() const {
+bool OccStaticVariablesRollback::StaticVariableRecord::isValid() const
+{
     return this->strKey != nullptr && this->value.valueless_by_exception();
 }
 
