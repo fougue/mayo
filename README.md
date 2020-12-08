@@ -53,6 +53,8 @@ STL                       |  &#10004; | &#10004; | ASCII/binary
 
 <img src="doc/screenshot_4.png"/>
 
+<img src="doc/screenshot_5.png"/>
+
 # Build instructions
 Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
 * [Qt installer](https://www.qt.io/download-qt-installer)
