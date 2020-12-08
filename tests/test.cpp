@@ -201,7 +201,7 @@ void Test::IO_OccStaticVariablesRollback_test()
         else if (varChangeValue.type() == QVariant::Double)
             rollback.change(cVarName, varChangeValue.toDouble());
         else if (varChangeValue.type() == QVariant::String)
-            rollback.change(cVarName, varChangeValue.toString().toLatin1().constData());
+            rollback.change(cVarName, varChangeValue.toString().toStdString());
 
         QCOMPARE(fnStaticVariableValue(cVarName, varChangeValue.type()), varChangeValue);
     }

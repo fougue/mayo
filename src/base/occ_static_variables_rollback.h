@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -34,13 +35,13 @@ public:
 
     void change(const char* strKey, int newValue);
     void change(const char* strKey, double newValue);
-    void change(const char* strKey, const char* newValue);
+    void change(const char* strKey, std::string_view newValue);
 
 private:
     struct Private;
 
     struct StaticVariableRecord {
-        using Value = std::variant<int, double, const char*>;
+        using Value = std::variant<int, double, std::string>;
 
         std::string strKey;
         Value value;

@@ -18,7 +18,7 @@ struct OccStaticVariablesRollback::Private {
     static StaticVariableRecord createStaticVariableRecord(const char* strKey)
     {
         if (!Interface_Static::IsPresent(strKey)) {
-            qWarning() << QString("OpenCascade static variable \"%1\" doesn't exist").arg(strKey);
+            qWarning() << QString("OpenCascade static variable '%1' doesn't exist").arg(strKey);
             return {};
         }
 
@@ -30,7 +30,7 @@ struct OccStaticVariablesRollback::Private {
         else if constexpr(std::is_same<double, T>::value) {
             record.value = Interface_Static::RVal(strKey);
         }
-        else if constexpr(std::is_same<const char*, T>::value) {
+        else if constexpr(std::is_same<std::string_view, T>::value) {
             record.value = Interface_Static::CVal(strKey);
         }
 
@@ -47,14 +47,15 @@ struct OccStaticVariablesRollback::Private {
         else if constexpr(std::is_same<double, T>::value) {
             ok = Interface_Static::SetRVal(strKey, value);
         }
-        else if constexpr(std::is_same<const char*, T>::value) {
-            ok = Interface_Static::SetCVal(strKey, value);
+        else if constexpr(std::is_same<std::string_view, T>::value) {
+            ok = Interface_Static::SetCVal(strKey, value.data());
+        }
+        else if constexpr(std::is_same<std::string, T>::value) {
+            ok = Interface_Static::SetCVal(strKey, value.c_str());
         }
 
-        if (!ok) {
-            qWarning() << QString("Failed to change OpenCascade static variable \"%1\" to \"%2\"")
-                          .arg(strKey).arg(value);
-        }
+        if (!ok)
+            qWarning() << QString("Failed to change OpenCascade static variable '%1'").arg(strKey);
 
         return ok;
     }
@@ -81,9 +82,9 @@ void OccStaticVariablesRollback::change(const char* strKey, double newValue)
         m_vecRecord.push_back(std::move(record));
 }
 
-void OccStaticVariablesRollback::change(const char* strKey, const char* newValue)
+void OccStaticVariablesRollback::change(const char* strKey, std::string_view newValue)
 {
-    const auto record = Private::createStaticVariableRecord<const char*>(strKey);
+    const auto record = Private::createStaticVariableRecord<std::string_view>(strKey);
     Private::changeStaticVariable(strKey, newValue);
     if (record.isValid())
         m_vecRecord.push_back(std::move(record));
@@ -96,8 +97,8 @@ OccStaticVariablesRollback::~OccStaticVariablesRollback()
             Private::changeStaticVariable(record.strKey.c_str(), std::get<int>(record.value));
         else if (std::holds_alternative<double>(record.value))
             Private::changeStaticVariable(record.strKey.c_str(), std::get<double>(record.value));
-        else if (std::holds_alternative<const char*>(record.value))
-            Private::changeStaticVariable(record.strKey.c_str(), std::get<const char*>(record.value));
+        else if (std::holds_alternative<std::string>(record.value))
+            Private::changeStaticVariable(record.strKey.c_str(), std::get<std::string>(record.value));
     }
 }
 
