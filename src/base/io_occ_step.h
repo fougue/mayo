@@ -128,9 +128,9 @@ public:
 
     using LengthUnit = OccCommon::LengthUnit;
     struct Parameters {
-        Schema schema = Schema::AP214_CD;
+        Schema schema = Schema::AP214_IS;
         LengthUnit lengthUnit = LengthUnit::Millimeter;
-        AssemblyMode assemblyMode = AssemblyMode::Skip;
+        AssemblyMode assemblyMode = AssemblyMode::Auto;
         FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
         bool writeParametricCurves = true;
         bool writeSubShapesNames = false;

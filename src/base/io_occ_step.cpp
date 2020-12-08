@@ -127,6 +127,9 @@ OccStepReader::OccStepReader()
     m_reader.SetNameMode(true);
     m_reader.SetLayerMode(true);
     m_reader.SetPropsMode(true);
+    m_reader.SetGDTMode(true);
+    m_reader.SetMatMode(true);
+    m_reader.SetViewMode(true);
 }
 
 bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
@@ -269,6 +272,12 @@ public:
 OccStepWriter::OccStepWriter()
 {
     STEPCAFControl_Controller::Init();
+    m_writer.SetColorMode(true);
+    m_writer.SetNameMode(true);
+    m_writer.SetLayerMode(true);
+    m_writer.SetPropsMode(true);
+    m_writer.SetDimTolMode(true);
+    m_writer.SetMaterialMode(true);
 }
 
 bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
