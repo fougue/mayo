@@ -14,6 +14,7 @@
 #include "../src/base/geom_utils.h"
 #include "../src/base/io_occ.h"
 #include "../src/base/io_system.h"
+#include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/meta_enum.h"
@@ -29,9 +30,12 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
+#include <Interface_ParamType.hxx>
+#include <Interface_Static.hxx>
 #include <TopAbs_ShapeEnum.hxx>
-#include <QtCore/QFile>
 #include <QtCore/QtDebug>
+#include <QtCore/QFile>
+#include <QtCore/QVariant>
 #include <QtTest/QSignalSpy>
 #include <gsl/gsl_util>
 #include <cmath>
@@ -159,6 +163,66 @@ void Test::IO_test_data()
     QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
 }
 
+void Test::IO_OccStaticVariablesRollback_test()
+{
+    QFETCH(QString, varName);
+    QFETCH(QVariant, varInitValue);
+    QFETCH(QVariant, varChangeValue);
+
+    auto fnStaticVariableType = [](QVariant value) {
+        switch (value.type()) {
+        case QVariant::Int: return Interface_ParamInteger;
+        case QVariant::Double: return Interface_ParamReal;
+        case QVariant::String: return Interface_ParamText;
+        default: return Interface_ParamMisc;
+        }
+    };
+    auto fnStaticVariableValue = [](const char* varName, QVariant::Type valueType) -> QVariant {
+        switch (valueType) {
+        case QVariant::Int: return Interface_Static::IVal(varName);
+        case QVariant::Double: return Interface_Static::RVal(varName);
+        case QVariant::String: return Interface_Static::CVal(varName);
+        default: return {};
+        }
+    };
+
+    QCOMPARE(varInitValue.type(), varChangeValue.type());
+    const QByteArray bytesVarName = varName.toLatin1();
+    const char* cVarName = bytesVarName.constData();
+    const QByteArray bytesVarInitValue = varInitValue.toString().toLatin1();
+    Interface_Static::Init("MAYO", cVarName, fnStaticVariableType(varInitValue), bytesVarInitValue.constData());
+    QVERIFY(Interface_Static::IsPresent(cVarName));
+    QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.type()), varInitValue);
+
+    {
+        IO::OccStaticVariablesRollback rollback;
+        if (varChangeValue.type() == QVariant::Int)
+            rollback.change(cVarName, varChangeValue.toInt());
+        else if (varChangeValue.type() == QVariant::Double)
+            rollback.change(cVarName, varChangeValue.toDouble());
+        else if (varChangeValue.type() == QVariant::String)
+            rollback.change(cVarName, varChangeValue.toString().toLatin1().constData());
+
+        QCOMPARE(fnStaticVariableValue(cVarName, varChangeValue.type()), varChangeValue);
+    }
+
+    QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.type()), varInitValue);
+}
+
+void Test::IO_OccStaticVariablesRollback_test_data()
+{
+    QTest::addColumn<QString>("varName");
+    QTest::addColumn<QVariant>("varInitValue");
+    QTest::addColumn<QVariant>("varChangeValue");
+
+    QTest::newRow("var_int1") << "mayo.test.variable_int1" << QVariant(25) << QVariant(40);
+    QTest::newRow("var_int2") << "mayo.test.variable_int2" << QVariant(0) << QVariant(5);
+    QTest::newRow("var_double1") << "mayo.test.variable_double1" << QVariant(1.5) << QVariant(4.5);
+    QTest::newRow("var_double2") << "mayo.test.variable_double2" << QVariant(50.7) << QVariant(25.8);
+    QTest::newRow("var_str1") << "mayo.test.variable_str1" << QVariant("") << QVariant("value");
+    QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
+}
+
 void Test::BRepUtils_test()
 {
     QVERIFY(BRepUtils::moreComplex(TopAbs_COMPOUND, TopAbs_SOLID));
@@ -186,7 +250,7 @@ void Test::MeshUtils_orientation_test()
 {
     struct BasicPolyline2d : public Mayo::MeshUtils::AdaptorPolyline2d {
         gp_Pnt2d pointAt(int index) const override { return this->vecPoint.at(index); }
-        int pointCount() const override { return this->vecPoint.size(); }
+        int pointCount() const override { return int(this->vecPoint.size()); }
         std::vector<gp_Pnt2d> vecPoint;
     };
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -41,7 +42,7 @@ private:
     struct StaticVariableRecord {
         using Value = std::variant<int, double, const char*>;
 
-        const char* strKey = nullptr;
+        std::string strKey;
         Value value;
 
         bool isValid() const;

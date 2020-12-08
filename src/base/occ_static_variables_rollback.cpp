@@ -62,7 +62,7 @@ struct OccStaticVariablesRollback::Private {
 
 bool OccStaticVariablesRollback::StaticVariableRecord::isValid() const
 {
-    return this->strKey != nullptr && this->value.valueless_by_exception();
+    return !this->strKey.empty() && !this->value.valueless_by_exception();
 }
 
 void OccStaticVariablesRollback::change(const char* strKey, int newValue)
@@ -93,11 +93,11 @@ OccStaticVariablesRollback::~OccStaticVariablesRollback()
 {
     for (const StaticVariableRecord& record : m_vecRecord) {
         if (std::holds_alternative<int>(record.value))
-            Private::changeStaticVariable(record.strKey, std::get<int>(record.value));
+            Private::changeStaticVariable(record.strKey.c_str(), std::get<int>(record.value));
         else if (std::holds_alternative<double>(record.value))
-            Private::changeStaticVariable(record.strKey, std::get<double>(record.value));
+            Private::changeStaticVariable(record.strKey.c_str(), std::get<double>(record.value));
         else if (std::holds_alternative<const char*>(record.value))
-            Private::changeStaticVariable(record.strKey, std::get<const char*>(record.value));
+            Private::changeStaticVariable(record.strKey.c_str(), std::get<const char*>(record.value));
     }
 }
 
