@@ -238,8 +238,16 @@ public:
                     textIdTr("Parameter to write all free vertices in one SDR (name and style of "
                              "vertex are lost) or each vertex in its own SDR (name and style of "
                              "vertex are exported)"));
+        // The behavior at import is controlled by new write.step.vertex.mode parameter,
+        // which can be equal to:
+        // 0 - One Compound: All free vertices are united into one compound and exported
+        // in one shape definition representation (vertex name and style are lost). This
+        // mode is used by default.
+        // 1 - Single Vertex: Each vertex is exported in its own SHAPE DEFINITION
+        // REPRESENTATION (vertex name and style are not lost, but the STEP file size
+        // increases).
         this->writePCurves.setDescription(
-                    textIdTr("Whether parametric curves (curves in parametric space of surface) should be "
+                    textIdTr("Indicates whether parametric curves (curves in parametric space of surface) should be "
                              "written into the STEP file.\n"
                              "It can be disabled in order to minimize the size of the resulting file."));
         this->writeSubShapesNames.setDescription(
@@ -293,7 +301,7 @@ bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    const IFSelect_ReturnStatus err = m_writer.Write(filepath.toLocal8Bit().constData());
+    const IFSelect_ReturnStatus err = m_writer.Write(filepath.toUtf8().constData());
     progress->setValue(100);
     return err == IFSelect_RetDone;
 }
@@ -318,21 +326,6 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
 
 void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
 {
-    auto fnOccLengthUnit = [](LengthUnit unit) {
-        switch (unit) {
-        case LengthUnit::Undefined: return "??";
-        case LengthUnit::Micrometer: return "UM";
-        case LengthUnit::Millimeter: return "MM";
-        case LengthUnit::Centimeter: return "CM";
-        case LengthUnit::Meter: return "M";
-        case LengthUnit::Kilometer: return "KM";
-        case LengthUnit::Inch: return "INCH";
-        case LengthUnit::Foot: return "FT";
-        case LengthUnit::Mile: return "MI";
-        }
-        Q_UNREACHABLE();
-    };
-
     const int previousSchema = Interface_Static::IVal("write.step.schema");
     rollback->change("write.step.schema", int(m_params.schema));
     if (int(m_params.schema) != previousSchema) {
@@ -342,7 +335,7 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
         m_writer.ChangeWriter().Model(true);
     }
 
-    rollback->change("write.step.unit", fnOccLengthUnit(m_params.lengthUnit));
+    rollback->change("write.step.unit", OccCommon::toCafString(m_params.lengthUnit));
     rollback->change("write.step.assembly", int(m_params.assemblyMode));
     rollback->change("write.step.vertex.mode", int(m_params.freeVertexMode));
     rollback->change("write.surfacecurve.mode", int(m_params.writeParametricCurves ? 1 : 0));

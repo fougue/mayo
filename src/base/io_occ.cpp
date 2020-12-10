@@ -24,6 +24,7 @@
 #endif
 
 #include <functional>
+#include <type_traits>
 
 namespace Mayo {
 namespace IO {
@@ -36,9 +37,10 @@ template<typename KEY, typename PRODUCT, typename... ARGS>
 struct Generator {
     using KeyType = KEY;
     using ProductType = PRODUCT;
+    using FunctionType = std::function<PRODUCT (const ARGS&...)>;
 
     KEY key;
-    std::function<PRODUCT (const ARGS&...)> fn;
+    FunctionType fn;
 
     static const auto& null() {
         static const Generator<KEY, PRODUCT, ARGS...> object = {
@@ -48,115 +50,128 @@ struct Generator {
     }
 };
 
-template<typename GENERATOR>
-const GENERATOR& findGenerator(
-        const typename GENERATOR::KeyType& key, Span<const GENERATOR> spanGenerator)
-{
-    for (const GENERATOR& generator : spanGenerator) {
-        if (generator.key == key)
-            return generator;
-    }
-
-    return GENERATOR::null();
-}
-
 template<typename PRODUCT> std::unique_ptr<PRODUCT> createProduct() {
     return std::make_unique<PRODUCT>();
 }
 
-using ReaderGenerator = Generator<Format, std::unique_ptr<Reader>>;
-using WriterGenerator = Generator<Format, std::unique_ptr<Writer>>;
+template<typename EXCHANGER>
+class FactoryHelper {
+public:
+    using ExchangerGenerator = Generator<Format, std::unique_ptr<EXCHANGER>>;
+    using PropertiesGenerator = Generator<Format, std::unique_ptr<PropertyGroup>, PropertyGroup*>;
 
-using ReaderParametersGenerator = Generator<Format, std::unique_ptr<PropertyGroup>, PropertyGroup*>;
-using WriterParametersGenerator = Generator<Format, std::unique_ptr<PropertyGroup>, PropertyGroup*>;
+    void addExchanger(
+            const Format& format,
+            const typename ExchangerGenerator::FunctionType& fnExchanger,
+            const PropertiesGenerator::FunctionType& fnProperties)
+    {
+        m_vecFormat.push_back(format);
+        m_vecExchangerGenerator.push_back({ format, fnExchanger });
+        if (fnProperties)
+            m_vecPropertiesGenerator.push_back({ format, fnProperties });
+    }
+
+    template<typename T> void addExchanger(const Format& format) {
+        this->addExchanger(format, &createProduct<T>, &T::createProperties);
+    }
+
+    bool empty() const { return m_vecFormat.empty(); }
+    Span<const Format> formats() const { return m_vecFormat; }
+
+    typename ExchangerGenerator::ProductType createExchanger(const Format& format) const {
+        return findGenerator<ExchangerGenerator>(format, m_vecExchangerGenerator).fn();
+    }
+
+    PropertiesGenerator::ProductType createProperties(
+            const Format& format, PropertyGroup* parentGroup) const
+    {
+        return findGenerator<PropertiesGenerator>(format, m_vecPropertiesGenerator).fn(parentGroup);
+    }
+
+private:
+    template<typename GENERATOR>
+    static const GENERATOR& findGenerator(
+            const typename GENERATOR::KeyType& key, Span<const GENERATOR> spanGenerator)
+    {
+        for (const GENERATOR& generator : spanGenerator) {
+            if (generator.key == key)
+                return generator;
+        }
+
+        return GENERATOR::null();
+    }
+
+    std::vector<Format> m_vecFormat;
+    std::vector<ExchangerGenerator> m_vecExchangerGenerator;
+    std::vector<PropertiesGenerator> m_vecPropertiesGenerator;
+};
+
+const FactoryHelper<Reader>& helper_OccFactoryReader()
+{
+    static FactoryHelper<Reader> helper;
+    if (helper.empty()) {
+        helper.addExchanger<OccStepReader>(Format_STEP);
+        helper.addExchanger<OccIgesReader>(Format_IGES);
+        helper.addExchanger(Format_OCCBREP, &createProduct<OccBRepReader>, nullptr);
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        helper.addExchanger<OccGltfReader>(Format_GLTF);
+        helper.addExchanger<OccObjReader>(Format_OBJ);
+#endif
+        helper.addExchanger(Format_STL, &createProduct<OccStlReader>, nullptr);
+    }
+
+    return helper;
+}
+
+const FactoryHelper<Writer>& helper_OccFactoryWriter()
+{
+    static FactoryHelper<Writer> helper;
+    if (helper.empty()) {
+        helper.addExchanger<OccStepWriter>(Format_STEP);
+        helper.addExchanger<OccIgesWriter>(Format_IGES);
+        helper.addExchanger(Format_OCCBREP, &createProduct<OccBRepWriter>, nullptr);
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+        helper.addExchanger<OccGltfWriter>(Format_GLTF);
+#endif
+        helper.addExchanger<OccStlWriter>(Format_STL);
+        helper.addExchanger<OccVrmlWriter>(Format_VRML);
+    }
+
+    return helper;
+}
 
 } // namespace
 
 Span<const Format> OccFactoryReader::formats() const
 {
-    static const Format array[] = {
-        Format_STEP,
-        Format_IGES,
-        Format_OCCBREP,
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        Format_GLTF,
-        Format_OBJ,
-#endif
-        Format_STL
-    };
-    return array;
+    return helper_OccFactoryReader().formats();
 }
 
 std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
 {
-    static const ReaderGenerator array[] = {
-        { Format_STEP, createProduct<OccStepReader> },
-        { Format_IGES, createProduct<OccIgesReader> },
-        { Format_OCCBREP, createProduct<OccBRepReader> },
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        { Format_GLTF, createProduct<OccGltfReader> },
-        { Format_OBJ, createProduct<OccObjReader> },
-#endif
-        { Format_STL, createProduct<OccStlReader> }
-    };
-    return findGenerator<ReaderGenerator>(format, array).fn();
+    return helper_OccFactoryReader().createExchanger(format);
 }
 
 std::unique_ptr<PropertyGroup> OccFactoryReader::createProperties(
         const Format& format, PropertyGroup* parentGroup) const
 {
-    static const ReaderParametersGenerator array[] = {
-        { Format_STEP, &OccStepReader::createProperties },
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        { Format_GLTF, &OccGltfReader::createProperties },
-        { Format_OBJ, &OccObjReader::createProperties }
-#endif
-    };
-    return findGenerator<ReaderParametersGenerator>(format, array).fn(parentGroup);
+    return helper_OccFactoryReader().createProperties(format, parentGroup);
 }
 
 Span<const Format> OccFactoryWriter::formats() const
 {
-    static const Format array[] = {
-        Format_STEP,
-        Format_IGES,
-        Format_OCCBREP,
-        Format_STL,
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-        Format_GLTF,
-#endif
-        Format_VRML
-    };
-    return array;
+    return helper_OccFactoryWriter().formats();
 }
 
 std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
 {
-    static const WriterGenerator array[] = {
-        { Format_STEP, createProduct<OccStepWriter> },
-        { Format_IGES, createProduct<OccIgesWriter> },
-        { Format_OCCBREP, createProduct<OccBRepWriter> },
-        { Format_STL, createProduct<OccStlWriter> },
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-        { Format_GLTF, createProduct<OccGltfWriter> },
-#endif
-        { Format_VRML, createProduct<OccVrmlWriter> }
-    };
-    return findGenerator<WriterGenerator>(format, array).fn();
+    return helper_OccFactoryWriter().createExchanger(format);
 }
 
 std::unique_ptr<PropertyGroup> OccFactoryWriter::createProperties(
         const Format& format, PropertyGroup* parentGroup) const
 {
-    static const WriterParametersGenerator array[] = {
-        { Format_STEP, &OccStepWriter::createProperties },
-        { Format_STL, &OccStlWriter::createProperties },
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-        { Format_GLTF, &OccGltfWriter::createProperties },
-#endif
-        { Format_VRML, &OccVrmlWriter::createProperties }
-    };
-    return findGenerator<WriterParametersGenerator>(format, array).fn(parentGroup);
+    return helper_OccFactoryWriter().createProperties(format, parentGroup);
 }
 
 } // namespace IO

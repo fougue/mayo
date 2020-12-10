@@ -16,6 +16,22 @@ namespace IO {
 
 struct OccCommonI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccCommonI18N) };
 
+const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
+{
+    switch (unit) {
+    case LengthUnit::Undefined: return "??";
+    case LengthUnit::Micrometer: return "UM";
+    case LengthUnit::Millimeter: return "MM";
+    case LengthUnit::Centimeter: return "CM";
+    case LengthUnit::Meter: return "M";
+    case LengthUnit::Kilometer: return "KM";
+    case LengthUnit::Inch: return "INCH";
+    case LengthUnit::Foot: return "FT";
+    case LengthUnit::Mile: return "MI";
+    }
+    Q_UNREACHABLE();
+}
+
 const Enumeration& OccCommon::enumerationLengthUnit()
 {
     static const Enumeration enumeration = {

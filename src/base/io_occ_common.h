@@ -25,6 +25,7 @@ public:
         Mile
     };
 
+    static const char* toCafString(LengthUnit unit);
     static const Enumeration& enumerationLengthUnit();
     static const Enumeration& enumMeshCoordinateSystem();
 };
