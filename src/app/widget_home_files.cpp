@@ -124,7 +124,7 @@ private:
                 return WidgetHomeFiles::tr("%1 %2").arg(strDayName, strTime);
             }
             else if (diffDays < 5) {
-                return WidgetHomeFiles::tr("%n day(s) ago %1", nullptr, diffDays).arg(strTime);
+                return WidgetHomeFiles::tr("%1 days ago %2").arg(diffDays).arg(strTime);
             }
             else {
                 const QString strDate = app->settings()->locale().toString(date, QLocale::ShortFormat);

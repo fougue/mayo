@@ -27,7 +27,7 @@ template<typename CAF_READER>
 bool cafGenericReadFile(CAF_READER& reader, const QString& filepath, TaskProgress* progress)
 {
     //readFile_prepare(reader);
-    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toLocal8Bit().constData());
+    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toUtf8().constData());
     progress->setValue(100);
     return error == IFSelect_RetDone;
 }
