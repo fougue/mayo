@@ -12,162 +12,162 @@
 <context>
     <name>Mayo::AppModule</name>
     <message>
-        <location filename="../src/app/app_module.cpp" line="20"/>
+        <location filename="../src/app/app_module.cpp" line="25"/>
         <source>SI</source>
         <translation>SI</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="21"/>
+        <location filename="../src/app/app_module.cpp" line="26"/>
         <source>IMPERIAL_UK</source>
         <translation>Imperial UK</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="25"/>
+        <location filename="../src/app/app_module.cpp" line="30"/>
         <source>en</source>
         <translation>English</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="26"/>
+        <location filename="../src/app/app_module.cpp" line="31"/>
         <source>fr</source>
         <translation>French</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="34"/>
+        <location filename="../src/app/app_module.cpp" line="39"/>
         <source>system</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="37"/>
+        <location filename="../src/app/app_module.cpp" line="42"/>
         <source>units</source>
         <translation>Units</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="38"/>
+        <location filename="../src/app/app_module.cpp" line="43"/>
         <source>decimalCount</source>
         <translation>Count Of Decimals</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="39"/>
+        <location filename="../src/app/app_module.cpp" line="44"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="41"/>
+        <location filename="../src/app/app_module.cpp" line="46"/>
         <source>application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="42"/>
+        <location filename="../src/app/app_module.cpp" line="47"/>
         <source>language</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="43"/>
+        <location filename="../src/app/app_module.cpp" line="48"/>
         <source>recentFiles</source>
         <translation>Recent Files</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="44"/>
+        <location filename="../src/app/app_module.cpp" line="49"/>
         <source>lastOpenFolder</source>
         <translation>Last Open Folder</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="45"/>
+        <location filename="../src/app/app_module.cpp" line="50"/>
         <source>lastSelectedFormatFilter</source>
         <translation>Last Selected Format Filter</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="46"/>
+        <location filename="../src/app/app_module.cpp" line="51"/>
         <source>linkWithDocumentSelector</source>
         <translation>Link With Document Selector</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="48"/>
+        <location filename="../src/app/app_module.cpp" line="53"/>
         <source>graphics</source>
         <translation>Graphics</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="49"/>
+        <location filename="../src/app/app_module.cpp" line="54"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Show Origin Trihedron By Default</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="52"/>
+        <location filename="../src/app/app_module.cpp" line="57"/>
         <source>clipPlanes</source>
         <translation>Clip planes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="53"/>
+        <location filename="../src/app/app_module.cpp" line="58"/>
         <source>cappingOn</source>
         <translation>Capping</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="54"/>
+        <location filename="../src/app/app_module.cpp" line="59"/>
         <source>cappingHatchOn</source>
         <translation>Capping Hatch</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="57"/>
+        <location filename="../src/app/app_module.cpp" line="62"/>
         <source>meshDefaults</source>
         <translation>Mesh Defaults</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="58"/>
+        <location filename="../src/app/app_module.cpp" line="63"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="59"/>
+        <location filename="../src/app/app_module.cpp" line="64"/>
         <source>edgeColor</source>
-        <translation type="unfinished"></translation>
+        <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="60"/>
+        <location filename="../src/app/app_module.cpp" line="65"/>
         <source>material</source>
         <translation>Material</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="61"/>
+        <location filename="../src/app/app_module.cpp" line="66"/>
         <source>showEgesOn</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="62"/>
+        <location filename="../src/app/app_module.cpp" line="67"/>
         <source>showNodesOn</source>
         <translation>Show Nodes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="76"/>
+        <location filename="../src/app/app_module.cpp" line="84"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="78"/>
+        <location filename="../src/app/app_module.cpp" line="86"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="91"/>
+        <location filename="../src/app/app_module.cpp" line="99"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="96"/>
+        <location filename="../src/app/app_module.cpp" line="104"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="98"/>
+        <location filename="../src/app/app_module.cpp" line="106"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="108"/>
+        <location filename="../src/app/app_module.cpp" line="116"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="125"/>
+        <location filename="../src/app/app_module.cpp" line="133"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -253,12 +253,12 @@
     <message>
         <location filename="../src/app/dialog_inspect_xde.cpp" line="414"/>
         <source>Shape</source>
-        <translation type="unfinished">Shape</translation>
+        <translation>Shape</translation>
     </message>
     <message>
         <location filename="../src/app/dialog_inspect_xde.cpp" line="421"/>
         <source>Color</source>
-        <translation type="unfinished">Color</translation>
+        <translation>Color</translation>
     </message>
     <message>
         <location filename="../src/app/dialog_inspect_xde.cpp" line="429"/>
@@ -440,7 +440,7 @@
     <message>
         <location filename="../src/graphics/graphics_entity_driver.cpp" line="253"/>
         <source>edgeColor</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Edge Color</translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_entity_driver.cpp" line="254"/>
@@ -558,62 +558,62 @@
 <context>
     <name>Mayo::IO::OccCommonI18N</name>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="22"/>
+        <location filename="../src/base/io_occ_common.cpp" line="38"/>
         <source>UnitUndefined</source>
         <translation>Undefined</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="23"/>
+        <location filename="../src/base/io_occ_common.cpp" line="39"/>
         <source>UnitMicrometer</source>
         <translation>Micrometer(µm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="24"/>
+        <location filename="../src/base/io_occ_common.cpp" line="40"/>
         <source>UnitMillimeter</source>
         <translation>Millimeter(mm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="25"/>
+        <location filename="../src/base/io_occ_common.cpp" line="41"/>
         <source>UnitCentimeter</source>
         <translation>Centimer(cm)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="26"/>
+        <location filename="../src/base/io_occ_common.cpp" line="42"/>
         <source>UnitMeter</source>
         <translation>Meter(m)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="27"/>
+        <location filename="../src/base/io_occ_common.cpp" line="43"/>
         <source>UnitKilometer</source>
         <translation>Kilometer(km)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="28"/>
+        <location filename="../src/base/io_occ_common.cpp" line="44"/>
         <source>UnitInch</source>
         <translation>Inch(in)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="29"/>
+        <location filename="../src/base/io_occ_common.cpp" line="45"/>
         <source>UnitFoot</source>
         <translation>Foot(ft)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="30"/>
+        <location filename="../src/base/io_occ_common.cpp" line="46"/>
         <source>UnitMile</source>
         <translation>Mile(mi)</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="38"/>
+        <location filename="../src/base/io_occ_common.cpp" line="54"/>
         <source>SystemUndefined</source>
         <translation>Undefined</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="39"/>
+        <location filename="../src/base/io_occ_common.cpp" line="55"/>
         <source>SystemPosZUp</source>
         <translation>+Z up</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_common.cpp" line="40"/>
+        <location filename="../src/base/io_occ_common.cpp" line="56"/>
         <source>SystemPosYUp</source>
         <translation>+Y up</translation>
     </message>
@@ -632,7 +632,7 @@
     </message>
     <message>
         <location filename="../src/base/io_occ_gltf_reader.cpp" line="22"/>
-        <source>Whether if nodes without geometry should be ignored(`Yes` by default)</source>
+        <source>Ignore nodes without geometry(`Yes` by default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -644,18 +644,235 @@
 <context>
     <name>Mayo::IO::OccGltfWriter_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_gltf_writer.cpp" line="26"/>
-        <source>systemCoordinatesConverter</source>
-        <translation type="unfinished">System Coordinates Converter</translation>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="28"/>
+        <source>coordinatesConverter</source>
+        <translation>Coordinates Converter</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_gltf_writer.cpp" line="27"/>
-        <source>forceExportUV</source>
-        <translation type="unfinished"></translation>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="29"/>
+        <source>transformationFormat</source>
+        <translation>Transformation Format</translation>
     </message>
     <message>
         <location filename="../src/base/io_occ_gltf_writer.cpp" line="30"/>
-        <source>Export UV coordinates even if there are no mapped texture</source>
+        <source>format</source>
+        <translation>Format</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="31"/>
+        <source>forceExportUV</source>
+        <translation>Force UV Export</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="34"/>
+        <source>Coordinate system transformation from OpenCascade to glTF</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="36"/>
+        <source>Preferred transformation format for writing into glTF file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="38"/>
+        <source>Export UV coordinates even if there is no mapped texture</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="50"/>
+        <source>Compact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="51"/>
+        <source>Automatically choose most compact representation between Mat4 and TRS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="52"/>
+        <source>Mat4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="53"/>
+        <source>4x4 transformation matrix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="54"/>
+        <source>TRS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_gltf_writer.cpp" line="55"/>
+        <source>Transformation decomposed into Translation vector, Rotation quaternion and Scale factor (T * R * S)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccIgesReader_Properties</name>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="26"/>
+        <source>bsplineContinuity</source>
+        <translation>BSpline Continuity</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="27"/>
+        <source>surfaceCurveMode</source>
+        <translation>Surface Curve Mode</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="28"/>
+        <source>readFaultyEntities</source>
+        <translation>Read Faulty Entities</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="29"/>
+        <source>readOnlyVisibleEntities</source>
+        <translation>Read Only Visible Entities</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="32"/>
+        <source>Manages the continuity of BSpline curves (IGES entities 106, 112 and 126) after translation to Open CASCADE (it requires that the curves in a model be at least C1 continuous; no such requirement is made by IGES).This parameter does not change the continuity of curves that are used in the construction of IGES BRep entities. In this case, the parameter does not influence the continuity of the resulting Open CASCADE curves (it is ignored).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="40"/>
+        <source>Preference for the computation of curves in case of 2D/3D inconsistency in an entity which has both 2D and 3D representations.
+
+Concerned entity types are 141 (Boundary), 142 (CurveOnSurface) and 508 (Loop). These are entities representing a contour lying on a surface, which is translated to a TopoDS_Wire, formed by TopoDS_Edges. Each TopoDS_Edge must have a 3D curve and a 2D curve that reference the surface.
+
+The processor also decides to re-compute either the 3D or the 2D curve even if both curves are translated successfully and seem to be correct, in case there is inconsistency between them. The processor considers that there is inconsistency if any of the following conditions is satisfied:
+- the number of sub-curves in the 2D curve is different from the number of sub-curves in the 3D curve. This can be either due to different numbers of sub-curves given in the IGES file or because of splitting of curves during translation
+- 3D or 2D curve is a Circular Arc (entity type 100) starting and ending in the same point (note that this case is incorrect according to the IGES standard)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="56"/>
+        <source>Read failed entities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="68"/>
+        <source>NoChange</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="69"/>
+        <source>Curves are taken as they are in the IGES file. C0 entities of Open CASCADE may be produced</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="71"/>
+        <source>BreakIntoC1Pieces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="72"/>
+        <source>If an IGES BSpline, Spline or CopiousData curve is C0 continuous, it is broken down into pieces of C1 continuous Geom_BSplineCurve</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="74"/>
+        <source>BreakIntoC2Pieces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="75"/>
+        <source>IGES Spline curves are broken down into pieces of C2 continuity. If C2 cannot be ensured, the Spline curves will be broken down into pieces of C1 continuity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="81"/>
+        <source>Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="82"/>
+        <source>Use the preference flag value in the entity&apos;s `Parameter Data` section</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="83"/>
+        <source>Prefer2D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="84"/>
+        <source>The 2D is used to rebuild the 3D in case of their inconsistency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="85"/>
+        <source>Force2D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="86"/>
+        <source>The 2D is always used to rebuild the 3D (even if 3D is present in the file)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="87"/>
+        <source>Prefer3D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="88"/>
+        <source>The 3D is used to rebuild the 2D in case of their inconsistency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="89"/>
+        <source>Force3D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="90"/>
+        <source>The 3D is always used to rebuild the 2D (even if 2D is present in the file)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccIgesWriter_Properties</name>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="152"/>
+        <source>brepMode</source>
+        <translation>BRep Mode</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="153"/>
+        <source>planeMode</source>
+        <translation>Plane Mode</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="154"/>
+        <source>lengthUnit</source>
+        <translation>Length Unit</translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="157"/>
+        <source>Indicates if planes should be saved as Bsplines or Planes (type 108). Writing p-curves on planes is disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="169"/>
+        <source>Faces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="170"/>
+        <source>OpenCascade TopoDS_Faces will be translated into IGES 144 (Trimmed Surface) entities, no BRep entities will be written to the IGES file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="172"/>
+        <source>BRep</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/io_occ_iges.cpp" line="173"/>
+        <source>OpenCascade TopoDS_Faces will be translated into IGES 510 (Face) entities, the IGES file will contain BRep entities</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -825,58 +1042,58 @@ This kind of association was used for the representation of hybrid models (i.e. 
 <context>
     <name>Mayo::IO::OccStepWriter_Properties</name>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="221"/>
+        <location filename="../src/base/io_occ_step.cpp" line="224"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="222"/>
+        <location filename="../src/base/io_occ_step.cpp" line="225"/>
         <source>lengthUnit</source>
         <translation>Length Unit</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="223"/>
+        <location filename="../src/base/io_occ_step.cpp" line="226"/>
         <source>assemblyMode</source>
         <translation>Assembly Mode</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="224"/>
+        <location filename="../src/base/io_occ_step.cpp" line="227"/>
         <source>freeVertexMode</source>
         <translation>Mode for Free Vertices</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="225"/>
+        <location filename="../src/base/io_occ_step.cpp" line="228"/>
         <source>writeParametericCurves</source>
         <translation>Write Parametric Curves</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="226"/>
+        <location filename="../src/base/io_occ_step.cpp" line="229"/>
         <source>writeSubShapesNames</source>
         <translation>Write Names of sub Shapes</translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="229"/>
+        <location filename="../src/base/io_occ_step.cpp" line="232"/>
         <source>Version of schema used for the output STEP file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="231"/>
+        <location filename="../src/base/io_occ_step.cpp" line="234"/>
         <source>Defines a unit in which the STEP file should be written. If set to unit other than millimeter, the model is converted to these units during the translation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="235"/>
+        <location filename="../src/base/io_occ_step.cpp" line="238"/>
         <source>Parameter to write all free vertices in one SDR (name and style of vertex are lost) or each vertex in its own SDR (name and style of vertex are exported)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="239"/>
-        <source>Whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
+        <location filename="../src/base/io_occ_step.cpp" line="250"/>
+        <source>Indicates whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
 It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/base/io_occ_step.cpp" line="243"/>
+        <location filename="../src/base/io_occ_step.cpp" line="254"/>
         <source>Indicates whether to write sub-shape names to &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1027,12 +1244,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="118"/>
+        <location filename="../src/app/main.cpp" line="121"/>
         <source>ERROR: Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="132"/>
+        <location filename="../src/app/main.cpp" line="135"/>
         <source>Failed to load translation for &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1045,350 +1262,345 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="65"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;You can create a &lt;/span&gt;&lt;a href=&quot;NewDocument&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;New Document&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;or &lt;/span&gt;&lt;a href=&quot;OpenDocuments&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Open Existing Documents&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/mainwindow.ui" line="168"/>
+        <location filename="../src/app/mainwindow.ui" line="186"/>
         <source>Model tree</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="173"/>
+        <location filename="../src/app/mainwindow.ui" line="191"/>
         <source>Opened documents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="178"/>
+        <location filename="../src/app/mainwindow.ui" line="196"/>
         <source>File system</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="196"/>
+        <location filename="../src/app/mainwindow.ui" line="214"/>
         <source>Close Left Side Bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="454"/>
+        <location filename="../src/app/mainwindow.ui" line="472"/>
         <source>X=</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="461"/>
-        <location filename="../src/app/mainwindow.ui" line="482"/>
-        <location filename="../src/app/mainwindow.ui" line="503"/>
+        <location filename="../src/app/mainwindow.ui" line="479"/>
+        <location filename="../src/app/mainwindow.ui" line="500"/>
+        <location filename="../src/app/mainwindow.ui" line="521"/>
         <source>?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="475"/>
+        <location filename="../src/app/mainwindow.ui" line="493"/>
         <source>Y=</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="496"/>
+        <location filename="../src/app/mainwindow.ui" line="514"/>
         <source>Z=</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="546"/>
+        <location filename="../src/app/mainwindow.ui" line="564"/>
         <source>&amp;File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="563"/>
+        <location filename="../src/app/mainwindow.ui" line="581"/>
         <source>&amp;Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="571"/>
+        <location filename="../src/app/mainwindow.ui" line="589"/>
         <source>&amp;Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="580"/>
+        <location filename="../src/app/mainwindow.ui" line="598"/>
         <source>&amp;Window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="590"/>
+        <location filename="../src/app/mainwindow.ui" line="608"/>
         <source>&amp;Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="594"/>
+        <location filename="../src/app/mainwindow.ui" line="612"/>
         <source>Projection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="613"/>
+        <location filename="../src/app/mainwindow.ui" line="631"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="616"/>
+        <location filename="../src/app/mainwindow.ui" line="634"/>
         <source>Ctrl+N</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="621"/>
-        <location filename="../src/app/mainwindow.cpp" line="501"/>
+        <location filename="../src/app/mainwindow.ui" line="639"/>
+        <location filename="../src/app/mainwindow.cpp" line="497"/>
         <source>Import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="626"/>
+        <location filename="../src/app/mainwindow.ui" line="644"/>
         <source>Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="631"/>
+        <location filename="../src/app/mainwindow.ui" line="649"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="634"/>
+        <location filename="../src/app/mainwindow.ui" line="652"/>
         <source>Ctrl+O</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="639"/>
+        <location filename="../src/app/mainwindow.ui" line="657"/>
         <source>About Mayo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="644"/>
+        <location filename="../src/app/mainwindow.ui" line="662"/>
         <source>Report Bug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="649"/>
-        <location filename="../src/app/mainwindow.cpp" line="750"/>
+        <location filename="../src/app/mainwindow.ui" line="667"/>
+        <location filename="../src/app/mainwindow.cpp" line="743"/>
         <source>Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="658"/>
+        <location filename="../src/app/mainwindow.ui" line="676"/>
         <source>Save View to Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="663"/>
+        <location filename="../src/app/mainwindow.ui" line="681"/>
         <source>Export selected items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="668"/>
+        <location filename="../src/app/mainwindow.ui" line="686"/>
         <source>Inspect XDE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="677"/>
-        <location filename="../src/app/mainwindow.ui" line="680"/>
+        <location filename="../src/app/mainwindow.ui" line="695"/>
+        <location filename="../src/app/mainwindow.ui" line="698"/>
         <source>Previous Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="683"/>
+        <location filename="../src/app/mainwindow.ui" line="701"/>
         <source>Alt+Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="692"/>
-        <location filename="../src/app/mainwindow.ui" line="695"/>
+        <location filename="../src/app/mainwindow.ui" line="710"/>
+        <location filename="../src/app/mainwindow.ui" line="713"/>
         <source>Next Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="698"/>
+        <location filename="../src/app/mainwindow.ui" line="716"/>
         <source>Alt+Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="707"/>
+        <location filename="../src/app/mainwindow.ui" line="725"/>
         <source>Close &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="710"/>
+        <location filename="../src/app/mainwindow.ui" line="728"/>
         <source>Ctrl+W</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="718"/>
+        <location filename="../src/app/mainwindow.ui" line="736"/>
         <source>Fullscreen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="721"/>
+        <location filename="../src/app/mainwindow.ui" line="739"/>
         <source>Switch Fullscreen/Normal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="724"/>
+        <location filename="../src/app/mainwindow.ui" line="742"/>
         <source>F11</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="736"/>
+        <location filename="../src/app/mainwindow.ui" line="754"/>
         <source>Show Left Sidebar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="739"/>
+        <location filename="../src/app/mainwindow.ui" line="757"/>
         <source>Show/Hide Left Sidebar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="742"/>
+        <location filename="../src/app/mainwindow.ui" line="760"/>
         <source>Alt+0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="747"/>
+        <location filename="../src/app/mainwindow.ui" line="765"/>
         <source>Recent files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="755"/>
+        <location filename="../src/app/mainwindow.ui" line="773"/>
         <source>Show Origin Trihedron</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="758"/>
+        <location filename="../src/app/mainwindow.ui" line="776"/>
         <source>Show/Hide Origin Trihedron</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="763"/>
+        <location filename="../src/app/mainwindow.ui" line="781"/>
         <source>Zoom In</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="766"/>
+        <location filename="../src/app/mainwindow.ui" line="784"/>
         <source>Ctrl++</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="771"/>
+        <location filename="../src/app/mainwindow.ui" line="789"/>
         <source>Zoom Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="774"/>
+        <location filename="../src/app/mainwindow.ui" line="792"/>
         <source>Ctrl+-</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="779"/>
+        <location filename="../src/app/mainwindow.ui" line="797"/>
         <source>Close all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="782"/>
+        <location filename="../src/app/mainwindow.ui" line="800"/>
         <source>Ctrl+Shift+W</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="787"/>
+        <location filename="../src/app/mainwindow.ui" line="805"/>
         <source>Close all except &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="795"/>
+        <location filename="../src/app/mainwindow.ui" line="813"/>
         <source>Perspective</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="803"/>
+        <location filename="../src/app/mainwindow.ui" line="821"/>
         <source>Orthographic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="117"/>
+        <location filename="../src/app/mainwindow.cpp" line="118"/>
         <source>All files(*.*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="119"/>
+        <location filename="../src/app/mainwindow.cpp" line="120"/>
         <source>Select Part File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="177"/>
+        <location filename="../src/app/mainwindow.cpp" line="166"/>
         <source>Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="180"/>
-        <location filename="../src/app/mainwindow.cpp" line="695"/>
+        <location filename="../src/app/mainwindow.cpp" line="169"/>
+        <location filename="../src/app/mainwindow.cpp" line="691"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="211"/>
+        <location filename="../src/app/mainwindow.cpp" line="200"/>
         <source>About %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="464"/>
+        <location filename="../src/app/mainwindow.cpp" line="460"/>
         <source>Anonymous%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="497"/>
-        <location filename="../src/app/mainwindow.cpp" line="886"/>
+        <location filename="../src/app/mainwindow.cpp" line="493"/>
+        <location filename="../src/app/mainwindow.cpp" line="879"/>
         <source>Import time: %1ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="521"/>
+        <location filename="../src/app/mainwindow.cpp" line="517"/>
         <source>Select Output File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="544"/>
+        <location filename="../src/app/mainwindow.cpp" line="540"/>
         <source>Export time: %1ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="652"/>
+        <location filename="../src/app/mainwindow.cpp" line="648"/>
         <source>Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="665"/>
+        <location filename="../src/app/mainwindow.cpp" line="661"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="778"/>
+        <location filename="../src/app/mainwindow.cpp" line="771"/>
         <source>Close %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="779"/>
+        <location filename="../src/app/mainwindow.cpp" line="772"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="782"/>
+        <location filename="../src/app/mainwindow.cpp" line="775"/>
         <source>Close all except %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="783"/>
+        <location filename="../src/app/mainwindow.cpp" line="776"/>
         <source>Close all except current</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1014"/>
+        <location filename="../src/app/mainwindow.cpp" line="1007"/>
         <source>%1 | %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1020"/>
+        <location filename="../src/app/mainwindow.cpp" line="1013"/>
         <source>Clear menu</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1489,6 +1701,32 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <source>[%1; %2%3; %4]</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="97"/>
+        <location filename="../src/base/string_utils.cpp" line="99"/>
+        <location filename="../src/base/string_utils.cpp" line="101"/>
+        <location filename="../src/base/string_utils.cpp" line="103"/>
+        <location filename="../src/base/string_utils.cpp" line="105"/>
+        <source>%1%2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="97"/>
+        <source>B</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="99"/>
+        <source>KB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="101"/>
+        <location filename="../src/base/string_utils.cpp" line="103"/>
+        <location filename="../src/base/string_utils.cpp" line="105"/>
+        <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Mayo::UnitSystem</name>
@@ -1560,25 +1798,10 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::WidgetFileSystem</name>
     <message>
-        <location filename="../src/app/widget_file_system.cpp" line="22"/>
-        <source>B</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/widget_file_system.cpp" line="24"/>
-        <source>KB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/widget_file_system.cpp" line="26"/>
-        <source>MB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/widget_file_system.cpp" line="90"/>
+        <location filename="../src/app/widget_file_system.cpp" line="81"/>
         <source>%1
-Size: %2%3
-Last modified: %4</source>
+Size: %2
+Last modified: %3</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1633,6 +1856,66 @@ Last modified: %4</source>
         <location filename="../src/app/widget_gui_document.cpp" line="214"/>
         <source>&lt;b&gt;Left-click&lt;/b&gt;: popup menu of pre-defined views
 &lt;b&gt;CTRL+Left-click&lt;/b&gt;: apply &apos;%1&apos; view</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::WidgetHomeFiles</name>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="45"/>
+        <source>New Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="46"/>
+        <source>
+
+Create and add an empty document where you can import files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="56"/>
+        <source>Open Document(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="57"/>
+        <source>
+
+Select files to load and open as distinct documents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="117"/>
+        <source>today %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="120"/>
+        <source>yersterday %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="124"/>
+        <location filename="../src/app/widget_home_files.cpp" line="131"/>
+        <source>%1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="127"/>
+        <source>%1 days ago %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_home_files.cpp" line="140"/>
+        <source>%1
+
+Size: %2
+
+Created: %3
+Modified: %4
+Read: %5
+</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
