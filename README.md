@@ -11,7 +11,7 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 # Overview
 * View and convert 3D files in different formats
 * Explore assembly trees and view properties
-* Cross platform: runs on Windows and Linux
+* Cross platform: runs on Windows, Linux and macOS
 * Underlying toolkits: OpenCascade and Qt
 
 # Current features
