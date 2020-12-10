@@ -38,11 +38,8 @@ release_with_debuginfo:*msvc* {
 *g++* {
     QMAKE_CXXFLAGS += -std=c++17
 }
-
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
-    #CASCADE_INC_DIR = /usr/local/occt/include/opencascade  # optional, use with Qt Creator
-    #CASCADE_LIB_DIR = /usr/local/occt/lib                  # optional, use with Qt Creator
 }
 
 INCLUDEPATH += \
@@ -124,7 +121,7 @@ LIBS += \
     -lTKService \
     -lTKShHealing \
     -lTKTopAlgo  \
-    -lTKXSDRAW \
+    -lTKXSDRAW \  # Seems to be required on macOS(see https://github.com/fougue/mayo/issues/41#issuecomment-742732322)
     -lTKV3d  \
     -lTKVCAF \
     -lTKXCAF \
