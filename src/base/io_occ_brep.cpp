@@ -29,7 +29,7 @@ bool OccBRepReader::readFile(const QString& filepath, TaskProgress* progress)
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     return BRepTools::Read(
                 m_shape,
-                filepath.toLocal8Bit().constData(),
+                filepath.toUtf8().constData(),
                 brepBuilder,
                 TKernelUtils::start(indicator));
 }
@@ -85,7 +85,7 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
 bool OccBRepWriter::writeFile(const QString& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    return BRepTools::Write(m_shape, filepath.toLocal8Bit().constData(), TKernelUtils::start(indicator));
+    return BRepTools::Write(m_shape, filepath.toUtf8().constData(), TKernelUtils::start(indicator));
 }
 
 } // namespace IO

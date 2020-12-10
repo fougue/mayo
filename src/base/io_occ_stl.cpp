@@ -75,7 +75,7 @@ bool OccStlReader::readFile(const QString& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     m_baseFilename = QFileInfo(filepath).baseName();
-    m_mesh = RWStl::ReadFile(OSD_Path(filepath.toLocal8Bit().constData()), TKernelUtils::start(indicator));
+    m_mesh = RWStl::ReadFile(OSD_Path(filepath.toUtf8().constData()), TKernelUtils::start(indicator));
     return !m_mesh.IsNull();
 }
 
@@ -124,12 +124,12 @@ bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
     if (!m_shape.IsNull()) {
         StlAPI_Writer writer;
         writer.ASCIIMode() = m_params.format == Format::Ascii;
-        return writer.Write(m_shape, filepath.toLocal8Bit().constData());
+        return writer.Write(m_shape, filepath.toUtf8().constData());
     }
     else if (!m_mesh.IsNull()) {
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-        const QByteArray filepathLocal8b = filepath.toLocal8Bit();
-        const OSD_Path osdFilepath(filepathLocal8b.constData());
+        const QByteArray filepathUtf8 = filepath.toUtf8();
+        const OSD_Path osdFilepath(filepathUtf8.constData());
         if (m_params.format == Format::Ascii)
             return RWStl::WriteAscii(m_mesh, osdFilepath, TKernelUtils::start(indicator));
         else
