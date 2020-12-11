@@ -42,8 +42,6 @@ protected:
 
 private:
     QString m_filepath;
-    RWMesh_CoordinateSystem m_fileCoordsConverter = RWMesh_CoordinateSystem_Undefined;
-    RWMesh_CoordinateSystem m_systemCoordsConverter = RWMesh_CoordinateSystem_Undefined;
     RWMesh_CafReader& m_reader;
 };
 
