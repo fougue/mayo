@@ -56,22 +56,9 @@ STL                       |  &#10004; | &#10004; | ASCII/binary
 
 <img src="doc/screenshot_5.png"/>
 
-# Build instructions
+# How to build Mayo
 Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
 * [Qt installer](https://www.qt.io/download-qt-installer)
 * [OpenCascade Download Center](https://old.opencascade.com/content/latest-release)
 
-It uses the `CSF_OCCTIncludePath` and `CSF_OCCTLibPath` environment variables to locate
-OpenCascade include and library paths. On Windows these two variables are set by the `env.bat`
-script which can be found within OpenCascade's base folder, it is recommended to run this script
-and then build Mayo :  
-```bash
-cd .../mayo
-qmake
-(n)make
-```
-In case you don't want to run OpenCascade `env.bat` you can use the `CASCADE_INC_DIR`and `CASCADE_LIB_DIR`
-qmake variables instead :  
-```bash
-qmake "CASCADE_INC_DIR=occ_include_dir" "CASCADE_LIB_DIR=occ_library_dir"
-```
+See detailed [build instructions](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)
