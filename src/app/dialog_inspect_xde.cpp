@@ -7,6 +7,7 @@
 #include "dialog_inspect_xde.h"
 
 #include "../base/application.h"
+#include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/qmeta_tdf_label.h"
@@ -27,17 +28,22 @@
 #include <TDataStd_TreeNode.hxx>
 #include <TDataStd_UAttribute.hxx>
 #include <TNaming_NamedShape.hxx>
+#include <XCAFDimTolObjects_DatumObject.hxx>
+#include <XCAFDimTolObjects_DimensionObject.hxx>
+#include <XCAFDimTolObjects_GeomToleranceObject.hxx>
 #include <XCAFDoc_Area.hxx>
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_Color.hxx>
+#include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ColorType.hxx>
 #include <XCAFDoc_Datum.hxx>
+#include <XCAFDoc_DimTolTool.hxx>
 #include <XCAFDoc_Dimension.hxx>
-#include <XCAFDoc_Location.hxx>
-#include <XCAFDoc_Volume.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
-#include <XCAFDoc_ColorTool.hxx>
+#include <XCAFDoc_GeomTolerance.hxx>
+#include <XCAFDoc_Location.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <XCAFDoc_Volume.hxx>
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include <XCAFDoc_VisMaterial.hxx>
 #  include <XCAFDoc_VisMaterialCommon.hxx>
@@ -138,10 +144,16 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
     }
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, bool isPropertyOn)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text)
 {
     auto itemProperty = new QTreeWidgetItem;
     itemProperty->setText(0, text);
+    return itemProperty;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, bool isPropertyOn)
+{
+    auto itemProperty = createPropertyTreeItem(text);
     const QString strYes = DialogInspectXde::tr("Yes");
     const QString strNo = DialogInspectXde::tr("No");
     itemProperty->setText(1, isPropertyOn ? strYes : strNo);
@@ -149,32 +161,43 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, bool isPrope
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, double propertyValue)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, int value)
 {
-    auto itemProperty = new QTreeWidgetItem;
-    itemProperty->setText(0, text);
-    const StringUtils::TextOptions textOptions = AppModule::get(Application::instance())->defaultTextOptions();
-    itemProperty->setText(1, StringUtils::text(propertyValue, textOptions));
+    auto itemProperty = createPropertyTreeItem(text);
+    itemProperty->setText(1, QString::number(value));
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QString& propertyValue)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, double value)
 {
-    auto itemProperty = new QTreeWidgetItem;
-    itemProperty->setText(0, text);
-    itemProperty->setText(1, propertyValue);
+    auto itemProperty = createPropertyTreeItem(text);
+    const StringUtils::TextOptions textOptions =
+            AppModule::get(Application::instance())->defaultTextOptions();
+    itemProperty->setText(1, StringUtils::text(value, textOptions));
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_view propertyValue)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QString& value)
 {
-    return createPropertyTreeItem(text, QString::fromUtf8(propertyValue.data()));
+    auto itemProperty = createPropertyTreeItem(text);
+    itemProperty->setText(1, value);
+    return itemProperty;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(
+        const QString& text, const Handle_TCollection_HAsciiString& value)
+{
+    return createPropertyTreeItem(text, QString::fromUtf8(value ? value.get()->String().ToCString() : ""));
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_view value)
+{
+    return createPropertyTreeItem(text, QString::fromUtf8(value.data()));
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_Color& color)
 {
-    auto itemColor = new QTreeWidgetItem;
-    itemColor->setText(0, text);
+    auto itemColor = createPropertyTreeItem(text);
     itemColor->setText(1, StringUtils::text(color));
     QPixmap pixColor(24, 16);
     pixColor.fill(occ::QtUtils::toQColor(color));
@@ -189,14 +212,55 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quanti
     return itemColor;
 }
 
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Pnt& pnt)
+{
+    const StringUtils::TextOptions textOptions =
+            AppModule::get(Application::instance())->defaultTextOptions();
+    auto itemPnt = createPropertyTreeItem(text);
+    itemPnt->setText(1, StringUtils::text(pnt, textOptions));
+    return itemPnt;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Ax2& ax2)
+{
+    const StringUtils::TextOptions textOptions =
+            AppModule::get(Application::instance())->defaultTextOptions();
+    auto itemPnt = createPropertyTreeItem(text);
+    const QString textAx2 =
+            QString("Location %1 - Direction %2")
+            .arg(StringUtils::text(ax2.Location(), textOptions))
+            .arg(StringUtils::text(ax2.Direction(), textOptions));
+    itemPnt->setText(1, textAx2);
+    return itemPnt;
+}
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS_Shape& shape)
+{
+    auto itemShape = createPropertyTreeItem(text);
+
+    int vertexCount = 0;
+    int edgeCount = 0;
+    int faceCount = 0;
+    BRepUtils::forEachSubShape(shape, TopAbs_VERTEX, [&](const TopoDS_Shape&) { ++vertexCount; });
+    BRepUtils::forEachSubShape(shape, TopAbs_EDGE, [&](const TopoDS_Shape&) { ++edgeCount; });
+    BRepUtils::forEachSubShape(shape, TopAbs_FACE, [&](const TopoDS_Shape&) { ++faceCount; });
+    const QString textShape =
+            QString("%1%2%3")
+            .arg(vertexCount ? QString("%1 vertices ").arg(vertexCount) : QString())
+            .arg(edgeCount ? QString("%1 edges ").arg(edgeCount) : QString())
+            .arg(faceCount ? QString("%1 faces").arg(faceCount) : QString());
+    itemShape->setText(1, textShape);
+
+    return itemShape;
+}
+
 static QTreeWidgetItem* createPropertyTreeItem(
         const QString& text, const opencascade::handle<Image_Texture>& imgTexture)
 {
     if (imgTexture.IsNull())
         return static_cast<QTreeWidgetItem*>(nullptr);
 
-    auto item = new QTreeWidgetItem;
-    item->setText(0, text);
+    auto item = createPropertyTreeItem(text);
     item->setText(1, occ::QtUtils::fromUtf8ToQString(imgTexture->FilePath()));
     return item;
 }
@@ -208,8 +272,9 @@ static void loadLabelVisMaterialProperties(
         QTreeWidgetItem* treeItem)
 {
     QList<QTreeWidgetItem*> listItemProp;
-    listItemProp.push_back(createPropertyTreeItem("IsMaterial", visMaterialTool->IsMaterial(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsSetShapeMaterial", visMaterialTool->IsSetShapeMaterial(label)));
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    fnAddItem(createPropertyTreeItem("IsMaterial", visMaterialTool->IsMaterial(label)));
+    fnAddItem(createPropertyTreeItem("IsSetShapeMaterial", visMaterialTool->IsSetShapeMaterial(label)));
 
     auto fnCreateVisMaterialTreeItem = [](const QString& text, const Handle_XCAFDoc_VisMaterial& material) {
         auto item = new QTreeWidgetItem;
@@ -261,13 +326,13 @@ static void loadLabelVisMaterialProperties(
     if (visMaterialTool->IsMaterial(label)) {
         Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetMaterial(label);
         if (!visMaterial.IsNull() && !visMaterial->IsEmpty())
-            listItemProp.push_back(fnCreateVisMaterialTreeItem("Material", visMaterial));
+            fnAddItem(fnCreateVisMaterialTreeItem("Material", visMaterial));
     }
 
     if (visMaterialTool->IsSetShapeMaterial(label)) {
         Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetShapeMaterial(label);
         if (!visMaterial.IsNull() && !visMaterial->IsEmpty())
-            listItemProp.push_back(fnCreateVisMaterialTreeItem("ShapeMaterial", visMaterial));
+            fnAddItem(fnCreateVisMaterialTreeItem("ShapeMaterial", visMaterial));
     }
 
     treeItem->addChildren(listItemProp);
@@ -280,24 +345,25 @@ static void loadLabelColorProperties(
         QTreeWidgetItem* treeItem)
 {
     QList<QTreeWidgetItem*> listItemProp;
-    listItemProp.push_back(createPropertyTreeItem("IsColor", colorTool->IsColor(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorGen", colorTool->IsSet(label, XCAFDoc_ColorGen)));
-    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorSurf", colorTool->IsSet(label, XCAFDoc_ColorSurf)));
-    listItemProp.push_back(createPropertyTreeItem("IsSet_ColorCurv", colorTool->IsSet(label, XCAFDoc_ColorCurv)));
-    listItemProp.push_back(createPropertyTreeItem("IsVisible", colorTool->IsColor(label)));
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    fnAddItem(createPropertyTreeItem("IsColor", colorTool->IsColor(label)));
+    fnAddItem(createPropertyTreeItem("IsSet_ColorGen", colorTool->IsSet(label, XCAFDoc_ColorGen)));
+    fnAddItem(createPropertyTreeItem("IsSet_ColorSurf", colorTool->IsSet(label, XCAFDoc_ColorSurf)));
+    fnAddItem(createPropertyTreeItem("IsSet_ColorCurv", colorTool->IsSet(label, XCAFDoc_ColorCurv)));
+    fnAddItem(createPropertyTreeItem("IsVisible", colorTool->IsColor(label)));
 
     Quantity_Color color;
     if (colorTool->GetColor(label, color))
-        listItemProp.push_back(createPropertyTreeItem("Color", color));
+        fnAddItem(createPropertyTreeItem("Color", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorGen, color))
-        listItemProp.push_back(createPropertyTreeItem("Color_ColorGen", color));
+        fnAddItem(createPropertyTreeItem("Color_ColorGen", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorSurf, color))
-        listItemProp.push_back(createPropertyTreeItem("Color_ColorSurf", color));
+        fnAddItem(createPropertyTreeItem("Color_ColorSurf", color));
 
     if (colorTool->GetColor(label, XCAFDoc_ColorCurv, color))
-        listItemProp.push_back(createPropertyTreeItem("Color_ColorCurv", color));
+        fnAddItem(createPropertyTreeItem("Color_ColorCurv", color));
 
     treeItem->addChildren(listItemProp);
 }
@@ -308,29 +374,207 @@ static void loadLabelShapeProperties(
         QTreeWidgetItem* treeItem)
 {
     QList<QTreeWidgetItem*> listItemProp;
-
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
     TopoDS_Shape shape;
     if (XCAFDoc_ShapeTool::GetShape(label, shape))
-        listItemProp.push_back(createPropertyTreeItem("ShapeType", MetaEnum::name(shape.ShapeType())));
+        fnAddItem(createPropertyTreeItem("ShapeType", MetaEnum::name(shape.ShapeType())));
 
-    listItemProp.push_back(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsFree", shapeTool->IsFree(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsAssembly", shapeTool->IsAssembly(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsComponent", shapeTool->IsComponent(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsSimpleShape", shapeTool->IsSimpleShape(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsCompound", shapeTool->IsCompound(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsSubShape", shapeTool->IsSubShape(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
-    listItemProp.push_back(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
+    fnAddItem(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
+    fnAddItem(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
+    fnAddItem(createPropertyTreeItem("IsFree", shapeTool->IsFree(label)));
+    fnAddItem(createPropertyTreeItem("IsAssembly", shapeTool->IsAssembly(label)));
+    fnAddItem(createPropertyTreeItem("IsComponent", shapeTool->IsComponent(label)));
+    fnAddItem(createPropertyTreeItem("IsSimpleShape", shapeTool->IsSimpleShape(label)));
+    fnAddItem(createPropertyTreeItem("IsCompound", shapeTool->IsCompound(label)));
+    fnAddItem(createPropertyTreeItem("IsSubShape", shapeTool->IsSubShape(label)));
+    fnAddItem(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
+    fnAddItem(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
 
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
         if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
             const QString textItemRefShape =
                     CafUtils::labelTag(labelRef) + " " + CafUtils::labelAttrStdName(labelRef);
-            listItemProp.push_back(createPropertyTreeItem("ReferredShape", textItemRefShape));
+            fnAddItem(createPropertyTreeItem("ReferredShape", textItemRefShape));
         }
+    }
+
+    treeItem->addChildren(listItemProp);
+}
+
+static void loadLabelDimensionProperties(const TDF_Label& label, QTreeWidgetItem* treeItem)
+{
+    QList<QTreeWidgetItem*> listItemProp;
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    auto fnAddChildItem = [&](QTreeWidgetItem* item) { listItemProp.back()->addChild(item); };
+    auto dimAttr = CafUtils::findAttribute<XCAFDoc_Dimension>(label);
+    if (!dimAttr)
+        return;
+
+    Handle_XCAFDimTolObjects_DimensionObject dimObject = dimAttr->GetObject();
+    fnAddItem(createPropertyTreeItem("SemanticName", dimObject->GetSemanticName()));
+    fnAddItem(createPropertyTreeItem(
+                  "Qualifier", MetaEnum::nameWithoutPrefix(dimObject->GetQualifier(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem(
+                  "Type", MetaEnum::nameWithoutPrefix(dimObject->GetType(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem("Value", dimObject->GetValue()));
+
+    fnAddItem(createPropertyTreeItem("IsDimWithRange", dimObject->IsDimWithRange()));
+    if (dimObject->IsDimWithRange()) {
+        fnAddChildItem(createPropertyTreeItem("UpperBound", dimObject->GetUpperBound()));
+        fnAddChildItem(createPropertyTreeItem("LowerBound", dimObject->GetLowerBound()));
+    }
+
+    fnAddItem(createPropertyTreeItem("IsDimWithPlusMinusTolerance", dimObject->IsDimWithPlusMinusTolerance()));
+    if (dimObject->IsDimWithPlusMinusTolerance()) {
+        fnAddChildItem(createPropertyTreeItem("UpperTolValue", dimObject->GetUpperTolValue()));
+        fnAddChildItem(createPropertyTreeItem("LowerTolValue", dimObject->GetLowerTolValue()));
+    }
+
+    fnAddItem(createPropertyTreeItem("IsDimWithClassOfTolerance", dimObject->IsDimWithClassOfTolerance()));
+    if (dimObject->IsDimWithClassOfTolerance()) {
+        Standard_Boolean hole;
+        XCAFDimTolObjects_DimensionFormVariance formVariance;
+        XCAFDimTolObjects_DimensionGrade grade;
+        if (dimObject->GetClassOfTolerance(hole, formVariance, grade)) {
+            fnAddChildItem(createPropertyTreeItem("IsHole", hole));
+            fnAddChildItem(createPropertyTreeItem("DimensionFormVariance", MetaEnum::nameWithoutPrefix(formVariance, "XCAFDimTolObjects_")));
+            fnAddChildItem(createPropertyTreeItem("DimensionGrade", MetaEnum::nameWithoutPrefix(grade, "XCAFDimTolObjects_")));
+        }
+    }
+
+    fnAddItem(createPropertyTreeItem("Path", dimObject->GetPath()));
+
+    fnAddItem(createPropertyTreeItem("HasTextPoint", dimObject->HasTextPoint()));
+    if (dimObject->HasTextPoint())
+        fnAddChildItem(createPropertyTreeItem("PointTextAttach", dimObject->GetPointTextAttach()));
+
+    fnAddItem(createPropertyTreeItem("HasPlane", dimObject->HasPlane()));
+    if (dimObject->HasPlane())
+        fnAddChildItem(createPropertyTreeItem("Plane", dimObject->GetPlane()));
+
+    fnAddItem(createPropertyTreeItem("HasPoint", dimObject->HasPoint()));
+    if (dimObject->HasPoint())
+        fnAddChildItem(createPropertyTreeItem("Point", dimObject->GetPoint()));
+
+    fnAddItem(createPropertyTreeItem("HasPoint2", dimObject->HasPoint2()));
+    if (dimObject->HasPoint2())
+        fnAddChildItem(createPropertyTreeItem("Point2", dimObject->GetPoint2()));
+
+    fnAddItem(createPropertyTreeItem("PresentationName", dimObject->GetPresentationName()));
+    fnAddItem(createPropertyTreeItem("Presentation", dimObject->GetPresentation()));
+
+    fnAddItem(createPropertyTreeItem("HasDescriptions", dimObject->HasDescriptions()));
+    if (dimObject->HasDescriptions()) {
+        for (int i = 1; i <= dimObject->NbDescriptions(); ++i)
+            fnAddChildItem(createPropertyTreeItem("DescriptionName", dimObject->GetDescriptionName(i)));
+    }
+
+    treeItem->addChildren(listItemProp);
+}
+
+static void loadLabelDatumProperties(const TDF_Label& label, QTreeWidgetItem* treeItem)
+{
+    QList<QTreeWidgetItem*> listItemProp;
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    auto fnAddChildItem = [&](QTreeWidgetItem* item) { listItemProp.back()->addChild(item); };
+    auto datumAttr = CafUtils::findAttribute<XCAFDoc_Datum>(label);
+    if (!datumAttr)
+        return;
+
+    Handle_XCAFDimTolObjects_DatumObject datumObject = datumAttr->GetObject();
+    fnAddItem(createPropertyTreeItem("SemanticName", datumObject->GetSemanticName()));
+    fnAddItem(createPropertyTreeItem("Name", datumObject->GetName()));
+    {
+        XCAFDimTolObjects_DatumModifWithValue modfValue;
+        double value;
+        datumObject->GetModifierWithValue(modfValue, value);
+        fnAddItem(createPropertyTreeItem("Modifier", MetaEnum::nameWithoutPrefix(modfValue, "XCAFDimTolObjects_")));
+        if (modfValue != XCAFDimTolObjects_DatumModifWithValue_None)
+            fnAddChildItem(createPropertyTreeItem("ModifierValue", value));
+    }
+
+    fnAddItem(createPropertyTreeItem("DatumTarget", datumObject->GetDatumTarget()));
+    fnAddItem(createPropertyTreeItem("Position", datumObject->GetPosition()));
+    fnAddItem(createPropertyTreeItem("IsDatumTarget", datumObject->IsDatumTarget()));
+    fnAddItem(createPropertyTreeItem(
+                  "DatumTargetType",
+                  MetaEnum::nameWithoutPrefix(datumObject->GetDatumTargetType(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem("HasDatumTargetParams", datumObject->HasDatumTargetParams()));
+    if (datumObject->HasDatumTargetParams()) {
+        fnAddChildItem(createPropertyTreeItem("DatumTargetAxis", datumObject->GetDatumTargetAxis()));
+        fnAddChildItem(createPropertyTreeItem("DatumTargetLength", datumObject->GetDatumTargetLength()));
+        fnAddChildItem(createPropertyTreeItem("DatumTargetWidth", datumObject->GetDatumTargetWidth()));
+        fnAddChildItem(createPropertyTreeItem("DatumTargetNumber", datumObject->GetDatumTargetNumber()));
+    }
+
+    fnAddItem(createPropertyTreeItem("HasPlane", datumObject->HasPlane()));
+    if (datumObject->HasPlane())
+        fnAddChildItem(createPropertyTreeItem("Plane", datumObject->GetPlane()));
+
+    fnAddItem(createPropertyTreeItem("HasPoint", datumObject->HasPoint()));
+    if (datumObject->HasPoint())
+        fnAddChildItem(createPropertyTreeItem("Point", datumObject->GetPoint()));
+
+    fnAddItem(createPropertyTreeItem("HasTextPoint", datumObject->HasPointText()));
+    if (datumObject->HasPointText())
+        fnAddChildItem(createPropertyTreeItem("PointTextAttach", datumObject->GetPointTextAttach()));
+
+    fnAddItem(createPropertyTreeItem("Presentation", datumObject->GetPresentation()));
+    fnAddItem(createPropertyTreeItem("PresentationName", datumObject->GetPresentationName()));
+
+    treeItem->addChildren(listItemProp);
+}
+
+static void loadLabelGeomToleranceProperties(const TDF_Label& label, QTreeWidgetItem* treeItem)
+{
+    QList<QTreeWidgetItem*> listItemProp;
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    auto fnAddChildItem = [&](QTreeWidgetItem* item) { listItemProp.back()->addChild(item); };
+    auto tolAttr = CafUtils::findAttribute<XCAFDoc_GeomTolerance>(label);
+    if (!tolAttr)
+        return;
+
+    Handle_XCAFDimTolObjects_GeomToleranceObject tolObject = tolAttr->GetObject();
+    fnAddItem(createPropertyTreeItem("SemanticName", tolObject->GetSemanticName()));
+    fnAddItem(createPropertyTreeItem(
+                  "Type", MetaEnum::nameWithoutPrefix(tolObject->GetType(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem(
+                  "TypeOfValue", MetaEnum::nameWithoutPrefix(tolObject->GetTypeOfValue(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem("Value", tolObject->GetValue()));
+    fnAddItem(createPropertyTreeItem(
+                  "MaterialRequirementModifier",
+                  MetaEnum::nameWithoutPrefix(tolObject->GetMaterialRequirementModifier(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem(
+                  "ZoneModifier",
+                  MetaEnum::nameWithoutPrefix(tolObject->GetZoneModifier(), "XCAFDimTolObjects_")));
+    fnAddItem(createPropertyTreeItem("ValueOfZoneModifier", tolObject->GetValueOfZoneModifier()));
+    fnAddItem(createPropertyTreeItem("MaxValueModifier", tolObject->GetMaxValueModifier()));
+    fnAddItem(createPropertyTreeItem("HasAxis", tolObject->HasAxis()));
+    if (tolObject->HasAxis())
+        fnAddChildItem(createPropertyTreeItem("Axis", tolObject->GetAxis()));
+
+    fnAddItem(createPropertyTreeItem("HasPlane", tolObject->HasPlane()));
+    if (tolObject->HasPlane())
+        fnAddChildItem(createPropertyTreeItem("Plane", tolObject->GetPlane()));
+
+    fnAddItem(createPropertyTreeItem("HasPoint", tolObject->HasPoint()));
+    if (tolObject->HasPoint())
+        fnAddChildItem(createPropertyTreeItem("Point", tolObject->GetPoint()));
+
+    fnAddItem(createPropertyTreeItem("HasPointText", tolObject->HasPointText()));
+    if (tolObject->HasPointText())
+        fnAddChildItem(createPropertyTreeItem("PointTextAttach", tolObject->GetPointTextAttach()));
+
+    fnAddItem(createPropertyTreeItem("Presentation", tolObject->GetPresentation()));
+    fnAddItem(createPropertyTreeItem("PresentationName", tolObject->GetPresentationName()));
+    fnAddItem(createPropertyTreeItem("HasAffectedPlane", tolObject->HasAffectedPlane()));
+    if (tolObject->HasAffectedPlane()) {
+        fnAddChildItem(createPropertyTreeItem(
+                           "AffectedPlaneType",
+                           MetaEnum::nameWithoutPrefix(tolObject->GetAffectedPlaneType(), "XCAFDimTolObjects_")));
+        fnAddChildItem(createPropertyTreeItem(
+                           "AffectedPlaneType", tolObject->GetAffectedPlane().Position().Ax2()));
     }
 
     treeItem->addChildren(listItemProp);
@@ -407,29 +651,36 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem *item, int /
             m_ui->treeWidget_LabelProps->addTopLevelItem(itemAttrs);
         }
 
+        auto fnCreateLabelTreeItem = [=](const QString& title) {
+            auto treeItem = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
+            treeItem->setText(0, title);
+            return treeItem;
+        };
+
+        auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
         const bool isShapeLabel = XCAFDoc_ShapeTool::IsShape(label);
-        if (isShapeLabel) {
-            auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(m_doc->Main());
-            auto itemShapeProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
-            itemShapeProps->setText(0, tr("Shape"));
-            Internal::loadLabelShapeProperties(label, shapeTool, itemShapeProps);
-        }
+        if (isShapeLabel)
+            Internal::loadLabelShapeProperties(label, shapeTool, fnCreateLabelTreeItem(tr("Shape")));
 
         auto colorTool = XCAFDoc_DocumentTool::ColorTool(m_doc->Main());
-        if (colorTool->IsColor(label) || isShapeLabel) {
-            auto itemColorProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
-            itemColorProps->setText(0, tr("Color"));
-            Internal::loadLabelColorProperties(label, colorTool, itemColorProps);
-        }
+        if (colorTool->IsColor(label) || isShapeLabel)
+            Internal::loadLabelColorProperties(label, colorTool, fnCreateLabelTreeItem(tr("Color")));
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         auto visMaterialTool = XCAFDoc_DocumentTool::VisMaterialTool(m_doc->Main());
-        if (visMaterialTool->IsMaterial(label) || isShapeLabel) {
-            auto itemVisMaterialProps = new QTreeWidgetItem(m_ui->treeWidget_LabelProps);
-            itemVisMaterialProps->setText(0, tr("VisMaterial"));
-            Internal::loadLabelVisMaterialProperties(label, visMaterialTool, itemVisMaterialProps);
-        }
+        if (visMaterialTool->IsMaterial(label) || isShapeLabel)
+            Internal::loadLabelVisMaterialProperties(label, visMaterialTool, fnCreateLabelTreeItem(tr("VisMaterial")));
 #endif
+
+        auto pmiTool = XCAFDoc_DocumentTool::DimTolTool(m_doc->Main());
+        if (pmiTool->IsDimension(label))
+            Internal::loadLabelDimensionProperties(label, fnCreateLabelTreeItem(tr("Dimension")));
+
+        if (pmiTool->IsDatum(label))
+            Internal::loadLabelDatumProperties(label, fnCreateLabelTreeItem(tr("Datum")));
+
+        if (pmiTool->IsGeomTolerance(label))
+            Internal::loadLabelGeomToleranceProperties(label, fnCreateLabelTreeItem(tr("GeomTolerance")));
     }
 
     m_ui->treeWidget_LabelProps->expandAll();

@@ -29,6 +29,7 @@ public:
         int unitDecimals;
     };
 
+    // TODO add overload for 'int' type
     static QString text(double value, const TextOptions& opt);
     static QString text(const gp_Pnt& pos, const TextOptions& opt);
     static QString text(const gp_Dir& pos, const TextOptions& opt);
