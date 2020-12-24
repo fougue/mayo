@@ -14,6 +14,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
 #include <functional>
+class QSettings;
 
 namespace Mayo {
 
@@ -29,8 +30,12 @@ public:
     ~Settings();
 
     void load();
+    void loadFrom(const QSettings& source);
     void loadProperty(SettingIndex index);
+    void loadPropertyFrom(const QSettings& source, SettingIndex index);
+
     void save();
+    void saveAs(QSettings* target);
 
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;

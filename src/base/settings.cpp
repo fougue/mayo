@@ -63,14 +63,15 @@ public:
         return this->sectionPath(this->group(index.group()), this->section(index));
     }
 
-    void loadProperty(const QString& sectionPath, Property* property) {
+    static void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
+    {
         if (!property)
             return;
 
         const QByteArray propertyKey = property->name().key;
         const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
-        if (m_settings.contains(settingPath)) {
-            const QVariant value = m_settings.value(settingPath);
+        if (source.contains(settingPath)) {
+            const QVariant value = source.value(settingPath);
             property->setValueFromVariant(value);
         }
     }
@@ -93,26 +94,45 @@ Settings::~Settings()
 
 void Settings::load()
 {
+    this->loadFrom(d->m_settings);
+}
+
+void Settings::loadFrom(const QSettings& source)
+{
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
             const QString sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting)
-                d->loadProperty(sectionPath, setting.property);
+                Private::loadPropertyFrom(source, sectionPath, setting.property);
         }
     }
 }
 
 void Settings::loadProperty(Settings::SettingIndex index)
 {
+    this->loadPropertyFrom(d->m_settings, index);
+}
+
+void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
+{
     Property* prop = this->property(index);
     if (prop) {
         const QString sectionPath = d->sectionPath(index.section());
-        d->loadProperty(sectionPath, prop);
+        Private::loadPropertyFrom(source, sectionPath, prop);
     }
 }
 
 void Settings::save()
 {
+    this->saveAs(&d->m_settings);
+    d->m_settings.sync();
+}
+
+void Settings::saveAs(QSettings* target)
+{
+    if (!target)
+        return;
+
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
             const QString sectionPath = d->sectionPath(group, section);
@@ -120,12 +140,10 @@ void Settings::save()
                 Property* prop = setting.property;
                 const QByteArray propKey = prop->name().key;
                 const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                d->m_settings.setValue(settingPath, prop->valueAsVariant());
+                target->setValue(settingPath, prop->valueAsVariant());
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)
-
-    d->m_settings.sync();
 }
 
 int Settings::groupCount() const
