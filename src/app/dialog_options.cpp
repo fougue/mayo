@@ -99,6 +99,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     auto treeModel = createGroupSectionModel(settings, this);
     m_ui->treeView_GroupSections->setModel(treeModel);
     m_ui->treeView_GroupSections->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_ui->treeView_GroupSections->expandAll();
 
     QFont fontItemGroupSection = m_ui->listWidget_Settings->font();
     fontItemGroupSection.setBold(true);
