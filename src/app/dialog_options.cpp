@@ -66,6 +66,24 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     return model;
 }
 
+template<typename PREDICATE>
+QModelIndex recursiveFindTreeItem(
+        QAbstractItemModel* treeModel, const QModelIndex& indexParentItem, const PREDICATE& fnPredicate)
+{
+    const int parentRowCount = treeModel->rowCount(indexParentItem);
+    for (int row = 0; row < parentRowCount; ++row) {
+        const QModelIndex indexItem = treeModel->index(row, 0, indexParentItem);
+        if (fnPredicate(indexItem))
+            return indexItem;
+
+        const QModelIndex indexItemFound = recursiveFindTreeItem(treeModel, indexItem, fnPredicate);
+        if (indexItemFound.isValid())
+            return indexItemFound;
+    }
+
+    return QModelIndex();
+}
+
 static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
 
 } // namespace
@@ -86,6 +104,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     fontItemGroupSection.setBold(true);
     fontItemGroupSection.setPointSizeF(1.7 * fontItemGroupSection.pointSizeF());
 
+    // Build "right-side" model(setting items)
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = settings->groupTitle(indexGroup);
@@ -121,24 +140,49 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         } // endfor(section)
     }
 
+    // When a setting is clicked in the "right-side" view then scroll to and select corresponding
+    // tree item in the "left-side" view
+    QObject::connect(m_ui->listWidget_Settings, &QListWidget::currentRowChanged, [=](int listRow) {
+        auto listItem = m_ui->listWidget_Settings->item(listRow);
+        if (!listItem)
+            return;
+
+        const SettingNodeId nodeId = listItem->data(ItemSettingNodeId_Role).toUInt();
+        auto fnFindNodeId = [=](QModelIndex indexTreeItem) {
+            const QVariant variantSettingNodeId = indexTreeItem.data(ItemSettingNodeId_Role);
+            return variantSettingNodeId.isValid() && variantSettingNodeId.toUInt() == nodeId;
+        };
+        const QModelIndex indexTreeItem = recursiveFindTreeItem(treeModel, QModelIndex(), fnFindNodeId);
+        if (indexTreeItem.isValid()) {
+            m_ui->treeView_GroupSections->scrollTo(indexTreeItem);
+            QSignalBlocker _(m_ui->treeView_GroupSections);
+            m_ui->treeView_GroupSections->selectionModel()->select(
+                        indexTreeItem, QItemSelectionModel::SelectCurrent);
+        }
+    });
+
+    // When a group/section is clicked in the "left-side" view then scroll to the list item in
+    // the "right-side" view
     QObject::connect(
                 m_ui->treeView_GroupSections->selectionModel(), &QItemSelectionModel::currentChanged,
                 [=](const QModelIndex& current) {
-        if (current.isValid()) {
-            const SettingNodeId nodeId = treeModel->data(current, ItemSettingNodeId_Role).toUInt();
-            for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
-                const QListWidgetItem* item = m_ui->listWidget_Settings->item(i);
-                const QVariant variantSettingNodeId = item->data(ItemSettingNodeId_Role);
-                if (variantSettingNodeId.isValid() && variantSettingNodeId.toUInt() == nodeId) {
-                    m_ui->listWidget_Settings->scrollToItem(item, QListWidget::PositionAtTop);
-                    return;
-                }
+        if (!current.isValid())
+            return;
+
+        const SettingNodeId nodeId = treeModel->data(current, ItemSettingNodeId_Role).toUInt();
+        for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
+            const QListWidgetItem* item = m_ui->listWidget_Settings->item(i);
+            const QVariant variantSettingNodeId = item->data(ItemSettingNodeId_Role);
+            if (variantSettingNodeId.isValid() && variantSettingNodeId.toUInt() == nodeId) {
+                m_ui->listWidget_Settings->scrollToItem(item, QListWidget::PositionAtTop);
+                return;
             }
         }
     });
 
-    auto btnResetAll = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnResetAll, &QPushButton::clicked, this, &DialogOptions::restoreDefaults);
+    // Action for "Restore defaults" button
+    auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
+    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, &DialogOptions::restoreDefaults);
 }
 
 DialogOptions::~DialogOptions()
