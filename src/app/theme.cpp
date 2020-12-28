@@ -185,7 +185,7 @@ public:
         }
     }
 
-    void setupHeaderComboBox(QComboBox* cb)
+    void setupHeaderComboBox(QComboBox* cb) override
     {
         const QString urlDown(":/images/themes/classic/indicator-down_8.png");
         const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
@@ -299,7 +299,7 @@ public:
         qApp->setStyleSheet(css);
     }
 
-    void setupHeaderComboBox(QComboBox* cb)
+    void setupHeaderComboBox(QComboBox* cb) override
     {
         const QString urlDown(":/images/themes/dark/indicator-down_8.png");
         const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
