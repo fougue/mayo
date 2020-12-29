@@ -12,11 +12,12 @@
 #include "ui_dialog_options.h"
 
 #include <QtGui/QStandardItemModel>
+#include <QtWidgets/QAbstractSpinBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QProxyStyle>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QAbstractSpinBox>
 
 namespace Mayo {
 
@@ -67,6 +68,30 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     return model;
 }
 
+class CustomStyle : public QProxyStyle {
+public:
+    CustomStyle()
+        : QProxyStyle(qApp->style())
+    {}
+
+    static QStyle* instance() {
+        static CustomStyle style;
+        return &style;
+    }
+
+    int styleHint(
+            StyleHint hint,
+            const QStyleOption* option,
+            const QWidget* widget,
+            QStyleHintReturn* returnData) const override
+    {
+        if (hint == QStyle::SH_ComboBox_AllowWheelScrolling)
+            return 0;
+        else
+            return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
+
 static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
 
 } // namespace
@@ -78,6 +103,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
       m_settings(settings)
 {
     m_ui->setupUi(this);
+    m_ui->listWidget_Settings->setStyle(CustomStyle::instance());
 
     auto treeModel = createGroupSectionModel(settings, this);
     m_ui->treeView_GroupSections->setModel(treeModel);
