@@ -6,9 +6,9 @@
 
 #include "dialog_save_image_view.h"
 #include "ui_dialog_save_image_view.h"
+#include "widgets_utils.h"
 #include "../graphics/graphics_utils.h"
 
-#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtCore/QHash>
 #include <QtGui/QClipboard>
 #include <QtGui/QImage>
@@ -97,10 +97,8 @@ void DialogSaveImageView::saveFile()
             saveOk = img.save(fileName, format);
         }
         if (!saveOk) {
-            qtgui::QWidgetUtils::asyncMsgBoxCritical(
-                        this,
-                        tr("Error"),
-                        tr("Failed to save image '%1'").arg(fileName));
+            WidgetsUtils::asyncMsgBoxCritical(
+                        this, tr("Error"), tr("Failed to save image '%1'").arg(fileName));
         }
     }
 }

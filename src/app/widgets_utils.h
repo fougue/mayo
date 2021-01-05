@@ -1,0 +1,52 @@
+/****************************************************************************
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
+#pragma once
+
+#include <QtGui/QCursor>
+#include <QtWidgets/QMessageBox>
+class QMenu;
+class QScreen;
+class QWidget;
+
+namespace Mayo {
+
+class WidgetsUtils {
+public:
+    static QScreen* screen(const QWidget* widget);
+    static int screenPixelWidth(double screenRatio, const QWidget* parentWidget = nullptr);
+    static int screenPixelHeight(double screenRatio, const QWidget* parentWidget = nullptr);
+    static QSize screenPixelSize(double widthRatio, double heightRatio, const QWidget* parentWidget = nullptr);
+
+    // Add 'contentsWidget' to 'containerWidget'
+    // If 'containerWidget' is empty then a QBoxLayout is created to receive 'contentsWidget'
+    static void addContentsWidget(QWidget* containerWidget, QWidget* contentsWidget);
+
+    static void asyncDialogExec(QDialog* dialog);
+    static void asyncMenuExec(QMenu* menu, const QPoint& pos = QCursor::pos());
+    static QMessageBox* asyncMsgBoxInfo(
+            QWidget* parent,
+            const QString& title,
+            const QString& text,
+            QMessageBox::StandardButtons buttons = QMessageBox::Ok);
+    static QMessageBox* asyncMsgBoxWarning(
+            QWidget* parent,
+            const QString& title,
+            const QString& text,
+            QMessageBox::StandardButtons buttons = QMessageBox::Ok);
+    static QMessageBox* asyncMsgBoxCritical(
+            QWidget* parent,
+            const QString& title,
+            const QString& text,
+            QMessageBox::StandardButtons buttons = QMessageBox::Ok);
+
+    // Move position of 'widget' so it's displayed stuck to the right of 'nextTo'
+    static void moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin);
+    // Move position of 'widget' so it's displayed stuck to the left of 'nextTo'
+    static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
+};
+
+} // namespace Mayo

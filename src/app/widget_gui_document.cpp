@@ -14,8 +14,8 @@
 #include "widget_clip_planes.h"
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
+#include "widgets_utils.h"
 
-#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -136,7 +136,7 @@ void WidgetGuiDocument::toggleWidgetClipPlanes()
     if (!m_widgetClipPlanes) {
         auto panel = new Internal::PanelView3d(this);
         auto widget = new WidgetClipPlanes(m_guiDoc->v3dView(), panel);
-        qtgui::QWidgetUtils::addContentsWidget(panel, widget);
+        WidgetsUtils::addContentsWidget(panel, widget);
         panel->show();
         panel->adjustSize();
         m_widgetClipPlanes = widget;
@@ -296,11 +296,11 @@ void WidgetGuiDocument::layoutViewControls()
     m_btnFitAll->move(fnGetViewControlsPos());
     const QWidget* widgetLast = m_btnFitAll;
     for (QWidget* widget : m_vecWidgetForViewProj) {
-        qtgui::QWidgetUtils::moveWidgetRightTo(widget, widgetLast, margin);
+        WidgetsUtils::moveWidgetRightTo(widget, widgetLast, margin);
         widgetLast = widget;
     }
 
-    qtgui::QWidgetUtils::moveWidgetRightTo(m_btnEditClipping, widgetLast, margin);
+    WidgetsUtils::moveWidgetRightTo(m_btnEditClipping, widgetLast, margin);
 }
 
 } // namespace Mayo

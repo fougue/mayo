@@ -12,9 +12,9 @@
 #include "../base/string_utils.h"
 #include "../base/unit_system.h"
 #include "app_module.h"
+#include "widgets_utils.h"
 
 #include <fougtools/occtools/qt_utils.h>
-#include <fougtools/qttools/gui/qwidget_utils.h>
 
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QCheckBox>
@@ -174,7 +174,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
                 property->setValue(occ::QtUtils::toOccColor(c));
                 this->syncWithProperty();
             });
-            qtgui::QWidgetUtils::asyncDialogExec(dlg);
+            WidgetsUtils::asyncDialogExec(dlg);
         });
 
         frameLayout->addWidget(m_labelColor);

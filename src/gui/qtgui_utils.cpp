@@ -114,6 +114,19 @@ int screenPixelWidth(double screenRatio, const QScreen* screen)
     return std::round(screenWidth * screenRatio);
 }
 
+int screenPixelHeight(double screenRatio, const QScreen* screen)
+{
+    screen = !screen ? QGuiApplication::primaryScreen() : screen;
+    const int screenHeight = screen ? screen->geometry().height() : 600;
+    return std::round(screenHeight * screenRatio);
+}
+
+QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen)
+{
+    return QSize(QtGuiUtils::screenPixelWidth(widthRatio, screen),
+                 QtGuiUtils::screenPixelHeight(heightRatio, screen));
+}
+
 FontChange::FontChange(const QFont& font)
     : m_font(font)
 {}

@@ -15,9 +15,9 @@
 #include "../base/string_utils.h"
 #include "../base/tkernel_utils.h"
 #include "app_module.h"
+#include "widgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
-#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
 
 #include <Image_Texture.hxx>
@@ -623,7 +623,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
 {
     m_doc = doc;
     if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc)) {
-        qtgui::QWidgetUtils::asyncMsgBoxCritical(
+        WidgetsUtils::asyncMsgBoxCritical(
                     this, tr("Error"), tr("This document is not suitable for XDE"));
         return;
     }

@@ -34,13 +34,13 @@
 #include "widget_model_tree.h"
 #include "widget_occ_view_controller.h"
 #include "widget_properties_editor.h"
+#include "widgets_utils.h"
 
 #ifdef Q_OS_WIN
 #  include "windows/win_taskbar_global_progress.h"
 #endif
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
-#include <fougtools/qttools/gui/qwidget_utils.h>
 #include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QMimeData>
@@ -163,10 +163,10 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
         WidgetMessageIndicator::showMessage(text, mainWnd);
         break;
     case Messenger::MessageType::Warning:
-        qtgui::QWidgetUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
+        WidgetsUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
         break;
     case Messenger::MessageType::Error:
-        qtgui::QWidgetUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
+        WidgetsUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
         break;
     }
 }
@@ -571,14 +571,14 @@ void MainWindow::zoomOutCurrentDoc()
 void MainWindow::editOptions()
 {
     auto dlg = new DialogOptions(m_guiApp->application()->settings(), this);
-    qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    WidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::saveImageView()
 {
     auto widgetGuiDoc = this->currentWidgetGuiDocument();
     auto dlg = new DialogSaveImageView(widgetGuiDoc->guiDocument()->v3dView());
-    qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    WidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::inspectXde()
@@ -595,7 +595,7 @@ void MainWindow::inspectXde()
     if (!xcafDoc.IsNull()) {
         auto dlg = new DialogInspectXde(this);
         dlg->load(xcafDoc);
-        qtgui::QWidgetUtils::asyncDialogExec(dlg);
+        WidgetsUtils::asyncDialogExec(dlg);
     }
 }
 
@@ -622,7 +622,7 @@ void MainWindow::toggleLeftSidebar()
 void MainWindow::aboutMayo()
 {
     auto dlg = new DialogAbout(this);
-    qtgui::QWidgetUtils::asyncDialogExec(dlg);
+    WidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::reportbug()
@@ -688,7 +688,7 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
     if (ok)
         WidgetMessageIndicator::showMessage(msg, this);
     else
-        qtgui::QWidgetUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
+        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)

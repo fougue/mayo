@@ -29,6 +29,8 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2);
 // Returns corresponding width in pixels proportional to 'screen' width resolution
 // 'screenRatio' must be within [0,1]
 int screenPixelWidth(double screenRatio, const QScreen* screen = nullptr);
+int screenPixelHeight(double screenRatio, const QScreen* screen = nullptr);
+QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen = nullptr);
 
 // Fluent-like helper to change font properties
 class FontChange {
