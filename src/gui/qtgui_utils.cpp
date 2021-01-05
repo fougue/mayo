@@ -7,8 +7,12 @@
 #include "qtgui_utils.h"
 #include "../base/math_utils.h"
 
+#include <QtGui/QGuiApplication>
+#include <QtGui/QScreen>
+#include <QtGui/QWindow>
 #include <gsl/gsl_assert>
 #include <algorithm>
+#include <cmath>
 
 namespace Mayo {
 namespace QtGuiUtils {
@@ -49,14 +53,12 @@ QColor linearColorAt(const QGradient& gradient, double t)
                 stops.cbegin(),
                 stops.cend(),
                 QGradientStop(t, QColor()),
-                [](const QGradientStop& lhs, const QGradientStop& rhs) {
-        return lhs.first < rhs.first;
-    });
+                [](const QGradientStop& lhs, const QGradientStop& rhs) { return lhs.first < rhs.first; }
+    );
     if (itLower != stops.cbegin() && itLower != stops.cend()) {
         const int i = (itLower - stops.cbegin()) - 1;
         const double tMapped =
-                MathUtils::mappedValue(
-                    t, stops.at(i).first, stops.at(i + 1).first, 0, 1);
+                MathUtils::mappedValue(t, stops.at(i).first, stops.at(i + 1).first, 0, 1);
         return lerp(stops.at(i).second, stops.at(i + 1).second, tMapped);
     }
 
@@ -103,6 +105,13 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2)
     QLinearGradient subGradient(0, 0, 1, 0);
     subGradient.setStops(subStops);
     return subGradient;
+}
+
+int screenPixelWidth(double screenRatio, const QScreen* screen)
+{
+    screen = !screen ? QGuiApplication::primaryScreen() : screen;
+    const int screenWidth = screen ? screen->geometry().width() : 800;
+    return std::round(screenWidth * screenRatio);
 }
 
 FontChange::FontChange(const QFont& font)

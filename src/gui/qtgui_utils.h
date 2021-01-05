@@ -9,6 +9,7 @@
 #include <QtGui/QColor>
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
+class QScreen;
 
 namespace Mayo {
 namespace QtGuiUtils {
@@ -25,6 +26,11 @@ QGradient gradientEndsAdded(const QGradient& gradient);
 
 QGradient subGradient(const QGradient& gradient, double t1, double t2);
 
+// Returns corresponding width in pixels proportional to 'screen' width resolution
+// 'screenRatio' must be within [0,1]
+int screenPixelWidth(double screenRatio, const QScreen* screen = nullptr);
+
+// Fluent-like helper to change font properties
 class FontChange {
 public:
     FontChange(const QFont& font);
