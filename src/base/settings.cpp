@@ -6,11 +6,9 @@
 
 #include "settings.h"
 
-#include <fougtools/qttools/core/qstring_hfunc.h>
 #include <QtCore/QSettings>
 #include <gsl/gsl_util>
 #include <regex>
-#include <unordered_map>
 
 namespace Mayo {
 

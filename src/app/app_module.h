@@ -13,10 +13,10 @@
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/qtcore_hfuncs.h"
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
 
-#include <fougtools/qttools/core/qbytearray_hfunc.h>
 #include <QtCore/QObject>
 #include <unordered_map>
 #include <vector>
