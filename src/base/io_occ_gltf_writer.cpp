@@ -12,9 +12,9 @@
 #include "property_builtins.h"
 #include "property_enumeration.h"
 #include "enumeration_fromenum.h"
+#include "string_utils.h"
 #include "text_id.h"
 
-#include <fougtools/occtools/qt_utils.h>
 #include <RWGltf_CafWriter.hxx>
 
 namespace Mayo {
@@ -93,7 +93,7 @@ bool OccGltfWriter::writeFile(const QString& filepath, TaskProgress* progress)
 
     Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
     const bool isBinary = m_params.format == Format::Binary;
-    RWGltf_CafWriter writer(occ::QtUtils::toOccUtf8String(filepath), isBinary);
+    RWGltf_CafWriter writer(StringUtils::toUtf8<TCollection_AsciiString>(filepath), isBinary);
     const TColStd_IndexedDataMapOfStringString fileInfo;
     if (m_seqRootLabel.IsEmpty())
         return writer.Perform(m_document, fileInfo, occProgress->Start());

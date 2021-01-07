@@ -10,10 +10,9 @@
 #include "theme.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
+#include "../gui/qtgui_utils.h"
 
-#include <fougtools/occtools/qt_utils.h>
 #include <gsl/gsl_util>
-
 #include <QtCore/QDateTime>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
@@ -37,7 +36,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
         view->ChangeRenderingParams().IsAntialiasingEnabled = true;
         view->ChangeRenderingParams().NbMsaaSamples = 4;
-        view->SetBackgroundColor(occ::QtUtils::toOccColor(backgroundColor));
+        view->SetBackgroundColor(QtGuiUtils::toColor<Quantity_Color>(backgroundColor));
 
         auto _ = gsl::finally([=]{
             guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);

@@ -6,13 +6,25 @@
 
 #pragma once
 
+#include <Quantity_Color.hxx>
+#include <Quantity_ColorRGBA.hxx>
+#include <Quantity_NameOfColor.hxx>
 #include <QtGui/QColor>
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
+#include <type_traits>
 class QScreen;
 
 namespace Mayo {
 namespace QtGuiUtils {
+
+// Color conversion
+QColor toQColor(const Quantity_Color& c);
+QColor toQColor(const Quantity_ColorRGBA& c);
+QColor toQColor(Quantity_NameOfColor c);
+
+template <typename OTHER_COLOR_TYPE>
+OTHER_COLOR_TYPE toColor(const QColor& c);
 
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'
 QColor lerp(const QColor& a, const QColor& b, double t);
@@ -47,6 +59,23 @@ public:
 private:
     QFont m_font;
 };
+
+// --
+// -- Implementation
+// --
+
+template <typename OTHER_COLOR_TYPE>
+OTHER_COLOR_TYPE QtGuiUtils::toColor(const QColor& c) {
+    if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_Color>::value) {
+        return Quantity_Color(c.redF(), c.greenF(), c.blueF(), Quantity_TOC_RGB);
+    }
+    if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_ColorRGBA>::value) {
+        return Quantity_ColorRGBA(c.redF(), c.greenF(), c.blueF(), c.alphaF());
+    }
+    else if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_NameOfColor>::value) {
+        return QtGuiUtils:toColor<Quantity_Color>(c).Name();
+    }
+}
 
 } // namespace QtGuiUtils
 } // namespace Mayo

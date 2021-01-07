@@ -41,7 +41,6 @@
 #endif
 
 #include <fougtools/qttools/gui/item_view_buttons.h>
-#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>

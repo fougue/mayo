@@ -23,8 +23,7 @@
 #include "../src/base/task_manager.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
-
-#include <fougtools/occtools/qt_utils.h>
+#include "../src/gui/qtgui_utils.h"
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -543,6 +542,14 @@ void Test::StringUtils_text_test_data()
             << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
 }
 
+void Test::StringUtils_stringConversion_test()
+{
+    const QString text = "test_éç²µ§_测试_Тест";
+    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<TCollection_AsciiString>(text)), text);
+    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<std::string>(text)), text);
+    QCOMPARE(StringUtils::fromUtf16(StringUtils::toUtf16<TCollection_ExtendedString>(text)), text);
+}
+
 void Test::UnitSystem_test()
 {
     QFETCH(UnitSystem::TranslateResult, trResultActual);
@@ -640,12 +647,14 @@ void Test::LibTree_test()
     QCOMPARE(tree.nodeSiblingNext(n0_1_2), nullptrId);
 }
 
-void Test::OccQtUtils_test()
+void Test::QtGuiUtils_test()
 {
     const QColor qtColor(51, 75, 128);
-    const Quantity_Color occColor = occ::QtUtils::toOccColor(qtColor);
-    const QColor backQtColor = occ::QtUtils::toQColor(occColor);
-    QCOMPARE(qtColor, backQtColor);
+    const QColor qtColorA(51, 75, 128, 87);
+    auto occColor = QtGuiUtils::toColor<Quantity_Color>(qtColor);
+    auto occColorA = QtGuiUtils::toColor<Quantity_ColorRGBA>(qtColorA);
+    QCOMPARE(QtGuiUtils::toQColor(occColor), qtColor);
+    QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
 }
 
 void Test::initTestCase()

@@ -113,4 +113,20 @@ void StringUtils::append(QString* dst, const QString& str, const QLocale& locale
         dst->prepend(str);
 }
 
+QString StringUtils::fromUtf8(const TCollection_AsciiString& str) {
+    return QString::fromUtf8(str.ToCString(), str.Length());
+}
+
+QString StringUtils::fromUtf8(const Handle_TCollection_HAsciiString& str) {
+    return StringUtils::fromUtf8(str ? str->String() : TCollection_AsciiString());
+}
+
+QString StringUtils::fromUtf8(std::string_view str) {
+    return QString::fromUtf8(str.data(), str.size());
+}
+
+QString StringUtils::fromUtf16(const TCollection_ExtendedString& str) {
+    return QString::fromUtf16(reinterpret_cast<const ushort*>(str.ToExtString()), str.Length());
+}
+
 } // namespace Mayo

@@ -33,13 +33,14 @@ private slots:
     void StringUtils_append_test_data();
     void StringUtils_text_test();
     void StringUtils_text_test_data();
+    void StringUtils_stringConversion_test();
     void UnitSystem_test();
     void UnitSystem_test_data();
 
     void LibTask_test();
     void LibTree_test();
 
-    void OccQtUtils_test();
+    void QtGuiUtils_test();
 
     void initTestCase();
 };

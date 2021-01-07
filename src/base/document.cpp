@@ -7,7 +7,6 @@
 #include "application.h"
 #include "caf_utils.h"
 #include "document.h"
-#include <fougtools/occtools/qt_utils.h>
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>

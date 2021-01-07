@@ -9,10 +9,10 @@
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "theme.h"
 
-#include <fougtools/occtools/qt_utils.h>
 #include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
@@ -186,7 +186,7 @@ void PropertyItemDelegate::paint(
                         painter,
                         option.widget);
 
-            const QColor color = occ::QtUtils::toQColor(propColor->value());
+            const QColor color = QtGuiUtils::toQColor(propColor->value());
             const QPixmap pixColor = PropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
             painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
             const QString strColor = propertyValueText(propColor);

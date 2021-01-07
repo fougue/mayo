@@ -14,7 +14,6 @@
 #include "scope_import.h"
 #include "task_progress.h"
 #include "tkernel_utils.h"
-#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QFileInfo>
 #include <BRep_Builder.hxx>

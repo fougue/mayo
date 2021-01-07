@@ -5,13 +5,12 @@
 ****************************************************************************/
 
 #include "caf_utils.h"
+#include "string_utils.h"
 
 #include <TDataStd_Name.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_Tool.hxx>
 #include <XCAFApp_Application.hxx>
-
-#include <fougtools/occtools/qt_utils.h>
 
 namespace Mayo {
 
@@ -26,14 +25,14 @@ QString CafUtils::labelAttrStdName(const TDF_Label& label)
 {
     Handle_TDataStd_Name attrName;
     if (label.FindAttribute(TDataStd_Name::GetID(), attrName))
-        return occ::QtUtils::toQString(attrName->Get());
+        return StringUtils::fromUtf16(attrName->Get());
     else
         return QString();
 }
 
 void CafUtils::setLabelAttrStdName(const TDF_Label& label, const QString& name)
 {
-    TDataStd_Name::Set(label, occ::QtUtils::toOccExtendedString(name));
+    TDataStd_Name::Set(label, StringUtils::toUtf16<TCollection_ExtendedString>(name));
 }
 
 bool CafUtils::isNullOrEmpty(const TDF_Label& label)

@@ -10,8 +10,8 @@
 #include "scope_import.h"
 #include "occ_progress_indicator.h"
 #include "task_progress.h"
+#include "string_utils.h"
 #include "tkernel_utils.h"
-#include <fougtools/occtools/qt_utils.h>
 
 #include <RWMesh_CafReader.hxx>
 
@@ -82,7 +82,8 @@ bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     XCafScopeImport import(doc);
     const bool okPerform = m_reader.Perform(
-                occ::QtUtils::toOccUtf8String(m_filepath), TKernelUtils::start(indicator));
+                StringUtils::toUtf8<TCollection_AsciiString>(m_filepath),
+                TKernelUtils::start(indicator));
     import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
     return okPerform;
 }
@@ -105,7 +106,7 @@ OccBaseMeshReader::OccBaseMeshReader(RWMesh_CafReader& reader)
 
 void OccBaseMeshReader::applyParameters()
 {
-    m_reader.SetRootPrefix(occ::QtUtils::toOccUtf8String(this->constParameters().rootPrefix));
+    m_reader.SetRootPrefix(StringUtils::toUtf8<TCollection_AsciiString>(this->constParameters().rootPrefix));
     m_reader.SetSystemLengthUnit(OccBaseMeshReaderProperties::lengthUnitFactor(this->constParameters().systemLengthUnit));
     m_reader.SetSystemCoordinateSystem(this->constParameters().systemCoordinatesConverter);
 }

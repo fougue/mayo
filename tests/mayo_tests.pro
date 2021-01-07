@@ -14,13 +14,14 @@ INCLUDEPATH += \
 HEADERS += \
     test.h \
     $$files(../src/base/*.h) \
+    ../src/gui/qtgui_utils.h \
 
 SOURCES += \
     test.cpp \
     main.cpp \
     \
-    ../src/3rdparty/fougtools/occtools/qt_utils.cpp \
     $$files(../src/base/*.cpp) \
+    ../src/gui/qtgui_utils.cpp \
 
 CONFIG += file_copies
 COPIES += MayoInputs

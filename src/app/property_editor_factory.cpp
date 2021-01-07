@@ -11,10 +11,9 @@
 #include "../base/property_enumeration.h"
 #include "../base/string_utils.h"
 #include "../base/unit_system.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "widgets_utils.h"
-
-#include <fougtools/occtools/qt_utils.h>
 
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QCheckBox>
@@ -169,9 +168,9 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
 
         QObject::connect(btnColor, &QAbstractButton::clicked, [=]{
             auto dlg = new QColorDialog(frame);
-            dlg->setCurrentColor(occ::QtUtils::toQColor(property->value()));
+            dlg->setCurrentColor(QtGuiUtils::toQColor(property->value()));
             QObject::connect(dlg, &QColorDialog::colorSelected, [=](const QColor& c) {
-                property->setValue(occ::QtUtils::toOccColor(c));
+                property->setValue(QtGuiUtils::toColor<Quantity_Color>(c));
                 this->syncWithProperty();
             });
             WidgetsUtils::asyncDialogExec(dlg);
@@ -184,7 +183,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
     }
 
     void syncWithProperty() override {
-        const QColor qtColor = occ::QtUtils::toQColor(m_property->value());
+        const QColor qtColor = QtGuiUtils::toQColor(m_property->value());
         m_labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(qtColor));
         m_labelRgb->setText(StringUtils::text(m_property->value()));
     }

@@ -17,7 +17,7 @@
 
 namespace Mayo {
 
-ButtonFlat::ButtonFlat(QWidget *parent)
+ButtonFlat::ButtonFlat(QWidget* parent)
     : QWidget(parent),
       m_iconSize(16, 16),
       m_hoverBrush(mayoTheme()->color(Theme::Color::ButtonFlat_Hover)),
@@ -60,17 +60,17 @@ const QIcon &ButtonFlat::icon() const
     return m_icon;
 }
 
-void ButtonFlat::setIcon(const QIcon &icon)
+void ButtonFlat::setIcon(const QIcon& icon)
 {
     m_icon = icon;
 }
 
-const QSize &ButtonFlat::iconSize() const
+const QSize& ButtonFlat::iconSize() const
 {
     return m_iconSize;
 }
 
-void ButtonFlat::setIconSize(const QSize &size)
+void ButtonFlat::setIconSize(const QSize& size)
 {
     m_iconSize = size;
 }
@@ -80,7 +80,7 @@ QAction *ButtonFlat::defaultAction() const
     return m_defaultAction;
 }
 
-void ButtonFlat::setDefaultAction(QAction *action)
+void ButtonFlat::setDefaultAction(QAction* action)
 {
     m_defaultAction = action;
     this->syncToAction();
@@ -93,7 +93,7 @@ const QBrush &ButtonFlat::hoverBrush() const
     return m_hoverBrush;
 }
 
-void ButtonFlat::setHoverBrush(const QBrush &brush)
+void ButtonFlat::setHoverBrush(const QBrush& brush)
 {
     m_hoverBrush = brush;
     this->update();
@@ -104,7 +104,7 @@ const QBrush &ButtonFlat::checkedBrush() const
     return m_checkedBrush;
 }
 
-void ButtonFlat::setCheckedBrush(const QBrush &brush)
+void ButtonFlat::setCheckedBrush(const QBrush& brush)
 {
     m_checkedBrush = brush;
     this->update();

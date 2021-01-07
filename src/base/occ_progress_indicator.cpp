@@ -5,8 +5,8 @@
 ****************************************************************************/
 
 #include "occ_progress_indicator.h"
+#include "string_utils.h"
 #include "task_progress.h"
-#include <fougtools/occtools/qt_utils.h>
 
 namespace Mayo {
 
@@ -39,10 +39,7 @@ void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool i
 bool OccProgressIndicator::Show(const bool /*force*/)
 {
     if (m_progress) {
-        const Handle_TCollection_HAsciiString name = this->GetScope(1).GetName();
-        if (!name.IsNull())
-            m_progress->setStep(occ::QtUtils::fromUtf8ToQString(name->String()));
-
+        m_progress->setStep(StringUtils::fromUtf8(this->GetScope(1).GetName()));
         const double pc = this->GetPosition(); // Always within [0,1]
         const int val = pc * 100;
         m_progress->setValue(val);

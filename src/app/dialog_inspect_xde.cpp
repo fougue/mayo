@@ -14,11 +14,10 @@
 #include "../base/settings.h"
 #include "../base/string_utils.h"
 #include "../base/tkernel_utils.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "widgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
-
-#include <fougtools/occtools/qt_utils.h>
 
 #include <Image_Texture.hxx>
 #include <TDF_AttributeIterator.hxx>
@@ -70,7 +69,7 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         if (attrId == TDataStd_Name::GetID()) {
             const auto& name = static_cast<const TDataStd_Name&>(*ptrAttr);
             text = "TDataStd_Name";
-            value = occ::QtUtils::toQString(name.Get());
+            value = StringUtils::fromUtf16(name.Get());
         }
 #if 0
         else if (attrId == TDataStd_TreeNode::GetID()) {
@@ -200,7 +199,7 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quanti
     auto itemColor = createPropertyTreeItem(text);
     itemColor->setText(1, StringUtils::text(color));
     QPixmap pixColor(24, 16);
-    pixColor.fill(occ::QtUtils::toQColor(color));
+    pixColor.fill(QtGuiUtils::toQColor(color));
     itemColor->setIcon(1, pixColor);
     return itemColor;
 }
@@ -261,7 +260,7 @@ static QTreeWidgetItem* createPropertyTreeItem(
         return static_cast<QTreeWidgetItem*>(nullptr);
 
     auto item = createPropertyTreeItem(text);
-    item->setText(1, occ::QtUtils::fromUtf8ToQString(imgTexture->FilePath()));
+    item->setText(1, StringUtils::fromUtf8(imgTexture->FilePath()));
     return item;
 }
 
@@ -286,7 +285,7 @@ static void loadLabelVisMaterialProperties(
         item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
         item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
         if (!material->RawName().IsNull())
-            item->addChild(createPropertyTreeItem("RawName", occ::QtUtils::fromUtf8ToQString(material->RawName()->String())));
+            item->addChild(createPropertyTreeItem("RawName", StringUtils::fromUtf8(material->RawName())));
 
         if (material->HasPbrMaterial()) {
             const XCAFDoc_VisMaterialPBR& pbrMaterial = material->PbrMaterial();

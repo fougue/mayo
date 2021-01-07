@@ -12,11 +12,10 @@
 #include "../base/document.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
+#include "../gui/qtgui_utils.h"
 #include "../graphics/graphics_entity_driver_table.h"
 #include "../graphics/graphics_utils.h"
 #include "../graphics/v3d_view_camera_animation.h"
-
-#include <fougtools/occtools/qt_utils.h>
 
 #include <QtCore/QtDebug>
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
@@ -85,9 +84,9 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
-                occ::QtUtils::toOccColor(
+                QtGuiUtils::toColor<Quantity_Color>(
                     mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart)),
-                occ::QtUtils::toOccColor(
+                QtGuiUtils::toColor<Quantity_Color>(
                     mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
                 Aspect_GFM_VER);
 

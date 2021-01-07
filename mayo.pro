@@ -56,7 +56,6 @@ HEADERS += \
     $$files(src/app/*.h) \
 
 SOURCES += \
-    src/3rdparty/fougtools/occtools/qt_utils.cpp \
     src/3rdparty/fougtools/qttools/gui/item_view_buttons.cpp \
     src/3rdparty/fougtools/qttools/gui/item_view_utils.cpp \
     src/3rdparty/fougtools/qttools/gui/proxy_styled_item_delegate.cpp \

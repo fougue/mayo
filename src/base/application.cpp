@@ -10,9 +10,8 @@
 #include "property_builtins.h"
 #include "qmeta_quantity_color.h"
 #include "settings.h"
+#include "string_utils.h"
 #include "tkernel_utils.h"
-
-#include <fougtools/occtools/qt_utils.h>
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
@@ -98,7 +97,8 @@ DocumentPtr Application::newDocument(Document::Format docFormat)
 DocumentPtr Application::openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus)
 {
     Handle_TDocStd_Document stdDoc;
-    const PCDM_ReaderStatus readStatus = this->Open(occ::QtUtils::toOccExtendedString(filePath), stdDoc);
+    const PCDM_ReaderStatus readStatus =
+            this->Open(StringUtils::toUtf16<TCollection_ExtendedString>(filePath), stdDoc);
     if (ptrReadStatus)
         *ptrReadStatus = readStatus;
 
