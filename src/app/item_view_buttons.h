@@ -1,64 +1,48 @@
 /****************************************************************************
-**  FougTools
-**  Copyright Fougue (30 Mar. 2015)
-**  contact@fougue.pro
-**
-** This software is a computer program whose purpose is to provide utility
-** tools for the C++ language and the Qt toolkit.
-**
-** This software is governed by the CeCILL-C license under French law and
-** abiding by the rules of distribution of free software.  You can  use,
-** modify and/ or redistribute the software under the terms of the CeCILL-C
-** license as circulated by CEA, CNRS and INRIA at the following URL
-** "http://www.cecill.info".
+** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
 #pragma once
-
-class QAbstractItemView;
-class QIcon;
-class QPainter;
-class QStyledItemDelegate;
-class QStyleOptionViewItem;
-
-#include "gui.h"
 
 #include <QtCore/QHash>
 #include <QtCore/QModelIndex>
 #include <QtCore/QObject>
 #include <QtCore/QFlags>
 #include <QtGui/QIcon>
+class QAbstractItemView;
+class QIcon;
+class QPainter;
+class QStyledItemDelegate;
+class QStyleOptionViewItem;
 
-namespace qtgui {
+namespace Mayo {
 
-class QTTOOLS_GUI_EXPORT ItemViewButtons : public QObject
-{
+class ItemViewButtons : public QObject {
     Q_OBJECT
-
 public:
     // Types
-    enum ItemSide
-    {
+    enum ItemSide {
         ItemLeftSide,
         ItemRightSide
     };
 
-    enum DisplayMode
-    {
+    enum DisplayMode {
         DisplayOnDetection = 0x01,
         DisplayPermanent = 0x02,
         DisplayWhenItemSelected = 0x04
     };
-    typedef QFlags<DisplayMode> DisplayModes;
+    using DisplayModes = QFlags<DisplayMode>;
 
     // Ctor & dtor
-    ItemViewButtons(QAbstractItemView* view, QObject* parent = NULL);
+    ItemViewButtons(QAbstractItemView* view, QObject* parent = nullptr);
     ~ItemViewButtons();
 
     // View control
     QAbstractItemView* itemView() const;
 
-    bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
+    bool eventFilter(QObject *object, QEvent *event) override;
     void paint(
             QPainter* painter,
             const QStyleOptionViewItem& option,
@@ -96,8 +80,8 @@ public:
     // Delegates
     void installDefaultItemDelegate();
     QStyledItemDelegate* createProxyItemDelegate(
-            QStyledItemDelegate *sourceDelegate,
-            QObject* parent = NULL) const;
+            QStyledItemDelegate* sourceDelegate,
+            QObject* parent = nullptr) const;
 
 signals:
     void buttonClicked(int btnId, const QModelIndex& index);
@@ -114,6 +98,6 @@ private:
     Private* const d;
 };
 
-} // namespace qtgui
+} // namespace Mayo
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(qtgui::ItemViewButtons::DisplayModes)
+Q_DECLARE_OPERATORS_FOR_FLAGS(Mayo::ItemViewButtons::DisplayModes)

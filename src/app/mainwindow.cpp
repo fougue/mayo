@@ -27,6 +27,7 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document_tree_node_properties_providers.h"
+#include "item_view_buttons.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
@@ -39,8 +40,6 @@
 #ifdef Q_OS_WIN
 #  include "windows/win_taskbar_global_progress.h"
 #endif
-
-#include <fougtools/qttools/gui/item_view_buttons.h>
 
 #include <QtCore/QMimeData>
 #include <QtCore/QTime>
@@ -349,18 +348,18 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     // Creation of annex objects
     {
         // Opened documents GUI
-        auto listViewBtns = new qtgui::ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+        auto listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
         listViewBtns->addButton(
                     1, mayoTheme()->icon(Theme::Icon::Cross), m_ui->actionCloseDoc->toolTip());
         listViewBtns->setButtonDetection(1, -1, QVariant());
         listViewBtns->setButtonDisplayColumn(1, 0);
-        listViewBtns->setButtonDisplayModes(1, qtgui::ItemViewButtons::DisplayOnDetection);
-        listViewBtns->setButtonItemSide(1, qtgui::ItemViewButtons::ItemRightSide);
+        listViewBtns->setButtonDisplayModes(1, ItemViewButtons::DisplayOnDetection);
+        listViewBtns->setButtonItemSide(1, ItemViewButtons::ItemRightSide);
         const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
         listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
         listViewBtns->installDefaultItemDelegate();
         QObject::connect(
-                    listViewBtns, &qtgui::ItemViewButtons::buttonClicked,
+                    listViewBtns, &ItemViewButtons::buttonClicked,
                     [=](int btnId, const QModelIndex& index) {
             if (btnId == 1)
                 this->closeDocument(index.row());

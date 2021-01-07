@@ -12,10 +12,9 @@
 #include "../base/settings.h"
 #include "../base/string_utils.h"
 #include "../gui/gui_application.h"
+#include "item_view_buttons.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
-
-#include <fougtools/qttools/gui/item_view_buttons.h>
 
 #include <QtCore/QMetaType>
 #include <QtWidgets/QTreeWidget>
@@ -148,7 +147,7 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     }
 
     // Add action "Remove item from document"
-    auto modelTreeBtns = new qtgui::ItemViewButtons(m_ui->treeWidget_Model, this);
+    auto modelTreeBtns = new ItemViewButtons(m_ui->treeWidget_Model, this);
     constexpr int idBtnRemove = 1;
     modelTreeBtns->addButton(
                 idBtnRemove,
@@ -159,13 +158,13 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
                 Internal::TreeItemTypeRole,
                 QVariant(Internal::TreeItemType_DocumentEntity));
     modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
-    modelTreeBtns->setButtonDisplayModes(idBtnRemove, qtgui::ItemViewButtons::DisplayOnDetection);
-    modelTreeBtns->setButtonItemSide(idBtnRemove, qtgui::ItemViewButtons::ItemRightSide);
+    modelTreeBtns->setButtonDisplayModes(idBtnRemove, ItemViewButtons::DisplayOnDetection);
+    modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
     const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
     modelTreeBtns->setButtonIconSize(idBtnRemove, QSize(iconSize * 0.66, iconSize * 0.66));
     modelTreeBtns->installDefaultItemDelegate();
     QObject::connect(
-                modelTreeBtns, &qtgui::ItemViewButtons::buttonClicked,
+                modelTreeBtns, &ItemViewButtons::buttonClicked,
                 this, [=](int btnId, const QModelIndex& index) {
         if (btnId == idBtnRemove && index.isValid()) {
             const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
