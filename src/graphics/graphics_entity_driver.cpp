@@ -24,7 +24,6 @@
 #include <V3d_Viewer.hxx>
 #include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
-#include <XSDRAWSTLVRML_DataSource.hxx>
 #include <stdexcept>
 
 namespace Mayo {

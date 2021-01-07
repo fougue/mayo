@@ -10,7 +10,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLocale>
 #include <QtCore/QString>
-#include <IFSelect_ReturnStatus.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TCollection_HAsciiString.hxx>
