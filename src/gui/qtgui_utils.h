@@ -73,7 +73,7 @@ OTHER_COLOR_TYPE QtGuiUtils::toColor(const QColor& c) {
         return Quantity_ColorRGBA(c.redF(), c.greenF(), c.blueF(), c.alphaF());
     }
     else if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_NameOfColor>::value) {
-        return QtGuiUtils:toColor<Quantity_Color>(c).Name();
+        return QtGuiUtils::toColor<Quantity_Color>(c).Name();
     }
 }
 
