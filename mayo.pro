@@ -134,13 +134,13 @@ minOpenCascadeVersion(7, 4, 0) {
     LIBS += -lTKRWMesh
 } else {
     SOURCES -= \
-        src/base/io_occ_base_mesh.cpp \
-        src/base/io_occ_gltf_reader.cpp \
-        src/base/io_occ_obj.cpp
+        src/io_occ/io_occ_base_mesh.cpp \
+        src/io_occ/io_occ_gltf_reader.cpp \
+        src/io_occ/io_occ_obj.cpp
 }
 
 !minOpenCascadeVersion(7, 5, 0) {
-    SOURCES -= src/base/io_occ_gltf_writer.cpp
+    SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
 }
 
 # -- VRML support
