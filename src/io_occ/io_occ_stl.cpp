@@ -6,14 +6,14 @@
 
 #include "io_occ_stl.h"
 
-#include "application_item.h"
-#include "document.h"
-#include "caf_utils.h"
-#include "occ_progress_indicator.h"
-#include "property_enumeration.h"
-#include "scope_import.h"
-#include "task_progress.h"
-#include "tkernel_utils.h"
+#include "../base/application_item.h"
+#include "../base/document.h"
+#include "../base/caf_utils.h"
+#include "../base/occ_progress_indicator.h"
+#include "../base/property_enumeration.h"
+#include "../base/scope_import.h"
+#include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 
 #include <QtCore/QFileInfo>
 #include <BRep_Builder.hxx>

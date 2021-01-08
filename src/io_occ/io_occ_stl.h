@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "io_reader.h"
-#include "io_writer.h"
+#include "../base/io_reader.h"
+#include "../base/io_writer.h"
 #include <Poly_Triangulation.hxx>
 #include <TopoDS_Shape.hxx>
 #include <QtCore/QString>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "io_writer.h"
+#include "../base/io_writer.h"
 #include <VrmlAPI_RepresentationOfShape.hxx>
 #include <VrmlData_Scene.hxx>
 #include <memory>

@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "io_occ_obj.h"
-#include "property_builtins.h"
+#include "../base/property_builtins.h"
 
 namespace Mayo {
 namespace IO {

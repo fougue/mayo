@@ -5,11 +5,11 @@
 ****************************************************************************/
 
 #include "io_occ_caf.h"
-#include "document.h"
-#include "occ_progress_indicator.h"
-#include "scope_import.h"
-#include "task_progress.h"
-#include "tkernel_utils.h"
+#include "../base/document.h"
+#include "../base/occ_progress_indicator.h"
+#include "../base/scope_import.h"
+#include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 
 #include <Transfer_TransientProcess.hxx>
 #include <IGESCAFControl_Reader.hxx>

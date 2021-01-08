@@ -7,9 +7,9 @@
 #pragma once
 
 #include "io_occ_common.h"
-#include "io_reader.h"
-#include "io_writer.h"
-#include "tkernel_utils.h"
+#include "../base/io_reader.h"
+#include "../base/io_writer.h"
+#include "../base/tkernel_utils.h"
 #include <NCollection_Vector.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>

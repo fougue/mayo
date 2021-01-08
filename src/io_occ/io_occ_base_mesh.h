@@ -7,9 +7,9 @@
 #pragma once
 
 #include "io_occ_common.h"
-#include "io_reader.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
+#include "../base/io_reader.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
 
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;

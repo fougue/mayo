@@ -6,14 +6,14 @@
 
 #include "io_occ_vrml.h"
 
-#include "application_item.h"
-#include "caf_utils.h"
-#include "document.h"
-#include "math_utils.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
-#include "task_progress.h"
-#include "tkernel_utils.h"
+#include "../base/application_item.h"
+#include "../base/caf_utils.h"
+#include "../base/document.h"
+#include "../base/math_utils.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
+#include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 
 #include <OSD_OpenFile.hxx>
 #include <VrmlData_ShapeConvert.hxx>

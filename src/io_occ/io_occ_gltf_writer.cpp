@@ -6,14 +6,14 @@
 
 #include "io_occ_gltf_writer.h"
 
-#include "application_item.h"
+#include "../base/application_item.h"
+#include "../base/occ_progress_indicator.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
+#include "../base/enumeration_fromenum.h"
+#include "../base/string_utils.h"
+#include "../base/text_id.h"
 #include "io_occ_common.h"
-#include "occ_progress_indicator.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
-#include "enumeration_fromenum.h"
-#include "string_utils.h"
-#include "text_id.h"
 
 #include <RWGltf_CafWriter.hxx>
 

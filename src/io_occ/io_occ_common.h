@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "property_enumeration.h"
+#include "../base/property_enumeration.h"
 
 namespace Mayo {
 namespace IO {

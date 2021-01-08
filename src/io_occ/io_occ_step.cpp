@@ -6,12 +6,12 @@
 
 #include "io_occ_step.h"
 #include "io_occ_caf.h"
-#include "occ_static_variables_rollback.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
-#include "task_progress.h"
-#include "tkernel_utils.h"
-#include "enumeration_fromenum.h"
+#include "../base/occ_static_variables_rollback.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
+#include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
+#include "../base/enumeration_fromenum.h"
 
 #include <Interface_Static.hxx>
 #include <STEPCAFControl_Controller.hxx>

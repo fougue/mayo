@@ -14,6 +14,7 @@ INCLUDEPATH += \
 HEADERS += \
     test.h \
     $$files(../src/base/*.h) \
+    $$files(../src/io_occ/*.h) \
     ../src/gui/qtgui_utils.h \
 
 SOURCES += \
@@ -21,6 +22,7 @@ SOURCES += \
     main.cpp \
     \
     $$files(../src/base/*.cpp) \
+    $$files(../src/io_occ/*.cpp) \
     ../src/gui/qtgui_utils.cpp \
 
 CONFIG += file_copies

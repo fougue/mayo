@@ -6,12 +6,12 @@
 
 #include "io_occ_base_mesh.h"
 
-#include "document.h"
-#include "scope_import.h"
-#include "occ_progress_indicator.h"
-#include "task_progress.h"
-#include "string_utils.h"
-#include "tkernel_utils.h"
+#include "../base/document.h"
+#include "../base/scope_import.h"
+#include "../base/occ_progress_indicator.h"
+#include "../base/task_progress.h"
+#include "../base/string_utils.h"
+#include "../base/tkernel_utils.h"
 
 #include <RWMesh_CafReader.hxx>
 

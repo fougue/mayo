@@ -10,9 +10,9 @@
 // -- Provides helper tools for IGESCAF/STEPCAF reader/writer
 // --
 
-#include "application_item.h"
-#include "document_ptr.h"
-#include "span.h"
+#include "../base/application_item.h"
+#include "../base/document_ptr.h"
+#include "../base/span.h"
 
 #include <Transfer_FinderProcess.hxx>
 #include <XSControl_WorkSession.hxx>

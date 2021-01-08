@@ -12,7 +12,6 @@
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
 #include "../src/base/geom_utils.h"
-#include "../src/base/io_occ.h"
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
@@ -23,6 +22,7 @@
 #include "../src/base/task_manager.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/io_occ/io_occ.h"
 #include "../src/gui/qtgui_utils.h"
 
 #include <BRep_Tool.hxx>

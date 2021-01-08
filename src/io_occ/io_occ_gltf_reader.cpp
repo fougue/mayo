@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "io_occ_gltf_reader.h"
-#include "property_builtins.h"
+#include "../base/property_builtins.h"
 
 namespace Mayo {
 namespace IO {

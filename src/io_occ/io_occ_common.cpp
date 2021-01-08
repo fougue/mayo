@@ -7,7 +7,7 @@
 #pragma once
 
 #include "io_occ_common.h"
-#include "text_id.h"
+#include "../base/text_id.h"
 
 #include <RWMesh_CoordinateSystem.hxx>
 

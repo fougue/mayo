@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "document_ptr.h"
-#include "io_writer.h"
+#include "../base/document_ptr.h"
+#include "../base/io_writer.h"
 
 #include <RWGltf_WriterTrsfFormat.hxx>
 #include <RWMesh_CoordinateSystemConverter.hxx>

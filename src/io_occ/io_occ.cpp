@@ -6,13 +6,13 @@
 
 #include "io_occ.h"
 
-#include "io_format.h"
+#include "../base/io_format.h"
+#include "../base/tkernel_utils.h"
 #include "io_occ_brep.h"
 #include "io_occ_iges.h"
 #include "io_occ_step.h"
 #include "io_occ_stl.h"
 #include "io_occ_vrml.h"
-#include "tkernel_utils.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"

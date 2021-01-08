@@ -6,11 +6,11 @@
 
 #include "io_occ_iges.h"
 #include "io_occ_caf.h"
-#include "occ_static_variables_rollback.h"
-#include "property_builtins.h"
-#include "property_enumeration.h"
-#include "task_progress.h"
-#include "enumeration_fromenum.h"
+#include "../base/occ_static_variables_rollback.h"
+#include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
+#include "../base/task_progress.h"
+#include "../base/enumeration_fromenum.h"
 
 #include <IGESControl_Controller.hxx>
 #include <Interface_Static.hxx>

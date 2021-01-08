@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "io_reader.h"
-#include "io_writer.h"
-#include "property.h"
+#include "../base/io_reader.h"
+#include "../base/io_writer.h"
+#include "../base/property.h"
 
 namespace Mayo {
 namespace IO {

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "io_occ_common.h"
-#include "io_reader.h"
-#include "io_writer.h"
+#include "../base/io_reader.h"
+#include "../base/io_writer.h"
 #include <IGESCAFControl_Reader.hxx>
 #include <IGESCAFControl_Writer.hxx>
 
