@@ -8,18 +8,6 @@
 
 namespace Mayo {
 
-/*!
- * \class ProxyStyledItemDelegate
- * \brief Convenience class that simplifies dynamically overriding QStyledItemDelegate
- *
- * QStyledItemDelegate protected functions cannot be overriden through proxy
- * technique, this is a limitation that applies to :
- *   \li QStyledItemDelegate::initStyleOption()
- *   \li QStyledItemDelegate::eventFilter()
- *   \li QStyledItemDelegate::editorEvent()
- *
- */
-
 ProxyStyledItemDelegate::ProxyStyledItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent),
       m_sourceDelegate(nullptr)
