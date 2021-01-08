@@ -9,6 +9,7 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
+#include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/string_utils.h"
 #include "../base/xcaf.h"
@@ -182,9 +183,11 @@ XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
 class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Mesh_DocumentTreeNodeProperties)
 public:
-        Properties(const DocumentTreeNode& treeNode)
+    Properties(const DocumentTreeNode& treeNode)
       : m_propertyNodeCount(this, textId("NodeCount")),
-        m_propertyTriangleCount(this, textId("TriangleCount"))
+        m_propertyTriangleCount(this, textId("TriangleCount")),
+        m_propertyArea(this, textId("Area")),
+        m_propertyVolume(this, textId("Volume"))
     {
         auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(treeNode.label());
         Handle_Poly_Triangulation polyTri;
@@ -193,12 +196,16 @@ public:
 
         m_propertyNodeCount.setValue(!polyTri.IsNull() ? polyTri->NbNodes() : 0);
         m_propertyTriangleCount.setValue(!polyTri.IsNull() ? polyTri->NbTriangles() : 0);
-        m_propertyNodeCount.setUserReadOnly(true);
-        m_propertyTriangleCount.setUserReadOnly(true);
+        m_propertyArea.setQuantity(MeshUtils::triangulationArea(polyTri) * Quantity_SquaredMillimeter);
+        m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(polyTri) * Quantity_CubicMillimeter);
+        for (Property* property : this->properties())
+            property->setUserReadOnly(true);
     }
 
-    PropertyInt m_propertyNodeCount; // Read-only
-    PropertyInt m_propertyTriangleCount; // Read-only
+    PropertyInt m_propertyNodeCount;
+    PropertyInt m_propertyTriangleCount;
+    PropertyArea m_propertyArea;
+    PropertyVolume m_propertyVolume;
 };
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const

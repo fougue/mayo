@@ -31,6 +31,9 @@ double MeshUtils::triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ&
 
 double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangulation)
 {
+    if (!triangulation)
+        return 0;
+
     double volume = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     // TODO Parallelize computation
@@ -48,6 +51,9 @@ double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangula
 
 double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulation)
 {
+    if (!triangulation)
+        return 0;
+
     double area = 0;
     const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     // TODO Parallelize computation
