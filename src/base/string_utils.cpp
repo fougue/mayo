@@ -94,15 +94,15 @@ QString StringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
 {
     constexpr int oneMB = 1024 * 1024;
     if (sizeBytes < 1024 )
-        return tr("%1%2").arg(locale.toString(sizeBytes), tr("B"));
+        return tr("%1%2").arg(locale.toString((quint64) sizeBytes), tr("B"));
     else if (sizeBytes < oneMB)
-        return tr("%1%2").arg(locale.toString(sizeBytes / 1024), tr("KB"));
+        return tr("%1%2").arg(locale.toString(((quint64) sizeBytes) / 1024), tr("KB"));
     else if (sizeBytes < (10 * oneMB))
         return tr("%1%2").arg(locale.toString(sizeBytes / double(oneMB), 'f', 2), tr("MB"));
     else if (sizeBytes < (100 * oneMB))
         return tr("%1%2").arg(locale.toString(sizeBytes / double(oneMB), 'f', 1), tr("MB"));
     else
-        return tr("%1%2").arg(locale.toString(sizeBytes / oneMB), tr("MB"));
+        return tr("%1%2").arg(locale.toString((quint64) sizeBytes / oneMB), tr("MB"));
 }
 
 void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)

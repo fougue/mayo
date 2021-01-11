@@ -100,7 +100,7 @@ QDataStream& operator<<(QDataStream& stream, const RecentFile& recentFile)
 {
     stream << recentFile.filepath;
     stream << recentFile.thumbnail;
-    stream << recentFile.thumbnailTimestamp;
+    stream << (qint64) recentFile.thumbnailTimestamp;
     return stream;
 }
 
@@ -108,7 +108,7 @@ QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile)
 {
     stream >> recentFile.filepath;
     stream >> recentFile.thumbnail;
-    stream >> recentFile.thumbnailTimestamp;
+    reinterpret_cast<qint64&>(recentFile.thumbnailTimestamp);
     return stream;
 }
 
