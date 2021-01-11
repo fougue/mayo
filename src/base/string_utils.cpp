@@ -14,23 +14,24 @@
 
 namespace Mayo {
 
-static QChar lastChar(const QString& str)
-{
-    return str.at(str.size() - 1);
-}
-
 static QString valueText(double value, const StringUtils::TextOptions& opt)
 {
+    auto fnLastChar = [](const QString& str) {
+        return !str.isEmpty() ? str.at(str.size() - 1) : QChar();
+    };
+
     const double c = std::abs(value) < Precision::Confusion() ? 0. : value;
     QString str = opt.locale.toString(c, 'f', opt.unitDecimals);
     const QChar chDecPnt = opt.locale.decimalPoint();
     const int posPnt = str.indexOf(chDecPnt);
     if (posPnt != -1) { // Remove useless trailing zeroes
-        while (lastChar(str) == opt.locale.zeroDigit())
+        while (fnLastChar(str) == opt.locale.zeroDigit())
             str.chop(1);
-        if (lastChar(str) == chDecPnt)
+
+        if (fnLastChar(str) == chDecPnt)
             str.chop(1);
     }
+
     return str;
 }
 
