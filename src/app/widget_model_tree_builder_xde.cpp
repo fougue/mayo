@@ -170,7 +170,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
     std::unordered_set<TreeNodeId> setReferenceNodeId;
     const DocumentPtr doc = node.document();
     const Tree<TDF_Label>& modelTree = doc->modelTree();
-    deepForeachTreeNode(node.id(), modelTree, [&](TreeNodeId itNodeId) {
+    traverseTree(node.id(), modelTree, [&](TreeNodeId itNodeId) {
         const TreeNodeId nodeParentId = modelTree.nodeParent(itNodeId);
         auto itParentFound = mapNodeIdToTreeItem.find(nodeParentId);
         QTreeWidgetItem* guiParentNode =

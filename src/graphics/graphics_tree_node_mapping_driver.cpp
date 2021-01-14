@@ -25,7 +25,7 @@ GraphicsShapeTreeNodeMappingDriver::createMapping(const DocumentTreeNode& entity
     int solidCount = 0;
     int faceCount = 0;
     const DocumentPtr doc = entityTreeNode.document();
-    deepForeachTreeNode(entityTreeNode.id(), doc->modelTree(), [&](TreeNodeId treeNodeId) {
+    traverseTree(entityTreeNode.id(), doc->modelTree(), [&](TreeNodeId treeNodeId) {
         const TopoDS_Shape shape = XCaf::shape(doc->modelTree().nodeData(treeNodeId));
         if (shape.ShapeType() == TopAbs_SOLID)
             ++solidCount;

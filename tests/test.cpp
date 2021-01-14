@@ -645,6 +645,18 @@ void Test::LibTree_test()
     QCOMPARE(tree.nodeSiblingNext(n0_1_1), n0_1_2);
     QCOMPARE(tree.nodeSiblingPrevious(n0_1_2), n0_1_1);
     QCOMPARE(tree.nodeSiblingNext(n0_1_2), nullptrId);
+
+    std::string strPreOrder;
+    traverseTree_preOrder(tree, [&](TreeNodeId id) {
+        strPreOrder += " " + tree.nodeData(id);
+    });
+    QCOMPARE(strPreOrder, " 0 0-1 0-1-1 0-1-2 0-2");
+
+    std::string strPostOrder;
+    traverseTree_postOrder(tree, [&](TreeNodeId id) {
+        strPostOrder += " " + tree.nodeData(id);
+    });
+    QCOMPARE(strPostOrder, " 0-1-1 0-1-2 0-1 0-2 0");
 }
 
 void Test::QtGuiUtils_test()
