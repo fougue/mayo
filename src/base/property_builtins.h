@@ -28,6 +28,7 @@ public:
 
     const T& value() const;
     Result<void> setValue(const T& val);
+    operator const T&() const { return this->value(); }
 
     QVariant valueAsVariant() const override;
     Result<void> setValueFromVariant(const QVariant& variant) override;
