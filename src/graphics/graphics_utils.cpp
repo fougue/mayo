@@ -109,7 +109,7 @@ AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const GraphicsObject
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     return object->InteractiveContext();
 #else
-    return object->GetInteractiveContext().get();
+    return object->GetContext().get();
 #endif
 }
 

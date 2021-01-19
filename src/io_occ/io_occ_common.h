@@ -7,8 +7,11 @@
 #pragma once
 
 #include "../base/property_enumeration.h"
+#include "../base/tkernel_utils.h"
 
-#include <RWMesh_CoordinateSystem.hxx>
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+#  include <RWMesh_CoordinateSystem.hxx>
+#endif
 
 namespace Mayo {
 namespace IO {
@@ -38,9 +41,11 @@ template<> struct EnumNames<IO::OccCommon::LengthUnit> {
     inline static const std::string_view junkPrefix = "";
 };
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 template<> struct EnumNames<RWMesh_CoordinateSystem> {
     inline static const QByteArray trContext = IO::OccCommon::textIdContext();
     inline static const std::string_view junkPrefix = "RWMesh_CoordinateSystem_";
 };
+#endif
 
 } // namespace Mayo

@@ -139,7 +139,7 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
 Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsObjectPtr& object) const
 {
     this->throwIf_differentDriver(object);
-    if (object->InteractiveContext()->DrawHiddenLine())
+    if (GraphicsUtils::AisObject_contextPtr(object)->DrawHiddenLine())
         return DisplayMode_HiddenLineRemoval;
 
     const int displayMode = object->DisplayMode();
@@ -234,7 +234,7 @@ void GraphicsMeshObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enumer
 {
     this->throwIf_differentDriver(object);
     this->throwIf_invalidDisplayMode(mode);
-    object->InteractiveContext()->SetDisplayMode(object, mode, false);
+    GraphicsUtils::AisObject_contextPtr(object)->SetDisplayMode(object, mode, false);
 }
 
 Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsObjectPtr& object) const

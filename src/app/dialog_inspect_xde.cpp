@@ -19,7 +19,6 @@
 #include "widgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
-#include <Image_Texture.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
 #include <TDF_LabelSequence.hxx>
@@ -43,6 +42,11 @@
 #include <XCAFDoc_Location.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_Volume.hxx>
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+#  include <Image_Texture.hxx>
+#endif
+
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include <XCAFDoc_VisMaterial.hxx>
 #  include <XCAFDoc_VisMaterialCommon.hxx>
@@ -253,6 +257,7 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS
     return itemShape;
 }
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 static QTreeWidgetItem* createPropertyTreeItem(
         const QString& text, const opencascade::handle<Image_Texture>& imgTexture)
 {
@@ -263,6 +268,7 @@ static QTreeWidgetItem* createPropertyTreeItem(
     item->setText(1, StringUtils::fromUtf8(imgTexture->FilePath()));
     return item;
 }
+#endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 static void loadLabelVisMaterialProperties(
