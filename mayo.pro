@@ -75,6 +75,8 @@ win* {
 
 FORMS += $$files(src/app/*.ui)
 
+#SOURCES += i18n/messages.cpp
+
 TRANSLATIONS += \
     i18n/mayo_en.ts \
     i18n/mayo_fr.ts

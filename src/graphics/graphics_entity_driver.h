@@ -33,7 +33,7 @@ public:
     virtual std::unique_ptr<PropertyGroupSignals> properties(const GraphicsEntity& entity) const = 0;
 
 protected:
-    void setDisplayModes(const Enumeration& enumeration) { m_enumDisplayModes = enumeration; }
+    void setDisplayModes(Enumeration enumeration) { m_enumDisplayModes = std::move(enumeration); }
     void throwIf_invalidDisplayMode(Enumeration::Value mode) const;
     void throwIf_differentDriver(const GraphicsEntity& entity) const;
 
@@ -45,7 +45,6 @@ private:
 };
 
 class GraphicsShapeEntityDriver : public GraphicsEntityDriver {
-
 public:
     GraphicsShapeEntityDriver();
 
@@ -55,7 +54,6 @@ public:
     Enumeration::Value currentDisplayMode(const GraphicsEntity& entity) const override;
     std::unique_ptr<PropertyGroupSignals> properties(const GraphicsEntity& entity) const override;
 
-protected:
     enum DisplayMode {
         DisplayMode_Wireframe,
         DisplayMode_HiddenLineRemoval,

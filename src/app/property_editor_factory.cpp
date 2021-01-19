@@ -129,20 +129,18 @@ struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QCombo
     PropertyEnumerationEditor(PropertyEnumeration* property, QWidget* parentWidget)
         : QComboBox(parentWidget), m_property(property)
     {
-        const Enumeration* enumDef = property->enumeration();
-        if (enumDef) {
-            for (const Enumeration::Item& enumItem : enumDef->items()) {
-                this->addItem(enumItem.name.tr(), enumItem.value);
-                if (!enumItem.description.isEmpty()) {
-                    const int itemIndex = this->count() - 1;
-                    this->setItemData(itemIndex, enumItem.description, Qt::ToolTipRole);
-                }
+        for (const Enumeration::Item& enumItem : property->enumeration().items()) {
+            this->addItem(enumItem.name.tr(), enumItem.value);
+            const QString itemDescr = property->findDescription(enumItem.value);
+            if (!itemDescr.isEmpty()) {
+                const int itemIndex = this->count() - 1;
+                this->setItemData(itemIndex, itemDescr, Qt::ToolTipRole);
             }
-
-            QObject::connect(this, qOverload<int>(&QComboBox::activated), [=](int index) {
-                property->setValue(this->itemData(index).toInt());
-            });
         }
+
+        QObject::connect(this, qOverload<int>(&QComboBox::activated), [=](int index) {
+            property->setValue(this->itemData(index).toInt());
+        });
     }
 
     void syncWithProperty() override {
@@ -214,8 +212,7 @@ struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
     void syncWithProperty() override {
         auto fnSetEditorCoord = [](QDoubleSpinBox* editor, double coord){
             auto appModule = AppModule::get(Application::instance());
-            auto unitSchema = appModule->unitSystemSchema.valueAs<UnitSystem::Schema>();
-            auto trRes = UnitSystem::translate(unitSchema, coord * Quantity_Millimeter);
+            auto trRes = UnitSystem::translate(appModule->unitSystemSchema, coord * Quantity_Millimeter);
             QSignalBlocker sigBlock(editor); Q_UNUSED(sigBlock);
             editor->setValue(trRes.value);
         };
@@ -232,8 +229,7 @@ struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
     {
         auto editor = new QDoubleSpinBox(parentWidget);
         auto appModule = AppModule::get(Application::instance());
-        auto unitSchema = appModule->unitSystemSchema.valueAs<UnitSystem::Schema>();
-        auto trRes = UnitSystem::translate(unitSchema, 1., Unit::Length);
+        auto trRes = UnitSystem::translate(appModule->unitSystemSchema, 1., Unit::Length);
         //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
         editor->setDecimals(appModule->unitSystemDecimals.value());
         editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
@@ -343,7 +339,7 @@ UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePrope
     }
 
     return UnitSystem::translate(
-                AppModule::get(Application::instance())->unitSystemSchema.valueAs<UnitSystem::Schema>(),
+                AppModule::get(Application::instance())->unitSystemSchema,
                 property->quantityValue(),
                 property->quantityUnit());
 }

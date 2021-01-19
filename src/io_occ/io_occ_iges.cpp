@@ -19,12 +19,12 @@ namespace Mayo {
 namespace IO {
 
 class OccIgesReader::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          bsplineContinuity(this, textId("bsplineContinuity"), &enumBSplineContinuity),
-          surfaceCurveMode(this, textId("surfaceCurveMode"), &enumSurfaceCurveMode),
+          bsplineContinuity(this, textId("bsplineContinuity")),
+          surfaceCurveMode(this, textId("surfaceCurveMode")),
           readFaultyEntities(this, textId("readFaultyEntities")),
           readOnlyVisibleEntities(this, textId("readOnlyVisibleEntities"))
     {
@@ -36,6 +36,7 @@ public:
                              "in the construction of IGES BRep entities. In this case, the parameter "
                              "does not influence the continuity of the resulting Open CASCADE curves "
                              "(it is ignored)."));
+
         this->surfaceCurveMode.setDescription(
                     textIdTr("Preference for the computation of curves in case of 2D/3D inconsistency "
                              "in an entity which has both 2D and 3D representations.\n\n"
@@ -53,7 +54,29 @@ public:
                              "translation\n"
                              "- 3D or 2D curve is a Circular Arc (entity type 100) starting and ending "
                              "in the same point (note that this case is incorrect according to the IGES standard)"));
+
         this->readFaultyEntities.setDescription(textIdTr("Read failed entities"));
+
+        this->bsplineContinuity.setDescriptions({
+                    { BSplineContinuity::NoChange, textIdTr("Curves are taken as they are in the IGES "
+                      "file. C0 entities of Open CASCADE may be produced")
+                    },
+                    { BSplineContinuity::BreakIntoC1Pieces, textIdTr("If an IGES BSpline, Spline or CopiousData "
+                      "curve is C0 continuous, it is broken down into pieces of C1 continuous Geom_BSplineCurve")
+                    },
+                    { BSplineContinuity::BreakIntoC2Pieces, textIdTr("IGES Spline curves are broken down "
+                      "into pieces of C2 continuity. If C2 cannot be ensured, the Spline curves will be "
+                      "broken down into pieces of C1 continuity")
+                    }
+        });
+
+        this->surfaceCurveMode.setDescriptions({
+                    { SurfaceCurveMode::Default, textIdTr("Use the preference flag value in the entity's `Parameter Data` section") },
+                    { SurfaceCurveMode::Prefer2D, textIdTr("The 2D is used to rebuild the 3D in case of their inconsistency") },
+                    { SurfaceCurveMode::Force2D, textIdTr("The 2D is always used to rebuild the 3D (even if 3D is present in the file)")},
+                    { SurfaceCurveMode::Prefer3D, textIdTr("The 3D is used to rebuild the 2D in case of their inconsistency") },
+                    { SurfaceCurveMode::Force3D, textIdTr("The 3D is always used to rebuild the 2D (even if 2D is present in the file)") },
+        });
     }
 
     void restoreDefaults() override {
@@ -64,34 +87,8 @@ public:
         this->readOnlyVisibleEntities.setValue(params.readOnlyVisibleEntities);
     }
 
-    inline static const Enumeration enumBSplineContinuity = {
-        { int(BSplineContinuity::NoChange), textId("NoChange"),
-          textIdTr("Curves are taken as they are in the IGES file. "
-                   "C0 entities of Open CASCADE may be produced") },
-        { int(BSplineContinuity::BreakIntoC1Pieces), textId("BreakIntoC1Pieces"),
-          textIdTr("If an IGES BSpline, Spline or CopiousData curve is C0 continuous, it is broken "
-                   "down into pieces of C1 continuous Geom_BSplineCurve") },
-        { int(BSplineContinuity::BreakIntoC2Pieces), textId("BreakIntoC2Pieces"),
-          textIdTr("IGES Spline curves are broken down into pieces of C2 continuity. "
-                   "If C2 cannot be ensured, the Spline curves will be broken down into pieces of "
-                   "C1 continuity") }
-    };
-
-    inline static const Enumeration enumSurfaceCurveMode = {
-        { int(SurfaceCurveMode::Default), textId("Default"),
-          textIdTr("Use the preference flag value in the entity's `Parameter Data` section") },
-        { int(SurfaceCurveMode::Prefer2D), textId("Prefer2D"),
-          textIdTr("The 2D is used to rebuild the 3D in case of their inconsistency") },
-        { int(SurfaceCurveMode::Force2D), textId("Force2D"),
-          textIdTr("The 2D is always used to rebuild the 3D (even if 3D is present in the file)") },
-        { int(SurfaceCurveMode::Prefer3D), textId("Prefer3D"),
-          textIdTr("The 3D is used to rebuild the 2D in case of their inconsistency") },
-        { int(SurfaceCurveMode::Force3D), textId("Force3D"),
-          textIdTr("The 3D is always used to rebuild the 2D (even if 2D is present in the file)") },
-    };
-
-    PropertyEnumeration bsplineContinuity;
-    PropertyEnumeration surfaceCurveMode;
+    PropertyEnum<BSplineContinuity> bsplineContinuity;
+    PropertyEnum<SurfaceCurveMode> surfaceCurveMode;
     PropertyBool readFaultyEntities;
     PropertyBool readOnlyVisibleEntities;
 };
@@ -129,10 +126,10 @@ void OccIgesReader::applyProperties(const PropertyGroup* group)
 {
     auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        m_params.bsplineContinuity = ptr->bsplineContinuity.valueAs<BSplineContinuity>();
-        m_params.surfaceCurveMode = ptr->surfaceCurveMode.valueAs<SurfaceCurveMode>();
-        m_params.readFaultyEntities = ptr->readFaultyEntities.value();
-        m_params.readOnlyVisibleEntities = ptr->readOnlyVisibleEntities.value();
+        m_params.bsplineContinuity = ptr->bsplineContinuity;
+        m_params.surfaceCurveMode = ptr->surfaceCurveMode;
+        m_params.readFaultyEntities = ptr->readFaultyEntities;
+        m_params.readOnlyVisibleEntities = ptr->readOnlyVisibleEntities;
     }
 }
 
@@ -145,17 +142,25 @@ void OccIgesReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 }
 
 class OccIgesWriter::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          brepMode(this, textId("brepMode"), &enumBRepMode),
-          planeMode(this, textId("planeMode"), &enumPlaneMode),
-          lengthUnit(this, textId("lengthUnit"), &OccCommon::enumerationLengthUnit())
+          brepMode(this, textId("brepMode")),
+          planeMode(this, textId("planeMode")),
+          lengthUnit(this, textId("lengthUnit"))
     {
         this->planeMode.setDescription(
                     textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
                              "Writing p-curves on planes is disabled"));
+        this->brepMode.setDescriptions({
+                    { BRepMode::Faces, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 "
+                      "(Trimmed Surface) entities, no BRep entities will be written to the IGES file")
+                    },
+                    { BRepMode::BRep, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 "
+                      "(Face) entities, the IGES file will contain BRep entities")
+                    }
+        });
     }
 
     void restoreDefaults() override {
@@ -165,20 +170,9 @@ public:
         this->lengthUnit.setValue(params.lengthUnit);
     }
 
-    inline static const Enumeration enumBRepMode = {
-        { int(BRepMode::Faces), textId("Faces"),
-          textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 (Trimmed Surface) "
-          "entities, no BRep entities will be written to the IGES file") },
-        { int(BRepMode::BRep), textId("BRep"),
-          textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 (Face) entities, the "
-          "IGES file will contain BRep entities") }
-    };
-
-    inline static const auto enumPlaneMode = Enumeration::fromEnum<PlaneMode>(textIdContext());
-
-    PropertyEnumeration brepMode;
-    PropertyEnumeration planeMode;
-    PropertyEnumeration lengthUnit;
+    PropertyEnum<BRepMode> brepMode;
+    PropertyEnum<PlaneMode> planeMode;
+    PropertyEnum<OccCommon::LengthUnit> lengthUnit;
 };
 
 OccIgesWriter::OccIgesWriter()
@@ -217,9 +211,9 @@ void OccIgesWriter::applyProperties(const PropertyGroup* group)
 {
     auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        m_params.brepMode = ptr->brepMode.valueAs<BRepMode>();
-        m_params.planeMode = ptr->planeMode.valueAs<PlaneMode>();
-        m_params.lengthUnit = ptr->lengthUnit.valueAs<LengthUnit>();
+        m_params.brepMode = ptr->brepMode;
+        m_params.planeMode = ptr->planeMode;
+        m_params.lengthUnit = ptr->lengthUnit;
     }
 }
 

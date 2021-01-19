@@ -21,14 +21,9 @@
 
 namespace Mayo {
 
-static inline const Enumeration enumUnitSchemas = {
-    { UnitSystem::SI, AppModule::textId("SI"), {} },
-    { UnitSystem::ImperialUK, AppModule::textId("IMPERIAL_UK"), {} }
-};
-
 static inline const Enumeration enumLanguages = {
-    { 0, AppModule::textId("en"), {} },
-    { 1, AppModule::textId("fr"), {} }
+    { 0, AppModule::textId("en") },
+    { 1, AppModule::textId("fr") }
 };
 
 AppModule::AppModule(Application* app)
@@ -41,10 +36,10 @@ AppModule::AppModule(Application* app)
       sectionId_systemUnits(
           app->settings()->addSection(this->groupId_system, textId("units"))),
       unitSystemDecimals(app->settings(), textId("decimalCount")),
-      unitSystemSchema(app->settings(), textId("schema"), &enumUnitSchemas),
+      unitSystemSchema(app->settings(), textId("schema")),
       // Application
       groupId_application(app->settings()->addGroup(textId("application"))),
-      language(this, textId("language"), &enumLanguages),
+      language(this, textId("language"), enumLanguages),
       recentFiles(this, textId("recentFiles")),
       lastOpenDir(this, textId("lastOpenFolder")),
       lastSelectedFormatFilter(this, textId("lastSelectedFormatFilter")),
@@ -62,7 +57,7 @@ AppModule::AppModule(Application* app)
           app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
       meshDefaultsColor(this, textId("color")),
       meshDefaultsEdgeColor(this, textId("edgeColor")),
-      meshDefaultsMaterial(this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial()),
+      meshDefaultsMaterial(this, textId("material"), OcctEnums::Graphic3d_NameOfMaterial()),
       meshDefaultsShowEdges(this, textId("showEgesOn")),
       meshDefaultsShowNodes(this, textId("showNodesOn"))
 {
@@ -175,8 +170,8 @@ StringUtils::TextOptions AppModule::defaultTextOptions() const
 {
     StringUtils::TextOptions opts;
     opts.locale = m_app->settings()->locale();
-    opts.unitDecimals = this->unitSystemDecimals.value();
-    opts.unitSchema = this->unitSystemSchema.valueAs<UnitSystem::Schema>();
+    opts.unitDecimals = this->unitSystemDecimals;
+    opts.unitSchema = this->unitSystemSchema;
     return opts;
 }
 
@@ -297,7 +292,7 @@ void AppModule::onPropertyChanged(Property* prop)
         auto values = GraphicsMeshEntityDriver::defaultValues();
         values.color = this->meshDefaultsColor.value();
         values.edgeColor = this->meshDefaultsEdgeColor.value();
-        values.material = this->meshDefaultsMaterial.valueAs<Graphic3d_NameOfMaterial>();
+        values.material = static_cast<Graphic3d_NameOfMaterial>(this->meshDefaultsMaterial.value());
         values.showEdges = this->meshDefaultsShowEdges.value();
         values.showNodes = this->meshDefaultsShowNodes.value();
         GraphicsMeshEntityDriver::setDefaultValues(values);

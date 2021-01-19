@@ -6,67 +6,29 @@
 
 #pragma once
 
+#include "enumeration.h"
+#include "enumeration_fromenum.h"
 #include "property.h"
-#include "span.h"
 
-#include <initializer_list>
+#include <type_traits>
 
 namespace Mayo {
 
-class Enumeration {
-public:
-    using Value = int;
-    struct Item {
-        Value value;
-        TextId name;
-        QString description;
-    };
-
-    Enumeration() = default;
-    Enumeration(std::initializer_list<Item> listItem);
-
-    template<typename VALUE>
-    void addItem(VALUE value, const TextId& name, const QString& description = QString());
-
-    int size() const;
-    bool empty() const { return this->size() == 0; }
-
-    bool descriptionsEmpty() const;
-    template<typename VALUE> void setDescription(VALUE value, const QString& descr);
-
-    const Item& findItem(Value value) const;
-    int findIndex(Value value) const;
-    QByteArray findName(Value value) const;
-    Value findValue(const QByteArray& name) const;
-    bool contains(const QByteArray& name) const;
-
-    const Item& itemAt(int index) const;
-    Span<const Item> items() const;
-
-    template<typename QENUM>
-    static Enumeration fromQENUM(const QByteArray& textIdContext);
-
-    template<typename ENUM>
-    static Enumeration fromEnum(const QByteArray& textIdContext);
-
-private:
-    std::vector<Item> m_vecItem;
-};
-
 class PropertyEnumeration : public Property {
 public:
-    PropertyEnumeration(
-            PropertyGroup* grp,
-            const TextId& name,
-            const Enumeration* enumeration = nullptr);
+    PropertyEnumeration(PropertyGroup* grp, const TextId& name, const Enumeration& enumeration);
 
-    const Enumeration* enumeration() const;
-    void setEnumeration(const Enumeration* enumeration);
+    constexpr const Enumeration& enumeration() const { return m_enumeration; }
+
+    bool descriptionsEmpty() const { return m_vecDescription.empty(); }
+    void addDescription(Enumeration::Value value, const QString& descr);
+    QString findDescription(Enumeration::Value value) const;
+    void clearDescriptions();
 
     QByteArray name() const;
     Enumeration::Value value() const;
-    template<typename T> T valueAs() const;
-    template<typename T> Result<void> setValue(T value);
+    Result<void> setValue(Enumeration::Value value);
+    Result<void> setValueByName(const QByteArray& name);
 
     QVariant valueAsVariant() const override;
     Result<void> setValueFromVariant(const QVariant& value) override;
@@ -75,40 +37,68 @@ public:
     static const char TypeName[];
 
 private:
+    struct Description {
+        Enumeration::Value value;
+        QString text;
+    };
+
     Enumeration::Value m_value;
-    const Enumeration* m_enumeration;
+    const Enumeration& m_enumeration;
+    std::vector<Description> m_vecDescription;
 };
 
-} // namespace Mayo
+template<typename ENUM>
+class PropertyEnum : public PropertyEnumeration {
+    static_assert(std::is_enum<ENUM>::value, "ENUM must be an enumeration type");
+public:
+    using EnumType = ENUM;
 
+    PropertyEnum(PropertyGroup* grp, const TextId& name);
+
+    Enumeration& mutableEnumeration() { return m_enum; }
+
+    EnumType value() const;
+    operator EnumType() const { return this->value(); }
+    Result<void> setValue(EnumType value);
+
+    void addDescription(EnumType value, const QString& descr);
+    void setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList);
+
+private:
+    Enumeration m_enum;
+};
 
 
 
 // -- Implementation
 
-namespace Mayo {
+template<typename ENUM>
+PropertyEnum<ENUM>::PropertyEnum(PropertyGroup* grp, const TextId& name)
+    : m_enum(Enumeration::fromType<EnumType>()),
+      PropertyEnumeration(grp, name, m_enum)
+{ }
 
-template<typename VALUE> void Enumeration::addItem(
-        VALUE value, const TextId& name, const QString& description)
+template<typename ENUM>
+ENUM PropertyEnum<ENUM>::value() const {
+    return static_cast<EnumType>(PropertyEnumeration::value());
+}
+
+template<typename ENUM>
+Result<void> PropertyEnum<ENUM>::setValue(EnumType value) {
+    return PropertyEnumeration::setValue(static_cast<Enumeration::Value>(value));
+}
+
+template<typename ENUM>
+void PropertyEnum<ENUM>::addDescription(EnumType value, const QString& descr) {
+    PropertyEnumeration::addDescription(static_cast<Enumeration::Value>(value), descr);
+}
+
+template<typename ENUM>
+void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList)
 {
-    const Item item = { Enumeration::Value(value), name, description };
-    m_vecItem.emplace_back(std::move(item));
-}
-
-template<typename VALUE> void Enumeration::setDescription(VALUE value, const QString& descr)
-{
-    const int index = this->findIndex(Enumeration::Value(value));
-    if (index != -1)
-        m_vecItem.at(index).description = descr;
-}
-
-template<typename T> T PropertyEnumeration::valueAs() const {
-    return static_cast<T>(m_value);
-}
-
-template<typename T> Result<void> PropertyEnumeration::setValue(T value) {
-    // TODO: check v is an enumerated value of m_enumeration
-    return Property::setValueHelper(this, &m_value, int(value));
+    this->clearDescriptions();
+    for (const auto& pair : initList)
+        this->addDescription(pair.first, pair.second);
 }
 
 } // namespace Mayo

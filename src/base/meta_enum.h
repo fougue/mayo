@@ -22,6 +22,11 @@ public:
     }
 
     template<typename ENUM>
+    static int count() {
+        return magic_enum::enum_count<ENUM>();
+    }
+
+    template<typename ENUM>
     static std::string_view nameWithoutPrefix(ENUM enumValue, std::string_view strPrefix) {
         std::string_view strEnumValueName = MetaEnum::name(enumValue);
         if (strEnumValueName.find(strPrefix) == 0)
@@ -34,6 +39,11 @@ public:
     template<typename ENUM>
     static auto entries() {
         return magic_enum::enum_entries<ENUM>();
+    }
+
+    template<typename ENUM>
+    static auto values() {
+        return magic_enum::enum_values<ENUM>();
     }
 };
 

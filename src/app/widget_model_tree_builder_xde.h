@@ -12,6 +12,7 @@ class TDF_Label;
 namespace Mayo {
 
 class WidgetModelTreeBuilder_Xde : public WidgetModelTreeBuilder {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::WidgetModelTreeBuilder_Xde)
 public:
     bool supportsDocumentTreeNode(const DocumentTreeNode& node) const override;
     void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem) override;

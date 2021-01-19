@@ -115,10 +115,7 @@ static QString propertyValueText(const PropertyOccTrsf* prop) {
 
 static QString propertyValueText(const PropertyEnumeration* prop)
 {
-    if (!prop->enumeration())
-        return QString();
-
-    for (const Enumeration::Item& enumItem : prop->enumeration()->items()) {
+    for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
             return enumItem.name.tr();
     }

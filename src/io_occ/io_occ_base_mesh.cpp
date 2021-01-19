@@ -21,8 +21,8 @@ namespace IO {
 OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGroup)
     : PropertyGroup(parentGroup),
       rootPrefix(this, textId("rootPrefix")),
-      systemCoordinatesConverter(this, textId("systemCoordinatesConverter"), &OccCommon::enumMeshCoordinateSystem()),
-      systemLengthUnit(this, textId("systemLengthUnit"), &OccCommon::enumerationLengthUnit())
+      systemCoordinatesConverter(this, textId("systemCoordinatesConverter")),
+      systemLengthUnit(this, textId("systemLengthUnit"))
 {
     this->rootPrefix.setDescription(tr("Prefix for generating root labels name"));
     this->systemLengthUnit.setDescription(tr("System length units to convert into while reading files"));
@@ -58,8 +58,7 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     if (factor < 0)
         return LengthUnit::Undefined;
 
-    for (const Enumeration::Item& enumItem : OccCommon::enumerationLengthUnit().items()) {
-        const auto lenUnit = static_cast<LengthUnit>(enumItem.value);
+    for (const LengthUnit lenUnit : MetaEnum::values<OccCommon::LengthUnit>()) {
         const double lenUnitFactor = OccBaseMeshReaderProperties::lengthUnitFactor(lenUnit);
         if (factor == lenUnitFactor)
             return lenUnit;
@@ -92,10 +91,9 @@ void OccBaseMeshReader::applyProperties(const PropertyGroup* params)
 {
     auto ptr = dynamic_cast<const OccBaseMeshReaderProperties*>(params);
     if (ptr) {
-        this->parameters().systemCoordinatesConverter =
-                ptr->systemCoordinatesConverter.valueAs<RWMesh_CoordinateSystem>();
-        this->parameters().systemLengthUnit = ptr->systemLengthUnit.valueAs<LengthUnit>();
-        this->parameters().rootPrefix = ptr->rootPrefix.value();
+        this->parameters().systemCoordinatesConverter = ptr->systemCoordinatesConverter;
+        this->parameters().systemLengthUnit = ptr->systemLengthUnit;
+        this->parameters().rootPrefix = ptr->rootPrefix;
     }
 }
 

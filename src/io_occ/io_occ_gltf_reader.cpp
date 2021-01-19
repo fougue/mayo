@@ -11,7 +11,7 @@ namespace Mayo {
 namespace IO {
 
 class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup),
@@ -49,8 +49,8 @@ void OccGltfReader::applyProperties(const PropertyGroup* params)
     OccBaseMeshReader::applyProperties(params);
     auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        m_params.useMeshNameAsFallback = ptr->useMeshNameAsFallback.value();
-        m_params.skipEmptyNodes = ptr->skipEmptyNodes.value();
+        m_params.useMeshNameAsFallback = ptr->useMeshNameAsFallback;
+        m_params.skipEmptyNodes = ptr->skipEmptyNodes;
     }
 }
 

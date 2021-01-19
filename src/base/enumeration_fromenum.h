@@ -6,46 +6,35 @@
 
 #pragma once
 
+#include "enumeration.h"
 #include "meta_enum.h"
-#include "property_enumeration.h"
-
-#include <QtCore/QMetaEnum>
+#include "qtcore_utils.h"
 
 // --
-// -- Implementation of template functions Enumeration::fromQENUM() and Enumeration::fromQENUM()
+// -- Implementation of template function Enumeration::fromType()
 // --
 
 namespace Mayo {
 
-template<typename QENUM>
-Enumeration Enumeration::fromQENUM(const QByteArray& textIdContext)
-{
-    auto fnQByteArrayFrowRawData = [](const char* str) {
-        return QByteArray::fromRawData(str, int(std::strlen(str)));
-    };
-
-    Enumeration enumObject;
-    const QMetaEnum metaEnum = QMetaEnum::fromType<QENUM>();
-    for (int i = 0; i < metaEnum.keyCount(); ++i) {
-        const char* strKey = metaEnum.key(i);
-        const TextId keyTextId = { textIdContext, fnQByteArrayFrowRawData(strKey) };
-        enumObject.addItem(metaEnum.value(i), keyTextId);
-    }
-
-    return enumObject;
-}
+template<typename ENUM>
+struct EnumNames {
+    static inline const std::string_view trContext = "";
+    static inline const std::string_view junkPrefix = "";
+};
 
 template<typename ENUM>
-Enumeration Enumeration::fromEnum(const QByteArray& textIdContext)
+Enumeration Enumeration::fromType()
 {
-    auto fnQByteArrayFrowRawData = [](std::string_view str) {
-        return QByteArray::fromRawData(str.data(), int(str.size()));
-    };
-
+    const bool hasJunkPrefix = !EnumNames<ENUM>::junkPrefix.empty();
+    const QByteArray textIdContext = QtCoreUtils::QByteArray_frowRawData(EnumNames<ENUM>::trContext);
     Enumeration enumObject;
-    for (const auto& entry : MetaEnum::entries<ENUM>()) {
-        const TextId keyTextId = { textIdContext, fnQByteArrayFrowRawData(entry.second) };
-        enumObject.addItem(int(entry.first), keyTextId);
+    for (const ENUM value : MetaEnum::values<ENUM>()) {
+        std::string_view key =
+                hasJunkPrefix ?
+                    MetaEnum::nameWithoutPrefix<ENUM>(value, EnumNames<ENUM>::junkPrefix) :
+                    MetaEnum::name<ENUM>(value);
+        const TextId keyTextId = { textIdContext, QtCoreUtils::QByteArray_frowRawData(key) };
+        enumObject.addItem(int(value), keyTextId);
     }
 
     return enumObject;

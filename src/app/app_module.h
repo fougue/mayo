@@ -16,6 +16,7 @@
 #include "../base/qtcore_hfuncs.h"
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
+#include "../base/unit_system.h"
 
 #include <QtCore/QObject>
 #include <unordered_map>
@@ -54,7 +55,7 @@ public:
     const Settings_GroupIndex groupId_system;
     const Settings_SectionIndex sectionId_systemUnits;
     PropertyInt unitSystemDecimals;
-    PropertyEnumeration unitSystemSchema;
+    PropertyEnum<UnitSystem::Schema> unitSystemSchema;
     // Application
     const Settings_GroupIndex groupId_application;
     PropertyEnumeration language;

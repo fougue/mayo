@@ -20,28 +20,31 @@ namespace Mayo {
 namespace IO {
 
 class OccStepReader::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          productContext(this, textId("productContext"), &enumProductContext),
-          assemblyLevel(this, textId("assemblyLevel"), &enumAssemblyLevel),
-          preferredShapeRepresentation(this, textId("preferredShapeRepresentation"), &enumShapeRepresentation()),
+          productContext(this, textId("productContext")),
+          assemblyLevel(this, textId("assemblyLevel")),
+          preferredShapeRepresentation(this, textId("preferredShapeRepresentation")),
           readShapeAspect(this, textId("readShapeAspect")),
           readSubShapesNames(this, textId("readSubShapesNames")),
-          encoding(this, textId("encoding"), &enumEncoding())
+          encoding(this, textId("encoding"))
     {
         this->productContext.setDescription(
                     textIdTr("When reading AP 209 STEP files, allows selecting either only `design` "
                              "or `analysis`, or both types of products for translation\n"
                              "Note that in AP 203 and AP214 files all products should be marked as "
                              "`design`, so if this mode is set to `analysis`, nothing will be read"));
+
         this->assemblyLevel.setDescription(
                     textIdTr("Specifies which data should be read for the products found in the STEP file"));
+
         this->preferredShapeRepresentation.setDescription(
                     textIdTr("Specifies preferred type of representation of the shape of the product, in "
                              "case if a STEP file contains more than one representation (i.e. multiple "
                              "`PRODUCT_DEFINITION_SHAPE` entities) for a single product"));
+
         this->readShapeAspect.setDescription(
                     textIdTr("Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity "
                              "of the product via `SHAPE_ASPECT` should be translated.\n"
@@ -51,9 +54,49 @@ public:
                              "sub-shapes of the part. Though STEP translator tries to recognize such cases "
                              "correctly, this parameter may be useful to avoid unconditionally translation "
                              "of shapes associated via `SHAPE_ASPECT` entities."));
+
         this->readSubShapesNames.setDescription(
                     textIdTr("Indicates whether to read sub-shape names from 'Name' attributes of "
                              "STEP Representation Items"));
+
+        this->productContext.setDescriptions({
+                    { ProductContext::Design, textIdTr("Translate only products that have "
+                      "`PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`")
+                    },
+                    { ProductContext::Analysis, textIdTr("Translate only products that have "
+                      "`PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`")
+                    },
+                    { ProductContext::Both, textIdTr("Translates all products") }
+        });
+
+        this->assemblyLevel.setDescriptions({
+                    { AssemblyLevel::Assembly, textIdTr("Translate the assembly structure and shapes "
+                      "associated with parts only(not with sub-assemblies)")
+                    },
+                    { AssemblyLevel::Structure, textIdTr("Translate only the assembly structure "
+                      "without shapes(a structure of empty compounds). This mode can be useful as "
+                      "an intermediate step in applications requiring specialized processing of assembly parts")
+                    },
+                    { AssemblyLevel::Shape, textIdTr("Translate only shapes associated with the "
+                      "product, ignoring the assembly structure (if any). This can be useful to "
+                      "translate only a shape associated with specific product, as a complement to assembly mode")
+                    },
+                    { AssemblyLevel::All, textIdTr("Translate both the assembly structure and all "
+                      "associated shapes. If both shape and sub-assemblies are associated with the "
+                      "same product, all of them are read and put in a single compound")
+                    }
+        });
+
+        this->preferredShapeRepresentation.addDescription(
+                    ShapeRepresentation::All,
+                    textIdTr("Translate all representations(if more than one, put in compound)"));
+
+        this->encoding.setDescriptions({
+                    { Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards") },
+                    { Encoding::EUC, textIdTr("EUC(Extended Unix Code), multi-byte encoding primarily "
+                      "for Japanese, Korean, and simplified Chinese") },
+                    { Encoding::GB, textIdTr("GB(Guobiao) encoding for Simplified Chinese") }
+        });
     }
 
     void restoreDefaults() override {
@@ -65,59 +108,12 @@ public:
         this->encoding.setValue(params.encoding);
     }
 
-    inline static const Enumeration enumProductContext = {
-        { int(ProductContext::Design), textId("Design"),
-          textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
-                   "`life_cycle_stage` set to `design`") },
-        { int(ProductContext::Analysis), textId("Analysis"),
-          textIdTr("Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field "
-                   "`life_cycle_stage` set to `analysis`") },
-        { int(ProductContext::Both), textId("Both"), textIdTr("Translates all products") }
-    };
-
-    inline static const Enumeration enumAssemblyLevel = {
-        { int(AssemblyLevel::Assembly), textId("Assembly"),
-          textIdTr("Translate the assembly structure and shapes associated with parts only "
-                   "(not with sub-assemblies)") },
-        { int(AssemblyLevel::Structure), textId("Structure"),
-          textIdTr("Translate only the assembly structure without shapes (a structure of "
-                   "empty compounds). This mode can be useful as an intermediate step in "
-                   "applications requiring specialized processing of assembly parts") },
-        { int(AssemblyLevel::Shape), textId("Shape"),
-          textIdTr("Translate only shapes associated with the product, ignoring the assembly "
-                   "structure (if any). This can be useful to translate only a shape associated "
-                   "with specific product, as a complement to assembly mode") },
-        { int(AssemblyLevel::All), textId("All"),
-          textIdTr("Translate both the assembly structure and all associated shapes. "
-                   "If both shape and sub-assemblies are associated with the same product, "
-                   "all of them are read and put in a single compound") }
-    };
-
-    static const Enumeration& enumShapeRepresentation() {
-        static Enumeration enumObject = Enumeration::fromEnum<ShapeRepresentation>(textIdContext());
-        enumObject.setDescription(
-                    int(ShapeRepresentation::All),
-                    textIdTr("Translate all representations(if more than one, put in compound)"));
-        return enumObject;
-    }
-
-    static const Enumeration& enumEncoding() {
-        static Enumeration enumObject = Enumeration::fromEnum<Encoding>(textIdContext());
-        enumObject.setDescription(Encoding::Shift_JIS, textIdTr("Shift Japanese Industrial Standards"));
-        enumObject.setDescription(
-                    Encoding::EUC,
-                    textIdTr("EUC (Extended Unix Code), multi-byte encoding primarily for Japanese, "
-                             "Korean, and simplified Chinese"));
-        enumObject.setDescription(Encoding::GB, textIdTr("GB (Guobiao) encoding for Simplified Chinese"));
-        return enumObject;
-    }
-
-    PropertyEnumeration productContext;
-    PropertyEnumeration assemblyLevel;
-    PropertyEnumeration preferredShapeRepresentation;
+    PropertyEnum<ProductContext> productContext;
+    PropertyEnum<AssemblyLevel> assemblyLevel;
+    PropertyEnum<ShapeRepresentation> preferredShapeRepresentation;
     PropertyBool readShapeAspect;
     PropertyBool readSubShapesNames;
-    PropertyEnumeration encoding;
+    PropertyEnum<Encoding> encoding;
 };
 
 OccStepReader::OccStepReader()
@@ -157,12 +153,12 @@ void OccStepReader::applyProperties(const PropertyGroup* group)
 {
     auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        m_params.productContext = ptr->productContext.valueAs<ProductContext>();
-        m_params.assemblyLevel = ptr->assemblyLevel.valueAs<AssemblyLevel>();
-        m_params.preferredShapeRepresentation = ptr->preferredShapeRepresentation.valueAs<ShapeRepresentation>();
-        m_params.readShapeAspect = ptr->readShapeAspect.value();
-        m_params.readSubShapesNames = ptr->readSubShapesNames.value();
-        m_params.encoding = ptr->encoding.valueAs<Encoding>();
+        m_params.productContext = ptr->productContext;
+        m_params.assemblyLevel = ptr->assemblyLevel;
+        m_params.preferredShapeRepresentation = ptr->preferredShapeRepresentation;
+        m_params.readShapeAspect = ptr->readShapeAspect;
+        m_params.readSubShapesNames = ptr->readSubShapesNames;
+        m_params.encoding = ptr->encoding;
     }
 }
 
@@ -217,39 +213,42 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 }
 
 class OccStepWriter::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup),
-          schema(this, textId("schema"), &enumSchema),
-          lengthUnit(this, textId("lengthUnit"), &OccCommon::enumerationLengthUnit()),
-          assemblyMode(this, textId("assemblyMode"), &enumAssemblyMode),
-          freeVertexMode(this, textId("freeVertexMode"), &enumFreeVertexMode),
+          schema(this, textId("schema")),
+          lengthUnit(this, textId("lengthUnit")),
+          assemblyMode(this, textId("assemblyMode")),
+          freeVertexMode(this, textId("freeVertexMode")),
           writePCurves(this, textId("writeParametericCurves")),
           writeSubShapesNames(this, textId("writeSubShapesNames"))
     {
-        this->schema.setDescription(
-                    textIdTr("Version of schema used for the output STEP file"));
+        this->schema.setDescription(textIdTr("Version of schema used for the output STEP file"));
+
         this->lengthUnit.setDescription(
                     textIdTr("Defines a unit in which the STEP file should be written. If set to "
                              "unit other than millimeter, the model is converted to these units "
                              "during the translation"));
+
         this->freeVertexMode.setDescription(
                     textIdTr("Parameter to write all free vertices in one SDR (name and style of "
                              "vertex are lost) or each vertex in its own SDR (name and style of "
                              "vertex are exported)"));
-        // The behavior at import is controlled by new write.step.vertex.mode parameter,
-        // which can be equal to:
-        // 0 - One Compound: All free vertices are united into one compound and exported
-        // in one shape definition representation (vertex name and style are lost). This
-        // mode is used by default.
-        // 1 - Single Vertex: Each vertex is exported in its own SHAPE DEFINITION
-        // REPRESENTATION (vertex name and style are not lost, but the STEP file size
-        // increases).
+        this->freeVertexMode.setDescriptions({
+                    { FreeVertexMode::Compound, textIdTr("All free vertices are united into one "
+                      "compound and exported in one shape definition representation (vertex name "
+                      "and style are lost)") },
+                    { FreeVertexMode::Single, textIdTr("Each vertex is exported in its own "
+                      "`SHAPE DEFINITION REPRESENTATION`(vertex name and style are not lost, but "
+                      "the STEP file size increases)") },
+        });
+
         this->writePCurves.setDescription(
                     textIdTr("Indicates whether parametric curves (curves in parametric space of surface) should be "
                              "written into the STEP file.\n"
                              "It can be disabled in order to minimize the size of the resulting file."));
+
         this->writeSubShapesNames.setDescription(
                     textIdTr("Indicates whether to write sub-shape names to 'Name' attributes of "
                              "STEP Representation Items"));
@@ -265,14 +264,10 @@ public:
         this->writeSubShapesNames.setValue(params.writeSubShapesNames);
     }
 
-    inline static const auto enumSchema = Enumeration::fromEnum<Schema>(textIdContext());
-    inline static const auto enumAssemblyMode = Enumeration::fromEnum<AssemblyMode>(textIdContext());
-    inline static const auto enumFreeVertexMode = Enumeration::fromEnum<FreeVertexMode>(textIdContext());
-
-    PropertyEnumeration schema;
-    PropertyEnumeration lengthUnit;
-    PropertyEnumeration assemblyMode;
-    PropertyEnumeration freeVertexMode;
+    PropertyEnum<Schema> schema;
+    PropertyEnum<LengthUnit> lengthUnit;
+    PropertyEnum<AssemblyMode> assemblyMode;
+    PropertyEnum<FreeVertexMode> freeVertexMode;
     PropertyBool writePCurves;
     PropertyBool writeSubShapesNames;
 };
@@ -315,12 +310,12 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
 {
     auto ptr = dynamic_cast<const Properties*>(group);
     if (ptr) {
-        m_params.schema = ptr->schema.valueAs<Schema>();
-        m_params.lengthUnit = ptr->lengthUnit.valueAs<LengthUnit>();
-        m_params.assemblyMode = ptr->assemblyMode.valueAs<AssemblyMode>();
-        m_params.freeVertexMode = ptr->freeVertexMode.valueAs<FreeVertexMode>();
-        m_params.writeParametricCurves = ptr->writePCurves.value();
-        m_params.writeSubShapesNames = ptr->writeSubShapesNames.value();
+        m_params.schema = ptr->schema;
+        m_params.lengthUnit = ptr->lengthUnit;
+        m_params.assemblyMode = ptr->assemblyMode;
+        m_params.freeVertexMode = ptr->freeVertexMode;
+        m_params.writeParametricCurves = ptr->writePCurves;
+        m_params.writeSubShapesNames = ptr->writeSubShapesNames;
     }
 }
 

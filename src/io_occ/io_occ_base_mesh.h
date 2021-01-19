@@ -59,8 +59,8 @@ public:
     static LengthUnit lengthUnit(double factor);
 
     PropertyQString rootPrefix;
-    PropertyEnumeration systemCoordinatesConverter;
-    PropertyEnumeration systemLengthUnit;
+    PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter;
+    PropertyEnum<LengthUnit> systemLengthUnit;
 };
 
 } // namespace IO

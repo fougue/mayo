@@ -12,9 +12,9 @@ namespace Mayo {
 
 namespace Internal {
 
-static const Enumeration* displayModesEnum(const GraphicsEntity& gfxEntity) {
+static const Enumeration& displayModesEnum(const GraphicsEntity& gfxEntity) {
     const GraphicsEntityDriver* driverPtr = gfxEntity.driverPtr();
-    return driverPtr ? &(driverPtr->displayModes()) : nullptr;
+    return driverPtr ? driverPtr->displayModes() : Enumeration::null();
 }
 
 static Enumeration::Value currentDisplayMode(const GraphicsEntity& gfxEntity) {
@@ -26,11 +26,8 @@ static Enumeration::Value currentDisplayMode(const GraphicsEntity& gfxEntity) {
 
 GraphicsEntityBasePropertyGroup::GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity)
     : m_gfxEntity(gfxEntity),
-      m_propertyIsVisible(this, MAYO_TEXT_ID("Mayo::GraphicsEntityBasePropertyGroup", "visible")),
-      m_propertyDisplayMode(
-          this,
-          MAYO_TEXT_ID("Mayo::GraphicsEntityBasePropertyGroup", "displayMode"),
-          Internal::displayModesEnum(gfxEntity))
+      m_propertyIsVisible(this, textId("visible")),
+      m_propertyDisplayMode(this, textId("displayMode"), Internal::displayModesEnum(gfxEntity))
 {
     // Init properties
     Mayo_PropertyChangedBlocker(this);

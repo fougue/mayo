@@ -11,7 +11,7 @@ namespace Mayo {
 namespace IO {
 
 class OccObjReader::Properties : public OccBaseMeshReaderProperties {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader_Properties)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup),
@@ -44,7 +44,7 @@ void OccObjReader::applyProperties(const PropertyGroup* params)
     OccBaseMeshReader::applyProperties(params);
     auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        m_params.singlePrecisionVertexCoords = ptr->singlePrecisionVertexCoords.value();
+        m_params.singlePrecisionVertexCoords = ptr->singlePrecisionVertexCoords;
     }
 }
 

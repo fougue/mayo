@@ -59,10 +59,10 @@ void GraphicsEntityDriver::setEntityAisObject(
 GraphicsShapeEntityDriver::GraphicsShapeEntityDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, GraphicsEntityDriverI18N::textId("WIREFRAME"), {} },
-        { DisplayMode_HiddenLineRemoval, GraphicsEntityDriverI18N::textId("HLR"), {} },
-        { DisplayMode_Shaded, GraphicsEntityDriverI18N::textId("SHADED"), {} },
-        { DisplayMode_ShadedWithFaceBoundary, GraphicsEntityDriverI18N::textId("SHADED_FACE_BNDS"), {} }
+        { DisplayMode_Wireframe, GraphicsEntityDriverI18N::textId("Wireframe") },
+        { DisplayMode_HiddenLineRemoval, GraphicsEntityDriverI18N::textId("HiddenLineRemoval") },
+        { DisplayMode_Shaded, GraphicsEntityDriverI18N::textId("Shaded") },
+        { DisplayMode_ShadedWithFaceBoundary, GraphicsEntityDriverI18N::textId("ShadedWithFaceBoundary") }
     });
 }
 
@@ -164,9 +164,9 @@ std::unique_ptr<PropertyGroupSignals> GraphicsShapeEntityDriver::properties(cons
 GraphicsMeshEntityDriver::GraphicsMeshEntityDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, GraphicsEntityDriverI18N::textId("WIREFRAME"), {} },
-        { MeshVS_DMF_Shading, GraphicsEntityDriverI18N::textId("SHADED"), {} },
-        { MeshVS_DMF_Shrink, GraphicsEntityDriverI18N::textId("SHRINK"), {} } // MeshVS_DA_ShrinkCoeff
+        { MeshVS_DMF_WireFrame, GraphicsEntityDriverI18N::textId("Wireframe") },
+        { MeshVS_DMF_Shading, GraphicsEntityDriverI18N::textId("Shaded") },
+        { MeshVS_DMF_Shrink, GraphicsEntityDriverI18N::textId("Shrink") } // MeshVS_DA_ShrinkCoeff
     });
 }
 
