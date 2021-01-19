@@ -19,7 +19,7 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     : QObject(app.get()),
       m_app(app),
       m_selectionModel(new ApplicationItemSelectionModel(this)),
-      m_gfxEntityDriverTable(new GraphicsEntityDriverTable),
+      m_gfxObjectDriverTable(new GraphicsObjectDriverTable),
       m_gfxTreeNodeMappingDriverTable(new GraphicsTreeNodeMappingDriverTable)
 {
     QObject::connect(
@@ -58,9 +58,9 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
     return m_selectionModel;
 }
 
-GraphicsEntityDriverTable* GuiApplication::graphicsEntityDriverTable() const
+GraphicsObjectDriverTable* GuiApplication::graphicsObjectDriverTable() const
 {
-    return m_gfxEntityDriverTable.get();
+    return m_gfxObjectDriverTable.get();
 }
 
 GraphicsTreeNodeMappingDriverTable* GuiApplication::graphicsTreeNodeMappingDriverTable() const

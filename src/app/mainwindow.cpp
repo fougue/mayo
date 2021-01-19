@@ -15,7 +15,7 @@
 #include "../base/messenger.h"
 #include "../base/settings.h"
 #include "../base/task_manager.h"
-#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
@@ -650,10 +650,10 @@ void MainWindow::onApplicationItemSelectionChanged()
             }
 
             GuiDocument* guiDoc = m_guiApp->findGuiDocument(item.document());
-            const TreeNodeId entityNodeId = item.document()->modelTree().nodeRoot(docTreeNode.id());
-            GraphicsEntity gfxEntity = guiDoc->findGraphicsEntity(entityNodeId);
-            if (gfxEntity.driverPtr()) {
-                m_ptrCurrentNodeGraphicsProperties = gfxEntity.driverPtr()->properties(gfxEntity);
+            GraphicsObjectPtr gfxObject = guiDoc->findGraphicsObject(docTreeNode.id());
+            GraphicsObjectDriverPtr gfxDriver = GraphicsObjectDriver::get(gfxObject);
+            if (gfxDriver) {
+                m_ptrCurrentNodeGraphicsProperties = gfxDriver->properties(gfxObject);
                 PropertyGroupSignals* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));

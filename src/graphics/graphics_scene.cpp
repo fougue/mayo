@@ -99,7 +99,8 @@ bool GraphicsScene::hiddenLineDrawingOn() const
 
 void GraphicsScene::addObject(const GraphicsObjectPtr& object)
 {
-    d->m_aisContext->Display(object, false);
+    if (object)
+        d->m_aisContext->Display(object, false);
 }
 
 void GraphicsScene::eraseObject(const GraphicsObjectPtr& object)

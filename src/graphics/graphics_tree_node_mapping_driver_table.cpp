@@ -13,7 +13,8 @@ void GraphicsTreeNodeMappingDriverTable::addDriver(DriverPtr driver)
     m_vecDriver.push_back(std::move(driver));
 }
 
-std::unique_ptr<GraphicsTreeNodeMapping> GraphicsTreeNodeMappingDriverTable::createMapping(const DocumentTreeNode &entityTreeNode) const
+std::unique_ptr<GraphicsTreeNodeMapping>
+GraphicsTreeNodeMappingDriverTable::createMapping(const DocumentTreeNode& entityTreeNode) const
 {
     for (const DriverPtr& driver : m_vecDriver) {
         std::unique_ptr<GraphicsTreeNodeMapping> ptr = driver->createMapping(entityTreeNode);

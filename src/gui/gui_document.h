@@ -7,7 +7,6 @@
 #pragma once
 
 #include "../base/document.h"
-#include "../graphics/graphics_entity.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 
@@ -38,7 +37,7 @@ public:
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
-    GraphicsEntity findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
+    GraphicsObjectPtr findGraphicsObject(TreeNodeId treeNodeId) const;
 
     void toggleItemSelected(const ApplicationItem& appItem);
 
@@ -76,13 +75,13 @@ private:
 
     void mapGraphics(TreeNodeId entityTreeNodeId);
 
-    struct GraphicsItem {
-        GraphicsEntity graphicsEntity;
-        TreeNodeId entityTreeNodeId;
-        std::unique_ptr<GraphicsTreeNodeMapping> gpxTreeNodeMapping;
+    struct GraphicsTreeNode {
+        GraphicsObjectPtr gfxObject;
+        TreeNodeId treeNodeId;
+        std::unique_ptr<GraphicsTreeNodeMapping> gfxTreeNodeMapping;
     };
 
-    const GraphicsItem* findGraphicsItem(TreeNodeId entityTreeNodeId) const;
+    const GraphicsTreeNode* findGraphicsTreeNode(TreeNodeId treeNodeId) const;
 
     void v3dViewTrihedronDisplay(Qt::Corner corner);
 
@@ -97,7 +96,7 @@ private:
     Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
     Handle_AIS_InteractiveObject m_aisViewCube;
 
-    std::vector<GraphicsItem> m_vecGraphicsItem;
+    std::vector<GraphicsTreeNode> m_vecGraphicsTreeNode;
     Bnd_Box m_gpxBoundingBox;
 };
 

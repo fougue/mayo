@@ -8,18 +8,18 @@
 
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "graphics_entity.h"
+#include "graphics_object_ptr.h"
 
 namespace Mayo {
 
-class GraphicsEntityBasePropertyGroup : public PropertyGroupSignals {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsEntityBasePropertyGroup)
+class GraphicsObjectBasePropertyGroup : public PropertyGroupSignals {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectBasePropertyGroup)
 public:
-    GraphicsEntityBasePropertyGroup(const GraphicsEntity& gfxEntity);
+    GraphicsObjectBasePropertyGroup(const GraphicsObjectPtr& object);
     void onPropertyChanged(Property* prop) override;
 
 private:
-    GraphicsEntity m_gfxEntity;
+    GraphicsObjectPtr m_object;
     PropertyBool m_propertyIsVisible;
     PropertyEnumeration m_propertyDisplayMode;
 };

@@ -10,7 +10,7 @@
 #include "../base/settings.h"
 #include "../io_occ/io_occ.h"
 #include "../gui/gui_application.h"
-#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_object_driver.h"
 #include "app_module.h"
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
@@ -96,8 +96,8 @@ static int runApp(QApplication* qtApp)
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
     // Register Graphics entity drivers
-    guiApp->graphicsEntityDriverTable()->addDriver(std::make_unique<GraphicsMeshEntityDriver>());
-    guiApp->graphicsEntityDriverTable()->addDriver(std::make_unique<GraphicsShapeEntityDriver>());
+    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
+    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
 
     // Register AppModule
     auto appModule = new AppModule(app);

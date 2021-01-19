@@ -7,6 +7,7 @@
 #include "graphics_utils.h"
 #include "../base/bnd_utils.h"
 #include "../base/math_utils.h"
+#include "../base/tkernel_utils.h"
 
 #include <algorithm>
 #include <Bnd_Box.hxx>
@@ -16,6 +17,21 @@
 #include <Standard_Version.hxx>
 
 namespace Mayo {
+
+namespace Internal {
+
+static void AisContext_setObjectVisible(
+        AIS_InteractiveContext* ptrContext, const Handle_AIS_InteractiveObject& object, bool on)
+{
+    if (ptrContext && object) {
+        if (on)
+            ptrContext->Display(object, false);
+        else
+            ptrContext->Erase(object, false);
+    }
+}
+
+} // namespace Internal
 
 void GraphicsUtils::V3dView_fitAll(const Handle_V3d_View& view)
 {
@@ -82,22 +98,40 @@ void GraphicsUtils::AisContext_setObjectVisible(
         const Handle_AIS_InteractiveObject& object,
         bool on)
 {
-    if (!context.IsNull() && !object.IsNull()) {
-        if (on)
-            context->Display(object, false);
-        else
-            context->Erase(object, false);
-    }
+    Internal::AisContext_setObjectVisible(context.get(), object, on);
 }
 
-Bnd_Box GraphicsUtils::AisObject_boundingBox(const Handle_AIS_InteractiveObject& object)
+AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const GraphicsObjectPtr& object)
+{
+    if (!object)
+        return nullptr;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return object->InteractiveContext();
+#else
+    return object->GetInteractiveContext().get();
+#endif
+}
+
+bool GraphicsUtils::AisObject_isVisible(const GraphicsObjectPtr& object)
+{
+    const AIS_InteractiveContext* ptrContext = AisObject_contextPtr(object);
+    return ptrContext ? ptrContext->IsDisplayed(object) : false;
+}
+
+void GraphicsUtils::AisObject_setVisible(const GraphicsObjectPtr& object, bool on)
+{
+    Internal::AisContext_setObjectVisible(AisObject_contextPtr(object), object, on);
+}
+
+Bnd_Box GraphicsUtils::AisObject_boundingBox(const GraphicsObjectPtr& object)
 {
     Bnd_Box box;
     if (object.IsNull())
         return box;
 
     // Ensure bounding box is calculated
-#if OCC_VERSION_HEX >= 0x070400
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     for (Handle_PrsMgr_Presentation prs : object->Presentations()) {
         if (prs->Mode() == object->DisplayMode() && !prs->CStructure()->BoundingBox().IsValid())
             prs->CalculateBoundBox();

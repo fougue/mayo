@@ -12,7 +12,7 @@
 #include "../base/io_system.h"
 #include "../base/occt_enums.h"
 #include "../base/settings.h"
-#include "../graphics/graphics_entity_driver.h"
+#include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 
@@ -157,7 +157,7 @@ AppModule::AppModule(Application* app)
         this->defaultShowOriginTrihedron.setValue(true);
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
-        const GraphicsMeshEntityDriver::DefaultValues meshDefaults;
+        const GraphicsMeshObjectDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
         this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
         this->meshDefaultsMaterial.setValue(meshDefaults.material);
@@ -289,13 +289,13 @@ void AppModule::onPropertyChanged(Property* prop)
             || prop == &this->meshDefaultsShowEdges
             || prop == &this->meshDefaultsShowNodes)
     {
-        auto values = GraphicsMeshEntityDriver::defaultValues();
+        auto values = GraphicsMeshObjectDriver::defaultValues();
         values.color = this->meshDefaultsColor.value();
         values.edgeColor = this->meshDefaultsEdgeColor.value();
         values.material = static_cast<Graphic3d_NameOfMaterial>(this->meshDefaultsMaterial.value());
         values.showEdges = this->meshDefaultsShowEdges.value();
         values.showNodes = this->meshDefaultsShowNodes.value();
-        GraphicsMeshEntityDriver::setDefaultValues(values);
+        GraphicsMeshObjectDriver::setDefaultValues(values);
     }
 
     PropertyGroup::onPropertyChanged(prop);
