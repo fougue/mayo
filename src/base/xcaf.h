@@ -56,6 +56,7 @@ public:
     Quantity_Color shapeColor(const TDF_Label& lbl) const;
 
     TopLoc_Location shapeAbsoluteLocation(TreeNodeId nodeId) const;
+    static TopLoc_Location shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, TreeNodeId nodeId);
     static TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl);
     static TDF_Label shapeReferred(const TDF_Label& lbl);
 

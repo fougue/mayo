@@ -8,6 +8,7 @@
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../io_gmio/io_gmio.h"
 #include "../io_occ/io_occ.h"
 #include "../gui/gui_application.h"
 #include "../graphics/graphics_object_driver.h"
@@ -86,9 +87,10 @@ static int runApp(QApplication* qtApp)
     auto app = Application::instance().get();
     auto guiApp = new GuiApplication(app);
 
-    // Register IO OpenCascade objects
+    // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
     IO::addPredefinedFormatProbes(app->ioSystem());
 
     // Register Graphics/TreeNode mapping drivers

@@ -366,8 +366,7 @@ void Test::MeshUtils_test()
     });
 
     // Merge all face triangulations into one
-    Handle_Poly_Triangulation polyTriBox =
-            new Poly_Triangulation(countNode, countTriangle, false);
+    Handle_Poly_Triangulation polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
     {
         int idNodeOffset = 0;
         int idTriangleOffset = 0;

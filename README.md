@@ -43,6 +43,7 @@ OBJ                       |  &#10004; | &#10060; | Requires OpenCascade &#8805; 
 glTF                      |  &#10004; | &#10004; | Import requires OpenCascade &#8805; v7.4.0<br>Export requires OpenCascade &#8805; v7.5.0<br>Supports 1.0, 2.0 and GLB
 VRML                      |  &#10060; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
+AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gmio](https://github.com/fougue/gmio) &#8805; v0.4.0
 
 # Gallery
 

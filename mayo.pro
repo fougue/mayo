@@ -53,6 +53,7 @@ HEADERS += \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
 
+
 SOURCES += \
     $$files(src/base/*.cpp) \
     $$files(src/io_occ/*.cpp) \
@@ -182,16 +183,20 @@ isEmpty(GMIO_ROOT) {
 } else {
     message(gmio ON)
     CONFIG(debug, debug|release) {
-        GMIO_BIN_SUFFIX = d
+        #GMIO_BIN_SUFFIX = d
+        GMIO_BIN_SUFFIX =
     } else {
         GMIO_BIN_SUFFIX =
     }
 
+    HEADERS += $$files(src/io_gmio/*.h)
+    SOURCES += $$files(src/io_gmio/*.cpp)
+
     INCLUDEPATH += $$GMIO_ROOT/include
-    LIBS += -L$$GMIO_ROOT/lib -lgmio_static$$GMIO_BIN_SUFFIX
+    LIBS += -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
     SOURCES += \
-        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
+#        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
+#        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
         $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
     DEFINES += HAVE_GMIO
 }
