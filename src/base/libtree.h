@@ -45,6 +45,9 @@ private:
     };
 
     template<typename U, typename FN>
+    friend void traverseTree_unorder(const Tree<U>& tree, const FN& callback);
+
+    template<typename U, typename FN>
     friend void traverseTree_preOrder(TreeNodeId node, const Tree<U>& tree, const FN& callback);
 
     template<typename U, typename FN>
@@ -59,6 +62,10 @@ private:
     std::vector<TreeNode> m_vecNode;
     std::vector<TreeNodeId> m_vecRoot;
 };
+
+// Fastest tree traversal, but nodes are visited unordered
+template<typename T, typename FN>
+void traverseTree_unorder(const Tree<T>& tree, const FN& callback);
 
 template<typename T, typename FN>
 void traverseTree_preOrder(const Tree<T>& tree, const FN& callback);
@@ -190,6 +197,7 @@ template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
 {
     Expects(this->nodeIsRoot(id));
 
+    // TODO Mark all children nodes as 'deleted'
     auto it = std::find(m_vecRoot.begin(), m_vecRoot.end(), id);
     if (it != m_vecRoot.end()) {
         TreeNode* node = this->ptrNode(id);
@@ -215,6 +223,16 @@ typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) {
 template<typename T>
 const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const {
     return id != 0 && id <= m_vecNode.size() ? &m_vecNode.at(id - 1) : nullptr;
+}
+
+template<typename T, typename FN>
+void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
+{
+    for (const Tree<T>::TreeNode& node : tree.m_vecNode) {
+        const TreeNodeId id = (&node - &tree.m_vecNode.front()) + 1;
+        if (!tree.isNodeDeleted(id))
+            callback(id);
+    }
 }
 
 template<typename T, typename FN>
