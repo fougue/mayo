@@ -9,11 +9,14 @@
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 #include "../base/enumeration_fromenum.h"
 
+#include <APIHeaderSection_MakeHeader.hxx>
 #include <Interface_Static.hxx>
+#include <Interface_Version.hxx>
 #include <STEPCAFControl_Controller.hxx>
 
 namespace Mayo {
@@ -222,7 +225,11 @@ public:
           assemblyMode(this, textId("assemblyMode")),
           freeVertexMode(this, textId("freeVertexMode")),
           writePCurves(this, textId("writeParametericCurves")),
-          writeSubShapesNames(this, textId("writeSubShapesNames"))
+          writeSubShapesNames(this, textId("writeSubShapesNames")),
+          headerAuthor(this, textId("headerAuthor")),
+          headerOrganization(this, textId("headerOrganization")),
+          headerOriginatingSystem(this, textId("headerOriginatingSystem")),
+          headerDescription(this, textId("headerDescription"))
     {
         this->schema.setDescription(textIdTr("Version of schema used for the output STEP file"));
 
@@ -252,6 +259,11 @@ public:
         this->writeSubShapesNames.setDescription(
                     textIdTr("Indicates whether to write sub-shape names to 'Name' attributes of "
                              "STEP Representation Items"));
+
+        this->headerAuthor.setDescription(textIdTr("Author attribute in STEP header"));
+        this->headerOrganization.setDescription(textIdTr("Organization(of author) attribute in STEP header"));
+        this->headerOriginatingSystem.setDescription(textIdTr("Originating system attribute in STEP header"));
+        this->headerDescription.setDescription(textIdTr("Description attribute in STEP header"));
     }
 
     void restoreDefaults() override {
@@ -262,6 +274,11 @@ public:
         this->freeVertexMode.setValue(params.freeVertexMode);
         this->writePCurves.setValue(params.writeParametricCurves);
         this->writeSubShapesNames.setValue(params.writeSubShapesNames);
+
+        this->headerAuthor.setValue(QString());
+        this->headerOrganization.setValue(QString());
+        this->headerOriginatingSystem.setValue(XSTEP_SYSTEM_VERSION);
+        this->headerDescription.setValue("OpenCascade Model");
     }
 
     PropertyEnum<Schema> schema;
@@ -270,6 +287,10 @@ public:
     PropertyEnum<FreeVertexMode> freeVertexMode;
     PropertyBool writePCurves;
     PropertyBool writeSubShapesNames;
+    PropertyQString headerAuthor;
+    PropertyQString headerOrganization;
+    PropertyQString headerOriginatingSystem;
+    PropertyQString headerDescription;
 };
 
 OccStepWriter::OccStepWriter()
@@ -296,6 +317,17 @@ bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
+
+    APIHeaderSection_MakeHeader makeHeader(m_writer.ChangeWriter().Model());
+    makeHeader.SetAuthorValue(
+                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
+    makeHeader.SetOrganizationValue(
+                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOrganization));
+    makeHeader.SetOriginatingSystem(
+                StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOriginatingSystem));
+    makeHeader.SetDescriptionValue(
+                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
+
     const IFSelect_ReturnStatus err = m_writer.Write(filepath.toUtf8().constData());
     progress->setValue(100);
     return err == IFSelect_RetDone;
@@ -316,6 +348,10 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
         m_params.freeVertexMode = ptr->freeVertexMode;
         m_params.writeParametricCurves = ptr->writePCurves;
         m_params.writeSubShapesNames = ptr->writeSubShapesNames;
+        m_params.headerAuthor = ptr->headerAuthor;
+        m_params.headerOrganization = ptr->headerOrganization;
+        m_params.headerOriginatingSystem = ptr->headerOriginatingSystem;
+        m_params.headerDescription = ptr->headerDescription;
     }
 }
 

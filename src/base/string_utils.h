@@ -66,7 +66,11 @@ public:
 template<typename OTHER_STRING_TYPE>
 OTHER_STRING_TYPE StringUtils::toUtf8(const QString& str) {
     if constexpr(std::is_same<OTHER_STRING_TYPE, TCollection_AsciiString>::value) {
-        return TCollection_AsciiString(str.toUtf8().constData());
+        return TCollection_AsciiString(qUtf8Printable(str));
+    }
+    else if constexpr(std::is_same<OTHER_STRING_TYPE, Handle_TCollection_HAsciiString>::value) {
+        Handle_TCollection_HAsciiString hStr = new TCollection_HAsciiString(qUtf8Printable(str));
+        return hStr;
     }
     else if constexpr(std::is_same<OTHER_STRING_TYPE, std::string>::value) {
         return str.toStdString();

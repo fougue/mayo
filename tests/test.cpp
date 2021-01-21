@@ -548,6 +548,7 @@ void Test::StringUtils_stringConversion_test()
 {
     const QString text = "test_éç²µ§_测试_Тест";
     QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<TCollection_AsciiString>(text)), text);
+    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<Handle_TCollection_HAsciiString>(text)), text);
     QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<std::string>(text)), text);
     QCOMPARE(StringUtils::fromUtf16(StringUtils::toUtf16<TCollection_ExtendedString>(text)), text);
 }
