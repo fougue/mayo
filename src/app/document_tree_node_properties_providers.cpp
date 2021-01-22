@@ -22,20 +22,7 @@ class XCaf_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::XCaf_DocumentTreeNodeProperties)
 public:
     Properties(const DocumentTreeNode& treeNode)
-        : m_propertyName(this, textId("Name")),
-          m_propertyShapeType(this, textId("Shape")),
-          m_propertyXdeShapeKind(this, textId("XdeShape")),
-          m_propertyColor(this, textId("Color")),
-          m_propertyReferenceLocation(this, textId("Location")),
-          m_propertyValidationCentroid(this, textId("Centroid")),
-          m_propertyValidationArea(this, textId("Area")),
-          m_propertyValidationVolume(this, textId("Volume")),
-          m_propertyReferredName(this, textId("ProductName")),
-          m_propertyReferredColor(this, textId("ProductColor")),
-          m_propertyReferredValidationCentroid(this, textId("ProductCentroid")),
-          m_propertyReferredValidationArea(this, textId("ProductArea")),
-          m_propertyReferredValidationVolume(this, textId("ProductVolume")),
-          m_label(treeNode.label())
+        : m_label(treeNode.label())
     {
         const TDF_Label& label = m_label;
         const XCaf& xcaf = treeNode.document()->xcaf();
@@ -147,20 +134,20 @@ public:
         PropertyGroupSignals::onPropertyChanged(prop);
     }
 
-    PropertyQString m_propertyName;
-    PropertyQString m_propertyShapeType;
-    PropertyQString m_propertyXdeShapeKind;
-    PropertyOccColor m_propertyColor;
-    PropertyOccTrsf m_propertyReferenceLocation;
-    PropertyOccPnt m_propertyValidationCentroid;
-    PropertyArea m_propertyValidationArea;
-    PropertyVolume m_propertyValidationVolume;
+    PropertyQString m_propertyName{ this, textId("Name") };
+    PropertyQString m_propertyShapeType{ this, textId("Shape") };
+    PropertyQString m_propertyXdeShapeKind{ this, textId("XdeShape") };
+    PropertyOccColor m_propertyColor{ this, textId("Color") };
+    PropertyOccTrsf m_propertyReferenceLocation{ this, textId("Location") };
+    PropertyOccPnt m_propertyValidationCentroid{ this, textId("Centroid") };
+    PropertyArea m_propertyValidationArea{ this, textId("Area") };
+    PropertyVolume m_propertyValidationVolume{ this, textId("Volume") };
 
-    PropertyQString m_propertyReferredName;
-    PropertyOccColor m_propertyReferredColor;
-    PropertyOccPnt m_propertyReferredValidationCentroid;
-    PropertyArea m_propertyReferredValidationArea;
-    PropertyVolume m_propertyReferredValidationVolume;
+    PropertyQString m_propertyReferredName{ this, textId("ProductName") };
+    PropertyOccColor m_propertyReferredColor{ this, textId("ProductColor") };
+    PropertyOccPnt m_propertyReferredValidationCentroid{ this, textId("ProductCentroid") };
+    PropertyArea m_propertyReferredValidationArea{ this, textId("ProductArea") };
+    PropertyVolume m_propertyReferredValidationVolume{ this, textId("ProductVolume") };
 
     TDF_Label m_label;
     TDF_Label m_labelReferred;
@@ -184,10 +171,6 @@ class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Mesh_DocumentTreeNodeProperties)
 public:
     Properties(const DocumentTreeNode& treeNode)
-      : m_propertyNodeCount(this, textId("NodeCount")),
-        m_propertyTriangleCount(this, textId("TriangleCount")),
-        m_propertyArea(this, textId("Area")),
-        m_propertyVolume(this, textId("Volume"))
     {
         auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(treeNode.label());
         Handle_Poly_Triangulation polyTri;
@@ -202,10 +185,10 @@ public:
             property->setUserReadOnly(true);
     }
 
-    PropertyInt m_propertyNodeCount;
-    PropertyInt m_propertyTriangleCount;
-    PropertyArea m_propertyArea;
-    PropertyVolume m_propertyVolume;
+    PropertyInt m_propertyNodeCount{ this, textId("NodeCount") };
+    PropertyInt m_propertyTriangleCount{ this, textId("TriangleCount") };
+    PropertyArea m_propertyArea{ this, textId("Area") };
+    PropertyVolume m_propertyVolume{ this, textId("Volume") };
 };
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const

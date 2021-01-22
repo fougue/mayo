@@ -248,11 +248,7 @@ class GraphicsMeshObjectDriver::ObjectProperties : public GraphicsObjectBaseProp
 public:
     ObjectProperties(const GraphicsObjectPtr& object)
         : GraphicsObjectBasePropertyGroup(object),
-          m_meshVisu(Handle_MeshVS_Mesh::DownCast(object)),
-          m_propertyColor(this, textId("color")),
-          m_propertyEdgeColor(this, textId("edgeColor")),
-          m_propertyShowEdges(this, textId("showEdges")),
-          m_propertyShowNodes(this, textId("showNodes"))
+          m_meshVisu(Handle_MeshVS_Mesh::DownCast(object))
     {
         // Init properties
         Mayo_PropertyChangedBlocker(this);
@@ -300,10 +296,10 @@ public:
     }
 
     Handle_MeshVS_Mesh m_meshVisu;
-    PropertyOccColor m_propertyColor;
-    PropertyOccColor m_propertyEdgeColor;
-    PropertyBool m_propertyShowEdges;
-    PropertyBool m_propertyShowNodes;
+    PropertyOccColor m_propertyColor{ this, textId("color") };
+    PropertyOccColor m_propertyEdgeColor{ this, textId("edgeColor") };
+    PropertyBool m_propertyShowEdges{ this, textId("showEdges") };
+    PropertyBool m_propertyShowNodes{ this, textId("showNodes") };
 };
 
 std::unique_ptr<PropertyGroupSignals>

@@ -14,8 +14,7 @@ class OccObjReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : OccBaseMeshReaderProperties(parentGroup),
-          singlePrecisionVertexCoords(this, textId("singlePrecisionVertexCoords"))
+        : OccBaseMeshReaderProperties(parentGroup)
     {
         this->singlePrecisionVertexCoords.setDescription(
                     textId("Single precision flag for reading vertex data(coordinates)").tr());
@@ -26,7 +25,7 @@ public:
         this->singlePrecisionVertexCoords.setValue(false);
     }
 
-    PropertyBool singlePrecisionVertexCoords;
+    PropertyBool singlePrecisionVertexCoords{ this, textId("singlePrecisionVertexCoords") };
 };
 
 OccObjReader::OccObjReader()

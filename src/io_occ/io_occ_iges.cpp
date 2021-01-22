@@ -22,11 +22,7 @@ class OccIgesReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          bsplineContinuity(this, textId("bsplineContinuity")),
-          surfaceCurveMode(this, textId("surfaceCurveMode")),
-          readFaultyEntities(this, textId("readFaultyEntities")),
-          readOnlyVisibleEntities(this, textId("readOnlyVisibleEntities"))
+        : PropertyGroup(parentGroup)
     {
         this->bsplineContinuity.setDescription(
                     textIdTr("Manages the continuity of BSpline curves (IGES entities 106, 112 and 126) "
@@ -87,10 +83,10 @@ public:
         this->readOnlyVisibleEntities.setValue(params.readOnlyVisibleEntities);
     }
 
-    PropertyEnum<BSplineContinuity> bsplineContinuity;
-    PropertyEnum<SurfaceCurveMode> surfaceCurveMode;
-    PropertyBool readFaultyEntities;
-    PropertyBool readOnlyVisibleEntities;
+    PropertyEnum<BSplineContinuity> bsplineContinuity{ this, textId("bsplineContinuity") };
+    PropertyEnum<SurfaceCurveMode> surfaceCurveMode{ this, textId("surfaceCurveMode") };
+    PropertyBool readFaultyEntities{ this, textId("readFaultyEntities") };
+    PropertyBool readOnlyVisibleEntities{ this, textId("readOnlyVisibleEntities") };
 };
 
 OccIgesReader::OccIgesReader()
@@ -145,10 +141,7 @@ class OccIgesWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          brepMode(this, textId("brepMode")),
-          planeMode(this, textId("planeMode")),
-          lengthUnit(this, textId("lengthUnit"))
+        : PropertyGroup(parentGroup)
     {
         this->planeMode.setDescription(
                     textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
@@ -170,9 +163,9 @@ public:
         this->lengthUnit.setValue(params.lengthUnit);
     }
 
-    PropertyEnum<BRepMode> brepMode;
-    PropertyEnum<PlaneMode> planeMode;
-    PropertyEnum<OccCommon::LengthUnit> lengthUnit;
+    PropertyEnum<BRepMode> brepMode{ this, textId("brepMode") };
+    PropertyEnum<PlaneMode> planeMode{ this, textId("planeMode") };
+    PropertyEnum<OccCommon::LengthUnit> lengthUnit{ this, textId("lengthUnit") };
 };
 
 OccIgesWriter::OccIgesWriter()

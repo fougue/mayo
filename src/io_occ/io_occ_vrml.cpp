@@ -26,8 +26,7 @@ class OccVrmlWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          shapeRepresentation(this, textId("shapeRepresentation"))
+        : PropertyGroup(parentGroup)
     {
         this->shapeRepresentation.mutableEnumeration().chopPrefix("VrmlAPI_");
     }
@@ -40,7 +39,7 @@ public:
 //    PropertyBool m_meshDeflectionFromShapeRelativeSize;
 //    PropertyDouble m_meshDeflection;
 //    PropertyDouble scale;
-    PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation;
+    PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation{ this, textId("shapeRepresentation") };
 };
 
 bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress)

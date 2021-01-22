@@ -25,8 +25,7 @@ class WidgetModelTreeBuilder_Xde::Module : public QObject, public PropertyGroup 
 public:
     Module(const ApplicationPtr& app)
         : QObject(app.get()),
-          PropertyGroup(app->settings()),
-          instanceNameFormat(this, textId("instanceNameFormat"))
+          PropertyGroup(app->settings())
     {
         this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
         auto settings = app->settings();
@@ -73,7 +72,7 @@ public:
         return QIcon();
     }
 
-    PropertyEnum<NameFormat> instanceNameFormat;
+    PropertyEnum<NameFormat> instanceNameFormat{ this, textId("instanceNameFormat") };
 };
 
 bool WidgetModelTreeBuilder_Xde::supportsDocumentTreeNode(const DocumentTreeNode& node) const

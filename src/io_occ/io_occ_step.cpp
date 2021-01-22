@@ -26,13 +26,7 @@ class OccStepReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          productContext(this, textId("productContext")),
-          assemblyLevel(this, textId("assemblyLevel")),
-          preferredShapeRepresentation(this, textId("preferredShapeRepresentation")),
-          readShapeAspect(this, textId("readShapeAspect")),
-          readSubShapesNames(this, textId("readSubShapesNames")),
-          encoding(this, textId("encoding"))
+        : PropertyGroup(parentGroup)
     {
         this->productContext.setDescription(
                     textIdTr("When reading AP 209 STEP files, allows selecting either only `design` "
@@ -111,12 +105,12 @@ public:
         this->encoding.setValue(params.encoding);
     }
 
-    PropertyEnum<ProductContext> productContext;
-    PropertyEnum<AssemblyLevel> assemblyLevel;
-    PropertyEnum<ShapeRepresentation> preferredShapeRepresentation;
-    PropertyBool readShapeAspect;
-    PropertyBool readSubShapesNames;
-    PropertyEnum<Encoding> encoding;
+    PropertyEnum<ProductContext> productContext{ this, textId("productContext") };
+    PropertyEnum<AssemblyLevel> assemblyLevel{ this, textId("assemblyLevel") };
+    PropertyEnum<ShapeRepresentation> preferredShapeRepresentation{ this, textId("preferredShapeRepresentation") };
+    PropertyBool readShapeAspect{ this, textId("readShapeAspect") };
+    PropertyBool readSubShapesNames{ this, textId("readSubShapesNames") };
+    PropertyEnum<Encoding> encoding{ this, textId("encoding") };
 };
 
 OccStepReader::OccStepReader()
@@ -219,17 +213,7 @@ class OccStepWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          schema(this, textId("schema")),
-          lengthUnit(this, textId("lengthUnit")),
-          assemblyMode(this, textId("assemblyMode")),
-          freeVertexMode(this, textId("freeVertexMode")),
-          writePCurves(this, textId("writeParametericCurves")),
-          writeSubShapesNames(this, textId("writeSubShapesNames")),
-          headerAuthor(this, textId("headerAuthor")),
-          headerOrganization(this, textId("headerOrganization")),
-          headerOriginatingSystem(this, textId("headerOriginatingSystem")),
-          headerDescription(this, textId("headerDescription"))
+        : PropertyGroup(parentGroup)
     {
         this->schema.setDescription(textIdTr("Version of schema used for the output STEP file"));
 
@@ -281,16 +265,16 @@ public:
         this->headerDescription.setValue("OpenCascade Model");
     }
 
-    PropertyEnum<Schema> schema;
-    PropertyEnum<LengthUnit> lengthUnit;
-    PropertyEnum<AssemblyMode> assemblyMode;
-    PropertyEnum<FreeVertexMode> freeVertexMode;
-    PropertyBool writePCurves;
-    PropertyBool writeSubShapesNames;
-    PropertyQString headerAuthor;
-    PropertyQString headerOrganization;
-    PropertyQString headerOriginatingSystem;
-    PropertyQString headerDescription;
+    PropertyEnum<Schema> schema{ this, textId("schema") };
+    PropertyEnum<LengthUnit> lengthUnit{ this, textId("lengthUnit") };
+    PropertyEnum<AssemblyMode> assemblyMode{ this, textId("assemblyMode") };
+    PropertyEnum<FreeVertexMode> freeVertexMode{ this, textId("freeVertexMode") };
+    PropertyBool writePCurves{ this, textId("writeParametericCurves") };
+    PropertyBool writeSubShapesNames{ this, textId("writeSubShapesNames") };
+    PropertyQString headerAuthor{ this, textId("headerAuthor") };
+    PropertyQString headerOrganization{ this, textId("headerOrganization") };
+    PropertyQString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
+    PropertyQString headerDescription{ this, textId("headerDescription") };
 };
 
 OccStepWriter::OccStepWriter()

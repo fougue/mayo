@@ -14,9 +14,7 @@ class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : OccBaseMeshReaderProperties(parentGroup),
-          skipEmptyNodes(this, textId("skipEmptyNodes")),
-          useMeshNameAsFallback(this, textId("useMeshNameAsFallback"))
+        : OccBaseMeshReaderProperties(parentGroup)
     {
        this->skipEmptyNodes.setDescription(
                     textIdTr("Ignore nodes without geometry(`Yes` by default)"));
@@ -30,8 +28,8 @@ public:
         this->useMeshNameAsFallback.setValue(true);
     }
 
-    PropertyBool skipEmptyNodes;
-    PropertyBool useMeshNameAsFallback;
+    PropertyBool skipEmptyNodes{ this, textId("skipEmptyNodes") };
+    PropertyBool useMeshNameAsFallback{ this, textId("useMeshNameAsFallback") };
 };
 
 OccGltfReader::OccGltfReader()

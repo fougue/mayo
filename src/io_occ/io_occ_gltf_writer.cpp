@@ -24,11 +24,7 @@ class OccGltfWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          coordinatesConverter(this, textId("coordinatesConverter")),
-          transformationFormat(this, textId("transformationFormat")),
-          format(this, textId("format")),
-          forceExportUV(this, textId("forceExportUV"))
+        : PropertyGroup(parentGroup)
     {
         this->coordinatesConverter.setDescription(
                     textIdTr("Coordinate system transformation from OpenCascade to glTF"));
@@ -55,10 +51,10 @@ public:
         this->forceExportUV.setValue(defaults.forceExportUV);
     }
 
-    PropertyEnum<RWMesh_CoordinateSystem> coordinatesConverter;
-    PropertyEnum<RWGltf_WriterTrsfFormat> transformationFormat;
-    PropertyEnum<Format> format;
-    PropertyBool forceExportUV;
+    PropertyEnum<RWMesh_CoordinateSystem> coordinatesConverter{ this, textId("coordinatesConverter") };
+    PropertyEnum<RWGltf_WriterTrsfFormat> transformationFormat{ this, textId("transformationFormat") };
+    PropertyEnum<Format> format{ this, textId("format") };
+    PropertyBool forceExportUV{ this, textId("forceExportUV") };
 };
 
 bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)

@@ -53,8 +53,7 @@ class OccStlWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStlWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup),
-          targetFormat(this, textId("targetFormat"))
+        : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(this->textIdContext());
     }
@@ -63,7 +62,7 @@ public:
         this->targetFormat.setValue(Format::Binary);
     }
 
-    PropertyEnum<OccStlWriter::Format> targetFormat;
+    PropertyEnum<OccStlWriter::Format> targetFormat{ this, textId("targetFormat") };
 };
 
 bool OccStlReader::readFile(const QString& filepath, TaskProgress* progress)
