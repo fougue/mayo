@@ -515,65 +515,81 @@
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="158"/>
         <source>Format used when writting `double` values as strings</source>
-        <translation type="unfinished"></translation>
+        <translation>Format à utiliser lors de l&apos;écriture des valeurs de type `double`en chaînes de caractères</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="160"/>
         <source>Decimal floating point(ex: 392.65)</source>
-        <translation type="unfinished"></translation>
+        <translation>Décimal à virgule flottante (ex: 392,65)</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="161"/>
         <source>Scientific notation(ex: 3.9265E+2)</source>
-        <translation type="unfinished"></translation>
+        <translation>Notation scientifique (ex: 3,9265E+2)</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="162"/>
         <source>Use the shortest representation: decimal or scientific</source>
-        <translation type="unfinished"></translation>
+        <translation>Utiliser la notation la plus compacte : décimale ou scientifique</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="166"/>
         <source>Maximum number of significant digits when writting `double` values</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombre maximal de chiffres significatifs lors de l&apos;écriture de valeurs de type `double`</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="169"/>
         <source>Write AMF document in ZIP archive containing one file entry</source>
-        <translation type="unfinished"></translation>
+        <translation>Écrire le document AMF dans une archive ZIP contenant une entrée de fichier</translation>
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="172"/>
-        <source>Filename of the single AMF entry within the ZIP archive</source>
-        <translation type="unfinished"></translation>
+        <source>Filename of the single AMF entry within the ZIP archive.
+Only applicable if option `%1` is on</source>
+        <translation>Nom de l&apos;entrée du fichier AMF dans l&apos;archive ZIP.
+Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="174"/>
-        <source>Use the ZIP64 format extensions</source>
-        <translation type="unfinished"></translation>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="176"/>
+        <source>Use the ZIP64 format extensions.
+Only applicable if option `%1` is on</source>
+        <translation>Utiliser les extensions de format ZIP64.
+Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="186"/>
+        <source>Filename of the single AMF entry within the ZIP archive.
+Only applicable if `%1` is on</source>
+        <translation type="vanished">Nom de l&apos;entrée du fichier AMF dans l&apos;archive ZIP.
+Seulement applicable si `%1` est activée</translation>
+    </message>
+    <message>
+        <source>Use the ZIP64 format extensions.
+Only applicable if `%1` is on</source>
+        <translation type="vanished">Utiliser les extensions de format ZIP64.
+Seulement applicable si `%1` est activée</translation>
+    </message>
+    <message>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="189"/>
         <source>float64Format</source>
         <translation>Format nombres flottants 64bit</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="187"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="190"/>
         <source>float64Precision</source>
         <translation>Précision nombres flottants 64bit</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="188"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="191"/>
         <source>createZipArchive</source>
         <translation>Créer une archive ZIP</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="189"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="192"/>
         <source>zipEntryFilename</source>
         <translation>Nom du fichier de l&apos;entrée ZIP</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="190"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="193"/>
         <source>useZip64</source>
         <translation>Utiliser les extensions ZIP64</translation>
     </message>
@@ -1397,12 +1413,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>[fichiers ...]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="123"/>
+        <location filename="../src/app/main.cpp" line="133"/>
         <source>ERROR: Failed to load theme &apos;%1&apos;</source>
         <translation>ERREUR : impossible de charger le tème &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="137"/>
+        <location filename="../src/app/main.cpp" line="97"/>
         <source>Failed to load translation for &apos;%1&apos;</source>
         <translation>Impossible de charger la traduction pour &apos;%1&apos;</translation>
     </message>
@@ -1846,7 +1862,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Settings</name>
     <message>
-        <location filename="../src/base/settings.cpp" line="279"/>
+        <location filename="../src/base/settings.cpp" line="284"/>
         <source>DEFAULT</source>
         <translation type="unfinished"></translation>
     </message>

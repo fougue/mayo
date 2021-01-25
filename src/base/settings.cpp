@@ -120,6 +120,11 @@ void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
     }
 }
 
+QVariant Settings::findValueFromKey(const QString& strKey) const
+{
+    return d->m_settings.value(strKey);
+}
+
 void Settings::save()
 {
     this->saveAs(&d->m_settings);

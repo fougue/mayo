@@ -33,6 +33,7 @@ public:
     void loadFrom(const QSettings& source);
     void loadProperty(SettingIndex index);
     void loadPropertyFrom(const QSettings& source, SettingIndex index);
+    QVariant findValueFromKey(const QString& strKey) const;
 
     void save();
     void saveAs(QSettings* target);

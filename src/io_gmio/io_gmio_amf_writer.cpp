@@ -169,9 +169,12 @@ public:
                     textIdTr("Write AMF document in ZIP archive containing one file entry"));
 
         this->zipEntryFilename.setDescription(
-                    textIdTr("Filename of the single AMF entry within the ZIP archive"));
+                    textIdTr("Filename of the single AMF entry within the ZIP archive.\n"
+                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
 
-        this->useZip64.setDescription(textIdTr("Use the ZIP64 format extensions"));
+        this->useZip64.setDescription(
+                    textIdTr("Use the ZIP64 format extensions.\n"
+                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
     }
 
     void restoreDefaults() override {

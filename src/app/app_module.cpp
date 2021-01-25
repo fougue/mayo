@@ -180,6 +180,14 @@ QString AppModule::qmFilePath(const QByteArray& languageCode)
     return QString(":/i18n/mayo_%1.qm").arg(QString::fromUtf8(languageCode));
 }
 
+QByteArray AppModule::languageCode(const ApplicationPtr& app)
+{
+    const char keyLang[] = "application/language";
+    const Settings* settings = app->settings();
+    const QByteArray code = app ? settings->findValueFromKey(keyLang).toByteArray() : QByteArray();
+    return !code.isEmpty() ? code : enumLanguages.findName(0);
+}
+
 const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) const
 {
     auto it = m_mapFormatReaderParameters.find(format.identifier);

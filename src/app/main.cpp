@@ -87,6 +87,16 @@ static int runApp(QApplication* qtApp)
     auto app = Application::instance().get();
     auto guiApp = new GuiApplication(app);
 
+    // Load translation files
+    {
+        const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
+        auto translator = new QTranslator(app);
+        if (translator->load(qmFilePath))
+            qtApp->installTranslator(translator);
+        else
+            std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
+    }
+
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
@@ -125,17 +135,6 @@ static int runApp(QApplication* qtApp)
         return -1;
     }
     mayoTheme()->setup();
-
-    // Load translation files before UI creation
-    {
-        app->settings()->loadProperty(app->settings()->findProperty(&appModule->language));
-        const QString qmFilePath = AppModule::qmFilePath(appModule->language.name());
-        auto translator = new QTranslator(app);
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
-    }
 
     // Create MainWindow
     app->settings()->loadProperty(app->settings()->findProperty(&appModule->recentFiles));

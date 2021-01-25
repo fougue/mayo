@@ -41,6 +41,7 @@ public:
     StringUtils::TextOptions defaultTextOptions() const;
 
     static QString qmFilePath(const QByteArray& languageCode);
+    static QByteArray languageCode(const ApplicationPtr& app);
 
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;

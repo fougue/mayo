@@ -525,36 +525,38 @@
     </message>
     <message>
         <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="172"/>
-        <source>Filename of the single AMF entry within the ZIP archive</source>
+        <source>Filename of the single AMF entry within the ZIP archive.
+Only applicable if option `%1` is on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="174"/>
-        <source>Use the ZIP64 format extensions</source>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="176"/>
+        <source>Use the ZIP64 format extensions.
+Only applicable if option `%1` is on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="186"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="189"/>
         <source>float64Format</source>
         <translation>64bit Float Format</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="187"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="190"/>
         <source>float64Precision</source>
         <translation>64bit Float Precision</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="188"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="191"/>
         <source>createZipArchive</source>
         <translation>Create ZIP Archive</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="189"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="192"/>
         <source>zipEntryFilename</source>
         <translation>ZIP Entry Filename</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="190"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="193"/>
         <source>useZip64</source>
         <translation>Use ZIP64 extensions</translation>
     </message>
@@ -1285,12 +1287,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="123"/>
+        <location filename="../src/app/main.cpp" line="133"/>
         <source>ERROR: Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="137"/>
+        <location filename="../src/app/main.cpp" line="97"/>
         <source>Failed to load translation for &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1734,7 +1736,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Settings</name>
     <message>
-        <location filename="../src/base/settings.cpp" line="279"/>
+        <location filename="../src/base/settings.cpp" line="284"/>
         <source>DEFAULT</source>
         <translation type="unfinished"></translation>
     </message>
