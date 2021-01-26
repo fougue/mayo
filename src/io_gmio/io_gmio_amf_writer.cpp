@@ -133,6 +133,8 @@ public:
                     { FloatTextFormat::Shortest, textIdTr("Use the shortest representation: decimal or scientific") }
         });
 
+        this->float64Precision.setConstraintsEnabled(true);
+        this->float64Precision.setRange(1, 16);
         this->float64Precision.setDescription(
                     textIdTr("Maximum number of significant digits when writting `double` values"));
 
@@ -173,7 +175,7 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
 
     Material defaultMaterial = {};
     defaultMaterial.id = 0;
-    defaultMaterial.color.SetValues(1., 1., 1., Quantity_TOC_RGB);
+    defaultMaterial.color.SetValues(Quantity_NOC_WHITE);
     defaultMaterial.isColor = true;
     m_vecMaterial.push_back(std::move(defaultMaterial));
 
