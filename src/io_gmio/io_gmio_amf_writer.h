@@ -10,6 +10,7 @@
 #include "../base/io_writer.h"
 
 #include <Poly_Triangulation.hxx>
+#include <Quantity_Color.hxx>
 #include <TopLoc_Location.hxx>
 
 #include <gmio_amf/amf_document.h>
@@ -97,7 +98,8 @@ private:
 
     struct Material {
         int id = -1;
-        TDF_Label labelColor;
+        Quantity_Color color;
+        bool isColor = false;
     };
 
     struct Object {

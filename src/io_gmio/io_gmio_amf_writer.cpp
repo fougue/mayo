@@ -9,6 +9,7 @@
 #include "../base/application_item.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
+#include "../base/math_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -55,37 +56,6 @@ gmio_task_iface gmio_createTask(TaskProgress* progress)
     task.func_is_stop_requested = gmio_taskIsStopRequested;
     task.func_handle_progress = gmio_handleProgress;
     return task;
-}
-
-std::string_view gmio_errorToString(int error)
-{
-#if 0
-    using ErrorString = std::pair<int, std::string_view>;
-    using ArrayErrorString = std::vector<ErrorString>;
-    auto fnCreateArrayErrorString = []{
-        std::vector<ErrorString> array;
-        for (const auto& entry : MetaEnum::entries<enum gmio_error>())
-            array.push_back({ entry.first, entry.second });
-
-
-        for (const auto& entry : MetaEnum::entries<enum gmio_stl_error>())
-            array.push_back({ entry.first, entry.second });
-
-        for (const auto& entry : MetaEnum::entries<enum gmio_amf_error>())
-            array.push_back({ entry.first, entry.second });
-
-        return array;
-    };
-
-    static const std::vector<ErrorString> array = fnCreateArrayErrorString();
-    auto it = std::find_if(array.cbegin(), array.cend(), [=](const ErrorString& item) {
-        return item.first == error;
-    });
-    const std::string_view strErrorUnknown = "GMIO_ERROR_UNKNOWN";
-    return it != array.cend() ? it->second : strErrorUnknown;
-#endif
-
-    return "";
 }
 
 //#ifdef HAVE_GMIO
@@ -200,6 +170,12 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     m_vecObject.clear();
     m_vecInstance.clear();
 
+    Material defaultMaterial = {};
+    defaultMaterial.id = 0;
+    defaultMaterial.color.SetValues(1., 1., 1., Quantity_TOC_RGB);
+    defaultMaterial.isColor = true;
+    m_vecMaterial.push_back(std::move(defaultMaterial));
+
     std::unordered_map<TDF_Label, int> mapLabelObjectId;
     auto fnFindObjectId = [&](const TDF_Label& label) {
         auto it = mapLabelObjectId.find(label);
@@ -241,6 +217,8 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     };
 
     for (const ApplicationItem& appItem : spanAppItem) {
+        const int appItemIndex = &appItem - &spanAppItem.at(0);
+        progress->setValue(MathUtils::mappedValue(appItemIndex, 0, spanAppItem.size() - 1, 0, 100));
         const Tree<TDF_Label>& modelTree = appItem.document()->modelTree();
         if (appItem.isDocument()) {
             traverseTree(modelTree, [&](TreeNodeId id) { fnCreateObject(modelTree, id); });
@@ -260,7 +238,8 @@ bool GmioAmfWriter::writeFile(const QString& filepath, TaskProgress* progress)
     gmio_amf_document amfDoc = {};
     amfDoc.cookie = this;
     amfDoc.unit = GMIO_AMF_UNIT_MILLIMETER;
-    amfDoc.object_count = m_vecObject.size();
+    amfDoc.object_count = int(m_vecObject.size());
+    amfDoc.material_count = int(m_vecMaterial.size());
     amfDoc.constellation_count = !m_vecInstance.empty() ? 1 : 0;
     amfDoc.func_get_document_element = &GmioAmfWriter::amf_getDocumentElement;
     amfDoc.func_get_document_element_metadata = &GmioAmfWriter::amf_getDocumentElementMetadata;
@@ -323,11 +302,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 
     // TDataXtd_Triangulation ?
 
-//    DocumentPtr doc = Document::findFrom(labelShape);
-//    if (doc) {
-//        doc->xcaf().colorTool();
-//    }
-
+    // Object meshes
     const int meshCount = int(m_vecMesh.size());
     BRepUtils::forEachSubFace(shape, [=](const TopoDS_Face& face){
         TopLoc_Location loc;
@@ -345,11 +320,35 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     if (m_vecMesh.size() == meshCount)
         return -1;
 
+    // Object material
+    int materialId = -1;
+    DocumentPtr doc = Document::findFrom(labelShape);
+    if (doc && doc->xcaf().hasShapeColor(labelShape)) {
+        const Quantity_Color color = doc->xcaf().shapeColor(labelShape);
+        auto itColor = std::find_if(
+                    m_vecMaterial.cbegin(), m_vecMaterial.cend(), [=](const Material& mat) {
+            return mat.color == color;
+        });
+        if (itColor != m_vecMaterial.cend()) {
+            materialId = itColor - m_vecMaterial.cbegin();
+        }
+        else {
+            materialId = m_vecMaterial.size();
+            Material material;
+            material.id = materialId;
+            material.color = color;
+            material.isColor = true;
+            m_vecMaterial.push_back(std::move(material));
+        }
+    }
+
+    // Add object
     Object object;
     object.id = m_vecObject.size();
     object.firstMeshId = meshCount;
     object.lastMeshId = m_vecMesh.size() - 1;
     object.name = CafUtils::labelAttrStdName(labelShape).toStdString();
+    object.materialId = materialId;
     m_vecObject.push_back(std::move(object));
     return m_vecObject.back().id;
 }
@@ -370,12 +369,23 @@ void GmioAmfWriter::amf_getDocumentElement(
         amfObject->mesh_count = object.lastMeshId - object.firstMeshId + 1;
         amfObject->metadata_count = 1;
     }
+    else if (element == GMIO_AMF_DOCUMENT_ELEMENT_MATERIAL) {
+        const Material& material = writer->m_vecMaterial.at(elementIndex);
+        auto amfMaterial = static_cast<gmio_amf_material*>(ptrElement);
+        *amfMaterial = {};
+        if (material.isColor) {
+            amfMaterial->id = material.id;
+            amfMaterial->color.r = material.color.Red();
+            amfMaterial->color.g = material.color.Green();
+            amfMaterial->color.b = material.color.Blue();
+        }
+    }
     else if (element == GMIO_AMF_DOCUMENT_ELEMENT_CONSTELLATION) {
         auto amfConstellation = static_cast<gmio_amf_constellation*>(ptrElement);
         *amfConstellation = {};
         // At most one constellation
         amfConstellation->id = 0;
-        amfConstellation->instance_count = writer->m_vecInstance.size();
+        amfConstellation->instance_count = int(writer->m_vecInstance.size());
     }
 }
 
@@ -426,6 +436,7 @@ void GmioAmfWriter::amf_getObjectMeshElement(
         *amfVolume = {};
         amfVolume->type = GMIO_AMF_VOLUME_TYPE_OBJECT;
         amfVolume->triangle_count = mesh.triangulation->NbTriangles();
+        amfVolume->materialid = object.materialId;
     }
 }
 
