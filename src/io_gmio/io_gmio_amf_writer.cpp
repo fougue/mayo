@@ -19,6 +19,7 @@
 
 #include <BRep_Tool.hxx>
 #include <Poly_Triangulation.hxx>
+#include <TDataXtd_Triangulation.hxx>
 #include <gp_Quaternion.hxx>
 
 #include <gmio_amf/amf_error.h>
@@ -290,23 +291,10 @@ void GmioAmfWriter::applyProperties(const PropertyGroup* group)
 
 int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 {
-    if (!XCaf::isShape(labelShape))
-        return -1;
-
-    if (!XCaf::isShapeSimple(labelShape))
-        return -1;
-
-    const TopoDS_Shape shape = XCaf::shape(labelShape);
-    if (shape.IsNull())
-        return -1;
-
-    // TDataXtd_Triangulation ?
-
     // Object meshes
     const int meshCount = int(m_vecMesh.size());
-    BRepUtils::forEachSubFace(shape, [=](const TopoDS_Face& face){
-        TopLoc_Location loc;
-        const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+
+    auto fnAddMesh = [&](const Handle_Poly_Triangulation& polyTri, const TopLoc_Location& loc) {
         if (!polyTri.IsNull()) {
             Mesh mesh;
             mesh.id = int(m_vecMesh.size());
@@ -315,7 +303,23 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
             // TODO mesh.materialId = ?
             m_vecMesh.push_back(std::move(mesh));
         }
-    });
+    };
+
+    // -- Shape ?
+    const TopoDS_Shape shape = XCaf::shape(labelShape);
+    if (!shape.IsNull()) {
+        BRepUtils::forEachSubFace(shape, [=](const TopoDS_Face& face){
+            TopLoc_Location loc;
+            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+            fnAddMesh(polyTri, loc);
+        });
+    }
+
+    // -- Triangulation ?
+    auto attrPolyTri = CafUtils::findAttribute<TDataXtd_Triangulation>(labelShape);
+    if (!attrPolyTri.IsNull()) {
+        fnAddMesh(attrPolyTri->Get(), TopLoc_Location());
+    }
 
     if (m_vecMesh.size() == meshCount)
         return -1;
