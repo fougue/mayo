@@ -7,7 +7,8 @@
 #pragma once
 
 #include "graphics_object_ptr.h"
-#include "../base/property_enumeration.h"
+#include "../base/enumeration.h"
+#include "../base/property.h"
 
 #include <Standard_Transient.hxx>
 #include <TDF_Label.hxx>
