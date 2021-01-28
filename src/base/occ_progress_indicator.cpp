@@ -27,7 +27,7 @@ void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool i
             m_lastStepName = scope.Name();
         }
 
-        const double pc = scope.GetPortion(); // Always within [0,1]
+        const double pc = this->GetPosition(); // Always within [0,1]
         const int val = pc * 100;
         if (m_lastProgress != val || isForce) {
             m_progress->setValue(val);
