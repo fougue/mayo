@@ -649,6 +649,7 @@ void MainWindow::onApplicationItemSelectionChanged()
                 });
             }
 
+#if 0
             GuiDocument* guiDoc = m_guiApp->findGuiDocument(item.document());
             GraphicsObjectPtr gfxObject = guiDoc->findGraphicsObject(docTreeNode.id());
             GraphicsObjectDriverPtr gfxDriver = GraphicsObjectDriver::get(gfxObject);
@@ -662,7 +663,7 @@ void MainWindow::onApplicationItemSelectionChanged()
                     });
                 }
             }
-
+#endif
         }
 
         auto app = m_guiApp->application();

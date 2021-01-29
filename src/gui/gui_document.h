@@ -26,6 +26,7 @@ class ApplicationItem;
 class GuiApplication;
 class V3dViewCameraAnimation;
 
+// Provides the link between Base::Document and graphical representations
 class GuiDocument : public QObject {
     Q_OBJECT
 public:
@@ -37,7 +38,7 @@ public:
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
-    GraphicsObjectPtr findGraphicsObject(TreeNodeId treeNodeId) const;
+    void foreachGraphicsObject(TreeNodeId treeNodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     void toggleItemSelected(const ApplicationItem& appItem);
 
@@ -75,13 +76,13 @@ private:
 
     void mapGraphics(TreeNodeId entityTreeNodeId);
 
-    struct GraphicsTreeNode {
-        GraphicsObjectPtr gfxObject;
+    struct GraphicsEntity {
         TreeNodeId treeNodeId;
-        std::unique_ptr<GraphicsTreeNodeMapping> gfxTreeNodeMapping;
+        std::vector<GraphicsObjectPtr> vecGfxObject;
+        std::unordered_map<TreeNodeId, GraphicsObjectPtr> mapTreeNodeGfxObject;
     };
 
-    const GraphicsTreeNode* findGraphicsTreeNode(TreeNodeId treeNodeId) const;
+    const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
     void v3dViewTrihedronDisplay(Qt::Corner corner);
 
@@ -96,7 +97,7 @@ private:
     Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
     Handle_AIS_InteractiveObject m_aisViewCube;
 
-    std::vector<GraphicsTreeNode> m_vecGraphicsTreeNode;
+    std::vector<GraphicsEntity> m_vecGraphicsEntity;
     Bnd_Box m_gpxBoundingBox;
 };
 

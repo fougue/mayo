@@ -53,7 +53,6 @@ HEADERS += \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
 
-
 SOURCES += \
     $$files(src/base/*.cpp) \
     $$files(src/io_occ/*.cpp) \
