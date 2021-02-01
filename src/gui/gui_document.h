@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/document.h"
+#include "../base/tkernel_utils.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 
@@ -38,7 +39,7 @@ public:
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
-    void foreachGraphicsObject(TreeNodeId treeNodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
+    void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     void toggleItemSelected(const ApplicationItem& appItem);
 
@@ -80,6 +81,7 @@ private:
         TreeNodeId treeNodeId;
         std::vector<GraphicsObjectPtr> vecGfxObject;
         std::unordered_map<TreeNodeId, GraphicsObjectPtr> mapTreeNodeGfxObject;
+        std::unordered_map<GraphicsObjectPtr, TreeNodeId> mapGfxObjectTreeNode;
     };
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;

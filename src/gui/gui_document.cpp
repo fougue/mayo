@@ -105,17 +105,16 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 }
 
 void GuiDocument::foreachGraphicsObject(
-        TreeNodeId treeNodeId,
-        const std::function<void (GraphicsObjectPtr)>& fn) const
+        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn) const
 {
     if (!fn)
         return;
 
-    const GraphicsEntity* ptrItem = this->findGraphicsEntity(treeNodeId);
+    const GraphicsEntity* ptrItem = this->findGraphicsEntity(nodeId);
     if (!ptrItem)
         return;
 
-    traverseTree(treeNodeId, m_document->modelTree(), [&](TreeNodeId id) {
+    traverseTree(nodeId, m_document->modelTree(), [&](TreeNodeId id) {
         GraphicsObjectPtr gfxObject = CppUtils::findValue(id, ptrItem->mapTreeNodeGfxObject);
         if (gfxObject)
             fn(gfxObject);
@@ -358,6 +357,7 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
             }
 
             gfxEntity.mapTreeNodeGfxObject.insert({ id, gfxEntity.vecGfxObject.back() });
+            gfxEntity.mapGfxObjectTreeNode.insert({ gfxEntity.vecGfxObject.back(), id });
         }
     });
 
