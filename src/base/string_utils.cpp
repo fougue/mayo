@@ -107,6 +107,20 @@ QString StringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
         return tr("%1%2").arg(locale.toString(qSizeBytes / oneMB), tr("MB"));
 }
 
+QString StringUtils::yesNoText(bool on)
+{
+    return on ? tr("Yes") : tr("No");
+}
+
+QString StringUtils::yesNoText(Qt::CheckState state)
+{
+    switch (state) {
+    case Qt::Unchecked: return tr("No");
+    case Qt::PartiallyChecked: return tr("Partially");
+    case Qt::Checked: return tr("Yes");
+    }
+}
+
 void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
 {
     if (locale.textDirection() == Qt::LeftToRight)

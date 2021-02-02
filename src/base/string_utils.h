@@ -43,6 +43,9 @@ public:
 
     static QString bytesText(uint64_t sizeBytes, const QLocale& locale = QLocale());
 
+    static QString yesNoText(bool on);
+    static QString yesNoText(Qt::CheckState state);
+
     static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
 
     // Qt/OpenCascade string conversion
