@@ -211,7 +211,10 @@ AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
 
 void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 {
-    d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
+    auto gfxObject = GraphicsObjectPtr::DownCast(
+                gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+    if (GraphicsUtils::AisObject_isVisible(gfxObject))
+        d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }
 
 void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)

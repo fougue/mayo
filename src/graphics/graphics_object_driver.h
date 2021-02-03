@@ -7,8 +7,10 @@
 #pragma once
 
 #include "graphics_object_ptr.h"
+#include "graphics_object_base_property_group.h"
 #include "../base/enumeration.h"
 #include "../base/property.h"
+#include "../base/span.h"
 
 #include <Standard_Transient.hxx>
 #include <TDF_Label.hxx>
@@ -32,23 +34,28 @@ public:
 
     virtual GraphicsObjectPtr createObject(const TDF_Label& label) const = 0;
 
+    Enumeration::Value defaultDisplayMode() const { return m_defaultDisplayMode; }
     const Enumeration& displayModes() const { return m_enumDisplayModes; }
     virtual void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const = 0;
     virtual Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const = 0;
 
-    virtual std::unique_ptr<PropertyGroupSignals> properties(const GraphicsObjectPtr& object) const = 0;
+    virtual std::unique_ptr<GraphicsObjectBasePropertyGroup> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
 
     static GraphicsObjectDriverPtr get(const GraphicsObjectPtr& object);
+    static GraphicsObjectDriverPtr getCommon(Span<const GraphicsObjectPtr> spanObject);
 
     DEFINE_STANDARD_RTTI_INLINE(GraphicsObjectDriver, Standard_Transient)
 
 protected:
     void setDisplayModes(Enumeration enumeration) { m_enumDisplayModes = std::move(enumeration); }
+    void setDefaultDisplayMode(Enumeration::Value mode) { m_defaultDisplayMode = mode; }
     void throwIf_invalidDisplayMode(Enumeration::Value mode) const;
     void throwIf_differentDriver(const GraphicsObjectPtr& object) const;
+    void throwIf_differentDriver(Span<const GraphicsObjectPtr> objects) const;
 
 private:
     Enumeration m_enumDisplayModes;
+    Enumeration::Value m_defaultDisplayMode = -1;
 };
 
 class GraphicsShapeObjectDriver : public GraphicsObjectDriver {
@@ -59,7 +66,7 @@ public:
     GraphicsObjectPtr createObject(const TDF_Label& label) const override;
     void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(const GraphicsObjectPtr& object) const override;
+    std::unique_ptr<GraphicsObjectBasePropertyGroup> properties(Span<const GraphicsObjectPtr> spanObject) const override;
 
     enum DisplayMode {
         DisplayMode_Wireframe,
@@ -77,7 +84,7 @@ public:
     GraphicsObjectPtr createObject(const TDF_Label& label) const override;
     void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(const GraphicsObjectPtr& object) const override;
+    std::unique_ptr<GraphicsObjectBasePropertyGroup> properties(Span<const GraphicsObjectPtr> spanObject) const override;
 
     struct DefaultValues {
         bool showEdges = false;

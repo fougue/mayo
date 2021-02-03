@@ -6,22 +6,26 @@
 
 #pragma once
 
+#include "../base/span.h"
 #include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "graphics_object_ptr.h"
+#include <vector>
 
 namespace Mayo {
 
 class GraphicsObjectBasePropertyGroup : public PropertyGroupSignals {
+    Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectBasePropertyGroup)
 public:
-    GraphicsObjectBasePropertyGroup(const GraphicsObjectPtr& object);
+    GraphicsObjectBasePropertyGroup(Span<const GraphicsObjectPtr> spanObject);
     void onPropertyChanged(Property* prop) override;
 
+signals:
+    void visibilityToggled(bool on);
+
 private:
-    GraphicsObjectPtr m_object;
-    PropertyBool m_propertyIsVisible;
-    PropertyEnumeration m_propertyDisplayMode;
+    std::vector<GraphicsObjectPtr> m_vecObject;
+    PropertyCheckState m_propertyVisibleState;
 };
 
 } // namespace Mayo

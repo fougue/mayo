@@ -110,7 +110,7 @@ void GuiDocument::foreachGraphicsObject(
     if (!fn)
         return;
 
-    const GraphicsEntity* ptrItem = this->findGraphicsEntity(nodeId);
+    const GraphicsEntity* ptrItem = this->findGraphicsEntity(m_document->modelTree().nodeRoot(nodeId));
     if (!ptrItem)
         return;
 
@@ -138,6 +138,35 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
             GraphicsObjectPtr gfxObject = CppUtils::findValue(id, gfxEntity->mapTreeNodeGfxObject);
             if (gfxObject)
                 m_gfxScene.toggleOwnerSelection(gfxObject->GlobalSelOwner());
+        });
+    }
+}
+
+int GuiDocument::activeDisplayMode(const GraphicsObjectDriverPtr& driver) const
+{
+    if (!driver)
+        return -1;
+
+    auto itDriver = m_mapGfxDriverDisplayMode.find(driver);
+    if (itDriver != m_mapGfxDriverDisplayMode.cend())
+        return itDriver->second;
+    else
+        return driver->defaultDisplayMode();
+}
+
+void GuiDocument::setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode)
+{
+    if (!driver)
+        return;
+
+    if (this->activeDisplayMode(driver) == mode)
+        return;
+
+    m_mapGfxDriverDisplayMode.insert_or_assign(driver, mode);
+    for (const TreeNodeId entityNodeId : m_document->modelTree().roots()) {
+        this->foreachGraphicsObject(entityNodeId, [&](GraphicsObjectPtr object) {
+            if (GraphicsObjectDriver::get(object) == driver)
+                driver->applyDisplayMode(object, mode);
         });
     }
 }
@@ -298,7 +327,7 @@ int GuiDocument::aisViewCubeBoundingSize() const
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapGraphics(entityTreeNodeId);
-    emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
+    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
@@ -317,15 +346,15 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     }
 
     // Recompute bounding box
-    m_gpxBoundingBox.SetVoid();
+    m_gfxBoundingBox.SetVoid();
     for (const GraphicsEntity& item : m_vecGraphicsEntity) {
         for (const GraphicsObjectPtr& gfxObject : item.vecGfxObject) {
             const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
-            BndUtils::add(&m_gpxBoundingBox, bndBox);
+            BndUtils::add(&m_gfxBoundingBox, bndBox);
         }
     }
 
-    emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
+    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
 void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
@@ -350,6 +379,8 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
                 Handle_AIS_ConnectedInteractive gfxInstance = new AIS_ConnectedInteractive;
                 gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
                 gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
+                gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
+                gfxInstance->SetOwner(gfxProduct->GetOwner());
                 gfxEntity.vecGfxObject.push_back(gfxInstance);
             }
             else {
@@ -361,15 +392,19 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
         }
     });
 
-    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject)
+    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
         m_gfxScene.addObject(gfxObject);
+        auto driver = GraphicsObjectDriver::get(gfxObject);
+        if (driver)
+            driver->applyDisplayMode(gfxObject, this->activeDisplayMode(driver));
+    }
 
     m_gfxScene.redraw();
 
     GraphicsUtils::V3dView_fitAll(m_v3dView);
     for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
         const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
-        BndUtils::add(&m_gpxBoundingBox, bndBox);
+        BndUtils::add(&m_gfxBoundingBox, bndBox);
     }
 
     m_vecGraphicsEntity.push_back(std::move(gfxEntity));

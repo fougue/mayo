@@ -8,6 +8,7 @@
 
 #include "../base/document.h"
 #include "../base/tkernel_utils.h"
+#include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 
@@ -38,10 +39,13 @@ public:
     const DocumentPtr& document() const { return m_document; }
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
-    const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
+    const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     void toggleItemSelected(const ApplicationItem& appItem);
+
+    int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
+    void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
@@ -100,7 +104,9 @@ private:
     Handle_AIS_InteractiveObject m_aisViewCube;
 
     std::vector<GraphicsEntity> m_vecGraphicsEntity;
-    Bnd_Box m_gpxBoundingBox;
+    Bnd_Box m_gfxBoundingBox;
+
+    std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
 };
 
 } // namespace Mayo

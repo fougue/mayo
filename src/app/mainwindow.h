@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/property.h"
+#include "../graphics/graphics_object_base_property_group.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
 class QFileInfo;
@@ -78,12 +79,13 @@ private:
     QWidget* recreateLeftHeaderPlaceHolder();
     QMenu* createMenuModelTreeSettings();
     QMenu* createMenuRecentFiles();
+    QMenu* createMenuDisplayMode();
 
     GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
+    std::unique_ptr<GraphicsObjectBasePropertyGroup> m_ptrCurrentNodeGraphicsProperties;
 };
 
 } // namespace Mayo
