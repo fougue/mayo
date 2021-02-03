@@ -24,7 +24,7 @@ static std::vector<ApplicationItem>::iterator findApplicationItem(
 
 } // namespace Internal
 
-ApplicationItemSelectionModel::ApplicationItemSelectionModel(QObject *parent)
+ApplicationItemSelectionModel::ApplicationItemSelectionModel(QObject* parent)
     : QObject(parent)
 {
 }
@@ -32,6 +32,11 @@ ApplicationItemSelectionModel::ApplicationItemSelectionModel(QObject *parent)
 Span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
 {
     return m_vecSelectedItem;
+}
+
+bool ApplicationItemSelectionModel::isSelected(const ApplicationItem& item)
+{
+    return Internal::hasApplicationItem(m_vecSelectedItem, item);
 }
 
 void ApplicationItemSelectionModel::add(const ApplicationItem& item)

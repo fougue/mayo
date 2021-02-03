@@ -39,11 +39,6 @@ static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
     return widget;
 }
 
-static QString stringYesNo(bool on)
-{
-    return on ? PropertyEditorI18N::tr("Yes") : PropertyEditorI18N::tr("No");
-}
-
 struct InterfacePropertyEditor {
     virtual void syncWithProperty() = 0;
 };
@@ -54,13 +49,13 @@ struct PropertyBoolEditor : public InterfacePropertyEditor, public QCheckBox {
     {
         QObject::connect(this, &QCheckBox::toggled, [=](bool on) {
             property->setValue(on);
-            this->setText(stringYesNo(on));
+            this->setText(StringUtils::yesNoText(on));
         });
     }
 
     void syncWithProperty() override {
-        this->setText(stringYesNo(m_property->value()));
-        this->setChecked(m_property->value());
+        this->setText(StringUtils::yesNoText(*m_property));
+        this->setChecked(*m_property);
     }
 
     PropertyBool* m_property;
@@ -107,6 +102,25 @@ struct PropertyDoubleEditor : public InterfacePropertyEditor, public QDoubleSpin
     }
 
     PropertyDouble* m_property;
+};
+
+struct PropertyCheckStateEditor : public InterfacePropertyEditor, public QCheckBox {
+    PropertyCheckStateEditor(PropertyCheckState* property, QWidget* parentWidget)
+        : QCheckBox(parentWidget), m_property(property)
+    {
+        //this->setTristate();
+        QObject::connect(this, &QCheckBox::stateChanged, [=](int state) {
+            property->setValue(Qt::CheckState(state));
+            this->setText(StringUtils::yesNoText(Qt::CheckState(state)));
+        });
+    }
+
+    void syncWithProperty() override {
+        this->setText(StringUtils::yesNoText(*m_property));
+        this->setChecked(*m_property);
+    }
+
+    PropertyCheckState* m_property;
 };
 
 struct PropertyQStringEditor : public InterfacePropertyEditor, public QLineEdit {
@@ -299,6 +313,9 @@ QWidget* DefaultPropertyEditorFactory::createEditor(Property* property, QWidget*
 
     if (propTypeName == PropertyDouble::TypeName)
         editor = new PropertyDoubleEditor(static_cast<PropertyDouble*>(property), parentWidget);
+
+    if (propTypeName == PropertyCheckState::TypeName)
+        editor = new PropertyCheckStateEditor(static_cast<PropertyCheckState*>(property), parentWidget);
 
     if (propTypeName == PropertyQString::TypeName)
         editor = new PropertyQStringEditor(static_cast<PropertyQString*>(property), parentWidget);

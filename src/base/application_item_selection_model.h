@@ -19,6 +19,8 @@ public:
 
     Span<const ApplicationItem> selectedItems() const;
 
+    bool isSelected(const ApplicationItem& item);
+
     void add(const ApplicationItem& item);
     void add(Span<ApplicationItem> vecItem);
     void remove(const ApplicationItem& item);

@@ -14,6 +14,7 @@
 #include "graphics_scene.h"
 #include "graphics_utils.h"
 
+#include <AIS_ConnectedInteractive.hxx>
 #include <AIS_DisplayMode.hxx>
 #include <AIS_InteractiveContext.hxx>
 #include <BRep_TFace.hxx>
@@ -41,6 +42,20 @@ GraphicsObjectDriverPtr GraphicsObjectDriver::get(const GraphicsObjectPtr& objec
         return {};
 }
 
+GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(Span<const GraphicsObjectPtr> spanObject)
+{
+    GraphicsObjectDriverPtr commonGfxDriver;
+    for (const GraphicsObjectPtr& object : spanObject) {
+        GraphicsObjectDriverPtr gfxDriver = GraphicsObjectDriver::get(object);
+        if (!commonGfxDriver)
+            commonGfxDriver = gfxDriver;
+        else if (commonGfxDriver != gfxDriver)
+            return {};
+    }
+
+    return commonGfxDriver;
+}
+
 void GraphicsObjectDriver::throwIf_invalidDisplayMode(Enumeration::Value mode) const
 {
     if (this->displayModes().findIndex(mode) == -1)
@@ -53,14 +68,21 @@ void GraphicsObjectDriver::throwIf_differentDriver(const GraphicsObjectPtr& obje
         throw std::invalid_argument("Invalid driver for graphics object");
 }
 
+void GraphicsObjectDriver::throwIf_differentDriver(Span<const GraphicsObjectPtr> objects) const
+{
+    for (const GraphicsObjectPtr& object : objects)
+        this->throwIf_differentDriver(object);
+}
+
 GraphicsShapeObjectDriver::GraphicsShapeObjectDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, GraphicsObjectDriverI18N::textId("Wireframe") },
-        { DisplayMode_HiddenLineRemoval, GraphicsObjectDriverI18N::textId("HiddenLineRemoval") },
-        { DisplayMode_Shaded, GraphicsObjectDriverI18N::textId("Shaded") },
-        { DisplayMode_ShadedWithFaceBoundary, GraphicsObjectDriverI18N::textId("ShadedWithFaceBoundary") }
+        { DisplayMode_Wireframe, GraphicsObjectDriverI18N::textId("Shape_Wireframe") },
+        { DisplayMode_HiddenLineRemoval, GraphicsObjectDriverI18N::textId("Shape_HiddenLineRemoval") },
+        { DisplayMode_Shaded, GraphicsObjectDriverI18N::textId("Shape_Shaded") },
+        { DisplayMode_ShadedWithFaceBoundary, GraphicsObjectDriverI18N::textId("Shape_ShadedWithFaceBoundary") }
     });
+    this->setDefaultDisplayMode(DisplayMode_ShadedWithFaceBoundary);
 }
 
 GraphicsObjectDriver::Support GraphicsShapeObjectDriver::supportStatus(const TDF_Label& label) const
@@ -102,6 +124,9 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
     this->throwIf_differentDriver(object);
     this->throwIf_invalidDisplayMode(mode);
 
+    if (mode == this->currentDisplayMode(object))
+        return;
+
     AIS_InteractiveContext* context = GraphicsUtils::AisObject_contextPtr(object);
     if (!context)
         return;
@@ -130,7 +155,14 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
 
         if (object->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
             object->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
-            object->Redisplay(true);
+            auto aisLink = Handle_AIS_ConnectedInteractive::DownCast(object);
+            if (aisLink && aisLink->HasConnection()) {
+                aisLink->ConnectedTo()->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
+                aisLink->ConnectedTo()->Redisplay(true);
+            }
+            else {
+                object->Redisplay(true);
+            }
         }
     }
 
@@ -156,20 +188,21 @@ Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsO
     return -1;
 }
 
-std::unique_ptr<PropertyGroupSignals>
-GraphicsShapeObjectDriver::properties(const GraphicsObjectPtr& object) const
+std::unique_ptr<GraphicsObjectBasePropertyGroup>
+GraphicsShapeObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
-    this->throwIf_differentDriver(object);
-    return std::make_unique<GraphicsObjectBasePropertyGroup>(object);
+    this->throwIf_differentDriver(spanObject);
+    return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);
 }
 
 GraphicsMeshObjectDriver::GraphicsMeshObjectDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, GraphicsObjectDriverI18N::textId("Wireframe") },
-        { MeshVS_DMF_Shading, GraphicsObjectDriverI18N::textId("Shaded") },
-        { MeshVS_DMF_Shrink, GraphicsObjectDriverI18N::textId("Shrink") } // MeshVS_DA_ShrinkCoeff
+        { MeshVS_DMF_WireFrame, GraphicsObjectDriverI18N::textId("Mesh_Wireframe") },
+        { MeshVS_DMF_Shading, GraphicsObjectDriverI18N::textId("Mesh_Shaded") },
+        { MeshVS_DMF_Shrink, GraphicsObjectDriverI18N::textId("Mesh_Shrink") } // MeshVS_DA_ShrinkCoeff
     });
+    this->setDefaultDisplayMode(MeshVS_DMF_Shading);
 }
 
 GraphicsObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const TDF_Label& label) const
@@ -221,7 +254,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         object->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, defaultValues().edgeColor);
         object->SetDisplayMode(MeshVS_DMF_Shading);
 
-        // object->SetHilightMode(MeshVS_DMF_WireFrame);
+        //object->SetHilightMode(MeshVS_DMF_WireFrame);
         object->SetMeshSelMethod(MeshVS_MSM_PRECISE);
 
         object->SetOwner(this);
@@ -247,28 +280,47 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
 class GraphicsMeshObjectDriver::ObjectProperties : public GraphicsObjectBasePropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsMeshObjectDriver_ObjectProperties)
 public:
-    ObjectProperties(const GraphicsObjectPtr& object)
-        : GraphicsObjectBasePropertyGroup(object),
-          m_meshVisu(Handle_MeshVS_Mesh::DownCast(object))
+    ObjectProperties(Span<const GraphicsObjectPtr> spanObject)
+        : GraphicsObjectBasePropertyGroup(spanObject)
     {
+        NCollection_Vec3<float> sumColor = {};
+        NCollection_Vec3<float> sumEdgeColor = {};
+        int countShowEdges = 0;
+        int countShowNodes = 0;
+        for (const GraphicsObjectPtr& object : spanObject) {
+            auto meshVisu = Handle_MeshVS_Mesh::DownCast(object);
+            // Color
+            Quantity_Color color;
+            meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, color);
+            sumColor += color;
+            // Edge color
+            meshVisu->GetDrawer()->GetColor(MeshVS_DA_EdgeColor, color);
+            sumEdgeColor += color;
+            // Show edges
+            bool boolVal;
+            meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
+            countShowEdges += boolVal ? 1 : 0;
+            // Show nodes
+            meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_DisplayNodes, boolVal);
+            countShowNodes += boolVal ? 1 : 0;
+
+            m_vecMeshVisu.push_back(meshVisu);
+        }
+
+        auto fnCheckState = [&](int count) {
+            if (count == 0)
+                return Qt::Unchecked;
+            else
+                return count == spanObject.size() ? Qt::Checked : Qt::PartiallyChecked;
+        };
+
         // Init properties
         Mayo_PropertyChangedBlocker(this);
 
-        // -- Color
-        Quantity_Color color;
-        m_meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, color);
-        m_propertyColor.setValue(color);
-        // -- Edge color
-        Quantity_Color edgeColor;
-        m_meshVisu->GetDrawer()->GetColor(MeshVS_DA_EdgeColor, edgeColor);
-        m_propertyEdgeColor.setValue(edgeColor);
-        // -- Show edges
-        bool boolVal;
-        m_meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_ShowEdges, boolVal);
-        m_propertyShowEdges.setValue(boolVal);
-        // -- Show nodes
-        m_meshVisu->GetDrawer()->GetBoolean(MeshVS_DA_DisplayNodes, boolVal);
-        m_propertyShowNodes.setValue(boolVal);
+        m_propertyColor.setValue(Quantity_Color(sumColor / float(spanObject.size())));
+        m_propertyEdgeColor.setValue(Quantity_Color(sumEdgeColor / float(spanObject.size())));
+        m_propertyShowEdges.setValue(fnCheckState(countShowEdges));
+        m_propertyShowNodes.setValue(fnCheckState(countShowNodes));
     }
 
     void onPropertyChanged(Property* prop) override {
@@ -277,37 +329,49 @@ public:
         };
 
         if (prop == &m_propertyShowEdges) {
-            m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges.value());
-            fnRedisplay(m_meshVisu);
+            if (m_propertyShowEdges != Qt::PartiallyChecked) {
+                for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges == Qt::Checked);
+                    fnRedisplay(meshVisu);
+                }
+            }
         }
         else if (prop == &m_propertyShowNodes) {
-            m_meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes.value());
-            fnRedisplay(m_meshVisu);
+            if (m_propertyShowNodes != Qt::PartiallyChecked) {
+                for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes == Qt::Checked);
+                    fnRedisplay(meshVisu);
+                }
+            }
         }
         else if (prop == &m_propertyColor) {
-            m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, m_propertyColor.value());
-            fnRedisplay(m_meshVisu);
+            for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, m_propertyColor);
+                fnRedisplay(meshVisu);
+            }
         }
         else if (prop == &m_propertyEdgeColor) {
-            m_meshVisu->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, m_propertyEdgeColor.value());
-            fnRedisplay(m_meshVisu);
+            for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                meshVisu->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, m_propertyEdgeColor);
+                fnRedisplay(meshVisu);
+            }
         }
 
         GraphicsObjectBasePropertyGroup::onPropertyChanged(prop);
     }
 
-    Handle_MeshVS_Mesh m_meshVisu;
+    std::vector<Handle_MeshVS_Mesh> m_vecMeshVisu;
     PropertyOccColor m_propertyColor{ this, textId("color") };
     PropertyOccColor m_propertyEdgeColor{ this, textId("edgeColor") };
-    PropertyBool m_propertyShowEdges{ this, textId("showEdges") };
-    PropertyBool m_propertyShowNodes{ this, textId("showNodes") };
+    PropertyCheckState m_propertyShowEdges{ this, textId("showEdges") };
+    PropertyCheckState m_propertyShowNodes{ this, textId("showNodes") };
 };
 
-std::unique_ptr<PropertyGroupSignals>
-GraphicsMeshObjectDriver::properties(const GraphicsObjectPtr& object) const
+std::unique_ptr<GraphicsObjectBasePropertyGroup>
+GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
-    this->throwIf_differentDriver(object);
-    return std::make_unique<ObjectProperties>(object);
+    this->throwIf_differentDriver(spanObject);
+    return std::make_unique<ObjectProperties>(spanObject);
 }
 
 namespace Internal {

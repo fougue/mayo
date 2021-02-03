@@ -7,6 +7,8 @@
 #pragma once
 
 #include "../base/document.h"
+#include "../base/tkernel_utils.h"
+#include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_tree_node_mapping.h"
 
@@ -26,6 +28,7 @@ class ApplicationItem;
 class GuiApplication;
 class V3dViewCameraAnimation;
 
+// Provides the link between Base::Document and graphical representations
 class GuiDocument : public QObject {
     Q_OBJECT
 public:
@@ -36,10 +39,13 @@ public:
     const DocumentPtr& document() const { return m_document; }
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
-    const Bnd_Box& graphicsBoundingBox() const { return m_gpxBoundingBox; }
-    GraphicsObjectPtr findGraphicsObject(TreeNodeId treeNodeId) const;
+    const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
+    void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     void toggleItemSelected(const ApplicationItem& appItem);
+
+    int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
+    void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
@@ -75,13 +81,14 @@ private:
 
     void mapGraphics(TreeNodeId entityTreeNodeId);
 
-    struct GraphicsTreeNode {
-        GraphicsObjectPtr gfxObject;
+    struct GraphicsEntity {
         TreeNodeId treeNodeId;
-        std::unique_ptr<GraphicsTreeNodeMapping> gfxTreeNodeMapping;
+        std::vector<GraphicsObjectPtr> vecGfxObject;
+        std::unordered_map<TreeNodeId, GraphicsObjectPtr> mapTreeNodeGfxObject;
+        std::unordered_map<GraphicsObjectPtr, TreeNodeId> mapGfxObjectTreeNode;
     };
 
-    const GraphicsTreeNode* findGraphicsTreeNode(TreeNodeId treeNodeId) const;
+    const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
     void v3dViewTrihedronDisplay(Qt::Corner corner);
 
@@ -96,8 +103,10 @@ private:
     Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
     Handle_AIS_InteractiveObject m_aisViewCube;
 
-    std::vector<GraphicsTreeNode> m_vecGraphicsTreeNode;
-    Bnd_Box m_gpxBoundingBox;
+    std::vector<GraphicsEntity> m_vecGraphicsEntity;
+    Bnd_Box m_gfxBoundingBox;
+
+    std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
 };
 
 } // namespace Mayo

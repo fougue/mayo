@@ -123,6 +123,7 @@ private:
 using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
+using PropertyCheckState = GenericProperty<Qt::CheckState>;
 using PropertyQByteArray = GenericProperty<QByteArray>;
 using PropertyQString = GenericProperty<QString>;
 using PropertyQStringList = GenericProperty<QStringList>;

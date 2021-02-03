@@ -8,6 +8,7 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
+#include "../base/string_utils.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
@@ -67,10 +68,13 @@ static QString toStringDHMS(QuantityTime time)
     QString text;
     if (dayCount > 0)
         text += PropertyItemDelegate::tr("%1d ").arg(dayCount);
+
     if (hourCount > 0)
         text += PropertyItemDelegate::tr("%1h ").arg(hourCount);
+
     if (minCount > 0)
         text += PropertyItemDelegate::tr("%1min ").arg(minCount);
+
     if (secCount > 0)
         text += PropertyItemDelegate::tr("%1s").arg(secCount);
 
@@ -78,7 +82,7 @@ static QString toStringDHMS(QuantityTime time)
 }
 
 static QString propertyValueText(const PropertyBool* prop) {
-    return prop->value() ? PropertyItemDelegate::tr("Yes") : PropertyItemDelegate::tr("No");
+    return StringUtils::yesNoText(*prop);
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
@@ -87,6 +91,10 @@ static QString propertyValueText(const PropertyInt* prop) {
 
 static QString propertyValueText(const PropertyDouble* prop) {
     return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+}
+
+static QString propertyValueText(const PropertyCheckState* prop) {
+    return StringUtils::yesNoText(*prop);
 }
 
 static QString propertyValueText(const PropertyQByteArray* prop) {
@@ -238,6 +246,9 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
 
         if (propTypeName == PropertyDouble::TypeName)
             return propertyValueText(static_cast<const PropertyDouble*>(prop));
+
+        if (propTypeName == PropertyCheckState::TypeName)
+            return propertyValueText(static_cast<const PropertyCheckState*>(prop));
 
         if (propTypeName == PropertyQByteArray::TypeName)
             return propertyValueText(static_cast<const PropertyQByteArray*>(prop));

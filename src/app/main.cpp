@@ -108,8 +108,8 @@ static int runApp(QApplication* qtApp)
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
 
     // Register Graphics entity drivers
-    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
     guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
+    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
 
     // Register AppModule
     auto appModule = new AppModule(app);

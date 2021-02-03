@@ -7,43 +7,41 @@
 #include "graphics_object_base_property_group.h"
 #include "graphics_object_driver.h"
 #include "graphics_utils.h"
+#include "../base/application.h"
+#include "../base/application_item_selection_model.h"
 #include "../base/text_id.h"
 
 namespace Mayo {
 
-namespace Internal {
-
-static const Enumeration& displayModesEnum(const GraphicsObjectPtr& object) {
-    auto driver = GraphicsObjectDriver::get(object);
-    return driver ? driver->displayModes() : Enumeration::null();
-}
-
-static Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) {
-    auto driver = GraphicsObjectDriver::get(object);
-    return driver ? driver->currentDisplayMode(object) : -1;
-}
-
-} // namespace Internal
-
-GraphicsObjectBasePropertyGroup::GraphicsObjectBasePropertyGroup(const GraphicsObjectPtr& object)
-    : m_object(object),
-      m_propertyIsVisible(this, textId("visible")),
-      m_propertyDisplayMode(this, textId("displayMode"), Internal::displayModesEnum(object))
+GraphicsObjectBasePropertyGroup::GraphicsObjectBasePropertyGroup(Span<const GraphicsObjectPtr> spanObject)
+    : m_vecObject(spanObject.cbegin(), spanObject.cend()),
+      m_propertyVisibleState(this, textId("visible"))
 {
     // Init properties
     Mayo_PropertyChangedBlocker(this);
-    m_propertyIsVisible.setValue(GraphicsUtils::AisObject_isVisible(object));
-    m_propertyDisplayMode.setValue(Internal::currentDisplayMode(object));
+
+    int visibleCount = 0;
+    for (const GraphicsObjectPtr& object : spanObject) {
+        if (GraphicsUtils::AisObject_isVisible(object))
+            ++visibleCount;
+    }
+
+    if (visibleCount == 0)
+        m_propertyVisibleState.setValue(Qt::Unchecked);
+    else
+        m_propertyVisibleState.setValue(visibleCount == spanObject.size() ? Qt::Checked : Qt::PartiallyChecked);
 }
 
 void GraphicsObjectBasePropertyGroup::onPropertyChanged(Property* prop)
 {
-    if (prop == &m_propertyIsVisible) {
-        GraphicsUtils::AisObject_setVisible(m_object, m_propertyIsVisible.value());
-    }
-    else if (prop == &m_propertyDisplayMode) {
-        auto driver = GraphicsObjectDriver::get(m_object);
-        driver->applyDisplayMode(m_object, m_propertyDisplayMode.value());
+    if (prop == &m_propertyVisibleState) {
+        if (m_propertyVisibleState != Qt::PartiallyChecked) {
+            const bool isVisible = m_propertyVisibleState == Qt::Checked;
+            for (const GraphicsObjectPtr& object : m_vecObject)
+                GraphicsUtils::AisObject_setVisible(object, isVisible);
+
+            emit this->visibilityToggled(isVisible);
+        }
     }
 
     PropertyGroupSignals::onPropertyChanged(prop);

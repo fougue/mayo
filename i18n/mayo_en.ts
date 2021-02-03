@@ -428,22 +428,22 @@
 <context>
     <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="299"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="351"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="300"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="352"/>
         <source>edgeColor</source>
         <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="301"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="353"/>
         <source>showEdges</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="302"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="354"/>
         <source>showNodes</source>
         <translation>Show Nodes</translation>
     </message>
@@ -451,12 +451,12 @@
 <context>
     <name>Mayo::GraphicsObjectBasePropertyGroup</name>
     <message>
-        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="30"/>
+        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="35"/>
         <source>visible</source>
         <translation>Visible</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="31"/>
+        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="36"/>
         <source>displayMode</source>
         <translation>Display Mode</translation>
     </message>
@@ -464,99 +464,115 @@
 <context>
     <name>Mayo::GraphicsObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="58"/>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="168"/>
-        <source>Wireframe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="59"/>
         <source>HiddenLineRemoval</source>
-        <translation>Hidden Line Removal</translation>
+        <translation type="vanished">Hidden Line Removal</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="60"/>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="169"/>
-        <source>Shaded</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="61"/>
         <source>ShadedWithFaceBoundary</source>
-        <translation>Shaded with edges</translation>
+        <translation type="vanished">Shaded with edges</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="170"/>
-        <source>Shrink</source>
-        <translation type="unfinished"></translation>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="79"/>
+        <source>Shape_Wireframe</source>
+        <translation>[Shape] Wireframe</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="80"/>
+        <source>Shape_HiddenLineRemoval</source>
+        <translation>[Shape] Hidden Line Removal</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="81"/>
+        <source>Shape_Shaded</source>
+        <translation>[Shape] Shaded</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="82"/>
+        <source>Shape_ShadedWithFaceBoundary</source>
+        <translation>[Shape] Shaded With Edges</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="189"/>
+        <source>Mesh_Wireframe</source>
+        <translation>[Mesh] Wireframe</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="190"/>
+        <source>Mesh_Shaded</source>
+        <translation>[Mesh] Shaded</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="191"/>
+        <source>Mesh_Shrink</source>
+        <translation>[Mesh] Shrink</translation>
     </message>
 </context>
 <context>
     <name>Mayo::IO::GmioAmfWriter::Properties</name>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="158"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="129"/>
         <source>Format used when writting `double` values as strings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="160"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="131"/>
         <source>Decimal floating point(ex: 392.65)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="161"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="132"/>
         <source>Scientific notation(ex: 3.9265E+2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="162"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="133"/>
         <source>Use the shortest representation: decimal or scientific</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="166"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="139"/>
         <source>Maximum number of significant digits when writting `double` values</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="169"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="142"/>
         <source>Write AMF document in ZIP archive containing one file entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="172"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="145"/>
         <source>Filename of the single AMF entry within the ZIP archive.
 Only applicable if option `%1` is on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="176"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="149"/>
         <source>Use the ZIP64 format extensions.
 Only applicable if option `%1` is on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="189"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="162"/>
         <source>float64Format</source>
         <translation>64bit Float Format</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="190"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="163"/>
         <source>float64Precision</source>
         <translation>64bit Float Precision</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="191"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="164"/>
         <source>createZipArchive</source>
         <translation>Create ZIP Archive</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="192"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="165"/>
         <source>zipEntryFilename</source>
         <translation>ZIP Entry Filename</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="193"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="166"/>
         <source>useZip64</source>
         <translation>Use ZIP64 extensions</translation>
     </message>
@@ -1377,273 +1393,278 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="631"/>
+        <location filename="../src/app/mainwindow.ui" line="632"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="634"/>
+        <location filename="../src/app/mainwindow.ui" line="635"/>
         <source>Ctrl+N</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="639"/>
-        <location filename="../src/app/mainwindow.cpp" line="495"/>
+        <location filename="../src/app/mainwindow.ui" line="640"/>
+        <location filename="../src/app/mainwindow.cpp" line="500"/>
         <source>Import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="644"/>
+        <location filename="../src/app/mainwindow.ui" line="645"/>
         <source>Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="649"/>
+        <location filename="../src/app/mainwindow.ui" line="650"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="652"/>
+        <location filename="../src/app/mainwindow.ui" line="653"/>
         <source>Ctrl+O</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="657"/>
+        <location filename="../src/app/mainwindow.ui" line="658"/>
         <source>About Mayo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="662"/>
+        <location filename="../src/app/mainwindow.ui" line="663"/>
         <source>Report Bug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="667"/>
-        <location filename="../src/app/mainwindow.cpp" line="741"/>
+        <location filename="../src/app/mainwindow.ui" line="668"/>
+        <location filename="../src/app/mainwindow.cpp" line="751"/>
         <source>Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="676"/>
+        <location filename="../src/app/mainwindow.ui" line="677"/>
         <source>Save View to Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="681"/>
+        <location filename="../src/app/mainwindow.ui" line="682"/>
         <source>Export selected items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="686"/>
+        <location filename="../src/app/mainwindow.ui" line="687"/>
         <source>Inspect XDE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="695"/>
-        <location filename="../src/app/mainwindow.ui" line="698"/>
+        <location filename="../src/app/mainwindow.ui" line="696"/>
+        <location filename="../src/app/mainwindow.ui" line="699"/>
         <source>Previous Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="701"/>
+        <location filename="../src/app/mainwindow.ui" line="702"/>
         <source>Alt+Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="710"/>
-        <location filename="../src/app/mainwindow.ui" line="713"/>
+        <location filename="../src/app/mainwindow.ui" line="711"/>
+        <location filename="../src/app/mainwindow.ui" line="714"/>
         <source>Next Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="716"/>
+        <location filename="../src/app/mainwindow.ui" line="717"/>
         <source>Alt+Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="725"/>
+        <location filename="../src/app/mainwindow.ui" line="726"/>
         <source>Close &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="728"/>
+        <location filename="../src/app/mainwindow.ui" line="729"/>
         <source>Ctrl+W</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="736"/>
+        <location filename="../src/app/mainwindow.ui" line="737"/>
         <source>Fullscreen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="739"/>
+        <location filename="../src/app/mainwindow.ui" line="740"/>
         <source>Switch Fullscreen/Normal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="742"/>
+        <location filename="../src/app/mainwindow.ui" line="743"/>
         <source>F11</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="754"/>
+        <location filename="../src/app/mainwindow.ui" line="755"/>
         <source>Show Left Sidebar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="757"/>
+        <location filename="../src/app/mainwindow.ui" line="758"/>
         <source>Show/Hide Left Sidebar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="760"/>
+        <location filename="../src/app/mainwindow.ui" line="761"/>
         <source>Alt+0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="765"/>
+        <location filename="../src/app/mainwindow.ui" line="766"/>
         <source>Recent files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="773"/>
+        <location filename="../src/app/mainwindow.ui" line="774"/>
         <source>Show Origin Trihedron</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="776"/>
+        <location filename="../src/app/mainwindow.ui" line="777"/>
         <source>Show/Hide Origin Trihedron</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="781"/>
+        <location filename="../src/app/mainwindow.ui" line="782"/>
         <source>Zoom In</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="784"/>
+        <location filename="../src/app/mainwindow.ui" line="785"/>
         <source>Ctrl++</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="789"/>
+        <location filename="../src/app/mainwindow.ui" line="790"/>
         <source>Zoom Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="792"/>
+        <location filename="../src/app/mainwindow.ui" line="793"/>
         <source>Ctrl+-</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="797"/>
+        <location filename="../src/app/mainwindow.ui" line="798"/>
         <source>Close all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="800"/>
+        <location filename="../src/app/mainwindow.ui" line="801"/>
         <source>Ctrl+Shift+W</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="805"/>
+        <location filename="../src/app/mainwindow.ui" line="806"/>
         <source>Close all except &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="813"/>
+        <location filename="../src/app/mainwindow.ui" line="814"/>
         <source>Perspective</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.ui" line="821"/>
+        <location filename="../src/app/mainwindow.ui" line="822"/>
         <source>Orthographic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="116"/>
-        <source>All files(*.*)</source>
+        <location filename="../src/app/mainwindow.ui" line="827"/>
+        <source>Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/app/mainwindow.cpp" line="118"/>
+        <source>All files(*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/mainwindow.cpp" line="120"/>
         <source>Select Part File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="164"/>
+        <location filename="../src/app/mainwindow.cpp" line="166"/>
         <source>Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="167"/>
-        <location filename="../src/app/mainwindow.cpp" line="689"/>
+        <location filename="../src/app/mainwindow.cpp" line="169"/>
+        <location filename="../src/app/mainwindow.cpp" line="699"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="198"/>
+        <location filename="../src/app/mainwindow.cpp" line="200"/>
         <source>About %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="458"/>
+        <location filename="../src/app/mainwindow.cpp" line="463"/>
         <source>Anonymous%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="491"/>
-        <location filename="../src/app/mainwindow.cpp" line="877"/>
+        <location filename="../src/app/mainwindow.cpp" line="496"/>
+        <location filename="../src/app/mainwindow.cpp" line="887"/>
         <source>Import time: %1ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="515"/>
+        <location filename="../src/app/mainwindow.cpp" line="520"/>
         <source>Select Output File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="538"/>
+        <location filename="../src/app/mainwindow.cpp" line="543"/>
         <source>Export time: %1ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="646"/>
+        <location filename="../src/app/mainwindow.cpp" line="651"/>
         <source>Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="659"/>
+        <location filename="../src/app/mainwindow.cpp" line="667"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="769"/>
+        <location filename="../src/app/mainwindow.cpp" line="779"/>
         <source>Close %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="770"/>
+        <location filename="../src/app/mainwindow.cpp" line="780"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="773"/>
+        <location filename="../src/app/mainwindow.cpp" line="783"/>
         <source>Close all except %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="774"/>
+        <location filename="../src/app/mainwindow.cpp" line="784"/>
         <source>Close all except current</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1005"/>
+        <location filename="../src/app/mainwindow.cpp" line="1016"/>
         <source>%1 | %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1011"/>
+        <location filename="../src/app/mainwindow.cpp" line="1022"/>
         <source>Clear menu</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1674,17 +1695,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::PropertyEditorI18N</name>
     <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="44"/>
-        <source>Yes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="44"/>
-        <source>No</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="165"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="179"/>
         <source>Choose color ...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1692,43 +1703,33 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::PropertyItemDelegate</name>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="81"/>
-        <source>Yes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="81"/>
-        <source>No</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="69"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="70"/>
         <source>%1d </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="71"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="73"/>
         <source>%1h </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="73"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="76"/>
         <source>%1min </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="75"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="79"/>
         <source>%1s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="134"/>
-        <location filename="../src/app/property_item_delegate.cpp" line="144"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="142"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="152"/>
         <source>%1%2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="272"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="283"/>
         <source>ERROR no stringifier for property type &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1778,6 +1779,23 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <location filename="../src/base/string_utils.cpp" line="105"/>
         <location filename="../src/base/string_utils.cpp" line="107"/>
         <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="112"/>
+        <location filename="../src/base/string_utils.cpp" line="120"/>
+        <source>Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="112"/>
+        <location filename="../src/base/string_utils.cpp" line="118"/>
+        <source>No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/base/string_utils.cpp" line="119"/>
+        <source>Partially</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2346,7 +2364,7 @@ Read: %5
 <context>
     <name>System</name>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="118"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="89"/>
         <source>Writing item %1</source>
         <translation type="unfinished"></translation>
     </message>

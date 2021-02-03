@@ -615,6 +615,7 @@
      <addaction name="actionProjectionPerspective"/>
     </widget>
     <addaction name="menu_Projection"/>
+    <addaction name="actionDisplayMode"/>
     <addaction name="actionToggleOriginTrihedron"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
@@ -819,6 +820,11 @@
    </property>
    <property name="text">
     <string>Orthographic</string>
+   </property>
+  </action>
+  <action name="actionDisplayMode">
+   <property name="text">
+    <string>Mode</string>
    </property>
   </action>
  </widget>

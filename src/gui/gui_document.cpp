@@ -9,6 +9,8 @@
 #include "../app/theme.h" // TODO Remove this dependency
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
+#include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
@@ -21,6 +23,7 @@
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include <AIS_ViewCube.hxx>
 #endif
+#include <AIS_ConnectedInteractive.hxx>
 #include <AIS_Trihedron.hxx>
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
@@ -101,10 +104,21 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
                 this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
 }
 
-GraphicsObjectPtr GuiDocument::findGraphicsObject(TreeNodeId treeNodeId) const
+void GuiDocument::foreachGraphicsObject(
+        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn) const
 {
-    const GraphicsTreeNode* ptrItem = this->findGraphicsTreeNode(treeNodeId);
-    return ptrItem ? ptrItem->gfxObject : GraphicsObjectPtr();
+    if (!fn)
+        return;
+
+    const GraphicsEntity* ptrItem = this->findGraphicsEntity(m_document->modelTree().nodeRoot(nodeId));
+    if (!ptrItem)
+        return;
+
+    traverseTree(nodeId, m_document->modelTree(), [&](TreeNodeId id) {
+        GraphicsObjectPtr gfxObject = CppUtils::findValue(id, ptrItem->mapTreeNodeGfxObject);
+        if (gfxObject)
+            fn(gfxObject);
+    });
 }
 
 void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
@@ -116,13 +130,44 @@ void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
     if (appItem.isDocumentTreeNode()) {
         const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
         const TreeNodeId entityNodeId = doc->modelTree().nodeRoot(docTreeNode.id());
-        // Add/remove graphics owner
-        const GraphicsTreeNode* gfxTreeNode = this->findGraphicsTreeNode(entityNodeId);
-        if (gfxTreeNode && gfxTreeNode->gfxTreeNodeMapping) {
-            auto vecGfxOwner = gfxTreeNode->gfxTreeNodeMapping->findGraphicsOwners(docTreeNode);
-            for (const GraphicsOwnerPtr& gfxOwner : vecGfxOwner)
-                m_gfxScene.toggleOwnerSelection(gfxOwner);
-        }
+        const GraphicsEntity* gfxEntity = this->findGraphicsEntity(entityNodeId);
+        if (!gfxEntity)
+            return;
+
+        traverseTree(docTreeNode.id(), doc->modelTree(), [=](TreeNodeId id) {
+            GraphicsObjectPtr gfxObject = CppUtils::findValue(id, gfxEntity->mapTreeNodeGfxObject);
+            if (gfxObject)
+                m_gfxScene.toggleOwnerSelection(gfxObject->GlobalSelOwner());
+        });
+    }
+}
+
+int GuiDocument::activeDisplayMode(const GraphicsObjectDriverPtr& driver) const
+{
+    if (!driver)
+        return -1;
+
+    auto itDriver = m_mapGfxDriverDisplayMode.find(driver);
+    if (itDriver != m_mapGfxDriverDisplayMode.cend())
+        return itDriver->second;
+    else
+        return driver->defaultDisplayMode();
+}
+
+void GuiDocument::setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode)
+{
+    if (!driver)
+        return;
+
+    if (this->activeDisplayMode(driver) == mode)
+        return;
+
+    m_mapGfxDriverDisplayMode.insert_or_assign(driver, mode);
+    for (const TreeNodeId entityNodeId : m_document->modelTree().roots()) {
+        this->foreachGraphicsObject(entityNodeId, [&](GraphicsObjectPtr object) {
+            if (GraphicsObjectDriver::get(object) == driver)
+                driver->applyDisplayMode(object, mode);
+        });
     }
 }
 
@@ -282,68 +327,96 @@ int GuiDocument::aisViewCubeBoundingSize() const
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapGraphics(entityTreeNodeId);
-    emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
+    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
 {
-    const GraphicsTreeNode* ptrItem = this->findGraphicsTreeNode(entityTreeNodeId);
-    if (ptrItem) {
-        const GraphicsObjectPtr& gfxObject = ptrItem->gfxObject;
-        m_gfxScene.eraseObject(gfxObject);
-        m_vecGraphicsTreeNode.erase(m_vecGraphicsTreeNode.begin() + (ptrItem - &m_vecGraphicsTreeNode.front()));
+    {   // Delete entity graphics
+        const GraphicsEntity* ptrItem = this->findGraphicsEntity(entityTreeNodeId);
+        if (!ptrItem)
+            return;
+
+        for (const GraphicsObjectPtr& gfxObject : ptrItem->vecGfxObject)
+            m_gfxScene.eraseObject(gfxObject);
+
+        const int indexItem = ptrItem - &m_vecGraphicsEntity.front();
+        m_vecGraphicsEntity.erase(m_vecGraphicsEntity.begin() + indexItem);
         m_gfxScene.redraw();
-
-        // Recompute bounding box
-        m_gpxBoundingBox.SetVoid();
-        for (const GraphicsTreeNode& item : m_vecGraphicsTreeNode) {
-            const Bnd_Box entityBndBox = GraphicsUtils::AisObject_boundingBox(item.gfxObject);
-            BndUtils::add(&m_gpxBoundingBox, entityBndBox);
-        }
-
-        emit graphicsBoundingBoxChanged(m_gpxBoundingBox);
     }
+
+    // Recompute bounding box
+    m_gfxBoundingBox.SetVoid();
+    for (const GraphicsEntity& item : m_vecGraphicsEntity) {
+        for (const GraphicsObjectPtr& gfxObject : item.vecGfxObject) {
+            const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
+            BndUtils::add(&m_gfxBoundingBox, bndBox);
+        }
+    }
+
+    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
 void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
 {
     const Tree<TDF_Label>& docModelTree = m_document->modelTree();
-    const TDF_Label entityLabel = docModelTree.nodeData(entityTreeNodeId);
+    GraphicsEntity gfxEntity;
+    gfxEntity.treeNodeId = entityTreeNodeId;
+    std::unordered_map<TDF_Label, GraphicsObjectPtr> mapLabelGfxProduct;
+    traverseTree(entityTreeNodeId, docModelTree, [&](TreeNodeId id) {
+        const TDF_Label nodeLabel = docModelTree.nodeData(id);
+        if (docModelTree.nodeIsLeaf(id)) {
+            GraphicsObjectPtr gfxProduct = CppUtils::findValue(nodeLabel, mapLabelGfxProduct);
+            if (!gfxProduct) {
+                gfxProduct = m_guiApp->graphicsObjectDriverTable()->createObject(nodeLabel);
+                if (!gfxProduct)
+                    return;
 
-    GraphicsTreeNode gfxTreeNode;
-    gfxTreeNode.gfxObject = m_guiApp->graphicsObjectDriverTable()->createObject(entityLabel);
-    gfxTreeNode.treeNodeId = entityTreeNodeId;
-    m_gfxScene.addObject(gfxTreeNode.gfxObject);
-    m_gfxScene.redraw();
+                mapLabelGfxProduct.insert({ nodeLabel, gfxProduct });
+            }
 
-    const DocumentTreeNode entityTreeNode(m_document, entityTreeNodeId);
-    gfxTreeNode.gfxTreeNodeMapping = m_guiApp->graphicsTreeNodeMappingDriverTable()->createMapping(entityTreeNode);
-    if (gfxTreeNode.gfxTreeNodeMapping) {
-        const int selectMode = gfxTreeNode.gfxTreeNodeMapping->selectionMode();
-        if (selectMode != -1) {
-            m_gfxScene.activateObjectSelection(gfxTreeNode.gfxObject, selectMode);
-            m_gfxScene.foreachOwner(gfxTreeNode.gfxObject, selectMode, [&](const GraphicsOwnerPtr& ptr) {
-                if (!gfxTreeNode.gfxTreeNodeMapping->mapGraphicsOwner(ptr))
-                    qDebug() << "Insertion failed";
-            });
+            if (!docModelTree.nodeIsRoot(id)) {
+                Handle_AIS_ConnectedInteractive gfxInstance = new AIS_ConnectedInteractive;
+                gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
+                gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
+                gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
+                gfxInstance->SetOwner(gfxProduct->GetOwner());
+                gfxEntity.vecGfxObject.push_back(gfxInstance);
+            }
+            else {
+                gfxEntity.vecGfxObject.push_back(gfxProduct);
+            }
 
-            //m_aisContext->Deactivate(gfxEntity.aisObject(), selectMode);
+            gfxEntity.mapTreeNodeGfxObject.insert({ id, gfxEntity.vecGfxObject.back() });
+            gfxEntity.mapGfxObjectTreeNode.insert({ gfxEntity.vecGfxObject.back(), id });
         }
+    });
+
+    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
+        m_gfxScene.addObject(gfxObject);
+        auto driver = GraphicsObjectDriver::get(gfxObject);
+        if (driver)
+            driver->applyDisplayMode(gfxObject, this->activeDisplayMode(driver));
     }
 
+    m_gfxScene.redraw();
+
     GraphicsUtils::V3dView_fitAll(m_v3dView);
-    const Bnd_Box itemBndBox = GraphicsUtils::AisObject_boundingBox(gfxTreeNode.gfxObject);
-    BndUtils::add(&m_gpxBoundingBox, itemBndBox);
-    m_vecGraphicsTreeNode.push_back(std::move(gfxTreeNode));
+    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
+        const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
+        BndUtils::add(&m_gfxBoundingBox, bndBox);
+    }
+
+    m_vecGraphicsEntity.push_back(std::move(gfxEntity));
 }
 
-const GuiDocument::GraphicsTreeNode* GuiDocument::findGraphicsTreeNode(TreeNodeId treeNodeId) const
+const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const
 {
     auto itFound = std::find_if(
-                m_vecGraphicsTreeNode.cbegin(),
-                m_vecGraphicsTreeNode.cend(),
-                [=](const GraphicsTreeNode& item) { return item.treeNodeId == treeNodeId; });
-    return itFound != m_vecGraphicsTreeNode.cend() ? &(*itFound) : nullptr;
+                m_vecGraphicsEntity.cbegin(),
+                m_vecGraphicsEntity.cend(),
+                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; });
+    return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
 }
 
 void GuiDocument::v3dViewTrihedronDisplay(Qt::Corner corner)

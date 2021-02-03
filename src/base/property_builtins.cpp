@@ -19,8 +19,9 @@ BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const TextId& nam
 }
 
 template<> const char PropertyBool::TypeName[] = "Mayo::PropertyBool";
-template<> const char GenericProperty<int>/*PropertyInt*/::TypeName[] = "Mayo::PropertyInt";
-template<> const char GenericProperty<double>/*PropertyDouble*/::TypeName[] = "Mayo::PropertyDouble";
+template<> const char GenericProperty<int>::TypeName[] = "Mayo::PropertyInt";
+template<> const char GenericProperty<double>::TypeName[] = "Mayo::PropertyDouble";
+template<> const char GenericProperty<Qt::CheckState>::TypeName[] = "Mayo::PropertyCheckState";
 template<> const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray";
 template<> const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
 template<> const char PropertyQStringList::TypeName[] = "Mayo::PropertyQStringList";
