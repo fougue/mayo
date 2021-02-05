@@ -665,10 +665,6 @@ void MainWindow::onApplicationItemSelectionChanged()
                 GraphicsObjectBasePropertyGroup* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
-                    QObject::connect(gfxProps, &GraphicsObjectBasePropertyGroup::visibilityToggled, this, [=](bool on) {
-                        if (on && m_guiApp->selectionModel()->isSelected(item))
-                            guiDoc->toggleItemSelected(item);
-                    });
                     QObject::connect(gfxProps, &PropertyGroupSignals::propertyChanged, this, [=]{
                         guiDoc->graphicsScene()->redraw();
                     });

@@ -192,7 +192,8 @@ std::unique_ptr<GraphicsObjectBasePropertyGroup>
 GraphicsShapeObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
-    return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);
+    //return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);
+    return {};
 }
 
 GraphicsMeshObjectDriver::GraphicsMeshObjectDriver()

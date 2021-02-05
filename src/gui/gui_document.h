@@ -47,6 +47,13 @@ public:
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
     void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
+    struct NodeVisibility {
+        TreeNodeId id;
+        Qt::CheckState state;
+    };
+    Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
+    void setNodeVisible(TreeNodeId nodeId, bool on);
+
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
 
@@ -71,7 +78,10 @@ public:
     int aisViewCubeBoundingSize() const;
 
 signals:
+    void nodesVisibilityChanged(Span<const NodeVisibility> spanNodeVisible);
+
     void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
+
     void viewTrihedronModeChanged(ViewTrihedronMode mode);
     void viewTrihedronCornerChanged(Qt::Corner corner);
 
@@ -107,6 +117,7 @@ private:
     Bnd_Box m_gfxBoundingBox;
 
     std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
+    std::unordered_map<TreeNodeId, Qt::CheckState> m_mapTreeNodeCheckState;
 };
 
 } // namespace Mayo

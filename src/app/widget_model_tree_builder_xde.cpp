@@ -198,6 +198,8 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
                 if (!icon.isNull())
                     guiNode->setIcon(0, icon);
 
+                guiNode->setFlags(guiNode->flags() | Qt::ItemIsUserCheckable);
+                guiNode->setCheckState(0, Qt::Checked);
                 mapNodeIdToTreeItem.insert({ itNodeId, guiNode });
             }
         }

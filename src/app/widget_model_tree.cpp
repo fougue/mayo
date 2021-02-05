@@ -16,12 +16,15 @@
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QMetaType>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
+#include <gsl/gsl_util>
 #include <cassert>
 #include <memory>
+#include <unordered_map>
 
 Q_DECLARE_METATYPE(Mayo::DocumentPtr)
 Q_DECLARE_METATYPE(Mayo::DocumentTreeNode)
@@ -172,6 +175,8 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
             entityNode.document()->destroyEntity(entityNode.id());
         }
     });
+
+    this->connectTreeModelDataChanged();
 }
 
 WidgetModelTree::~WidgetModelTree()
@@ -220,6 +225,15 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
     QObject::connect(
                 app.get(), &Application::documentEntityAboutToBeDestroyed,
                 this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
+
+    QObject::connect(m_guiApp, &GuiApplication::guiDocumentAdded, this, [=](GuiDocument* guiDoc) {
+        QObject::connect(
+                    guiDoc, &GuiDocument::nodesVisibilityChanged,
+                    this, [=](Span<const GuiDocument::NodeVisibility> spanNodeVisible) {
+            this->onNodesVisibilityChanged(guiDoc, spanNodeVisible);
+        });
+    });
+
     QObject::connect(
                 m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
@@ -391,6 +405,69 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
 
     m_guiApp->selectionModel()->add(vecSelected);
     m_guiApp->selectionModel()->remove(vecDeselected);
+}
+
+void WidgetModelTree::connectTreeModelDataChanged()
+{
+    m_connTreeModelDataChanged = QObject::connect(
+                m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
+                this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection);
+}
+
+void WidgetModelTree::disconnectTreeModelDataChanged()
+{
+    QObject::disconnect(m_connTreeModelDataChanged);
+}
+
+void WidgetModelTree::onTreeModelDataChanged(
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+{
+    if (roles.contains(Qt::CheckStateRole) && topLeft == bottomRight) {
+        const QModelIndex& indexItem = topLeft;
+        const auto itemCheckState = Qt::CheckState(indexItem.data(Qt::CheckStateRole).toInt());
+        if (itemCheckState == Qt::PartiallyChecked)
+            return;
+
+        const QVariant var = indexItem.data(Internal::TreeItemDocumentTreeNodeRole);
+        auto treeNode = var.isValid() ? var.value<DocumentTreeNode>() : DocumentTreeNode::null();
+        if (!treeNode.isValid())
+            return;
+
+        GuiDocument* guiDoc = m_guiApp->findGuiDocument(treeNode.document());
+        if (!guiDoc)
+            return;
+
+        guiDoc->setNodeVisible(treeNode.id(), itemCheckState == Qt::Checked ? true : false);
+        guiDoc->graphicsScene()->redraw();
+    }
+}
+
+void WidgetModelTree::onNodesVisibilityChanged(
+        const GuiDocument* guiDoc, Span<const GuiDocument::NodeVisibility> spanNodeVisible)
+{
+    QTreeWidgetItem* treeItemDoc = this->findTreeItem(guiDoc->document());
+    if (!treeItemDoc)
+        return;
+
+    std::unordered_map<TreeNodeId, Qt::CheckState> mapNodeVisibleState;
+    for (const GuiDocument::NodeVisibility& nodeVisibleState : spanNodeVisible)
+        mapNodeVisibleState.insert({ nodeVisibleState.id, nodeVisibleState.state });
+
+    this->disconnectTreeModelDataChanged();
+    auto _ = gsl::finally([=]{ this->connectTreeModelDataChanged(); });
+
+    for (QTreeWidgetItemIterator it(treeItemDoc); *it; ++it) {
+        QTreeWidgetItem* treeItem = *it;
+        const DocumentTreeNode docTreeNode = Internal::treeItemDocumentTreeNode(treeItem);
+        auto itNodeVisibleState = mapNodeVisibleState.find(docTreeNode.id());
+        if (itNodeVisibleState != mapNodeVisibleState.cend()) {
+            treeItem->setCheckState(0, itNodeVisibleState->second);
+            mapNodeVisibleState.erase(itNodeVisibleState);
+        }
+
+        if (mapNodeVisibleState.empty())
+            return;
+    }
 }
 
 } // namespace Mayo

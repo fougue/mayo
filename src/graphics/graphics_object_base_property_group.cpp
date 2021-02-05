@@ -14,12 +14,12 @@
 namespace Mayo {
 
 GraphicsObjectBasePropertyGroup::GraphicsObjectBasePropertyGroup(Span<const GraphicsObjectPtr> spanObject)
-    : m_vecObject(spanObject.cbegin(), spanObject.cend()),
-      m_propertyVisibleState(this, textId("visible"))
+    : m_vecObject(spanObject.cbegin(), spanObject.cend())/*,
+      m_propertyVisibleState(this, textId("visible"))*/
 {
     // Init properties
     Mayo_PropertyChangedBlocker(this);
-
+#if 0
     int visibleCount = 0;
     for (const GraphicsObjectPtr& object : spanObject) {
         if (GraphicsUtils::AisObject_isVisible(object))
@@ -30,10 +30,12 @@ GraphicsObjectBasePropertyGroup::GraphicsObjectBasePropertyGroup(Span<const Grap
         m_propertyVisibleState.setValue(Qt::Unchecked);
     else
         m_propertyVisibleState.setValue(visibleCount == spanObject.size() ? Qt::Checked : Qt::PartiallyChecked);
+#endif
 }
 
 void GraphicsObjectBasePropertyGroup::onPropertyChanged(Property* prop)
 {
+#if 0
     if (prop == &m_propertyVisibleState) {
         if (m_propertyVisibleState != Qt::PartiallyChecked) {
             const bool isVisible = m_propertyVisibleState == Qt::Checked;
@@ -43,6 +45,7 @@ void GraphicsObjectBasePropertyGroup::onPropertyChanged(Property* prop)
             emit this->visibilityToggled(isVisible);
         }
     }
+#endif
 
     PropertyGroupSignals::onPropertyChanged(prop);
 }

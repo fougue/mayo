@@ -43,6 +43,8 @@ QTreeWidgetItem* WidgetModelTreeBuilder::createTreeItem(const DocumentTreeNode& 
 {
     auto treeItem = new QTreeWidgetItem;
     treeItem->setText(0, WidgetModelTreeBuilder::labelText(node.label()));
+    treeItem->setFlags(treeItem->flags() | Qt::ItemIsUserCheckable);
+    treeItem->setCheckState(0, Qt::Checked);
     return treeItem;
 }
 

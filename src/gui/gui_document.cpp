@@ -171,6 +171,84 @@ void GuiDocument::setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, in
     }
 }
 
+Qt::CheckState GuiDocument::nodeVisibleState(TreeNodeId nodeId) const
+{
+    auto itFound = m_mapTreeNodeCheckState.find(nodeId);
+    return itFound != m_mapTreeNodeCheckState.cend() ? itFound->second : Qt::Unchecked;
+}
+
+void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
+{
+    auto itNode = m_mapTreeNodeCheckState.find(nodeId);
+    if (itNode == m_mapTreeNodeCheckState.end())
+        return;
+
+    const Qt::CheckState nodeVisibleState = on ? Qt::Checked : Qt::Unchecked;
+    if (itNode->second == nodeVisibleState)
+        return; // Nothing to do in that case
+
+    std::vector<NodeVisibility> vecNodeVisibleChange;
+    auto fnSetNodeVisibleState = [&](TreeNodeId id, Qt::CheckState state) {
+        auto it = m_mapTreeNodeCheckState.find(id);
+        if (it == m_mapTreeNodeCheckState.cend()) {
+            m_mapTreeNodeCheckState.insert({ id, state });
+            vecNodeVisibleChange.push_back({ id, state });
+        }
+        else if (it->second != state) {
+            it->second = state;
+            vecNodeVisibleChange.push_back({ id, state });
+        }
+    };
+
+    const Tree<TDF_Label>& docModelTree = m_document->modelTree();
+    traverseTree(nodeId, docModelTree , [=](TreeNodeId id) {
+        fnSetNodeVisibleState(id, nodeVisibleState);
+    });
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject){
+        GraphicsUtils::AisObject_setVisible(gfxObject, on);
+    });
+    const ApplicationItem appItem({ m_document, nodeId });
+    bool isAppItemSelected = m_guiApp->selectionModel()->isSelected(appItem);
+    if (!isAppItemSelected) { // Check if a parent is selected
+        TreeNodeId parentId = docModelTree.nodeParent(nodeId);
+        while (parentId != 0 && !isAppItemSelected) {
+            const ApplicationItem parentAppItem({ m_document, parentId });
+            isAppItemSelected = m_guiApp->selectionModel()->isSelected(parentAppItem);
+            parentId = docModelTree.nodeParent(parentId);
+        }
+    }
+
+    if (on && isAppItemSelected)
+        this->toggleItemSelected(appItem);
+
+    // Parent nodes check state
+    TreeNodeId parentId = docModelTree.nodeParent(nodeId);
+    while (parentId != 0) {
+        int childCount = 0;
+        int checkedCount = 0;
+        int uncheckedCount = 0;
+        visitDirectChildren(parentId, docModelTree, [&](TreeNodeId id) {
+            ++childCount;
+            const Qt::CheckState childState = this->nodeVisibleState(id);
+            if (childState == Qt::Checked)
+                ++checkedCount;
+            else if (childState == Qt::Unchecked)
+                ++uncheckedCount;
+        });
+        Qt::CheckState parentVisibleState = Qt::PartiallyChecked;
+        if (checkedCount == childCount)
+            parentVisibleState = Qt::Checked;
+        else if (uncheckedCount == childCount)
+            parentVisibleState = Qt::Unchecked;
+
+        fnSetNodeVisibleState(parentId, parentVisibleState);
+        parentId = docModelTree.nodeParent(parentId);
+    }
+
+    if (!vecNodeVisibleChange.empty())
+        emit nodesVisibilityChanged(vecNodeVisibleChange);
+}
+
 bool GuiDocument::isOriginTrihedronVisible() const
 {
     return m_gfxScene.isObjectVisible(m_aisOriginTrihedron);
@@ -345,6 +423,10 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
         m_gfxScene.redraw();
     }
 
+    traverseTree(entityTreeNodeId, m_document->modelTree(), [=](TreeNodeId id) {
+        m_mapTreeNodeCheckState.erase(id);
+    });
+
     // Recompute bounding box
     m_gfxBoundingBox.SetVoid();
     for (const GraphicsEntity& item : m_vecGraphicsEntity) {
@@ -400,6 +482,10 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     }
 
     m_gfxScene.redraw();
+
+    traverseTree(entityTreeNodeId, docModelTree, [=](TreeNodeId id) {
+        m_mapTreeNodeCheckState.insert({ id, Qt::Checked });
+    });
 
     GraphicsUtils::V3dView_fitAll(m_v3dView);
     for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {

@@ -20,12 +20,12 @@ public:
     GraphicsObjectBasePropertyGroup(Span<const GraphicsObjectPtr> spanObject);
     void onPropertyChanged(Property* prop) override;
 
-signals:
-    void visibilityToggled(bool on);
+//signals:
+//    void visibilityToggled(bool on);
 
 private:
     std::vector<GraphicsObjectPtr> m_vecObject;
-    PropertyCheckState m_propertyVisibleState;
+    //PropertyCheckState m_propertyVisibleState;
 };
 
 } // namespace Mayo

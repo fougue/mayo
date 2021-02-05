@@ -53,6 +53,9 @@ private:
     template<typename U, typename FN>
     friend void traverseTree_postOrder(TreeNodeId node, const Tree<U>& tree, const FN& callback);
 
+    template<typename U, typename FN>
+    friend void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback);
+
     TreeNodeId lastNodeId() const;
     TreeNode* ptrNode(TreeNodeId id);
     const TreeNode* ptrNode(TreeNodeId id) const;
@@ -86,6 +89,9 @@ void traverseTree(const Tree<T>& tree, const FN& callback);
 // Same as traverseTree_preOrder()
 template<typename T, typename FN>
 void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback);
+
+template<typename U, typename FN>
+void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback);
 
 // --
 // -- Implementation
@@ -275,6 +281,18 @@ void traverseTree_postOrder(TreeNodeId id, const Tree<T>& tree, const FN& callba
             traverseTree_postOrder(it, tree, callback);
 
         callback(id);
+    }
+}
+
+template<typename U, typename FN>
+void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback)
+{
+    if (tree.isNodeDeleted(id))
+        return;
+
+    for (auto idChild = tree.nodeChildFirst(id); idChild != 0; idChild = tree.nodeSiblingNext(idChild)) {
+        if (!tree.isNodeDeleted(idChild))
+            callback(idChild);
     }
 }
 
