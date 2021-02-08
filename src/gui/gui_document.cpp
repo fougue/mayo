@@ -181,12 +181,13 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 {
     auto itNode = m_mapTreeNodeCheckState.find(nodeId);
     if (itNode == m_mapTreeNodeCheckState.end())
-        return;
+        return; // Error: unknown tree node
 
     const Qt::CheckState nodeVisibleState = on ? Qt::Checked : Qt::Unchecked;
     if (itNode->second == nodeVisibleState)
-        return; // Nothing to do in that case
+        return; // Same visible state
 
+    // Helper data/function to keep track of all the nodes whose visibility state are altered
     std::vector<NodeVisibility> vecNodeVisibleChange;
     auto fnSetNodeVisibleState = [&](TreeNodeId id, Qt::CheckState state) {
         auto it = m_mapTreeNodeCheckState.find(id);
@@ -200,6 +201,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         }
     };
 
+    // Recursive show/hide of the input node graphics
     const Tree<TDF_Label>& docModelTree = m_document->modelTree();
     traverseTree(nodeId, docModelTree , [=](TreeNodeId id) {
         fnSetNodeVisibleState(id, nodeVisibleState);
@@ -207,6 +209,9 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject){
         GraphicsUtils::AisObject_setVisible(gfxObject, on);
     });
+
+    // Keep selection state of the input node: in case the node graphics are "shown" back again then
+    // AIS object selection status is lost
     const ApplicationItem appItem({ m_document, nodeId });
     bool isAppItemSelected = m_guiApp->selectionModel()->isSelected(appItem);
     if (!isAppItemSelected) { // Check if a parent is selected
@@ -220,6 +225,15 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 
     if (on && isAppItemSelected)
         this->toggleItemSelected(appItem);
+
+    // Keep selection state of input node children
+    traverseTree(nodeId, docModelTree, [=](TreeNodeId id) {
+        if (id != nodeId) {
+            const ApplicationItem childAppItem({ m_document, id });
+            if (on && m_guiApp->selectionModel()->isSelected(childAppItem))
+                this->toggleItemSelected(childAppItem);
+        }
+    });
 
     // Parent nodes check state
     TreeNodeId parentId = docModelTree.nodeParent(nodeId);
@@ -245,6 +259,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         parentId = docModelTree.nodeParent(parentId);
     }
 
+    // Notify all node visibility changes
     if (!vecNodeVisibleChange.empty())
         emit nodesVisibilityChanged(vecNodeVisibleChange);
 }
