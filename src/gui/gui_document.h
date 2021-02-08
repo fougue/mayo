@@ -47,10 +47,6 @@ public:
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
     void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
-    struct NodeVisibility {
-        TreeNodeId id;
-        Qt::CheckState state;
-    };
     Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
@@ -78,7 +74,7 @@ public:
     int aisViewCubeBoundingSize() const;
 
 signals:
-    void nodesVisibilityChanged(Span<const NodeVisibility> spanNodeVisible);
+    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId);
 
     void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
 

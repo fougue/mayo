@@ -188,16 +188,16 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         return; // Same visible state
 
     // Helper data/function to keep track of all the nodes whose visibility state are altered
-    std::vector<NodeVisibility> vecNodeVisibleChange;
+    std::unordered_map<TreeNodeId, Qt::CheckState> mapNodeIdVisibleState;
     auto fnSetNodeVisibleState = [&](TreeNodeId id, Qt::CheckState state) {
         auto it = m_mapTreeNodeCheckState.find(id);
         if (it == m_mapTreeNodeCheckState.cend()) {
-            m_mapTreeNodeCheckState.insert({ id, state });
-            vecNodeVisibleChange.push_back({ id, state });
+            m_mapTreeNodeCheckState[id] = state;
+            mapNodeIdVisibleState[id] = state;
         }
         else if (it->second != state) {
             it->second = state;
-            vecNodeVisibleChange.push_back({ id, state });
+            mapNodeIdVisibleState[id] = state;
         }
     };
 
@@ -260,8 +260,8 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     }
 
     // Notify all node visibility changes
-    if (!vecNodeVisibleChange.empty())
-        emit nodesVisibilityChanged(vecNodeVisibleChange);
+    if (!mapNodeIdVisibleState.empty())
+        emit nodesVisibilityChanged(mapNodeIdVisibleState);
 }
 
 bool GuiDocument::isOriginTrihedronVisible() const

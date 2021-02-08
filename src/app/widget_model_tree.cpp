@@ -229,8 +229,8 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
     QObject::connect(m_guiApp, &GuiApplication::guiDocumentAdded, this, [=](GuiDocument* guiDoc) {
         QObject::connect(
                     guiDoc, &GuiDocument::nodesVisibilityChanged,
-                    this, [=](Span<const GuiDocument::NodeVisibility> spanNodeVisible) {
-            this->onNodesVisibilityChanged(guiDoc, spanNodeVisible);
+                    this, [=](const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId) {
+            this->onNodesVisibilityChanged(guiDoc, mapNodeId);
         });
     });
 
@@ -443,29 +443,26 @@ void WidgetModelTree::onTreeModelDataChanged(
 }
 
 void WidgetModelTree::onNodesVisibilityChanged(
-        const GuiDocument* guiDoc, Span<const GuiDocument::NodeVisibility> spanNodeVisible)
+        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId)
 {
     QTreeWidgetItem* treeItemDoc = this->findTreeItem(guiDoc->document());
     if (!treeItemDoc)
         return;
 
-    std::unordered_map<TreeNodeId, Qt::CheckState> mapNodeVisibleState;
-    for (const GuiDocument::NodeVisibility& nodeVisibleState : spanNodeVisible)
-        mapNodeVisibleState.insert({ nodeVisibleState.id, nodeVisibleState.state });
-
     this->disconnectTreeModelDataChanged();
     auto _ = gsl::finally([=]{ this->connectTreeModelDataChanged(); });
 
+    auto localMapNodeId = mapNodeId;
     for (QTreeWidgetItemIterator it(treeItemDoc); *it; ++it) {
         QTreeWidgetItem* treeItem = *it;
         const DocumentTreeNode docTreeNode = Internal::treeItemDocumentTreeNode(treeItem);
-        auto itNodeVisibleState = mapNodeVisibleState.find(docTreeNode.id());
-        if (itNodeVisibleState != mapNodeVisibleState.cend()) {
+        auto itNodeVisibleState = localMapNodeId.find(docTreeNode.id());
+        if (itNodeVisibleState != localMapNodeId.cend()) {
             treeItem->setCheckState(0, itNodeVisibleState->second);
-            mapNodeVisibleState.erase(itNodeVisibleState);
+            localMapNodeId.erase(itNodeVisibleState);
         }
 
-        if (mapNodeVisibleState.empty())
+        if (localMapNodeId.empty())
             return;
     }
 }

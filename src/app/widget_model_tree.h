@@ -69,7 +69,7 @@ private:
     void onTreeModelDataChanged(
             const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onNodesVisibilityChanged(
-            const GuiDocument* guiDoc, Span<const GuiDocument::NodeVisibility> spanNodeVisible);
+            const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId);
 
     QTreeWidgetItem* loadDocumentEntity(const DocumentTreeNode& entityNode);
 
