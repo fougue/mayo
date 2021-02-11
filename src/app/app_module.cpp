@@ -30,36 +30,15 @@ AppModule::AppModule(Application* app)
     : QObject(app),
       PropertyGroup(app->settings()),
       m_app(app),
-      // System
       groupId_system(app->settings()->addGroup(textId("system"))),
-      // -- Units
-      sectionId_systemUnits(
-          app->settings()->addSection(this->groupId_system, textId("units"))),
-      unitSystemDecimals(app->settings(), textId("decimalCount")),
-      unitSystemSchema(app->settings(), textId("schema")),
-      // Application
+      sectionId_systemUnits(app->settings()->addSection(this->groupId_system, textId("units"))),
       groupId_application(app->settings()->addGroup(textId("application"))),
       language(this, textId("language"), enumLanguages),
-      recentFiles(this, textId("recentFiles")),
-      lastOpenDir(this, textId("lastOpenFolder")),
-      lastSelectedFormatFilter(this, textId("lastSelectedFormatFilter")),
-      linkWithDocumentSelector(this, textId("linkWithDocumentSelector")),
-      // Graphics
       groupId_graphics(app->settings()->addGroup(textId("graphics"))),
-      defaultShowOriginTrihedron(this, textId("defaultShowOriginTrihedron")),
-      // -- Clip planes
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
-      clipPlanesCappingOn(this, textId("cappingOn")),
-      clipPlanesCappingHatchOn(this, textId("cappingHatchOn")),
-      // -- Mesh defaults
       sectionId_graphicsMeshDefaults(
-          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
-      meshDefaultsColor(this, textId("color")),
-      meshDefaultsEdgeColor(this, textId("edgeColor")),
-      meshDefaultsMaterial(this, textId("material"), OcctEnums::Graphic3d_NameOfMaterial()),
-      meshDefaultsShowEdges(this, textId("showEgesOn")),
-      meshDefaultsShowNodes(this, textId("showNodesOn"))
+          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults")))
 {
     auto settings = app->settings();
 
@@ -94,6 +73,7 @@ AppModule::AppModule(Application* app)
                 tr("Show or hide by default the trihedron centered at world origin. "
                    "This doesn't affect 3D view of currently opened documents"));
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
+    settings->addSetting(&this->instantZoomFactor, this->groupId_graphics);
     // -- Clip planes
     this->clipPlanesCappingOn.setDescription(
                 tr("Enable capping of currently clipped graphics"));
@@ -155,6 +135,7 @@ AppModule::AppModule(Application* app)
     });
     settings->addGroupResetFunction(this->groupId_graphics, [&]{
         this->defaultShowOriginTrihedron.setValue(true);
+        this->instantZoomFactor.setValue(5.);
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
         const GraphicsMeshObjectDriver::DefaultValues meshDefaults;

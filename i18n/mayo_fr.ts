@@ -21,142 +21,147 @@
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="34"/>
+        <location filename="../src/app/app_module.cpp" line="33"/>
         <source>system</source>
         <translation>Système</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="37"/>
+        <location filename="../src/app/app_module.cpp" line="34"/>
         <source>units</source>
         <translation>Unités</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="38"/>
+        <location filename="../src/app/app_module.h" line="59"/>
         <source>decimalCount</source>
         <translation>Nombre de décimales</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="39"/>
+        <location filename="../src/app/app_module.h" line="60"/>
         <source>schema</source>
         <translation>Schéma</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="41"/>
+        <location filename="../src/app/app_module.cpp" line="35"/>
         <source>application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="42"/>
+        <location filename="../src/app/app_module.cpp" line="36"/>
         <source>language</source>
         <translation>Langue</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="43"/>
+        <location filename="../src/app/app_module.h" line="64"/>
         <source>recentFiles</source>
         <translation>Fichiers récents</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="44"/>
+        <location filename="../src/app/app_module.h" line="65"/>
         <source>lastOpenFolder</source>
         <translation>Dernier répertoire ouvert</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="45"/>
+        <location filename="../src/app/app_module.h" line="66"/>
         <source>lastSelectedFormatFilter</source>
         <translation>Dernier filtre de format sélectionné</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="46"/>
+        <location filename="../src/app/app_module.h" line="67"/>
         <source>linkWithDocumentSelector</source>
         <translation>Lier au sélecteur de documents</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="48"/>
+        <location filename="../src/app/app_module.cpp" line="37"/>
         <source>graphics</source>
         <translation>Graphisme</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="49"/>
+        <location filename="../src/app/app_module.h" line="70"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Afficher le trihèdre Origine par défaut</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="52"/>
+        <location filename="../src/app/app_module.cpp" line="39"/>
         <source>clipPlanes</source>
         <translation>Plans de coupe</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="53"/>
+        <location filename="../src/app/app_module.h" line="74"/>
         <source>cappingOn</source>
         <translation>Bouchage</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="54"/>
+        <location filename="../src/app/app_module.h" line="75"/>
         <source>cappingHatchOn</source>
         <translation>Bouchages avec hachures</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="57"/>
+        <location filename="../src/app/app_module.cpp" line="41"/>
         <source>meshDefaults</source>
         <translation>Maillage par défauts</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="58"/>
+        <location filename="../src/app/app_module.h" line="71"/>
+        <source>instantZoomFactor</source>
+        <translation>Coefficient du zoom instantané</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module.h" line="78"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="59"/>
+        <location filename="../src/app/app_module.h" line="79"/>
         <source>edgeColor</source>
         <translation>Couleur des arêtes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="60"/>
+        <location filename="../src/app/app_module.h" line="80"/>
         <source>material</source>
         <translation>Matériau</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="61"/>
+        <location filename="../src/app/app_module.h" line="81"/>
         <source>showEgesOn</source>
         <translation>Afficher les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="62"/>
+        <location filename="../src/app/app_module.h" line="82"/>
         <source>showNodesOn</source>
         <translation>Afficher les nœuds</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="79"/>
+        <location filename="../src/app/app_module.cpp" line="58"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation>Langage de l&apos;application. Tout changement sera effectif après redémarrage de l&apos;application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="81"/>
+        <location filename="../src/app/app_module.cpp" line="60"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation>Dans le cas où plusieurs documents sont ouverts, fait en sort que le document affiché dans la vue 2D correspond à ce qui est sélectionné dans l&apos;arborescence du modèle</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="94"/>
+        <location filename="../src/app/app_module.cpp" line="73"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation>Montrer/cacher par défaut le trièdre positionné à l&apos;orgine &quot;monde&quot;. N&apos;affecte pas la vue 3D des documents actuellement ouverts</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="99"/>
+        <location filename="../src/app/app_module.cpp" line="79"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation>Activer le bouchage des graphismes actuellement coupés</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="101"/>
+        <location filename="../src/app/app_module.cpp" line="81"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation>Activer le hachage texturé pour le bouchage des graphismes actuellement coupés</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="111"/>
+        <location filename="../src/app/app_module.cpp" line="91"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module.cpp" line="128"/>
+        <location filename="../src/app/app_module.cpp" line="108"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
@@ -447,22 +452,22 @@
 <context>
     <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="351"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="365"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="352"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="366"/>
         <source>edgeColor</source>
         <translation>Couleur des arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="353"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="367"/>
         <source>showEdges</source>
         <translation>Montrer les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="354"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="368"/>
         <source>showNodes</source>
         <translation>Montrer les nœuds</translation>
     </message>
@@ -470,14 +475,12 @@
 <context>
     <name>Mayo::GraphicsObjectBasePropertyGroup</name>
     <message>
-        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="35"/>
         <source>visible</source>
-        <translation>Visible</translation>
+        <translation type="vanished">Visible</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_base_property_group.cpp" line="36"/>
         <source>displayMode</source>
-        <translation>Mode d&apos;affichage</translation>
+        <translation type="vanished">Mode d&apos;affichage</translation>
     </message>
 </context>
 <context>
@@ -503,39 +506,39 @@
         <translation type="vanished">Rétréci</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="79"/>
-        <source>Shape_Wireframe</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/graphics/graphics_object_driver.cpp" line="80"/>
-        <source>Shape_HiddenLineRemoval</source>
-        <translation type="unfinished"></translation>
+        <source>Shape_Wireframe</source>
+        <translation>[Forme] Filaire</translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_object_driver.cpp" line="81"/>
-        <source>Shape_Shaded</source>
-        <translation type="unfinished"></translation>
+        <source>Shape_HiddenLineRemoval</source>
+        <translation>[Forme] Suppression des arêtes cachées</translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_object_driver.cpp" line="82"/>
+        <source>Shape_Shaded</source>
+        <translation>[Forme] Ombré</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="83"/>
         <source>Shape_ShadedWithFaceBoundary</source>
-        <translation type="unfinished"></translation>
+        <translation>[Forme] Ombré avec arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="189"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="202"/>
         <source>Mesh_Wireframe</source>
-        <translation type="unfinished"></translation>
+        <translation>[Maillage] Filaire</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="190"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="203"/>
         <source>Mesh_Shaded</source>
-        <translation type="unfinished"></translation>
+        <translation>[Maillage] Ombré</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="191"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="204"/>
         <source>Mesh_Shrink</source>
-        <translation type="unfinished"></translation>
+        <translation>[Maillage] Rétréci</translation>
     </message>
 </context>
 <context>
@@ -1573,7 +1576,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="668"/>
-        <location filename="../src/app/mainwindow.cpp" line="751"/>
+        <location filename="../src/app/mainwindow.cpp" line="754"/>
         <source>Options</source>
         <translation></translation>
     </message>
@@ -1736,7 +1739,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
     <message>
         <location filename="../src/app/mainwindow.cpp" line="169"/>
-        <location filename="../src/app/mainwindow.cpp" line="699"/>
+        <location filename="../src/app/mainwindow.cpp" line="695"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
@@ -1752,7 +1755,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
     <message>
         <location filename="../src/app/mainwindow.cpp" line="496"/>
-        <location filename="../src/app/mainwindow.cpp" line="887"/>
+        <location filename="../src/app/mainwindow.cpp" line="890"/>
         <source>Import time: %1ms</source>
         <translation>Temps import : %1ms</translation>
     </message>
@@ -1777,32 +1780,32 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Graphismes</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="779"/>
+        <location filename="../src/app/mainwindow.cpp" line="782"/>
         <source>Close %1</source>
         <translation>Fermer %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="780"/>
+        <location filename="../src/app/mainwindow.cpp" line="783"/>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="783"/>
+        <location filename="../src/app/mainwindow.cpp" line="786"/>
         <source>Close all except %1</source>
         <translation>Tout fermer sauf %1</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="784"/>
+        <location filename="../src/app/mainwindow.cpp" line="787"/>
         <source>Close all except current</source>
         <translation>Tout fermer sauf document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1016"/>
+        <location filename="../src/app/mainwindow.cpp" line="1019"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="1022"/>
+        <location filename="../src/app/mainwindow.cpp" line="1025"/>
         <source>Clear menu</source>
         <translation>Vider le menu</translation>
     </message>
@@ -2037,52 +2040,52 @@ Modifié le: %3 {1
 <context>
     <name>Mayo::WidgetGuiDocument</name>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="90"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="91"/>
         <source>Fit All</source>
         <translation>Adapter à tout</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="91"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="92"/>
         <source>Edit clip planes</source>
         <translation>Éditer les plans de coupe</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="198"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="199"/>
         <source>Isometric</source>
         <translation>Isométrique</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="199"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="200"/>
         <source>Back</source>
         <translation>Arrière</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="200"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="201"/>
         <source>Front</source>
         <translation>Devant</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="201"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="202"/>
         <source>Left</source>
         <translation>Gauche</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="202"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="203"/>
         <source>Right</source>
         <translation>Droit</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="203"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="204"/>
         <source>Top</source>
         <translation>Haut</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="204"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="205"/>
         <source>Bottom</source>
         <translation>Bas</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="214"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="215"/>
         <source>&lt;b&gt;Left-click&lt;/b&gt;: popup menu of pre-defined views
 &lt;b&gt;CTRL+Left-click&lt;/b&gt;: apply &apos;%1&apos; view</source>
         <translation>&lt;b&gt;Click gauche&lt;/b&gt; : menu déroulant des vues pré-définies
@@ -2168,12 +2171,12 @@ Lu: %5
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree.cpp" line="155"/>
+        <location filename="../src/app/widget_model_tree.cpp" line="158"/>
         <source>Remove from document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder.cpp" line="61"/>
+        <location filename="../src/app/widget_model_tree_builder.cpp" line="63"/>
         <source>&lt;unnamed&gt;</source>
         <translation type="unfinished"></translation>
     </message>

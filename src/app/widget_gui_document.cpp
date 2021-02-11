@@ -16,6 +16,7 @@
 #include "widget_occ_view_controller.h"
 #include "widgets_utils.h"
 
+#include <QtCore/QtDebug>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>

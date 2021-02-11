@@ -698,11 +698,18 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto app = m_guiApp->application();
+    auto appModule = AppModule::get(app);
     auto widget = new WidgetGuiDocument(guiDoc);
-    if (AppModule::get(app)->defaultShowOriginTrihedron.value()) {
+    widget->controller()->setInstantZoomFactor(appModule->instantZoomFactor);
+    if (appModule->defaultShowOriginTrihedron.value()) {
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->graphicsScene()->redraw();
     }
+
+    QObject::connect(app->settings(), &Settings::changed, this, [=](Property* setting) {
+        if (setting == &appModule->instantZoomFactor)
+            widget->controller()->setInstantZoomFactor(appModule->instantZoomFactor);
+    });
 
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
@@ -726,7 +733,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
 void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
 {
-    AppModule::get(Application::instance())->recordRecentFileThumbnail(guiDoc);
+    AppModule::get(m_guiApp->application())->recordRecentFileThumbnail(guiDoc);
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)

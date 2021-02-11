@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "widget_occ_view_controller.h"
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
 #include <vector>
@@ -14,7 +15,6 @@ namespace Mayo {
 
 class ButtonFlat;
 class GuiDocument;
-class V3dViewController;
 class WidgetClipPlanes;
 class WidgetOccView;
 
@@ -41,7 +41,7 @@ private:
 
     GuiDocument* m_guiDoc = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
-    V3dViewController* m_controller = nullptr;
+    WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     QRect m_rectControls;
 
