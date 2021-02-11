@@ -90,6 +90,27 @@ void V3dViewController::hideRubberBand()
         m_rubberBand->setVisible(false);
 }
 
+void V3dViewController::backupCamera()
+{
+    if (!m_cameraBackup)
+        m_cameraBackup = new Graphic3d_Camera;
+
+    m_cameraBackup->Copy(m_view->Camera());
+}
+
+void V3dViewController::restoreCamera()
+{
+    if (m_cameraBackup)
+        m_view->Camera()->Copy(m_cameraBackup);
+}
+
+void V3dViewController::instantZoomAt(const QPoint& pos)
+{
+    const int dX = m_instantZoomFactor * 100;
+    m_view->StartZoomAtPoint(pos.x(), pos.y());
+    m_view->ZoomAtPoint(pos.x(), pos.y(), pos.x() + dX, pos.y());
+}
+
 void V3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
 {
     if (std::abs(posMin.x() - posMax.x()) > 1 || std::abs(posMin.y() - posMax.y()) > 1)

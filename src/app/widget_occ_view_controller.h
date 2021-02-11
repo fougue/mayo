@@ -8,7 +8,6 @@
 
 #include "../graphics/v3d_view_controller.h"
 
-#include <Graphic3d_Camera.hxx>
 class QCursor;
 class QRubberBand;
 
@@ -32,7 +31,6 @@ private:
     WidgetOccView* m_widgetView = nullptr;
     QPoint m_prevPos;
     QPoint m_posRubberBandStart;
-    Handle_Graphic3d_Camera m_prevCamera;
 };
 
 } // namespace Mayo
