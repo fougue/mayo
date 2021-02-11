@@ -177,7 +177,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
         if (m_isMergeXdeReferredShapeOn) {
             const TDF_Label& nodeLabel = modelTree.nodeData(itNodeId);
             if (XCaf::isShapeReference(nodeLabel)) {
-                mapNodeIdToTreeItem.insert({ itNodeId, guiParentNode });
+                mapNodeIdToTreeItem[itNodeId] = guiParentNode;
                 setReferenceNodeId.insert(itNodeId);
             }
             else {
@@ -189,7 +189,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
                     guiNodeText = this->referenceItemText(refLabel, nodeLabel);
                     guiNodeId = nodeParentId;
                     if (!guiParentNode)
-                        mapNodeIdToTreeItem.insert_or_assign(nodeParentId, guiNode);
+                        mapNodeIdToTreeItem[nodeParentId] = guiNode;
                 }
 
                 guiNode->setText(0, guiNodeText);
@@ -200,12 +200,12 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
                 guiNode->setFlags(guiNode->flags() | Qt::ItemIsUserCheckable);
                 guiNode->setCheckState(0, Qt::Checked);
-                mapNodeIdToTreeItem.insert({ itNodeId, guiNode });
+                mapNodeIdToTreeItem[itNodeId] = guiNode;
             }
         }
         else {
             auto guiNode = ThisType::guiCreateXdeTreeNode(guiParentNode, { doc, itNodeId });
-            mapNodeIdToTreeItem.insert({ itNodeId, guiNode });
+            mapNodeIdToTreeItem[itNodeId] = guiNode;
         }
     });
 

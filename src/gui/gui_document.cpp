@@ -102,6 +102,9 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     QObject::connect(
                 doc.get(), &Document::entityAboutToBeDestroyed,
                 this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
+    QObject::connect(
+                &m_gfxScene, &GraphicsScene::selectionChanged,
+                this, &GuiDocument::onGraphicsSelectionChanged);
 }
 
 void GuiDocument::foreachGraphicsObject(
@@ -110,15 +113,30 @@ void GuiDocument::foreachGraphicsObject(
     if (!fn)
         return;
 
-    const GraphicsEntity* ptrItem = this->findGraphicsEntity(m_document->modelTree().nodeRoot(nodeId));
+    const Tree<TDF_Label>& docModelTree = m_document->modelTree();
+    const GraphicsEntity* ptrItem = this->findGraphicsEntity(docModelTree.nodeRoot(nodeId));
     if (!ptrItem)
         return;
 
-    traverseTree(nodeId, m_document->modelTree(), [&](TreeNodeId id) {
+    traverseTree(nodeId, docModelTree, [&](TreeNodeId id) {
         GraphicsObjectPtr gfxObject = CppUtils::findValue(id, ptrItem->mapTreeNodeGfxObject);
         if (gfxObject)
             fn(gfxObject);
     });
+}
+
+TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& object) const
+{
+    if (!object)
+        return 0;
+
+    for (const GraphicsEntity& gfxEntity: m_vecGraphicsEntity) {
+        auto it = gfxEntity.mapGfxObjectTreeNode.find(object);
+        if (it != gfxEntity.mapGfxObjectTreeNode.cend())
+            return it->second;
+    }
+
+    return 0;
 }
 
 void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
@@ -275,16 +293,20 @@ void GuiDocument::toggleOriginTrihedronVisibility()
     m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
 }
 
-void GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
+bool GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
 {
     if (graphicsOwner.IsNull())
-        return;
+        return false;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(graphicsOwner);
-    if (!viewCubeOwner.IsNull())
+    if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
+        return true;
+    }
 #endif
+
+    return false;
 }
 
 void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
@@ -454,6 +476,45 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
+void GuiDocument::onGraphicsSelectionChanged()
+{
+    m_guiApp->connectApplicationItemSelectionChanged(false);
+    auto _ = gsl::finally([=]{ m_guiApp->connectApplicationItemSelectionChanged(true); });
+
+    ApplicationItemSelectionModel* appSelectionModel = m_guiApp->selectionModel();
+    if (m_gfxScene.selectedCount() == 0) {
+        appSelectionModel->clear();
+        return;
+    }
+
+    std::vector<ApplicationItem> vecSelected;
+    m_gfxScene.foreachSelectedOwner([&](const GraphicsOwnerPtr& gfxOwner) {
+        auto gfxObject = GraphicsObjectPtr::DownCast(
+                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+        const TreeNodeId nodeId = this->nodeFromGraphicsObject(gfxObject);
+        if (nodeId != 0) {
+            const ApplicationItem appItem({ m_document, nodeId });
+            vecSelected.push_back(std::move(appItem));
+        }
+    });
+
+    std::vector<ApplicationItem> vecRemoved;
+    for (const ApplicationItem& appItem : appSelectionModel->selectedItems()) {
+        if (appItem.document() != m_document)
+            continue;
+
+        auto it = std::find(vecSelected.cbegin(), vecSelected.cend(), appItem);
+        if (it == vecSelected.cend())
+            vecRemoved.push_back(appItem);
+    }
+
+    if (!vecSelected.empty())
+        appSelectionModel->add(vecSelected);
+
+    if (!vecRemoved.empty())
+        appSelectionModel->remove(vecRemoved);
+}
+
 void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
 {
     const Tree<TDF_Label>& docModelTree = m_document->modelTree();
@@ -479,6 +540,8 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
                 gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
                 gfxInstance->SetOwner(gfxProduct->GetOwner());
                 gfxEntity.vecGfxObject.push_back(gfxInstance);
+                if (XCaf::isShapeReference(docModelTree.nodeData(docModelTree.nodeParent(id))))
+                    id = docModelTree.nodeParent(id);
             }
             else {
                 gfxEntity.vecGfxObject.push_back(gfxProduct);

@@ -176,7 +176,7 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
         }
     });
 
-    this->connectTreeModelDataChanged();
+    this->connectTreeModelDataChanged(true);
 }
 
 WidgetModelTree::~WidgetModelTree()
@@ -235,8 +235,10 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
     });
 
     QObject::connect(
-                m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
-                this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged);
+                m_guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
+                this, &WidgetModelTree::onApplicationItemSelectionModelChanged);
+
+    this->connectTreeWidgetDocumentSelectionChanged(true);
 }
 
 WidgetModelTree_UserActions WidgetModelTree::createUserActions(QObject* parent)
@@ -407,16 +409,54 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
     m_guiApp->selectionModel()->remove(vecDeselected);
 }
 
-void WidgetModelTree::connectTreeModelDataChanged()
+void WidgetModelTree::onApplicationItemSelectionModelChanged(
+        Span<ApplicationItem> selected, Span<ApplicationItem> deselected)
 {
-    m_connTreeModelDataChanged = QObject::connect(
-                m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
-                this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection);
+    this->connectTreeWidgetDocumentSelectionChanged(false);
+    auto _ = gsl::finally([=] { this->connectTreeWidgetDocumentSelectionChanged(true); });
+
+    auto fnSetSelected = [=](Span<ApplicationItem> spanAppItem, bool on) {
+        for (const ApplicationItem& appItem : spanAppItem) {
+            if (!appItem.isDocumentTreeNode())
+                continue;
+
+            QTreeWidgetItem* treeItem = this->findTreeItem(appItem.documentTreeNode());
+            if (!treeItem)
+                continue;
+
+            treeItem->setSelected(on);
+            if (on)
+                m_ui->treeWidget_Model->scrollToItem(treeItem);
+        }
+    };
+
+    fnSetSelected(selected, true);
+    fnSetSelected(deselected, false);
 }
 
-void WidgetModelTree::disconnectTreeModelDataChanged()
+void WidgetModelTree::connectTreeModelDataChanged(bool on)
 {
-    QObject::disconnect(m_connTreeModelDataChanged);
+    if (on) {
+        m_connTreeModelDataChanged = QObject::connect(
+                    m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
+                    this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection);
+    }
+    else {
+        QObject::disconnect(m_connTreeModelDataChanged);
+    }
+}
+
+void WidgetModelTree::connectTreeWidgetDocumentSelectionChanged(bool on)
+{
+    if (on) {
+        m_connTreeWidgetDocumentSelectionChanged = QObject::connect(
+                    m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
+                    this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
+                    Qt::UniqueConnection);
+    }
+    else {
+        QObject::disconnect(m_connTreeWidgetDocumentSelectionChanged);
+    }
 }
 
 void WidgetModelTree::onTreeModelDataChanged(
@@ -449,8 +489,8 @@ void WidgetModelTree::onNodesVisibilityChanged(
     if (!treeItemDoc)
         return;
 
-    this->disconnectTreeModelDataChanged();
-    auto _ = gsl::finally([=]{ this->connectTreeModelDataChanged(); });
+    this->connectTreeModelDataChanged(false);
+    auto _ = gsl::finally([=]{ this->connectTreeModelDataChanged(true); });
 
     auto localMapNodeId = mapNodeId;
     for (QTreeWidgetItemIterator it(treeItemDoc); *it; ++it) {

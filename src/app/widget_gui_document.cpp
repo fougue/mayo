@@ -106,8 +106,14 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
                 m_guiDoc, &GuiDocument::stopViewCameraAnimation);
     QObject::connect(
                 m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
-        if (btn == Qt::MouseButton::LeftButton)
-            m_guiDoc->processAction(m_guiDoc->graphicsScene()->currentHighlightedOwner());
+        if (btn == Qt::MouseButton::LeftButton) {
+            if (!m_guiDoc->processAction(m_guiDoc->graphicsScene()->currentHighlightedOwner()))
+                m_guiDoc->graphicsScene()->select();
+        }
+    });
+    QObject::connect(m_controller, &WidgetOccViewController::multiSelectionToggled, this, [=](bool on) {
+        m_guiDoc->graphicsScene()->setSelectionMode(
+                    on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single);
     });
     QObject::connect(
                 m_guiDoc, &GuiDocument::viewTrihedronModeChanged,

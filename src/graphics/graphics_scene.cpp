@@ -57,6 +57,7 @@ public:
     Handle_InteractiveContext m_aisContext;
     std::unordered_set<const AIS_InteractiveObject*> m_setClipPlaneSensitive;
     bool m_isRedrawBlocked = false;
+    SelectionMode m_selectionMode = SelectionMode::Single;
 };
 
 GraphicsScene::GraphicsScene(QObject* parent)
@@ -222,13 +223,22 @@ void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
     d->m_aisContext->MoveTo(pos.x(), pos.y(), view, true);
 }
 
-void GraphicsScene::selectCurrentHighlighted()
+void GraphicsScene::select()
 {
-    const AIS_StatusOfPick pick = d->m_aisContext->Select(true);
-    if (pick == AIS_SOP_NothingSelected)
-        emit this->selectionCleared();
-    else if (pick == AIS_SOP_OneSelected)
-        emit this->singleItemSelected();
+    if (d->m_selectionMode == SelectionMode::None)
+        return;
+
+    if (d->m_selectionMode == SelectionMode::Single)
+        d->m_aisContext->Select(true);
+    else if (d->m_selectionMode == SelectionMode::Multi)
+        d->m_aisContext->ShiftSelect(true);
+
+    emit this->selectionChanged();
+}
+
+int GraphicsScene::selectedCount() const
+{
+    return d->m_aisContext->NbSelected();
 }
 
 const GraphicsOwnerPtr& GraphicsScene::currentHighlightedOwner() const
@@ -238,6 +248,14 @@ const GraphicsOwnerPtr& GraphicsScene::currentHighlightedOwner() const
 #else
     return d->m_aisContext->member_myLastPicked();
 #endif
+}
+
+GraphicsScene::SelectionMode GraphicsScene::selectionMode() const {
+    return d->m_selectionMode;
+}
+
+void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode) {
+    d->m_selectionMode = mode;
 }
 
 GraphicsSceneRedrawBlocker::GraphicsSceneRedrawBlocker(GraphicsScene* scene)

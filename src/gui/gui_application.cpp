@@ -28,13 +28,7 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     QObject::connect(
                 app.get(), &Application::documentAboutToClose,
                 this, &GuiApplication::onDocumentAboutToClose);
-
-    QObject::connect(
-                m_selectionModel, &ApplicationItemSelectionModel::changed,
-                this, &GuiApplication::onApplicationItemSelectionChanged);
-    QObject::connect(
-                m_selectionModel, &ApplicationItemSelectionModel::cleared,
-                this, &GuiApplication::onApplicationItemSelectionCleared);
+    this->connectApplicationItemSelectionChanged(true);
 }
 
 GuiApplication::~GuiApplication()
@@ -88,11 +82,16 @@ void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
     }
 }
 
-void GuiApplication::onApplicationItemSelectionCleared()
+void GuiApplication::connectApplicationItemSelectionChanged(bool on)
 {
-    for (GuiDocument* guiDoc : m_vecGuiDocument) {
-        guiDoc->graphicsScene()->clearSelection();
-        guiDoc->graphicsScene()->redraw();
+    if (on) {
+        m_connApplicationItemSelectionChanged = QObject::connect(
+                    m_selectionModel, &ApplicationItemSelectionModel::changed,
+                    this, &GuiApplication::onApplicationItemSelectionChanged,
+                    Qt::UniqueConnection);
+    }
+    else {
+        QObject::disconnect(m_connApplicationItemSelectionChanged);
     }
 }
 

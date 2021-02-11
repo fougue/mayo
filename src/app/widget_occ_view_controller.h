@@ -22,6 +22,9 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
+signals:
+    void multiSelectionToggled(bool on);
+
 private:
     void setViewCursor(const QCursor& cursor);
 

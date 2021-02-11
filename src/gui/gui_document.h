@@ -42,6 +42,8 @@ public:
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
+    TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& object) const;
+
     void toggleItemSelected(const ApplicationItem& appItem);
 
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
@@ -53,7 +55,7 @@ public:
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
 
-    void processAction(const GraphicsOwnerPtr& graphicsOwner);
+    bool processAction(const GraphicsOwnerPtr& graphicsOwner);
 
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
     void setViewCameraOrientation(V3d_TypeOfOrientation projection);
@@ -84,6 +86,7 @@ signals:
 private:
     void onDocumentEntityAdded(TreeNodeId entityTreeNodeId);
     void onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
+    void onGraphicsSelectionChanged();
 
     void mapGraphics(TreeNodeId entityTreeNodeId);
 

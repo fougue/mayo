@@ -63,9 +63,12 @@ private:
 
     void onTreeWidgetDocumentSelectionChanged(
             const QItemSelection& selected, const QItemSelection& deselected);
+    void onApplicationItemSelectionModelChanged(
+            Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
 
-    void connectTreeModelDataChanged();
-    void disconnectTreeModelDataChanged();
+    void connectTreeModelDataChanged(bool on);
+    void connectTreeWidgetDocumentSelectionChanged(bool on);
+
     void onTreeModelDataChanged(
             const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onNodesVisibilityChanged(
@@ -84,6 +87,7 @@ private:
     std::vector<BuilderPtr> m_vecBuilder;
     QString m_refItemTextTemplate;
     QMetaObject::Connection m_connTreeModelDataChanged;
+    QMetaObject::Connection m_connTreeWidgetDocumentSelectionChanged;
 };
 
 } // namespace Mayo

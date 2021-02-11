@@ -57,10 +57,17 @@ public:
     bool isObjectVisible(const GraphicsObjectPtr& object) const;
     void setObjectVisible(const GraphicsObjectPtr& object, bool on);
 
-    void highlightAt(const QPoint& pos, const Handle_V3d_View& view);
-    void selectCurrentHighlighted();
+    enum class SelectionMode {
+        None, Single, Multi
+    };
+    SelectionMode selectionMode() const;
+    void setSelectionMode(SelectionMode mode);
 
     const GraphicsOwnerPtr& currentHighlightedOwner() const;
+    void highlightAt(const QPoint& pos, const Handle_V3d_View& view);
+    void select();
+
+    int selectedCount() const;
 
     GraphicsOwnerPtr firstSelectedOwner() const;
     void toggleOwnerSelection(const GraphicsOwnerPtr& owner);
@@ -79,8 +86,7 @@ public:
     GraphicsOwnerPtr findSelectedOwner(PREDICATE fn) const;
 
 signals:
-    void selectionCleared();
-    void singleItemSelected();
+    void selectionChanged();
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;

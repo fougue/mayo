@@ -31,7 +31,6 @@ public:
     void clear();
 
 signals:
-    void cleared();
     void changed(Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
 
 private:

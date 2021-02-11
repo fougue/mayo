@@ -46,6 +46,8 @@ protected:
     void onDocumentAboutToClose(const DocumentPtr& doc);
 
 private:
+    friend class GuiDocument;
+    void connectApplicationItemSelectionChanged(bool on);
     void onApplicationItemSelectionCleared();
     void onApplicationItemSelectionChanged(
             Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
@@ -55,6 +57,7 @@ private:
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
     std::unique_ptr<GraphicsObjectDriverTable> m_gfxObjectDriverTable;
     std::unique_ptr<GraphicsTreeNodeMappingDriverTable> m_gfxTreeNodeMappingDriverTable;
+    QMetaObject::Connection m_connApplicationItemSelectionChanged;
 };
 
 } // namespace Mayo

@@ -90,6 +90,13 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
             this->instantZoomAt(m_widgetView->mapFromGlobal(QCursor::pos()));
         }
 
+        if (keyEvent->key() == Qt::Key_Shift
+                && !keyEvent->isAutoRepeat()
+                && !this->hasCurrentDynamicAction())
+        {
+            emit this->multiSelectionToggled(true);
+        }
+
         break;
     }
     case QEvent::KeyRelease: {
@@ -101,6 +108,13 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
             this->stopDynamicAction();
             this->restoreCamera();
             view->Update();
+        }
+
+        if (keyEvent->key() == Qt::Key_Shift
+                && !keyEvent->isAutoRepeat()
+                && !this->hasCurrentDynamicAction())
+        {
+            emit this->multiSelectionToggled(false);
         }
 
         break;
