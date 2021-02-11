@@ -25,6 +25,7 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 * Perspective/orthographic 3D view projection
 * Save image(snapshot) of the current 3D view
 * Quick access to the CAD files recently open thanks to thumbnails in the Home page
+* Toggle visibility of any item from the Model tree(use checkbox)
 
 3D viewer operations :
 * Rotate : mouse left + move
@@ -32,6 +33,8 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 * Zoom : mouse wheel(scroll)
 * Window zoom : mouse wheel + move
 * Instant zoom : space bar
+* Select Object: mouse left click
+* Select Objects: SHIFT + mouse left clicks
 
 # Supported formats
   Formats                 |  Import   |  Export  | Notes
