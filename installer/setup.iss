@@ -68,6 +68,7 @@ Source: "{#FFMPEG_BinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeImage_BinDir}\freeimage.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeImage_BinDir}\freeimageplus.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FreeType_BinDir}\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#OpenVR_BinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;Source: "{#TclTk_BinDir}\tcl86.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;Source: "{#TclTk_BinDir}\tk86.dll"; DestDir: "{app}"; Flags: ignoreversion
 

@@ -151,14 +151,21 @@ LIBS += -lTKVRML
 CASCADE_LIST_OPTBIN_DIR = $$split(CASCADE_OPTBIN_DIRS, ;)
 for(binPath, CASCADE_LIST_OPTBIN_DIR) {
     lowerBinPath = $$lower($${binPath})
+
     findLib = $$find(lowerBinPath, "ffmpeg")
     !isEmpty(findLib):FFMPEG_BIN_DIR = $${binPath}
+
     findLib = $$find(lowerBinPath, "freeimage")
     !isEmpty(findLib):FREEIMAGE_BIN_DIR = $${binPath}
+
     findLib = $$find(lowerBinPath, "freetype")
     !isEmpty(findLib):FREETYPE_BIN_DIR = $${binPath}
+
     findLib = $$find(lowerBinPath, "tbb")
     !isEmpty(findLib):TBB_BIN_DIR = $${binPath}
+
+    findLib = $$find(lowerBinPath, "openvr")
+    !isEmpty(findLib):OPENVR_BIN_DIR = $${binPath}
 }
 
 # -- Create file "opencascade_dlls.iss" that will contain the required OpenCascade DLL files to be

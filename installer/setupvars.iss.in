@@ -6,4 +6,5 @@
 #define FreeImage_BinDir \"$$FREEIMAGE_BIN_DIR\"
 #define FreeType_BinDir \"$$FREETYPE_BIN_DIR\"
 #define Tbb_BinDir \"$$TBB_BIN_DIR\"
+#define OpenVR_BinDir \"$$OPENVR_BIN_DIR\"
 #define MsvcRedist_Dir \"$$(VCToolsRedistDir)\"
