@@ -100,7 +100,7 @@ ItemDelegate::ItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent)
 {
     m_frameColor = QColor(220, 220, 220);
-    m_pixmapColor = qApp->palette().color(QPalette::Highlight);
+    m_pixmapColor = qApp->palette().color(QPalette::Button);
     m_textColor = qApp->palette().color(QPalette::WindowText);
 
     m_itemAnimation.setDuration(250);

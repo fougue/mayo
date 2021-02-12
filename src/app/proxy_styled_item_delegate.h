@@ -16,7 +16,6 @@ namespace Mayo {
 //     - QStyledItemDelegate::initStyleOption()
 //     - QStyledItemDelegate::eventFilter()
 //     - QStyledItemDelegate::editorEvent()
-
 class ProxyStyledItemDelegate : public QStyledItemDelegate {
 public:
     ProxyStyledItemDelegate(QObject* parent = nullptr);

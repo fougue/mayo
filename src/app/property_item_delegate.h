@@ -16,6 +16,7 @@ namespace Mayo {
 
 class BasePropertyQuantity;
 
+// Provides an ItemView delegate specialized to display/edit Property objects
 class PropertyItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
