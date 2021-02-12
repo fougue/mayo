@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>
+** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
@@ -61,7 +61,7 @@ const ApplicationPtr& Application::instance()
     static ApplicationPtr appPtr;
     if (appPtr.IsNull()) {
         appPtr = new Application;
-        const char strFougueCopyright[] = "Copyright (c) 2020, Fougue Ltd. <http://www.fougue.pro>";
+        const char strFougueCopyright[] = "Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>";
         appPtr->DefineFormat(
                     Document::NameFormatBinary, qUtf8Printable(tr("Binary Mayo Document Format")), "myb",
                     new Document::FormatBinaryRetrievalDriver,
