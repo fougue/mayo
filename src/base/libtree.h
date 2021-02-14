@@ -234,7 +234,7 @@ const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const {
 template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 {
-    for (const Tree<T>::TreeNode& node : tree.m_vecNode) {
+    for (const typename Tree<T>::TreeNode& node : tree.m_vecNode) {
         const TreeNodeId id = (&node - &tree.m_vecNode.front()) + 1;
         if (!tree.isNodeDeleted(id))
             callback(id);
