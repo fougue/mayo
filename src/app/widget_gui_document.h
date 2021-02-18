@@ -16,6 +16,7 @@ namespace Mayo {
 class ButtonFlat;
 class GuiDocument;
 class WidgetClipPlanes;
+class WidgetExplodeAssembly;
 class WidgetOccView;
 
 class WidgetGuiDocument : public QWidget {
@@ -32,21 +33,24 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
-    void toggleWidgetClipPlanes();
-    void layoutWidgetClipPlanes();
+    void toggleWidgetClipPlanes(bool on);
+    void toggleWidgetExplode(bool on);
 
     void recreateViewControls();
     QRect viewControlsRect() const;
     void layoutViewControls();
+    void layoutWidgetPanel(QWidget* panel);
 
     GuiDocument* m_guiDoc = nullptr;
     WidgetOccView* m_qtOccView = nullptr;
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
+    WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;
     QRect m_rectControls;
 
     ButtonFlat* m_btnFitAll = nullptr;
     ButtonFlat* m_btnEditClipping = nullptr;
+    ButtonFlat* m_btnExplode = nullptr;
     std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 

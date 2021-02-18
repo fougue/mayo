@@ -75,6 +75,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::Link: return "link.svg";
     case Theme::Icon::Back: return "back.svg";
     case Theme::Icon::Next: return "next.svg";
+    case Theme::Icon::Multiple: return "multiple.svg";
     case Theme::Icon::Camera: return "camera.svg";
     case Theme::Icon::LeftSidebar: return "left-sidebar.svg";
     case Theme::Icon::BackSquare: return "back-square.svg";

@@ -52,10 +52,11 @@ void ButtonFlat::setChecked(bool on)
     else
         m_isChecked = on;
 
+    emit this->checked(on);
     this->update();
 }
 
-const QIcon &ButtonFlat::icon() const
+const QIcon& ButtonFlat::icon() const
 {
     return m_icon;
 }
@@ -75,7 +76,7 @@ void ButtonFlat::setIconSize(const QSize& size)
     m_iconSize = size;
 }
 
-QAction *ButtonFlat::defaultAction() const
+QAction* ButtonFlat::defaultAction() const
 {
     return m_defaultAction;
 }
@@ -99,7 +100,7 @@ void ButtonFlat::setHoverBrush(const QBrush& brush)
     this->update();
 }
 
-const QBrush &ButtonFlat::checkedBrush() const
+const QBrush& ButtonFlat::checkedBrush() const
 {
     return m_checkedBrush;
 }
@@ -115,7 +116,7 @@ const QBrush &ButtonFlat::backgroundBrush() const
     return this->palette().button();
 }
 
-void ButtonFlat::setBackgroundBrush(const QBrush &brush)
+void ButtonFlat::setBackgroundBrush(const QBrush& brush)
 {
     QPalette pal = this->palette();
     pal.setBrush(QPalette::Button, brush);
@@ -160,7 +161,7 @@ void ButtonFlat::leaveEvent(QEvent* event)
     QWidget::leaveEvent(event);
 }
 
-void ButtonFlat::mouseReleaseEvent(QMouseEvent *event)
+void ButtonFlat::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (m_defaultAction != nullptr) {

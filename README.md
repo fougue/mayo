@@ -20,6 +20,7 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 * Area and volume properties for meshes and shapes
 * Editable name of STEP/IGES entities
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
+* 3D exploding of the model tree, allowing better exploration of complex designs
 * 3D clip planes with configurable capping
 * 3D view cube providing intuitive camera manipulation
 * Perspective/orthographic 3D view projection
