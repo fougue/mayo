@@ -43,6 +43,7 @@ public:
         Link,
         Back,
         Next,
+        Multiple,
         Camera,
         LeftSidebar,
         BackSquare,
