@@ -60,6 +60,10 @@ public:
     Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
+    // -- Exploding
+    double explodingFactor() const { return m_explodingFactor; }
+    void setExplodingFactor(double t);
+
     // -- Visibility of trihedron at world origin
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
@@ -98,13 +102,22 @@ private:
     void onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
     void onGraphicsSelectionChanged();
 
-    void mapGraphics(TreeNodeId entityTreeNodeId);
+    void mapEntity(TreeNodeId entityTreeNodeId);
+    void unmapEntity(TreeNodeId entityTreeNodeId);
 
     struct GraphicsEntity {
+        struct Object {
+            Object(const GraphicsObjectPtr& p) : ptr(p) {}
+            GraphicsObjectPtr ptr;
+            gp_Trsf trsfOriginal;
+            Bnd_Box bndBox;
+        };
+
         TreeNodeId treeNodeId;
-        std::vector<GraphicsObjectPtr> vecGfxObject;
+        std::vector<Object> vecObject;
         std::unordered_map<TreeNodeId, GraphicsObjectPtr> mapTreeNodeGfxObject;
         std::unordered_map<GraphicsObjectPtr, TreeNodeId> mapGfxObjectTreeNode;
+        Bnd_Box bndBox;
     };
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
@@ -127,6 +140,8 @@ private:
 
     std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
     std::unordered_map<TreeNodeId, Qt::CheckState> m_mapTreeNodeCheckState;
+
+    double m_explodingFactor = 0.;
 };
 
 } // namespace Mayo

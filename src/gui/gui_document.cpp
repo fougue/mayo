@@ -96,7 +96,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
 
     for (int i = 0; i < doc->entityCount(); ++i)
-        this->mapGraphics(doc->entityTreeNodeId(i));
+        this->mapEntity(doc->entityTreeNodeId(i));
 
     QObject::connect(doc.get(), &Document::entityAdded, this, &GuiDocument::onDocumentEntityAdded);
     QObject::connect(
@@ -282,6 +282,22 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         emit nodesVisibilityChanged(mapNodeIdVisibleState);
 }
 
+void GuiDocument::setExplodingFactor(double t)
+{
+    m_explodingFactor = t;
+    for (const GraphicsEntity& entity : m_vecGraphicsEntity) {
+        const gp_Pnt entityCenter = BndBoxCoords::get(entity.bndBox).center();
+        for (const GraphicsEntity::Object& object : entity.vecObject) {
+            const gp_Vec vecDirection(entityCenter, BndBoxCoords::get(object.bndBox).center());
+            gp_Trsf trsfMove;
+            trsfMove.SetTranslation(2 * t * vecDirection);
+            m_gfxScene.setObjectTransformation(object.ptr, trsfMove * object.trsfOriginal);
+        }
+    }
+
+    m_gfxScene.redraw();
+}
+
 bool GuiDocument::isOriginTrihedronVisible() const
 {
     return m_gfxScene.isObjectVisible(m_aisOriginTrihedron);
@@ -441,37 +457,18 @@ int GuiDocument::aisViewCubeBoundingSize() const
 
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
-    this->mapGraphics(entityTreeNodeId);
+    this->mapEntity(entityTreeNodeId);
+    BndUtils::add(&m_gfxBoundingBox, m_vecGraphicsEntity.back().bndBox);
     emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
 {
-    {   // Delete entity graphics
-        const GraphicsEntity* ptrItem = this->findGraphicsEntity(entityTreeNodeId);
-        if (!ptrItem)
-            return;
-
-        for (const GraphicsObjectPtr& gfxObject : ptrItem->vecGfxObject)
-            m_gfxScene.eraseObject(gfxObject);
-
-        const int indexItem = ptrItem - &m_vecGraphicsEntity.front();
-        m_vecGraphicsEntity.erase(m_vecGraphicsEntity.begin() + indexItem);
-        m_gfxScene.redraw();
-    }
-
-    traverseTree(entityTreeNodeId, m_document->modelTree(), [=](TreeNodeId id) {
-        m_mapTreeNodeCheckState.erase(id);
-    });
-
+    this->unmapEntity(entityTreeNodeId);
     // Recompute bounding box
     m_gfxBoundingBox.SetVoid();
-    for (const GraphicsEntity& item : m_vecGraphicsEntity) {
-        for (const GraphicsObjectPtr& gfxObject : item.vecGfxObject) {
-            const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
-            BndUtils::add(&m_gfxBoundingBox, bndBox);
-        }
-    }
+    for (const GraphicsEntity& gfxEntity : m_vecGraphicsEntity)
+        BndUtils::add(&m_gfxBoundingBox, gfxEntity.bndBox);
 
     emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
 }
@@ -515,12 +512,13 @@ void GuiDocument::onGraphicsSelectionChanged()
         appSelectionModel->remove(vecRemoved);
 }
 
-void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
+void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
 {
     const Tree<TDF_Label>& docModelTree = m_document->modelTree();
     GraphicsEntity gfxEntity;
     gfxEntity.treeNodeId = entityTreeNodeId;
     std::unordered_map<TDF_Label, GraphicsObjectPtr> mapLabelGfxProduct;
+
     traverseTree(entityTreeNodeId, docModelTree, [&](TreeNodeId id) {
         const TDF_Label nodeLabel = docModelTree.nodeData(id);
         if (docModelTree.nodeIsLeaf(id)) {
@@ -539,24 +537,31 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
                 gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
                 gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
                 gfxInstance->SetOwner(gfxProduct->GetOwner());
-                gfxEntity.vecGfxObject.push_back(gfxInstance);
+                gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
                 if (XCaf::isShapeReference(docModelTree.nodeData(docModelTree.nodeParent(id))))
                     id = docModelTree.nodeParent(id);
             }
             else {
-                gfxEntity.vecGfxObject.push_back(gfxProduct);
+                gfxEntity.vecObject.push_back(gfxProduct);
             }
 
-            gfxEntity.mapTreeNodeGfxObject.insert({ id, gfxEntity.vecGfxObject.back() });
-            gfxEntity.mapGfxObjectTreeNode.insert({ gfxEntity.vecGfxObject.back(), id });
+            const GraphicsEntity::Object& lastGfxObject = gfxEntity.vecObject.back();
+            gfxEntity.mapTreeNodeGfxObject.insert({ id, lastGfxObject.ptr });
+            gfxEntity.mapGfxObjectTreeNode.insert({ lastGfxObject.ptr, id });
         }
     });
 
-    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
-        m_gfxScene.addObject(gfxObject);
-        auto driver = GraphicsObjectDriver::get(gfxObject);
+    for (const GraphicsEntity::Object& object : gfxEntity.vecObject) {
+        m_gfxScene.addObject(object.ptr);
+        auto driver = GraphicsObjectDriver::get(object.ptr);
         if (driver)
-            driver->applyDisplayMode(gfxObject, this->activeDisplayMode(driver));
+            driver->applyDisplayMode(object.ptr, this->activeDisplayMode(driver));
+    }
+
+    for (GraphicsEntity::Object& object : gfxEntity.vecObject) {
+        object.bndBox = GraphicsUtils::AisObject_boundingBox(object.ptr);
+        object.trsfOriginal = m_gfxScene.objectTransformation(object.ptr);
+        BndUtils::add(&gfxEntity.bndBox, object.bndBox);
     }
 
     m_gfxScene.redraw();
@@ -566,12 +571,27 @@ void GuiDocument::mapGraphics(TreeNodeId entityTreeNodeId)
     });
 
     GraphicsUtils::V3dView_fitAll(m_v3dView);
-    for (const GraphicsObjectPtr& gfxObject : gfxEntity.vecGfxObject) {
-        const Bnd_Box bndBox = GraphicsUtils::AisObject_boundingBox(gfxObject);
-        BndUtils::add(&m_gfxBoundingBox, bndBox);
+    m_vecGraphicsEntity.push_back(std::move(gfxEntity));
+}
+
+void GuiDocument::unmapEntity(TreeNodeId entityTreeNodeId)
+{
+    {   // Delete entity graphics
+        const GraphicsEntity* ptrItem = this->findGraphicsEntity(entityTreeNodeId);
+        if (!ptrItem)
+            return;
+
+        for (const GraphicsEntity::Object& object : ptrItem->vecObject)
+            m_gfxScene.eraseObject(object.ptr);
+
+        const int indexItem = ptrItem - &m_vecGraphicsEntity.front();
+        m_vecGraphicsEntity.erase(m_vecGraphicsEntity.begin() + indexItem);
+        m_gfxScene.redraw();
     }
 
-    m_vecGraphicsEntity.push_back(std::move(gfxEntity));
+    traverseTree(entityTreeNodeId, m_document->modelTree(), [=](TreeNodeId id) {
+        m_mapTreeNodeCheckState.erase(id);
+    });
 }
 
 const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const

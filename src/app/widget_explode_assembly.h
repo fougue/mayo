@@ -6,11 +6,7 @@
 
 #pragma once
 
-#include "../base/libtree.h"
-#include "../graphics/graphics_object_ptr.h"
-#include <gp_Pnt.hxx>
 #include <QtWidgets/QWidget>
-#include <vector>
 
 namespace Mayo {
 
@@ -23,26 +19,8 @@ public:
     ~WidgetExplodeAssembly();
 
 private:
-    void onFactorChanged(double t); // t within [0,1]
-
-    void mapEntity(TreeNodeId entityNodeId);
-    void unmapEntity(TreeNodeId entityNodeId);
-
-    struct Movable {
-        GraphicsObjectPtr gfxObject;
-        Bnd_Box bndBox;
-        gp_Trsf trsfOriginal;
-    };
-
-    struct Entity {
-        TreeNodeId treeNodeId;
-        Bnd_Box bndBox;
-        std::vector<Movable> vecMovable;
-    };
-
     class Ui_WidgetExplodeAssembly* m_ui= nullptr;
     GuiDocument* m_guiDoc = nullptr;
-    std::vector<Entity> m_vecEntity;
 };
 
 } // namespace Mayo

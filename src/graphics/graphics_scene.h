@@ -57,6 +57,9 @@ public:
     bool isObjectVisible(const GraphicsObjectPtr& object) const;
     void setObjectVisible(const GraphicsObjectPtr& object, bool on);
 
+    gp_Trsf objectTransformation(const GraphicsObjectPtr& object) const;
+    void setObjectTransformation(const GraphicsObjectPtr& object, const gp_Trsf& trsf);
+
     enum class SelectionMode {
         None, Single, Multi
     };
