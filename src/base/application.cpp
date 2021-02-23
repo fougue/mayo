@@ -120,12 +120,11 @@ DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent)
     return itFound != d->m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr();
 }
 
-DocumentPtr Application::findDocumentByLocation(const QFileInfo& loc) const
+DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 {
-    const QString locAbsoluteFilePath = loc.absoluteFilePath();
     for (const auto& mapPair : d->m_mapIdentifierDocument) {
         const DocumentPtr& docPtr = mapPair.second;
-        if (QFileInfo(docPtr->filePath()).absoluteFilePath() == locAbsoluteFilePath)
+        if (std::filesystem::equivalent(docPtr->filePath(), location))
             return docPtr;
     }
 

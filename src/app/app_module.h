@@ -47,8 +47,8 @@ public:
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
-    void prependRecentFile(const QString& filepath);
-    const RecentFile* findRecentFile(const QString& filepath) const;
+    void prependRecentFile(const FilePath& fp);
+    const RecentFile* findRecentFile(const FilePath& fp) const;
     void recordRecentFileThumbnail(GuiDocument* guiDoc);
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }

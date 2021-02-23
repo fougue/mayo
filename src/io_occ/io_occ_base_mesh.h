@@ -22,7 +22,7 @@ namespace IO {
 // Base class around OpenCascade RWMesh_CafReader
 class OccBaseMeshReader : public Reader {
 public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     bool transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     void applyProperties(const PropertyGroup* params) override;
@@ -41,7 +41,7 @@ protected:
     virtual void applyParameters();
 
 private:
-    QString m_filepath;
+    FilePath m_filepath;
     RWMesh_CafReader& m_reader;
 };
 

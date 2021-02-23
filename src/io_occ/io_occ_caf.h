@@ -12,6 +12,7 @@
 
 #include "../base/application_item.h"
 #include "../base/document_ptr.h"
+#include "../base/filepath.h"
 #include "../base/span.h"
 
 #include <Transfer_FinderProcess.hxx>
@@ -44,8 +45,8 @@ Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader)
 Handle_Transfer_FinderProcess cafFinderProcess(const IGESCAFControl_Writer& writer);
 Handle_Transfer_FinderProcess cafFinderProcess(const STEPCAFControl_Writer& writer);
 
-bool cafReadFile(IGESCAFControl_Reader& reader, const QString& filepath, TaskProgress* progress);
-bool cafReadFile(STEPCAFControl_Reader& reader, const QString& filepath, TaskProgress* progress);
+bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
+bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
 
 bool cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);

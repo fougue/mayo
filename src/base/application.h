@@ -41,7 +41,7 @@ public:
     DocumentPtr openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
     DocumentPtr findDocumentByIndex(int docIndex) const;
     DocumentPtr findDocumentByIdentifier(Document::Identifier docIdent) const;
-    DocumentPtr findDocumentByLocation(const QFileInfo& loc) const;
+    DocumentPtr findDocumentByLocation(const FilePath& location) const;
     int findIndexOfDocument(const DocumentPtr& doc) const;
 
     void closeDocument(const DocumentPtr& doc);

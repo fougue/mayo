@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/filepath.h"
 #include "grid_helper.h"
 #include "list_helper.h"
 
@@ -19,7 +20,7 @@ public:
 signals:
     void newDocumentRequested();
     void openDocumentsRequested();
-    void recentFileOpenRequested(const QString& filepath);
+    void recentFileOpenRequested(const FilePath& fp);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;

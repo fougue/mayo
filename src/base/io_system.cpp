@@ -11,15 +11,13 @@
 #include "io_reader.h"
 #include "io_writer.h"
 #include "messenger.h"
+#include "string_utils.h"
 #include "task_manager.h"
 #include "task_progress.h"
 
-#include <QtCore/QDebug>
-#include <QtCore/QFile>
-#include <QtCore/QFileInfo>
-
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <future>
 #include <locale>
 #include <mutex>
@@ -43,8 +41,8 @@ Messenger* nullMessenger()
 
 bool containsFormat(Span<const Format> spanFormat, const Format& format)
 {
-    auto itFormat = std::find(spanFormat.cbegin(), spanFormat.cend(), format);
-    return itFormat != spanFormat.cend();
+    auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
+    return itFormat != spanFormat.end();
 }
 
 } // namespace
@@ -54,17 +52,18 @@ void System::addFormatProbe(const FormatProbe& probe)
     m_vecFormatProbe.push_back(probe);
 }
 
-Format System::probeFormat(const QString& filepath) const
+Format System::probeFormat(const FilePath& filepath) const
 {
-    QFile file(filepath);
-    if (file.open(QIODevice::ReadOnly)) {
+    std::ifstream file;
+    file.open(filepath);
+    if (file.is_open()) {
         std::array<char, 2048> buff;
         buff.fill(0);
         file.read(buff.data(), buff.size());
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
         probeInput.contentsBegin = QByteArray::fromRawData(buff.data(), buff.size());
-        probeInput.hintFullSize = file.size();
+        probeInput.hintFullSize = std::filesystem::file_size(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
             if (format != Format_Unknown)
@@ -72,7 +71,10 @@ Format System::probeFormat(const QString& filepath) const
         }
 
         // Try to guess from file suffix
-        const QString fileSuffix = QFileInfo(file).suffix();
+        QString fileSuffix = filepathTo<QString>(filepath.extension());
+        if (fileSuffix.startsWith('.'))
+            fileSuffix.remove(0, 1);
+
         auto fnMatchFileSuffix = [=](const Format& format) {
             return format.fileSuffixes.contains(fileSuffix, Qt::CaseInsensitive);
         };
@@ -189,45 +191,46 @@ QString System::fileFilter(const Format& format)
 bool System::importInDocument(const Args_ImportInDocument& args)
 {
     DocumentPtr doc = args.targetDocument;
-    const QStringList listFilepath = args.filepaths;
+    const auto listFilepath = args.filepaths;
     TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
 
     bool ok = true;
 
     using ReaderPtr = std::unique_ptr<Reader>;
-    auto fnAddError = [&](QString filepath, QString errorMsg) {
+    auto fnAddError = [&](const FilePath& fp, QString errorMsg) {
         ok = false;
-        messenger->emitError(tr("Error during import of '%1'\n%2").arg(filepath, errorMsg));
+        messenger->emitError(tr("Error during import of '%1'\n%2")
+                             .arg(filepathTo<QString>(fp), errorMsg));
     };
-    auto fnReadFileError = [&](QString filepath, QString errorMsg) -> ReaderPtr {
-        fnAddError(filepath, errorMsg);
+    auto fnReadFileError = [&](const FilePath& fp, QString errorMsg) -> ReaderPtr {
+        fnAddError(fp, errorMsg);
         return {};
     };
-    auto fnReadFile = [&](QString filepath, TaskProgress* subProgress) -> ReaderPtr {
+    auto fnReadFile = [&](const FilePath& fp, TaskProgress* subProgress) -> ReaderPtr {
         subProgress->beginScope(40, tr("Reading file"));
         auto _ = gsl::finally([=]{ subProgress->endScope(); });
-        const Format fileFormat = this->probeFormat(filepath);
+        const Format fileFormat = this->probeFormat(fp);
         if (fileFormat == Format_Unknown)
-            return fnReadFileError(filepath, tr("Unknown format"));
+            return fnReadFileError(fp, tr("Unknown format"));
 
         std::unique_ptr<Reader> reader = this->createReader(fileFormat);
         if (!reader)
-            return fnReadFileError(filepath, tr("No supporting reader"));
+            return fnReadFileError(fp, tr("No supporting reader"));
 
         if (args.parametersProvider)
             reader->applyProperties(args.parametersProvider->findReaderParameters(fileFormat));
 
-        if (!reader->readFile(filepath, subProgress))
-            return fnReadFileError(filepath, tr("File read problem"));
+        if (!reader->readFile(fp, subProgress))
+            return fnReadFileError(fp, tr("File read problem"));
 
         return reader;
     };
-    auto fnTransfer = [&](QString filepath, const ReaderPtr& reader, TaskProgress* subProgress) {
+    auto fnTransfer = [&](const FilePath& fp, const ReaderPtr& reader, TaskProgress* subProgress) {
         subProgress->beginScope(60, tr("Transferring file"));
         if (reader) {
             if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
-                fnAddError(filepath, tr("File transfer problem"));
+                fnAddError(fp, tr("File transfer problem"));
         }
 
         subProgress->endScope();
@@ -240,7 +243,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     else { // Many files case
         struct TaskData {
             std::unique_ptr<Reader> reader;
-            QString filepath;
+            FilePath filepath;
             TaskProgress* progress = nullptr;
             TaskId taskId = 0;
             bool transferred = false;
@@ -254,8 +257,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
 
         for (int i = 0; i < listFilepath.size(); ++i) {
-            TaskData& taskData = vecTaskData.at(i);
-            taskData.filepath = listFilepath.at(i);
+            TaskData& taskData = vecTaskData[i];
+            taskData.filepath = listFilepath[i];
             const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
                 taskData.progress = progressChild;
                 taskData.reader = fnReadFile(taskData.filepath, progressChild);
@@ -301,7 +304,8 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
     TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
     auto fnError = [=](const QString& errorMsg) {
-        messenger->emitError(tr("Error during export to '%1'\n%2").arg(args.targetFilepath, errorMsg));
+        messenger->emitError(tr("Error during export to '%1'\n%2")
+                             .arg(filepathTo<QString>(args.targetFilepath), errorMsg));
         return false;
     };
 
@@ -326,7 +330,7 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFile(const QString& filepath) {
+System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath) {
     m_args.targetFilepath = filepath;
     return *this;
 }
@@ -382,7 +386,7 @@ System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document) 
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(const QStringList& filepaths) {
+System::Operation_ImportInDocument::withFilepaths(Span<const FilePath> filepaths) {
     m_args.filepaths = filepaths;
     return *this;
 }
@@ -406,9 +410,9 @@ System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
 }
 
 System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withFilepath(const QString& filepath)
+System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
 {
-    return this->withFilepaths({ filepath });
+    return this->withFilepaths(Span<const FilePath>(&filepath, 1));
 }
 
 bool System::Operation_ImportInDocument::execute() {

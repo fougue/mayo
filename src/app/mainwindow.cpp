@@ -76,26 +76,26 @@ static IO::Format formatFromFilter(const QString& filter)
 
 // TODO: move in Options
 struct ImportExportSettings {
-    QString openDir;
+    FilePath openDir;
     QString selectedFilter;
 
     static ImportExportSettings load()
     {
         return {
-            AppModule::get(Application::instance())->lastOpenDir.value(),
+            filepathFrom(AppModule::get(Application::instance())->lastOpenDir),
             AppModule::get(Application::instance())->lastSelectedFormatFilter.value()
         };
     }
 
     static void save(const ImportExportSettings& sets)
     {
-        AppModule::get(Application::instance())->lastOpenDir.setValue(sets.openDir),
+        AppModule::get(Application::instance())->lastOpenDir.setValue(filepathTo<QString>(sets.openDir));
         AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(sets.selectedFilter);
     }
 };
 
 struct OpenFileNames {
-    QStringList listFilepath;
+    std::vector<FilePath> listFilepath;
     ImportExportSettings lastIoSettings;
     IO::Format selectedFormat;
 
@@ -118,25 +118,27 @@ struct OpenFileNames {
         const QString allFilesFilter = MainWindow::tr("All files(*.*)");
         listFormatFilter.append(allFilesFilter);
         const QString dlgTitle = MainWindow::tr("Select Part File");
-        const QString& dlgOpenDir = result.lastIoSettings.openDir;
+        const QString dlgOpenDir = filepathTo<QString>(result.lastIoSettings.openDir);
         const QString dlgFilter = listFormatFilter.join(QLatin1String(";;"));
         QString* dlgPtrSelFilter = &result.lastIoSettings.selectedFilter;
         if (option == OpenFileNames::GetOne) {
-            const QString filepath =
+            const QString strFilepath =
                     QFileDialog::getOpenFileName(
                         parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
             result.listFilepath.clear();
-            result.listFilepath.push_back(filepath);
+            result.listFilepath.push_back(filepathFrom(strFilepath));
         }
         else {
-            result.listFilepath =
+            const QStringList listStrFilePath =
                     QFileDialog::getOpenFileNames(
                         parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
+            result.listFilepath.clear();
+            for (const QString& strFilePath : listStrFilePath)
+                result.listFilepath.push_back(filepathFrom(strFilePath));
         }
 
-        if (!result.listFilepath.isEmpty()) {
-            result.lastIoSettings.openDir =
-                    QFileInfo(result.listFilepath.front()).canonicalPath();
+        if (!result.listFilepath.empty()) {
+            result.lastIoSettings.openDir = result.listFilepath.front();
             result.selectedFormat =
                     result.lastIoSettings.selectedFilter != allFilesFilter ?
                         formatFromFilter(result.lastIoSettings.selectedFilter) :
@@ -148,10 +150,10 @@ struct OpenFileNames {
     }
 };
 
-static void prependRecentFile(const QString& filepath)
+static void prependRecentFile(const FilePath& fp)
 {
     auto appModule = AppModule::get(Application::instance());
-    appModule->prependRecentFile(filepath);
+    appModule->prependRecentFile(fp);
 }
 
 static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
@@ -226,9 +228,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->actionOpen, &QAction::trigger);
     QObject::connect(
                 m_ui->widget_HomeFiles, &WidgetHomeFiles::recentFileOpenRequested,
-                this, [=](const QString& filepath) {
-        this->openDocumentsFromList(QStringList(filepath));
-    });
+                this, [=](const FilePath& fp) { this->openDocument(fp); });
     // "File" actions
     QObject::connect(
                 m_ui->actionNewDoc, &QAction::triggered,
@@ -434,10 +434,10 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 void MainWindow::dropEvent(QDropEvent* event)
 {
     const QList<QUrl> listUrl = event->mimeData()->urls();
-    QStringList listFilePath;
+    std::vector<FilePath> listFilePath;
     for (const QUrl& url : listUrl) {
         if (url.isLocalFile())
-            listFilePath.push_back(url.toLocalFile());
+            listFilePath.push_back(filepathFrom(url.toLocalFile()));
     }
 
     event->acceptProposedAction();
@@ -466,7 +466,7 @@ void MainWindow::newDocument()
 void MainWindow::openDocuments()
 {
     const auto resFileNames = Internal::OpenFileNames::get(this);
-    if (!resFileNames.listFilepath.isEmpty())
+    if (!resFileNames.listFilepath.empty())
         this->openDocumentsFromList(resFileNames.listFilepath);
 }
 
@@ -477,7 +477,7 @@ void MainWindow::importInCurrentDoc()
         return;
 
     const auto resFileNames = Internal::OpenFileNames::get(this);
-    if (resFileNames.listFilepath.isEmpty())
+    if (resFileNames.listFilepath.empty())
         return;
 
     auto app = m_guiApp->application();
@@ -498,11 +498,11 @@ void MainWindow::importInCurrentDoc()
     const QString taskTitle =
             resFileNames.listFilepath.size() > 1 ?
                 tr("Import") :
-                QFileInfo(resFileNames.listFilepath.front()).fileName();
+                filepathTo<QString>(resFileNames.listFilepath.front().stem());
     taskMgr->setTitle(taskId, taskTitle);
     taskMgr->run(taskId);
-    for (const QString& filepath : resFileNames.listFilepath)
-        Internal::prependRecentFile(filepath);
+    for (const FilePath& fp : resFileNames.listFilepath)
+        Internal::prependRecentFile(fp);
 }
 
 void MainWindow::exportSelectedItems()
@@ -514,17 +514,17 @@ void MainWindow::exportSelectedItems()
         listWriterFileFilter.append(IO::System::fileFilter(format));
 
     auto lastSettings = Internal::ImportExportSettings::load();
-    const QString filepath =
+    const QString strFilepath =
             QFileDialog::getSaveFileName(
                 this,
                 tr("Select Output File"),
-                lastSettings.openDir,
+                filepathTo<QString>(lastSettings.openDir),
                 listWriterFileFilter.join(QLatin1String(";;")),
                 &lastSettings.selectedFilter);
-    if (filepath.isEmpty())
+    if (strFilepath.isEmpty())
         return;
 
-    lastSettings.openDir = QFileInfo(filepath).canonicalPath();
+    lastSettings.openDir = filepathFrom(strFilepath);
     auto taskMgr = TaskManager::globalInstance();
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
@@ -532,7 +532,7 @@ void MainWindow::exportSelectedItems()
         chrono.start();
         const bool okExport =
                 app->ioSystem()->exportApplicationItems()
-                .targetFile(filepath)
+                .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(m_guiApp->selectionModel()->selectedItems())
                 .withParameters(AppModule::get(app)->findWriterParameters(format))
@@ -542,7 +542,7 @@ void MainWindow::exportSelectedItems()
         if (okExport)
             Messenger::defaultInstance()->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
     });
-    taskMgr->setTitle(taskId, QFileInfo(filepath).fileName());
+    taskMgr->setTitle(taskId, QFileInfo(strFilepath).fileName());
     taskMgr->run(taskId);
     Internal::ImportExportSettings::save(lastSettings);
 }
@@ -641,7 +641,7 @@ void MainWindow::onApplicationItemSelectionChanged()
     uiProps->clear();
     Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
-        const ApplicationItem& item = spanAppItem.at(0);
+        const ApplicationItem& item = spanAppItem.front();
         const DocumentTreeNode& docTreeNode = item.documentTreeNode();
         if (item.isDocumentTreeNode()) {
             auto providerTable = m_guiApp->application()->documentTreeNodePropertiesProviderTable();
@@ -738,7 +738,7 @@ void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)
 {
-    this->openDocumentsFromList(QStringList(loc.absoluteFilePath()));
+    this->openDocument(filepathFrom(loc));
 }
 
 void MainWindow::onLeftContentsPageChanged(int pageId)
@@ -785,10 +785,10 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
             docPtr ?
                 tr("Close all except %1").arg(fnFilepathQuoted(docPtr->name())) :
                 tr("Close all except current");
-    const QString docFilePath = docPtr ? docPtr->filePath() : QString();
+    const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->actionCloseDoc->setText(textActionClose);
     m_ui->actionCloseAllExcept->setText(textActionCloseAllExcept);
-    m_ui->widget_FileSystem->setLocation(docFilePath);
+    m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(docFilePath));
 
     if (this->currentWidgetGuiDocument()) {
         const GuiDocument* guiDoc = this->currentWidgetGuiDocument()->guiDocument();
@@ -857,16 +857,19 @@ void MainWindow::closeAllDocuments()
         this->closeCurrentDocument();
 }
 
-void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
+void MainWindow::openDocument(const FilePath& fp)
+{
+    this->openDocumentsFromList(Span<const FilePath>(&fp, 1));
+}
+
+void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
 {
     auto app = m_guiApp->application();
     auto taskMgr = TaskManager::globalInstance();
     static std::mutex mutexApp;
-    for (const QString& filePath : listFilePath) {
-        const QFileInfo loc(filePath);
-        const DocumentPtr docPtr = app->findDocumentByLocation(loc);
+    for (const FilePath& fp : listFilePath) {
+        const DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
-            const QString locAbsoluteFilePath = QDir::toNativeSeparators(loc.absoluteFilePath());
             const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 QTime chrono;
                 chrono.start();
@@ -876,12 +879,12 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
                     doc = app->newDocument();
                 }
 
-                doc->setName(loc.fileName());
-                doc->setFilePath(locAbsoluteFilePath);
+                doc->setName(filepathTo<QString>(fp.stem()));
+                doc->setFilePath(fp);
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
-                        .withFilepath(locAbsoluteFilePath)
+                        .withFilepath(fp)
                         .withParametersProvider(AppModule::get(app))
                         .withMessenger(Messenger::defaultInstance())
                         .withTaskProgress(progress)
@@ -889,9 +892,9 @@ void MainWindow::openDocumentsFromList(const QStringList& listFilePath)
                 if (okImport)
                     Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
             });
-            taskMgr->setTitle(taskId, loc.fileName());
+            taskMgr->setTitle(taskId, filepathTo<QString>(fp.stem()));
             taskMgr->run(taskId);
-            Internal::prependRecentFile(locAbsoluteFilePath);
+            Internal::prependRecentFile(fp);
         }
         else {
             if (listFilePath.size() == 1)
@@ -930,7 +933,7 @@ void MainWindow::updateControlsActivation()
 
     Span<const ApplicationItem> spanSelectedAppItem = m_guiApp->selectionModel()->selectedItems();
     const ApplicationItem firstAppItem =
-            !spanSelectedAppItem.empty() ? spanSelectedAppItem.at(0) : ApplicationItem();
+            !spanSelectedAppItem.empty() ? spanSelectedAppItem.front() : ApplicationItem();
     m_ui->actionInspectXDE->setEnabled(
                 spanSelectedAppItem.size() == 1
                 && firstAppItem.isValid()
@@ -1016,8 +1019,8 @@ QMenu* MainWindow::createMenuRecentFiles()
     auto appModule = AppModule::get(m_guiApp->application());
     const RecentFiles& recentFiles = appModule->recentFiles.value();
     for (const RecentFile& recentFile : recentFiles) {
-        const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(recentFile.filepath);
-        menu->addAction(entryRecentFile, [=]{ this->openDocumentsFromList({ recentFile.filepath }); });
+        const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(filepathTo<QString>(recentFile.filepath));
+        menu->addAction(entryRecentFile, [=]{ this->openDocument(recentFile.filepath); });
     }
 
     if (!recentFiles.empty()) {
@@ -1052,7 +1055,7 @@ QMenu* MainWindow::createMenuDisplayMode()
         if (driver->displayModes().empty())
             continue; // Skip
 
-        if (driver != spanDrivers.at(0))
+        if (driver != spanDrivers.front())
             menu->addSeparator();
 
         auto group = new QActionGroup(menu);

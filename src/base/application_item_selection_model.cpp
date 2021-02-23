@@ -12,8 +12,8 @@ namespace Internal {
 
 static bool hasApplicationItem(Span<ApplicationItem> vec, const ApplicationItem& item)
 {
-    auto itFound = std::find(vec.cbegin(), vec.cend(), item);
-    return itFound != vec.cend();
+    auto itFound = std::find(vec.begin(), vec.end(), item);
+    return itFound != vec.end();
 }
 
 static std::vector<ApplicationItem>::iterator findApplicationItem(

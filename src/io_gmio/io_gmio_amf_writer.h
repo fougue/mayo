@@ -25,7 +25,7 @@ namespace IO {
 class GmioAmfWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
-    bool writeFile(const QString& filepath, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* group) override;

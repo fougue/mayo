@@ -7,6 +7,7 @@
 #pragma once
 
 #include "application_item.h"
+#include "filepath.h"
 #include "io_format.h"
 #include "io_reader.h"
 #include "io_writer.h"
@@ -18,11 +19,10 @@
 #include <memory>
 
 namespace Mayo {
+
 class Messenger;
 class TaskProgress;
-}
 
-namespace Mayo {
 namespace IO {
 
 class ParametersProvider;
@@ -35,13 +35,13 @@ public:
     ~System() = default;
 
     struct FormatProbeInput {
-        QString filepath;
+        FilePath filepath;
         QByteArray contentsBegin; // Excerpt of the file(from start)
         uint64_t hintFullSize; // Full file size in bytes
     };
     using FormatProbe = std::function<Format (const FormatProbeInput&)>;
     void addFormatProbe(const FormatProbe& probe);
-    Format probeFormat(const QString& filepath) const;
+    Format probeFormat(const FilePath& filepath) const;
 
     void addFactoryReader(std::unique_ptr<FactoryReader> ptr);
     void addFactoryWriter(std::unique_ptr<FactoryWriter> ptr);
@@ -60,7 +60,7 @@ public:
 
     struct Args_ImportInDocument {
         DocumentPtr targetDocument;
-        QStringList filepaths;
+        Span<const FilePath> filepaths;
         const ParametersProvider* parametersProvider = nullptr;
         Messenger* messenger = nullptr;
         TaskProgress* progress = nullptr;
@@ -71,7 +71,7 @@ public:
 
     struct Args_ExportApplicationItems {
         Span<const ApplicationItem> applicationItems;
-        QString targetFilepath;
+        FilePath targetFilepath;
         Format targetFormat = Format_Unknown;
         const PropertyGroup* parameters = nullptr;
         Messenger* messenger = nullptr;
@@ -84,8 +84,8 @@ public:
     struct Operation_ImportInDocument {
         using Operation = Operation_ImportInDocument;
         Operation& targetDocument(const DocumentPtr& document);
-        Operation& withFilepath(const QString& filepath);
-        Operation& withFilepaths(const QStringList& filepaths);
+        Operation& withFilepath(const FilePath& filepath);
+        Operation& withFilepaths(Span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
@@ -103,7 +103,7 @@ public:
 
     struct Operation_ExportApplicationItems {
         using Operation = Operation_ExportApplicationItems;
-        Operation& targetFile(const QString& filepath);
+        Operation& targetFile(const FilePath& filepath);
         Operation& targetFormat(const Format& format);
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);

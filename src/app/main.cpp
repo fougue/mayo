@@ -35,7 +35,7 @@ class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
 
 struct CommandLineArguments {
     QString themeName;
-    QStringList listFileToOpen;
+    std::vector<FilePath> listFileToOpen;
 };
 
 static CommandLineArguments processCommandLine()
@@ -66,7 +66,8 @@ static CommandLineArguments processCommandLine()
     if (cmdParser.isSet(cmdOptionTheme))
         args.themeName = cmdParser.value(cmdOptionTheme);
 
-    args.listFileToOpen = cmdParser.positionalArguments();
+    for (const QString& posArg : cmdParser.positionalArguments())
+        args.listFileToOpen.push_back(filepathFrom(posArg));
 
     return args;
 }

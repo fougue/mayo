@@ -24,10 +24,10 @@ namespace IO {
 namespace {
 
 template<typename CAF_READER>
-bool cafGenericReadFile(CAF_READER& reader, const QString& filepath, TaskProgress* progress)
+bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgress* progress)
 {
     //readFile_prepare(reader);
-    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.toUtf8().constData());
+    const IFSelect_ReturnStatus error = reader.ReadFile(filepath.u8string().c_str());
     progress->setValue(100);
     return error == IFSelect_RetDone;
 }
@@ -91,11 +91,11 @@ Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader)
     return reader.WS();
 }
 
-bool cafReadFile(IGESCAFControl_Reader& reader, const QString& filepath, TaskProgress* progress) {
+bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress) {
     return cafGenericReadFile(reader, filepath, progress);
 }
 
-bool cafReadFile(STEPCAFControl_Reader& reader, const QString& filepath, TaskProgress* progress) {
+bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress) {
     return cafGenericReadFile(reader, filepath, progress);
 }
 

@@ -60,7 +60,7 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 converter.AddShape(XCaf::shape(label));
         }
 
-        const int index = &appItem - &spanAppItem.at(0);
+        const int index = &appItem - &spanAppItem.front();
         progress->setValue(MathUtils::mappedValue(index, 0, spanAppItem.size() - 1, 0, 100));
     }
 
@@ -71,13 +71,13 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool OccVrmlWriter::writeFile(const QString& filepath, TaskProgress*)
+bool OccVrmlWriter::writeFile(const FilePath& filepath, TaskProgress*)
 {
     if (!m_scene)
         return false;
 
     std::ofstream outs;
-    OSD_OpenStream(outs, filepath.toUtf8().constData(), std::ios::out);
+    OSD_OpenStream(outs, filepath.u8string().c_str(), std::ios::out);
     if (outs) {
         outs << *m_scene;
         outs.close();

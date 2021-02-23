@@ -181,9 +181,9 @@ const PropertyGroup *AppModule::findWriterParameters(const IO::Format& format) c
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
-void AppModule::prependRecentFile(const QString& filepath)
+void AppModule::prependRecentFile(const FilePath& fp)
 {
-    const RecentFile* ptrRecentFile = this->findRecentFile(filepath);
+    const RecentFile* ptrRecentFile = this->findRecentFile(fp);
     RecentFiles newRecentFiles = this->recentFiles.value();
     if (ptrRecentFile) {
         RecentFile& firstRecentFile = newRecentFiles.front();
@@ -192,7 +192,7 @@ void AppModule::prependRecentFile(const QString& filepath)
     }
     else {
         RecentFile recentFile;
-        recentFile.filepath = filepath;
+        recentFile.filepath = fp;
         newRecentFiles.insert(newRecentFiles.begin(), std::move(recentFile));
         constexpr int sizeLimit = 15;
         while (newRecentFiles.size() > sizeLimit)
@@ -202,16 +202,15 @@ void AppModule::prependRecentFile(const QString& filepath)
     this->recentFiles.setValue(newRecentFiles);
 }
 
-const RecentFile* AppModule::findRecentFile(const QString& filepath) const
+const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
 {
-    const QFileInfo fileInfo(filepath);
     const RecentFiles& listRecentFile = this->recentFiles.value();
     auto itFound =
             std::find_if(
                 listRecentFile.cbegin(),
                 listRecentFile.cend(),
                 [=](const RecentFile& recentFile) {
-        return fileInfo == QFileInfo(recentFile.filepath);
+        return std::filesystem::equivalent(fp, recentFile.filepath);
     });
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
 }

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "../base/filepath.h"
 #include "../base/property_builtins.h"
 
 #include <QtCore/QMetaType>
-#include <QtCore/QString>
 #include <QtGui/QPixmap>
 #include <vector>
 class QDataStream;
@@ -19,7 +19,7 @@ namespace Mayo {
 class GuiDocument;
 
 struct RecentFile {
-    QString filepath;
+    FilePath filepath;
     QPixmap thumbnail;
     int64_t thumbnailTimestamp = 0;
     bool recordThumbnail(GuiDocument* guiDoc, QSize size);

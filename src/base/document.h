@@ -8,6 +8,7 @@
 
 #include "document_ptr.h"
 #include "document_tree_node.h"
+#include "filepath.h"
 #include "libtree.h"
 #include "xcaf.h"
 #include <QtCore/QObject>
@@ -21,7 +22,7 @@ class Document : public QObject, public TDocStd_Document {
     Q_OBJECT
     Q_PROPERTY(int identifier READ identifier)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QString filePath READ filePath WRITE setFilePath)
+    Q_PROPERTY(FilePath filePath READ filePath WRITE setFilePath)
     Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
 public:
     using Identifier = int;
@@ -29,11 +30,11 @@ public:
 
     Identifier identifier() const { return m_identifier; }
 
-    QString name() const;
+    const QString& name() const;
     void setName(const QString& name);
 
-    QString filePath() const;
-    void setFilePath(const QString& filepath);
+    const FilePath& filePath() const;
+    void setFilePath(const FilePath& fp);
 
     static const char NameFormatBinary[];
     static const char NameFormatXml[];
@@ -89,7 +90,7 @@ private:
 
     Identifier m_identifier = -1;
     QString m_name;
-    QString m_filePath;
+    FilePath m_filePath;
     XCaf m_xcaf;
     Tree<TDF_Label> m_modelTree;
 };

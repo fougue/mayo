@@ -66,7 +66,7 @@ void Document::notifyNewEntity(const TDF_Label& label)
 #endif
 }
 
-QString Document::name() const
+const QString& Document::name() const
 {
     return m_name;
 }
@@ -77,14 +77,14 @@ void Document::setName(const QString& name)
     emit this->nameChanged(name);
 }
 
-QString Document::filePath() const
+const FilePath& Document::filePath() const
 {
     return m_filePath;
 }
 
-void Document::setFilePath(const QString& filepath)
+void Document::setFilePath(const FilePath& fp)
 {
-    m_filePath = filepath;
+    m_filePath = fp;
 }
 
 const char* Document::toNameFormat(Document::Format format)
@@ -128,7 +128,7 @@ TDF_Label Document::entityLabel(int index) const
 
 TreeNodeId Document::entityTreeNodeId(int index) const
 {
-    return m_modelTree.roots().at(index);
+    return m_modelTree.roots()[index];
 }
 
 DocumentTreeNode Document::entityTreeNode(int index) const

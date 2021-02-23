@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "filepath.h"
 #include "io_format.h"
 #include "span.h"
 #include <memory>
-class QString;
 
 namespace Mayo {
 
@@ -22,8 +22,7 @@ namespace IO {
 class Writer {
 public:
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
-    // TODO Replace QString with std::filesystem::path
-    virtual bool writeFile(const QString& filepath, TaskProgress* progress) = 0;
+    virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
 };
 

@@ -8,6 +8,7 @@
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/filepath.h"
 #include "widget_model_tree.h"
 #include "theme.h"
 
@@ -35,7 +36,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder::createTreeItem(const DocumentPtr& doc)
     auto treeItem = new QTreeWidgetItem;
     treeItem->setText(0, WidgetModelTreeBuilder::labelText(doc->name()));
     treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::File));
-    treeItem->setToolTip(0, doc->filePath());
+    treeItem->setToolTip(0, filepathTo<QString>(doc->filePath()));
     return treeItem;
 }
 

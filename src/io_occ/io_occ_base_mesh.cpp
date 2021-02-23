@@ -67,7 +67,7 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     return LengthUnit::Undefined;
 }
 
-bool OccBaseMeshReader::readFile(const QString& filepath, TaskProgress* progress)
+bool OccBaseMeshReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_filepath = filepath;
     progress->setValue(100);
@@ -80,9 +80,7 @@ bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
     m_reader.SetDocument(doc);
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     XCafScopeImport import(doc);
-    const bool okPerform = m_reader.Perform(
-                StringUtils::toUtf8<TCollection_AsciiString>(m_filepath),
-                TKernelUtils::start(indicator));
+    const bool okPerform = m_reader.Perform(m_filepath.u8string().c_str(), TKernelUtils::start(indicator));
     import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
     return okPerform;
 }
