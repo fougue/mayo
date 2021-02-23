@@ -68,10 +68,10 @@ void Test::Application_test()
 {
     auto app = Application::instance();
     auto ioSystem = Application::instance()->ioSystem();
-    auto fnImportInDocument = [=](const DocumentPtr& doc, const QString& filepath) {
+    auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return ioSystem->importInDocument()
                 .targetDocument(doc)
-                .withFilepaths({ filepath })
+                .withFilepath(fp)
                 .execute();
     };
     QCOMPARE(app->documentCount(), 0);
@@ -143,16 +143,16 @@ void Test::TextId_test()
 
 void Test::IO_test()
 {
-    QFETCH(QString, filePath);
+    QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
 
     auto ioSystem = Application::instance()->ioSystem();
-    QCOMPARE(ioSystem->probeFormat(filePath), expectedPartFormat);
+    QCOMPARE(ioSystem->probeFormat(filepathFrom(strFilePath)), expectedPartFormat);
 }
 
 void Test::IO_test_data()
 {
-    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
 
     QTest::newRow("cube.step") << "inputs/cube.step" << IO::Format_STEP;
