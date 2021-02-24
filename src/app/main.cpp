@@ -16,7 +16,6 @@
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "theme.h"
-#include "version.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_xde.h"
 #include "widget_model_tree_builder_mesh.h"
@@ -26,7 +25,6 @@
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
 #include <QtWidgets/QApplication>
-#include <iostream>
 #include <memory>
 
 namespace Mayo {
@@ -80,22 +78,20 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
-static int runApp(QApplication* qtApp)
+// Initializes "Base" objects
+static void initBase(QCoreApplication* qtApp)
 {
-    const CommandLineArguments args = processCommandLine();
     Application::setOpenCascadeEnvironment("opencascade.conf");
-
-    auto app = Application::instance().get();
-    auto guiApp = new GuiApplication(app);
+    auto app = Application::instance();
 
     // Load translation files
     {
         const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
-        auto translator = new QTranslator(app);
+        auto translator = new QTranslator(app.get());
         if (translator->load(qmFilePath))
             qtApp->installTranslator(translator);
         else
-            std::cerr << qUtf8Printable(Main::tr("Failed to load translation for '%1'").arg(qmFilePath)) << std::endl;
+            qWarning() << Main::tr("Failed to load translation for '%1'").arg(qmFilePath);
     }
 
     // Register I/O objects
@@ -104,6 +100,16 @@ static int runApp(QApplication* qtApp)
     app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
     IO::addPredefinedFormatProbes(app->ioSystem());
 
+    // Register providers to query document tree node properties
+    app->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    app->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+}
+
+// Initializes "GUI" objects
+static void initGui(GuiApplication* guiApp)
+{
     // Register Graphics/TreeNode mapping drivers
     guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
@@ -111,18 +117,23 @@ static int runApp(QApplication* qtApp)
     // Register Graphics entity drivers
     guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
+}
+
+// Initializes and runs Mayo application
+static int runApp(QApplication* qtApp)
+{
+    const CommandLineArguments args = processCommandLine();
+
+    initBase(qtApp);
+    auto app = Application::instance().get();
+    auto guiApp = new GuiApplication(app);
+    initGui(guiApp);
 
     // Register AppModule
     auto appModule = new AppModule(app);
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
                 appModule, &AppModule::recordRecentFileThumbnail);
-
-    // Register document tree node providers
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -131,8 +142,7 @@ static int runApp(QApplication* qtApp)
     // Create theme
     globalTheme.reset(createTheme(args.themeName));
     if (!globalTheme) {
-        const QString errorText = Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
-        std::cerr << qUtf8Printable(errorText) << std::endl;
+        qCritical() << Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
         return -1;
     }
     mayoTheme()->setup();

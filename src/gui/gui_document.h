@@ -62,7 +62,7 @@ public:
 
     // -- Exploding
     double explodingFactor() const { return m_explodingFactor; }
-    void setExplodingFactor(double t);
+    void setExplodingFactor(double t); // Must be in [0,1]
 
     // -- Visibility of trihedron at world origin
     bool isOriginTrihedronVisible() const;
