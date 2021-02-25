@@ -36,7 +36,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QVariant>
 #include <QtTest/QSignalSpy>
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <algorithm>
 #include <cmath>
 #include <cstring>

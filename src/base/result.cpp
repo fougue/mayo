@@ -26,7 +26,7 @@ Result<void> Result<void>::error(const QString& errorText)
 {
     Result<void> res(false);
     res.m_errorText = errorText;
-    return std::move(res);
+    return res;
 }
 
 Result<void>::Result(bool valid)

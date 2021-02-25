@@ -10,7 +10,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 #include <algorithm>
 #include <cmath>
 

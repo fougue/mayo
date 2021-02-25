@@ -4,8 +4,6 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#pragma once
-
 #include "io_occ_common.h"
 #include "../base/text_id.h"
 

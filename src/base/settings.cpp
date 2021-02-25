@@ -7,7 +7,7 @@
 #include "settings.h"
 
 #include <QtCore/QSettings>
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <regex>
 
 namespace Mayo {

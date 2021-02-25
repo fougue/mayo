@@ -7,6 +7,7 @@
 #pragma once
 
 #include "span.h"
+#include <algorithm>
 #include <vector>
 
 namespace Mayo {

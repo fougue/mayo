@@ -21,7 +21,7 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <cassert>
 #include <memory>
 #include <unordered_map>
@@ -39,18 +39,6 @@ static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
         vecPtrBuilder.emplace_back(std::make_unique<WidgetModelTreeBuilder>()); // Fallback
 
     return vecPtrBuilder;
-}
-
-template<typename PREDICATE>
-static WidgetModelTreeBuilder* findSupportBuilder(
-        Span<WidgetModelTreeBuilder*> spanBuilder, PREDICATE fn)
-{
-    for (int i = 1; i < spanBuilder.size(); ++i) {
-        if (fn(spanBuilder.at(i)))
-            return spanBuilder.at(i);
-    }
-
-    return spanBuilder.at(0); // Fallback
 }
 
 class TreeWidget : public QTreeWidget {

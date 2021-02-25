@@ -16,7 +16,7 @@
 #include <IGESCAFControl_Writer.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
-#include <gsl/gsl_util>
+#include <gsl/util>
 
 namespace Mayo {
 namespace IO {

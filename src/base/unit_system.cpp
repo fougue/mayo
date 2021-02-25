@@ -205,7 +205,7 @@ UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
 
 UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 {
-    constexpr double factor = Quantity_Degree.value();
+    const double factor = Quantity_Degree.value();
     const double rad = angle.value();
     return { rad / factor, "°", factor };
 }

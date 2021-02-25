@@ -6,7 +6,10 @@
 
 #pragma once
 
-#include <filesystem>
+// Workaround bug https://bugreports.qt.io/browse/QTBUG-73263 which affects GCC builds
+#ifndef Q_MOC_RUN
+#  include <filesystem>
+#endif
 
 namespace Mayo {
 

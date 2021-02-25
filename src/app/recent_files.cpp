@@ -12,7 +12,7 @@
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
 
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <QtWidgets/QWidget>
 
 namespace Mayo {

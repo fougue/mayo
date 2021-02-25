@@ -29,7 +29,7 @@ public:
     const ApplicationPtr& application() const { return m_app; }
 
     Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
-    Span<const GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
+    Span<GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
     GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
