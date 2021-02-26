@@ -527,7 +527,7 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
     const QByteArray& sample = input.contentsBegin;
-    const std::regex rx("^\\s*(v|vt|vn|vp|surf)\\s+[-\\+]?[0-9\\.]+\\s");
+    const std::regex rx{ R"("^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s")" };
     if (std::regex_search(sample.cbegin(), sample.cend(), rx))
         return Format_OBJ;
 
