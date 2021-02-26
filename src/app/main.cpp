@@ -57,7 +57,7 @@ static CommandLineArguments processCommandLine()
                 Main::tr("Files to open at startup, optionally"),
                 Main::tr("[files...]"));
 
-    cmdParser.process(QApplication::arguments());
+    cmdParser.process(QCoreApplication::arguments());
 
     // Retrieve arguments
     args.themeName = "dark";
