@@ -13,7 +13,9 @@
 #include "../gui/qtgui_utils.h"
 
 #include <gsl/util>
-#include <QtWidgets/QWidget>
+//#include <QtGui/QOffscreenSurface>
+#include <QtGui/QWindow>
+#include <Aspect_NeutralWindow.hxx>
 
 namespace Mayo {
 
@@ -53,12 +55,15 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         if (guiDoc->isOriginTrihedronVisible())
             guiDoc->toggleOriginTrihedronVisibility();
 
-        QWidget widgetView; // TODO Use a pure offscreen window instead
-        Handle_Aspect_Window hWnd = new OcctWindow(&widgetView);
+        QWindow window; // TODO Use a pure offscreen window instead
+        window.setBaseSize(size);
+        window.create();
+        Handle_Aspect_NeutralWindow hWnd = new Aspect_NeutralWindow;
+        hWnd->SetSize(size.width(), size.height());
+        hWnd->SetNativeHandle(reinterpret_cast<Aspect_Drawable>(window.winId()));
         view->SetWindow(hWnd);
-        view->MustBeResized();
+
         GraphicsUtils::V3dView_fitAll(view);
-        view->Redraw();
 
         Image_PixMap pixmap;
         pixmap.SetTopDown(true);
