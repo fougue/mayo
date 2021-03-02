@@ -95,13 +95,15 @@ void Settings::load()
     this->loadFrom(d->m_settings);
 }
 
-void Settings::loadFrom(const QSettings& source)
+void Settings::loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude)
 {
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
             const QString sectionPath = d->sectionPath(group, section);
-            for (const Settings_Setting& setting : section.vecSetting)
-                Private::loadPropertyFrom(source, sectionPath, setting.property);
+            for (const Settings_Setting& setting : section.vecSetting) {
+                if (!fnExclude || !fnExclude(*setting.property))
+                    Private::loadPropertyFrom(source, sectionPath, setting.property);
+            }
         }
     }
 }
@@ -131,7 +133,7 @@ void Settings::save()
     d->m_settings.sync();
 }
 
-void Settings::saveAs(QSettings* target)
+void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude)
 {
     if (!target)
         return;
@@ -141,9 +143,11 @@ void Settings::saveAs(QSettings* target)
             const QString sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 Property* prop = setting.property;
-                const QByteArray propKey = prop->name().key;
-                const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                target->setValue(settingPath, prop->valueAsVariant());
+                if (!fnExclude || !fnExclude(*prop)) {
+                    const QByteArray propKey = prop->name().key;
+                    const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
+                    target->setValue(settingPath, prop->valueAsVariant());
+                }
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)

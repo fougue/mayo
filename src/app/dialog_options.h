@@ -25,7 +25,12 @@ public:
 
 private:
     QWidget* createEditor(Property* property, QWidget* parentWidget) const;
+    void syncAllEditors();
+
     void restoreDefaults();
+
+    void loadFromFile();
+    void saveAs();
 
     class Ui_DialogOptions* m_ui = nullptr;
     std::unique_ptr<PropertyEditorFactory> m_editorFactory;

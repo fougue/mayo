@@ -19,6 +19,7 @@ public:
 
     TaskId taskId() const;
 
+    // Value in [0,100]
     int value() const { return m_value; }
     void setValue(int pct);
 

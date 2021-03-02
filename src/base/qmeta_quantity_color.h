@@ -9,13 +9,3 @@
 #include <Quantity_Color.hxx>
 #include <QtCore/QMetaType>
 Q_DECLARE_METATYPE(Quantity_Color)
-
-class QDataStream;
-QDataStream& operator<<(QDataStream& out, const Quantity_Color& color);
-QDataStream& operator>>(QDataStream& in, Quantity_Color& color);
-
-namespace Mayo {
-
-void qtRegisterMetaType_OccColor();
-
-} // namespace Mayo

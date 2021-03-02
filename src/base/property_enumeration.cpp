@@ -58,7 +58,7 @@ Result<void> PropertyEnumeration::setValueByName(const QByteArray& name)
 
 QVariant PropertyEnumeration::valueAsVariant() const
 {
-    return QVariant::fromValue(this->name());
+    return QVariant::fromValue(QString::fromUtf8(this->name()));
 }
 
 Result<void> PropertyEnumeration::setValueFromVariant(const QVariant& value)

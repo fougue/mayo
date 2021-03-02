@@ -75,7 +75,6 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
-        qtRegisterMetaType_OccColor();
     }
 
     return appPtr;

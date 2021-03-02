@@ -25,18 +25,19 @@ public:
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
     using GroupResetFunction = std::function<void()>;
+    using ExcludePropertyPredicate = std::function<bool(const Property&)>;
 
     Settings(QObject* parent = nullptr);
     ~Settings();
 
     void load();
-    void loadFrom(const QSettings& source);
     void loadProperty(SettingIndex index);
-    void loadPropertyFrom(const QSettings& source, SettingIndex index);
     QVariant findValueFromKey(const QString& strKey) const;
-
     void save();
-    void saveAs(QSettings* target);
+
+    void loadPropertyFrom(const QSettings& source, SettingIndex index);
+    void loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude = nullptr);
+    void saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude = nullptr);
 
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;

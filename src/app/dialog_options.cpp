@@ -9,13 +9,17 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "widgets_utils.h"
 #include "ui_dialog_options.h"
 
+#include <QtCore/QSettings>
 #include <QtGui/QStandardItemModel>
 #include <QtWidgets/QAbstractSpinBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QProxyStyle>
 #include <QtWidgets/QPushButton>
 
@@ -184,6 +188,15 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     // Action for "Restore defaults" button
     auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
     QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, &DialogOptions::restoreDefaults);
+
+    // Actions for "Exchange" button
+    auto btnExchange = m_ui->buttonBox->addButton(tr("Exchange"), QDialogButtonBox::ActionRole);
+    {
+        auto menu = new QMenu(btnExchange);
+        menu->addAction(tr("Load from file..."), this, &DialogOptions::loadFromFile);
+        menu->addAction(tr("Save as..."), this, &DialogOptions::saveAs);
+        btnExchange->setMenu(menu);
+    }
 }
 
 DialogOptions::~DialogOptions()
@@ -246,9 +259,8 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
     return widget;
 }
 
-void DialogOptions::restoreDefaults()
+void DialogOptions::syncAllEditors()
 {
-    m_settings->resetAll();
     for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
         QListWidgetItem* listItem = m_ui->listWidget_Settings->item(i);
         QWidget* itemWidget = m_ui->listWidget_Settings->itemWidget(listItem);
@@ -257,6 +269,51 @@ void DialogOptions::restoreDefaults()
             m_editorFactory->syncEditorWithProperty(editorWidget);
         }
     }
+}
+
+void DialogOptions::restoreDefaults()
+{
+    m_settings->resetAll();
+    this->syncAllEditors();
+}
+
+void DialogOptions::loadFromFile()
+{
+    const QString startDirPath = QString();
+    const QString filepath = QFileDialog::getOpenFileName(
+                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)"));
+    if (filepath.isEmpty())
+        return;
+
+    const QFileInfo fi(filepath);
+    if (!fi.exists()) {
+        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' doesn't exist").arg(filepath));
+        return;
+    }
+
+    if (!fi.isReadable()) {
+        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' is not readable").arg(filepath));
+        return;
+    }
+
+    QSettings fileSettings(filepath, QSettings::IniFormat);
+    m_settings->loadFrom(fileSettings, [](const Property& prop) { return !prop.isUserVisible(); });
+    this->syncAllEditors();
+}
+
+void DialogOptions::saveAs()
+{
+    const QString startDirPath = QString();
+    const QString filepath = QFileDialog::getSaveFileName(
+                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)"));
+    if (filepath.isEmpty())
+        return;
+
+    QSettings fileSettings(filepath, QSettings::IniFormat);
+    m_settings->saveAs(&fileSettings, [](const Property& prop) { return !prop.isUserVisible(); });
+    fileSettings.sync();
+    if (fileSettings.status() != QSettings::NoError)
+        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
 }
 
 } // namespace Mayo
