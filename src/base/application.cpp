@@ -164,13 +164,13 @@ void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
 {
     const QFileInfo fiSettingsFilepath(settingsFilepath);
     if (!fiSettingsFilepath.exists() || !fiSettingsFilepath.isReadable()) {
-        qDebug() << settingsFilepath << "doesn't exist or is not readable";
+        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(settingsFilepath);
         return;
     }
 
     const QSettings occSettings(settingsFilepath, QSettings::IniFormat);
     if (occSettings.status() != QSettings::NoError) {
-        qDebug() << settingsFilepath << "could not be loaded by QSettings";
+        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(settingsFilepath);
         return;
     }
 

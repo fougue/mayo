@@ -9,6 +9,7 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "app_module.h"
 #include "widgets_utils.h"
 #include "ui_dialog_options.h"
 
@@ -297,7 +298,7 @@ void DialogOptions::loadFromFile()
     }
 
     QSettings fileSettings(filepath, QSettings::IniFormat);
-    m_settings->loadFrom(fileSettings, [](const Property& prop) { return !prop.isUserVisible(); });
+    m_settings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
     this->syncAllEditors();
 }
 
@@ -310,7 +311,7 @@ void DialogOptions::saveAs()
         return;
 
     QSettings fileSettings(filepath, QSettings::IniFormat);
-    m_settings->saveAs(&fileSettings, [](const Property& prop) { return !prop.isUserVisible(); });
+    m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
     if (fileSettings.status() != QSettings::NoError)
         WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));

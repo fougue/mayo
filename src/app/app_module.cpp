@@ -169,6 +169,11 @@ QByteArray AppModule::languageCode(const ApplicationPtr& app)
     return !code.isEmpty() ? code : enumLanguages.findName(0);
 }
 
+bool AppModule::excludeSettingPredicate(const Property& prop)
+{
+    return !prop.isUserVisible();
+}
+
 const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) const
 {
     auto it = m_mapFormatReaderParameters.find(format.identifier);

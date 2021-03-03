@@ -22,6 +22,8 @@
 
 #include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QDir>
+#include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
 #include <QtWidgets/QApplication>
@@ -33,7 +35,8 @@ class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
 
 struct CommandLineArguments {
     QString themeName;
-    std::vector<FilePath> listFileToOpen;
+    std::vector<FilePath> listFilepathToOpen;
+    FilePath filepathSettings;
 };
 
 static CommandLineArguments processCommandLine()
@@ -57,6 +60,12 @@ static CommandLineArguments processCommandLine()
                 Main::tr("Files to open at startup, optionally"),
                 Main::tr("[files...]"));
 
+    const QCommandLineOption cmdFileSettings(
+                "settings",
+                Main::tr("Settings file(INI format) to load at startup"),
+                Main::tr("filepath"));
+    cmdParser.addOption(cmdFileSettings);
+
     cmdParser.process(QCoreApplication::arguments());
 
     // Retrieve arguments
@@ -64,10 +73,37 @@ static CommandLineArguments processCommandLine()
     if (cmdParser.isSet(cmdOptionTheme))
         args.themeName = cmdParser.value(cmdOptionTheme);
 
+    if (cmdParser.isSet(cmdFileSettings))
+        args.filepathSettings = filepathFrom(cmdParser.value(cmdFileSettings));
+
     for (const QString& posArg : cmdParser.positionalArguments())
-        args.listFileToOpen.push_back(filepathFrom(posArg));
+        args.listFilepathToOpen.push_back(filepathFrom(posArg));
 
     return args;
+}
+
+static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    const QByteArray localMsg = msg.toLocal8Bit();
+//    const char* file = context.file ? context.file : "";
+//    const char* function = context.function ? context.function : "";
+    switch (type) {
+    case QtDebugMsg:
+        std::cout << "DEBUG: " << localMsg.constData() << std::endl;
+        break;
+    case QtInfoMsg:
+        std::cout << "INFO: " << localMsg.constData() << std::endl;
+        break;
+    case QtWarningMsg:
+        std::cerr << "WARNING: " << localMsg.constData() << std::endl;
+        break;
+    case QtCriticalMsg:
+        std::cerr << "CRITICAL: " << localMsg.constData() << std::endl;
+        break;
+    case QtFatalMsg:
+        std::cerr << "FATAL: " << localMsg.constData() << std::endl;
+        break;
+    }
 }
 
 static std::unique_ptr<Theme> globalTheme;
@@ -142,7 +178,7 @@ static int runApp(QApplication* qtApp)
     // Create theme
     globalTheme.reset(createTheme(args.themeName));
     if (!globalTheme) {
-        qCritical() << Main::tr("ERROR: Failed to load theme '%1'").arg(args.themeName);
+        qCritical().noquote() << Main::tr("Failed to load theme '%1'").arg(args.themeName);
         return -1;
     }
     mayoTheme()->setup();
@@ -152,12 +188,25 @@ static int runApp(QApplication* qtApp)
     MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QApplication::applicationName());
     mainWindow.show();
-    if (!args.listFileToOpen.empty()) {
-        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFileToOpen); });
+    if (!args.listFilepathToOpen.empty()) {
+        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
     app->settings()->resetAll();
-    app->settings()->load();
+    if (args.filepathSettings.empty()) {
+        app->settings()->load();
+    }
+    else {
+        const QString strFilepathSettings = filepathTo<QString>(args.filepathSettings);
+        if (!std::filesystem::is_regular_file(args.filepathSettings)) {
+            qCritical().noquote() << Main::tr("Failed to load settings file '%1'").arg(strFilepathSettings);
+            return -1;
+        }
+
+        QSettings fileSettings(strFilepathSettings, QSettings::IniFormat);
+        app->settings()->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
+    }
+
     const int code = qtApp->exec();
     appModule->recordRecentFileThumbnails(guiApp);
     app->settings()->save();
@@ -168,6 +217,7 @@ static int runApp(QApplication* qtApp)
 
 int main(int argc, char* argv[])
 {
+    qInstallMessageHandler(&Mayo::qtMessageHandler);
     QApplication app(argc, argv);
     QApplication::setOrganizationName("Fougue Ltd");
     QApplication::setOrganizationDomain("www.fougue.pro");

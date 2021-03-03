@@ -44,6 +44,8 @@ public:
     static QString qmFilePath(const QByteArray& languageCode);
     static QByteArray languageCode(const ApplicationPtr& app);
 
+    static bool excludeSettingPredicate(const Property& prop);
+
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
