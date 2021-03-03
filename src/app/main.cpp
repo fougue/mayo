@@ -16,6 +16,7 @@
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "theme.h"
+#include "version.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_xde.h"
 #include "widget_model_tree_builder_mesh.h"
@@ -48,6 +49,7 @@ static CommandLineArguments processCommandLine()
     cmdParser.setApplicationDescription(
                 Main::tr("Mayo, an open-source 3D viewer based on Qt5/OpenCascade"));
     cmdParser.addHelpOption();
+    cmdParser.addVersionOption();
 
     const QCommandLineOption cmdOptionTheme(
                 "theme",
@@ -222,5 +224,6 @@ int main(int argc, char* argv[])
     QApplication::setOrganizationName("Fougue Ltd");
     QApplication::setOrganizationDomain("www.fougue.pro");
     QApplication::setApplicationName("Mayo");
+    QApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
     return Mayo::runApp(&app);
 }
