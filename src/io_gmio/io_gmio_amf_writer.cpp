@@ -157,6 +157,19 @@ public:
         this->createZipArchive.setValue(params.createZipArchive);
         this->zipEntryFilename.setValue(QString::fromStdString(params.zipEntryFilename));
         this->useZip64.setValue(params.useZip64);
+
+        this->zipEntryFilename.setEnabled(this->createZipArchive);
+        this->useZip64.setEnabled(this->createZipArchive);
+    }
+
+    void onPropertyChanged(Property* prop) override
+    {
+        if (prop == &this->createZipArchive) {
+            this->zipEntryFilename.setEnabled(this->createZipArchive);
+            this->useZip64.setEnabled(this->createZipArchive);
+        }
+
+        PropertyGroup::onPropertyChanged(prop);
     }
 
     PropertyEnum<GmioAmfWriter::FloatTextFormat> float64Format{ this, textId("float64Format") };

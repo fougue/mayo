@@ -355,4 +355,10 @@ void Settings::onPropertyChanged(Property* prop)
     emit this->changed(prop);
 }
 
+void Settings::onPropertyEnabled(Property* prop, bool on)
+{
+    PropertyGroup::onPropertyEnabled(prop, on);
+    emit this->enabled(prop, on);
+}
+
 } // namespace Mayo

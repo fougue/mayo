@@ -6,6 +6,7 @@
 
 #include "dialog_options.h"
 
+#include "../base/cpp_utils.h"
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -151,9 +152,16 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 listItemSetting->setSizeHint(widget->sizeHint());
                 m_ui->listWidget_Settings->addItem(listItemSetting);
                 m_ui->listWidget_Settings->setItemWidget(listItemSetting, widget);
+                m_mapSettingEditor.insert({ property, widget });
             } // endfor(setting)
         } // endfor(section)
     }
+
+    QObject::connect(settings, &Settings::enabled, this, [=](Property* setting, bool on) {
+        QWidget* editor = CppUtils::findValue(setting, m_mapSettingEditor);
+        if (editor)
+            editor->setEnabled(on);
+    });
 
     // When a setting is clicked in the "right-side" view then scroll to and select corresponding
     // tree item in the "left-side" view
@@ -257,6 +265,7 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
     }
 
     widgetLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    widget->setEnabled(property->isEnabled());
     return widget;
 }
 

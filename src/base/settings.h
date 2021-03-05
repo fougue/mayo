@@ -72,9 +72,11 @@ public:
 
 signals:
     void changed(Property* setting);
+    void enabled(Property* setting, bool on);
 
 protected:
     void onPropertyChanged(Property* prop) override;
+    void onPropertyEnabled(Property* prop, bool on) override;
 
 private:
     class Private;

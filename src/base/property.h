@@ -32,6 +32,7 @@ public:
 
 protected:
     virtual void onPropertyChanged(Property* prop);
+    virtual void onPropertyEnabled(Property* prop, bool on);
     virtual Result<void> isPropertyValid(const Property* prop) const;
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
@@ -84,11 +85,17 @@ public:
     bool isUserVisible() const { return m_isUserVisible; }
     void setUserVisible(bool on) { m_isUserVisible = on; }
 
+    bool isEnabled() const { return m_isEnabled; }
+    void setEnabled(bool on);
+
     virtual const char* dynTypeName() const = 0;
 
 protected:
     void notifyChanged();
+    void notifyEnabled(bool on);
+
     Result<void> isValid() const;
+
     bool hasGroup() const;
 
     template<typename T>
@@ -100,6 +107,7 @@ private:
     QString m_description;
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
+    bool m_isEnabled = true;
 };
 
 class PropertyGroupSignals : public QObject, public PropertyGroup {
