@@ -11,8 +11,6 @@
 #include <QtCore/QLocale>
 #include <cfloat>
 
-#define MAYO_CUBIC_SYMBOL "\xc2\xb3"
-
 namespace Mayo {
 
 namespace Internal {
@@ -32,10 +30,10 @@ static const char* symbol(Unit unit)
     case Unit::Angle: return "rad";
     // Derived
     case Unit::Area: return "m²";
-    case Unit::Volume: return "m" MAYO_CUBIC_SYMBOL;
+    case Unit::Volume: return "m³";
     case Unit::Velocity: return "m/s";
     case Unit::Acceleration: return "m/s²";
-    case Unit::Density: return "kg/m" MAYO_CUBIC_SYMBOL;
+    case Unit::Density: return "kg/m³";
     case Unit::Pressure: return "kg/m.s²";
     }
 
@@ -66,11 +64,11 @@ static UnitSystem::TranslateResult translateSI(double value, Unit unit)
     else if (unit == Unit::Area)
         return { value, "mm²", 1. };
     else if (unit == Unit::Volume)
-        return { value, "mm" MAYO_CUBIC_SYMBOL, 1. };
+        return { value, "mm³", 1. };
     else if (unit == Unit::Velocity)
         return { value, "mm/s", 1. };
     else if (unit == Unit::Density)
-        return { value, "kg/mm" MAYO_CUBIC_SYMBOL, 1. };
+        return { value, "kg/mm³", 1. };
     else if (unit == Unit::Pressure)
         return { value, "kPa", 1. };
 
@@ -84,7 +82,7 @@ static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
     else if (unit == Unit::Area)
         return { value / 645.16, "in²", 654.16 };
     else if (unit == Unit::Volume)
-        return { value / 16387.064, "in" MAYO_CUBIC_SYMBOL, 16387.064 };
+        return { value / 16387.064, "in³", 16387.064 };
     else if (unit == Unit::Velocity)
         return { value / (25.4 / 60.), "in/min", 25.4 / 60. };
 
@@ -217,7 +215,7 @@ UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
 
 UnitSystem::TranslateResult UnitSystem::cubicMillimeters(QuantityVolume volume)
 {
-    return { volume.value(), "mm" MAYO_CUBIC_SYMBOL, 1. };
+    return { volume.value(), "mm³", 1. };
 }
 
 UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity speed)
