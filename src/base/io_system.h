@@ -58,28 +58,14 @@ public:
 
     // Import service
 
-    // Post-processing procedure executed before adding entities into Document
-    class EntityPostProcess {
-    public:
-        int progressPortionSize() const { return m_progressPortionSize; }
-        void setProgressPortionSize(int size) { m_progressPortionSize = size; }
-
-        const QString& progressPortionStep() const { return m_progressPortionStep; }
-        void setProgressPortionStep(const QString& step) { m_progressPortionStep = step; }
-
-        virtual bool requiresPostProcess(const Format& format) const = 0;
-        virtual void perform(const TDF_Label& labelEntity, TaskProgress* progress) = 0;
-
-    private:
-        int m_progressPortionSize = 0;
-        QString m_progressPortionStep;
-    };
-
     struct Args_ImportInDocument {
         DocumentPtr targetDocument;
-        Span<const FilePath> filepaths;
+        Span<const FilePath> filepaths; // The files to be imported in target document
         const ParametersProvider* parametersProvider = nullptr;
-        EntityPostProcess* entityPostProcess = nullptr;
+        std::function<void(TDF_Label, TaskProgress*)> entityPostProcess;
+        std::function<bool(const Format&)> entityPostProcessRequiredIf;
+        int entityPostProcessProgressSize = 0;
+        QString entityPostProcessProgressStep;
         Messenger* messenger = nullptr;
         TaskProgress* progress = nullptr;
     };
@@ -105,7 +91,12 @@ public:
         Operation& withFilepath(const FilePath& filepath);
         Operation& withFilepaths(Span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
-        Operation& withEntityPostProcess(EntityPostProcess* postProcess);
+
+        // Post-processing executed before adding entities into Document
+        Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
+        Operation& withEntityPostProcessRequiredIf(std::function<bool(const Format&)> fn);
+        Operation& withEntityPostProcessInfoProgress(int progressSize, const QString& progressStep);
+
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
         bool execute();

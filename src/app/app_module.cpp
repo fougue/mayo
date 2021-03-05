@@ -8,6 +8,7 @@
 
 #include "../base/application.h"
 #include "../base/bnd_utils.h"
+#include "../base/brep_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
@@ -386,6 +387,17 @@ OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) c
     }
 
     return params;
+}
+
+void AppModule::computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress)
+{
+    BRepUtils::computeMesh(shape, this->brepMeshParameters(shape), progress);
+}
+
+void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress)
+{
+    if (XCaf::isShape(labelEntity))
+        this->computeBRepMesh(XCaf::shape(labelEntity), progress);
 }
 
 AppModule* AppModule::get(const ApplicationPtr& app)

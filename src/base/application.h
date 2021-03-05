@@ -9,7 +9,6 @@
 #include "application_ptr.h"
 #include "document.h"
 #include <CDF_DirectoryIterator.hxx>
-class QFileInfo;
 
 namespace Mayo {
 

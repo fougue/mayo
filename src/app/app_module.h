@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
+class TDF_Label;
 class TopoDS_Shape;
 
 namespace Mayo {
@@ -58,6 +59,8 @@ public:
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
 
     OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
+    void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
+    void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
     // from IO::ParametersProvider
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;

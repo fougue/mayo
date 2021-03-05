@@ -8,8 +8,8 @@
 
 #include "../base/task_common.h"
 
-#include <QtCore/QHash>
 #include <QtWidgets/QDialog>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -33,7 +33,7 @@ private:
 
     class Ui_DialogTaskManager* m_ui = nullptr;
     TaskManager* m_taskMgr = nullptr;
-    QHash<TaskId, TaskWidget*> m_taskIdToWidget;
+    std::unordered_map<TaskId, TaskWidget*> m_taskIdToWidget;
     bool m_isRunning = false;
     unsigned m_taskCount = 0;
 };
