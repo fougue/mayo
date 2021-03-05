@@ -19,6 +19,7 @@ namespace Mayo {
 
 class Property;
 
+// Provides a cohesive container of Property objects
 class PropertyGroup {
 public:
     PropertyGroup(PropertyGroup* parentGroup = nullptr);
@@ -28,12 +29,18 @@ public:
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 
+    // Reinitialize properties to their default values
     virtual void restoreDefaults();
 
 protected:
+    // Callback executed when Property value was changed
     virtual void onPropertyChanged(Property* prop);
+
+    // Callback executed when Property "enabled" status was changed
     virtual void onPropertyEnabled(Property* prop, bool on);
+
     virtual Result<void> isPropertyValid(const Property* prop) const;
+
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
 
@@ -48,6 +55,9 @@ private:
     bool m_propertyChangedBlocked = false;
 };
 
+// Exception-safe wrapper around PropertyGroup::blockPropertyChanged()
+// It blocks call to PropertyGroup::onPropertyChanged() in its constructor and in the destructor it
+// resets the state to what it was before the constructor ran.
 struct PropertyChangedBlocker {
     PropertyChangedBlocker(PropertyGroup* group);
     ~PropertyChangedBlocker();
