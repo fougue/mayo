@@ -34,6 +34,7 @@ AppModule::AppModule(Application* app)
       sectionId_systemUnits(app->settings()->addSection(this->groupId_system, textId("units"))),
       groupId_application(app->settings()->addGroup(textId("application"))),
       language(this, textId("language"), enumLanguages),
+      groupId_meshing(app->settings()->addGroup(textId("meshing"))),
       groupId_graphics(app->settings()->addGroup(textId("graphics"))),
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
@@ -67,6 +68,25 @@ AppModule::AppModule(Application* app)
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
+
+    // Meshing
+    this->meshingUseDefaultParameters.setDescription(
+                tr("Use default values for meshing parameters"));
+    this->meshingLinearDeflection.setDescription(
+                tr("For the tesselation of faces the linear deflection limits the distance between "
+                   "a curve and its tessellation"));
+    this->meshingAngularDeflection.setDescription(
+                tr("For the tesselation of faces the angular deflection limits the angle between "
+                   "subsequent segments in a polyline"));
+    this->meshingRelative.setDescription(
+                tr("Relative computation of edge tolerance\n\n"
+                   "If activated, deflection used for the polygonalisation of each edge will be "
+                   "`LinearDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+                   "the  maximum deflection of their edges."));
+    settings->addSetting(&this->meshingUseDefaultParameters, this->groupId_meshing);
+    settings->addSetting(&this->meshingLinearDeflection, this->groupId_meshing);
+    settings->addSetting(&this->meshingAngularDeflection, this->groupId_meshing);
+    settings->addSetting(&this->meshingRelative, this->groupId_meshing);
 
     // Graphics
     this->defaultShowOriginTrihedron.setDescription(
@@ -136,6 +156,12 @@ AppModule::AppModule(Application* app)
     settings->addResetFunction(this->groupId_graphics, [=]{
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
+    });
+    settings->addResetFunction(this->groupId_meshing, [&]{
+        this->meshingUseDefaultParameters.setValue(true);
+        this->meshingLinearDeflection.setQuantity(1 * Quantity_Millimeter);
+        this->meshingAngularDeflection.setQuantity(28.5 * Quantity_Degree);
+        this->meshingRelative.setValue(false);
     });
     settings->addResetFunction(this->sectionId_graphicsClipPlanes, [=]{
         this->clipPlanesCappingOn.setValue(true);
@@ -321,6 +347,12 @@ void AppModule::onPropertyChanged(Property* prop)
         values.showEdges = this->meshDefaultsShowEdges.value();
         values.showNodes = this->meshDefaultsShowNodes.value();
         GraphicsMeshObjectDriver::setDefaultValues(values);
+    }
+    else if (prop == &this->meshingUseDefaultParameters) {
+        const bool useMeshingDefaults = this->meshingUseDefaultParameters;
+        this->meshingLinearDeflection.setEnabled(!useMeshingDefaults);
+        this->meshingAngularDeflection.setEnabled(!useMeshingDefaults);
+        this->meshingRelative.setEnabled(!useMeshingDefaults);
     }
 
     PropertyGroup::onPropertyChanged(prop);

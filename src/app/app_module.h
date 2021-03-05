@@ -74,6 +74,12 @@ public:
     PropertyQString lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyQString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
+    // Meshing
+    const Settings_GroupIndex groupId_meshing;
+    PropertyBool meshingUseDefaultParameters{ this, textId("meshingUseDefaultParameters") };
+    PropertyLength meshingLinearDeflection{ this, textId("meshingLinearDeflection") };
+    PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
+    PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
     const Settings_GroupIndex groupId_graphics;
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
