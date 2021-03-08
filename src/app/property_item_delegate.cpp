@@ -16,10 +16,43 @@
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QWidget>
 
 namespace Mayo {
 
 namespace {
+
+class PanelEditor : public QWidget {
+public:
+    PanelEditor(QWidget* parent = nullptr)
+        : QWidget(parent)
+    {}
+
+    static QWidget* create(QWidget* parentWidget)
+    {
+        auto frame = new PanelEditor(parentWidget);
+        auto layout = new QHBoxLayout(frame);
+        layout->setContentsMargins(2, 1, 2, 1);
+        return frame;
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+
+        const QRect frame = this->frameGeometry();
+        const QRect surface(0, 0, frame.width(), frame.height());
+        const QColor panelColor = palette().color(QPalette::Base);
+        painter.fillRect(surface, panelColor);
+
+        QStyleOption option;
+        option.initFrom(this);
+        option.state |= QStyle::State_HasFocus;
+        this->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, this);
+    }
+};
 
 static QString toStringDHMS(QuantityTime time)
 {
@@ -263,8 +296,20 @@ QWidget* PropertyItemDelegate::createEditor(
     if (!property || property->isUserReadOnly())
         return nullptr;
 
-    if (this->editorFactory())
-        return this->editorFactory()->createEditor(property, parent);
+    if (this->editorFactory()) {
+        if (property->dynTypeName() == PropertyBool::TypeName
+                || property->dynTypeName() == PropertyCheckState::TypeName
+                || property->dynTypeName() == PropertyOccColor::TypeName)
+        {
+            auto panel = PanelEditor::create(parent);
+            auto editor = this->editorFactory()->createEditor(property, panel);
+            panel->layout()->addWidget(editor);
+            return panel;
+        }
+        else {
+            return this->editorFactory()->createEditor(property, parent);
+        }
+    }
 
     return nullptr;
 }
