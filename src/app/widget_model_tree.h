@@ -64,7 +64,7 @@ private:
     void onTreeWidgetDocumentSelectionChanged(
             const QItemSelection& selected, const QItemSelection& deselected);
     void onApplicationItemSelectionModelChanged(
-            Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
+            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
 
     void connectTreeModelDataChanged(bool on);
     void connectTreeWidgetDocumentSelectionChanged(bool on);

@@ -90,8 +90,10 @@ void ApplicationItemSelectionModel::remove(Span<ApplicationItem> vecItem)
 void ApplicationItemSelectionModel::clear()
 {
     if (!m_vecSelectedItem.empty()) {
-        emit changed({}, m_vecSelectedItem);
+        // Warning: slots connected to changed() signal may indirectly access m_vecSelectedItem
+        const auto vecDeselectedItem = m_vecSelectedItem;
         m_vecSelectedItem.clear();
+        emit changed({}, vecDeselectedItem);
     }
 }
 

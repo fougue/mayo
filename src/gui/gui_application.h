@@ -50,7 +50,7 @@ private:
     void connectApplicationItemSelectionChanged(bool on);
     void onApplicationItemSelectionCleared();
     void onApplicationItemSelectionChanged(
-            Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
+            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
 
     ApplicationPtr m_app;
     std::vector<GuiDocument*> m_vecGuiDocument;
