@@ -177,18 +177,19 @@ public:
         case Theme::Color::ButtonFlat_Hover:
             return appPalette.color(QPalette::Button).darker(110);
         case Theme::Color::ButtonFlat_Checked:
-            return appPalette.color(QPalette::Button).darker(125);
+            return appPalette.color(QPalette::Highlight);
         case Theme::Color::ButtonView3d_Background:
             return appPalette.color(QPalette::Button).lighter(125);
         case Theme::Color::ButtonView3d_Hover:
-        case Theme::Color::ButtonView3d_Checked:
             return appPalette.color(QPalette::Button).lighter(160);
+        case Theme::Color::ButtonView3d_Checked:
+            return appPalette.color(QPalette::Highlight);
         case Theme::Color::View3d_BackgroundGradientStart:
             return QColor(100, 100, 100);
         case Theme::Color::View3d_BackgroundGradientEnd:
             return QColor(200, 200, 200);
         case Theme::Color::MessageIndicator_Background:
-            return appPalette.color(QPalette::Highlight).lighter(125);
+            return appPalette.color(QPalette::Highlight);
         case Theme::Color::MessageIndicator_Text:
             return appPalette.color(QPalette::WindowText);
         }
