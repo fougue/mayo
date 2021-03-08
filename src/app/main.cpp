@@ -84,7 +84,7 @@ static CommandLineArguments processCommandLine()
     return args;
 }
 
-static void qtMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+static void qtMessageHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
 {
     const QByteArray localMsg = msg.toLocal8Bit();
 //    const char* file = context.file ? context.file : "";
