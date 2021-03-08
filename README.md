@@ -51,7 +51,7 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 
 # Gallery
 
-<img src="doc/screenshot_1.png"/>
+<img src="doc/screencast_1.gif"/>
 
 <img src="doc/screenshot_2.png"/>
 
