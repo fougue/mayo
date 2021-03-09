@@ -24,7 +24,7 @@ template<> const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray
 template<> const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
 template<> const char PropertyQStringList::TypeName[] = "Mayo::PropertyQStringList";
 template<> const char PropertyQDateTime::TypeName[] = "Mayo::PropertyQDateTime";
-template<> const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
+template<> const char GenericProperty<Quantity_Color>::TypeName[] = "Mayo::PropertyOccColor";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
 template<> const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
 

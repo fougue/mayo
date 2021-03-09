@@ -60,7 +60,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         window.create();
         Handle_Aspect_NeutralWindow hWnd = new Aspect_NeutralWindow;
         hWnd->SetSize(size.width(), size.height());
-        hWnd->SetNativeHandle(reinterpret_cast<Aspect_Drawable>(window.winId()));
+        hWnd->SetNativeHandle(Aspect_Drawable(window.winId()));
         view->SetWindow(hWnd);
 
         GraphicsUtils::V3dView_fitAll(view);
