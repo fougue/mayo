@@ -20,6 +20,7 @@
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
+#include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ.h"
@@ -550,6 +551,59 @@ void Test::StringUtils_stringConversion_test()
     QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<Handle_TCollection_HAsciiString>(text)), text);
     QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<std::string>(text)), text);
     QCOMPARE(StringUtils::fromUtf16(StringUtils::toUtf16<TCollection_ExtendedString>(text)), text);
+}
+
+void Test::TKernelUtils_colorToHex_test()
+{
+    QFETCH(int, red);
+    QFETCH(int, green);
+    QFETCH(int, blue);
+    QFETCH(QString, strHexColor);
+
+    const Quantity_Color color(red / 255., green / 255., blue / 255., Quantity_TOC_RGB);
+    const std::string strHexColorActual = TKernelUtils::colorToHex(color);
+    QCOMPARE(QString::fromStdString(strHexColorActual), strHexColor);
+}
+
+void Test::TKernelUtils_colorToHex_test_data()
+{
+    QTest::addColumn<int>("red");
+    QTest::addColumn<int>("green");
+    QTest::addColumn<int>("blue");
+    QTest::addColumn<QString>("strHexColor");
+
+    QTest::newRow("RGB(  0,  0,  0)") << 0 << 0 << 0 << "#000000";
+    QTest::newRow("RGB(255,255,255)") << 255 << 255 << 255 << "#FFFFFF";
+    QTest::newRow("RGB(  5,  5,  5)") << 5 << 5 << 5 << "#050505";
+    QTest::newRow("RGB(155,208, 67)") << 155 << 208 << 67 << "#9BD043";
+    QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
+}
+
+void Test::TKernelUtils_colorFromHex_test()
+{
+    QFETCH(int, red);
+    QFETCH(int, green);
+    QFETCH(int, blue);
+    QFETCH(QString, strHexColor);
+    const Quantity_Color expectedColor(red / 255., green / 255., blue / 255., Quantity_TOC_RGB);
+
+    Quantity_Color actualColor;
+    QVERIFY(TKernelUtils::colorFromHex(strHexColor.toStdString(), &actualColor));
+    QCOMPARE(actualColor, expectedColor);
+}
+
+void Test::TKernelUtils_colorFromHex_test_data()
+{
+    QTest::addColumn<int>("red");
+    QTest::addColumn<int>("green");
+    QTest::addColumn<int>("blue");
+    QTest::addColumn<QString>("strHexColor");
+
+    QTest::newRow("RGB(  0,  0,  0)") << 0 << 0 << 0 << "#000000";
+    QTest::newRow("RGB(255,255,255)") << 255 << 255 << 255 << "#FFFFFF";
+    QTest::newRow("RGB(  5,  5,  5)") << 5 << 5 << 5 << "#050505";
+    QTest::newRow("RGB(155,208, 67)") << 155 << 208 << 67 << "#9BD043";
+    QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
 }
 
 void Test::UnitSystem_test()

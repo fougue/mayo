@@ -6,8 +6,11 @@
 
 #pragma once
 
+#include <Quantity_Color.hxx>
 #include <Standard_Handle.hxx>
 #include <Standard_Version.hxx>
+#include <string>
+#include <string_view>
 
 #ifndef OCC_VERSION_CHECK
 #  define OCC_VERSION_CHECK(major, minor, patch) ((major<<16)|(minor<<8)|(patch))
@@ -35,6 +38,12 @@ public:
 #endif
     static ReturnType_StartProgressIndicator start(const opencascade::handle<Message_ProgressIndicator>& progress);
 
+    // Encodes 'color' into hexadecimal representation with #RRGGBB format
+    static std::string colorToHex(const Quantity_Color& color);
+
+    // Decodes a string containing a color with #RRGGBB format to a Quantity_Color object
+    // RR, GG, BB are in hexadecimal notation
+    static bool colorFromHex(std::string_view strHex, Quantity_Color* color);
 };
 
 } // namespace Mayo

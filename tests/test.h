@@ -15,25 +15,40 @@ class Test : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+
     void TextId_test();
+
     void IO_test();
     void IO_test_data();
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
+
     void BRepUtils_test();
+
     void CafUtils_test();
+
     void MeshUtils_test();
     void MeshUtils_test_data();
     void MeshUtils_orientation_test();
     void MeshUtils_orientation_test_data();
+
     void MetaEnum_test();
+
     void Quantity_test();
+
     void Result_test();
+
     void StringUtils_append_test();
     void StringUtils_append_test_data();
     void StringUtils_text_test();
     void StringUtils_text_test_data();
     void StringUtils_stringConversion_test();
+
+    void TKernelUtils_colorToHex_test();
+    void TKernelUtils_colorToHex_test_data();
+    void TKernelUtils_colorFromHex_test();
+    void TKernelUtils_colorFromHex_test_data();
+
     void UnitSystem_test();
     void UnitSystem_test_data();
 

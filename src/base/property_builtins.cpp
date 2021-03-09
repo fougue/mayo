@@ -6,6 +6,7 @@
 
 #include "property_builtins.h"
 
+#include "tkernel_utils.h"
 #include "string_utils.h"
 
 namespace Mayo {
@@ -34,15 +35,14 @@ PropertyOccColor::PropertyOccColor(PropertyGroup* grp, const TextId& name)
 
 QVariant PropertyOccColor::valueAsVariant() const
 {
-    constexpr bool hashPrefix = true;
-    return StringUtils::fromUtf8(Quantity_Color::ColorToHex(this->value(), hashPrefix));
+    return StringUtils::fromUtf8(TKernelUtils::colorToHex(this->value()));
 }
 
 Result<void> PropertyOccColor::setValueFromVariant(const QVariant& variant)
 {
     auto strColorHex = StringUtils::toUtf8<std::string>(variant.toString());
     Quantity_Color color;
-    const bool ok = Quantity_Color::ColorFromHex(strColorHex.c_str(), color);
+    const bool ok = TKernelUtils::colorFromHex(strColorHex, &color);
     if (ok)
         return this->setValue(color);
 
