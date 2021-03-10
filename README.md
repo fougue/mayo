@@ -62,8 +62,5 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 <img src="doc/screenshot_5.png"/>
 
 # How to build Mayo
-Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
-* [Qt installer](https://www.qt.io/download-qt-installer)
-* [OpenCascade Download Center](https://old.opencascade.com/content/latest-release)
-
-See detailed [build instructions](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)
+[Build instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
+[Build instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
