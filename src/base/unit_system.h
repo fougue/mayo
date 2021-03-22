@@ -30,6 +30,7 @@ public:
         return UnitSystem::translate(schema, qty.value(), UNIT);
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);
+    static TranslateResult parseQuantity(std::string_view strQuantity, Unit* ptrUnit = nullptr);
 
     static TranslateResult radians(QuantityAngle angle);
     static TranslateResult degrees(QuantityAngle angle);

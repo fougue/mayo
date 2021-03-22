@@ -14,6 +14,7 @@
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/property_value_conversion.h"
 #include "../base/qtcore_hfuncs.h"
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
@@ -31,7 +32,8 @@ class GuiDocument;
 class AppModule :
         public QObject,
         public PropertyGroup,
-        public IO::ParametersProvider
+        public IO::ParametersProvider,
+        public PropertyValueConversion
 {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
@@ -52,9 +54,13 @@ public:
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
 
-    // -- from IO::ParametersProvider
+    // from IO::ParametersProvider
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
+
+    // PropertyValueConversion
+    QVariant toVariant(const Property& prop) const override;
+    bool fromVariant(Property* prop, const QVariant& variant) const override;
 
     // System
     const Settings_GroupIndex groupId_system;
@@ -85,7 +91,7 @@ public:
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
 
 protected:
-    // -- from PropertyGroup
+    // from PropertyGroup
     void onPropertyChanged(Property* prop) override;
 
 private:

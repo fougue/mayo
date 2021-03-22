@@ -20,6 +20,11 @@ private slots:
 
     void FilePath_test();
 
+    void PropertyValueConversion_test();
+    void PropertyValueConversion_test_data();
+    void PropertyQuantityValueConversion_test();
+    void PropertyQuantityValueConversion_test_data();
+
     void IO_test();
     void IO_test_data();
     void IO_OccStaticVariablesRollback_test();

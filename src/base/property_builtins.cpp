@@ -16,27 +16,6 @@ BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const TextId& nam
 {
 }
 
-PropertyOccColor::PropertyOccColor(PropertyGroup* grp, const TextId& name)
-    : GenericProperty<Quantity_Color>(grp, name)
-{
-}
-
-QVariant PropertyOccColor::valueAsVariant() const
-{
-    return StringUtils::fromUtf8(TKernelUtils::colorToHex(this->value()));
-}
-
-Result<void> PropertyOccColor::setValueFromVariant(const QVariant& variant)
-{
-    auto strColorHex = StringUtils::toUtf8<std::string>(variant.toString());
-    Quantity_Color color;
-    const bool ok = TKernelUtils::colorFromHex(strColorHex, &color);
-    if (ok)
-        return this->setValue(color);
-
-    return Result<void>::error(QString("Not hexadecimal format '%1'").arg(variant.toString()));
-}
-
 template<> const char PropertyBool::TypeName[] = "Mayo::PropertyBool";
 template<> const char GenericProperty<int>::TypeName[] = "Mayo::PropertyInt";
 template<> const char GenericProperty<double>::TypeName[] = "Mayo::PropertyDouble";

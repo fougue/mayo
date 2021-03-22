@@ -190,6 +190,34 @@ const PropertyGroup* AppModule::findWriterParameters(const IO::Format& format) c
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
+QVariant AppModule::toVariant(const Property& prop) const
+{
+    if (isType<PropertyRecentFiles>(prop)) {
+        const auto& filesProp = constRef<PropertyRecentFiles>(prop);
+        QByteArray blob;
+        QDataStream stream(&blob, QIODevice::WriteOnly);
+        stream << filesProp.value();
+        return blob;
+    }
+    else {
+        return PropertyValueConversion::toVariant(prop);
+    }
+}
+
+bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
+{
+    if (isType<PropertyRecentFiles>(prop)) {
+        const QByteArray blob = variant.toByteArray();
+        QDataStream stream(blob);
+        RecentFiles recentFiles;
+        stream >> recentFiles;
+        ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
+    }
+    else {
+        return PropertyValueConversion::fromVariant(prop, variant);
+    }
+}
+
 void AppModule::prependRecentFile(const FilePath& fp)
 {
     const RecentFile* ptrRecentFile = this->findRecentFile(fp);
