@@ -87,6 +87,7 @@ RC_ICONS = images/appicon.ico
 OTHER_FILES += \
     README.md \
     appveyor.yml \
+    .travis.yml \
     images/credits.txt
 
 # OpenCascade
