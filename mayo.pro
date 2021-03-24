@@ -35,7 +35,7 @@ release_with_debuginfo:*msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
-*g++* {
+*g++*|*clang* {
     QMAKE_CXXFLAGS += -std=c++17
 }
 macx {

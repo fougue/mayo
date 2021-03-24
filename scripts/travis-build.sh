@@ -5,7 +5,7 @@ set -e
 
 # Force QMake spec in case of Clang
 if [ "${TRAVIS_COMPILER}" == "clang" ]; then
-    export QMAKESPEC=linux-clang
+    export QMAKESPEC=linux-clang-libc++
 fi
 
 echo QMAKESPEC=${QMAKESPEC}
