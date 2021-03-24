@@ -21,6 +21,7 @@ namespace IO {
 
 class Reader {
 public:
+    virtual ~Reader() = default;
     virtual bool readFile(const FilePath& fp, TaskProgress* progress) = 0;
     virtual bool transfer(DocumentPtr doc, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
@@ -28,6 +29,7 @@ public:
 
 class FactoryReader {
 public:
+    virtual ~FactoryReader() = default;
     virtual Span<const Format> formats() const = 0;
     virtual std::unique_ptr<Reader> create(const Format& format) const = 0;
     virtual std::unique_ptr<PropertyGroup> createProperties(

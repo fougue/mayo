@@ -21,6 +21,7 @@ namespace IO {
 
 class Writer {
 public:
+    virtual ~Writer() = default;
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
     virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
@@ -28,6 +29,7 @@ public:
 
 class FactoryWriter {
 public:
+    virtual ~FactoryWriter() = default;
     virtual Span<const Format> formats() const = 0;
     virtual std::unique_ptr<Writer> create(const Format& format) const = 0;
     virtual std::unique_ptr<PropertyGroup> createProperties(

@@ -16,6 +16,7 @@ class PropertyGroupSignals;
 
 class DocumentTreeNodePropertiesProvider {
 public:
+    virtual ~DocumentTreeNodePropertiesProvider() = default;
     virtual bool supports(const DocumentTreeNode& treeNode) const = 0;
     virtual std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const = 0;
 };
