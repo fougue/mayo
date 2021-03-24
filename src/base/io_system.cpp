@@ -256,7 +256,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     &childTaskManager, &TaskManager::progressChanged,
                     [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
 
-        for (int i = 0; i < listFilepath.size(); ++i) {
+        for (int i = 0; i < int(listFilepath.size()); ++i) {
             TaskData& taskData = vecTaskData[i];
             taskData.filepath = listFilepath[i];
             const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
