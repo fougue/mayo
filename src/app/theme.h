@@ -68,6 +68,8 @@ public:
         XdeSimpleShape
     };
 
+    virtual ~Theme() = default;
+
     virtual const QIcon& icon(Icon icn) const = 0;
     virtual QColor color(Color role) const = 0;
 

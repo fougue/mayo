@@ -23,6 +23,7 @@ class Property;
 class PropertyGroup {
 public:
     PropertyGroup(PropertyGroup* parentGroup = nullptr);
+    virtual ~PropertyGroup() = default;
 
     // TODO Rename to get() or items() ?
     Span<Property* const> properties() const;

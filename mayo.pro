@@ -38,6 +38,10 @@ release_with_debuginfo:*msvc* {
 *g++*|*clang* {
     QMAKE_CXXFLAGS += -std=c++17
 }
+*clang-libc++* {
+    # See https://libcxx.llvm.org/docs/UsingLibcxx.html
+    LIBS += -lc++fs
+}
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 }

@@ -19,6 +19,8 @@ class Property;
 // Provides widgets for editing Property objects within views and delegates
 class PropertyEditorFactory {
 public:
+    virtual ~PropertyEditorFactory() = default;
+
     virtual QWidget* createEditor(Property* property, QWidget* parentWidget) const = 0;
     virtual void syncEditorWithProperty(QWidget* editor) const = 0;
 
