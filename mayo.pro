@@ -213,3 +213,17 @@ isEmpty(GMIO_ROOT) {
         $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
     DEFINES += HAVE_GMIO
 }
+
+# assimp
+isEmpty(ASSIMP_ROOT) {
+    message(assimp OFF)
+} else {
+    message(assimp ON)
+
+    HEADERS += $$files(src/io_assimp/*.h)
+    SOURCES += $$files(src/io_assimp/*.cpp)
+
+    INCLUDEPATH += $$ASSIMP_ROOT/include
+    LIBS += -L$$ASSIMP_ROOT/lib -lassimp-vc142-mtd -lzlibstaticd
+    DEFINES += HAVE_ASSIMP
+}
