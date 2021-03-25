@@ -44,7 +44,7 @@ private:
 class SingleScopeImport : public BaseScopeImport {
 public:
     SingleScopeImport(const DocumentPtr& doc);
-    SingleScopeImport(XCafScopeImport&& other);
+    SingleScopeImport(SingleScopeImport&& other);
     ~SingleScopeImport();
 
     const TDF_Label& entityLabel() const { return m_newEntityLabel; }

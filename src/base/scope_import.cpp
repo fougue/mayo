@@ -55,9 +55,9 @@ SingleScopeImport::SingleScopeImport(const DocumentPtr& doc)
       m_newEntityLabel(doc->newEntityLabel())
 {}
 
-SingleScopeImport::SingleScopeImport(XCafScopeImport&& other)
+SingleScopeImport::SingleScopeImport(SingleScopeImport&& other)
     : BaseScopeImport(std::move(other)),
-      m_newEntityLabel(std::move(m_newEntityLabel))
+      m_newEntityLabel(std::move(other.m_newEntityLabel))
 {}
 
 SingleScopeImport::~SingleScopeImport()

@@ -38,6 +38,10 @@ release_with_debuginfo:*msvc* {
 *g++*|*clang* {
     QMAKE_CXXFLAGS += -std=c++17
 }
+*clang* {
+    # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
+    QMAKE_CXXFLAGS += -Wno-undefined-var-template
+}
 *clang-libc++* {
     # See https://libcxx.llvm.org/docs/UsingLibcxx.html
     LIBS += -lc++fs

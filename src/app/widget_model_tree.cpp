@@ -133,7 +133,7 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     m_ui->setupUi(this);
     m_ui->treeWidget_Model->setUniformRowHeights(true);
     for (const BuilderPtr& ptrBuilder : Internal::arrayPrototypeBuilder()) {
-        m_vecBuilder.push_back(std::move(ptrBuilder->clone()));
+        m_vecBuilder.push_back(ptrBuilder->clone());
         m_vecBuilder.back()->setTreeWidget(m_ui->treeWidget_Model);
     }
 
@@ -385,12 +385,12 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
     vecDeselected.reserve(listDeselectedIndex.size());
     for (const QModelIndex& index : listSelectedIndex) {
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
-        vecSelected.push_back(std::move(Internal::toApplicationItem(treeItem)));
+        vecSelected.push_back(Internal::toApplicationItem(treeItem));
     }
 
     for (const QModelIndex& index : listDeselectedIndex) {
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
-        vecDeselected.push_back(std::move(Internal::toApplicationItem(treeItem)));
+        vecDeselected.push_back(Internal::toApplicationItem(treeItem));
     }
 
     m_guiApp->selectionModel()->add(vecSelected);

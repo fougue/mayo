@@ -65,7 +65,7 @@ private:
 // --
 
 template <typename OTHER_COLOR_TYPE>
-OTHER_COLOR_TYPE QtGuiUtils::toColor(const QColor& c) {
+OTHER_COLOR_TYPE toColor(const QColor& c) {
     if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_Color>::value) {
         return Quantity_Color(c.redF(), c.greenF(), c.blueF(), Quantity_TOC_RGB);
     }

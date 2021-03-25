@@ -119,7 +119,7 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2)
     subStops.push_back({ 1., linearColorAt(gradient, t2) });
     QLinearGradient subGradient(0, 0, 1, 0);
     subGradient.setStops(subStops);
-    return subGradient;
+    return std::move(subGradient);
 }
 
 int screenPixelWidth(double screenRatio, const QScreen* screen)
