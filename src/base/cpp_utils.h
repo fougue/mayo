@@ -17,6 +17,10 @@ public:
         auto it = hashmap.find(key);
         return it != hashmap.cend() ? it->second : VALUE();
     }
+
+    static void toggle(bool& value) {
+        value = !value;
+    }
 };
 
 } // namespace Mayo

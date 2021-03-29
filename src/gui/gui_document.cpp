@@ -85,12 +85,20 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     // 3D view - Enable anti-aliasing with MSAA
     m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
+    m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
+    m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
+                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20));
     // 3D view - Set gradient background
+    // TODO Investigate why with OpenCascade 7.5.0 gradient colors are lighter
+    QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
+    QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    bkgGradientStart = bkgGradientStart.darker();
+    bkgGradientEnd = bkgGradientEnd.darker();
+#endif
     m_v3dView->SetBgGradientColors(
-                QtGuiUtils::toColor<Quantity_Color>(
-                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart)),
-                QtGuiUtils::toColor<Quantity_Color>(
-                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
+                QtGuiUtils::toColor<Quantity_Color>(bkgGradientStart),
+                QtGuiUtils::toColor<Quantity_Color>(bkgGradientEnd),
                 Aspect_GFM_VER);
 
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);

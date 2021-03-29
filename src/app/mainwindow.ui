@@ -617,6 +617,7 @@
     <addaction name="menu_Projection"/>
     <addaction name="actionDisplayMode"/>
     <addaction name="actionToggleOriginTrihedron"/>
+    <addaction name="actionTogglePerformanceStats"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -825,6 +826,17 @@
   <action name="actionDisplayMode">
    <property name="text">
     <string>Mode</string>
+   </property>
+  </action>
+  <action name="actionTogglePerformanceStats">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Performance Stats</string>
+   </property>
+   <property name="toolTip">
+    <string>Show/Hide rendering performance statistics</string>
    </property>
   </action>
  </widget>
