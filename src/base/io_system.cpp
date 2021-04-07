@@ -190,6 +190,10 @@ QString System::fileFilter(const Format& format)
 
 bool System::importInDocument(const Args_ImportInDocument& args)
 {
+    // NOTE
+    // Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
+    // But concurrent calls to Transfer() to the same target Document must be serialized
+
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
     TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
@@ -270,23 +274,20 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         // Transfer to document
         int taskDataCount = vecTaskData.size();
         while (taskDataCount > 0 && !progress->isAbortRequested()) {
-            auto itTaskData = std::find_if(
-                        vecTaskData.begin(), vecTaskData.end(),
-                        [&](const TaskData& taskData) {
+            auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
                 return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 10);
             });
-            if (itTaskData == vecTaskData.end()) {
-                itTaskData = std::find_if(
-                            vecTaskData.begin(), vecTaskData.end(),
-                            [&](const TaskData& taskData) { return !taskData.transferred; });
-                if (itTaskData != vecTaskData.end())
-                    if (!childTaskManager.waitForDone(itTaskData->taskId, 100))
-                        itTaskData = vecTaskData.end();
+            if (it == vecTaskData.end()) {
+                it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
+                    return !taskData.transferred;
+                });
+                if (it != vecTaskData.end() && !childTaskManager.waitForDone(it->taskId, 100))
+                    it = vecTaskData.end();
             }
 
-            if (itTaskData != vecTaskData.end()) {
-                fnTransfer(itTaskData->filepath, itTaskData->reader, itTaskData->progress);
-                itTaskData->transferred = true;
+            if (it != vecTaskData.end()) {
+                fnTransfer(it->filepath, it->reader, it->progress);
+                it->transferred = true;
                 --taskDataCount;
             }
         } // endwhile

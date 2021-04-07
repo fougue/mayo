@@ -11,6 +11,7 @@
 
 namespace Mayo {
 
+// Provides base class for importing entities in Document at the end of scope
 class BaseScopeImport {
 public:
     BaseScopeImport(const DocumentPtr& doc);
