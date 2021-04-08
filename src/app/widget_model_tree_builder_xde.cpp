@@ -30,7 +30,7 @@ public:
         this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
         auto settings = app->settings();
         settings->addSetting(&this->instanceNameFormat, AppModule::get(app)->groupId_application);
-        settings->addGroupResetFunction(AppModule::get(app)->groupId_application, [&]{
+        settings->addResetFunction(AppModule::get(app)->groupId_application, [=]{
             this->instanceNameFormat.setValue(NameFormat::Product);
         });
         this->instanceNameFormat.mutableEnumeration().changeTrContext(WidgetModelTreeBuilder_Xde::textIdContext());

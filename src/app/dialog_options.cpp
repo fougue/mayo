@@ -10,7 +10,10 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "item_view_buttons.h"
+#include "theme.h"
 #include "widgets_utils.h"
 #include "ui_dialog_options.h"
 
@@ -29,6 +32,9 @@ namespace Mayo {
 
 namespace {
 
+// Encodes the index of an item node in the Settings tree(group+section)
+// The 4 "high" bytes are used for the group id
+// The 4 "low" bytes are used for the section id
 using SettingNodeId = uint32_t;
 
 SettingNodeId toSettingNodeId(Settings::GroupIndex indexGroup)
@@ -43,8 +49,22 @@ SettingNodeId toSettingNodeId(Settings::SectionIndex indexSection)
     return (groupId << 16) | sectionId;
 }
 
-enum { ItemSettingNodeId_Role = Qt::UserRole + 1 };
+Settings::GroupIndex toGroupIndex(SettingNodeId nodeId)
+{
+    const int index = (nodeId & 0xFFFF0000) >> 16;
+    return Settings::GroupIndex(index);
+}
 
+Settings::SectionIndex toSectionIndex(SettingNodeId nodeId)
+{
+    const int index = (nodeId & 0x0000FFFF);
+    return Settings::SectionIndex(toGroupIndex(nodeId), index);
+}
+
+// Specific role for storing the SettingNodeId value of an item node in the Settings tree
+constexpr int ItemSettingNodeId_Role = Qt::UserRole + 1;
+
+// Create the tree model corresponding to the Settings tree(groups and sections)
 QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* parent = nullptr)
 {
     auto model = new QStandardItemModel(parent);
@@ -74,6 +94,7 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     return model;
 }
 
+// Provides a custom style for deactivating mouse wheel interaction with combo boxes
 class CustomStyle : public QProxyStyle {
 public:
     CustomStyle()
@@ -98,6 +119,7 @@ public:
     }
 };
 
+// Reserved name for Property(ie setting) editors. QObject::objectName() will return this name
 static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
 
 } // namespace
@@ -116,11 +138,34 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     m_ui->treeView_GroupSections->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_ui->treeView_GroupSections->expandAll();
 
-    QFont fontItemGroupSection = m_ui->listWidget_Settings->font();
-    fontItemGroupSection.setBold(true);
-    fontItemGroupSection.setPointSizeF(1.7 * fontItemGroupSection.pointSizeF());
+    // Add action "Restore defaults" for group/section items in "left-side" tree view
+    {
+        auto treeViewBtns = new ItemViewButtons(m_ui->treeView_GroupSections, this);
+        constexpr int idBtnRestore = 1;
+        treeViewBtns->addButton(
+                    idBtnRestore,
+                    mayoTheme()->icon(Theme::Icon::Reload),
+                    tr("Restore default values"));
+        treeViewBtns->setButtonDetection(idBtnRestore, -1, {});
+        treeViewBtns->setButtonDisplayColumn(idBtnRestore, 0);
+        treeViewBtns->setButtonDisplayModes(idBtnRestore, ItemViewButtons::DisplayWhenItemSelected);
+        treeViewBtns->setButtonItemSide(idBtnRestore, ItemViewButtons::ItemRightSide);
+        const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
+        treeViewBtns->setButtonIconSize(idBtnRestore, QSize(iconSize * 0.66, iconSize * 0.66));
+        treeViewBtns->installDefaultItemDelegate();
+        QObject::connect(
+                    treeViewBtns, &ItemViewButtons::buttonClicked,
+                    this, [=](int btnId, const QModelIndex& index) {
+            if (btnId == idBtnRestore && index.isValid())
+                this->handleTreeViewButtonClick_restoreDefaults(index);
+        });
+    }
 
     // Build "right-side" model(setting items)
+    const QFont fontItemGroupSection =
+            QtGuiUtils::FontChange(m_ui->listWidget_Settings->font())
+            .bold(true).scalePointSizeF(1.7);
+
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
         const QString titleGroup = settings->groupTitle(indexGroup);
@@ -134,8 +179,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 continue; // Skip empty section
 
             if (!settings->isDefaultGroupSection(indexSection)) {
-                const QString titleSection =
-                        tr("%1 / %2").arg(titleGroup).arg(settings->sectionTitle(indexSection));
+                const QString titleSection = tr("%1 / %2").arg(titleGroup, settings->sectionTitle(indexSection));
                 auto listItemSection = new QListWidgetItem(titleSection, m_ui->listWidget_Settings);
                 listItemSection->setFont(fontItemGroupSection);
                 listItemSection->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
@@ -157,10 +201,16 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         } // endfor(section)
     }
 
-    QObject::connect(settings, &Settings::enabled, this, [=](Property* setting, bool on) {
+    // Enable/disable editor widget when the corresponding setting status is changed
+    QObject::connect(settings, &Settings::enabled, this, [=](const Property* setting, bool on) {
         QWidget* editor = CppUtils::findValue(setting, m_mapSettingEditor);
         if (editor)
             editor->setEnabled(on);
+    });
+
+    // Synchronize editor widget when value of the corresponding property is changed
+    QObject::connect(m_settings, &Settings::changed, this, [=](const Property* property) {
+        this->syncEditor(CppUtils::findValue(property, m_mapSettingEditor));
     });
 
     // When a setting is clicked in the "right-side" view then scroll to and select corresponding
@@ -184,7 +234,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     // the "right-side" view
     QObject::connect(
                 m_ui->treeView_GroupSections->selectionModel(), &QItemSelectionModel::currentChanged,
-                [=](const QModelIndex& current) {
+                this, [=](const QModelIndex& current) {
         const QAbstractItemModel* settingsModel = m_ui->listWidget_Settings->model();
         const QVariant variantNodeId = current.data(ItemSettingNodeId_Role);
         const QModelIndex indexFirst = settingsModel->index(0, 0);
@@ -196,7 +246,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
     // Action for "Restore defaults" button
     auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, &DialogOptions::restoreDefaults);
+    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, m_settings, &Settings::resetAll);
 
     // Actions for "Exchange" button
     auto btnExchange = m_ui->buttonBox->addButton(tr("Exchange"), QDialogButtonBox::ActionRole);
@@ -269,22 +319,12 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
     return widget;
 }
 
-void DialogOptions::syncAllEditors()
+void DialogOptions::syncEditor(QWidget* editor)
 {
-    for (int i = 0; i < m_ui->listWidget_Settings->count(); ++i) {
-        QListWidgetItem* listItem = m_ui->listWidget_Settings->item(i);
-        QWidget* itemWidget = m_ui->listWidget_Settings->itemWidget(listItem);
-        if (itemWidget) {
-            auto editorWidget = itemWidget->findChild<QWidget*>(reservedPropertyEditorName);
-            m_editorFactory->syncEditorWithProperty(editorWidget);
-        }
-    }
-}
+    if (editor && editor->objectName() != reservedPropertyEditorName)
+        editor = editor->findChild<QWidget*>(reservedPropertyEditorName);
 
-void DialogOptions::restoreDefaults()
-{
-    m_settings->resetAll();
-    this->syncAllEditors();
+    m_editorFactory->syncEditorWithProperty(editor);
 }
 
 void DialogOptions::loadFromFile()
@@ -308,7 +348,6 @@ void DialogOptions::loadFromFile()
 
     QSettings fileSettings(filepath, QSettings::IniFormat);
     m_settings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
-    this->syncAllEditors();
 }
 
 void DialogOptions::saveAs()
@@ -324,6 +363,35 @@ void DialogOptions::saveAs()
     fileSettings.sync();
     if (fileSettings.status() != QSettings::NoError)
         WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+}
+
+void DialogOptions::handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index)
+{
+    const SettingNodeId nodeId = index.data(ItemSettingNodeId_Role).toUInt();
+    const bool isGroup = !index.parent().isValid();
+    if (isGroup) {
+        const Settings::GroupIndex groupIndex = toGroupIndex(nodeId);
+        const Settings::SectionIndex firstSectionIndex(groupIndex, 0);
+        const bool defaultSectionNotEmpty =
+                m_settings->isDefaultGroupSection(firstSectionIndex)
+                && m_settings->settingCount(firstSectionIndex) > 0;
+        if (defaultSectionNotEmpty && m_settings->sectionCount(groupIndex) > 1) {
+            auto menu = new QMenu(this);
+            menu->addAction(tr("Restore values for default section only"), this, [=]{
+                m_settings->resetSection(firstSectionIndex);
+            });
+            menu->addAction(tr("Restore values for the whole group"), this, [=]{
+                m_settings->resetGroup(groupIndex);
+            });
+            WidgetsUtils::asyncMenuExec(menu);
+        }
+        else {
+            m_settings->resetGroup(groupIndex);
+        }
+    }
+    else {
+        m_settings->resetSection(toSectionIndex(nodeId));
+    }
 }
 
 } // namespace Mayo

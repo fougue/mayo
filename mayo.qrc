@@ -74,5 +74,7 @@
         <file>images/themes/classic/open-files.svg</file>
         <file>images/themes/classic/multiple.svg</file>
         <file>images/themes/dark/multiple.svg</file>
+        <file>images/themes/classic/reload.svg</file>
+        <file>images/themes/dark/reload.svg</file>
     </qresource>
 </RCC>

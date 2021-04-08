@@ -157,6 +157,12 @@ FontChange& FontChange::adjustSize(int offset) {
     return *this;
 }
 
+FontChange &FontChange::scalePointSizeF(double f) {
+    const int pointSizeF = m_font.pointSizeF();
+    m_font.setPointSizeF(f * pointSizeF);
+    return *this;
+}
+
 FontChange& FontChange::bold(bool on) {
     m_font.setBold(on);
     return *this;

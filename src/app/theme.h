@@ -48,6 +48,7 @@ public:
         LeftSidebar,
         BackSquare,
         IndicatorDown,
+        Reload,
         Stop,
         Gear,
         ZoomIn,

@@ -80,6 +80,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::LeftSidebar: return "left-sidebar.svg";
     case Theme::Icon::BackSquare: return "back-square.svg";
     case Theme::Icon::IndicatorDown: return "indicator-down_8.png";
+    case Theme::Icon::Reload: return "reload.svg";
     case Theme::Icon::Stop: return "stop.svg";
     case Theme::Icon::Gear: return "gear.svg";
     case Theme::Icon::ZoomIn: return "zoom-in.svg";

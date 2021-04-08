@@ -98,7 +98,7 @@ AppModule::AppModule(Application* app)
                 settings->addSetting(property, sectionId_format);
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
-            settings->addGroupResetFunction(groupId_Import, [=]{ rawPtrGroup->restoreDefaults(); });
+            settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
             m_mapFormatReaderParameters.insert({ format.identifier, rawPtrGroup });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
@@ -115,29 +115,33 @@ AppModule::AppModule(Application* app)
                 settings->addSetting(property, sectionId_format);
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
-            settings->addGroupResetFunction(groupId_Export, [=]{ rawPtrGroup->restoreDefaults(); });
+            settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
             m_mapFormatWriterParameters.insert({ format.identifier, ptrGroup.get() });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 
     // Register reset functions
-    settings->addGroupResetFunction(this->groupId_system, [&]{
+    settings->addResetFunction(this->sectionId_systemUnits, [=]{
         this->unitSystemDecimals.setValue(2);
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
-    settings->addGroupResetFunction(this->groupId_application, [&]{
+    settings->addResetFunction(this->groupId_application, [&]{
         this->language.setValue(enumLanguages.findValue("en"));
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue(QString());
         this->lastSelectedFormatFilter.setValue(QString());
         this->linkWithDocumentSelector.setValue(true);
     });
-    settings->addGroupResetFunction(this->groupId_graphics, [&]{
+    settings->addResetFunction(this->groupId_graphics, [=]{
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
+    });
+    settings->addResetFunction(this->sectionId_graphicsClipPlanes, [=]{
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
+    });
+    settings->addResetFunction(this->sectionId_graphicsMeshDefaults, [=]{
         const GraphicsMeshObjectDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
         this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
@@ -180,7 +184,7 @@ const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) c
     return it != m_mapFormatReaderParameters.cend() ? it->second : nullptr;
 }
 
-const PropertyGroup *AppModule::findWriterParameters(const IO::Format& format) const
+const PropertyGroup* AppModule::findWriterParameters(const IO::Format& format) const
 {
     auto it = m_mapFormatWriterParameters.find(format.identifier);
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
