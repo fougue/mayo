@@ -17,8 +17,8 @@ namespace IO {
 // Opencascade-based writer for VRML(v2.0 UTF8) file format
 class OccVrmlWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
+    bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;

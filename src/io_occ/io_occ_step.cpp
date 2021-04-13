@@ -125,7 +125,7 @@ OccStepReader::OccStepReader()
     m_reader.SetViewMode(true);
 }
 
-bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStepReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -133,7 +133,7 @@ bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return Private::cafReadFile(m_reader, filepath, progress);
 }
 
-bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+bool OccStepReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -288,7 +288,7 @@ OccStepWriter::OccStepWriter()
     m_writer.SetMaterialMode(true);
 }
 
-bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -296,7 +296,7 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     return Private::cafTransfer(m_writer, appItems, progress);
 }
 
-bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgressPortion* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -313,7 +313,6 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
 
     const IFSelect_ReturnStatus err = m_writer.Write(filepath.u8string().c_str());
-    progress->setValue(100);
     return err == IFSelect_RetDone;
 }
 

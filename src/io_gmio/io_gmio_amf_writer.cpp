@@ -36,12 +36,13 @@ namespace {
 
 bool gmio_taskIsStopRequested(void* cookie)
 {
-    return TaskProgress::isAbortRequested(static_cast<const TaskProgress*>(cookie));
+    auto progress = static_cast<const TaskProgressPortion*>(cookie);
+    return progress ? progress->isAbortRequested() : false;
 }
 
 void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
 {
-    auto progress = static_cast<TaskProgress*>(cookie);
+    auto progress = static_cast<TaskProgressPortion*>(cookie);
     if (progress && maxValue > 0) {
         const auto pctNorm = value / double(maxValue);
         const auto pct = qRound(pctNorm * 100);
@@ -50,7 +51,7 @@ void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
     }
 }
 
-gmio_task_iface gmio_createTask(TaskProgress* progress)
+gmio_task_iface gmio_createTask(TaskProgressPortion* progress)
 {
     gmio_task_iface task = {};
     task.cookie = progress;
@@ -179,7 +180,7 @@ public:
     PropertyBool useZip64{ this, textId("useZip64") };
 };
 
-bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress)
+bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgressPortion* progress)
 {
     m_vecMaterial.clear();
     m_vecMesh.clear();
@@ -249,7 +250,7 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     gmio_amf_document amfDoc = {};
     amfDoc.cookie = this;

@@ -97,7 +97,7 @@ OccIgesReader::OccIgesReader()
     m_reader.SetLayerMode(true);
 }
 
-bool OccIgesReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccIgesReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -105,7 +105,7 @@ bool OccIgesReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return Private::cafReadFile(m_reader, filepath, progress);
 }
 
-bool OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
+bool OccIgesReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -176,7 +176,7 @@ OccIgesWriter::OccIgesWriter()
     m_writer.SetLayerMode(true);
 }
 
-bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -184,14 +184,13 @@ bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     return Private::cafTransfer(m_writer, appItems, progress);
 }
 
-bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgressPortion* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
     m_writer.ComputeModel();
     const bool ok = m_writer.Write(filepath.u8string().c_str());
-    progress->setValue(100);
     return ok;
 }
 

@@ -16,8 +16,8 @@ namespace IO {
 // Reader for OpenCascade BRep file format
 class OccBRepReader : public Reader {
 public:
-    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgressPortion* progress) override;
+    bool transfer(DocumentPtr doc, TaskProgressPortion* progress) override;
 
 private:
     TopoDS_Shape m_shape;
@@ -27,8 +27,8 @@ private:
 // Writer for OpenCascade BRep file format
 class OccBRepWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
+    bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
 
 private:
     TopoDS_Shape m_shape;

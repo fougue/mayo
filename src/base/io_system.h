@@ -21,7 +21,7 @@
 namespace Mayo {
 
 class Messenger;
-class TaskProgress;
+class TaskProgressPortion;
 
 namespace IO {
 
@@ -63,7 +63,7 @@ public:
         Span<const FilePath> filepaths;
         const ParametersProvider* parametersProvider = nullptr;
         Messenger* messenger = nullptr;
-        TaskProgress* progress = nullptr;
+        TaskProgressPortion* progress = nullptr;
     };
     bool importInDocument(const Args_ImportInDocument& args);
 
@@ -75,7 +75,7 @@ public:
         Format targetFormat = Format_Unknown;
         const PropertyGroup* parameters = nullptr;
         Messenger* messenger = nullptr;
-        TaskProgress* progress = nullptr;
+        TaskProgressPortion* progress = nullptr;
     };
     bool exportApplicationItems(const Args_ExportApplicationItems& args);
 
@@ -88,7 +88,7 @@ public:
         Operation& withFilepaths(Span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
         Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgress* progress);
+        Operation& withTaskProgress(TaskProgressPortion* progress);
         bool execute();
 
     private:
@@ -108,7 +108,7 @@ public:
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgress* progress);
+        Operation& withTaskProgress(TaskProgressPortion* progress);
         bool execute();
 
     private:

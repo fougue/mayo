@@ -28,9 +28,9 @@ namespace IO {
 
 namespace {
 
-TaskProgress* nullTaskProgress()
+TaskProgressPortion* nullTaskProgress()
 {
-    static TaskProgress null;
+    static TaskProgressPortion null;
     return &null;
 }
 
@@ -196,7 +196,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
-    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
+    TaskProgressPortion* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
 
     bool ok = true;
@@ -211,9 +211,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         fnAddError(fp, errorMsg);
         return {};
     };
-    auto fnReadFile = [&](const FilePath& fp, TaskProgress* subProgress) -> ReaderPtr {
-        subProgress->beginScope(40, tr("Reading file"));
-        auto _ = gsl::finally([=]{ subProgress->endScope(); });
+    auto fnReadFile = [&](const FilePath& fp, TaskProgressPortion* subProgress) -> ReaderPtr {
+        TaskProgressPortion readProgress(subProgress, 40, tr("Reading file"));
         const Format fileFormat = this->probeFormat(fp);
         if (fileFormat == Format_Unknown)
             return fnReadFileError(fp, tr("Unknown format"));
@@ -225,16 +224,17 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (args.parametersProvider)
             reader->applyProperties(args.parametersProvider->findReaderParameters(fileFormat));
 
-        if (!reader->readFile(fp, subProgress))
+        if (!reader->readFile(fp, &readProgress))
             return fnReadFileError(fp, tr("File read problem"));
 
         return reader;
     };
-    auto fnTransfer = [&](const FilePath& fp, const ReaderPtr& reader, TaskProgress* subProgress) {
-        subProgress->beginScope(60, tr("Transferring file"));
-        auto _ = gsl::finally([=]{ subProgress->endScope(); });
-        if (reader) {
-            if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
+    auto fnTransfer = [&](const FilePath& fp, const ReaderPtr& reader, TaskProgressPortion* subProgress) {
+        TaskProgressPortion transferProgress(subProgress, 60, tr("Transferring file"));
+        if (reader
+                && !reader->transfer(doc, &transferProgress)
+                && !TaskProgress::isAbortRequested(&transferProgress))
+        {
                 fnAddError(fp, tr("File transfer problem"));
         }
     };
@@ -247,7 +247,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         struct TaskData {
             std::unique_ptr<Reader> reader;
             FilePath filepath;
-            TaskProgress* progress = nullptr;
+            TaskProgressPortion* progress = nullptr;
             TaskId taskId = 0;
             bool transferred = false;
         };
@@ -264,8 +264,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             TaskData& taskData = vecTaskData[i];
             taskData.filepath = listFilepath[i];
             const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
-                taskData.progress = progressChild;
-                taskData.reader = fnReadFile(taskData.filepath, progressChild);
+                taskData.progress = &progressChild->rootPortion();
+                taskData.reader = fnReadFile(taskData.filepath, taskData.progress);
             });
             taskData.taskId = childTaskId;
             childTaskManager.run(childTaskId, TaskAutoDestroy::Off);
@@ -302,7 +302,7 @@ System::Operation_ImportInDocument System::importInDocument() {
 
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
-    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
+    TaskProgressPortion* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
     auto fnError = [=](const QString& errorMsg) {
         messenger->emitError(tr("Error during export to '%1'\n%2")
@@ -315,17 +315,19 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
         return fnError(tr("No supporting writer"));
 
     writer->applyProperties(args.parameters);
-    auto _ = gsl::finally([=]{ progress->endScope(); });
-    progress->beginScope(40, tr("Transfer"));
-    const bool okTransfer = writer->transfer(args.applicationItems, progress);
-    if (!okTransfer)
-        return fnError(tr("File transfer problem"));
+    {
+        TaskProgressPortion transferProgress(progress, 40, tr("Transfer"));
+        const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
+        if (!okTransfer)
+            return fnError(tr("File transfer problem"));
+    }
 
-    progress->endScope();
-    progress->beginScope(60, tr("Write"));
-    const bool okWriteFile = writer->writeFile(args.targetFilepath, progress);
-    if (!okWriteFile)
-        return fnError(tr("File write problem"));
+    {
+        TaskProgressPortion writeProgress(progress, 60, tr("Write"));
+        const bool okWriteFile = writer->writeFile(args.targetFilepath, &writeProgress);
+        if (!okWriteFile)
+            return fnError(tr("File write problem"));
+    }
 
     return true;
 }
@@ -361,7 +363,7 @@ System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger) {
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress) {
+System::Operation_ExportApplicationItems::withTaskProgress(TaskProgressPortion* progress) {
     m_args.progress = progress;
     return *this;
 }
@@ -405,7 +407,7 @@ System::Operation_ImportInDocument::withMessenger(Messenger* messenger) {
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
+System::Operation_ImportInDocument::withTaskProgress(TaskProgressPortion* progress) {
     m_args.progress = progress;
     return *this;
 }

@@ -24,8 +24,8 @@ class OccStepReader : public Reader {
 public:
     OccStepReader();
 
-    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgressPortion* progress) override;
+    bool transfer(DocumentPtr doc, TaskProgressPortion* progress) override;
 
     // Parameters
 
@@ -105,8 +105,8 @@ class OccStepWriter : public Writer {
 public:
     OccStepWriter();
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
+    bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
 
     // Parameters
 

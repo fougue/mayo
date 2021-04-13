@@ -36,11 +36,11 @@ public:
     void requestAbort(TaskId id);
 
 signals:
-    void started(TaskId id);
-    void progressStep(TaskId id, const QString& stepTitle);
-    void progressChanged(TaskId id, int percent);
-    void abortRequested(TaskId id);
-    void ended(TaskId id);
+    void started(Mayo::TaskId id);
+    void progressStep(Mayo::TaskId id, const QString& stepTitle);
+    void progressChanged(Mayo::TaskId id, int percent);
+    void abortRequested(Mayo::TaskId id);
+    void ended(Mayo::TaskId id);
 
 private:
     struct Entity {

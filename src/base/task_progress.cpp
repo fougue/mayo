@@ -8,13 +8,12 @@
 #include "task.h"
 #include "task_manager.h"
 
-#include <cassert>
 #include <limits>
 
 namespace Mayo {
 
-TaskProgress::TaskProgress(const Task& task)
-    : m_task(&task)
+TaskProgress::TaskProgress()
+    : m_rootPortion(*this)
 {
 }
 
@@ -25,9 +24,6 @@ TaskId TaskProgress::taskId() const
 
 void TaskProgress::setValue(int pct)
 {
-    if (m_currentScopeSize != -1)
-        pct = m_currentScopeValueStart + pct * (m_currentScopeSize / 100.);
-
     m_value = pct;
     if (m_task)
         emit m_task->manager()->progressChanged(m_task->id(), pct);
@@ -40,25 +36,19 @@ void TaskProgress::setStep(const QString& title)
         emit m_task->manager()->progressStep(m_task->id(), title);
 }
 
+void TaskProgress::setTask(const Task* task)
+{
+    m_task = task;
+}
+
 bool TaskProgress::isAbortRequested(const TaskProgress* progress)
 {
     return progress ? progress->isAbortRequested() : false;
 }
 
-void TaskProgress::beginScope(int scopeSize, const QString& stepTitle)
+bool TaskProgress::isAbortRequested(const TaskProgressPortion* progress)
 {
-    assert(m_currentScopeSize == -1);
-    assert(scopeSize > 1);
-    m_currentScopeSize = scopeSize;
-    m_currentScopeValueStart = m_value;
-    if (!stepTitle.isEmpty())
-        this->setStep(stepTitle);
-}
-
-void TaskProgress::endScope()
-{
-    this->setValue(100);
-    m_currentScopeSize = -1;
+    return progress ? progress->isAbortRequested() : false;
 }
 
 void TaskProgress::requestAbort()

@@ -233,7 +233,6 @@ void Test::PropertyQuantityValueConversion_test()
     PropertyValueConversion conv;
     QVERIFY(conv.fromVariant(prop.get(), variantFrom));
     QCOMPARE(conv.toVariant(*prop.get()), variantTo);
-
 }
 
 void Test::PropertyQuantityValueConversion_test_data()
@@ -751,15 +750,17 @@ void Test::LibTask_test()
 
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        progress->beginScope(40);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgressPortion portionProgress(&progress->rootPortion(), 40);
+            for (int i = 0; i <= 100; ++i)
+                portionProgress.setValue(i);
+        }
 
-        progress->beginScope(60);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgressPortion portionProgress(&progress->rootPortion(), 60);
+            for (int i = 0; i <= 100; ++i)
+                portionProgress.setValue(i);
+        }
     });
     std::vector<ProgressRecord> vecProgressRec;
     QObject::connect(

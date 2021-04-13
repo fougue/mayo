@@ -67,14 +67,13 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     return LengthUnit::Undefined;
 }
 
-bool OccBaseMeshReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccBaseMeshReader::readFile(const FilePath& filepath, TaskProgressPortion* /*progress*/)
 {
     m_filepath = filepath;
-    progress->setValue(100);
     return true;
 }
 
-bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
+bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
 {
     this->applyParameters();
     m_reader.SetDocument(doc);

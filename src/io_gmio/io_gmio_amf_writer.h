@@ -24,8 +24,8 @@ namespace IO {
 // Requires gmio >= v0.4.0
 class GmioAmfWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
+    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgressPortion* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* group) override;

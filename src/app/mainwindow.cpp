@@ -495,7 +495,7 @@ void MainWindow::importInCurrentDoc()
                 .withFilepaths(resFileNames.listFilepath)
                 .withParametersProvider(AppModule::get(app))
                 .withMessenger(Messenger::defaultInstance())
-                .withTaskProgress(progress)
+                .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
                 .execute();
         if (okImport)
             Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
@@ -542,7 +542,7 @@ void MainWindow::exportSelectedItems()
                 .withItems(m_guiApp->selectionModel()->selectedItems())
                 .withParameters(AppModule::get(app)->findWriterParameters(format))
                 .withMessenger(Messenger::defaultInstance())
-                .withTaskProgress(progress)
+                .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
                 .execute();
         if (okExport)
             Messenger::defaultInstance()->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
@@ -908,7 +908,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                         .withFilepath(fp)
                         .withParametersProvider(AppModule::get(app))
                         .withMessenger(Messenger::defaultInstance())
-                        .withTaskProgress(progress)
+                        .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
                         .execute();
                 if (okImport)
                     Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));

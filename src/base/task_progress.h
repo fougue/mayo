@@ -7,6 +7,7 @@
 #pragma once
 
 #include "task_common.h"
+#include "task_progress_portion.h"
 #include <QtCore/QString>
 
 namespace Mayo {
@@ -15,35 +16,43 @@ class Task;
 
 class TaskProgress {
 public:
-    TaskProgress() = default;
+    TaskProgress();
 
     TaskId taskId() const;
 
     // Value in [0,100]
     int value() const { return m_value; }
-    void setValue(int pct);
 
     const QString& step() const { return m_step; }
-    void setStep(const QString& title);
 
     bool isAbortRequested() const { return m_isAbortRequested; }
     static bool isAbortRequested(const TaskProgress* progress);
+    static bool isAbortRequested(const TaskProgressPortion* progress);
 
-    void beginScope(int scopeSize, const QString& stepTitle = QString());
-    void endScope();
+    const TaskProgressPortion& rootPortion() const { return m_rootPortion; }
+    TaskProgressPortion& rootPortion() { return m_rootPortion; }
+
+    // Disable copy
+    TaskProgress(const TaskProgress&) = delete;
+    TaskProgress(TaskProgress&&) = delete;
+    TaskProgress& operator=(const TaskProgress&) = delete;
+    TaskProgress& operator=(TaskProgress&&) = delete;
 
 private:
-    TaskProgress(const Task& task);
+    void setValue(int pct);
+    void setStep(const QString& title);
+    void setTask(const Task* task);
 
     void requestAbort();
 
     friend class TaskManager;
+    friend class TaskProgressPortion;
+
     const Task* m_task = nullptr;
     int m_value = 0;
     QString m_step;
-    int m_currentScopeSize = -1;
-    int m_currentScopeValueStart = 0;
     bool m_isAbortRequested = false;
+    TaskProgressPortion m_rootPortion;
 };
 
 } // namespace Mayo

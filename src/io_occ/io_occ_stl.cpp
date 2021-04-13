@@ -66,7 +66,7 @@ public:
     PropertyEnum<OccStlWriter::Format> targetFormat{ this, textId("targetFormat") };
 };
 
-bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStlReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     m_baseFilename = filepath.stem();
@@ -74,7 +74,7 @@ bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return !m_mesh.IsNull();
 }
 
-bool OccStlReader::transfer(DocumentPtr doc, TaskProgress* progress)
+bool OccStlReader::transfer(DocumentPtr doc, TaskProgressPortion* /*progress*/)
 {
     if (m_mesh.IsNull())
         return false;
@@ -82,11 +82,10 @@ bool OccStlReader::transfer(DocumentPtr doc, TaskProgress* progress)
     SingleScopeImport import(doc);
     TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
     CafUtils::setLabelAttrStdName(import.entityLabel(), filepathTo<QString>(m_baseFilename));
-    progress->setValue(100);
     return true;
 }
 
-bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* /*progress*/)
 {
 //    if (appItems.size() > 1)
 //        return Result::error(tr("OpenCascade RWStl does not support multi-solids"));
@@ -114,7 +113,7 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     return !m_shape.IsNull() || !m_mesh.IsNull();
 }
 
-bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     if (!m_shape.IsNull()) {
         StlAPI_Writer writer;

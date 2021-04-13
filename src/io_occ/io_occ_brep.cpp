@@ -21,7 +21,7 @@
 namespace Mayo {
 namespace IO {
 
-bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccBRepReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     m_shape.Nullify();
     m_baseFilename = filepath.stem();
@@ -34,21 +34,20 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
                 TKernelUtils::start(indicator));
 }
 
-bool OccBRepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+bool OccBRepReader::transfer(DocumentPtr doc, TaskProgressPortion* /*progress*/)
 {
     if (m_shape.IsNull())
         return false;
 
-    XCafScopeImport import(doc);
+    XCafScopeImport import(doc); Q_UNUSED(import)
     const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
     CafUtils::setLabelAttrStdName(labelShape, filepathTo<QString>(m_baseFilename));
-    progress->setValue(100);
     return true;
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 
@@ -78,11 +77,10 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
         m_shape = vecShape.front();
     }
 
-    progress->setValue(100);
     return true;
 }
 
-bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));

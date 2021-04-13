@@ -24,16 +24,15 @@ namespace IO {
 namespace {
 
 template<typename CAF_READER>
-bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgress* progress)
+bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgressPortion* /*progress*/)
 {
     //readFile_prepare(reader);
     const IFSelect_ReturnStatus error = reader.ReadFile(filepath.u8string().c_str());
-    progress->setValue(100);
     return error == IFSelect_RetDone;
 }
 
 template<typename CAF_READER>
-bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
+bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgressPortion* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     XCafScopeImport import(doc);
@@ -51,7 +50,7 @@ bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* p
 }
 
 template<typename CAF_WRITER>
-bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> appItems, TaskProgressPortion* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
@@ -91,19 +90,19 @@ Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader)
     return reader.WS();
 }
 
-bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress) {
+bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgressPortion* progress) {
     return cafGenericReadFile(reader, filepath, progress);
 }
 
-bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress) {
+bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgressPortion* progress) {
     return cafGenericReadFile(reader, filepath, progress);
 }
 
-bool cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+bool cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgressPortion* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 
-bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgressPortion* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 
@@ -115,11 +114,11 @@ Handle_Transfer_FinderProcess cafFinderProcess(const STEPCAFControl_Writer& writ
     return writer.Writer().WS()->TransferWriter()->FinderProcess();
 }
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgressPortion* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgressPortion* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 

@@ -39,8 +39,7 @@ TaskId TaskManager::newTask(TaskJob fn)
     ptrEntity->task.m_id = taskId;
     ptrEntity->task.m_fn = std::move(fn);
     ptrEntity->task.m_manager = this;
-    const TaskProgress progress(ptrEntity->task);
-    ptrEntity->taskProgress = std::move(progress);
+    ptrEntity->taskProgress.setTask(&ptrEntity->task);
     ptrEntity->isGarbage = false;
     m_mapEntity.insert({ taskId, std::move(ptrEntity) });
     return taskId;

@@ -17,8 +17,8 @@ namespace IO {
 // Opencascade-based reader for STL file format
 class OccStlReader : public Reader {
 public:
-    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgressPortion* progress) override;
+    bool transfer(DocumentPtr doc, TaskProgressPortion* progress) override;
 
 private:
     Handle_Poly_Triangulation m_mesh;
@@ -28,8 +28,8 @@ private:
 // Opencascade-based writer for STL file format
 class OccStlWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
+    bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;
