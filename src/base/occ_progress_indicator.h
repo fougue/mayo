@@ -11,11 +11,11 @@
 
 namespace Mayo {
 
-class TaskProgressPortion;
+class TaskProgress;
 
 class OccProgressIndicator : public Message_ProgressIndicator {
 public:
-    OccProgressIndicator(TaskProgressPortion* progress);
+    OccProgressIndicator(TaskProgress* progress);
 
     bool UserBreak() override;
 
@@ -26,7 +26,7 @@ public:
 #endif
 
 private:
-    TaskProgressPortion* m_progress = nullptr;
+    TaskProgress* m_progress = nullptr;
     const char* m_lastStepName = nullptr;
     int m_lastProgress = -1;
 };

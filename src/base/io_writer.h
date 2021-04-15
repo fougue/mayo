@@ -15,15 +15,15 @@ namespace Mayo {
 
 class ApplicationItem;
 class PropertyGroup;
-class TaskProgressPortion;
+class TaskProgress;
 
 namespace IO {
 
 class Writer {
 public:
     virtual ~Writer() = default;
-    virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) = 0;
-    virtual bool writeFile(const FilePath& fp, TaskProgressPortion* progress) = 0;
+    virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
+    virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
 };
 

@@ -22,21 +22,33 @@
 #include <locale>
 #include <mutex>
 #include <regex>
+#include <vector>
 
 namespace Mayo {
 namespace IO {
 
 namespace {
 
-TaskProgressPortion* nullTaskProgress()
+TaskProgress* nullTaskProgress()
 {
-    static TaskProgressPortion null;
+    static TaskProgress null;
     return &null;
 }
 
 Messenger* nullMessenger()
 {
     return NullMessenger::instance();
+}
+
+class NopEntityPostProcess : public System::EntityPostProcess {
+public:
+    bool requiresPostProcess(const Format&) const override { return false; }
+    void perform(const TDF_Label&, TaskProgress*) override {}
+};
+
+System::EntityPostProcess* nullEntityPostProcess() {
+    static NopEntityPostProcess null;
+    return &null;
 }
 
 bool containsFormat(Span<const Format> spanFormat, const Format& format)
@@ -196,98 +208,130 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
-    TaskProgressPortion* progress = args.progress ? args.progress : nullTaskProgress();
+    TaskProgress* rootProgress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    EntityPostProcess* postProcess = args.entityPostProcess ? args.entityPostProcess : nullEntityPostProcess();
 
     bool ok = true;
 
     using ReaderPtr = std::unique_ptr<Reader>;
+    struct TaskData {
+        ReaderPtr reader;
+        FilePath filepath;
+        Format fileFormat = Format_Unknown;
+        TaskProgress* progress = nullptr;
+        TaskId taskId = 0;
+        TDF_LabelSequence seqTransferredEntity;
+        bool transferred = false;
+    };
+
     auto fnAddError = [&](const FilePath& fp, QString errorMsg) {
         ok = false;
         messenger->emitError(tr("Error during import of '%1'\n%2")
                              .arg(filepathTo<QString>(fp), errorMsg));
     };
-    auto fnReadFileError = [&](const FilePath& fp, QString errorMsg) -> ReaderPtr {
+    auto fnReadFileError = [&](const FilePath& fp, QString errorMsg) {
         fnAddError(fp, errorMsg);
-        return {};
+        return false;
     };
-    auto fnReadFile = [&](const FilePath& fp, TaskProgressPortion* subProgress) -> ReaderPtr {
-        TaskProgressPortion readProgress(subProgress, 40, tr("Reading file"));
-        const Format fileFormat = this->probeFormat(fp);
-        if (fileFormat == Format_Unknown)
-            return fnReadFileError(fp, tr("Unknown format"));
+    auto fnReadFile = [&](TaskData& taskData) {
+        taskData.fileFormat = this->probeFormat(taskData.filepath);
+        if (taskData.fileFormat == Format_Unknown)
+            return fnReadFileError(taskData.filepath, tr("Unknown format"));
 
-        std::unique_ptr<Reader> reader = this->createReader(fileFormat);
-        if (!reader)
-            return fnReadFileError(fp, tr("No supporting reader"));
+        int portionSize = 40;
+        if (postProcess->requiresPostProcess(taskData.fileFormat))
+            portionSize *= (100 - postProcess->progressPortionSize()) / 100.;
 
-        if (args.parametersProvider)
-            reader->applyProperties(args.parametersProvider->findReaderParameters(fileFormat));
+        TaskProgress progress(taskData.progress, portionSize, tr("Reading file"));
+        taskData.reader = this->createReader(taskData.fileFormat);
+        if (!taskData.reader)
+            return fnReadFileError(taskData.filepath, tr("No supporting reader"));
 
-        if (!reader->readFile(fp, &readProgress))
-            return fnReadFileError(fp, tr("File read problem"));
-
-        return reader;
-    };
-    auto fnTransfer = [&](const FilePath& fp, const ReaderPtr& reader, TaskProgressPortion* subProgress) {
-        TaskProgressPortion transferProgress(subProgress, 60, tr("Transferring file"));
-        if (reader
-                && !reader->transfer(doc, &transferProgress)
-                && !TaskProgress::isAbortRequested(&transferProgress))
-        {
-                fnAddError(fp, tr("File transfer problem"));
+        if (args.parametersProvider) {
+            taskData.reader->applyProperties(
+                        args.parametersProvider->findReaderParameters(taskData.fileFormat));
         }
+
+        if (!taskData.reader->readFile(taskData.filepath, &progress))
+            return fnReadFileError(taskData.filepath, tr("File read problem"));
+
+        return taskData.reader.get() != nullptr;
+    };
+    auto fnTransfer = [&](TaskData& taskData) {
+        int portionSize = 60;
+        if (postProcess->requiresPostProcess(taskData.fileFormat))
+            portionSize *= (100 - postProcess->progressPortionSize()) / 100.;
+
+        TaskProgress progress(taskData.progress, portionSize, tr("Transferring file"));
+        if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
+            taskData.seqTransferredEntity = taskData.reader->transfer(doc, &progress);
+            if (taskData.seqTransferredEntity.IsEmpty())
+                fnAddError(taskData.filepath, tr("File transfer problem"));
+        }
+
+        taskData.transferred = true;
+    };
+    auto fnPostProcess = [&](TaskData& taskData) {
+        if (!postProcess->requiresPostProcess(taskData.fileFormat))
+            return;
+
+        TaskProgress progress(
+                    taskData.progress,
+                    postProcess->progressPortionSize(),
+                    postProcess->progressPortionStep());
+        const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
+        for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
+            TaskProgress subProgress(&progress, subPortionSize);
+            postProcess->perform(labelEntity, &subProgress);
+        }
+    };
+    auto fnAddModelTreeEntities = [&](TaskData& taskData) {
+        for (const TDF_Label& labelEntity : taskData.seqTransferredEntity)
+            doc->addEntityTreeNode(labelEntity);
     };
 
     if (listFilepath.size() == 1) { // Single file case
-        const ReaderPtr reader = fnReadFile(listFilepath.front(), progress);
-        fnTransfer(listFilepath.front(), reader, progress);
+        TaskData taskData;
+        taskData.filepath = listFilepath.front();
+        taskData.progress = rootProgress;
+        fnReadFile(taskData);
+        fnTransfer(taskData);
+        fnPostProcess(taskData);
+        fnAddModelTreeEntities(taskData);
     }
     else { // Many files case
-        struct TaskData {
-            std::unique_ptr<Reader> reader;
-            FilePath filepath;
-            TaskProgressPortion* progress = nullptr;
-            TaskId taskId = 0;
-            bool transferred = false;
-        };
         std::vector<TaskData> vecTaskData;
         vecTaskData.resize(listFilepath.size());
 
         TaskManager childTaskManager;
-        QObject::connect(
-                    &childTaskManager, &TaskManager::progressChanged,
-                    [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
+        QObject::connect(&childTaskManager, &TaskManager::progressChanged, [&](TaskId, int) {
+            rootProgress->setValue(childTaskManager.globalProgress());
+        });
 
         // Read files
-        for (int i = 0; i < int(listFilepath.size()); ++i) {
-            TaskData& taskData = vecTaskData[i];
-            taskData.filepath = listFilepath[i];
-            const TaskId childTaskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
-                taskData.progress = &progressChild->rootPortion();
-                taskData.reader = fnReadFile(taskData.filepath, taskData.progress);
+        for (TaskData& taskData : vecTaskData) {
+            taskData.filepath = listFilepath[&taskData - &vecTaskData.front()];
+            taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
+                taskData.progress = progressChild;
+                fnReadFile(taskData);
             });
-            taskData.taskId = childTaskId;
-            childTaskManager.run(childTaskId, TaskAutoDestroy::Off);
         }
+
+        for (const TaskData& taskData : vecTaskData)
+            childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
 
         // Transfer to document
         int taskDataCount = vecTaskData.size();
-        while (taskDataCount > 0 && !progress->isAbortRequested()) {
+        while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
             auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
-                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 10);
+                return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);
             });
-            if (it == vecTaskData.end()) {
-                it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
-                    return !taskData.transferred;
-                });
-                if (it != vecTaskData.end() && !childTaskManager.waitForDone(it->taskId, 100))
-                    it = vecTaskData.end();
-            }
 
             if (it != vecTaskData.end()) {
-                fnTransfer(it->filepath, it->reader, it->progress);
-                it->transferred = true;
+                fnTransfer(*it);
+                fnPostProcess(*it);
+                fnAddModelTreeEntities(*it);
                 --taskDataCount;
             }
         } // endwhile
@@ -302,7 +346,7 @@ System::Operation_ImportInDocument System::importInDocument() {
 
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
-    TaskProgressPortion* progress = args.progress ? args.progress : nullTaskProgress();
+    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
     auto fnError = [=](const QString& errorMsg) {
         messenger->emitError(tr("Error during export to '%1'\n%2")
@@ -316,14 +360,14 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 
     writer->applyProperties(args.parameters);
     {
-        TaskProgressPortion transferProgress(progress, 40, tr("Transfer"));
+        TaskProgress transferProgress(progress, 40, tr("Transfer"));
         const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
         if (!okTransfer)
             return fnError(tr("File transfer problem"));
     }
 
     {
-        TaskProgressPortion writeProgress(progress, 60, tr("Write"));
+        TaskProgress writeProgress(progress, 60, tr("Write"));
         const bool okWriteFile = writer->writeFile(args.targetFilepath, &writeProgress);
         if (!okWriteFile)
             return fnError(tr("File write problem"));
@@ -363,7 +407,7 @@ System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger) {
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgressPortion* progress) {
+System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress) {
     m_args.progress = progress;
     return *this;
 }
@@ -407,7 +451,7 @@ System::Operation_ImportInDocument::withMessenger(Messenger* messenger) {
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgressPortion* progress) {
+System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
     m_args.progress = progress;
     return *this;
 }
@@ -416,6 +460,13 @@ System::Operation_ImportInDocument::Operation&
 System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
 {
     return this->withFilepaths(Span<const FilePath>(&filepath, 1));
+}
+
+System::Operation_ImportInDocument::Operation&
+System::Operation_ImportInDocument::withEntityPostProcess(EntityPostProcess* postProcess)
+{
+    m_args.entityPostProcess = postProcess;
+    return *this;
 }
 
 bool System::Operation_ImportInDocument::execute() {

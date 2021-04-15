@@ -28,7 +28,7 @@ class QString;
 
 namespace Mayo {
 
-class TaskProgressPortion;
+class TaskProgress;
 
 namespace IO {
 namespace Private {
@@ -45,14 +45,14 @@ Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader)
 Handle_Transfer_FinderProcess cafFinderProcess(const IGESCAFControl_Writer& writer);
 Handle_Transfer_FinderProcess cafFinderProcess(const STEPCAFControl_Writer& writer);
 
-bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgressPortion* progress);
-bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgressPortion* progress);
+bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
+bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
 
-bool cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgressPortion* progress);
-bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgressPortion* progress);
+TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
+TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgressPortion* progress);
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgressPortion* progress);
+bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
+bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
 
 } // namespace Private
 } // namespace IO

@@ -67,8 +67,8 @@ private:
 class OccIgesWriter : public Writer {
 public:
     OccIgesWriter();
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
+    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters
 

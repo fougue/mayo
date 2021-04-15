@@ -57,7 +57,7 @@ public:
     PropertyBool forceExportUV{ this, textId("forceExportUV") };
 };
 
-bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgressPortion*)
+bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();
@@ -80,7 +80,7 @@ bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (!m_document)
         return false;

@@ -21,6 +21,7 @@ class TaskManager : public QObject {
     Q_OBJECT
 public:
     TaskManager(QObject* parent = nullptr);
+    ~TaskManager();
     static TaskManager* globalInstance();
 
     TaskId newTask(TaskJob fn);
@@ -48,7 +49,8 @@ private:
         TaskProgress taskProgress;
         QString title;
         std::future<void> control;
-        std::atomic<bool> isGarbage;
+        std::atomic<bool> isFinished = false;
+        TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;
     };
 
     Entity* findEntity(TaskId id);

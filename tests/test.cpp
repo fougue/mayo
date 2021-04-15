@@ -750,15 +750,15 @@ void Test::LibTask_test()
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
         {
-            TaskProgressPortion portionProgress(&progress->rootPortion(), 40);
+            TaskProgress subProgress(progress, 40);
             for (int i = 0; i <= 100; ++i)
-                portionProgress.setValue(i);
+                subProgress.setValue(i);
         }
 
         {
-            TaskProgressPortion portionProgress(&progress->rootPortion(), 60);
+            TaskProgress subProgress(progress, 60);
             for (int i = 0; i <= 100; ++i)
-                portionProgress.setValue(i);
+                subProgress.setValue(i);
         }
     });
     std::vector<ProgressRecord> vecProgressRec;

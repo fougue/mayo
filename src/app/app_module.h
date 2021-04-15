@@ -10,6 +10,7 @@
 
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/occ_brep_mesh_parameters.h"
 #include "../base/occt_enums.h"
 #include "../base/property.h"
 #include "../base/property_builtins.h"
@@ -23,6 +24,8 @@
 #include <QtCore/QObject>
 #include <unordered_map>
 #include <vector>
+
+class TopoDS_Shape;
 
 namespace Mayo {
 
@@ -54,11 +57,13 @@ public:
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
 
+    OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
+
     // from IO::ParametersProvider
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
-    // PropertyValueConversion
+    // from PropertyValueConversion
     QVariant toVariant(const Property& prop) const override;
     bool fromVariant(Property* prop, const QVariant& variant) const override;
 
@@ -76,8 +81,9 @@ public:
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     // Meshing
     const Settings_GroupIndex groupId_meshing;
-    PropertyBool meshingUseDefaultParameters{ this, textId("meshingUseDefaultParameters") };
-    PropertyLength meshingLinearDeflection{ this, textId("meshingLinearDeflection") };
+    enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
+    PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
+    PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics

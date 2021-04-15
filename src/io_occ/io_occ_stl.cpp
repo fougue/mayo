@@ -11,7 +11,6 @@
 #include "../base/caf_utils.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
-#include "../base/scope_import.h"
 #include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
@@ -66,7 +65,7 @@ public:
     PropertyEnum<OccStlWriter::Format> targetFormat{ this, textId("targetFormat") };
 };
 
-bool OccStlReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     m_baseFilename = filepath.stem();
@@ -74,18 +73,18 @@ bool OccStlReader::readFile(const FilePath& filepath, TaskProgressPortion* progr
     return !m_mesh.IsNull();
 }
 
-bool OccStlReader::transfer(DocumentPtr doc, TaskProgressPortion* /*progress*/)
+TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_mesh.IsNull())
-        return false;
+        return {};
 
-    SingleScopeImport import(doc);
-    TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
-    CafUtils::setLabelAttrStdName(import.entityLabel(), filepathTo<QString>(m_baseFilename));
-    return true;
+    const TDF_Label entityLabel = doc->newEntityLabel();
+    TDataXtd_Triangulation::Set(entityLabel, m_mesh);
+    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<QString>(m_baseFilename));
+    return CafUtils::makeLabelSequence({ entityLabel });
 }
 
-bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* /*progress*/)
+bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
 //    if (appItems.size() > 1)
 //        return Result::error(tr("OpenCascade RWStl does not support multi-solids"));
@@ -113,7 +112,7 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPo
     return !m_shape.IsNull() || !m_mesh.IsNull();
 }
 
-bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
         StlAPI_Writer writer;

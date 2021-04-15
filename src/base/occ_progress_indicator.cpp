@@ -10,7 +10,7 @@
 
 namespace Mayo {
 
-OccProgressIndicator::OccProgressIndicator(TaskProgressPortion* progress)
+OccProgressIndicator::OccProgressIndicator(TaskProgress* progress)
     : m_progress(progress)
 {
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)

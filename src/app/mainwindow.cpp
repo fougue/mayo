@@ -11,6 +11,8 @@
 #include "../base/application_item_selection_model.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/global.h"
+#include "../base/io_entity_brep_mesh.h"
 #include "../base/io_format.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
@@ -490,12 +492,21 @@ void MainWindow::importInCurrentDoc()
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
+
+        IO::EntityBRepMesh postProcess;
+        postProcess.setProgressPortionSize(20);
+        postProcess.setProgressPortionStep(tr("Mesh BRep shapes"));
+        postProcess.setParametersProvider([=](const TopoDS_Shape& shape) {
+            return AppModule::get(app)->brepMeshParameters(shape);
+        });
+
         const bool okImport = app->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
                 .withParametersProvider(AppModule::get(app))
+                .withEntityPostProcess(&postProcess)
                 .withMessenger(Messenger::defaultInstance())
-                .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
+                .withTaskProgress(progress)
                 .execute();
         if (okImport)
             Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
@@ -542,7 +553,7 @@ void MainWindow::exportSelectedItems()
                 .withItems(m_guiApp->selectionModel()->selectedItems())
                 .withParameters(AppModule::get(app)->findWriterParameters(format))
                 .withMessenger(Messenger::defaultInstance())
-                .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
+                .withTaskProgress(progress)
                 .execute();
         if (okExport)
             Messenger::defaultInstance()->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
@@ -896,19 +907,28 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 chrono.start();
                 DocumentPtr doc;
                 {
-                    std::lock_guard<std::mutex> lock(mutexApp);
+                    std::lock_guard<std::mutex> lock(mutexApp); MAYO_UNUSED(lock);
                     doc = app->newDocument();
                 }
 
                 doc->setName(filepathTo<QString>(fp.stem()));
                 doc->setFilePath(fp);
+
+                IO::EntityBRepMesh postProcess;
+                postProcess.setProgressPortionSize(20);
+                postProcess.setProgressPortionStep(tr("Mesh BRep shapes"));
+                postProcess.setParametersProvider([=](const TopoDS_Shape& shape) {
+                    return AppModule::get(app)->brepMeshParameters(shape);
+                });
+
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
                         .withFilepath(fp)
                         .withParametersProvider(AppModule::get(app))
+                        .withEntityPostProcess(&postProcess)
                         .withMessenger(Messenger::defaultInstance())
-                        .withTaskProgress(progress ? &progress->rootPortion() : nullptr)
+                        .withTaskProgress(progress)
                         .execute();
                 if (okImport)
                     Messenger::defaultInstance()->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));

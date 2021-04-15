@@ -27,45 +27,6 @@ void Document::initXCaf()
     m_xcaf.setModelTree(m_modelTree);
 }
 
-void Document::notifyNewXCafEntities(const TDF_LabelSequence& seqEntityBefore)
-{
-    TDF_LabelSequence seqDiff;
-    {
-        const TDF_LabelSequence& seqBefore = seqEntityBefore;
-        const TDF_LabelSequence seqAfter = m_xcaf.topLevelFreeShapes();
-        std::set<int> setBeforeTag;
-        const TDF_Label firstBeforeLabel = !seqBefore.IsEmpty() ? seqBefore.First() : TDF_Label();
-        for (const TDF_Label& label : seqBefore) {
-            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
-            setBeforeTag.insert(label.Tag());
-        }
-
-        for (const TDF_Label& label : seqAfter) {
-            Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
-            if (setBeforeTag.find(label.Tag()) == setBeforeTag.cend())
-                seqDiff.Append(label);
-        }
-    }
-
-    for (const TDF_Label& label : seqDiff) {
-        const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
-        emit this->entityAdded(nodeId);
-    }
-}
-
-void Document::notifyNewEntity(const TDF_Label& label)
-{
-    // TODO Allow custom population of the model tree for the new entity
-    const TreeNodeId nodeNewEntity = m_modelTree.appendChild(0, label);
-    emit this->entityAdded(nodeNewEntity);
-
-#if 0
-    // Remove 'label'
-    label.ForgetAllAttributes();
-    label.Nullify();
-#endif
-}
-
 const QString& Document::name() const
 {
     return m_name;
@@ -169,6 +130,29 @@ TDF_Label Document::newEntityLabel()
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
 
     return this->rootLabel().NewChild();
+}
+
+void Document::addEntityTreeNode(const TDF_Label& label)
+{
+    // Check if 'label' belongs to current document
+    if (Document::findFrom(label).get() != this)
+        return;
+
+    // Check if 'label' is not already there inside model tree
+    for (int i = 0; i < this->entityCount(); ++i) {
+        if (this->entityLabel(i) == label)
+            return;
+    }
+
+    // TODO Allow custom population of the model tree for the new entity
+    const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
+    emit this->entityAdded(nodeId);
+
+#if 0
+    // Remove 'label'
+    label.ForgetAllAttributes();
+    label.Nullify();
+#endif
 }
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)

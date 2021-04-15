@@ -7,8 +7,8 @@
 #pragma once
 
 #include <TDF_Label.hxx>
+#include <TDF_LabelSequence.hxx>
 #include <QtCore/QString>
-#include <QtCore/QHash>
 
 namespace Mayo {
 
@@ -25,6 +25,8 @@ struct CafUtils {
 
     static bool hasAttribute(const TDF_Label& label, const Standard_GUID& attrGuid);
     template<typename TDF_ATTRIBUTE> static bool hasAttribute(const TDF_Label& label);
+
+    static TDF_LabelSequence makeLabelSequence(std::initializer_list<TDF_Label> listLabel);
 };
 
 } // namespace Mayo

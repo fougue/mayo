@@ -20,8 +20,8 @@ namespace IO {
 // Requires OpenCascade >= v7.5.0
 class OccGltfWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgressPortion* progress) override;
-    bool writeFile(const FilePath& filepath, TaskProgressPortion* progress) override;
+    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;

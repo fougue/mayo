@@ -60,12 +60,13 @@ public:
     static DocumentPtr findFrom(const TDF_Label& label);
 
     TDF_Label newEntityLabel();
+    void addEntityTreeNode(const TDF_Label& label);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
 signals:
     void nameChanged(const QString& name);
-    void entityAdded(TreeNodeId entityTreeNodeId);
-    void entityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
+    void entityAdded(Mayo::TreeNodeId entityTreeNodeId);
+    void entityAboutToBeDestroyed(Mayo::TreeNodeId entityTreeNodeId);
     //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
 
 public: // -- from TDocStd_Document
@@ -85,8 +86,6 @@ private:
     Document();
     void initXCaf();
     void setIdentifier(Identifier ident) { m_identifier = ident; }
-    void notifyNewXCafEntities(const TDF_LabelSequence& seqEntityBefore);
-    void notifyNewEntity(const TDF_Label& label);
 
     Identifier m_identifier = -1;
     QString m_name;

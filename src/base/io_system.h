@@ -21,7 +21,7 @@
 namespace Mayo {
 
 class Messenger;
-class TaskProgressPortion;
+class TaskProgress;
 
 namespace IO {
 
@@ -58,12 +58,30 @@ public:
 
     // Import service
 
+    // Post-processing procedure executed before adding entities into Document
+    class EntityPostProcess {
+    public:
+        int progressPortionSize() const { return m_progressPortionSize; }
+        void setProgressPortionSize(int size) { m_progressPortionSize = size; }
+
+        const QString& progressPortionStep() const { return m_progressPortionStep; }
+        void setProgressPortionStep(const QString& step) { m_progressPortionStep = step; }
+
+        virtual bool requiresPostProcess(const Format& format) const = 0;
+        virtual void perform(const TDF_Label& labelEntity, TaskProgress* progress) = 0;
+
+    private:
+        int m_progressPortionSize = 0;
+        QString m_progressPortionStep;
+    };
+
     struct Args_ImportInDocument {
         DocumentPtr targetDocument;
         Span<const FilePath> filepaths;
         const ParametersProvider* parametersProvider = nullptr;
+        EntityPostProcess* entityPostProcess = nullptr;
         Messenger* messenger = nullptr;
-        TaskProgressPortion* progress = nullptr;
+        TaskProgress* progress = nullptr;
     };
     bool importInDocument(const Args_ImportInDocument& args);
 
@@ -75,7 +93,7 @@ public:
         Format targetFormat = Format_Unknown;
         const PropertyGroup* parameters = nullptr;
         Messenger* messenger = nullptr;
-        TaskProgressPortion* progress = nullptr;
+        TaskProgress* progress = nullptr;
     };
     bool exportApplicationItems(const Args_ExportApplicationItems& args);
 
@@ -87,8 +105,9 @@ public:
         Operation& withFilepath(const FilePath& filepath);
         Operation& withFilepaths(Span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
+        Operation& withEntityPostProcess(EntityPostProcess* postProcess);
         Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgressPortion* progress);
+        Operation& withTaskProgress(TaskProgress* progress);
         bool execute();
 
     private:
@@ -108,7 +127,7 @@ public:
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
-        Operation& withTaskProgress(TaskProgressPortion* progress);
+        Operation& withTaskProgress(TaskProgress* progress);
         bool execute();
 
     private:

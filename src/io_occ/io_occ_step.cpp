@@ -132,7 +132,7 @@ OccStepReader::~OccStepReader()
     m_reader->~STEPCAFControl_Reader();
 }
 
-bool OccStepReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -140,7 +140,7 @@ bool OccStepReader::readFile(const FilePath& filepath, TaskProgressPortion* prog
     return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
-bool OccStepReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
+TDF_LabelSequence OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -295,7 +295,7 @@ OccStepWriter::OccStepWriter()
     m_writer.SetMaterialMode(true);
 }
 
-bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* progress)
+bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -303,7 +303,7 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressP
     return Private::cafTransfer(m_writer, appItems, progress);
 }
 
-bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgressPortion* /*progress*/)
+bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;

@@ -42,7 +42,7 @@ public:
     PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation{ this, textId("shapeRepresentation") };
 };
 
-bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgressPortion* progress)
+bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress)
 {
     m_scene.reset(new VrmlData_Scene);
     VrmlData_ShapeConvert converter(*m_scene);
@@ -71,7 +71,7 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool OccVrmlWriter::writeFile(const FilePath& filepath, TaskProgressPortion*)
+bool OccVrmlWriter::writeFile(const FilePath& filepath, TaskProgress*)
 {
     if (!m_scene)
         return false;

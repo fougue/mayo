@@ -10,7 +10,6 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/scope_import.h"
 #include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
@@ -21,7 +20,7 @@
 namespace Mayo {
 namespace IO {
 
-bool OccBRepReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_shape.Nullify();
     m_baseFilename = filepath.stem();
@@ -34,20 +33,19 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgressPortion* prog
                 TKernelUtils::start(indicator));
 }
 
-bool OccBRepReader::transfer(DocumentPtr doc, TaskProgressPortion* /*progress*/)
+TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_shape.IsNull())
-        return false;
+        return {};
 
-    XCafScopeImport import(doc); Q_UNUSED(import)
     const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
     CafUtils::setLabelAttrStdName(labelShape, filepathTo<QString>(m_baseFilename));
-    return true;
+    return CafUtils::makeLabelSequence({ labelShape });
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressPortion* /*progress*/)
+bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 
@@ -80,7 +78,7 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgressP
     return true;
 }
 
-bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgressPortion* progress)
+bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
