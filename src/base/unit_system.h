@@ -34,6 +34,7 @@ public:
 
     static TranslateResult radians(QuantityAngle angle);
     static TranslateResult degrees(QuantityAngle angle);
+    static TranslateResult meters(QuantityLength length);
     static TranslateResult millimeters(QuantityLength length);
     static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);

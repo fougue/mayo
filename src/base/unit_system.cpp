@@ -303,6 +303,13 @@ UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
     return { rad / factor, "°", factor };
 }
 
+UnitSystem::TranslateResult UnitSystem::meters(QuantityLength length)
+{
+    const double factor = Quantity_Meter.value();
+    const double mm = length.value();
+    return { mm / factor, "m", factor };
+}
+
 UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
 {
     return { length.value(), "mm", 1. };
