@@ -219,11 +219,7 @@ const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
                 listRecentFile.cbegin(),
                 listRecentFile.cend(),
                 [=](const RecentFile& recentFile) {
-        try {
-            return std::filesystem::equivalent(fp, recentFile.filepath);
-        } catch (...) { // fs::equivalent() might throw on non-existing files
-            return false;
-        }
+        return filepathEquivalent(fp, recentFile.filepath);
     });
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
 }
