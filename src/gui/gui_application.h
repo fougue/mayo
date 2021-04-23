@@ -38,8 +38,8 @@ public:
     GraphicsTreeNodeMappingDriverTable* graphicsTreeNodeMappingDriverTable() const;
 
 signals:
-    void guiDocumentAdded(GuiDocument* guiDoc);
-    void guiDocumentErased(GuiDocument* guiDoc);
+    void guiDocumentAdded(Mayo::GuiDocument* guiDoc);
+    void guiDocumentErased(Mayo::GuiDocument* guiDoc);
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);

@@ -743,7 +743,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
     const int newDocIndex = app->documentCount() - 1;
-    QTimer::singleShot(0, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+    QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 
 void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
@@ -1021,7 +1021,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
         menu->addAction(action);
 
     // Sync before menu show
-    QObject::connect(menu, &QMenu::aboutToShow, [=]{
+    QObject::connect(menu, &QMenu::aboutToShow, this, [=]{
         action->setChecked(appModule->linkWithDocumentSelector.value());
         if (userActions.fnSyncItems)
             userActions.fnSyncItems();
@@ -1042,12 +1042,12 @@ QMenu* MainWindow::createMenuRecentFiles()
     const RecentFiles& recentFiles = appModule->recentFiles.value();
     for (const RecentFile& recentFile : recentFiles) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(filepathTo<QString>(recentFile.filepath));
-        menu->addAction(entryRecentFile, [=]{ this->openDocument(recentFile.filepath); });
+        menu->addAction(entryRecentFile, this, [=]{ this->openDocument(recentFile.filepath); });
     }
 
     if (!recentFiles.empty()) {
         menu->addSeparator();
-        menu->addAction(tr("Clear menu"), [=]{
+        menu->addAction(tr("Clear menu"), this, [=]{
             menu->clear();
             appModule->recentFiles.setValue({});
         });
@@ -1092,7 +1092,7 @@ QMenu* MainWindow::createMenuDisplayMode()
                 action->setChecked(true);
         }
 
-        QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
+        QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
             guiDoc->setActiveDisplayMode(driver, action->data().toInt());
             guiDoc->graphicsScene()->redraw();
         });
