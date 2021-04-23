@@ -115,6 +115,7 @@ public:
 
 OccStepReader::OccStepReader()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
     STEPCAFControl_Controller::Init();
     m_reader.SetColorMode(true);
     m_reader.SetNameMode(true);
