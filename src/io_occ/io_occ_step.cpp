@@ -116,14 +116,20 @@ public:
 OccStepReader::OccStepReader()
 {
     MayoIO_CafGlobalScopedLock(cafLock);
+    m_reader = new(&m_readerStorage) STEPCAFControl_Reader();
     STEPCAFControl_Controller::Init();
-    m_reader.SetColorMode(true);
-    m_reader.SetNameMode(true);
-    m_reader.SetLayerMode(true);
-    m_reader.SetPropsMode(true);
-    m_reader.SetGDTMode(true);
-    m_reader.SetMatMode(true);
-    m_reader.SetViewMode(true);
+    m_reader->SetColorMode(true);
+    m_reader->SetNameMode(true);
+    m_reader->SetLayerMode(true);
+    m_reader->SetPropsMode(true);
+    m_reader->SetGDTMode(true);
+    m_reader->SetMatMode(true);
+    m_reader->SetViewMode(true);
+}
+
+OccStepReader::~OccStepReader()
+{
+    m_reader->~STEPCAFControl_Reader();
 }
 
 bool OccStepReader::readFile(const FilePath& filepath, TaskProgressPortion* progress)
@@ -131,7 +137,7 @@ bool OccStepReader::readFile(const FilePath& filepath, TaskProgressPortion* prog
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafReadFile(m_reader, filepath, progress);
+    return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
 bool OccStepReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
@@ -139,7 +145,7 @@ bool OccStepReader::transfer(DocumentPtr doc, TaskProgressPortion* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_reader, doc, progress);
+    return Private::cafTransfer(*m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccStepReader::createProperties(PropertyGroup* parentGroup)
