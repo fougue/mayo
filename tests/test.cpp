@@ -11,6 +11,7 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/filepath.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
@@ -140,6 +141,21 @@ void Test::TextId_test()
 {
     QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == "foobar");
     QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
+}
+
+void Test::FilePath_test()
+{
+    {
+        const QByteArray testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const FilePath testPath = filepathFrom(testPathQt);
+        QCOMPARE(filepathTo<QByteArray>(testPath), testPathQt);
+    }
+
+    {
+        const QString testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const FilePath testPath = filepathFrom(testPathQt);
+        QCOMPARE(filepathTo<QString>(testPath), testPathQt);
+    }
 }
 
 void Test::IO_test()

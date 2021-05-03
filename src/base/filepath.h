@@ -25,8 +25,8 @@ using FilePath = std::filesystem::path;
 namespace Mayo {
 
 // Returns a FilePath object constructed from input
-inline FilePath filepathFrom(const QByteArray& bytes) { return bytes.toStdString(); }
-inline FilePath filepathFrom(const QString& str) { return str.toStdString(); }
+inline FilePath filepathFrom(const QByteArray& bytes) { return std::filesystem::u8path(bytes.constData()); }
+inline FilePath filepathFrom(const QString& str) { return reinterpret_cast<const char16_t*>(str.utf16()); }
 inline FilePath filepathFrom(const QFileInfo& fi) { return filepathFrom(fi.filePath()); }
 
 // Returns the object converted to 'T' from filepath 'fp'
