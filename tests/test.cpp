@@ -147,7 +147,6 @@ void Test::TextId_test()
     QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
 }
 
-
 void Test::FilePath_test()
 {
     {
