@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "bnd_utils.h"
+#include "tkernel_utils.h"
 
 namespace Mayo {
 
@@ -54,6 +55,46 @@ void BndUtils::add(Bnd_Box* box, const Bnd_Box& other)
     const auto bbc = BndBoxCoords::get(other);
     for (const gp_Pnt& pnt : bbc.vertices())
         box->Add(pnt);
+}
+
+bool BndUtils::isOpen(const Bnd_Box& bndBox)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return bndBox.IsOpen();
+#else
+    return bndBox.IsOpenXmax()
+            || bndBox.IsOpenXmin()
+            || bndBox.IsOpenYmax()
+            || bndBox.IsOpenYmin()
+            || bndBox.IsOpenZmax()
+            || bndBox.IsOpenZmin();
+#endif
+}
+
+bool BndUtils::hasFinitePart(const Bnd_Box& bndBox)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return bndBox.HasFinitePart();
+#else
+    const auto coords = BndBoxCoords::get(bndBox);
+    return !bndBox.IsVoid() && coords.xmax >= coords.xmin;
+#endif
+}
+
+Bnd_Box BndUtils::finitePart(const Bnd_Box& bndBox)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return bndBox.FinitePart();
+#else
+    if (!BndUtils::hasFinitePart(bndBox))
+        return Bnd_Box();
+
+    const auto coords = BndBoxCoords::get(bndBox);
+    Bnd_Box otherBox;
+    otherBox.Update(coords.xmin, coords.ymin, coords.zmin, coords.xmax, coords.ymax, coords.zmax);
+    otherBox.SetGap(bndBox.GetGap());
+    return otherBox;
+#endif
 }
 
 } // namespace Mayo

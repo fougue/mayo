@@ -339,11 +339,11 @@ static QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
     if (bndBox.IsVoid())
         return baseDeviation;
 
-    if (bndBox.IsOpen()) {
-        if (!bndBox.HasFinitePart())
+    if (BndUtils::isOpen(bndBox)) {
+        if (!BndUtils::hasFinitePart(bndBox))
             return baseDeviation;
 
-        bndBox = bndBox.FinitePart();
+        bndBox = BndUtils::finitePart(bndBox);
     }
 
     const auto coords = BndBoxCoords::get(bndBox);

@@ -14,6 +14,11 @@ namespace Mayo {
 
 struct BndUtils {
     static void add(Bnd_Box* box, const Bnd_Box& other);
+
+    static bool isOpen(const Bnd_Box& bndBox);
+
+    static bool hasFinitePart(const Bnd_Box& bndBox);
+    static Bnd_Box finitePart(const Bnd_Box& bndBox);
 };
 
 struct BndBoxCoords {
@@ -28,6 +33,7 @@ struct BndBoxCoords {
     std::array<gp_Pnt, 8> vertices() const;
     gp_Pnt minVertex() const;
     gp_Pnt maxVertex() const;
+
     static BndBoxCoords get(const Bnd_Box& box);
 };
 
