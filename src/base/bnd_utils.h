@@ -26,6 +26,8 @@ struct BndBoxCoords {
 
     gp_Pnt center() const;
     std::array<gp_Pnt, 8> vertices() const;
+    gp_Pnt minVertex() const;
+    gp_Pnt maxVertex() const;
     static BndBoxCoords get(const Bnd_Box& box);
 };
 

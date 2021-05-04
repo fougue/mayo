@@ -31,6 +31,16 @@ std::array<gp_Pnt, 8> BndBoxCoords::vertices() const
         }};
 }
 
+gp_Pnt BndBoxCoords::minVertex() const
+{
+    return { this->xmin, this->ymin, this->zmin };
+}
+
+gp_Pnt BndBoxCoords::maxVertex() const
+{
+    return { this->xmax, this->ymax, this->zmax };
+}
+
 BndBoxCoords BndBoxCoords::get(const Bnd_Box& box)
 {
     BndBoxCoords bbc = {};
