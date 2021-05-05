@@ -230,6 +230,7 @@ void Test::PropertyQuantityValueConversion_test()
     QVERIFY(prop);
 
     PropertyValueConversion conv;
+    conv.setDoubleToStringPrecision(7);
     QVERIFY(conv.fromVariant(prop.get(), variantFrom));
     QCOMPARE(conv.toVariant(*prop.get()), variantTo);
 }
@@ -242,7 +243,7 @@ void Test::PropertyQuantityValueConversion_test_data()
     QTest::newRow("Length(25mm)") << "PropertyLength" << QVariant("25mm") << QVariant("25mm");
     QTest::newRow("Length(2m)") << "PropertyLength" << QVariant("2m") << QVariant("2000mm");
     QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << QVariant("1.57079rad") << QVariant("1.57079rad");
-    QTest::newRow("Length(90°)") << "PropertyAngle" << QVariant("90°") << QVariant("1.57079rad");
+    QTest::newRow("Length(90°)") << "PropertyAngle" << QVariant("90°") << QVariant("1.570796rad");
 }
 
 void Test::IO_test()

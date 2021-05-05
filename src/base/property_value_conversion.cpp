@@ -11,19 +11,12 @@
 #include "string_utils.h"
 #include "tkernel_utils.h"
 #include "unit_system.h"
+
 #include <QtCore/QtDebug>
+#include <charconv>
+#include <sstream>
 
 namespace Mayo {
-
-namespace {
-
-template<typename T>
-QVariant toVariant(const GenericProperty<T>& prop)
-{
-    return prop.value();
-}
-
-} // namespace
 
 QVariant PropertyValueConversion::toVariant(const Property& prop) const
 {
@@ -67,8 +60,25 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
         const auto& qtyProp = constRef<BasePropertyQuantity>(prop);
         const UnitSystem::TranslateResult trRes = UnitSystem::translate(
                     UnitSystem::SI, qtyProp.quantityValue(), qtyProp.quantityUnit());
-        return StringUtils::fromUtf8(
-                    UnitSystem::toCLocaleString(trRes.value * trRes.factor, trRes.strUnit));
+        const QString strUnit = StringUtils::fromUtf8(std::string_view(trRes.strUnit));
+#if __cpp_lib_to_chars
+        char buff[64] = {};
+        auto resToChars = std::to_chars(
+                    std::begin(buff),
+                    std::end(buff),
+                    trRes.value * trRes.factor,
+                    std::chars_format::general,
+                    m_doubleToStringPrecision);
+        if (resToChars.ec == std::errc())
+            return StringUtils::fromUtf8(std::string_view(buff)) + strUnit;
+        else
+            qCritical() << "toVariant(PropertyQuantity) failed with error: 'value_too_large'";
+#else
+        std::stringstream sstr;
+        sstr.precision(m_doubleToStringPrecision);
+        sstr << trRes.value * trRes.factor;
+        return StringUtils::fromUtf8(sstr.str()) + strUnit;
+#endif
     }
 
     return QVariant();

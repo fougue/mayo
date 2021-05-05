@@ -17,6 +17,9 @@ class PropertyValueConversion {
 public:
     //using Variant = std::variant<bool, int, double, std::string>;
 
+    int doubleToStringPrecision() const { return m_doubleToStringPrecision; }
+    void setDoubleToStringPrecision(int prec) { m_doubleToStringPrecision = prec; }
+
     virtual QVariant toVariant(const Property& prop) const;
 
     // TODO Use maybe std::error_code instead of bool
@@ -29,6 +32,9 @@ protected:
 
     template<typename T> static bool isType(const Property& prop);
     template<typename T> static bool isType(const Property* prop);
+
+private:
+    int m_doubleToStringPrecision = 6;
 };
 
 

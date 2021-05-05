@@ -7,7 +7,7 @@
 #pragma once
 
 #include "quantity.h"
-#include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -39,9 +39,6 @@ public:
     static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
     static TranslateResult seconds(QuantityTime duration);
-
-    static std::string toSystemLocaleString(double value, const char* strUnit);
-    static std::string toCLocaleString(double value, const char* strUnit);
 
 private:
     UnitSystem() = default;

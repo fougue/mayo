@@ -7,9 +7,7 @@
 #include "unit_system.h"
 
 #include <fast_float/fast_float.h>
-#include <QtCore/QCoreApplication>
 #include <QtCore/QtGlobal>
-#include <QtCore/QLocale>
 
 namespace Mayo {
 
@@ -223,25 +221,7 @@ static UnitSystem::TranslateResult translateImperialUK_ranged(double value, Unit
 }
 #endif
 
-static std::string toLocaleString(const QLocale& locale, double value, const char* strUnit)
-{
-
-    return QCoreApplication::translate("Mayo::UnitSystem", "%1%2")
-            .arg(locale.toString(value), QString::fromUtf8(strUnit))
-            .toStdString();
-}
-
 } // namespace Internal
-
-std::string UnitSystem::toSystemLocaleString(double value, const char* strUnit)
-{
-    return Internal::toLocaleString(QLocale::system(), value, strUnit);
-}
-
-std::string UnitSystem::toCLocaleString(double value, const char* strUnit)
-{
-    return Internal::toLocaleString(QLocale::c(), value, strUnit);
-}
 
 UnitSystem::TranslateResult UnitSystem::translate(Schema schema, double value, Unit unit)
 {
