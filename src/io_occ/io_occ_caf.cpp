@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "io_occ_caf.h"
+#include "../base/global.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/task_progress.h"
@@ -44,6 +45,7 @@ TDF_LabelSequence cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, Ta
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
     const bool okTransfer = reader.Transfer(stdDoc);
 #endif
+    MAYO_UNUSED(okTransfer);
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 

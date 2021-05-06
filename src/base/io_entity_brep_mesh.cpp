@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "io_entity_brep_mesh.h"
+#include "global.h"
 
 #include <BRepMesh_IncrementalMesh.hxx>
 
@@ -40,8 +41,9 @@ void EntityBRepMesh::perform(const TDF_Label& labelEntity, TaskProgress* progres
     BRepMesh_IncrementalMesh mesher(shapeEntity, params, TKernelUtils::start(indicator));
 #else
     BRepMesh_IncrementalMesh mesher(shapeEntity, params);
+    MAYO_UNUSED(progress);
 #endif
-    Q_UNUSED(mesher);
+    MAYO_UNUSED(mesher);
 }
 
 } // namespace IO
