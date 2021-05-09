@@ -46,14 +46,15 @@ public:
 
     static bool excludeSettingPredicate(const Property& prop);
 
-    const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
-    const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
-
     void prependRecentFile(const FilePath& fp);
     const RecentFile* findRecentFile(const FilePath& fp) const;
     void recordRecentFileThumbnail(GuiDocument* guiDoc);
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
+
+    // -- from IO::ParametersProvider
+    const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
+    const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
 
     // System
     const Settings_GroupIndex groupId_system;
@@ -84,6 +85,7 @@ public:
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
 
 protected:
+    // -- from PropertyGroup
     void onPropertyChanged(Property* prop) override;
 
 private:

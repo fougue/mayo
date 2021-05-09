@@ -56,6 +56,7 @@ public:
 
     FontChange& size(int size);
     FontChange& adjustSize(int offset);
+    FontChange& scalePointSizeF(double f);
     FontChange& bold(bool on);
     FontChange& fixedPitch(bool on);
 

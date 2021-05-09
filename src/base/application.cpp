@@ -123,7 +123,7 @@ DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 {
     for (const auto& mapPair : d->m_mapIdentifierDocument) {
         const DocumentPtr& docPtr = mapPair.second;
-        if (std::filesystem::equivalent(docPtr->filePath(), location))
+        if (filepathEquivalent(docPtr->filePath(), location))
             return docPtr;
     }
 

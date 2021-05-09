@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <QtCore/QHash>
 #include <QtCore/QModelIndex>
 #include <QtCore/QObject>
 #include <QtCore/QFlags>

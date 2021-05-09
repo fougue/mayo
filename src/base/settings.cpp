@@ -29,7 +29,11 @@ struct Settings_Group {
     TextId identifier; // Must be unique in the context of the parent Settings object
     QString overridenTitle;
     std::vector<Settings_Section> vecSection;
-    std::vector<Settings::GroupResetFunction> vecFnReset;
+};
+
+struct SectionResetFunction {
+    Settings_SectionIndex sectionId;
+    Settings::ResetFunction fnReset;
 };
 
 static bool isValidIdentifier(const QByteArray& identifier)
@@ -77,6 +81,7 @@ public:
     QSettings m_settings;
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
+    std::vector<SectionResetFunction> m_vecSectionResetFn;
 };
 
 Settings::Settings(QObject* parent)
@@ -201,10 +206,19 @@ void Settings::setGroupTitle(GroupIndex index, const QString& title)
     d->group(index).overridenTitle = title;
 }
 
-void Settings::addGroupResetFunction(GroupIndex index, GroupResetFunction fn)
+void Settings::addResetFunction(GroupIndex index, Settings::ResetFunction fn)
 {
-    if (fn)
-        d->group(index).vecFnReset.push_back(std::move(fn));
+    this->addResetFunction(SectionIndex(index, 0), std::move(fn));
+}
+
+void Settings::addResetFunction(SectionIndex index, ResetFunction fn)
+{
+    if (fn) {
+        SectionResetFunction obj;
+        obj.sectionId = index;
+        obj.fnReset = std::move(fn);
+        d->m_vecSectionResetFn.push_back(std::move(obj));
+    }
 }
 
 int Settings::sectionCount(GroupIndex index) const
@@ -315,17 +329,26 @@ Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex ind
     return SettingIndex(index, int(section.vecSetting.size()) - 1);
 }
 
-void Settings::resetGroup(GroupIndex index)
-{
-    Settings_Group& group = d->group(index);
-    for (const GroupResetFunction& fnReset : group.vecFnReset)
-        fnReset();
-}
-
 void Settings::resetAll()
 {
-    for (Settings_Group& group : d->m_vecGroup)
-        this->resetGroup(GroupIndex(&group - &d->m_vecGroup.front()));
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn)
+        sectionResetFn.fnReset();
+}
+
+void Settings::resetGroup(GroupIndex index)
+{
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn) {
+        if (sectionResetFn.sectionId.group() == index)
+            sectionResetFn.fnReset();
+    }
+}
+
+void Settings::resetSection(SectionIndex index)
+{
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn) {
+        if (sectionResetFn.sectionId == index)
+            sectionResetFn.fnReset();
+    }
 }
 
 QByteArray Settings::defautLocaleLanguageCode()

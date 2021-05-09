@@ -85,6 +85,9 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     // 3D view - Enable anti-aliasing with MSAA
     m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
+    m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
+    m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
+                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20));
     // 3D view - Set gradient background
     const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
     const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);

@@ -24,8 +24,8 @@ public:
     using GroupIndex = Settings_GroupIndex;
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
-    using GroupResetFunction = std::function<void()>;
     using ExcludePropertyPredicate = std::function<bool(const Property&)>;
+    using ResetFunction = std::function<void()>;
 
     Settings(QObject* parent = nullptr);
     ~Settings();
@@ -45,7 +45,9 @@ public:
     GroupIndex addGroup(TextId identifier);
     GroupIndex addGroup(QByteArray identifier);
     void setGroupTitle(GroupIndex index, const QString& title);
-    void addGroupResetFunction(GroupIndex index, GroupResetFunction fn);
+
+    void addResetFunction(GroupIndex index, ResetFunction fn);
+    void addResetFunction(SectionIndex index, ResetFunction fn);
 
     int sectionCount(GroupIndex index) const;
     QByteArray sectionIdentifier(SectionIndex index) const;
@@ -61,8 +63,9 @@ public:
     SettingIndex addSetting(Property* property, GroupIndex index);
     SettingIndex addSetting(Property* property, SectionIndex index);
 
-    void resetGroup(GroupIndex index);
     void resetAll();
+    void resetGroup(GroupIndex index);
+    void resetSection(SectionIndex index);
 
     // Helpers
 
@@ -71,8 +74,8 @@ public:
     void setLocale(const QLocale& locale);
 
 signals:
-    void changed(Property* setting);
-    void enabled(Property* setting, bool on);
+    void changed(Mayo::Property* setting);
+    void enabled(Mayo::Property* setting, bool on);
 
 protected:
     void onPropertyChanged(Property* prop) override;

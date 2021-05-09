@@ -9,6 +9,7 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
+#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/io_format.h"
 #include "../base/io_system.h"
@@ -214,6 +215,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     m_ui->actionToggleLeftSidebar->setChecked(m_ui->widget_Left->isVisible());
     m_ui->actionToggleFullscreen->setChecked(this->isFullScreen());
     m_ui->actionToggleOriginTrihedron->setChecked(false);
+    m_ui->actionTogglePerformanceStats->setChecked(false);
 
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
@@ -280,6 +282,9 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionToggleOriginTrihedron, &QAction::toggled,
                 this, &MainWindow::toggleCurrentDocOriginTrihedron);
+    QObject::connect(
+                m_ui->actionTogglePerformanceStats, &QAction::toggled,
+                this, &MainWindow::toggleCurrentDocPerformanceStats);
     QObject::connect(
                 m_ui->actionZoomIn, &QAction::triggered,
                 this, &MainWindow::zoomInCurrentDoc);
@@ -561,6 +566,16 @@ void MainWindow::toggleCurrentDocOriginTrihedron()
     }
 }
 
+void MainWindow::toggleCurrentDocPerformanceStats()
+{
+    WidgetGuiDocument* widget = this->currentWidgetGuiDocument();
+    GuiDocument* guiDoc = widget ? widget->guiDocument() : nullptr;
+    if (guiDoc) {
+        CppUtils::toggle(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
+        guiDoc->graphicsScene()->redraw();
+    }
+}
+
 void MainWindow::zoomInCurrentDoc()
 {
     this->currentWidgetGuiDocument()->controller()->zoomIn();
@@ -797,6 +812,11 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
             QSignalBlocker sigBlk(m_ui->actionToggleOriginTrihedron); Q_UNUSED(sigBlk);
             m_ui->actionToggleOriginTrihedron->setChecked(guiDoc->isOriginTrihedronVisible());
         }
+        // Sync action with current visibility status of rendering performance stats
+        {
+            QSignalBlocker sigBlk(m_ui->actionTogglePerformanceStats); Q_UNUSED(sigBlk);
+            m_ui->actionTogglePerformanceStats->setChecked(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
+        }
         // Sync menu with current projection type
         {
             const Graphic3d_Camera::Projection viewProjectionType =
@@ -813,6 +833,7 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     }
     else {
         m_ui->actionToggleOriginTrihedron->setChecked(false);
+        m_ui->actionTogglePerformanceStats->setChecked(false);
     }
  }
 
@@ -918,6 +939,7 @@ void MainWindow::updateControlsActivation()
     m_ui->actionProjectionPerspective->setEnabled(!appDocumentsEmpty);
     m_ui->actionDisplayMode->setEnabled(!appDocumentsEmpty);
     m_ui->actionToggleOriginTrihedron->setEnabled(!appDocumentsEmpty);
+    m_ui->actionTogglePerformanceStats->setEnabled(!appDocumentsEmpty);
     m_ui->actionZoomIn->setEnabled(!appDocumentsEmpty);
     m_ui->actionZoomOut->setEnabled(!appDocumentsEmpty);
     m_ui->actionSaveImageView->setEnabled(!appDocumentsEmpty);

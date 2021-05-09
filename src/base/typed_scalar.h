@@ -22,6 +22,10 @@ public:
 
     SCALAR get() const { return m_scalar; }
 
+    bool operator==(const TypedScalar<SCALAR, TAG>& other) const {
+        return m_scalar == other.m_scalar;
+    }
+
 private:
     SCALAR m_scalar;
 };

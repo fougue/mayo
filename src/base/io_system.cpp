@@ -228,12 +228,11 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     };
     auto fnTransfer = [&](const FilePath& fp, const ReaderPtr& reader, TaskProgress* subProgress) {
         subProgress->beginScope(60, tr("Transferring file"));
+        auto _ = gsl::finally([=]{ subProgress->endScope(); });
         if (reader) {
             if (!reader->transfer(doc, subProgress) && !TaskProgress::isAbortRequested(subProgress))
                 fnAddError(fp, tr("File transfer problem"));
         }
-
-        subProgress->endScope();
     };
 
     if (listFilepath.size() == 1) { // Single file case
@@ -256,6 +255,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     &childTaskManager, &TaskManager::progressChanged,
                     [&](TaskId, int) { progress->setValue(childTaskManager.globalProgress()); });
 
+        // Read files
         for (int i = 0; i < int(listFilepath.size()); ++i) {
             TaskData& taskData = vecTaskData[i];
             taskData.filepath = listFilepath[i];
@@ -269,7 +269,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
         // Transfer to document
         int taskDataCount = vecTaskData.size();
-        while (taskDataCount > 0 && (!progress || !progress->isAbortRequested())) {
+        while (taskDataCount > 0 && !progress->isAbortRequested()) {
             auto itTaskData = std::find_if(
                         vecTaskData.begin(), vecTaskData.end(),
                         [&](const TaskData& taskData) {

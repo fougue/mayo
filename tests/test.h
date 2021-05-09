@@ -18,6 +18,8 @@ private slots:
 
     void TextId_test();
 
+    void FilePath_test();
+
     void IO_test();
     void IO_test_data();
     void IO_OccStaticVariablesRollback_test();

@@ -31,7 +31,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (!guiDoc)
         return false;
 
-    if (!std::filesystem::equivalent(this->filepath, guiDoc->document()->filePath()))
+    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
         return false;
 
     if (this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath)) {
