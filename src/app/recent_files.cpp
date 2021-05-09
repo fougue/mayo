@@ -37,11 +37,11 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath)) {
         const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
         const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-        const QColor backgroundColor = mayoTheme()->color(Theme::Color::Palette_Window);
+        const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
         Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
         view->ChangeRenderingParams().IsAntialiasingEnabled = true;
         view->ChangeRenderingParams().NbMsaaSamples = 4;
-        view->SetBackgroundColor(QtGuiUtils::toColor<Quantity_Color>(backgroundColor));
+        view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
 
         auto _ = gsl::finally([=]{
             guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);

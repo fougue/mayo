@@ -86,11 +86,11 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     // 3D view - Set gradient background
+    const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
+    const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
     m_v3dView->SetBgGradientColors(
-                QtGuiUtils::toColor<Quantity_Color>(
-                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart)),
-                QtGuiUtils::toColor<Quantity_Color>(
-                    mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd)),
+                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
+                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
                 Aspect_GFM_VER);
 
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);

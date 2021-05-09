@@ -26,6 +26,11 @@ QColor toQColor(Quantity_NameOfColor c);
 template <typename OTHER_COLOR_TYPE>
 OTHER_COLOR_TYPE toColor(const QColor& c);
 
+template <Quantity_TypeOfColor OTHER_COLOR_TYPE>
+Quantity_Color toColor(const QColor& c);
+
+Quantity_Color toPreferredColorSpace(const QColor& c);
+
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'
 QColor lerp(const QColor& a, const QColor& b, double t);
 
@@ -66,15 +71,21 @@ private:
 
 template <typename OTHER_COLOR_TYPE>
 OTHER_COLOR_TYPE toColor(const QColor& c) {
-    if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_Color>::value) {
+    if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_Color>) {
         return Quantity_Color(c.redF(), c.greenF(), c.blueF(), Quantity_TOC_RGB);
     }
-    if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_ColorRGBA>::value) {
+    if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_ColorRGBA>) {
         return Quantity_ColorRGBA(c.redF(), c.greenF(), c.blueF(), c.alphaF());
     }
-    else if constexpr(std::is_same<OTHER_COLOR_TYPE, Quantity_NameOfColor>::value) {
+    else if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_NameOfColor>) {
         return QtGuiUtils::toColor<Quantity_Color>(c).Name();
     }
+}
+
+template <Quantity_TypeOfColor OTHER_COLOR_TYPE>
+Quantity_Color toColor(const QColor& c)
+{
+    return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OTHER_COLOR_TYPE);
 }
 
 } // namespace QtGuiUtils
