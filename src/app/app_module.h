@@ -10,10 +10,12 @@
 
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/occ_brep_mesh_parameters.h"
 #include "../base/occt_enums.h"
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/property_value_conversion.h"
 #include "../base/qtcore_hfuncs.h"
 #include "../base/settings_index.h"
 #include "../base/string_utils.h"
@@ -23,6 +25,8 @@
 #include <unordered_map>
 #include <vector>
 
+class TopoDS_Shape;
+
 namespace Mayo {
 
 class GuiApplication;
@@ -31,7 +35,8 @@ class GuiDocument;
 class AppModule :
         public QObject,
         public PropertyGroup,
-        public IO::ParametersProvider
+        public IO::ParametersProvider,
+        public PropertyValueConversion
 {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
@@ -52,9 +57,15 @@ public:
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
 
-    // -- from IO::ParametersProvider
+    OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
+
+    // from IO::ParametersProvider
     const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
     const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
+
+    // from PropertyValueConversion
+    QVariant toVariant(const Property& prop) const override;
+    bool fromVariant(Property* prop, const QVariant& variant) const override;
 
     // System
     const Settings_GroupIndex groupId_system;
@@ -68,6 +79,13 @@ public:
     PropertyQString lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyQString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
+    // Meshing
+    const Settings_GroupIndex groupId_meshing;
+    enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
+    PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
+    PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
+    PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
+    PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
     const Settings_GroupIndex groupId_graphics;
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
@@ -85,7 +103,7 @@ public:
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
 
 protected:
-    // -- from PropertyGroup
+    // from PropertyGroup
     void onPropertyChanged(Property* prop) override;
 
 private:

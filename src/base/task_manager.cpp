@@ -7,6 +7,7 @@
 #include "task_manager.h"
 #include "math_utils.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QCoreApplication>
 #include <cassert>
 
@@ -21,6 +22,21 @@ TaskManager::TaskManager(QObject* parent)
         qRegisterMetaType<TaskId>("TaskId");
         staticTypesRegistered = true;
     }
+}
+
+TaskManager::~TaskManager()
+{
+    // Make sure all tasks are really finished
+    for (const auto& mapPair : m_mapEntity) {
+        const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
+        if (ptrEntity->control.valid())
+            ptrEntity->control.wait();
+    }
+
+    // Erase the task from its container before destruction, this will allow TaskProgress destructor
+    // to behave correctly(it calls TaskProgress::setValue())
+    for (auto it = m_mapEntity.begin(); it != m_mapEntity.end(); )
+        it = m_mapEntity.erase(it);
 }
 
 TaskManager* TaskManager::globalInstance()
@@ -39,9 +55,7 @@ TaskId TaskManager::newTask(TaskJob fn)
     ptrEntity->task.m_id = taskId;
     ptrEntity->task.m_fn = std::move(fn);
     ptrEntity->task.m_manager = this;
-    const TaskProgress progress(ptrEntity->task);
-    ptrEntity->taskProgress = std::move(progress);
-    ptrEntity->isGarbage = false;
+    ptrEntity->taskProgress.setTask(&ptrEntity->task);
     m_mapEntity.insert({ taskId, std::move(ptrEntity) });
     return taskId;
 }
@@ -53,14 +67,14 @@ void TaskManager::run(TaskId id, TaskAutoDestroy autoDestroy)
     if (!entity)
         return;
 
+    entity->isFinished = false;
+    entity->autoDestroy = autoDestroy;
     entity->control = std::async([=]{
         emit this->started(id);
         const TaskJob& fn = entity->task.job();
         fn(&entity->taskProgress);
         emit this->ended(id);
-        if (autoDestroy == TaskAutoDestroy::On) {
-            entity->isGarbage = true;
-        }
+        entity->isFinished = true;
     });
 }
 
@@ -101,12 +115,13 @@ int TaskManager::globalProgress() const
     int taskAccumPct = 0;
     for (const auto& mapPair : m_mapEntity) {
         const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
-        if (ptrEntity->taskProgress.value())
+        if (ptrEntity->taskProgress.value() > 0)
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
     const int taskCount = m_mapEntity.size();
     const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
+    //qDebug() << "taskCount=" << taskCount << " taskAccumPct=" << taskAccumPct << " newGlobalPct=" << newGlobalPct;
     return newGlobalPct;
 }
 
@@ -140,10 +155,15 @@ void TaskManager::cleanGarbage()
     auto it = m_mapEntity.begin();
     while (it != m_mapEntity.end()) {
         Entity* entity = it->second.get();
-        if (entity->isGarbage.load())
+        if (entity->isFinished && entity->autoDestroy == TaskAutoDestroy::On) {
+            if (entity->control.valid())
+                entity->control.wait();
+
             it = m_mapEntity.erase(it);
-        else
+        }
+        else {
             ++it;
+        }
     }
 }
 

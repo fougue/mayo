@@ -10,7 +10,6 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/scope_import.h"
 #include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
@@ -34,21 +33,19 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
                 TKernelUtils::start(indicator));
 }
 
-bool OccBRepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_shape.IsNull())
-        return false;
+        return {};
 
-    XCafScopeImport import(doc);
     const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
     CafUtils::setLabelAttrStdName(labelShape, filepathTo<QString>(m_baseFilename));
-    progress->setValue(100);
-    return true;
+    return CafUtils::makeLabelSequence({ labelShape });
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 
@@ -78,7 +75,6 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
         m_shape = vecShape.front();
     }
 
-    progress->setValue(100);
     return true;
 }
 

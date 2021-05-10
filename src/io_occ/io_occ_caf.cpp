@@ -5,9 +5,9 @@
 ****************************************************************************/
 
 #include "io_occ_caf.h"
+#include "../base/global.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/scope_import.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -24,19 +24,18 @@ namespace IO {
 namespace {
 
 template<typename CAF_READER>
-bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgress* progress)
+bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgress* /*progress*/)
 {
     //readFile_prepare(reader);
     const IFSelect_ReturnStatus error = reader.ReadFile(filepath.u8string().c_str());
-    progress->setValue(100);
     return error == IFSelect_RetDone;
 }
 
 template<typename CAF_READER>
-bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    XCafScopeImport import(doc);
+    const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
     Handle_TDocStd_Document stdDoc = doc;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
@@ -46,8 +45,8 @@ bool cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* p
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
     const bool okTransfer = reader.Transfer(stdDoc);
 #endif
-    import.setConfirmation(okTransfer && !TaskProgress::isAbortRequested(progress));
-    return okTransfer;
+    MAYO_UNUSED(okTransfer);
+    return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 
 template<typename CAF_WRITER>
@@ -99,11 +98,11 @@ bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskPr
     return cafGenericReadFile(reader, filepath, progress);
 }
 
-bool cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 
-bool cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 

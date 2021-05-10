@@ -7,7 +7,6 @@
 #include "io_occ_base_mesh.h"
 
 #include "../base/document.h"
-#include "../base/scope_import.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/task_progress.h"
 #include "../base/string_utils.h"
@@ -67,22 +66,20 @@ OccBaseMeshReaderProperties::LengthUnit OccBaseMeshReaderProperties::lengthUnit(
     return LengthUnit::Undefined;
 }
 
-bool OccBaseMeshReader::readFile(const FilePath& filepath, TaskProgress* progress)
+bool OccBaseMeshReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
     m_filepath = filepath;
-    progress->setValue(100);
     return true;
 }
 
-bool OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     this->applyParameters();
     m_reader.SetDocument(doc);
+    const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    XCafScopeImport import(doc);
-    const bool okPerform = m_reader.Perform(m_filepath.u8string().c_str(), TKernelUtils::start(indicator));
-    import.setConfirmation(okPerform && !TaskProgress::isAbortRequested(progress));
-    return okPerform;
+    m_reader.Perform(m_filepath.u8string().c_str(), TKernelUtils::start(indicator));
+    return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 
 void OccBaseMeshReader::applyProperties(const PropertyGroup* params)

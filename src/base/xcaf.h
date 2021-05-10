@@ -62,6 +62,9 @@ public:
 
     static ValidationProperties validationProperties(const TDF_Label& lbl);
 
+    // Returns labels of the top-level free shapes that were not found in 'seqOther'
+    TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
+
 private:
     XCaf() = default;
 

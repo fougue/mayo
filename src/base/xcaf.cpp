@@ -12,6 +12,7 @@
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_Volume.hxx>
+#include <set>
 
 namespace Mayo {
 
@@ -238,6 +239,27 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
     }
 
     return props;
+}
+
+TDF_LabelSequence XCaf::diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const
+{
+    const TDF_LabelSequence& seqBefore = seqOther;
+    const TDF_LabelSequence seqAfter = this->topLevelFreeShapes();
+    std::set<int> setBeforeTag;
+    const TDF_Label firstBeforeLabel = !seqBefore.IsEmpty() ? seqBefore.First() : TDF_Label();
+    for (const TDF_Label& label : seqBefore) {
+        Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
+        setBeforeTag.insert(label.Tag());
+    }
+
+    TDF_LabelSequence seqDiff;
+    for (const TDF_Label& label : seqAfter) {
+        Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
+        if (setBeforeTag.find(label.Tag()) == setBeforeTag.cend())
+            seqDiff.Append(label);
+    }
+
+    return seqDiff;
 }
 
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)

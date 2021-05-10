@@ -115,14 +115,21 @@ public:
 
 OccStepReader::OccStepReader()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_reader = new(&m_readerStorage) STEPCAFControl_Reader();
     STEPCAFControl_Controller::Init();
-    m_reader.SetColorMode(true);
-    m_reader.SetNameMode(true);
-    m_reader.SetLayerMode(true);
-    m_reader.SetPropsMode(true);
-    m_reader.SetGDTMode(true);
-    m_reader.SetMatMode(true);
-    m_reader.SetViewMode(true);
+    m_reader->SetColorMode(true);
+    m_reader->SetNameMode(true);
+    m_reader->SetLayerMode(true);
+    m_reader->SetPropsMode(true);
+    m_reader->SetGDTMode(true);
+    m_reader->SetMatMode(true);
+    m_reader->SetViewMode(true);
+}
+
+OccStepReader::~OccStepReader()
+{
+    m_reader->~STEPCAFControl_Reader();
 }
 
 bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
@@ -130,15 +137,15 @@ bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafReadFile(m_reader, filepath, progress);
+    return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
-bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_reader, doc, progress);
+    return Private::cafTransfer(*m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccStepReader::createProperties(PropertyGroup* parentGroup)
@@ -296,7 +303,7 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     return Private::cafTransfer(m_writer, appItems, progress);
 }
 
-bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -313,7 +320,6 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
 
     const IFSelect_ReturnStatus err = m_writer.Write(filepath.u8string().c_str());
-    progress->setValue(100);
     return err == IFSelect_RetDone;
 }
 

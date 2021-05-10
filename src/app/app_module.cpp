@@ -7,6 +7,7 @@
 #include "app_module.h"
 
 #include "../base/application.h"
+#include "../base/bnd_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
@@ -16,6 +17,7 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 
+#include <BRepBndLib.hxx>
 #include <QtCore/QDir>
 #include <iterator>
 
@@ -34,6 +36,7 @@ AppModule::AppModule(Application* app)
       sectionId_systemUnits(app->settings()->addSection(this->groupId_system, textId("units"))),
       groupId_application(app->settings()->addGroup(textId("application"))),
       language(this, textId("language"), enumLanguages),
+      groupId_meshing(app->settings()->addGroup(textId("meshing"))),
       groupId_graphics(app->settings()->addGroup(textId("graphics"))),
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
@@ -67,6 +70,26 @@ AppModule::AppModule(Application* app)
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
+
+    // Meshing
+    this->meshingQuality.setDescription(
+                tr("Controls precision of the mesh to be computed from the BRep shape"));
+    this->meshingQuality.mutableEnumeration().changeTrContext(AppModule::textIdContext());
+    this->meshingChordalDeflection.setDescription(
+                tr("For the tesselation of faces the chordal deflection limits the distance between "
+                   "a curve and its tessellation"));
+    this->meshingAngularDeflection.setDescription(
+                tr("For the tesselation of faces the angular deflection limits the angle between "
+                   "subsequent segments in a polyline"));
+    this->meshingRelative.setDescription(
+                tr("Relative computation of edge tolerance\n\n"
+                   "If activated, deflection used for the polygonalisation of each edge will be "
+                   "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+                   "the maximum deflection of their edges."));
+    settings->addSetting(&this->meshingQuality, this->groupId_meshing);
+    settings->addSetting(&this->meshingChordalDeflection, this->groupId_meshing);
+    settings->addSetting(&this->meshingAngularDeflection, this->groupId_meshing);
+    settings->addSetting(&this->meshingRelative, this->groupId_meshing);
 
     // Graphics
     this->defaultShowOriginTrihedron.setDescription(
@@ -137,6 +160,12 @@ AppModule::AppModule(Application* app)
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
     });
+    settings->addResetFunction(this->groupId_meshing, [&]{
+        this->meshingQuality.setValue(BRepMeshQuality::Normal);
+        this->meshingChordalDeflection.setQuantity(1 * Quantity_Millimeter);
+        this->meshingAngularDeflection.setQuantity(20 * Quantity_Degree);
+        this->meshingRelative.setValue(false);
+    });
     settings->addResetFunction(this->sectionId_graphicsClipPlanes, [=]{
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
@@ -188,6 +217,35 @@ const PropertyGroup* AppModule::findWriterParameters(const IO::Format& format) c
 {
     auto it = m_mapFormatWriterParameters.find(format.identifier);
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
+}
+
+QVariant AppModule::toVariant(const Property& prop) const
+{
+    if (isType<PropertyRecentFiles>(prop)) {
+        const auto& filesProp = constRef<PropertyRecentFiles>(prop);
+        QByteArray blob;
+        QDataStream stream(&blob, QIODevice::WriteOnly);
+        stream << filesProp.value();
+        return blob;
+    }
+    else {
+        return PropertyValueConversion::toVariant(prop);
+    }
+}
+
+bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
+{
+    if (isType<PropertyRecentFiles>(prop)) {
+        const QByteArray blob = variant.toByteArray();
+        QDataStream stream(blob);
+        RecentFiles recentFiles;
+        stream >> recentFiles;
+        ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
+        return true;
+    }
+    else {
+        return PropertyValueConversion::fromVariant(prop, variant);
+    }
 }
 
 void AppModule::prependRecentFile(const FilePath& fp)
@@ -270,6 +328,66 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
     this->recentFiles.setValue(newListRecentFile);
 }
 
+static QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
+{
+    // Excerpted from Prs3d::GetDeflection(...)
+    constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
+
+    Bnd_Box bndBox;
+    constexpr bool useTriangulation = true;
+    BRepBndLib::Add(shape, bndBox, !useTriangulation);
+    if (bndBox.IsVoid())
+        return baseDeviation;
+
+    if (BndUtils::isOpen(bndBox)) {
+        if (!BndUtils::hasFinitePart(bndBox))
+            return baseDeviation;
+
+        bndBox = BndUtils::finitePart(bndBox);
+    }
+
+    const auto coords = BndBoxCoords::get(bndBox);
+    const gp_XYZ diag = coords.maxVertex().XYZ() - coords.minVertex().XYZ();
+    const double diagMaxComp = std::max({ diag.X(), diag.Y(), diag.Z() });
+    return 4 * diagMaxComp * baseDeviation;
+}
+
+OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) const
+{
+    OccBRepMeshParameters params;
+    params.InParallel = true;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    params.AllowQualityDecrease = true;
+#endif
+    if (this->meshingQuality == BRepMeshQuality::UserDefined) {
+        params.Deflection = UnitSystem::meters(this->meshingChordalDeflection.quantity());
+        params.Angle = UnitSystem::radians(this->meshingAngularDeflection.quantity());
+        params.Relative = this->meshingRelative;
+    }
+    else {
+        struct Coefficients {
+            double chordalDeflection;
+            double angularDeflection;
+        };
+        auto fnCoefficients = [](BRepMeshQuality meshQuality) -> Coefficients {
+            switch (meshQuality) {
+            case BRepMeshQuality::VeryCoarse: return { 8, 4 };
+            case BRepMeshQuality::Coarse: return { 4, 2 };
+            case BRepMeshQuality::Normal: return { 1, 1 };
+            case BRepMeshQuality::Precise: return { 1/4., 1/2. };
+            case BRepMeshQuality::VeryPrecise: return { 1/8., 1/4. };
+            case BRepMeshQuality::UserDefined: return { -1, -1 };
+            }
+            return { 1, 1 };
+        };
+        const Coefficients coeffs = fnCoefficients(this->meshingQuality);
+        params.Deflection = UnitSystem::meters(coeffs.chordalDeflection * shapeChordalDeflection(shape));
+        params.Angle = UnitSystem::radians(coeffs.angularDeflection * (20 * Quantity_Degree));
+    }
+
+    return params;
+}
+
 AppModule* AppModule::get(const ApplicationPtr& app)
 {
     if (app)
@@ -293,6 +411,12 @@ void AppModule::onPropertyChanged(Property* prop)
         values.showEdges = this->meshDefaultsShowEdges.value();
         values.showNodes = this->meshDefaultsShowNodes.value();
         GraphicsMeshObjectDriver::setDefaultValues(values);
+    }
+    else if (prop == &this->meshingQuality) {
+        const bool isUserDefined = this->meshingQuality.value() == BRepMeshQuality::UserDefined;
+        this->meshingChordalDeflection.setEnabled(isUserDefined);
+        this->meshingAngularDeflection.setEnabled(isUserDefined);
+        this->meshingRelative.setEnabled(isUserDefined);
     }
 
     PropertyGroup::onPropertyChanged(prop);

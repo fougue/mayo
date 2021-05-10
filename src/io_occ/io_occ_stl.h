@@ -18,7 +18,7 @@ namespace IO {
 class OccStlReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
 private:
     Handle_Poly_Triangulation m_mesh;

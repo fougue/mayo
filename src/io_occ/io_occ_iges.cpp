@@ -91,10 +91,17 @@ public:
 
 OccIgesReader::OccIgesReader()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_reader = new(&m_readerStorage) IGESCAFControl_Reader();
     IGESControl_Controller::Init();
-    m_reader.SetColorMode(true);
-    m_reader.SetNameMode(true);
-    m_reader.SetLayerMode(true);
+    m_reader->SetColorMode(true);
+    m_reader->SetNameMode(true);
+    m_reader->SetLayerMode(true);
+}
+
+OccIgesReader::~OccIgesReader()
+{
+    m_reader->~IGESCAFControl_Reader();
 }
 
 bool OccIgesReader::readFile(const FilePath& filepath, TaskProgress* progress)
@@ -102,15 +109,15 @@ bool OccIgesReader::readFile(const FilePath& filepath, TaskProgress* progress)
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafReadFile(m_reader, filepath, progress);
+    return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
-bool OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_reader, doc, progress);
+    return Private::cafTransfer(*m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccIgesReader::createProperties(PropertyGroup* parentGroup)
@@ -184,14 +191,13 @@ bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     return Private::cafTransfer(m_writer, appItems, progress);
 }
 
-bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
     m_writer.ComputeModel();
     const bool ok = m_writer.Write(filepath.u8string().c_str());
-    progress->setValue(100);
     return ok;
 }
 

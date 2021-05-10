@@ -7,9 +7,8 @@
 #pragma once
 
 #include "property.h"
+#include "property_value_conversion.h"
 #include "settings_index.h"
-#include "string_utils.h"
-#include "unit_system.h"
 
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
@@ -38,6 +37,9 @@ public:
     void loadPropertyFrom(const QSettings& source, SettingIndex index);
     void loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude = nullptr);
     void saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude = nullptr);
+
+    const PropertyValueConversion& propertyValueConversion() const;
+    void setPropertyValueConversion(const PropertyValueConversion& conv);
 
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;

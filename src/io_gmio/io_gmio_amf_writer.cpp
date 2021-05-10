@@ -36,7 +36,8 @@ namespace {
 
 bool gmio_taskIsStopRequested(void* cookie)
 {
-    return TaskProgress::isAbortRequested(static_cast<const TaskProgress*>(cookie));
+    auto progress = static_cast<const TaskProgress*>(cookie);
+    return progress ? progress->isAbortRequested() : false;
 }
 
 void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
@@ -45,8 +46,7 @@ void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
     if (progress && maxValue > 0) {
         const auto pctNorm = value / double(maxValue);
         const auto pct = qRound(pctNorm * 100);
-        if (pct >= (progress->value() + 5))
-            progress->setValue(pct);
+        progress->setValue(pct);
     }
 }
 

@@ -84,9 +84,6 @@ public:
     const TextId& name() const;
     QString label() const;
 
-    virtual QVariant valueAsVariant() const = 0;
-    virtual Result<void> setValueFromVariant(const QVariant& value) = 0; // TODO Remove use of Result<>
-
     const QString& description() const { return m_description; }
     void setDescription(const QString& text) { m_description = text; }
 

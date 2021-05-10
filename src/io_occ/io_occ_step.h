@@ -14,6 +14,8 @@
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
 
+#include <type_traits>
+
 namespace Mayo {
 namespace IO {
 
@@ -23,9 +25,10 @@ class OccStaticVariablesRollback;
 class OccStepReader : public Reader {
 public:
     OccStepReader();
+    ~OccStepReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     // Parameters
 
@@ -96,7 +99,8 @@ private:
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
-    STEPCAFControl_Reader m_reader;
+    STEPCAFControl_Reader* m_reader = nullptr;
+    std::aligned_storage_t<sizeof(STEPCAFControl_Reader)> m_readerStorage;
     Parameters m_params;
 };
 

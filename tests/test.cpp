@@ -18,6 +18,9 @@
 #include "../src/base/libtree.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/meta_enum.h"
+#include "../src/base/property_builtins.h"
+#include "../src/base/property_enumeration.h"
+#include "../src/base/property_value_conversion.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
@@ -43,6 +46,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -156,6 +160,90 @@ void Test::FilePath_test()
         const FilePath testPath = filepathFrom(testPathQt);
         QCOMPARE(filepathTo<QString>(testPath), testPathQt);
     }
+}
+
+void Test::PropertyValueConversion_test()
+{
+    QFETCH(QString, strPropertyName);
+    QFETCH(QVariant, variantValue);
+
+    std::unique_ptr<Property> prop;
+    if (strPropertyName == PropertyBool::TypeName) {
+        prop.reset(new PropertyBool(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyInt::TypeName) {
+        prop.reset(new PropertyInt(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyDouble::TypeName) {
+        prop.reset(new PropertyDouble(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyQString::TypeName) {
+        prop.reset(new PropertyQString(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyOccColor::TypeName) {
+        prop.reset(new PropertyOccColor(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyEnumeration::TypeName) {
+        enum class MayoTest_Color { Bleu, Blanc, Rouge };
+        prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
+    }
+
+    QVERIFY(prop);
+
+    PropertyValueConversion conv;
+    QVERIFY(conv.fromVariant(prop.get(), variantValue));
+    QCOMPARE(conv.toVariant(*prop.get()), variantValue);
+}
+
+void Test::PropertyValueConversion_test_data()
+{
+    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<QVariant>("variantValue");
+    QTest::newRow("bool(false)") << PropertyBool::TypeName << QVariant(false);
+    QTest::newRow("bool(true)") << PropertyBool::TypeName << QVariant(true);
+    QTest::newRow("int(-50)") << PropertyInt::TypeName << QVariant(-50);
+    QTest::newRow("int(1979)") << PropertyInt::TypeName << QVariant(1979);
+    QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << QVariant(-1e6);
+    QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << QVariant(3.1415926535);
+    QTest::newRow("QString(\"test\")") << PropertyQString::TypeName << QVariant("test");
+    QTest::newRow("QString(\"1558\")") << PropertyQString::TypeName << QVariant(1558);
+    QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << QVariant("#0000AA");
+    QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << QVariant("#FFFFFF");
+    QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << QVariant("#BB0000");
+    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << QVariant("Blanc");
+}
+
+void Test::PropertyQuantityValueConversion_test()
+{
+    QFETCH(QString, strPropertyName);
+    QFETCH(QVariant, variantFrom);
+    QFETCH(QVariant, variantTo);
+
+    std::unique_ptr<Property> prop;
+    if (strPropertyName == "PropertyLength") {
+        prop.reset(new PropertyLength(nullptr, {}));
+    }
+    else if (strPropertyName == "PropertyAngle") {
+        prop.reset(new PropertyAngle(nullptr, {}));
+    }
+
+    QVERIFY(prop);
+
+    PropertyValueConversion conv;
+    conv.setDoubleToStringPrecision(7);
+    QVERIFY(conv.fromVariant(prop.get(), variantFrom));
+    QCOMPARE(conv.toVariant(*prop.get()), variantTo);
+}
+
+void Test::PropertyQuantityValueConversion_test_data()
+{
+    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<QVariant>("variantFrom");
+    QTest::addColumn<QVariant>("variantTo");
+    QTest::newRow("Length(25mm)") << "PropertyLength" << QVariant("25mm") << QVariant("25mm");
+    QTest::newRow("Length(2m)") << "PropertyLength" << QVariant("2m") << QVariant("2000mm");
+    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << QVariant("1.57079rad") << QVariant("1.57079rad");
+    QTest::newRow("Length(90°)") << "PropertyAngle" << QVariant("90°") << QVariant("1.570796rad");
 }
 
 void Test::IO_test()
@@ -662,15 +750,17 @@ void Test::LibTask_test()
 
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        progress->beginScope(40);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgress subProgress(progress, 40);
+            for (int i = 0; i <= 100; ++i)
+                subProgress.setValue(i);
+        }
 
-        progress->beginScope(60);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgress subProgress(progress, 60);
+            for (int i = 0; i <= 100; ++i)
+                subProgress.setValue(i);
+        }
     });
     std::vector<ProgressRecord> vecProgressRec;
     QObject::connect(

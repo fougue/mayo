@@ -11,6 +11,8 @@
 #include "../base/application_item_selection_model.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/global.h"
+#include "../base/io_entity_brep_mesh.h"
 #include "../base/io_format.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
@@ -490,10 +492,19 @@ void MainWindow::importInCurrentDoc()
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
+
+        IO::EntityBRepMesh postProcess;
+        postProcess.setProgressPortionSize(20);
+        postProcess.setProgressPortionStep(tr("Mesh BRep shapes"));
+        postProcess.setParametersProvider([=](const TopoDS_Shape& shape) {
+            return AppModule::get(app)->brepMeshParameters(shape);
+        });
+
         const bool okImport = app->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
                 .withParametersProvider(AppModule::get(app))
+                .withEntityPostProcess(&postProcess)
                 .withMessenger(Messenger::defaultInstance())
                 .withTaskProgress(progress)
                 .execute();
@@ -743,7 +754,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
     const int newDocIndex = app->documentCount() - 1;
-    QTimer::singleShot(0, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+    QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 
 void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
@@ -896,17 +907,26 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 chrono.start();
                 DocumentPtr doc;
                 {
-                    std::lock_guard<std::mutex> lock(mutexApp);
+                    std::lock_guard<std::mutex> lock(mutexApp); MAYO_UNUSED(lock);
                     doc = app->newDocument();
                 }
 
                 doc->setName(filepathTo<QString>(fp.stem()));
                 doc->setFilePath(fp);
+
+                IO::EntityBRepMesh postProcess;
+                postProcess.setProgressPortionSize(20);
+                postProcess.setProgressPortionStep(tr("Mesh BRep shapes"));
+                postProcess.setParametersProvider([=](const TopoDS_Shape& shape) {
+                    return AppModule::get(app)->brepMeshParameters(shape);
+                });
+
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
                         .withFilepath(fp)
                         .withParametersProvider(AppModule::get(app))
+                        .withEntityPostProcess(&postProcess)
                         .withMessenger(Messenger::defaultInstance())
                         .withTaskProgress(progress)
                         .execute();
@@ -1021,7 +1041,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
         menu->addAction(action);
 
     // Sync before menu show
-    QObject::connect(menu, &QMenu::aboutToShow, [=]{
+    QObject::connect(menu, &QMenu::aboutToShow, this, [=]{
         action->setChecked(appModule->linkWithDocumentSelector.value());
         if (userActions.fnSyncItems)
             userActions.fnSyncItems();
@@ -1042,12 +1062,12 @@ QMenu* MainWindow::createMenuRecentFiles()
     const RecentFiles& recentFiles = appModule->recentFiles.value();
     for (const RecentFile& recentFile : recentFiles) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(filepathTo<QString>(recentFile.filepath));
-        menu->addAction(entryRecentFile, [=]{ this->openDocument(recentFile.filepath); });
+        menu->addAction(entryRecentFile, this, [=]{ this->openDocument(recentFile.filepath); });
     }
 
     if (!recentFiles.empty()) {
         menu->addSeparator();
-        menu->addAction(tr("Clear menu"), [=]{
+        menu->addAction(tr("Clear menu"), this, [=]{
             menu->clear();
             appModule->recentFiles.setValue({});
         });
@@ -1092,7 +1112,7 @@ QMenu* MainWindow::createMenuDisplayMode()
                 action->setChecked(true);
         }
 
-        QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
+        QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
             guiDoc->setActiveDisplayMode(driver, action->data().toInt());
             guiDoc->graphicsScene()->redraw();
         });

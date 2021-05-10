@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <QtCore/QFlags>
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -33,6 +34,9 @@ const Format Format_OBJ = { "OBJ", "Wavefront OBJ", { "obj" } };
 const Format Format_GLTF = { "GLTF", "glTF(GL Transmission Format)", { "gltf", "glb" } };
 const Format Format_VRML = { "VRML", "VRML(ISO/CEI 14772-2)", { "wrl", "wrz", "vrml" } };
 const Format Format_AMF = { "AMF", "Additive manufacturing file format(ISO/ASTM 52915:2016)", { "amf" } };
+
+bool formatProvidesBRep(const Format& format);
+bool formatProvidesMesh(const Format& format);
 
 } // namespace IO
 } // namespace Mayo

@@ -46,8 +46,10 @@ static bool isValidIdentifier(const QByteArray& identifier)
 class Settings::Private {
 public:
     Private()
-        : m_locale(QLocale::system())
-    {}
+        : m_locale(QLocale::system()),
+          m_propValueConverter(&m_defaultPropValueConverter)
+    {
+    }
 
     Settings_Group& group(Settings::GroupIndex index) {
         return m_vecGroup.at(index.get());
@@ -65,7 +67,7 @@ public:
         return this->sectionPath(this->group(index.group()), this->section(index));
     }
 
-    static void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
+    void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
     {
         if (!property)
             return;
@@ -74,7 +76,7 @@ public:
         const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
         if (source.contains(settingPath)) {
             const QVariant value = source.value(settingPath);
-            property->setValueFromVariant(value);
+            m_propValueConverter->fromVariant(property, value);
         }
     }
 
@@ -82,6 +84,8 @@ public:
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
     std::vector<SectionResetFunction> m_vecSectionResetFn;
+    const PropertyValueConversion m_defaultPropValueConverter;
+    const PropertyValueConversion* m_propValueConverter = nullptr;
 };
 
 Settings::Settings(QObject* parent)
@@ -107,7 +111,7 @@ void Settings::loadFrom(const QSettings& source, const ExcludePropertyPredicate&
             const QString sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (!fnExclude || !fnExclude(*setting.property))
-                    Private::loadPropertyFrom(source, sectionPath, setting.property);
+                    d->loadPropertyFrom(source, sectionPath, setting.property);
             }
         }
     }
@@ -123,7 +127,7 @@ void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
     Property* prop = this->property(index);
     if (prop) {
         const QString sectionPath = d->sectionPath(index.section());
-        Private::loadPropertyFrom(source, sectionPath, prop);
+        d->loadPropertyFrom(source, sectionPath, prop);
     }
 }
 
@@ -151,11 +155,21 @@ void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclu
                 if (!fnExclude || !fnExclude(*prop)) {
                     const QByteArray propKey = prop->name().key;
                     const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                    target->setValue(settingPath, prop->valueAsVariant());
+                    target->setValue(settingPath, d->m_propValueConverter->toVariant(*prop));
                 }
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)
+}
+
+const PropertyValueConversion& Settings::propertyValueConversion() const
+{
+    return *(d->m_propValueConverter);
+}
+
+void Settings::setPropertyValueConversion(const PropertyValueConversion& conv)
+{
+    d->m_propValueConverter = &conv;
 }
 
 int Settings::groupCount() const

@@ -30,9 +30,6 @@ public:
     Result<void> setValue(const T& val);
     operator const T&() const { return this->value(); }
 
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& variant) override;
-
     const char* dynTypeName() const override { return TypeName; }
     static const char TypeName[];
 
@@ -110,9 +107,6 @@ public:
     double quantityValue() const override { return this->quantity().value(); }
     Result<void> setQuantityValue(double v) override;
 
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& variant) override;
-
     QuantityType quantity() const { return m_quantity; }
     Result<void> setQuantity(QuantityType qty);
 
@@ -130,15 +124,7 @@ using PropertyQStringList = GenericProperty<QStringList>;
 using PropertyQDateTime = GenericProperty<QDateTime>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
-
-//using PropertyOccColor = GenericProperty<Quantity_Color>;
-class PropertyOccColor : public GenericProperty<Quantity_Color> {
-public:
-    PropertyOccColor(PropertyGroup* grp, const TextId& name);
-
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& variant) override;
-};
+using PropertyOccColor = GenericProperty<Quantity_Color>;
 
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
 using PropertyArea = GenericPropertyQuantity<Unit::Area>;
@@ -162,20 +148,6 @@ GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
 template<typename T> Result<void> GenericProperty<T>::setValue(const T& val)
 {
     return Property::setValueHelper(this, &m_value, val);
-}
-
-template<typename T> QVariant GenericProperty<T>::valueAsVariant() const
-{
-    return QVariant::fromValue(this->value());
-}
-
-template<typename T>
-Result<void> GenericProperty<T>::setValueFromVariant(const QVariant& variant)
-{
-    if (variant.canConvert<T>())
-        return this->setValue(variant.value<T>());
-    else
-        return Result<void>::error("Incompatible type");
 }
 
 // PropertyScalarConstraints<>
@@ -221,21 +193,6 @@ template<Unit UNIT>
 Result<void> GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 {
     return this->setQuantity(QuantityType(v));
-}
-
-template<Unit UNIT>
-QVariant GenericPropertyQuantity<UNIT>::valueAsVariant() const
-{
-    return QVariant::fromValue(this->quantity());
-}
-
-template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setValueFromVariant(const QVariant& variant)
-{
-    if (variant.canConvert<QuantityType>())
-        return this->setQuantity(variant.value<QuantityType>());
-    else
-        return Result<void>::error("Incompatible quantity type");
 }
 
 template<Unit UNIT>

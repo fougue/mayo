@@ -169,6 +169,7 @@ static int runApp(QApplication* qtApp)
 
     // Register AppModule
     auto appModule = new AppModule(app);
+    app->settings()->setPropertyValueConversion(*appModule);
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
                 appModule, &AppModule::recordRecentFileThumbnail);

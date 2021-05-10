@@ -37,9 +37,6 @@ public:
     Result<void> setValue(Enumeration::Value value);
     Result<void> setValueByName(const QByteArray& name);
 
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& value) override;
-
     const char* dynTypeName() const override;
     static const char TypeName[];
 

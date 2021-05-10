@@ -11,7 +11,6 @@
 #include "../base/caf_utils.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
-#include "../base/scope_import.h"
 #include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
@@ -74,16 +73,15 @@ bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return !m_mesh.IsNull();
 }
 
-bool OccStlReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_mesh.IsNull())
-        return false;
+        return {};
 
-    SingleScopeImport import(doc);
-    TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
-    CafUtils::setLabelAttrStdName(import.entityLabel(), filepathTo<QString>(m_baseFilename));
-    progress->setValue(100);
-    return true;
+    const TDF_Label entityLabel = doc->newEntityLabel();
+    TDataXtd_Triangulation::Set(entityLabel, m_mesh);
+    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<QString>(m_baseFilename));
+    return CafUtils::makeLabelSequence({ entityLabel });
 }
 
 bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)

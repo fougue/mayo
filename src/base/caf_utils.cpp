@@ -52,4 +52,13 @@ bool CafUtils::hasAttribute(const TDF_Label& label, const Standard_GUID& attrGui
     return label.FindAttribute(attrGuid, attr);
 }
 
+TDF_LabelSequence CafUtils::makeLabelSequence(std::initializer_list<TDF_Label> listLabel)
+{
+    TDF_LabelSequence seqLabel;
+    for (const TDF_Label& label : listLabel)
+        seqLabel.Append(label);
+
+    return seqLabel;
+}
+
 } // namespace Mayo
