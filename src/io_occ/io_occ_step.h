@@ -108,6 +108,7 @@ private:
 class OccStepWriter : public Writer {
 public:
     OccStepWriter();
+    ~OccStepWriter();
 
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
@@ -153,7 +154,8 @@ private:
     void changeStaticVariables(OccStaticVariablesRollback* rollback);
 
     class Properties;
-    STEPCAFControl_Writer m_writer;
+    STEPCAFControl_Writer* m_writer = nullptr;
+    std::aligned_storage_t<sizeof(STEPCAFControl_Writer)> m_writerStorage;
     Parameters m_params;
 };
 

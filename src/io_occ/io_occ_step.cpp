@@ -286,13 +286,20 @@ public:
 
 OccStepWriter::OccStepWriter()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_writer = new(&m_writerStorage) STEPCAFControl_Writer();
     STEPCAFControl_Controller::Init();
-    m_writer.SetColorMode(true);
-    m_writer.SetNameMode(true);
-    m_writer.SetLayerMode(true);
-    m_writer.SetPropsMode(true);
-    m_writer.SetDimTolMode(true);
-    m_writer.SetMaterialMode(true);
+    m_writer->SetColorMode(true);
+    m_writer->SetNameMode(true);
+    m_writer->SetLayerMode(true);
+    m_writer->SetPropsMode(true);
+    m_writer->SetDimTolMode(true);
+    m_writer->SetMaterialMode(true);
+}
+
+OccStepWriter::~OccStepWriter()
+{
+    m_writer->~STEPCAFControl_Writer();
 }
 
 bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
@@ -300,7 +307,7 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_writer, appItems, progress);
+    return Private::cafTransfer(*m_writer, appItems, progress);
 }
 
 bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
@@ -309,7 +316,7 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
 
-    APIHeaderSection_MakeHeader makeHeader(m_writer.ChangeWriter().Model());
+    APIHeaderSection_MakeHeader makeHeader(m_writer->ChangeWriter().Model());
     makeHeader.SetAuthorValue(
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
     makeHeader.SetOrganizationValue(
@@ -319,7 +326,7 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
     makeHeader.SetDescriptionValue(
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
 
-    const IFSelect_ReturnStatus err = m_writer.Write(filepath.u8string().c_str());
+    const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;
 }
 
@@ -353,7 +360,7 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
         // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
         // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
         // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
-        m_writer.ChangeWriter().Model(true);
+        m_writer->ChangeWriter().Model(true);
     }
 
     rollback->change("write.step.unit", OccCommon::toCafString(m_params.lengthUnit));

@@ -67,6 +67,8 @@ private:
 class OccIgesWriter : public Writer {
 public:
     OccIgesWriter();
+    ~OccIgesWriter();
+
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
@@ -100,7 +102,8 @@ private:
     void changeStaticVariables(OccStaticVariablesRollback* rollback);
 
     class Properties;
-    IGESCAFControl_Writer m_writer;
+    IGESCAFControl_Writer* m_writer = nullptr;
+    std::aligned_storage_t<sizeof(IGESCAFControl_Writer)> m_writerStorage;
     Parameters m_params;
 };
 

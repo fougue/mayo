@@ -177,10 +177,17 @@ public:
 
 OccIgesWriter::OccIgesWriter()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_writer = new(&m_writerStorage) IGESCAFControl_Writer();
     IGESControl_Controller::Init();
-    m_writer.SetColorMode(true);
-    m_writer.SetNameMode(true);
-    m_writer.SetLayerMode(true);
+    m_writer->SetColorMode(true);
+    m_writer->SetNameMode(true);
+    m_writer->SetLayerMode(true);
+}
+
+OccIgesWriter::~OccIgesWriter()
+{
+    m_writer->~IGESCAFControl_Writer();
 }
 
 bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
@@ -188,7 +195,7 @@ bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_writer, appItems, progress);
+    return Private::cafTransfer(*m_writer, appItems, progress);
 }
 
 bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
@@ -196,8 +203,8 @@ bool OccIgesWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    m_writer.ComputeModel();
-    const bool ok = m_writer.Write(filepath.u8string().c_str());
+    m_writer->ComputeModel();
+    const bool ok = m_writer->Write(filepath.u8string().c_str());
     return ok;
 }
 
