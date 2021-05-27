@@ -222,6 +222,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskProgress* progress = nullptr;
         TaskId taskId = 0;
         TDF_LabelSequence seqTransferredEntity;
+        bool readSuccess = false;
         bool transferred = false;
     };
 
@@ -314,7 +315,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             taskData.filepath = listFilepath[&taskData - &vecTaskData.front()];
             taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
                 taskData.progress = progressChild;
-                fnReadFile(taskData);
+                taskData.readSuccess = fnReadFile(taskData);
             });
         }
 
@@ -329,9 +330,12 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             });
 
             if (it != vecTaskData.end()) {
-                fnTransfer(*it);
-                fnPostProcess(*it);
-                fnAddModelTreeEntities(*it);
+                if (it->readSuccess) {
+                    fnTransfer(*it);
+                    fnPostProcess(*it);
+                    fnAddModelTreeEntities(*it);
+                }
+
                 --taskDataCount;
             }
         } // endwhile
