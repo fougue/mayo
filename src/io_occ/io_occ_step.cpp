@@ -100,6 +100,7 @@ public:
         const OccStepReader::Parameters params;
         this->productContext.setValue(params.productContext);
         this->assemblyLevel.setValue(params.assemblyLevel);
+        this->preferredShapeRepresentation.setValue(params.preferredShapeRepresentation);
         this->readShapeAspect.setValue(params.readShapeAspect);
         this->readSubShapesNames.setValue(params.readSubShapesNames);
         this->encoding.setValue(params.encoding);
