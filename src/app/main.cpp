@@ -122,7 +122,9 @@ static void qtMessageHandler(QtMsgType type, const QMessageLogContext& /*context
 //    const char* function = context.function ? context.function : "";
     switch (type) {
     case QtDebugMsg:
+#ifndef NDEBUG
         std::cout << "DEBUG: " << localMsg.constData() << std::endl;
+#endif
         break;
     case QtInfoMsg:
         std::cout << "INFO: " << localMsg.constData() << std::endl;
@@ -234,7 +236,6 @@ static void cli_asyncExportDocuments(
     };
     // Helper function to print in console the progress info of current function
     auto fnPrintProgress = [=]{
-        consoleCursorShow(false);
         consoleCursorMoveUp(helper->lastPrintProgressLineCount);
         helper->lastPrintProgressLineCount = 0;
         std::cout << "\r";
@@ -260,18 +261,17 @@ static void cli_asyncExportDocuments(
                     consoleSetTextColor(ConsoleColor::Default);
             }
 
+            const int printWidth = consoleWidth();
             auto itLineFound = helper->mapTaskLineWidth.find(taskId);
-            const int lineWidthOld = itLineFound != helper->mapTaskLineWidth.cend() ? itLineFound->second : 0;
+            const int lineWidthOld = itLineFound != helper->mapTaskLineWidth.cend() ? itLineFound->second : printWidth - 1;
             for (int i = 0; i < (lineWidthOld - lineWidth); ++i)
                 std::cout << ' ';
 
-            const int printWidth = consoleWidth();
             helper->mapTaskLineWidth.insert_or_assign(taskId, lineWidth);
             helper->lastPrintProgressLineCount += printWidth > 0 ? (lineWidth / printWidth) + 1 : 1;
             std::cout << "\n";
         });
         std::cout.flush();
-        consoleCursorShow(true);
     };
 
     // Show progress/traces corresponding to task events
@@ -382,7 +382,7 @@ static void cli_asyncExportDocuments(
 }
 
 // Initializes and runs Mayo application
-static int runApp(QApplication* qtApp)
+static int runApp(QCoreApplication* qtApp)
 {
     const CommandLineArguments args = processCommandLine();
 
@@ -423,7 +423,7 @@ static int runApp(QApplication* qtApp)
 
         app->settings()->resetAll();
         fnLoadAppSettings(app->settings());
-        QTimer::singleShot(0, qtApp, [&]{
+        QTimer::singleShot(0, qtApp, [=]{
             cli_asyncExportDocuments(app, args, [=](int retcode) { qtApp->exit(retcode); });
         });
         return qtApp->exec();
@@ -450,7 +450,7 @@ static int runApp(QApplication* qtApp)
     // Create MainWindow
     app->settings()->loadProperty(app->settings()->findProperty(&appModule->recentFiles));
     MainWindow mainWindow(guiApp);
-    mainWindow.setWindowTitle(QApplication::applicationName());
+    mainWindow.setWindowTitle(QCoreApplication::applicationName());
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
@@ -469,10 +469,42 @@ static int runApp(QApplication* qtApp)
 int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::qtMessageHandler);
-    QApplication app(argc, argv);
+
+    auto fnIsCliMode = [=]{
+        for (int i = 1; i < argc; ++i) {
+            if (std::strcmp(argv[i], "-e") == 0 || std::strcmp(argv[i], "--export"))
+                return true;
+        }
+        return false;
+    };
+    std::unique_ptr<QCoreApplication> ptrApp(
+            fnIsCliMode() ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
+
+#if defined(Q_OS_WIN) && defined(NDEBUG)
+    if (fnIsCliMode()) {
+        // https://devblogs.microsoft.com/oldnewthing/20090101-00/?p=19643
+        // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
+        if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
+            auto fnRedirectToConsole = [](DWORD hnd, FILE* file, const char* strPath) {
+                if (GetStdHandle(hnd) != INVALID_HANDLE_VALUE) {
+                    freopen(strPath, "w", file);
+                    setvbuf(file, nullptr, _IONBF, 0);
+                }
+            };
+            fnRedirectToConsole(STD_OUTPUT_HANDLE, stdout, "CONOUT$");
+            fnRedirectToConsole(STD_ERROR_HANDLE, stderr, "CONOUT$");
+            std::ios::sync_with_stdio();
+        }
+    }
+#endif
+
     QCoreApplication::setOrganizationName("Fougue Ltd");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-    return Mayo::runApp(&app);
+    const int retcode = Mayo::runApp(ptrApp.get());
+#if defined(Q_OS_WIN) && defined(NDEBUG)
+    Mayo::consoleSendEnterKey();
+#endif
+    return retcode;
 }

@@ -127,4 +127,13 @@ int consoleWidth() {
     return consoleSize().second;
 }
 
+void consoleSendEnterKey()
+{
+#ifdef Q_OS_WIN
+    HWND consoleWnd = GetConsoleWindow();
+    if (IsWindow(consoleWnd))
+        PostMessage(consoleWnd, WM_KEYUP, VK_RETURN, 0);
+#endif
+}
+
 } // namespace Mayo

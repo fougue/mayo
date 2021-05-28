@@ -29,4 +29,8 @@ void consoleCursorShow(bool on);
 std::pair<int, int> consoleSize();
 int consoleWidth();
 
+// Sends "Enter" to the console
+//     Useful to release the command prompt on the parent console when using AttachConsole()
+void consoleSendEnterKey();
+
 } // namespace Mayo

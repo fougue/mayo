@@ -125,7 +125,7 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
                 facesMeshed = false;
         });
         if (!facesMeshed) {
-            qCritical() << "Not all BRep faces are meshed";
+            //qCritical() << "Not all BRep faces are meshed";
             return false;
         }
 
