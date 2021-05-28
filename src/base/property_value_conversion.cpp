@@ -89,6 +89,11 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
     if (!prop)
         return false;
 
+    auto fnError = [=](const QString& text) {
+        qCritical() << QString("[property '%1'] %2").arg(QString::fromUtf8(prop->name().key), text);
+        return false;
+    };
+
     if (isType<PropertyBool>(prop)) {
         return ptr<PropertyBool>(prop)->setValue(variant.toBool());
     }
@@ -99,8 +104,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
         return ptr<PropertyDouble>(prop)->setValue(variant.toDouble());
     }
     else if (isType<PropertyCheckState>(prop)) {
-        qCritical() << "fromVariant() not yet implemented for PropertyCheckState";
-        return false;
+        return fnError("fromVariant() not yet implemented for PropertyCheckState");
     }
     else if (isType<PropertyQByteArray>(prop)) {
         return ptr<PropertyQByteArray>(prop)->setValue(variant.toByteArray());
@@ -115,30 +119,24 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
         return ptr<PropertyQDateTime>(prop)->setValue(variant.toDateTime());
     }
     else if (isType<PropertyOccPnt>(prop)) {
-        qCritical() << "fromVariant() not yet implemented for PropertyOccPnt";
-        return false;
+        return fnError("fromVariant() not yet implemented for PropertyOccPnt");
     }
     else if (isType<PropertyOccTrsf>(prop)) {
-        qCritical() << "fromVariant() not yet implemented for PropertyOccTrsf";
-        return false;
+        return fnError("fromVariant() not yet implemented for PropertyOccTrsf");
     }
     else if (isType<PropertyOccColor>(prop)) {
         auto strColorHex = StringUtils::toUtf8<std::string>(variant.toString());
         Quantity_Color color;
-        if (!TKernelUtils::colorFromHex(strColorHex, &color)) {
-            qCritical() << QString("Not hexadecimal format '%1'").arg(variant.toString());
-            return false;
-        }
+        if (!TKernelUtils::colorFromHex(strColorHex, &color))
+            return fnError(QString("Not hexadecimal format '%1'").arg(variant.toString()));
 
         return ptr<PropertyOccColor>(prop)->setValue(color);
     }
     else if (isType<PropertyEnumeration>(prop)) {
         const QByteArray name = variant.toByteArray();
         const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItem(name);
-        if (!ptrItem) {
-            qCritical() << QString("fromVariant() found no enumeration item for '%1'").arg(variant.toString());
-            return false;
-        }
+        if (!ptrItem)
+            return fnError(QString("fromVariant() found no enumeration item for '%1'").arg(variant.toString()));
 
         return ptr<PropertyEnumeration>(prop)->setValue(ptrItem->value);
     }
@@ -146,15 +144,11 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
         const std::string strQty = variant.toString().toStdString();
         Unit unit;
         const UnitSystem::TranslateResult trRes = UnitSystem::parseQuantity(strQty, &unit);
-        if (!trRes.strUnit || qFuzzyIsNull(trRes.factor)) {
-            qCritical() << QString("fromVariant() failed to parse quantity string '%1'").arg(variant.toString());
-            return false;
-        }
+        if (!trRes.strUnit || qFuzzyIsNull(trRes.factor))
+            return fnError(QString("fromVariant() failed to parse quantity string '%1'").arg(variant.toString()));
 
-        if (unit != Unit::None && unit != ptr<BasePropertyQuantity>(prop)->quantityUnit()) {
-            qCritical() << QString("fromVariant() unit mismatch with quantity string '%1'").arg(variant.toString());
-            return false;
-        }
+        if (unit != Unit::None && unit != ptr<BasePropertyQuantity>(prop)->quantityUnit())
+            return fnError(QString("fromVariant() unit mismatch with quantity string '%1'").arg(variant.toString()));
 
         return ptr<BasePropertyQuantity>(prop)->setQuantityValue(trRes.value * trRes.factor);
     }
