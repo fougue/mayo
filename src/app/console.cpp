@@ -10,7 +10,7 @@
 
 #include <QtCore/QtGlobal>
 
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
 #  include <io.h>
 #  include <windows.h>
 #else
@@ -24,7 +24,7 @@ namespace Mayo {
 void consoleSetTextColor(ConsoleColor color)
 {
     constexpr bool isBrightText = true;
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     auto fnColorFlags = [](ConsoleColor color) {
         switch (color) {
         case ConsoleColor::Black: return 0;
@@ -77,7 +77,7 @@ void consoleCursorMoveUp(int lines)
     if (lines == 0)
         return;
 
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     auto hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout) {
         CONSOLE_SCREEN_BUFFER_INFO buffInfo;
@@ -94,7 +94,7 @@ void consoleCursorMoveUp(int lines)
 
 void consoleCursorShow(bool on)
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout) {
         CONSOLE_CURSOR_INFO cursorInfo;
@@ -109,7 +109,7 @@ void consoleCursorShow(bool on)
 
 std::pair<int, int> consoleSize()
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     CONSOLE_SCREEN_BUFFER_INFO buffInfo;
     int cols, rows;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &buffInfo);
