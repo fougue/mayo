@@ -7,6 +7,7 @@
 #include "io_occ_stl.h"
 
 #include "../base/application_item.h"
+#include "../base/brep_utils.h"
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "../base/occ_progress_indicator.h"
@@ -15,8 +16,9 @@
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
-#include <QtCore/QFileInfo>
+#include <QtCore/QtDebug>
 #include <BRep_Builder.hxx>
+#include <BRepTools.hxx>
 #include <RWStl.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TDataXtd_Triangulation.hxx>
@@ -115,6 +117,18 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
+        bool facesMeshed = true;
+        BRepUtils::forEachSubFace(m_shape, [&](const TopoDS_Face& face) {
+            TopLoc_Location loc;
+            Handle_Poly_Triangulation mesh = BRep_Tool::Triangulation(face, loc);
+            if (mesh.IsNull())
+                facesMeshed = false;
+        });
+        if (!facesMeshed) {
+            qCritical() << "Not all BRep faces are meshed";
+            return false;
+        }
+
         StlAPI_Writer writer;
         writer.ASCIIMode() = m_params.format == Format::Ascii;
         return writer.Write(m_shape, filepath.u8string().c_str());
