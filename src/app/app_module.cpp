@@ -20,6 +20,7 @@
 
 #include <BRepBndLib.hxx>
 #include <QtCore/QDir>
+#include <QtGui/QGuiApplication>
 #include <iterator>
 
 namespace Mayo {
@@ -237,6 +238,9 @@ QVariant AppModule::toVariant(const Property& prop) const
 bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
+        if (qobject_cast<QGuiApplication*>(QCoreApplication::instance()) == nullptr)
+            return true;
+
         const QByteArray blob = variant.toByteArray();
         QDataStream stream(blob);
         RecentFiles recentFiles;
