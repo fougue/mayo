@@ -464,24 +464,39 @@ static int runApp(QCoreApplication* qtApp)
     return code;
 }
 
+static bool isAppCliMode = false;
+static void onQtAppExit()
+{
+#if defined(Q_OS_WIN) && defined(NDEBUG)
+    if (isAppCliMode)
+        consoleSendEnterKey();
+#endif
+}
+
 } // namespace Mayo
 
 int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::qtMessageHandler);
+    qAddPostRoutine(&Mayo::onQtAppExit);
 
-    auto fnIsCliMode = [=]{
-        for (int i = 1; i < argc; ++i) {
-            if (std::strcmp(argv[i], "-e") == 0 || std::strcmp(argv[i], "--export"))
-                return true;
+    auto fnArgEqual = [](const char* arg, const char* option) { return std::strcmp(arg, option) == 0; };
+    for (int i = 1; i < argc; ++i) {
+        const char* arg = argv[i];
+        if (fnArgEqual(arg, "-e") || fnArgEqual(arg, "--export")
+                || fnArgEqual(arg, "-h") || fnArgEqual(arg, "--help")
+                || fnArgEqual(arg, "-v") || fnArgEqual(arg, "--version"))
+        {
+            Mayo::isAppCliMode = true;
+            break;
         }
-        return false;
-    };
+    }
+
     std::unique_ptr<QCoreApplication> ptrApp(
-            fnIsCliMode() ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
+            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
 
 #if defined(Q_OS_WIN) && defined(NDEBUG)
-    if (fnIsCliMode()) {
+    if (Mayo::isAppCliMode) {
         // https://devblogs.microsoft.com/oldnewthing/20090101-00/?p=19643
         // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
         if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
@@ -502,9 +517,5 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-    const int retcode = Mayo::runApp(ptrApp.get());
-#if defined(Q_OS_WIN) && defined(NDEBUG)
-    Mayo::consoleSendEnterKey();
-#endif
-    return retcode;
+    return Mayo::runApp(ptrApp.get());
 }
