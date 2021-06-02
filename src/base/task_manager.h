@@ -26,6 +26,7 @@ public:
 
     TaskId newTask(TaskJob fn);
     void run(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On);
+    void exec(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On); // Synchronous
 
     int progress(TaskId id) const;
     int globalProgress() const;
@@ -35,6 +36,12 @@ public:
 
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
+
+    template<typename FUNCTION>
+    void foreachTask(FUNCTION fn) {
+        for (const auto& mapPair : m_mapEntity)
+            fn(mapPair.first);
+    }
 
 signals:
     void started(Mayo::TaskId id);
@@ -55,6 +62,7 @@ private:
 
     Entity* findEntity(TaskId id);
     const Entity* findEntity(TaskId id) const;
+    void execEntity(Entity* entity);
     void cleanGarbage();
 
     std::atomic<TaskId> m_taskIdSeq = {};

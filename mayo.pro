@@ -50,6 +50,10 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
 }
 
+*win* {
+    LIBS += -lUser32
+}
+
 INCLUDEPATH += \
     src/app \
     src/3rdparty

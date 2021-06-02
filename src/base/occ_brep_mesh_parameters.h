@@ -15,6 +15,8 @@
 
 namespace Mayo {
 
+class TaskProgress;
+
 // Portable alias over parameters for OpenCascade's built-in BRep mesher
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 using OccBRepMeshParameters = IMeshTools_Parameters;

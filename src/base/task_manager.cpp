@@ -69,13 +69,19 @@ void TaskManager::run(TaskId id, TaskAutoDestroy autoDestroy)
 
     entity->isFinished = false;
     entity->autoDestroy = autoDestroy;
-    entity->control = std::async([=]{
-        emit this->started(id);
-        const TaskJob& fn = entity->task.job();
-        fn(&entity->taskProgress);
-        emit this->ended(id);
-        entity->isFinished = true;
-    });
+    entity->control = std::async([=]{ this->execEntity(entity); });
+}
+
+void TaskManager::exec(TaskId id, TaskAutoDestroy autoDestroy)
+{
+    this->cleanGarbage();
+    Entity* entity = this->findEntity(id);
+    if (!entity)
+        return;
+
+    entity->isFinished = false;
+    entity->autoDestroy = autoDestroy;
+    this->execEntity(entity);
 }
 
 bool TaskManager::waitForDone(TaskId id, int msecs)
@@ -148,6 +154,21 @@ const TaskManager::Entity* TaskManager::findEntity(TaskId id) const
 {
     auto it = m_mapEntity.find(id);
     return it != m_mapEntity.cend() ? it->second.get() : nullptr;
+}
+
+void TaskManager::execEntity(Entity* entity)
+{
+    if (!entity)
+        return;
+
+    emit this->started(entity->task.id());
+    const TaskJob& fn = entity->task.job();
+    fn(&entity->taskProgress);
+    if (!entity->taskProgress.isAbortRequested())
+        entity->taskProgress.setValue(100);
+
+    emit this->ended(entity->task.id());
+    entity->isFinished = true;
 }
 
 void TaskManager::cleanGarbage()

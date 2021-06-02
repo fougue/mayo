@@ -52,4 +52,13 @@ inline bool filepathEquivalent(const FilePath& lhs, const FilePath& rhs) {
     }
 }
 
+// Exception-safe version of std::filesystem::is_regular_file()
+inline bool filepathIsRegularFile(const FilePath& fp) {
+    try {
+        return std::filesystem::is_regular_file(fp);
+    } catch (...) {
+        return false;
+    }
+}
+
 } // namespace Mayo

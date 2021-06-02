@@ -40,17 +40,6 @@ Messenger* nullMessenger()
     return NullMessenger::instance();
 }
 
-class NopEntityPostProcess : public System::EntityPostProcess {
-public:
-    bool requiresPostProcess(const Format&) const override { return false; }
-    void perform(const TDF_Label&, TaskProgress*) override {}
-};
-
-System::EntityPostProcess* nullEntityPostProcess() {
-    static NopEntityPostProcess null;
-    return &null;
-}
-
 bool containsFormat(Span<const Format> spanFormat, const Format& format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
@@ -81,24 +70,24 @@ Format System::probeFormat(const FilePath& filepath) const
             if (format != Format_Unknown)
                 return format;
         }
+    }
 
-        // Try to guess from file suffix
-        QString fileSuffix = filepathTo<QString>(filepath.extension());
-        if (fileSuffix.startsWith('.'))
-            fileSuffix.remove(0, 1);
+    // Try to guess from file suffix
+    QString fileSuffix = filepathTo<QString>(filepath.extension());
+    if (fileSuffix.startsWith('.'))
+        fileSuffix.remove(0, 1);
 
-        auto fnMatchFileSuffix = [=](const Format& format) {
-            return format.fileSuffixes.contains(fileSuffix, Qt::CaseInsensitive);
-        };
-        for (const Format& format : m_vecReaderFormat) {
-            if (fnMatchFileSuffix(format))
-                return format;
-        }
+    auto fnMatchFileSuffix = [=](const Format& format) {
+        return format.fileSuffixes.contains(fileSuffix, Qt::CaseInsensitive);
+    };
+    for (const Format& format : m_vecReaderFormat) {
+        if (fnMatchFileSuffix(format))
+            return format;
+    }
 
-        for (const Format& format : m_vecWriterFormat) {
-            if (fnMatchFileSuffix(format))
-                return format;
-        }
+    for (const Format& format : m_vecWriterFormat) {
+        if (fnMatchFileSuffix(format))
+            return format;
     }
 
     return Format_Unknown;
@@ -210,7 +199,6 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
-    EntityPostProcess* postProcess = args.entityPostProcess ? args.entityPostProcess : nullEntityPostProcess();
 
     bool ok = true;
 
@@ -222,9 +210,16 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskProgress* progress = nullptr;
         TaskId taskId = 0;
         TDF_LabelSequence seqTransferredEntity;
+        bool readSuccess = false;
         bool transferred = false;
     };
 
+    auto fnEntityPostProcessRequired = [&](const Format& format) {
+        if (args.entityPostProcess && args.entityPostProcessRequiredIf)
+            return args.entityPostProcessRequiredIf(format);
+        else
+            return false;
+    };
     auto fnAddError = [&](const FilePath& fp, QString errorMsg) {
         ok = false;
         messenger->emitError(tr("Error during import of '%1'\n%2")
@@ -240,8 +235,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             return fnReadFileError(taskData.filepath, tr("Unknown format"));
 
         int portionSize = 40;
-        if (postProcess->requiresPostProcess(taskData.fileFormat))
-            portionSize *= (100 - postProcess->progressPortionSize()) / 100.;
+        if (fnEntityPostProcessRequired(taskData.fileFormat))
+            portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
         TaskProgress progress(taskData.progress, portionSize, tr("Reading file"));
         taskData.reader = this->createReader(taskData.fileFormat);
@@ -260,8 +255,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     };
     auto fnTransfer = [&](TaskData& taskData) {
         int portionSize = 60;
-        if (postProcess->requiresPostProcess(taskData.fileFormat))
-            portionSize *= (100 - postProcess->progressPortionSize()) / 100.;
+        if (fnEntityPostProcessRequired(taskData.fileFormat))
+            portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
         TaskProgress progress(taskData.progress, portionSize, tr("Transferring file"));
         if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
@@ -273,17 +268,17 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         taskData.transferred = true;
     };
     auto fnPostProcess = [&](TaskData& taskData) {
-        if (!postProcess->requiresPostProcess(taskData.fileFormat))
+        if (!fnEntityPostProcessRequired(taskData.fileFormat))
             return;
 
         TaskProgress progress(
                     taskData.progress,
-                    postProcess->progressPortionSize(),
-                    postProcess->progressPortionStep());
+                    args.entityPostProcessProgressSize,
+                    args.entityPostProcessProgressStep);
         const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
             TaskProgress subProgress(&progress, subPortionSize);
-            postProcess->perform(labelEntity, &subProgress);
+            args.entityPostProcess(labelEntity, &subProgress);
         }
     };
     auto fnAddModelTreeEntities = [&](TaskData& taskData) {
@@ -295,10 +290,12 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskData taskData;
         taskData.filepath = listFilepath.front();
         taskData.progress = rootProgress;
-        fnReadFile(taskData);
-        fnTransfer(taskData);
-        fnPostProcess(taskData);
-        fnAddModelTreeEntities(taskData);
+        ok = fnReadFile(taskData);
+        if (ok) {
+            fnTransfer(taskData);
+            fnPostProcess(taskData);
+            fnAddModelTreeEntities(taskData);
+        }
     }
     else { // Many files case
         std::vector<TaskData> vecTaskData;
@@ -314,7 +311,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             taskData.filepath = listFilepath[&taskData - &vecTaskData.front()];
             taskData.taskId = childTaskManager.newTask([&](TaskProgress* progressChild) {
                 taskData.progress = progressChild;
-                fnReadFile(taskData);
+                taskData.readSuccess = fnReadFile(taskData);
             });
         }
 
@@ -329,9 +326,12 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             });
 
             if (it != vecTaskData.end()) {
-                fnTransfer(*it);
-                fnPostProcess(*it);
-                fnAddModelTreeEntities(*it);
+                if (it->readSuccess) {
+                    fnTransfer(*it);
+                    fnPostProcess(*it);
+                    fnAddModelTreeEntities(*it);
+                }
+
                 --taskDataCount;
             }
         } // endwhile
@@ -463,9 +463,24 @@ System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
 }
 
 System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcess(EntityPostProcess* postProcess)
+System::Operation_ImportInDocument::withEntityPostProcess(std::function<void (TDF_Label, TaskProgress*)> fn)
 {
-    m_args.entityPostProcess = postProcess;
+    m_args.entityPostProcess = std::move(fn);
+    return *this;
+}
+
+System::Operation_ImportInDocument::Operation&
+System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::function<bool(const Format&)> fn)
+{
+    m_args.entityPostProcessRequiredIf = std::move(fn);
+    return *this;
+}
+
+System::Operation_ImportInDocument::Operation&
+System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progressSize, const QString& progressStep)
+{
+    m_args.entityPostProcessProgressSize = progressSize;
+    m_args.entityPostProcessProgressStep = progressStep;
     return *this;
 }
 
