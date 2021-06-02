@@ -29,6 +29,7 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 * Quick access to the CAD files recently open thanks to thumbnails in the Home page
 * Toggle visibility of any item from the Model tree(use checkbox)
 * Customizable precision of the meshes computed from BRep shapes, affecting visualization quality and conversion into mesh formats
+* Convert files to multiple CAD formats from command-line interface(CLI)
 
 3D viewer operations :
 * Rotate : mouse left + move
@@ -54,6 +55,8 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 # Gallery
 
 <img src="doc/screencast_1.gif"/>
+
+<img src="doc/screencast_cli.gif"/>
 
 <img src="doc/screenshot_2.png"/>
 
