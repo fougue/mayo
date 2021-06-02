@@ -125,8 +125,12 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
                 facesMeshed = false;
         });
         if (!facesMeshed) {
+#if OCC_VERSION_HEX <= OCC_VERSION_CHECK(7, 3, 0)
             //qCritical() << "Not all BRep faces are meshed";
-            return false;
+            return false; // Continuing would crash
+#else
+            //qWarning() << "Not all BRep faces are meshed";
+#endif
         }
 
         StlAPI_Writer writer;
