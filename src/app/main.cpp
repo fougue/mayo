@@ -40,6 +40,10 @@
 #include <memory>
 #include <unordered_map>
 
+#ifdef Q_OS_WIN
+#  include <windows.h> // For AttachConsole(), etc.
+#endif
+
 namespace Mayo {
 
 class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
