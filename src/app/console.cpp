@@ -136,4 +136,20 @@ void consoleSendEnterKey()
 #endif
 }
 
+std::string consoleToPrintable(const QString& str)
+{
+#ifdef Q_OS_WIN
+    const auto codepage = GetConsoleOutputCP();
+    const wchar_t* source = reinterpret_cast<const wchar_t*>(str.utf16());
+    const int dstSize = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
+    std::string dst;
+    dst.resize(dstSize + 1);
+    WideCharToMultiByte(codepage, 0, source, -1, dst.data(), dstSize, nullptr, nullptr);
+    dst.back() = '\0';
+    return dst;
+#else
+    return str.toStdString(); // utf8
+#endif
+}
+
 } // namespace Mayo

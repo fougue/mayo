@@ -78,7 +78,7 @@ static CommandLineArguments processCommandLine()
     const QCommandLineOption cmdFileToExport(
                 QStringList{ "e", "export" },
                 Main::tr("Export opened files into an output file, can be repeated for different "
-                         "formats(eg. -e file.stp -e file.igs ..."),
+                         "formats(eg. -e file.stp -e file.igs...)"),
                 Main::tr("filepath"));
     cmdParser.addOption(cmdFileToExport);
 
@@ -117,26 +117,26 @@ static CommandLineArguments processCommandLine()
 
 static void qtMessageHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
 {
-    const QByteArray localMsg = msg.toLocal8Bit();
+    const std::string localMsg = consoleToPrintable(msg);
 //    const char* file = context.file ? context.file : "";
 //    const char* function = context.function ? context.function : "";
     switch (type) {
     case QtDebugMsg:
 #ifndef NDEBUG
-        std::cout << "DEBUG: " << localMsg.constData() << std::endl;
+        std::cout << "DEBUG: " << localMsg << std::endl;
 #endif
         break;
     case QtInfoMsg:
-        std::cout << "INFO: " << localMsg.constData() << std::endl;
+        std::cout << "INFO: " << localMsg << std::endl;
         break;
     case QtWarningMsg:
-        std::cerr << "WARNING: " << localMsg.constData() << std::endl;
+        std::cerr << "WARNING: " << localMsg << std::endl;
         break;
     case QtCriticalMsg:
-        std::cerr << "CRITICAL: " << localMsg.constData() << std::endl;
+        std::cerr << "CRITICAL: " << localMsg << std::endl;
         break;
     case QtFatalMsg:
-        std::cerr << "FATAL: " << localMsg.constData() << std::endl;
+        std::cerr << "FATAL: " << localMsg << std::endl;
         break;
     }
 }
@@ -240,7 +240,7 @@ static void cli_asyncExportDocuments(
         helper->lastPrintProgressLineCount = 0;
         std::cout << "\r";
         taskMgr->foreachTask([=](TaskId taskId) {
-            const std::string strMessage = taskMgr->title(taskId).replace('\n', ' ').toStdString();
+            const std::string strMessage = consoleToPrintable(taskMgr->title(taskId).replace('\n', ' '));
             int lineWidth = strMessage.size();
             const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
             const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
