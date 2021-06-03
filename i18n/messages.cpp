@@ -2,8 +2,6 @@ namespace {
 double dummy = 0;
 }
 
-#if 0
-
 #include "src/io_occ/io_occ_common.h"
 #include "src/io_occ/io_occ_stl.cpp"
 #include "src/app/app_module.h"
@@ -46,5 +44,3 @@ static void messages() {
 
 } // namespace IO
 } // namespace Mayo
-
-#endif

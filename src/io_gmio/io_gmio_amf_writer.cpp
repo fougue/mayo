@@ -86,7 +86,7 @@ IO::Result IO::exportStl_gmio(ExportData data)
         for (const DocumentItem* item : docItems) {
             if (progress) {
                 progress->setStep(
-                            tr("Writing item %1")
+                            QString("Writing item %1")
                             .arg(item->propertyLabel.value()));
             }
 

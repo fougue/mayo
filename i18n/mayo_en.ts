@@ -94,10 +94,6 @@
         <translation>Mesh Defaults</translation>
     </message>
     <message>
-        <source>meshingLinearDeflection</source>
-        <translation type="vanished">Linear Deflection</translation>
-    </message>
-    <message>
         <location filename="../src/app/app_module.h" line="88"/>
         <source>meshingQuality</source>
         <translation>Quality</translation>
@@ -210,28 +206,34 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation>Export</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="12"/>
         <source>VeryCoarse</source>
-        <translation type="vanished">Very Coarse</translation>
+        <translation>Very Coarse</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="13"/>
         <source>Coarse</source>
-        <translation type="vanished">Coarse</translation>
+        <translation>Coarse</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="14"/>
         <source>Normal</source>
-        <translation type="vanished">Normal</translation>
+        <translation>Normal</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="15"/>
         <source>Precise</source>
-        <translation type="vanished">Precise</translation>
+        <translation>Precise</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="16"/>
         <source>VeryPrecise</source>
-        <translation type="vanished">Very Precise</translation>
+        <translation>Very Precise</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="17"/>
         <source>UserDefined</source>
-        <translation type="vanished">User Defined</translation>
+        <translation>User Defined</translation>
     </message>
 </context>
 <context>
@@ -539,47 +541,6 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
     </message>
 </context>
 <context>
-    <name>Mayo::GraphicsEntityBasePropertyGroup</name>
-    <message>
-        <source>visible</source>
-        <translation type="vanished">Visible</translation>
-    </message>
-    <message>
-        <source>displayMode</source>
-        <translation type="vanished">Display Mode</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::GraphicsEntityDriver</name>
-    <message>
-        <source>HiddenLineRemoval</source>
-        <translation type="vanished">Hidden Line Removal</translation>
-    </message>
-    <message>
-        <source>ShadedWithFaceBoundary</source>
-        <translation type="vanished">Shaded with edges</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::GraphicsMeshEntityDriver_EntityProperties</name>
-    <message>
-        <source>color</source>
-        <translation type="vanished">Color</translation>
-    </message>
-    <message>
-        <source>edgeColor</source>
-        <translation type="vanished">Edge Color</translation>
-    </message>
-    <message>
-        <source>showEdges</source>
-        <translation type="vanished">Show Edges</translation>
-    </message>
-    <message>
-        <source>showNodes</source>
-        <translation type="vanished">Show Nodes</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
     <message>
         <location filename="../src/graphics/graphics_object_driver.cpp" line="365"/>
@@ -603,26 +564,7 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
     </message>
 </context>
 <context>
-    <name>Mayo::GraphicsObjectBasePropertyGroup</name>
-    <message>
-        <source>visible</source>
-        <translation type="vanished">Visible</translation>
-    </message>
-    <message>
-        <source>displayMode</source>
-        <translation type="vanished">Display Mode</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::GraphicsObjectDriver</name>
-    <message>
-        <source>HiddenLineRemoval</source>
-        <translation type="vanished">Hidden Line Removal</translation>
-    </message>
-    <message>
-        <source>ShadedWithFaceBoundary</source>
-        <translation type="vanished">Shaded with edges</translation>
-    </message>
     <message>
         <location filename="../src/graphics/graphics_object_driver.cpp" line="80"/>
         <source>Shape_Wireframe</source>
@@ -758,6 +700,65 @@ Only applicable if option `%1` is on</source>
     </message>
 </context>
 <context>
+    <name>Mayo::IO::OccCommon</name>
+    <message>
+        <location filename="messages.cpp" line="27"/>
+        <location filename="messages.cpp" line="31"/>
+        <source>Undefined</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="28"/>
+        <source>posYfwd_posZup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="29"/>
+        <source>negZfwd_posYup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="32"/>
+        <source>Micrometer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="33"/>
+        <source>Millimeter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="34"/>
+        <source>Centimeter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="35"/>
+        <source>Meter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="36"/>
+        <source>Kilometer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="37"/>
+        <source>Inch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="38"/>
+        <source>Foot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="39"/>
+        <source>Mile</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Mayo::IO::OccGltfReader::Properties</name>
     <message>
         <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="31"/>
@@ -778,17 +779,6 @@ Only applicable if option `%1` is on</source>
         <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="22"/>
         <source>Use mesh name in case if node name is empty(`Yes` by default)</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccGltfReader_Properties</name>
-    <message>
-        <source>skipEmptyNodes</source>
-        <translation type="vanished">Skip Empty Nodes</translation>
-    </message>
-    <message>
-        <source>useMeshNameAsFallback</source>
-        <translation type="vanished">Use Mesh Name As Fallback</translation>
     </message>
 </context>
 <context>
@@ -842,25 +832,6 @@ Only applicable if option `%1` is on</source>
         <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="41"/>
         <source>Transformation decomposed into Translation vector, Rotation quaternion and Scale factor(T * R * S)</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccGltfWriter_Properties</name>
-    <message>
-        <source>coordinatesConverter</source>
-        <translation type="vanished">Coordinates Converter</translation>
-    </message>
-    <message>
-        <source>transformationFormat</source>
-        <translation type="vanished">Transformation Format</translation>
-    </message>
-    <message>
-        <source>format</source>
-        <translation type="vanished">Format</translation>
-    </message>
-    <message>
-        <source>forceExportUV</source>
-        <translation type="vanished">Force UV Export</translation>
     </message>
 </context>
 <context>
@@ -948,25 +919,6 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccIgesReader_Properties</name>
-    <message>
-        <source>bsplineContinuity</source>
-        <translation type="vanished">BSpline Continuity</translation>
-    </message>
-    <message>
-        <source>surfaceCurveMode</source>
-        <translation type="vanished">Surface Curve Mode</translation>
-    </message>
-    <message>
-        <source>readFaultyEntities</source>
-        <translation type="vanished">Read Faulty Entities</translation>
-    </message>
-    <message>
-        <source>readOnlyVisibleEntities</source>
-        <translation type="vanished">Read Only Visible Entities</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::IO::OccIgesWriter::Properties</name>
     <message>
         <location filename="../src/io_occ/io_occ_iges.cpp" line="173"/>
@@ -1000,21 +952,6 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccIgesWriter_Properties</name>
-    <message>
-        <source>brepMode</source>
-        <translation type="vanished">BRep Mode</translation>
-    </message>
-    <message>
-        <source>planeMode</source>
-        <translation type="vanished">Plane Mode</translation>
-    </message>
-    <message>
-        <source>lengthUnit</source>
-        <translation type="vanished">Length Unit</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::IO::OccObjReader::Properties</name>
     <message>
         <location filename="../src/io_occ/io_occ_obj.cpp" line="28"/>
@@ -1025,13 +962,6 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
         <location filename="../src/io_occ/io_occ_obj.cpp" line="20"/>
         <source>Single precision flag for reading vertex data(coordinates)</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccObjReader_Properties</name>
-    <message>
-        <source>singlePrecisionVertexCoords</source>
-        <translation type="vanished">Single Precision For Vertex Coordinates</translation>
     </message>
 </context>
 <context>
@@ -1150,33 +1080,6 @@ This kind of association was used for the representation of hybrid models (i.e. 
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccStepReader_Properties</name>
-    <message>
-        <source>productContext</source>
-        <translation type="vanished">Product Context</translation>
-    </message>
-    <message>
-        <source>assemblyLevel</source>
-        <translation type="vanished">Assembly Level</translation>
-    </message>
-    <message>
-        <source>preferredShapeRepresentation</source>
-        <translation type="vanished">Preferred Shape Representation</translation>
-    </message>
-    <message>
-        <source>readShapeAspect</source>
-        <translation type="vanished">Read Shape Aspect</translation>
-    </message>
-    <message>
-        <source>readSubShapesNames</source>
-        <translation type="vanished">Read Names of sub Shapes</translation>
-    </message>
-    <message>
-        <source>encoding</source>
-        <translation type="vanished">Encoding</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::IO::OccStepWriter::Properties</name>
     <message>
         <location filename="../src/io_occ/io_occ_step.cpp" line="276"/>
@@ -1286,33 +1189,6 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
 </context>
 <context>
-    <name>Mayo::IO::OccStepWriter_Properties</name>
-    <message>
-        <source>schema</source>
-        <translation type="vanished">Schema</translation>
-    </message>
-    <message>
-        <source>lengthUnit</source>
-        <translation type="vanished">Length Unit</translation>
-    </message>
-    <message>
-        <source>assemblyMode</source>
-        <translation type="vanished">Assembly Mode</translation>
-    </message>
-    <message>
-        <source>freeVertexMode</source>
-        <translation type="vanished">Mode for Free Vertices</translation>
-    </message>
-    <message>
-        <source>writeParametericCurves</source>
-        <translation type="vanished">Write Parametric Curves</translation>
-    </message>
-    <message>
-        <source>writeSubShapesNames</source>
-        <translation type="vanished">Write Names of sub Shapes</translation>
-    </message>
-</context>
-<context>
     <name>Mayo::IO::OccStlWriter::Properties</name>
     <message>
         <location filename="../src/io_occ/io_occ_stl.cpp" line="67"/>
@@ -1320,19 +1196,14 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Target Format</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="41"/>
         <source>Ascii</source>
-        <translation type="vanished">Text</translation>
+        <translation>Text</translation>
     </message>
     <message>
+        <location filename="messages.cpp" line="42"/>
         <source>Binary</source>
-        <translation type="vanished">Binary</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccStlWriter_Properties</name>
-    <message>
-        <source>targetFormat</source>
-        <translation type="obsolete">Target Format</translation>
+        <translation>Binary</translation>
     </message>
 </context>
 <context>
@@ -1341,13 +1212,6 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <location filename="../src/io_occ/io_occ_vrml.cpp" line="42"/>
         <source>shapeRepresentation</source>
         <translation>Shape Representation</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccVrmlWriter_Properties</name>
-    <message>
-        <source>shapeRepresentation</source>
-        <translation type="vanished">Shape Representation</translation>
     </message>
 </context>
 <context>
@@ -1425,98 +1289,98 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="62"/>
+        <location filename="../src/app/main.cpp" line="66"/>
         <source>Mayo, an open-source 3D viewer based on Qt5/OpenCascade</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="68"/>
+        <location filename="../src/app/main.cpp" line="72"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="69"/>
+        <location filename="../src/app/main.cpp" line="73"/>
         <source>name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="87"/>
+        <location filename="../src/app/main.cpp" line="91"/>
         <source>Disable progress reporting in console output(CLI-mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="91"/>
+        <location filename="../src/app/main.cpp" line="95"/>
         <source>files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="92"/>
+        <location filename="../src/app/main.cpp" line="96"/>
         <source>Files to open at startup, optionally</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="93"/>
+        <location filename="../src/app/main.cpp" line="97"/>
         <source>[files...]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="74"/>
+        <location filename="../src/app/main.cpp" line="78"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="75"/>
-        <location filename="../src/app/main.cpp" line="82"/>
+        <location filename="../src/app/main.cpp" line="79"/>
+        <location filename="../src/app/main.cpp" line="86"/>
         <source>filepath</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="80"/>
+        <location filename="../src/app/main.cpp" line="84"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="338"/>
+        <location filename="../src/app/main.cpp" line="342"/>
         <source>Mesh BRep shapes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="342"/>
+        <location filename="../src/app/main.cpp" line="346"/>
         <source>Imported</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="347"/>
+        <location filename="../src/app/main.cpp" line="351"/>
         <source>Importing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="367"/>
+        <location filename="../src/app/main.cpp" line="371"/>
         <source>Exported %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="373"/>
+        <location filename="../src/app/main.cpp" line="377"/>
         <source>Exporting %1...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="422"/>
+        <location filename="../src/app/main.cpp" line="426"/>
         <source>No input files -&gt; nothing to export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="446"/>
+        <location filename="../src/app/main.cpp" line="450"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="404"/>
+        <location filename="../src/app/main.cpp" line="408"/>
         <source>Failed to load settings file &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="165"/>
+        <location filename="../src/app/main.cpp" line="169"/>
         <source>Failed to load translation for &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2254,6 +2118,21 @@ Read: %5
         <source>Show %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="messages.cpp" line="19"/>
+        <source>Instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="20"/>
+        <source>Product</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="21"/>
+        <source>Both</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Mayo::WidgetPropertiesEditor</name>
@@ -2592,14 +2471,6 @@ Read: %5
     <message>
         <location filename="../src/base/occt_enums.cpp" line="38"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>System</name>
-    <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="89"/>
-        <source>Writing item %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
