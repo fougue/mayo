@@ -207,7 +207,7 @@ static void cli_asyncExportDocuments(
         std::atomic<bool> success = {};
     };
 
-    struct Helper {
+    struct Helper : public QObject {
         // Task manager object dedicated to the scope of current function
         TaskManager taskMgr;
         // Counter decremented for each export task finished, when 0 is reached then quit
@@ -235,7 +235,7 @@ static void cli_asyncExportDocuments(
 
     // Helper function to exit current function
     auto fnExit = [=](int retCode) {
-        delete helper;
+        helper->deleteLater();
         fnContinuation(retCode);
     };
     // Helper function to print in console the progress info of current function
@@ -374,14 +374,13 @@ static void cli_asyncExportDocuments(
                 helper->mapTaskStatus.at(progress->taskId())->finished = true;
                 --(helper->exportTaskCount);
         });
+        helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
         taskMgr->setTitle(taskId, Main::tr("Exporting %1...").arg(strFilename));
     }
 
     taskMgr->foreachTask([=](TaskId taskId) {
-        if (taskId != importTaskId) {
-            helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
+        if (taskId != importTaskId)
             taskMgr->run(taskId, TaskAutoDestroy::Off);
-        }
     });
 }
 
