@@ -12,6 +12,13 @@
 
 #include <type_traits>
 
+// Silent GCC warnings about PropertyEnum<>::m_enum being initialized before PropertyEnumeration
+// attributes
+#ifdef Q_CC_GNU
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wreorder"
+#endif
+
 namespace Mayo {
 
 class PropertyEnumeration : public Property {
@@ -29,9 +36,6 @@ public:
     Enumeration::Value value() const;
     Result<void> setValue(Enumeration::Value value);
     Result<void> setValueByName(const QByteArray& name);
-
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& value) override;
 
     const char* dynTypeName() const override;
     static const char TypeName[];
@@ -102,3 +106,7 @@ void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumTyp
 }
 
 } // namespace Mayo
+
+#ifdef Q_CC_GNU
+#  pragma GCC diagnostic pop
+#endif

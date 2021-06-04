@@ -9,7 +9,6 @@
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include <TopoDS_Shape.hxx>
-#include <QtCore/QString>
 
 namespace Mayo {
 namespace IO {
@@ -17,19 +16,19 @@ namespace IO {
 // Reader for OpenCascade BRep file format
 class OccBRepReader : public Reader {
 public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
 private:
     TopoDS_Shape m_shape;
-    QString m_baseFilename;
+    FilePath m_baseFilename;
 };
 
 // Writer for OpenCascade BRep file format
 class OccBRepWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const QString& filepath, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
 private:
     TopoDS_Shape m_shape;

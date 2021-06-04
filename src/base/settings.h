@@ -7,9 +7,8 @@
 #pragma once
 
 #include "property.h"
+#include "property_value_conversion.h"
 #include "settings_index.h"
-#include "string_utils.h"
-#include "unit_system.h"
 
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
@@ -24,19 +23,23 @@ public:
     using GroupIndex = Settings_GroupIndex;
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
-    using GroupResetFunction = std::function<void()>;
+    using ExcludePropertyPredicate = std::function<bool(const Property&)>;
+    using ResetFunction = std::function<void()>;
 
     Settings(QObject* parent = nullptr);
     ~Settings();
 
     void load();
-    void loadFrom(const QSettings& source);
     void loadProperty(SettingIndex index);
-    void loadPropertyFrom(const QSettings& source, SettingIndex index);
     QVariant findValueFromKey(const QString& strKey) const;
-
     void save();
-    void saveAs(QSettings* target);
+
+    void loadPropertyFrom(const QSettings& source, SettingIndex index);
+    void loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude = nullptr);
+    void saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude = nullptr);
+
+    const PropertyValueConversion& propertyValueConversion() const;
+    void setPropertyValueConversion(const PropertyValueConversion& conv);
 
     int groupCount() const;
     QByteArray groupIdentifier(GroupIndex index) const;
@@ -44,7 +47,9 @@ public:
     GroupIndex addGroup(TextId identifier);
     GroupIndex addGroup(QByteArray identifier);
     void setGroupTitle(GroupIndex index, const QString& title);
-    void addGroupResetFunction(GroupIndex index, GroupResetFunction fn);
+
+    void addResetFunction(GroupIndex index, ResetFunction fn);
+    void addResetFunction(SectionIndex index, ResetFunction fn);
 
     int sectionCount(GroupIndex index) const;
     QByteArray sectionIdentifier(SectionIndex index) const;
@@ -60,8 +65,9 @@ public:
     SettingIndex addSetting(Property* property, GroupIndex index);
     SettingIndex addSetting(Property* property, SectionIndex index);
 
-    void resetGroup(GroupIndex index);
     void resetAll();
+    void resetGroup(GroupIndex index);
+    void resetSection(SectionIndex index);
 
     // Helpers
 
@@ -70,10 +76,12 @@ public:
     void setLocale(const QLocale& locale);
 
 signals:
-    void changed(Property* setting);
+    void changed(Mayo::Property* setting);
+    void enabled(Mayo::Property* setting, bool on);
 
 protected:
     void onPropertyChanged(Property* prop) override;
+    void onPropertyEnabled(Property* prop, bool on) override;
 
 private:
     class Private;

@@ -6,12 +6,8 @@
 
 #include "unit_system.h"
 
-#include <QtCore/QCoreApplication>
+#include <fast_float/fast_float.h>
 #include <QtCore/QtGlobal>
-#include <QtCore/QLocale>
-#include <cfloat>
-
-#define MAYO_CUBIC_SYMBOL "\xc2\xb3"
 
 namespace Mayo {
 
@@ -32,16 +28,107 @@ static const char* symbol(Unit unit)
     case Unit::Angle: return "rad";
     // Derived
     case Unit::Area: return "m²";
-    case Unit::Volume: return "m" MAYO_CUBIC_SYMBOL;
+    case Unit::Volume: return "m³";
     case Unit::Velocity: return "m/s";
     case Unit::Acceleration: return "m/s²";
-    case Unit::Density: return "kg/m" MAYO_CUBIC_SYMBOL;
+    case Unit::Density: return "kg/m³";
     case Unit::Pressure: return "kg/m.s²";
     }
 
     return "?";
 }
 
+struct UnitInfo {
+    Unit unit;
+    const char* str;
+    double factor;
+};
+const UnitInfo arrayUnitInfo_SI[] = {
+    //Length
+    { Unit::Length, "mm", 1. },
+    { Unit::Length, "m", 1000. },
+    { Unit::Length, "nm", 1e-6 },
+    { Unit::Length, "µm", 0.001 },
+    { Unit::Length, "mm", 1. },
+    { Unit::Length, "m", 1000. },
+    { Unit::Length, "km", 1e6 },
+    // Angle
+    { Unit::Angle, "rad", 1. },
+    { Unit::Angle, "deg", Quantity_Degree.value() },
+    { Unit::Angle, "°", Quantity_Degree.value() },
+    // Area
+    { Unit::Area, "mm²", 1. },
+    { Unit::Area, "m²", 1e6 },
+    { Unit::Area, "km²", 1e12 },
+    // Volume
+    { Unit::Volume, "mm³", 1. },
+    { Unit::Volume, "m³", 1e9 },
+    { Unit::Volume, "km³", 1e18 },
+    // Velocity
+    { Unit::Velocity, "mm/s", 1. },
+    // Density
+    { Unit::Density, "kg/mm³", 1. },
+    { Unit::Density, "kg/cm³", 0.001 },
+    { Unit::Density, "kg/m³", 1e-9 },
+    // Pressure
+    { Unit::Pressure, "kPa", 1. },
+    { Unit::Pressure, "Pa", 0.001 },
+    { Unit::Pressure, "kPa", 1. },
+    { Unit::Pressure, "MPa", 1000. },
+    { Unit::Pressure, "GPa", 1e6 }
+};
+
+const UnitInfo arrayUnitInfo_ImperialUK[] = {
+    //Length
+    { Unit::Length, "in", 25.4 },
+    { Unit::Length, "thou", 0.0254 },
+    { Unit::Length, "\"", 25.4 },
+    { Unit::Length, "'", 304.8 },
+    { Unit::Length, "yd", 914.4 },
+    { Unit::Length, "mi", 1609344 },
+    // Others
+    { Unit::Area, "in²", 654.16 },
+    { Unit::Volume, "in³", 16387.064 },
+    { Unit::Velocity, "in/min", 25.4 / 60. }
+};
+
+static UnitSystem::TranslateResult translateSI(double value, Unit unit)
+{
+    switch (unit) {
+    case Unit::Length:
+        return { value, "mm", 1. };
+    case Unit::Area:
+        return { value, "mm²", 1. };
+    case Unit::Volume:
+        return { value, "mm³", 1. };
+    case Unit::Velocity:
+        return { value, "mm/s", 1. };
+    case Unit::Density:
+        return { value, "kg/mm³", 1. };
+    case Unit::Pressure:
+        return { value, "kPa", 1. };
+    default:
+        return { value, symbol(unit), 1. };
+    }
+}
+
+static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
+{
+    switch (unit) {
+    case Unit::Length:
+        return { value / 25.4, "in", 25.4 };
+    case Unit::Area:
+        return { value / 645.16, "in²", 654.16 };
+    case Unit::Volume:
+        return { value / 16387.064, "in³", 16387.064 };
+    case Unit::Velocity:
+        return { value / (25.4 / 60.), "in/min", 25.4 / 60. };
+    default:
+        return { value, symbol(unit), 1. };
+    }
+}
+
+#if 0
 struct Threshold_UnitInfo {
     double threshold;
     const char* str;
@@ -57,38 +144,6 @@ template<size_t N> UnitSystem::TranslateResult translate(
     }
 
     return { value, nullptr, 1. };
-}
-
-static UnitSystem::TranslateResult translateSI(double value, Unit unit)
-{
-    if (unit == Unit::Length)
-        return { value, "mm", 1. };
-    else if (unit == Unit::Area)
-        return { value, "mm²", 1. };
-    else if (unit == Unit::Volume)
-        return { value, "mm" MAYO_CUBIC_SYMBOL, 1. };
-    else if (unit == Unit::Velocity)
-        return { value, "mm/s", 1. };
-    else if (unit == Unit::Density)
-        return { value, "kg/mm" MAYO_CUBIC_SYMBOL, 1. };
-    else if (unit == Unit::Pressure)
-        return { value, "kPa", 1. };
-
-    return { value, symbol(unit), 1. };
-}
-
-static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
-{
-    if (unit == Unit::Length)
-        return { value / 25.4, "in", 25.4 };
-    else if (unit == Unit::Area)
-        return { value / 645.16, "in²", 654.16 };
-    else if (unit == Unit::Volume)
-        return { value / 16387.064, "in" MAYO_CUBIC_SYMBOL, 16387.064 };
-    else if (unit == Unit::Velocity)
-        return { value / (25.4 / 60.), "in/min", 25.4 / 60. };
-
-    return { value, symbol(unit), 1. };
 }
 
 static UnitSystem::TranslateResult translateSI_ranged(double value, Unit unit)
@@ -115,17 +170,17 @@ static UnitSystem::TranslateResult translateSI_ranged(double value, Unit unit)
     }
     else if (unit == Unit::Volume) {
         static const Internal::Threshold_UnitInfo array[] = {
-            { 1e4, "mm^3", 1. },       // < 10cm^3
-            { 1e18, "m^3", 1e9 },      // < 1km^3
-            { DBL_MAX, "km^3", 1e18 }  // > 1km^3
+            { 1e4, "mm³", 1. },       // < 10cm^3
+            { 1e18, "m³", 1e9 },      // < 1km^3
+            { DBL_MAX, "km³", 1e18 }  // > 1km^3
         };
         return Internal::translate(value, array);
     }
     else if (unit == Unit::Density) {
         static const Internal::Threshold_UnitInfo array[] = {
-            { 1e-4, "kg/m^3", 1e-9 },
-            { 1., "kg/cm^3", 0.001 },
-            { DBL_MAX, "kg/mm^3", 1. }
+            { 1e-4, "kg/m³", 1e-9 },
+            { 1., "kg/cm³", 0.001 },
+            { DBL_MAX, "kg/mm³", 1. }
         };
         return Internal::translate(value, array);
     }
@@ -164,28 +219,11 @@ static UnitSystem::TranslateResult translateImperialUK_ranged(double value, Unit
 
     return translateImperialUK(value, unit);
 }
-
-static std::string toLocaleString(const QLocale& locale, double value, const char* strUnit)
-{
-    return QCoreApplication::translate("Mayo::UnitSystem", "%1%2")
-            .arg(locale.toString(value), QString::fromUtf8(strUnit))
-            .toStdString();
-}
+#endif
 
 } // namespace Internal
 
-std::string UnitSystem::toSystemLocaleString(double value, const char* strUnit)
-{
-    return Internal::toLocaleString(QLocale::system(), value, strUnit);
-}
-
-std::string UnitSystem::toCLocaleString(double value, const char* strUnit)
-{
-    return Internal::toLocaleString(QLocale::c(), value, strUnit);
-}
-
-UnitSystem::TranslateResult UnitSystem::translate(
-        Schema schema, double value, Unit unit)
+UnitSystem::TranslateResult UnitSystem::translate(Schema schema, double value, Unit unit)
 {
     switch (schema) {
     case Schema::SI:
@@ -198,6 +236,41 @@ UnitSystem::TranslateResult UnitSystem::translate(
     return {};
 }
 
+UnitSystem::TranslateResult UnitSystem::parseQuantity(std::string_view strQuantity, Unit* ptrUnit)
+{
+    auto fnAssignUnit = [=](Unit unit) {
+        if (ptrUnit)
+            *ptrUnit = unit;
+    };
+
+    fnAssignUnit(Unit::None);
+
+    double v;
+    auto res = fast_float::from_chars(strQuantity.data(), strQuantity.data() + strQuantity.size(), v);
+    if (res.ec != std::errc())
+        return {};
+
+    std::string_view strUnit = strQuantity.substr(res.ptr - strQuantity.data());
+    if (strUnit.empty())
+        return { v, nullptr, 1. };
+
+    for (const Internal::UnitInfo& unitInfo : Internal::arrayUnitInfo_SI) {
+        if (strUnit == unitInfo.str) {
+            fnAssignUnit(unitInfo.unit);
+            return { v, unitInfo.str, unitInfo.factor };
+        }
+    }
+
+    for (const Internal::UnitInfo& unitInfo : Internal::arrayUnitInfo_ImperialUK) {
+        if (strUnit == unitInfo.str) {
+            fnAssignUnit(unitInfo.unit);
+            return { v, unitInfo.str, unitInfo.factor };
+        }
+    }
+
+    return {};
+}
+
 UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
 {
     return { angle.value(), "rad", 1. };
@@ -205,9 +278,16 @@ UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
 
 UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 {
-    constexpr double factor = Quantity_Degree.value();
+    const double factor = Quantity_Degree.value();
     const double rad = angle.value();
     return { rad / factor, "°", factor };
+}
+
+UnitSystem::TranslateResult UnitSystem::meters(QuantityLength length)
+{
+    const double factor = Quantity_Meter.value();
+    const double mm = length.value();
+    return { mm / factor, "m", factor };
 }
 
 UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
@@ -217,7 +297,7 @@ UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
 
 UnitSystem::TranslateResult UnitSystem::cubicMillimeters(QuantityVolume volume)
 {
-    return { volume.value(), "mm" MAYO_CUBIC_SYMBOL, 1. };
+    return { volume.value(), "mm³", 1. };
 }
 
 UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity speed)

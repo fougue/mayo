@@ -190,6 +190,16 @@ void GraphicsScene::setObjectVisible(const GraphicsObjectPtr& object, bool on)
     GraphicsUtils::AisContext_setObjectVisible(d->m_aisContext, object, on);
 }
 
+gp_Trsf GraphicsScene::objectTransformation(const GraphicsObjectPtr& object) const
+{
+    return d->m_aisContext->Location(object);
+}
+
+void GraphicsScene::setObjectTransformation(const GraphicsObjectPtr &object, const gp_Trsf &trsf)
+{
+    d->m_aisContext->SetLocation(object, trsf);
+}
+
 GraphicsOwnerPtr GraphicsScene::firstSelectedOwner() const
 {
     d->m_aisContext->InitSelected();

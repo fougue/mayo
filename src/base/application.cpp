@@ -75,7 +75,6 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
-        qtRegisterMetaType_OccColor();
     }
 
     return appPtr;
@@ -120,12 +119,11 @@ DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent)
     return itFound != d->m_mapIdentifierDocument.cend() ? itFound->second : DocumentPtr();
 }
 
-DocumentPtr Application::findDocumentByLocation(const QFileInfo& loc) const
+DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 {
-    const QString locAbsoluteFilePath = loc.absoluteFilePath();
     for (const auto& mapPair : d->m_mapIdentifierDocument) {
         const DocumentPtr& docPtr = mapPair.second;
-        if (QFileInfo(docPtr->filePath()).absoluteFilePath() == locAbsoluteFilePath)
+        if (filepathEquivalent(docPtr->filePath(), location))
             return docPtr;
     }
 
@@ -166,13 +164,13 @@ void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
 {
     const QFileInfo fiSettingsFilepath(settingsFilepath);
     if (!fiSettingsFilepath.exists() || !fiSettingsFilepath.isReadable()) {
-        qDebug() << settingsFilepath << "doesn't exist or is not readable";
+        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(settingsFilepath);
         return;
     }
 
     const QSettings occSettings(settingsFilepath, QSettings::IniFormat);
     if (occSettings.status() != QSettings::NoError) {
-        qDebug() << settingsFilepath << "could not be loaded by QSettings";
+        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(settingsFilepath);
         return;
     }
 

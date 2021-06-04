@@ -21,10 +21,12 @@ class TaskManager : public QObject {
     Q_OBJECT
 public:
     TaskManager(QObject* parent = nullptr);
+    ~TaskManager();
     static TaskManager* globalInstance();
 
     TaskId newTask(TaskJob fn);
     void run(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On);
+    void exec(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On); // Synchronous
 
     int progress(TaskId id) const;
     int globalProgress() const;
@@ -35,12 +37,18 @@ public:
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
 
+    template<typename FUNCTION>
+    void foreachTask(FUNCTION fn) {
+        for (const auto& mapPair : m_mapEntity)
+            fn(mapPair.first);
+    }
+
 signals:
-    void started(TaskId id);
-    void progressStep(TaskId id, const QString& stepTitle);
-    void progressChanged(TaskId id, int percent);
-    void abortRequested(TaskId id);
-    void ended(TaskId id);
+    void started(Mayo::TaskId id);
+    void progressStep(Mayo::TaskId id, const QString& stepTitle);
+    void progressChanged(Mayo::TaskId id, int percent);
+    void abortRequested(Mayo::TaskId id);
+    void ended(Mayo::TaskId id);
 
 private:
     struct Entity {
@@ -48,11 +56,13 @@ private:
         TaskProgress taskProgress;
         QString title;
         std::future<void> control;
-        std::atomic<bool> isGarbage;
+        std::atomic<bool> isFinished = false;
+        TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;
     };
 
     Entity* findEntity(TaskId id);
     const Entity* findEntity(TaskId id) const;
+    void execEntity(Entity* entity);
     void cleanGarbage();
 
     std::atomic<TaskId> m_taskIdSeq = {};

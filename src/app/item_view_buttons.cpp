@@ -14,6 +14,7 @@
 #include <QtWidgets/QAbstractItemView>
 #include <QtWidgets/QToolTip>
 #include <QtWidgets/QStyledItemDelegate>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -69,12 +70,12 @@ public:
     void paintButton(ButtonInfo* btnInfo, QPainter* painter, const QStyleOptionViewItem& option);
     void resetButtonUnderMouseState();
 
-    QAbstractItemView* m_view;
-    QHash<int, ButtonInfo> m_btnInfos;
-    const ButtonInfo* m_buttonUnderMouse;
+    QAbstractItemView* m_view = nullptr;
+    std::unordered_map<int, ButtonInfo> m_btnInfos;
+    const ButtonInfo* m_buttonUnderMouse = nullptr;
 
 private:
-    ItemViewButtons* m_backPtr;
+    ItemViewButtons* m_backPtr = nullptr;
 };
 
 ItemViewButtons::Private::ProxyItemDelegate::ProxyItemDelegate(
@@ -97,22 +98,20 @@ void ItemViewButtons::Private::ProxyItemDelegate::paint(
 }
 
 ItemViewButtons::Private::Private(ItemViewButtons* backPtr)
-    : m_view(nullptr),
-      m_buttonUnderMouse(nullptr),
-      m_backPtr(backPtr)
+    : m_backPtr(backPtr)
 {
 }
 
 const ItemViewButtons::Private::ButtonInfo* ItemViewButtons::Private::buttonInfo(int btnId) const
 {
     const auto iBtnInfo = m_btnInfos.find(btnId);
-    return iBtnInfo != m_btnInfos.constEnd() ? &(iBtnInfo.value()) : nullptr;
+    return iBtnInfo != m_btnInfos.cend() ? &(iBtnInfo->second) : nullptr;
 }
 
 ItemViewButtons::Private::ButtonInfo* ItemViewButtons::Private::mutableButtonInfo(int btnId)
 {
     auto iBtnInfo = m_btnInfos.find(btnId);
-    return iBtnInfo != m_btnInfos.end() ? &(iBtnInfo.value()) : nullptr;
+    return iBtnInfo != m_btnInfos.end() ? &(iBtnInfo->second) : nullptr;
 }
 
 QModelIndex ItemViewButtons::Private::modelIndexForButtonDisplay(const QModelIndex& index) const
@@ -273,19 +272,17 @@ void ItemViewButtons::paint(
         if (!btnInfo)
             return;
 
-        // Check if button can be displayed
-        if (btnInfo->itemDisplayModes.testFlag(DisplayWhenItemSelected)
-                && !option.state.testFlag(QStyle::State_Selected))
-        {
-            //      painter->fillRect(optionForBtn.rect, optionForBtn.backgroundBrush);
-            return;
-        }
-
         if (btnInfo->itemDisplayModes.testFlag(DisplayPermanent)) {
             d->paintButton(btnInfo, painter, optionForBtn);
         }
         else if (btnInfo->itemDisplayModes.testFlag(DisplayOnDetection)) {
             if (mouseIsOver)
+                d->paintButton(btnInfo, painter, optionForBtn);
+            else
+                painter->fillRect(optionForBtn.rect, optionForBtn.backgroundBrush);
+        }
+        else if (btnInfo->itemDisplayModes.testFlag(DisplayWhenItemSelected)) {
+            if (option.state.testFlag(QStyle::State_Selected))
                 d->paintButton(btnInfo, painter, optionForBtn);
             else
                 painter->fillRect(optionForBtn.rect, optionForBtn.backgroundBrush);
@@ -309,7 +306,7 @@ void ItemViewButtons::paint(
  */
 void ItemViewButtons::addButton(int btnId, const QIcon& icon, const QString& toolTip)
 {
-    if (!d->m_btnInfos.contains(btnId)) {
+    if (d->m_btnInfos.find(btnId) == d->m_btnInfos.cend()) {
         Private::ButtonInfo info;
         info.index = btnId;
         info.icon = icon;
@@ -318,7 +315,7 @@ void ItemViewButtons::addButton(int btnId, const QIcon& icon, const QString& too
         info.displayColumn = -1;
         info.itemSide = ItemRightSide;
         info.itemDisplayModes = DisplayOnDetection;
-        d->m_btnInfos.insert(btnId, info);
+        d->m_btnInfos.insert({ btnId, info });
     }
     else {
         qWarning() << QString("%1 : there is already a button of index '%2'")
@@ -506,15 +503,16 @@ QStyledItemDelegate* ItemViewButtons::createProxyItemDelegate(
 
 int ItemViewButtons::buttonAtModelIndex(const QModelIndex& index) const
 {
-    for (int id : d->m_btnInfos.keys()) {
-        const Private::ButtonInfo* btnInfo = d->buttonInfo(id);
-        if (btnInfo->matchRole < 0)
+    for (const auto& pair : d->m_btnInfos) {
+        const int id = pair.first;
+        const Private::ButtonInfo& btnInfo = pair.second;
+        if (btnInfo.matchRole < 0)
             return id;
 
-        const QVariant modelItemData = index.data(btnInfo->matchRole);
-        if ((!btnInfo->matchData.isNull() && btnInfo->matchData.isValid())
+        const QVariant modelItemData = index.data(btnInfo.matchRole);
+        if ((!btnInfo.matchData.isNull() && btnInfo.matchData.isValid())
                 && (!modelItemData.isNull() && modelItemData.isValid())
-                && (btnInfo->matchData == modelItemData))
+                && (btnInfo.matchData == modelItemData))
         {
             return id;
         }

@@ -7,6 +7,7 @@
 #include "io_format.h"
 
 #include <QtCore/QHash>
+#include <algorithm>
 
 namespace Mayo {
 namespace IO {
@@ -26,6 +27,20 @@ bool operator!=(const Format& lhs, const Format& rhs) {
 unsigned hash(const Format& key)
 {
     return qHash(key.identifier.toLower());
+}
+
+bool formatProvidesBRep(const Format& format)
+{
+    static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP };
+    return std::any_of(
+                std::cbegin(brepFormats),
+                std::cend(brepFormats),
+                [&](const Format& candidate) { return candidate == format; });
+}
+
+bool formatProvidesMesh(const Format& format)
+{
+    return !formatProvidesBRep(format) && format != Format_Unknown;
 }
 
 } // namespace IO

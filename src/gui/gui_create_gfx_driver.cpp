@@ -20,7 +20,7 @@ namespace Internal {
 Handle_Graphic3d_GraphicDriver createGfxDriver()
 {
     Handle_Aspect_DisplayConnection dispConnection;
-#if (!defined(Q_OS_WIN32) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
+#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
     dispConnection = new Aspect_DisplayConnection(std::getenv("DISPLAY"));
 #endif
     Handle_Graphic3d_GraphicDriver gfxDriver = new OpenGl_GraphicDriver(dispConnection);

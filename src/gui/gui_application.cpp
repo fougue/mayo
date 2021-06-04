@@ -96,7 +96,7 @@ void GuiApplication::connectApplicationItemSelectionChanged(bool on)
 }
 
 void GuiApplication::onApplicationItemSelectionChanged(
-        Span<ApplicationItem> selected, Span<ApplicationItem> deselected)
+        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected)
 {
     std::unordered_set<GuiDocument*> setGuiDocDirty;
     auto fnToggleItemSelected = [&](const ApplicationItem& item) {

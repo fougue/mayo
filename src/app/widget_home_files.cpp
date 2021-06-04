@@ -29,7 +29,7 @@ namespace {
 struct HomeFileItem : public ListHelper::ModelItem {
     enum class Type { None, New, Open, RecentFile };
     Type type = Type::None;
-    QString filepath;
+    FilePath filepath;
 };
 
 class HomeFilesModel : public ListHelper::Model {
@@ -81,7 +81,7 @@ public:
         }
         else {
             auto appModule = AppModule::get(Application::instance());
-            const RecentFile* recentFile = appModule ? appModule->findRecentFile(url) : nullptr;
+            const RecentFile* recentFile = appModule ? appModule->findRecentFile(filepathFrom(url)) : nullptr;
             pixmap = recentFile ? recentFile->thumbnail : QPixmap();
             if (pixmap.isNull()) {
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
@@ -133,7 +133,7 @@ private:
         };
         for (const RecentFile& recentFile : listRecentFile) {
             HomeFileItem item;
-            const QFileInfo fi(recentFile.filepath);
+            const auto fi = filepathTo<QFileInfo>(recentFile.filepath);
             item.name = fi.fileName();
             item.type = HomeFileItem::Type::RecentFile;
             item.description =
@@ -150,7 +150,7 @@ private:
                     .arg(fnToString(fi.lastRead()))
                     ;
             item.textWrapMode = QTextOption::WrapAtWordBoundaryOrAnywhere;
-            item.imageUrl = recentFile.filepath;
+            item.imageUrl = filepathTo<QString>(recentFile.filepath);
             item.filepath = recentFile.filepath;
             m_storage->m_items.push_back(std::move(item));
         }

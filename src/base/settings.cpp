@@ -7,7 +7,7 @@
 #include "settings.h"
 
 #include <QtCore/QSettings>
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <regex>
 
 namespace Mayo {
@@ -29,7 +29,11 @@ struct Settings_Group {
     TextId identifier; // Must be unique in the context of the parent Settings object
     QString overridenTitle;
     std::vector<Settings_Section> vecSection;
-    std::vector<Settings::GroupResetFunction> vecFnReset;
+};
+
+struct SectionResetFunction {
+    Settings_SectionIndex sectionId;
+    Settings::ResetFunction fnReset;
 };
 
 static bool isValidIdentifier(const QByteArray& identifier)
@@ -42,8 +46,10 @@ static bool isValidIdentifier(const QByteArray& identifier)
 class Settings::Private {
 public:
     Private()
-        : m_locale(QLocale::system())
-    {}
+        : m_locale(QLocale::system()),
+          m_propValueConverter(&m_defaultPropValueConverter)
+    {
+    }
 
     Settings_Group& group(Settings::GroupIndex index) {
         return m_vecGroup.at(index.get());
@@ -61,7 +67,7 @@ public:
         return this->sectionPath(this->group(index.group()), this->section(index));
     }
 
-    static void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
+    void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
     {
         if (!property)
             return;
@@ -70,13 +76,16 @@ public:
         const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
         if (source.contains(settingPath)) {
             const QVariant value = source.value(settingPath);
-            property->setValueFromVariant(value);
+            m_propValueConverter->fromVariant(property, value);
         }
     }
 
     QSettings m_settings;
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
+    std::vector<SectionResetFunction> m_vecSectionResetFn;
+    const PropertyValueConversion m_defaultPropValueConverter;
+    const PropertyValueConversion* m_propValueConverter = nullptr;
 };
 
 Settings::Settings(QObject* parent)
@@ -95,13 +104,15 @@ void Settings::load()
     this->loadFrom(d->m_settings);
 }
 
-void Settings::loadFrom(const QSettings& source)
+void Settings::loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude)
 {
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
             const QString sectionPath = d->sectionPath(group, section);
-            for (const Settings_Setting& setting : section.vecSetting)
-                Private::loadPropertyFrom(source, sectionPath, setting.property);
+            for (const Settings_Setting& setting : section.vecSetting) {
+                if (!fnExclude || !fnExclude(*setting.property))
+                    d->loadPropertyFrom(source, sectionPath, setting.property);
+            }
         }
     }
 }
@@ -116,7 +127,7 @@ void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
     Property* prop = this->property(index);
     if (prop) {
         const QString sectionPath = d->sectionPath(index.section());
-        Private::loadPropertyFrom(source, sectionPath, prop);
+        d->loadPropertyFrom(source, sectionPath, prop);
     }
 }
 
@@ -131,7 +142,7 @@ void Settings::save()
     d->m_settings.sync();
 }
 
-void Settings::saveAs(QSettings* target)
+void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude)
 {
     if (!target)
         return;
@@ -141,12 +152,24 @@ void Settings::saveAs(QSettings* target)
             const QString sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 Property* prop = setting.property;
-                const QByteArray propKey = prop->name().key;
-                const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
-                target->setValue(settingPath, prop->valueAsVariant());
+                if (!fnExclude || !fnExclude(*prop)) {
+                    const QByteArray propKey = prop->name().key;
+                    const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
+                    target->setValue(settingPath, d->m_propValueConverter->toVariant(*prop));
+                }
             } // endfor(settings)
         } // endfor(sections)
     } // endfor(groups)
+}
+
+const PropertyValueConversion& Settings::propertyValueConversion() const
+{
+    return *(d->m_propValueConverter);
+}
+
+void Settings::setPropertyValueConversion(const PropertyValueConversion& conv)
+{
+    d->m_propValueConverter = &conv;
 }
 
 int Settings::groupCount() const
@@ -197,10 +220,19 @@ void Settings::setGroupTitle(GroupIndex index, const QString& title)
     d->group(index).overridenTitle = title;
 }
 
-void Settings::addGroupResetFunction(GroupIndex index, GroupResetFunction fn)
+void Settings::addResetFunction(GroupIndex index, Settings::ResetFunction fn)
 {
-    if (fn)
-        d->group(index).vecFnReset.push_back(std::move(fn));
+    this->addResetFunction(SectionIndex(index, 0), std::move(fn));
+}
+
+void Settings::addResetFunction(SectionIndex index, ResetFunction fn)
+{
+    if (fn) {
+        SectionResetFunction obj;
+        obj.sectionId = index;
+        obj.fnReset = std::move(fn);
+        d->m_vecSectionResetFn.push_back(std::move(obj));
+    }
 }
 
 int Settings::sectionCount(GroupIndex index) const
@@ -311,17 +343,26 @@ Settings::SettingIndex Settings::addSetting(Property* property, SectionIndex ind
     return SettingIndex(index, int(section.vecSetting.size()) - 1);
 }
 
-void Settings::resetGroup(GroupIndex index)
-{
-    Settings_Group& group = d->group(index);
-    for (const GroupResetFunction& fnReset : group.vecFnReset)
-        fnReset();
-}
-
 void Settings::resetAll()
 {
-    for (Settings_Group& group : d->m_vecGroup)
-        this->resetGroup(GroupIndex(&group - &d->m_vecGroup.front()));
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn)
+        sectionResetFn.fnReset();
+}
+
+void Settings::resetGroup(GroupIndex index)
+{
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn) {
+        if (sectionResetFn.sectionId.group() == index)
+            sectionResetFn.fnReset();
+    }
+}
+
+void Settings::resetSection(SectionIndex index)
+{
+    for (const SectionResetFunction& sectionResetFn : d->m_vecSectionResetFn) {
+        if (sectionResetFn.sectionId == index)
+            sectionResetFn.fnReset();
+    }
 }
 
 QByteArray Settings::defautLocaleLanguageCode()
@@ -349,6 +390,12 @@ void Settings::onPropertyChanged(Property* prop)
 {
     PropertyGroup::onPropertyChanged(prop);
     emit this->changed(prop);
+}
+
+void Settings::onPropertyEnabled(Property* prop, bool on)
+{
+    PropertyGroup::onPropertyEnabled(prop, on);
+    emit this->enabled(prop, on);
 }
 
 } // namespace Mayo

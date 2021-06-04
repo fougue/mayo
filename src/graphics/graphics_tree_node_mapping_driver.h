@@ -13,6 +13,7 @@ namespace Mayo {
 class GraphicsTreeNodeMappingDriver {
 public:
     using MappingPtr = std::unique_ptr<GraphicsTreeNodeMapping>;
+    virtual ~GraphicsTreeNodeMappingDriver() = default;
     virtual MappingPtr createMapping(const DocumentTreeNode& entityTreeNode) const = 0;
 };
 

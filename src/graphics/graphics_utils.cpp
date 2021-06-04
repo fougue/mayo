@@ -73,12 +73,7 @@ gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x
     view->Convert(ix, iy, px, py, pz);
     const gp_Pnt pntConverted(px, py, pz);
     const gp_Pnt2d pntConvertedOnPlane = ProjLib::Project(planeView, pntConverted);
-    const gp_Pnt pntResult =
-            ElSLib::Value(
-                pntConvertedOnPlane.X(),
-                pntConvertedOnPlane.Y(),
-                planeView);
-    return pntResult;
+    return ElSLib::Value(pntConvertedOnPlane.X(), pntConvertedOnPlane.Y(), planeView);
 }
 
 void GraphicsUtils::AisContext_eraseObject(

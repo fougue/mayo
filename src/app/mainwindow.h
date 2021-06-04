@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/filepath.h"
 #include "../base/property.h"
 #include "../graphics/graphics_object_base_property_group.h"
 #include <QtWidgets/QMainWindow>
@@ -25,7 +26,8 @@ public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
-    void openDocumentsFromList(const QStringList& listFilePath);
+    void openDocument(const FilePath& fp);
+    void openDocumentsFromList(Span<const FilePath> listFilePath);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -38,19 +40,28 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
+    // -- File menu
     void newDocument();
     void openDocuments();
     void importInCurrentDoc();
     void exportSelectedItems();
+    void closeCurrentDocument();
+    void closeAllDocumentsExceptCurrent();
+    void closeAllDocuments();
     void quitApp();
+    // -- Display menu
     void toggleCurrentDocOriginTrihedron();
+    void toggleCurrentDocPerformanceStats();
     void zoomInCurrentDoc();
     void zoomOutCurrentDoc();
+    // -- Tools menu
     void editOptions();
     void saveImageView();
     void inspectXde();
+    // -- Window menu
     void toggleFullscreen();
     void toggleLeftSidebar();
+    // -- Help menu
     void aboutMayo();
     void reportbug();
 
@@ -62,11 +73,8 @@ private:
     void onLeftContentsPageChanged(int pageId);
     void onCurrentDocumentIndexChanged(int idx);
 
-    void closeCurrentDocument();
     void closeDocument(WidgetGuiDocument* widget);
     void closeDocument(int docIndex);
-    void closeAllDocumentsExceptCurrent();
-    void closeAllDocuments();
 
     void updateControlsActivation();
 

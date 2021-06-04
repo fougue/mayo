@@ -14,7 +14,7 @@
 namespace Mayo {
 
 GraphicsObjectBasePropertyGroup::GraphicsObjectBasePropertyGroup(Span<const GraphicsObjectPtr> spanObject)
-    : m_vecObject(spanObject.cbegin(), spanObject.cend())/*,
+    : m_vecObject(spanObject.begin(), spanObject.end())/*,
       m_propertyVisibleState(this, textId("visible"))*/
 {
     // Init properties

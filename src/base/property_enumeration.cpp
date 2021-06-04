@@ -56,21 +56,6 @@ Result<void> PropertyEnumeration::setValueByName(const QByteArray& name)
     return Property::setValueHelper(this, &m_value, m_enumeration.findValue(name));
 }
 
-QVariant PropertyEnumeration::valueAsVariant() const
-{
-    return QVariant::fromValue(this->name());
-}
-
-Result<void> PropertyEnumeration::setValueFromVariant(const QVariant& value)
-{
-    const QByteArray name = value.toByteArray();
-    const Enumeration::Item* ptrItem = m_enumeration.findItem(name);
-    if (ptrItem)
-        return this->setValue(ptrItem->value);
-
-    return Result<void>::error();
-}
-
 const char* PropertyEnumeration::dynTypeName() const
 {
     return PropertyEnumeration::TypeName;

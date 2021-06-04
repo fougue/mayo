@@ -6,12 +6,10 @@
 
 #include "property_builtins.h"
 
-namespace Mayo {
+#include "tkernel_utils.h"
+#include "string_utils.h"
 
-const char* BasePropertyQuantity::dynTypeName() const
-{
-    return BasePropertyQuantity::TypeName;
-}
+namespace Mayo {
 
 BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const TextId& name)
     : Property(grp, name)
@@ -26,10 +24,8 @@ template<> const char PropertyQByteArray::TypeName[] = "Mayo::PropertyQByteArray
 template<> const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
 template<> const char PropertyQStringList::TypeName[] = "Mayo::PropertyQStringList";
 template<> const char PropertyQDateTime::TypeName[] = "Mayo::PropertyQDateTime";
-template<> const char PropertyOccColor::TypeName[] = "Mayo::PropertyOccColor";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
 template<> const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
-
-const char BasePropertyQuantity::TypeName[] = "Mayo::BasePropertyQuantity";
+template<> const char GenericProperty<Quantity_Color>::TypeName[] = "Mayo::PropertyOccColor";
 
 } // namespace Mayo

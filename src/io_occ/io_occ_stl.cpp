@@ -7,16 +7,18 @@
 #include "io_occ_stl.h"
 
 #include "../base/application_item.h"
+#include "../base/brep_utils.h"
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
-#include "../base/scope_import.h"
+#include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
-#include <QtCore/QFileInfo>
+#include <QtCore/QtDebug>
 #include <BRep_Builder.hxx>
+#include <BRepTools.hxx>
 #include <RWStl.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TDataXtd_Triangulation.hxx>
@@ -65,24 +67,23 @@ public:
     PropertyEnum<OccStlWriter::Format> targetFormat{ this, textId("targetFormat") };
 };
 
-bool OccStlReader::readFile(const QString& filepath, TaskProgress* progress)
+bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    m_baseFilename = QFileInfo(filepath).baseName();
-    m_mesh = RWStl::ReadFile(OSD_Path(filepath.toUtf8().constData()), TKernelUtils::start(indicator));
+    m_baseFilename = filepath.stem();
+    m_mesh = RWStl::ReadFile(filepath.u8string().c_str(), TKernelUtils::start(indicator));
     return !m_mesh.IsNull();
 }
 
-bool OccStlReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_mesh.IsNull())
-        return false;
+        return {};
 
-    SingleScopeImport import(doc);
-    TDataXtd_Triangulation::Set(import.entityLabel(), m_mesh);
-    CafUtils::setLabelAttrStdName(import.entityLabel(), m_baseFilename);
-    progress->setValue(100);
-    return true;
+    const TDF_Label entityLabel = doc->newEntityLabel();
+    TDataXtd_Triangulation::Set(entityLabel, m_mesh);
+    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<QString>(m_baseFilename));
+    return CafUtils::makeLabelSequence({ entityLabel });
 }
 
 bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
@@ -93,7 +94,7 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     m_shape = {};
     m_mesh = {};
     if (!appItems.empty()) {
-        const ApplicationItem& item = appItems.at(0);
+        const ApplicationItem& item = appItems.front();
         if (item.isDocument()) {
             m_shape = asShape(item.document());
         }
@@ -113,17 +114,33 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     return !m_shape.IsNull() || !m_mesh.IsNull();
 }
 
-bool OccStlWriter::writeFile(const QString& filepath, TaskProgress* progress)
+bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
+        bool facesMeshed = true;
+        BRepUtils::forEachSubFace(m_shape, [&](const TopoDS_Face& face) {
+            TopLoc_Location loc;
+            Handle_Poly_Triangulation mesh = BRep_Tool::Triangulation(face, loc);
+            if (mesh.IsNull())
+                facesMeshed = false;
+        });
+        if (!facesMeshed) {
+#if OCC_VERSION_HEX <= OCC_VERSION_CHECK(7, 3, 0)
+            //qCritical() << "Not all BRep faces are meshed";
+            return false; // Continuing would crash
+#else
+            //qWarning() << "Not all BRep faces are meshed";
+#endif
+        }
+
         StlAPI_Writer writer;
         writer.ASCIIMode() = m_params.format == Format::Ascii;
-        return writer.Write(m_shape, filepath.toUtf8().constData());
+        return writer.Write(m_shape, filepath.u8string().c_str());
     }
     else if (!m_mesh.IsNull()) {
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-        const QByteArray filepathUtf8 = filepath.toUtf8();
-        const OSD_Path osdFilepath(filepathUtf8.constData());
+        const std::string filepathUtf8 = filepath.u8string();
+        const OSD_Path osdFilepath(filepathUtf8.c_str());
         if (m_params.format == Format::Ascii)
             return RWStl::WriteAscii(m_mesh, osdFilepath, TKernelUtils::start(indicator));
         else

@@ -26,14 +26,11 @@ public:
 
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
-    const T& value() const;
+    const T& value() const { return m_value; }
     Result<void> setValue(const T& val);
     operator const T&() const { return this->value(); }
 
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& variant) override;
-
-    const char* dynTypeName() const override;
+    const char* dynTypeName() const override { return TypeName; }
     static const char TypeName[];
 
 protected:
@@ -49,19 +46,19 @@ public:
     PropertyScalarConstraints() = default;
     PropertyScalarConstraints(T minimum, T maximum, T singleStep);
 
-    bool constraintsEnabled() const;
-    void setConstraintsEnabled(bool on);
+    bool constraintsEnabled() const { return m_constraintsEnabled; }
+    void setConstraintsEnabled(bool on) { m_constraintsEnabled = on; }
 
-    T minimum() const;
-    void setMinimum(T val);
+    T minimum() const { return m_minimum; }
+    void setMinimum(T val) { m_minimum = val; }
 
-    T maximum() const;
-    void setMaximum(T val);
+    T maximum() const { return m_maximum; }
+    void setMaximum(T val) { m_maximum = val; }
 
     void setRange(T minVal, T maxVal);
 
-    T singleStep() const;
-    void setSingleStep(T step);
+    T singleStep() const { return m_singleStep; }
+    void setSingleStep(T step) { m_singleStep = step; }
 
 private:
     T m_minimum;
@@ -92,8 +89,8 @@ public:
     virtual double quantityValue() const = 0;
     virtual Result<void> setQuantityValue(double v) = 0;
 
-    const char* dynTypeName() const override;
-    static const char TypeName[];
+    inline static const char TypeName[] = "Mayo::BasePropertyQuantity";
+    const char* dynTypeName() const override { return BasePropertyQuantity::TypeName; }
 
 protected:
     BasePropertyQuantity(PropertyGroup* grp, const TextId& name);
@@ -106,14 +103,11 @@ public:
 
     GenericPropertyQuantity(PropertyGroup* grp, const TextId& name);
 
-    Unit quantityUnit() const override;
-    double quantityValue() const override;
+    Unit quantityUnit() const override { return UNIT; }
+    double quantityValue() const override { return this->quantity().value(); }
     Result<void> setQuantityValue(double v) override;
 
-    QVariant valueAsVariant() const override;
-    Result<void> setValueFromVariant(const QVariant& variant) override;
-
-    QuantityType quantity() const;
+    QuantityType quantity() const { return m_quantity; }
     Result<void> setQuantity(QuantityType qty);
 
 private:
@@ -128,9 +122,9 @@ using PropertyQByteArray = GenericProperty<QByteArray>;
 using PropertyQString = GenericProperty<QString>;
 using PropertyQStringList = GenericProperty<QStringList>;
 using PropertyQDateTime = GenericProperty<QDateTime>;
-using PropertyOccColor = GenericProperty<Quantity_Color>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
+using PropertyOccColor = GenericProperty<Quantity_Color>;
 
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
 using PropertyArea = GenericPropertyQuantity<Unit::Area>;
@@ -151,59 +145,20 @@ GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
     : Property(grp, name)
 { }
 
-template<typename T> const T& GenericProperty<T>::value() const
-{ return m_value; }
-
 template<typename T> Result<void> GenericProperty<T>::setValue(const T& val)
 {
     return Property::setValueHelper(this, &m_value, val);
 }
 
-template<typename T> QVariant GenericProperty<T>::valueAsVariant() const
-{
-    return QVariant::fromValue(this->value());
-}
-
-template<typename T>
-Result<void> GenericProperty<T>::setValueFromVariant(const QVariant& variant)
-{
-    if (variant.canConvert<T>())
-        return this->setValue(variant.value<T>());
-    else
-        return Result<void>::error("Incompatible type");
-}
-
-template<typename T> const char* GenericProperty<T>::dynTypeName() const
-{ return TypeName; }
-
 // PropertyScalarConstraints<>
 
 template<typename T>
-PropertyScalarConstraints<T>::PropertyScalarConstraints(
-        T minimum, T maximum, T singleStep)
+PropertyScalarConstraints<T>::PropertyScalarConstraints(T minimum, T maximum, T singleStep)
     : m_minimum(minimum),
       m_maximum(maximum),
       m_singleStep(singleStep),
       m_constraintsEnabled(true)
 { }
-
-template<typename T> bool PropertyScalarConstraints<T>::constraintsEnabled() const
-{ return m_constraintsEnabled; }
-
-template<typename T> void PropertyScalarConstraints<T>::setConstraintsEnabled(bool on)
-{ m_constraintsEnabled = on; }
-
-template<typename T> T PropertyScalarConstraints<T>::minimum() const
-{ return m_minimum; }
-
-template<typename T> void PropertyScalarConstraints<T>::setMinimum(T val)
-{ m_minimum = val; }
-
-template<typename T> T PropertyScalarConstraints<T>::maximum() const
-{ return m_maximum; }
-
-template<typename T> void PropertyScalarConstraints<T>::setMaximum(T val)
-{ m_maximum = val; }
 
 template<typename T>
 void PropertyScalarConstraints<T>::setRange(T minVal, T maxVal)
@@ -211,12 +166,6 @@ void PropertyScalarConstraints<T>::setRange(T minVal, T maxVal)
     this->setMinimum(minVal);
     this->setMaximum(maxVal);
 }
-
-template<typename T> T PropertyScalarConstraints<T>::singleStep() const
-{ return m_singleStep; }
-
-template<typename T> void PropertyScalarConstraints<T>::setSingleStep(T step)
-{ m_singleStep = step; }
 
 // GenericScalarProperty<>
 
@@ -241,39 +190,10 @@ GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const
 { }
 
 template<Unit UNIT>
-Unit GenericPropertyQuantity<UNIT>::quantityUnit() const
-{ return UNIT; }
-
-template<Unit UNIT>
-double GenericPropertyQuantity<UNIT>::quantityValue() const
-{
-    return this->quantity().value();
-}
-
-template<Unit UNIT>
 Result<void> GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 {
     return this->setQuantity(QuantityType(v));
 }
-
-template<Unit UNIT>
-QVariant GenericPropertyQuantity<UNIT>::valueAsVariant() const
-{
-    return QVariant::fromValue(this->quantity());
-}
-
-template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setValueFromVariant(const QVariant& variant)
-{
-    if (variant.canConvert<QuantityType>())
-        return this->setQuantity(variant.value<QuantityType>());
-    else
-        return Result<void>::error("Incompatible quantity type");
-}
-
-template<Unit UNIT>
-Quantity<UNIT> GenericPropertyQuantity<UNIT>::quantity() const
-{ return m_quantity; }
 
 template<Unit UNIT>
 Result<void> GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)

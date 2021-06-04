@@ -29,7 +29,7 @@ public:
     const ApplicationPtr& application() const { return m_app; }
 
     Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
-    Span<const GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
+    Span<GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
     GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
@@ -38,8 +38,8 @@ public:
     GraphicsTreeNodeMappingDriverTable* graphicsTreeNodeMappingDriverTable() const;
 
 signals:
-    void guiDocumentAdded(GuiDocument* guiDoc);
-    void guiDocumentErased(GuiDocument* guiDoc);
+    void guiDocumentAdded(Mayo::GuiDocument* guiDoc);
+    void guiDocumentErased(Mayo::GuiDocument* guiDoc);
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);
@@ -50,7 +50,7 @@ private:
     void connectApplicationItemSelectionChanged(bool on);
     void onApplicationItemSelectionCleared();
     void onApplicationItemSelectionChanged(
-            Span<ApplicationItem> selected, Span<ApplicationItem> deselected);
+            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
 
     ApplicationPtr m_app;
     std::vector<GuiDocument*> m_vecGuiDocument;

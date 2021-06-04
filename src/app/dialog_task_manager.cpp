@@ -136,7 +136,7 @@ void DialogTaskManager::onTaskStarted(TaskId taskId)
                 widget->m_interruptBtn, &QToolButton::clicked,
                 this, &DialogTaskManager::interruptTask);
     m_ui->contentsLayout->insertWidget(0, widget);
-    m_taskIdToWidget.insert(taskId, widget);
+    m_taskIdToWidget.insert({ taskId, widget });
     ++m_taskCount;
     this->onTaskProgressStep(taskId, QString());
 }
@@ -150,7 +150,7 @@ void DialogTaskManager::onTaskEnded(TaskId taskId)
 
         m_ui->contentsLayout->removeWidget(widget);
         delete widget;
-        m_taskIdToWidget.remove(taskId);
+        m_taskIdToWidget.erase(taskId);
     }
 
     --m_taskCount;
@@ -204,7 +204,7 @@ void DialogTaskManager::interruptTask()
 DialogTaskManager::TaskWidget* DialogTaskManager::taskWidget(TaskId taskId)
 {
     auto it = m_taskIdToWidget.find(taskId);
-    return it != m_taskIdToWidget.end() ? it.value() : nullptr;
+    return it != m_taskIdToWidget.end() ? it->second : nullptr;
 }
 
 } // namespace Mayo

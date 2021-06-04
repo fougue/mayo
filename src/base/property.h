@@ -19,20 +19,29 @@ namespace Mayo {
 
 class Property;
 
+// Provides a cohesive container of Property objects
 class PropertyGroup {
 public:
     PropertyGroup(PropertyGroup* parentGroup = nullptr);
+    virtual ~PropertyGroup() = default;
 
     // TODO Rename to get() or items() ?
     Span<Property* const> properties() const;
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 
+    // Reinitialize properties to their default values
     virtual void restoreDefaults();
 
 protected:
+    // Callback executed when Property value was changed
     virtual void onPropertyChanged(Property* prop);
+
+    // Callback executed when Property "enabled" status was changed
+    virtual void onPropertyEnabled(Property* prop, bool on);
+
     virtual Result<void> isPropertyValid(const Property* prop) const;
+
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
 
@@ -47,6 +56,9 @@ private:
     bool m_propertyChangedBlocked = false;
 };
 
+// Exception-safe wrapper around PropertyGroup::blockPropertyChanged()
+// It blocks call to PropertyGroup::onPropertyChanged() in its constructor and in the destructor it
+// resets the state to what it was before the constructor ran.
 struct PropertyChangedBlocker {
     PropertyChangedBlocker(PropertyGroup* group);
     ~PropertyChangedBlocker();
@@ -72,9 +84,6 @@ public:
     const TextId& name() const;
     QString label() const;
 
-    virtual QVariant valueAsVariant() const = 0;
-    virtual Result<void> setValueFromVariant(const QVariant& value) = 0; // TODO Remove use of Result<>
-
     const QString& description() const { return m_description; }
     void setDescription(const QString& text) { m_description = text; }
 
@@ -84,11 +93,17 @@ public:
     bool isUserVisible() const { return m_isUserVisible; }
     void setUserVisible(bool on) { m_isUserVisible = on; }
 
+    bool isEnabled() const { return m_isEnabled; }
+    void setEnabled(bool on);
+
     virtual const char* dynTypeName() const = 0;
 
 protected:
     void notifyChanged();
+    void notifyEnabled(bool on);
+
     Result<void> isValid() const;
+
     bool hasGroup() const;
 
     template<typename T>
@@ -100,6 +115,7 @@ private:
     QString m_description;
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
+    bool m_isEnabled = true;
 };
 
 class PropertyGroupSignals : public QObject, public PropertyGroup {

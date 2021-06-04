@@ -36,7 +36,8 @@ namespace {
 
 bool gmio_taskIsStopRequested(void* cookie)
 {
-    return TaskProgress::isAbortRequested(static_cast<const TaskProgress*>(cookie));
+    auto progress = static_cast<const TaskProgress*>(cookie);
+    return progress ? progress->isAbortRequested() : false;
 }
 
 void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
@@ -45,8 +46,7 @@ void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
     if (progress && maxValue > 0) {
         const auto pctNorm = value / double(maxValue);
         const auto pct = qRound(pctNorm * 100);
-        if (pct >= (progress->value() + 5))
-            progress->setValue(pct);
+        progress->setValue(pct);
     }
 }
 
@@ -86,7 +86,7 @@ IO::Result IO::exportStl_gmio(ExportData data)
         for (const DocumentItem* item : docItems) {
             if (progress) {
                 progress->setStep(
-                            tr("Writing item %1")
+                            QString("Writing item %1")
                             .arg(item->propertyLabel.value()));
             }
 
@@ -157,6 +157,19 @@ public:
         this->createZipArchive.setValue(params.createZipArchive);
         this->zipEntryFilename.setValue(QString::fromStdString(params.zipEntryFilename));
         this->useZip64.setValue(params.useZip64);
+
+        this->zipEntryFilename.setEnabled(this->createZipArchive);
+        this->useZip64.setEnabled(this->createZipArchive);
+    }
+
+    void onPropertyChanged(Property* prop) override
+    {
+        if (prop == &this->createZipArchive) {
+            this->zipEntryFilename.setEnabled(this->createZipArchive);
+            this->useZip64.setEnabled(this->createZipArchive);
+        }
+
+        PropertyGroup::onPropertyChanged(prop);
     }
 
     PropertyEnum<GmioAmfWriter::FloatTextFormat> float64Format{ this, textId("float64Format") };
@@ -220,7 +233,7 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     };
 
     for (const ApplicationItem& appItem : spanAppItem) {
-        const int appItemIndex = &appItem - &spanAppItem.at(0);
+        const int appItemIndex = &appItem - &spanAppItem.front();
         progress->setValue(MathUtils::mappedValue(appItemIndex, 0, spanAppItem.size() - 1, 0, 100));
         const Tree<TDF_Label>& modelTree = appItem.document()->modelTree();
         if (appItem.isDocument()) {
@@ -236,7 +249,7 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool GmioAmfWriter::writeFile(const QString& filepath, TaskProgress* progress)
+bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     gmio_amf_document amfDoc = {};
     amfDoc.cookie = this;
@@ -270,7 +283,7 @@ bool GmioAmfWriter::writeFile(const QString& filepath, TaskProgress* progress)
     amfOptions.zip_entry_filename = m_params.zipEntryFilename.c_str();
     amfOptions.zip_entry_filename_len = m_params.zipEntryFilename.size();
     // TODO Handle gmio_amf_write_options::z_compress_options
-    const int error = gmio_amf_write_file(filepath.toUtf8().constData(), &amfDoc, &amfOptions);
+    const int error = gmio_amf_write_file(filepath.u8string().c_str(), &amfDoc, &amfOptions);
     return gmio_no_error(error);
 }
 

@@ -12,31 +12,36 @@
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
 
-#include <gsl/gsl_util>
-#include <QtCore/QDateTime>
-#include <QtCore/QFileInfo>
-#include <QtWidgets/QWidget>
+#include <gsl/util>
+//#include <QtGui/QOffscreenSurface>
+#include <QtGui/QWindow>
+#include <Aspect_NeutralWindow.hxx>
 
 namespace Mayo {
+
+static int64_t lastModifiedTimestamp(const FilePath& fp)
+{
+    // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
+    const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
+}
 
 bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
 {
     if (!guiDoc)
         return false;
 
-    const QFileInfo fileInfo(this->filepath);
-    if (fileInfo != QFileInfo(guiDoc->document()->filePath()))
+    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
         return false;
 
-    const int64_t lastModifiedTimestamp = fileInfo.lastModified().toSecsSinceEpoch();
-    if (this->thumbnailTimestamp != lastModifiedTimestamp) {
+    if (this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath)) {
         const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
         const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-        const QColor backgroundColor = mayoTheme()->color(Theme::Color::Palette_Window);
+        const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
         Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
         view->ChangeRenderingParams().IsAntialiasingEnabled = true;
         view->ChangeRenderingParams().NbMsaaSamples = 4;
-        view->SetBackgroundColor(QtGuiUtils::toColor<Quantity_Color>(backgroundColor));
+        view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
 
         auto _ = gsl::finally([=]{
             guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
@@ -50,12 +55,15 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         if (guiDoc->isOriginTrihedronVisible())
             guiDoc->toggleOriginTrihedronVisibility();
 
-        QWidget widgetView; // TODO Use a pure offscreen window instead
-        Handle_Aspect_Window hWnd = new OcctWindow(&widgetView);
+        QWindow window; // TODO Use a pure offscreen window instead
+        window.setBaseSize(size);
+        window.create();
+        Handle_Aspect_NeutralWindow hWnd = new Aspect_NeutralWindow;
+        hWnd->SetSize(size.width(), size.height());
+        hWnd->SetNativeHandle(Aspect_Drawable(window.winId()));
         view->SetWindow(hWnd);
-        view->MustBeResized();
+
         GraphicsUtils::V3dView_fitAll(view);
-        view->Redraw();
 
         Image_PixMap pixmap;
         pixmap.SetTopDown(true);
@@ -76,7 +84,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
             return false;
 
         this->thumbnail = QPixmap::fromImage(img);
-        this->thumbnailTimestamp = lastModifiedTimestamp;
+        this->thumbnailTimestamp = lastModifiedTimestamp(this->filepath);
     }
 
     return true;
@@ -84,9 +92,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
 
 bool RecentFile::isThumbnailOutOfSync() const
 {
-    const QFileInfo fileInfo(this->filepath);
-    const int64_t lastModifiedTimestamp = fileInfo.lastModified().toSecsSinceEpoch();
-    return this->thumbnailTimestamp != lastModifiedTimestamp;
+    return this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath);
 }
 
 bool operator==(const RecentFile& lhs, const RecentFile& rhs)
@@ -98,7 +104,7 @@ bool operator==(const RecentFile& lhs, const RecentFile& rhs)
 
 QDataStream& operator<<(QDataStream& stream, const RecentFile& recentFile)
 {
-    stream << recentFile.filepath;
+    stream << filepathTo<QString>(recentFile.filepath);
     stream << recentFile.thumbnail;
     stream << qint64(recentFile.thumbnailTimestamp);
     return stream;
@@ -106,7 +112,9 @@ QDataStream& operator<<(QDataStream& stream, const RecentFile& recentFile)
 
 QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile)
 {
-    stream >> recentFile.filepath;
+    QString strFilepath;
+    stream >> strFilepath;
+    recentFile.filepath = filepathFrom(strFilepath);
     stream >> recentFile.thumbnail;
     stream >> reinterpret_cast<qint64&>(recentFile.thumbnailTimestamp);
     return stream;

@@ -33,7 +33,7 @@ public:
 
     constexpr Qty& operator+=(Qty q) { return this->change(m_value + q.value()); }
     constexpr Qty& operator-=(Qty q) { return this->change(m_value - q.value()); }
-    constexpr Qty& operator=(Qty q) { return this->change(q.value()); }
+    //constexpr Qty& operator=(Qty q) { return this->change(q.value()); }
 
     constexpr static Qty null() { return Qty(0.); }
 

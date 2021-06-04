@@ -10,45 +10,42 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
-#include "../base/scope_import.h"
+#include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
-#include <QtCore/QFileInfo>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 
 namespace Mayo {
 namespace IO {
 
-bool OccBRepReader::readFile(const QString& filepath, TaskProgress* progress)
+bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_shape.Nullify();
-    m_baseFilename = QFileInfo(filepath).baseName();
+    m_baseFilename = filepath.stem();
     BRep_Builder brepBuilder;
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     return BRepTools::Read(
                 m_shape,
-                filepath.toUtf8().constData(),
+                filepath.u8string().c_str(),
                 brepBuilder,
                 TKernelUtils::start(indicator));
 }
 
-bool OccBRepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_shape.IsNull())
-        return false;
+        return {};
 
-    XCafScopeImport import(doc);
     const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
-    CafUtils::setLabelAttrStdName(labelShape, m_baseFilename);
-    progress->setValue(100);
-    return true;
+    CafUtils::setLabelAttrStdName(labelShape, filepathTo<QString>(m_baseFilename));
+    return CafUtils::makeLabelSequence({ labelShape });
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 
@@ -78,14 +75,13 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
         m_shape = vecShape.front();
     }
 
-    progress->setValue(100);
     return true;
 }
 
-bool OccBRepWriter::writeFile(const QString& filepath, TaskProgress* progress)
+bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
-    return BRepTools::Write(m_shape, filepath.toUtf8().constData(), TKernelUtils::start(indicator));
+    return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
 }
 
 } // namespace IO

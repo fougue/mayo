@@ -3,6 +3,7 @@
 </p>
 
 [![Build status](https://ci.appveyor.com/api/projects/status/6d1w0d6gw28npxpf?svg=true)](https://ci.appveyor.com/project/HuguesDelorme/mayo)
+[![Build Status](https://img.shields.io/travis/fougue/mayo/develop.svg?logo=travis)](https://travis-ci.org/fougue/mayo)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
 
 # What is Mayo
@@ -20,12 +21,15 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 * Area and volume properties for meshes and shapes
 * Editable name of STEP/IGES entities
 * Editable 3D properties of the imported items, eg. material, color, display mode, ...
+* 3D exploding of the model tree, allowing better exploration of complex designs
 * 3D clip planes with configurable capping
 * 3D view cube providing intuitive camera manipulation
 * Perspective/orthographic 3D view projection
 * Save image(snapshot) of the current 3D view
 * Quick access to the CAD files recently open thanks to thumbnails in the Home page
 * Toggle visibility of any item from the Model tree(use checkbox)
+* Customizable precision of the meshes computed from BRep shapes, affecting visualization quality and conversion into mesh formats
+* Convert files to multiple CAD formats from command-line interface(CLI)
 
 3D viewer operations :
 * Rotate : mouse left + move
@@ -50,7 +54,9 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 
 # Gallery
 
-<img src="doc/screenshot_1.png"/>
+<img src="doc/screencast_1.gif"/>
+
+<img src="doc/screencast_cli.gif"/>
 
 <img src="doc/screenshot_2.png"/>
 
@@ -61,8 +67,5 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 <img src="doc/screenshot_5.png"/>
 
 # How to build Mayo
-Mayo requires Qt5 and OpenCascade &#8805; 7.3.0  
-* [Qt installer](https://www.qt.io/download-qt-installer)
-* [OpenCascade Download Center](https://old.opencascade.com/content/latest-release)
-
-See detailed [build instructions](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)
+[Build instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
+[Build instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)

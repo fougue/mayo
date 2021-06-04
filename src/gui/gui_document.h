@@ -10,12 +10,9 @@
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
-#include "../graphics/graphics_tree_node_mapping.h"
 
 #include <QtCore/QObject>
-#include <AIS_InteractiveContext.hxx>
 #include <Bnd_Box.hxx>
-#include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
 #include <functional>
 #include <memory>
@@ -34,34 +31,50 @@ class GuiDocument : public QObject {
 public:
     GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
 
+    const DocumentPtr& document() const { return m_document; }
+
     GuiApplication* guiApplication() const { return m_guiApp; }
 
-    const DocumentPtr& document() const { return m_document; }
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
+
+    // Executes callback 'fn' on all graphics objects associated to tree node 'nodeId'
+    // This also includes all children(deep node traversal)
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
+    // Finds the tree node id associated to graphics object
     TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& object) const;
 
+    // Toggles selected status of an application item(doesn't affect Application's selection model)
     void toggleItemSelected(const ApplicationItem& appItem);
 
+    // Executes action associated to a 3D sensistive item
+    bool processAction(const GraphicsOwnerPtr& graphicsOwner);
+
+    // -- Display mode
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
     void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
+    // -- Visible state of document's tree nodes
     Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
+    // -- Exploding
+    double explodingFactor() const { return m_explodingFactor; }
+    void setExplodingFactor(double t); // Must be in [0,1]
+
+    // -- Visibility of trihedron at world origin
     bool isOriginTrihedronVisible() const;
     void toggleOriginTrihedronVisibility();
 
-    bool processAction(const GraphicsOwnerPtr& graphicsOwner);
-
+    // -- Camera animation
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
     void setViewCameraOrientation(V3d_TypeOfOrientation projection);
     void runViewCameraAnimation(const std::function<void(Handle_V3d_View)>& fnViewChange);
     void stopViewCameraAnimation();
 
+    // -- View trihedron
     enum class ViewTrihedronMode {
         None,
         V3dViewZBuffer,
@@ -83,18 +96,28 @@ signals:
     void viewTrihedronModeChanged(ViewTrihedronMode mode);
     void viewTrihedronCornerChanged(Qt::Corner corner);
 
+    // -- Implementation
 private:
     void onDocumentEntityAdded(TreeNodeId entityTreeNodeId);
     void onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId);
     void onGraphicsSelectionChanged();
 
-    void mapGraphics(TreeNodeId entityTreeNodeId);
+    void mapEntity(TreeNodeId entityTreeNodeId);
+    void unmapEntity(TreeNodeId entityTreeNodeId);
 
     struct GraphicsEntity {
+        struct Object {
+            Object(const GraphicsObjectPtr& p) : ptr(p) {}
+            GraphicsObjectPtr ptr;
+            gp_Trsf trsfOriginal;
+            Bnd_Box bndBox;
+        };
+
         TreeNodeId treeNodeId;
-        std::vector<GraphicsObjectPtr> vecGfxObject;
+        std::vector<Object> vecObject;
         std::unordered_map<TreeNodeId, GraphicsObjectPtr> mapTreeNodeGfxObject;
         std::unordered_map<GraphicsObjectPtr, TreeNodeId> mapGfxObjectTreeNode;
+        Bnd_Box bndBox;
     };
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
@@ -117,6 +140,8 @@ private:
 
     std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
     std::unordered_map<TreeNodeId, Qt::CheckState> m_mapTreeNodeCheckState;
+
+    double m_explodingFactor = 0.;
 };
 
 } // namespace Mayo

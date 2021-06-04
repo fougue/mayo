@@ -11,15 +11,20 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/filepath.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/meta_enum.h"
+#include "../src/base/property_builtins.h"
+#include "../src/base/property_enumeration.h"
+#include "../src/base/property_value_conversion.h"
 #include "../src/base/result.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
+#include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ.h"
@@ -36,11 +41,12 @@
 #include <QtCore/QFile>
 #include <QtCore/QVariant>
 #include <QtTest/QSignalSpy>
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -68,10 +74,10 @@ void Test::Application_test()
 {
     auto app = Application::instance();
     auto ioSystem = Application::instance()->ioSystem();
-    auto fnImportInDocument = [=](const DocumentPtr& doc, const QString& filepath) {
+    auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return ioSystem->importInDocument()
                 .targetDocument(doc)
-                .withFilepaths({ filepath })
+                .withFilepath(fp)
                 .execute();
     };
     QCOMPARE(app->documentCount(), 0);
@@ -141,18 +147,117 @@ void Test::TextId_test()
     QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
 }
 
+void Test::FilePath_test()
+{
+    {
+        const QByteArray testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const FilePath testPath = filepathFrom(testPathQt);
+        QCOMPARE(filepathTo<QByteArray>(testPath), testPathQt);
+    }
+
+    {
+        const QString testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const FilePath testPath = filepathFrom(testPathQt);
+        QCOMPARE(filepathTo<QString>(testPath), testPathQt);
+    }
+}
+
+void Test::PropertyValueConversion_test()
+{
+    QFETCH(QString, strPropertyName);
+    QFETCH(QVariant, variantValue);
+
+    std::unique_ptr<Property> prop;
+    if (strPropertyName == PropertyBool::TypeName) {
+        prop.reset(new PropertyBool(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyInt::TypeName) {
+        prop.reset(new PropertyInt(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyDouble::TypeName) {
+        prop.reset(new PropertyDouble(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyQString::TypeName) {
+        prop.reset(new PropertyQString(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyOccColor::TypeName) {
+        prop.reset(new PropertyOccColor(nullptr, {}));
+    }
+    else if (strPropertyName == PropertyEnumeration::TypeName) {
+        enum class MayoTest_Color { Bleu, Blanc, Rouge };
+        prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
+    }
+
+    QVERIFY(prop);
+
+    PropertyValueConversion conv;
+    QVERIFY(conv.fromVariant(prop.get(), variantValue));
+    QCOMPARE(conv.toVariant(*prop.get()), variantValue);
+}
+
+void Test::PropertyValueConversion_test_data()
+{
+    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<QVariant>("variantValue");
+    QTest::newRow("bool(false)") << PropertyBool::TypeName << QVariant(false);
+    QTest::newRow("bool(true)") << PropertyBool::TypeName << QVariant(true);
+    QTest::newRow("int(-50)") << PropertyInt::TypeName << QVariant(-50);
+    QTest::newRow("int(1979)") << PropertyInt::TypeName << QVariant(1979);
+    QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << QVariant(-1e6);
+    QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << QVariant(3.1415926535);
+    QTest::newRow("QString(\"test\")") << PropertyQString::TypeName << QVariant("test");
+    QTest::newRow("QString(\"1558\")") << PropertyQString::TypeName << QVariant(1558);
+    QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << QVariant("#0000AA");
+    QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << QVariant("#FFFFFF");
+    QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << QVariant("#BB0000");
+    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << QVariant("Blanc");
+}
+
+void Test::PropertyQuantityValueConversion_test()
+{
+    QFETCH(QString, strPropertyName);
+    QFETCH(QVariant, variantFrom);
+    QFETCH(QVariant, variantTo);
+
+    std::unique_ptr<Property> prop;
+    if (strPropertyName == "PropertyLength") {
+        prop.reset(new PropertyLength(nullptr, {}));
+    }
+    else if (strPropertyName == "PropertyAngle") {
+        prop.reset(new PropertyAngle(nullptr, {}));
+    }
+
+    QVERIFY(prop);
+
+    PropertyValueConversion conv;
+    conv.setDoubleToStringPrecision(7);
+    QVERIFY(conv.fromVariant(prop.get(), variantFrom));
+    QCOMPARE(conv.toVariant(*prop.get()), variantTo);
+}
+
+void Test::PropertyQuantityValueConversion_test_data()
+{
+    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<QVariant>("variantFrom");
+    QTest::addColumn<QVariant>("variantTo");
+    QTest::newRow("Length(25mm)") << "PropertyLength" << QVariant("25mm") << QVariant("25mm");
+    QTest::newRow("Length(2m)") << "PropertyLength" << QVariant("2m") << QVariant("2000mm");
+    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << QVariant("1.57079rad") << QVariant("1.57079rad");
+    QTest::newRow("Length(90°)") << "PropertyAngle" << QVariant("90°") << QVariant("1.570796rad");
+}
+
 void Test::IO_test()
 {
-    QFETCH(QString, filePath);
+    QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
 
     auto ioSystem = Application::instance()->ioSystem();
-    QCOMPARE(ioSystem->probeFormat(filePath), expectedPartFormat);
+    QCOMPARE(ioSystem->probeFormat(filepathFrom(strFilePath)), expectedPartFormat);
 }
 
 void Test::IO_test_data()
 {
-    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
 
     QTest::newRow("cube.step") << "inputs/cube.step" << IO::Format_STEP;
@@ -552,6 +657,59 @@ void Test::StringUtils_stringConversion_test()
     QCOMPARE(StringUtils::fromUtf16(StringUtils::toUtf16<TCollection_ExtendedString>(text)), text);
 }
 
+void Test::TKernelUtils_colorToHex_test()
+{
+    QFETCH(int, red);
+    QFETCH(int, green);
+    QFETCH(int, blue);
+    QFETCH(QString, strHexColor);
+
+    const Quantity_Color color(red / 255., green / 255., blue / 255., Quantity_TOC_RGB);
+    const std::string strHexColorActual = TKernelUtils::colorToHex(color);
+    QCOMPARE(QString::fromStdString(strHexColorActual), strHexColor);
+}
+
+void Test::TKernelUtils_colorToHex_test_data()
+{
+    QTest::addColumn<int>("red");
+    QTest::addColumn<int>("green");
+    QTest::addColumn<int>("blue");
+    QTest::addColumn<QString>("strHexColor");
+
+    QTest::newRow("RGB(  0,  0,  0)") << 0 << 0 << 0 << "#000000";
+    QTest::newRow("RGB(255,255,255)") << 255 << 255 << 255 << "#FFFFFF";
+    QTest::newRow("RGB(  5,  5,  5)") << 5 << 5 << 5 << "#050505";
+    QTest::newRow("RGB(155,208, 67)") << 155 << 208 << 67 << "#9BD043";
+    QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
+}
+
+void Test::TKernelUtils_colorFromHex_test()
+{
+    QFETCH(int, red);
+    QFETCH(int, green);
+    QFETCH(int, blue);
+    QFETCH(QString, strHexColor);
+    const Quantity_Color expectedColor(red / 255., green / 255., blue / 255., Quantity_TOC_RGB);
+
+    Quantity_Color actualColor;
+    QVERIFY(TKernelUtils::colorFromHex(strHexColor.toStdString(), &actualColor));
+    QCOMPARE(actualColor, expectedColor);
+}
+
+void Test::TKernelUtils_colorFromHex_test_data()
+{
+    QTest::addColumn<int>("red");
+    QTest::addColumn<int>("green");
+    QTest::addColumn<int>("blue");
+    QTest::addColumn<QString>("strHexColor");
+
+    QTest::newRow("RGB(  0,  0,  0)") << 0 << 0 << 0 << "#000000";
+    QTest::newRow("RGB(255,255,255)") << 255 << 255 << 255 << "#FFFFFF";
+    QTest::newRow("RGB(  5,  5,  5)") << 5 << 5 << 5 << "#050505";
+    QTest::newRow("RGB(155,208, 67)") << 155 << 208 << 67 << "#9BD043";
+    QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
+}
+
 void Test::UnitSystem_test()
 {
     QFETCH(UnitSystem::TranslateResult, trResultActual);
@@ -592,15 +750,17 @@ void Test::LibTask_test()
 
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        progress->beginScope(40);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgress subProgress(progress, 40);
+            for (int i = 0; i <= 100; ++i)
+                subProgress.setValue(i);
+        }
 
-        progress->beginScope(60);
-        for (int i = 0; i <= 100; ++i)
-            progress->setValue(i);
-        progress->endScope();
+        {
+            TaskProgress subProgress(progress, 60);
+            for (int i = 0; i <= 100; ++i)
+                subProgress.setValue(i);
+        }
     });
     std::vector<ProgressRecord> vecProgressRec;
     QObject::connect(

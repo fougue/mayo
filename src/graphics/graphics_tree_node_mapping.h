@@ -17,6 +17,7 @@ class DocumentTreeNode;
 
 class GraphicsTreeNodeMapping {
 public:
+    virtual ~GraphicsTreeNodeMapping() = default;
     virtual int selectionMode() const = 0;
     virtual std::vector<GraphicsOwnerPtr> findGraphicsOwners(const DocumentTreeNode& treeNode) const = 0;
     virtual bool mapGraphicsOwner(const GraphicsOwnerPtr& gfxOwner) = 0;

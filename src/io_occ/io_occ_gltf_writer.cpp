@@ -80,14 +80,14 @@ bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     return true;
 }
 
-bool OccGltfWriter::writeFile(const QString& filepath, TaskProgress* progress)
+bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (!m_document)
         return false;
 
     Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
     const bool isBinary = m_params.format == Format::Binary;
-    RWGltf_CafWriter writer(StringUtils::toUtf8<TCollection_AsciiString>(filepath), isBinary);
+    RWGltf_CafWriter writer(filepath.u8string().c_str(), isBinary);
     const TColStd_IndexedDataMapOfStringString fileInfo;
     if (m_seqRootLabel.IsEmpty())
         return writer.Perform(m_document, fileInfo, occProgress->Start());

@@ -15,7 +15,12 @@ public:
     template<typename KEY, typename VALUE, typename... EXTRAS>
     static VALUE findValue(const KEY& key, const std::unordered_map<KEY, VALUE, EXTRAS...>& hashmap) {
         auto it = hashmap.find(key);
-        return it != hashmap.cend() ? it->second : VALUE();
+        const VALUE defaultValue = {};
+        return it != hashmap.cend() ? it->second : defaultValue;
+    }
+
+    static void toggle(bool& value) {
+        value = !value;
     }
 };
 

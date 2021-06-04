@@ -12,8 +12,8 @@ namespace Internal {
 
 static bool hasApplicationItem(Span<ApplicationItem> vec, const ApplicationItem& item)
 {
-    auto itFound = std::find(vec.cbegin(), vec.cend(), item);
-    return itFound != vec.cend();
+    auto itFound = std::find(vec.begin(), vec.end(), item);
+    return itFound != vec.end();
 }
 
 static std::vector<ApplicationItem>::iterator findApplicationItem(
@@ -90,8 +90,10 @@ void ApplicationItemSelectionModel::remove(Span<ApplicationItem> vecItem)
 void ApplicationItemSelectionModel::clear()
 {
     if (!m_vecSelectedItem.empty()) {
-        emit changed({}, m_vecSelectedItem);
+        // Warning: slots connected to changed() signal may indirectly access m_vecSelectedItem
+        const auto vecDeselectedItem = m_vecSelectedItem;
         m_vecSelectedItem.clear();
+        emit changed({}, vecDeselectedItem);
     }
 }
 

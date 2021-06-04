@@ -21,8 +21,10 @@ class OccStaticVariablesRollback;
 class OccIgesReader : public Reader {
 public:
     OccIgesReader();
-    bool readFile(const QString& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    ~OccIgesReader();
+
+    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     // Parameters
 
@@ -56,7 +58,8 @@ private:
     void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
-    IGESCAFControl_Reader m_reader;
+    IGESCAFControl_Reader* m_reader = nullptr;
+    std::aligned_storage_t<sizeof(IGESCAFControl_Reader)> m_readerStorage;
     Parameters m_params;
 };
 
@@ -64,8 +67,10 @@ private:
 class OccIgesWriter : public Writer {
 public:
     OccIgesWriter();
+    ~OccIgesWriter();
+
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const QString& filepath, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters
 
@@ -97,7 +102,8 @@ private:
     void changeStaticVariables(OccStaticVariablesRollback* rollback);
 
     class Properties;
-    IGESCAFControl_Writer m_writer;
+    IGESCAFControl_Writer* m_writer = nullptr;
+    std::aligned_storage_t<sizeof(IGESCAFControl_Writer)> m_writerStorage;
     Parameters m_params;
 };
 

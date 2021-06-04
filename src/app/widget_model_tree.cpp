@@ -21,7 +21,7 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <cassert>
 #include <memory>
 #include <unordered_map>
@@ -39,18 +39,6 @@ static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
         vecPtrBuilder.emplace_back(std::make_unique<WidgetModelTreeBuilder>()); // Fallback
 
     return vecPtrBuilder;
-}
-
-template<typename PREDICATE>
-static WidgetModelTreeBuilder* findSupportBuilder(
-        Span<WidgetModelTreeBuilder*> spanBuilder, PREDICATE fn)
-{
-    for (int i = 1; i < spanBuilder.size(); ++i) {
-        if (fn(spanBuilder.at(i)))
-            return spanBuilder.at(i);
-    }
-
-    return spanBuilder.at(0); // Fallback
 }
 
 class TreeWidget : public QTreeWidget {
@@ -145,7 +133,7 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     m_ui->setupUi(this);
     m_ui->treeWidget_Model->setUniformRowHeights(true);
     for (const BuilderPtr& ptrBuilder : Internal::arrayPrototypeBuilder()) {
-        m_vecBuilder.push_back(std::move(ptrBuilder->clone()));
+        m_vecBuilder.push_back(ptrBuilder->clone());
         m_vecBuilder.back()->setTreeWidget(m_ui->treeWidget_Model);
     }
 
@@ -397,12 +385,12 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
     vecDeselected.reserve(listDeselectedIndex.size());
     for (const QModelIndex& index : listSelectedIndex) {
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
-        vecSelected.push_back(std::move(Internal::toApplicationItem(treeItem)));
+        vecSelected.push_back(Internal::toApplicationItem(treeItem));
     }
 
     for (const QModelIndex& index : listDeselectedIndex) {
         const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
-        vecDeselected.push_back(std::move(Internal::toApplicationItem(treeItem)));
+        vecDeselected.push_back(Internal::toApplicationItem(treeItem));
     }
 
     m_guiApp->selectionModel()->add(vecSelected);
@@ -410,12 +398,12 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
 }
 
 void WidgetModelTree::onApplicationItemSelectionModelChanged(
-        Span<ApplicationItem> selected, Span<ApplicationItem> deselected)
+        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected)
 {
     this->connectTreeWidgetDocumentSelectionChanged(false);
     auto _ = gsl::finally([=] { this->connectTreeWidgetDocumentSelectionChanged(true); });
 
-    auto fnSetSelected = [=](Span<ApplicationItem> spanAppItem, bool on) {
+    auto fnSetSelected = [=](Span<const ApplicationItem> spanAppItem, bool on) {
         for (const ApplicationItem& appItem : spanAppItem) {
             if (!appItem.isDocumentTreeNode())
                 continue;

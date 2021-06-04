@@ -35,11 +35,23 @@ release_with_debuginfo:*msvc* {
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
-*g++* {
+*g++*|*clang* {
     QMAKE_CXXFLAGS += -std=c++17
+}
+*clang* {
+    # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
+    QMAKE_CXXFLAGS += -Wno-undefined-var-template
+}
+*clang-libc++* {
+    # See https://libcxx.llvm.org/docs/UsingLibcxx.html
+    LIBS += -lc++fs
 }
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+}
+
+*win* {
+    LIBS += -lUser32
 }
 
 INCLUDEPATH += \
@@ -75,18 +87,13 @@ win* {
 
 FORMS += $$files(src/app/*.ui)
 
-#SOURCES += i18n/messages.cpp
-
-TRANSLATIONS += \
-    i18n/mayo_en.ts \
-    i18n/mayo_fr.ts
-
 RESOURCES += mayo.qrc
 RC_ICONS = images/appicon.ico
 
 OTHER_FILES += \
     README.md \
     appveyor.yml \
+    .travis.yml \
     images/credits.txt
 
 # OpenCascade

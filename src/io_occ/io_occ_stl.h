@@ -10,7 +10,6 @@
 #include "../base/io_writer.h"
 #include <Poly_Triangulation.hxx>
 #include <TopoDS_Shape.hxx>
-#include <QtCore/QString>
 
 namespace Mayo {
 namespace IO {
@@ -18,19 +17,19 @@ namespace IO {
 // Opencascade-based reader for STL file format
 class OccStlReader : public Reader {
 public:
-    bool readFile(const QString& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    bool readFile(const FilePath& filepath, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
 private:
     Handle_Poly_Triangulation m_mesh;
-    QString m_baseFilename;
+    FilePath m_baseFilename;
 };
 
 // Opencascade-based writer for STL file format
 class OccStlWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
-    bool writeFile(const QString& filepath, TaskProgress* progress) override;
+    bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "quantity.h"
-#include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -30,16 +30,15 @@ public:
         return UnitSystem::translate(schema, qty.value(), UNIT);
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);
+    static TranslateResult parseQuantity(std::string_view strQuantity, Unit* ptrUnit = nullptr);
 
     static TranslateResult radians(QuantityAngle angle);
     static TranslateResult degrees(QuantityAngle angle);
+    static TranslateResult meters(QuantityLength length);
     static TranslateResult millimeters(QuantityLength length);
     static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
     static TranslateResult seconds(QuantityTime duration);
-
-    static std::string toSystemLocaleString(double value, const char* strUnit);
-    static std::string toCLocaleString(double value, const char* strUnit);
 
 private:
     UnitSystem() = default;

@@ -8,6 +8,7 @@
 
 #include "../base/application.h"
 #include "../base/document.h"
+#include "../base/string_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
 
@@ -38,7 +39,7 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
     const DocumentPtr& doc = m_vecGuiDocument.at(index.row())->document();
     switch (role) {
     case Qt::ToolTipRole:
-        return doc->filePath();
+        return filepathTo<QString>(doc->filePath());
     case Qt::DisplayRole:
     case Qt::EditRole:
         return doc->name();

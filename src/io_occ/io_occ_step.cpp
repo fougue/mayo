@@ -100,6 +100,7 @@ public:
         const OccStepReader::Parameters params;
         this->productContext.setValue(params.productContext);
         this->assemblyLevel.setValue(params.assemblyLevel);
+        this->preferredShapeRepresentation.setValue(params.preferredShapeRepresentation);
         this->readShapeAspect.setValue(params.readShapeAspect);
         this->readSubShapesNames.setValue(params.readSubShapesNames);
         this->encoding.setValue(params.encoding);
@@ -115,30 +116,37 @@ public:
 
 OccStepReader::OccStepReader()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_reader = new(&m_readerStorage) STEPCAFControl_Reader();
     STEPCAFControl_Controller::Init();
-    m_reader.SetColorMode(true);
-    m_reader.SetNameMode(true);
-    m_reader.SetLayerMode(true);
-    m_reader.SetPropsMode(true);
-    m_reader.SetGDTMode(true);
-    m_reader.SetMatMode(true);
-    m_reader.SetViewMode(true);
+    m_reader->SetColorMode(true);
+    m_reader->SetNameMode(true);
+    m_reader->SetLayerMode(true);
+    m_reader->SetPropsMode(true);
+    m_reader->SetGDTMode(true);
+    m_reader->SetMatMode(true);
+    m_reader->SetViewMode(true);
 }
 
-bool OccStepReader::readFile(const QString& filepath, TaskProgress* progress)
+OccStepReader::~OccStepReader()
+{
+    m_reader->~STEPCAFControl_Reader();
+}
+
+bool OccStepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafReadFile(m_reader, filepath, progress);
+    return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
-bool OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence OccStepReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_reader, doc, progress);
+    return Private::cafTransfer(*m_reader, doc, progress);
 }
 
 std::unique_ptr<PropertyGroup> OccStepReader::createProperties(PropertyGroup* parentGroup)
@@ -279,13 +287,20 @@ public:
 
 OccStepWriter::OccStepWriter()
 {
+    MayoIO_CafGlobalScopedLock(cafLock);
+    m_writer = new(&m_writerStorage) STEPCAFControl_Writer();
     STEPCAFControl_Controller::Init();
-    m_writer.SetColorMode(true);
-    m_writer.SetNameMode(true);
-    m_writer.SetLayerMode(true);
-    m_writer.SetPropsMode(true);
-    m_writer.SetDimTolMode(true);
-    m_writer.SetMaterialMode(true);
+    m_writer->SetColorMode(true);
+    m_writer->SetNameMode(true);
+    m_writer->SetLayerMode(true);
+    m_writer->SetPropsMode(true);
+    m_writer->SetDimTolMode(true);
+    m_writer->SetMaterialMode(true);
+}
+
+OccStepWriter::~OccStepWriter()
+{
+    m_writer->~STEPCAFControl_Writer();
 }
 
 bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
@@ -293,16 +308,16 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
-    return Private::cafTransfer(m_writer, appItems, progress);
+    return Private::cafTransfer(*m_writer, appItems, progress);
 }
 
-bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
+bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
 
-    APIHeaderSection_MakeHeader makeHeader(m_writer.ChangeWriter().Model());
+    APIHeaderSection_MakeHeader makeHeader(m_writer->ChangeWriter().Model());
     makeHeader.SetAuthorValue(
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
     makeHeader.SetOrganizationValue(
@@ -312,8 +327,7 @@ bool OccStepWriter::writeFile(const QString& filepath, TaskProgress* progress)
     makeHeader.SetDescriptionValue(
                 1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
 
-    const IFSelect_ReturnStatus err = m_writer.Write(filepath.toUtf8().constData());
-    progress->setValue(100);
+    const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;
 }
 
@@ -347,7 +361,7 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
         // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
         // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
         // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
-        m_writer.ChangeWriter().Model(true);
+        m_writer->ChangeWriter().Model(true);
     }
 
     rollback->change("write.step.unit", OccCommon::toCafString(m_params.lengthUnit));

@@ -138,7 +138,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     QDoubleSpinBox* posSpin = ui.posSpin();
     auto signalSpinValueChanged = qOverload<double>(&QDoubleSpinBox::valueChanged);
 
-    QObject::connect(ui.check_On, &QCheckBox::clicked, [=](bool on) {
+    QObject::connect(ui.check_On, &QCheckBox::clicked, this, [=](bool on) {
         ui.widget_Control->setEnabled(on);
         this->setPlaneOn(gfx, on);
         m_view->Redraw();
@@ -146,7 +146,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
 
     if (data->ui.customXDirSpin()) {
         auto widgetDir = ui.widget_Control->findChild<QWidget*>("widget_CustomDir");
-        QObject::connect(ui.check_On, &QAbstractButton::clicked, [=](bool on) {
+        QObject::connect(ui.check_On, &QAbstractButton::clicked, this, [=](bool on) {
             widgetDir->setVisible(on);
             QWidget* panel = this->parentWidget() ? this->parentWidget() : this;
             if (on) {
@@ -160,7 +160,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         });
     }
 
-    QObject::connect(posSpin, signalSpinValueChanged, [=](double pos) {
+    QObject::connect(posSpin, signalSpinValueChanged, this, [=](double pos) {
         QSignalBlocker sigBlock(posSlider); Q_UNUSED(sigBlock);
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
@@ -168,7 +168,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         m_view->Redraw();
     });
 
-    QObject::connect(posSlider, &QSlider::valueChanged, [=](int pct) {
+    QObject::connect(posSlider, &QSlider::valueChanged, this, [=](int pct) {
         const double pos = ui.sliderValueToSpinValue(pct);
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
@@ -176,7 +176,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         m_view->Redraw();
     });
 
-    QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, [=]{
+    QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, this, [=]{
         const gp_Dir invNormal = gfx->ToPlane().Axis().Direction().Reversed();
         GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, invNormal);
         GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
@@ -188,7 +188,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     QDoubleSpinBox* customYDirSpin = ui.customYDirSpin();
     QDoubleSpinBox* customZDirSpin = ui.customZDirSpin();
     auto funcConnectDirSpin = [=](QDoubleSpinBox* dirSpin) {
-        QObject::connect(dirSpin, signalSpinValueChanged, [=]{
+        QObject::connect(dirSpin, signalSpinValueChanged, this, [=]{
             const gp_Vec vecNormal(
                         customXDirSpin->value(),
                         customYDirSpin->value(),
@@ -206,7 +206,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         funcConnectDirSpin(customXDirSpin);
         funcConnectDirSpin(customYDirSpin);
         funcConnectDirSpin(customZDirSpin);
-        QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, [=]{
+        QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, this, [=]{
             QSignalBlocker sigBlockX(customXDirSpin); Q_UNUSED(sigBlockX);
             QSignalBlocker sigBlockY(customYDirSpin); Q_UNUSED(sigBlockY);
             QSignalBlocker sigBlockZ(customZDirSpin); Q_UNUSED(sigBlockZ);

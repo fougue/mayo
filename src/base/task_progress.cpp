@@ -8,14 +8,29 @@
 #include "task.h"
 #include "task_manager.h"
 
-#include <cassert>
+#include <algorithm>
+#include <cmath>
 #include <limits>
 
 namespace Mayo {
 
-TaskProgress::TaskProgress(const Task& task)
-    : m_task(&task)
+TaskProgress::TaskProgress()
 {
+}
+
+TaskProgress::TaskProgress(TaskProgress* parent, double portionSize, const QString& step)
+    : m_parent(parent),
+      m_task(parent ? parent->m_task : nullptr),
+      m_portionSize(std::clamp(portionSize, 0., 100.))
+{
+    if (!step.isEmpty())
+        this->setStep(step);
+}
+
+TaskProgress::~TaskProgress()
+{
+    if (m_parent)
+        this->setValue(100);
 }
 
 TaskId TaskProgress::taskId() const
@@ -23,14 +38,29 @@ TaskId TaskProgress::taskId() const
     return m_task ? m_task->id() : std::numeric_limits<TaskId>::max();
 }
 
+TaskManager* TaskProgress::taskManager() const
+{
+    return m_task ? m_task->manager() : nullptr;
+}
+
 void TaskProgress::setValue(int pct)
 {
-    if (m_currentScopeSize != -1)
-        pct = m_currentScopeValueStart + pct * (m_currentScopeSize / 100.);
+    if (m_isAbortRequested)
+        return;
 
-    m_value = pct;
-    if (m_task)
-        emit m_task->manager()->progressChanged(m_task->id(), pct);
+    const int valueOnEntry = m_value;
+    m_value = std::clamp(pct, 0, 100);
+    if (m_value != 0 && m_value == valueOnEntry)
+        return;
+
+    if (m_parent) {
+        const int valueDeltaInParent = std::round((m_value - valueOnEntry) * (m_portionSize / 100.));
+        m_parent->setValue(m_parent->value() + valueDeltaInParent);
+    }
+    else {
+        if (m_task)
+            emit m_task->manager()->progressChanged(m_task->id(), m_value);
+    }
 }
 
 void TaskProgress::setStep(const QString& title)
@@ -40,25 +70,14 @@ void TaskProgress::setStep(const QString& title)
         emit m_task->manager()->progressStep(m_task->id(), title);
 }
 
+void TaskProgress::setTask(const Task* task)
+{
+    m_task = task;
+}
+
 bool TaskProgress::isAbortRequested(const TaskProgress* progress)
 {
     return progress ? progress->isAbortRequested() : false;
-}
-
-void TaskProgress::beginScope(int scopeSize, const QString& stepTitle)
-{
-    assert(m_currentScopeSize == -1);
-    assert(scopeSize > 1);
-    m_currentScopeSize = scopeSize;
-    m_currentScopeValueStart = m_value;
-    if (!stepTitle.isEmpty())
-        this->setStep(stepTitle);
-}
-
-void TaskProgress::endScope()
-{
-    this->setValue(100);
-    m_currentScopeSize = -1;
 }
 
 void TaskProgress::requestAbort()

@@ -8,40 +8,53 @@
 
 #include "task_common.h"
 #include <QtCore/QString>
+#include <atomic>
 
 namespace Mayo {
 
 class Task;
+class TaskManager;
 
 class TaskProgress {
 public:
-    TaskProgress() = default;
+    TaskProgress();
+    TaskProgress(TaskProgress* parent, double portionSize, const QString& step = {});
+    ~TaskProgress();
 
     TaskId taskId() const;
+    TaskManager* taskManager() const;
 
+    // Value in [0,100]
     int value() const { return m_value; }
     void setValue(int pct);
 
     const QString& step() const { return m_step; }
     void setStep(const QString& title);
 
+    bool isRoot() const { return m_parent != nullptr; }
+    const TaskProgress* parent() const { return m_parent; }
+    TaskProgress* parent() { return m_parent; }
+
     bool isAbortRequested() const { return m_isAbortRequested; }
     static bool isAbortRequested(const TaskProgress* progress);
 
-    void beginScope(int scopeSize, const QString& stepTitle = QString());
-    void endScope();
+    // Disable copy
+    TaskProgress(const TaskProgress&) = delete;
+    TaskProgress(TaskProgress&&) = delete;
+    TaskProgress& operator=(const TaskProgress&) = delete;
+    TaskProgress& operator=(TaskProgress&&) = delete;
 
 private:
-    TaskProgress(const Task& task);
-
+    void setTask(const Task* task);
     void requestAbort();
 
     friend class TaskManager;
+
+    TaskProgress* m_parent = nullptr;
     const Task* m_task = nullptr;
-    int m_value = 0;
+    double m_portionSize = -1;
+    std::atomic<int> m_value = 0;
     QString m_step;
-    int m_currentScopeSize = -1;
-    int m_currentScopeValueStart = 0;
     bool m_isAbortRequested = false;
 };
 

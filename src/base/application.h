@@ -9,7 +9,6 @@
 #include "application_ptr.h"
 #include "document.h"
 #include <CDF_DirectoryIterator.hxx>
-class QFileInfo;
 
 namespace Mayo {
 
@@ -41,7 +40,7 @@ public:
     DocumentPtr openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
     DocumentPtr findDocumentByIndex(int docIndex) const;
     DocumentPtr findDocumentByIdentifier(Document::Identifier docIdent) const;
-    DocumentPtr findDocumentByLocation(const QFileInfo& loc) const;
+    DocumentPtr findDocumentByLocation(const FilePath& location) const;
     int findIndexOfDocument(const DocumentPtr& doc) const;
 
     void closeDocument(const DocumentPtr& doc);
@@ -67,11 +66,11 @@ public: //  from TDocStd_Application
     DEFINE_STANDARD_RTTI_INLINE(Application, TDocStd_Application)
 
 signals:
-    void documentAdded(const DocumentPtr& doc);
-    void documentAboutToClose(const DocumentPtr& doc);
-    void documentNameChanged(const DocumentPtr& doc, const QString& name);
-    void documentEntityAdded(const DocumentPtr& doc, TreeNodeId entityId);
-    void documentEntityAboutToBeDestroyed(const DocumentPtr& doc, TreeNodeId entityId);
+    void documentAdded(const Mayo::DocumentPtr& doc);
+    void documentAboutToClose(const Mayo::DocumentPtr& doc);
+    void documentNameChanged(const Mayo::DocumentPtr& doc, const QString& name);
+    void documentEntityAdded(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
+    void documentEntityAboutToBeDestroyed(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
 
 private: // Implementation
     friend class Document;

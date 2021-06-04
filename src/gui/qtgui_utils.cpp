@@ -7,10 +7,11 @@
 #include "qtgui_utils.h"
 #include "../base/math_utils.h"
 
+#include <Standard_Version.hxx>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 #include <algorithm>
 #include <cmath>
 
@@ -119,7 +120,7 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2)
     subStops.push_back({ 1., linearColorAt(gradient, t2) });
     QLinearGradient subGradient(0, 0, 1, 0);
     subGradient.setStops(subStops);
-    return subGradient;
+    return std::move(subGradient);
 }
 
 int screenPixelWidth(double screenRatio, const QScreen* screen)
@@ -157,6 +158,12 @@ FontChange& FontChange::adjustSize(int offset) {
     return *this;
 }
 
+FontChange &FontChange::scalePointSizeF(double f) {
+    const int pointSizeF = m_font.pointSizeF();
+    m_font.setPointSizeF(f * pointSizeF);
+    return *this;
+}
+
 FontChange& FontChange::bold(bool on) {
     m_font.setBold(on);
     return *this;
@@ -165,6 +172,16 @@ FontChange& FontChange::bold(bool on) {
 FontChange& FontChange::fixedPitch(bool on) {
     m_font.setFixedPitch(on);
     return *this;
+}
+
+Quantity_Color toPreferredColorSpace(const QColor& c)
+{
+    // See https://dev.opencascade.org/content/occt-3d-viewer-becomes-srgb-aware
+#if OCC_VERSION_HEX >= 0x070500
+    return QtGuiUtils::toColor<Quantity_TOC_sRGB>(c);
+#else
+    return QtGuiUtils::toColor<Quantity_TOC_RGB>(c);
+#endif
 }
 
 } // namespace QtGuiUtils

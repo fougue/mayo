@@ -13,7 +13,6 @@
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TCollection_HAsciiString.hxx>
-#include <TopAbs_ShapeEnum.hxx>
 #include <string>
 #include <string_view>
 #include <utility>
