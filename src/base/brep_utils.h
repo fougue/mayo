@@ -15,6 +15,8 @@
 
 namespace Mayo {
 
+class TaskProgress;
+
 struct BRepUtils {
     template<typename FUNC>
     static void forEachSubShape(TopExp_Explorer& explorer, FUNC fn);

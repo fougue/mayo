@@ -32,6 +32,7 @@ namespace Mayo {
 
 class GuiApplication;
 class GuiDocument;
+class TaskProgress;
 
 class AppModule :
         public QObject,
