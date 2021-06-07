@@ -1,0 +1,10 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/mocs_compilation.cpp
+

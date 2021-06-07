@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="mayo"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\..\;CMake Files\..\..\..\..\..\usr\;CMake Files\..\..\..\..\..\usr\local\;CMake Files\..\..\..\..\..\usr\local\lib\;CMake Files\..\..\..\..\..\usr\local\lib\cmake\;CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\;CMake Files\..\..\..\..\..\usr\lib\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Xml\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5OpenGL\;CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mayo">
+				<Option output="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DOCCT"/>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_WIDGETS_LIB"/>
+					<Add option="-DQT_GUI_LIB"/>
+					<Add option="-DQT_XML_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/include"/>
+					<Add directory="/usr/local/include/opencascade"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtWidgets"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtGui"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtXml"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 mayo"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mayo/fast">
+				<Option output="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DOCCT"/>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_WIDGETS_LIB"/>
+					<Add option="-DQT_GUI_LIB"/>
+					<Add option="-DQT_XML_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/include"/>
+					<Add directory="/usr/local/include/opencascade"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtWidgets"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtGui"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtXml"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 mayo/fast"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mayo_autogen">
+				<Option working_dir="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 mayo_autogen"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/mocs_compilation.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/app_module.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/app_module.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/button_flat.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/button_flat.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/console.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/console.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_about.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_about.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_inspect_xde.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_inspect_xde.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_options.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_options.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_save_image_view.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_save_image_view.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_task_manager.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_task_manager.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/document_tree_node_properties_providers.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/document_tree_node_properties_providers.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/grid_helper.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/grid_helper.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/item_view_buttons.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/item_view_buttons.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/list_helper.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/list_helper.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/main.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/mainwindow.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/mainwindow.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window_740.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window_740.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window_750.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window_750.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/property_editor_factory.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/property_editor_factory.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/property_item_delegate.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/property_item_delegate.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/proxy_styled_item_delegate.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/proxy_styled_item_delegate.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/recent_files.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/recent_files.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/theme.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/theme.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_planes.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_planes.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_file_system.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_file_system.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_gui_document.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_gui_document.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_home_files.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_home_files.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_message_indicator.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_message_indicator.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder_mesh.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder_mesh.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder_xde.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder_xde.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_occ_view.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_occ_view.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_occ_view_controller.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_occ_view_controller.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_properties_editor.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_properties_editor.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_shape_selector.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_shape_selector.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widgets_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widgets_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADECompileDefinitionsAndFlags-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEDrawTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEDrawTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEModelingDataTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEModelingDataTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEVisualizationTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEVisualizationTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\opencascade\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5Config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5ConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5ModuleLocation.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreMacros.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsMacros.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QComposePlatformInputContextPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEglFSEmulatorIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEglFSIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEglFSKmsEglDeviceIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEglFSKmsGbmIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEglFSX11IntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEvdevKeyboardPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEvdevMousePlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEvdevTabletPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QEvdevTouchScreenPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QGifPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QICOPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QIbusPlatformInputContextPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QJpegPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QLibInputPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QLinuxFbIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QMinimalEglIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QMinimalIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QOffscreenIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QTuioTouchPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QVncIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QXcbEglIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QXcbGlxIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5Gui_QXcbIntegrationPlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Xml/Qt5XmlConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Xml\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Xml/Qt5XmlConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Xml\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5OpenGL/Qt5OpenGLConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5OpenGL\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5OpenGL/Qt5OpenGLConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5OpenGL\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5NetworkConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5NetworkConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5Network_QConnmanEnginePlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5Network_QGenericEnginePlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5Network_QNetworkManagerEnginePlugin.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
