@@ -6,6 +6,9 @@
 [![Build Status](https://img.shields.io/travis/fougue/mayo/develop.svg?logo=travis)](https://travis-ci.org/fougue/mayo)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
 
+# What is this repo
+This repo is made so that it can be recompiled with the mayo project cmake.
+
 # What is Mayo
 Mayo is a 3D viewer and converter inspired by FreeCad
 
