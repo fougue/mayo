@@ -12,11 +12,11 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 #-------------------------------------------------------------------
 message("--> Searching source files....")
 file(GLOB SOURCE_FILES
-        ${PROJECT_SOURCE_DIR}/*.cpp *.c
-        ${PROJECT_SOURCE_DIR}/src/app/*.cpp *.c
-        ${PROJECT_SOURCE_DIR}/src/intro/*.cpp *.c
-        ${PROJECT_SOURCE_DIR}/src/project/*.cpp *.c
-        ${PROJECT_SOURCE_DIR}/src/account/*.cpp *.c
+        ${PROJECT_SOURCE_DIR}/src/app/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/base/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/graphics/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/gui/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
         )
 
 # Source Files Dump
@@ -28,11 +28,11 @@ endforeach ()
 #-------------------------------------------------------------------
 message("--> Searching header files....")
 file(GLOB HEADER_FILES
-        ${PROJECT_SOURCE_DIR}/*.h *.hpp
-        ${PROJECT_SOURCE_DIR}/src/*.h *.hpp
-        ${PROJECT_SOURCE_DIR}/src/intro/*.hpp *.h
-        ${PROJECT_SOURCE_DIR}/src/project/*.hpp *.h
-        ${PROJECT_SOURCE_DIR}/src/account/*.hpp *.h
+        ${PROJECT_SOURCE_DIR}/src/app/*.h
+        ${PROJECT_SOURCE_DIR}/src/base/*.h
+        ${PROJECT_SOURCE_DIR}/src/graphics/*.h
+        ${PROJECT_SOURCE_DIR}/src/gui/*.h
+        ${PROJECT_SOURCE_DIR}/src/io_occ/*.h
         )
 
 # Header Files Dump
@@ -44,7 +44,7 @@ endforeach ()
 #-------------------------------------------------------------------
 message("--> Searching resource files...")
 file(GLOB RESOURCE_FILES
-        ${PROJECT_SOURCE_DIR}/resources/*.qrc
+        ${PROJECT_SOURCE_DIR}/*.qrc
         )
 
 # Resource Files Dump
@@ -56,14 +56,10 @@ endforeach ()
 #-------------------------------------------------------------------
 message("--> Searching UI files....")
 file(GLOB UI_FILES
-        ${PROJECT_SOURCE_DIR}/*.cpp *.c
-        ${PROJECT_SOURCE_DIR}/src/app/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/base/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/graphics/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/gui/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/io_gmio/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/*.ui
         )
+
+#QT_WRAP_UI(${UI_FILES})
 
 # Source Files Dump
 foreach (_file ${UI_FILES})
@@ -71,24 +67,6 @@ foreach (_file ${UI_FILES})
 endforeach ()
 #-------------------------------------------------------------------
 
-# Translation Files ------------------------------------------------
-# YET NOT COMPATIBLE IN WINDOWS
-option(CREATE_TRANSLATION "Create translation files" OFF)
-if (${CREATE_TRANSLATION})
-    set(TRANSLATION_FILES
-            ${PROJECT_SOURCE_DIR}/resources/translations/turkish.ts
-            ${PROJECT_SOURCE_DIR}/resources/translations/french.ts
-            ${PROJECT_SOURCE_DIR}/resources/translations/russian.ts
-            ${PROJECT_SOURCE_DIR}/resources/translations/italian.ts
-            ${PROJECT_SOURCE_DIR}/resources/translations/chinese.ts
-            ${PROJECT_SOURCE_DIR}/resources/translations/arabic.ts)
-
-    # Translation Files Dump
-    foreach (_file ${TRANSLATION_FILES})
-        message("Found: ${_file}")
-    endforeach ()
-endif ()
-#-------------------------------------------------------------------
 option(USE_OCE "Use OpenCASCADE Community Edition " OFF)
 
 if (USE_OCE)
@@ -139,12 +117,6 @@ find_package(Qt5 COMPONENTS Xml REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
 find_package(Qt5 COMPONENTS Network REQUIRED)
 
-
-if (${CREATE_TRANSLATION})
-    find_package(Qt5LinguistTools)
-    message("Qt5LinguistTools  : " ${Qt5LinguistTools_DIR})
-endif ()
-
 message("--> Printing QT5 Modules")
 message("Qt5               : " ${Qt5_DIR})
 message("Qt5Core           : " ${Qt5Core_DIR})
@@ -165,6 +137,7 @@ message("Qt5::Gui Lib     : ${QtGui_location}")
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES}
         ${HEADER_FILES}
+        ${UI_FILES}
         ${RESOURCE_FILES}
         ${TRANSLATION_FILES}
         ${QM_FILES}
@@ -177,7 +150,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt5::Widgets
         Qt5::Xml
         Qt5::Network
-        ${TabToolbar_LIBRARY}
         )
 
 ###########################################################################################

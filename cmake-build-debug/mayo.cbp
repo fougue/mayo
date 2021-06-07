@@ -122,7 +122,16 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.rule">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/mocs_compilation.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/mayo.qrc">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/app_module.cpp">
@@ -149,10 +158,16 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_about.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_about.ui">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_inspect_xde.cpp">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_inspect_xde.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_inspect_xde.ui">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_options.cpp">
@@ -161,16 +176,25 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_options.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_options.ui">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_save_image_view.cpp">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_save_image_view.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_save_image_view.ui">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_task_manager.cpp">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_task_manager.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/dialog_task_manager.ui">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/document_tree_node_properties_providers.cpp">
@@ -204,6 +228,12 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/mainwindow.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/mainwindow.ui">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window.h">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/occt_window_740.cpp">
@@ -254,10 +284,16 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_planes.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_planes.ui">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.cpp">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.ui">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_file_system.cpp">
@@ -288,6 +324,9 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree.ui">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree_builder.cpp">
@@ -326,6 +365,9 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_properties_editor.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_properties_editor.ui">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_shape_selector.cpp">
 			<Option target="mayo"/>
 		</Unit>
@@ -338,7 +380,469 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widgets_utils.h">
 			<Option target="mayo"/>
 		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application_item.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application_item.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application_item_selection_model.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application_item_selection_model.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/application_ptr.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/bnd_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/bnd_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/brep_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/brep_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/caf_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/caf_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/cpp_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document_ptr.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document_tree_node.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document_tree_node.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document_tree_node_properties_provider.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/document_tree_node_properties_provider.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/enumeration.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/enumeration.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/enumeration_fromenum.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/filepath.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/geom_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/geom_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/global.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_format.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_format.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_parameters_provider.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_reader.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_system.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_system.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/io_writer.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/libtree.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/math_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/math_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/mesh_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/mesh_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/messenger.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/messenger.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/meta_enum.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occ_brep_mesh_parameters.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occ_progress_indicator.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occ_progress_indicator.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occ_static_variables_rollback.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occ_static_variables_rollback.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occt_enums.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/occt_enums.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_builtins.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_builtins.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_enumeration.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_enumeration.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_value_conversion.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/property_value_conversion.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_gp_pnt.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_gp_trsf.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_quantity.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_quantity_color.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_quantity_color.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qmeta_tdf_label.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qtcore_hfuncs.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/qtcore_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/quantity.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/quantity.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/result.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/result.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/settings.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/settings.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/settings_index.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/span.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/string_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/string_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task_common.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task_manager.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task_manager.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task_progress.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/task_progress.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/text_id.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/text_id.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/tkernel_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/tkernel_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/typed_scalar.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/unit.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/unit.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/unit_system.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/unit_system.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/xcaf.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/base/xcaf.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/ais_text.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/ais_text.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_mesh_data_source.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_mesh_data_source.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_base_property_group.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_base_property_group.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_driver.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_driver.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_driver_table.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_driver_table.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_object_ptr.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_owner_ptr.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_scene.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_scene.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping_driver.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping_driver.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping_driver_table.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_tree_node_mapping_driver_table.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/graphics_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/v3d_view_camera_animation.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/v3d_view_camera_animation.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/v3d_view_controller.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/graphics/v3d_view_controller.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_application.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_application.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_create_gfx_driver.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document_list_model.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document_list_model.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/qtgui_utils.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/qtgui_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_caf.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_caf.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_step.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_step.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_stl.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_stl.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_vrml.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_vrml.h">
+			<Option target="mayo"/>
+		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/mayo.qrc">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/../../../../../usr/local/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets-release.cmake">

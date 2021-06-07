@@ -11,6 +11,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.19.2/CMakeCCompiler.cmake"
   "CMakeFiles/3.19.2/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.19.2/CMakeSystem.cmake"
+  "../mayo.qrc"
   "/opt/clion-2020.2.4/bin/cmake/linux/share/cmake-3.19/Modules/CMakeCInformation.cmake"
   "/opt/clion-2020.2.4/bin/cmake/linux/share/cmake-3.19/Modules/CMakeCXXInformation.cmake"
   "/opt/clion-2020.2.4/bin/cmake/linux/share/cmake-3.19/Modules/CMakeCommonLanguageInclude.cmake"
@@ -108,6 +109,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/mayo_autogen.dir/AutogenInfo.json"
+  "CMakeFiles/mayo_autogen.dir/AutoRcc_mayo_EWIEGA46WW_Info.json"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
