@@ -772,6 +772,7 @@
 	"MOC_COMPILATION_FILE" : "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/mocs_compilation.cpp",
 	"MOC_DEFINITIONS" : 
 	[
+		"HAVE_GMIO",
 		"OCCT",
 		"QT_CORE_LIB",
 		"QT_GUI_LIB",
@@ -789,6 +790,7 @@
 	"MOC_INCLUDES" : 
 	[
 		"/usr/local/include/opencascade",
+		"/opt/gmio/include",
 		"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app",
 		"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty",
 		"/usr/include/x86_64-linux-gnu/qt5",
@@ -1199,6 +1201,10 @@
 			"MU"
 		],
 		[
+			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp",
+			"MU"
+		],
+		[
 			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp",
 			"MU"
 		],
@@ -1211,11 +1217,15 @@
 			"MU"
 		],
 		[
-			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp",
+			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp",
 			"MU"
 		],
 		[
 			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp",
+			"MU"
+		],
+		[
+			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp",
 			"MU"
 		],
 		[

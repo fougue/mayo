@@ -1367,9 +1367,22 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.s
 
+CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o: CMakeFiles/mayo.dir/flags.make
+CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o: ../src/io_occ/io_occ_base_mesh.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp
+
+CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp > CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.i
+
+CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.s
+
 CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o: ../src/io_occ/io_occ_brep.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.i: cmake_force
@@ -1382,7 +1395,7 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.s: cmake_force
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o: ../src/io_occ/io_occ_caf.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_caf.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.i: cmake_force
@@ -1395,7 +1408,7 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.s: cmake_force
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o: ../src/io_occ/io_occ_common.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.i: cmake_force
@@ -1406,22 +1419,22 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.s
 
-CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o: CMakeFiles/mayo.dir/flags.make
-CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o: ../src/io_occ/io_occ_gltf_writer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp
+CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o: CMakeFiles/mayo.dir/flags.make
+CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o: ../src/io_occ/io_occ_gltf_reader.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp
 
-CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp > CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.i
+CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp > CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.i
 
-CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.s
+CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.s
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o: ../src/io_occ/io_occ_iges.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_100) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.i: cmake_force
@@ -1432,9 +1445,22 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.s
 
+CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o: CMakeFiles/mayo.dir/flags.make
+CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o: ../src/io_occ/io_occ_obj.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_101) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp
+
+CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp > CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.i
+
+CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp -o CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.s
+
 CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o: ../src/io_occ/io_occ_step.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_100) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_102) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_step.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.i: cmake_force
@@ -1447,7 +1473,7 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.s: cmake_force
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o: ../src/io_occ/io_occ_stl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_101) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_103) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_stl.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.i: cmake_force
@@ -1460,7 +1486,7 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.s: cmake_force
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o: ../src/io_occ/io_occ_vrml.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_102) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_104) "Building CXX object CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_vrml.cpp
 
 CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.i: cmake_force
@@ -1473,7 +1499,7 @@ CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.s: cmake_force
 
 CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.o: CMakeFiles/mayo.dir/flags.make
 CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.o: mayo_autogen/EWIEGA46WW/qrc_mayo.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_103) "Building CXX object CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_105) "Building CXX object CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.o -c /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp
 
 CMakeFiles/mayo.dir/mayo_autogen/EWIEGA46WW/qrc_mayo.cpp.i: cmake_force
@@ -1579,11 +1605,13 @@ mayo_OBJECTS = \
 "CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.o" \
+"CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o" \
-"CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o" \
+"CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o" \
+"CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o" \
 "CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o" \
@@ -1685,11 +1713,13 @@ mayo: CMakeFiles/mayo.dir/src/gui/qtgui_utils.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.o
+mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o
-mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o
+mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o
+mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o
 mayo: CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o
@@ -1699,9 +1729,21 @@ mayo: /usr/local/lib/libTKXMesh.so.7.4.0
 mayo: /usr/local/lib/libTKXDEDRAW.so.7.4.0
 mayo: /usr/local/lib/libTKTObjDRAW.so.7.4.0
 mayo: /usr/local/lib/libTKQADraw.so.7.4.0
+mayo: /opt/gmio//lib/libgmio.so
+mayo: /opt/gmio//lib/libgmio_static.a
+mayo: /opt/gmio//lib/libz.a
+mayo: /opt/gmio//lib/libz.so
+mayo: /opt/gmio//lib/libz.so.1
+mayo: /opt/gmio//lib/libz.so.1.2.11
 mayo: /usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5.12.8
 mayo: /usr/lib/x86_64-linux-gnu/libQt5Xml.so.5.12.8
 mayo: /usr/lib/x86_64-linux-gnu/libQt5Network.so.5.12.8
+mayo: /opt/gmio//lib/libgmio.so
+mayo: /opt/gmio//lib/libgmio_static.a
+mayo: /opt/gmio//lib/libz.a
+mayo: /opt/gmio//lib/libz.so
+mayo: /opt/gmio//lib/libz.so.1
+mayo: /opt/gmio//lib/libz.so.1.2.11
 mayo: /usr/local/lib/libTKXDEIGES.so.7.4.0
 mayo: /usr/local/lib/libTKXmlXCAF.so.7.4.0
 mayo: /usr/local/lib/libTKBinXCAF.so.7.4.0
@@ -1761,7 +1803,7 @@ mayo: /usr/lib/x86_64-linux-gnu/libtk.so
 mayo: /usr/lib/x86_64-linux-gnu/libQt5Gui.so.5.12.8
 mayo: /usr/lib/x86_64-linux-gnu/libQt5Core.so.5.12.8
 mayo: CMakeFiles/mayo.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_104) "Linking CXX executable mayo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_106) "Linking CXX executable mayo"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/mayo.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

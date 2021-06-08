@@ -223,12 +223,6 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
-//Create translation files
-CREATE_TRANSLATION:BOOL=OFF
-
-//The directory containing a CMake configuration file for GMIO.
-GMIO_DIR:PATH=GMIO_DIR-NOTFOUND
-
 //The directory containing a CMake configuration file for OpenCASCADE.
 OpenCASCADE_DIR:PATH=/usr/local/lib/cmake/opencascade
 
@@ -237,12 +231,6 @@ ProcessorCount_cmd_nproc:FILEPATH=/usr/bin/nproc
 
 //Path to a program.
 ProcessorCount_cmd_sysctl:FILEPATH=/sbin/sysctl
-
-//Value Computed by CMake
-Project_BINARY_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug
-
-//Value Computed by CMake
-Project_SOURCE_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake
 
 //The directory containing a CMake configuration file for Qt5Core.
 Qt5Core_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Core
@@ -265,9 +253,6 @@ Qt5Xml_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Xml
 //The directory containing a CMake configuration file for Qt5.
 Qt5_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5
 
-//The directory containing a CMake configuration file for TabToolbar.
-TabToolbar_DIR:PATH=TabToolbar_DIR-NOTFOUND
-
 //Use OpenCASCADE Community Edition 
 USE_OCE:BOOL=OFF
 
@@ -276,12 +261,6 @@ mayo_BINARY_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-b
 
 //Value Computed by CMake
 mayo_SOURCE_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake
-
-//Value Computed by CMake
-mradsim-gui_BINARY_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug
-
-//Value Computed by CMake
-mradsim-gui_SOURCE_DIR:STATIC=/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake
 
 
 ########################

@@ -32,6 +32,7 @@
 #define __FLT_EVAL_METHOD__ 0
 #define __unix__ 1
 #define __cpp_binary_literals 201304
+#define HAVE_GMIO 1
 #define __FLT64_DECIMAL_DIG__ 17
 #define __CET__ 3
 #define __GCC_ATOMIC_CHAR32_T_LOCK_FREE 2

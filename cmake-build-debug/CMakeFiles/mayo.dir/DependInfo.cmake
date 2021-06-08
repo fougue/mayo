@@ -98,11 +98,13 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio_amf_writer.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.o"
+  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_caf.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_caf.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.o"
-  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_writer.cpp.o"
+  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.o"
+  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_step.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_step.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_stl.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_stl.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_vrml.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_vrml.cpp.o"
@@ -111,6 +113,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
+  "HAVE_GMIO"
   "OCCT"
   "QT_CORE_LIB"
   "QT_GUI_LIB"
@@ -123,6 +126,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "mayo_autogen/include"
   "/usr/local/include/opencascade"
+  "/opt/gmio/include"
   "../src/app"
   "../src/3rdparty"
   "/usr/include/x86_64-linux-gnu/qt5"

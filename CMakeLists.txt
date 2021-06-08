@@ -107,16 +107,34 @@ else ()
 
 endif ()
 
+message("${OpenCASCADE_VERSION}")
+set(GMIO_ROOT /opt/gmio/)
+if (GMIO_ROOT)
+    message("GMIO ON")
+    set(GMIO_INCLUDE_DIRECTORIES ${GMIO_ROOT}/include)
+    include_directories(${GMIO_INCLUDE_DIRECTORIES})
+    set(GMIO_LIBRARY_DIR ${GMIO_ROOT}/lib)
+    file(GLOB GMIO_LIBRARIES ${GMIO_LIBRARY_DIR}/*)
+    add_definitions(-DHAVE_GMIO)
+else ()
+    message("GMIO OFF")
+endif ()
 
-if(${OpenCASCADE_VERSION} VERSION_GREATER_EQUAL 7.4.0)
-    message("OpenCASCADE Version: ${OpenCASCADE_VERSION}")
+
+if (${OpenCASCADE_VERSION} VERSION_GREATER_EQUAL 7.4.0)
+    get_filename_component(io_occ_base_mesh_cpp ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp ABSOLUTE)
+    get_filename_component(io_occ_gltf_reader_cpp ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp ABSOLUTE)
+    get_filename_component(io_occ_obj_cpp ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj.cpp ABSOLUTE)
+    get_filename_component(io_occ_gltf_writer_cpp ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_writer.cpp ABSOLUTE)
 
     list(REMOVE_ITEM SOURCE_FILES
-           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp
-           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
-           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj.cpp
-           )
-endif()
+#            ${io_occ_base_mesh_cpp}
+#            ${io_occ_gltf_reader_cpp}
+#            ${io_occ_obj_cpp}
+            ${io_occ_gltf_writer_cpp}
+            )
+
+endif ()
 
 #QT5
 if (WIN32)
@@ -160,18 +178,20 @@ add_executable(${PROJECT_NAME}
         ${RESOURCE_FILES}
         ${TRANSLATION_FILES}
         ${QM_FILES}
+
         )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         ${OpenCASCADE_LIBRARIES}
         ${OpenCASCADE_OCAF_LIBRARIES}
+        ${GMIO_LIBRARIES}
         Qt5::Core
         Qt5::Widgets
         Qt5::Xml
         Qt5::Network
-        )
+        ${GMIO_LIBRARIES}
 
-find_package(GMIO)
+        )
 
 ###########################################################################################
 # first we can indicate the documentation build as an option and set it to ON by default
