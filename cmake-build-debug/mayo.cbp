@@ -52,6 +52,8 @@
 					<Add option="-DQT_NETWORK_LIB"/>
 					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/include"/>
 					<Add directory="/usr/local/include/opencascade"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
@@ -89,6 +91,8 @@
 					<Add option="-DQT_NETWORK_LIB"/>
 					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/mayo_autogen/include"/>
 					<Add directory="/usr/local/include/opencascade"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app"/>
+					<Add directory="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
@@ -132,6 +136,51 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/mayo.qrc">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/algorithm">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/assert">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/byte">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl_algorithm">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl_assert">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl_byte">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl_narrow">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/gsl_util">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/narrow">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/pointers">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/span">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/span_ext">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/string_span">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/3rdparty/gsl/util">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/app_module.cpp">
@@ -276,6 +325,9 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/theme.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/version.h">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_planes.cpp">
@@ -765,6 +817,18 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/qtgui_utils.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio.h">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio_amf_writer.cpp">
+			<Option target="mayo"/>
+		</Unit>
+		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio_amf_writer.h">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.cpp">

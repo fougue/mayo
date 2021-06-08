@@ -95,6 +95,8 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/gui/gui_document.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/gui_document_list_model.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/gui/gui_document_list_model.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/gui/qtgui_utils.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/gui/qtgui_utils.cpp.o"
+  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o"
+  "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_gmio/io_gmio_amf_writer.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o"
   "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp" "/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o"
@@ -124,6 +126,8 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "mayo_autogen/include"
   "/usr/local/include/opencascade"
+  "../src/app"
+  "../src/3rdparty"
   "/usr/include/x86_64-linux-gnu/qt5"
   "/usr/include/x86_64-linux-gnu/qt5/QtCore"
   "/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"

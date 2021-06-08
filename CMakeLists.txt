@@ -17,6 +17,7 @@ file(GLOB SOURCE_FILES
         ${PROJECT_SOURCE_DIR}/src/graphics/*.cpp
         ${PROJECT_SOURCE_DIR}/src/gui/*.cpp
         ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/io_gmio/*.cpp
         )
 
 # Source Files Dump
@@ -33,6 +34,8 @@ file(GLOB HEADER_FILES
         ${PROJECT_SOURCE_DIR}/src/graphics/*.h
         ${PROJECT_SOURCE_DIR}/src/gui/*.h
         ${PROJECT_SOURCE_DIR}/src/io_occ/*.h
+        ${PROJECT_SOURCE_DIR}/src/3rdparty/gsl/*
+        ${PROJECT_SOURCE_DIR}/src/io_gmio/*.h
         )
 
 # Header Files Dump
@@ -101,7 +104,18 @@ else ()
     find_package(OpenCASCADE COMPONENTS ModelingData REQUIRED)
     find_package(OpenCASCADE COMPONENTS DataExchange REQUIRED)
     include_directories(${OpenCASCADE_INCLUDE_DIR})
+
 endif ()
+
+message("${OpenCASCADE_VERSION}")
+
+if(${OpenCASCADE_VERSION} VERSION_GREATER_EQUAL 7.4.0)
+   list(REMOVE_ITEM ${SOURCE_FILES}
+           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp
+           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
+           ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj.cpp
+           )
+endif()
 
 #QT5
 if (WIN32)
@@ -132,6 +146,10 @@ message("Qt5::Widgets Lib : ${QtWidgets_location}")
 get_target_property(QtGui_location Qt5::Gui LOCATION)
 message("Qt5::Gui Lib     : ${QtGui_location}")
 
+include_directories(
+        src/app
+        src/3rdparty
+)
 
 # ------------------------------------------------------------------------
 add_executable(${PROJECT_NAME}

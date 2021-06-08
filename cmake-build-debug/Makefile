@@ -2612,6 +2612,60 @@ src/gui/qtgui_utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/gui/qtgui_utils.cpp.s
 .PHONY : src/gui/qtgui_utils.cpp.s
 
+src/io_gmio/io_gmio.o: src/io_gmio/io_gmio.cpp.o
+
+.PHONY : src/io_gmio/io_gmio.o
+
+# target to build an object file
+src/io_gmio/io_gmio.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o
+.PHONY : src/io_gmio/io_gmio.cpp.o
+
+src/io_gmio/io_gmio.i: src/io_gmio/io_gmio.cpp.i
+
+.PHONY : src/io_gmio/io_gmio.i
+
+# target to preprocess a source file
+src/io_gmio/io_gmio.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.i
+.PHONY : src/io_gmio/io_gmio.cpp.i
+
+src/io_gmio/io_gmio.s: src/io_gmio/io_gmio.cpp.s
+
+.PHONY : src/io_gmio/io_gmio.s
+
+# target to generate assembly for a file
+src/io_gmio/io_gmio.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.s
+.PHONY : src/io_gmio/io_gmio.cpp.s
+
+src/io_gmio/io_gmio_amf_writer.o: src/io_gmio/io_gmio_amf_writer.cpp.o
+
+.PHONY : src/io_gmio/io_gmio_amf_writer.o
+
+# target to build an object file
+src/io_gmio/io_gmio_amf_writer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o
+.PHONY : src/io_gmio/io_gmio_amf_writer.cpp.o
+
+src/io_gmio/io_gmio_amf_writer.i: src/io_gmio/io_gmio_amf_writer.cpp.i
+
+.PHONY : src/io_gmio/io_gmio_amf_writer.i
+
+# target to preprocess a source file
+src/io_gmio/io_gmio_amf_writer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.i
+.PHONY : src/io_gmio/io_gmio_amf_writer.cpp.i
+
+src/io_gmio/io_gmio_amf_writer.s: src/io_gmio/io_gmio_amf_writer.cpp.s
+
+.PHONY : src/io_gmio/io_gmio_amf_writer.s
+
+# target to generate assembly for a file
+src/io_gmio/io_gmio_amf_writer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.s
+.PHONY : src/io_gmio/io_gmio_amf_writer.cpp.s
+
 src/io_occ/io_occ.o: src/io_occ/io_occ.cpp.o
 
 .PHONY : src/io_occ/io_occ.o
@@ -3219,6 +3273,12 @@ help:
 	@echo "... src/gui/qtgui_utils.o"
 	@echo "... src/gui/qtgui_utils.i"
 	@echo "... src/gui/qtgui_utils.s"
+	@echo "... src/io_gmio/io_gmio.o"
+	@echo "... src/io_gmio/io_gmio.i"
+	@echo "... src/io_gmio/io_gmio.s"
+	@echo "... src/io_gmio/io_gmio_amf_writer.o"
+	@echo "... src/io_gmio/io_gmio_amf_writer.i"
+	@echo "... src/io_gmio/io_gmio_amf_writer.s"
 	@echo "... src/io_occ/io_occ.o"
 	@echo "... src/io_occ/io_occ.i"
 	@echo "... src/io_occ/io_occ.s"

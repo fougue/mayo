@@ -93,6 +93,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/mayo.dir/src/gui/gui_document.cpp.o"
   "CMakeFiles/mayo.dir/src/gui/gui_document_list_model.cpp.o"
   "CMakeFiles/mayo.dir/src/gui/qtgui_utils.cpp.o"
+  "CMakeFiles/mayo.dir/src/io_gmio/io_gmio.cpp.o"
+  "CMakeFiles/mayo.dir/src/io_gmio/io_gmio_amf_writer.cpp.o"
   "CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.o"
   "CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o"
   "CMakeFiles/mayo.dir/src/io_occ/io_occ_brep.cpp.o"
