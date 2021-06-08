@@ -107,10 +107,11 @@ else ()
 
 endif ()
 
-message("${OpenCASCADE_VERSION}")
 
 if(${OpenCASCADE_VERSION} VERSION_GREATER_EQUAL 7.4.0)
-   list(REMOVE_ITEM ${SOURCE_FILES}
+    message("OpenCASCADE Version: ${OpenCASCADE_VERSION}")
+
+    list(REMOVE_ITEM SOURCE_FILES
            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp
            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
            ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj.cpp
@@ -169,6 +170,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt5::Xml
         Qt5::Network
         )
+
+find_package(GMIO)
 
 ###########################################################################################
 # first we can indicate the documentation build as an option and set it to ON by default

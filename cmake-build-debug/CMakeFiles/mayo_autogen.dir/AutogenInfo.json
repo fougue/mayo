@@ -1199,10 +1199,6 @@
 			"MU"
 		],
 		[
-			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp",
-			"MU"
-		],
-		[
 			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_brep.cpp",
 			"MU"
 		],
@@ -1215,19 +1211,11 @@
 			"MU"
 		],
 		[
-			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp",
-			"MU"
-		],
-		[
 			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_writer.cpp",
 			"MU"
 		],
 		[
 			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.cpp",
-			"MU"
-		],
-		[
-			"/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp",
 			"MU"
 		],
 		[

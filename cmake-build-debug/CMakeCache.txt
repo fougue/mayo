@@ -226,6 +226,9 @@ CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 //Create translation files
 CREATE_TRANSLATION:BOOL=OFF
 
+//The directory containing a CMake configuration file for GMIO.
+GMIO_DIR:PATH=GMIO_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for OpenCASCADE.
 OpenCASCADE_DIR:PATH=/usr/local/lib/cmake/opencascade
 

@@ -259,7 +259,7 @@ Found: /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_clip_pla
 Found: /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_explode_assembly.ui
 Found: /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_model_tree.ui
 Found: /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/app/widget_properties_editor.ui
-7.4.0
+OpenCASCADE Version: 7.4.0
 --> Printing QT5 Modules
 Qt5               : /usr/lib/x86_64-linux-gnu/cmake/Qt5
 Qt5Core           : /usr/lib/x86_64-linux-gnu/cmake/Qt5Core
@@ -270,6 +270,23 @@ Qt5OpenGL         : /usr/lib/x86_64-linux-gnu/cmake/Qt5OpenGL
 Qt5::Core Lib    : /usr/lib/x86_64-linux-gnu/libQt5Core.so.5.12.8
 Qt5::Widgets Lib : /usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5.12.8
 Qt5::Gui Lib     : /usr/lib/x86_64-linux-gnu/libQt5Gui.so.5.12.8
+CMake Warning at CMakeLists.txt:174 (find_package):
+  By not providing "FindGMIO.cmake" in CMAKE_MODULE_PATH this project has
+  asked CMake to find a package configuration file provided by "GMIO", but
+  CMake did not find one.
+
+  Could not find a package configuration file provided by "GMIO" with any of
+  the following names:
+
+    GMIOConfig.cmake
+    gmio-config.cmake
+
+  Add the installation prefix of "GMIO" to CMAKE_PREFIX_PATH or set
+  "GMIO_DIR" to a directory containing one of the above files.  If "GMIO"
+  provides a separate development package or SDK, be sure it has been
+  installed.
+
+
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug

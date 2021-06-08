@@ -2693,33 +2693,6 @@ src/io_occ/io_occ.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ.cpp.s
 .PHONY : src/io_occ/io_occ.cpp.s
 
-src/io_occ/io_occ_base_mesh.o: src/io_occ/io_occ_base_mesh.cpp.o
-
-.PHONY : src/io_occ/io_occ_base_mesh.o
-
-# target to build an object file
-src/io_occ/io_occ_base_mesh.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.o
-.PHONY : src/io_occ/io_occ_base_mesh.cpp.o
-
-src/io_occ/io_occ_base_mesh.i: src/io_occ/io_occ_base_mesh.cpp.i
-
-.PHONY : src/io_occ/io_occ_base_mesh.i
-
-# target to preprocess a source file
-src/io_occ/io_occ_base_mesh.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.i
-.PHONY : src/io_occ/io_occ_base_mesh.cpp.i
-
-src/io_occ/io_occ_base_mesh.s: src/io_occ/io_occ_base_mesh.cpp.s
-
-.PHONY : src/io_occ/io_occ_base_mesh.s
-
-# target to generate assembly for a file
-src/io_occ/io_occ_base_mesh.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_base_mesh.cpp.s
-.PHONY : src/io_occ/io_occ_base_mesh.cpp.s
-
 src/io_occ/io_occ_brep.o: src/io_occ/io_occ_brep.cpp.o
 
 .PHONY : src/io_occ/io_occ_brep.o
@@ -2801,33 +2774,6 @@ src/io_occ/io_occ_common.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_common.cpp.s
 .PHONY : src/io_occ/io_occ_common.cpp.s
 
-src/io_occ/io_occ_gltf_reader.o: src/io_occ/io_occ_gltf_reader.cpp.o
-
-.PHONY : src/io_occ/io_occ_gltf_reader.o
-
-# target to build an object file
-src/io_occ/io_occ_gltf_reader.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.o
-.PHONY : src/io_occ/io_occ_gltf_reader.cpp.o
-
-src/io_occ/io_occ_gltf_reader.i: src/io_occ/io_occ_gltf_reader.cpp.i
-
-.PHONY : src/io_occ/io_occ_gltf_reader.i
-
-# target to preprocess a source file
-src/io_occ/io_occ_gltf_reader.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.i
-.PHONY : src/io_occ/io_occ_gltf_reader.cpp.i
-
-src/io_occ/io_occ_gltf_reader.s: src/io_occ/io_occ_gltf_reader.cpp.s
-
-.PHONY : src/io_occ/io_occ_gltf_reader.s
-
-# target to generate assembly for a file
-src/io_occ/io_occ_gltf_reader.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_gltf_reader.cpp.s
-.PHONY : src/io_occ/io_occ_gltf_reader.cpp.s
-
 src/io_occ/io_occ_gltf_writer.o: src/io_occ/io_occ_gltf_writer.cpp.o
 
 .PHONY : src/io_occ/io_occ_gltf_writer.o
@@ -2881,33 +2827,6 @@ src/io_occ/io_occ_iges.s: src/io_occ/io_occ_iges.cpp.s
 src/io_occ/io_occ_iges.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_iges.cpp.s
 .PHONY : src/io_occ/io_occ_iges.cpp.s
-
-src/io_occ/io_occ_obj.o: src/io_occ/io_occ_obj.cpp.o
-
-.PHONY : src/io_occ/io_occ_obj.o
-
-# target to build an object file
-src/io_occ/io_occ_obj.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.o
-.PHONY : src/io_occ/io_occ_obj.cpp.o
-
-src/io_occ/io_occ_obj.i: src/io_occ/io_occ_obj.cpp.i
-
-.PHONY : src/io_occ/io_occ_obj.i
-
-# target to preprocess a source file
-src/io_occ/io_occ_obj.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.i
-.PHONY : src/io_occ/io_occ_obj.cpp.i
-
-src/io_occ/io_occ_obj.s: src/io_occ/io_occ_obj.cpp.s
-
-.PHONY : src/io_occ/io_occ_obj.s
-
-# target to generate assembly for a file
-src/io_occ/io_occ_obj.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mayo.dir/build.make CMakeFiles/mayo.dir/src/io_occ/io_occ_obj.cpp.s
-.PHONY : src/io_occ/io_occ_obj.cpp.s
 
 src/io_occ/io_occ_step.o: src/io_occ/io_occ_step.cpp.o
 
@@ -3282,9 +3201,6 @@ help:
 	@echo "... src/io_occ/io_occ.o"
 	@echo "... src/io_occ/io_occ.i"
 	@echo "... src/io_occ/io_occ.s"
-	@echo "... src/io_occ/io_occ_base_mesh.o"
-	@echo "... src/io_occ/io_occ_base_mesh.i"
-	@echo "... src/io_occ/io_occ_base_mesh.s"
 	@echo "... src/io_occ/io_occ_brep.o"
 	@echo "... src/io_occ/io_occ_brep.i"
 	@echo "... src/io_occ/io_occ_brep.s"
@@ -3294,18 +3210,12 @@ help:
 	@echo "... src/io_occ/io_occ_common.o"
 	@echo "... src/io_occ/io_occ_common.i"
 	@echo "... src/io_occ/io_occ_common.s"
-	@echo "... src/io_occ/io_occ_gltf_reader.o"
-	@echo "... src/io_occ/io_occ_gltf_reader.i"
-	@echo "... src/io_occ/io_occ_gltf_reader.s"
 	@echo "... src/io_occ/io_occ_gltf_writer.o"
 	@echo "... src/io_occ/io_occ_gltf_writer.i"
 	@echo "... src/io_occ/io_occ_gltf_writer.s"
 	@echo "... src/io_occ/io_occ_iges.o"
 	@echo "... src/io_occ/io_occ_iges.i"
 	@echo "... src/io_occ/io_occ_iges.s"
-	@echo "... src/io_occ/io_occ_obj.o"
-	@echo "... src/io_occ/io_occ_obj.i"
-	@echo "... src/io_occ/io_occ_obj.s"
 	@echo "... src/io_occ/io_occ_step.o"
 	@echo "... src/io_occ/io_occ_step.i"
 	@echo "... src/io_occ/io_occ_step.s"

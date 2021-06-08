@@ -837,9 +837,6 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ.h">
 			<Option target="mayo"/>
 		</Unit>
-		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.cpp">
-			<Option target="mayo"/>
-		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_base_mesh.h">
 			<Option target="mayo"/>
 		</Unit>
@@ -861,9 +858,6 @@
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_common.h">
 			<Option target="mayo"/>
 		</Unit>
-		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.cpp">
-			<Option target="mayo"/>
-		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_gltf_reader.h">
 			<Option target="mayo"/>
 		</Unit>
@@ -877,9 +871,6 @@
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_iges.h">
-			<Option target="mayo"/>
-		</Unit>
-		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.cpp">
 			<Option target="mayo"/>
 		</Unit>
 		<Unit filename="/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/src/io_occ/io_occ_obj.h">
