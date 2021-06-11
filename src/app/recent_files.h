@@ -9,7 +9,6 @@
 #include "../base/filepath.h"
 #include "../base/property_builtins.h"
 
-#include <QtCore/QMetaType>
 #include <QtGui/QPixmap>
 #include <vector>
 class QDataStream;
@@ -36,5 +35,3 @@ QDataStream& operator<<(QDataStream& stream, const RecentFiles& recentFiles);
 QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles);
 
 } // namespace Mayo
-
-Q_DECLARE_METATYPE(Mayo::RecentFiles)

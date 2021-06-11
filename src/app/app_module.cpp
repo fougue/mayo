@@ -47,9 +47,6 @@ AppModule::AppModule(Application* app)
 {
     auto settings = app->settings();
 
-    qRegisterMetaTypeStreamOperators<RecentFiles>("RecentFiles");
-    qRegisterMetaTypeStreamOperators<RecentFiles>("Mayo::RecentFiles");
-
     // System
     // -- Units
     settings->addSetting(&this->unitSystemSchema, this->sectionId_systemUnits);
