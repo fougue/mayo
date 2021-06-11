@@ -20,6 +20,7 @@ using FilePath = std::filesystem::path;
 
 #include <QtCore/QString>
 #include <QtCore/QFileInfo>
+#include <TCollection_ExtendedString.hxx>
 #include <type_traits>
 
 namespace Mayo {
@@ -32,14 +33,32 @@ inline FilePath filepathFrom(const QFileInfo& fi) { return filepathFrom(fi.fileP
 // Returns the object converted to 'T' from filepath 'fp'
 template<typename T> T filepathTo(const FilePath& fp)
 {
-    if constexpr(std::is_same<T, QByteArray>::value) {
+    if constexpr(std::is_same_v<T, QByteArray>) {
         return QByteArray::fromStdString(fp.u8string());
     }
-    if constexpr(std::is_same<T, QString>::value) {
+    if constexpr(std::is_same_v<T, QString>) {
         return QString::fromStdString(fp.u8string());
     }
-    else if constexpr(std::is_same<T, QFileInfo>::value) {
+    else if constexpr(std::is_same_v<T, QFileInfo>) {
         return QFileInfo(filepathTo<QString>(fp));
+    }
+    else if constexpr(std::is_same_v<T, TCollection_ExtendedString>) {
+        if constexpr(std::is_same_v<FilePath::value_type, char>) {
+            constexpr bool multiByte = true;
+            return TCollection_ExtendedString(fp.c_str(), multiByte);
+        }
+        else if constexpr(std::is_same_v<FilePath::value_type, wchar_t>) {
+            return TCollection_ExtendedString(fp.c_str());
+        }
+    }
+}
+
+// Exception-safe version of std::filesystem::equivalent()
+inline bool filepathExists(const FilePath& fp) {
+    try {
+        return std::filesystem::exists(fp);
+    } catch (...) { // fs::exists() might throw on non-existing files
+        return false;
     }
 }
 

@@ -149,16 +149,24 @@ void Test::TextId_test()
 
 void Test::FilePath_test()
 {
+    const char strTestPath[] = "../as1-oc-214 - 測試文件.stp";
+
     {
-        const QByteArray testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const QByteArray testPathQt = strTestPath;
         const FilePath testPath = filepathFrom(testPathQt);
         QCOMPARE(filepathTo<QByteArray>(testPath), testPathQt);
     }
 
     {
-        const QString testPathQt = "../as1-oc-214 - 測試文件.stp";
+        const QString testPathQt = strTestPath;
         const FilePath testPath = filepathFrom(testPathQt);
         QCOMPARE(filepathTo<QString>(testPath), testPathQt);
+    }
+
+    {
+        const TCollection_ExtendedString extStrTestPath(strTestPath, true/*multi-byte*/);
+        const FilePath testPath = std::filesystem::u8path(strTestPath);
+        QCOMPARE(filepathTo<TCollection_ExtendedString>(testPath), extStrTestPath);
     }
 }
 

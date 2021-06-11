@@ -93,11 +93,10 @@ DocumentPtr Application::newDocument(Document::Format docFormat)
     return DocumentPtr::DownCast(stdDoc);
 }
 
-DocumentPtr Application::openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus)
+DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus)
 {
     Handle_TDocStd_Document stdDoc;
-    const PCDM_ReaderStatus readStatus =
-            this->Open(StringUtils::toUtf16<TCollection_ExtendedString>(filePath), stdDoc);
+    const PCDM_ReaderStatus readStatus = this->Open(filepathTo<TCollection_ExtendedString>(filepath), stdDoc);
     if (ptrReadStatus)
         *ptrReadStatus = readStatus;
 
@@ -160,17 +159,17 @@ DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodeProperties
     return &(d->m_documentTreeNodePropertiesProviderTable);
 }
 
-void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
+void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
 {
-    const QFileInfo fiSettingsFilepath(settingsFilepath);
-    if (!fiSettingsFilepath.exists() || !fiSettingsFilepath.isReadable()) {
-        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(settingsFilepath);
+    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
+        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(strSettingsFilepath);
         return;
     }
 
-    const QSettings occSettings(settingsFilepath, QSettings::IniFormat);
+    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
     if (occSettings.status() != QSettings::NoError) {
-        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(settingsFilepath);
+        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(strSettingsFilepath);
         return;
     }
 

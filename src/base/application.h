@@ -37,7 +37,7 @@ public:
 
     int documentCount() const;
     DocumentPtr newDocument(Document::Format docFormat = Document::Format::Binary);
-    DocumentPtr openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
+    DocumentPtr openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
     DocumentPtr findDocumentByIndex(int docIndex) const;
     DocumentPtr findDocumentByIdentifier(Document::Identifier docIdent) const;
     DocumentPtr findDocumentByLocation(const FilePath& location) const;
@@ -49,7 +49,7 @@ public:
     IO::System* ioSystem() const;
     DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 
-    static void setOpenCascadeEnvironment(const QString& settingsFilepath);
+    static void setOpenCascadeEnvironment(const FilePath& settingsFilepath);
 
 public: //  from TDocStd_Application
     void NewDocument(
