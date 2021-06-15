@@ -32,10 +32,8 @@ class FactoryReader {
 public:
     virtual ~FactoryReader() = default;
     virtual Span<const Format> formats() const = 0;
-    virtual std::unique_ptr<Reader> create(const Format& format) const = 0;
-    virtual std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const = 0;
+    virtual std::unique_ptr<Reader> create(Format format) const = 0;
+    virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 
 } // namespace IO

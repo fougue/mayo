@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "span.h"
 #include <QtCore/QString>
 
 #include <cstring>

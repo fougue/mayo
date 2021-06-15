@@ -6,39 +6,87 @@
 
 #include "io_format.h"
 
-#include <QtCore/QHash>
 #include <algorithm>
 
 namespace Mayo {
 namespace IO {
 
-bool operator==(const Format& lhs, const Format& rhs) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-    return lhs.identifier.compare(rhs.identifier, Qt::CaseInsensitive) == 0;
-#else
-    return qstrnicmp(lhs.identifier.constData(), rhs.identifier.constData(), lhs.identifier.size()) == 0;
-#endif
-}
-
-bool operator!=(const Format& lhs, const Format& rhs) {
-    return !(lhs == rhs);
-}
-
-unsigned hash(const Format& key)
+std::string_view formatIdentifier(Format format)
 {
-    return qHash(key.identifier.toLower());
+    switch (format) {
+    case Format_Unknown: return "";
+    case Format_STEP: return "STEP";
+    case Format_IGES: return "IGES";
+    case Format_OCCBREP: return "OCCBREP";
+    case Format_STL:  return "STL";
+    case Format_OBJ:  return "OBJ";
+    case Format_GLTF: return "GLTF";
+    case Format_VRML: return "VRML";
+    case Format_AMF:  return "AMF";
+    }
+
+    return "";
 }
 
-bool formatProvidesBRep(const Format& format)
+std::string_view formatName(Format format)
+{
+    switch (format) {
+    case Format_Unknown: return "Format_Unknown";
+    case Format_STEP: return "STEP(ISO 10303)";
+    case Format_IGES: return "IGES(ASME Y14.26M)";
+    case Format_OCCBREP: return "OpenCascade BREP";
+    case Format_STL:  return "STL(STereo-Lithography)";
+    case Format_OBJ:  return "Wavefront OBJ";
+    case Format_GLTF: return "glTF(GL Transmission Format)";
+    case Format_VRML: return "VRML(ISO/CEI 14772-2)";
+    case Format_AMF:  return "Additive manufacturing file format(ISO/ASTM 52915:2016)";
+    }
+
+    return "";
+}
+
+template<Format FORMAT, const char* SUFFIX>
+Span<std::string_view> formatFileSuffixesFrom()
+{
+    return {};
+}
+
+Span<std::string_view> formatFileSuffixes(Format format)
+{
+    static std::string_view step_suffix[] = { "step", "stp" };
+    static std::string_view iges_suffix[] = { "iges", "igs" };
+    static std::string_view occ_suffix[] =  { "brep", "rle", "occ" };
+    static std::string_view stl_suffix[] =  { "stl" };
+    static std::string_view obj_suffix[] =  { "obj" };
+    static std::string_view gltf_suffix[] = { "gltf", "glb" };
+    static std::string_view vrml_suffix[] = { "wrl", "wrz", "vrml" };
+    static std::string_view amf_suffix[] =  { "amf" };
+
+    switch (format) {
+    case Format_Unknown: return {};
+    case Format_STEP: return step_suffix;
+    case Format_IGES: return iges_suffix;
+    case Format_OCCBREP: return occ_suffix;
+    case Format_STL:  return stl_suffix;
+    case Format_OBJ:  return obj_suffix;
+    case Format_GLTF: return gltf_suffix;
+    case Format_VRML: return vrml_suffix;
+    case Format_AMF:  return amf_suffix;
+    }
+
+    return {};
+}
+
+bool formatProvidesBRep(Format format)
 {
     static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP };
     return std::any_of(
                 std::cbegin(brepFormats),
                 std::cend(brepFormats),
-                [&](const Format& candidate) { return candidate == format; });
+                [=](Format candidate) { return candidate == format; });
 }
 
-bool formatProvidesMesh(const Format& format)
+bool formatProvidesMesh(Format format)
 {
     return !formatProvidesBRep(format) && format != Format_Unknown;
 }

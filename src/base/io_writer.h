@@ -31,10 +31,8 @@ class FactoryWriter {
 public:
     virtual ~FactoryWriter() = default;
     virtual Span<const Format> formats() const = 0;
-    virtual std::unique_ptr<Writer> create(const Format& format) const = 0;
-    virtual std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const = 0;
+    virtual std::unique_ptr<Writer> create(Format format) const = 0;
+    virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 
 } // namespace IO

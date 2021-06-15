@@ -46,15 +46,14 @@ public:
     void addFactoryReader(std::unique_ptr<FactoryReader> ptr);
     void addFactoryWriter(std::unique_ptr<FactoryWriter> ptr);
 
-    const FactoryReader* findFactoryReader(const Format& format) const;
-    const FactoryWriter* findFactoryWriter(const Format& format) const;
+    const FactoryReader* findFactoryReader(Format format) const;
+    const FactoryWriter* findFactoryWriter(Format format) const;
 
-    std::unique_ptr<Reader> createReader(const Format& format) const;
-    std::unique_ptr<Writer> createWriter(const Format& format) const;
+    std::unique_ptr<Reader> createReader(Format format) const;
+    std::unique_ptr<Writer> createWriter(Format format) const;
 
     Span<const Format> readerFormats() const { return m_vecReaderFormat; }
     Span<const Format> writerFormats() const { return m_vecWriterFormat; }
-    static QString fileFilter(const Format& format);
 
     // Import service
 
@@ -63,7 +62,7 @@ public:
         Span<const FilePath> filepaths; // The files to be imported in target document
         const ParametersProvider* parametersProvider = nullptr;
         std::function<void(TDF_Label, TaskProgress*)> entityPostProcess;
-        std::function<bool(const Format&)> entityPostProcessRequiredIf;
+        std::function<bool(Format)> entityPostProcessRequiredIf;
         int entityPostProcessProgressSize = 0;
         QString entityPostProcessProgressStep;
         Messenger* messenger = nullptr;
@@ -94,7 +93,7 @@ public:
 
         // Post-processing executed before adding entities into Document
         Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
-        Operation& withEntityPostProcessRequiredIf(std::function<bool(const Format&)> fn);
+        Operation& withEntityPostProcessRequiredIf(std::function<bool(Format)> fn);
         Operation& withEntityPostProcessInfoProgress(int progressSize, const QString& progressStep);
 
         Operation& withMessenger(Messenger* messenger);
@@ -114,7 +113,7 @@ public:
     struct Operation_ExportApplicationItems {
         using Operation = Operation_ExportApplicationItems;
         Operation& targetFile(const FilePath& filepath);
-        Operation& targetFormat(const Format& format);
+        Operation& targetFormat(Format format);
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);

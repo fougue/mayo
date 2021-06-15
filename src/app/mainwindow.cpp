@@ -61,15 +61,38 @@ namespace Mayo {
 
 namespace Internal {
 
+static QString fileFilter(IO::Format format)
+{
+    if (format == IO::Format_Unknown)
+        return {};
+
+    QString filter;
+    for (std::string_view suffix : IO::formatFileSuffixes(format)) {
+        if (suffix.data() != IO::formatFileSuffixes(format).front().data())
+            filter += " ";
+
+        const QString qsuffix = StringUtils::fromUtf8(suffix);
+        filter += "*." + qsuffix;
+#ifdef Q_OS_UNIX
+        filter += " *." + qsuffix.toUpper();
+#endif
+    }
+
+    //: %1 is the format identifier and %2 is the file filters string
+    return MainWindow::tr("%1 files(%2)")
+            .arg(StringUtils::fromUtf8(IO::formatIdentifier(format)))
+            .arg(filter);
+}
+
 static IO::Format formatFromFilter(const QString& filter)
 {
-    for (const IO::Format& format : Application::instance()->ioSystem()->readerFormats()) {
-        if (filter == IO::System::fileFilter(format))
+    for (IO::Format format : Application::instance()->ioSystem()->readerFormats()) {
+        if (filter == fileFilter(format))
             return format;
     }
 
-    for (const IO::Format& format : Application::instance()->ioSystem()->writerFormats()) {
-        if (filter == IO::System::fileFilter(format))
+    for (IO::Format format : Application::instance()->ioSystem()->writerFormats()) {
+        if (filter == fileFilter(format))
             return format;
     }
 
@@ -114,8 +137,8 @@ struct OpenFileNames {
         result.selectedFormat = IO::Format_Unknown;
         result.lastIoSettings = ImportExportSettings::load();
         QStringList listFormatFilter;
-        for (const IO::Format& format : Application::instance()->ioSystem()->readerFormats())
-            listFormatFilter += IO::System::fileFilter(format);
+        for (IO::Format format : Application::instance()->ioSystem()->readerFormats())
+            listFormatFilter += fileFilter(format);
 
         const QString allFilesFilter = MainWindow::tr("All files(*.*)");
         listFormatFilter.append(allFilesFilter);
@@ -523,8 +546,8 @@ void MainWindow::exportSelectedItems()
     auto app = m_guiApp->application();
 
     QStringList listWriterFileFilter;
-    for (const IO::Format& format : app->ioSystem()->writerFormats())
-        listWriterFileFilter.append(IO::System::fileFilter(format));
+    for (IO::Format format : app->ioSystem()->writerFormats())
+        listWriterFileFilter.append(Internal::fileFilter(format));
 
     auto lastSettings = Internal::ImportExportSettings::load();
     const QString strFilepath =

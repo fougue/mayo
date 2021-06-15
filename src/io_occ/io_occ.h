@@ -17,20 +17,16 @@ namespace IO {
 class OccFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
-    std::unique_ptr<Reader> create(const Format& format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const override;
+    std::unique_ptr<Reader> create(Format format) const override;
+    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 };
 
 // Provides factory for OpenCascade-based Writer objects
 class OccFactoryWriter : public FactoryWriter {
 public:
     Span<const Format> formats() const override;
-    std::unique_ptr<Writer> create(const Format& format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const override;
+    std::unique_ptr<Writer> create(Format format) const override;
+    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 };
 
 } // namespace IO

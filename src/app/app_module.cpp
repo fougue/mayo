@@ -111,8 +111,8 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
     // Import
     auto groupId_Import = settings->addGroup(textId("import"));
-    for (const IO::Format& format : app->ioSystem()->readerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Import, format.identifier);
+    for (IO::Format format : app->ioSystem()->readerFormats()) {
+        auto sectionId_format = settings->addSection(groupId_Import, IO::formatIdentifier(format));
         const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
@@ -121,15 +121,15 @@ AppModule::AppModule(Application* app)
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
             settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatReaderParameters.insert({ format.identifier, rawPtrGroup });
+            m_mapFormatReaderParameters.insert({ format, rawPtrGroup });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 
     // Export
     auto groupId_Export = settings->addGroup(textId("export"));
-    for (const IO::Format& format : app->ioSystem()->writerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Export, format.identifier);
+    for (IO::Format format : app->ioSystem()->writerFormats()) {
+        auto sectionId_format = settings->addSection(groupId_Export, IO::formatIdentifier(format));
         const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
@@ -138,7 +138,7 @@ AppModule::AppModule(Application* app)
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
             settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatWriterParameters.insert({ format.identifier, ptrGroup.get() });
+            m_mapFormatWriterParameters.insert({ format, ptrGroup.get() });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
@@ -206,15 +206,15 @@ bool AppModule::excludeSettingPredicate(const Property& prop)
     return !prop.isUserVisible();
 }
 
-const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) const
+const PropertyGroup* AppModule::findReaderParameters(IO::Format format) const
 {
-    auto it = m_mapFormatReaderParameters.find(format.identifier);
+    auto it = m_mapFormatReaderParameters.find(format);
     return it != m_mapFormatReaderParameters.cend() ? it->second : nullptr;
 }
 
-const PropertyGroup* AppModule::findWriterParameters(const IO::Format& format) const
+const PropertyGroup* AppModule::findWriterParameters(IO::Format format) const
 {
-    auto it = m_mapFormatWriterParameters.find(format.identifier);
+    auto it = m_mapFormatWriterParameters.find(format);
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 

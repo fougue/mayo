@@ -40,7 +40,7 @@ Messenger* nullMessenger()
     return NullMessenger::instance();
 }
 
-bool containsFormat(Span<const Format> spanFormat, const Format& format)
+bool containsFormat(Span<const Format> spanFormat, Format format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
     return itFormat != spanFormat.end();
@@ -73,19 +73,31 @@ Format System::probeFormat(const FilePath& filepath) const
     }
 
     // Try to guess from file suffix
-    QString fileSuffix = filepathTo<QString>(filepath.extension());
-    if (fileSuffix.startsWith('.'))
-        fileSuffix.remove(0, 1);
+    std::string fileSuffix = filepath.extension().u8string();
+    if (!fileSuffix.empty() && fileSuffix.front() == '.')
+        fileSuffix.erase(fileSuffix.begin());
 
-    auto fnMatchFileSuffix = [=](const Format& format) {
-        return format.fileSuffixes.contains(fileSuffix, Qt::CaseInsensitive);
+    auto fnCharIEqual = [](char lhs, char rhs) {
+        const auto& clocale = std::locale::classic();
+        return std::tolower(lhs, clocale) == std::tolower(rhs, clocale);
     };
-    for (const Format& format : m_vecReaderFormat) {
+    auto fnMatchFileSuffix = [=](Format format) {
+        for (std::string_view candidate : formatFileSuffixes(format)) {
+            if (candidate.size() == fileSuffix.size()
+                    && std::equal(candidate.cbegin(), candidate.cend(), fileSuffix.cbegin(), fnCharIEqual))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+    for (Format format : m_vecReaderFormat) {
         if (fnMatchFileSuffix(format))
             return format;
     }
 
-    for (const Format& format : m_vecWriterFormat) {
+    for (Format format : m_vecWriterFormat) {
         if (fnMatchFileSuffix(format))
             return format;
     }
@@ -102,7 +114,7 @@ void System::addFactoryReader(std::unique_ptr<FactoryReader> ptr)
     if (itFactory != m_vecFactoryReader.cend())
         return;
 
-    for (const Format& format : ptr->formats()) {
+    for (Format format : ptr->formats()) {
         auto itFormat = std::find(m_vecReaderFormat.cbegin(), m_vecReaderFormat.cend(), format);
         if (itFormat == m_vecReaderFormat.cend())
             m_vecReaderFormat.push_back(format);
@@ -120,7 +132,7 @@ void System::addFactoryWriter(std::unique_ptr<FactoryWriter> ptr)
     if (itFactory != m_vecFactoryWriter.cend())
         return;
 
-    for (const IO::Format& format : ptr->formats()) {
+    for (IO::Format format : ptr->formats()) {
         auto itFormat = std::find(m_vecWriterFormat.cbegin(), m_vecWriterFormat.cend(), format);
         if (itFormat == m_vecWriterFormat.cend())
             m_vecWriterFormat.push_back(format);
@@ -129,7 +141,7 @@ void System::addFactoryWriter(std::unique_ptr<FactoryWriter> ptr)
     m_vecFactoryWriter.push_back(std::move(ptr));
 }
 
-const FactoryReader* System::findFactoryReader(const Format& format) const
+const FactoryReader* System::findFactoryReader(Format format) const
 {
     for (const std::unique_ptr<FactoryReader>& ptr : m_vecFactoryReader) {
         if (containsFormat(ptr->formats(), format))
@@ -139,7 +151,7 @@ const FactoryReader* System::findFactoryReader(const Format& format) const
     return nullptr;
 }
 
-const FactoryWriter* System::findFactoryWriter(const Format& format) const
+const FactoryWriter* System::findFactoryWriter(Format format) const
 {
     for (const std::unique_ptr<FactoryWriter>& ptr : m_vecFactoryWriter) {
         if (containsFormat(ptr->formats(), format))
@@ -149,7 +161,7 @@ const FactoryWriter* System::findFactoryWriter(const Format& format) const
     return nullptr;
 }
 
-std::unique_ptr<Reader> System::createReader(const Format& format) const
+std::unique_ptr<Reader> System::createReader(Format format) const
 {
     const FactoryReader* ptr = this->findFactoryReader(format);
     if (ptr)
@@ -158,35 +170,13 @@ std::unique_ptr<Reader> System::createReader(const Format& format) const
     return {};
 }
 
-std::unique_ptr<Writer> System::createWriter(const Format& format) const
+std::unique_ptr<Writer> System::createWriter(Format format) const
 {
     const FactoryWriter* ptr = this->findFactoryWriter(format);
     if (ptr)
         return ptr->create(format);
 
     return {};
-}
-
-QString System::fileFilter(const Format& format)
-{
-    if (format == Format_Unknown)
-        return QString();
-
-    QString filter;
-    for (const QString& suffix : format.fileSuffixes) {
-        if (&suffix != &format.fileSuffixes.front())
-            filter += " ";
-
-        filter += "*." + suffix;
-#ifdef Q_OS_UNIX
-        filter += " *." + suffix.toUpper();
-#endif
-    }
-
-    //: %1 is the format identifier and %2 is the file filters string
-    return tr("%1 files(%2)")
-            .arg(QString::fromLatin1(format.identifier))
-            .arg(filter);
 }
 
 bool System::importInDocument(const Args_ImportInDocument& args)
@@ -214,7 +204,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         bool transferred = false;
     };
 
-    auto fnEntityPostProcessRequired = [&](const Format& format) {
+    auto fnEntityPostProcessRequired = [&](Format format) {
         if (args.entityPostProcess && args.entityPostProcessRequiredIf)
             return args.entityPostProcessRequiredIf(format);
         else
@@ -383,7 +373,7 @@ System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath) {
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFormat(const Format& format) {
+System::Operation_ExportApplicationItems::targetFormat(Format format) {
     m_args.targetFormat = format;
     return *this;
 }
@@ -470,7 +460,7 @@ System::Operation_ImportInDocument::withEntityPostProcess(std::function<void (TD
 }
 
 System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::function<bool(const Format&)> fn)
+System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::function<bool(Format)> fn)
 {
     m_args.entityPostProcessRequiredIf = std::move(fn);
     return *this;
