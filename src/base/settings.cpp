@@ -6,6 +6,8 @@
 
 #include "settings.h"
 
+#include "qtcore_utils.h"
+
 #include <QtCore/QSettings>
 #include <gsl/util>
 #include <regex>
@@ -215,6 +217,11 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
 }
 
+Settings::GroupIndex Settings::addGroup(std::string_view identifier)
+{
+    return this->addGroup(QtCoreUtils::QByteArray_frowRawData(identifier));
+}
+
 void Settings::setGroupTitle(GroupIndex index, const QString& title)
 {
     d->group(index).overridenTitle = title;
@@ -273,6 +280,11 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identif
     Settings_Section& section = group.vecSection.back();
     section.identifier.key = identifier;
     return SectionIndex(index, int(group.vecSection.size()) - 1);
+}
+
+Settings::SectionIndex Settings::addSection(GroupIndex index, std::string_view identifier)
+{
+    return this->addSection(index, QtCoreUtils::QByteArray_frowRawData(identifier));
 }
 
 void Settings::setSectionTitle(SectionIndex index, const QString& title)

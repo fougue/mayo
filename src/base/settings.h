@@ -13,6 +13,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
 #include <functional>
+#include <string_view>
 class QSettings;
 
 namespace Mayo {
@@ -46,6 +47,7 @@ public:
     QString groupTitle(GroupIndex index) const;
     GroupIndex addGroup(TextId identifier);
     GroupIndex addGroup(QByteArray identifier);
+    GroupIndex addGroup(std::string_view identifier);
     void setGroupTitle(GroupIndex index, const QString& title);
 
     void addResetFunction(GroupIndex index, ResetFunction fn);
@@ -57,6 +59,7 @@ public:
     bool isDefaultGroupSection(SectionIndex index) const;
     SectionIndex addSection(GroupIndex index, TextId identifier);
     SectionIndex addSection(GroupIndex index, QByteArray identifier);
+    SectionIndex addSection(GroupIndex index, std::string_view identifier);
     void setSectionTitle(SectionIndex index, const QString& title);
 
     int settingCount(SectionIndex index) const;

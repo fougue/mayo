@@ -17,7 +17,7 @@ Span<const Format> GmioFactoryWriter::formats() const
     return array;
 }
 
-std::unique_ptr<Writer> GmioFactoryWriter::create(const Format& format) const
+std::unique_ptr<Writer> GmioFactoryWriter::create(Format format) const
 {
     if (format == Format_AMF)
         return std::make_unique<GmioAmfWriter>();
@@ -26,7 +26,7 @@ std::unique_ptr<Writer> GmioFactoryWriter::create(const Format& format) const
 }
 
 std::unique_ptr<PropertyGroup>
-GmioFactoryWriter::createProperties(const Format& format, PropertyGroup* parentGroup) const
+GmioFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_AMF)
         return GmioAmfWriter::createProperties(parentGroup);

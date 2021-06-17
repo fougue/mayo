@@ -6,37 +6,39 @@
 
 #pragma once
 
-#include <QtCore/QFlags>
-#include <QtCore/QByteArray>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
+#include "span.h"
+#include <string_view>
 
 namespace Mayo {
 namespace IO {
 
-struct Format {
-    QByteArray identifier;
-    QString name;
-    QStringList fileSuffixes;
+// Predefined I/O formats
+enum Format {
+    Format_Unknown,
+    Format_STEP,
+    Format_IGES,
+    Format_OCCBREP,
+    Format_STL,
+    Format_OBJ,
+    Format_GLTF,
+    Format_VRML,
+    Format_AMF
 };
 
-bool operator==(const Format& lhs, const Format& rhs);
-bool operator!=(const Format& lhs, const Format& rhs);
-unsigned hash(const Format& key);
+// Returns identifier(unique short name) corresponding to 'format'
+std::string_view formatIdentifier(Format format);
 
-// Predefined formats
-const Format Format_Unknown = { "", "Format_Unknown", {} };
-const Format Format_STEP = { "STEP", "STEP(ISO 10303)", { "stp", "step" } };
-const Format Format_IGES = { "IGES", "IGES(ASME Y14.26M))", { "igs", "iges" } };
-const Format Format_OCCBREP = { "OCCBREP", "OpenCascade BREP", { "brep", "rle", "occ" } };
-const Format Format_STL = { "STL", "STL(STereo-Lithography)", { "stl" } };
-const Format Format_OBJ = { "OBJ", "Wavefront OBJ", { "obj" } };
-const Format Format_GLTF = { "GLTF", "glTF(GL Transmission Format)", { "gltf", "glb" } };
-const Format Format_VRML = { "VRML", "VRML(ISO/CEI 14772-2)", { "wrl", "wrz", "vrml" } };
-const Format Format_AMF = { "AMF", "Additive manufacturing file format(ISO/ASTM 52915:2016)", { "amf" } };
+// Returns name(eg ISO designation) corresponding to 'format'
+std::string_view formatName(Format format);
 
-bool formatProvidesBRep(const Format& format);
-bool formatProvidesMesh(const Format& format);
+// Returns array of applicable file suffixes(extensions) corresponding to 'format'
+Span<std::string_view> formatFileSuffixes(Format format);
+
+// Does 'format' provide BRep model ?
+bool formatProvidesBRep(Format format);
+
+// Does 'format' provide mesh model ?
+bool formatProvidesMesh(Format format);
 
 } // namespace IO
 } // namespace Mayo

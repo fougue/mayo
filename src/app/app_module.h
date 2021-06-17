@@ -64,8 +64,8 @@ public:
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
     // from IO::ParametersProvider
-    const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
-    const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
+    const PropertyGroup* findReaderParameters(IO::Format format) const override;
+    const PropertyGroup* findWriterParameters(IO::Format format) const override;
 
     // from PropertyValueConversion
     QVariant toVariant(const Property& prop) const override;
@@ -113,8 +113,8 @@ protected:
 private:
     Application* m_app = nullptr;
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
-    std::unordered_map<QByteArray, PropertyGroup*> m_mapFormatReaderParameters;
-    std::unordered_map<QByteArray, PropertyGroup*> m_mapFormatWriterParameters;
+    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
+    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
 };
 
 } // namespace Mayo

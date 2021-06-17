@@ -25,8 +25,8 @@ public:
     static TaskManager* globalInstance();
 
     TaskId newTask(TaskJob fn);
-    void run(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On);
-    void exec(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On); // Synchronous
+    void run(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On);
+    void exec(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On); // Synchronous
 
     int progress(TaskId id) const;
     int globalProgress() const;

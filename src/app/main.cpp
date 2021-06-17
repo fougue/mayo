@@ -338,7 +338,7 @@ static void cli_asyncExportDocuments(
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
                     appModule->computeBRepMesh(labelEntity, progress);
                 })
-                .withEntityPostProcessRequiredIf([=](const IO::Format&){ return brepMeshRequired; })
+                .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
                 .withEntityPostProcessInfoProgress(20, Main::tr("Mesh BRep shapes"))
                 .withMessenger(&errorCollect)
                 .withTaskProgress(progress)

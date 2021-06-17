@@ -6,18 +6,18 @@
 
 #pragma once
 
+#include "io_format.h"
+
 namespace Mayo { class PropertyGroup; }
 
 namespace Mayo {
 namespace IO {
 
-struct Format;
-
 // Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
 public:
-    virtual const PropertyGroup* findReaderParameters(const Format& format) const = 0;
-    virtual const PropertyGroup* findWriterParameters(const Format& format) const = 0;
+    virtual const PropertyGroup* findReaderParameters(Format format) const = 0;
+    virtual const PropertyGroup* findWriterParameters(Format format) const = 0;
 };
 
 } // namespace IO

@@ -42,7 +42,7 @@ Span<const Format> OccFactoryReader::formats() const
     return arrayFormat;
 }
 
-std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
+std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepReader>();
@@ -63,7 +63,7 @@ std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
     return {};
 }
 
-PtrPropertyGroup OccFactoryReader::createProperties(const Format& format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_STEP)
         return OccStepReader::createProperties(parentGroup);
@@ -91,7 +91,7 @@ Span<const Format> OccFactoryWriter::formats() const
     return arrayFormat;
 }
 
-std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
+std::unique_ptr<Writer> OccFactoryWriter::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepWriter>();
@@ -112,7 +112,7 @@ std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
     return {};
 }
 
-PtrPropertyGroup OccFactoryWriter::createProperties(const Format& format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_STEP)
         return OccStepWriter::createProperties(parentGroup);

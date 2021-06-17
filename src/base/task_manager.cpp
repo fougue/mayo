@@ -60,7 +60,7 @@ TaskId TaskManager::newTask(TaskJob fn)
     return taskId;
 }
 
-void TaskManager::run(TaskId id, TaskAutoDestroy autoDestroy)
+void TaskManager::run(TaskId id, TaskAutoDestroy policy)
 {
     this->cleanGarbage();
     Entity* entity = this->findEntity(id);
@@ -68,11 +68,11 @@ void TaskManager::run(TaskId id, TaskAutoDestroy autoDestroy)
         return;
 
     entity->isFinished = false;
-    entity->autoDestroy = autoDestroy;
+    entity->autoDestroy = policy;
     entity->control = std::async([=]{ this->execEntity(entity); });
 }
 
-void TaskManager::exec(TaskId id, TaskAutoDestroy autoDestroy)
+void TaskManager::exec(TaskId id, TaskAutoDestroy policy)
 {
     this->cleanGarbage();
     Entity* entity = this->findEntity(id);
@@ -80,7 +80,7 @@ void TaskManager::exec(TaskId id, TaskAutoDestroy autoDestroy)
         return;
 
     entity->isFinished = false;
-    entity->autoDestroy = autoDestroy;
+    entity->autoDestroy = policy;
     this->execEntity(entity);
 }
 
