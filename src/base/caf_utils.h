@@ -6,17 +6,18 @@
 
 #pragma once
 
+#include <TCollection_AsciiString.hxx>
+#include <TCollection_ExtendedString.hxx>
 #include <TDF_Label.hxx>
 #include <TDF_LabelSequence.hxx>
-#include <QtCore/QString>
 
 namespace Mayo {
 
 struct CafUtils {
-    static QLatin1String labelTag(const TDF_Label& label);
+    static const TCollection_AsciiString& labelTag(const TDF_Label& label);
 
-    static QString labelAttrStdName(const TDF_Label& label);
-    static void setLabelAttrStdName(const TDF_Label& label, const QString& name);
+    static const TCollection_ExtendedString& labelAttrStdName(const TDF_Label& label);
+    static void setLabelAttrStdName(const TDF_Label& label, const TCollection_ExtendedString& name);
 
     static bool isNullOrEmpty(const TDF_Label& label);
 
@@ -31,14 +32,14 @@ struct CafUtils {
 
 } // namespace Mayo
 
+
 #include <TDF_LabelMapHasher.hxx>
 namespace std {
 
-//! Specialization of C++11 std::hash<> functor for TDF_Label
+// Specialization of C++11 std::hash<> functor for TDF_Label
 template<> struct hash<TDF_Label> {
     inline size_t operator()(const TDF_Label& lbl) const {
         return TDF_LabelMapHasher::HashCode(lbl, INT_MAX);
-        // return qHash(Mayo::CafUtils::labelTag(lbl));
     }
 };
 

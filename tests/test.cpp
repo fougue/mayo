@@ -22,6 +22,7 @@
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
 #include "../src/base/result.h"
+#include "../src/base/string_conv.h"
 #include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
 #include "../src/base/tkernel_utils.h"
@@ -108,7 +109,7 @@ void Test::Application_test()
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
         QVERIFY(XCaf::isShape(doc->entityLabel(0)));
-        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), QLatin1String("Cube"));
+        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), to_OccExtString("Cube"));
 
         QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
         doc->destroyEntity(doc->entityTreeNodeId(0));
@@ -656,13 +657,13 @@ void Test::StringUtils_text_test_data()
             << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
 }
 
-void Test::StringUtils_stringConversion_test()
+void Test::StringConv_test()
 {
     const QString text = "test_éç²µ§_测试_Тест";
-    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<TCollection_AsciiString>(text)), text);
-    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<Handle_TCollection_HAsciiString>(text)), text);
-    QCOMPARE(StringUtils::fromUtf8(StringUtils::toUtf8<std::string>(text)), text);
-    QCOMPARE(StringUtils::fromUtf16(StringUtils::toUtf16<TCollection_ExtendedString>(text)), text);
+    QCOMPARE(to_QString(string_conv<TCollection_AsciiString>(text)), text);
+    QCOMPARE(to_QString(string_conv<Handle_TCollection_HAsciiString>(text)), text);
+    QCOMPARE(to_QString(to_stdString(text)), text);
+    QCOMPARE(to_QString(to_OccExtString(text)), text);
 }
 
 void Test::TKernelUtils_colorToHex_test()

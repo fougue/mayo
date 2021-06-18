@@ -9,7 +9,7 @@
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/task_progress.h"
-#include "../base/string_utils.h"
+#include "../base/string_conv.h"
 #include "../base/tkernel_utils.h"
 
 #include <RWMesh_CafReader.hxx>
@@ -99,7 +99,7 @@ OccBaseMeshReader::OccBaseMeshReader(RWMesh_CafReader& reader)
 
 void OccBaseMeshReader::applyParameters()
 {
-    m_reader.SetRootPrefix(StringUtils::toUtf8<TCollection_AsciiString>(this->constParameters().rootPrefix));
+    m_reader.SetRootPrefix(string_conv<TCollection_AsciiString>(this->constParameters().rootPrefix));
     m_reader.SetSystemLengthUnit(OccBaseMeshReaderProperties::lengthUnitFactor(this->constParameters().systemLengthUnit));
     m_reader.SetSystemCoordinateSystem(this->constParameters().systemCoordinatesConverter);
 }

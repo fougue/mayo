@@ -44,8 +44,7 @@ template<typename T> T filepathTo(const FilePath& fp)
     }
     else if constexpr(std::is_same_v<T, TCollection_ExtendedString>) {
         if constexpr(std::is_same_v<FilePath::value_type, char>) {
-            constexpr bool multiByte = true;
-            return TCollection_ExtendedString(fp.c_str(), multiByte);
+            return TCollection_ExtendedString(fp.c_str(), true/*multi-byte*/);
         }
         else if constexpr(std::is_same_v<FilePath::value_type, wchar_t>) {
             return TCollection_ExtendedString(fp.c_str());

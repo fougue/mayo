@@ -14,7 +14,6 @@
 #include "qmeta_quantity.h"
 
 #include <QtCore/QDateTime>
-#include <QtCore/QVariant>
 #include <type_traits>
 
 namespace Mayo {

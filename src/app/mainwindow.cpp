@@ -16,6 +16,7 @@
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/settings.h"
+#include "../base/string_conv.h"
 #include "../base/task_manager.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_utils.h"
@@ -71,7 +72,7 @@ static QString fileFilter(IO::Format format)
         if (suffix.data() != IO::formatFileSuffixes(format).front().data())
             filter += " ";
 
-        const QString qsuffix = StringUtils::fromUtf8(suffix);
+        const QString qsuffix = to_QString(suffix);
         filter += "*." + qsuffix;
 #ifdef Q_OS_UNIX
         filter += " *." + qsuffix.toUpper();
@@ -80,7 +81,7 @@ static QString fileFilter(IO::Format format)
 
     //: %1 is the format identifier and %2 is the file filters string
     return MainWindow::tr("%1 files(%2)")
-            .arg(StringUtils::fromUtf8(IO::formatIdentifier(format)))
+            .arg(to_QString(IO::formatIdentifier(format)))
             .arg(filter);
 }
 

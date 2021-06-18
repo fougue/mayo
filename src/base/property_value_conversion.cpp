@@ -8,7 +8,7 @@
 
 #include "property_builtins.h"
 #include "property_enumeration.h"
-#include "string_utils.h"
+#include "string_conv.h"
 #include "tkernel_utils.h"
 #include "unit_system.h"
 
@@ -51,16 +51,16 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
         qCritical() << "toVariant() not yet implemented for PropertyOccTrsf";
     }
     else if (isType<PropertyOccColor>(prop)) {
-        return StringUtils::fromUtf8(TKernelUtils::colorToHex(constRef<PropertyOccColor>(prop)));
+        return to_QString(TKernelUtils::colorToHex(constRef<PropertyOccColor>(prop)));
     }
     else if (isType<PropertyEnumeration>(prop)) {
-        return QString::fromUtf8(constRef<PropertyEnumeration>(prop).name());
+        return to_QString(constRef<PropertyEnumeration>(prop).name());
     }
     else if (isType<BasePropertyQuantity>(prop)) {
         const auto& qtyProp = constRef<BasePropertyQuantity>(prop);
         const UnitSystem::TranslateResult trRes = UnitSystem::translate(
                     UnitSystem::SI, qtyProp.quantityValue(), qtyProp.quantityUnit());
-        const QString strUnit = StringUtils::fromUtf8(std::string_view(trRes.strUnit));
+        const QString strUnit = to_QString(trRes.strUnit);
 #if __cpp_lib_to_chars
         char buff[64] = {};
         auto resToChars = std::to_chars(
@@ -70,7 +70,7 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
                     std::chars_format::general,
                     m_doubleToStringPrecision);
         if (resToChars.ec == std::errc())
-            return StringUtils::fromUtf8(std::string_view(buff)) + strUnit;
+            return QString::fromUtf8(buff, resToChars.ptr - buff) + strUnit;
         else
             qCritical() << "toVariant(PropertyQuantity) failed with error: 'value_too_large'";
 #else
@@ -125,7 +125,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
         return fnError("fromVariant() not yet implemented for PropertyOccTrsf");
     }
     else if (isType<PropertyOccColor>(prop)) {
-        auto strColorHex = StringUtils::toUtf8<std::string>(variant.toString());
+        auto strColorHex = to_stdString(variant.toString());
         Quantity_Color color;
         if (!TKernelUtils::colorFromHex(strColorHex, &color))
             return fnError(QString("Not hexadecimal format '%1'").arg(variant.toString()));

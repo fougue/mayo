@@ -11,6 +11,7 @@
 #include "../base/document_tree_node.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
+#include "../base/string_conv.h"
 #include "../base/string_utils.h"
 #include "../base/xcaf.h"
 
@@ -28,7 +29,7 @@ public:
         const XCaf& xcaf = treeNode.document()->xcaf();
 
         // Name
-        m_propertyName.setValue(CafUtils::labelAttrStdName(label));
+        m_propertyName.setValue(to_QString(CafUtils::labelAttrStdName(label)));
 
         // Shape type
         const TopAbs_ShapeEnum shapeType = XCAFDoc_ShapeTool::GetShape(label).ShapeType();
@@ -90,7 +91,7 @@ public:
         // Referred entity's properties
         if (XCaf::isShapeReference(label)) {
             m_labelReferred = XCaf::shapeReferred(label);
-            m_propertyReferredName.setValue(CafUtils::labelAttrStdName(m_labelReferred));
+            m_propertyReferredName.setValue(to_QString(CafUtils::labelAttrStdName(m_labelReferred)));
             auto validProps = XCaf::validationProperties(m_labelReferred);
             m_propertyReferredValidationCentroid.setValue(validProps.centroid);
             if (!validProps.hasCentroid)
@@ -127,9 +128,9 @@ public:
     void onPropertyChanged(Property* prop) override
     {
         if (prop == &m_propertyName)
-            CafUtils::setLabelAttrStdName(m_label, m_propertyName.value());
+            CafUtils::setLabelAttrStdName(m_label, to_OccExtString(m_propertyName.value()));
         else if (prop == &m_propertyReferredName)
-            CafUtils::setLabelAttrStdName(m_labelReferred, m_propertyReferredName.value());
+            CafUtils::setLabelAttrStdName(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
 
         PropertyGroupSignals::onPropertyChanged(prop);
     }

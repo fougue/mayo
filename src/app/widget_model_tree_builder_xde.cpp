@@ -6,6 +6,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/qtcore_utils.h"
 #include "../base/settings.h"
+#include "../base/string_conv.h"
 #include "../base/xcaf.h"
 #include "../gui/gui_application.h"
 #include "app_module.h"
@@ -150,7 +151,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
         QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node)
 {
     auto guiNode = new QTreeWidgetItem(guiParentNode);
-    const QString stdName = CafUtils::labelAttrStdName(node.label());
+    const QString stdName = to_QString(CafUtils::labelAttrStdName(node.label()));
     guiNode->setText(0, stdName);
     WidgetModelTree::setDocumentTreeNode(guiNode, node);
     const QIcon icon = Module::shapeIcon(node.label());
@@ -182,7 +183,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
             }
             else {
                 auto guiNode = new QTreeWidgetItem(guiParentNode);
-                QString guiNodeText = CafUtils::labelAttrStdName(nodeLabel);
+                QString guiNodeText = to_QString(CafUtils::labelAttrStdName(nodeLabel));
                 TreeNodeId guiNodeId = itNodeId;
                 if (setReferenceNodeId.find(nodeParentId) != setReferenceNodeId.cend()) {
                     const TDF_Label& refLabel = modelTree.nodeData(nodeParentId);
@@ -248,15 +249,15 @@ void WidgetModelTreeBuilder_Xde::refreshXdeAssemblyNodeItemText(QTreeWidgetItem*
         item->setText(0, itemText);
     }
     else {
-        item->setText(0, CafUtils::labelAttrStdName(label));
+        item->setText(0, to_QString(CafUtils::labelAttrStdName(label)));
     }
 }
 
 QString WidgetModelTreeBuilder_Xde::referenceItemText(
         const TDF_Label& instanceLabel, const TDF_Label& productLabel) const
 {
-    const QString instanceName = CafUtils::labelAttrStdName(instanceLabel).trimmed();
-    const QString productName = CafUtils::labelAttrStdName(productLabel).trimmed();
+    const QString instanceName = to_QString(CafUtils::labelAttrStdName(instanceLabel)).trimmed();
+    const QString productName = to_QString(CafUtils::labelAttrStdName(productLabel)).trimmed();
     const QByteArray strTemplate = Module::toInstanceNameTemplate(m_module->instanceNameFormat);
     QString itemText = QString::fromUtf8(strTemplate);
     itemText.replace("%instance", instanceName)

@@ -12,6 +12,7 @@
 #include "../base/meta_enum.h"
 #include "../base/qmeta_tdf_label.h"
 #include "../base/settings.h"
+#include "../base/string_conv.h"
 #include "../base/string_utils.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/qtgui_utils.h"
@@ -73,7 +74,7 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         if (attrId == TDataStd_Name::GetID()) {
             const auto& name = static_cast<const TDataStd_Name&>(*ptrAttr);
             text = "TDataStd_Name";
-            value = StringUtils::fromUtf16(name.Get());
+            value = to_QString(name.Get());
         }
 #if 0
         else if (attrId == TDataStd_TreeNode::GetID()) {
@@ -265,7 +266,7 @@ static QTreeWidgetItem* createPropertyTreeItem(
         return static_cast<QTreeWidgetItem*>(nullptr);
 
     auto item = createPropertyTreeItem(text);
-    item->setText(1, StringUtils::fromUtf8(imgTexture->FilePath()));
+    item->setText(1, to_QString(imgTexture->FilePath()));
     return item;
 }
 #endif
@@ -291,7 +292,7 @@ static void loadLabelVisMaterialProperties(
         item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
         item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
         if (!material->RawName().IsNull())
-            item->addChild(createPropertyTreeItem("RawName", StringUtils::fromUtf8(material->RawName())));
+            item->addChild(createPropertyTreeItem("RawName", to_QString(material->RawName())));
 
         if (material->HasPbrMaterial()) {
             const XCAFDoc_VisMaterialPBR& pbrMaterial = material->PbrMaterial();
@@ -399,7 +400,9 @@ static void loadLabelShapeProperties(
         TDF_Label labelRef;
         if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
             const QString textItemRefShape =
-                    CafUtils::labelTag(labelRef) + " " + CafUtils::labelAttrStdName(labelRef);
+                    to_QString(CafUtils::labelTag(labelRef))
+                    + " "
+                    + to_QString(CafUtils::labelAttrStdName(labelRef));
             fnAddItem(createPropertyTreeItem("ReferredShape", textItemRefShape));
         }
     }
@@ -588,9 +591,9 @@ static void loadLabelGeomToleranceProperties(const TDF_Label& label, QTreeWidget
 static void loadLabel(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
     treeItem->setData(0, TreeWidgetItem_TdfLabelRole, QVariant::fromValue(label));
-    treeItem->setText(0, CafUtils::labelTag(label));
+    treeItem->setText(0, to_QString(CafUtils::labelTag(label)));
 
-    const QString stdName = CafUtils::labelAttrStdName(label);
+    const QString stdName = to_QString(CafUtils::labelAttrStdName(label));
     if (!stdName.isEmpty())
         treeItem->setText(0, treeItem->text(0) + " " + stdName);
 }

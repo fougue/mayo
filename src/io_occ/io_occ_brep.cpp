@@ -41,7 +41,7 @@ TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progr
     const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
-    CafUtils::setLabelAttrStdName(labelShape, filepathTo<QString>(m_baseFilename));
+    CafUtils::setLabelAttrStdName(labelShape, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ labelShape });
 }
 

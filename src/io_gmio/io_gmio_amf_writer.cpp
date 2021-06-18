@@ -13,6 +13,7 @@
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/string_conv.h"
 #include "../base/task_progress.h"
 #include "../base/unit_system.h"
 #include "../base/xcaf.h"
@@ -214,7 +215,7 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
             do {
                 itParent = modelTree.nodeParent(itParent);
                 if (itParent != 0) {
-                    const QString name = CafUtils::labelAttrStdName(modelTree.nodeData(itParent));
+                    const QString name = to_QString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
                     if (!name.trimmed().isEmpty())
                         absoluteName += name;
                     else
@@ -366,7 +367,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     object.id = m_vecObject.size();
     object.firstMeshId = meshCount;
     object.lastMeshId = m_vecMesh.size() - 1;
-    object.name = CafUtils::labelAttrStdName(labelShape).toStdString();
+    object.name = to_stdString(CafUtils::labelAttrStdName(labelShape));
     object.materialId = materialId;
     m_vecObject.push_back(std::move(object));
     return m_vecObject.back().id;

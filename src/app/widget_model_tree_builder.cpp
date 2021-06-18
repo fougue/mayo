@@ -9,6 +9,7 @@
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "../base/filepath.h"
+#include "../base/string_conv.h"
 #include "widget_model_tree.h"
 #include "theme.h"
 
@@ -66,7 +67,7 @@ QString WidgetModelTreeBuilder::labelText(const QString& label)
 
 QString WidgetModelTreeBuilder::labelText(const TDF_Label& label)
 {
-    return WidgetModelTreeBuilder::labelText(CafUtils::labelAttrStdName(label));
+    return WidgetModelTreeBuilder::labelText(to_QString(CafUtils::labelAttrStdName(label)));
 }
 
 } // namespace Mayo

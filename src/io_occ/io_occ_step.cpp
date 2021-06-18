@@ -9,7 +9,7 @@
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_utils.h"
+#include "../base/string_conv.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 #include "../base/enumeration_fromenum.h"
@@ -319,13 +319,13 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
 
     APIHeaderSection_MakeHeader makeHeader(m_writer->ChangeWriter().Model());
     makeHeader.SetAuthorValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
+                1, string_conv<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
     makeHeader.SetOrganizationValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOrganization));
+                1, string_conv<Handle_TCollection_HAsciiString>(m_params.headerOrganization));
     makeHeader.SetOriginatingSystem(
-                StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOriginatingSystem));
+                string_conv<Handle_TCollection_HAsciiString>(m_params.headerOriginatingSystem));
     makeHeader.SetDescriptionValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
+                1, string_conv<Handle_TCollection_HAsciiString>(m_params.headerDescription));
 
     const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;

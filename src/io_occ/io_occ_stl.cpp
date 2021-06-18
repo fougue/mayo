@@ -82,7 +82,7 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
 
     const TDF_Label entityLabel = doc->newEntityLabel();
     TDataXtd_Triangulation::Set(entityLabel, m_mesh);
-    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<QString>(m_baseFilename));
+    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ entityLabel });
 }
 
