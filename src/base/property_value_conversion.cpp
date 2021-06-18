@@ -77,7 +77,7 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
         std::stringstream sstr;
         sstr.precision(m_doubleToStringPrecision);
         sstr << trRes.value * trRes.factor;
-        return StringUtils::fromUtf8(sstr.str()) + strUnit;
+        return to_QString(sstr.str()) + strUnit;
 #endif
     }
 
