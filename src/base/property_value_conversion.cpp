@@ -35,6 +35,9 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
     else if (isType<PropertyQString>(prop)) {
         return constRef<PropertyQString>(prop).value();
     }
+    else if (isType<PropertyFilePath>(prop)) {
+        return filepathTo<QString>(constRef<PropertyFilePath>(prop).value());
+    }
     else if (isType<PropertyOccPnt>(prop)) {
         qCritical() << "toVariant() not yet implemented for PropertyOccPnt";
     }
@@ -99,6 +102,9 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
     }
     else if (isType<PropertyQString>(prop)) {
         return ptr<PropertyQString>(prop)->setValue(variant.toString());
+    }
+    else if (isType<PropertyFilePath>(prop)) {
+        return ptr<PropertyFilePath>(prop)->setValue(filepathFrom(variant.toString()));
     }
     else if (isType<PropertyOccPnt>(prop)) {
         return fnError("fromVariant() not yet implemented for PropertyOccPnt");

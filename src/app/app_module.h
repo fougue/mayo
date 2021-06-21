@@ -80,7 +80,7 @@ public:
     const Settings_GroupIndex groupId_application;
     PropertyEnumeration language;
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
-    PropertyQString lastOpenDir{ this, textId("lastOpenFolder") };
+    PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyQString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     // Meshing

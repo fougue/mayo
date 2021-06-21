@@ -151,7 +151,7 @@ AppModule::AppModule(Application* app)
     settings->addResetFunction(this->groupId_application, [&]{
         this->language.setValue(enumLanguages.findValue("en"));
         this->recentFiles.setValue({});
-        this->lastOpenDir.setValue(QString());
+        this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue(QString());
         this->linkWithDocumentSelector.setValue(true);
     });

@@ -23,5 +23,6 @@ template<> const char PropertyQString::TypeName[] = "Mayo::PropertyQString";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
 template<> const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
 template<> const char GenericProperty<Quantity_Color>::TypeName[] = "Mayo::PropertyOccColor";
+template<> const char GenericProperty<FilePath>::TypeName[] = "Mayo::PropertyFilePath";
 
 } // namespace Mayo

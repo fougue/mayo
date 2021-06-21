@@ -7,7 +7,9 @@
 #include "settings.h"
 
 #include "qtcore_utils.h"
+#include "string_conv.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QSettings>
 #include <gsl/util>
 #include <regex>
@@ -78,7 +80,9 @@ public:
         const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
         if (source.contains(settingPath)) {
             const QVariant value = source.value(settingPath);
-            m_propValueConverter->fromVariant(property, value);
+            const bool ok = m_propValueConverter->fromVariant(property, value);
+            if (!ok)
+                qCritical() << QString("Failed to load setting %1").arg(to_QString(propertyKey));
         }
     }
 

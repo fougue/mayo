@@ -7,6 +7,7 @@
 #pragma once
 
 #include "property.h"
+#include "filepath.h"
 #include "quantity.h"
 #include "result.h"
 
@@ -121,6 +122,7 @@ using PropertyQString = GenericProperty<QString>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
+using PropertyFilePath = GenericProperty<FilePath>;
 
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
 using PropertyArea = GenericPropertyQuantity<Unit::Area>;
