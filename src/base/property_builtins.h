@@ -15,6 +15,7 @@
 #include <gp_Trsf.hxx>
 #include <Quantity_Color.hxx>
 
+#include <string>
 #include <type_traits>
 
 namespace Mayo {
@@ -23,6 +24,7 @@ template<typename T>
 class GenericProperty : public Property {
 public:
     using ValueType = T;
+    // TODO Add value_type traits for T
 
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
@@ -117,8 +119,8 @@ private:
 using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
+using PropertyString = GenericProperty<std::string>;
 using PropertyCheckState = GenericProperty<Qt::CheckState>;
-using PropertyQString = GenericProperty<QString>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;

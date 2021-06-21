@@ -9,6 +9,7 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/string_conv.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
@@ -123,20 +124,20 @@ struct PropertyCheckStateEditor : public InterfacePropertyEditor, public QCheckB
     PropertyCheckState* m_property;
 };
 
-struct PropertyQStringEditor : public InterfacePropertyEditor, public QLineEdit {
-    PropertyQStringEditor(PropertyQString* property, QWidget* parentWidget)
+struct PropertyStringEditor : public InterfacePropertyEditor, public QLineEdit {
+    PropertyStringEditor(PropertyString* property, QWidget* parentWidget)
         : QLineEdit(parentWidget), m_property(property)
     {
         QObject::connect(this, &QLineEdit::textChanged, [=](const QString& text) {
-            property->setValue(text);
+            property->setValue(to_stdString(text));
         });
     }
 
     void syncWithProperty() override {
-        this->setText(m_property->value());
+        this->setText(to_QString(m_property->value()));
     }
 
-    PropertyQString* m_property;
+    PropertyString* m_property;
 };
 
 struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QComboBox {
@@ -317,8 +318,8 @@ QWidget* DefaultPropertyEditorFactory::createEditor(Property* property, QWidget*
     if (propTypeName == PropertyCheckState::TypeName)
         editor = new PropertyCheckStateEditor(static_cast<PropertyCheckState*>(property), parentWidget);
 
-    if (propTypeName == PropertyQString::TypeName)
-        editor = new PropertyQStringEditor(static_cast<PropertyQString*>(property), parentWidget);
+    if (propTypeName == PropertyString::TypeName)
+        editor = new PropertyStringEditor(static_cast<PropertyString*>(property), parentWidget);
 
     if (propTypeName == PropertyOccColor::TypeName)
         editor = new PropertyOccColorEditor(static_cast<PropertyOccColor*>(property), parentWidget);

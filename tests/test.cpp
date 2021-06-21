@@ -186,8 +186,8 @@ void Test::PropertyValueConversion_test()
     else if (strPropertyName == PropertyDouble::TypeName) {
         prop.reset(new PropertyDouble(nullptr, {}));
     }
-    else if (strPropertyName == PropertyQString::TypeName) {
-        prop.reset(new PropertyQString(nullptr, {}));
+    else if (strPropertyName == PropertyString::TypeName) {
+        prop.reset(new PropertyString(nullptr, {}));
     }
     else if (strPropertyName == PropertyOccColor::TypeName) {
         prop.reset(new PropertyOccColor(nullptr, {}));
@@ -214,8 +214,8 @@ void Test::PropertyValueConversion_test_data()
     QTest::newRow("int(1979)") << PropertyInt::TypeName << QVariant(1979);
     QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << QVariant(-1e6);
     QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << QVariant(3.1415926535);
-    QTest::newRow("QString(\"test\")") << PropertyQString::TypeName << QVariant("test");
-    QTest::newRow("QString(\"1558\")") << PropertyQString::TypeName << QVariant(1558);
+    QTest::newRow("QString(\"test\")") << PropertyString::TypeName << QVariant("test");
+    QTest::newRow("QString(\"1558\")") << PropertyString::TypeName << QVariant(1558);
     QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << QVariant("#0000AA");
     QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << QVariant("#FFFFFF");
     QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << QVariant("#BB0000");

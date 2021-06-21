@@ -55,9 +55,9 @@ std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder::clone() const
     return std::make_unique<WidgetModelTreeBuilder>();
 }
 
-QString WidgetModelTreeBuilder::labelText(const PropertyQString& propLabel)
+QString WidgetModelTreeBuilder::labelText(const PropertyString& propLabel)
 {
-    return WidgetModelTreeBuilder::labelText(propLabel.value());
+    return WidgetModelTreeBuilder::labelText(to_QString(propLabel.value()));
 }
 
 QString WidgetModelTreeBuilder::labelText(const QString& label)

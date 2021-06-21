@@ -29,7 +29,7 @@ public:
 
     using LengthUnit = OccCommon::LengthUnit;
     struct Parameters {
-        QString rootPrefix;
+        std::string rootPrefix;
         LengthUnit systemLengthUnit = LengthUnit::Undefined;
         RWMesh_CoordinateSystem systemCoordinatesConverter = RWMesh_CoordinateSystem_Undefined;
     };
@@ -58,7 +58,7 @@ public:
     static double lengthUnitFactor(LengthUnit lenUnit);
     static LengthUnit lengthUnit(double factor);
 
-    PropertyQString rootPrefix;
+    PropertyString rootPrefix;
     PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter;
     PropertyEnum<LengthUnit> systemLengthUnit;
 };

@@ -267,8 +267,8 @@ public:
         this->writePCurves.setValue(params.writeParametricCurves);
         this->writeSubShapesNames.setValue(params.writeSubShapesNames);
 
-        this->headerAuthor.setValue(QString());
-        this->headerOrganization.setValue(QString());
+        this->headerAuthor.setValue({});
+        this->headerOrganization.setValue({});
         this->headerOriginatingSystem.setValue(XSTEP_SYSTEM_VERSION);
         this->headerDescription.setValue("OpenCascade Model");
     }
@@ -279,10 +279,10 @@ public:
     PropertyEnum<FreeVertexMode> freeVertexMode{ this, textId("freeVertexMode") };
     PropertyBool writePCurves{ this, textId("writeParametericCurves") };
     PropertyBool writeSubShapesNames{ this, textId("writeSubShapesNames") };
-    PropertyQString headerAuthor{ this, textId("headerAuthor") };
-    PropertyQString headerOrganization{ this, textId("headerOrganization") };
-    PropertyQString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
-    PropertyQString headerDescription{ this, textId("headerDescription") };
+    PropertyString headerAuthor{ this, textId("headerAuthor") };
+    PropertyString headerOrganization{ this, textId("headerOrganization") };
+    PropertyString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
+    PropertyString headerDescription{ this, textId("headerDescription") };
 };
 
 OccStepWriter::OccStepWriter()

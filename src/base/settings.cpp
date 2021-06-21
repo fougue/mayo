@@ -64,7 +64,7 @@ public:
     }
 
     QString sectionPath(const Settings_Group& group, const Settings_Section& section) const {
-        return QString::fromUtf8(group.identifier.key) + "/" + QString::fromUtf8(section.identifier.key);
+        return to_QString(group.identifier.key) + "/" + to_QString(section.identifier.key);
     }
 
     QString sectionPath(Settings::SectionIndex index) {
@@ -77,7 +77,7 @@ public:
             return;
 
         const QByteArray propertyKey = property->name().key;
-        const QString settingPath = sectionPath + "/" + QString::fromUtf8(propertyKey);
+        const QString settingPath = sectionPath + "/" + to_QString(propertyKey);
         if (source.contains(settingPath)) {
             const QVariant value = source.value(settingPath);
             const bool ok = m_propValueConverter->fromVariant(property, value);
@@ -160,7 +160,7 @@ void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclu
                 Property* prop = setting.property;
                 if (!fnExclude || !fnExclude(*prop)) {
                     const QByteArray propKey = prop->name().key;
-                    const QString settingPath = sectionPath + "/" + QString::fromUtf8(propKey);
+                    const QString settingPath = sectionPath + "/" + to_QString(propKey);
                     target->setValue(settingPath, d->m_propValueConverter->toVariant(*prop));
                 }
             } // endfor(settings)

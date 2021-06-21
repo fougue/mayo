@@ -109,14 +109,14 @@ struct ImportExportSettings {
     {
         return {
             AppModule::get(Application::instance())->lastOpenDir.value(),
-            AppModule::get(Application::instance())->lastSelectedFormatFilter.value()
+            to_QString(AppModule::get(Application::instance())->lastSelectedFormatFilter.value())
         };
     }
 
     static void save(const ImportExportSettings& sets)
     {
         AppModule::get(Application::instance())->lastOpenDir.setValue(sets.openDir);
-        AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(sets.selectedFilter);
+        AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(to_stdString(sets.selectedFilter));
     }
 };
 

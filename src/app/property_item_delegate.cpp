@@ -8,6 +8,7 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
+#include "../base/string_conv.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
@@ -97,8 +98,8 @@ static QString propertyValueText(const PropertyCheckState* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyQString* prop) {
-    return prop->value();
+static QString propertyValueText(const PropertyString* prop) {
+    return to_QString(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
@@ -242,8 +243,8 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
         if (propTypeName == PropertyCheckState::TypeName)
             return propertyValueText(static_cast<const PropertyCheckState*>(prop));
 
-        if (propTypeName == PropertyQString::TypeName)
-            return propertyValueText(static_cast<const PropertyQString*>(prop));
+        if (propTypeName == PropertyString::TypeName)
+            return propertyValueText(static_cast<const PropertyString*>(prop));
 
         if (propTypeName == PropertyOccColor::TypeName)
             return propertyValueText(static_cast<const PropertyOccColor*>(prop));

@@ -156,7 +156,7 @@ public:
         this->float64Format.setValue(params.float64Format);
         this->float64Precision.setValue(params.float64Precision);
         this->createZipArchive.setValue(params.createZipArchive);
-        this->zipEntryFilename.setValue(QString::fromStdString(params.zipEntryFilename));
+        this->zipEntryFilename.setValue(params.zipEntryFilename);
         this->useZip64.setValue(params.useZip64);
 
         this->zipEntryFilename.setEnabled(this->createZipArchive);
@@ -176,7 +176,7 @@ public:
     PropertyEnum<GmioAmfWriter::FloatTextFormat> float64Format{ this, textId("float64Format") };
     PropertyInt float64Precision{ this, textId("float64Precision") };
     PropertyBool createZipArchive{ this, textId("createZipArchive") };
-    PropertyQString zipEntryFilename{ this, textId("zipEntryFilename") };
+    PropertyString zipEntryFilename{ this, textId("zipEntryFilename") };
     PropertyBool useZip64{ this, textId("useZip64") };
 };
 
@@ -300,7 +300,7 @@ void GmioAmfWriter::applyProperties(const PropertyGroup* group)
         m_params.float64Format = ptr->float64Format;
         m_params.float64Precision = ptr->float64Precision;
         m_params.createZipArchive = ptr->createZipArchive;
-        m_params.zipEntryFilename = ptr->zipEntryFilename.value().toStdString();
+        m_params.zipEntryFilename = ptr->zipEntryFilename;
         m_params.useZip64 = ptr->useZip64;
     }
 }

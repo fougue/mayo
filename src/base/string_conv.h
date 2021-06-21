@@ -78,6 +78,21 @@ template<size_t N> struct StringConv<char[N], QString> {
     static auto to(const char(&str)[N]) { return QString::fromUtf8(str, N); }
 };
 
+// std::string -> TCollection_AsciiString
+template<> struct StringConv<std::string, TCollection_AsciiString> {
+    static auto to(const std::string& str) {
+        return TCollection_AsciiString(str.c_str(), int(str.length()));
+    }
+};
+
+// std::string -> Handle_TCollection_HAsciiString
+template<> struct StringConv<std::string, Handle_TCollection_HAsciiString> {
+    static auto to(const std::string& str) {
+        Handle_TCollection_HAsciiString hnd = new TCollection_HAsciiString(str.c_str());
+        return hnd;
+    }
+};
+
 // std::string -> TCollection_ExtendedString
 template<> struct StringConv<std::string, TCollection_ExtendedString> {
     static auto to(const std::string& str) {
@@ -110,7 +125,7 @@ template<> struct StringConv<QString, Handle_TCollection_HAsciiString> {
     }
 };
 
-// QString -> Handle_TCollection_HAsciiString
+// Handle_TCollection_HAsciiString -> QString
 template<> struct StringConv<Handle_TCollection_HAsciiString, QString> {
     static auto to(const Handle_TCollection_HAsciiString& str) {
         return string_conv<QString>(str ? str->String() : TCollection_AsciiString());
@@ -118,6 +133,14 @@ template<> struct StringConv<Handle_TCollection_HAsciiString, QString> {
 };
 
 #if OCC_VERSION_HEX >= 0x070400
+// std::string -> opencascade::handle<TCollection_HAsciiString>
+template<> struct StringConv<std::string, opencascade::handle<TCollection_HAsciiString>> {
+    static auto to(const std::string& str) {
+        opencascade::handle<TCollection_HAsciiString> hnd = new TCollection_HAsciiString(str.c_str());
+        return hnd;
+    }
+};
+
 // QString -> opencascade::handle<TCollection_HAsciiString>
 template<> struct StringConv<QString, opencascade::handle<TCollection_HAsciiString>> {
     static auto to(const QString& str) {
@@ -126,7 +149,7 @@ template<> struct StringConv<QString, opencascade::handle<TCollection_HAsciiStri
     }
 };
 
-// Handle_TCollection_HAsciiString -> QString
+// opencascade::handle<TCollection_HAsciiString> -> QString
 template<> struct StringConv<opencascade::handle<TCollection_HAsciiString>, QString> {
     static auto to(const opencascade::handle<TCollection_HAsciiString>& str) {
         return string_conv<QString>(str ? str->String() : TCollection_AsciiString());
