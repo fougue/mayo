@@ -25,7 +25,7 @@ std::string TKernelUtils::colorToHex(const Quantity_Color& color)
 {
 //#if OCC_VERSION_HEX >= 0x070400
 //    constexpr bool hashPrefix = true;
-//    return StringUtils::fromUtf8(Quantity_Color::ColorToHex(this->value(), hashPrefix));
+//    return to_QString(Quantity_Color::ColorToHex(this->value(), hashPrefix));
 //#endif
 
     // Converts a decimal digit to hexadecimal character

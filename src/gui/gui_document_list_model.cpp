@@ -8,7 +8,6 @@
 
 #include "../base/application.h"
 #include "../base/document.h"
-#include "../base/string_utils.h"
 #include "gui_application.h"
 #include "gui_document.h"
 

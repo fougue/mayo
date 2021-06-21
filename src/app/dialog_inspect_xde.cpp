@@ -13,10 +13,10 @@
 #include "../base/qmeta_tdf_label.h"
 #include "../base/settings.h"
 #include "../base/string_conv.h"
-#include "../base/string_utils.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_utils.h"
 #include "widgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
@@ -85,30 +85,30 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         else if (attrId == XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             text = "XCAFDoc_Area";
-            value = StringUtils::text(
+            value = QStringUtils::text(
                         area.Get(), AppModule::get(Application::instance())->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Centroid::GetID()) {
             const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);
             text = "XCAFDoc_Centroid";
-            value = StringUtils::text(
+            value = QStringUtils::text(
                         centroid.Get(), AppModule::get(Application::instance())->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);
             text = "XCAFDoc_Volume";
-            value = StringUtils::text(
+            value = QStringUtils::text(
                         volume.Get(), AppModule::get(Application::instance())->defaultTextOptions());
         }
         else if (attrId == XCAFDoc_Color::GetID()) {
             const auto& color = static_cast<const XCAFDoc_Color&>(*ptrAttr);
             text = "XCAFDoc_Color";
-            value = StringUtils::text(color.GetColor());
+            value = QStringUtils::text(color.GetColor());
         }
         else if (attrId == XCAFDoc_Location::GetID()) {
             const auto& location = static_cast<const XCAFDoc_Location&>(*ptrAttr);
             text = "XCAFDoc_Location";
-            value = StringUtils::text(
+            value = QStringUtils::text(
                         location.Get().Transformation(),
                         AppModule::get(Application::instance())->defaultTextOptions());
         }
@@ -175,9 +175,9 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, int value)
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, double value)
 {
     auto itemProperty = createPropertyTreeItem(text);
-    const StringUtils::TextOptions textOptions =
+    const QStringUtils::TextOptions textOptions =
             AppModule::get(Application::instance())->defaultTextOptions();
-    itemProperty->setText(1, StringUtils::text(value, textOptions));
+    itemProperty->setText(1, QStringUtils::text(value, textOptions));
     return itemProperty;
 }
 
@@ -202,7 +202,7 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_Color& color)
 {
     auto itemColor = createPropertyTreeItem(text);
-    itemColor->setText(1, StringUtils::text(color));
+    itemColor->setText(1, QStringUtils::text(color));
     QPixmap pixColor(24, 16);
     pixColor.fill(QtGuiUtils::toQColor(color));
     itemColor->setIcon(1, pixColor);
@@ -218,22 +218,22 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quanti
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Pnt& pnt)
 {
-    const StringUtils::TextOptions textOptions =
+    const QStringUtils::TextOptions textOptions =
             AppModule::get(Application::instance())->defaultTextOptions();
     auto itemPnt = createPropertyTreeItem(text);
-    itemPnt->setText(1, StringUtils::text(pnt, textOptions));
+    itemPnt->setText(1, QStringUtils::text(pnt, textOptions));
     return itemPnt;
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Ax2& ax2)
 {
-    const StringUtils::TextOptions textOptions =
+    const QStringUtils::TextOptions textOptions =
             AppModule::get(Application::instance())->defaultTextOptions();
     auto itemPnt = createPropertyTreeItem(text);
     const QString textAx2 =
             QString("Location %1 - Direction %2")
-            .arg(StringUtils::text(ax2.Location(), textOptions))
-            .arg(StringUtils::text(ax2.Direction(), textOptions));
+            .arg(QStringUtils::text(ax2.Location(), textOptions))
+            .arg(QStringUtils::text(ax2.Direction(), textOptions));
     itemPnt->setText(1, textAx2);
     return itemPnt;
 }

@@ -45,10 +45,10 @@ private slots:
 
     void Result_test();
 
-    void StringUtils_append_test();
-    void StringUtils_append_test_data();
-    void StringUtils_text_test();
-    void StringUtils_text_test_data();
+    void QStringUtils_append_test();
+    void QStringUtils_append_test_data();
+    void QStringUtils_text_test();
+    void QStringUtils_text_test_data();
 
     void StringConv_test();
 

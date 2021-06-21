@@ -12,7 +12,6 @@
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/string_conv.h"
-#include "../base/string_utils.h"
 #include "../base/xcaf.h"
 
 #include <TDataXtd_Triangulation.hxx>

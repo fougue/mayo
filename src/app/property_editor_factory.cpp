@@ -9,10 +9,10 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_utils.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_utils.h"
 #include "widgets_utils.h"
 
 #include <QtWidgets/QDoubleSpinBox>
@@ -49,12 +49,12 @@ struct PropertyBoolEditor : public InterfacePropertyEditor, public QCheckBox {
     {
         QObject::connect(this, &QCheckBox::toggled, [=](bool on) {
             property->setValue(on);
-            this->setText(StringUtils::yesNoText(on));
+            this->setText(QStringUtils::yesNoText(on));
         });
     }
 
     void syncWithProperty() override {
-        this->setText(StringUtils::yesNoText(*m_property));
+        this->setText(QStringUtils::yesNoText(*m_property));
         this->setChecked(*m_property);
     }
 
@@ -111,12 +111,12 @@ struct PropertyCheckStateEditor : public InterfacePropertyEditor, public QCheckB
         //this->setTristate();
         QObject::connect(this, &QCheckBox::stateChanged, [=](int state) {
             property->setValue(Qt::CheckState(state));
-            this->setText(StringUtils::yesNoText(Qt::CheckState(state)));
+            this->setText(QStringUtils::yesNoText(Qt::CheckState(state)));
         });
     }
 
     void syncWithProperty() override {
-        this->setText(StringUtils::yesNoText(*m_property));
+        this->setText(QStringUtils::yesNoText(*m_property));
         this->setChecked(*m_property);
     }
 
@@ -197,7 +197,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
     void syncWithProperty() override {
         const QColor qtColor = QtGuiUtils::toQColor(m_property->value());
         m_labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(qtColor));
-        m_labelRgb->setText(StringUtils::text(m_property->value()));
+        m_labelRgb->setText(QStringUtils::text(m_property->value()));
     }
 
     PropertyOccColor* m_property;

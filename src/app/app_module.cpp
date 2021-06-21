@@ -179,9 +179,9 @@ AppModule::AppModule(Application* app)
     });
 }
 
-StringUtils::TextOptions AppModule::defaultTextOptions() const
+QStringUtils::TextOptions AppModule::defaultTextOptions() const
 {
-    StringUtils::TextOptions opts;
+    QStringUtils::TextOptions opts;
     opts.locale = m_app->settings()->locale();
     opts.unitDecimals = this->unitSystemDecimals;
     opts.unitSchema = this->unitSystemSchema;

@@ -7,7 +7,6 @@
 #include "property_builtins.h"
 
 #include "tkernel_utils.h"
-#include "string_utils.h"
 
 namespace Mayo {
 

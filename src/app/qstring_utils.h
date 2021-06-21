@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "unit_system.h"
+#include "../base/unit_system.h"
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLocale>
 #include <QtCore/QString>
@@ -18,8 +18,8 @@ class gp_Trsf;
 
 namespace Mayo {
 
-class StringUtils {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::StringUtils)
+class QStringUtils {
+    Q_DECLARE_TR_FUNCTIONS(Mayo::QStringUtils)
 public:
     struct TextOptions {
         QLocale locale;

@@ -23,6 +23,7 @@ SOURCES += \
     \
     $$files(../src/base/*.cpp) \
     $$files(../src/io_occ/*.cpp) \
+    ../src/app/qstring_utils.cpp \
     ../src/gui/qtgui_utils.cpp \
 
 CONFIG += file_copies

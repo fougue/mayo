@@ -8,10 +8,10 @@
 
 #include "../base/application.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "app_module.h"
+#include "qstring_utils.h"
 #include "theme.h"
 
 #include <QtCore/QtDebug>
@@ -144,7 +144,7 @@ private:
                         "Modified: %4\n"
                         "Read: %5\n")
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
-                    .arg(StringUtils::bytesText(fi.size(), app->settings()->locale()))
+                    .arg(QStringUtils::bytesText(fi.size(), app->settings()->locale()))
                     .arg(fnToString(fi.birthTime()))
                     .arg(fnToString(fi.lastModified()))
                     .arg(fnToString(fi.lastRead()))

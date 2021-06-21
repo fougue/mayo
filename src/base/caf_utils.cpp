@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "caf_utils.h"
-#include "string_utils.h"
 
 #include <TDataStd_Name.hxx>
 #include <TDF_AttributeIterator.hxx>

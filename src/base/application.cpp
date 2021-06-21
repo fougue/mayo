@@ -10,7 +10,6 @@
 #include "property_builtins.h"
 #include "qmeta_quantity_color.h"
 #include "settings.h"
-#include "string_utils.h"
 #include "tkernel_utils.h"
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>

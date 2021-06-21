@@ -8,10 +8,10 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_utils.h"
 #include "theme.h"
 
 #include <QtGui/QPainter>
@@ -82,7 +82,7 @@ static QString toStringDHMS(QuantityTime time)
 }
 
 static QString propertyValueText(const PropertyBool* prop) {
-    return StringUtils::yesNoText(*prop);
+    return QStringUtils::yesNoText(*prop);
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
@@ -90,11 +90,11 @@ static QString propertyValueText(const PropertyInt* prop) {
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyCheckState* prop) {
-    return StringUtils::yesNoText(*prop);
+    return QStringUtils::yesNoText(*prop);
 }
 
 static QString propertyValueText(const PropertyQByteArray* prop) {
@@ -110,15 +110,15 @@ static QString propertyValueText(const PropertyQDateTime* prop) {
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
-    return StringUtils::text(prop->value());
+    return QStringUtils::text(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccPnt* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyOccTrsf* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyEnumeration* prop)
@@ -140,7 +140,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
 
     const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(prop);
     return PropertyItemDelegate::tr("%1%2")
-            .arg(StringUtils::text(trRes.value, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trRes.value, AppModule::get(Application::instance())->defaultTextOptions()))
             .arg(trRes.strUnit);
 }
 
@@ -150,7 +150,7 @@ static QString propertyValueText(
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return PropertyItemDelegate::tr("%1%2")
-            .arg(StringUtils::text(trValue, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trValue, AppModule::get(Application::instance())->defaultTextOptions()))
             .arg(unitTr.strUnit);
 }
 

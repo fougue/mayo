@@ -12,7 +12,6 @@
 #include "../base/caf_utils.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 

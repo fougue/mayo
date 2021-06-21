@@ -4,9 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "string_utils.h"
+#include "qstring_utils.h"
 
-#include "unit_system.h"
 #include <gp_Trsf.hxx>
 #include <Precision.hxx>
 #include <Quantity_Color.hxx>
@@ -14,7 +13,7 @@
 
 namespace Mayo {
 
-static QString valueText(double value, const StringUtils::TextOptions& opt)
+static QString valueText(double value, const QStringUtils::TextOptions& opt)
 {
     auto fnLastChar = [](const QString& str) {
         return !str.isEmpty() ? str.at(str.size() - 1) : QChar();
@@ -35,15 +34,15 @@ static QString valueText(double value, const StringUtils::TextOptions& opt)
     return str;
 }
 
-static QString coordsText(const gp_XYZ& coords, const StringUtils::TextOptions& opt)
+static QString coordsText(const gp_XYZ& coords, const QStringUtils::TextOptions& opt)
 {
     const QString strX = valueText(coords.X(), opt);
     const QString strY = valueText(coords.Y(), opt);
     const QString strZ = valueText(coords.Z(), opt);
-    return StringUtils::tr("(%1 %2 %3)").arg(strX, strY, strZ);
+    return QStringUtils::tr("(%1 %2 %3)").arg(strX, strY, strZ);
 }
 
-static QString pntCoordText(double coord, const StringUtils::TextOptions& opt)
+static QString pntCoordText(double coord, const QStringUtils::TextOptions& opt)
 {
     const UnitSystem::TranslateResult trCoord =
             UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
@@ -51,12 +50,12 @@ static QString pntCoordText(double coord, const StringUtils::TextOptions& opt)
     return strValue + trCoord.strUnit;
 }
 
-QString StringUtils::text(double value, const TextOptions& opt)
+QString QStringUtils::text(double value, const TextOptions& opt)
 {
     return valueText(value, opt);
 }
 
-QString StringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
+QString QStringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
 {
     const QString strX = pntCoordText(pos.X(), opt);
     const QString strY = pntCoordText(pos.Y(), opt);
@@ -64,12 +63,12 @@ QString StringUtils::text(const gp_Pnt& pos, const TextOptions& opt)
     return tr("(%1 %2 %3)").arg(strX, strY, strZ);
 }
 
-QString StringUtils::text(const gp_Dir& dir, const TextOptions& opt)
+QString QStringUtils::text(const gp_Dir& dir, const TextOptions& opt)
 {
     return coordsText(dir.XYZ(), opt);
 }
 
-QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
+QString QStringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
 {
     gp_XYZ axisRotation;
     double angleRotation;
@@ -80,10 +79,10 @@ QString StringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
                 coordsText(axisRotation, opt),
                 valueText(trAngleRotation.value, opt),
                 QString::fromUtf8(trAngleRotation.strUnit),
-                StringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
+                QStringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
 }
 
-QString StringUtils::text(const Quantity_Color& color, const QString& format)
+QString QStringUtils::text(const Quantity_Color& color, const QString& format)
 {
     const int red = color.Red() * 255;
     const int green = color.Green() * 255;
@@ -91,7 +90,7 @@ QString StringUtils::text(const Quantity_Color& color, const QString& format)
     return format.arg(red).arg(green).arg(blue);
 }
 
-QString StringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
+QString QStringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
 {
     constexpr int oneMB = 1024 * 1024;
     const quint64 qSizeBytes = sizeBytes; // Avoids ambiguous calls of QLocale::toString()
@@ -107,12 +106,12 @@ QString StringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)
         return tr("%1%2").arg(locale.toString(qSizeBytes / oneMB), tr("MB"));
 }
 
-QString StringUtils::yesNoText(bool on)
+QString QStringUtils::yesNoText(bool on)
 {
     return on ? tr("Yes") : tr("No");
 }
 
-QString StringUtils::yesNoText(Qt::CheckState state)
+QString QStringUtils::yesNoText(Qt::CheckState state)
 {
     switch (state) {
     case Qt::Unchecked: return tr("No");
@@ -121,7 +120,7 @@ QString StringUtils::yesNoText(Qt::CheckState state)
     }
 }
 
-void StringUtils::append(QString* dst, const QString& str, const QLocale& locale)
+void QStringUtils::append(QString* dst, const QString& str, const QLocale& locale)
 {
     if (locale.textDirection() == Qt::LeftToRight)
         dst->append(str);

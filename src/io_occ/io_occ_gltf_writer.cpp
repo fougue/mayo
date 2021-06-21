@@ -11,7 +11,6 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/enumeration_fromenum.h"
-#include "../base/string_utils.h"
 #include "../base/text_id.h"
 #include "io_occ_common.h"
 

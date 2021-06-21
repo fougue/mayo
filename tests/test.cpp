@@ -23,11 +23,11 @@
 #include "../src/base/property_value_conversion.h"
 #include "../src/base/result.h"
 #include "../src/base/string_conv.h"
-#include "../src/base/string_utils.h"
 #include "../src/base/task_manager.h"
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/app/qstring_utils.h"
 #include "../src/io_occ/io_occ.h"
 #include "../src/gui/qtgui_utils.h"
 
@@ -584,7 +584,7 @@ void Test::Result_test()
     }
 }
 
-void Test::StringUtils_append_test()
+void Test::QStringUtils_append_test()
 {
     QFETCH(QString, strExpected);
     QFETCH(QString, str1);
@@ -592,11 +592,11 @@ void Test::StringUtils_append_test()
     QFETCH(QLocale, locale);
 
     QString strActual = str1;
-    StringUtils::append(&strActual, str2, locale);
+    QStringUtils::append(&strActual, str2, locale);
     QCOMPARE(strActual, strExpected);
 }
 
-void Test::StringUtils_append_test_data()
+void Test::QStringUtils_append_test_data()
 {
     QTest::addColumn<QString>("strExpected");
     QTest::addColumn<QString>("str1");
@@ -625,35 +625,35 @@ void Test::StringUtils_append_test_data()
             << QLocale(QLocale::Syriac);
 }
 
-void Test::StringUtils_text_test()
+void Test::QStringUtils_text_test()
 {
     QFETCH(QString, strActual);
     QFETCH(QString, strExpected);
     QCOMPARE(strActual, strExpected);
 }
 
-void Test::StringUtils_text_test_data()
+void Test::QStringUtils_text_test_data()
 {
     QTest::addColumn<QString>("strActual");
     QTest::addColumn<QString>("strExpected");
 
-    const StringUtils::TextOptions opts_c_si_2 = { QLocale::c(), UnitSystem::SI, 2 };
-    const StringUtils::TextOptions opts_fr_si_2 = {
+    const QStringUtils::TextOptions opts_c_si_2 = { QLocale::c(), UnitSystem::SI, 2 };
+    const QStringUtils::TextOptions opts_fr_si_2 = {
         QLocale(QLocale::French, QLocale::France), UnitSystem::SI, 2 };
     QTest::newRow("c_0.1")
-            << StringUtils::text(0.1, opts_c_si_2)
+            << QStringUtils::text(0.1, opts_c_si_2)
             << QStringLiteral("0.1");
     QTest::newRow("c_0.155")
-            << StringUtils::text(0.155, opts_c_si_2)
+            << QStringUtils::text(0.155, opts_c_si_2)
             << QStringLiteral("0.15");
     QTest::newRow("c_0.159")
-            << StringUtils::text(0.159, opts_c_si_2)
+            << QStringUtils::text(0.159, opts_c_si_2)
             << QStringLiteral("0.16");
     QTest::newRow("fr_1.4995")
-            << StringUtils::text(1.4995, opts_fr_si_2)
+            << QStringUtils::text(1.4995, opts_fr_si_2)
             << QStringLiteral("1,5");
     QTest::newRow("c_pnt0.55,4.8977,15.1445")
-            << StringUtils::text(gp_Pnt(0.55, 4.8977, 15.1445), opts_c_si_2)
+            << QStringUtils::text(gp_Pnt(0.55, 4.8977, 15.1445), opts_c_si_2)
             << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
 }
 
