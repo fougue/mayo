@@ -10,7 +10,6 @@
 #include "quantity.h"
 #include "result.h"
 
-#include <QtCore/QDateTime>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <Quantity_Color.hxx>
@@ -118,10 +117,7 @@ using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
 using PropertyCheckState = GenericProperty<Qt::CheckState>;
-using PropertyQByteArray = GenericProperty<QByteArray>;
 using PropertyQString = GenericProperty<QString>;
-using PropertyQStringList = GenericProperty<QStringList>;
-using PropertyQDateTime = GenericProperty<QDateTime>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;

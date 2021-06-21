@@ -97,16 +97,8 @@ static QString propertyValueText(const PropertyCheckState* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyQByteArray* prop) {
-    return QString::fromUtf8(prop->value());
-}
-
 static QString propertyValueText(const PropertyQString* prop) {
     return prop->value();
-}
-
-static QString propertyValueText(const PropertyQDateTime* prop) {
-    return Application::instance()->settings()->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
@@ -250,14 +242,8 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
         if (propTypeName == PropertyCheckState::TypeName)
             return propertyValueText(static_cast<const PropertyCheckState*>(prop));
 
-        if (propTypeName == PropertyQByteArray::TypeName)
-            return propertyValueText(static_cast<const PropertyQByteArray*>(prop));
-
         if (propTypeName == PropertyQString::TypeName)
             return propertyValueText(static_cast<const PropertyQString*>(prop));
-
-        if (propTypeName == PropertyQDateTime::TypeName)
-            return propertyValueText(static_cast<const PropertyQDateTime*>(prop));
 
         if (propTypeName == PropertyOccColor::TypeName)
             return propertyValueText(static_cast<const PropertyOccColor*>(prop));

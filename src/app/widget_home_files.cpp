@@ -15,6 +15,7 @@
 #include "theme.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QDateTime>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtGui/QPixmapCache>

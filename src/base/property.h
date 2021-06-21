@@ -124,7 +124,7 @@ public:
     PropertyGroupSignals(QObject* parent = nullptr);
 
 signals:
-    void propertyChanged(Property* prop);
+    void propertyChanged(Mayo::Property* prop);
 
 protected:
     void onPropertyChanged(Property* prop) override;

@@ -32,17 +32,8 @@ QVariant PropertyValueConversion::toVariant(const Property& prop) const
     else if (isType<PropertyCheckState>(prop)) {
         qCritical() << "toVariant() not yet implemented for PropertyCheckState";
     }
-    else if (isType<PropertyQByteArray>(prop)) {
-        return constRef<PropertyQByteArray>(prop).value();
-    }
     else if (isType<PropertyQString>(prop)) {
         return constRef<PropertyQString>(prop).value();
-    }
-    else if (isType<PropertyQStringList>(prop)) {
-        return constRef<PropertyQStringList>(prop).value();
-    }
-    else if (isType<PropertyQDateTime>(prop)) {
-        return constRef<PropertyQDateTime>(prop).value();
     }
     else if (isType<PropertyOccPnt>(prop)) {
         qCritical() << "toVariant() not yet implemented for PropertyOccPnt";
@@ -106,17 +97,8 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
     else if (isType<PropertyCheckState>(prop)) {
         return fnError("fromVariant() not yet implemented for PropertyCheckState");
     }
-    else if (isType<PropertyQByteArray>(prop)) {
-        return ptr<PropertyQByteArray>(prop)->setValue(variant.toByteArray());
-    }
     else if (isType<PropertyQString>(prop)) {
         return ptr<PropertyQString>(prop)->setValue(variant.toString());
-    }
-    else if (isType<PropertyQStringList>(prop)) {
-        return ptr<PropertyQStringList>(prop)->setValue(variant.toStringList());
-    }
-    else if (isType<PropertyQDateTime>(prop)) {
-        return ptr<PropertyQDateTime>(prop)->setValue(variant.toDateTime());
     }
     else if (isType<PropertyOccPnt>(prop)) {
         return fnError("fromVariant() not yet implemented for PropertyOccPnt");
