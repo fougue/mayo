@@ -7,13 +7,14 @@
 #pragma once
 
 #include "property.h"
+#include "quantity.h"
 #include "result.h"
-#include "qmeta_gp_pnt.h"
-#include "qmeta_gp_trsf.h"
-#include "qmeta_quantity_color.h"
-#include "qmeta_quantity.h"
 
 #include <QtCore/QDateTime>
+#include <gp_Pnt.hxx>
+#include <gp_Trsf.hxx>
+#include <Quantity_Color.hxx>
+
 #include <type_traits>
 
 namespace Mayo {
