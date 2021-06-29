@@ -43,8 +43,6 @@ private slots:
 
     void Quantity_test();
 
-    void Result_test();
-
     void QStringUtils_append_test();
     void QStringUtils_append_test_data();
     void QStringUtils_text_test();

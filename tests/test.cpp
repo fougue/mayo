@@ -21,7 +21,6 @@
 #include "../src/base/property_builtins.h"
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
-#include "../src/base/result.h"
 #include "../src/base/string_conv.h"
 #include "../src/base/task_manager.h"
 #include "../src/base/tkernel_utils.h"
@@ -528,60 +527,6 @@ void Test::Quantity_test()
     const QuantityArea area = (10 * Quantity_Millimeter) * (5 * Quantity_Centimeter);
     QCOMPARE(area.value(), 500.);
     QCOMPARE((Quantity_Millimeter / 5.).value(), 1/5.);
-}
-
-namespace Result_test {
-
-struct Data {
-    static std::ostream* data_ostr;
-
-    Data() {
-        *data_ostr << 0;
-    }
-    Data(const Data& other) : foo(other.foo) {
-        *data_ostr << 1;
-    }
-    Data(Data&& other) {
-        foo = std::move(other.foo);
-        *data_ostr << 2;
-    }
-    Data& operator=(const Data& other) {
-        this->foo = other.foo;
-        *data_ostr << 3;
-        return *this;
-    }
-    Data& operator=(Data&& other) {
-        this->foo = std::move(other.foo);
-        *data_ostr << 4;
-        return *this;
-    }
-    QString foo;
-};
-std::ostream* Data::data_ostr = nullptr;
-
-} // Result_test
-
-void Test::Result_test()
-{
-    using Result = Result<Result_test::Data>;
-    {
-        std::ostringstream sstr;
-        Result::Data::data_ostr = &sstr;
-        const Result res = Result::error("error_description");
-        QVERIFY(res.errorText() == "error_description");
-        QVERIFY(!res.valid());
-        QCOMPARE(sstr.str().c_str(), "02");
-    }
-    {
-        std::ostringstream sstr;
-        Result::Data::data_ostr = &sstr;
-        Result::Data data;
-        data.foo = "FooData";
-        const Result res = Result::ok(std::move(data));
-        QVERIFY(res.valid());
-        QVERIFY(res.get().foo == "FooData");
-        QCOMPARE(sstr.str().c_str(), "0042");
-    }
 }
 
 void Test::QStringUtils_append_test()

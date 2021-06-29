@@ -45,13 +45,13 @@ Enumeration::Value PropertyEnumeration::value() const
     return m_value;
 }
 
-Result<void> PropertyEnumeration::setValue(Enumeration::Value value)
+bool PropertyEnumeration::setValue(Enumeration::Value value)
 {
     // TODO: check v is an enumerated value of m_enumeration
     return Property::setValueHelper(this, &m_value, value);
 }
 
-Result<void> PropertyEnumeration::setValueByName(const QByteArray& name)
+bool PropertyEnumeration::setValueByName(const QByteArray& name)
 {
     return Property::setValueHelper(this, &m_value, m_enumeration.findValue(name));
 }

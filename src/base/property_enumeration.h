@@ -34,8 +34,8 @@ public:
 
     QByteArray name() const;
     Enumeration::Value value() const;
-    Result<void> setValue(Enumeration::Value value);
-    Result<void> setValueByName(const QByteArray& name);
+    bool setValue(Enumeration::Value value);
+    bool setValueByName(const QByteArray& name);
 
     const char* dynTypeName() const override;
     static const char TypeName[];
@@ -63,7 +63,7 @@ public:
 
     EnumType value() const;
     operator EnumType() const { return this->value(); }
-    Result<void> setValue(EnumType value);
+    bool setValue(EnumType value);
 
     void addDescription(EnumType value, const QString& descr);
     void setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList);
@@ -88,7 +88,7 @@ ENUM PropertyEnum<ENUM>::value() const {
 }
 
 template<typename ENUM>
-Result<void> PropertyEnum<ENUM>::setValue(EnumType value) {
+bool PropertyEnum<ENUM>::setValue(EnumType value) {
     return PropertyEnumeration::setValue(static_cast<Enumeration::Value>(value));
 }
 

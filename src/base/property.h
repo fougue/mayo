@@ -7,7 +7,6 @@
 #pragma once
 
 #include "span.h"
-#include "result.h"
 #include "text_id.h"
 
 #include <QtCore/QMetaType>
@@ -40,7 +39,7 @@ protected:
     // Callback executed when Property "enabled" status was changed
     virtual void onPropertyEnabled(Property* prop, bool on);
 
-    virtual Result<void> isPropertyValid(const Property* prop) const;
+    virtual bool isPropertyValid(const Property* prop) const;
 
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
@@ -102,12 +101,12 @@ protected:
     void notifyChanged();
     void notifyEnabled(bool on);
 
-    Result<void> isValid() const;
+    bool isValid() const;
 
     bool hasGroup() const;
 
     template<typename T>
-    static Result<void> setValueHelper(Property* prop, T* ptrValue, const T& newValue);
+    static bool setValueHelper(Property* prop, T* ptrValue, const T& newValue);
 
 private:
     PropertyGroup* const m_group = nullptr;
@@ -135,15 +134,14 @@ protected:
 // -- Implementation
 // --
 
-template<typename T> Result<void> Property::setValueHelper(
-        Property* prop, T* ptrValue, const T& newValue)
+template<typename T> bool Property::setValueHelper(Property* prop, T* ptrValue, const T& newValue)
 {
-    Result<void> result = Result<void>::ok();
+    bool okResult = true;
     if (prop->hasGroup()) {
         const T previousValue = *ptrValue;
         *ptrValue = newValue;
-        result = prop->isValid();
-        if (result.valid())
+        okResult = prop->isValid();
+        if (okResult)
             prop->notifyChanged();
         else
             *ptrValue = previousValue;
@@ -153,7 +151,7 @@ template<typename T> Result<void> Property::setValueHelper(
         prop->notifyChanged();
     }
 
-    return result;
+    return okResult;
 }
 
 } // namespace Mayo

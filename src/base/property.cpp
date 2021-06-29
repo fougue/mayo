@@ -37,9 +37,9 @@ void PropertyGroup::onPropertyEnabled(Property* prop, bool on)
         m_parentGroup->onPropertyEnabled(prop, on);
 }
 
-Result<void> PropertyGroup::isPropertyValid(const Property*) const
+bool PropertyGroup::isPropertyValid(const Property*) const
 {
-    return Result<void>::ok();
+    return true;
 }
 
 void PropertyGroup::blockPropertyChanged(bool on)
@@ -104,12 +104,12 @@ void Property::notifyEnabled(bool on)
         m_group->onPropertyEnabled(this, on);
 }
 
-Result<void> Property::isValid() const
+bool Property::isValid() const
 {
     if (m_group)
         return m_group->isPropertyValid(this);
 
-    return Result<void>::ok();
+    return true;
 }
 
 bool Property::hasGroup() const

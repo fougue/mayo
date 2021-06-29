@@ -9,7 +9,6 @@
 #include "property.h"
 #include "filepath.h"
 #include "quantity.h"
-#include "result.h"
 
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
@@ -29,7 +28,7 @@ public:
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
     const T& value() const { return m_value; }
-    Result<void> setValue(const T& val);
+    bool setValue(const T& val);
     operator const T&() const { return this->value(); }
 
     const char* dynTypeName() const override { return TypeName; }
@@ -89,7 +88,7 @@ class BasePropertyQuantity :
 public:
     virtual Unit quantityUnit() const = 0;
     virtual double quantityValue() const = 0;
-    virtual Result<void> setQuantityValue(double v) = 0;
+    virtual bool setQuantityValue(double v) = 0;
 
     inline static const char TypeName[] = "Mayo::BasePropertyQuantity";
     const char* dynTypeName() const override { return BasePropertyQuantity::TypeName; }
@@ -107,10 +106,10 @@ public:
 
     Unit quantityUnit() const override { return UNIT; }
     double quantityValue() const override { return this->quantity().value(); }
-    Result<void> setQuantityValue(double v) override;
+    bool setQuantityValue(double v) override;
 
     QuantityType quantity() const { return m_quantity; }
-    Result<void> setQuantity(QuantityType qty);
+    bool setQuantity(QuantityType qty);
 
 private:
     QuantityType m_quantity = {};
@@ -145,7 +144,7 @@ GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
     : Property(grp, name)
 { }
 
-template<typename T> Result<void> GenericProperty<T>::setValue(const T& val)
+template<typename T> bool GenericProperty<T>::setValue(const T& val)
 {
     return Property::setValueHelper(this, &m_value, val);
 }
@@ -190,13 +189,13 @@ GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const
 { }
 
 template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
+bool GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 {
     return this->setQuantity(QuantityType(v));
 }
 
 template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
+bool GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
 {
     return Property::setValueHelper(this, &m_quantity, qty);
 }
