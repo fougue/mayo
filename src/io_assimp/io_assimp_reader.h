@@ -17,7 +17,7 @@ namespace IO {
 class AssimpReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    bool transfer(DocumentPtr doc, TaskProgress* progress) override;
+    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;

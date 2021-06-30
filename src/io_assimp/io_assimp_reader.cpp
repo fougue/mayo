@@ -53,13 +53,13 @@ static void transferNode(const aiNode* node, const aiScene* scene)
                    matrix.c1 / scalingZ, matrix.c2 / scalingZ, matrix.c3 / scalingZ, matrix.c4);
 }
 
-bool AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress)
+TDF_LabelSequence AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     if (!m_scene)
-        return false;
+        return {};
 
     transferNode(m_scene->mRootNode, m_scene);
-    return true;
+    return {};
 }
 
 std::unique_ptr<PropertyGroup> AssimpReader::createProperties(PropertyGroup* parentGroup)

@@ -15,14 +15,24 @@ namespace IO {
 // Predefined I/O formats
 enum Format {
     Format_Unknown,
-    Format_STEP,
-    Format_IGES,
-    Format_OCCBREP,
-    Format_STL,
-    Format_OBJ,
+    Format_AMF,
     Format_GLTF,
+    Format_IGES,
+    Format_OBJ,
+    Format_OCCBREP,
+    Format_STEP,
+    Format_STL,
     Format_VRML,
-    Format_AMF
+    //
+    Format_3DS,
+    Format_3MF,
+    Format_COLLADA,
+    Format_DXF,
+    Format_FBX,
+    Format_IFC,
+    Format_OFF,
+    Format_PLY,
+    Format_X3D
 };
 
 // Returns identifier(unique short name) corresponding to 'format'
