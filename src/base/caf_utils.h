@@ -13,20 +13,31 @@
 
 namespace Mayo {
 
+// Provides helper functions for OpenCascade CAF related libraries
 struct CafUtils {
+    // Returns a string representation of tag list path to 'label'
     static const TCollection_AsciiString& labelTag(const TDF_Label& label);
 
+    // Returns the name attribute(if any) attached to 'label'
+    // Empty string is returned if no name attribute
     static const TCollection_ExtendedString& labelAttrStdName(const TDF_Label& label);
+
     static void setLabelAttrStdName(const TDF_Label& label, const TCollection_ExtendedString& name);
 
+    // Is 'label' null or empty(ie no attributes)?
     static bool isNullOrEmpty(const TDF_Label& label);
 
+    // Returns attribute of type 'TDF_ATTRIBUTE'(result may be null)?
     template<typename TDF_ATTRIBUTE>
     static opencascade::handle<TDF_ATTRIBUTE> findAttribute(const TDF_Label& label);
 
+    // Is there an attribute of identifier 'attrGuid' attached to 'label'?
     static bool hasAttribute(const TDF_Label& label, const Standard_GUID& attrGuid);
+
+    // Is there an attribute of type 'TDF_ATTRIBUTE' attached to 'label'?
     template<typename TDF_ATTRIBUTE> static bool hasAttribute(const TDF_Label& label);
 
+    // Returns a TDF_LabelSequence object built from initializer list
     static TDF_LabelSequence makeLabelSequence(std::initializer_list<TDF_Label> listLabel);
 };
 
