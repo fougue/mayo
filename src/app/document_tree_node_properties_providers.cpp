@@ -14,6 +14,7 @@
 #include "../base/string_conv.h"
 #include "../base/xcaf.h"
 
+#include <TDataStd_Name.hxx>
 #include <TDataXtd_Triangulation.hxx>
 
 namespace Mayo {
@@ -127,9 +128,9 @@ public:
     void onPropertyChanged(Property* prop) override
     {
         if (prop == &m_propertyName)
-            CafUtils::setLabelAttrStdName(m_label, to_OccExtString(m_propertyName.value()));
+            TDataStd_Name::Set(m_label, to_OccExtString(m_propertyName.value()));
         else if (prop == &m_propertyReferredName)
-            CafUtils::setLabelAttrStdName(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
+            TDataStd_Name::Set(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
 
         PropertyGroupSignals::onPropertyChanged(prop);
     }

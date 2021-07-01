@@ -7,7 +7,6 @@
 #include "caf_utils.h"
 
 #include <TDataStd_Name.hxx>
-#include <TDF_AttributeIterator.hxx>
 #include <TDF_Tool.hxx>
 
 namespace Mayo {
@@ -29,11 +28,6 @@ const TCollection_ExtendedString& CafUtils::labelAttrStdName(const TDF_Label& la
         static const TCollection_ExtendedString nullStr = {};
         return nullStr;
     }
-}
-
-void CafUtils::setLabelAttrStdName(const TDF_Label& label, const TCollection_ExtendedString& name)
-{
-    TDataStd_Name::Set(label, name);
 }
 
 bool CafUtils::isNullOrEmpty(const TDF_Label& label)
