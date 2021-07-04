@@ -1,0 +1,4 @@
+/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo.dir
+/mnt/30CF23011BA11B15/IRADETS/Projects/mayo-cmake/cmake-build-debug/CMakeFiles/mayo_autogen.dir

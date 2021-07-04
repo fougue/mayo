@@ -9,7 +9,7 @@
 #include "../base/document_ptr.h"
 #include "../base/io_writer.h"
 
-#include <RWGltf_WriterTrsfFormat.hxx>
+//#include <RWGltf_WriterTrsfFormat.hxx>
 #include <RWMesh_CoordinateSystemConverter.hxx>
 #include <TDF_LabelSequence.hxx>
 
