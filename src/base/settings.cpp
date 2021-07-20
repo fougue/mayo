@@ -402,6 +402,12 @@ void Settings::setLocale(const QLocale& locale)
     d->m_locale = locale;
 }
 
+void Settings::onPropertyAboutToChange(Property* prop)
+{
+    PropertyGroup::onPropertyAboutToChange(prop);
+    emit this->aboutToChange(prop);
+}
+
 void Settings::onPropertyChanged(Property* prop)
 {
     PropertyGroup::onPropertyChanged(prop);

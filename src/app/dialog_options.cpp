@@ -208,9 +208,21 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             editor->setEnabled(on);
     });
 
+    // Backup initial value of changed settings, so they can be restored on dialog cancellation
+    auto connSettingsAboutToChange =
+            QObject::connect(m_settings, &Settings::aboutToChange, this, [=](Property* property) {
+        if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
+            const QVariant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
+            m_mapSettingInitialValue.insert({ property, propertyValue});
+        }
+    });
+
     // Synchronize editor widget when value of the corresponding property is changed
-    QObject::connect(m_settings, &Settings::changed, this, [=](const Property* property) {
-        this->syncEditor(CppUtils::findValue(property, m_mapSettingEditor));
+    auto connSettingsChanged =
+            QObject::connect(m_settings, &Settings::changed, this, [=](const Property* property) {
+        auto itFound = m_mapSettingEditor.find(property);
+        if (itFound != m_mapSettingEditor.cend())
+            this->syncEditor(itFound->second);
     });
 
     // When a setting is clicked in the "right-side" view then scroll to and select corresponding
@@ -242,6 +254,14 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                     indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, Qt::MatchExactly);
         if (!indexList.isEmpty())
             m_ui->listWidget_Settings->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
+    });
+
+    // Action for "Cancel" button : restore changed properties to their initial values
+    QObject::connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, [=]{
+        QObject::disconnect(connSettingsAboutToChange);
+        QObject::disconnect(connSettingsChanged);
+        for (const auto& [prop, propInitialValue] : m_mapSettingInitialValue)
+            m_settings->propertyValueConversion().fromVariant(prop, propInitialValue);
     });
 
     // Action for "Restore defaults" button

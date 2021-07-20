@@ -79,10 +79,12 @@ public:
     void setLocale(const QLocale& locale);
 
 signals:
+    void aboutToChange(Mayo::Property* setting);
     void changed(Mayo::Property* setting);
     void enabled(Mayo::Property* setting, bool on);
 
 protected:
+    void onPropertyAboutToChange(Property* prop) override;
     void onPropertyChanged(Property* prop) override;
     void onPropertyEnabled(Property* prop, bool on) override;
 

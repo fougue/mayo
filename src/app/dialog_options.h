@@ -7,6 +7,7 @@
 #pragma once
 
 #include "property_editor_factory.h"
+#include <QtCore/QVariant>
 #include <QtWidgets/QDialog>
 #include <memory>
 #include <unordered_map>
@@ -37,6 +38,7 @@ private:
     class Ui_DialogOptions* m_ui = nullptr;
     std::unique_ptr<PropertyEditorFactory> m_editorFactory;
     std::unordered_map<const Property*, QWidget*> m_mapSettingEditor;
+    std::unordered_map<Property*, QVariant> m_mapSettingInitialValue;
     Settings* m_settings = nullptr;
 };
 

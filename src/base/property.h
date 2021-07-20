@@ -33,6 +33,9 @@ public:
     virtual void restoreDefaults();
 
 protected:
+    // Callback executed when Property value is about to change
+    virtual void onPropertyAboutToChange(Property* prop);
+
     // Callback executed when Property value was changed
     virtual void onPropertyChanged(Property* prop);
 
@@ -98,6 +101,7 @@ public:
     virtual const char* dynTypeName() const = 0;
 
 protected:
+    void notifyAboutToChange();
     void notifyChanged();
     void notifyEnabled(bool on);
 
@@ -123,9 +127,11 @@ public:
     PropertyGroupSignals(QObject* parent = nullptr);
 
 signals:
+    void propertyAboutToChange(Mayo::Property* prop);
     void propertyChanged(Mayo::Property* prop);
 
 protected:
+    void onPropertyAboutToChange(Property* prop) override;
     void onPropertyChanged(Property* prop) override;
 };
 
@@ -138,6 +144,7 @@ template<typename T> bool Property::setValueHelper(Property* prop, T* ptrValue, 
 {
     bool okResult = true;
     if (prop->hasGroup()) {
+        prop->notifyAboutToChange();
         const T previousValue = *ptrValue;
         *ptrValue = newValue;
         okResult = prop->isValid();

@@ -25,6 +25,12 @@ void PropertyGroup::restoreDefaults()
 {
 }
 
+void PropertyGroup::onPropertyAboutToChange(Property *prop)
+{
+    if (m_parentGroup)
+        m_parentGroup->onPropertyAboutToChange(prop);
+}
+
 void PropertyGroup::onPropertyChanged(Property* prop)
 {
     if (m_parentGroup)
@@ -92,6 +98,12 @@ Property::Property(PropertyGroup* group, const TextId& name)
         m_group->addProperty(this);
 }
 
+void Property::notifyAboutToChange()
+{
+    if (m_group && !m_group->isPropertyChangedBlocked())
+        m_group->onPropertyAboutToChange(this);
+}
+
 void Property::notifyChanged()
 {
     if (m_group && !m_group->isPropertyChangedBlocked())
@@ -135,6 +147,12 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
 PropertyGroupSignals::PropertyGroupSignals(QObject* parent)
     : QObject(parent)
 {
+}
+
+void PropertyGroupSignals::onPropertyAboutToChange(Property* prop)
+{
+    PropertyGroup::onPropertyAboutToChange(prop);
+    emit propertyAboutToChange(prop);
 }
 
 void PropertyGroupSignals::onPropertyChanged(Property* prop)
