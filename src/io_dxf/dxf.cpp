@@ -3,20 +3,13 @@
 // This program is released under the BSD license. See the file COPYING for details.
 // modified 2018 wandererfan
 
-#include "PreCompiled.h"
-
 //required by windows for M_PI definition
 #define _USE_MATH_DEFINES
 #include <cmath>
 
 #include <iomanip>
+#include <filesystem>
 
-#include <App/Application.h>
-#include <Base/Console.h>
-#include <Base/FileInfo.h>
-#include <Base/Parameter.h>
-#include <Base/Stream.h>
-#include <Base/Vector3D.h>
 #include "dxf.h"
 
 using namespace std;
@@ -48,8 +41,7 @@ m_layerName("none")
     // start the file
     m_fail = false;
     m_version = 12;
-    Base::FileInfo fi(filepath);
-    m_ofs = new Base::ofstream(fi, ios::out);
+    m_ofs = new std::ofstream(filepath, ios::out);
     m_ssBlock     = new std::ostringstream();
     m_ssBlkRecord = new std::ostringstream();
     m_ssEntity    = new std::ostringstream();
@@ -100,12 +92,14 @@ void CDxfWrite::endRun(void)
 void CDxfWrite::writeHeaderSection(void)
 {
     std::stringstream ss;
+#if 0
     ss << "FreeCAD v"
         << App::Application::Config()["BuildVersionMajor"]
         << "."
         << App::Application::Config()["BuildVersionMinor"]
         << " "
         << App::Application::Config()["BuildRevision"];
+#endif
 
     //header & version
     (*m_ofs) << "999"      << endl;
@@ -430,12 +424,12 @@ void CDxfWrite::makeBlockSectionHead(void)
 std::string CDxfWrite::getPlateFile(std::string fileSpec)
 {
     std::stringstream outString;
-    Base::FileInfo fi(fileSpec);
-    if (!fi.isReadable()) {
-        Base::Console().Message("dxf unable to open %s!\n",fileSpec.c_str());
+    const std::filesystem::path fpath(fileSpec);
+    if (!std::filesystem::exists(fpath)) { // TODO Check read permissions
+        //Base::Console().Message("dxf unable to open %s!\n",fileSpec.c_str());
     } else {
         string line;
-        ifstream inFile (fi.filePath().c_str());
+        ifstream inFile (fpath);
 
         while (!inFile.eof())
         {

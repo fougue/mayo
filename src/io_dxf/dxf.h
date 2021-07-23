@@ -20,7 +20,8 @@
 #include <string.h>
 #include <math.h>
 
-#include <Base/Vector3D.h>
+#include "freecad.h"
+#define ImportExport
 
 //Following is required to be defined on Ubuntu with OCC 6.3.1
 #ifndef HAVE_IOSTREAM
