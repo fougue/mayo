@@ -101,8 +101,8 @@ template<typename ENUM>
 void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList)
 {
     this->clearDescriptions();
-    for (const auto& pair : initList)
-        this->addDescription(pair.first, pair.second);
+    for (const auto& [value, description] : initList)
+        this->addDescription(value, description);
 }
 
 } // namespace Mayo

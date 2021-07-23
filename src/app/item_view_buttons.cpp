@@ -503,9 +503,7 @@ QStyledItemDelegate* ItemViewButtons::createProxyItemDelegate(
 
 int ItemViewButtons::buttonAtModelIndex(const QModelIndex& index) const
 {
-    for (const auto& pair : d->m_btnInfos) {
-        const int id = pair.first;
-        const Private::ButtonInfo& btnInfo = pair.second;
+    for (const auto& [id, btnInfo] : d->m_btnInfos) {
         if (btnInfo.matchRole < 0)
             return id;
 
