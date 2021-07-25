@@ -1,8 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include <limits>
+
+// Implements required FreeCad classes/functions for the sake of dxf.h,cpp and io_dxf.h,cpp
 
 namespace Base {
 
@@ -27,19 +30,21 @@ public:
         return this->x * other.x + this->y * other.y + this->z * other.z;
     }
 
-    Vector3d& Normalize();
-    double Length() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
-    double GetAngle(const Vector3d& rcVect) const;
-    Vector3d DistanceToLineSegment(const Vector3d& rclP1, const Vector3d& rclP2) const;
+    inline Vector3d& Normalize();
+    inline double Length() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
+    inline double GetAngle(const Vector3d& rcVect) const;
+    inline Vector3d DistanceToLineSegment(const Vector3d& rclP1, const Vector3d& rclP2) const;
 };
 
 template<class T> T clamp (T num, T lower, T upper) {
     return std::max<T>(std::min<T>(upper,num),lower);
 }
 
-double DistanceP2(const Vector3d& v1, const Vector3d& v2)
+inline double DistanceP2(const Vector3d& v1, const Vector3d& v2)
 {
-    const double x=v1.x-v2.x, y=v1.y-v2.y, z=v1.z-v2.z;
+    const double x = v1.x - v2.x;
+    const double y = v1.y - v2.y;
+    const double z = v1.z - v2.z;
     return x * x + y * y + z * z;
 }
 
