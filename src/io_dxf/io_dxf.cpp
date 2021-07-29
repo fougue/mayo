@@ -27,6 +27,7 @@
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
+#include <iostream>
 #include <string_view>
 
 namespace Mayo {
@@ -66,6 +67,8 @@ public:
     void OnReadSpline(struct SplineData& sd) override;
     void OnReadInsert(const double* point, const double* scale, const char* name, double rotation) override;
     void OnReadDimension(const double* s, const double* e, const double* point, double rotation) override;
+
+    void ReportError(const char* msg) override;
 
     static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(struct SplineData& sd);
     static Handle_Geom_BSplineCurve createInterpolationSpline(struct SplineData& sd);
@@ -116,6 +119,10 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
     const std::string layerName = this->LayerName();
     if (!startsWith(layerName, "BLOCKS")) {
         // TODO
+        std::cerr << "InternalDxfRead::OnReadText() - Not yet implemented" << std::endl
+                  << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
+                  << "    height: " << height << std::endl
+                  << "    text: " << text << std::endl;
 #if 0
         App::Annotation *pcFeature = (App::Annotation *)document->addObject("App::Annotation", "Text");
         pcFeature->LabelText.setValue(Deformat(text));
@@ -245,7 +252,17 @@ void InternalDxfRead::OnReadDimension(const double* s, const double* e, const do
 {
     if (m_params.importAnnotations) {
         // TODO
+        std::cerr << "InternalDxfRead::OnReadDimension() - Not yet implemented" << std::endl
+                  << "    s: " << s[0] << ", " << s[1] << ", " << s[2] << std::endl
+                  << "    e: " << e[0] << ", " << e[1] << ", " << e[2] << std::endl
+                  << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
+                  << "    rotation: " << rotation << std::endl;
     }
+}
+
+void InternalDxfRead::ReportError(const char* msg)
+{
+    std::cerr << msg << std::endl;
 }
 
 gp_Pnt InternalDxfRead::toPnt(const double* coords) const
