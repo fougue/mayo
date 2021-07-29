@@ -6,6 +6,7 @@
 
 #include "io_dxf.h"
 
+#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/math_utils.h"
 #include "../base/property_builtins.h"
@@ -13,6 +14,9 @@
 #include "../base/string_conv.h"
 #include "dxf.h"
 
+#include <gp_Circ.hxx>
+#include <gp_Elips.hxx>
+#include <gp_Trsf.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
@@ -21,9 +25,6 @@
 #include <Precision.hxx>
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Edge.hxx>
-#include <gp_Circ.hxx>
-#include <gp_Elips.hxx>
-#include <gp_Trsf.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
 #include <string_view>
@@ -41,10 +42,16 @@ bool startsWith(std::string_view str, std::string_view prefix)
 class InternalDxfRead : public CDxfRead {
 private:
     DxfReader::Parameters m_params;
-    std::map<std::string, std::vector<TopoDS_Shape>> m_layers;
+    std::unordered_map<std::string, std::vector<TopoDS_Shape>> m_layers;
+    TaskProgress* m_progress = nullptr;
+    std::uintmax_t m_fileSize = 0;
+    std::uintmax_t m_fileReadSize = 0;
+
+protected:
+    void get_line() override;
 
 public:
-    InternalDxfRead(const FilePath& filepath);
+    InternalDxfRead(const FilePath& filepath, TaskProgress* progress = nullptr);
 
     void setParameters(const DxfReader::Parameters& params) { m_params = params; }
     const auto& layers() const { return m_layers; }
@@ -67,9 +74,20 @@ public:
     void addShape(const TopoDS_Shape& shape);
 };
 
-InternalDxfRead::InternalDxfRead(const FilePath& filepath)
-    : CDxfRead(filepath.u8string().c_str())
+void InternalDxfRead::get_line()
 {
+    CDxfRead::get_line();
+    m_fileReadSize += this->gcount();
+    if (m_progress)
+        m_progress->setValue(MathUtils::mappedValue(m_fileReadSize, 0, m_fileSize, 0, 100));
+}
+
+InternalDxfRead::InternalDxfRead(const FilePath& filepath, TaskProgress* progress)
+    : CDxfRead(filepath.u8string().c_str()),
+      m_progress(progress)
+{
+    if (!this->Failed())
+        m_fileSize = std::filesystem::file_size(filepath);
 }
 
 void InternalDxfRead::OnReadLine(const double* s, const double* e, bool /*hidden*/)
@@ -95,16 +113,18 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
         return;
 
     const gp_Pnt pt = this->toPnt(point);
+    const std::string layerName = this->LayerName();
+    if (!startsWith(layerName, "BLOCKS")) {
+        // TODO
 #if 0
-    if(LayerName().substr(0, 6) != "BLOCKS") {
         App::Annotation *pcFeature = (App::Annotation *)document->addObject("App::Annotation", "Text");
         pcFeature->LabelText.setValue(Deformat(text));
         pcFeature->Position.setValue(pt);
-    }
-    //else std::cout << "skipped text in block: " << LayerName() << std::endl;
 #endif
+    }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void InternalDxfRead::OnReadArc(const double* s, const double* e, const double* c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
@@ -121,6 +141,7 @@ void InternalDxfRead::OnReadArc(const double* s, const double* e, const double* 
     }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void InternalDxfRead::OnReadCircle(const double* s, const double* c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
@@ -136,6 +157,7 @@ void InternalDxfRead::OnReadCircle(const double* s, const double* c, bool dir, b
     }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void InternalDxfRead::OnReadEllipse(
         const double* c,
         double major_radius, double minor_radius,
@@ -159,6 +181,7 @@ void InternalDxfRead::OnReadEllipse(
     }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void InternalDxfRead::OnReadSpline(SplineData& sd)
 {
     // https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ff18cb41610ec0a2e719-79e1.htm
@@ -183,6 +206,7 @@ void InternalDxfRead::OnReadSpline(SplineData& sd)
     }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void InternalDxfRead::OnReadInsert(const double* point, const double* scale, const char* name, double rotation)
 {
     //std::cout << "Inserting block " << name << " rotation " << rotation << " pos " << point[0] << "," << point[1] << "," << point[2] << " scale " << scale[0] << "," << scale[1] << "," << scale[2] << std::endl;
@@ -204,7 +228,7 @@ void InternalDxfRead::OnReadInsert(const double* point, const double* scale, con
 
         gp_Trsf trsfScale;
         trsfScale.SetValues(
-                    scale[0], 0,        0,        0,
+                scale[0], 0,        0,        0,
                 0,        scale[1], 0,        0,
                 0,        0,        scale[2], 0);
         gp_Trsf trsfRotZ;
@@ -219,6 +243,9 @@ void InternalDxfRead::OnReadInsert(const double* point, const double* scale, con
 
 void InternalDxfRead::OnReadDimension(const double* s, const double* e, const double* point, double rotation)
 {
+    if (m_params.importAnnotations) {
+        // TODO
+    }
 }
 
 gp_Pnt InternalDxfRead::toPnt(const double* coords) const
@@ -245,16 +272,19 @@ void InternalDxfRead::addShape(const TopoDS_Shape& shape)
     }
     else {
         decltype(m_layers)::value_type pair(std::move(layerName), { shape });
-        //pair.second.push_back(shape);
         m_layers.insert(std::move(pair));
     }
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 Handle_Geom_BSplineCurve InternalDxfRead::createSplineFromPolesAndKnots(struct SplineData& sd)
 {
     const size_t numPoles = sd.control_points;
-    if (sd.controlx.size() > numPoles || sd.controly.size() > numPoles ||
-            sd.controlz.size() > numPoles || sd.weight.size() > numPoles) {
+    if (sd.controlx.size() > numPoles
+            || sd.controly.size() > numPoles
+            || sd.controlz.size() > numPoles
+            || sd.weight.size() > numPoles)
+    {
         return nullptr;
     }
 
@@ -304,6 +334,7 @@ Handle_Geom_BSplineCurve InternalDxfRead::createSplineFromPolesAndKnots(struct S
     return new Geom_BSplineCurve(occpoles, occweights, occknots, occmults, sd.degree, periodic);
 }
 
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 Handle_Geom_BSplineCurve InternalDxfRead::createInterpolationSpline(struct SplineData& sd)
 {
     const size_t numPoints = sd.fit_points;
@@ -355,7 +386,7 @@ public:
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_layers.clear();
-    InternalDxfRead internalReader(filepath);
+    InternalDxfRead internalReader(filepath, progress);
     internalReader.DoRead();
     m_layers = std::move(internalReader.layers());
     return !internalReader.Failed();
@@ -364,20 +395,27 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     TDF_LabelSequence seqLabel;
-    const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+    Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+    Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
+    std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
 
-    auto fnAddShape = [&](const TopoDS_Shape& shape, const std::string& name) {
+    auto fnAddShape = [&](const TopoDS_Shape& shape, const std::string& shapeName, TDF_Label layer) {
         const TDF_Label labelShape = shapeTool->NewShape();
         shapeTool->SetShape(labelShape, shape);
-        TDataStd_Name::Set(labelShape, to_OccExtString(name));
+        TDataStd_Name::Set(labelShape, to_OccExtString(shapeName));
         seqLabel.Append(labelShape);
+        if (!layer.IsNull())
+            layerTool->SetLayer(labelShape, layer, true/*onlyInOneLayer*/);
     };
 
     int iShape = 0;
     int shapeCount = 0;
     for (const auto& [layerName, vecShape] : m_layers) {
-        if (!startsWith(layerName, "BLOCKS"))
+        if (!startsWith(layerName, "BLOCKS")) {
             shapeCount += vecShape.size();
+            const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
+            mapLayerNameLabel.insert({ layerName, layerLabel });
+        }
     }
     auto fnUpdateProgressValue = [&]{
         progress->setValue(MathUtils::mappedValue(iShape, 0, shapeCount, 0, 100));
@@ -388,8 +426,9 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
             if (startsWith(layerName, "BLOCKS"))
                 continue; // Skip
 
+            const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
             for (const TopoDS_Shape& shape : vecShape) {
-                fnAddShape(shape, std::string("Shape_") + std::to_string(++iShape));
+                fnAddShape(shape, std::string("Shape_") + std::to_string(++iShape), layerLabel);
                 fnUpdateProgressValue();
             }
         }
@@ -409,7 +448,8 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 
             iShape += vecShape.size();
             if (!comp.IsNull()) {
-                fnAddShape(comp, layerName);
+                const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
+                fnAddShape(comp, layerName, layerLabel);
                 fnUpdateProgressValue();
             }
         }

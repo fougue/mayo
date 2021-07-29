@@ -1775,11 +1775,11 @@ double CDxfRead::mm( double value ) const
 
     switch(m_eUnits)
     {
-        case eUnspecified:  return(value * 1.0);    // We don't know any better.
+        case eUnspecified:  return(value);    // We don't know any better.
         case eInches:       return(value * 25.4);
         case eFeet:     return(value * 25.4 * 12);
         case eMiles:        return(value *  1609344.0);
-        case eMillimeters:  return(value * 1.0);
+        case eMillimeters:  return(value);
         case eCentimeters:  return(value * 10.0);
         case eMeters:       return(value * 1000.0);
         case eKilometers:   return(value * 1000000.0);
@@ -1796,7 +1796,7 @@ double CDxfRead::mm( double value ) const
         case eAstronomicalUnits: return(value * 149597870690000.0);
         case eLightYears:   return(value * 9454254955500000000.0);
         case eParsecs:      return(value * 30856774879000000000.0);
-        default:        return(value * 1.0);    // We don't know any better.
+        default:        return(value);    // We don't know any better.
     } // End switch
 } // End mm() method
 
@@ -3420,6 +3420,11 @@ void  CDxfRead::DerefACI()
     {
          m_aci = m_layer_aci[std::string(m_layer_name)];
     }
+}
+
+streamsize CDxfRead::gcount() const
+{
+    return m_ifs ? m_ifs->gcount() : 0;
 }
 
 std::string CDxfRead::LayerName() const

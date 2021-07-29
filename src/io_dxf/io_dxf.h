@@ -8,7 +8,7 @@
 
 #include "../base/io_reader.h"
 #include <TopoDS_Shape.hxx>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -34,7 +34,7 @@ public:
 
 private:
     class Properties;
-    std::map<std::string, std::vector<TopoDS_Shape>> m_layers;
+    std::unordered_map<std::string, std::vector<TopoDS_Shape>> m_layers;
     Parameters m_params;
 };
 

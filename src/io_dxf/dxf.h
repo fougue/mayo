@@ -282,12 +282,14 @@ private:
     bool ReadDimension();
     bool ReadBlockInfo();
 
-    void get_line();
     void put_line(const char *value);
     void DerefACI();
 
 protected:
     Aci_t m_aci; // manifest color name or 256 for layer color
+
+    std::streamsize gcount() const;
+    virtual void get_line();
 
 public:
     CDxfRead(const char* filepath); // this opens the file
