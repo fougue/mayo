@@ -54,7 +54,7 @@ void TaskProgress::setValue(int pct)
         return;
 
     if (m_parent) {
-        const int valueDeltaInParent = std::round((m_value - valueOnEntry) * (m_portionSize / 100.));
+        const int valueDeltaInParent = std::ceil((m_value - valueOnEntry) * (m_portionSize / 100.));
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
