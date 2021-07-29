@@ -32,6 +32,11 @@ Handle_XCAFDoc_ShapeTool XCaf::shapeTool() const
     return XCAFDoc_DocumentTool::ShapeTool(m_labelMain);
 }
 
+Handle_XCAFDoc_LayerTool XCaf::layerTool() const
+{
+    return XCAFDoc_DocumentTool::LayerTool(m_labelMain);
+}
+
 Handle_XCAFDoc_ColorTool XCaf::colorTool() const
 {
     return XCAFDoc_DocumentTool::ColorTool(m_labelMain);
@@ -190,6 +195,26 @@ TDF_Label XCaf::shapeReferred(const TDF_Label& lbl)
     TDF_Label referred;
     XCAFDoc_ShapeTool::GetReferredShape(lbl, referred);
     return referred;
+}
+
+TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
+{
+    TDF_LabelSequence seq;
+    auto layerTool = this->layerTool();
+    if (layerTool)
+        layerTool->GetLayers(lbl, seq);
+
+    return seq;
+}
+
+TCollection_ExtendedString XCaf::layerName(const TDF_Label &lbl) const
+{
+    TCollection_ExtendedString name;
+    auto layerTool = this->layerTool();
+    if (layerTool)
+        layerTool->GetLayer(lbl, name);
+
+    return name;
 }
 
 TopLoc_Location XCaf::shapeAbsoluteLocation(TreeNodeId nodeId) const

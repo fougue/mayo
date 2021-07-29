@@ -36,26 +36,46 @@ public:
         m_propertyShapeType.setValue(MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_").data());
 
         // XDE shape kind
-        QStringList listXdeShapeKind;
-        if (XCaf::isShapeAssembly(label))
-            listXdeShapeKind.push_back(textId("Assembly").tr());
+        {
+            QStringList listXdeShapeKind;
+            if (XCaf::isShapeAssembly(label))
+                listXdeShapeKind.push_back(textId("Assembly").tr());
 
-        if (XCaf::isShapeReference(label))
-            listXdeShapeKind.push_back(textId("Reference").tr());
+            if (XCaf::isShapeReference(label))
+                listXdeShapeKind.push_back(textId("Reference").tr());
 
-        if (XCaf::isShapeComponent(label))
-            listXdeShapeKind.push_back(textId("Component").tr());
+            if (XCaf::isShapeComponent(label))
+                listXdeShapeKind.push_back(textId("Component").tr());
 
-        if (XCaf::isShapeCompound(label))
-            listXdeShapeKind.push_back(textId("Compound").tr());
+            if (XCaf::isShapeCompound(label))
+                listXdeShapeKind.push_back(textId("Compound").tr());
 
-        if (XCaf::isShapeSimple(label))
-            listXdeShapeKind.push_back(textId("Simple").tr());
+            if (XCaf::isShapeSimple(label))
+                listXdeShapeKind.push_back(textId("Simple").tr());
 
-        if (XCaf::isShapeSub(label))
-            listXdeShapeKind.push_back(textId("Sub").tr());
+            if (XCaf::isShapeSub(label))
+                listXdeShapeKind.push_back(textId("Sub").tr());
 
-        m_propertyXdeShapeKind.setValue(to_stdString(listXdeShapeKind.join('+')));
+            m_propertyXdeShapeKind.setValue(to_stdString(listXdeShapeKind.join('+')));
+        }
+
+        // XDE layers
+        {
+            TDF_LabelSequence seqLayerLabel = xcaf.layers(label);
+            if (XCaf::isShapeReference(label)) {
+                TDF_LabelSequence seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
+                seqLayerLabel.Append(seqLayerLabelProduct);
+            }
+
+            QStringList listLayerName;
+            for (const TDF_Label& layerLabel : seqLayerLabel)
+                listLayerName.push_back(to_QString(xcaf.layerName(layerLabel)));
+
+            if (!seqLayerLabel.IsEmpty())
+                m_propertyXdeLayer.setValue(to_stdString(listLayerName.join(", ")));
+            else
+                this->removeProperty(&m_propertyXdeLayer);
+        }
 
         // Reference location
         if (XCaf::isShapeReference(label)) {
@@ -138,6 +158,7 @@ public:
     PropertyString m_propertyName{ this, textId("Name") };
     PropertyString m_propertyShapeType{ this, textId("Shape") };
     PropertyString m_propertyXdeShapeKind{ this, textId("XdeShape") };
+    PropertyString m_propertyXdeLayer{ this, textId("XdeLayer") };
     PropertyOccColor m_propertyColor{ this, textId("Color") };
     PropertyOccTrsf m_propertyReferenceLocation{ this, textId("Location") };
     PropertyOccPnt m_propertyValidationCentroid{ this, textId("Centroid") };
