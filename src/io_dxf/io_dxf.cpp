@@ -9,6 +9,7 @@
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/math_utils.h"
+#include "../base/messenger.h"
 #include "../base/property_builtins.h"
 #include "../base/task_progress.h"
 #include "../base/string_conv.h"
@@ -27,7 +28,7 @@
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
-#include <iostream>
+#include <sstream>
 #include <string_view>
 
 namespace Mayo {
@@ -42,6 +43,7 @@ bool startsWith(std::string_view str, std::string_view prefix)
 
 class InternalDxfRead : public CDxfRead {
 private:
+    Messenger* m_messenger = nullptr;
     DxfReader::Parameters m_params;
     std::unordered_map<std::string, std::vector<TopoDS_Shape>> m_layers;
     TaskProgress* m_progress = nullptr;
@@ -54,6 +56,7 @@ protected:
 public:
     InternalDxfRead(const FilePath& filepath, TaskProgress* progress = nullptr);
 
+    void setMessenger(Messenger* messenger) { m_messenger = messenger; }
     void setParameters(const DxfReader::Parameters& params) { m_params = params; }
     const auto& layers() const { return m_layers; }
 
@@ -119,10 +122,12 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
     const std::string layerName = this->LayerName();
     if (!startsWith(layerName, "BLOCKS")) {
         // TODO
-        std::cerr << "InternalDxfRead::OnReadText() - Not yet implemented" << std::endl
-                  << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
-                  << "    height: " << height << std::endl
-                  << "    text: " << text << std::endl;
+        std::stringstream sstr;
+        sstr << "DxfReader::OnReadText() - Not yet implemented" << std::endl
+             << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
+             << "    height: " << height << std::endl
+             << "    text: " << text << std::endl;
+        m_messenger->emitWarning(to_QString(sstr.str()));
 #if 0
         App::Annotation *pcFeature = (App::Annotation *)document->addObject("App::Annotation", "Text");
         pcFeature->LabelText.setValue(Deformat(text));
@@ -144,7 +149,7 @@ void InternalDxfRead::OnReadArc(const double* s, const double* e, const double* 
         this->addShape(edge);
     }
     else {
-        //Base::Console().Warning("ImpExpDxf - ignore degenerate arc of circle\n");
+        m_messenger->emitWarning("DxfReader - Ignore degenerate arc of circle");
     }
 }
 
@@ -160,7 +165,7 @@ void InternalDxfRead::OnReadCircle(const double* s, const double* c, bool dir, b
         this->addShape(edge);
     }
     else {
-        //Base::Console().Warning("ImpExpDxf - ignore degenerate circle\n");
+        m_messenger->emitWarning("DxfReader - Ignore degenerate circle");
     }
 }
 
@@ -184,7 +189,7 @@ void InternalDxfRead::OnReadEllipse(
         this->addShape(edge);
     }
     else {
-        //Base::Console().Warning("ImpExpDxf - ignore degenerate ellipse\n");
+        m_messenger->emitWarning("DxfReader - Ignore degenerate ellipse");
     }
 }
 
@@ -209,7 +214,7 @@ void InternalDxfRead::OnReadSpline(SplineData& sd)
         this->addShape(edge);
     }
     catch (const Standard_Failure&) {
-        //Base::Console().Warning("ImpExpDxf - failed to create bspline\n");
+        m_messenger->emitWarning("DxfReader - Failed to create bspline");
     }
 }
 
@@ -252,17 +257,20 @@ void InternalDxfRead::OnReadDimension(const double* s, const double* e, const do
 {
     if (m_params.importAnnotations) {
         // TODO
-        std::cerr << "InternalDxfRead::OnReadDimension() - Not yet implemented" << std::endl
-                  << "    s: " << s[0] << ", " << s[1] << ", " << s[2] << std::endl
-                  << "    e: " << e[0] << ", " << e[1] << ", " << e[2] << std::endl
-                  << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
-                  << "    rotation: " << rotation << std::endl;
+        std::stringstream sstr;
+        sstr << "DxfReader::OnReadDimension() - Not yet implemented" << std::endl
+             << "    s: " << s[0] << ", " << s[1] << ", " << s[2] << std::endl
+             << "    e: " << e[0] << ", " << e[1] << ", " << e[2] << std::endl
+             << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
+             << "    rotation: " << rotation << std::endl;
+        m_messenger->emitWarning(to_QString(sstr.str()));
+
     }
 }
 
 void InternalDxfRead::ReportError(const char* msg)
 {
-    std::cerr << msg << std::endl;
+    m_messenger->emitError(msg);
 }
 
 gp_Pnt InternalDxfRead::toPnt(const double* coords) const
@@ -404,6 +412,7 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_layers.clear();
     InternalDxfRead internalReader(filepath, progress);
+    internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
     internalReader.DoRead();
     m_layers = std::move(internalReader.layers());
     return !internalReader.Failed();
