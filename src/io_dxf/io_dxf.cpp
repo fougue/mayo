@@ -11,6 +11,7 @@
 #include "../base/math_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
+#include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/string_conv.h"
 #include "dxf.h"
@@ -21,6 +22,8 @@
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
+#include <Font_BRepTextBuilder.hxx>
+#include <Font_FontMgr.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Precision.hxx>
@@ -121,18 +124,18 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
     const gp_Pnt pt = this->toPnt(point);
     const std::string layerName = this->LayerName();
     if (!startsWith(layerName, "BLOCKS")) {
-        // TODO
-        std::stringstream sstr;
-        sstr << "DxfReader::OnReadText() - Not yet implemented" << std::endl
-             << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
-             << "    height: " << height << std::endl
-             << "    text: " << text << std::endl;
-        m_messenger->emitWarning(to_QString(sstr.str()));
-#if 0
-        App::Annotation *pcFeature = (App::Annotation *)document->addObject("App::Annotation", "Text");
-        pcFeature->LabelText.setValue(Deformat(text));
-        pcFeature->Position.setValue(pt);
-#endif
+        const std::string& fontName = m_params.fontNameForTextObjects;
+        const double fontHeight = 4 * height * m_params.scaling;
+        Font_BRepFont brepFont;
+        if (brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight)) {
+            const gp_Ax3 locText(pt, gp::DZ(), gp::DX());
+            Font_BRepTextBuilder brepTextBuilder;
+            const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, text, locText);
+            this->addShape(shapeText);
+        }
+        else {
+            m_messenger->emitWarning(QString("Font_BRepFont is null for '%1'").arg(to_QString(fontName)));
+        }
     }
 }
 
@@ -264,7 +267,6 @@ void InternalDxfRead::OnReadDimension(const double* s, const double* e, const do
              << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
              << "    rotation: " << rotation << std::endl;
         m_messenger->emitWarning(to_QString(sstr.str()));
-
     }
 }
 
@@ -386,6 +388,21 @@ Handle_Geom_BSplineCurve InternalDxfRead::createInterpolationSpline(struct Splin
     return interp.Curve();
 }
 
+const Enumeration& systemFontNames()
+{
+    static Enumeration fontNames;
+    if (fontNames.empty()) {
+        Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
+        TColStd_SequenceOfHAsciiString seqFontName;
+        fontMgr->GetAvailableFontsNames(seqFontName);
+        int i = 0;
+        for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
+            fontNames.addItem(i++, { QByteArray{}, string_conv<QByteArray>(fontName->String()) });
+    }
+
+    return fontNames;
+}
+
 } // namespace
 
 class DxfReader::Properties : public PropertyGroup {
@@ -394,6 +411,12 @@ public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
+        this->importAnnotations.setDescription(
+                    textIdTr("Import text/dimension objects"));
+        this->groupLayers.setDescription(
+                    textIdTr("Group all objects within a layer into a single coumpound shape"));
+        this->fontNameForTextObjects.setDescription(
+                    textIdTr("Name of the font to be used when creating shape for text objects"));
     }
 
     void restoreDefaults() override {
@@ -401,17 +424,20 @@ public:
         this->scaling.setValue(params.scaling);
         this->importAnnotations.setValue(params.importAnnotations);
         this->groupLayers.setValue(params.groupLayers);
+        this->fontNameForTextObjects.setValue(0);
     }
 
     PropertyDouble scaling{ this, textId("scaling") };
     PropertyBool importAnnotations{ this, textId("importAnnotations") };
     PropertyBool groupLayers{ this, textId("groupLayers") };
+    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), systemFontNames() };
 };
 
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
     m_layers.clear();
     InternalDxfRead internalReader(filepath, progress);
+    internalReader.setParameters(m_params);
     internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
     internalReader.DoRead();
     m_layers = std::move(internalReader.layers());
@@ -496,6 +522,7 @@ void DxfReader::applyProperties(const PropertyGroup* group)
         m_params.scaling = ptr->scaling;
         m_params.importAnnotations = ptr->importAnnotations;
         m_params.groupLayers = ptr->groupLayers;
+        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name().toStdString();
     }
 }
 

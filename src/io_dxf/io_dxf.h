@@ -24,7 +24,8 @@ public:
     struct Parameters {
         double scaling = 1.;
         bool importAnnotations = true;
-        bool groupLayers = false;
+        bool groupLayers = true;
+        std::string fontNameForTextObjects = "Arial";
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }
