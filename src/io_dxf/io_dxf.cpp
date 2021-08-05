@@ -14,6 +14,8 @@
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/string_conv.h"
+#include "../base/unit_system.h"
+#include "aci_table.h"
 #include "dxf.h"
 
 #include <gp_Circ.hxx>
@@ -44,11 +46,28 @@ bool startsWith(std::string_view str, std::string_view prefix)
     return str.substr(0, prefix.size()) == prefix;
 }
 
-class InternalDxfRead : public CDxfRead {
+const Enumeration& systemFontNames()
+{
+    static Enumeration fontNames;
+    if (fontNames.empty()) {
+        Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
+        TColStd_SequenceOfHAsciiString seqFontName;
+        fontMgr->GetAvailableFontsNames(seqFontName);
+        int i = 0;
+        for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
+            fontNames.addItem(i++, { QByteArray{}, string_conv<QByteArray>(fontName->String()) });
+    }
+
+    return fontNames;
+}
+
+} // namespace
+
+class DxfReader::Internal : public CDxfRead {
 private:
     Messenger* m_messenger = nullptr;
     DxfReader::Parameters m_params;
-    std::unordered_map<std::string, std::vector<TopoDS_Shape>> m_layers;
+    std::unordered_map<std::string, std::vector<DxfReader::Entity>> m_layers;
     TaskProgress* m_progress = nullptr;
     std::uintmax_t m_fileSize = 0;
     std::uintmax_t m_fileReadSize = 0;
@@ -57,7 +76,7 @@ protected:
     void get_line() override;
 
 public:
-    InternalDxfRead(const FilePath& filepath, TaskProgress* progress = nullptr);
+    Internal(const FilePath& filepath, TaskProgress* progress = nullptr);
 
     void setMessenger(Messenger* messenger) { m_messenger = messenger; }
     void setParameters(const DxfReader::Parameters& params) { m_params = params; }
@@ -66,7 +85,7 @@ public:
     // CDxfRead's virtual functions
     void OnReadLine(const double* s, const double* e, bool hidden) override;
     void OnReadPoint(const double* s) override;
-    void OnReadText(const double* point, const double height, const char* text) override;
+    void OnReadText(const double* point, const double height, double rotation, const char* text) override;
     void OnReadArc(const double* s, const double* e, const double* c, bool dir, bool hidden) override;
     void OnReadCircle(const double* s, const double* c, bool dir, bool hidden) override;
     void OnReadEllipse(const double* c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
@@ -83,7 +102,193 @@ public:
     void addShape(const TopoDS_Shape& shape);
 };
 
-void InternalDxfRead::get_line()
+class DxfReader::Properties : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::DxfReader::Properties)
+public:
+    Properties(PropertyGroup* parentGroup)
+        : PropertyGroup(parentGroup)
+    {
+        this->importAnnotations.setDescription(
+                    textIdTr("Import text/dimension objects"));
+        this->groupLayers.setDescription(
+                    textIdTr("Group all objects within a layer into a single coumpound shape"));
+        this->fontNameForTextObjects.setDescription(
+                    textIdTr("Name of the font to be used when creating shape for text objects"));
+    }
+
+    void restoreDefaults() override {
+        const DxfReader::Parameters params;
+        this->scaling.setValue(params.scaling);
+        this->importAnnotations.setValue(params.importAnnotations);
+        this->groupLayers.setValue(params.groupLayers);
+        this->fontNameForTextObjects.setValue(0);
+    }
+
+    PropertyDouble scaling{ this, textId("scaling") };
+    PropertyBool importAnnotations{ this, textId("importAnnotations") };
+    PropertyBool groupLayers{ this, textId("groupLayers") };
+    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), systemFontNames() };
+};
+
+bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
+{
+    m_layers.clear();
+    DxfReader::Internal internalReader(filepath, progress);
+    internalReader.setParameters(m_params);
+    internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
+    internalReader.DoRead();
+    m_layers = std::move(internalReader.layers());
+    return !internalReader.Failed();
+}
+
+TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
+{
+    TDF_LabelSequence seqLabel;
+    Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+    Handle_XCAFDoc_ColorTool colorTool = doc->xcaf().colorTool();
+    Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
+    std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
+    std::unordered_map<Aci_t, TDF_Label> mapAciColorLabel;
+
+    auto fnAddRootShape = [&](const TopoDS_Shape& shape, const std::string& shapeName, TDF_Label layer) {
+        const TDF_Label labelShape = shapeTool->NewShape();
+        shapeTool->SetShape(labelShape, shape);
+        TDataStd_Name::Set(labelShape, to_OccExtString(shapeName));
+        seqLabel.Append(labelShape);
+        if (!layer.IsNull())
+            layerTool->SetLayer(labelShape, layer, true/*onlyInOneLayer*/);
+
+        return labelShape;
+    };
+
+    auto fnAddAci = [&](Aci_t aci) {
+        auto it = mapAciColorLabel.find(aci);
+        if (it != mapAciColorLabel.cend())
+            return it->second;
+
+        if (0 <= aci && aci < std::size(aciTable)) {
+            const RGB_Color& c = aciTable[aci].second;
+            const TDF_Label colorLabel = colorTool->AddColor(
+                        Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_sRGB));
+            mapAciColorLabel.insert({ aci, colorLabel });
+            return colorLabel;
+        }
+
+        return TDF_Label();
+    };
+
+    int iShape = 0;
+    int shapeCount = 0;
+    for (const auto& [layerName, vecEntity] : m_layers) {
+        if (!startsWith(layerName, "BLOCKS")) {
+            shapeCount += vecEntity.size();
+            const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
+            mapLayerNameLabel.insert({ layerName, layerLabel });
+        }
+    }
+    auto fnUpdateProgressValue = [&]{
+        progress->setValue(MathUtils::mappedValue(iShape, 0, shapeCount, 0, 100));
+    };
+
+    if (!m_params.groupLayers) {
+        for (const auto& [layerName, vecEntity] : m_layers) {
+            if (startsWith(layerName, "BLOCKS"))
+                continue; // Skip
+
+            const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
+            for (const DxfReader::Entity& entity : vecEntity) {
+                const std::string shapeName = std::string("Shape_") + std::to_string(++iShape);
+                const TDF_Label shapeLabel = fnAddRootShape(entity.shape, shapeName, layerLabel);
+                colorTool->SetColor(shapeLabel, fnAddAci(entity.aci), XCAFDoc_ColorGen);
+                fnUpdateProgressValue();
+            }
+        }
+    }
+    else {
+        for (const auto& [layerName, vecEntity] : m_layers) {
+            if (startsWith(layerName, "BLOCKS"))
+                continue; // Skip
+
+            BRep_Builder builder;
+            TopoDS_Compound comp;
+            builder.MakeCompound(comp);
+            for (const Entity& entity : vecEntity) {
+                if (!entity.shape.IsNull())
+                    builder.Add(comp, entity.shape);
+            }
+
+            if (!comp.IsNull()) {
+                const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
+                const TDF_Label compLabel = fnAddRootShape(comp, layerName, layerLabel);
+                // Check if all entities have the same color
+                bool uniqueColor = true;
+                const Aci_t aci = !vecEntity.empty() ? vecEntity.front().aci : -1;
+                for (const Entity& entity : vecEntity) {
+                    uniqueColor = entity.aci == aci;
+                    if (!uniqueColor)
+                        break;
+                }
+
+                if (uniqueColor) {
+                    colorTool->SetColor(compLabel, fnAddAci(aci), XCAFDoc_ColorGen);
+                }
+                else {
+                    for (const Entity& entity : vecEntity) {
+                        if (!entity.shape.IsNull()) {
+                            const TDF_Label entityLabel = shapeTool->AddSubShape(compLabel, entity.shape);
+                            colorTool->SetColor(entityLabel, fnAddAci(entity.aci), XCAFDoc_ColorGen);
+                        }
+                    }
+                }
+            }
+
+            iShape += vecEntity.size();
+            fnUpdateProgressValue();
+        }
+    }
+
+    return seqLabel;
+}
+
+std::unique_ptr<PropertyGroup> DxfReader::createProperties(PropertyGroup* parentGroup)
+{
+    return std::make_unique<Properties>(parentGroup);
+}
+
+void DxfReader::applyProperties(const PropertyGroup* group)
+{
+    auto ptr = dynamic_cast<const Properties*>(group);
+    if (ptr) {
+        m_params.scaling = ptr->scaling;
+        m_params.importAnnotations = ptr->importAnnotations;
+        m_params.groupLayers = ptr->groupLayers;
+        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name().toStdString();
+    }
+}
+
+Span<const Format> DxfFactoryReader::formats() const
+{
+    static const Format arrayFormat[] = { Format_DXF };
+    return arrayFormat;
+}
+
+std::unique_ptr<Reader> DxfFactoryReader::create(Format format) const
+{
+    if (format == Format_DXF)
+        return std::make_unique<DxfReader>();
+
+    return {};
+}
+
+std::unique_ptr<PropertyGroup> DxfFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
+{
+    if (format == Format_DXF)
+        return DxfReader::createProperties(parentGroup);
+
+    return {};
+}
+
+void DxfReader::Internal::get_line()
 {
     CDxfRead::get_line();
     m_fileReadSize += this->gcount();
@@ -91,7 +296,7 @@ void InternalDxfRead::get_line()
         m_progress->setValue(MathUtils::mappedValue(m_fileReadSize, 0, m_fileSize, 0, 100));
 }
 
-InternalDxfRead::InternalDxfRead(const FilePath& filepath, TaskProgress* progress)
+DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
     : CDxfRead(filepath.u8string().c_str()),
       m_progress(progress)
 {
@@ -99,7 +304,7 @@ InternalDxfRead::InternalDxfRead(const FilePath& filepath, TaskProgress* progres
         m_fileSize = std::filesystem::file_size(filepath);
 }
 
-void InternalDxfRead::OnReadLine(const double* s, const double* e, bool /*hidden*/)
+void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Pnt p1 = this->toPnt(e);
@@ -110,13 +315,13 @@ void InternalDxfRead::OnReadLine(const double* s, const double* e, bool /*hidden
     this->addShape(edge);
 }
 
-void InternalDxfRead::OnReadPoint(const double* s)
+void DxfReader::Internal::OnReadPoint(const double* s)
 {
     const TopoDS_Vertex vertex = BRepBuilderAPI_MakeVertex(this->toPnt(s));
     this->addShape(vertex);
 }
 
-void InternalDxfRead::OnReadText(const double* point, const double height, const char* text)
+void DxfReader::Internal::OnReadText(const double* point, const double height, double rotation, const char* text)
 {
     if (!m_params.importAnnotations)
         return;
@@ -128,7 +333,11 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
         const double fontHeight = 4 * height * m_params.scaling;
         Font_BRepFont brepFont;
         if (brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight)) {
-            const gp_Ax3 locText(pt, gp::DZ(), gp::DX());
+            gp_Trsf rotTrsf;
+            if (rotation != 0.)
+                rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), UnitSystem::radians(rotation * Quantity_Degree));
+
+            const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
             Font_BRepTextBuilder brepTextBuilder;
             const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, text, locText);
             this->addShape(shapeText);
@@ -140,7 +349,7 @@ void InternalDxfRead::OnReadText(const double* point, const double height, const
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void InternalDxfRead::OnReadArc(const double* s, const double* e, const double* c, bool dir, bool /*hidden*/)
+void DxfReader::Internal::OnReadArc(const double* s, const double* e, const double* c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Pnt p1 = this->toPnt(e);
@@ -157,7 +366,7 @@ void InternalDxfRead::OnReadArc(const double* s, const double* e, const double* 
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void InternalDxfRead::OnReadCircle(const double* s, const double* c, bool dir, bool /*hidden*/)
+void DxfReader::Internal::OnReadCircle(const double* s, const double* c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Dir up = dir ? gp::DZ() : -gp::DZ();
@@ -173,7 +382,7 @@ void InternalDxfRead::OnReadCircle(const double* s, const double* c, bool dir, b
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void InternalDxfRead::OnReadEllipse(
+void DxfReader::Internal::OnReadEllipse(
         const double* c,
         double major_radius, double minor_radius,
         double rotation,
@@ -197,7 +406,7 @@ void InternalDxfRead::OnReadEllipse(
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void InternalDxfRead::OnReadSpline(SplineData& sd)
+void DxfReader::Internal::OnReadSpline(SplineData& sd)
 {
     // https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ff18cb41610ec0a2e719-79e1.htm
     // Flags:
@@ -222,20 +431,20 @@ void InternalDxfRead::OnReadSpline(SplineData& sd)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void InternalDxfRead::OnReadInsert(const double* point, const double* scale, const char* name, double rotation)
+void DxfReader::Internal::OnReadInsert(const double* point, const double* scale, const char* name, double rotation)
 {
     //std::cout << "Inserting block " << name << " rotation " << rotation << " pos " << point[0] << "," << point[1] << "," << point[2] << " scale " << scale[0] << "," << scale[1] << "," << scale[2] << std::endl;
     const std::string prefix = std::string("BLOCKS ") + name + " ";
-    for (const auto& [k, vecShape] : m_layers) {
+    for (const auto& [k, vecEntity] : m_layers) {
         if (!startsWith(k, prefix))
             continue; // Skip
 
         BRep_Builder builder;
         TopoDS_Compound comp;
         builder.MakeCompound(comp);
-        for (const TopoDS_Shape& shape : vecShape) {
-            if (!shape.IsNull())
-                builder.Add(comp, shape);
+        for (const DxfReader::Entity& entity : vecEntity) {
+            if (!entity.shape.IsNull())
+                builder.Add(comp, entity.shape);
         }
 
         if (comp.IsNull())
@@ -256,7 +465,7 @@ void InternalDxfRead::OnReadInsert(const double* point, const double* scale, con
     }
 }
 
-void InternalDxfRead::OnReadDimension(const double* s, const double* e, const double* point, double rotation)
+void DxfReader::Internal::OnReadDimension(const double* s, const double* e, const double* point, double rotation)
 {
     if (m_params.importAnnotations) {
         // TODO
@@ -270,12 +479,12 @@ void InternalDxfRead::OnReadDimension(const double* s, const double* e, const do
     }
 }
 
-void InternalDxfRead::ReportError(const char* msg)
+void DxfReader::Internal::ReportError(const char* msg)
 {
     m_messenger->emitError(msg);
 }
 
-gp_Pnt InternalDxfRead::toPnt(const double* coords) const
+gp_Pnt DxfReader::Internal::toPnt(const double* coords) const
 {
     double sp1(coords[0]);
     double sp2(coords[1]);
@@ -289,22 +498,23 @@ gp_Pnt InternalDxfRead::toPnt(const double* coords) const
     return gp_Pnt(sp1, sp2, sp3);
 }
 
-void InternalDxfRead::addShape(const TopoDS_Shape& shape)
+void DxfReader::Internal::addShape(const TopoDS_Shape& shape)
 {
+    const Entity newEntity{ m_aci, shape };
     const std::string layerName = this->LayerName();
     auto itFound = m_layers.find(layerName);
     if (itFound != m_layers.end()) {
-        std::vector<TopoDS_Shape>& vecShape = itFound->second;
-        vecShape.push_back(shape);
+        std::vector<DxfReader::Entity>& vecEntity = itFound->second;
+        vecEntity.push_back(newEntity);
     }
     else {
-        decltype(m_layers)::value_type pair(std::move(layerName), { shape });
+        decltype(m_layers)::value_type pair(std::move(layerName), { newEntity });
         m_layers.insert(std::move(pair));
     }
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve InternalDxfRead::createSplineFromPolesAndKnots(struct SplineData& sd)
+Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(struct SplineData& sd)
 {
     const size_t numPoles = sd.control_points;
     if (sd.controlx.size() > numPoles
@@ -362,7 +572,7 @@ Handle_Geom_BSplineCurve InternalDxfRead::createSplineFromPolesAndKnots(struct S
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve InternalDxfRead::createInterpolationSpline(struct SplineData& sd)
+Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(struct SplineData& sd)
 {
     const size_t numPoints = sd.fit_points;
     if (sd.fitx.size() > numPoints || sd.fity.size() > numPoints || sd.fitz.size() > numPoints)
@@ -386,166 +596,6 @@ Handle_Geom_BSplineCurve InternalDxfRead::createInterpolationSpline(struct Splin
     GeomAPI_Interpolate interp(fitpoints, periodic, Precision::Confusion());
     interp.Perform();
     return interp.Curve();
-}
-
-const Enumeration& systemFontNames()
-{
-    static Enumeration fontNames;
-    if (fontNames.empty()) {
-        Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
-        TColStd_SequenceOfHAsciiString seqFontName;
-        fontMgr->GetAvailableFontsNames(seqFontName);
-        int i = 0;
-        for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
-            fontNames.addItem(i++, { QByteArray{}, string_conv<QByteArray>(fontName->String()) });
-    }
-
-    return fontNames;
-}
-
-} // namespace
-
-class DxfReader::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::DxfReader::Properties)
-public:
-    Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-        this->importAnnotations.setDescription(
-                    textIdTr("Import text/dimension objects"));
-        this->groupLayers.setDescription(
-                    textIdTr("Group all objects within a layer into a single coumpound shape"));
-        this->fontNameForTextObjects.setDescription(
-                    textIdTr("Name of the font to be used when creating shape for text objects"));
-    }
-
-    void restoreDefaults() override {
-        const DxfReader::Parameters params;
-        this->scaling.setValue(params.scaling);
-        this->importAnnotations.setValue(params.importAnnotations);
-        this->groupLayers.setValue(params.groupLayers);
-        this->fontNameForTextObjects.setValue(0);
-    }
-
-    PropertyDouble scaling{ this, textId("scaling") };
-    PropertyBool importAnnotations{ this, textId("importAnnotations") };
-    PropertyBool groupLayers{ this, textId("groupLayers") };
-    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), systemFontNames() };
-};
-
-bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
-{
-    m_layers.clear();
-    InternalDxfRead internalReader(filepath, progress);
-    internalReader.setParameters(m_params);
-    internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
-    internalReader.DoRead();
-    m_layers = std::move(internalReader.layers());
-    return !internalReader.Failed();
-}
-
-TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
-{
-    TDF_LabelSequence seqLabel;
-    Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
-    Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
-    std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
-
-    auto fnAddShape = [&](const TopoDS_Shape& shape, const std::string& shapeName, TDF_Label layer) {
-        const TDF_Label labelShape = shapeTool->NewShape();
-        shapeTool->SetShape(labelShape, shape);
-        TDataStd_Name::Set(labelShape, to_OccExtString(shapeName));
-        seqLabel.Append(labelShape);
-        if (!layer.IsNull())
-            layerTool->SetLayer(labelShape, layer, true/*onlyInOneLayer*/);
-    };
-
-    int iShape = 0;
-    int shapeCount = 0;
-    for (const auto& [layerName, vecShape] : m_layers) {
-        if (!startsWith(layerName, "BLOCKS")) {
-            shapeCount += vecShape.size();
-            const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
-            mapLayerNameLabel.insert({ layerName, layerLabel });
-        }
-    }
-    auto fnUpdateProgressValue = [&]{
-        progress->setValue(MathUtils::mappedValue(iShape, 0, shapeCount, 0, 100));
-    };
-
-    if (!m_params.groupLayers) {
-        for (const auto& [layerName, vecShape] : m_layers) {
-            if (startsWith(layerName, "BLOCKS"))
-                continue; // Skip
-
-            const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
-            for (const TopoDS_Shape& shape : vecShape) {
-                fnAddShape(shape, std::string("Shape_") + std::to_string(++iShape), layerLabel);
-                fnUpdateProgressValue();
-            }
-        }
-    }
-    else {
-        for (const auto& [layerName, vecShape] : m_layers) {
-            if (startsWith(layerName, "BLOCKS"))
-                continue; // Skip
-
-            BRep_Builder builder;
-            TopoDS_Compound comp;
-            builder.MakeCompound(comp);
-            for (const TopoDS_Shape& shape : vecShape) {
-                if (!shape.IsNull())
-                    builder.Add(comp, shape);
-            }
-
-            iShape += vecShape.size();
-            if (!comp.IsNull()) {
-                const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
-                fnAddShape(comp, layerName, layerLabel);
-                fnUpdateProgressValue();
-            }
-        }
-    }
-
-    return seqLabel;
-}
-
-std::unique_ptr<PropertyGroup> DxfReader::createProperties(PropertyGroup* parentGroup)
-{
-    return std::make_unique<Properties>(parentGroup);
-}
-
-void DxfReader::applyProperties(const PropertyGroup* group)
-{
-    auto ptr = dynamic_cast<const Properties*>(group);
-    if (ptr) {
-        m_params.scaling = ptr->scaling;
-        m_params.importAnnotations = ptr->importAnnotations;
-        m_params.groupLayers = ptr->groupLayers;
-        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name().toStdString();
-    }
-}
-
-Span<const Format> DxfFactoryReader::formats() const
-{
-    static const Format arrayFormat[] = { Format_DXF };
-    return arrayFormat;
-}
-
-std::unique_ptr<Reader> DxfFactoryReader::create(Format format) const
-{
-    if (format == Format_DXF)
-        return std::make_unique<DxfReader>();
-
-    return {};
-}
-
-std::unique_ptr<PropertyGroup> DxfFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
-{
-    if (format == Format_DXF)
-        return DxfReader::createProperties(parentGroup);
-
-    return {};
 }
 
 } // namespace IO

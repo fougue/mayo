@@ -35,7 +35,13 @@ public:
 
 private:
     class Properties;
-    std::unordered_map<std::string, std::vector<TopoDS_Shape>> m_layers;
+    class Internal;
+
+    struct Entity {
+        int aci = 0;
+        TopoDS_Shape shape;
+    };
+    std::unordered_map<std::string, std::vector<Entity>> m_layers;
     Parameters m_params;
 };
 
