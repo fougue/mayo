@@ -169,7 +169,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         if (0 <= aci && aci < std::size(aciTable)) {
             const RGB_Color& c = aciTable[aci].second;
             const TDF_Label colorLabel = colorTool->AddColor(
-                        Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_sRGB));
+                        Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB));
             mapAciColorLabel.insert({ aci, colorLabel });
             return colorLabel;
         }

@@ -47,6 +47,7 @@ Mayo is a 3D viewer and converter inspired by FreeCad
 STEP                      |  &#10004; | &#10004; | AP203, 214, 242(some parts)
 IGES                      |  &#10004; | &#10004; | v5.3
 OpenCascade BREP          |  &#10004; | &#10004; |
+DXF                       |  &#10004; | &#10060; |
 OBJ                       |  &#10004; | &#10060; | Requires OpenCascade &#8805; v7.4.0
 glTF                      |  &#10004; | &#10004; | Import requires OpenCascade &#8805; v7.4.0<br>Export requires OpenCascade &#8805; v7.5.0<br>Supports 1.0, 2.0 and GLB
 VRML                      |  &#10060; | &#10004; | v2.0 UTF8
