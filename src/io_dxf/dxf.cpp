@@ -2356,6 +2356,8 @@ bool CDxfRead::ReadText()
 {
     double c[3]; // coordinate
     double height = 0.03082;
+    double rotation = 0.; // degrees
+    char text[1024] = {};
 
     memset( c, 0, sizeof(c) );
 
@@ -2372,7 +2374,10 @@ bool CDxfRead::ReadText()
         ss.imbue(std::locale("C"));
         switch(n){
             case 0:
-                return false;
+                DerefACI();
+                OnReadText(c, height * 25.4 / 72.0, rotation, text);
+                return(true);
+
             case 8: // Layer name follows
                 get_line();
                 safe_strcpy(m_layer_name, m_str);
@@ -2401,9 +2406,15 @@ bool CDxfRead::ReadText()
             case 1:
                 // text
                 get_line();
-                DerefACI();
-                OnReadText(c, height * 25.4 / 72.0, m_str);
-                return(true);
+                safe_strcpy(text, m_str);
+                break;
+
+            case 50:
+                // text rotation
+                get_line();
+                ss.str(m_str); ss >> rotation; if(ss.fail()) return false;
+                break;
+
             case 62:
                 // color index
                 get_line();
