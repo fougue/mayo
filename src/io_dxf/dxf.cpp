@@ -3226,11 +3226,9 @@ bool CDxfRead::ReadLayer()
         switch(n){
             case 0: // next item found, so finish with line
                 if (layername.empty())
-                {
-                    this->ReportError("DXF::ReadLayer() - No layer name");
                     return false;
-                }
-                    m_layer_aci[layername] = aci;
+
+                m_layer_aci[layername] = aci;
                 return true;
 
             case 2: // Layer name follows
@@ -3305,8 +3303,6 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
         }
 
         else if (!strcmp( m_str, "LAYER" )){
-              get_line();
-              get_line();
               if(!ReadLayer())
                 {
                   this->ReportError("DXF::DoRead() - Failed to read layer");
