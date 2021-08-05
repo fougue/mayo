@@ -3151,6 +3151,7 @@ void CDxfRead::get_line()
     }
 
     m_ifs->getline(m_str, 1024);
+    ++m_lineNum;
 
     char str[1024];
     size_t len = strlen(m_str);

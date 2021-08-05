@@ -289,6 +289,7 @@ private:
 
 protected:
     Aci_t m_aci; // manifest color name or 256 for layer color
+    int m_lineNum = 0;
 
     std::streamsize gcount() const;
     virtual void get_line();
