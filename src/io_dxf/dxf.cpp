@@ -16,6 +16,15 @@
 
 using namespace std;
 
+namespace {
+
+template<size_t N1, size_t N2>
+void safe_strcpy(char (&dst)[N1], const char (&src)[N2]) {
+    strncpy(dst, src, std::min(N1, N2));
+}
+
+} // namespace
+
 Base::Vector3d toVector3d(const double* a)
 {
     Base::Vector3d result;
@@ -1746,7 +1755,7 @@ CDxfRead::CDxfRead(const char* filepath)
     m_aci = 0;
     m_eUnits = eMillimeters;
     m_measurement_inch = false;
-    strcpy(m_layer_name, "0");  // Default layer name
+    safe_strcpy(m_layer_name, "0");  // Default layer name
     memset( m_section_name, '\0', sizeof(m_section_name) );
     memset( m_block_name, '\0', sizeof(m_block_name) );
     m_ignore_errors = true;
@@ -1829,7 +1838,7 @@ bool CDxfRead::ReadLine()
 
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 6: // line style name follows
@@ -1926,7 +1935,7 @@ bool CDxfRead::ReadPoint()
 
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 10:
@@ -2010,7 +2019,7 @@ bool CDxfRead::ReadArc()
 
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 6: // line style name follows
@@ -2113,7 +2122,7 @@ bool CDxfRead::ReadSpline()
                 return true;
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
                 case 62:
                 // color index
@@ -2294,7 +2303,7 @@ bool CDxfRead::ReadCircle()
 
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 10:
@@ -2366,7 +2375,7 @@ bool CDxfRead::ReadText()
                 return false;
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 10:
@@ -2395,7 +2404,6 @@ bool CDxfRead::ReadText()
                 DerefACI();
                 OnReadText(c, height * 25.4 / 72.0, m_str);
                 return(true);
-
             case 62:
                 // color index
                 get_line();
@@ -2448,7 +2456,7 @@ bool CDxfRead::ReadEllipse()
                 return true;
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
 
             case 10:
@@ -2626,7 +2634,7 @@ bool CDxfRead::ReadLwPolyLine()
                 break;
             case 8: // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
             case 10:
                 // x
@@ -2724,7 +2732,7 @@ bool CDxfRead::ReadVertex(double *pVertex, bool *bulge_found, double *bulge)
 
         case 8: // Layer name follows
             get_line();
-            strcpy(m_layer_name, m_str);
+            safe_strcpy(m_layer_name, m_str);
             break;
 
         case 10:
@@ -2921,7 +2929,7 @@ bool CDxfRead::ReadInsert()
             case 8: 
                 // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
             case 10:
                 // coord x
@@ -2961,7 +2969,7 @@ bool CDxfRead::ReadInsert()
             case 2:
                 // block name
                 get_line();
-                strcpy(name, m_str);
+                safe_strcpy(name, m_str);
                 break;
             case 62:
                 // color index
@@ -3013,7 +3021,7 @@ bool CDxfRead::ReadDimension()
             case 8: 
                 // Layer name follows
                 get_line();
-                strcpy(m_layer_name, m_str);
+                safe_strcpy(m_layer_name, m_str);
                 break;
             case 13:
                 // start x
@@ -3105,12 +3113,12 @@ bool CDxfRead::ReadBlockInfo()
             case 2:
                 // block name
                 get_line();
-                strcpy(m_block_name, m_str);
+                safe_strcpy(m_block_name, m_str);
                 return true;
             case 3:
                 // block name too???
                 get_line();
-                strcpy(m_block_name, m_str);
+                safe_strcpy(m_block_name, m_str);
                 return true;
             default:
                 // skip the next line
@@ -3126,7 +3134,7 @@ void CDxfRead::get_line()
 {
     if (m_unused_line[0] != '\0')
     {
-        strcpy(m_str, m_unused_line);
+        safe_strcpy(m_str, m_unused_line);
         memset( m_unused_line, '\0', sizeof(m_unused_line));
         return;
     }
@@ -3147,7 +3155,7 @@ void CDxfRead::get_line()
         }
     }
     str[j] = 0;
-    strcpy(m_str, str);
+    safe_strcpy(m_str, str);
 }
 
 void dxf_strncpy(char* dst, const char* src, size_t size)
@@ -3271,12 +3279,12 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
         {
             get_line();
             if (!strcmp( m_str, "SECTION" )){
-              strcpy(m_section_name, "");
+              safe_strcpy(m_section_name, "");
               get_line();
               get_line();
               if (strcmp( m_str, "ENTITIES" ))
-                strcpy(m_section_name, m_str);
-              strcpy(m_block_name, "");
+                safe_strcpy(m_section_name, m_str);
+              safe_strcpy(m_block_name, "");
 
         } // End if - then
         else if (!strcmp( m_str, "TABLE" )){
@@ -3305,8 +3313,8 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
         } // End if - then
 
         else if (!strcmp( m_str, "ENDSEC" )){
-                    strcpy(m_section_name, "");
-                    strcpy(m_block_name, "");
+                    safe_strcpy(m_section_name, "");
+                    safe_strcpy(m_block_name, "");
                 } // End if - then
         else if(!strcmp(m_str, "LINE")){
                 if(!ReadLine())
