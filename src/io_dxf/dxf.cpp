@@ -3,6 +3,8 @@
 // This program is released under the BSD license. See the file COPYING for details.
 // modified 2018 wandererfan
 
+// MAYO: file initially taken from FreeCad/src/Mod/Import/App/dxf.cpp -- commit #1ac35d2
+
 //required by windows for M_PI definition
 #define _USE_MATH_DEFINES
 #include <cmath>

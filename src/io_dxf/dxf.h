@@ -3,6 +3,8 @@
 // This program is released under the BSD license. See the file COPYING for details.
 // modified 2018 wandererfan
 
+// MAYO: file initially taken from FreeCad/src/Mod/Import/App/dxf.h -- commit #47d5707
+
 #ifndef _dxf_h_
 #define _dxf_h_
 
