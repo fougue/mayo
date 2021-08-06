@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <QtCore/QObject>
+#include <QtCore/QString>
 #include <functional>
 
 namespace Mayo {
@@ -20,23 +20,16 @@ public:
         Error
     };
 
+    struct Message {
+        MessageType type;
+        QString text;
+    };
+
     void emitTrace(const QString& text);
     void emitInfo(const QString& text);
     void emitWarning(const QString& text);
     void emitError(const QString& text);
     virtual void emitMessage(MessageType msgType, const QString& text) = 0;
-};
-
-class MessengerQtSignal : public QObject, public Messenger {
-    Q_OBJECT
-public:
-    MessengerQtSignal(QObject* parent = nullptr);
-    void emitMessage(MessageType msgType, const QString& text) override;
-
-    static MessengerQtSignal* defaultInstance();
-
-signals:
-    void message(Messenger::MessageType msgType, const QString& text);
 };
 
 // Provides facility to construct a Messenger object from a lambda
@@ -60,6 +53,3 @@ private:
 };
 
 } // namespace Mayo
-
-#include <QtCore/QMetaType>
-Q_DECLARE_METATYPE(Mayo::Messenger::MessageType)

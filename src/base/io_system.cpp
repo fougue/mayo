@@ -232,6 +232,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (!taskData.reader)
             return fnReadFileError(taskData.filepath, tr("No supporting reader"));
 
+        taskData.reader->setMessenger(messenger);
         if (args.parametersProvider) {
             taskData.reader->applyProperties(
                         args.parametersProvider->findReaderParameters(taskData.fileFormat));
@@ -240,7 +241,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (!taskData.reader->readFile(taskData.filepath, &progress))
             return fnReadFileError(taskData.filepath, tr("File read problem"));
 
-        return taskData.reader.get() != nullptr;
+        return true;
     };
     auto fnTransfer = [&](TaskData& taskData) {
         int portionSize = 60;
@@ -347,6 +348,7 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
     if (!writer)
         return fnError(tr("No supporting writer"));
 
+    writer->setMessenger(args.messenger);
     writer->applyProperties(args.parameters);
     {
         TaskProgress transferProgress(progress, 40, tr("Transfer"));

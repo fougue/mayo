@@ -23,6 +23,7 @@ std::string_view formatIdentifier(Format format)
     case Format_GLTF: return "GLTF";
     case Format_VRML: return "VRML";
     case Format_AMF:  return "AMF";
+    case Format_DXF:  return "DXF";
     }
 
     return "";
@@ -40,15 +41,10 @@ std::string_view formatName(Format format)
     case Format_GLTF: return "glTF(GL Transmission Format)";
     case Format_VRML: return "VRML(ISO/CEI 14772-2)";
     case Format_AMF:  return "Additive manufacturing file format(ISO/ASTM 52915:2016)";
+    case Format_DXF:  return "Drawing Exchange Format";
     }
 
     return "";
-}
-
-template<Format FORMAT, const char* SUFFIX>
-Span<std::string_view> formatFileSuffixesFrom()
-{
-    return {};
 }
 
 Span<std::string_view> formatFileSuffixes(Format format)
@@ -61,6 +57,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view gltf_suffix[] = { "gltf", "glb" };
     static std::string_view vrml_suffix[] = { "wrl", "wrz", "vrml" };
     static std::string_view amf_suffix[] =  { "amf" };
+    static std::string_view dxf_suffix[] =  { "dxf" };
 
     switch (format) {
     case Format_Unknown: return {};
@@ -72,6 +69,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     case Format_GLTF: return gltf_suffix;
     case Format_VRML: return vrml_suffix;
     case Format_AMF:  return amf_suffix;
+    case Format_DXF:  return dxf_suffix;
     }
 
     return {};
@@ -79,7 +77,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
 
 bool formatProvidesBRep(Format format)
 {
-    static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP };
+    static const Format brepFormats[] = { Format_STEP, Format_IGES, Format_OCCBREP, Format_DXF };
     return std::any_of(
                 std::cbegin(brepFormats),
                 std::cend(brepFormats),

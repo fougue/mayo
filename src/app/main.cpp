@@ -10,6 +10,7 @@
 #include "../base/messenger.h"
 #include "../base/settings.h"
 #include "../base/task_manager.h"
+#include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
 #include "../io_occ/io_occ.h"
 #include "../graphics/graphics_object_driver.h"
@@ -171,6 +172,7 @@ static void initBase(QCoreApplication* qtApp)
 
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
     app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
     IO::addPredefinedFormatProbes(app->ioSystem());

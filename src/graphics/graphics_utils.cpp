@@ -64,7 +64,8 @@ gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x
     const gp_Pnt pntAt(xAt, yAt, zAt);
 
     const gp_Vec vecEye(pntEye, pntAt);
-    const gp_Dir dirEye(vecEye);
+    const bool vecEyeNotNull = vecEye.SquareMagnitude() > gp::Resolution();
+    const gp_Dir dirEye(vecEyeNotNull ? vecEye : gp_Vec{0, 0, 1});
 
     const gp_Pln planeView(pntAt, dirEye);
     double px, py, pz;
