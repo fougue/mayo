@@ -189,9 +189,9 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QStrin
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(
-        const QString& text, const Handle_TCollection_HAsciiString& value)
+        const QString& text, const Handle(TCollection_HAsciiString)& value)
 {
-    return createPropertyTreeItem(text, QString::fromUtf8(value ? value.get()->String().ToCString() : ""));
+    return createPropertyTreeItem(text, to_QString(value));
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_view value)
