@@ -108,6 +108,8 @@ public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
+        this->scaling.setDescription(
+                    textIdTr("Scale entities according some factor"));
         this->importAnnotations.setDescription(
                     textIdTr("Import text/dimension objects"));
         this->groupLayers.setDescription(
