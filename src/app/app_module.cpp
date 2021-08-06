@@ -45,6 +45,12 @@ AppModule::AppModule(Application* app)
       sectionId_graphicsMeshDefaults(
           app->settings()->addSection(this->groupId_graphics, textId("meshDefaults")))
 {
+    static bool metaTypesRegistered = false;
+    if (!metaTypesRegistered) {
+        qRegisterMetaType<MessageType>("Messenger::MessageType");
+        metaTypesRegistered = true;
+    }
+
     auto settings = app->settings();
 
     // System
@@ -248,6 +254,26 @@ bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
     else {
         return PropertyValueConversion::fromVariant(prop, variant);
     }
+}
+
+void AppModule::emitMessage(Messenger::MessageType msgType, const QString& text)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        m_messageLog.push_back({ msgType, text });
+    }
+
+    emit this->message(msgType, text);
+}
+
+void AppModule::clearMessageLog()
+{
+    {
+        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        m_messageLog.clear();
+    }
+
+    emit this->messageLogCleared();
 }
 
 void AppModule::prependRecentFile(const FilePath& fp)

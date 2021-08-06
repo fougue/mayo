@@ -10,6 +10,7 @@
 
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/messenger.h"
 #include "../base/occ_brep_mesh_parameters.h"
 #include "../base/occt_enums.h"
 #include "../base/property.h"
@@ -22,6 +23,7 @@
 #include "qstring_utils.h"
 
 #include <QtCore/QObject>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -38,7 +40,8 @@ class AppModule :
         public QObject,
         public PropertyGroup,
         public IO::ParametersProvider,
-        public PropertyValueConversion
+        public PropertyValueConversion,
+        public Messenger
 {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
@@ -70,6 +73,13 @@ public:
     // from PropertyValueConversion
     QVariant toVariant(const Property& prop) const override;
     bool fromVariant(Property* prop, const QVariant& variant) const override;
+
+    // from Messenger
+    void emitMessage(MessageType msgType, const QString& text) override;
+    void clearMessageLog();
+    Span<const Messenger::Message> messageLog() const { return m_messageLog; }
+    Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
+    Q_SIGNAL void messageLogCleared();
 
     // System
     const Settings_GroupIndex groupId_system;
@@ -115,6 +125,8 @@ private:
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
+    std::vector<Messenger::Message> m_messageLog;
+    std::mutex m_mutexMessageLog;
 };
 
 } // namespace Mayo

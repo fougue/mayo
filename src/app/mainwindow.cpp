@@ -376,7 +376,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
-                MessengerQtSignal::defaultInstance(), &MessengerQtSignal::message,
+                AppModule::get(guiApp->application()), &AppModule::message,
                 this, [=](Messenger::MessageType msgType, const QString& text) {
         Internal::handleMessage(msgType, text, this);
     });
@@ -516,21 +516,21 @@ void MainWindow::importInCurrentDoc()
         QTime chrono;
         chrono.start();
 
-        auto messenger = MessengerQtSignal::defaultInstance();
+        auto appModule = AppModule::get(app);
         const bool okImport = app->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
-                .withParametersProvider(AppModule::get(app))
+                .withParametersProvider(appModule)
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
                         AppModule::get(app)->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                 .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
-                .withMessenger(messenger)
+                .withMessenger(appModule)
                 .withTaskProgress(progress)
                 .execute();
         if (okImport)
-            messenger->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
     });
     const QString taskTitle =
             resFileNames.listFilepath.size() > 1 ?
@@ -567,18 +567,18 @@ void MainWindow::exportSelectedItems()
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QTime chrono;
         chrono.start();
-        auto messenger = MessengerQtSignal::defaultInstance();
+        auto appModule = AppModule::get(app);
         const bool okExport =
                 app->ioSystem()->exportApplicationItems()
                 .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(m_guiApp->selectionModel()->selectedItems())
-                .withParameters(AppModule::get(app)->findWriterParameters(format))
-                .withMessenger(messenger)
+                .withParameters(appModule->findWriterParameters(format))
+                .withMessenger(appModule)
                 .withTaskProgress(progress)
                 .execute();
         if (okExport)
-            messenger->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
     });
     taskMgr->setTitle(taskId, QFileInfo(strFilepath).fileName());
     taskMgr->run(taskId);
@@ -936,22 +936,22 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 doc->setName(filepathTo<QString>(fp.stem()));
                 doc->setFilePath(fp);
 
-                auto messenger = MessengerQtSignal::defaultInstance();
+                auto appModule = AppModule::get(app);
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
                         .withFilepath(fp)
-                        .withParametersProvider(AppModule::get(app))
+                        .withParametersProvider(appModule)
                         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                                AppModule::get(app)->computeBRepMesh(labelEntity, progress);
+                                appModule->computeBRepMesh(labelEntity, progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                         .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
-                        .withMessenger(messenger)
+                        .withMessenger(appModule)
                         .withTaskProgress(progress)
                         .execute();
                 if (okImport)
-                    messenger->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+                    appModule->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
             });
             taskMgr->setTitle(taskId, filepathTo<QString>(fp.stem()));
             taskMgr->run(taskId);

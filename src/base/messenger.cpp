@@ -28,27 +28,6 @@ void Messenger::emitError(const QString& text)
     this->emitMessage(MessageType::Error, text);
 }
 
-MessengerQtSignal::MessengerQtSignal(QObject* parent)
-    : QObject(parent)
-{
-    static bool metaTypesRegistered = false;
-    if (!metaTypesRegistered) {
-        qRegisterMetaType<MessageType>("Messenger::MessageType");
-        metaTypesRegistered = true;
-    }
-}
-
-void MessengerQtSignal::emitMessage(MessageType msgType, const QString& text)
-{
-    emit this->message(msgType, text);
-}
-
-MessengerQtSignal* MessengerQtSignal::defaultInstance()
-{
-    static MessengerQtSignal messenger;
-    return &messenger;
-}
-
 MessengerByCallback::MessengerByCallback(std::function<void(MessageType, QString)> fnCallback)
     : m_fnCallback(std::move(fnCallback))
 {
