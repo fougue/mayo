@@ -610,7 +610,7 @@ static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* tree
 
 } // namespace Internal
 
-DialogInspectXde::DialogInspectXde(QWidget *parent)
+DialogInspectXde::DialogInspectXde(QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogInspectXde)
 {
@@ -646,7 +646,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
     }
 }
 
-void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem *item, int /*column*/)
+void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem* item, int /*column*/)
 {
     const QVariant varLabel = item->data(0, Internal::TreeWidgetItem_TdfLabelRole);
     if (varLabel.isValid()) {
