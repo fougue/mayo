@@ -172,6 +172,7 @@ bool PropertyItemDelegate::overridePropertyUnitTranslation(
 void PropertyItemDelegate::paint(
         QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
+    bool cellPainted = false;
     if (index.column() == 1) {
         const Property* prop = qvariant_cast<Property*>(index.data());
         if (prop && prop->dynTypeName() == PropertyOccColor::TypeName) {
@@ -200,11 +201,13 @@ void PropertyItemDelegate::paint(
                         strColor);
 
             painter->restore();
-            return;
+            cellPainted = true;
         }
     }
 
-    QStyledItemDelegate::paint(painter, option, index);
+    if (!cellPainted)
+        QStyledItemDelegate::paint(painter, option, index);
+
     if (index.column() == 1 && !index.data().isNull()) {
         const Property* prop = qvariant_cast<Property*>(index.data());
         if (!prop->isUserReadOnly()
@@ -309,8 +312,14 @@ void PropertyItemDelegate::setModelData(QWidget*, QAbstractItemModel*, const QMo
 QSize PropertyItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
-    if (index.data(Qt::SizeHintRole).isNull())
-        return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
+    if (index.data(Qt::SizeHintRole).isNull()) {
+        int widthDelta = 0;
+        const Property* prop = qvariant_cast<Property*>(index.data());
+        if (prop && prop->dynTypeName() == PropertyOccColor::TypeName)
+            widthDelta = option.rect.height()/*colorPixSideSize*/ + 6;
+
+        return QSize(baseSize.width() + widthDelta, m_rowHeightFactor * baseSize.height());
+    }
 
     return baseSize;
 }
