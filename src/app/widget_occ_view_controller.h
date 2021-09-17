@@ -26,14 +26,18 @@ signals:
     void multiSelectionToggled(bool on);
 
 private:
+    void startDynamicAction(DynamicAction action) override;
+    void stopDynamicAction() override;
+
     void setViewCursor(const QCursor& cursor);
 
     AbstractRubberBand* createRubberBand() override;
     struct RubberBand;
 
+    bool handleEvent(QEvent* event);
+
     WidgetOccView* m_widgetView = nullptr;
     QPoint m_prevPos;
-    QPoint m_posRubberBandStart;
 };
 
 } // namespace Mayo

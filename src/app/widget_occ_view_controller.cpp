@@ -69,129 +69,34 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
     if (watched != m_widgetView)
         return false;
 
-    Handle_V3d_View view = m_widgetView->v3dView();
-    switch (event->type()) {
-    case QEvent::Enter: {
+    if (event->type() == QEvent::Enter) {
         m_widgetView->grabKeyboard();
-        break;
+        return false;
     }
-    case QEvent::Leave: {
+    else if (event->type() == QEvent::Leave) {
         m_widgetView->releaseKeyboard();
-        break;
+        return false;
     }
-    case QEvent::KeyPress: {
-        auto keyEvent = static_cast<const QKeyEvent*>(event);
-        if (keyEvent->key() == Qt::Key_Space
-                && keyEvent->modifiers() == Qt::NoModifier
-                && !keyEvent->isAutoRepeat())
-        {
-            this->startDynamicAction(DynamicAction::InstantZoom);
-            this->backupCamera();
-            this->instantZoomAt(m_widgetView->mapFromGlobal(QCursor::pos()));
-        }
 
-        if (keyEvent->key() == Qt::Key_Shift
-                && !keyEvent->isAutoRepeat()
-                && !this->hasCurrentDynamicAction())
-        {
-            emit this->multiSelectionToggled(true);
-        }
+    return this->handleEvent(event);
+}
 
-        break;
-    }
-    case QEvent::KeyRelease: {
-        auto keyEvent = static_cast<const QKeyEvent*>(event);
-        if (keyEvent->key() == Qt::Key_Space
-                && !keyEvent->isAutoRepeat()
-                && this->currentDynamicAction() == DynamicAction::InstantZoom)
-        {
-            this->stopDynamicAction();
-            this->restoreCamera();
-            view->Update();
-        }
+void WidgetOccViewController::startDynamicAction(V3dViewController::DynamicAction action)
+{
+    if (action == DynamicAction::Rotation)
+        this->setViewCursor(Internal::rotateCursor());
+    else if (action == DynamicAction::Panning)
+        this->setViewCursor(Qt::SizeAllCursor);
+    else if (action == DynamicAction::WindowZoom)
+        this->setViewCursor(Qt::SizeBDiagCursor);
 
-        if (keyEvent->key() == Qt::Key_Shift
-                && !keyEvent->isAutoRepeat()
-                && !this->hasCurrentDynamicAction())
-        {
-            emit this->multiSelectionToggled(false);
-        }
+    V3dViewController::startDynamicAction(action);
+}
 
-        break;
-    }
-    case QEvent::MouseButtonPress: {
-        auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
-        m_prevPos = currPos;
-        break;
-    }
-    case QEvent::MouseMove: {
-        auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
-        const QPoint prevPos = m_prevPos;
-        m_prevPos = currPos;
-        if (mouseEvent->buttons() == Qt::LeftButton) {
-            if (!this->isRotationStarted()) {
-                this->setViewCursor(Internal::rotateCursor());
-                this->startDynamicAction(DynamicAction::Rotation);
-                view->StartRotation(prevPos.x(), prevPos.y());
-            }
-
-            view->Rotation(currPos.x(), currPos.y());
-        }
-        else if (mouseEvent->buttons() == Qt::RightButton) {
-            if (!this->isPanningStarted()) {
-                this->setViewCursor(Qt::SizeAllCursor);
-                this->startDynamicAction(DynamicAction::Panning);
-            }
-
-            view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
-        }
-        else if (mouseEvent->buttons() == Qt::MiddleButton) {
-            if (!this->isWindowZoomingStarted()) {
-                this->setViewCursor(Qt::SizeBDiagCursor);
-                this->startDynamicAction(DynamicAction::WindowZoom);
-                m_posRubberBandStart = currPos;
-            }
-
-            this->drawRubberBand(m_posRubberBandStart, currPos);
-        }
-        else {
-            emit mouseMoved(currPos);
-        }
-
-        break;
-    }
-    case QEvent::MouseButtonRelease: {
-        auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const bool hadDynamicAction = this->hasCurrentDynamicAction();
-        if (this->isWindowZoomingStarted()) {
-            const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
-            this->windowFitAll(m_posRubberBandStart, currPos);
-            this->hideRubberBand();
-        }
-
-        this->setViewCursor(Qt::ArrowCursor);
-        this->stopDynamicAction();
-        if (!hadDynamicAction)
-            emit mouseClicked(mouseEvent->button());
-
-        break;
-    }
-    case QEvent::Wheel: {
-        auto wheelEvent = static_cast<const QWheelEvent*>(event);
-        if (wheelEvent->delta() > 0)
-            this->zoomIn();
-        else
-            this->zoomOut();
-
-        break;
-    }
-    default:
-        break;
-    } // end switch
-
-    return false;
+void WidgetOccViewController::stopDynamicAction()
+{
+    this->setViewCursor(Qt::ArrowCursor);
+    V3dViewController::stopDynamicAction();
 }
 
 void WidgetOccViewController::setViewCursor(const QCursor &cursor)
@@ -224,6 +129,85 @@ private:
 V3dViewController::AbstractRubberBand* WidgetOccViewController::createRubberBand()
 {
     return new RubberBand(m_widgetView);
+}
+
+bool WidgetOccViewController::handleEvent(QEvent* event)
+{
+    switch (event->type()) {
+    case QEvent::KeyPress: {
+        auto keyEvent = static_cast<const QKeyEvent*>(event);
+        if (keyEvent->isAutoRepeat())
+            return false;
+
+        if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier)
+            this->startInstantZoom(m_widgetView->mapFromGlobal(QCursor::pos()));
+
+        if (keyEvent->key() == Qt::Key_Shift && !this->hasCurrentDynamicAction())
+            emit this->multiSelectionToggled(true);
+
+        break;
+    }
+    case QEvent::KeyRelease: {
+        auto keyEvent = static_cast<const QKeyEvent*>(event);
+        if (keyEvent->isAutoRepeat())
+            return false;
+
+        if (keyEvent->key() == Qt::Key_Space && this->currentDynamicAction() == DynamicAction::InstantZoom)
+            this->stopInstantZoom();
+
+        if (keyEvent->key() == Qt::Key_Shift && !this->hasCurrentDynamicAction())
+            emit this->multiSelectionToggled(false);
+
+        break;
+    }
+    case QEvent::MouseButtonPress: {
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
+        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
+        m_prevPos = currPos;
+        break;
+    }
+    case QEvent::MouseMove: {
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
+        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
+        const QPoint prevPos = m_prevPos;
+        m_prevPos = currPos;
+        if (mouseEvent->buttons() == Qt::LeftButton)
+            this->rotation(prevPos, currPos);
+        else if (mouseEvent->buttons() == Qt::RightButton)
+            this->pan(prevPos, currPos);
+        else if (mouseEvent->buttons() == Qt::MiddleButton)
+            this->windowZoomRubberBand(currPos);
+        else
+            emit mouseMoved(currPos);
+
+        break;
+    }
+    case QEvent::MouseButtonRelease: {
+        auto mouseEvent = static_cast<const QMouseEvent*>(event);
+        const bool hadDynamicAction = this->hasCurrentDynamicAction();
+        if (this->isWindowZoomingStarted())
+            this->windowZoom(m_widgetView->mapFromGlobal(mouseEvent->globalPos()));
+
+        this->stopDynamicAction();
+        if (!hadDynamicAction)
+            emit mouseClicked(mouseEvent->button());
+
+        break;
+    }
+    case QEvent::Wheel: {
+        auto wheelEvent = static_cast<const QWheelEvent*>(event);
+        if (wheelEvent->delta() > 0)
+            this->zoomIn();
+        else
+            this->zoomOut();
+
+        break;
+    }
+    default:
+        break;
+    } // end switch
+
+    return false;
 }
 
 } // namespace Mayo

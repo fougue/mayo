@@ -70,6 +70,63 @@ bool V3dViewController::isWindowZoomingStarted() const
     return m_dynamicAction == DynamicAction::WindowZoom;
 }
 
+void V3dViewController::rotation(const QPoint& prevPos, const QPoint& currPos)
+{
+    if (!this->isRotationStarted()) {
+        this->startDynamicAction(DynamicAction::Rotation);
+        m_view->StartRotation(prevPos.x(), prevPos.y());
+    }
+
+    m_view->Rotation(currPos.x(), currPos.y());
+}
+
+void V3dViewController::pan(const QPoint& prevPos, const QPoint& currPos)
+{
+    if (!this->isPanningStarted())
+        this->startDynamicAction(DynamicAction::Panning);
+
+    m_view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
+}
+
+void V3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
+{
+    if (std::abs(posMin.x() - posMax.x()) > 1 || std::abs(posMin.y() - posMax.y()) > 1)
+        m_view->WindowFitAll(posMin.x(), posMin.y(), posMax.x(), posMax.y());
+}
+
+void V3dViewController::windowZoomRubberBand(const QPoint& currPos)
+{
+    if (!this->isWindowZoomingStarted()) {
+        this->startDynamicAction(DynamicAction::WindowZoom);
+        m_posRubberBandStart = currPos;
+    }
+
+    this->drawRubberBand(m_posRubberBandStart, currPos);
+}
+
+void V3dViewController::windowZoom(const QPoint& currPos)
+{
+    this->windowFitAll(m_posRubberBandStart, currPos);
+    this->hideRubberBand();
+}
+
+void V3dViewController::startInstantZoom(const QPoint& currPos)
+{
+    this->startDynamicAction(DynamicAction::InstantZoom);
+    this->backupCamera();
+    const int factor = 5;
+    const int dX = factor * 100;
+    m_view->StartZoomAtPoint(currPos.x(), currPos.y());
+    m_view->ZoomAtPoint(currPos.x(), currPos.y(), currPos.x() + dX, currPos.y());
+}
+
+void V3dViewController::stopInstantZoom()
+{
+    this->stopDynamicAction();
+    this->restoreCamera();
+    m_view->Update();
+}
+
 void V3dViewController::drawRubberBand(const QPoint& posMin, const QPoint& posMax)
 {
     if (!m_rubberBand)
@@ -102,19 +159,6 @@ void V3dViewController::restoreCamera()
 {
     if (m_cameraBackup)
         m_view->Camera()->Copy(m_cameraBackup);
-}
-
-void V3dViewController::instantZoomAt(const QPoint& pos)
-{
-    const int dX = m_instantZoomFactor * 100;
-    m_view->StartZoomAtPoint(pos.x(), pos.y());
-    m_view->ZoomAtPoint(pos.x(), pos.y(), pos.x() + dX, pos.y());
-}
-
-void V3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
-{
-    if (std::abs(posMin.x() - posMax.x()) > 1 || std::abs(posMin.y() - posMax.y()) > 1)
-        m_view->WindowFitAll(posMin.x(), posMin.y(), posMax.x(), posMax.y());
 }
 
 V3dViewController::DynamicAction V3dViewController::currentDynamicAction() const
