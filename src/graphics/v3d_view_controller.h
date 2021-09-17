@@ -58,7 +58,7 @@ protected:
     bool isPanningStarted() const;
     bool isWindowZoomingStarted() const;
 
-    void rotation(const QPoint& prevPos, const QPoint& currPos);
+    void rotation(const QPoint& currPos);
     void pan(const QPoint& prevPos, const QPoint& currPos);
 
     void windowFitAll(const QPoint& posMin, const QPoint& posMax);

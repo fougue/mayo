@@ -172,7 +172,7 @@ bool WidgetOccViewController::handleEvent(QEvent* event)
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
         if (mouseEvent->buttons() == Qt::LeftButton)
-            this->rotation(prevPos, currPos);
+            this->rotation(currPos);
         else if (mouseEvent->buttons() == Qt::RightButton)
             this->pan(prevPos, currPos);
         else if (mouseEvent->buttons() == Qt::MiddleButton)

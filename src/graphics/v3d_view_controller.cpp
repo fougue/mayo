@@ -70,14 +70,15 @@ bool V3dViewController::isWindowZoomingStarted() const
     return m_dynamicAction == DynamicAction::WindowZoom;
 }
 
-void V3dViewController::rotation(const QPoint& prevPos, const QPoint& currPos)
+void V3dViewController::rotation(const QPoint& currPos)
 {
     if (!this->isRotationStarted()) {
         this->startDynamicAction(DynamicAction::Rotation);
-        m_view->StartRotation(prevPos.x(), prevPos.y());
+        m_view->StartRotation(currPos.x(), currPos.y());
     }
-
-    m_view->Rotation(currPos.x(), currPos.y());
+    else {
+        m_view->Rotation(currPos.x(), currPos.y());
+    }
 }
 
 void V3dViewController::pan(const QPoint& prevPos, const QPoint& currPos)
