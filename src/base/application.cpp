@@ -270,7 +270,7 @@ void Application::addDocument(const DocumentPtr& doc)
 
         QObject::connect(
                     doc.get(), &Document::nameChanged,
-                    this, [=](const QString& name) { emit this->documentNameChanged(doc, name); });
+                    this, [=](const std::string& name) { emit this->documentNameChanged(doc, name); });
         QObject::connect(
                     doc.get(), &Document::entityAdded,
                     this, [=](TreeNodeId entityId) { emit this->documentEntityAdded(doc, entityId); });

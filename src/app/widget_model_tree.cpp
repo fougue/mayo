@@ -291,7 +291,7 @@ void WidgetModelTree::onDocumentAboutToClose(const DocumentPtr& doc)
     delete this->findTreeItem(doc);
 }
 
-void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const QString& /*name*/)
+void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const std::string& /*name*/)
 {
     QTreeWidgetItem* treeItem = this->findTreeItem(doc);
     if (treeItem)

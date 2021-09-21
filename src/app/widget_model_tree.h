@@ -57,7 +57,7 @@ public:
 private:
     void onDocumentAdded(const DocumentPtr& doc);
     void onDocumentAboutToClose(const DocumentPtr& doc);
-    void onDocumentNameChanged(const DocumentPtr& doc, const QString& name);
+    void onDocumentNameChanged(const DocumentPtr& doc, const std::string& name);
     void onDocumentEntityAdded(const DocumentPtr& doc, TreeNodeId entityId);
     void onDocumentEntityAboutToBeDestroyed(const DocumentPtr& doc, TreeNodeId entityId);
 

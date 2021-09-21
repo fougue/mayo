@@ -490,7 +490,7 @@ void MainWindow::newDocument()
 {
     static unsigned docSequenceId = 0;
     auto docPtr = m_guiApp->application()->newDocument(Document::Format::Binary);
-    docPtr->setName(tr("Anonymous%1").arg(++docSequenceId));
+    docPtr->setName(to_stdString(tr("Anonymous%1").arg(++docSequenceId)));
 }
 
 void MainWindow::openDocuments()
@@ -825,13 +825,14 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
         return filepath;
     };
     const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
+    const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                tr("Close %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close");
     const QString textActionCloseAllExcept =
             docPtr ?
-                tr("Close all except %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close all except %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close all except current");
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->actionCloseDoc->setText(textActionClose);
@@ -933,7 +934,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                     doc = app->newDocument();
                 }
 
-                doc->setName(filepathTo<QString>(fp.stem()));
+                doc->setName(fp.stem().u8string());
                 doc->setFilePath(fp);
 
                 auto appModule = AppModule::get(app);

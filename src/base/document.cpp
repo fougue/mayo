@@ -27,12 +27,12 @@ void Document::initXCaf()
     m_xcaf.setModelTree(m_modelTree);
 }
 
-const QString& Document::name() const
+const std::string& Document::name() const
 {
     return m_name;
 }
 
-void Document::setName(const QString& name)
+void Document::setName(const std::string& name)
 {
     m_name = name;
     emit this->nameChanged(name);

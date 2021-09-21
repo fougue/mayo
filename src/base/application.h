@@ -68,7 +68,7 @@ public: //  from TDocStd_Application
 signals:
     void documentAdded(const Mayo::DocumentPtr& doc);
     void documentAboutToClose(const Mayo::DocumentPtr& doc);
-    void documentNameChanged(const Mayo::DocumentPtr& doc, const QString& name);
+    void documentNameChanged(const Mayo::DocumentPtr& doc, const std::string& name);
     void documentEntityAdded(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
     void documentEntityAboutToBeDestroyed(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
 

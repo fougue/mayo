@@ -8,6 +8,7 @@
 
 #include "../base/application.h"
 #include "../base/document.h"
+#include "../base/string_conv.h"
 #include "gui_application.h"
 #include "gui_document.h"
 
@@ -41,7 +42,7 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
         return filepathTo<QString>(doc->filePath());
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return doc->name();
+        return to_QString(doc->name());
     }
 
     return QVariant();
@@ -71,7 +72,7 @@ void GuiDocumentListModel::removeGuiDocument(const GuiDocument* guiDoc)
     }
 }
 
-void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const QString& /*name*/)
+void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const std::string& /*name*/)
 {
     auto itFound = std::find_if(
                 m_vecGuiDocument.cbegin(),

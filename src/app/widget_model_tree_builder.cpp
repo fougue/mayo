@@ -24,7 +24,7 @@ WidgetModelTreeBuilder::~WidgetModelTreeBuilder()
 
 void WidgetModelTreeBuilder::refreshTextTreeItem(const DocumentPtr& doc, QTreeWidgetItem* treeItem)
 {
-    treeItem->setText(0, WidgetModelTreeBuilder::labelText(doc->name()));
+    treeItem->setText(0, WidgetModelTreeBuilder::labelText(to_QString(doc->name())));
 }
 
 void WidgetModelTreeBuilder::refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem)
@@ -35,7 +35,7 @@ void WidgetModelTreeBuilder::refreshTextTreeItem(const DocumentTreeNode& node, Q
 QTreeWidgetItem* WidgetModelTreeBuilder::createTreeItem(const DocumentPtr& doc)
 {
     auto treeItem = new QTreeWidgetItem;
-    treeItem->setText(0, WidgetModelTreeBuilder::labelText(doc->name()));
+    treeItem->setText(0, WidgetModelTreeBuilder::labelText(to_QString(doc->name())));
     treeItem->setIcon(0, mayoTheme()->icon(Theme::Icon::File));
     treeItem->setToolTip(0, filepathTo<QString>(doc->filePath()));
     return treeItem;
