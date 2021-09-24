@@ -73,6 +73,8 @@ SOURCES += \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
+    \
+    src/3rdparty/fmt/src/format.cc \
 
 win* {
     QT += winextras
