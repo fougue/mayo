@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "widget_properties_editor.h"
+#include "../base/string_conv.h"
 #include "ui_widget_properties_editor.h"
 
 #include <vector>
@@ -158,7 +159,7 @@ void WidgetPropertiesEditor::Private::createQtProperty(
     this->vecProperty.push_back(property);
     auto itemProp = new QTreeWidgetItem;
     const QString labelSpacer = parentItem ? "       " : "";
-    itemProp->setText(0, labelSpacer + property->label());
+    itemProp->setText(0, labelSpacer + to_QString(property->label()));
     itemProp->setData(1, Qt::DisplayRole, QVariant::fromValue<Property*>(property));
     itemProp->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
     if (parentItem)

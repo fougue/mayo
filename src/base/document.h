@@ -14,6 +14,7 @@
 
 #include <QtCore/QObject>
 #include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -33,7 +34,7 @@ public:
     Identifier identifier() const { return m_identifier; }
 
     const std::string& name() const;
-    void setName(const std::string& name);
+    void setName(std::string_view name);
 
     const FilePath& filePath() const;
     void setFilePath(const FilePath& fp);

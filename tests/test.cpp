@@ -143,8 +143,14 @@ void Test::Application_test()
 
 void Test::TextId_test()
 {
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == "foobar");
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
+    struct TextIdContext {
+        MAYO_DECLARE_TEXT_ID_FUNCTIONS(Test::TextIdContext)
+    };
+
+    QVERIFY(TextIdContext::textIdContext() == "Test::TextIdContext");
+    QVERIFY(TextIdContext::textId("foof").trContext == "Test::TextIdContext");
+    QVERIFY(TextIdContext::textId("bark").key == "bark");
+    QVERIFY(TextIdContext::textIdTr("shktu") == "shktu");
 }
 
 void Test::FilePath_test()

@@ -33,6 +33,7 @@
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
+#include <fmt/format.h>
 #include <sstream>
 #include <string_view>
 
@@ -49,13 +50,13 @@ bool startsWith(std::string_view str, std::string_view prefix)
 const Enumeration& systemFontNames()
 {
     static Enumeration fontNames;
+    static TColStd_SequenceOfHAsciiString seqFontName;
     if (fontNames.empty()) {
         Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
-        TColStd_SequenceOfHAsciiString seqFontName;
         fontMgr->GetAvailableFontsNames(seqFontName);
         int i = 0;
         for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
-            fontNames.addItem(i++, { QByteArray{}, string_conv<QByteArray>(fontName->String()) });
+            fontNames.addItem(i++, { {}, to_stdStringView(fontName->String()) });
     }
 
     return fontNames;
@@ -264,7 +265,7 @@ void DxfReader::applyProperties(const PropertyGroup* group)
         m_params.scaling = ptr->scaling;
         m_params.importAnnotations = ptr->importAnnotations;
         m_params.groupLayers = ptr->groupLayers;
-        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name().toStdString();
+        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name();
     }
 }
 
@@ -345,7 +346,7 @@ void DxfReader::Internal::OnReadText(const double* point, const double height, d
             this->addShape(shapeText);
         }
         else {
-            m_messenger->emitWarning(QString("Font_BRepFont is null for '%1'").arg(to_QString(fontName)));
+            m_messenger->emitWarning(fmt::format("Font_BRepFont is null for '{}'", fontName));
         }
     }
 }
@@ -477,7 +478,7 @@ void DxfReader::Internal::OnReadDimension(const double* s, const double* e, cons
              << "    e: " << e[0] << ", " << e[1] << ", " << e[2] << std::endl
              << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
              << "    rotation: " << rotation << std::endl;
-        m_messenger->emitWarning(to_QString(sstr.str()));
+        m_messenger->emitWarning(sstr.str());
     }
 }
 

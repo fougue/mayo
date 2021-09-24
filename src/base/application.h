@@ -8,7 +8,10 @@
 
 #include "application_ptr.h"
 #include "document.h"
+#include "text_id.h"
+
 #include <CDF_DirectoryIterator.hxx>
+#include <functional>
 
 namespace Mayo {
 
@@ -17,13 +20,16 @@ class DocumentTreeNodePropertiesProviderTable;
 
 namespace IO { class System; }
 
+// Provides management of Document objects
 class Application : public QObject, public TDocStd_Application {
     Q_OBJECT
 public:
     ~Application();
 
+    // Global instance(singleton)
     static const ApplicationPtr& instance();
 
+    // Iterator over Documents contained in an Application
     struct DocumentIterator : private CDF_DirectoryIterator {
         DocumentIterator(const ApplicationPtr& app);
         DocumentIterator(const Application* app);
@@ -48,6 +54,14 @@ public:
     Settings* settings() const;
     IO::System* ioSystem() const;
     DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
+
+    // Provides internationalization support for text output
+    //     1st arg: message to be translated(TextId = context+key)
+    //     2nd arg: when != -1 used to choose an appropriate form for the translation(e.g. "%n file found" vs. "%n files found")
+    //     returns: translated message
+    using Translator = std::function<std::string_view (const TextId&, int)>;
+    void addTranslator(Translator fn);
+    std::string_view translate(const TextId& textId, int n = -1) const;
 
     static void setOpenCascadeEnvironment(const FilePath& settingsFilepath);
 

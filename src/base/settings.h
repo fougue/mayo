@@ -32,7 +32,7 @@ public:
 
     void load();
     void loadProperty(SettingIndex index);
-    QVariant findValueFromKey(const QString& strKey) const;
+    QVariant findValueFromKey(std::string_view strKey) const;
     void save();
 
     void loadPropertyFrom(const QSettings& source, SettingIndex index);
@@ -43,24 +43,22 @@ public:
     void setPropertyValueConversion(const PropertyValueConversion& conv);
 
     int groupCount() const;
-    QByteArray groupIdentifier(GroupIndex index) const;
-    QString groupTitle(GroupIndex index) const;
+    std::string_view groupIdentifier(GroupIndex index) const;
+    std::string_view groupTitle(GroupIndex index) const;
     GroupIndex addGroup(TextId identifier);
-    GroupIndex addGroup(QByteArray identifier);
     GroupIndex addGroup(std::string_view identifier);
-    void setGroupTitle(GroupIndex index, const QString& title);
+    void setGroupTitle(GroupIndex index, std::string_view title);
 
     void addResetFunction(GroupIndex index, ResetFunction fn);
     void addResetFunction(SectionIndex index, ResetFunction fn);
 
     int sectionCount(GroupIndex index) const;
-    QByteArray sectionIdentifier(SectionIndex index) const;
-    QString sectionTitle(SectionIndex index) const;
+    std::string_view sectionIdentifier(SectionIndex index) const;
+    std::string_view sectionTitle(SectionIndex index) const;
     bool isDefaultGroupSection(SectionIndex index) const;
     SectionIndex addSection(GroupIndex index, TextId identifier);
-    SectionIndex addSection(GroupIndex index, QByteArray identifier);
     SectionIndex addSection(GroupIndex index, std::string_view identifier);
-    void setSectionTitle(SectionIndex index, const QString& title);
+    void setSectionTitle(SectionIndex index, std::string_view title);
 
     int settingCount(SectionIndex index) const;
     Property* property(SettingIndex index) const;

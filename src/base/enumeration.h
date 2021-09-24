@@ -27,21 +27,21 @@ public:
     template<typename VALUE>
     Enumeration& addItem(VALUE value, const TextId& name);
 
-    Enumeration& chopPrefix(std::string_view strPrefix);
-    Enumeration& changeTrContext(const QByteArray& context);
+    Enumeration& chopPrefix(std::string_view prefix);
+    Enumeration& changeTrContext(std::string_view context);
 
     int size() const { return int(m_vecItem.size()); }
     bool empty() const { return this->size() == 0; }
 
     const Item& findItem(Value value) const;
     int findIndex(Value value) const;
-    QByteArray findName(Value value) const;
-    Value findValue(const QByteArray& name) const;
-    bool contains(const QByteArray& name) const;
+    std::string_view findName(Value value) const;
+    Value findValue(std::string_view name) const;
+    bool contains(std::string_view name) const;
 
     const Item& itemAt(int index) const { return m_vecItem.at(index); }
     Span<const Item> items() const { return m_vecItem; }
-    const Item* findItem(const QByteArray& name) const;
+    const Item* findItem(std::string_view name) const;
 
     template<typename ENUM>
     static Enumeration fromType();

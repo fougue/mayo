@@ -24,14 +24,14 @@ struct Settings_Setting {
 
 struct Settings_Section {
     TextId identifier; // Must be unique in the context of the parent group
-    QString overridenTitle;
+    std::string overridenTitle;
     bool isDefault; // Default section in parent group
     std::vector<Settings_Setting> vecSetting;
 };
 
 struct Settings_Group {
     TextId identifier; // Must be unique in the context of the parent Settings object
-    QString overridenTitle;
+    std::string overridenTitle;
     std::vector<Settings_Section> vecSection;
 };
 
@@ -40,9 +40,9 @@ struct SectionResetFunction {
     Settings::ResetFunction fnReset;
 };
 
-static bool isValidIdentifier(const QByteArray& identifier)
+static bool isValidIdentifier(std::string_view identifier)
 {
-    return !identifier.isEmpty() && !identifier.simplified().isEmpty();
+    return !identifier.empty() /*&& !identifier.simplified().isEmpty()*/;
 }
 
 } // namespace
@@ -76,7 +76,7 @@ public:
         if (!property)
             return;
 
-        const QByteArray propertyKey = property->name().key;
+        std::string_view propertyKey = property->name().key;
         const QString settingPath = sectionPath + "/" + to_QString(propertyKey);
         if (source.contains(settingPath)) {
             const QVariant value = source.value(settingPath);
@@ -137,9 +137,9 @@ void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
     }
 }
 
-QVariant Settings::findValueFromKey(const QString& strKey) const
+QVariant Settings::findValueFromKey(std::string_view strKey) const
 {
-    return d->m_settings.value(strKey);
+    return d->m_settings.value(to_QString(strKey));
 }
 
 void Settings::save()
@@ -159,7 +159,7 @@ void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclu
             for (const Settings_Setting& setting : section.vecSetting) {
                 Property* prop = setting.property;
                 if (!fnExclude || !fnExclude(*prop)) {
-                    const QByteArray propKey = prop->name().key;
+                    std::string_view propKey = prop->name().key;
                     const QString settingPath = sectionPath + "/" + to_QString(propKey);
                     target->setValue(settingPath, d->m_propValueConverter->toVariant(*prop));
                 }
@@ -183,15 +183,15 @@ int Settings::groupCount() const
     return int(d->m_vecGroup.size());
 }
 
-QByteArray Settings::groupIdentifier(GroupIndex index) const
+std::string_view Settings::groupIdentifier(GroupIndex index) const
 {
     return d->group(index).identifier.key;
 }
 
-QString Settings::groupTitle(GroupIndex index) const
+std::string_view Settings::groupTitle(GroupIndex index) const
 {
     const Settings_Group& group = d->group(index);
-    return !group.overridenTitle.isEmpty() ? group.overridenTitle : group.identifier.tr();
+    return !group.overridenTitle.empty() ? group.overridenTitle : group.identifier.tr();
 }
 
 Settings::GroupIndex Settings::addGroup(TextId identifier)
@@ -201,7 +201,7 @@ Settings::GroupIndex Settings::addGroup(TextId identifier)
     return index;
 }
 
-Settings::GroupIndex Settings::addGroup(QByteArray identifier)
+Settings::GroupIndex Settings::addGroup(std::string_view identifier)
 {
     Expects(isValidIdentifier(identifier));
 
@@ -221,12 +221,7 @@ Settings::GroupIndex Settings::addGroup(QByteArray identifier)
     return GroupIndex(int(d->m_vecGroup.size()) - 1);
 }
 
-Settings::GroupIndex Settings::addGroup(std::string_view identifier)
-{
-    return this->addGroup(QtCoreUtils::QByteArray_frowRawData(identifier));
-}
-
-void Settings::setGroupTitle(GroupIndex index, const QString& title)
+void Settings::setGroupTitle(GroupIndex index, std::string_view title)
 {
     d->group(index).overridenTitle = title;
 }
@@ -251,15 +246,15 @@ int Settings::sectionCount(GroupIndex index) const
     return int(d->group(index).vecSection.size());
 }
 
-QByteArray Settings::sectionIdentifier(SectionIndex index) const
+std::string_view Settings::sectionIdentifier(SectionIndex index) const
 {
     return d->section(index).identifier.key;
 }
 
-QString Settings::sectionTitle(SectionIndex index) const
+std::string_view Settings::sectionTitle(SectionIndex index) const
 {
     const Settings_Section& section = d->section(index);
-    return !section.overridenTitle.isEmpty() ? section.overridenTitle : section.identifier.tr();
+    return !section.overridenTitle.empty() ? section.overridenTitle : section.identifier.tr();
 }
 
 bool Settings::isDefaultGroupSection(SectionIndex index) const
@@ -274,7 +269,7 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, TextId identifier)
     return sectionIndex;
 }
 
-Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identifier)
+Settings::SectionIndex Settings::addSection(GroupIndex index, std::string_view identifier)
 {
     Expects(isValidIdentifier(identifier));
     // TODO Check identifier is unique
@@ -286,12 +281,7 @@ Settings::SectionIndex Settings::addSection(GroupIndex index, QByteArray identif
     return SectionIndex(index, int(group.vecSection.size()) - 1);
 }
 
-Settings::SectionIndex Settings::addSection(GroupIndex index, std::string_view identifier)
-{
-    return this->addSection(index, QtCoreUtils::QByteArray_frowRawData(identifier));
-}
-
-void Settings::setSectionTitle(SectionIndex index, const QString& title)
+void Settings::setSectionTitle(SectionIndex index, std::string_view title)
 {
     d->section(index).overridenTitle = title;
 }
@@ -329,7 +319,7 @@ Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex group
     Settings_Group& group = d->group(groupId);
     Settings_Section* sectionDefault = nullptr;
     if (group.vecSection.empty()) {
-        const SectionIndex sectionId = this->addSection(groupId, MAYO_TEXT_ID("Mayo::Settings", "DEFAULT"));
+        const SectionIndex sectionId = this->addSection(groupId, { "Mayo::Settings", "DEFAULT" });
         sectionDefault = &d->section(sectionId);
     }
     else {

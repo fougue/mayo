@@ -17,6 +17,7 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
+#include <fmt/format.h>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -125,10 +126,10 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
     for (const Enumeration::Item& item : m_module->instanceNameFormat.enumeration().items()) {
-        const QString actionText = textId("Show %1").tr().arg(item.name.tr());
+        const QString actionText = to_QString(fmt::format(textIdTr("Show {}"), item.name.tr()));
         auto action = new QAction(actionText, parent);
         action->setCheckable(true);
-        action->setData(item.name.key);
+        action->setData(to_QString(item.name.key));
         userActions.items.push_back(action);
         group->addAction(action);
     }
@@ -215,7 +216,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
 QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return m_module->instanceNameFormat.name();
+    return QtCoreUtils::QByteArray_frowRawData(m_module->instanceNameFormat.name());
 }
 
 void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
@@ -223,7 +224,7 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
     if (format == this->instanceNameFormat())
         return;
 
-    m_module->instanceNameFormat.setValueByName(format);
+    m_module->instanceNameFormat.setValueByName(format.constData());
     for (QTreeWidgetItemIterator it(this->treeWidget()); *it; ++it) {
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);

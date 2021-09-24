@@ -14,8 +14,6 @@
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;
 
-#include <QtCore/QCoreApplication>
-
 namespace Mayo {
 namespace IO {
 
@@ -48,7 +46,6 @@ private:
 // Common properties for OccBaseMeshReader
 class OccBaseMeshReaderProperties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
 public:
     OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
 

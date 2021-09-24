@@ -46,6 +46,11 @@ class AppModule :
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
+    struct Message {
+        MessageType type;
+        QString text;
+    };
+
     AppModule(Application* app);
     static AppModule* get(const ApplicationPtr& app);
 
@@ -75,9 +80,9 @@ public:
     bool fromVariant(Property* prop, const QVariant& variant) const override;
 
     // from Messenger
-    void emitMessage(MessageType msgType, const QString& text) override;
+    void emitMessage(MessageType msgType, std::string_view text) override;
     void clearMessageLog();
-    Span<const Messenger::Message> messageLog() const { return m_messageLog; }
+    Span<const Message> messageLog() const { return m_messageLog; }
     Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
     Q_SIGNAL void messageLogCleared();
 
@@ -125,7 +130,7 @@ private:
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
-    std::vector<Messenger::Message> m_messageLog;
+    std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
 };
 

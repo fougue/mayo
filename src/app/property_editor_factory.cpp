@@ -145,8 +145,8 @@ struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QCombo
         : QComboBox(parentWidget), m_property(property)
     {
         for (const Enumeration::Item& enumItem : property->enumeration().items()) {
-            this->addItem(enumItem.name.tr(), enumItem.value);
-            const QString itemDescr = property->findDescription(enumItem.value);
+            this->addItem(to_QString(enumItem.name.tr()), enumItem.value);
+            const QString itemDescr = to_QString(property->findDescription(enumItem.value));
             if (!itemDescr.isEmpty()) {
                 const int itemIndex = this->count() - 1;
                 this->setItemData(itemIndex, itemDescr, Qt::ToolTipRole);

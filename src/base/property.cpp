@@ -77,7 +77,7 @@ const TextId& Property::name() const
     return m_name;
 }
 
-QString Property::label() const
+std::string_view Property::label() const
 {
     return m_name.tr();
 }

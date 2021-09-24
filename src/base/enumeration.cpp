@@ -7,6 +7,8 @@
 #include "enumeration.h"
 #include "qtcore_utils.h"
 
+#include <cassert>
+
 namespace Mayo {
 
 Enumeration::Enumeration(std::initializer_list<Item> listItem)
@@ -14,21 +16,17 @@ Enumeration::Enumeration(std::initializer_list<Item> listItem)
 {
 }
 
-Enumeration& Enumeration::chopPrefix(std::string_view strPrefix)
+Enumeration& Enumeration::chopPrefix(std::string_view prefix)
 {
-    const QByteArray prefix = QtCoreUtils::QByteArray_frowRawData(strPrefix);
     for (Item& item : m_vecItem) {
-        if (item.name.key.startsWith(prefix)) {
-            item.name.key.setRawData(
-                        item.name.key.constData() + prefix.size(),
-                        item.name.key.size() - prefix.size());
-        }
+        if (item.name.key.substr(0, prefix.size()) == prefix) // TODO Replace with C++20 starts_with()
+            item.name.key = item.name.key.substr(prefix.size());
     }
 
     return *this;
 }
 
-Enumeration& Enumeration::changeTrContext(const QByteArray& context)
+Enumeration& Enumeration::changeTrContext(std::string_view context)
 {
     for (Item& item : m_vecItem)
         item.name.trContext = context;
@@ -52,14 +50,14 @@ int Enumeration::findIndex(Value value) const
     return it != m_vecItem.cend() ? it - m_vecItem.cbegin() : -1;
 }
 
-Enumeration::Value Enumeration::findValue(const QByteArray& name) const
+Enumeration::Value Enumeration::findValue(std::string_view name) const
 {
     const Enumeration::Item* ptrItem = this->findItem(name);
-    Q_ASSERT(ptrItem != nullptr);
+    assert(ptrItem != nullptr);
     return ptrItem ? ptrItem->value : -1;
 }
 
-bool Enumeration::contains(const QByteArray& name) const
+bool Enumeration::contains(std::string_view name) const
 {
     return this->findItem(name) != nullptr;
 }
@@ -70,16 +68,16 @@ const Enumeration& Enumeration::null()
     return null;
 }
 
-QByteArray Enumeration::findName(Value value) const
+std::string_view Enumeration::findName(Value value) const
 {
     const int index = this->findIndex(value);
     if (index != -1)
         return this->itemAt(index).name.key;
 
-    return QByteArray();
+    return {};
 }
 
-const Enumeration::Item* Enumeration::findItem(const QByteArray& name) const
+const Enumeration::Item* Enumeration::findItem(std::string_view name) const
 {
     auto itFound = std::find_if(
                 m_vecItem.cbegin(),

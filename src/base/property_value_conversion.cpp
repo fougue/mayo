@@ -84,7 +84,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
         return false;
 
     auto fnError = [=](const QString& text) {
-        qCritical() << QString("[property '%1'] %2").arg(QString::fromUtf8(prop->name().key), text);
+        qCritical() << QString("[property '%1'] %2").arg(to_QString(prop->name().key), text);
         return false;
     };
 
@@ -122,7 +122,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const QVariant& varian
     }
     else if (isType<PropertyEnumeration>(prop)) {
         const QByteArray name = variant.toByteArray();
-        const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItem(name);
+        const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItem(name.constData());
         if (!ptrItem)
             return fnError(QString("fromVariant() found no enumeration item for '%1'").arg(variant.toString()));
 

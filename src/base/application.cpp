@@ -27,6 +27,7 @@
 #include <QtCore/QtDebug>
 
 #include <atomic>
+#include <vector>
 #include <unordered_map>
 
 namespace Mayo {
@@ -47,6 +48,7 @@ struct Application::Private {
     Settings m_settings;
     IO::System m_ioSystem;
     DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
+    std::vector<Application::Translator> m_vecTranslator;
 };
 
 Application::~Application()
@@ -73,6 +75,7 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qRegisterMetaType<std::string>("std::string");
     }
 
     return appPtr;
@@ -155,6 +158,24 @@ IO::System* Application::ioSystem() const
 DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodePropertiesProviderTable() const
 {
     return &(d->m_documentTreeNodePropertiesProviderTable);
+}
+
+void Application::addTranslator(Application::Translator fn)
+{
+    if (fn)
+        d->m_vecTranslator.push_back(std::move(fn));
+}
+
+std::string_view Application::translate(const TextId& textId, int n) const
+{
+    for (auto it = d->m_vecTranslator.rbegin(); it != d->m_vecTranslator.rend(); ++it) {
+        const Application::Translator& fn = *it;
+        std::string_view msg = fn(textId, n);
+        if (!msg.empty())
+            return msg;
+    }
+
+    return textId.key;
 }
 
 void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)

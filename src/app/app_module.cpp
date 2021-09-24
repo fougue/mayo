@@ -14,6 +14,7 @@
 #include "../base/io_system.h"
 #include "../base/occt_enums.h"
 #include "../base/settings.h"
+#include "../base/string_conv.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
@@ -63,10 +64,10 @@ AppModule::AppModule(Application* app)
 
     // Application
     this->language.setDescription(
-                tr("Language used for the application. Change will take effect after application restart"));
+                textIdTr("Language used for the application. Change will take effect after application restart"));
     this->linkWithDocumentSelector.setDescription(
-                tr("In case where multiple documents are opened, make sure the document displayed in "
-                   "the 3D view corresponds to what is selected in the model tree"));
+                textIdTr("In case where multiple documents are opened, make sure the document displayed in "
+                         "the 3D view corresponds to what is selected in the model tree"));
     settings->addSetting(&this->language, this->groupId_application);
     settings->addSetting(&this->recentFiles, this->groupId_application);
     settings->addSetting(&this->lastOpenDir, this->groupId_application);
@@ -78,19 +79,19 @@ AppModule::AppModule(Application* app)
 
     // Meshing
     this->meshingQuality.setDescription(
-                tr("Controls precision of the mesh to be computed from the BRep shape"));
+                textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
     this->meshingQuality.mutableEnumeration().changeTrContext(AppModule::textIdContext());
     this->meshingChordalDeflection.setDescription(
-                tr("For the tesselation of faces the chordal deflection limits the distance between "
-                   "a curve and its tessellation"));
+                textIdTr("For the tesselation of faces the chordal deflection limits the distance between "
+                         "a curve and its tessellation"));
     this->meshingAngularDeflection.setDescription(
-                tr("For the tesselation of faces the angular deflection limits the angle between "
-                   "subsequent segments in a polyline"));
+                textIdTr("For the tesselation of faces the angular deflection limits the angle between "
+                         "subsequent segments in a polyline"));
     this->meshingRelative.setDescription(
-                tr("Relative computation of edge tolerance\n\n"
-                   "If activated, deflection used for the polygonalisation of each edge will be "
-                   "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                   "the maximum deflection of their edges."));
+                textIdTr("Relative computation of edge tolerance\n\n"
+                         "If activated, deflection used for the polygonalisation of each edge will be "
+                         "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+                         "the maximum deflection of their edges."));
     settings->addSetting(&this->meshingQuality, this->groupId_meshing);
     settings->addSetting(&this->meshingChordalDeflection, this->groupId_meshing);
     settings->addSetting(&this->meshingAngularDeflection, this->groupId_meshing);
@@ -98,15 +99,15 @@ AppModule::AppModule(Application* app)
 
     // Graphics
     this->defaultShowOriginTrihedron.setDescription(
-                tr("Show or hide by default the trihedron centered at world origin. "
-                   "This doesn't affect 3D view of currently opened documents"));
+                textIdTr("Show or hide by default the trihedron centered at world origin. "
+                         "This doesn't affect 3D view of currently opened documents"));
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, this->groupId_graphics);
     // -- Clip planes
     this->clipPlanesCappingOn.setDescription(
-                tr("Enable capping of currently clipped graphics"));
+                textIdTr("Enable capping of currently clipped graphics"));
     this->clipPlanesCappingHatchOn.setDescription(
-                tr("Enable capping hatch texture of currently clipped graphics"));
+                textIdTr("Enable capping hatch texture of currently clipped graphics"));
     settings->addSetting(&this->clipPlanesCappingOn, this->sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
     // -- Mesh defaults
@@ -204,7 +205,7 @@ QByteArray AppModule::languageCode(const ApplicationPtr& app)
     const char keyLang[] = "application/language";
     const Settings* settings = app->settings();
     const QByteArray code = app ? settings->findValueFromKey(keyLang).toByteArray() : QByteArray();
-    return !code.isEmpty() ? code : enumLanguages.findName(0);
+    return !code.isEmpty() ? code : QtCoreUtils::QByteArray_frowRawData(enumLanguages.findName(0));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
@@ -256,14 +257,14 @@ bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
     }
 }
 
-void AppModule::emitMessage(Messenger::MessageType msgType, const QString& text)
+void AppModule::emitMessage(Messenger::MessageType msgType, std::string_view text)
 {
     {
         std::lock_guard<std::mutex> lock(m_mutexMessageLog);
-        m_messageLog.push_back({ msgType, text });
+        m_messageLog.push_back({ msgType, to_QString(text) });
     }
 
-    emit this->message(msgType, text);
+    emit this->message(msgType, to_QString(text));
 }
 
 void AppModule::clearMessageLog()

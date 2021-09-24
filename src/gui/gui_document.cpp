@@ -95,6 +95,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
                 QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
                 QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
                 Aspect_GFM_VER);
+    //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
 
@@ -382,7 +383,7 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
     case ViewTrihedronMode::AisViewCube: {
         if (m_aisViewCube.IsNull()) {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-            opencascade::handle<AIS_ViewCube> aisViewCube = new AIS_ViewCube;
+            auto aisViewCube = new AIS_ViewCube;
             aisViewCube->SetBoxColor(Quantity_NOC_GRAY75);
             //aisViewCube->SetFixedAnimationLoop(false);
             aisViewCube->SetSize(55);
