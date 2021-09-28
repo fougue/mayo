@@ -157,7 +157,7 @@ std::string consoleToPrintable(std::string_view str)
 #ifdef Q_OS_WIN
     return consoleToPrintable(QString::fromUtf8(str.data(), str.size()));
 #else
-    return str.toStdString(); // utf8
+    return std::string(str); // utf8
 #endif
 }
 

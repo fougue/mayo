@@ -6,6 +6,7 @@
 
 #include "enumeration.h"
 
+#include <algorithm>
 #include <cassert>
 
 namespace Mayo {
