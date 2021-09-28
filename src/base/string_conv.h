@@ -57,7 +57,7 @@ TCollection_ExtendedString to_OccExtString(const STRING_TYPE& str) {
 
 
 // --
-// -- Converters
+// -- Converters(misc)
 // --
 
 // const char* -> TCollection_ExtendedString
@@ -83,6 +83,47 @@ template<size_t N> struct StringConv<char[N], TCollection_ExtendedString> {
 template<size_t N> struct StringConv<char[N], QString> {
     static auto to(const char(&str)[N]) { return QString::fromUtf8(str, N); }
 };
+
+// std::string_view -> QString
+template<> struct StringConv<std::string_view, QString> {
+    static auto to(std::string_view str) { return QString::fromUtf8(str.data(), int(str.size())); }
+};
+
+// QByteArray -> QString
+template<> struct StringConv<QByteArray, QString> {
+    static auto to(const QByteArray& str) { return QString::fromUtf8(str); }
+};
+
+#if 0
+// std::string_view -> TCollection_ExtendedString
+template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
+    static auto to(std::string_view str) {
+        return TCollection_ExtendedString(str.data(), true/*multi-byte*/);
+    }
+};
+#endif
+
+// --
+// -- Handle(TCollection_HAsciiString) -> X
+// --
+
+// Handle(TCollection_HAsciiString) -> std::string_view
+template<> struct StringConv<Handle(TCollection_HAsciiString), std::string_view> {
+    static auto to(const Handle(TCollection_HAsciiString)& str) {
+        return string_conv<std::string_view>(str ? str->String() : TCollection_AsciiString());
+    }
+};
+
+// Handle(TCollection_HAsciiString) -> QString
+template<> struct StringConv<Handle(TCollection_HAsciiString), QString> {
+    static auto to(const Handle(TCollection_HAsciiString)& str) {
+        return string_conv<QString>(str ? str->String() : TCollection_AsciiString());
+    }
+};
+
+// --
+// -- std::string -> X
+// --
 
 // std::string -> TCollection_AsciiString
 template<> struct StringConv<std::string, TCollection_AsciiString> {
@@ -111,49 +152,8 @@ template<> struct StringConv<std::string, QString> {
     static auto to(const std::string& str) { return QString::fromStdString(str); }
 };
 
-// std::string_view -> QString
-template<> struct StringConv<std::string_view, QString> {
-    static auto to(std::string_view str) { return QString::fromUtf8(str.data(), int(str.size())); }
-};
-
-// QString -> TCollection_AsciiString
-template<> struct StringConv<QString, TCollection_AsciiString> {
-    static auto to(const QString& str) {
-        return TCollection_AsciiString(qUtf8Printable(str));
-    }
-};
-
-// QString -> Handle(TCollection_HAsciiString)
-template<> struct StringConv<QString, Handle(TCollection_HAsciiString)> {
-    static auto to(const QString& str) {
-        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(qUtf8Printable(str));
-        return hnd;
-    }
-};
-
-// Handle(TCollection_HAsciiString) -> QString
-template<> struct StringConv<Handle(TCollection_HAsciiString), QString> {
-    static auto to(const Handle(TCollection_HAsciiString)& str) {
-        return string_conv<QString>(str ? str->String() : TCollection_AsciiString());
-    }
-};
-
-// QByteArray -> QString
-template<> struct StringConv<QByteArray, QString> {
-    static auto to(const QByteArray& str) { return QString::fromUtf8(str); }
-};
-
-#if 0
-// std::string_view -> TCollection_ExtendedString
-template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
-    static auto to(std::string_view str) {
-        return TCollection_ExtendedString(str.data(), true/*multi-byte*/);
-    }
-};
-#endif
-
 // --
-// -- TCollection_AsciiString
+// -- TCollection_AsciiString -> X
 // --
 
 // TCollection_AsciiString -> std::string
@@ -192,7 +192,7 @@ template<> struct StringConv<TCollection_AsciiString, QString> {
 };
 
 // --
-// -- TCollection_ExtendedString
+// -- TCollection_ExtendedString -> X
 // --
 
 // TCollection_ExtendedString -> std::string
@@ -235,7 +235,7 @@ template<> struct StringConv<TCollection_ExtendedString, QString> {
 };
 
 // --
-// -- QString
+// -- QString -> X
 // --
 
 // QString -> std::string
@@ -259,6 +259,21 @@ template<> struct StringConv<QString, std::u16string_view> {
 template<> struct StringConv<QString, TCollection_ExtendedString> {
     static auto to(const QString& str) {
         return TCollection_ExtendedString(reinterpret_cast<const char16_t*>(str.utf16()));
+    }
+};
+
+// QString -> TCollection_AsciiString
+template<> struct StringConv<QString, TCollection_AsciiString> {
+    static auto to(const QString& str) {
+        return TCollection_AsciiString(qUtf8Printable(str));
+    }
+};
+
+// QString -> Handle(TCollection_HAsciiString)
+template<> struct StringConv<QString, Handle(TCollection_HAsciiString)> {
+    static auto to(const QString& str) {
+        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(qUtf8Printable(str));
+        return hnd;
     }
 };
 
