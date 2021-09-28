@@ -14,6 +14,7 @@
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
+#include "qsettings_storage.h"
 #include "theme.h"
 #include "widgets_utils.h"
 #include "ui_dialog_options.h"
@@ -213,7 +214,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     auto connSettingsAboutToChange =
             QObject::connect(m_settings, &Settings::aboutToChange, this, [=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
-            const QVariant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
+            const Settings::Variant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
             m_mapSettingInitialValue.insert({ property, propertyValue});
         }
     });
@@ -367,7 +368,7 @@ void DialogOptions::loadFromFile()
         return;
     }
 
-    QSettings fileSettings(filepath, QSettings::IniFormat);
+    QSettingsStorage fileSettings(filepath, QSettings::IniFormat);
     m_settings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
 }
 
@@ -379,10 +380,10 @@ void DialogOptions::saveAs()
     if (filepath.isEmpty())
         return;
 
-    QSettings fileSettings(filepath, QSettings::IniFormat);
+    QSettingsStorage fileSettings(filepath, QSettings::IniFormat);
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
-    if (fileSettings.status() != QSettings::NoError)
+    if (fileSettings.get().status() != QSettings::NoError)
         WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
 }
 

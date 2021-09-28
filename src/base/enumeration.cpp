@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "enumeration.h"
-#include "qtcore_utils.h"
 
 #include <cassert>
 

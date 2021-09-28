@@ -20,6 +20,7 @@
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
+#include "qsettings_storage.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
@@ -166,6 +167,7 @@ static void initBase(QCoreApplication* qtApp)
     Application::setOpenCascadeEnvironment("opencascade.conf");
     auto app = Application::instance();
 
+    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
     // Load translation files
     {
         const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
@@ -442,7 +444,7 @@ static int runApp(QCoreApplication* qtApp)
             if (!filepathIsRegularFile(args.filepathSettings))
                 fnCriticalExit(Main::tr("Failed to load settings file '%1'").arg(strFilepathSettings));
 
-            QSettings fileSettings(strFilepathSettings, QSettings::IniFormat);
+            QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
             appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
         }
     };

@@ -18,6 +18,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/property_value_conversion.h"
 #include "../base/qtcore_hfuncs.h"
+#include "../base/settings.h"
 #include "../base/settings_index.h"
 #include "../base/unit_system.h"
 #include "qstring_utils.h"
@@ -76,8 +77,8 @@ public:
     const PropertyGroup* findWriterParameters(IO::Format format) const override;
 
     // from PropertyValueConversion
-    QVariant toVariant(const Property& prop) const override;
-    bool fromVariant(Property* prop, const QVariant& variant) const override;
+    Settings::Variant toVariant(const Property& prop) const override;
+    bool fromVariant(Property* prop, const Settings::Variant& variant) const override;
 
     // from Messenger
     void emitMessage(MessageType msgType, std::string_view text) override;

@@ -38,7 +38,7 @@ public:
 
     struct FormatProbeInput {
         FilePath filepath;
-        QByteArray contentsBegin; // Excerpt of the file(from start)
+        std::string_view contentsBegin; // Excerpt of the file(from start)
         uint64_t hintFullSize; // Full file size in bytes
     };
     using FormatProbe = std::function<Format (const FormatProbeInput&)>;

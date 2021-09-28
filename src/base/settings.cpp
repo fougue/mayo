@@ -6,11 +6,9 @@
 
 #include "settings.h"
 
-#include "qtcore_utils.h"
 #include "string_conv.h"
 
 #include <QtCore/QtDebug>
-#include <QtCore/QSettings>
 #include <gsl/util>
 #include <regex>
 
@@ -45,12 +43,21 @@ static bool isValidIdentifier(std::string_view identifier)
     return !identifier.empty() /*&& !identifier.simplified().isEmpty()*/;
 }
 
+class VoidStorage : public Settings::Storage {
+public:
+    bool contains(std::string_view /*key*/) const override { return false; }
+    Settings::Variant value(std::string_view /*key*/) const override { return {}; }
+    void setValue(std::string_view /*key*/, const Settings::Variant& /*value*/) override {}
+    void sync() override {}
+};
+
 } // namespace
 
 class Settings::Private {
 public:
     Private()
-        : m_locale(QLocale::system()),
+        : m_storage(new VoidStorage),
+          m_locale(QLocale::system()),
           m_propValueConverter(&m_defaultPropValueConverter)
     {
     }
@@ -63,30 +70,36 @@ public:
         return this->group(index.group()).vecSection.at(index.get());
     }
 
-    QString sectionPath(const Settings_Group& group, const Settings_Section& section) const {
-        return to_QString(group.identifier.key) + "/" + to_QString(section.identifier.key);
+    std::string sectionPath(const Settings_Group& group, const Settings_Section& section) const {
+        std::string path(group.identifier.key);
+        if (!path.empty() && path.back() != '/' && !section.identifier.key.empty())
+            path += '/';
+
+        return path.append(section.identifier.key);
     }
 
-    QString sectionPath(Settings::SectionIndex index) {
+    std::string sectionPath(Settings::SectionIndex index) {
         return this->sectionPath(this->group(index.group()), this->section(index));
     }
 
-    void loadPropertyFrom(const QSettings& source, const QString& sectionPath, Property* property)
+    void loadPropertyFrom(const Settings::Storage& source, std::string_view sectionPath, Property* property)
     {
         if (!property)
             return;
 
         std::string_view propertyKey = property->name().key;
-        const QString settingPath = sectionPath + "/" + to_QString(propertyKey);
+        const std::string settingPath = std::string(sectionPath).append("/").append(propertyKey);
         if (source.contains(settingPath)) {
-            const QVariant value = source.value(settingPath);
+            const Settings::Variant value = source.value(settingPath);
             const bool ok = m_propValueConverter->fromVariant(property, value);
             if (!ok)
                 qCritical() << QString("Failed to load setting %1").arg(to_QString(propertyKey));
         }
     }
 
-    QSettings m_settings;
+    Settings::Storage& storage() { return *m_storage.get(); }
+
+    std::unique_ptr<Settings::Storage> m_storage;
     QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
     std::vector<SectionResetFunction> m_vecSectionResetFn;
@@ -105,16 +118,24 @@ Settings::~Settings()
     delete d;
 }
 
-void Settings::load()
+void Settings::setStorage(std::unique_ptr<Settings::Storage> ptrStorage)
 {
-    this->loadFrom(d->m_settings);
+    if (ptrStorage)
+        d->m_storage = std::move(ptrStorage);
+    else
+        d->m_storage.reset(new VoidStorage);
 }
 
-void Settings::loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude)
+void Settings::load()
+{
+    this->loadFrom(d->storage());
+}
+
+void Settings::loadFrom(const Storage& source, const ExcludePropertyPredicate& fnExclude)
 {
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
-            const QString sectionPath = d->sectionPath(group, section);
+            const std::string sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (!fnExclude || !fnExclude(*setting.property))
                     d->loadPropertyFrom(source, sectionPath, setting.property);
@@ -125,42 +146,42 @@ void Settings::loadFrom(const QSettings& source, const ExcludePropertyPredicate&
 
 void Settings::loadProperty(Settings::SettingIndex index)
 {
-    this->loadPropertyFrom(d->m_settings, index);
+    this->loadPropertyFrom(d->storage(), index);
 }
 
-void Settings::loadPropertyFrom(const QSettings& source, SettingIndex index)
+void Settings::loadPropertyFrom(const Storage& source, SettingIndex index)
 {
     Property* prop = this->property(index);
     if (prop) {
-        const QString sectionPath = d->sectionPath(index.section());
+        const std::string sectionPath = d->sectionPath(index.section());
         d->loadPropertyFrom(source, sectionPath, prop);
     }
 }
 
-QVariant Settings::findValueFromKey(std::string_view strKey) const
+Settings::Variant Settings::findValueFromKey(std::string_view strKey) const
 {
-    return d->m_settings.value(to_QString(strKey));
+    return d->m_storage->value(strKey);
 }
 
 void Settings::save()
 {
-    this->saveAs(&d->m_settings);
-    d->m_settings.sync();
+    this->saveAs(d->m_storage.get());
+    d->m_storage->sync();
 }
 
-void Settings::saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude)
+void Settings::saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude)
 {
     if (!target)
         return;
 
     for (const Settings_Group& group : d->m_vecGroup) {
         for (const Settings_Section& section : group.vecSection) {
-            const QString sectionPath = d->sectionPath(group, section);
+            const std::string sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
                 Property* prop = setting.property;
                 if (!fnExclude || !fnExclude(*prop)) {
                     std::string_view propKey = prop->name().key;
-                    const QString settingPath = sectionPath + "/" + to_QString(propKey);
+                    const std::string settingPath = std::string(sectionPath).append("/").append(propKey);
                     target->setValue(settingPath, d->m_propValueConverter->toVariant(*prop));
                 }
             } // endfor(settings)

@@ -13,6 +13,7 @@
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
 #include "../base/occt_enums.h"
+#include "../base/qtcore_utils.h"
 #include "../base/settings.h"
 #include "../base/string_conv.h"
 #include "../graphics/graphics_object_driver.h"
@@ -203,9 +204,14 @@ QString AppModule::qmFilePath(const QByteArray& languageCode)
 QByteArray AppModule::languageCode(const ApplicationPtr& app)
 {
     const char keyLang[] = "application/language";
-    const Settings* settings = app->settings();
-    const QByteArray code = app ? settings->findValueFromKey(keyLang).toByteArray() : QByteArray();
-    return !code.isEmpty() ? code : QtCoreUtils::QByteArray_frowRawData(enumLanguages.findName(0));
+    const Settings::Variant code = app->settings()->findValueFromKey(keyLang);
+    if (code.isConvertibleToConstRefString()) {
+        const std::string& strCode = code.toConstRefString();
+        if (!strCode.empty())
+            return QByteArray::fromStdString(strCode);
+    }
+
+    return QtCoreUtils::QByteArray_frowRawData(enumLanguages.findName(0));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
@@ -225,27 +231,29 @@ const PropertyGroup* AppModule::findWriterParameters(IO::Format format) const
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
-QVariant AppModule::toVariant(const Property& prop) const
+Settings::Variant AppModule::toVariant(const Property& prop) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
         const auto& filesProp = constRef<PropertyRecentFiles>(prop);
         QByteArray blob;
         QDataStream stream(&blob, QIODevice::WriteOnly);
         stream << filesProp.value();
-        return blob;
+        Variant varBlob(blob.toStdString());
+        varBlob.setByteArray(true);
+        return varBlob;
     }
     else {
         return PropertyValueConversion::toVariant(prop);
     }
 }
 
-bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
+bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
         if (qobject_cast<QGuiApplication*>(QCoreApplication::instance()) == nullptr)
             return true;
 
-        const QByteArray blob = variant.toByteArray();
+        const QByteArray blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
         QDataStream stream(blob);
         RecentFiles recentFiles;
         stream >> recentFiles;
