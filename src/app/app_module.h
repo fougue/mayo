@@ -17,10 +17,10 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/property_value_conversion.h"
-#include "../base/qtcore_hfuncs.h"
 #include "../base/settings.h"
 #include "../base/settings_index.h"
 #include "../base/unit_system.h"
+#include "qtcore_hfuncs.h"
 #include "qstring_utils.h"
 
 #include <QtCore/QObject>
