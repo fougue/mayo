@@ -5,8 +5,9 @@
 ****************************************************************************/
 
 #include "qsettings_storage.h"
-#include "../base/qtcore_utils.h"
+
 #include "../base/string_conv.h"
+#include "qtcore_utils.h"
 
 namespace Mayo {
 

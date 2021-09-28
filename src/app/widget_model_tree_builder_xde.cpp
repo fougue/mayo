@@ -4,12 +4,12 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/property_enumeration.h"
-#include "../base/qtcore_utils.h"
 #include "../base/settings.h"
 #include "../base/string_conv.h"
 #include "../base/xcaf.h"
 #include "../gui/gui_application.h"
 #include "app_module.h"
+#include "qtcore_utils.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
