@@ -8,7 +8,6 @@
 
 #include "../base/application.h"
 #include "../base/document.h"
-#include "../base/string_conv.h"
 #include "gui_application.h"
 #include "gui_document.h"
 
@@ -42,7 +41,7 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
         return filepathTo<QString>(doc->filePath());
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return to_QString(doc->name());
+        return QString::fromStdString(doc->name());
     }
 
     return QVariant();

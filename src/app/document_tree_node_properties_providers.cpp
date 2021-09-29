@@ -11,8 +11,8 @@
 #include "../base/document_tree_node.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
-#include "../base/string_conv.h"
 #include "../base/xcaf.h"
+#include "qstring_conv.h"
 
 #include <TDataStd_Name.hxx>
 #include <TDataXtd_Triangulation.hxx>

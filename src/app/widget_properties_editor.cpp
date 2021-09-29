@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "widget_properties_editor.h"
-#include "../base/string_conv.h"
+#include "qstring_conv.h"
 #include "ui_widget_properties_editor.h"
 
 #include <vector>

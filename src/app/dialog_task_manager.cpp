@@ -8,9 +8,9 @@
 
 #include "../base/application.h"
 #include "../base/settings.h"
-#include "../base/string_conv.h"
 #include "../base/task_manager.h"
 #include "ui_dialog_task_manager.h"
+#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
 

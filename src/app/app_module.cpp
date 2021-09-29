@@ -14,11 +14,11 @@
 #include "../base/io_system.h"
 #include "../base/occt_enums.h"
 #include "../base/settings.h"
-#include "../base/string_conv.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "qtcore_utils.h"
+#include "qstring_conv.h"
 
 #include <BRepBndLib.hxx>
 #include <QtCore/QDir>

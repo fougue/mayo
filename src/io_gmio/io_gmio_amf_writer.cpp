@@ -213,24 +213,25 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 mapLabelObjectId.insert({ nodeLabel, objectId });
             }
 
-            QStringList absoluteName;
+            std::string absoluteName;
             TreeNodeId itParent = id;
             do {
                 itParent = modelTree.nodeParent(itParent);
                 if (itParent != 0) {
-                    const QString name = to_QString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
-                    if (!name.trimmed().isEmpty())
-                        absoluteName += name;
+                    const std::string name = to_stdString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
+                    if (!name.empty())
+                        absoluteName += '/' + name;
                     else
-                        absoluteName += "anonymous";
+                        absoluteName += "/anonymous";
                 }
             } while (itParent != 0);
 
-            if (!absoluteName.isEmpty()) {
+            if (!absoluteName.empty()) {
+                absoluteName.erase(0, 1); // Remove starting '/'
                 Instance instance;
                 instance.objectId = objectId;
                 instance.trsf = XCaf::shapeAbsoluteLocation(modelTree, id);
-                instance.name = absoluteName.join('/').toStdString();
+                instance.name = absoluteName;
                 m_vecInstance.push_back(std::move(instance));
             }
         }

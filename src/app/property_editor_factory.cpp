@@ -9,10 +9,10 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_conv.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "widgets_utils.h"
 

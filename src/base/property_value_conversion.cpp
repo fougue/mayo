@@ -13,9 +13,9 @@
 #include "tkernel_utils.h"
 #include "unit_system.h"
 
-#include <QtCore/QtDebug>
 #include <fmt/format.h>
 #include <charconv>
+#include <iostream>
 #include <sstream>
 
 namespace Mayo {
@@ -23,7 +23,7 @@ namespace Mayo {
 PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Property& prop) const
 {
     auto fnError = [=](std::string_view text) {
-        qCritical() << to_QString(text);
+        std::cerr << text << std::endl; // TODO Use other output stream(dedicated Messenger object?)
         return PropertyValueConversion::Variant{};
     };
 
@@ -90,7 +90,8 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
         return false;
 
     auto fnError = [=](std::string_view text) {
-        qCritical() << QString("[property '%1'] %2").arg(to_QString(prop->name().key), to_QString(text));
+        // TODO Use other output stream(dedicated Messenger object?)
+        std::cerr << fmt::format("[property '{}'] {}", prop->name().key, text) << std::endl;
         return false;
     };
 

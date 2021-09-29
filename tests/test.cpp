@@ -26,6 +26,7 @@
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/app/qstring_conv.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/io_occ/io_occ.h"
 #include "../src/gui/qtgui_utils.h"

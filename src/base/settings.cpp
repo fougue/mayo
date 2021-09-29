@@ -1,4 +1,4 @@
-/****************************************************************************
+ /****************************************************************************
 ** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
@@ -6,10 +6,9 @@
 
 #include "settings.h"
 
-#include "string_conv.h"
-
-#include <QtCore/QtDebug>
+#include <fmt/format.h>
 #include <gsl/util>
+#include <iostream>
 #include <regex>
 
 namespace Mayo {
@@ -92,8 +91,10 @@ public:
         if (source.contains(settingPath)) {
             const Settings::Variant value = source.value(settingPath);
             const bool ok = m_propValueConverter->fromVariant(property, value);
-            if (!ok)
-                qCritical() << QString("Failed to load setting %1").arg(to_QString(propertyKey));
+            if (!ok) {
+                // TODO Use other output stream(dedicated Messenger object?)
+                std::cerr << fmt::format("Failed to load setting {}", propertyKey) << std::endl;
+            }
         }
     }
 
