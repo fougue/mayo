@@ -12,6 +12,7 @@
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qtcore_utils.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "widgets_utils.h"
@@ -111,14 +112,15 @@ struct PropertyCheckStateEditor : public InterfacePropertyEditor, public QCheckB
     {
         //this->setTristate();
         QObject::connect(this, &QCheckBox::stateChanged, [=](int state) {
-            property->setValue(Qt::CheckState(state));
-            this->setText(QStringUtils::yesNoText(Qt::CheckState(state)));
+            auto estate = QtCoreUtils::toCheckState(Qt::CheckState(state));
+            property->setValue(estate);
+            this->setText(QStringUtils::yesNoText(estate));
         });
     }
 
     void syncWithProperty() override {
         this->setText(QStringUtils::yesNoText(*m_property));
-        this->setChecked(*m_property);
+        this->setCheckState(QtCoreUtils::toQtCheckState(*m_property));
     }
 
     PropertyCheckState* m_property;

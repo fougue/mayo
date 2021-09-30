@@ -193,10 +193,10 @@ void GuiDocument::setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, in
     }
 }
 
-Qt::CheckState GuiDocument::nodeVisibleState(TreeNodeId nodeId) const
+CheckState GuiDocument::nodeVisibleState(TreeNodeId nodeId) const
 {
     auto itFound = m_mapTreeNodeCheckState.find(nodeId);
-    return itFound != m_mapTreeNodeCheckState.cend() ? itFound->second : Qt::Unchecked;
+    return itFound != m_mapTreeNodeCheckState.cend() ? itFound->second : CheckState::Off;
 }
 
 void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
@@ -205,13 +205,13 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     if (itNode == m_mapTreeNodeCheckState.end())
         return; // Error: unknown tree node
 
-    const Qt::CheckState nodeVisibleState = on ? Qt::Checked : Qt::Unchecked;
+    const CheckState nodeVisibleState = on ? CheckState::On : CheckState::Off;
     if (itNode->second == nodeVisibleState)
         return; // Same visible state
 
     // Helper data/function to keep track of all the nodes whose visibility state are altered
-    std::unordered_map<TreeNodeId, Qt::CheckState> mapNodeIdVisibleState;
-    auto fnSetNodeVisibleState = [&](TreeNodeId id, Qt::CheckState state) {
+    std::unordered_map<TreeNodeId, CheckState> mapNodeIdVisibleState;
+    auto fnSetNodeVisibleState = [&](TreeNodeId id, CheckState state) {
         auto it = m_mapTreeNodeCheckState.find(id);
         if (it == m_mapTreeNodeCheckState.cend()) {
             m_mapTreeNodeCheckState[id] = state;
@@ -265,17 +265,17 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
         int uncheckedCount = 0;
         visitDirectChildren(parentId, docModelTree, [&](TreeNodeId id) {
             ++childCount;
-            const Qt::CheckState childState = this->nodeVisibleState(id);
-            if (childState == Qt::Checked)
+            const CheckState childState = this->nodeVisibleState(id);
+            if (childState == CheckState::On)
                 ++checkedCount;
-            else if (childState == Qt::Unchecked)
+            else if (childState == CheckState::Off)
                 ++uncheckedCount;
         });
-        Qt::CheckState parentVisibleState = Qt::PartiallyChecked;
+        CheckState parentVisibleState = CheckState::Partially;
         if (checkedCount == childCount)
-            parentVisibleState = Qt::Checked;
+            parentVisibleState = CheckState::On;
         else if (uncheckedCount == childCount)
-            parentVisibleState = Qt::Unchecked;
+            parentVisibleState = CheckState::Off;
 
         fnSetNodeVisibleState(parentId, parentVisibleState);
         parentId = docModelTree.nodeParent(parentId);
@@ -571,7 +571,7 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
     m_gfxScene.redraw();
 
     traverseTree(entityTreeNodeId, docModelTree, [=](TreeNodeId id) {
-        m_mapTreeNodeCheckState.insert({ id, Qt::Checked });
+        m_mapTreeNodeCheckState.insert({ id, CheckState::On });
     });
 
     GraphicsUtils::V3dView_fitAll(m_v3dView);

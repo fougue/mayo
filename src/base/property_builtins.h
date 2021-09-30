@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "global.h"
 #include "property.h"
 #include "filepath.h"
 #include "quantity.h"
@@ -119,7 +120,7 @@ using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
 using PropertyString = GenericProperty<std::string>;
-using PropertyCheckState = GenericProperty<Qt::CheckState>;
+using PropertyCheckState = GenericProperty<CheckState>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;

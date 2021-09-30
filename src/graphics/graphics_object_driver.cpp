@@ -310,9 +310,9 @@ public:
 
         auto fnCheckState = [&](int count) {
             if (count == 0)
-                return Qt::Unchecked;
+                return CheckState::Off;
             else
-                return count == spanObject.size() ? Qt::Checked : Qt::PartiallyChecked;
+                return count == spanObject.size() ? CheckState::On : CheckState::Partially;
         };
 
         // Init properties
@@ -330,17 +330,17 @@ public:
         };
 
         if (prop == &m_propertyShowEdges) {
-            if (m_propertyShowEdges != Qt::PartiallyChecked) {
+            if (m_propertyShowEdges.value() != CheckState::Partially) {
                 for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
-                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges == Qt::Checked);
+                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges.value() == CheckState::On);
                     fnRedisplay(meshVisu);
                 }
             }
         }
         else if (prop == &m_propertyShowNodes) {
-            if (m_propertyShowNodes != Qt::PartiallyChecked) {
+            if (m_propertyShowNodes.value() != CheckState::Partially) {
                 for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
-                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes == Qt::Checked);
+                    meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes.value() == CheckState::On);
                     fnRedisplay(meshVisu);
                 }
             }
