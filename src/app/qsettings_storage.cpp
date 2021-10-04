@@ -60,6 +60,8 @@ Settings::Variant QSettingsStorage::value(std::string_view key) const
     }
     case QVariant::Bool:
         return value.toBool();
+    default:
+        return {};
     } // endswitch
 
     return {};
