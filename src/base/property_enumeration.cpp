@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "property_enumeration.h"
-#include <QtCore/QVariant>
 
 namespace Mayo {
 

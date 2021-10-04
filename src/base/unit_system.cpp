@@ -7,7 +7,7 @@
 #include "unit_system.h"
 
 #include <fast_float/fast_float.h>
-#include <QtCore/QtGlobal>
+#include <cassert>
 
 namespace Mayo {
 
@@ -232,7 +232,7 @@ UnitSystem::TranslateResult UnitSystem::translate(Schema schema, double value, U
         return Internal::translateImperialUK(value, unit);
     }
 
-    Q_UNREACHABLE();
+    assert(false);
     return {};
 }
 

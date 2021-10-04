@@ -85,7 +85,6 @@ public:
 
     // Helpers
 
-    static QByteArray defautLocaleLanguageCode();
     const QLocale& locale() const;
     void setLocale(const QLocale& locale);
 

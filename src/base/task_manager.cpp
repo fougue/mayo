@@ -5,11 +5,11 @@
 ****************************************************************************/
 
 #include "task_manager.h"
+
+#include "application.h"
 #include "cpp_utils.h"
 #include "math_utils.h"
 
-#include <QtCore/QtDebug>
-#include <QtCore/QCoreApplication>
 #include <cassert>
 
 namespace Mayo {
@@ -17,12 +17,6 @@ namespace Mayo {
 TaskManager::TaskManager(QObject* parent)
     : QObject(parent)
 {
-    static bool staticTypesRegistered = false;
-    if (!staticTypesRegistered) {
-        qRegisterMetaType<TaskId>("Mayo::TaskId");
-        qRegisterMetaType<TaskId>("TaskId");
-        staticTypesRegistered = true;
-    }
 }
 
 TaskManager::~TaskManager()
@@ -44,7 +38,7 @@ TaskManager* TaskManager::globalInstance()
 {
     static TaskManager* global = nullptr;
     if (!global)
-        global = new TaskManager(QCoreApplication::instance());
+        global = new TaskManager(Application::instance().get());
 
     return global;
 }

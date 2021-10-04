@@ -393,17 +393,6 @@ void Settings::resetSection(SectionIndex index)
     }
 }
 
-QByteArray Settings::defautLocaleLanguageCode()
-{
-    const QByteArray localeName = QLocale().name().toUtf8();
-    const std::regex rxLang("([a-z]+)_");
-    std::cmatch rxLangMatch;
-    if (std::regex_match(localeName.cbegin(), localeName.cend(), rxLangMatch, rxLang))
-        return QByteArray::fromStdString(rxLangMatch.str(1));
-
-    return QByteArrayLiteral("en");
-}
-
 const QLocale& Settings::locale() const
 {
     return d->m_locale;
