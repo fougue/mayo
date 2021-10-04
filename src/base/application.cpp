@@ -6,9 +6,11 @@
 
 #include "application.h"
 #include "document_tree_node_properties_provider.h"
+#include "filepath_conv.h"
 #include "io_system.h"
 #include "property_builtins.h"
 #include "settings.h"
+#include "task_common.h"
 #include "tkernel_utils.h"
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
@@ -75,6 +77,8 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qRegisterMetaType<TaskId>("Mayo::TaskId");
+        qRegisterMetaType<TaskId>("TaskId");
         qRegisterMetaType<std::string>("std::string");
     }
 
@@ -180,7 +184,7 @@ std::string_view Application::translate(const TextId& textId, int n) const
 
 void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
 {
-    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    const QString strSettingsFilepath = QString::fromStdString(settingsFilepath.u8string());
     if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
         qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(strSettingsFilepath);
         return;

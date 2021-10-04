@@ -6,6 +6,7 @@
 
 #include "recent_files.h"
 
+#include "filepath_conv.h"
 #include "occt_window.h"
 #include "theme.h"
 #include "../graphics/graphics_utils.h"

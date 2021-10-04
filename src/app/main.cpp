@@ -18,6 +18,7 @@
 #include "app_module.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "mainwindow.h"
 #include "qsettings_storage.h"
 #include "qstring_conv.h"

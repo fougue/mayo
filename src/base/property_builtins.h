@@ -41,7 +41,7 @@ protected:
 
 template<typename T>
 class PropertyScalarConstraints {
-    static_assert(std::is_scalar<T>::value, "Requires scalar type");
+    static_assert(std::is_scalar_v<T>, "Requires scalar type");
 public:
     using ValueType = T;
 

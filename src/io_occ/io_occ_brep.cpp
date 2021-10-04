@@ -9,6 +9,7 @@
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
 #include "../base/document.h"
+#include "../base/filepath_conv.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"

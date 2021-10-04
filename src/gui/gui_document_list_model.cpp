@@ -38,7 +38,7 @@ QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
     const DocumentPtr& doc = m_vecGuiDocument.at(index.row())->document();
     switch (role) {
     case Qt::ToolTipRole:
-        return filepathTo<QString>(doc->filePath());
+        return QString::fromStdString(doc->filePath().u8string());
     case Qt::DisplayRole:
     case Qt::EditRole:
         return QString::fromStdString(doc->name());

@@ -29,6 +29,7 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "item_view_buttons.h"
 #include "qstring_conv.h"
 #include "theme.h"
