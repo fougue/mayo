@@ -8,6 +8,7 @@
 
 #include "application_ptr.h"
 #include "document.h"
+#include "span.h"
 #include "text_id.h"
 
 #include <CDF_DirectoryIterator.hxx>
@@ -63,7 +64,8 @@ public:
     void addTranslator(Translator fn);
     std::string_view translate(const TextId& textId, int n = -1) const;
 
-    static void setOpenCascadeEnvironment(const FilePath& settingsFilepath);
+    static Span<const char*> envOpenCascadeOptions();
+    static Span<const char*> envOpenCascadePaths();
 
 public: //  from TDocStd_Application
     void NewDocument(

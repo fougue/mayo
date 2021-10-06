@@ -22,12 +22,6 @@
 #  include <CDF_Session.hxx>
 #endif
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
-#include <QtCore/QSettings>
-#include <QtCore/QtDebug>
-
 #include <atomic>
 #include <vector>
 #include <unordered_map>
@@ -182,28 +176,21 @@ std::string_view Application::translate(const TextId& textId, int n) const
     return textId.key;
 }
 
-void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
+Span<const char*> Application::envOpenCascadeOptions()
 {
-    const QString strSettingsFilepath = QString::fromStdString(settingsFilepath.u8string());
-    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
-        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(strSettingsFilepath);
-        return;
-    }
-
-    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
-    if (occSettings.status() != QSettings::NoError) {
-        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(strSettingsFilepath);
-        return;
-    }
-
-    const char* arrayOptionName[] = {
+    static const char* arrayOptionName[] = {
         "MMGT_OPT",
         "MMGT_CLEAR",
         "MMGT_REENTRANT",
         "CSF_LANGUAGE",
         "CSF_EXCEPTION_PROMPT"
     };
-    const char* arrayPathName[] = {
+    return arrayOptionName;
+}
+
+Span<const char*> Application::envOpenCascadePaths()
+{
+    static const char* arrayPathName[] = {
         "CSF_SHMessage",
         "CSF_MDTVTexturesDirectory",
         "CSF_ShadersDirectory",
@@ -219,32 +206,7 @@ void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
         "CSF_XmlOcafResource",
         "CSF_MIGRATION_TYPES"
     };
-
-    // Process options
-    for (const char* varName : arrayOptionName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        const QString strValue = occSettings.value(qVarName).toString();
-        qputenv(varName, strValue.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
-    }
-
-    // Process paths
-    for (const char* varName : arrayPathName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        QString strPath = occSettings.value(qVarName).toString();
-        if (QFileInfo(strPath).isRelative())
-            strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
-
-        strPath = QDir::toNativeSeparators(strPath);
-        qputenv(varName, strPath.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
-    }
+    return arrayPathName;
 }
 
 void Application::NewDocument(

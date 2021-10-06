@@ -162,13 +162,53 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
+static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
+{
+    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file doesn't exist or is not readable [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
+    if (occSettings.status() != QSettings::NoError) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file could not be loaded with QSettings [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    // Process options
+    for (const char* varName : Application::envOpenCascadeOptions()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            const QString strValue = occSettings.value(qVarName).toString();
+            qputenv(varName, strValue.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
+        }
+    }
+
+    // Process paths
+    for (const char* varName : Application::envOpenCascadePaths()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            QString strPath = occSettings.value(qVarName).toString();
+            if (QFileInfo(strPath).isRelative())
+                strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
+
+            strPath = QDir::toNativeSeparators(strPath);
+            qputenv(varName, strPath.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
+        }
+    }
+}
+
 // Initializes "Base" objects
 static void initBase(QCoreApplication* qtApp)
 {
-    Application::setOpenCascadeEnvironment("opencascade.conf");
     auto app = Application::instance();
-
     app->settings()->setStorage(std::make_unique<QSettingsStorage>());
+
     // Load translation files
     {
         const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
@@ -176,7 +216,7 @@ static void initBase(QCoreApplication* qtApp)
         if (translator->load(qmFilePath))
             qtApp->installTranslator(translator);
         else
-            qWarning() << Main::tr("Failed to load translation for '%1'").arg(qmFilePath);
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
     }
 
     // Set Qt i18n backend
@@ -443,7 +483,7 @@ static int runApp(QCoreApplication* qtApp)
         else {
             const QString strFilepathSettings = filepathTo<QString>(args.filepathSettings);
             if (!filepathIsRegularFile(args.filepathSettings))
-                fnCriticalExit(Main::tr("Failed to load settings file '%1'").arg(strFilepathSettings));
+                fnCriticalExit(Main::tr("Failed to load application settings file [path=%1]").arg(strFilepathSettings));
 
             QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
             appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
@@ -451,6 +491,7 @@ static int runApp(QCoreApplication* qtApp)
     };
 
     // Initialize Base application
+    initOpenCascadeEnvironment("opencascade.conf");
     initBase(qtApp);
     auto app = Application::instance().get();
 
