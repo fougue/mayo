@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "property_enumeration.h"
-#include <QtCore/QVariant>
 
 namespace Mayo {
 
@@ -16,18 +15,18 @@ PropertyEnumeration::PropertyEnumeration(
 {
 }
 
-void PropertyEnumeration::addDescription(Enumeration::Value value, const QString& descr)
+void PropertyEnumeration::addDescription(Enumeration::Value value, std::string_view descr)
 {
-    m_vecDescription.push_back({ value, descr });
+    m_vecDescription.push_back({ value, std::string(descr) });
 }
 
-QString PropertyEnumeration::findDescription(Enumeration::Value value) const
+std::string_view PropertyEnumeration::findDescription(Enumeration::Value value) const
 {
     auto itFound = std::find_if(
                 m_vecDescription.cbegin(), m_vecDescription.cend(), [=](const Description& descr) {
        return descr.value == value;
     });
-    return itFound != m_vecDescription.cend() ? itFound->text: QString();
+    return itFound != m_vecDescription.cend() ? itFound->text : std::string_view{};
 }
 
 void PropertyEnumeration::clearDescriptions()
@@ -35,7 +34,7 @@ void PropertyEnumeration::clearDescriptions()
     m_vecDescription.clear();
 }
 
-QByteArray PropertyEnumeration::name() const
+std::string_view PropertyEnumeration::name() const
 {
     return m_enumeration.findName(m_value);
 }
@@ -51,7 +50,7 @@ bool PropertyEnumeration::setValue(Enumeration::Value value)
     return Property::setValueHelper(this, &m_value, value);
 }
 
-bool PropertyEnumeration::setValueByName(const QByteArray& name)
+bool PropertyEnumeration::setValueByName(std::string_view name)
 {
     return Property::setValueHelper(this, &m_value, m_enumeration.findValue(name));
 }

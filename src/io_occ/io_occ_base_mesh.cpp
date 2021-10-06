@@ -23,8 +23,8 @@ OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGr
       systemCoordinatesConverter(this, textId("systemCoordinatesConverter")),
       systemLengthUnit(this, textId("systemLengthUnit"))
 {
-    this->rootPrefix.setDescription(tr("Prefix for generating root labels name"));
-    this->systemLengthUnit.setDescription(tr("System length units to convert into while reading files"));
+    this->rootPrefix.setDescription(textIdTr("Prefix for generating root labels name"));
+    this->systemLengthUnit.setDescription(textIdTr("System length units to convert into while reading files"));
 }
 
 void OccBaseMeshReaderProperties::restoreDefaults()

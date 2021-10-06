@@ -25,7 +25,7 @@ public:
 private:
     void appendGuiDocument(const GuiDocument* guiDoc);
     void removeGuiDocument(const GuiDocument* guiDoc);
-    void onDocumentNameChanged(const DocumentPtr& doc, const QString& name);
+    void onDocumentNameChanged(const DocumentPtr& doc, const std::string& name);
 
     std::vector<const GuiDocument*> m_vecGuiDocument;
 };

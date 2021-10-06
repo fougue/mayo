@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <QtCore/QString>
 #include <functional>
+#include <string_view>
 
 namespace Mayo {
 
@@ -20,33 +20,28 @@ public:
         Error
     };
 
-    struct Message {
-        MessageType type;
-        QString text;
-    };
-
-    void emitTrace(const QString& text);
-    void emitInfo(const QString& text);
-    void emitWarning(const QString& text);
-    void emitError(const QString& text);
-    virtual void emitMessage(MessageType msgType, const QString& text) = 0;
+    void emitTrace(std::string_view text);
+    void emitInfo(std::string_view text);
+    void emitWarning(std::string_view text);
+    void emitError(std::string_view text);
+    virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
 };
 
 // Provides facility to construct a Messenger object from a lambda
 // This avoids to subclass Messenger
 class MessengerByCallback : public Messenger {
 public:
-    MessengerByCallback(std::function<void(MessageType, QString)> fnCallback);
-    void emitMessage(MessageType msgType, const QString& text) override;
+    MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
+    void emitMessage(MessageType msgType, std::string_view text) override;
 
 private:
-    std::function<void(MessageType, QString)> m_fnCallback;
+    std::function<void(MessageType, std::string_view)> m_fnCallback;
 };
 
 class NullMessenger : public Messenger {
 public:
     static Messenger* instance();
-    void emitMessage(MessageType msgType, const QString& text) override;
+    void emitMessage(MessageType msgType, std::string_view text) override;
 
 private:
     NullMessenger() = default;

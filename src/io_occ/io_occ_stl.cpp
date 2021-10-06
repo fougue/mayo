@@ -10,6 +10,7 @@
 #include "../base/brep_utils.h"
 #include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/filepath_conv.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"

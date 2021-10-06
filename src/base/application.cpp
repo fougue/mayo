@@ -6,9 +6,11 @@
 
 #include "application.h"
 #include "document_tree_node_properties_provider.h"
+#include "filepath_conv.h"
 #include "io_system.h"
 #include "property_builtins.h"
 #include "settings.h"
+#include "task_common.h"
 #include "tkernel_utils.h"
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
@@ -20,13 +22,8 @@
 #  include <CDF_Session.hxx>
 #endif
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
-#include <QtCore/QSettings>
-#include <QtCore/QtDebug>
-
 #include <atomic>
+#include <vector>
 #include <unordered_map>
 
 namespace Mayo {
@@ -47,6 +44,7 @@ struct Application::Private {
     Settings m_settings;
     IO::System m_ioSystem;
     DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
+    std::vector<Application::Translator> m_vecTranslator;
 };
 
 Application::~Application()
@@ -73,6 +71,9 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qRegisterMetaType<TaskId>("Mayo::TaskId");
+        qRegisterMetaType<TaskId>("TaskId");
+        qRegisterMetaType<std::string>("std::string");
     }
 
     return appPtr;
@@ -157,28 +158,39 @@ DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodeProperties
     return &(d->m_documentTreeNodePropertiesProviderTable);
 }
 
-void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
+void Application::addTranslator(Application::Translator fn)
 {
-    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
-    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
-        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(strSettingsFilepath);
-        return;
+    if (fn)
+        d->m_vecTranslator.push_back(std::move(fn));
+}
+
+std::string_view Application::translate(const TextId& textId, int n) const
+{
+    for (auto it = d->m_vecTranslator.rbegin(); it != d->m_vecTranslator.rend(); ++it) {
+        const Application::Translator& fn = *it;
+        std::string_view msg = fn(textId, n);
+        if (!msg.empty())
+            return msg;
     }
 
-    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
-    if (occSettings.status() != QSettings::NoError) {
-        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(strSettingsFilepath);
-        return;
-    }
+    return textId.key;
+}
 
-    const char* arrayOptionName[] = {
+Span<const char*> Application::envOpenCascadeOptions()
+{
+    static const char* arrayOptionName[] = {
         "MMGT_OPT",
         "MMGT_CLEAR",
         "MMGT_REENTRANT",
         "CSF_LANGUAGE",
         "CSF_EXCEPTION_PROMPT"
     };
-    const char* arrayPathName[] = {
+    return arrayOptionName;
+}
+
+Span<const char*> Application::envOpenCascadePaths()
+{
+    static const char* arrayPathName[] = {
         "CSF_SHMessage",
         "CSF_MDTVTexturesDirectory",
         "CSF_ShadersDirectory",
@@ -194,32 +206,7 @@ void Application::setOpenCascadeEnvironment(const FilePath& settingsFilepath)
         "CSF_XmlOcafResource",
         "CSF_MIGRATION_TYPES"
     };
-
-    // Process options
-    for (const char* varName : arrayOptionName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        const QString strValue = occSettings.value(qVarName).toString();
-        qputenv(varName, strValue.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
-    }
-
-    // Process paths
-    for (const char* varName : arrayPathName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        QString strPath = occSettings.value(qVarName).toString();
-        if (QFileInfo(strPath).isRelative())
-            strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
-
-        strPath = QDir::toNativeSeparators(strPath);
-        qputenv(varName, strPath.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
-    }
+    return arrayPathName;
 }
 
 void Application::NewDocument(
@@ -270,7 +257,7 @@ void Application::addDocument(const DocumentPtr& doc)
 
         QObject::connect(
                     doc.get(), &Document::nameChanged,
-                    this, [=](const QString& name) { emit this->documentNameChanged(doc, name); });
+                    this, [=](const std::string& name) { emit this->documentNameChanged(doc, name); });
         QObject::connect(
                     doc.get(), &Document::entityAdded,
                     this, [=](TreeNodeId entityId) { emit this->documentEntityAdded(doc, entityId); });

@@ -28,6 +28,7 @@
 #include <gmio_core/error.h>
 #include <gmio_stl/stl_error.h>
 
+#include <fmt/format.h>
 #include <unordered_map>
 
 namespace Mayo {
@@ -143,12 +144,14 @@ public:
                     textIdTr("Write AMF document in ZIP archive containing one file entry"));
 
         this->zipEntryFilename.setDescription(
-                    textIdTr("Filename of the single AMF entry within the ZIP archive.\n"
-                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
+                    fmt::format(textIdTr("Filename of the single AMF entry within the ZIP archive.\n"
+                                         "Only applicable if option `{}` is on"),
+                                this->createZipArchive.label()));
 
         this->useZip64.setDescription(
-                    textIdTr("Use the ZIP64 format extensions.\n"
-                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
+                    fmt::format(textIdTr("Use the ZIP64 format extensions.\n"
+                                         "Only applicable if option `{}` is on"),
+                                this->createZipArchive.label()));
     }
 
     void restoreDefaults() override {
@@ -210,24 +213,25 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 mapLabelObjectId.insert({ nodeLabel, objectId });
             }
 
-            QStringList absoluteName;
+            std::string absoluteName;
             TreeNodeId itParent = id;
             do {
                 itParent = modelTree.nodeParent(itParent);
                 if (itParent != 0) {
-                    const QString name = to_QString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
-                    if (!name.trimmed().isEmpty())
-                        absoluteName += name;
+                    const std::string name = to_stdString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
+                    if (!name.empty())
+                        absoluteName += '/' + name;
                     else
-                        absoluteName += "anonymous";
+                        absoluteName += "/anonymous";
                 }
             } while (itParent != 0);
 
-            if (!absoluteName.isEmpty()) {
+            if (!absoluteName.empty()) {
+                absoluteName.erase(0, 1); // Remove starting '/'
                 Instance instance;
                 instance.objectId = objectId;
                 instance.trsf = XCaf::shapeAbsoluteLocation(modelTree, id);
-                instance.name = absoluteName.join('/').toStdString();
+                instance.name = absoluteName;
                 m_vecInstance.push_back(std::move(instance));
             }
         }

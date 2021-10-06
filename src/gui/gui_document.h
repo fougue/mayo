@@ -57,7 +57,7 @@ public:
     void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
     // -- Visible state of document's tree nodes
-    Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
+    CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
     // -- Exploding
@@ -89,7 +89,7 @@ public:
     int aisViewCubeBoundingSize() const;
 
 signals:
-    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId);
+    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
 
     void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
 
@@ -139,7 +139,7 @@ private:
     Bnd_Box m_gfxBoundingBox;
 
     std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
-    std::unordered_map<TreeNodeId, Qt::CheckState> m_mapTreeNodeCheckState;
+    std::unordered_map<TreeNodeId, CheckState> m_mapTreeNodeCheckState;
 
     double m_explodingFactor = 0.;
 };

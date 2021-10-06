@@ -11,6 +11,7 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "app_module.h"
+#include "filepath_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
 

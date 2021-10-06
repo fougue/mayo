@@ -9,10 +9,11 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_conv.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qtcore_utils.h"
+#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "widgets_utils.h"
 
@@ -111,14 +112,15 @@ struct PropertyCheckStateEditor : public InterfacePropertyEditor, public QCheckB
     {
         //this->setTristate();
         QObject::connect(this, &QCheckBox::stateChanged, [=](int state) {
-            property->setValue(Qt::CheckState(state));
-            this->setText(QStringUtils::yesNoText(Qt::CheckState(state)));
+            auto estate = QtCoreUtils::toCheckState(Qt::CheckState(state));
+            property->setValue(estate);
+            this->setText(QStringUtils::yesNoText(estate));
         });
     }
 
     void syncWithProperty() override {
         this->setText(QStringUtils::yesNoText(*m_property));
-        this->setChecked(*m_property);
+        this->setCheckState(QtCoreUtils::toQtCheckState(*m_property));
     }
 
     PropertyCheckState* m_property;
@@ -145,8 +147,8 @@ struct PropertyEnumerationEditor : public InterfacePropertyEditor, public QCombo
         : QComboBox(parentWidget), m_property(property)
     {
         for (const Enumeration::Item& enumItem : property->enumeration().items()) {
-            this->addItem(enumItem.name.tr(), enumItem.value);
-            const QString itemDescr = property->findDescription(enumItem.value);
+            this->addItem(to_QString(enumItem.name.tr()), enumItem.value);
+            const QString itemDescr = to_QString(property->findDescription(enumItem.value));
             if (!itemDescr.isEmpty()) {
                 const int itemIndex = this->count() - 1;
                 this->setItemData(itemIndex, itemDescr, Qt::ToolTipRole);

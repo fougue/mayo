@@ -11,8 +11,8 @@
 #include "../base/document_tree_node.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
-#include "../base/string_conv.h"
 #include "../base/xcaf.h"
+#include "qstring_conv.h"
 
 #include <TDataStd_Name.hxx>
 #include <TDataXtd_Triangulation.hxx>
@@ -37,24 +37,25 @@ public:
 
         // XDE shape kind
         {
+            auto fnTrQString = [](const char* str){ return to_QString(textIdTr(str)); };
             QStringList listXdeShapeKind;
             if (XCaf::isShapeAssembly(label))
-                listXdeShapeKind.push_back(textId("Assembly").tr());
+                listXdeShapeKind.push_back(fnTrQString("Assembly"));
 
             if (XCaf::isShapeReference(label))
-                listXdeShapeKind.push_back(textId("Reference").tr());
+                listXdeShapeKind.push_back(fnTrQString("Reference"));
 
             if (XCaf::isShapeComponent(label))
-                listXdeShapeKind.push_back(textId("Component").tr());
+                listXdeShapeKind.push_back(fnTrQString("Component"));
 
             if (XCaf::isShapeCompound(label))
-                listXdeShapeKind.push_back(textId("Compound").tr());
+                listXdeShapeKind.push_back(fnTrQString("Compound"));
 
             if (XCaf::isShapeSimple(label))
-                listXdeShapeKind.push_back(textId("Simple").tr());
+                listXdeShapeKind.push_back(fnTrQString("Simple"));
 
             if (XCaf::isShapeSub(label))
-                listXdeShapeKind.push_back(textId("Sub").tr());
+                listXdeShapeKind.push_back(fnTrQString("Sub"));
 
             m_propertyXdeShapeKind.setValue(to_stdString(listXdeShapeKind.join('+')));
         }

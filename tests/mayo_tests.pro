@@ -25,6 +25,8 @@ SOURCES += \
     $$files(../src/io_occ/*.cpp) \
     ../src/app/qstring_utils.cpp \
     ../src/gui/qtgui_utils.cpp \
+    \
+    ../src/3rdparty/fmt/src/format.cc \
 
 CONFIG += file_copies
 COPIES += MayoInputs

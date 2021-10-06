@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/global.h"
 #include "../base/unit_system.h"
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLocale>
@@ -37,7 +38,7 @@ public:
     static QString bytesText(uint64_t sizeBytes, const QLocale& locale = QLocale());
 
     static QString yesNoText(bool on);
-    static QString yesNoText(Qt::CheckState state);
+    static QString yesNoText(CheckState state);
 
     static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
 };

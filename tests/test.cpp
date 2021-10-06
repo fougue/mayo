@@ -26,6 +26,8 @@
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/app/filepath_conv.h"
+#include "../src/app/qstring_conv.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/io_occ/io_occ.h"
 #include "../src/gui/qtgui_utils.h"
@@ -57,6 +59,9 @@ Q_DECLARE_METATYPE(Mayo::IO::Format)
 // For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
+// For PropertyValueConversion_test()
+Q_DECLARE_METATYPE(std::string)
+Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 
 namespace Mayo {
 
@@ -143,8 +148,14 @@ void Test::Application_test()
 
 void Test::TextId_test()
 {
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).key == "foobar");
-    QVERIFY(TextId(MAYO_TEXT_ID("Mayo::Test", "foobar")).trContext == "Mayo::Test");
+    struct TextIdContext {
+        MAYO_DECLARE_TEXT_ID_FUNCTIONS(Test::TextIdContext)
+    };
+
+    QVERIFY(TextIdContext::textIdContext() == "Test::TextIdContext");
+    QVERIFY(TextIdContext::textId("foof").trContext == "Test::TextIdContext");
+    QVERIFY(TextIdContext::textId("bark").key == "bark");
+    QVERIFY(TextIdContext::textIdTr("shktu") == "shktu");
 }
 
 void Test::FilePath_test()
@@ -173,7 +184,7 @@ void Test::FilePath_test()
 void Test::PropertyValueConversion_test()
 {
     QFETCH(QString, strPropertyName);
-    QFETCH(QVariant, variantValue);
+    QFETCH(PropertyValueConversion::Variant, variantValue);
 
     std::unique_ptr<Property> prop;
     if (strPropertyName == PropertyBool::TypeName) {
@@ -205,27 +216,27 @@ void Test::PropertyValueConversion_test()
 
 void Test::PropertyValueConversion_test_data()
 {
+    using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<QString>("strPropertyName");
-    QTest::addColumn<QVariant>("variantValue");
-    QTest::newRow("bool(false)") << PropertyBool::TypeName << QVariant(false);
-    QTest::newRow("bool(true)") << PropertyBool::TypeName << QVariant(true);
-    QTest::newRow("int(-50)") << PropertyInt::TypeName << QVariant(-50);
-    QTest::newRow("int(1979)") << PropertyInt::TypeName << QVariant(1979);
-    QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << QVariant(-1e6);
-    QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << QVariant(3.1415926535);
-    QTest::newRow("QString(\"test\")") << PropertyString::TypeName << QVariant("test");
-    QTest::newRow("QString(\"1558\")") << PropertyString::TypeName << QVariant(1558);
-    QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << QVariant("#0000AA");
-    QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << QVariant("#FFFFFF");
-    QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << QVariant("#BB0000");
-    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << QVariant("Blanc");
+    QTest::addColumn<Variant>("variantValue");
+    QTest::newRow("bool(false)") << PropertyBool::TypeName << Variant(false);
+    QTest::newRow("bool(true)") << PropertyBool::TypeName << Variant(true);
+    QTest::newRow("int(-50)") << PropertyInt::TypeName << Variant(-50);
+    QTest::newRow("int(1979)") << PropertyInt::TypeName << Variant(1979);
+    QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << Variant(-1e6);
+    QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << Variant(3.1415926535);
+    QTest::newRow("String(\"test\")") << PropertyString::TypeName << Variant("test");
+    QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << Variant("#0000AA");
+    QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << Variant("#FFFFFF");
+    QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << Variant("#BB0000");
+    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
 }
 
 void Test::PropertyQuantityValueConversion_test()
 {
     QFETCH(QString, strPropertyName);
-    QFETCH(QVariant, variantFrom);
-    QFETCH(QVariant, variantTo);
+    QFETCH(PropertyValueConversion::Variant, variantFrom);
+    QFETCH(PropertyValueConversion::Variant, variantTo);
 
     std::unique_ptr<Property> prop;
     if (strPropertyName == "PropertyLength") {
@@ -245,13 +256,14 @@ void Test::PropertyQuantityValueConversion_test()
 
 void Test::PropertyQuantityValueConversion_test_data()
 {
+    using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<QString>("strPropertyName");
-    QTest::addColumn<QVariant>("variantFrom");
-    QTest::addColumn<QVariant>("variantTo");
-    QTest::newRow("Length(25mm)") << "PropertyLength" << QVariant("25mm") << QVariant("25mm");
-    QTest::newRow("Length(2m)") << "PropertyLength" << QVariant("2m") << QVariant("2000mm");
-    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << QVariant("1.57079rad") << QVariant("1.57079rad");
-    QTest::newRow("Length(90°)") << "PropertyAngle" << QVariant("90°") << QVariant("1.570796rad");
+    QTest::addColumn<Variant>("variantFrom");
+    QTest::addColumn<Variant>("variantTo");
+    QTest::newRow("Length(25mm)") << "PropertyLength" << Variant("25mm") << Variant("25mm");
+    QTest::newRow("Length(2m)") << "PropertyLength" << Variant("2m") << Variant("2000mm");
+    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
+    QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
 void Test::IO_test()

@@ -8,10 +8,10 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
-#include "../base/string_conv.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
 
@@ -118,7 +118,7 @@ static QString propertyValueText(const PropertyEnumeration* prop)
 {
     for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
-            return enumItem.name.tr();
+            return to_QString(enumItem.name.tr());
     }
 
     return QString();

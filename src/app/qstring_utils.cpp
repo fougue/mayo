@@ -111,12 +111,12 @@ QString QStringUtils::yesNoText(bool on)
     return on ? tr("Yes") : tr("No");
 }
 
-QString QStringUtils::yesNoText(Qt::CheckState state)
+QString QStringUtils::yesNoText(CheckState state)
 {
     switch (state) {
-    case Qt::Unchecked: return tr("No");
-    case Qt::PartiallyChecked: return tr("Partially");
-    case Qt::Checked: return tr("Yes");
+    case CheckState::Off: return tr("No");
+    case CheckState::Partially: return tr("Partially");
+    case CheckState::On: return tr("Yes");
     }
 }
 

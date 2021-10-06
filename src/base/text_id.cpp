@@ -5,20 +5,18 @@
 ****************************************************************************/
 
 #include "text_id.h"
-
-#include <QtCore/QCoreApplication>
-#include <cstring>
+#include "application.h"
 
 namespace Mayo {
 
-QString TextId::tr() const
+std::string_view TextId::tr(int n) const
 {
-    return QCoreApplication::translate(this->trContext.data(), this->key.data());
+    return Application::instance()->translate(*this, n);
 }
 
 bool TextId::isEmpty() const
 {
-    return this->key.isEmpty();
+    return this->key.empty();
 }
 
 } // namespace Mayo

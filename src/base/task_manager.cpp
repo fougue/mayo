@@ -5,10 +5,11 @@
 ****************************************************************************/
 
 #include "task_manager.h"
+
+#include "application.h"
+#include "cpp_utils.h"
 #include "math_utils.h"
 
-#include <QtCore/QtDebug>
-#include <QtCore/QCoreApplication>
 #include <cassert>
 
 namespace Mayo {
@@ -16,12 +17,6 @@ namespace Mayo {
 TaskManager::TaskManager(QObject* parent)
     : QObject(parent)
 {
-    static bool staticTypesRegistered = false;
-    if (!staticTypesRegistered) {
-        qRegisterMetaType<TaskId>("Mayo::TaskId");
-        qRegisterMetaType<TaskId>("TaskId");
-        staticTypesRegistered = true;
-    }
 }
 
 TaskManager::~TaskManager()
@@ -43,7 +38,7 @@ TaskManager* TaskManager::globalInstance()
 {
     static TaskManager* global = nullptr;
     if (!global)
-        global = new TaskManager(QCoreApplication::instance());
+        global = new TaskManager(Application::instance().get());
 
     return global;
 }
@@ -131,13 +126,13 @@ int TaskManager::globalProgress() const
     return newGlobalPct;
 }
 
-QString TaskManager::title(TaskId id) const
+const std::string& TaskManager::title(TaskId id) const
 {
     const Entity* entity = this->findEntity(id);
-    return entity ? entity->title : QString();
+    return entity ? entity->title : CppUtils::nullString();
 }
 
-void TaskManager::setTitle(TaskId id, const QString& title)
+void TaskManager::setTitle(TaskId id, std::string_view title)
 {
     Entity* entity = this->findEntity(id);
     if (entity)

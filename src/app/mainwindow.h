@@ -8,6 +8,7 @@
 
 #include "../base/filepath.h"
 #include "../base/property.h"
+#include "../base/text_id.h"
 #include "../graphics/graphics_object_base_property_group.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
@@ -22,6 +23,7 @@ class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::MainWindow)
 public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();

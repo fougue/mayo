@@ -13,6 +13,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QObject>
 #include <functional>
+#include <memory>
 #include <string_view>
 class QSettings;
 
@@ -21,6 +22,16 @@ namespace Mayo {
 class Settings : public QObject, public PropertyGroup {
     Q_OBJECT
 public:
+    using Variant = PropertyValueConversion::Variant;
+
+    class Storage {
+    public:
+        virtual bool contains(std::string_view key) const = 0;
+        virtual Variant value(std::string_view key) const = 0;
+        virtual void setValue(std::string_view key, const Variant& value) = 0;
+        virtual void sync() = 0;
+    };
+
     using GroupIndex = Settings_GroupIndex;
     using SectionIndex = Settings_SectionIndex;
     using SettingIndex = Settings_SettingIndex;
@@ -30,37 +41,37 @@ public:
     Settings(QObject* parent = nullptr);
     ~Settings();
 
+    void setStorage(std::unique_ptr<Storage> ptrStorage);
+
     void load();
     void loadProperty(SettingIndex index);
-    QVariant findValueFromKey(const QString& strKey) const;
+    Variant findValueFromKey(std::string_view strKey) const;
     void save();
 
-    void loadPropertyFrom(const QSettings& source, SettingIndex index);
-    void loadFrom(const QSettings& source, const ExcludePropertyPredicate& fnExclude = nullptr);
-    void saveAs(QSettings* target, const ExcludePropertyPredicate& fnExclude = nullptr);
+    void loadPropertyFrom(const Storage& source, SettingIndex index);
+    void loadFrom(const Storage& source, const ExcludePropertyPredicate& fnExclude = nullptr);
+    void saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude = nullptr);
 
     const PropertyValueConversion& propertyValueConversion() const;
     void setPropertyValueConversion(const PropertyValueConversion& conv);
 
     int groupCount() const;
-    QByteArray groupIdentifier(GroupIndex index) const;
-    QString groupTitle(GroupIndex index) const;
+    std::string_view groupIdentifier(GroupIndex index) const;
+    std::string_view groupTitle(GroupIndex index) const;
     GroupIndex addGroup(TextId identifier);
-    GroupIndex addGroup(QByteArray identifier);
     GroupIndex addGroup(std::string_view identifier);
-    void setGroupTitle(GroupIndex index, const QString& title);
+    void setGroupTitle(GroupIndex index, std::string_view title);
 
     void addResetFunction(GroupIndex index, ResetFunction fn);
     void addResetFunction(SectionIndex index, ResetFunction fn);
 
     int sectionCount(GroupIndex index) const;
-    QByteArray sectionIdentifier(SectionIndex index) const;
-    QString sectionTitle(SectionIndex index) const;
+    std::string_view sectionIdentifier(SectionIndex index) const;
+    std::string_view sectionTitle(SectionIndex index) const;
     bool isDefaultGroupSection(SectionIndex index) const;
     SectionIndex addSection(GroupIndex index, TextId identifier);
-    SectionIndex addSection(GroupIndex index, QByteArray identifier);
     SectionIndex addSection(GroupIndex index, std::string_view identifier);
-    void setSectionTitle(SectionIndex index, const QString& title);
+    void setSectionTitle(SectionIndex index, std::string_view title);
 
     int settingCount(SectionIndex index) const;
     Property* property(SettingIndex index) const;
@@ -74,7 +85,6 @@ public:
 
     // Helpers
 
-    static QByteArray defautLocaleLanguageCode();
     const QLocale& locale() const;
     void setLocale(const QLocale& locale);
 

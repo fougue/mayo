@@ -16,7 +16,6 @@
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/settings.h"
-#include "../base/string_conv.h"
 #include "../base/task_manager.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_utils.h"
@@ -30,7 +29,9 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "item_view_buttons.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
@@ -56,6 +57,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtDebug>
 
+#include <fmt/format.h>
 #include <unordered_set>
 
 namespace Mayo {
@@ -490,7 +492,7 @@ void MainWindow::newDocument()
 {
     static unsigned docSequenceId = 0;
     auto docPtr = m_guiApp->application()->newDocument(Document::Format::Binary);
-    docPtr->setName(tr("Anonymous%1").arg(++docSequenceId));
+    docPtr->setName(to_stdString(tr("Anonymous%1").arg(++docSequenceId)));
 }
 
 void MainWindow::openDocuments()
@@ -525,18 +527,18 @@ void MainWindow::importInCurrentDoc()
                         AppModule::get(app)->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
+                .withEntityPostProcessInfoProgress(20, textIdTr("Mesh BRep shapes"))
                 .withMessenger(appModule)
                 .withTaskProgress(progress)
                 .execute();
         if (okImport)
-            appModule->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
     });
     const QString taskTitle =
             resFileNames.listFilepath.size() > 1 ?
                 tr("Import") :
                 filepathTo<QString>(resFileNames.listFilepath.front().stem());
-    taskMgr->setTitle(taskId, taskTitle);
+    taskMgr->setTitle(taskId, to_stdString(taskTitle));
     taskMgr->run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
         Internal::prependRecentFile(fp);
@@ -578,9 +580,9 @@ void MainWindow::exportSelectedItems()
                 .withTaskProgress(progress)
                 .execute();
         if (okExport)
-            appModule->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(fmt::format(textIdTr("Export time: {}ms"), chrono.elapsed()));
     });
-    taskMgr->setTitle(taskId, QFileInfo(strFilepath).fileName());
+    taskMgr->setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
     taskMgr->run(taskId);
     Internal::ImportExportSettings::save(lastSettings);
 }
@@ -825,13 +827,14 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
         return filepath;
     };
     const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
+    const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                tr("Close %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close");
     const QString textActionCloseAllExcept =
             docPtr ?
-                tr("Close all except %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close all except %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close all except current");
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->actionCloseDoc->setText(textActionClose);
@@ -933,7 +936,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                     doc = app->newDocument();
                 }
 
-                doc->setName(filepathTo<QString>(fp.stem()));
+                doc->setName(fp.stem().u8string());
                 doc->setFilePath(fp);
 
                 auto appModule = AppModule::get(app);
@@ -946,14 +949,14 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                                 appModule->computeBRepMesh(labelEntity, progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                        .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
+                        .withEntityPostProcessInfoProgress(20, textIdTr("Mesh BRep shapes"))
                         .withMessenger(appModule)
                         .withTaskProgress(progress)
                         .execute();
                 if (okImport)
-                    appModule->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+                    appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
-            taskMgr->setTitle(taskId, filepathTo<QString>(fp.stem()));
+            taskMgr->setTitle(taskId, fp.stem().u8string());
             taskMgr->run(taskId);
             Internal::prependRecentFile(fp);
         }
@@ -1048,7 +1051,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
 
     // Link with document selector
     auto appModule = AppModule::get(m_guiApp->application());
-    QAction* action = menu->addAction(appModule->linkWithDocumentSelector.name().tr());
+    QAction* action = menu->addAction(to_QString(appModule->linkWithDocumentSelector.name().tr()));
     action->setCheckable(true);
     QObject::connect(action, &QAction::triggered, [=](bool on) {
         appModule->linkWithDocumentSelector.setValue(on);
@@ -1123,7 +1126,7 @@ QMenu* MainWindow::createMenuDisplayMode()
         auto group = new QActionGroup(menu);
         group->setExclusive(true);
         for (const Enumeration::Item& displayMode : driver->displayModes().items()) {
-            auto action = new QAction(displayMode.name.tr(), menu);
+            auto action = new QAction(to_QString(displayMode.name.tr()), menu);
             action->setCheckable(true);
             action->setData(displayMode.value);
             menu->addAction(action);

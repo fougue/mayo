@@ -14,6 +14,7 @@
 #include "task_manager.h"
 #include "task_progress.h"
 
+#include <fmt/format.h>
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -62,7 +63,7 @@ Format System::probeFormat(const FilePath& filepath) const
         file.read(buff.data(), buff.size());
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
-        probeInput.contentsBegin = QByteArray::fromRawData(buff.data(), buff.size());
+        probeInput.contentsBegin = std::string_view(buff.data(), buff.size());
         probeInput.hintFullSize = std::filesystem::file_size(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
@@ -209,28 +210,27 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         else
             return false;
     };
-    auto fnAddError = [&](const FilePath& fp, QString errorMsg) {
+    auto fnAddError = [&](const FilePath& fp, std::string_view errorMsg) {
         ok = false;
-        messenger->emitError(tr("Error during import of '%1'\n%2")
-                             .arg(filepathTo<QString>(fp), errorMsg));
+        messenger->emitError(fmt::format(textIdTr("Error during import of '{}'\n{}"), fp.u8string(), errorMsg));
     };
-    auto fnReadFileError = [&](const FilePath& fp, QString errorMsg) {
+    auto fnReadFileError = [&](const FilePath& fp, std::string_view errorMsg) {
         fnAddError(fp, errorMsg);
         return false;
     };
     auto fnReadFile = [&](TaskData& taskData) {
         taskData.fileFormat = this->probeFormat(taskData.filepath);
         if (taskData.fileFormat == Format_Unknown)
-            return fnReadFileError(taskData.filepath, tr("Unknown format"));
+            return fnReadFileError(taskData.filepath, textIdTr("Unknown format"));
 
         int portionSize = 40;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
-        TaskProgress progress(taskData.progress, portionSize, tr("Reading file"));
+        TaskProgress progress(taskData.progress, portionSize, textIdTr("Reading file"));
         taskData.reader = this->createReader(taskData.fileFormat);
         if (!taskData.reader)
-            return fnReadFileError(taskData.filepath, tr("No supporting reader"));
+            return fnReadFileError(taskData.filepath, textIdTr("No supporting reader"));
 
         taskData.reader->setMessenger(messenger);
         if (args.parametersProvider) {
@@ -239,7 +239,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
-            return fnReadFileError(taskData.filepath, tr("File read problem"));
+            return fnReadFileError(taskData.filepath, textIdTr("File read problem"));
 
         return true;
     };
@@ -248,11 +248,11 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
-        TaskProgress progress(taskData.progress, portionSize, tr("Transferring file"));
+        TaskProgress progress(taskData.progress, portionSize, textIdTr("Transferring file"));
         if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
             taskData.seqTransferredEntity = taskData.reader->transfer(doc, &progress);
             if (taskData.seqTransferredEntity.IsEmpty())
-                fnAddError(taskData.filepath, tr("File transfer problem"));
+                fnAddError(taskData.filepath, textIdTr("File transfer problem"));
         }
 
         taskData.transferred = true;
@@ -338,30 +338,30 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
     TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
     Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
-    auto fnError = [=](const QString& errorMsg) {
-        messenger->emitError(tr("Error during export to '%1'\n%2")
-                             .arg(filepathTo<QString>(args.targetFilepath), errorMsg));
+    auto fnError = [=](std::string_view errorMsg) {
+        const std::string strFilepath = args.targetFilepath.u8string();
+        messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));
         return false;
     };
 
     std::unique_ptr<Writer> writer = this->createWriter(args.targetFormat);
     if (!writer)
-        return fnError(tr("No supporting writer"));
+        return fnError(textIdTr("No supporting writer"));
 
     writer->setMessenger(args.messenger);
     writer->applyProperties(args.parameters);
     {
-        TaskProgress transferProgress(progress, 40, tr("Transfer"));
+        TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
         const bool okTransfer = writer->transfer(args.applicationItems, &transferProgress);
         if (!okTransfer)
-            return fnError(tr("File transfer problem"));
+            return fnError(textIdTr("File transfer problem"));
     }
 
     {
-        TaskProgress writeProgress(progress, 60, tr("Write"));
+        TaskProgress writeProgress(progress, 60, textIdTr("Write"));
         const bool okWriteFile = writer->writeFile(args.targetFilepath, &writeProgress);
         if (!okWriteFile)
-            return fnError(tr("File write problem"));
+            return fnError(textIdTr("File write problem"));
     }
 
     return true;
@@ -468,7 +468,7 @@ System::Operation_ImportInDocument::withEntityPostProcessRequiredIf(std::functio
 }
 
 System::Operation_ImportInDocument::Operation&
-System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progressSize, const QString& progressStep)
+System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep)
 {
     m_args.entityPostProcessProgressSize = progressSize;
     m_args.entityPostProcessProgressStep = progressStep;
@@ -490,11 +490,11 @@ bool isSpace(char c) {
     return std::isspace(c, std::locale::classic());
 }
 
-bool matchToken(QByteArray::const_iterator itBegin, std::string_view token) {
+bool matchToken(std::string_view::const_iterator itBegin, std::string_view token) {
     return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
 }
 
-auto findFirstNonSpace(const QByteArray& str) {
+auto findFirstNonSpace(std::string_view str) {
     return std::find_if_not(str.cbegin(), str.cend(), isSpace);
 }
 
@@ -502,7 +502,7 @@ auto findFirstNonSpace(const QByteArray& str) {
 
 Format probeFormat_STEP(const System::FormatProbeInput& input)
 {
-    const QByteArray& sample = input.contentsBegin;
+    std::string_view sample = input.contentsBegin;
     // regex : ^\s*ISO-10303-21\s*;\s*HEADER
     constexpr std::string_view stepIsoId = "ISO-10303-21";
     constexpr std::string_view stepHeaderToken = "HEADER";
@@ -521,7 +521,7 @@ Format probeFormat_STEP(const System::FormatProbeInput& input)
 
 Format probeFormat_IGES(const System::FormatProbeInput& input)
 {
-    const QByteArray& sample = input.contentsBegin;
+    std::string_view sample = input.contentsBegin;
     // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
     bool isIges = true;
     if (sample.size() >= 80 && sample[72] == 'S') {
@@ -554,7 +554,7 @@ Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 
 Format probeFormat_STL(const System::FormatProbeInput& input)
 {
-    const QByteArray& sample = input.contentsBegin;
+    std::string_view sample = input.contentsBegin;
     // Binary STL ?
     {
         constexpr size_t binaryStlHeaderSize = 80 + sizeof(uint32_t);
@@ -586,7 +586,7 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
-    const QByteArray& sample = input.contentsBegin;
+    std::string_view sample = input.contentsBegin;
     const std::regex rx{ R"("^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s")" };
     if (std::regex_search(sample.cbegin(), sample.cend(), rx))
         return Format_OBJ;

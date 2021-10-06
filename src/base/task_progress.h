@@ -7,8 +7,9 @@
 #pragma once
 
 #include "task_common.h"
-#include <QtCore/QString>
 #include <atomic>
+#include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -18,7 +19,7 @@ class TaskManager;
 class TaskProgress {
 public:
     TaskProgress();
-    TaskProgress(TaskProgress* parent, double portionSize, const QString& step = {});
+    TaskProgress(TaskProgress* parent, double portionSize, std::string_view step = {});
     ~TaskProgress();
 
     TaskId taskId() const;
@@ -28,8 +29,8 @@ public:
     int value() const { return m_value; }
     void setValue(int pct);
 
-    const QString& step() const { return m_step; }
-    void setStep(const QString& title);
+    const std::string& step() const { return m_step; }
+    void setStep(std::string_view title);
 
     bool isRoot() const { return m_parent != nullptr; }
     const TaskProgress* parent() const { return m_parent; }
@@ -54,7 +55,7 @@ private:
     const Task* m_task = nullptr;
     double m_portionSize = -1;
     std::atomic<int> m_value = 0;
-    QString m_step;
+    std::string m_step;
     bool m_isAbortRequested = false;
 };
 

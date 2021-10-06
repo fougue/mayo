@@ -11,7 +11,10 @@
 #include "filepath.h"
 #include "libtree.h"
 #include "xcaf.h"
+
 #include <QtCore/QObject>
+#include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -21,7 +24,7 @@ class DocumentTreeNode;
 class Document : public QObject, public TDocStd_Document {
     Q_OBJECT
     Q_PROPERTY(int identifier READ identifier)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(std::string name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(FilePath filePath READ filePath WRITE setFilePath)
     Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
 public:
@@ -30,8 +33,8 @@ public:
 
     Identifier identifier() const { return m_identifier; }
 
-    const QString& name() const;
-    void setName(const QString& name);
+    const std::string& name() const;
+    void setName(std::string_view name);
 
     const FilePath& filePath() const;
     void setFilePath(const FilePath& fp);
@@ -64,7 +67,7 @@ public:
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
 signals:
-    void nameChanged(const QString& name);
+    void nameChanged(const std::string& name);
     void entityAdded(Mayo::TreeNodeId entityTreeNodeId);
     void entityAboutToBeDestroyed(Mayo::TreeNodeId entityTreeNodeId);
     //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
@@ -88,7 +91,7 @@ private:
     void setIdentifier(Identifier ident) { m_identifier = ident; }
 
     Identifier m_identifier = -1;
-    QString m_name;
+    std::string m_name;
     FilePath m_filePath;
     XCaf m_xcaf;
     Tree<TDF_Label> m_modelTree;

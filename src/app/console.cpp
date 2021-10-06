@@ -152,4 +152,13 @@ std::string consoleToPrintable(const QString& str)
 #endif
 }
 
+std::string consoleToPrintable(std::string_view str)
+{
+#ifdef Q_OS_WIN
+    return consoleToPrintable(QString::fromUtf8(str.data(), str.size()));
+#else
+    return std::string(str); // utf8
+#endif
+}
+
 } // namespace Mayo

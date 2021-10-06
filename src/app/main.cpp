@@ -18,7 +18,10 @@
 #include "app_module.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "mainwindow.h"
+#include "qsettings_storage.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
@@ -30,11 +33,13 @@
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
+#include <QtCore/QReadWriteLock>
 #include <QtCore/QTranslator>
 #include <QtWidgets/QApplication>
 
 #include <Message.hxx>
 
+#include <fmt/format.h>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -47,7 +52,10 @@
 
 namespace Mayo {
 
-class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
+class Main {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Main)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::Main)
+};
 
 struct CommandLineArguments {
     QString themeName;
@@ -154,11 +162,52 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
+static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
+{
+    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file doesn't exist or is not readable [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
+    if (occSettings.status() != QSettings::NoError) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file could not be loaded with QSettings [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    // Process options
+    for (const char* varName : Application::envOpenCascadeOptions()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            const QString strValue = occSettings.value(qVarName).toString();
+            qputenv(varName, strValue.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
+        }
+    }
+
+    // Process paths
+    for (const char* varName : Application::envOpenCascadePaths()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            QString strPath = occSettings.value(qVarName).toString();
+            if (QFileInfo(strPath).isRelative())
+                strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
+
+            strPath = QDir::toNativeSeparators(strPath);
+            qputenv(varName, strPath.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
+        }
+    }
+}
+
 // Initializes "Base" objects
 static void initBase(QCoreApplication* qtApp)
 {
-    Application::setOpenCascadeEnvironment("opencascade.conf");
     auto app = Application::instance();
+    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
 
     // Load translation files
     {
@@ -167,8 +216,26 @@ static void initBase(QCoreApplication* qtApp)
         if (translator->load(qmFilePath))
             qtApp->installTranslator(translator);
         else
-            qWarning() << Main::tr("Failed to load translation for '%1'").arg(qmFilePath);
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
     }
+
+    // Set Qt i18n backend
+    app->addTranslator([=](const TextId& text, int n) -> std::string_view {
+        const QString qstr = qtApp->translate(text.trContext.data(), text.key.data(), nullptr, n);
+        auto qstrHash = qHash(qstr);
+        static std::unordered_map<unsigned, std::string> mapStr;
+        static QReadWriteLock mapStrLock;
+        {
+            QReadLocker locker(&mapStrLock);
+            auto it = mapStr.find(qstrHash);
+            if (it != mapStr.cend())
+                return it->second;
+        }
+
+        QWriteLocker locker(&mapStrLock);
+        auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
+        return ok ? it->second : std::string_view{};
+    });
 
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
@@ -223,12 +290,17 @@ static void cli_asyncExportDocuments(
     };
 
     // Collects emitted error messages into a single string object
-    struct ErrorMessageCollect : public Messenger {
-        QString message;
-        void emitMessage(MessageType msgType, const QString& text) override {
+    class ErrorMessageCollect : public Messenger {
+    public:
+        void emitMessage(MessageType msgType, std::string_view text) override {
             if (msgType == MessageType::Error)
-                message += text + " ";
+                m_message += to_QString(text) + " ";
         }
+
+        std::string message() const { return to_stdString(m_message); }
+
+    private:
+        QString m_message;
     };
 
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
@@ -246,8 +318,10 @@ static void cli_asyncExportDocuments(
         helper->lastPrintProgressLineCount = 0;
         std::cout << "\r";
         taskMgr->foreachTask([=](TaskId taskId) {
-            const std::string strMessage = consoleToPrintable(taskMgr->title(taskId).replace('\n', ' '));
-            int lineWidth = strMessage.size();
+            std::string strMessage = taskMgr->title(taskId);
+            std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
+            strMessage = consoleToPrintable(strMessage);
+            auto lineWidth = int(strMessage.size());
             const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
             const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
             if (taskFinished && !taskSuccess) {
@@ -285,7 +359,7 @@ static void cli_asyncExportDocuments(
         if (args.cliProgressReport)
             fnPrintProgress();
         else
-            qInfo() << taskMgr->title(taskId);
+            qInfo() << to_QString(taskMgr->title(taskId));
     });
     QObject::connect(taskMgr, &TaskManager::ended, app, [=](TaskId taskId) {
         if (args.cliProgressReport) {
@@ -293,9 +367,9 @@ static void cli_asyncExportDocuments(
         }
         else {
             if (helper->mapTaskStatus.at(taskId)->success)
-                qInfo() << taskMgr->title(taskId);
+                qInfo() << to_QString(taskMgr->title(taskId));
             else
-                qCritical() << taskMgr->title(taskId);
+                qCritical() << to_QString(taskMgr->title(taskId));
         }
     });
     QObject::connect(taskMgr, &TaskManager::progressChanged, app, [=]{
@@ -341,23 +415,23 @@ static void cli_asyncExportDocuments(
                     appModule->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
-                .withEntityPostProcessInfoProgress(20, Main::tr("Mesh BRep shapes"))
+                .withEntityPostProcessInfoProgress(20, Main::textIdTr("Mesh BRep shapes"))
                 .withMessenger(&errorCollect)
                 .withTaskProgress(progress)
                 .execute();
-            taskMgr->setTitle(progress->taskId(), okImport ? Main::tr("Imported") : errorCollect.message);
+            taskMgr->setTitle(progress->taskId(), okImport ? Main::textIdTr("Imported") : errorCollect.message());
             helper->mapTaskStatus.at(progress->taskId())->success = okImport;
             helper->mapTaskStatus.at(progress->taskId())->finished = true;
     });
     helper->mapTaskStatus.insert({ importTaskId, std::make_unique<TaskStatus>() });
-    taskMgr->setTitle(importTaskId, Main::tr("Importing..."));
+    taskMgr->setTitle(importTaskId, Main::textIdTr("Importing..."));
     taskMgr->exec(importTaskId, TaskAutoDestroy::Off);
     if (!okImport)
         return fnExit(EXIT_FAILURE); // Error
 
     // Run export operations(asynchronous)
     for (const FilePath& filepath : args.listFilepathToExport) {
-        const QString strFilename = filepathTo<QString>(filepath.filename());
+        const std::string strFilename = filepath.filename().u8string();
         const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 ErrorMessageCollect errorCollect;
                 const IO::Format format = app->ioSystem()->probeFormat(filepath);
@@ -370,14 +444,17 @@ static void cli_asyncExportDocuments(
                             .withMessenger(&errorCollect)
                             .withTaskProgress(progress)
                             .execute();
-                const QString msg = okExport ? Main::tr("Exported %1").arg(strFilename) : errorCollect.message;
+                const std::string msg =
+                        okExport ?
+                            fmt::format(Main::textIdTr("Exported {}"), strFilename) :
+                            errorCollect.message();
                 taskMgr->setTitle(progress->taskId(), msg);
                 helper->mapTaskStatus.at(progress->taskId())->success = okExport;
                 helper->mapTaskStatus.at(progress->taskId())->finished = true;
                 --(helper->exportTaskCount);
         });
         helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
-        taskMgr->setTitle(taskId, Main::tr("Exporting %1...").arg(strFilename));
+        taskMgr->setTitle(taskId, fmt::format(Main::textIdTr("Exporting {}..."), strFilename));
     }
 
     taskMgr->foreachTask([=](TaskId taskId) {
@@ -406,14 +483,15 @@ static int runApp(QCoreApplication* qtApp)
         else {
             const QString strFilepathSettings = filepathTo<QString>(args.filepathSettings);
             if (!filepathIsRegularFile(args.filepathSettings))
-                fnCriticalExit(Main::tr("Failed to load settings file '%1'").arg(strFilepathSettings));
+                fnCriticalExit(Main::tr("Failed to load application settings file [path=%1]").arg(strFilepathSettings));
 
-            QSettings fileSettings(strFilepathSettings, QSettings::IniFormat);
+            QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
             appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
         }
     };
 
     // Initialize Base application
+    initOpenCascadeEnvironment("opencascade.conf");
     initBase(qtApp);
     auto app = Application::instance().get();
 

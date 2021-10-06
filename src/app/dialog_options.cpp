@@ -13,6 +13,8 @@
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
+#include "qsettings_storage.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "widgets_utils.h"
 #include "ui_dialog_options.h"
@@ -71,7 +73,7 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
     QStandardItem* itemRoot = model->invisibleRootItem();
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
-        const QString titleGroup = settings->groupTitle(indexGroup);
+        const QString titleGroup = to_QString(settings->groupTitle(indexGroup));
         auto itemGroup = new QStandardItem(titleGroup);
         itemGroup->setData(toSettingNodeId(indexGroup), ItemSettingNodeId_Role);
         for (int iSection = 0; iSection < settings->sectionCount(indexGroup); ++iSection) {
@@ -82,7 +84,7 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
             if (settings->settingCount(indexSection) == 0)
                 continue;
 
-            const QString titleSection = settings->sectionTitle(indexSection);
+            const QString titleSection = to_QString(settings->sectionTitle(indexSection));
             auto itemSection = new QStandardItem(titleSection);
             itemSection->setData(toSettingNodeId(indexSection), ItemSettingNodeId_Role);
             itemGroup->appendRow(itemSection);
@@ -168,7 +170,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
     for (int iGroup = 0; iGroup < settings->groupCount(); ++iGroup) {
         const Settings::GroupIndex indexGroup(iGroup);
-        const QString titleGroup = settings->groupTitle(indexGroup);
+        const QString titleGroup = to_QString(settings->groupTitle(indexGroup));
         auto listItemGroup = new QListWidgetItem(titleGroup, m_ui->listWidget_Settings);
         listItemGroup->setFont(fontItemGroupSection);
         listItemGroup->setData(ItemSettingNodeId_Role, toSettingNodeId(indexGroup));
@@ -179,7 +181,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
                 continue; // Skip empty section
 
             if (!settings->isDefaultGroupSection(indexSection)) {
-                const QString titleSection = tr("%1 / %2").arg(titleGroup, settings->sectionTitle(indexSection));
+                const QString titleSection = tr("%1 / %2").arg(titleGroup, to_QString(settings->sectionTitle(indexSection)));
                 auto listItemSection = new QListWidgetItem(titleSection, m_ui->listWidget_Settings);
                 listItemSection->setFont(fontItemGroupSection);
                 listItemSection->setData(ItemSettingNodeId_Role, toSettingNodeId(indexSection));
@@ -212,7 +214,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     auto connSettingsAboutToChange =
             QObject::connect(m_settings, &Settings::aboutToChange, this, [=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
-            const QVariant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
+            const Settings::Variant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
             m_mapSettingInitialValue.insert({ property, propertyValue});
         }
     });
@@ -294,7 +296,7 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
         return nullptr;
 
     auto widget = new QWidget(parentWidget);
-    auto labelName = new QLabel(QString("<b>%1</b>").arg(property->label()), widget);
+    auto labelName = new QLabel(QString("<b>%1</b>").arg(to_QString(property->label())), widget);
     auto widgetLayout = new QVBoxLayout(widget);
     widgetLayout->addWidget(labelName);
 
@@ -303,8 +305,8 @@ QWidget* DialogOptions::createEditor(Property* property, QWidget* parentWidget) 
     {
         auto panelEditorLayout = new QVBoxLayout(panelEditor);
         panelEditorLayout->setContentsMargins(0, 0, 0, 10);
-        if (!property->description().isEmpty()) {
-            auto labelDescription = new QLabel(property->description(), panelEditor);
+        if (!property->description().empty()) {
+            auto labelDescription = new QLabel(to_QString(property->description()), panelEditor);
             labelDescription->setMinimumWidth(600);
             labelDescription->setWordWrap(true);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -366,7 +368,7 @@ void DialogOptions::loadFromFile()
         return;
     }
 
-    QSettings fileSettings(filepath, QSettings::IniFormat);
+    QSettingsStorage fileSettings(filepath, QSettings::IniFormat);
     m_settings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
 }
 
@@ -378,10 +380,10 @@ void DialogOptions::saveAs()
     if (filepath.isEmpty())
         return;
 
-    QSettings fileSettings(filepath, QSettings::IniFormat);
+    QSettingsStorage fileSettings(filepath, QSettings::IniFormat);
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
-    if (fileSettings.status() != QSettings::NoError)
+    if (fileSettings.get().status() != QSettings::NoError)
         WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
 }
 
