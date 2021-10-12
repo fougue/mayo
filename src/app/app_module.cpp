@@ -45,7 +45,8 @@ AppModule::AppModule(Application* app)
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
       sectionId_graphicsMeshDefaults(
-          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults")))
+          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
+      m_locale(QLocale::system())
 {
     static bool metaTypesRegistered = false;
     if (!metaTypesRegistered) {
@@ -190,10 +191,15 @@ AppModule::AppModule(Application* app)
 QStringUtils::TextOptions AppModule::defaultTextOptions() const
 {
     QStringUtils::TextOptions opts;
-    opts.locale = m_app->settings()->locale();
+    opts.locale = this->locale();
     opts.unitDecimals = this->unitSystemDecimals;
     opts.unitSchema = this->unitSystemSchema;
     return opts;
+}
+
+const QLocale& AppModule::locale() const
+{
+    return m_locale;
 }
 
 QString AppModule::qmFilePath(const QByteArray& languageCode)

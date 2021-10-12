@@ -56,7 +56,6 @@ class Settings::Private {
 public:
     Private()
         : m_storage(new VoidStorage),
-          m_locale(QLocale::system()),
           m_propValueConverter(&m_defaultPropValueConverter)
     {
     }
@@ -101,7 +100,6 @@ public:
     Settings::Storage& storage() { return *m_storage.get(); }
 
     std::unique_ptr<Settings::Storage> m_storage;
-    QLocale m_locale;
     std::vector<Settings_Group> m_vecGroup;
     std::vector<SectionResetFunction> m_vecSectionResetFn;
     const PropertyValueConversion m_defaultPropValueConverter;
@@ -391,16 +389,6 @@ void Settings::resetSection(SectionIndex index)
         if (sectionResetFn.sectionId == index)
             sectionResetFn.fnReset();
     }
-}
-
-const QLocale& Settings::locale() const
-{
-    return d->m_locale;
-}
-
-void Settings::setLocale(const QLocale& locale)
-{
-    d->m_locale = locale;
 }
 
 void Settings::onPropertyAboutToChange(Property* prop)

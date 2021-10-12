@@ -13,7 +13,7 @@
 
 namespace Mayo {
 
-// Mechanism to convert value of a Property object to/from QVariant
+// Mechanism to convert value of a Property object to/from a basic variant type
 class PropertyValueConversion {
 public:
     // Variant type to be used when (de)serializing values

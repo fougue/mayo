@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "mesh_utils.h"
-#include <QtCore/QtGlobal>
+#include "math_utils.h"
 #include <cmath>
 
 namespace Mayo {
@@ -81,7 +81,7 @@ MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
     for (int i = 1; i < pntCount; ++i) {
         const gp_Pnt2d pnt = polyline.pointAt(i);
         if (pnt.Y() < pntExtreme.Y()
-                || (qFuzzyCompare(pnt.Y(), pntExtreme.Y()) && (pnt.X() > pntExtreme.X())))
+                || (MathUtils::fuzzyEqual(pnt.Y(), pntExtreme.Y()) && (pnt.X() > pntExtreme.X())))
         {
             pntExtreme = pnt;
             indexPntExtreme = i;

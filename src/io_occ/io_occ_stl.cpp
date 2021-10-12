@@ -16,7 +16,6 @@
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
-#include <QtCore/QtDebug>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <RWStl.hxx>

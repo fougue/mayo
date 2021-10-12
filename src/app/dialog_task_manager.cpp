@@ -10,6 +10,7 @@
 #include "../base/settings.h"
 #include "../base/task_manager.h"
 #include "ui_dialog_task_manager.h"
+#include "app_module.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
@@ -184,10 +185,11 @@ void DialogTaskManager::onTaskProgressStep(TaskId taskId, std::string_view name)
     const QString taskTitle = to_QString(m_taskMgr->title(taskId));
     QString text = taskTitle;
     if (!name.empty()) {
+        const QLocale& locale = AppModule::get(Application::instance())->locale();
         if (!text.isEmpty())
-            QStringUtils::append(&text, tr(" / "), Application::instance()->settings()->locale());
+            QStringUtils::append(&text, tr(" / "), locale);
 
-        QStringUtils::append(&text, to_QString(name), Application::instance()->settings()->locale());
+        QStringUtils::append(&text, to_QString(name), locale);
     }
 
     widget->m_label->setText(text);

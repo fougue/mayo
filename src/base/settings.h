@@ -10,12 +10,10 @@
 #include "property_value_conversion.h"
 #include "settings_index.h"
 
-#include <QtCore/QLocale>
 #include <QtCore/QObject>
 #include <functional>
 #include <memory>
 #include <string_view>
-class QSettings;
 
 namespace Mayo {
 
@@ -82,11 +80,6 @@ public:
     void resetAll();
     void resetGroup(GroupIndex index);
     void resetSection(SectionIndex index);
-
-    // Helpers
-
-    const QLocale& locale() const;
-    void setLocale(const QLocale& locale);
 
 signals:
     void aboutToChange(Mayo::Property* setting);

@@ -6,8 +6,9 @@
 
 #include "occ_static_variables_rollback.h"
 
-#include <QtCore/QtDebug>
 #include <Interface_Static.hxx>
+#include <fmt/format.h>
+#include <iostream>
 #include <type_traits>
 
 namespace Mayo {
@@ -18,7 +19,7 @@ struct OccStaticVariablesRollback::Private {
     static StaticVariableRecord createStaticVariableRecord(const char* strKey)
     {
         if (!Interface_Static::IsPresent(strKey)) {
-            qWarning() << QString("OpenCascade static variable '%1' doesn't exist").arg(strKey);
+            std::cerr << fmt::format("OpenCascade static variable doesn't exist [varname={}]", strKey) << std::endl;
             return {};
         }
 
@@ -55,7 +56,7 @@ struct OccStaticVariablesRollback::Private {
         }
 
         if (!ok)
-            qWarning() << QString("Failed to change OpenCascade static variable '%1'").arg(strKey);
+            std::cerr << fmt::format("Failed to change OpenCascade static variable [varname={}]", strKey) << std::endl;
 
         return ok;
     }

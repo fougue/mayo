@@ -56,6 +56,7 @@ public:
     static AppModule* get(const ApplicationPtr& app);
 
     QStringUtils::TextOptions defaultTextOptions() const;
+    const QLocale& locale() const;
 
     static QString qmFilePath(const QByteArray& languageCode);
     static QByteArray languageCode(const ApplicationPtr& app);
@@ -133,6 +134,7 @@ private:
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
+    QLocale m_locale;
 };
 
 } // namespace Mayo

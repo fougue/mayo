@@ -24,8 +24,6 @@ class STEPCAFControl_Reader;
 class IGESCAFControl_Writer;
 class STEPCAFControl_Writer;
 
-class QString;
-
 namespace Mayo {
 
 class TaskProgress;

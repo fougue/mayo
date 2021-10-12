@@ -7,6 +7,7 @@
 #include "property_value_conversion.h"
 
 #include "cpp_utils.h"
+#include "math_utils.h"
 #include "property_builtins.h"
 #include "property_enumeration.h"
 #include "string_conv.h"
@@ -176,7 +177,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
             const std::string& strQty = variant.toConstRefString();
             Unit unit;
             const UnitSystem::TranslateResult trRes = UnitSystem::parseQuantity(strQty, &unit);
-            if (!trRes.strUnit || qFuzzyIsNull(trRes.factor))
+            if (!trRes.strUnit || MathUtils::fuzzyIsNull(trRes.factor))
                 return fnError(fmt::format("fromVariant() failed to parse quantity string '{}'", strQty));
 
             if (unit != Unit::None && unit != ptr<BasePropertyQuantity>(prop)->quantityUnit())

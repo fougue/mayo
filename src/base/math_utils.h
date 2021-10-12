@@ -9,6 +9,7 @@
 #include <gp_Dir.hxx>
 #include <gp_Pln.hxx>
 #include <utility>
+#include <cmath>
 
 namespace Mayo {
 
@@ -22,6 +23,16 @@ struct MathUtils {
     static std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal);
 
     template<typename T, typename U> static T lerp(T a, T b, U t);
+
+    static inline bool fuzzyIsNull(float f) { return std::abs(f) <= 0.00001f; }
+    static inline bool fuzzyIsNull(double d) { return std::abs(d) <= 0.000000000001; }
+
+    static inline bool fuzzyEqual(float f1, float f2) {
+        return (std::abs(f1 - f2) * 100000.f <= std::min(std::abs(f1), std::abs(f2)));
+    }
+    static inline bool fuzzyEqual(double d1, double d2) {
+        return (std::abs(d1 - d2) * 1000000000000. <= std::min(std::abs(d1), std::abs(d2)));
+    }
 };
 
 
