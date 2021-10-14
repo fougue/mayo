@@ -8,8 +8,9 @@
 
 #include <gp_Dir.hxx>
 #include <gp_Pln.hxx>
-#include <utility>
+#include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace Mayo {
 
