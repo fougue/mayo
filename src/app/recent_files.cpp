@@ -136,9 +136,13 @@ QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles)
     stream >> count;
     recentFiles.clear();
     for (uint32_t i = 0; i < count; ++i) {
+        if (stream.status() != QDataStream::Ok)
+            break; // Stream extraction error, abort
+
         RecentFile recent;
         stream >> recent;
-        recentFiles.push_back(std::move(recent));
+        if (!recent.filepath.empty() && recent.thumbnailTimestamp != 0)
+            recentFiles.push_back(std::move(recent));
     }
 
     return stream;

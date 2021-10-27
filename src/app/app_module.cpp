@@ -264,7 +264,7 @@ bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) co
         RecentFiles recentFiles;
         stream >> recentFiles;
         ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
-        return true;
+        return stream.status() == QDataStream::Ok;
     }
     else {
         return PropertyValueConversion::fromVariant(prop, variant);

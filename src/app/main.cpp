@@ -531,7 +531,6 @@ static int runApp(QCoreApplication* qtApp)
     mayoTheme()->setup();
 
     // Create MainWindow
-    app->settings()->loadProperty(app->settings()->findProperty(&appModule->recentFiles));
     MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
     mainWindow.show();
