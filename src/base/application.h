@@ -12,6 +12,7 @@
 #include "text_id.h"
 
 #include <CDF_DirectoryIterator.hxx>
+#include <Standard_Version.hxx>
 #include <functional>
 
 namespace Mayo {
@@ -67,11 +68,14 @@ public:
     static Span<const char*> envOpenCascadeOptions();
     static Span<const char*> envOpenCascadePaths();
 
-public: //  from TDocStd_Application
-    void NewDocument(
-            const TCollection_ExtendedString& format,
-            opencascade::handle<TDocStd_Document>& outDoc) override;
-    void InitDocument(const opencascade::handle<TDocStd_Document>& doc) const override;
+public: // -- from TDocStd_Application
+#if OCC_VERSION_HEX >= 0x070600
+    void NewDocument(const TCollection_ExtendedString& format, Handle(CDM_Document)& outDoc) override;
+    void InitDocument(const opencascade::handle<CDM_Document>& doc) const override;
+#else
+    void NewDocument(const TCollection_ExtendedString& format, Handle(TDocStd_Document)& outDoc) override;
+    void InitDocument(const Handle(TDocStd_Document)& doc) const override;
+#endif
 
 // TODO: Redefine TDocStd_Document::BeforeClose() to emit signal documentClosed
 // class Document : public TDocStd_Document { ... };

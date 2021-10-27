@@ -500,7 +500,7 @@ void Test::MeshUtils_test()
             const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
             if (!polyTri.IsNull()) {
                 for (int i = 1; i <= polyTri->NbNodes(); ++i)
-                    polyTriBox->ChangeNode(idNodeOffset + i) = polyTri->Node(i);
+                    MeshUtils::setNode(polyTriBox, idNodeOffset + i, polyTri->Node(i));
 
                 for (int i = 1; i <= polyTri->NbTriangles(); ++i) {
                     int n1, n2, n3;

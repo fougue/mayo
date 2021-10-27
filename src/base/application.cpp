@@ -30,12 +30,16 @@ namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
-    opencascade::handle<CDM_Document> CreateDocument() override { return new Document;  }
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) CreateDocument() override { return new Document;  }
+#endif
 };
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
-    opencascade::handle<CDM_Document> CreateDocument() override { return new Document; }
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) CreateDocument() override { return new Document; }
+#endif
 };
 
 struct Application::Private {
@@ -87,7 +91,11 @@ int Application::documentCount() const
 DocumentPtr Application::newDocument(Document::Format docFormat)
 {
     const char* docNameFormat = Document::toNameFormat(docFormat);
-    Handle_TDocStd_Document stdDoc;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) stdDoc;
+#else
+    Handle(TDocStd_Document) stdDoc;
+#endif
     this->NewDocument(docNameFormat, stdDoc);
     return DocumentPtr::DownCast(stdDoc);
 }
@@ -208,14 +216,12 @@ Span<const char*> Application::envOpenCascadePaths()
     };
     return arrayPathName;
 }
-
-void Application::NewDocument(
-        const TCollection_ExtendedString& /*format*/,
-        opencascade::handle<TDocStd_Document>& outDocument)
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+void Application::NewDocument(const TCollection_ExtendedString&, Handle(CDM_Document)& outDocument)
+#else
+void Application::NewDocument(const TCollection_ExtendedString&, Handle(TDocStd_Document)& outDocument)
+#endif
 {
-    //std::lock_guard<std::mutex> lock(Internal::mutex_XCAFApplication);
-    //XCAFApp_Application::GetApplication()->NewDocument(format, outDocument);
-
     // TODO: check format == "mayo" if not throw exception
     // Extended from TDocStd_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
@@ -225,7 +231,11 @@ void Application::NewDocument(
     outDocument = newDoc;
 }
 
-void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc) const
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+void Application::InitDocument(const Handle(CDM_Document)& doc) const
+#else
+void Application::InitDocument(const Handle(TDocStd_Document)& doc) const
+#endif
 {
     TDocStd_Application::InitDocument(doc);
     XCAFApp_Application::GetApplication()->InitDocument(doc);

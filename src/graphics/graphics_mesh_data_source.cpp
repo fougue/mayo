@@ -18,13 +18,12 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const Handle_Poly_Triangulation& 
     : m_mesh(mesh)
 {
     if (!m_mesh.IsNull()) {
-        const TColgp_Array1OfPnt& aCoords = m_mesh->Nodes();
-        const int lenCoords = aCoords.Length();
+        const int lenCoords = m_mesh->NbNodes();
         m_nodeCoords = new TColStd_HArray2OfReal(1, lenCoords, 1, 3);
 
         for(int i = 1; i <= lenCoords; ++i) {
             m_nodes.Add(i);
-            const gp_XYZ& xyz = aCoords(i).XYZ();
+            const gp_XYZ xyz = m_mesh->Node(i).XYZ();
             m_nodeCoords->SetValue(i, 1, xyz.X());
             m_nodeCoords->SetValue(i, 2, xyz.Y());
             m_nodeCoords->SetValue(i, 3, xyz.Z());
@@ -42,12 +41,8 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const Handle_Poly_Triangulation& 
             int V[3];
             aTri.Get(V[0], V[1], V[2]);
 
-            const gp_Pnt& aP1 = aCoords(V[0]);
-            const gp_Pnt& aP2 = aCoords(V[1]);
-            const gp_Pnt& aP3 = aCoords(V[2]);
-
-            const gp_Vec aV1(aP1, aP2);
-            const gp_Vec aV2(aP2, aP3);
+            const gp_Vec aV1(m_mesh->Node(V[0]), m_mesh->Node(V[1]));
+            const gp_Vec aV2(m_mesh->Node(V[1]), m_mesh->Node(V[2]));
 
             gp_Vec aN = aV1.Crossed(aV2);
             if (aN.SquareMagnitude() > Precision::SquareConfusion())

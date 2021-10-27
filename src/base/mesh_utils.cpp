@@ -6,6 +6,7 @@
 
 #include "mesh_utils.h"
 #include "math_utils.h"
+#include <Standard_Version.hxx>
 #include <cmath>
 
 namespace Mayo {
@@ -35,15 +36,14 @@ double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangula
         return 0;
 
     double volume = 0;
-    const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     // TODO Parallelize computation
     for (const Poly_Triangle& tri : triangulation->Triangles()) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         volume += MeshUtils::triangleSignedVolume(
-                    vecNode.Value(v1).Coord(),
-                    vecNode.Value(v2).Coord(),
-                    vecNode.Value(v3).Coord());
+                    triangulation->Node(v1).Coord(),
+                    triangulation->Node(v2).Coord(),
+                    triangulation->Node(v3).Coord());
     }
 
     return std::abs(volume);
@@ -55,18 +55,26 @@ double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulati
         return 0;
 
     double area = 0;
-    const TColgp_Array1OfPnt& vecNode = triangulation->Nodes();
     // TODO Parallelize computation
     for (const Poly_Triangle& tri : triangulation->Triangles()) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         area += MeshUtils::triangleArea(
-                    vecNode.Value(v1).Coord(),
-                    vecNode.Value(v2).Coord(),
-                    vecNode.Value(v3).Coord());
+                    triangulation->Node(v1).Coord(),
+                    triangulation->Node(v2).Coord(),
+                    triangulation->Node(v3).Coord());
     }
 
     return area;
+}
+
+void MeshUtils::setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->SetNode(index, pnt);
+#else
+    triangulation->ChangeNode(index) = pnt;
+#endif
 }
 
 // Adapted from http://cs.smith.edu/~jorourke/Code/polyorient.C

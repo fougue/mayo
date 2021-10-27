@@ -54,21 +54,16 @@ public:
     unsigned textCount() const;
     void addText(const TCollection_ExtendedString& text, const gp_Pnt& pos);
 
-    void ComputeSelection(
-            const opencascade::handle<SelectMgr_Selection>& sel,
-            const int mode) override;
+    void ComputeSelection(const Handle(SelectMgr_Selection)& sel, const int mode) override;
 
 protected:
     void Compute(
-            const opencascade::handle<PrsMgr_PresentationManager3d>& pm,
-            const opencascade::handle<Prs3d_Presentation>& pres,
+            const Handle(PrsMgr_PresentationManager3d)& pm,
+            const Handle(Prs3d_Presentation)& pres,
             const int mode) override;
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
-    void Compute(
-            const opencascade::handle<Prs3d_Projector>&,
-            const opencascade::handle<Prs3d_Presentation>&) override
-    {}
+    void Compute(const Handle(Prs3d_Projector)&, const Handle(Prs3d_Presentation)&) override {}
 #endif
 
 private:
