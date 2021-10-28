@@ -59,7 +59,7 @@ minOpenCascadeVersion(7, 4, 0) {
     SOURCES -= ../src/io_occ/io_occ_gltf_writer.cpp
 }
 !minOpenCascadeVersion(7, 6, 0) {
-    SOURCES -= src/io_occ/io_occ_obj_writer.cpp
+    SOURCES -= ../src/io_occ/io_occ_obj_writer.cpp
 }
 # -- VRML support
 LIBS += -lTKVRML
