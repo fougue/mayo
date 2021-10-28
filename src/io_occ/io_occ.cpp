@@ -16,15 +16,16 @@
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"
-#  include "io_occ_obj.h"
+#  include "io_occ_obj_reader.h"
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include "io_occ_gltf_writer.h"
 #endif
 
-#include <functional>
-#include <type_traits>
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+#  include "io_occ_obj_writer.h"
+#endif
 
 namespace Mayo {
 namespace IO {
@@ -87,6 +88,9 @@ Span<const Format> OccFactoryWriter::formats() const
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         , Format_GLTF
     #endif
+    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        , Format_OBJ
+    #endif
     };
     return arrayFormat;
 }
@@ -109,6 +113,11 @@ std::unique_ptr<Writer> OccFactoryWriter::create(Format format) const
         return std::make_unique<OccGltfWriter>();
 #endif
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (format == Format_OBJ)
+        return std::make_unique<OccObjWriter>();
+#endif
+
     return {};
 }
 
@@ -126,6 +135,11 @@ PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     if (format == Format_GLTF)
         return OccGltfWriter::createProperties(parentGroup);
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (format == Format_OBJ)
+        return OccObjWriter::createProperties(parentGroup);
 #endif
 
     return {};
