@@ -7,25 +7,18 @@
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
 
 # What is Mayo
-Mayo is a 3D viewer and converter inspired by FreeCad
+Mayo is an opensource 3D CAD viewer and converter
 
 # Overview
 * View and convert 3D files in different formats
-* Explore assembly trees and view properties
+* Explore assembly trees(product structure) and view properties
 * Cross platform: runs on Windows, Linux and macOS
 * Underlying toolkits: OpenCascade and Qt
 
 # Current features
-* Support of multi-documents, user can open many files in the session
-* Support of STEP/IGES assemblies(product structure and colors)
-* Area and volume properties for meshes and shapes
-* Editable name of STEP/IGES entities
-
-* Editable 3D properties of the imported items, eg. material, color, display mode, ...
 * 3D exploding of the model tree, allowing better exploration of complex designs
 * 3D clip planes with configurable capping
 * 3D view cube providing intuitive camera manipulation
-* Perspective/orthographic 3D view projection
 * Save image(snapshot) of the current 3D view
 * Quick access to the CAD files recently open thanks to thumbnails in the Home page
 * Toggle visibility of any item from the Model tree(use checkbox)
@@ -69,5 +62,5 @@ AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gm
 <img src="doc/screenshot_5.png"/>
 
 # How to build Mayo
-[Build instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
-[Build instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
+[Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
+[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
