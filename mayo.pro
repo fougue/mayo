@@ -51,7 +51,7 @@ macx {
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
 }
 win32 {
-    LIBS += -lUser32
+    LIBS += -lOpengl32 -lUser32
 }
 
 INCLUDEPATH += \

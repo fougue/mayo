@@ -17,7 +17,6 @@
 #include "../gui/qtgui_utils.h"
 #include "../graphics/graphics_object_driver_table.h"
 #include "../graphics/graphics_utils.h"
-#include "../graphics/v3d_view_camera_animation.h"
 
 #include <QtCore/QtDebug>
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
@@ -337,7 +336,7 @@ void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
     });
 }
 
-void GuiDocument::runViewCameraAnimation(const std::function<void (Handle_V3d_View)>& fnViewChange)
+void GuiDocument::runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange)
 {
     m_cameraAnimation->configure(fnViewChange);
     m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);

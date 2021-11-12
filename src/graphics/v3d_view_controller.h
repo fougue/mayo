@@ -76,6 +76,8 @@ protected:
     void backupCamera();
     void restoreCamera();
 
+    virtual void redrawView();
+
 private:
     Handle_V3d_View m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;

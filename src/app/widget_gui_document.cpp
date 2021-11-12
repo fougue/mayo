@@ -24,6 +24,7 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QProxyStyle>
 #include <QtWidgets/QWidgetAction>
+#include <Standard_Version.hxx>
 
 namespace Mayo {
 
@@ -95,6 +96,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_btnExplode = Internal::createViewBtn(this, Theme::Icon::Multiple, tr("Explode assemblies"));
     m_btnExplode->setCheckable(true);
 
+    auto gfxScene = m_guiDoc->graphicsScene();
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
         m_guiDoc->runViewCameraAnimation(&GraphicsUtils::V3dView_fitAll);
     });
@@ -110,20 +112,24 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     QObject::connect(
                 m_controller, &V3dViewController::viewScaled,
                 m_guiDoc, &GuiDocument::stopViewCameraAnimation);
-    QObject::connect(
-                m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
-        if (btn == Qt::MouseButton::LeftButton) {
-            if (!m_guiDoc->processAction(m_guiDoc->graphicsScene()->currentHighlightedOwner()))
-                m_guiDoc->graphicsScene()->select();
+    QObject::connect(m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
+        if (btn == Qt::LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
+            gfxScene->select();
+            m_qtOccView->redraw();
         }
     });
     QObject::connect(m_controller, &WidgetOccViewController::multiSelectionToggled, this, [=](bool on) {
-        m_guiDoc->graphicsScene()->setSelectionMode(
-                    on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single);
+        auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
+        gfxScene->setSelectionMode(mode);
     });
     QObject::connect(
                 m_guiDoc, &GuiDocument::viewTrihedronModeChanged,
                 this, &WidgetGuiDocument::recreateViewControls);
+
+    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
+        if (view == m_qtOccView->v3dView())
+            m_qtOccView->redraw();
+    });
 
     this->recreateViewControls();
 }
@@ -133,7 +139,10 @@ void WidgetGuiDocument::paintPanel(QWidget* widget)
     QPainter painter(widget);
     const QRect frame = widget->frameGeometry();
     const QRect surface(0, 0, frame.width(), frame.height());
-    const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
+    QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
+#if OCC_VERSION_HEX >= 0x070600
+    panelColor.setAlpha(150);
+#endif
     painter.fillRect(surface, panelColor);
 }
 
@@ -197,24 +206,23 @@ void WidgetGuiDocument::toggleWidgetExplode(bool on)
 void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 {
     auto fnPanelPos = [=](QWidget* panel) -> QPoint {
+        const QRect ctrlRect = this->viewControlsRect();
         const int margin = Internal::widgetMargin;
         if (m_guiDoc->viewTrihedronMode() != GuiDocument::ViewTrihedronMode::AisViewCube)
-            return QPoint(margin, this->viewControlsRect().bottom() + margin);
+            return QPoint(margin, ctrlRect.bottom() + margin);
 
         switch (m_guiDoc->viewTrihedronCorner()) {
         case Qt::TopLeftCorner:
-            return QPoint(margin, this->viewControlsRect().bottom() + margin);
+            return QPoint(ctrlRect.left(), ctrlRect.bottom() + margin);
         case Qt::TopRightCorner:
-            return QPoint(this->width() - panel->width(),
-                          this->viewControlsRect().bottom() + margin);
+            return QPoint(this->width() - panel->width(), ctrlRect.bottom() + margin);
         case Qt::BottomLeftCorner:
-            return QPoint(margin, this->viewControlsRect().top() - panel->height() - margin);
+            return QPoint(margin, ctrlRect.top() - panel->height() - margin);
         case Qt::BottomRightCorner:
-            return QPoint(this->width() - panel->width(),
-                          this->viewControlsRect().top() - panel->height() - margin);
+            return QPoint(this->width() - panel->width(), ctrlRect.top() - panel->height() - margin);
         } // endswitch
 
-        return QPoint(margin, this->viewControlsRect().bottom() + margin);
+        return QPoint(margin, ctrlRect.bottom() + margin);
     };
 
     QWidget* widget = panel ? panel->parentWidget() : nullptr;
