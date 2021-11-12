@@ -10,6 +10,7 @@
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
+#include "../graphics/v3d_view_camera_animation.h"
 
 #include <QtCore/QObject>
 #include <Bnd_Box.hxx>
@@ -23,7 +24,6 @@ namespace Mayo {
 
 class ApplicationItem;
 class GuiApplication;
-class V3dViewCameraAnimation;
 
 // Provides the link between Base::Document and graphical representations
 class GuiDocument : public QObject {
@@ -71,7 +71,7 @@ public:
     // -- Camera animation
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
     void setViewCameraOrientation(V3d_TypeOfOrientation projection);
-    void runViewCameraAnimation(const std::function<void(Handle_V3d_View)>& fnViewChange);
+    void runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange);
     void stopViewCameraAnimation();
 
     // -- View trihedron

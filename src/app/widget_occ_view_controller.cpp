@@ -81,6 +81,12 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
     return this->handleEvent(event);
 }
 
+void WidgetOccViewController::redrawView()
+{
+    //V3dViewController::redrawView();
+    m_widgetView->redraw();
+}
+
 void WidgetOccViewController::startDynamicAction(V3dViewController::DynamicAction action)
 {
     if (action == DynamicAction::Rotation)

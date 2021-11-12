@@ -26,12 +26,14 @@ V3dViewController::~V3dViewController()
 void V3dViewController::zoomIn()
 {
     m_view->SetScale(m_view->Scale() * 1.1); // +10%
+    this->redrawView();
     emit viewScaled();
 }
 
 void V3dViewController::zoomOut()
 {
     m_view->SetScale(m_view->Scale() / 1.1); // -10%
+    this->redrawView();
     emit viewScaled();
 }
 
@@ -78,6 +80,7 @@ void V3dViewController::rotation(const QPoint& currPos)
     }
     else {
         m_view->Rotation(currPos.x(), currPos.y());
+        this->redrawView();
     }
 }
 
@@ -87,6 +90,7 @@ void V3dViewController::pan(const QPoint& prevPos, const QPoint& currPos)
         this->startDynamicAction(DynamicAction::Panning);
 
     m_view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
+    this->redrawView();
 }
 
 void V3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)
@@ -118,13 +122,14 @@ void V3dViewController::startInstantZoom(const QPoint& currPos)
     const int dX = m_instantZoomFactor * 100;
     m_view->StartZoomAtPoint(currPos.x(), currPos.y());
     m_view->ZoomAtPoint(currPos.x(), currPos.y(), currPos.x() + dX, currPos.y());
+    this->redrawView();
 }
 
 void V3dViewController::stopInstantZoom()
 {
     this->stopDynamicAction();
     this->restoreCamera();
-    m_view->Update();
+    this->redrawView();
 }
 
 void V3dViewController::drawRubberBand(const QPoint& posMin, const QPoint& posMax)
@@ -159,6 +164,11 @@ void V3dViewController::restoreCamera()
 {
     if (m_cameraBackup)
         m_view->Camera()->Copy(m_cameraBackup);
+}
+
+void V3dViewController::redrawView()
+{
+    m_view->Redraw();
 }
 
 V3dViewController::DynamicAction V3dViewController::currentDynamicAction() const

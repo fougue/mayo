@@ -75,7 +75,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         cappingMaterial.SetColor(fnGetCappingColor(data));
         data.graphics->SetCappingMaterial(cappingMaterial);
 #endif
-        if (!m_textureCapping.IsNull() && appModule->clipPlanesCappingHatchOn.value())
+        if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
             data.graphics->SetCappingTexture(m_textureCapping);
     }
 
@@ -89,7 +89,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         }
         else if (property == &appModule->clipPlanesCappingHatchOn) {
             Handle_Graphic3d_TextureMap hatchTexture;
-            if (!m_textureCapping.IsNull() && appModule->clipPlanesCappingHatchOn.value())
+            if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
                 hatchTexture = m_textureCapping;
 
             for (ClipPlaneData& data : m_vecClipPlaneData)

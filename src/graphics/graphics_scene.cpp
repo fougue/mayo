@@ -230,7 +230,7 @@ void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 
 void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
 {
-    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, true);
+    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, false);
 }
 
 void GraphicsScene::select()
@@ -239,9 +239,9 @@ void GraphicsScene::select()
         return;
 
     if (d->m_selectionMode == SelectionMode::Single)
-        d->m_aisContext->Select(true);
+        d->m_aisContext->Select(false);
     else if (d->m_selectionMode == SelectionMode::Multi)
-        d->m_aisContext->ShiftSelect(true);
+        d->m_aisContext->ShiftSelect(false);
 
     emit this->selectionChanged();
 }

@@ -46,7 +46,7 @@ void V3dViewCameraAnimation::setEasingCurve(const QEasingCurve& easingCurve)
     m_easingCurve = easingCurve;
 }
 
-void V3dViewCameraAnimation::configure(const std::function<void(Handle_V3d_View)>& fnViewChange)
+void V3dViewCameraAnimation::configure(const ViewFunction& fnViewChange)
 {
     if (this->state() == QAbstractAnimation::Running)
         this->stop();
@@ -59,6 +59,11 @@ void V3dViewCameraAnimation::configure(const std::function<void(Handle_V3d_View)
     m_view->SetImmediateUpdate(wasImmediateUpdateOn);
 }
 
+void V3dViewCameraAnimation::setRenderFunction(ViewFunction fnViewRender)
+{
+    m_fnViewRender = std::move(fnViewRender);
+}
+
 void V3dViewCameraAnimation::updateCurrentTime(int currentTime)
 {
     const double t = m_easingCurve.valueForProgress(currentTime / double(m_duration_ms));
@@ -69,7 +74,10 @@ void V3dViewCameraAnimation::updateCurrentTime(int currentTime)
     m_view->SetCamera(camera);
     m_view->ZFitAll();
     m_view->SetImmediateUpdate(prevImmediateUpdate);
-    m_view->Update();
+    if (m_fnViewRender)
+        m_fnViewRender(m_view);
+    else
+        m_view->Update();
 }
 
 } // namespace Mayo

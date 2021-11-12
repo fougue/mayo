@@ -37,6 +37,7 @@
 #include "widget_gui_document.h"
 #include "widget_message_indicator.h"
 #include "widget_model_tree.h"
+#include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
 #include "widget_properties_editor.h"
 #include "widgets_utils.h"
@@ -764,6 +765,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
         guiDoc->graphicsScene()->highlightAt(pos2d, widget->guiDocument()->v3dView());
+        widget->view()->redraw();
         auto selector = guiDoc->graphicsScene()->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =

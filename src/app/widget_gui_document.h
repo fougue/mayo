@@ -26,6 +26,7 @@ public:
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
     V3dViewController* controller() const { return m_controller; }
+    WidgetOccView* view() const { return m_qtOccView; }
 
     static void paintPanel(QWidget* widget);
 

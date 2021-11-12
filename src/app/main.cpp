@@ -562,17 +562,19 @@ int main(int argc, char* argv[])
     qInstallMessageHandler(&Mayo::qtMessageHandler);
     qAddPostRoutine(&Mayo::onQtAppExit);
 
-    auto fnArgEqual = [](const char* arg, const char* option) { return std::strcmp(arg, option) == 0; };
-    for (int i = 1; i < argc; ++i) {
-        const char* arg = argv[i];
-        if (fnArgEqual(arg, "-e") || fnArgEqual(arg, "--export")
-                || fnArgEqual(arg, "-h") || fnArgEqual(arg, "--help")
-                || fnArgEqual(arg, "-v") || fnArgEqual(arg, "--version"))
-        {
-            Mayo::isAppCliMode = true;
-            break;
-        }
+    // Running CLI mode?
+    for (int i = 1; i < argc && !Mayo::isAppCliMode; ++i) {
+        static const char* cliArgs[] = { "-e", "--export", "-h", "--help", "-v", "--version" };
+        auto itCliArg = std::find_if(std::cbegin(cliArgs), std::cend(cliArgs), [=](const char* cliArg) {
+            return std::strcmp(argv[i], cliArg) == 0;
+        });
+        Mayo::isAppCliMode = itCliArg != std::cend(cliArgs);
     }
+
+#if defined(Q_OS_WIN)
+    // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+#endif
 
     std::unique_ptr<QCoreApplication> ptrApp(
             Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));

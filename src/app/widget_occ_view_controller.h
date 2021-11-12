@@ -25,6 +25,9 @@ public:
 signals:
     void multiSelectionToggled(bool on);
 
+protected:
+    void redrawView() override;
+
 private:
     void startDynamicAction(DynamicAction action) override;
     void stopDynamicAction() override;
