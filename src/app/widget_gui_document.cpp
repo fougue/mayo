@@ -271,11 +271,11 @@ void WidgetGuiDocument::recreateViewControls()
         btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
         auto menuBtnView = new QMenu(btnViewMenu);
         menuBtnView->setStyle(menuStyle);
-#if OCC_VERSION_HEX >= 0x070600
         const QString strPanelBkgndColor = WidgetGuiDocument::panelBackgroundColor().name(QColor::HexArgb);
         menuBtnView->setStyleSheet(QString("QMenu { background:%1; border: 0px }").arg(strPanelBkgndColor));
-        menuBtnView->setAttribute(Qt::WA_TranslucentBackground);
         menuBtnView->setWindowFlags(menuBtnView->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+#if OCC_VERSION_HEX >= 0x070600
+        menuBtnView->setAttribute(Qt::WA_TranslucentBackground);
 #endif
         m_vecWidgetForViewProj.push_back(btnViewMenu);
         for (const ButtonCreationData& btnData : btnCreationData) {

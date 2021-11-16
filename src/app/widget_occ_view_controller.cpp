@@ -6,10 +6,12 @@
 
 #include "widget_occ_view_controller.h"
 #include "widget_occ_view.h"
+#include "theme.h"
 
 #include <QtCore/QDebug>
 #include <QtGui/QBitmap>
 #include <QtGui/QCursor>
+#include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QRubberBand>
@@ -54,6 +56,49 @@ static const QCursor& rotateCursor()
 
     return cursor;
 }
+
+#if OCC_VERSION_HEX >= 0x070600
+using RubberBandWidget_ParentType = QWidget;
+#else
+using RubberBandWidget_ParentType = QRubberBand;
+#endif
+
+class RubberBandWidget : public RubberBandWidget_ParentType {
+public:
+    RubberBandWidget(QWidget* parent)
+#if OCC_VERSION_HEX >= 0x070600
+        : RubberBandWidget_ParentType(parent)
+    {}
+#else
+        : RubberBandWidget_ParentType(QRubberBand::Rectangle, parent)
+    {
+        // QWidget::setStyle() is important, set to windows style will just draw
+        // rectangle frame, otherwise will draw a solid rectangle.
+        this->setStyle(QStyleFactory::create("windows"));
+    }
+#endif
+
+protected:
+#if OCC_VERSION_HEX >= 0x070600
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+
+        const QColor lineColor = mayoTheme()->color(Theme::Color::RubberBandView3d_Line);
+        QColor fillColor = mayoTheme()->color(Theme::Color::RubberBandView3d_Fill);
+        fillColor.setAlpha(60);
+        QPen pen = painter.pen();
+        pen.setColor(lineColor);
+        pen.setWidth(2);
+        pen.setCapStyle(Qt::FlatCap);
+        pen.setJoinStyle(Qt::MiterJoin);
+
+        painter.setPen(pen);
+        painter.setBrush(fillColor);
+        painter.drawRect(this->rect().adjusted(1, 1, -1, -1));
+    }
+#endif
+};
 
 } // namespace Internal
 
@@ -113,11 +158,8 @@ void WidgetOccViewController::setViewCursor(const QCursor &cursor)
 
 struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractRubberBand {
     RubberBand(QWidget* parent)
-        : m_rubberBand(QRubberBand::Rectangle, parent)
+        : m_rubberBand(parent)
     {
-        // QWidget::setStyle() is important, set to windows style will just draw
-        // rectangle frame, otherwise will draw a solid rectangle.
-        m_rubberBand.setStyle(QStyleFactory::create("windows"));
     }
 
     void updateGeometry(const QRect& rect) override {
@@ -129,7 +171,7 @@ struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractR
     }
 
 private:
-    QRubberBand m_rubberBand;
+    Internal::RubberBandWidget m_rubberBand;
 };
 
 V3dViewController::AbstractRubberBand* WidgetOccViewController::createRubberBand()
