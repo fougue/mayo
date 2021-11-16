@@ -243,18 +243,18 @@ void WidgetGuiDocument::recreateViewControls()
     m_vecWidgetForViewProj.clear();
 
     struct ButtonCreationData {
+        V3d_TypeOfOrientation proj;
         Theme::Icon icon;
         QString text;
-        V3d_TypeOfOrientation proj;
     };
     const ButtonCreationData btnCreationData[] = {
-        { Theme::Icon::View3dIso, tr("Isometric"), V3d_XposYnegZpos },
-        { Theme::Icon::View3dBack, tr("Back"), V3d_Ypos },
-        { Theme::Icon::View3dFront, tr("Front"), V3d_Yneg },
-        { Theme::Icon::View3dLeft, tr("Left"), V3d_Xneg },
-        { Theme::Icon::View3dRight, tr("Right"), V3d_Xpos },
-        { Theme::Icon::View3dTop, tr("Top"), V3d_Zpos },
-        { Theme::Icon::View3dBottom, tr("Bottom"), V3d_Zneg }
+        { V3d_XposYnegZpos, Theme::Icon::View3dIso, tr("Isometric") },
+        { V3d_Ypos, Theme::Icon::View3dBack,   tr("Back")},
+        { V3d_Yneg, Theme::Icon::View3dFront,  tr("Front") },
+        { V3d_Xneg, Theme::Icon::View3dLeft,   tr("Left") },
+        { V3d_Xpos, Theme::Icon::View3dRight,  tr("Right") },
+        { V3d_Zpos, Theme::Icon::View3dTop,    tr("Top") },
+        { V3d_Zneg, Theme::Icon::View3dBottom, tr("Bottom") }
     };
     if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
         static Internal::MenuIconSizeStyle* menuStyle = nullptr;
