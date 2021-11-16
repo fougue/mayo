@@ -139,11 +139,16 @@ void WidgetGuiDocument::paintPanel(QWidget* widget)
     QPainter painter(widget);
     const QRect frame = widget->frameGeometry();
     const QRect surface(0, 0, frame.width(), frame.height());
-    QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
+    painter.fillRect(surface, WidgetGuiDocument::panelBackgroundColor());
+}
+
+QColor WidgetGuiDocument::panelBackgroundColor()
+{
+    QColor color = mayoTheme()->color(Theme::Color::Palette_Window);
 #if OCC_VERSION_HEX >= 0x070600
-    panelColor.setAlpha(150);
+    color.setAlpha(150);
 #endif
-    painter.fillRect(surface, panelColor);
+    return color;
 }
 
 void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
@@ -266,6 +271,12 @@ void WidgetGuiDocument::recreateViewControls()
         btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
         auto menuBtnView = new QMenu(btnViewMenu);
         menuBtnView->setStyle(menuStyle);
+#if OCC_VERSION_HEX >= 0x070600
+        const QString strPanelBkgndColor = WidgetGuiDocument::panelBackgroundColor().name(QColor::HexArgb);
+        menuBtnView->setStyleSheet(QString("QMenu { background:%1; border: 0px }").arg(strPanelBkgndColor));
+        menuBtnView->setAttribute(Qt::WA_TranslucentBackground);
+        menuBtnView->setWindowFlags(menuBtnView->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+#endif
         m_vecWidgetForViewProj.push_back(btnViewMenu);
         for (const ButtonCreationData& btnData : btnCreationData) {
             auto action = menuBtnView->addAction(mayoTheme()->icon(btnData.icon), btnData.text);

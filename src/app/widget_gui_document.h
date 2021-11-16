@@ -29,6 +29,7 @@ public:
     WidgetOccView* view() const { return m_qtOccView; }
 
     static void paintPanel(QWidget* widget);
+    static QColor panelBackgroundColor();
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
