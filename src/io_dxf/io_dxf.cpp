@@ -453,11 +453,13 @@ void DxfReader::Internal::OnReadInsert(const double* point, const double* scale,
         if (comp.IsNull())
             continue; // Skip
 
+        auto nonNull = [](double v) { return !MathUtils::fuzzyIsNull(v) ? v : 1.; };
+        const double nscale[] = { nonNull(scale[0]), nonNull(scale[1]), nonNull(scale[2]) };
         gp_Trsf trsfScale;
         trsfScale.SetValues(
-                scale[0], 0,        0,        0,
-                0,        scale[1], 0,        0,
-                0,        0,        scale[2], 0);
+                nscale[0], 0,         0,         0,
+                0,         nscale[1], 0,         0,
+                0,         0,         nscale[2], 0);
         gp_Trsf trsfRotZ;
         trsfRotZ.SetRotation(gp::OZ(), rotation);
         gp_Trsf trsfMove;
