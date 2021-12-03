@@ -13,6 +13,8 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_LayerTool.hxx>
+#include <XCAFDoc_Material.hxx>
+#include <XCAFDoc_MaterialTool.hxx>
 #if OCC_VERSION_HEX >= 0x070500
 #  include <XCAFDoc_VisMaterialTool.hxx>
 #endif
@@ -36,6 +38,7 @@ public:
     Handle_XCAFDoc_ShapeTool shapeTool() const;
     Handle_XCAFDoc_LayerTool layerTool() const;
     Handle_XCAFDoc_ColorTool colorTool() const;
+    Handle_XCAFDoc_MaterialTool materialTool() const;
 #if OCC_VERSION_HEX >= 0x070500
     Handle_XCAFDoc_VisMaterialTool visMaterialTool() const;
 #endif
@@ -61,6 +64,10 @@ public:
     static TopLoc_Location shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, TreeNodeId nodeId);
     static TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl);
     static TDF_Label shapeReferred(const TDF_Label& lbl);
+
+    static QuantityDensity shapeMaterialDensity(const TDF_Label& lbl);
+    static QuantityDensity shapeMaterialDensity(const Handle_XCAFDoc_Material& material);
+    static Handle_XCAFDoc_Material shapeMaterial(const TDF_Label& lbl);
 
     TDF_LabelSequence layers(const TDF_Label& lbl) const;
     TCollection_ExtendedString layerName(const TDF_Label& lbl) const;

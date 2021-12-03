@@ -5,9 +5,13 @@
 ****************************************************************************/
 
 #include "xcaf.h"
+#include "caf_utils.h"
+#include "math_utils.h"
 
+#include <TDataStd_TreeNode.hxx>
 #include <TDocStd_Document.hxx>
 #include <TDF_AttributeIterator.hxx>
+#include <XCAFDoc.hxx>
 #include <XCAFDoc_Area.hxx>
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
@@ -40,6 +44,11 @@ Handle_XCAFDoc_LayerTool XCaf::layerTool() const
 Handle_XCAFDoc_ColorTool XCaf::colorTool() const
 {
     return XCAFDoc_DocumentTool::ColorTool(m_labelMain);
+}
+
+Handle_XCAFDoc_MaterialTool XCaf::materialTool() const
+{
+    return XCAFDoc_DocumentTool::MaterialTool(m_labelMain);
 }
 
 #if OCC_VERSION_HEX >= 0x070500
@@ -235,6 +244,27 @@ TopLoc_Location XCaf::shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, Tr
     }
 
     return absoluteLoc;
+}
+
+QuantityDensity XCaf::shapeMaterialDensity(const TDF_Label& lbl)
+{
+    return XCaf::shapeMaterialDensity(XCaf::shapeMaterial(lbl));
+}
+
+QuantityDensity XCaf::shapeMaterialDensity(const Handle_XCAFDoc_Material& material)
+{
+    const double density = material ? material->GetDensity() : 0.;
+    return density * Quantity_GramPerCubicCentimeter;
+}
+
+Handle_XCAFDoc_Material XCaf::shapeMaterial(const TDF_Label& lbl)
+{
+    Handle_TDataStd_TreeNode node;
+    if (!lbl.FindAttribute(XCAFDoc::MaterialRefGUID(), node) || !node->HasFather())
+        return {};
+
+    const TDF_Label labelMaterial = node->Father()->Label();
+    return CafUtils::findAttribute<XCAFDoc_Material>(labelMaterial);
 }
 
 XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)

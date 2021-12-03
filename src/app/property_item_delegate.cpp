@@ -55,6 +55,11 @@ protected:
     }
 };
 
+static QStringUtils::TextOptions appDefaultTextOptions()
+{
+    return AppModule::get(Application::instance())->defaultTextOptions();
+}
+
 static QString toStringDHMS(QuantityTime time)
 {
     const double duration_s = UnitSystem::seconds(time);
@@ -91,7 +96,7 @@ static QString propertyValueText(const PropertyInt* prop) {
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
-    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyCheckState* prop) {
@@ -107,11 +112,11 @@ static QString propertyValueText(const PropertyOccColor* prop) {
 }
 
 static QString propertyValueText(const PropertyOccPnt* prop) {
-    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyOccTrsf* prop) {
-    return QStringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyEnumeration* prop)
@@ -133,7 +138,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
 
     const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(prop);
     return PropertyItemDelegate::tr("%1%2")
-            .arg(QStringUtils::text(trRes.value, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trRes.value, appDefaultTextOptions()))
             .arg(trRes.strUnit);
 }
 
@@ -143,7 +148,7 @@ static QString propertyValueText(
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return PropertyItemDelegate::tr("%1%2")
-            .arg(QStringUtils::text(trValue, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trValue, appDefaultTextOptions()))
             .arg(unitTr.strUnit);
 }
 

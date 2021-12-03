@@ -81,6 +81,13 @@ template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
 // -- Handle(TCollection_HAsciiString) -> X
 // --
 
+// Handle(TCollection_HAsciiString) -> std::string
+template<> struct StringConv<Handle(TCollection_HAsciiString), std::string> {
+    static auto to(const Handle(TCollection_HAsciiString)& str) {
+        return string_conv<std::string>(str ? str->String() : TCollection_AsciiString());
+    }
+};
+
 // Handle(TCollection_HAsciiString) -> std::string_view
 template<> struct StringConv<Handle(TCollection_HAsciiString), std::string_view> {
     static auto to(const Handle(TCollection_HAsciiString)& str) {

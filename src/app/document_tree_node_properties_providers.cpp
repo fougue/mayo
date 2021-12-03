@@ -93,6 +93,20 @@ public:
         else
             this->removeProperty(&m_propertyColor);
 
+        // Material
+        {
+            const TDF_Label labelPart = XCaf::isShapeReference(label) ? XCaf::shapeReferred(label) : label;
+            const Handle_XCAFDoc_Material material = XCaf::shapeMaterial(labelPart);
+            if (material) {
+                m_propertyMaterialDensity.setQuantity(XCaf::shapeMaterialDensity(material));
+                m_propertyMaterialName.setValue(to_stdString(material->GetName()));
+            }
+            else {
+                this->removeProperty(&m_propertyMaterialDensity);
+                this->removeProperty(&m_propertyMaterialName);
+            }
+        }
+
         // Validation properties
         {
             auto validProps = XCaf::validationProperties(label);
@@ -165,6 +179,8 @@ public:
     PropertyOccPnt m_propertyValidationCentroid{ this, textId("Centroid") };
     PropertyArea m_propertyValidationArea{ this, textId("Area") };
     PropertyVolume m_propertyValidationVolume{ this, textId("Volume") };
+    PropertyDensity m_propertyMaterialDensity{ this, textId("MaterialDensity") };
+    PropertyString m_propertyMaterialName{ this, textId("MaterialName") };
 
     PropertyString m_propertyReferredName{ this, textId("ProductName") };
     PropertyOccColor m_propertyReferredColor{ this, textId("ProductColor") };

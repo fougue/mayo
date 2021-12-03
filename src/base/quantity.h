@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "math_utils.h"
 #include "unit.h"
 
 namespace Mayo {
@@ -53,6 +54,7 @@ using QuantityMass = Quantity<Unit::Mass>;
 using QuantityTime = Quantity<Unit::Time>;
 using QuantityAngle = Quantity<Unit::Angle>;
 using QuantityVelocity = Quantity<Unit::Velocity>;
+using QuantityDensity = Quantity<Unit::Density>;
 
 template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs);
 template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs);
@@ -96,6 +98,11 @@ constexpr QuantityMass Quantity_Gram(0.001);
 constexpr QuantityMass Quantity_Kilogram(1.);
 constexpr QuantityMass Quantity_Ton(1000.);
 
+constexpr QuantityDensity Quantity_GramPerCubicMillimeter(1e6);
+constexpr QuantityDensity Quantity_GramPerCubicCentimeter(1000.);
+constexpr QuantityDensity Quantity_GramPerCubicMeter(0.001);
+constexpr QuantityDensity Quantity_KilogramPerCubicMeter(1.);
+
 constexpr QuantityMass Quantity_Pound(0.45359237);
 constexpr QuantityMass Quantity_Ounce(0.0283495231);
 constexpr QuantityMass Quantity_Stone(6.35029318);
@@ -108,9 +115,21 @@ constexpr QuantityTime Quantity_Hour(3600.);
 constexpr QuantityAngle Quantity_Degree(3.14159265358979323846 / 180.);
 constexpr QuantityAngle Quantity_Radian(1.);
 
+namespace MathUtils {
+
+template<Unit U>
+bool fuzzyIsNull(Quantity<U> qty) { return fuzzyIsNull(qty.value()); }
+
+template<Unit U>
+bool fuzzyEqual(Quantity<U> lhs, Quantity<U> rhs) { return fuzzyEqual(lhs.value(), rhs.value()); }
+
+} // namespace MathUtils
 
 
-// Implementation
+
+// --
+// -- Implementation
+// --
 
 template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs) {
     return Quantity<U>(lhs.value() * rhs);

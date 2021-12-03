@@ -133,6 +133,7 @@ using PropertyMass = GenericPropertyQuantity<Unit::Mass>;
 using PropertyTime = GenericPropertyQuantity<Unit::Time>;
 using PropertyAngle = GenericPropertyQuantity<Unit::Angle>;
 using PropertyVelocity = GenericPropertyQuantity<Unit::Velocity>;
+using PropertyDensity = GenericPropertyQuantity<Unit::Density>;
 
 // --
 // -- Implementation

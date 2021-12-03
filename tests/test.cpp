@@ -701,6 +701,13 @@ void Test::UnitSystem_test_data()
     QTest::newRow("50mm²")
             << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquaredCentimer)
             << UnitSystem::TranslateResult{ 50., "mm²", 1. };
+    QTest::newRow("50kg/m³")
+            << UnitSystem::translate(schemaSI, 25 * Quantity_KilogramPerCubicMeter)
+            << UnitSystem::TranslateResult{ 25., "kg/m³", 1. };
+    QTest::newRow("40kg/m³")
+            << UnitSystem::translate(schemaSI, 0.04 * Quantity_GramPerCubicCentimeter)
+            << UnitSystem::TranslateResult{ 40., "kg/m³", 1. };
+
     constexpr double radDeg = Quantity_Degree.value();
     QTest::newRow("degrees(PIrad)")
             << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
