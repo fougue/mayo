@@ -4,6 +4,7 @@ TEMPLATE = app
 CONFIG += c++17 no_batch
 
 QT += testlib
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 
 *msvc*:QMAKE_CXXFLAGS += /std:c++17
 *g++*:QMAKE_CXXFLAGS += -std=c++17

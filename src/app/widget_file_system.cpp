@@ -80,7 +80,7 @@ void WidgetFileSystem::setLocation(const QFileInfo& fiLoc)
                             tr("%1\nSize: %2\nLast modified: %3")
                             .arg(QDir::toNativeSeparators(fi.absoluteFilePath()))
                             .arg(QStringUtils::bytesText(fi.size()))
-                            .arg(fi.lastModified().toString(Qt::SystemLocaleShortDate));
+                            .arg(QLocale::system().toString(fi.lastModified(), QLocale::LongFormat));
                     item->setToolTip(0, itemTooltip);
                     if (fi.fileName() == fiLoc.fileName())
                         itemToBeSelected = item;

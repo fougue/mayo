@@ -14,6 +14,7 @@ CONFIG(debug, debug|release) {
 }
 
 QT += core gui widgets
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 message(Qt version $$QT_VERSION)
 
 CONFIG += c++17

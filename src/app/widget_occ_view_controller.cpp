@@ -244,7 +244,8 @@ bool WidgetOccViewController::handleEvent(QEvent* event)
     }
     case QEvent::Wheel: {
         auto wheelEvent = static_cast<const QWheelEvent*>(event);
-        if (wheelEvent->delta() > 0)
+        const QPoint delta = wheelEvent->angleDelta();
+        if (delta.y() > 0 || (delta.y() == 0 && delta.x() > 0))
             this->zoomIn();
         else
             this->zoomOut();

@@ -50,7 +50,7 @@ void WidgetMessageIndicator::run()
 void WidgetMessageIndicator::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
-    p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing);
+    p.setRenderHints(QPainter::Antialiasing);
     p.setOpacity(m_opacity);
 
     const QRectF& msgRect = m_messageRect;

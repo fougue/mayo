@@ -173,12 +173,13 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::addLineWidgetItem(QWidget* wid
     widget->setAutoFillBackground(true);
     auto treeItem = new QTreeWidgetItem(this->ui->treeWidget_Browser);
     treeItem->setFlags(Qt::ItemIsEnabled);
+    treeItem->setFirstColumnSpanned(true);
     if (height > 0) {
         treeItem->setSizeHint(0, QSize(100, height));
         treeItem->setSizeHint(1, QSize(100, height));
     }
+
     this->vecLineWidget.push_back(widget);
-    this->ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
     this->ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
     return treeItem;
 }

@@ -47,7 +47,7 @@
 #endif
 
 #include <QtCore/QMimeData>
-#include <QtCore/QTime>
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <QtCore/QSettings>
 #include <QtGui/QDesktopServices>
@@ -516,7 +516,7 @@ void MainWindow::importInCurrentDoc()
     auto app = m_guiApp->application();
     auto taskMgr = TaskManager::globalInstance();
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-        QTime chrono;
+        QElapsedTimer chrono;
         chrono.start();
 
         auto appModule = AppModule::get(app);
@@ -568,7 +568,7 @@ void MainWindow::exportSelectedItems()
     auto taskMgr = TaskManager::globalInstance();
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-        QTime chrono;
+        QElapsedTimer chrono;
         chrono.start();
         auto appModule = AppModule::get(app);
         const bool okExport =
@@ -930,7 +930,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
         const DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-                QTime chrono;
+                QElapsedTimer chrono;
                 chrono.start();
                 DocumentPtr doc;
                 {
