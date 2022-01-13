@@ -849,53 +849,118 @@ Only applicable if option `{}` is on</source>
 <context>
     <name>Mayo::IO::OccGltfWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="53"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="97"/>
         <source>coordinatesConverter</source>
         <translation>Coordinates Converter</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="54"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="98"/>
         <source>transformationFormat</source>
         <translation>Transformation Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="55"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="99"/>
         <source>format</source>
         <translation>Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="56"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="100"/>
         <source>forceExportUV</source>
         <translation>Force UV Export</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="29"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="31"/>
         <source>Coordinate system transformation from OpenCascade to glTF</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="31"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="33"/>
         <source>Preferred transformation format for writing into glTF file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="33"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="35"/>
         <source>Export UV coordinates even if there is no mapped texture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="37"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="39"/>
         <source>Automatically choose most compact representation between Mat4 and TRS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="39"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="41"/>
         <source>4x4 transformation matrix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="40"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="42"/>
         <source>Transformation decomposed into Translation vector, Rotation quaternion and Scale factor(T * R * S)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="46"/>
+        <source>Name format for exporting nodes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="47"/>
+        <source>Name format for exporting meshes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="49"/>
+        <source>Write image textures into target file.
+
+If set to `false` then texture images will be written as separate files.
+
+Applicable only if option `{0}` is set to `{1}`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="56"/>
+        <source>Merge faces within a single part.
+
+May reduce JSON size thanks to smaller number of primitive arrays</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="59"/>
+        <source>Prefer keeping 16-bit indexes while merging face.
+
+May reduce binary data size thanks to smaller triangle indexes.
+
+Applicable only if option `{}` is on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="101"/>
+        <source>nodeNameFormat</source>
+        <translation>Node Name Format</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="102"/>
+        <source>meshNameFormat</source>
+        <translation>Mesh Name Format</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="103"/>
+        <source>embedTextures</source>
+        <translation>Embed Textures</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="104"/>
+        <source>mergeFaces</source>
+        <translation>Merge Faces</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="105"/>
+        <source>keepIndices16b</source>
+        <translation>Keep 16bit Indices</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="159"/>
+        <source>Option supported from OpenCascade ≥ v7.6 [option={}, actual version={}]</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1848,22 +1913,22 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Mesh_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="229"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="227"/>
         <source>NodeCount</source>
         <translation>Count Of Nodes</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="230"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="228"/>
         <source>TriangleCount</source>
         <translation>Count Of Triangles</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="231"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="229"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="232"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="230"/>
         <source>Volume</source>
         <translation>Volume</translation>
     </message>
@@ -2288,82 +2353,82 @@ Read: %5
 <context>
     <name>Mayo::XCaf_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="175"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="173"/>
         <source>Name</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="176"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="174"/>
         <source>Shape</source>
         <translation>Shape</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="177"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="175"/>
         <source>XdeShape</source>
         <translation>XDE Shape Type</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="178"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="176"/>
         <source>XdeLayer</source>
         <translation>Layer</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="179"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="177"/>
         <source>Color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="180"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="178"/>
         <source>Location</source>
         <translation>Location</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="181"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="179"/>
         <source>Centroid</source>
         <translation>Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="182"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="180"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="183"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="181"/>
         <source>Volume</source>
         <translation>Volume</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="184"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="182"/>
         <source>MaterialDensity</source>
         <translation>Material Density</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="185"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="183"/>
         <source>MaterialName</source>
         <translation>Material Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="187"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="185"/>
         <source>ProductName</source>
         <translation>Product Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="188"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="186"/>
         <source>ProductColor</source>
         <translation>Product Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="189"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="187"/>
         <source>ProductCentroid</source>
         <translation>Product Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="190"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="188"/>
         <source>ProductArea</source>
         <translation>Product Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="191"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="189"/>
         <source>ProductVolume</source>
         <translation>Product Volume</translation>
     </message>

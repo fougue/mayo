@@ -48,7 +48,7 @@ public:
         this->embedTextures.setDescription(
                     fmt::format(textIdTr("Write image textures into target file.\n\n"
                                          "If set to `false` then texture images will be written as separate files.\n\n"
-                                         "Applicable only if option `{}` is set to `{}`"),
+                                         "Applicable only if option `{0}` is set to `{1}`"),
                                 this->format.label(),
                                 MetaEnum::name<Format>(Format::Binary))
         );
