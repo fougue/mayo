@@ -104,7 +104,12 @@ OTHER_FILES += \
 
 # OpenCascade
 include(opencascade.pri)
-message(OpenCascade version $$OCC_VERSION_STR)
+!isEmpty(OCC_VERSION_STR) {
+    message(OpenCascade version $$OCC_VERSION_STR)
+} else {
+    warning(OpenCascade version <unknown>)
+}
+
 LIBS += \
     -lTKBin \
     -lTKBinL \

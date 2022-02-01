@@ -62,16 +62,20 @@ defineTest(minOpenCascadeVersion) {
             isEqual(OCC_VERSION_PATCH, $$patch) {
                 return(true)
             }
+
             greaterThan(OCC_VERSION_PATCH, $$patch) {
                 return(true)
             }
         }
+
         greaterThan(OCC_VERSION_MINOR, $$min) {
             return(true)
         }
     }
+
     greaterThan(OCC_VERSION_MAJOR, $$maj) {
         return(true)
     }
+
     return(false)
 }
