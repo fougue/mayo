@@ -33,6 +33,7 @@ release_with_debuginfo:msvc {
 }
 
 msvc {
+    DEFINES += NOMINMAX
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
