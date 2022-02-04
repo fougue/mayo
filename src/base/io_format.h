@@ -15,6 +15,7 @@ namespace IO {
 // Predefined I/O formats
 enum Format {
     Format_Unknown,
+    Format_Image,
     Format_STEP,
     Format_IGES,
     Format_OCCBREP,

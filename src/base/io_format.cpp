@@ -15,6 +15,7 @@ std::string_view formatIdentifier(Format format)
 {
     switch (format) {
     case Format_Unknown: return "";
+    case Format_Image: return "Image";
     case Format_STEP: return "STEP";
     case Format_IGES: return "IGES";
     case Format_OCCBREP: return "OCCBREP";
@@ -33,6 +34,7 @@ std::string_view formatName(Format format)
 {
     switch (format) {
     case Format_Unknown: return "Format_Unknown";
+    case Format_Image: return "Image";
     case Format_STEP: return "STEP(ISO 10303)";
     case Format_IGES: return "IGES(ASME Y14.26M)";
     case Format_OCCBREP: return "OpenCascade BREP";
@@ -49,6 +51,7 @@ std::string_view formatName(Format format)
 
 Span<std::string_view> formatFileSuffixes(Format format)
 {
+    static std::string_view img_suffix[] = { "bmp", "jpeg", "jpg", "png", "gif", "ppm", "tiff" };
     static std::string_view step_suffix[] = { "step", "stp" };
     static std::string_view iges_suffix[] = { "iges", "igs" };
     static std::string_view occ_suffix[] =  { "brep", "rle", "occ" };
@@ -61,6 +64,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
 
     switch (format) {
     case Format_Unknown: return {};
+    case Format_Image: return img_suffix;
     case Format_STEP: return step_suffix;
     case Format_IGES: return iges_suffix;
     case Format_OCCBREP: return occ_suffix;
@@ -86,7 +90,9 @@ bool formatProvidesBRep(Format format)
 
 bool formatProvidesMesh(Format format)
 {
-    return !formatProvidesBRep(format) && format != Format_Unknown;
+    return !formatProvidesBRep(format)
+            && format != Format_Unknown
+            && format != Format_Image;
 }
 
 } // namespace IO

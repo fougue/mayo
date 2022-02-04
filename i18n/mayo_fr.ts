@@ -757,6 +757,54 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
 </context>
 <context>
+    <name>Mayo::IO::ImageWriter::Properties</name>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="45"/>
+        <source>Image width in pixels</source>
+        <translation>Largeur de l&apos;image en pixels</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="49"/>
+        <source>Image height in pixels</source>
+        <translation>Hauteur de l&apos;image en pixels</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="54"/>
+        <source>Camera orientation expressed in Z-up convention as a unit vector</source>
+        <translation>Orientation de la caméra selon la convention Z-up exprimée en tant que vecteur unitaire</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="66"/>
+        <source>width</source>
+        <translation>Largeur</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="67"/>
+        <source>height</source>
+        <translation>Hauteur</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="68"/>
+        <source>backgroundColor</source>
+        <translation>Couleur de l&apos;arrière plan</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="69"/>
+        <source>cameraOrientation</source>
+        <translation>Orientation de la caméra</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="70"/>
+        <source>cameraProjection</source>
+        <translation>Projection de la caméra</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="119"/>
+        <source>Camera orientation vector must not be null</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
     <name>Mayo::IO::OccBaseMeshReaderProperties</name>
     <message>
         <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="22"/>
@@ -1491,98 +1539,98 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="75"/>
+        <location filename="../src/app/main.cpp" line="76"/>
         <source>Mayo, an open-source 3D viewer based on Qt5/OpenCascade</source>
         <translation>Mayo, une visionneuse 3D en code libre basée surQt5/OpenCascade</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="81"/>
+        <location filename="../src/app/main.cpp" line="82"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation>Thème de l&apos;IHM (classic|dark)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="82"/>
+        <location filename="../src/app/main.cpp" line="83"/>
         <source>name</source>
         <translation>nom</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="100"/>
+        <location filename="../src/app/main.cpp" line="101"/>
         <source>Disable progress reporting in console output(CLI-mode only)</source>
         <translation>Désactiver l&apos;indicateur de progression dans la sortie console (mode CLI seulement)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="104"/>
+        <location filename="../src/app/main.cpp" line="105"/>
         <source>files</source>
         <translation>files</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="105"/>
+        <location filename="../src/app/main.cpp" line="106"/>
         <source>Files to open at startup, optionally</source>
         <translation>Fichiers à ouvrir au démarrage, optionnel</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="106"/>
+        <location filename="../src/app/main.cpp" line="107"/>
         <source>[files...]</source>
         <translation>[fichiers ...]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="169"/>
+        <location filename="../src/app/main.cpp" line="170"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="176"/>
+        <location filename="../src/app/main.cpp" line="177"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="219"/>
+        <location filename="../src/app/main.cpp" line="220"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="449"/>
+        <location filename="../src/app/main.cpp" line="453"/>
         <source>Exported {}</source>
         <translation>Export de {} terminé</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="457"/>
+        <location filename="../src/app/main.cpp" line="461"/>
         <source>Exporting {}...</source>
         <translation>Export de {} en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="486"/>
+        <location filename="../src/app/main.cpp" line="490"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="87"/>
+        <location filename="../src/app/main.cpp" line="88"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation>Fichier de configuration (format INI) à charger au démarrage</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="88"/>
-        <location filename="../src/app/main.cpp" line="95"/>
+        <location filename="../src/app/main.cpp" line="89"/>
+        <location filename="../src/app/main.cpp" line="96"/>
         <source>filepath</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="93"/>
+        <location filename="../src/app/main.cpp" line="94"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation>Exporter des fichiers dans un fichier de sortie, répétable selon les différents formats supportés (par exemple -e file.stp -e file.igs ...)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="418"/>
+        <location filename="../src/app/main.cpp" line="422"/>
         <source>Mesh BRep shapes</source>
         <translation>Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="422"/>
+        <location filename="../src/app/main.cpp" line="426"/>
         <source>Imported</source>
         <translation>Importé</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="427"/>
+        <location filename="../src/app/main.cpp" line="431"/>
         <source>Importing...</source>
         <translation>Import en cours ...</translation>
     </message>
@@ -1595,12 +1643,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de %1 en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="505"/>
+        <location filename="../src/app/main.cpp" line="513"/>
         <source>No input files -&gt; nothing to export</source>
         <translation>Auncun fichier en entrée -&gt; aucun export</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="529"/>
+        <location filename="../src/app/main.cpp" line="535"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>Impossible de charger le thème &apos;%1&apos;</translation>
     </message>
@@ -2025,7 +2073,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::PropertyEditorI18N</name>
     <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="182"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="194"/>
         <source>Choose color ...</source>
         <translation>Choix couleur ...</translation>
     </message>

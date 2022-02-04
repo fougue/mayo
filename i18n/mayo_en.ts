@@ -737,6 +737,54 @@ Only applicable if option `{}` is on</source>
     </message>
 </context>
 <context>
+    <name>Mayo::IO::ImageWriter::Properties</name>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="45"/>
+        <source>Image width in pixels</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="49"/>
+        <source>Image height in pixels</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="54"/>
+        <source>Camera orientation expressed in Z-up convention as a unit vector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="66"/>
+        <source>width</source>
+        <translation>Width</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="67"/>
+        <source>height</source>
+        <translation>Height</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="68"/>
+        <source>backgroundColor</source>
+        <translation>Background Color</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="69"/>
+        <source>cameraOrientation</source>
+        <translation>Camera Orientation</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="70"/>
+        <source>cameraProjection</source>
+        <translation>Camera Projection</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="119"/>
+        <source>Camera orientation vector must not be null</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Mayo::IO::OccBaseMeshReaderProperties</name>
     <message>
         <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="22"/>
@@ -1426,108 +1474,108 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="75"/>
+        <location filename="../src/app/main.cpp" line="76"/>
         <source>Mayo, an open-source 3D viewer based on Qt5/OpenCascade</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="81"/>
+        <location filename="../src/app/main.cpp" line="82"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="82"/>
+        <location filename="../src/app/main.cpp" line="83"/>
         <source>name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="100"/>
+        <location filename="../src/app/main.cpp" line="101"/>
         <source>Disable progress reporting in console output(CLI-mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="104"/>
+        <location filename="../src/app/main.cpp" line="105"/>
         <source>files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="105"/>
+        <location filename="../src/app/main.cpp" line="106"/>
         <source>Files to open at startup, optionally</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="106"/>
+        <location filename="../src/app/main.cpp" line="107"/>
         <source>[files...]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="169"/>
+        <location filename="../src/app/main.cpp" line="170"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="176"/>
+        <location filename="../src/app/main.cpp" line="177"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="219"/>
+        <location filename="../src/app/main.cpp" line="220"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="449"/>
+        <location filename="../src/app/main.cpp" line="453"/>
         <source>Exported {}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="457"/>
+        <location filename="../src/app/main.cpp" line="461"/>
         <source>Exporting {}...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="87"/>
+        <location filename="../src/app/main.cpp" line="88"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="88"/>
-        <location filename="../src/app/main.cpp" line="95"/>
+        <location filename="../src/app/main.cpp" line="89"/>
+        <location filename="../src/app/main.cpp" line="96"/>
         <source>filepath</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="93"/>
+        <location filename="../src/app/main.cpp" line="94"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="418"/>
+        <location filename="../src/app/main.cpp" line="422"/>
         <source>Mesh BRep shapes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="422"/>
+        <location filename="../src/app/main.cpp" line="426"/>
         <source>Imported</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="427"/>
+        <location filename="../src/app/main.cpp" line="431"/>
         <source>Importing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="486"/>
+        <location filename="../src/app/main.cpp" line="490"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="505"/>
+        <location filename="../src/app/main.cpp" line="513"/>
         <source>No input files -&gt; nothing to export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="529"/>
+        <location filename="../src/app/main.cpp" line="535"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1936,7 +1984,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::PropertyEditorI18N</name>
     <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="182"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="194"/>
         <source>Choose color ...</source>
         <translation type="unfinished"></translation>
     </message>

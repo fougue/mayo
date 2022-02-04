@@ -92,7 +92,7 @@ public:
             const bool ok = m_propValueConverter->fromVariant(property, value);
             if (!ok) {
                 // TODO Use other output stream(dedicated Messenger object?)
-                std::cerr << fmt::format("Failed to load setting {}", propertyKey) << std::endl;
+                std::cerr << fmt::format("Failed to load setting [path={}]", settingPath) << std::endl;
             }
         }
     }
