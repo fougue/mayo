@@ -8,6 +8,7 @@
 
 #include "filepath.h"
 
+#include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 
 namespace Mayo {
@@ -19,6 +20,13 @@ template<typename T> struct FilePathConv {};
 template<typename T> T filepathTo(const FilePath& fp) {
     return FilePathConv<T>::to(fp);
 }
+
+// FilePath -> TCollection_AsciiString
+template<> struct FilePathConv<TCollection_AsciiString> {
+    static auto to(const FilePath& fp) {
+        return TCollection_AsciiString(fp.u8string().c_str());
+    }
+};
 
 // FilePath -> TCollection_ExtendedString
 template<> struct FilePathConv<TCollection_ExtendedString> {

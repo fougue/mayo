@@ -21,6 +21,7 @@ template<> const char GenericProperty<double>::TypeName[] = "Mayo::PropertyDoubl
 template<> const char PropertyString::TypeName[] = "Mayo::PropertyString";
 template<> const char GenericProperty<CheckState>::TypeName[] = "Mayo::PropertyCheckState";
 template<> const char PropertyOccPnt::TypeName[] = "Mayo::PropertyOccPnt";
+template<> const char PropertyOccVec::TypeName[] = "Mayo::PropertyOccVec";
 template<> const char PropertyOccTrsf::TypeName[] = "Mayo::PropertyOccTrsf";
 template<> const char GenericProperty<Quantity_Color>::TypeName[] = "Mayo::PropertyOccColor";
 template<> const char GenericProperty<FilePath>::TypeName[] = "Mayo::PropertyFilePath";

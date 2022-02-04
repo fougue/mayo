@@ -33,6 +33,7 @@ release_with_debuginfo:msvc {
 }
 
 msvc {
+    DEFINES += NOMINMAX
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
@@ -63,6 +64,7 @@ HEADERS += \
     $$files(src/base/*.h) \
     $$files(src/io_occ/*.h) \
     $$files(src/io_dxf/*.h) \
+    $$files(src/io_image/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
@@ -71,6 +73,7 @@ SOURCES += \
     $$files(src/base/*.cpp) \
     $$files(src/io_occ/*.cpp) \
     $$files(src/io_dxf/*.cpp) \
+    $$files(src/io_image/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
@@ -103,7 +106,12 @@ OTHER_FILES += \
 
 # OpenCascade
 include(opencascade.pri)
-message(OpenCascade version $$OCC_VERSION_STR)
+!isEmpty(OCC_VERSION_STR) {
+    message(OpenCascade version $$OCC_VERSION_STR)
+} else {
+    warning(OpenCascade version <unknown>)
+}
+
 LIBS += \
     -lTKBin \
     -lTKBinL \

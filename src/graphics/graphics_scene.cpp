@@ -14,14 +14,15 @@
 #include <QtCore/QPoint>
 
 namespace Mayo {
-namespace Internal {
 
 // Defined in graphics_create_driver.cpp
-Handle_Graphic3d_GraphicDriver createGfxDriver();
+Handle_Graphic3d_GraphicDriver graphicsCreateDriver();
+
+namespace Internal {
 
 static Handle_V3d_Viewer createOccViewer()
 {
-    Handle_V3d_Viewer viewer = new V3d_Viewer(createGfxDriver());
+    Handle_V3d_Viewer viewer = new V3d_Viewer(graphicsCreateDriver());
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);

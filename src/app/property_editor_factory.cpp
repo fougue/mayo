@@ -26,12 +26,15 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QToolButton>
 
+#include <limits>
+
 namespace Mayo {
 
 class PropertyEditorI18N { Q_DECLARE_TR_FUNCTIONS(Mayo::PropertyEditorI18N) };
 
 namespace {
 
+// Helper that returns an empty widget with stretch-based horizontal space
 static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
 {
     auto widget = new QWidget(parent);
@@ -41,6 +44,7 @@ static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
     return widget;
 }
 
+// Base interface of all property editors
 struct InterfacePropertyEditor {
     virtual void syncWithProperty() = 0;
 };
@@ -71,6 +75,10 @@ struct PropertyIntEditor : public InterfacePropertyEditor, public QSpinBox {
             this->setRange(property->minimum(), property->maximum());
             this->setSingleStep(property->singleStep());
         }
+        else {
+            this->setRange(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+            this->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        }
 
         QObject::connect(this, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
             property->setValue(val);
@@ -91,6 +99,10 @@ struct PropertyDoubleEditor : public InterfacePropertyEditor, public QDoubleSpin
         if (property->constraintsEnabled()) {
             this->setRange(property->minimum(), property->maximum());
             this->setSingleStep(property->singleStep());
+        }
+        else {
+            this->setRange(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
+            this->setButtonSymbols(QAbstractSpinBox::NoButtons);
         }
 
         this->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
@@ -208,41 +220,65 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
     QLabel* m_labelRgb = nullptr;
 };
 
-struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
-    PropertyOccPntEditor(PropertyOccPnt* property, QWidget* parentWidget)
+// Helper generic interface over a XYZ-value property type to get/set the coordinates with gp_XYZ
+template<typename PROPERTY_COORDS_TYPE> class IProperty3dCoords {
+    // Expected functions
+    //     static const gp_XYZ& coords(const PROPERTY_COORDS_TYPE* prop);
+    //     static void setCoords(PROPERTY_COORDS_TYPE* prop, const gp_XYZ& coords);
+};
+
+// Partial specialization of IProperty3dCoords for PropertyOccPnt
+template<> struct IProperty3dCoords<PropertyOccPnt> {
+    static const gp_XYZ& coords(const PropertyOccPnt* prop) { return prop->value().XYZ(); }
+    static void setCoords(PropertyOccPnt* prop, const gp_XYZ& coords) { prop->setValue(coords); }
+};
+
+// Partial specialization of IProperty3dCoords for PropertyOccVec
+template<> struct IProperty3dCoords<PropertyOccVec> {
+    static const gp_XYZ& coords(const PropertyOccVec* prop) { return prop->value().XYZ(); }
+    static void setCoords(PropertyOccVec* prop, const gp_XYZ& coords) { prop->setValue(coords); }
+};
+
+// Generic editor of XYZ-value properties
+// The property type must provide a partial specialization of IProperty3dCoords
+template<typename PROPERTY_XYZ_TYPE>
+struct Property3dCoordsEditor : public InterfacePropertyEditor, public QWidget {
+    using PropertyCoordsType = PROPERTY_XYZ_TYPE;
+    using IProperty3dCoordsType = IProperty3dCoords<PropertyCoordsType>;
+    enum class Coord { X, Y, Z };
+
+    Property3dCoordsEditor(PropertyCoordsType* property, QWidget* parentWidget)
         : QWidget(parentWidget), m_property(property)
     {
         QWidget* frame = this;
         auto frameLayout = new QHBoxLayout(frame);
         frameLayout->setContentsMargins(0, 0, 0, 0);
-        m_xCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetX);
-        m_yCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetY);
-        m_zCoordEditor = createCoordEditor(frame, property, &gp_Pnt::SetZ);
+        m_xCoordEditor = createCoordEditor(frame, property, Coord::X);
+        m_yCoordEditor = createCoordEditor(frame, property, Coord::Y);
+        m_zCoordEditor = createCoordEditor(frame, property, Coord::Z);
         frameLayout->addWidget(new QLabel("X", frame));
         frameLayout->addWidget(m_xCoordEditor);
         frameLayout->addWidget(new QLabel("Y", frame));
         frameLayout->addWidget(m_yCoordEditor);
         frameLayout->addWidget(new QLabel("Z", frame));
         frameLayout->addWidget(m_zCoordEditor);
+        frameLayout->addWidget(hSpacerWidget(frame));
     }
 
     void syncWithProperty() override {
         auto fnSetEditorCoord = [](QDoubleSpinBox* editor, double coord){
             auto appModule = AppModule::get(Application::instance());
             auto trRes = UnitSystem::translate(appModule->unitSystemSchema, coord * Quantity_Millimeter);
-            QSignalBlocker sigBlock(editor); Q_UNUSED(sigBlock);
+            QSignalBlocker _(editor);
             editor->setValue(trRes.value);
         };
 
-        fnSetEditorCoord(m_xCoordEditor, m_property->value().X());
-        fnSetEditorCoord(m_yCoordEditor, m_property->value().Y());
-        fnSetEditorCoord(m_zCoordEditor, m_property->value().Z());
+        fnSetEditorCoord(m_xCoordEditor, IProperty3dCoordsType::coords(m_property).X());
+        fnSetEditorCoord(m_yCoordEditor, IProperty3dCoordsType::coords(m_property).Y());
+        fnSetEditorCoord(m_zCoordEditor, IProperty3dCoordsType::coords(m_property).Z());
     }
 
-    static QDoubleSpinBox* createCoordEditor(
-            QWidget* parentWidget,
-            PropertyOccPnt* property,
-            void (gp_Pnt::*funcSetCoord)(double))
+    static QDoubleSpinBox* createCoordEditor(QWidget* parentWidget, PropertyCoordsType* property, Coord specCoord)
     {
         auto editor = new QDoubleSpinBox(parentWidget);
         auto appModule = AppModule::get(Application::instance());
@@ -250,7 +286,7 @@ struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
         //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
         editor->setDecimals(appModule->unitSystemDecimals.value());
         editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
-        editor->setRange(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
+        editor->setRange(-std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
         QSizePolicy sp = editor->sizePolicy();
         sp.setHorizontalPolicy(QSizePolicy::Expanding);
         editor->setSizePolicy(sp);
@@ -258,14 +294,19 @@ struct PropertyOccPntEditor : public InterfacePropertyEditor, public QWidget {
         QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double value) {
             const double f = trRes.factor;
             value = qFuzzyCompare(f, 1.) ? value : value * f;
-            gp_Pnt pnt = property->value();
-            (pnt.*funcSetCoord)(value);
-            property->setValue(pnt);
+            gp_XYZ coords = IProperty3dCoordsType::coords(property);
+            switch (specCoord) {
+            case Coord::X: coords.SetX(value); break;
+            case Coord::Y: coords.SetY(value); break;
+            case Coord::Z: coords.SetZ(value); break;
+            }
+
+            IProperty3dCoordsType::setCoords(property, coords);
         });
         return editor;
     }
 
-    PropertyOccPnt* m_property;
+    PropertyCoordsType* m_property;
     QDoubleSpinBox* m_xCoordEditor = nullptr;
     QDoubleSpinBox* m_yCoordEditor = nullptr;
     QDoubleSpinBox* m_zCoordEditor = nullptr;
@@ -327,7 +368,10 @@ QWidget* DefaultPropertyEditorFactory::createEditor(Property* property, QWidget*
         editor = new PropertyOccColorEditor(static_cast<PropertyOccColor*>(property), parentWidget);
 
     if (propTypeName == PropertyOccPnt::TypeName)
-        editor = new PropertyOccPntEditor(static_cast<PropertyOccPnt*>(property), parentWidget);
+        editor = new Property3dCoordsEditor<PropertyOccPnt>(static_cast<PropertyOccPnt*>(property), parentWidget);
+
+    if (propTypeName == PropertyOccVec::TypeName)
+        editor = new Property3dCoordsEditor<PropertyOccVec>(static_cast<PropertyOccVec*>(property), parentWidget);
 
     if (propTypeName == PropertyEnumeration::TypeName)
         editor = new PropertyEnumerationEditor(static_cast<PropertyEnumeration*>(property), parentWidget);

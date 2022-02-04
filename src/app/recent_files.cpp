@@ -7,18 +7,19 @@
 #include "recent_files.h"
 
 #include "filepath_conv.h"
-#include "occt_window.h"
 #include "theme.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
 
 #include <gsl/util>
-//#include <QtGui/QOffscreenSurface>
-#include <QtGui/QWindow>
-#include <Aspect_NeutralWindow.hxx>
+
+#include <Graphic3d_GraphicDriver.hxx>
 
 namespace Mayo {
+
+// Defined in graphics_create_virtual_window.cpp
+Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicDriver&, int , int);
 
 static int64_t lastModifiedTimestamp(const FilePath& fp)
 {
@@ -35,58 +36,53 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
         return false;
 
-    if (this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath)) {
-        const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
-        const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-        const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
-        Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
-        view->ChangeRenderingParams().IsAntialiasingEnabled = true;
-        view->ChangeRenderingParams().NbMsaaSamples = 4;
-        view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
+    if (this->thumbnailTimestamp == lastModifiedTimestamp(this->filepath))
+        return true;
 
-        auto _ = gsl::finally([=]{
-            guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
-            guiDoc->setViewTrihedronMode(onEntryTrihedronMode);
-            if (guiDoc->isOriginTrihedronVisible() != onEntryOriginTrihedronVisible)
-                guiDoc->toggleOriginTrihedronVisibility();
-        });
+    const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
+    const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
+    const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
+    Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
+    view->ChangeRenderingParams().IsAntialiasingEnabled = true;
+    view->ChangeRenderingParams().NbMsaaSamples = 4;
+    view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
 
-        guiDoc->graphicsScene()->clearSelection();
-        guiDoc->setViewTrihedronMode(GuiDocument::ViewTrihedronMode::None);
-        if (guiDoc->isOriginTrihedronVisible())
+    auto _ = gsl::finally([=]{
+        guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
+        guiDoc->setViewTrihedronMode(onEntryTrihedronMode);
+        if (guiDoc->isOriginTrihedronVisible() != onEntryOriginTrihedronVisible)
             guiDoc->toggleOriginTrihedronVisibility();
+    });
 
-        QWindow window; // TODO Use a pure offscreen window instead
-        window.setBaseSize(size);
-        window.create();
-        Handle_Aspect_NeutralWindow hWnd = new Aspect_NeutralWindow;
-        hWnd->SetSize(size.width(), size.height());
-        hWnd->SetNativeHandle(Aspect_Drawable(window.winId()));
-        view->SetWindow(hWnd);
+    guiDoc->graphicsScene()->clearSelection();
+    guiDoc->setViewTrihedronMode(GuiDocument::ViewTrihedronMode::None);
+    if (guiDoc->isOriginTrihedronVisible())
+        guiDoc->toggleOriginTrihedronVisibility();
 
-        GraphicsUtils::V3dView_fitAll(view);
+    auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), size.width(), size.height());
+    view->SetWindow(wnd);
+    GraphicsUtils::V3dView_fitAll(view);
 
-        Image_PixMap pixmap;
-        pixmap.SetTopDown(true);
-        V3d_ImageDumpOptions dumpOptions;
-        dumpOptions.BufferType = Graphic3d_BT_RGB;
-        dumpOptions.Width = size.width();
-        dumpOptions.Height = size.height();
-        bool ok = view->ToPixMap(pixmap, dumpOptions);
-        if (!ok)
-            return false;
+    Image_PixMap pixmap;
+    pixmap.SetTopDown(true);
+    V3d_ImageDumpOptions dumpOptions;
+    dumpOptions.BufferType = Graphic3d_BT_RGB;
+    dumpOptions.Width = size.width();
+    dumpOptions.Height = size.height();
+    const bool ok = view->ToPixMap(pixmap, dumpOptions);
+    if (!ok)
+        return false;
 
-        const QImage img(pixmap.Data(),
-                         int(pixmap.Width()),
-                         int(pixmap.Height()),
-                         int(pixmap.SizeRowBytes()),
-                         QImage::Format_RGB888);
-        if (img.isNull())
-            return false;
+    const QImage img(pixmap.Data(),
+                     int(pixmap.Width()),
+                     int(pixmap.Height()),
+                     int(pixmap.SizeRowBytes()),
+                     QImage::Format_RGB888);
+    if (img.isNull())
+        return false;
 
-        this->thumbnail = QPixmap::fromImage(img);
-        this->thumbnailTimestamp = lastModifiedTimestamp(this->filepath);
-    }
+    this->thumbnail = QPixmap::fromImage(img);
+    this->thumbnailTimestamp = lastModifiedTimestamp(this->filepath);
 
     return true;
 }

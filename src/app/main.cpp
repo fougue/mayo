@@ -12,6 +12,7 @@
 #include "../base/task_manager.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
+#include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
@@ -257,6 +258,9 @@ static void initGui(GuiApplication* guiApp)
     if (!guiApp)
         return;
 
+    // Register I/O objects
+    guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+
     // Register Graphics/TreeNode mapping drivers
     guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
@@ -495,6 +499,10 @@ static int runApp(QCoreApplication* qtApp)
     initBase(qtApp);
     auto app = Application::instance().get();
 
+    // Initialize Gui application
+    auto guiApp = new GuiApplication(app);
+    initGui(guiApp);
+
     // Register AppModule
     auto appModule = new AppModule(app);
     app->settings()->setPropertyValueConversion(*appModule);
@@ -512,9 +520,7 @@ static int runApp(QCoreApplication* qtApp)
         return qtApp->exec();
     }
 
-    // Initialize Gui application
-    auto guiApp = new GuiApplication(app);
-    initGui(guiApp);
+    // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
                 appModule, &AppModule::recordRecentFileThumbnail);
