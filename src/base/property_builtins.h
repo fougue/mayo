@@ -122,6 +122,7 @@ using PropertyDouble = GenericScalarProperty<double>;
 using PropertyString = GenericProperty<std::string>;
 using PropertyCheckState = GenericProperty<CheckState>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
+using PropertyOccVec = GenericProperty<gp_Vec>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
 using PropertyFilePath = GenericProperty<FilePath>;
