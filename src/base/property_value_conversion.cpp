@@ -16,6 +16,8 @@
 
 #include <fmt/format.h>
 #include <charconv>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -60,9 +62,16 @@ static gp_XYZ xyzFromString(std::string_view str)
         ptrCoord = std::find_if(ptrCoord, ptrCoordEnd, [&](char ch) { return !std::isspace(ch, locale); });
         auto ptrComma = std::find(ptrCoord, ptrCoordEnd, L',');
         double coord = 0;
+#if __cpp_lib_to_chars
         auto [ptr, err] = std::from_chars(ptrCoord, ptrComma, coord);
         if (err != std::errc())
             throw std::runtime_error(std::make_error_code(err).message());
+#else
+        errno = 0;
+        coord = std::strtod(ptrCoord, nullptr);
+        if (errno != 0)
+            throw std::runtime_error(std::strerror(errno));
+#endif
 
         ptrCoord = ptrComma + 1;
         return coord;
