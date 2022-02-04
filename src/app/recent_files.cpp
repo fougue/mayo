@@ -18,10 +18,8 @@
 
 namespace Mayo {
 
-namespace Internal {
-// Defined in gui_create_virtual_window.cpp
-Handle_Aspect_Window createGfxVirtualWindow(const Handle_Graphic3d_GraphicDriver&, int , int);
-} // namespace Internal
+// Defined in graphics_create_virtual_window.cpp
+Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicDriver&, int , int);
 
 static int64_t lastModifiedTimestamp(const FilePath& fp)
 {
@@ -61,9 +59,8 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (guiDoc->isOriginTrihedronVisible())
         guiDoc->toggleOriginTrihedronVisibility();
 
-    auto wnd = Internal::createGfxVirtualWindow(view->Viewer()->Driver(), size.width(), size.height());
+    auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), size.width(), size.height());
     view->SetWindow(wnd);
-
     GraphicsUtils::V3dView_fitAll(view);
 
     Image_PixMap pixmap;

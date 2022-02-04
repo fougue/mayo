@@ -17,9 +17,8 @@
 #include <QtCore/QtGlobal>
 
 namespace Mayo {
-namespace Internal {
 
-Handle_Graphic3d_GraphicDriver createGfxDriver()
+Handle_Graphic3d_GraphicDriver graphicsCreateDriver()
 {
     Handle_Aspect_DisplayConnection dispConnection;
 #if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
@@ -48,5 +47,4 @@ Handle_Graphic3d_GraphicDriver createGfxDriver()
     return gfxDriver;
 }
 
-} // namespace Internal
 } // namespace Mayo

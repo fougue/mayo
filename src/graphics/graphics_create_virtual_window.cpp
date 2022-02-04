@@ -29,9 +29,8 @@
 #endif
 
 namespace Mayo {
-namespace Internal {
 
-Handle_Aspect_Window createGfxVirtualWindow(const Handle_Graphic3d_GraphicDriver& gfxDriver, int wndWidth, int wndHeight)
+Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicDriver& gfxDriver, int wndWidth, int wndHeight)
 {
 #if defined(Q_OS_WIN)
     MAYO_UNUSED(gfxDriver);
@@ -51,5 +50,4 @@ Handle_Aspect_Window createGfxVirtualWindow(const Handle_Graphic3d_GraphicDriver
     return wnd;
 }
 
-} // namespace Internal
 } // namespace Mayo
