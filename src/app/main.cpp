@@ -512,6 +512,7 @@ static int runApp(QCoreApplication* qtApp)
         if (args.listFilepathToOpen.empty())
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
+        guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
         app->settings()->resetAll();
         fnLoadAppSettings(app->settings());
         QTimer::singleShot(0, qtApp, [=]{
