@@ -16,6 +16,7 @@
 #include "../io_occ/io_occ.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
@@ -536,6 +537,13 @@ static int runApp(QCoreApplication* qtApp)
         fnCriticalExit(Main::tr("Failed to load theme '%1'").arg(args.themeName));
 
     mayoTheme()->setup();
+    const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
+    const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
+    GuiDocument::setDefaultGradientBackground({
+                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
+                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
+                Aspect_GFM_VER
+    });
 
     // Create MainWindow
     MainWindow mainWindow(guiApp);

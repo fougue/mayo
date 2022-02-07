@@ -6,7 +6,6 @@
 
 #include "gui_document.h"
 
-#include "../app/theme.h" // TODO Remove this dependency
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
 #include "../base/caf_utils.h"
@@ -14,11 +13,9 @@
 #include "../base/document.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
-#include "../gui/qtgui_utils.h"
 #include "../graphics/graphics_object_driver_table.h"
 #include "../graphics/graphics_utils.h"
 
-#include <QtCore/QtDebug>
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include <AIS_ViewCube.hxx>
 #endif
@@ -59,6 +56,14 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     return aisTrihedron;
 }
 
+static GuiDocument::GradientBackground& defaultGradientBackground()
+{
+    static GuiDocument::GradientBackground defaultGradientBackground{
+        Quantity_NOC_GRAY50, Quantity_NOC_GRAY60, Aspect_GFM_VER
+    };
+    return defaultGradientBackground;
+}
+
 } // namespace Internal
 
 GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
@@ -88,12 +93,11 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
                 Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20));
     // 3D view - Set gradient background
-    const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
-    const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
     m_v3dView->SetBgGradientColors(
-                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
-                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
-                Aspect_GFM_VER);
+                GuiDocument::defaultGradientBackground().color1,
+                GuiDocument::defaultGradientBackground().color2,
+                GuiDocument::defaultGradientBackground().fillStyle
+    );
     //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
     m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
@@ -456,6 +460,16 @@ int GuiDocument::aisViewCubeBoundingSize() const
 #else
     return 0;
 #endif
+}
+
+const GuiDocument::GradientBackground& GuiDocument::defaultGradientBackground()
+{
+    return Internal::defaultGradientBackground();
+}
+
+void GuiDocument::setDefaultGradientBackground(const GradientBackground& gradientBkgnd)
+{
+    Internal::defaultGradientBackground() = gradientBkgnd;
 }
 
 void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)

@@ -88,6 +88,15 @@ public:
 
     int aisViewCubeBoundingSize() const;
 
+    // -- Background
+    struct GradientBackground {
+        Quantity_Color color1;
+        Quantity_Color color2;
+        Aspect_GradientFillMethod fillStyle;
+    };
+    static const GradientBackground& defaultGradientBackground();
+    static void setDefaultGradientBackground(const GradientBackground& gradientBkgnd);
+
 signals:
     void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
 
