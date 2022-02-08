@@ -13,13 +13,15 @@ INCLUDEPATH += \
     ../src/3rdparty
 
 HEADERS += \
-    test.h \
+    test_app.h \
+    test_base.h \
     $$files(../src/base/*.h) \
     $$files(../src/io_occ/*.h) \
     ../src/gui/qtgui_utils.h \
 
 SOURCES += \
-    test.cpp \
+    test_app.cpp \
+    test_base.cpp \
     main.cpp \
     \
     $$files(../src/base/*.cpp) \

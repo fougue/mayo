@@ -4,14 +4,18 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-// Need to include this first because of MSVC conflicts with M_E, M_LOG2, ...
-#include <BRepPrimAPI_MakeBox.hxx>
+// Avoid MSVC conflicts with M_E, M_LOG2, ...
+#ifdef _MSC_VER
+#  define _USE_MATH_DEFINES
+#endif
 
-#include "test.h"
+#include "test_base.h"
+
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
 #include "../src/base/filepath.h"
+#include "../src/base/filepath_conv.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
@@ -26,23 +30,22 @@
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
-#include "../src/app/filepath_conv.h"
-#include "../src/app/qstring_conv.h"
-#include "../src/app/qstring_utils.h"
 #include "../src/io_occ/io_occ.h"
-#include "../src/gui/qtgui_utils.h"
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <GCPnts_TangentialDeflection.hxx>
 #include <Interface_ParamType.hxx>
 #include <Interface_Static.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>
 #include <QtCore/QVariant>
 #include <QtTest/QSignalSpy>
+
 #include <gsl/util>
 #include <algorithm>
 #include <cmath>
@@ -75,7 +78,7 @@ static bool operator==(
             && std::abs(lhs.factor - rhs.factor) < 1e-6;
 }
 
-void Test::Application_test()
+void TestBase::Application_test()
 {
     auto app = Application::instance();
     auto ioSystem = Application::instance()->ioSystem();
@@ -146,42 +149,35 @@ void Test::Application_test()
     QCOMPARE(app->documentCount(), 0);
 }
 
-void Test::TextId_test()
+void TestBase::TextId_test()
 {
     struct TextIdContext {
-        MAYO_DECLARE_TEXT_ID_FUNCTIONS(Test::TextIdContext)
+        MAYO_DECLARE_TEXT_ID_FUNCTIONS(TestBase::TextIdContext)
     };
 
-    QVERIFY(TextIdContext::textIdContext() == "Test::TextIdContext");
-    QVERIFY(TextIdContext::textId("foof").trContext == "Test::TextIdContext");
+    QVERIFY(TextIdContext::textIdContext() == "TestBase::TextIdContext");
+    QVERIFY(TextIdContext::textId("foof").trContext == "TestBase::TextIdContext");
     QVERIFY(TextIdContext::textId("bark").key == "bark");
     QVERIFY(TextIdContext::textIdTr("shktu") == "shktu");
 }
 
-void Test::FilePath_test()
+void TestBase::FilePath_test()
 {
     const char strTestPath[] = "../as1-oc-214 - 測試文件.stp";
+    const FilePath testPath = std::filesystem::u8path(strTestPath);
 
     {
-        const QByteArray testPathQt = strTestPath;
-        const FilePath testPath = filepathFrom(testPathQt);
-        QCOMPARE(filepathTo<QByteArray>(testPath), testPathQt);
-    }
-
-    {
-        const QString testPathQt = strTestPath;
-        const FilePath testPath = filepathFrom(testPathQt);
-        QCOMPARE(filepathTo<QString>(testPath), testPathQt);
+        const TCollection_AsciiString ascStrTestPath(strTestPath);
+        QCOMPARE(filepathTo<TCollection_AsciiString>(testPath), ascStrTestPath);
     }
 
     {
         const TCollection_ExtendedString extStrTestPath(strTestPath, true/*multi-byte*/);
-        const FilePath testPath = std::filesystem::u8path(strTestPath);
         QCOMPARE(filepathTo<TCollection_ExtendedString>(testPath), extStrTestPath);
     }
 }
 
-void Test::PropertyValueConversion_test()
+void TestBase::PropertyValueConversion_test()
 {
     QFETCH(QString, strPropertyName);
     QFETCH(PropertyValueConversion::Variant, variantValue);
@@ -214,7 +210,7 @@ void Test::PropertyValueConversion_test()
     QCOMPARE(conv.toVariant(*prop.get()), variantValue);
 }
 
-void Test::PropertyValueConversion_test_data()
+void TestBase::PropertyValueConversion_test_data()
 {
     using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<QString>("strPropertyName");
@@ -232,7 +228,7 @@ void Test::PropertyValueConversion_test_data()
     QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
 }
 
-void Test::PropertyQuantityValueConversion_test()
+void TestBase::PropertyQuantityValueConversion_test()
 {
     QFETCH(QString, strPropertyName);
     QFETCH(PropertyValueConversion::Variant, variantFrom);
@@ -254,7 +250,7 @@ void Test::PropertyQuantityValueConversion_test()
     QCOMPARE(conv.toVariant(*prop.get()), variantTo);
 }
 
-void Test::PropertyQuantityValueConversion_test_data()
+void TestBase::PropertyQuantityValueConversion_test_data()
 {
     using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<QString>("strPropertyName");
@@ -266,16 +262,16 @@ void Test::PropertyQuantityValueConversion_test_data()
     QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
-void Test::IO_test()
+void TestBase::IO_test()
 {
     QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
 
     auto ioSystem = Application::instance()->ioSystem();
-    QCOMPARE(ioSystem->probeFormat(filepathFrom(strFilePath)), expectedPartFormat);
+    QCOMPARE(ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
 }
 
-void Test::IO_test_data()
+void TestBase::IO_test_data()
 {
     QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
@@ -289,7 +285,7 @@ void Test::IO_test_data()
     QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
 }
 
-void Test::IO_OccStaticVariablesRollback_test()
+void TestBase::IO_OccStaticVariablesRollback_test()
 {
     QFETCH(QString, varName);
     QFETCH(QVariant, varInitValue);
@@ -335,7 +331,7 @@ void Test::IO_OccStaticVariablesRollback_test()
     QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.type()), varInitValue);
 }
 
-void Test::IO_OccStaticVariablesRollback_test_data()
+void TestBase::IO_OccStaticVariablesRollback_test_data()
 {
     QTest::addColumn<QString>("varName");
     QTest::addColumn<QVariant>("varInitValue");
@@ -349,7 +345,7 @@ void Test::IO_OccStaticVariablesRollback_test_data()
     QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
 }
 
-void Test::BRepUtils_test()
+void TestBase::BRepUtils_test()
 {
     QVERIFY(BRepUtils::moreComplex(TopAbs_COMPOUND, TopAbs_SOLID));
     QVERIFY(BRepUtils::moreComplex(TopAbs_SOLID, TopAbs_SHELL));
@@ -367,12 +363,12 @@ void Test::BRepUtils_test()
     }
 }
 
-void Test::CafUtils_test()
+void TestBase::CafUtils_test()
 {
     // TODO Add CafUtils::labelTag() test for multi-threaded safety
 }
 
-void Test::MeshUtils_orientation_test()
+void TestBase::MeshUtils_orientation_test()
 {
     struct BasicPolyline2d : public Mayo::MeshUtils::AdaptorPolyline2d {
         gp_Pnt2d pointAt(int index) const override { return this->vecPoint.at(index); }
@@ -387,7 +383,7 @@ void Test::MeshUtils_orientation_test()
     QCOMPARE(Mayo::MeshUtils::orientation(polyline2d), orientation);
 }
 
-void Test::MeshUtils_orientation_test_data()
+void TestBase::MeshUtils_orientation_test_data()
 {
     QTest::addColumn<std::vector<gp_Pnt2d>>("vecPoint");
     QTest::addColumn<Mayo::MeshUtils::Orientation>("orientation");
@@ -449,7 +445,7 @@ void Test::MeshUtils_orientation_test_data()
     }
 }
 
-void Test::MetaEnum_test()
+void TestBase::MetaEnum_test()
 {
     QCOMPARE(MetaEnum::name(TopAbs_VERTEX), "TopAbs_VERTEX");
     QCOMPARE(MetaEnum::name(TopAbs_EDGE), "TopAbs_EDGE");
@@ -463,7 +459,7 @@ void Test::MetaEnum_test()
     QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_VERTEX, ""), "TopAbs_VERTEX");
 }
 
-void Test::MeshUtils_test()
+void TestBase::MeshUtils_test()
 {
     // Create box
     QFETCH(double, boxDx);
@@ -522,7 +518,7 @@ void Test::MeshUtils_test()
              double(2 * boxDx * boxDy + 2 * boxDy * boxDz + 2 * boxDx * boxDz));
 }
 
-void Test::MeshUtils_test_data()
+void TestBase::MeshUtils_test_data()
 {
     QTest::addColumn<double>("boxDx");
     QTest::addColumn<double>("boxDy");
@@ -534,96 +530,14 @@ void Test::MeshUtils_test_data()
     QTest::newRow("case4") << 40. << 50. << 70.;
 }
 
-void Test::Quantity_test()
+void TestBase::Quantity_test()
 {
     const QuantityArea area = (10 * Quantity_Millimeter) * (5 * Quantity_Centimeter);
     QCOMPARE(area.value(), 500.);
     QCOMPARE((Quantity_Millimeter / 5.).value(), 1/5.);
 }
 
-void Test::QStringUtils_append_test()
-{
-    QFETCH(QString, strExpected);
-    QFETCH(QString, str1);
-    QFETCH(QString, str2);
-    QFETCH(QLocale, locale);
-
-    QString strActual = str1;
-    QStringUtils::append(&strActual, str2, locale);
-    QCOMPARE(strActual, strExpected);
-}
-
-void Test::QStringUtils_append_test_data()
-{
-    QTest::addColumn<QString>("strExpected");
-    QTest::addColumn<QString>("str1");
-    QTest::addColumn<QString>("str2");
-    QTest::addColumn<QLocale>("locale");
-
-    QTest::newRow("locale_c")
-            << QString("1234")
-            << QStringLiteral("12")
-            << QStringLiteral("34")
-            << QLocale::c();
-    QTest::newRow("locale_fr")
-            << QString("1234")
-            << QStringLiteral("12")
-            << QStringLiteral("34")
-            << QLocale(QLocale::French);
-    QTest::newRow("locale_arabic")
-            << QString("3412")
-            << QStringLiteral("12")
-            << QStringLiteral("34")
-            << QLocale(QLocale::Arabic);
-    QTest::newRow("locale_syriac")
-            << QString("3412")
-            << QStringLiteral("12")
-            << QStringLiteral("34")
-            << QLocale(QLocale::Syriac);
-}
-
-void Test::QStringUtils_text_test()
-{
-    QFETCH(QString, strActual);
-    QFETCH(QString, strExpected);
-    QCOMPARE(strActual, strExpected);
-}
-
-void Test::QStringUtils_text_test_data()
-{
-    QTest::addColumn<QString>("strActual");
-    QTest::addColumn<QString>("strExpected");
-
-    const QStringUtils::TextOptions opts_c_si_2 = { QLocale::c(), UnitSystem::SI, 2 };
-    const QStringUtils::TextOptions opts_fr_si_2 = {
-        QLocale(QLocale::French, QLocale::France), UnitSystem::SI, 2 };
-    QTest::newRow("c_0.1")
-            << QStringUtils::text(0.1, opts_c_si_2)
-            << QStringLiteral("0.1");
-    QTest::newRow("c_0.155")
-            << QStringUtils::text(0.155, opts_c_si_2)
-            << QStringLiteral("0.15");
-    QTest::newRow("c_0.159")
-            << QStringUtils::text(0.159, opts_c_si_2)
-            << QStringLiteral("0.16");
-    QTest::newRow("fr_1.4995")
-            << QStringUtils::text(1.4995, opts_fr_si_2)
-            << QStringLiteral("1,5");
-    QTest::newRow("c_pnt0.55,4.8977,15.1445")
-            << QStringUtils::text(gp_Pnt(0.55, 4.8977, 15.1445), opts_c_si_2)
-            << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
-}
-
-void Test::StringConv_test()
-{
-    const QString text = "test_éç²µ§_测试_Тест";
-    QCOMPARE(to_QString(string_conv<TCollection_AsciiString>(text)), text);
-    QCOMPARE(to_QString(string_conv<Handle(TCollection_HAsciiString)>(text)), text);
-    QCOMPARE(to_QString(to_stdString(text)), text);
-    QCOMPARE(to_QString(to_OccExtString(text)), text);
-}
-
-void Test::TKernelUtils_colorToHex_test()
+void TestBase::TKernelUtils_colorToHex_test()
 {
     QFETCH(int, red);
     QFETCH(int, green);
@@ -635,7 +549,7 @@ void Test::TKernelUtils_colorToHex_test()
     QCOMPARE(QString::fromStdString(strHexColorActual), strHexColor);
 }
 
-void Test::TKernelUtils_colorToHex_test_data()
+void TestBase::TKernelUtils_colorToHex_test_data()
 {
     QTest::addColumn<int>("red");
     QTest::addColumn<int>("green");
@@ -649,7 +563,7 @@ void Test::TKernelUtils_colorToHex_test_data()
     QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
 }
 
-void Test::TKernelUtils_colorFromHex_test()
+void TestBase::TKernelUtils_colorFromHex_test()
 {
     QFETCH(int, red);
     QFETCH(int, green);
@@ -662,7 +576,7 @@ void Test::TKernelUtils_colorFromHex_test()
     QCOMPARE(actualColor, expectedColor);
 }
 
-void Test::TKernelUtils_colorFromHex_test_data()
+void TestBase::TKernelUtils_colorFromHex_test_data()
 {
     QTest::addColumn<int>("red");
     QTest::addColumn<int>("green");
@@ -676,14 +590,14 @@ void Test::TKernelUtils_colorFromHex_test_data()
     QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
 }
 
-void Test::UnitSystem_test()
+void TestBase::UnitSystem_test()
 {
     QFETCH(UnitSystem::TranslateResult, trResultActual);
     QFETCH(UnitSystem::TranslateResult, trResultExpected);
     QCOMPARE(trResultActual, trResultExpected);
 }
 
-void Test::UnitSystem_test_data()
+void TestBase::UnitSystem_test_data()
 {
     QTest::addColumn<UnitSystem::TranslateResult>("trResultActual");
     QTest::addColumn<UnitSystem::TranslateResult>("trResultExpected");
@@ -714,7 +628,7 @@ void Test::UnitSystem_test_data()
             << UnitSystem::TranslateResult{ 180., "°", radDeg };
 }
 
-void Test::LibTask_test()
+void TestBase::LibTask_test()
 {
     struct ProgressRecord {
         TaskId taskId;
@@ -761,7 +675,7 @@ void Test::LibTask_test()
     QCOMPARE(vecProgressRec.back().value, 100);
 }
 
-void Test::LibTree_test()
+void TestBase::LibTree_test()
 {
     const TreeNodeId nullptrId = 0;
     Tree<std::string> tree;
@@ -814,17 +728,7 @@ void Test::LibTree_test()
     }
 }
 
-void Test::QtGuiUtils_test()
-{
-    const QColor qtColor(51, 75, 128);
-    const QColor qtColorA(51, 75, 128, 87);
-    auto occColor = QtGuiUtils::toColor<Quantity_Color>(qtColor);
-    auto occColorA = QtGuiUtils::toColor<Quantity_ColorRGBA>(qtColorA);
-    QCOMPARE(QtGuiUtils::toQColor(occColor), qtColor);
-    QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
-}
-
-void Test::initTestCase()
+void TestBase::initTestCase()
 {
     IO::System* ioSystem = Application::instance()->ioSystem();
     ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());

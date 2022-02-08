@@ -4,7 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "test.h"
+#include "test_base.h"
+#include "test_app.h"
 
 #include <memory>
 #include <vector>
@@ -13,7 +14,8 @@ int main(int argc, char** argv)
 {
     int retcode = 0;
     std::vector<std::unique_ptr<QObject>> vecTest;
-    vecTest.emplace_back(new Mayo::Test);
+    vecTest.emplace_back(new Mayo::TestBase);
+    vecTest.emplace_back(new Mayo::TestApp);
     for (const std::unique_ptr<QObject>& test : vecTest)
         retcode += QTest::qExec(test.get(), argc, argv);
 
