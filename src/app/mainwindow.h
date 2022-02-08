@@ -70,7 +70,6 @@ private:
     void onApplicationItemSelectionChanged();
     void onOperationFinished(bool ok, const QString& msg);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
-    void onGuiDocumentErased(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
     void onCurrentDocumentIndexChanged(int idx);

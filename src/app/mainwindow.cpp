@@ -370,9 +370,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                guiApp, &GuiApplication::guiDocumentErased,
-                this, &MainWindow::onGuiDocumentErased);
-    QObject::connect(
                 guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
                 this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
@@ -781,11 +778,6 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     this->updateControlsActivation();
     const int newDocIndex = app->documentCount() - 1;
     QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
-}
-
-void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
-{
-    AppModule::get(m_guiApp->application())->recordRecentFileThumbnail(guiDoc);
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)
