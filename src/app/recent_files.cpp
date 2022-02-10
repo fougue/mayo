@@ -6,11 +6,15 @@
 
 #include "recent_files.h"
 
-#include "filepath_conv.h"
-#include "theme.h"
+#include "../base/meta_enum.h"
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
 #include "../io_image/io_image.h"
+#include "filepath_conv.h"
+#include "qstring_conv.h"
+#include "theme.h"
+
+#include <QtCore/QtDebug>
 
 namespace Mayo {
 
@@ -19,8 +23,13 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (!guiDoc)
         return false;
 
-    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
+    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath())) {
+        qDebug().noquote() << QString("Filepath mismatch with GUI document\nFunction: %1\nFilepath: %2\nDocument: %2")
+                              .arg(Q_FUNC_INFO)
+                              .arg(filepathTo<QString>(this->filepath))
+                              .arg(filepathTo<QString>(guiDoc->document()->filePath()));
         return false;
+    }
 
     if (this->thumbnailTimestamp == RecentFile::timestampLastModified(this->filepath))
         return true;
@@ -30,8 +39,10 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     params.height = size.height();
     params.backgroundColor = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
     Handle_Image_AlienPixMap pixmap = IO::ImageWriter::createImage(guiDoc, params);
-    if (!pixmap)
+    if (!pixmap) {
+        qDebug().noquote() << "Empty pixmap returned by IO::ImageWriter::createImage()";
         return false;
+    }
 
     Image_PixMap::FlipY(*pixmap);
     Image_PixMap::SwapRgbaBgra(*pixmap);
@@ -51,7 +62,9 @@ int64_t RecentFile::timestampLastModified(const FilePath& fp)
     try {
         const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
         return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
-    } catch (const std::exception& /*err*/) {
+    } catch (const std::exception& err) {
+        qDebug().noquote() << QString("Exception caught\nFunction %1\nFilepath: %2\nError: %3")
+                              .arg(Q_FUNC_INFO, filepathTo<QString>(fp), err.what());
         return -1;
     }
 }
@@ -96,8 +109,11 @@ QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles)
     stream >> count;
     recentFiles.clear();
     for (uint32_t i = 0; i < count; ++i) {
-        if (stream.status() != QDataStream::Ok)
+        if (stream.status() != QDataStream::Ok) {
+            qDebug().noquote() << QString("QDataStream error\nFunction: %1\nStatus: %2")
+                                  .arg(Q_FUNC_INFO, to_QString(MetaEnum::name(stream.status())));
             break; // Stream extraction error, abort
+        }
 
         RecentFile recent;
         stream >> recent;

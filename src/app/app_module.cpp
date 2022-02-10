@@ -18,10 +18,12 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "qtcore_utils.h"
+#include "filepath_conv.h"
 #include "qstring_conv.h"
 
 #include <BRepBndLib.hxx>
 #include <QtCore/QDir>
+#include <QtCore/QtDebug>
 #include <QtGui/QGuiApplication>
 #include <iterator>
 
@@ -331,8 +333,11 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
         return;
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
-    if (!recentFile)
+    if (!recentFile) {
+        qDebug().noquote() << QString("RecentFile object is null\n%Function: %1\nDocument: %2")
+                              .arg(Q_FUNC_INFO, filepathTo<QString>(guiDoc->document()->filePath()));
         return;
+    }
 
     if (!recentFile->isThumbnailOutOfSync())
         return;
