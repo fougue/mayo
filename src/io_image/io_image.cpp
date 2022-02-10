@@ -26,6 +26,7 @@
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
 
+#include <gsl/util>
 #include <limits>
 #include <unordered_set>
 
@@ -70,6 +71,15 @@ public:
     PropertyEnum<CameraProjection> cameraProjection{ this, textId("cameraProjection") };
 };
 
+namespace {
+
+bool isVectorNull(const gp_Vec& vec)
+{
+    return vec.IsEqual({}, Precision::Confusion(), Precision::Angular());
+}
+
+} // namespace
+
 ImageWriter::ImageWriter(GuiApplication* guiApp)
     : m_guiApp(guiApp)
 {
@@ -98,29 +108,12 @@ bool ImageWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /
 
 bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
-    auto fnToGfxCamProjection = [](ImageWriter::CameraProjection proj) {
-        switch (proj) {
-        case CameraProjection::Orthographic: return Graphic3d_Camera::Projection_Orthographic;
-        case CameraProjection::Perspective:  return Graphic3d_Camera::Projection_Perspective;
-        default: return Graphic3d_Camera::Projection_Orthographic;
-        }
-    };
+    if (isVectorNull(m_params.cameraOrientation))
+        this->messenger()->emitError(ImageWriter::Properties::textIdTr("Camera orientation vector must not be null"));
 
     // Create 3D view
     GraphicsScene gfxScene;
-    Handle_V3d_View view = gfxScene.createV3dView();
-    view->ChangeRenderingParams().IsAntialiasingEnabled = true;
-    view->ChangeRenderingParams().NbMsaaSamples = 4;
-    view->SetBackgroundColor(m_params.backgroundColor);
-    view->Camera()->SetProjectionType(fnToGfxCamProjection(m_params.cameraProjection));
-    if (!m_params.cameraOrientation.IsEqual({}, Precision::Confusion(), Precision::Angular()))
-        view->SetProj(m_params.cameraOrientation.X(), m_params.cameraOrientation.Y(), m_params.cameraOrientation.Z());
-    else
-        this->messenger()->emitError(ImageWriter::Properties::textIdTr("Camera orientation vector must not be null"));
-
-    // Create virtual window
-    auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), m_params.width, m_params.height);
-    view->SetWindow(wnd);
+    Handle_V3d_View view = ImageWriter::createV3dView(&gfxScene, m_params);
 
     int itemProgress = 0;
     const int itemCount = m_setDoc.size() + m_setNode.size();
@@ -144,23 +137,12 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     gfxScene.redraw();
     GraphicsUtils::V3dView_fitAll(view);
-
-    // Generate image
-    Image_AlienPixMap pixmap;
-    pixmap.SetTopDown(true);
-    V3d_ImageDumpOptions dumpOptions;
-    dumpOptions.BufferType = Graphic3d_BT_RGB;
-    dumpOptions.Width = m_params.width;
-    dumpOptions.Height = m_params.height;
-    const bool okPixmap = view->ToPixMap(pixmap, dumpOptions);
-    if (!okPixmap)
+    Handle_Image_AlienPixMap pixmap = ImageWriter::createImage(view);
+    if (!pixmap)
         return false;
 
-    const bool okSave = pixmap.Save(filepathTo<TCollection_AsciiString>(filepath));
-    if (!okSave)
-        return false;
-
-    return true;
+    const bool okSave = pixmap->Save(filepathTo<TCollection_AsciiString>(filepath));
+    return okSave;
 }
 
 std::unique_ptr<PropertyGroup> ImageWriter::createProperties(PropertyGroup* parentGroup)
@@ -178,6 +160,73 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
         m_params.cameraOrientation = ptr->cameraOrientation;
         m_params.cameraProjection = ptr->cameraProjection;
     }
+}
+
+Handle_Image_AlienPixMap ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
+{
+    if (!guiDoc)
+        return {};
+
+    const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
+    const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
+    Handle_V3d_View view = ImageWriter::createV3dView(guiDoc->graphicsScene(), params);
+
+    auto _ = gsl::finally([=]{
+        guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
+        guiDoc->setViewTrihedronMode(onEntryTrihedronMode);
+        if (guiDoc->isOriginTrihedronVisible() != onEntryOriginTrihedronVisible)
+            guiDoc->toggleOriginTrihedronVisibility();
+    });
+
+    guiDoc->graphicsScene()->clearSelection();
+    guiDoc->setViewTrihedronMode(GuiDocument::ViewTrihedronMode::None);
+    if (guiDoc->isOriginTrihedronVisible())
+        guiDoc->toggleOriginTrihedronVisibility();
+
+    GraphicsUtils::V3dView_fitAll(view);
+    return ImageWriter::createImage(view);
+}
+
+Handle_Image_AlienPixMap ImageWriter::createImage(Handle_V3d_View view)
+{
+    Handle_Image_AlienPixMap pixmap = new Image_AlienPixMap;
+    V3d_ImageDumpOptions dumpOptions;
+    dumpOptions.BufferType = Graphic3d_BT_RGB;
+    view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
+    const bool okPixmap = view->ToPixMap(*pixmap.get(), dumpOptions);
+    if (!okPixmap)
+        return {};
+
+    pixmap->SetFormat(Image_Format_RGB);
+    return pixmap;
+}
+
+Handle_V3d_View ImageWriter::createV3dView(GraphicsScene* gfxScene, const Parameters& params)
+{
+    auto fnToGfxCamProjection = [](ImageWriter::CameraProjection proj) {
+        switch (proj) {
+        case CameraProjection::Orthographic: return Graphic3d_Camera::Projection_Orthographic;
+        case CameraProjection::Perspective:  return Graphic3d_Camera::Projection_Perspective;
+        default: return Graphic3d_Camera::Projection_Orthographic;
+        }
+    };
+
+    // Create 3D view
+    Handle_V3d_View view = gfxScene->createV3dView();
+    view->ChangeRenderingParams().IsAntialiasingEnabled = true;
+    view->ChangeRenderingParams().NbMsaaSamples = 4;
+    view->SetBackgroundColor(params.backgroundColor);
+    view->Camera()->SetProjectionType(fnToGfxCamProjection(params.cameraProjection));
+    if (!isVectorNull(params.cameraOrientation))
+        view->SetProj(params.cameraOrientation.X(), params.cameraOrientation.Y(), params.cameraOrientation.Z());
+    else
+        view->SetProj(1, -1, 1);
+
+    // Create virtual window
+    auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), params.width, params.height);
+    view->SetWindow(wnd);
+
+    return view;
 }
 
 ImageFactoryWriter::ImageFactoryWriter(GuiApplication* guiApp)

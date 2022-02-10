@@ -8,25 +8,11 @@
 
 #include "filepath_conv.h"
 #include "theme.h"
-#include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
-
-#include <gsl/util>
-
-#include <Graphic3d_GraphicDriver.hxx>
+#include "../io_image/io_image.h"
 
 namespace Mayo {
-
-// Defined in graphics_create_virtual_window.cpp
-Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicDriver&, int , int);
-
-static int64_t lastModifiedTimestamp(const FilePath& fp)
-{
-    // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
-    const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
-    return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
-}
 
 bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
 {
@@ -36,60 +22,38 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
     if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
         return false;
 
-    if (this->thumbnailTimestamp == lastModifiedTimestamp(this->filepath))
+    if (this->thumbnailTimestamp == RecentFile::timestampLastModified(this->filepath))
         return true;
 
-    const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
-    const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-    const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
-    Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
-    view->ChangeRenderingParams().IsAntialiasingEnabled = true;
-    view->ChangeRenderingParams().NbMsaaSamples = 4;
-    view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
-
-    auto _ = gsl::finally([=]{
-        guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
-        guiDoc->setViewTrihedronMode(onEntryTrihedronMode);
-        if (guiDoc->isOriginTrihedronVisible() != onEntryOriginTrihedronVisible)
-            guiDoc->toggleOriginTrihedronVisibility();
-    });
-
-    guiDoc->graphicsScene()->clearSelection();
-    guiDoc->setViewTrihedronMode(GuiDocument::ViewTrihedronMode::None);
-    if (guiDoc->isOriginTrihedronVisible())
-        guiDoc->toggleOriginTrihedronVisibility();
-
-    auto wnd = graphicsCreateVirtualWindow(view->Viewer()->Driver(), size.width(), size.height());
-    view->SetWindow(wnd);
-    GraphicsUtils::V3dView_fitAll(view);
-
-    Image_PixMap pixmap;
-    pixmap.SetTopDown(true);
-    V3d_ImageDumpOptions dumpOptions;
-    dumpOptions.BufferType = Graphic3d_BT_RGB;
-    dumpOptions.Width = size.width();
-    dumpOptions.Height = size.height();
-    const bool ok = view->ToPixMap(pixmap, dumpOptions);
-    if (!ok)
+    IO::ImageWriter::Parameters params;
+    params.width = size.width();
+    params.height = size.height();
+    params.backgroundColor = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
+    Handle_Image_AlienPixMap pixmap = IO::ImageWriter::createImage(guiDoc, params);
+    if (!pixmap)
         return false;
 
-    const QImage img(pixmap.Data(),
-                     int(pixmap.Width()),
-                     int(pixmap.Height()),
-                     int(pixmap.SizeRowBytes()),
-                     QImage::Format_RGB888);
-    if (img.isNull())
-        return false;
-
-    this->thumbnail = QPixmap::fromImage(img);
-    this->thumbnailTimestamp = lastModifiedTimestamp(this->filepath);
-
+    Image_PixMap::FlipY(*pixmap);
+    Image_PixMap::SwapRgbaBgra(*pixmap);
+    this->thumbnail = QtGuiUtils::toQPixmap(*pixmap);
+    this->thumbnailTimestamp = RecentFile::timestampLastModified(this->filepath);
     return true;
 }
 
 bool RecentFile::isThumbnailOutOfSync() const
 {
-    return this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath);
+    return this->thumbnailTimestamp != RecentFile::timestampLastModified(this->filepath);
+}
+
+int64_t RecentFile::timestampLastModified(const FilePath& fp)
+{
+    // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
+    try {
+        const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
+        return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
+    } catch (const std::exception& /*err*/) {
+        return -1;
+    }
 }
 
 bool operator==(const RecentFile& lhs, const RecentFile& rhs)

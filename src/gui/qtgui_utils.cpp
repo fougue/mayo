@@ -8,9 +8,12 @@
 #include "../base/math_utils.h"
 
 #include <Standard_Version.hxx>
+
 #include <QtGui/QGuiApplication>
+#include <QtGui/QImage>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
+
 #include <gsl/assert>
 #include <algorithm>
 #include <cmath>
@@ -158,7 +161,7 @@ FontChange& FontChange::adjustSize(int offset) {
     return *this;
 }
 
-FontChange &FontChange::scalePointSizeF(double f) {
+FontChange& FontChange::scalePointSizeF(double f) {
     const int pointSizeF = m_font.pointSizeF();
     m_font.setPointSizeF(f * pointSizeF);
     return *this;
@@ -182,6 +185,29 @@ Quantity_Color toPreferredColorSpace(const QColor& c)
 #else
     return QtGuiUtils::toColor<Quantity_TOC_RGB>(c);
 #endif
+}
+
+QPixmap toQPixmap(const Image_PixMap& pixmap)
+{
+    auto fnToQImageFormat = [](Image_Format occFormat) {
+        switch (occFormat) {
+        case Image_Format_RGB:   return QImage::Format_RGB888;
+        case Image_Format_RGBA:  return QImage::Format_ARGB32;
+        case Image_Format_RGBF:  return QImage::Format_RGB444;
+        case Image_Format_Gray:  return QImage::Format_Grayscale8;
+        case Image_Format_GrayF: return QImage::Format_Invalid;
+        default: return QImage::Format_Invalid;
+        }
+    };
+    const QImage img(pixmap.Data(),
+                     int(pixmap.Width()),
+                     int(pixmap.Height()),
+                     int(pixmap.SizeRowBytes()),
+                     fnToQImageFormat(pixmap.Format()));
+    if (img.isNull())
+        return {};
+
+    return QPixmap::fromImage(img);
 }
 
 } // namespace QtGuiUtils

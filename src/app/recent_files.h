@@ -23,6 +23,7 @@ struct RecentFile {
     int64_t thumbnailTimestamp = 0;
     bool recordThumbnail(GuiDocument* guiDoc, QSize size);
     bool isThumbnailOutOfSync() const;
+    static int64_t timestampLastModified(const FilePath& fp);
 };
 
 using RecentFiles = std::vector<RecentFile>;

@@ -12,12 +12,18 @@
 #include "../base/tkernel_utils.h"
 
 #include <gp_Dir.hxx>
+#include <Image_AlienPixMap.hxx>
 #include <Quantity_Color.hxx>
 #include <TDF_Label.hxx>
+#include <V3d_View.hxx>
 #include <unordered_set>
 
 // Pre-decls
-namespace Mayo { class GuiApplication; }
+namespace Mayo {
+class GraphicsScene;
+class GuiApplication;
+class GuiDocument;
+} // namespace Mayo
 
 namespace Mayo {
 namespace IO {
@@ -46,6 +52,11 @@ public:
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }
+
+    // Helper
+    static Handle_Image_AlienPixMap createImage(GuiDocument* guiDoc, const Parameters& params);
+    static Handle_Image_AlienPixMap createImage(Handle_V3d_View view);
+    static Handle_V3d_View createV3dView(GraphicsScene* gfxScene, const Parameters& params);
 
 private:
     class Properties;
