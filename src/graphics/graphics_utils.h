@@ -46,7 +46,7 @@ struct GraphicsUtils {
     static void Gpx3dClipPlane_setPosition(
             const Handle_Graphic3d_ClipPlane& plane, double pos);
 
-    static bool Image_flipY(Image_PixMap& pixmap);
+    static bool ImagePixmap_flipY(Image_PixMap& pixmap);
 };
 
 } // namespace Mayo

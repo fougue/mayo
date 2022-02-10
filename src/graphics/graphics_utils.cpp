@@ -197,7 +197,7 @@ void GraphicsUtils::Gpx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane&
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
 }
 
-bool GraphicsUtils::Image_flipY(Image_PixMap& pixmap)
+bool GraphicsUtils::ImagePixmap_flipY(Image_PixMap& pixmap)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
     return Image_PixMap::FlipY(pixmap);

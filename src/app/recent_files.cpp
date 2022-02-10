@@ -45,7 +45,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         return false;
     }
 
-    GraphicsUtils::Image_flipY(*pixmap);
+    GraphicsUtils::ImagePixmap_flipY(*pixmap);
     Image_PixMap::SwapRgbaBgra(*pixmap);
     this->thumbnail = QtGuiUtils::toQPixmap(*pixmap);
     this->thumbnailTimestamp = RecentFile::timestampLastModified(this->filepath);
