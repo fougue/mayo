@@ -37,8 +37,11 @@ Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicD
 
 namespace IO {
 
-class ImageWriter::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::ImageWriter::Properties)
+struct ImageWriterI18N {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::ImageWriterI18N)
+};
+
+class ImageWriter::Properties : public PropertyGroup, private ImageWriterI18N {
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
@@ -103,13 +106,16 @@ bool ImageWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /
         }
     }
 
+    if (m_setDoc.empty() && m_setNode.empty())
+        this->messenger()->emitWarning(ImageWriterI18N::textIdTr("No transferred application items"));
+
     return true;
 }
 
 bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (isVectorNull(m_params.cameraOrientation))
-        this->messenger()->emitError(ImageWriter::Properties::textIdTr("Camera orientation vector must not be null"));
+        this->messenger()->emitError(ImageWriterI18N::textIdTr("Camera orientation vector must not be null"));
 
     // Create 3D view
     GraphicsScene gfxScene;
