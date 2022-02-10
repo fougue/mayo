@@ -21,6 +21,8 @@ private slots:
     void QStringUtils_text_test();
     void QStringUtils_text_test_data();
 
+    void RecentFiles_test();
+
     void StringConv_test();
 
     void QtGuiUtils_test();

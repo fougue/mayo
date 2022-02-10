@@ -14,15 +14,27 @@
 #include "../src/app/filepath_conv.h"
 #include "../src/app/qstring_conv.h"
 #include "../src/app/qstring_utils.h"
+#include "../src/app/recent_files.h"
+#include "../src/app/theme.h"
 #include "../src/io_occ/io_occ.h"
 #include "../src/gui/qtgui_utils.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>
+#include <QtCore/QTemporaryFile>
 #include <QtCore/QVariant>
+#include <QtGui/QPainter>
+#include <QtGui/QPixmap>
 #include <QtTest/QSignalSpy>
 
 namespace Mayo {
+
+// Declared in app/theme.h
+Theme* mayoTheme()
+{
+    static std::unique_ptr<Theme> globalTheme(createTheme("classic"));
+    return globalTheme.get();
+}
 
 void TestApp::FilePathConv_test()
 {
@@ -112,6 +124,57 @@ void TestApp::QStringUtils_text_test_data()
     QTest::newRow("c_pnt0.55,4.8977,15.1445")
             << QStringUtils::text(gp_Pnt(0.55, 4.8977, 15.1445), opts_c_si_2)
             << QStringLiteral("(0.55mm 4.9mm 15.14mm)");
+}
+
+void TestApp::RecentFiles_test()
+{
+    auto fnColorPixmap = [](const QColor& color) {
+        QPixmap pix(64, 64);
+        QPainter painter(&pix);
+        painter.fillRect(0, 0, 64, 64, color);
+        return pix;
+    };
+
+    auto fnCreateRecentFile = [](const QPixmap& thumbnail) {
+        QTemporaryFile file;
+        file.open();
+        RecentFile rf;
+        rf.filepath = filepathFrom(QFileInfo(file));
+        rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+        rf.thumbnail = thumbnail;
+        return rf;
+    };
+
+    RecentFiles recentFiles;
+    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::blue)));
+    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::white)));
+    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::red)));
+
+    RecentFiles recentFiles_read;
+    {
+        QByteArray data;
+        QDataStream wstream(&data, QIODevice::WriteOnly);
+        wstream << recentFiles;
+        QDataStream rstream(&data, QIODevice::ReadOnly);
+        rstream >> recentFiles_read;
+    }
+
+    QCOMPARE(recentFiles.size(), recentFiles_read.size());
+    for (RecentFiles::size_type i = 0; i < recentFiles.size(); ++i) {
+        const RecentFile& lhs = recentFiles.at(i);
+        const RecentFile& rhs = recentFiles_read.at(i);
+        QCOMPARE(lhs.filepath, rhs.filepath);
+        QVERIFY(lhs.thumbnailTimestamp != -1);
+        QCOMPARE(lhs.thumbnailTimestamp, rhs.thumbnailTimestamp);
+        QCOMPARE(lhs.thumbnail.size(), rhs.thumbnail.size());
+        const QImage lhsImg = lhs.thumbnail.toImage();
+        const QImage rhsImg = rhs.thumbnail.toImage();
+        for (int i = 0; i < lhs.thumbnail.width(); ++i) {
+            for (int j = 0; j < lhs.thumbnail.height(); ++j) {
+                QCOMPARE(lhsImg.pixel(i, j), rhsImg.pixel(i, j));
+            }
+        } // endfor
+    }
 }
 
 void TestApp::StringConv_test()

@@ -7,11 +7,16 @@
 #include "test_base.h"
 #include "test_app.h"
 
+#include <QtGui/QGuiApplication>
+
 #include <memory>
 #include <vector>
 
 int main(int argc, char** argv)
 {
+    // Required by TestApp
+    QGuiApplication guiApp(argc, argv);
+
     int retcode = 0;
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);

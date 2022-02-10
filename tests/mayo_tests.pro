@@ -12,25 +12,44 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 INCLUDEPATH += \
     ../src/3rdparty
 
+SOURCES += \
+    main.cpp \
+    ../src/3rdparty/fmt/src/format.cc \
+
+# Base --
 HEADERS += \
-    test_app.h \
     test_base.h \
     $$files(../src/base/*.h) \
     $$files(../src/io_occ/*.h) \
-    ../src/gui/qtgui_utils.h \
+
+SOURCES += \
+    test_base.cpp \
+    $$files(../src/base/*.cpp) \
+    $$files(../src/io_occ/*.cpp) \
+
+# App --
+QT += widgets
+
+HEADERS += \
+    test_app.h \
+    $$files(../src/graphics/*.h) \
+    $$files(../src/gui/*.h) \
+    $$files(../src/io_image/*.h) \
 
 SOURCES += \
     test_app.cpp \
-    test_base.cpp \
-    main.cpp \
-    \
-    $$files(../src/base/*.cpp) \
-    $$files(../src/io_occ/*.cpp) \
     ../src/app/qstring_utils.cpp \
-    ../src/gui/qtgui_utils.cpp \
-    \
-    ../src/3rdparty/fmt/src/format.cc \
+    ../src/app/recent_files.cpp \
+    ../src/app/theme.cpp \
+    $$files(../src/graphics/*.cpp) \
+    $$files(../src/gui/*.cpp) \
+    $$files(../src/io_image/*.cpp) \
 
+win32 {
+    LIBS += -lOpengl32 -lUser32
+}
+
+# Copy input files
 CONFIG += file_copies
 COPIES += MayoInputs
 MayoInputs.files = $$files(inputs/*.*)
@@ -66,3 +85,6 @@ minOpenCascadeVersion(7, 4, 0) {
 }
 # -- VRML support
 LIBS += -lTKVRML
+
+# -- For TestApp
+LIBS += -lTKService -lTKV3d -lTKMeshVS -lTKOpenGl
