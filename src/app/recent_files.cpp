@@ -7,6 +7,7 @@
 #include "recent_files.h"
 
 #include "../base/meta_enum.h"
+#include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
 #include "../io_image/io_image.h"
@@ -44,7 +45,7 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         return false;
     }
 
-    Image_PixMap::FlipY(*pixmap);
+    GraphicsUtils::Image_flipY(*pixmap);
     Image_PixMap::SwapRgbaBgra(*pixmap);
     this->thumbnail = QtGuiUtils::toQPixmap(*pixmap);
     this->thumbnailTimestamp = RecentFile::timestampLastModified(this->filepath);

@@ -9,12 +9,15 @@
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 
-#include <algorithm>
 #include <Bnd_Box.hxx>
 #include <ElSLib.hxx>
+#include <Image_PixMap.hxx>
 #include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
 #include <Standard_Version.hxx>
+
+#include <algorithm>
+#include <cstring>
 
 namespace Mayo {
 
@@ -192,6 +195,35 @@ void GraphicsUtils::Gpx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane&
 
     const gp_Vec placement(pos * gp_Vec(n));
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
+}
+
+bool GraphicsUtils::Image_flipY(Image_PixMap& pixmap)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    return Image_PixMap::FlipY(pixmap);
+#else
+    // Excerpt from OpenCascade7.6/src/Image/Image_Pixmap.cpp
+
+    if (pixmap.IsEmpty() || pixmap.SizeX() == 0 || pixmap.SizeY() == 0)
+        return false;
+
+    NCollection_Buffer tmp(NCollection_BaseAllocator::CommonBaseAllocator());
+    const size_t rowSize = pixmap.SizeRowBytes();
+    if (!tmp.Allocate(rowSize))
+        return false;
+
+    // For odd height middle row should be left as is
+    const Standard_Size nbRowsHalf = pixmap.SizeY() / 2;
+    for (Standard_Size rowT = 0, rowB = pixmap.SizeY() - 1; rowT < nbRowsHalf; ++rowT, --rowB) {
+        Standard_Byte* top = pixmap.ChangeRow(rowT);
+        Standard_Byte* bottom = pixmap.ChangeRow(rowB);
+        std::memcpy(tmp.ChangeData(), top, rowSize);
+        std::memcpy(top, bottom, rowSize);
+        std::memcpy(bottom, tmp.Data(), rowSize);
+    }
+
+    return true;
+#endif
 }
 
 } // namespace Mayo

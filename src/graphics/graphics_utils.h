@@ -11,6 +11,7 @@
 #include <AIS_InteractiveObject.hxx>
 #include <Aspect_Window.hxx>
 #include <V3d_View.hxx>
+class Image_PixMap;
 
 namespace Mayo {
 
@@ -44,6 +45,8 @@ struct GraphicsUtils {
             const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n);
     static void Gpx3dClipPlane_setPosition(
             const Handle_Graphic3d_ClipPlane& plane, double pos);
+
+    static bool Image_flipY(Image_PixMap& pixmap);
 };
 
 } // namespace Mayo
