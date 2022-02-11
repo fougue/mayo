@@ -22,9 +22,12 @@
 #include "qstring_conv.h"
 
 #include <BRepBndLib.hxx>
+
 #include <QtCore/QDir>
 #include <QtCore/QtDebug>
 #include <QtGui/QGuiApplication>
+
+#include <fmt/format.h>
 #include <iterator>
 
 namespace Mayo {
@@ -334,11 +337,12 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
     if (!recentFile) {
-        qDebug().noquote() << QString("RecentFile object is null\n"
-                                      "    Function: %1\n    Document: %2\n    RecentFilesCount: %3")
-                              .arg(Q_FUNC_INFO)
-                              .arg(filepathTo<QString>(guiDoc->document()->filePath()))
-                              .arg(this->recentFiles.value().size());
+        qDebug() << fmt::format("RecentFile object is null\n"
+                                "    Function: %1\n    Document: %2\n    RecentFilesCount: %3",
+                                Q_FUNC_INFO,
+                                guiDoc->document()->filePath().u8string(),
+                                this->recentFiles.value().size())
+                    .c_str();
         return;
     }
 
