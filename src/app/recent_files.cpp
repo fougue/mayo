@@ -113,7 +113,7 @@ QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles)
     recentFiles.clear();
     for (uint32_t i = 0; i < count; ++i) {
         if (stream.status() != QDataStream::Ok) {
-            qDebug() << fmt::format("QDataStream error\n    Function: %1\n    Status: %2",
+            qDebug() << fmt::format("QDataStream error\n    Function: {}\n    Status: {}",
                                     Q_FUNC_INFO, MetaEnum::name(stream.status()))
                         .c_str();
             break; // Stream extraction error, abort
