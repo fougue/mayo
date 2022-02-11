@@ -218,7 +218,7 @@ QByteArray AppModule::languageCode(const ApplicationPtr& app)
     const Settings::Variant code = app->settings()->findValueFromKey(keyLang);
     if (code.isConvertibleToConstRefString()) {
         const std::string& strCode = code.toConstRefString();
-        if (!strCode.empty())
+        if (enumLanguages.contains(strCode))
             return QByteArray::fromStdString(strCode);
     }
 
