@@ -334,8 +334,11 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
     if (!recentFile) {
-        qDebug().noquote() << QString("RecentFile object is null\n%Function: %1\nDocument: %2")
-                              .arg(Q_FUNC_INFO, filepathTo<QString>(guiDoc->document()->filePath()));
+        qDebug().noquote() << QString("RecentFile object is null\n"
+                                      "    Function: %1\n    Document: %2\n    RecentFilesCount: %3")
+                              .arg(Q_FUNC_INFO)
+                              .arg(filepathTo<QString>(guiDoc->document()->filePath()))
+                              .arg(this->recentFiles.value().size());
         return;
     }
 

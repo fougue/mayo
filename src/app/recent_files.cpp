@@ -25,7 +25,8 @@ bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
         return false;
 
     if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath())) {
-        qDebug().noquote() << QString("Filepath mismatch with GUI document\nFunction: %1\nFilepath: %2\nDocument: %2")
+        qDebug().noquote() << QString("Filepath mismatch with GUI document\n"
+                                      "    Function: %1\n    Filepath: %2\n    Document: %2")
                               .arg(Q_FUNC_INFO)
                               .arg(filepathTo<QString>(this->filepath))
                               .arg(filepathTo<QString>(guiDoc->document()->filePath()));
@@ -64,7 +65,7 @@ int64_t RecentFile::timestampLastModified(const FilePath& fp)
         const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
         return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
     } catch (const std::exception& err) {
-        qDebug().noquote() << QString("Exception caught\nFunction %1\nFilepath: %2\nError: %3")
+        qDebug().noquote() << QString("Exception caught\n    Function %1\n    Filepath: %2\n    Error: %3")
                               .arg(Q_FUNC_INFO, filepathTo<QString>(fp), err.what());
         return -1;
     }
@@ -111,7 +112,7 @@ QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles)
     recentFiles.clear();
     for (uint32_t i = 0; i < count; ++i) {
         if (stream.status() != QDataStream::Ok) {
-            qDebug().noquote() << QString("QDataStream error\nFunction: %1\nStatus: %2")
+            qDebug().noquote() << QString("QDataStream error\n    Function: %1\n    Status: %2")
                                   .arg(Q_FUNC_INFO, to_QString(MetaEnum::name(stream.status())));
             break; // Stream extraction error, abort
         }
