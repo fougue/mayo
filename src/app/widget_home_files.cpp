@@ -68,8 +68,10 @@ public:
         this->setStorage(std::move(storage));
     }
 
-    QPixmap findPixmap(const QString& url) const override {
+    QPixmap findPixmap(const QString& url) const override
+    {
         QPixmap pixmap;
+        bool cachePixmap = true;
         auto fnPixmap = [](const QIcon& icon, int iconSize, int pixmapSize) {
             return icon
                     .pixmap(iconSize, iconSize)
@@ -88,21 +90,26 @@ public:
             if (pixmap.isNull()) {
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
                 pixmap = fnPixmap(icon, 64, 64);
+                cachePixmap = false;
             }
         }
 
-        QPixmapCache::insert(url, pixmap);
+        if (cachePixmap)
+            QPixmapCache::insert(url, pixmap);
+
         return pixmap;
     }
 
-    void reload() {
+    void reload()
+    {
         this->beginResetModel();
         this->reloadRecentFiles();
         this->endResetModel();
     }
 
 private:
-    void reloadRecentFiles() {
+    void reloadRecentFiles()
+    {
         auto app = Application::instance();
         auto appModule = AppModule::get(app);
         const RecentFiles& listRecentFile = appModule->recentFiles.value();
@@ -178,7 +185,8 @@ public:
     {}
 
 protected:
-    void clickAction(const ListHelper::ModelItem* item) const override {
+    void clickAction(const ListHelper::ModelItem* item) const override
+    {
         auto fileItem = static_cast<const HomeFileItem*>(item);
         if (!fileItem)
             return;

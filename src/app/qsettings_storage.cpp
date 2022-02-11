@@ -82,7 +82,7 @@ void QSettingsStorage::setValue(std::string_view key, const Settings::Variant& v
     else if (std::holds_alternative<std::string>(value)) {
         const std::string& str = value.toConstRefString();
         if (value.isByteArray())
-            qvalue = QtCoreUtils::QByteArray_frowRawData(str);
+            qvalue = QByteArray::fromStdString(str); // Don't use QtCoreUtils::QByteArray_frowRawData(str)
         else
             qvalue = to_QString(str);
     }
