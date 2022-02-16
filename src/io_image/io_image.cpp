@@ -41,21 +41,21 @@ struct ImageWriterI18N {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::ImageWriterI18N)
 };
 
-class ImageWriter::Properties : public PropertyGroup, private ImageWriterI18N {
+class ImageWriter::Properties : public PropertyGroup {
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
-        this->width.setDescription(textIdTr("Image width in pixels"));
+        this->width.setDescription(ImageWriterI18N::textIdTr("Image width in pixels"));
         this->width.setConstraintsEnabled(true);
         this->width.setRange(0, std::numeric_limits<int>::max());
 
-        this->height.setDescription(textIdTr("Image height in pixels"));
+        this->height.setDescription(ImageWriterI18N::textIdTr("Image height in pixels"));
         this->height.setConstraintsEnabled(true);
         this->height.setRange(0, std::numeric_limits<int>::max());
 
         this->cameraOrientation.setDescription(
-                    textIdTr("Camera orientation expressed in Z-up convention as a unit vector"));
+                    ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector"));
     }
 
     void restoreDefaults() override {
@@ -67,11 +67,11 @@ public:
         this->cameraProjection.setValue(defaults.cameraProjection);
     }
 
-    PropertyInt width{ this, textId("width") };
-    PropertyInt height{ this, textId("height") };
-    PropertyOccColor backgroundColor{ this, textId("backgroundColor") };
-    PropertyOccVec cameraOrientation{ this, textId("cameraOrientation") };
-    PropertyEnum<CameraProjection> cameraProjection{ this, textId("cameraProjection") };
+    PropertyInt width{ this, ImageWriterI18N::textId("width") };
+    PropertyInt height{ this, ImageWriterI18N::textId("height") };
+    PropertyOccColor backgroundColor{ this, ImageWriterI18N::textId("backgroundColor") };
+    PropertyOccVec cameraOrientation{ this, ImageWriterI18N::textId("cameraOrientation") };
+    PropertyEnum<CameraProjection> cameraProjection{ this, ImageWriterI18N::textId("cameraProjection") };
 };
 
 namespace {
