@@ -102,24 +102,24 @@ protected:
 
 } // namespace Internal
 
-WidgetOccViewController::WidgetOccViewController(WidgetOccView* widgetView)
-    : V3dViewController(widgetView->v3dView(), widgetView),
-      m_widgetView(widgetView)
+WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
+    : V3dViewController(occView->v3dView(), occView->widget()),
+      m_occView(occView)
 {
-    widgetView->installEventFilter(this);
+    m_occView->widget()->installEventFilter(this);
 }
 
 bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched != m_widgetView)
+    if (watched != m_occView->widget())
         return false;
 
     if (event->type() == QEvent::Enter) {
-        m_widgetView->grabKeyboard();
+        m_occView->widget()->grabKeyboard();
         return false;
     }
     else if (event->type() == QEvent::Leave) {
-        m_widgetView->releaseKeyboard();
+        m_occView->widget()->releaseKeyboard();
         return false;
     }
 
@@ -129,7 +129,7 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
 void WidgetOccViewController::redrawView()
 {
     //V3dViewController::redrawView();
-    m_widgetView->redraw();
+    m_occView->redraw();
 }
 
 void WidgetOccViewController::startDynamicAction(V3dViewController::DynamicAction action)
@@ -152,8 +152,8 @@ void WidgetOccViewController::stopDynamicAction()
 
 void WidgetOccViewController::setViewCursor(const QCursor &cursor)
 {
-    if (m_widgetView)
-        m_widgetView->setCursor(cursor);
+    if (m_occView->widget())
+        m_occView->widget()->setCursor(cursor);
 }
 
 struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractRubberBand {
@@ -176,7 +176,7 @@ private:
 
 V3dViewController::AbstractRubberBand* WidgetOccViewController::createRubberBand()
 {
-    return new RubberBand(m_widgetView);
+    return new RubberBand(m_occView->widget());
 }
 
 bool WidgetOccViewController::handleEvent(QEvent* event)
@@ -188,7 +188,7 @@ bool WidgetOccViewController::handleEvent(QEvent* event)
             return false;
 
         if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier)
-            this->startInstantZoom(m_widgetView->mapFromGlobal(QCursor::pos()));
+            this->startInstantZoom(m_occView->widget()->mapFromGlobal(QCursor::pos()));
 
         if (keyEvent->key() == Qt::Key_Shift && !this->hasCurrentDynamicAction())
             emit this->multiSelectionToggled(true);
@@ -210,13 +210,13 @@ bool WidgetOccViewController::handleEvent(QEvent* event)
     }
     case QEvent::MouseButtonPress: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
+        const QPoint currPos = m_occView->widget()->mapFromGlobal(mouseEvent->globalPos());
         m_prevPos = currPos;
         break;
     }
     case QEvent::MouseMove: {
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
-        const QPoint currPos = m_widgetView->mapFromGlobal(mouseEvent->globalPos());
+        const QPoint currPos = m_occView->widget()->mapFromGlobal(mouseEvent->globalPos());
         const QPoint prevPos = m_prevPos;
         m_prevPos = currPos;
         if (mouseEvent->buttons() == Qt::LeftButton)
@@ -234,7 +234,7 @@ bool WidgetOccViewController::handleEvent(QEvent* event)
         auto mouseEvent = static_cast<const QMouseEvent*>(event);
         const bool hadDynamicAction = this->hasCurrentDynamicAction();
         if (this->isWindowZoomingStarted())
-            this->windowZoom(m_widgetView->mapFromGlobal(mouseEvent->globalPos()));
+            this->windowZoom(m_occView->widget()->mapFromGlobal(mouseEvent->globalPos()));
 
         this->stopDynamicAction();
         if (!hadDynamicAction)

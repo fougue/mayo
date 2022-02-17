@@ -8,7 +8,6 @@
 #include "../base/meta_enum.h"
 #include "../base/span.h"
 
-#include <Standard_Version.hxx>
 #include <QtGui/QImage>
 #include <QtGui/QPalette>
 #include <QtWidgets/QApplication>
@@ -118,11 +117,7 @@ public:
         case Theme::Color::ButtonFlat_Background:
             return appPalette.color(QPalette::Button);
         case Theme::Color::ButtonView3d_Background: {
-#if OCC_VERSION_HEX >= 0x070600
-            return Qt::transparent;
-#else
             return appPalette.color(QPalette::Button);
-#endif
         }
         case Theme::Color::ButtonFlat_Hover:
             return appPalette.color(QPalette::Button).darker(110);
@@ -191,11 +186,7 @@ public:
         case Theme::Color::ButtonFlat_Checked:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::ButtonView3d_Background:
-#if OCC_VERSION_HEX >= 0x070600
-            return Qt::transparent;
-#else
             return appPalette.color(QPalette::Button).lighter(125);
-#endif
         case Theme::Color::ButtonView3d_Hover:
             return appPalette.color(QPalette::Button).lighter(160);
         case Theme::Color::ButtonView3d_Checked:

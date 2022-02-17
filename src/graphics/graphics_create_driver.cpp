@@ -11,40 +11,33 @@
 // --
 
 #include <Aspect_DisplayConnection.hxx>
-#include <Message.hxx>
 #include <OpenGl_GraphicDriver.hxx>
-#include <Standard_Version.hxx>
-#include <QtCore/QtGlobal>
+#include <functional>
 
 namespace Mayo {
 
+using FunctionCreateGraphicsDriver = std::function<Handle_Graphic3d_GraphicDriver()>;
+
+static FunctionCreateGraphicsDriver& getFunctionCreateGraphicsDriver()
+{
+    static FunctionCreateGraphicsDriver fn = []{
+        return new OpenGl_GraphicDriver(new Aspect_DisplayConnection);
+    };
+    return fn;
+}
+
+void setFunctionCreateGraphicsDriver(FunctionCreateGraphicsDriver fn)
+{
+    getFunctionCreateGraphicsDriver() = std::move(fn);
+}
+
 Handle_Graphic3d_GraphicDriver graphicsCreateDriver()
 {
-    Handle_Aspect_DisplayConnection dispConnection;
-#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    dispConnection = new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#else
-    dispConnection = new Aspect_DisplayConnection;
-#endif
+    auto& fn = getFunctionCreateGraphicsDriver();
+    if (fn)
+        return fn();
 
-#if OCC_VERSION_HEX >= 0x070600
-    auto gfxDriver = new OpenGl_GraphicDriver(dispConnection, false/*dontInit*/);
-    // Let QOpenGLWidget to manage buffer swap
-    gfxDriver->ChangeOptions().buffersNoSwap = true;
-    // Don't write into alpha channel
-    gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
-    // Offscreen FBOs should be always used
-    gfxDriver->ChangeOptions().useSystemBuffer = false;
-#  if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning("Warning! Qt 5.10+ is required for sRGB setup.\n"
-                         "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n");
-    gfxDriver->ChangeOptions().sRGBDisable = true;
-#  endif
-#else
-    auto gfxDriver = new OpenGl_GraphicDriver(dispConnection);
-#endif
-
-    return gfxDriver;
+    return {};
 }
 
 } // namespace Mayo

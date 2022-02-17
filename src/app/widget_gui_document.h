@@ -7,6 +7,8 @@
 #pragma once
 
 #include "widget_occ_view_controller.h"
+#include "theme.h"
+
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
 #include <vector>
@@ -17,7 +19,7 @@ class ButtonFlat;
 class GuiDocument;
 class WidgetClipPlanes;
 class WidgetExplodeAssembly;
-class WidgetOccView;
+class IWidgetOccView;
 
 class WidgetGuiDocument : public QWidget {
     Q_OBJECT
@@ -26,10 +28,9 @@ public:
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
     V3dViewController* controller() const { return m_controller; }
-    WidgetOccView* view() const { return m_qtOccView; }
+    IWidgetOccView* view() const { return m_qtOccView; }
 
-    static void paintPanel(QWidget* widget);
-    static QColor panelBackgroundColor();
+    QColor panelBackgroundColor() const;
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -43,8 +44,10 @@ private:
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
 
+    ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
+
     GuiDocument* m_guiDoc = nullptr;
-    WidgetOccView* m_qtOccView = nullptr;
+    IWidgetOccView* m_qtOccView = nullptr;
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;

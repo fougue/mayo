@@ -29,14 +29,19 @@
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_mesh.h"
 #include "widget_model_tree_builder_xde.h"
+#include "widget_occ_view.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QDir>
+#include <QtCore/QReadWriteLock>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
-#include <QtCore/QReadWriteLock>
 #include <QtCore/QTranslator>
+#include <QtCore/QVersionNumber>
+#include <QtGui/QOffscreenSurface>
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOpenGLFunctions>
 #include <QtWidgets/QApplication>
 
 #include <Message.hxx>
@@ -53,6 +58,9 @@
 #endif
 
 namespace Mayo {
+
+// Declared in graphics/graphics_create_driver.cpp
+void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
 
 class Main {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Main)
@@ -253,11 +261,68 @@ static void initBase(QCoreApplication* qtApp)
                 std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 }
 
+// Helper to query the OpenGL version string
+static std::string queryGlVersionString()
+{
+    QOpenGLContext glContext;
+    if (!glContext.create())
+        return {};
+
+    QOffscreenSurface surface;
+    surface.create();
+    if (!glContext.makeCurrent(&surface))
+        return {};
+
+    auto glVersion = glContext.functions()->glGetString(GL_VERSION);
+    if (!glVersion)
+        return {};
+
+    return reinterpret_cast<const char*>(glVersion);
+}
+
+// Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
+// Note: only major and minor versions are detected
+static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
+{
+    if (strVersion.empty())
+        return {};
+
+    const char* ptrVersionStart = strVersion.data();
+    const char* ptrVersionEnd = ptrVersionStart + strVersion.size();
+    const int versionMajor = std::atoi(ptrVersionStart);
+    int versionMinor = 0;
+    auto ptrDot = std::find(ptrVersionStart, ptrVersionEnd, '.');
+    if (ptrDot != ptrVersionEnd)
+        versionMinor = std::atoi(ptrDot + 1);
+
+    return QVersionNumber(versionMajor, versionMinor);
+}
+
 // Initializes "GUI" objects
 static void initGui(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
+
+    // Retrieve OpenGL infos
+    const std::string strGlVersion = queryGlVersionString();
+    const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
+    qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
+
+    // Fallback for OpenGL
+    setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);
+    IWidgetOccView::setCreator(&QWidgetOccView::create);
+
+    // Use QOpenGLWidget if possible
+#if OCC_VERSION_HEX >= 0x070600
+    if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
+        setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
+        IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
+    }
+    else {
+        qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
+    }
+#endif
 
     // Register I/O objects
     guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));

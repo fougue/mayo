@@ -13,12 +13,12 @@ class QRubberBand;
 
 namespace Mayo {
 
-class WidgetOccView;
+class IWidgetOccView;
 
 class WidgetOccViewController : public V3dViewController {
     Q_OBJECT
 public:
-    WidgetOccViewController(WidgetOccView* widgetView = nullptr);
+    WidgetOccViewController(IWidgetOccView* occView = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -39,7 +39,7 @@ private:
 
     bool handleEvent(QEvent* event);
 
-    WidgetOccView* m_widgetView = nullptr;
+    IWidgetOccView* m_occView = nullptr;
     QPoint m_prevPos;
 };
 

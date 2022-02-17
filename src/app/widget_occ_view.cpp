@@ -11,28 +11,63 @@
 
 #include "widget_occ_view.h"
 
+#include "occt_window.h"
+#include <QtGui/QResizeEvent>
+
 #if OCC_VERSION_HEX >= 0x070600
 #  include <Aspect_NeutralWindow.hxx>
 #  include <OpenGl_Context.hxx>
 #  include <OpenGl_GraphicDriver.hxx>
 #  include <OpenGl_FrameBuffer.hxx>
-#else
-#  include "occt_window.h"
-#  include <QtGui/QResizeEvent>
 #endif
 
 namespace Mayo {
 
+namespace {
+
+Handle_Aspect_DisplayConnection createDisplayConnection()
+{
+#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
+    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
+#else
+    return new Aspect_DisplayConnection;
+#endif
+}
+
+IWidgetOccView::Creator& getWidgetOccViewCreator()
+{
+    static IWidgetOccView::Creator fn = [](const Handle_V3d_View& view, QWidget* parent) {
+        return new QWidgetOccView(view, parent);
+    };
+    return fn;
+}
+
+} // namespace
+
+
+void IWidgetOccView::setCreator(IWidgetOccView::Creator fn)
+{
+    getWidgetOccViewCreator() = std::move(fn);
+}
+
+IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+{
+    auto& fn = getWidgetOccViewCreator();
+    return fn(view, parent);
+}
+
+
+#if OCC_VERSION_HEX >= 0x070600
+
 constexpr bool isCoreProfile = false;
 
-WidgetOccView::WidgetOccView(const Handle_V3d_View& view, QWidget* parent)
-    : MayoWidgetOccView_ParentType(parent),
-      m_view(view)
+QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
+    : QOpenGLWidget(parent),
+      IWidgetOccView(view)
 {
     this->setMouseTracking(true);
     this->setBackgroundRole(QPalette::NoRole);
 
-#if OCC_VERSION_HEX >= 0x070600
     this->setUpdatesEnabled(true);
     this->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
 
@@ -41,30 +76,42 @@ WidgetOccView::WidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     glFormat.setStencilBufferSize(8);
     glFormat.setVersion(4, 5);
     glFormat.setProfile(isCoreProfile ? QSurfaceFormat::CoreProfile : QSurfaceFormat::CompatibilityProfile);
-  #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
     glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
     this->setTextureFormat(GL_SRGB8_ALPHA8);
-  #endif
+#endif
     this->setFormat(glFormat);
-#else
-    // Avoid Qt background clears to improve resizing speed
-    this->setAutoFillBackground(false);
-    this->setAttribute(Qt::WA_NoSystemBackground);
-    this->setAttribute(Qt::WA_PaintOnScreen);
-#endif
 }
 
-void WidgetOccView::redraw()
+void QOpenGLWidgetOccView::redraw()
 {
-#if OCC_VERSION_HEX >= 0x070600
     this->update();
-#else
-    m_view->Redraw();
-#endif
 }
 
-#if OCC_VERSION_HEX >= 0x070600
-void WidgetOccView::initializeGL()
+QOpenGLWidgetOccView* QOpenGLWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+{
+    return new QOpenGLWidgetOccView(view, parent);
+}
+
+Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView::createCompatibleGraphicsDriver()
+{
+    auto gfxDriver = new OpenGl_GraphicDriver(createDisplayConnection(), false/*dontInit*/);
+    // Let QOpenGLWidget manage buffer swap
+    gfxDriver->ChangeOptions().buffersNoSwap = true;
+    // Don't write into alpha channel
+    gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
+    // Offscreen FBOs should be always used
+    gfxDriver->ChangeOptions().useSystemBuffer = false;
+#  if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+    Message::SendWarning("Warning! Qt 5.10+ is required for sRGB setup.\n"
+                         "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n");
+    gfxDriver->ChangeOptions().sRGBDisable = true;
+#  endif
+
+    return gfxDriver;
+}
+
+void QOpenGLWidgetOccView::initializeGL()
 {
     const QRect wrect = this->rect();
     const Graphic3d_Vec2i viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
@@ -75,10 +122,10 @@ void WidgetOccView::initializeGL()
         return;
     }
 
-    auto window = Handle_Aspect_NeutralWindow::DownCast(m_view->Window());
+    auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
     if (window) {
         window->SetSize(viewSize.x(), viewSize.y());
-        m_view->SetWindow(window, glCtx->RenderingContext());
+        this->v3dView()->SetWindow(window, glCtx->RenderingContext());
     }
     else {
         window = new Aspect_NeutralWindow;
@@ -92,19 +139,19 @@ void WidgetOccView::initializeGL()
 #endif
         window->SetNativeHandle(nativeWin);
         window->SetSize(viewSize.x(), viewSize.y());
-        m_view->SetWindow(window, glCtx->RenderingContext());
+        this->v3dView()->SetWindow(window, glCtx->RenderingContext());
     }
 
     //dumpGlInfo(true);
 }
 
-void WidgetOccView::paintGL()
+void QOpenGLWidgetOccView::paintGL()
 {
-    if (m_view->Window().IsNull())
+    if (this->v3dView()->Window().IsNull())
         return;
 
     // Wrap FBO created by QOpenGLWidget
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(m_view->Viewer()->Driver());
+    auto driver = Handle_OpenGl_GraphicDriver::DownCast(this->v3dView()->Viewer()->Driver());
     const Handle_OpenGl_Context& glCtx = driver->GetSharedContext();
     Handle_OpenGl_FrameBuffer defaultFbo = glCtx->DefaultFrameBuffer();
     if (!defaultFbo) {
@@ -120,41 +167,71 @@ void WidgetOccView::paintGL()
 
     Graphic3d_Vec2i viewSizeOld;
     const Graphic3d_Vec2i viewSizeNew = defaultFbo->GetVPSize();
-    auto window = Handle_Aspect_NeutralWindow::DownCast(m_view->Window());
+    auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
     window->Size(viewSizeOld.x(), viewSizeOld.y());
     if (viewSizeNew != viewSizeOld) {
         window->SetSize(viewSizeNew.x(), viewSizeNew.y());
-        m_view->MustBeResized();
-        m_view->Invalidate();
+        this->v3dView()->MustBeResized();
+        this->v3dView()->Invalidate();
     }
 
     // Redraw the viewer
-    //m_view->InvalidateImmediate();
-    m_view->Redraw();
+    //this->v3dView()->InvalidateImmediate();
+    this->v3dView()->Redraw();
 }
-#else
-void WidgetOccView::showEvent(QShowEvent*)
+
+#endif // OCC_VERSION_HEX >= 0x070600
+
+
+QWidgetOccView::QWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
+    : QWidget(parent),
+      IWidgetOccView(view)
 {
-    if (m_view->Window().IsNull()) {
+    this->setMouseTracking(true);
+    this->setBackgroundRole(QPalette::NoRole);
+
+    // Avoid Qt background clears to improve resizing speed
+    this->setAutoFillBackground(false);
+    this->setAttribute(Qt::WA_NoSystemBackground);
+    this->setAttribute(Qt::WA_PaintOnScreen);
+}
+
+Handle_Graphic3d_GraphicDriver QWidgetOccView::createCompatibleGraphicsDriver()
+{
+    return new OpenGl_GraphicDriver(createDisplayConnection());
+}
+
+void QWidgetOccView::redraw()
+{
+    this->v3dView()->Redraw();
+}
+
+QWidgetOccView* QWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+{
+    return new QWidgetOccView(view, parent);
+}
+
+void QWidgetOccView::showEvent(QShowEvent*)
+{
+    if (this->v3dView()->Window().IsNull()) {
         Handle_Aspect_Window hWnd = new OcctWindow(this);
-        m_view->SetWindow(hWnd);
+        this->v3dView()->SetWindow(hWnd);
         if (!hWnd->IsMapped())
             hWnd->Map();
 
-        m_view->MustBeResized();
+        this->v3dView()->MustBeResized();
     }
 }
 
-void WidgetOccView::paintEvent(QPaintEvent*)
+void QWidgetOccView::paintEvent(QPaintEvent*)
 {
-    m_view->Redraw();
+    this->v3dView()->Redraw();
 }
 
-void WidgetOccView::resizeEvent(QResizeEvent* event)
+void QWidgetOccView::resizeEvent(QResizeEvent* event)
 {
     if (!event->spontaneous()) // Workaround for infinite window shrink on Ubuntu
-        m_view->MustBeResized();
+        this->v3dView()->MustBeResized();
 }
-#endif
 
 } // namespace Mayo

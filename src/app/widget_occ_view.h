@@ -6,49 +6,80 @@
 
 #pragma once
 
+#include <Graphic3d_GraphicDriver.hxx>
 #include <Standard_Version.hxx>
 #include <V3d_View.hxx>
 
+#include <QtWidgets/QWidget>
 #if OCC_VERSION_HEX >= 0x070600
 #  include <QtWidgets/QOpenGLWidget>
-using MayoWidgetOccView_ParentType = QOpenGLWidget;
-#else
-#  include <QtWidgets/QWidget>
-using MayoWidgetOccView_ParentType = QWidget;
 #endif
+
+#include <functional>
 
 namespace Mayo {
 
-// Qt wrapper around the V3d_View class
-// WidgetOccView does not handle input devices interaction like keyboard and mouse
-//
-// Integration of OpenCascade 7.6 with QOpenGLWidget allows widgets with translucid background to be
-// correctly displayed over V3d_View
-// WidgetOccView implementation is based on https://github.com/gkv311/occt-samples-qopenglwidget
-class WidgetOccView : public MayoWidgetOccView_ParentType {
-    Q_OBJECT
+// Base interface for bridging Qt and OpenCascade 3D view
+// IWidgetOccView does not handle input devices interaction like keyboard and mouse
+class IWidgetOccView {
 public:
-    WidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
-
     const Handle_V3d_View& v3dView() const { return m_view; }
 
-    void redraw();
+    virtual void redraw() = 0;
+    virtual QWidget* widget() = 0;
+    virtual bool supportsWidgetOpacity() const = 0;
+
+    using Creator = std::function<IWidgetOccView* (const Handle_V3d_View&, QWidget*)>;
+    static void setCreator(Creator fn);
+    static IWidgetOccView* create(const Handle_V3d_View& view, QWidget* parent = nullptr);
 
 protected:
+    IWidgetOccView(const Handle_V3d_View& view) : m_view(view) {}
+
+private:
+    Handle_V3d_View m_view;
+};
+
 #if OCC_VERSION_HEX >= 0x070600
+// Integration of OpenCascade 7.6 with QOpenGLWidget allows widgets with translucid background to be
+// correctly displayed over V3d_View
+// QOpenGLWidgetOccView implementation is based on https://github.com/gkv311/occt-samples-qopenglwidget
+class QOpenGLWidgetOccView : public QOpenGLWidget, public IWidgetOccView {
+public:
+    QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
+
+    void redraw() override;
+    QWidget* widget() override { return this; }
+    bool supportsWidgetOpacity() const override { return true; }
+
+    static QOpenGLWidgetOccView* create(const Handle_V3d_View& view, QWidget* parent);
+    static Handle_Graphic3d_GraphicDriver createCompatibleGraphicsDriver();
+
+protected:
     // -- QOpenGLWidget
     void initializeGL() override;
     void paintGL() override;
-#else
+};
+#endif
+
+// Fallback using traditional QWidget wrapper, no translucid brackground support
+class QWidgetOccView : public QWidget, public IWidgetOccView {
+public:
+    QWidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
+
+    void redraw() override;
+    virtual QWidget* widget() { return this; }
+    bool supportsWidgetOpacity() const override { return false; }
+
+    static QWidgetOccView* create(const Handle_V3d_View& view, QWidget* parent);
+    static Handle_Graphic3d_GraphicDriver createCompatibleGraphicsDriver();
+
+protected:
     // -- QWidget
     void showEvent(QShowEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     QPaintEngine* paintEngine() const override { return nullptr; }
-#endif
-
-private:
-    Handle_V3d_View m_view;
 };
 
 } // namespace Mayo
