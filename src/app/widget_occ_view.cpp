@@ -12,12 +12,14 @@
 #include "widget_occ_view.h"
 
 #include "occt_window.h"
+
 #include <QtGui/QResizeEvent>
 
+#include <Aspect_DisplayConnection.hxx>
+#include <OpenGl_GraphicDriver.hxx>
 #if OCC_VERSION_HEX >= 0x070600
 #  include <Aspect_NeutralWindow.hxx>
 #  include <OpenGl_Context.hxx>
-#  include <OpenGl_GraphicDriver.hxx>
 #  include <OpenGl_FrameBuffer.hxx>
 #endif
 
