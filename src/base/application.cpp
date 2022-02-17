@@ -6,11 +6,11 @@
 
 #include "application.h"
 #include "document_tree_node_properties_provider.h"
+#include "filepath_conv.h"
 #include "io_system.h"
 #include "property_builtins.h"
-#include "qmeta_quantity_color.h"
 #include "settings.h"
-#include "string_utils.h"
+#include "task_common.h"
 #include "tkernel_utils.h"
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
@@ -22,25 +22,24 @@
 #  include <CDF_Session.hxx>
 #endif
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
-#include <QtCore/QSettings>
-#include <QtCore/QtDebug>
-
 #include <atomic>
+#include <vector>
 #include <unordered_map>
 
 namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
-    opencascade::handle<CDM_Document> CreateDocument() override { return new Document;  }
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) CreateDocument() override { return new Document;  }
+#endif
 };
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
-    opencascade::handle<CDM_Document> CreateDocument() override { return new Document; }
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) CreateDocument() override { return new Document; }
+#endif
 };
 
 struct Application::Private {
@@ -49,6 +48,7 @@ struct Application::Private {
     Settings m_settings;
     IO::System m_ioSystem;
     DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
+    std::vector<Application::Translator> m_vecTranslator;
 };
 
 Application::~Application()
@@ -75,6 +75,9 @@ const ApplicationPtr& Application::instance()
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
         qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
         qRegisterMetaType<DocumentPtr>("DocumentPtr");
+        qRegisterMetaType<TaskId>("Mayo::TaskId");
+        qRegisterMetaType<TaskId>("TaskId");
+        qRegisterMetaType<std::string>("std::string");
     }
 
     return appPtr;
@@ -88,16 +91,19 @@ int Application::documentCount() const
 DocumentPtr Application::newDocument(Document::Format docFormat)
 {
     const char* docNameFormat = Document::toNameFormat(docFormat);
-    Handle_TDocStd_Document stdDoc;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    Handle(CDM_Document) stdDoc;
+#else
+    Handle(TDocStd_Document) stdDoc;
+#endif
     this->NewDocument(docNameFormat, stdDoc);
     return DocumentPtr::DownCast(stdDoc);
 }
 
-DocumentPtr Application::openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus)
+DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus)
 {
     Handle_TDocStd_Document stdDoc;
-    const PCDM_ReaderStatus readStatus =
-            this->Open(StringUtils::toUtf16<TCollection_ExtendedString>(filePath), stdDoc);
+    const PCDM_ReaderStatus readStatus = this->Open(filepathTo<TCollection_ExtendedString>(filepath), stdDoc);
     if (ptrReadStatus)
         *ptrReadStatus = readStatus;
 
@@ -160,28 +166,39 @@ DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodeProperties
     return &(d->m_documentTreeNodePropertiesProviderTable);
 }
 
-void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
+void Application::addTranslator(Application::Translator fn)
 {
-    const QFileInfo fiSettingsFilepath(settingsFilepath);
-    if (!fiSettingsFilepath.exists() || !fiSettingsFilepath.isReadable()) {
-        qDebug().noquote() << tr("'%1' doesn't exist or is not readable").arg(settingsFilepath);
-        return;
+    if (fn)
+        d->m_vecTranslator.push_back(std::move(fn));
+}
+
+std::string_view Application::translate(const TextId& textId, int n) const
+{
+    for (auto it = d->m_vecTranslator.rbegin(); it != d->m_vecTranslator.rend(); ++it) {
+        const Application::Translator& fn = *it;
+        std::string_view msg = fn(textId, n);
+        if (!msg.empty())
+            return msg;
     }
 
-    const QSettings occSettings(settingsFilepath, QSettings::IniFormat);
-    if (occSettings.status() != QSettings::NoError) {
-        qDebug().noquote() << tr("'%1' could not be loaded by QSettings").arg(settingsFilepath);
-        return;
-    }
+    return textId.key;
+}
 
-    const char* arrayOptionName[] = {
+Span<const char*> Application::envOpenCascadeOptions()
+{
+    static const char* arrayOptionName[] = {
         "MMGT_OPT",
         "MMGT_CLEAR",
         "MMGT_REENTRANT",
         "CSF_LANGUAGE",
         "CSF_EXCEPTION_PROMPT"
     };
-    const char* arrayPathName[] = {
+    return arrayOptionName;
+}
+
+Span<const char*> Application::envOpenCascadePaths()
+{
+    static const char* arrayPathName[] = {
         "CSF_SHMessage",
         "CSF_MDTVTexturesDirectory",
         "CSF_ShadersDirectory",
@@ -197,41 +214,14 @@ void Application::setOpenCascadeEnvironment(const QString& settingsFilepath)
         "CSF_XmlOcafResource",
         "CSF_MIGRATION_TYPES"
     };
-
-    // Process options
-    for (const char* varName : arrayOptionName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        const QString strValue = occSettings.value(qVarName).toString();
-        qputenv(varName, strValue.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
-    }
-
-    // Process paths
-    for (const char* varName : arrayPathName) {
-        const QLatin1String qVarName(varName);
-        if (!occSettings.contains(qVarName))
-            continue;
-
-        QString strPath = occSettings.value(qVarName).toString();
-        if (QFileInfo(strPath).isRelative())
-            strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
-
-        strPath = QDir::toNativeSeparators(strPath);
-        qputenv(varName, strPath.toUtf8());
-        qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
-    }
+    return arrayPathName;
 }
-
-void Application::NewDocument(
-        const TCollection_ExtendedString& /*format*/,
-        opencascade::handle<TDocStd_Document>& outDocument)
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+void Application::NewDocument(const TCollection_ExtendedString&, Handle(CDM_Document)& outDocument)
+#else
+void Application::NewDocument(const TCollection_ExtendedString&, Handle(TDocStd_Document)& outDocument)
+#endif
 {
-    //std::lock_guard<std::mutex> lock(Internal::mutex_XCAFApplication);
-    //XCAFApp_Application::GetApplication()->NewDocument(format, outDocument);
-
     // TODO: check format == "mayo" if not throw exception
     // Extended from TDocStd_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
@@ -241,7 +231,11 @@ void Application::NewDocument(
     outDocument = newDoc;
 }
 
-void Application::InitDocument(const opencascade::handle<TDocStd_Document>& doc) const
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+void Application::InitDocument(const Handle(CDM_Document)& doc) const
+#else
+void Application::InitDocument(const Handle(TDocStd_Document)& doc) const
+#endif
 {
     TDocStd_Application::InitDocument(doc);
     XCAFApp_Application::GetApplication()->InitDocument(doc);
@@ -273,7 +267,7 @@ void Application::addDocument(const DocumentPtr& doc)
 
         QObject::connect(
                     doc.get(), &Document::nameChanged,
-                    this, [=](const QString& name) { emit this->documentNameChanged(doc, name); });
+                    this, [=](const std::string& name) { emit this->documentNameChanged(doc, name); });
         QObject::connect(
                     doc.get(), &Document::entityAdded,
                     this, [=](TreeNodeId entityId) { emit this->documentEntityAdded(doc, entityId); });

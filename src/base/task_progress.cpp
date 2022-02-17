@@ -18,12 +18,12 @@ TaskProgress::TaskProgress()
 {
 }
 
-TaskProgress::TaskProgress(TaskProgress* parent, double portionSize, const QString& step)
+TaskProgress::TaskProgress(TaskProgress* parent, double portionSize, std::string_view step)
     : m_parent(parent),
       m_task(parent ? parent->m_task : nullptr),
       m_portionSize(std::clamp(portionSize, 0., 100.))
 {
-    if (!step.isEmpty())
+    if (!step.empty())
         this->setStep(step);
 }
 
@@ -54,7 +54,7 @@ void TaskProgress::setValue(int pct)
         return;
 
     if (m_parent) {
-        const int valueDeltaInParent = std::round((m_value - valueOnEntry) * (m_portionSize / 100.));
+        const int valueDeltaInParent = std::ceil((m_value - valueOnEntry) * (m_portionSize / 100.));
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
@@ -63,11 +63,11 @@ void TaskProgress::setValue(int pct)
     }
 }
 
-void TaskProgress::setStep(const QString& title)
+void TaskProgress::setStep(std::string_view title)
 {
     m_step = title;
     if (m_task)
-        emit m_task->manager()->progressStep(m_task->id(), title);
+        emit m_task->manager()->progressStep(m_task->id(), m_step);
 }
 
 void TaskProgress::setTask(const Task* task)

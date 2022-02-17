@@ -8,13 +8,15 @@
 
 #include "../base/application.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "app_module.h"
+#include "filepath_conv.h"
+#include "qstring_utils.h"
 #include "theme.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QDateTime>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtGui/QPixmapCache>
@@ -66,8 +68,10 @@ public:
         this->setStorage(std::move(storage));
     }
 
-    QPixmap findPixmap(const QString& url) const override {
+    QPixmap findPixmap(const QString& url) const override
+    {
         QPixmap pixmap;
+        bool cachePixmap = true;
         auto fnPixmap = [](const QIcon& icon, int iconSize, int pixmapSize) {
             return icon
                     .pixmap(iconSize, iconSize)
@@ -86,21 +90,26 @@ public:
             if (pixmap.isNull()) {
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
                 pixmap = fnPixmap(icon, 64, 64);
+                cachePixmap = false;
             }
         }
 
-        QPixmapCache::insert(url, pixmap);
+        if (cachePixmap)
+            QPixmapCache::insert(url, pixmap);
+
         return pixmap;
     }
 
-    void reload() {
+    void reload()
+    {
         this->beginResetModel();
         this->reloadRecentFiles();
         this->endResetModel();
     }
 
 private:
-    void reloadRecentFiles() {
+    void reloadRecentFiles()
+    {
         auto app = Application::instance();
         auto appModule = AppModule::get(app);
         const RecentFiles& listRecentFile = appModule->recentFiles.value();
@@ -127,10 +136,12 @@ private:
                 return WidgetHomeFiles::tr("%1 days ago %2").arg(diffDays).arg(strTime);
             }
             else {
-                const QString strDate = app->settings()->locale().toString(date, QLocale::ShortFormat);
+                auto appModule = AppModule::get(Application::instance());
+                const QString strDate = appModule->locale().toString(date, QLocale::ShortFormat);
                 return WidgetHomeFiles::tr("%1 %2").arg(strDate, strTime);
             }
         };
+
         for (const RecentFile& recentFile : listRecentFile) {
             HomeFileItem item;
             const auto fi = filepathTo<QFileInfo>(recentFile.filepath);
@@ -144,7 +155,7 @@ private:
                         "Modified: %4\n"
                         "Read: %5\n")
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
-                    .arg(StringUtils::bytesText(fi.size(), app->settings()->locale()))
+                    .arg(QStringUtils::bytesText(fi.size(), AppModule::get(Application::instance())->locale()))
                     .arg(fnToString(fi.birthTime()))
                     .arg(fnToString(fi.lastModified()))
                     .arg(fnToString(fi.lastRead()))
@@ -174,7 +185,8 @@ public:
     {}
 
 protected:
-    void clickAction(const ListHelper::ModelItem* item) const override {
+    void clickAction(const ListHelper::ModelItem* item) const override
+    {
         auto fileItem = static_cast<const HomeFileItem*>(item);
         if (!fileItem)
             return;

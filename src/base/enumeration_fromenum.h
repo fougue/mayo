@@ -8,7 +8,6 @@
 
 #include "enumeration.h"
 #include "meta_enum.h"
-#include "qtcore_utils.h"
 
 // --
 // -- Implementation of template function Enumeration::fromType()
@@ -26,14 +25,13 @@ template<typename ENUM>
 Enumeration Enumeration::fromType()
 {
     const bool hasJunkPrefix = !EnumNames<ENUM>::junkPrefix.empty();
-    const QByteArray textIdContext = QtCoreUtils::QByteArray_frowRawData(EnumNames<ENUM>::trContext);
     Enumeration enumObject;
     for (const ENUM value : MetaEnum::values<ENUM>()) {
         std::string_view key =
                 hasJunkPrefix ?
                     MetaEnum::nameWithoutPrefix<ENUM>(value, EnumNames<ENUM>::junkPrefix) :
                     MetaEnum::name<ENUM>(value);
-        const TextId keyTextId = { textIdContext, QtCoreUtils::QByteArray_frowRawData(key) };
+        const TextId keyTextId = { EnumNames<ENUM>::trContext, key };
         enumObject.addItem(int(value), keyTextId);
     }
 

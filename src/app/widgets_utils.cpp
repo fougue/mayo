@@ -61,14 +61,13 @@ void WidgetsUtils::asyncMenuExec(QMenu* menu, const QPoint& pos)
 
 void WidgetsUtils::asyncDialogExec(QDialog* dialog)
 {
-    if (dialog) {
-        QObject::connect(
-                    dialog, &QDialog::finished,
-                    dialog, &QObject::deleteLater,
-                    Qt::UniqueConnection);
-        dialog->show();
-    }
+    if (!dialog)
+        return;
+
+    QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater, Qt::UniqueConnection);
+    dialog->show();
 }
+
 QMessageBox* WidgetsUtils::asyncMsgBoxInfo(
         QWidget* parent,
         const QString& title,

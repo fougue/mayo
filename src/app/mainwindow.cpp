@@ -29,12 +29,15 @@
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "item_view_buttons.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
 #include "widget_message_indicator.h"
 #include "widget_model_tree.h"
+#include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
 #include "widget_properties_editor.h"
 #include "widgets_utils.h"
@@ -44,7 +47,7 @@
 #endif
 
 #include <QtCore/QMimeData>
-#include <QtCore/QTime>
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <QtCore/QSettings>
 #include <QtGui/QDesktopServices>
@@ -55,21 +58,45 @@
 #include <QtWidgets/QFileDialog>
 #include <QtDebug>
 
+#include <fmt/format.h>
 #include <unordered_set>
 
 namespace Mayo {
 
 namespace Internal {
 
+static QString fileFilter(IO::Format format)
+{
+    if (format == IO::Format_Unknown)
+        return {};
+
+    QString filter;
+    for (std::string_view suffix : IO::formatFileSuffixes(format)) {
+        if (suffix.data() != IO::formatFileSuffixes(format).front().data())
+            filter += " ";
+
+        const QString qsuffix = to_QString(suffix);
+        filter += "*." + qsuffix;
+#ifdef Q_OS_UNIX
+        filter += " *." + qsuffix.toUpper();
+#endif
+    }
+
+    //: %1 is the format identifier and %2 is the file filters string
+    return MainWindow::tr("%1 files(%2)")
+            .arg(to_QString(IO::formatIdentifier(format)))
+            .arg(filter);
+}
+
 static IO::Format formatFromFilter(const QString& filter)
 {
-    for (const IO::Format& format : Application::instance()->ioSystem()->readerFormats()) {
-        if (filter == IO::System::fileFilter(format))
+    for (IO::Format format : Application::instance()->ioSystem()->readerFormats()) {
+        if (filter == fileFilter(format))
             return format;
     }
 
-    for (const IO::Format& format : Application::instance()->ioSystem()->writerFormats()) {
-        if (filter == IO::System::fileFilter(format))
+    for (IO::Format format : Application::instance()->ioSystem()->writerFormats()) {
+        if (filter == fileFilter(format))
             return format;
     }
 
@@ -84,15 +111,15 @@ struct ImportExportSettings {
     static ImportExportSettings load()
     {
         return {
-            filepathFrom(AppModule::get(Application::instance())->lastOpenDir),
-            AppModule::get(Application::instance())->lastSelectedFormatFilter.value()
+            AppModule::get(Application::instance())->lastOpenDir.value(),
+            to_QString(AppModule::get(Application::instance())->lastSelectedFormatFilter.value())
         };
     }
 
     static void save(const ImportExportSettings& sets)
     {
-        AppModule::get(Application::instance())->lastOpenDir.setValue(filepathTo<QString>(sets.openDir));
-        AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(sets.selectedFilter);
+        AppModule::get(Application::instance())->lastOpenDir.setValue(sets.openDir);
+        AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(to_stdString(sets.selectedFilter));
     }
 };
 
@@ -114,8 +141,8 @@ struct OpenFileNames {
         result.selectedFormat = IO::Format_Unknown;
         result.lastIoSettings = ImportExportSettings::load();
         QStringList listFormatFilter;
-        for (const IO::Format& format : Application::instance()->ioSystem()->readerFormats())
-            listFormatFilter += IO::System::fileFilter(format);
+        for (IO::Format format : Application::instance()->ioSystem()->readerFormats())
+            listFormatFilter += fileFilter(format);
 
         const QString allFilesFilter = MainWindow::tr("All files(*.*)");
         listFormatFilter.append(allFilesFilter);
@@ -343,16 +370,13 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                guiApp, &GuiApplication::guiDocumentErased,
-                this, &MainWindow::onGuiDocumentErased);
-    QObject::connect(
                 guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
                 this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
-                MessengerQtSignal::defaultInstance(), &MessengerQtSignal::message,
+                AppModule::get(guiApp->application()), &AppModule::message,
                 this, [=](Messenger::MessageType msgType, const QString& text) {
         Internal::handleMessage(msgType, text, this);
     });
@@ -466,7 +490,7 @@ void MainWindow::newDocument()
 {
     static unsigned docSequenceId = 0;
     auto docPtr = m_guiApp->application()->newDocument(Document::Format::Binary);
-    docPtr->setName(tr("Anonymous%1").arg(++docSequenceId));
+    docPtr->setName(to_stdString(tr("Anonymous%1").arg(++docSequenceId)));
 }
 
 void MainWindow::openDocuments()
@@ -489,30 +513,30 @@ void MainWindow::importInCurrentDoc()
     auto app = m_guiApp->application();
     auto taskMgr = TaskManager::globalInstance();
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-        QTime chrono;
+        QElapsedTimer chrono;
         chrono.start();
 
-        auto messenger = MessengerQtSignal::defaultInstance();
+        auto appModule = AppModule::get(app);
         const bool okImport = app->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
-                .withParametersProvider(AppModule::get(app))
+                .withParametersProvider(appModule)
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
                         AppModule::get(app)->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
-                .withMessenger(messenger)
+                .withEntityPostProcessInfoProgress(20, textIdTr("Mesh BRep shapes"))
+                .withMessenger(appModule)
                 .withTaskProgress(progress)
                 .execute();
         if (okImport)
-            messenger->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
     });
     const QString taskTitle =
             resFileNames.listFilepath.size() > 1 ?
                 tr("Import") :
                 filepathTo<QString>(resFileNames.listFilepath.front().stem());
-    taskMgr->setTitle(taskId, taskTitle);
+    taskMgr->setTitle(taskId, to_stdString(taskTitle));
     taskMgr->run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
         Internal::prependRecentFile(fp);
@@ -523,8 +547,8 @@ void MainWindow::exportSelectedItems()
     auto app = m_guiApp->application();
 
     QStringList listWriterFileFilter;
-    for (const IO::Format& format : app->ioSystem()->writerFormats())
-        listWriterFileFilter.append(IO::System::fileFilter(format));
+    for (IO::Format format : app->ioSystem()->writerFormats())
+        listWriterFileFilter.append(Internal::fileFilter(format));
 
     auto lastSettings = Internal::ImportExportSettings::load();
     const QString strFilepath =
@@ -541,22 +565,22 @@ void MainWindow::exportSelectedItems()
     auto taskMgr = TaskManager::globalInstance();
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-        QTime chrono;
+        QElapsedTimer chrono;
         chrono.start();
-        auto messenger = MessengerQtSignal::defaultInstance();
+        auto appModule = AppModule::get(app);
         const bool okExport =
                 app->ioSystem()->exportApplicationItems()
                 .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(m_guiApp->selectionModel()->selectedItems())
-                .withParameters(AppModule::get(app)->findWriterParameters(format))
-                .withMessenger(messenger)
+                .withParameters(appModule->findWriterParameters(format))
+                .withMessenger(appModule)
                 .withTaskProgress(progress)
                 .execute();
         if (okExport)
-            messenger->emitInfo(tr("Export time: %1ms").arg(chrono.elapsed()));
+            appModule->emitInfo(fmt::format(textIdTr("Export time: {}ms"), chrono.elapsed()));
     });
-    taskMgr->setTitle(taskId, QFileInfo(strFilepath).fileName());
+    taskMgr->setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
     taskMgr->run(taskId);
     Internal::ImportExportSettings::save(lastSettings);
 }
@@ -738,6 +762,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     V3dViewController* ctrl = widget->controller();
     QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
         guiDoc->graphicsScene()->highlightAt(pos2d, widget->guiDocument()->v3dView());
+        widget->view()->redraw();
         auto selector = guiDoc->graphicsScene()->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
@@ -753,11 +778,6 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     this->updateControlsActivation();
     const int newDocIndex = app->documentCount() - 1;
     QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
-}
-
-void MainWindow::onGuiDocumentErased(GuiDocument* guiDoc)
-{
-    AppModule::get(m_guiApp->application())->recordRecentFileThumbnail(guiDoc);
 }
 
 void MainWindow::onWidgetFileSystemLocationActivated(const QFileInfo& loc)
@@ -801,13 +821,14 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
         return filepath;
     };
     const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
+    const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                tr("Close %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close");
     const QString textActionCloseAllExcept =
             docPtr ?
-                tr("Close all except %1").arg(fnFilepathQuoted(docPtr->name())) :
+                tr("Close all except %1").arg(fnFilepathQuoted(docName)) :
                 tr("Close all except current");
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->actionCloseDoc->setText(textActionClose);
@@ -901,7 +922,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
         const DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-                QTime chrono;
+                QElapsedTimer chrono;
                 chrono.start();
                 DocumentPtr doc;
                 {
@@ -909,27 +930,27 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                     doc = app->newDocument();
                 }
 
-                doc->setName(filepathTo<QString>(fp.stem()));
+                doc->setName(fp.stem().u8string());
                 doc->setFilePath(fp);
 
-                auto messenger = MessengerQtSignal::defaultInstance();
+                auto appModule = AppModule::get(app);
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
                         .withFilepath(fp)
-                        .withParametersProvider(AppModule::get(app))
+                        .withParametersProvider(appModule)
                         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                                AppModule::get(app)->computeBRepMesh(labelEntity, progress);
+                                appModule->computeBRepMesh(labelEntity, progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                        .withEntityPostProcessInfoProgress(20, tr("Mesh BRep shapes"))
-                        .withMessenger(messenger)
+                        .withEntityPostProcessInfoProgress(20, textIdTr("Mesh BRep shapes"))
+                        .withMessenger(appModule)
                         .withTaskProgress(progress)
                         .execute();
                 if (okImport)
-                    messenger->emitInfo(tr("Import time: %1ms").arg(chrono.elapsed()));
+                    appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
-            taskMgr->setTitle(taskId, filepathTo<QString>(fp.stem()));
+            taskMgr->setTitle(taskId, fp.stem().u8string());
             taskMgr->run(taskId);
             Internal::prependRecentFile(fp);
         }
@@ -1024,7 +1045,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
 
     // Link with document selector
     auto appModule = AppModule::get(m_guiApp->application());
-    QAction* action = menu->addAction(appModule->linkWithDocumentSelector.name().tr());
+    QAction* action = menu->addAction(to_QString(appModule->linkWithDocumentSelector.name().tr()));
     action->setCheckable(true);
     QObject::connect(action, &QAction::triggered, [=](bool on) {
         appModule->linkWithDocumentSelector.setValue(on);
@@ -1099,7 +1120,7 @@ QMenu* MainWindow::createMenuDisplayMode()
         auto group = new QActionGroup(menu);
         group->setExclusive(true);
         for (const Enumeration::Item& displayMode : driver->displayModes().items()) {
-            auto action = new QAction(displayMode.name.tr(), menu);
+            auto action = new QAction(to_QString(displayMode.name.tr()), menu);
             action->setCheckable(true);
             action->setData(displayMode.value);
             menu->addAction(action);

@@ -11,10 +11,9 @@
 #include <OSD_Environment.hxx>
 #include <Prs3d_Text.hxx>
 #include <Prs3d_TextAspect.hxx>
-#include <Quantity_Factor.hxx>
-#include <Quantity_PlaneAngle.hxx>
 #include <SelectMgr_SelectableObject.hxx>
 #include <SelectMgr_Selection.hxx>
+#include <Standard_Version.hxx>
 #include <Standard_CString.hxx>
 #include <Standard_Integer.hxx>
 #include <Standard_IStream.hxx>
@@ -22,6 +21,11 @@
 #include <Standard_Real.hxx>
 #include <Standard_Transient.hxx>
 #include <TCollection_AsciiString.hxx>
+
+#if OCC_VERSION_HEX < 0x070600
+#  include <Quantity_Factor.hxx>
+#  include <Quantity_PlaneAngle.hxx>
+#endif
 
 #include <vector>
 
@@ -144,21 +148,24 @@ void AIS_Text::setDefaultTextStyle(Aspect_TypeOfStyleText style)
 }
 
 void AIS_Text::Compute(
-        const opencascade::handle<PrsMgr_PresentationManager3d>&,
-        const opencascade::handle<Prs3d_Presentation>& pres,
+        const Handle(PrsMgr_PresentationManager3d)&,
+        const Handle(Prs3d_Presentation)& pres,
         const int)
 {
     for (unsigned i = 0; i < this->textCount(); ++i) {
         Prs3d_Text::Draw(
+#if OCC_VERSION_HEX >= 0x070600
+                    pres->CurrentGroup(),
+#else
                     pres,
+#endif
                     this->presentationTextAspect(i),
                     this->text(i),
                     this->position(i));
     }
 }
 
-void AIS_Text::ComputeSelection(
-        const opencascade::handle<SelectMgr_Selection>&, const int)
+void AIS_Text::ComputeSelection(const Handle(SelectMgr_Selection)&, const int)
 {
 }
 

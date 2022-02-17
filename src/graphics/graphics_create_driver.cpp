@@ -12,20 +12,32 @@
 
 #include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
-#include <QtCore/QtGlobal>
+#include <functional>
 
 namespace Mayo {
-namespace Internal {
 
-Handle_Graphic3d_GraphicDriver createGfxDriver()
+using FunctionCreateGraphicsDriver = std::function<Handle_Graphic3d_GraphicDriver()>;
+
+static FunctionCreateGraphicsDriver& getFunctionCreateGraphicsDriver()
 {
-    Handle_Aspect_DisplayConnection dispConnection;
-#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    dispConnection = new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#endif
-    Handle_Graphic3d_GraphicDriver gfxDriver = new OpenGl_GraphicDriver(dispConnection);
-    return gfxDriver;
+    static FunctionCreateGraphicsDriver fn = []{
+        return new OpenGl_GraphicDriver(new Aspect_DisplayConnection);
+    };
+    return fn;
 }
 
-} // namespace Internal
+void setFunctionCreateGraphicsDriver(FunctionCreateGraphicsDriver fn)
+{
+    getFunctionCreateGraphicsDriver() = std::move(fn);
+}
+
+Handle_Graphic3d_GraphicDriver graphicsCreateDriver()
+{
+    auto& fn = getFunctionCreateGraphicsDriver();
+    if (fn)
+        return fn();
+
+    return {};
+}
+
 } // namespace Mayo

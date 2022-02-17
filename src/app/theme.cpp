@@ -115,8 +115,10 @@ public:
             return appPalette.color(QPalette::Window);
         case Theme::Color::Palette_Button:
         case Theme::Color::ButtonFlat_Background:
-        case Theme::Color::ButtonView3d_Background:
             return appPalette.color(QPalette::Button);
+        case Theme::Color::ButtonView3d_Background: {
+            return appPalette.color(QPalette::Button);
+        }
         case Theme::Color::ButtonFlat_Hover:
             return appPalette.color(QPalette::Button).darker(110);
         case Theme::Color::ButtonFlat_Checked:
@@ -128,6 +130,10 @@ public:
             return QColor(128, 148, 255);
         case Theme::Color::View3d_BackgroundGradientEnd:
             return Qt::white;
+        case Theme::Color::RubberBandView3d_Line:
+            return QColor(65, 200, 250);
+        case Theme::Color::RubberBandView3d_Fill:
+            return QColor(65, 200, 250).lighter();
         case Theme::Color::MessageIndicator_Background:
             return QColor(128, 200, 255);
         case Theme::Color::MessageIndicator_Text:
@@ -189,6 +195,10 @@ public:
             return QColor(100, 100, 100);
         case Theme::Color::View3d_BackgroundGradientEnd:
             return QColor(200, 200, 200);
+        case Theme::Color::RubberBandView3d_Line:
+            return appPalette.color(QPalette::Highlight);
+        case Theme::Color::RubberBandView3d_Fill:
+            return appPalette.color(QPalette::Highlight).lighter();
         case Theme::Color::MessageIndicator_Background:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::MessageIndicator_Text:

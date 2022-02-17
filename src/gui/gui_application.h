@@ -37,6 +37,10 @@ public:
     GraphicsObjectDriverTable* graphicsObjectDriverTable() const;
     GraphicsTreeNodeMappingDriverTable* graphicsTreeNodeMappingDriverTable() const;
 
+    // Whether a GuiDocument object is automatically created once a Document is added in Application
+    bool automaticDocumentMapping() const { return m_automaticDocumentMapping; }
+    void setAutomaticDocumentMapping(bool on) { m_automaticDocumentMapping = on; }
+
 signals:
     void guiDocumentAdded(Mayo::GuiDocument* guiDoc);
     void guiDocumentErased(Mayo::GuiDocument* guiDoc);
@@ -58,6 +62,7 @@ private:
     std::unique_ptr<GraphicsObjectDriverTable> m_gfxObjectDriverTable;
     std::unique_ptr<GraphicsTreeNodeMappingDriverTable> m_gfxTreeNodeMappingDriverTable;
     QMetaObject::Connection m_connApplicationItemSelectionChanged;
+    bool m_automaticDocumentMapping = true;
 };
 
 } // namespace Mayo

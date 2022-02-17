@@ -57,7 +57,7 @@ public:
 private:
     void onDocumentAdded(const DocumentPtr& doc);
     void onDocumentAboutToClose(const DocumentPtr& doc);
-    void onDocumentNameChanged(const DocumentPtr& doc, const QString& name);
+    void onDocumentNameChanged(const DocumentPtr& doc, const std::string& name);
     void onDocumentEntityAdded(const DocumentPtr& doc, TreeNodeId entityId);
     void onDocumentEntityAboutToBeDestroyed(const DocumentPtr& doc, TreeNodeId entityId);
 
@@ -72,7 +72,7 @@ private:
     void onTreeModelDataChanged(
             const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
     void onNodesVisibilityChanged(
-            const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId);
+            const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
 
     QTreeWidgetItem* loadDocumentEntity(const DocumentTreeNode& entityNode);
 

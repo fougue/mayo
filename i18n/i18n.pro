@@ -1,7 +1,9 @@
 HEADERS += \
     $$files(../src/base/*.h) \
     $$files(../src/io_occ/*.h) \
-    $$files(../src/io_gmio/*.h) \
+    $$files(../src/io_dxf/*.h) \
+    $$files(../src/io_gmio/*.h) \    
+    $$files(../src/io_image/*.h) \
     $$files(../src/graphics/*.h) \
     $$files(../src/gui/*.h) \
     $$files(../src/app/*.h) \
@@ -10,7 +12,9 @@ HEADERS += \
 SOURCES += \
     $$files(../src/base/*.cpp) \
     $$files(../src/io_occ/*.cpp) \
+    $$files(../src/io_dxf/*.cpp) \
     $$files(../src/io_gmio/*.cpp) \
+    $$files(../src/io_image/*.cpp) \
     $$files(../src/graphics/*.cpp) \
     $$files(../src/gui/*.cpp) \
     $$files(../src/app/*.cpp) \

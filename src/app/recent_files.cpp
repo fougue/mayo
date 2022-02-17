@@ -6,93 +6,70 @@
 
 #include "recent_files.h"
 
-#include "occt_window.h"
-#include "theme.h"
+#include "../base/meta_enum.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/qtgui_utils.h"
+#include "../io_image/io_image.h"
+#include "filepath_conv.h"
+#include "qstring_conv.h"
+#include "theme.h"
 
-#include <gsl/util>
-//#include <QtGui/QOffscreenSurface>
-#include <QtGui/QWindow>
-#include <Aspect_NeutralWindow.hxx>
+#include <fmt/format.h>
+#include <QtCore/QtDebug>
 
 namespace Mayo {
-
-static int64_t lastModifiedTimestamp(const FilePath& fp)
-{
-    // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
-    const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
-    return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
-}
 
 bool RecentFile::recordThumbnail(GuiDocument* guiDoc, QSize size)
 {
     if (!guiDoc)
         return false;
 
-    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath()))
+    if (!filepathEquivalent(this->filepath, guiDoc->document()->filePath())) {
+        qDebug() << fmt::format("Filepath mismatch with GUI document\n"
+                                      "    Function: {}\n    Filepath: {}\n    Document: {}",
+                                Q_FUNC_INFO, this->filepath.u8string(), guiDoc->document()->filePath().u8string())
+                    .c_str();
         return false;
-
-    if (this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath)) {
-        const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
-        const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-        const QColor bkgColor = mayoTheme()->color(Theme::Color::Palette_Window);
-        Handle_V3d_View view = guiDoc->graphicsScene()->createV3dView();
-        view->ChangeRenderingParams().IsAntialiasingEnabled = true;
-        view->ChangeRenderingParams().NbMsaaSamples = 4;
-        view->SetBackgroundColor(QtGuiUtils::toPreferredColorSpace(bkgColor));
-
-        auto _ = gsl::finally([=]{
-            guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
-            guiDoc->setViewTrihedronMode(onEntryTrihedronMode);
-            if (guiDoc->isOriginTrihedronVisible() != onEntryOriginTrihedronVisible)
-                guiDoc->toggleOriginTrihedronVisibility();
-        });
-
-        guiDoc->graphicsScene()->clearSelection();
-        guiDoc->setViewTrihedronMode(GuiDocument::ViewTrihedronMode::None);
-        if (guiDoc->isOriginTrihedronVisible())
-            guiDoc->toggleOriginTrihedronVisibility();
-
-        QWindow window; // TODO Use a pure offscreen window instead
-        window.setBaseSize(size);
-        window.create();
-        Handle_Aspect_NeutralWindow hWnd = new Aspect_NeutralWindow;
-        hWnd->SetSize(size.width(), size.height());
-        hWnd->SetNativeHandle(Aspect_Drawable(window.winId()));
-        view->SetWindow(hWnd);
-
-        GraphicsUtils::V3dView_fitAll(view);
-
-        Image_PixMap pixmap;
-        pixmap.SetTopDown(true);
-        V3d_ImageDumpOptions dumpOptions;
-        dumpOptions.BufferType = Graphic3d_BT_RGB;
-        dumpOptions.Width = size.width();
-        dumpOptions.Height = size.height();
-        bool ok = view->ToPixMap(pixmap, dumpOptions);
-        if (!ok)
-            return false;
-
-        const QImage img(pixmap.Data(),
-                         int(pixmap.Width()),
-                         int(pixmap.Height()),
-                         int(pixmap.SizeRowBytes()),
-                         QImage::Format_RGB888);
-        if (img.isNull())
-            return false;
-
-        this->thumbnail = QPixmap::fromImage(img);
-        this->thumbnailTimestamp = lastModifiedTimestamp(this->filepath);
     }
 
+    if (this->thumbnailTimestamp == RecentFile::timestampLastModified(this->filepath))
+        return true;
+
+    IO::ImageWriter::Parameters params;
+    params.width = size.width();
+    params.height = size.height();
+    params.backgroundColor = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
+    Handle_Image_AlienPixMap pixmap = IO::ImageWriter::createImage(guiDoc, params);
+    if (!pixmap) {
+        qDebug() << "Empty pixmap returned by IO::ImageWriter::createImage()";
+        return false;
+    }
+
+    GraphicsUtils::ImagePixmap_flipY(*pixmap);
+    Image_PixMap::SwapRgbaBgra(*pixmap);
+    this->thumbnail = QtGuiUtils::toQPixmap(*pixmap);
+    this->thumbnailTimestamp = RecentFile::timestampLastModified(this->filepath);
     return true;
 }
 
 bool RecentFile::isThumbnailOutOfSync() const
 {
-    return this->thumbnailTimestamp != lastModifiedTimestamp(this->filepath);
+    return this->thumbnailTimestamp != RecentFile::timestampLastModified(this->filepath);
+}
+
+int64_t RecentFile::timestampLastModified(const FilePath& fp)
+{
+    // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
+    try {
+        const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
+        return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
+    } catch (const std::exception& err) {
+        qDebug() << fmt::format("Exception caught\n    Function {}\n    Filepath: {}\n    Error: {}",
+                                Q_FUNC_INFO, fp.u8string(), err.what())
+                    .c_str();
+        return -1;
+    }
 }
 
 bool operator==(const RecentFile& lhs, const RecentFile& rhs)
@@ -135,9 +112,17 @@ QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles)
     stream >> count;
     recentFiles.clear();
     for (uint32_t i = 0; i < count; ++i) {
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << fmt::format("QDataStream error\n    Function: {}\n    Status: {}",
+                                    Q_FUNC_INFO, MetaEnum::name(stream.status()))
+                        .c_str();
+            break; // Stream extraction error, abort
+        }
+
         RecentFile recent;
         stream >> recent;
-        recentFiles.push_back(std::move(recent));
+        if (!recent.filepath.empty() && recent.thumbnailTimestamp != 0)
+            recentFiles.push_back(std::move(recent));
     }
 
     return stream;

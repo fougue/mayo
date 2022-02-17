@@ -8,7 +8,12 @@
 
 #include "application_ptr.h"
 #include "document.h"
+#include "span.h"
+#include "text_id.h"
+
 #include <CDF_DirectoryIterator.hxx>
+#include <Standard_Version.hxx>
+#include <functional>
 
 namespace Mayo {
 
@@ -17,13 +22,16 @@ class DocumentTreeNodePropertiesProviderTable;
 
 namespace IO { class System; }
 
+// Provides management of Document objects
 class Application : public QObject, public TDocStd_Application {
     Q_OBJECT
 public:
     ~Application();
 
+    // Global instance(singleton)
     static const ApplicationPtr& instance();
 
+    // Iterator over Documents contained in an Application
     struct DocumentIterator : private CDF_DirectoryIterator {
         DocumentIterator(const ApplicationPtr& app);
         DocumentIterator(const Application* app);
@@ -37,7 +45,7 @@ public:
 
     int documentCount() const;
     DocumentPtr newDocument(Document::Format docFormat = Document::Format::Binary);
-    DocumentPtr openDocument(const QString& filePath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
+    DocumentPtr openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
     DocumentPtr findDocumentByIndex(int docIndex) const;
     DocumentPtr findDocumentByIdentifier(Document::Identifier docIdent) const;
     DocumentPtr findDocumentByLocation(const FilePath& location) const;
@@ -49,13 +57,25 @@ public:
     IO::System* ioSystem() const;
     DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 
-    static void setOpenCascadeEnvironment(const QString& settingsFilepath);
+    // Provides internationalization support for text output
+    //     1st arg: message to be translated(TextId = context+key)
+    //     2nd arg: when != -1 used to choose an appropriate form for the translation(e.g. "%n file found" vs. "%n files found")
+    //     returns: translated message
+    using Translator = std::function<std::string_view (const TextId&, int)>;
+    void addTranslator(Translator fn);
+    std::string_view translate(const TextId& textId, int n = -1) const;
 
-public: //  from TDocStd_Application
-    void NewDocument(
-            const TCollection_ExtendedString& format,
-            opencascade::handle<TDocStd_Document>& outDoc) override;
-    void InitDocument(const opencascade::handle<TDocStd_Document>& doc) const override;
+    static Span<const char*> envOpenCascadeOptions();
+    static Span<const char*> envOpenCascadePaths();
+
+public: // -- from TDocStd_Application
+#if OCC_VERSION_HEX >= 0x070600
+    void NewDocument(const TCollection_ExtendedString& format, Handle(CDM_Document)& outDoc) override;
+    void InitDocument(const opencascade::handle<CDM_Document>& doc) const override;
+#else
+    void NewDocument(const TCollection_ExtendedString& format, Handle(TDocStd_Document)& outDoc) override;
+    void InitDocument(const Handle(TDocStd_Document)& doc) const override;
+#endif
 
 // TODO: Redefine TDocStd_Document::BeforeClose() to emit signal documentClosed
 // class Document : public TDocStd_Document { ... };
@@ -68,7 +88,7 @@ public: //  from TDocStd_Application
 signals:
     void documentAdded(const Mayo::DocumentPtr& doc);
     void documentAboutToClose(const Mayo::DocumentPtr& doc);
-    void documentNameChanged(const Mayo::DocumentPtr& doc, const QString& name);
+    void documentNameChanged(const Mayo::DocumentPtr& doc, const std::string& name);
     void documentEntityAdded(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
     void documentEntityAboutToBeDestroyed(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
 

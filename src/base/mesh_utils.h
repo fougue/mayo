@@ -18,6 +18,8 @@ struct MeshUtils {
     static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 
+    static void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt);
+
     enum class Orientation {
         Unknown,
         Clockwise,

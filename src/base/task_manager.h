@@ -13,6 +13,8 @@
 #include <atomic>
 #include <future>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace Mayo {
@@ -25,14 +27,14 @@ public:
     static TaskManager* globalInstance();
 
     TaskId newTask(TaskJob fn);
-    void run(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On);
-    void exec(TaskId id, TaskAutoDestroy autoDestroy = TaskAutoDestroy::On); // Synchronous
+    void run(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On);
+    void exec(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On); // Synchronous
 
     int progress(TaskId id) const;
     int globalProgress() const;
 
-    QString title(TaskId id) const;
-    void setTitle(TaskId id, const QString& title);
+    const std::string& title(TaskId id) const;
+    void setTitle(TaskId id, std::string_view title);
 
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
@@ -45,7 +47,7 @@ public:
 
 signals:
     void started(Mayo::TaskId id);
-    void progressStep(Mayo::TaskId id, const QString& stepTitle);
+    void progressStep(Mayo::TaskId id, const std::string& stepTitle);
     void progressChanged(Mayo::TaskId id, int percent);
     void abortRequested(Mayo::TaskId id);
     void ended(Mayo::TaskId id);
@@ -54,7 +56,7 @@ private:
     struct Entity {
         Task task;
         TaskProgress taskProgress;
-        QString title;
+        std::string title;
         std::future<void> control;
         std::atomic<bool> isFinished = false;
         TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;

@@ -8,10 +8,11 @@
 #include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qstring_conv.h"
+#include "qstring_utils.h"
 #include "theme.h"
 
 #include <QtGui/QPainter>
@@ -54,6 +55,11 @@ protected:
     }
 };
 
+static QStringUtils::TextOptions appDefaultTextOptions()
+{
+    return AppModule::get(Application::instance())->defaultTextOptions();
+}
+
 static QString toStringDHMS(QuantityTime time)
 {
     const double duration_s = UnitSystem::seconds(time);
@@ -82,50 +88,42 @@ static QString toStringDHMS(QuantityTime time)
 }
 
 static QString propertyValueText(const PropertyBool* prop) {
-    return StringUtils::yesNoText(*prop);
+    return QStringUtils::yesNoText(*prop);
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return Application::instance()->settings()->locale().toString(prop->value());
+    return AppModule::get(Application::instance())->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyCheckState* prop) {
-    return StringUtils::yesNoText(*prop);
+    return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyQByteArray* prop) {
-    return QString::fromUtf8(prop->value());
-}
-
-static QString propertyValueText(const PropertyQString* prop) {
-    return prop->value();
-}
-
-static QString propertyValueText(const PropertyQDateTime* prop) {
-    return Application::instance()->settings()->locale().toString(prop->value());
+static QString propertyValueText(const PropertyString* prop) {
+    return to_QString(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
-    return StringUtils::text(prop->value());
+    return QStringUtils::text(prop->value());
 }
 
 static QString propertyValueText(const PropertyOccPnt* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyOccTrsf* prop) {
-    return StringUtils::text(prop->value(), AppModule::get(Application::instance())->defaultTextOptions());
+    return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
 static QString propertyValueText(const PropertyEnumeration* prop)
 {
     for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
-            return enumItem.name.tr();
+            return to_QString(enumItem.name.tr());
     }
 
     return QString();
@@ -140,7 +138,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
 
     const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(prop);
     return PropertyItemDelegate::tr("%1%2")
-            .arg(StringUtils::text(trRes.value, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trRes.value, appDefaultTextOptions()))
             .arg(trRes.strUnit);
 }
 
@@ -150,7 +148,7 @@ static QString propertyValueText(
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return PropertyItemDelegate::tr("%1%2")
-            .arg(StringUtils::text(trValue, AppModule::get(Application::instance())->defaultTextOptions()))
+            .arg(QStringUtils::text(trValue, appDefaultTextOptions()))
             .arg(unitTr.strUnit);
 }
 
@@ -179,6 +177,7 @@ bool PropertyItemDelegate::overridePropertyUnitTranslation(
 void PropertyItemDelegate::paint(
         QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
+    bool cellPainted = false;
     if (index.column() == 1) {
         const Property* prop = qvariant_cast<Property*>(index.data());
         if (prop && prop->dynTypeName() == PropertyOccColor::TypeName) {
@@ -207,11 +206,13 @@ void PropertyItemDelegate::paint(
                         strColor);
 
             painter->restore();
-            return;
+            cellPainted = true;
         }
     }
 
-    QStyledItemDelegate::paint(painter, option, index);
+    if (!cellPainted)
+        QStyledItemDelegate::paint(painter, option, index);
+
     if (index.column() == 1 && !index.data().isNull()) {
         const Property* prop = qvariant_cast<Property*>(index.data());
         if (!prop->isUserReadOnly()
@@ -250,14 +251,8 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
         if (propTypeName == PropertyCheckState::TypeName)
             return propertyValueText(static_cast<const PropertyCheckState*>(prop));
 
-        if (propTypeName == PropertyQByteArray::TypeName)
-            return propertyValueText(static_cast<const PropertyQByteArray*>(prop));
-
-        if (propTypeName == PropertyQString::TypeName)
-            return propertyValueText(static_cast<const PropertyQString*>(prop));
-
-        if (propTypeName == PropertyQDateTime::TypeName)
-            return propertyValueText(static_cast<const PropertyQDateTime*>(prop));
+        if (propTypeName == PropertyString::TypeName)
+            return propertyValueText(static_cast<const PropertyString*>(prop));
 
         if (propTypeName == PropertyOccColor::TypeName)
             return propertyValueText(static_cast<const PropertyOccColor*>(prop));
@@ -322,8 +317,14 @@ void PropertyItemDelegate::setModelData(QWidget*, QAbstractItemModel*, const QMo
 QSize PropertyItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     const QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
-    if (index.data(Qt::SizeHintRole).isNull())
-        return QSize(baseSize.width(), m_rowHeightFactor * baseSize.height());
+    if (index.data(Qt::SizeHintRole).isNull()) {
+        int widthDelta = 0;
+        const Property* prop = qvariant_cast<Property*>(index.data());
+        if (prop && prop->dynTypeName() == PropertyOccColor::TypeName)
+            widthDelta = option.rect.height()/*colorPixSideSize*/ + 6;
+
+        return QSize(baseSize.width() + widthDelta, m_rowHeightFactor * baseSize.height());
+    }
 
     return baseSize;
 }

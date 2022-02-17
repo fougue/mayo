@@ -29,12 +29,25 @@ public:
     // Parameters
 
     enum class Format { Json, Binary };
+    enum class ShapeNameFormat {
+        Empty,    // Omit name
+        Product,  // Product name(eg from XCaf::shapeReferred(), which could be shared by multiple instances)
+        Instance,
+        InstanceOrProduct,  // Instance name when available and Product name otherwise
+        ProductOrInstance,  // Product name when available and Instance name otherwise
+        ProductAndInstance, // Generates "Product [Instance]" name
+    };
 
     struct Parameters {
         RWMesh_CoordinateSystem coordinatesConverter = RWMesh_CoordinateSystem_glTF;
         RWGltf_WriterTrsfFormat transformationFormat = RWGltf_WriterTrsfFormat_Compact;
         Format format = Format::Binary;
         bool forceExportUV = false;
+        ShapeNameFormat nodeNameFormat = ShapeNameFormat::ProductOrInstance;
+        ShapeNameFormat meshNameFormat = ShapeNameFormat::Product;
+        bool embedTextures = true;    // Only applicable if `format` == Format::Binary
+        bool mergeFaces = false;
+        bool keepIndices16b = false;  // Only applicable if 'mergeFaces' == true
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }

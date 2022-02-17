@@ -10,6 +10,7 @@
 #include "enumeration_fromenum.h"
 #include "property.h"
 
+#include <string_view>
 #include <type_traits>
 
 // Silent GCC warnings about PropertyEnum<>::m_enum being initialized before PropertyEnumeration
@@ -28,14 +29,14 @@ public:
     constexpr const Enumeration& enumeration() const { return m_enumeration; }
 
     bool descriptionsEmpty() const { return m_vecDescription.empty(); }
-    void addDescription(Enumeration::Value value, const QString& descr);
-    QString findDescription(Enumeration::Value value) const;
+    void addDescription(Enumeration::Value value, std::string_view descr);
+    std::string_view findDescription(Enumeration::Value value) const;
     void clearDescriptions();
 
-    QByteArray name() const;
+    std::string_view name() const;
     Enumeration::Value value() const;
-    Result<void> setValue(Enumeration::Value value);
-    Result<void> setValueByName(const QByteArray& name);
+    bool setValue(Enumeration::Value value);
+    bool setValueByName(std::string_view name);
 
     const char* dynTypeName() const override;
     static const char TypeName[];
@@ -43,7 +44,7 @@ public:
 private:
     struct Description {
         Enumeration::Value value;
-        QString text;
+        std::string text;
     };
 
     Enumeration::Value m_value;
@@ -63,10 +64,10 @@ public:
 
     EnumType value() const;
     operator EnumType() const { return this->value(); }
-    Result<void> setValue(EnumType value);
+    bool setValue(EnumType value);
 
-    void addDescription(EnumType value, const QString& descr);
-    void setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList);
+    void addDescription(EnumType value, std::string_view descr);
+    void setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList);
 
 private:
     Enumeration m_enum;
@@ -88,21 +89,21 @@ ENUM PropertyEnum<ENUM>::value() const {
 }
 
 template<typename ENUM>
-Result<void> PropertyEnum<ENUM>::setValue(EnumType value) {
+bool PropertyEnum<ENUM>::setValue(EnumType value) {
     return PropertyEnumeration::setValue(static_cast<Enumeration::Value>(value));
 }
 
 template<typename ENUM>
-void PropertyEnum<ENUM>::addDescription(EnumType value, const QString& descr) {
+void PropertyEnum<ENUM>::addDescription(EnumType value, std::string_view descr) {
     PropertyEnumeration::addDescription(static_cast<Enumeration::Value>(value), descr);
 }
 
 template<typename ENUM>
-void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumType, QString>> initList)
+void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList)
 {
     this->clearDescriptions();
-    for (const auto& pair : initList)
-        this->addDescription(pair.first, pair.second);
+    for (const auto& [value, description] : initList)
+        this->addDescription(value, description);
 }
 
 } // namespace Mayo

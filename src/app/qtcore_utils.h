@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/global.h"
 #include <QtCore/QByteArray>
 #include <string_view>
 
@@ -23,6 +24,26 @@ inline QByteArray QByteArray_frowRawData(std::string_view str) {
 template<size_t N>
 QByteArray QByteArray_frowRawData(const char (&str)[N]) {
     return QByteArray::fromRawData(str, N);
+}
+
+inline Qt::CheckState toQtCheckState(Mayo::CheckState state) {
+    switch (state) {
+    case CheckState::Off: return Qt::Unchecked;
+    case CheckState::Partially: return Qt::PartiallyChecked;
+    case CheckState::On: return Qt::Checked;
+    }
+
+    return Qt::Unchecked;
+}
+
+inline Mayo::CheckState toCheckState(Qt::CheckState state) {
+    switch (state) {
+    case Qt::Unchecked: return CheckState::Off;
+    case Qt::PartiallyChecked: return CheckState::Partially;
+    case Qt::Checked: return CheckState::On;
+    }
+
+    return CheckState::Off;
 }
 
 } // namespace QtCoreUtils

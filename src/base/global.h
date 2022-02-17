@@ -8,3 +8,9 @@
 
 // Avoid "unused parameter" warnings
 #define MAYO_UNUSED(x) (void)x;
+
+namespace Mayo {
+
+enum class CheckState { Off, Partially, On };
+
+} // namespace Mayo

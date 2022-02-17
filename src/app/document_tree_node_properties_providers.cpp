@@ -11,9 +11,10 @@
 #include "../base/document_tree_node.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
-#include "../base/string_utils.h"
 #include "../base/xcaf.h"
+#include "qstring_conv.h"
 
+#include <TDataStd_Name.hxx>
 #include <TDataXtd_Triangulation.hxx>
 
 namespace Mayo {
@@ -28,33 +29,54 @@ public:
         const XCaf& xcaf = treeNode.document()->xcaf();
 
         // Name
-        m_propertyName.setValue(CafUtils::labelAttrStdName(label));
+        m_propertyName.setValue(to_stdString(CafUtils::labelAttrStdName(label)));
 
         // Shape type
         const TopAbs_ShapeEnum shapeType = XCAFDoc_ShapeTool::GetShape(label).ShapeType();
         m_propertyShapeType.setValue(MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_").data());
 
         // XDE shape kind
-        QStringList listXdeShapeKind;
-        if (XCaf::isShapeAssembly(label))
-            listXdeShapeKind.push_back(textId("Assembly").tr());
+        {
+            auto fnTrQString = [](const char* str){ return to_QString(textIdTr(str)); };
+            QStringList listXdeShapeKind;
+            if (XCaf::isShapeAssembly(label))
+                listXdeShapeKind.push_back(fnTrQString("Assembly"));
 
-        if (XCaf::isShapeReference(label))
-            listXdeShapeKind.push_back(textId("Reference").tr());
+            if (XCaf::isShapeReference(label))
+                listXdeShapeKind.push_back(fnTrQString("Reference"));
 
-        if (XCaf::isShapeComponent(label))
-            listXdeShapeKind.push_back(textId("Component").tr());
+            if (XCaf::isShapeComponent(label))
+                listXdeShapeKind.push_back(fnTrQString("Component"));
 
-        if (XCaf::isShapeCompound(label))
-            listXdeShapeKind.push_back(textId("Compound").tr());
+            if (XCaf::isShapeCompound(label))
+                listXdeShapeKind.push_back(fnTrQString("Compound"));
 
-        if (XCaf::isShapeSimple(label))
-            listXdeShapeKind.push_back(textId("Simple").tr());
+            if (XCaf::isShapeSimple(label))
+                listXdeShapeKind.push_back(fnTrQString("Simple"));
 
-        if (XCaf::isShapeSub(label))
-            listXdeShapeKind.push_back(textId("Sub").tr());
+            if (XCaf::isShapeSub(label))
+                listXdeShapeKind.push_back(fnTrQString("Sub"));
 
-        m_propertyXdeShapeKind.setValue(listXdeShapeKind.join('+'));
+            m_propertyXdeShapeKind.setValue(to_stdString(listXdeShapeKind.join('+')));
+        }
+
+        // XDE layers
+        {
+            TDF_LabelSequence seqLayerLabel = xcaf.layers(label);
+            if (XCaf::isShapeReference(label)) {
+                TDF_LabelSequence seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
+                seqLayerLabel.Append(seqLayerLabelProduct);
+            }
+
+            QStringList listLayerName;
+            for (const TDF_Label& layerLabel : seqLayerLabel)
+                listLayerName.push_back(to_QString(xcaf.layerName(layerLabel)));
+
+            if (!seqLayerLabel.IsEmpty())
+                m_propertyXdeLayer.setValue(to_stdString(listLayerName.join(", ")));
+            else
+                this->removeProperty(&m_propertyXdeLayer);
+        }
 
         // Reference location
         if (XCaf::isShapeReference(label)) {
@@ -70,6 +92,20 @@ public:
             m_propertyColor.setValue(xcaf.shapeColor(label));
         else
             this->removeProperty(&m_propertyColor);
+
+        // Material
+        {
+            const TDF_Label labelPart = XCaf::isShapeReference(label) ? XCaf::shapeReferred(label) : label;
+            const Handle_XCAFDoc_Material material = XCaf::shapeMaterial(labelPart);
+            if (material) {
+                m_propertyMaterialDensity.setQuantity(XCaf::shapeMaterialDensity(material));
+                m_propertyMaterialName.setValue(to_stdString(material->GetName()));
+            }
+            else {
+                this->removeProperty(&m_propertyMaterialDensity);
+                this->removeProperty(&m_propertyMaterialName);
+            }
+        }
 
         // Validation properties
         {
@@ -90,7 +126,7 @@ public:
         // Referred entity's properties
         if (XCaf::isShapeReference(label)) {
             m_labelReferred = XCaf::shapeReferred(label);
-            m_propertyReferredName.setValue(CafUtils::labelAttrStdName(m_labelReferred));
+            m_propertyReferredName.setValue(to_stdString(CafUtils::labelAttrStdName(m_labelReferred)));
             auto validProps = XCaf::validationProperties(m_labelReferred);
             m_propertyReferredValidationCentroid.setValue(validProps.centroid);
             if (!validProps.hasCentroid)
@@ -127,23 +163,26 @@ public:
     void onPropertyChanged(Property* prop) override
     {
         if (prop == &m_propertyName)
-            CafUtils::setLabelAttrStdName(m_label, m_propertyName.value());
+            TDataStd_Name::Set(m_label, to_OccExtString(m_propertyName.value()));
         else if (prop == &m_propertyReferredName)
-            CafUtils::setLabelAttrStdName(m_labelReferred, m_propertyReferredName.value());
+            TDataStd_Name::Set(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
 
         PropertyGroupSignals::onPropertyChanged(prop);
     }
 
-    PropertyQString m_propertyName{ this, textId("Name") };
-    PropertyQString m_propertyShapeType{ this, textId("Shape") };
-    PropertyQString m_propertyXdeShapeKind{ this, textId("XdeShape") };
+    PropertyString m_propertyName{ this, textId("Name") };
+    PropertyString m_propertyShapeType{ this, textId("Shape") };
+    PropertyString m_propertyXdeShapeKind{ this, textId("XdeShape") };
+    PropertyString m_propertyXdeLayer{ this, textId("XdeLayer") };
     PropertyOccColor m_propertyColor{ this, textId("Color") };
     PropertyOccTrsf m_propertyReferenceLocation{ this, textId("Location") };
     PropertyOccPnt m_propertyValidationCentroid{ this, textId("Centroid") };
     PropertyArea m_propertyValidationArea{ this, textId("Area") };
     PropertyVolume m_propertyValidationVolume{ this, textId("Volume") };
+    PropertyDensity m_propertyMaterialDensity{ this, textId("MaterialDensity") };
+    PropertyString m_propertyMaterialName{ this, textId("MaterialName") };
 
-    PropertyQString m_propertyReferredName{ this, textId("ProductName") };
+    PropertyString m_propertyReferredName{ this, textId("ProductName") };
     PropertyOccColor m_propertyReferredColor{ this, textId("ProductColor") };
     PropertyOccPnt m_propertyReferredValidationCentroid{ this, textId("ProductCentroid") };
     PropertyArea m_propertyReferredValidationArea{ this, textId("ProductArea") };

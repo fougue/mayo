@@ -17,10 +17,17 @@
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "qtcore_utils.h"
+#include "filepath_conv.h"
+#include "qstring_conv.h"
 
 #include <BRepBndLib.hxx>
+
 #include <QtCore/QDir>
+#include <QtCore/QtDebug>
 #include <QtGui/QGuiApplication>
+
+#include <fmt/format.h>
 #include <iterator>
 
 namespace Mayo {
@@ -43,12 +50,16 @@ AppModule::AppModule(Application* app)
       sectionId_graphicsClipPlanes(
           app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
       sectionId_graphicsMeshDefaults(
-          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults")))
+          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
+      m_locale(QLocale::system())
 {
-    auto settings = app->settings();
+    static bool metaTypesRegistered = false;
+    if (!metaTypesRegistered) {
+        qRegisterMetaType<MessageType>("Messenger::MessageType");
+        metaTypesRegistered = true;
+    }
 
-    qRegisterMetaTypeStreamOperators<RecentFiles>("RecentFiles");
-    qRegisterMetaTypeStreamOperators<RecentFiles>("Mayo::RecentFiles");
+    auto settings = app->settings();
 
     // System
     // -- Units
@@ -60,10 +71,10 @@ AppModule::AppModule(Application* app)
 
     // Application
     this->language.setDescription(
-                tr("Language used for the application. Change will take effect after application restart"));
+                textIdTr("Language used for the application. Change will take effect after application restart"));
     this->linkWithDocumentSelector.setDescription(
-                tr("In case where multiple documents are opened, make sure the document displayed in "
-                   "the 3D view corresponds to what is selected in the model tree"));
+                textIdTr("In case where multiple documents are opened, make sure the document displayed in "
+                         "the 3D view corresponds to what is selected in the model tree"));
     settings->addSetting(&this->language, this->groupId_application);
     settings->addSetting(&this->recentFiles, this->groupId_application);
     settings->addSetting(&this->lastOpenDir, this->groupId_application);
@@ -75,19 +86,19 @@ AppModule::AppModule(Application* app)
 
     // Meshing
     this->meshingQuality.setDescription(
-                tr("Controls precision of the mesh to be computed from the BRep shape"));
+                textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
     this->meshingQuality.mutableEnumeration().changeTrContext(AppModule::textIdContext());
     this->meshingChordalDeflection.setDescription(
-                tr("For the tesselation of faces the chordal deflection limits the distance between "
-                   "a curve and its tessellation"));
+                textIdTr("For the tesselation of faces the chordal deflection limits the distance between "
+                         "a curve and its tessellation"));
     this->meshingAngularDeflection.setDescription(
-                tr("For the tesselation of faces the angular deflection limits the angle between "
-                   "subsequent segments in a polyline"));
+                textIdTr("For the tesselation of faces the angular deflection limits the angle between "
+                         "subsequent segments in a polyline"));
     this->meshingRelative.setDescription(
-                tr("Relative computation of edge tolerance\n\n"
-                   "If activated, deflection used for the polygonalisation of each edge will be "
-                   "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                   "the maximum deflection of their edges."));
+                textIdTr("Relative computation of edge tolerance\n\n"
+                         "If activated, deflection used for the polygonalisation of each edge will be "
+                         "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+                         "the maximum deflection of their edges."));
     settings->addSetting(&this->meshingQuality, this->groupId_meshing);
     settings->addSetting(&this->meshingChordalDeflection, this->groupId_meshing);
     settings->addSetting(&this->meshingAngularDeflection, this->groupId_meshing);
@@ -95,15 +106,15 @@ AppModule::AppModule(Application* app)
 
     // Graphics
     this->defaultShowOriginTrihedron.setDescription(
-                tr("Show or hide by default the trihedron centered at world origin. "
-                   "This doesn't affect 3D view of currently opened documents"));
+                textIdTr("Show or hide by default the trihedron centered at world origin. "
+                         "This doesn't affect 3D view of currently opened documents"));
     settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, this->groupId_graphics);
     // -- Clip planes
     this->clipPlanesCappingOn.setDescription(
-                tr("Enable capping of currently clipped graphics"));
+                textIdTr("Enable capping of currently clipped graphics"));
     this->clipPlanesCappingHatchOn.setDescription(
-                tr("Enable capping hatch texture of currently clipped graphics"));
+                textIdTr("Enable capping hatch texture of currently clipped graphics"));
     settings->addSetting(&this->clipPlanesCappingOn, this->sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
     // -- Mesh defaults
@@ -114,8 +125,8 @@ AppModule::AppModule(Application* app)
     settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
     // Import
     auto groupId_Import = settings->addGroup(textId("import"));
-    for (const IO::Format& format : app->ioSystem()->readerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Import, format.identifier);
+    for (IO::Format format : app->ioSystem()->readerFormats()) {
+        auto sectionId_format = settings->addSection(groupId_Import, IO::formatIdentifier(format));
         const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
@@ -124,15 +135,15 @@ AppModule::AppModule(Application* app)
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
             settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatReaderParameters.insert({ format.identifier, rawPtrGroup });
+            m_mapFormatReaderParameters.insert({ format, rawPtrGroup });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
 
     // Export
     auto groupId_Export = settings->addGroup(textId("export"));
-    for (const IO::Format& format : app->ioSystem()->writerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Export, format.identifier);
+    for (IO::Format format : app->ioSystem()->writerFormats()) {
+        auto sectionId_format = settings->addSection(groupId_Export, IO::formatIdentifier(format));
         const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
         if (ptrGroup) {
@@ -141,7 +152,7 @@ AppModule::AppModule(Application* app)
 
             PropertyGroup* rawPtrGroup = ptrGroup.get();
             settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatWriterParameters.insert({ format.identifier, ptrGroup.get() });
+            m_mapFormatWriterParameters.insert({ format, ptrGroup.get() });
             m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
         }
     }
@@ -154,8 +165,8 @@ AppModule::AppModule(Application* app)
     settings->addResetFunction(this->groupId_application, [&]{
         this->language.setValue(enumLanguages.findValue("en"));
         this->recentFiles.setValue({});
-        this->lastOpenDir.setValue(QString());
-        this->lastSelectedFormatFilter.setValue(QString());
+        this->lastOpenDir.setValue({});
+        this->lastSelectedFormatFilter.setValue({});
         this->linkWithDocumentSelector.setValue(true);
     });
     settings->addResetFunction(this->groupId_graphics, [=]{
@@ -182,13 +193,18 @@ AppModule::AppModule(Application* app)
     });
 }
 
-StringUtils::TextOptions AppModule::defaultTextOptions() const
+QStringUtils::TextOptions AppModule::defaultTextOptions() const
 {
-    StringUtils::TextOptions opts;
-    opts.locale = m_app->settings()->locale();
+    QStringUtils::TextOptions opts;
+    opts.locale = this->locale();
     opts.unitDecimals = this->unitSystemDecimals;
     opts.unitSchema = this->unitSystemSchema;
     return opts;
+}
+
+const QLocale& AppModule::locale() const
+{
+    return m_locale;
 }
 
 QString AppModule::qmFilePath(const QByteArray& languageCode)
@@ -199,9 +215,14 @@ QString AppModule::qmFilePath(const QByteArray& languageCode)
 QByteArray AppModule::languageCode(const ApplicationPtr& app)
 {
     const char keyLang[] = "application/language";
-    const Settings* settings = app->settings();
-    const QByteArray code = app ? settings->findValueFromKey(keyLang).toByteArray() : QByteArray();
-    return !code.isEmpty() ? code : enumLanguages.findName(0);
+    const Settings::Variant code = app->settings()->findValueFromKey(keyLang);
+    if (code.isConvertibleToConstRefString()) {
+        const std::string& strCode = code.toConstRefString();
+        if (enumLanguages.contains(strCode))
+            return QByteArray::fromStdString(strCode);
+    }
+
+    return QtCoreUtils::QByteArray_frowRawData(enumLanguages.findName(0));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
@@ -209,48 +230,70 @@ bool AppModule::excludeSettingPredicate(const Property& prop)
     return !prop.isUserVisible();
 }
 
-const PropertyGroup* AppModule::findReaderParameters(const IO::Format& format) const
+const PropertyGroup* AppModule::findReaderParameters(IO::Format format) const
 {
-    auto it = m_mapFormatReaderParameters.find(format.identifier);
+    auto it = m_mapFormatReaderParameters.find(format);
     return it != m_mapFormatReaderParameters.cend() ? it->second : nullptr;
 }
 
-const PropertyGroup* AppModule::findWriterParameters(const IO::Format& format) const
+const PropertyGroup* AppModule::findWriterParameters(IO::Format format) const
 {
-    auto it = m_mapFormatWriterParameters.find(format.identifier);
+    auto it = m_mapFormatWriterParameters.find(format);
     return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
-QVariant AppModule::toVariant(const Property& prop) const
+Settings::Variant AppModule::toVariant(const Property& prop) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
         const auto& filesProp = constRef<PropertyRecentFiles>(prop);
         QByteArray blob;
         QDataStream stream(&blob, QIODevice::WriteOnly);
         stream << filesProp.value();
-        return blob;
+        Variant varBlob(blob.toStdString());
+        varBlob.setByteArray(true);
+        return varBlob;
     }
     else {
         return PropertyValueConversion::toVariant(prop);
     }
 }
 
-bool AppModule::fromVariant(Property* prop, const QVariant& variant) const
+bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
         if (qobject_cast<QGuiApplication*>(QCoreApplication::instance()) == nullptr)
             return true;
 
-        const QByteArray blob = variant.toByteArray();
+        const QByteArray blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
         QDataStream stream(blob);
         RecentFiles recentFiles;
         stream >> recentFiles;
         ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
-        return true;
+        return stream.status() == QDataStream::Ok;
     }
     else {
         return PropertyValueConversion::fromVariant(prop, variant);
     }
+}
+
+void AppModule::emitMessage(Messenger::MessageType msgType, std::string_view text)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        m_messageLog.push_back({ msgType, to_QString(text) });
+    }
+
+    emit this->message(msgType, to_QString(text));
+}
+
+void AppModule::clearMessageLog()
+{
+    {
+        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        m_messageLog.clear();
+    }
+
+    emit this->messageLogCleared();
 }
 
 void AppModule::prependRecentFile(const FilePath& fp)
@@ -293,8 +336,15 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
         return;
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
-    if (!recentFile)
+    if (!recentFile) {
+        qDebug() << fmt::format("RecentFile object is null\n"
+                                "    Function: {}\n    Document: {}\n    RecentFilesCount: {}",
+                                Q_FUNC_INFO,
+                                guiDoc->document()->filePath().u8string(),
+                                this->recentFiles.value().size())
+                    .c_str();
         return;
+    }
 
     if (!recentFile->isThumbnailOutOfSync())
         return;

@@ -10,12 +10,13 @@
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/meta_enum.h"
-#include "../base/qmeta_tdf_label.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "qmeta_tdf_label.h"
+#include "qstring_conv.h"
+#include "qstring_utils.h"
 #include "widgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
@@ -40,6 +41,7 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_GeomTolerance.hxx>
 #include <XCAFDoc_Location.hxx>
+#include <XCAFDoc_MaterialTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_Volume.hxx>
 
@@ -63,6 +65,11 @@ enum TreeWidgetItemRole {
     TreeWidgetItem_TdfLabelRole = Qt::UserRole + 1
 };
 
+static QStringUtils::TextOptions appDefaultTextOptions()
+{
+    return AppModule::get(Application::instance())->defaultTextOptions();
+}
+
 static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
     for (TDF_AttributeIterator it(label); it.More(); it.Next()) {
@@ -73,7 +80,7 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         if (attrId == TDataStd_Name::GetID()) {
             const auto& name = static_cast<const TDataStd_Name&>(*ptrAttr);
             text = "TDataStd_Name";
-            value = StringUtils::fromUtf16(name.Get());
+            value = to_QString(name.Get());
         }
 #if 0
         else if (attrId == TDataStd_TreeNode::GetID()) {
@@ -84,32 +91,27 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         else if (attrId == XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             text = "XCAFDoc_Area";
-            value = StringUtils::text(
-                        area.Get(), AppModule::get(Application::instance())->defaultTextOptions());
+            value = QStringUtils::text(area.Get(), appDefaultTextOptions());
         }
         else if (attrId == XCAFDoc_Centroid::GetID()) {
             const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);
             text = "XCAFDoc_Centroid";
-            value = StringUtils::text(
-                        centroid.Get(), AppModule::get(Application::instance())->defaultTextOptions());
+            value = QStringUtils::text(centroid.Get(), appDefaultTextOptions());
         }
         else if (attrId == XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);
             text = "XCAFDoc_Volume";
-            value = StringUtils::text(
-                        volume.Get(), AppModule::get(Application::instance())->defaultTextOptions());
+            value = QStringUtils::text(volume.Get(), appDefaultTextOptions());
         }
         else if (attrId == XCAFDoc_Color::GetID()) {
             const auto& color = static_cast<const XCAFDoc_Color&>(*ptrAttr);
             text = "XCAFDoc_Color";
-            value = StringUtils::text(color.GetColor());
+            value = QStringUtils::text(color.GetColor());
         }
         else if (attrId == XCAFDoc_Location::GetID()) {
             const auto& location = static_cast<const XCAFDoc_Location&>(*ptrAttr);
             text = "XCAFDoc_Location";
-            value = StringUtils::text(
-                        location.Get().Transformation(),
-                        AppModule::get(Application::instance())->defaultTextOptions());
+            value = QStringUtils::text(location.Get().Transformation(), appDefaultTextOptions());
         }
         else if (attrId == TNaming_NamedShape::GetID()) {
             const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);
@@ -133,9 +135,7 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
             while (i < strDump.size() && strDump.at(i).isSpace()) ++i;
 
             const int dataStart = i;
-            text = wordStart < strDump.size() ?
-                        strDump.mid(wordStart, wordEnd - wordStart) :
-                        QStringLiteral("??");
+            text = wordStart < strDump.size() ? strDump.mid(wordStart, wordEnd - wordStart) : QStringLiteral("??");
             strDump = strDump.right(strDump.size() - dataStart);
             value = strDump.replace(QChar('\n'), QString("  "));
         }
@@ -171,12 +171,11 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, int value)
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, double value)
+static QTreeWidgetItem* createPropertyTreeItem(
+        const QString& text, double value, const QStringUtils::TextOptions& options = appDefaultTextOptions())
 {
     auto itemProperty = createPropertyTreeItem(text);
-    const StringUtils::TextOptions textOptions =
-            AppModule::get(Application::instance())->defaultTextOptions();
-    itemProperty->setText(1, StringUtils::text(value, textOptions));
+    itemProperty->setText(1, QStringUtils::text(value, options));
     return itemProperty;
 }
 
@@ -187,10 +186,9 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QStrin
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(
-        const QString& text, const Handle_TCollection_HAsciiString& value)
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Handle(TCollection_HAsciiString)& value)
 {
-    return createPropertyTreeItem(text, QString::fromUtf8(value ? value.get()->String().ToCString() : ""));
+    return createPropertyTreeItem(text, to_QString(value));
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_view value)
@@ -201,7 +199,7 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, std::string_
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quantity_Color& color)
 {
     auto itemColor = createPropertyTreeItem(text);
-    itemColor->setText(1, StringUtils::text(color));
+    itemColor->setText(1, QStringUtils::text(color));
     QPixmap pixColor(24, 16);
     pixColor.fill(QtGuiUtils::toQColor(color));
     itemColor->setIcon(1, pixColor);
@@ -217,22 +215,18 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Quanti
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Pnt& pnt)
 {
-    const StringUtils::TextOptions textOptions =
-            AppModule::get(Application::instance())->defaultTextOptions();
     auto itemPnt = createPropertyTreeItem(text);
-    itemPnt->setText(1, StringUtils::text(pnt, textOptions));
+    itemPnt->setText(1, QStringUtils::text(pnt, appDefaultTextOptions()));
     return itemPnt;
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Ax2& ax2)
 {
-    const StringUtils::TextOptions textOptions =
-            AppModule::get(Application::instance())->defaultTextOptions();
     auto itemPnt = createPropertyTreeItem(text);
     const QString textAx2 =
             QString("Location %1 - Direction %2")
-            .arg(StringUtils::text(ax2.Location(), textOptions))
-            .arg(StringUtils::text(ax2.Direction(), textOptions));
+            .arg(QStringUtils::text(ax2.Location(), appDefaultTextOptions()))
+            .arg(QStringUtils::text(ax2.Direction(), appDefaultTextOptions()));
     itemPnt->setText(1, textAx2);
     return itemPnt;
 }
@@ -257,6 +251,37 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS
     return itemShape;
 }
 
+static void loadLabelMaterialProperties(
+        const TDF_Label& label, const Handle_XCAFDoc_MaterialTool& materialTool, QTreeWidgetItem* treeItem)
+{
+    QList<QTreeWidgetItem*> listItemProp;
+    auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
+    fnAddItem(createPropertyTreeItem("IsMaterial", materialTool->IsMaterial(label)));
+
+    QStringUtils::TextOptions densityValueTextOptions = appDefaultTextOptions();
+    densityValueTextOptions.unitDecimals = 6;
+
+    Handle(TCollection_HAsciiString) name;
+    Handle(TCollection_HAsciiString) description;
+    double density;
+    Handle(TCollection_HAsciiString) densityName;
+    Handle(TCollection_HAsciiString) densityValueType;
+    if (materialTool->GetMaterial(label, name, description, density, densityName, densityValueType)) {
+        fnAddItem(createPropertyTreeItem("Name", to_QString(name)));
+        fnAddItem(createPropertyTreeItem("Description", to_QString(description)));
+        fnAddItem(createPropertyTreeItem("Density", density, densityValueTextOptions));
+        fnAddItem(createPropertyTreeItem("DensityName", to_QString(densityName)));
+        fnAddItem(createPropertyTreeItem("DensityValType", to_QString(densityValueType)));
+    }
+    else {
+        density = materialTool->GetDensityForShape(label);
+        if (!qFuzzyIsNull(density))
+            fnAddItem(createPropertyTreeItem("Density", density, densityValueTextOptions));
+    }
+
+    treeItem->addChildren(listItemProp);
+}
+
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 static QTreeWidgetItem* createPropertyTreeItem(
         const QString& text, const opencascade::handle<Image_Texture>& imgTexture)
@@ -265,7 +290,7 @@ static QTreeWidgetItem* createPropertyTreeItem(
         return static_cast<QTreeWidgetItem*>(nullptr);
 
     auto item = createPropertyTreeItem(text);
-    item->setText(1, StringUtils::fromUtf8(imgTexture->FilePath()));
+    item->setText(1, to_QString(imgTexture->FilePath()));
     return item;
 }
 #endif
@@ -291,7 +316,7 @@ static void loadLabelVisMaterialProperties(
         item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
         item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
         if (!material->RawName().IsNull())
-            item->addChild(createPropertyTreeItem("RawName", StringUtils::fromUtf8(material->RawName())));
+            item->addChild(createPropertyTreeItem("RawName", to_QString(material->RawName())));
 
         if (material->HasPbrMaterial()) {
             const XCAFDoc_VisMaterialPBR& pbrMaterial = material->PbrMaterial();
@@ -399,7 +424,9 @@ static void loadLabelShapeProperties(
         TDF_Label labelRef;
         if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
             const QString textItemRefShape =
-                    CafUtils::labelTag(labelRef) + " " + CafUtils::labelAttrStdName(labelRef);
+                    to_QString(CafUtils::labelTag(labelRef))
+                    + " "
+                    + to_QString(CafUtils::labelAttrStdName(labelRef));
             fnAddItem(createPropertyTreeItem("ReferredShape", textItemRefShape));
         }
     }
@@ -588,9 +615,9 @@ static void loadLabelGeomToleranceProperties(const TDF_Label& label, QTreeWidget
 static void loadLabel(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
     treeItem->setData(0, TreeWidgetItem_TdfLabelRole, QVariant::fromValue(label));
-    treeItem->setText(0, CafUtils::labelTag(label));
+    treeItem->setText(0, to_QString(CafUtils::labelTag(label)));
 
-    const QString stdName = CafUtils::labelAttrStdName(label);
+    const QString stdName = to_QString(CafUtils::labelAttrStdName(label));
     if (!stdName.isEmpty())
         treeItem->setText(0, treeItem->text(0) + " " + stdName);
 }
@@ -607,7 +634,7 @@ static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* tree
 
 } // namespace Internal
 
-DialogInspectXde::DialogInspectXde(QWidget *parent)
+DialogInspectXde::DialogInspectXde(QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogInspectXde)
 {
@@ -643,7 +670,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
     }
 }
 
-void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem *item, int /*column*/)
+void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem* item, int /*column*/)
 {
     const QVariant varLabel = item->data(0, Internal::TreeWidgetItem_TdfLabelRole);
     if (varLabel.isValid()) {
@@ -670,6 +697,10 @@ void DialogInspectXde::onLabelTreeWidgetItemClicked(QTreeWidgetItem *item, int /
         auto colorTool = XCAFDoc_DocumentTool::ColorTool(m_doc->Main());
         if (colorTool->IsColor(label) || isShapeLabel)
             Internal::loadLabelColorProperties(label, colorTool, fnCreateLabelTreeItem(tr("Color")));
+
+        auto materialTool = XCAFDoc_DocumentTool::MaterialTool(m_doc->Main());
+        if (materialTool->IsMaterial(label) || isShapeLabel)
+            Internal::loadLabelMaterialProperties(label, materialTool, fnCreateLabelTreeItem(tr("Material")));
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         auto visMaterialTool = XCAFDoc_DocumentTool::VisMaterialTool(m_doc->Main());

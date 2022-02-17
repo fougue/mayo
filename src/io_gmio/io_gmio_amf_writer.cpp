@@ -13,6 +13,7 @@
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../base/string_conv.h"
 #include "../base/task_progress.h"
 #include "../base/unit_system.h"
 #include "../base/xcaf.h"
@@ -27,6 +28,7 @@
 #include <gmio_core/error.h>
 #include <gmio_stl/stl_error.h>
 
+#include <fmt/format.h>
 #include <unordered_map>
 
 namespace Mayo {
@@ -142,12 +144,14 @@ public:
                     textIdTr("Write AMF document in ZIP archive containing one file entry"));
 
         this->zipEntryFilename.setDescription(
-                    textIdTr("Filename of the single AMF entry within the ZIP archive.\n"
-                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
+                    fmt::format(textIdTr("Filename of the single AMF entry within the ZIP archive.\n"
+                                         "Only applicable if option `{}` is on"),
+                                this->createZipArchive.label()));
 
         this->useZip64.setDescription(
-                    textIdTr("Use the ZIP64 format extensions.\n"
-                             "Only applicable if option `%1` is on").arg(this->createZipArchive.label()));
+                    fmt::format(textIdTr("Use the ZIP64 format extensions.\n"
+                                         "Only applicable if option `{}` is on"),
+                                this->createZipArchive.label()));
     }
 
     void restoreDefaults() override {
@@ -155,7 +159,7 @@ public:
         this->float64Format.setValue(params.float64Format);
         this->float64Precision.setValue(params.float64Precision);
         this->createZipArchive.setValue(params.createZipArchive);
-        this->zipEntryFilename.setValue(QString::fromStdString(params.zipEntryFilename));
+        this->zipEntryFilename.setValue(params.zipEntryFilename);
         this->useZip64.setValue(params.useZip64);
 
         this->zipEntryFilename.setEnabled(this->createZipArchive);
@@ -175,7 +179,7 @@ public:
     PropertyEnum<GmioAmfWriter::FloatTextFormat> float64Format{ this, textId("float64Format") };
     PropertyInt float64Precision{ this, textId("float64Precision") };
     PropertyBool createZipArchive{ this, textId("createZipArchive") };
-    PropertyQString zipEntryFilename{ this, textId("zipEntryFilename") };
+    PropertyString zipEntryFilename{ this, textId("zipEntryFilename") };
     PropertyBool useZip64{ this, textId("useZip64") };
 };
 
@@ -209,24 +213,25 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 mapLabelObjectId.insert({ nodeLabel, objectId });
             }
 
-            QStringList absoluteName;
+            std::string absoluteName;
             TreeNodeId itParent = id;
             do {
                 itParent = modelTree.nodeParent(itParent);
                 if (itParent != 0) {
-                    const QString name = CafUtils::labelAttrStdName(modelTree.nodeData(itParent));
-                    if (!name.trimmed().isEmpty())
-                        absoluteName += name;
+                    const std::string name = to_stdString(CafUtils::labelAttrStdName(modelTree.nodeData(itParent)));
+                    if (!name.empty())
+                        absoluteName += '/' + name;
                     else
-                        absoluteName += "anonymous";
+                        absoluteName += "/anonymous";
                 }
             } while (itParent != 0);
 
-            if (!absoluteName.isEmpty()) {
+            if (!absoluteName.empty()) {
+                absoluteName.erase(0, 1); // Remove starting '/'
                 Instance instance;
                 instance.objectId = objectId;
                 instance.trsf = XCaf::shapeAbsoluteLocation(modelTree, id);
-                instance.name = absoluteName.join('/').toStdString();
+                instance.name = absoluteName;
                 m_vecInstance.push_back(std::move(instance));
             }
         }
@@ -299,7 +304,7 @@ void GmioAmfWriter::applyProperties(const PropertyGroup* group)
         m_params.float64Format = ptr->float64Format;
         m_params.float64Precision = ptr->float64Precision;
         m_params.createZipArchive = ptr->createZipArchive;
-        m_params.zipEntryFilename = ptr->zipEntryFilename.value().toStdString();
+        m_params.zipEntryFilename = ptr->zipEntryFilename;
         m_params.useZip64 = ptr->useZip64;
     }
 }
@@ -366,7 +371,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     object.id = m_vecObject.size();
     object.firstMeshId = meshCount;
     object.lastMeshId = m_vecMesh.size() - 1;
-    object.name = CafUtils::labelAttrStdName(labelShape).toStdString();
+    object.name = to_stdString(CafUtils::labelAttrStdName(labelShape));
     object.materialId = materialId;
     m_vecObject.push_back(std::move(object));
     return m_vecObject.back().id;

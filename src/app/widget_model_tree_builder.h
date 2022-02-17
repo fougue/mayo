@@ -43,7 +43,7 @@ public:
     virtual std::unique_ptr<WidgetModelTreeBuilder> clone() const;
 
 protected:
-    static QString labelText(const PropertyQString& propLabel);
+    static QString labelText(const PropertyString& propLabel);
     static QString labelText(const QString& label);
     static QString labelText(const TDF_Label& label);
 

@@ -4,11 +4,12 @@
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/property_enumeration.h"
-#include "../base/qtcore_utils.h"
 #include "../base/settings.h"
 #include "../base/xcaf.h"
 #include "../gui/gui_application.h"
 #include "app_module.h"
+#include "qtcore_utils.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
@@ -16,6 +17,7 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
+#include <fmt/format.h>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -124,10 +126,10 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
     for (const Enumeration::Item& item : m_module->instanceNameFormat.enumeration().items()) {
-        const QString actionText = textId("Show %1").tr().arg(item.name.tr());
+        const QString actionText = to_QString(fmt::format(textIdTr("Show {}"), item.name.tr()));
         auto action = new QAction(actionText, parent);
         action->setCheckable(true);
-        action->setData(item.name.key);
+        action->setData(to_QString(item.name.key));
         userActions.items.push_back(action);
         group->addAction(action);
     }
@@ -150,7 +152,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
         QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node)
 {
     auto guiNode = new QTreeWidgetItem(guiParentNode);
-    const QString stdName = CafUtils::labelAttrStdName(node.label());
+    const QString stdName = to_QString(CafUtils::labelAttrStdName(node.label()));
     guiNode->setText(0, stdName);
     WidgetModelTree::setDocumentTreeNode(guiNode, node);
     const QIcon icon = Module::shapeIcon(node.label());
@@ -182,7 +184,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
             }
             else {
                 auto guiNode = new QTreeWidgetItem(guiParentNode);
-                QString guiNodeText = CafUtils::labelAttrStdName(nodeLabel);
+                QString guiNodeText = to_QString(CafUtils::labelAttrStdName(nodeLabel));
                 TreeNodeId guiNodeId = itNodeId;
                 if (setReferenceNodeId.find(nodeParentId) != setReferenceNodeId.cend()) {
                     const TDF_Label& refLabel = modelTree.nodeData(nodeParentId);
@@ -214,7 +216,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
 QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return m_module->instanceNameFormat.name();
+    return QtCoreUtils::QByteArray_frowRawData(m_module->instanceNameFormat.name());
 }
 
 void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
@@ -222,7 +224,7 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
     if (format == this->instanceNameFormat())
         return;
 
-    m_module->instanceNameFormat.setValueByName(format);
+    m_module->instanceNameFormat.setValueByName(format.constData());
     for (QTreeWidgetItemIterator it(this->treeWidget()); *it; ++it) {
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);
@@ -248,15 +250,15 @@ void WidgetModelTreeBuilder_Xde::refreshXdeAssemblyNodeItemText(QTreeWidgetItem*
         item->setText(0, itemText);
     }
     else {
-        item->setText(0, CafUtils::labelAttrStdName(label));
+        item->setText(0, to_QString(CafUtils::labelAttrStdName(label)));
     }
 }
 
 QString WidgetModelTreeBuilder_Xde::referenceItemText(
         const TDF_Label& instanceLabel, const TDF_Label& productLabel) const
 {
-    const QString instanceName = CafUtils::labelAttrStdName(instanceLabel).trimmed();
-    const QString productName = CafUtils::labelAttrStdName(productLabel).trimmed();
+    const QString instanceName = to_QString(CafUtils::labelAttrStdName(instanceLabel)).trimmed();
+    const QString productName = to_QString(CafUtils::labelAttrStdName(productLabel)).trimmed();
     const QByteArray strTemplate = Module::toInstanceNameTemplate(m_module->instanceNameFormat);
     QString itemText = QString::fromUtf8(strTemplate);
     itemText.replace("%instance", instanceName)

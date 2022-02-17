@@ -111,7 +111,7 @@ void ButtonFlat::setCheckedBrush(const QBrush& brush)
     this->update();
 }
 
-const QBrush &ButtonFlat::backgroundBrush() const
+const QBrush& ButtonFlat::backgroundBrush() const
 {
     return this->palette().button();
 }

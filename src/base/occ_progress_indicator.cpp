@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "occ_progress_indicator.h"
-#include "string_utils.h"
+#include "string_conv.h"
 #include "task_progress.h"
 
 namespace Mayo {
@@ -23,7 +23,7 @@ void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool i
 {
     if (m_progress) {
         if (scope.Name() && (scope.Name() != m_lastStepName || isForce)) {
-            m_progress->setStep(QString::fromUtf8(scope.Name()));
+            m_progress->setStep(scope.Name());
             m_lastStepName = scope.Name();
         }
 
@@ -39,7 +39,7 @@ void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool i
 bool OccProgressIndicator::Show(const bool /*force*/)
 {
     if (m_progress) {
-        m_progress->setStep(StringUtils::fromUtf8(this->GetScope(1).GetName()));
+        m_progress->setStep(to_stdStringView(this->GetScope(1).GetName()));
         const double pc = this->GetPosition(); // Always within [0,1]
         const int val = pc * 100;
         m_progress->setValue(val);

@@ -10,18 +10,21 @@
 
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/messenger.h"
 #include "../base/occ_brep_mesh_parameters.h"
 #include "../base/occt_enums.h"
 #include "../base/property.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/property_value_conversion.h"
-#include "../base/qtcore_hfuncs.h"
+#include "../base/settings.h"
 #include "../base/settings_index.h"
-#include "../base/string_utils.h"
 #include "../base/unit_system.h"
+#include "qtcore_hfuncs.h"
+#include "qstring_utils.h"
 
 #include <QtCore/QObject>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -32,20 +35,28 @@ namespace Mayo {
 
 class GuiApplication;
 class GuiDocument;
+class TaskProgress;
 
 class AppModule :
         public QObject,
         public PropertyGroup,
         public IO::ParametersProvider,
-        public PropertyValueConversion
+        public PropertyValueConversion,
+        public Messenger
 {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
+    struct Message {
+        MessageType type;
+        QString text;
+    };
+
     AppModule(Application* app);
     static AppModule* get(const ApplicationPtr& app);
 
-    StringUtils::TextOptions defaultTextOptions() const;
+    QStringUtils::TextOptions defaultTextOptions() const;
+    const QLocale& locale() const;
 
     static QString qmFilePath(const QByteArray& languageCode);
     static QByteArray languageCode(const ApplicationPtr& app);
@@ -63,12 +74,19 @@ public:
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
     // from IO::ParametersProvider
-    const PropertyGroup* findReaderParameters(const IO::Format& format) const override;
-    const PropertyGroup* findWriterParameters(const IO::Format& format) const override;
+    const PropertyGroup* findReaderParameters(IO::Format format) const override;
+    const PropertyGroup* findWriterParameters(IO::Format format) const override;
 
     // from PropertyValueConversion
-    QVariant toVariant(const Property& prop) const override;
-    bool fromVariant(Property* prop, const QVariant& variant) const override;
+    Settings::Variant toVariant(const Property& prop) const override;
+    bool fromVariant(Property* prop, const Settings::Variant& variant) const override;
+
+    // from Messenger
+    void emitMessage(MessageType msgType, std::string_view text) override;
+    void clearMessageLog();
+    Span<const Message> messageLog() const { return m_messageLog; }
+    Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
+    Q_SIGNAL void messageLogCleared();
 
     // System
     const Settings_GroupIndex groupId_system;
@@ -79,8 +97,8 @@ public:
     const Settings_GroupIndex groupId_application;
     PropertyEnumeration language;
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
-    PropertyQString lastOpenDir{ this, textId("lastOpenFolder") };
-    PropertyQString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
+    PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
+    PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     // Meshing
     const Settings_GroupIndex groupId_meshing;
@@ -112,8 +130,11 @@ protected:
 private:
     Application* m_app = nullptr;
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
-    std::unordered_map<QByteArray, PropertyGroup*> m_mapFormatReaderParameters;
-    std::unordered_map<QByteArray, PropertyGroup*> m_mapFormatWriterParameters;
+    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
+    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
+    std::vector<Message> m_messageLog;
+    std::mutex m_mutexMessageLog;
+    QLocale m_locale;
 };
 
 } // namespace Mayo

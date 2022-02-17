@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "io_occ_obj.h"
+#include "io_occ_obj_reader.h"
 #include "../base/property_builtins.h"
 
 namespace Mayo {

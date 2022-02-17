@@ -10,6 +10,7 @@
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
+#include "../graphics/v3d_view_camera_animation.h"
 
 #include <QtCore/QObject>
 #include <Bnd_Box.hxx>
@@ -23,7 +24,6 @@ namespace Mayo {
 
 class ApplicationItem;
 class GuiApplication;
-class V3dViewCameraAnimation;
 
 // Provides the link between Base::Document and graphical representations
 class GuiDocument : public QObject {
@@ -57,7 +57,7 @@ public:
     void setActiveDisplayMode(const GraphicsObjectDriverPtr& driver, int mode);
 
     // -- Visible state of document's tree nodes
-    Qt::CheckState nodeVisibleState(TreeNodeId nodeId) const;
+    CheckState nodeVisibleState(TreeNodeId nodeId) const;
     void setNodeVisible(TreeNodeId nodeId, bool on);
 
     // -- Exploding
@@ -71,7 +71,7 @@ public:
     // -- Camera animation
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
     void setViewCameraOrientation(V3d_TypeOfOrientation projection);
-    void runViewCameraAnimation(const std::function<void(Handle_V3d_View)>& fnViewChange);
+    void runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange);
     void stopViewCameraAnimation();
 
     // -- View trihedron
@@ -88,8 +88,17 @@ public:
 
     int aisViewCubeBoundingSize() const;
 
+    // -- Background
+    struct GradientBackground {
+        Quantity_Color color1;
+        Quantity_Color color2;
+        Aspect_GradientFillMethod fillStyle;
+    };
+    static const GradientBackground& defaultGradientBackground();
+    static void setDefaultGradientBackground(const GradientBackground& gradientBkgnd);
+
 signals:
-    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId);
+    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
 
     void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
 
@@ -139,7 +148,7 @@ private:
     Bnd_Box m_gfxBoundingBox;
 
     std::unordered_map<GraphicsObjectDriverPtr, int> m_mapGfxDriverDisplayMode;
-    std::unordered_map<TreeNodeId, Qt::CheckState> m_mapTreeNodeCheckState;
+    std::unordered_map<TreeNodeId, CheckState> m_mapTreeNodeCheckState;
 
     double m_explodingFactor = 0.;
 };

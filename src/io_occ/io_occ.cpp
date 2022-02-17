@@ -16,15 +16,16 @@
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"
-#  include "io_occ_obj.h"
+#  include "io_occ_obj_reader.h"
 #endif
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include "io_occ_gltf_writer.h"
 #endif
 
-#include <functional>
-#include <type_traits>
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+#  include "io_occ_obj_writer.h"
+#endif
 
 namespace Mayo {
 namespace IO {
@@ -42,7 +43,7 @@ Span<const Format> OccFactoryReader::formats() const
     return arrayFormat;
 }
 
-std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
+std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepReader>();
@@ -63,7 +64,7 @@ std::unique_ptr<Reader> OccFactoryReader::create(const Format& format) const
     return {};
 }
 
-PtrPropertyGroup OccFactoryReader::createProperties(const Format& format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_STEP)
         return OccStepReader::createProperties(parentGroup);
@@ -87,11 +88,14 @@ Span<const Format> OccFactoryWriter::formats() const
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
         , Format_GLTF
     #endif
+    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        , Format_OBJ
+    #endif
     };
     return arrayFormat;
 }
 
-std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
+std::unique_ptr<Writer> OccFactoryWriter::create(Format format) const
 {
     if (format == Format_STEP)
         return std::make_unique<OccStepWriter>();
@@ -109,10 +113,15 @@ std::unique_ptr<Writer> OccFactoryWriter::create(const Format& format) const
         return std::make_unique<OccGltfWriter>();
 #endif
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (format == Format_OBJ)
+        return std::make_unique<OccObjWriter>();
+#endif
+
     return {};
 }
 
-PtrPropertyGroup OccFactoryWriter::createProperties(const Format& format, PropertyGroup* parentGroup) const
+PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_STEP)
         return OccStepWriter::createProperties(parentGroup);
@@ -126,6 +135,11 @@ PtrPropertyGroup OccFactoryWriter::createProperties(const Format& format, Proper
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     if (format == Format_GLTF)
         return OccGltfWriter::createProperties(parentGroup);
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (format == Format_OBJ)
+        return OccObjWriter::createProperties(parentGroup);
 #endif
 
     return {};

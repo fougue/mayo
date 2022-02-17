@@ -27,6 +27,8 @@ public:
         ButtonView3d_Checked,
         View3d_BackgroundGradientStart,
         View3d_BackgroundGradientEnd,
+        RubberBandView3d_Line,
+        RubberBandView3d_Fill,
         MessageIndicator_Background,
         MessageIndicator_Text
     };

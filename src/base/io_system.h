@@ -13,10 +13,12 @@
 #include "io_writer.h"
 #include "property.h"
 #include "span.h"
+#include "text_id.h"
 
-#include <QtCore/QCoreApplication>
 #include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
 
 namespace Mayo {
 
@@ -30,13 +32,13 @@ class ParametersProvider;
 // Main class to centralize access to FactoryReader/FactoryWriter objects
 // Provides also high-level import/export services
 class System {
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::System)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::System)
 public:
     ~System() = default;
 
     struct FormatProbeInput {
         FilePath filepath;
-        QByteArray contentsBegin; // Excerpt of the file(from start)
+        std::string_view contentsBegin; // Excerpt of the file(from start)
         uint64_t hintFullSize; // Full file size in bytes
     };
     using FormatProbe = std::function<Format (const FormatProbeInput&)>;
@@ -46,15 +48,14 @@ public:
     void addFactoryReader(std::unique_ptr<FactoryReader> ptr);
     void addFactoryWriter(std::unique_ptr<FactoryWriter> ptr);
 
-    const FactoryReader* findFactoryReader(const Format& format) const;
-    const FactoryWriter* findFactoryWriter(const Format& format) const;
+    const FactoryReader* findFactoryReader(Format format) const;
+    const FactoryWriter* findFactoryWriter(Format format) const;
 
-    std::unique_ptr<Reader> createReader(const Format& format) const;
-    std::unique_ptr<Writer> createWriter(const Format& format) const;
+    std::unique_ptr<Reader> createReader(Format format) const;
+    std::unique_ptr<Writer> createWriter(Format format) const;
 
     Span<const Format> readerFormats() const { return m_vecReaderFormat; }
     Span<const Format> writerFormats() const { return m_vecWriterFormat; }
-    static QString fileFilter(const Format& format);
 
     // Import service
 
@@ -63,9 +64,9 @@ public:
         Span<const FilePath> filepaths; // The files to be imported in target document
         const ParametersProvider* parametersProvider = nullptr;
         std::function<void(TDF_Label, TaskProgress*)> entityPostProcess;
-        std::function<bool(const Format&)> entityPostProcessRequiredIf;
+        std::function<bool(Format)> entityPostProcessRequiredIf;
         int entityPostProcessProgressSize = 0;
-        QString entityPostProcessProgressStep;
+        std::string entityPostProcessProgressStep;
         Messenger* messenger = nullptr;
         TaskProgress* progress = nullptr;
     };
@@ -94,8 +95,8 @@ public:
 
         // Post-processing executed before adding entities into Document
         Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
-        Operation& withEntityPostProcessRequiredIf(std::function<bool(const Format&)> fn);
-        Operation& withEntityPostProcessInfoProgress(int progressSize, const QString& progressStep);
+        Operation& withEntityPostProcessRequiredIf(std::function<bool(Format)> fn);
+        Operation& withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep);
 
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
@@ -114,7 +115,7 @@ public:
     struct Operation_ExportApplicationItems {
         using Operation = Operation_ExportApplicationItems;
         Operation& targetFile(const FilePath& filepath);
-        Operation& targetFormat(const Format& format);
+        Operation& targetFormat(Format format);
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);

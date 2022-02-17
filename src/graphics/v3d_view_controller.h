@@ -51,15 +51,23 @@ signals:
     void mouseClicked(Qt::MouseButton btn);
 
 protected:
-    void startDynamicAction(DynamicAction dynAction);
-    void stopDynamicAction();
+    virtual void startDynamicAction(DynamicAction dynAction);
+    virtual void stopDynamicAction();
 
     bool isRotationStarted() const;
     bool isPanningStarted() const;
     bool isWindowZoomingStarted() const;
 
-    void instantZoomAt(const QPoint& pos);
+    void rotation(const QPoint& currPos);
+    void pan(const QPoint& prevPos, const QPoint& currPos);
+
     void windowFitAll(const QPoint& posMin, const QPoint& posMax);
+
+    void windowZoomRubberBand(const QPoint& currPos);
+    void windowZoom(const QPoint& currPos);
+
+    void startInstantZoom(const QPoint& currPos);
+    void stopInstantZoom();
 
     virtual AbstractRubberBand* createRubberBand() = 0;
     void drawRubberBand(const QPoint& posMin, const QPoint& posMax);
@@ -68,12 +76,15 @@ protected:
     void backupCamera();
     void restoreCamera();
 
+    virtual void redrawView();
+
 private:
     Handle_V3d_View m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;
     AbstractRubberBand* m_rubberBand = nullptr;
     double m_instantZoomFactor = 5.;
     Handle_Graphic3d_Camera m_cameraBackup;
+    QPoint m_posRubberBandStart;
 };
 
 } // namespace Mayo

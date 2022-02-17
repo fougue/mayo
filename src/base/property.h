@@ -7,13 +7,12 @@
 #pragma once
 
 #include "span.h"
-#include "result.h"
 #include "text_id.h"
 
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
-#include <QtCore/QString>
 #include <vector>
+#include <string_view>
 
 namespace Mayo {
 
@@ -34,13 +33,16 @@ public:
     virtual void restoreDefaults();
 
 protected:
+    // Callback executed when Property value is about to change
+    virtual void onPropertyAboutToChange(Property* prop);
+
     // Callback executed when Property value was changed
     virtual void onPropertyChanged(Property* prop);
 
     // Callback executed when Property "enabled" status was changed
     virtual void onPropertyEnabled(Property* prop, bool on);
 
-    virtual Result<void> isPropertyValid(const Property* prop) const;
+    virtual bool isPropertyValid(const Property* prop) const;
 
     void blockPropertyChanged(bool on);
     bool isPropertyChangedBlocked() const;
@@ -82,10 +84,10 @@ public:
     PropertyGroup* group() const { return m_group; }
 
     const TextId& name() const;
-    QString label() const;
+    std::string_view label() const;
 
-    const QString& description() const { return m_description; }
-    void setDescription(const QString& text) { m_description = text; }
+    const std::string& description() const { return m_description; }
+    void setDescription(std::string_view text) { m_description = text; }
 
     bool isUserReadOnly() const { return m_isUserReadOnly; }
     void setUserReadOnly(bool on) { m_isUserReadOnly = on; }
@@ -99,20 +101,21 @@ public:
     virtual const char* dynTypeName() const = 0;
 
 protected:
+    void notifyAboutToChange();
     void notifyChanged();
     void notifyEnabled(bool on);
 
-    Result<void> isValid() const;
+    bool isValid() const;
 
     bool hasGroup() const;
 
     template<typename T>
-    static Result<void> setValueHelper(Property* prop, T* ptrValue, const T& newValue);
+    static bool setValueHelper(Property* prop, T* ptrValue, const T& newValue);
 
 private:
     PropertyGroup* const m_group = nullptr;
     const TextId m_name;
-    QString m_description;
+    std::string m_description;
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
     bool m_isEnabled = true;
@@ -124,9 +127,11 @@ public:
     PropertyGroupSignals(QObject* parent = nullptr);
 
 signals:
-    void propertyChanged(Property* prop);
+    void propertyAboutToChange(Mayo::Property* prop);
+    void propertyChanged(Mayo::Property* prop);
 
 protected:
+    void onPropertyAboutToChange(Property* prop) override;
     void onPropertyChanged(Property* prop) override;
 };
 
@@ -135,15 +140,15 @@ protected:
 // -- Implementation
 // --
 
-template<typename T> Result<void> Property::setValueHelper(
-        Property* prop, T* ptrValue, const T& newValue)
+template<typename T> bool Property::setValueHelper(Property* prop, T* ptrValue, const T& newValue)
 {
-    Result<void> result = Result<void>::ok();
+    bool okResult = true;
     if (prop->hasGroup()) {
+        prop->notifyAboutToChange();
         const T previousValue = *ptrValue;
         *ptrValue = newValue;
-        result = prop->isValid();
-        if (result.valid())
+        okResult = prop->isValid();
+        if (okResult)
             prop->notifyChanged();
         else
             *ptrValue = previousValue;
@@ -153,7 +158,7 @@ template<typename T> Result<void> Property::setValueHelper(
         prop->notifyChanged();
     }
 
-    return result;
+    return okResult;
 }
 
 } // namespace Mayo

@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "widget_message_indicator.h"
+#include "../gui/qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QTimer>
@@ -15,27 +16,15 @@
 
 namespace Mayo {
 
-namespace Internal {
-
-static QFont indicatorFont(const QFont& font)
-{
-    QFont indicFont(font);
-    indicFont.setBold(true);
-    return indicFont;
-}
-
-} // namespace Internal
-
 WidgetMessageIndicator::WidgetMessageIndicator(const QString& msg, QWidget* parent)
     : QWidget(parent),
       m_message(msg),
-      m_messageRect(QFontMetrics(Internal::indicatorFont(this->font())).boundingRect(msg))
+      m_messageRect(QFontMetrics(QtGuiUtils::FontChange(this->font()).bold()).boundingRect(msg))
 {
-    if (parent != nullptr) {
+    if (parent) {
         const qreal rectWidth = m_messageRect.width() + 20;
         const qreal rectHeight = m_messageRect.height() + 10;
-        this->setGeometry(
-                    QRect(5, parent->height() - rectHeight - 5, rectWidth, rectHeight));
+        this->setGeometry(QRect(5, parent->height() - rectHeight - 5, rectWidth, rectHeight));
         parent->installEventFilter(this);
     }
 }
@@ -61,14 +50,14 @@ void WidgetMessageIndicator::run()
 void WidgetMessageIndicator::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
-    p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing);
+    p.setRenderHints(QPainter::Antialiasing);
     p.setOpacity(m_opacity);
 
     const QRectF& msgRect = m_messageRect;
     const QRectF boxRect(0, 0, msgRect.width() + 18, msgRect.height() + 8);
     p.fillRect(boxRect, mayoTheme()->color(Theme::Color::MessageIndicator_Background));
 
-    p.setFont(Internal::indicatorFont(this->font()));
+    p.setFont(QtGuiUtils::FontChange(this->font()).bold());
     const QRectF textRect(9, 4, msgRect.width() + 4, msgRect.height());
     p.setPen(mayoTheme()->color(Theme::Color::MessageIndicator_Text));
     p.drawText(textRect, m_message);

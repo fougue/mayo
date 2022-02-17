@@ -37,14 +37,14 @@ public:
 } // namespace IO
 
 template<> struct EnumNames<IO::OccCommon::LengthUnit> {
-    inline static const QByteArray trContext = IO::OccCommon::textIdContext();
-    inline static const std::string_view junkPrefix = "";
+    inline static std::string_view trContext = IO::OccCommon::textIdContext();
+    inline static std::string_view junkPrefix = "";
 };
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 template<> struct EnumNames<RWMesh_CoordinateSystem> {
-    inline static const QByteArray trContext = IO::OccCommon::textIdContext();
-    inline static const std::string_view junkPrefix = "RWMesh_CoordinateSystem_";
+    inline static std::string_view trContext = IO::OccCommon::textIdContext();
+    inline static std::string_view junkPrefix = "RWMesh_CoordinateSystem_";
 };
 #endif
 

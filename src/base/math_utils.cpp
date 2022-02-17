@@ -13,12 +13,14 @@
 
 namespace Mayo {
 
-double MathUtils::mappedValue(double val, double omin, double omax, double nmin, double nmax)
+namespace MathUtils {
+
+double mappedValue(double val, double omin, double omax, double nmin, double nmax)
 {
     return (((val - omin) * (nmax - nmin)) / (omax - omin)) + nmin;
 }
 
-bool MathUtils::isReversedStandardDir(const gp_Dir& n)
+bool isReversedStandardDir(const gp_Dir& n)
 {
     for (int i = 0; i < 3; ++i) {
         const double c = n.XYZ().GetData()[i];
@@ -29,18 +31,16 @@ bool MathUtils::isReversedStandardDir(const gp_Dir& n)
     return false;
 }
 
-double MathUtils::planePosition(const gp_Pln& plane)
+double planePosition(const gp_Pln& plane)
 {
     const gp_Vec vecLoc(plane.Location().XYZ());
     const gp_Vec vecNormal(plane.Axis().Direction());
     return vecLoc.Dot(vecNormal);
 }
 
-std::pair<double, double> MathUtils::planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal)
+std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal)
 {
-    const gp_Vec n(MathUtils::isReversedStandardDir(planeNormal) ?
-                       planeNormal.Reversed() :
-                       planeNormal);
+    const gp_Vec n(isReversedStandardDir(planeNormal) ? planeNormal.Reversed() : planeNormal);
     bool isMaxValid = false;
     bool isMinValid = false;
     double rmax;
@@ -56,7 +56,9 @@ std::pair<double, double> MathUtils::planeRange(const BndBoxCoords& bbc, const g
 
     if (isMaxValid && isMinValid)
         return { rmin, rmax };
+
     return {};
 }
 
+} // namespace MathUtils
 } // namespace Mayo

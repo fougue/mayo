@@ -7,7 +7,7 @@
 #include "unit_system.h"
 
 #include <fast_float/fast_float.h>
-#include <QtCore/QtGlobal>
+#include <cassert>
 
 namespace Mayo {
 
@@ -67,9 +67,10 @@ const UnitInfo arrayUnitInfo_SI[] = {
     // Velocity
     { Unit::Velocity, "mm/s", 1. },
     // Density
-    { Unit::Density, "kg/mm³", 1. },
-    { Unit::Density, "kg/cm³", 0.001 },
-    { Unit::Density, "kg/m³", 1e-9 },
+    { Unit::Density, "kg/m³", 1 },
+    { Unit::Density, "g/m³", 1000. },
+    { Unit::Density, "g/cm³", 0.001 },
+    { Unit::Density, "g/mm³", 1e-6 },
     // Pressure
     { Unit::Pressure, "kPa", 1. },
     { Unit::Pressure, "Pa", 0.001 },
@@ -104,7 +105,7 @@ static UnitSystem::TranslateResult translateSI(double value, Unit unit)
     case Unit::Velocity:
         return { value, "mm/s", 1. };
     case Unit::Density:
-        return { value, "kg/mm³", 1. };
+        return { value, "kg/m³", 1. };
     case Unit::Pressure:
         return { value, "kPa", 1. };
     default:
@@ -232,7 +233,7 @@ UnitSystem::TranslateResult UnitSystem::translate(Schema schema, double value, U
         return Internal::translateImperialUK(value, unit);
     }
 
-    Q_UNREACHABLE();
+    assert(false);
     return {};
 }
 

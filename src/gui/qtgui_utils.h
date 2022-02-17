@@ -9,11 +9,15 @@
 #include <Quantity_Color.hxx>
 #include <Quantity_ColorRGBA.hxx>
 #include <Quantity_NameOfColor.hxx>
+#include <Image_PixMap.hxx>
+
 #include <QtGui/QColor>
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
-#include <type_traits>
+#include <QtGui/QPixmap>
 class QScreen;
+
+#include <type_traits>
 
 namespace Mayo {
 namespace QtGuiUtils {
@@ -30,6 +34,9 @@ template <Quantity_TypeOfColor OTHER_COLOR_TYPE>
 Quantity_Color toColor(const QColor& c);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
+
+// Image conversion
+QPixmap toQPixmap(const Image_PixMap& pixmap);
 
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'
 QColor lerp(const QColor& a, const QColor& b, double t);
@@ -57,8 +64,8 @@ public:
     FontChange& size(int size);
     FontChange& adjustSize(int offset);
     FontChange& scalePointSizeF(double f);
-    FontChange& bold(bool on);
-    FontChange& fixedPitch(bool on);
+    FontChange& bold(bool on = true);
+    FontChange& fixedPitch(bool on = true);
 
     constexpr operator const QFont&() const { return m_font; }
 

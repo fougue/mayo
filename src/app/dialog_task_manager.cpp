@@ -8,9 +8,11 @@
 
 #include "../base/application.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../base/task_manager.h"
 #include "ui_dialog_task_manager.h"
+#include "app_module.h"
+#include "qstring_conv.h"
+#include "qstring_utils.h"
 #include "theme.h"
 
 #include <QtCore/QTimer>
@@ -138,7 +140,7 @@ void DialogTaskManager::onTaskStarted(TaskId taskId)
     m_ui->contentsLayout->insertWidget(0, widget);
     m_taskIdToWidget.insert({ taskId, widget });
     ++m_taskCount;
-    this->onTaskProgressStep(taskId, QString());
+    this->onTaskProgressStep(taskId, {});
 }
 
 void DialogTaskManager::onTaskEnded(TaskId taskId)
@@ -174,19 +176,20 @@ void DialogTaskManager::onTaskProgress(TaskId taskId, int percent)
     }
 }
 
-void DialogTaskManager::onTaskProgressStep(TaskId taskId, const QString& name)
+void DialogTaskManager::onTaskProgressStep(TaskId taskId, std::string_view name)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (!widget)
         return;
 
-    const QString taskTitle = m_taskMgr->title(taskId);
+    const QString taskTitle = to_QString(m_taskMgr->title(taskId));
     QString text = taskTitle;
-    if (!name.isEmpty()) {
+    if (!name.empty()) {
+        const QLocale& locale = AppModule::get(Application::instance())->locale();
         if (!text.isEmpty())
-            StringUtils::append(&text, tr(" / "), Application::instance()->settings()->locale());
+            QStringUtils::append(&text, tr(" / "), locale);
 
-        StringUtils::append(&text, name, Application::instance()->settings()->locale());
+        QStringUtils::append(&text, to_QString(name), locale);
     }
 
     widget->m_label->setText(text);

@@ -10,9 +10,9 @@
 #include "../base/application_item_selection_model.h"
 #include "../base/document.h"
 #include "../base/settings.h"
-#include "../base/string_utils.h"
 #include "../gui/gui_application.h"
 #include "item_view_buttons.h"
+#include "qtcore_utils.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 
@@ -217,7 +217,7 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
     QObject::connect(m_guiApp, &GuiApplication::guiDocumentAdded, this, [=](GuiDocument* guiDoc) {
         QObject::connect(
                     guiDoc, &GuiDocument::nodesVisibilityChanged,
-                    this, [=](const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId) {
+                    this, [=](const std::unordered_map<TreeNodeId, CheckState>& mapNodeId) {
             this->onNodesVisibilityChanged(guiDoc, mapNodeId);
         });
     });
@@ -292,7 +292,7 @@ void WidgetModelTree::onDocumentAboutToClose(const DocumentPtr& doc)
     delete this->findTreeItem(doc);
 }
 
-void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const QString& /*name*/)
+void WidgetModelTree::onDocumentNameChanged(const DocumentPtr& doc, const std::string& /*name*/)
 {
     QTreeWidgetItem* treeItem = this->findTreeItem(doc);
     if (treeItem)
@@ -452,8 +452,9 @@ void WidgetModelTree::onTreeModelDataChanged(
 {
     if (roles.contains(Qt::CheckStateRole) && topLeft == bottomRight) {
         const QModelIndex& indexItem = topLeft;
-        const auto itemCheckState = Qt::CheckState(indexItem.data(Qt::CheckStateRole).toInt());
-        if (itemCheckState == Qt::PartiallyChecked)
+        const auto qtCheckState = Qt::CheckState(indexItem.data(Qt::CheckStateRole).toInt());
+        const auto checkState = QtCoreUtils::toCheckState(qtCheckState);
+        if (checkState == CheckState::Partially)
             return;
 
         const QVariant var = indexItem.data(Internal::TreeItemDocumentTreeNodeRole);
@@ -465,13 +466,13 @@ void WidgetModelTree::onTreeModelDataChanged(
         if (!guiDoc)
             return;
 
-        guiDoc->setNodeVisible(treeNode.id(), itemCheckState == Qt::Checked ? true : false);
+        guiDoc->setNodeVisible(treeNode.id(), checkState == CheckState::On ? true : false);
         guiDoc->graphicsScene()->redraw();
     }
 }
 
 void WidgetModelTree::onNodesVisibilityChanged(
-        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, Qt::CheckState>& mapNodeId)
+        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId)
 {
     QTreeWidgetItem* treeItemDoc = this->findTreeItem(guiDoc->document());
     if (!treeItemDoc)
@@ -486,7 +487,7 @@ void WidgetModelTree::onNodesVisibilityChanged(
         const DocumentTreeNode docTreeNode = Internal::treeItemDocumentTreeNode(treeItem);
         auto itNodeVisibleState = localMapNodeId.find(docTreeNode.id());
         if (itNodeVisibleState != localMapNodeId.cend()) {
-            treeItem->setCheckState(0, itNodeVisibleState->second);
+            treeItem->setCheckState(0, QtCoreUtils::toQtCheckState(itNodeVisibleState->second));
             localMapNodeId.erase(itNodeVisibleState);
         }
 

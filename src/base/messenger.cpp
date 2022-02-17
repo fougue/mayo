@@ -8,59 +8,38 @@
 
 namespace Mayo {
 
-void Messenger::emitTrace(const QString& text)
+void Messenger::emitTrace(std::string_view text)
 {
     this->emitMessage(MessageType::Trace, text);
 }
 
-void Messenger::emitInfo(const QString& text)
+void Messenger::emitInfo(std::string_view text)
 {
     this->emitMessage(MessageType::Info, text);
 }
 
-void Messenger::emitWarning(const QString& text)
+void Messenger::emitWarning(std::string_view text)
 {
     this->emitMessage(MessageType::Warning, text);
 }
 
-void Messenger::emitError(const QString& text)
+void Messenger::emitError(std::string_view text)
 {
     this->emitMessage(MessageType::Error, text);
 }
 
-MessengerQtSignal::MessengerQtSignal(QObject* parent)
-    : QObject(parent)
-{
-    static bool metaTypesRegistered = false;
-    if (!metaTypesRegistered) {
-        qRegisterMetaType<MessageType>("Messenger::MessageType");
-        metaTypesRegistered = true;
-    }
-}
-
-void MessengerQtSignal::emitMessage(MessageType msgType, const QString& text)
-{
-    emit this->message(msgType, text);
-}
-
-MessengerQtSignal* MessengerQtSignal::defaultInstance()
-{
-    static MessengerQtSignal messenger;
-    return &messenger;
-}
-
-MessengerByCallback::MessengerByCallback(std::function<void(MessageType, QString)> fnCallback)
+MessengerByCallback::MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback)
     : m_fnCallback(std::move(fnCallback))
 {
 }
 
-void MessengerByCallback::emitMessage(Messenger::MessageType msgType, const QString& text)
+void MessengerByCallback::emitMessage(Messenger::MessageType msgType, std::string_view text)
 {
     if (m_fnCallback)
         m_fnCallback(msgType, text);
 }
 
-void NullMessenger::emitMessage(Messenger::MessageType /*msgType*/, const QString& /*text*/)
+void NullMessenger::emitMessage(Messenger::MessageType /*msgType*/, std::string_view /*text*/)
 {
 }
 

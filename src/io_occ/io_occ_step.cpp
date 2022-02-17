@@ -9,7 +9,7 @@
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_utils.h"
+#include "../base/string_conv.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 #include "../base/enumeration_fromenum.h"
@@ -267,8 +267,8 @@ public:
         this->writePCurves.setValue(params.writeParametricCurves);
         this->writeSubShapesNames.setValue(params.writeSubShapesNames);
 
-        this->headerAuthor.setValue(QString());
-        this->headerOrganization.setValue(QString());
+        this->headerAuthor.setValue({});
+        this->headerOrganization.setValue({});
         this->headerOriginatingSystem.setValue(XSTEP_SYSTEM_VERSION);
         this->headerDescription.setValue("OpenCascade Model");
     }
@@ -279,10 +279,10 @@ public:
     PropertyEnum<FreeVertexMode> freeVertexMode{ this, textId("freeVertexMode") };
     PropertyBool writePCurves{ this, textId("writeParametericCurves") };
     PropertyBool writeSubShapesNames{ this, textId("writeSubShapesNames") };
-    PropertyQString headerAuthor{ this, textId("headerAuthor") };
-    PropertyQString headerOrganization{ this, textId("headerOrganization") };
-    PropertyQString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
-    PropertyQString headerDescription{ this, textId("headerDescription") };
+    PropertyString headerAuthor{ this, textId("headerAuthor") };
+    PropertyString headerOrganization{ this, textId("headerOrganization") };
+    PropertyString headerOriginatingSystem{ this, textId("headerOriginatingSystem") };
+    PropertyString headerDescription{ this, textId("headerDescription") };
 };
 
 OccStepWriter::OccStepWriter()
@@ -319,13 +319,13 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
 
     APIHeaderSection_MakeHeader makeHeader(m_writer->ChangeWriter().Model());
     makeHeader.SetAuthorValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerAuthor));
+                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerAuthor));
     makeHeader.SetOrganizationValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOrganization));
+                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerOrganization));
     makeHeader.SetOriginatingSystem(
-                StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerOriginatingSystem));
+                string_conv<Handle(TCollection_HAsciiString)>(m_params.headerOriginatingSystem));
     makeHeader.SetDescriptionValue(
-                1, StringUtils::toUtf8<Handle_TCollection_HAsciiString>(m_params.headerDescription));
+                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerDescription));
 
     const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;

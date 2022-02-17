@@ -14,6 +14,7 @@ CONFIG(debug, debug|release) {
 }
 
 QT += core gui widgets
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 message(Qt version $$QT_VERSION)
 
 CONFIG += c++17
@@ -25,20 +26,21 @@ CONFIG(debug, debug|release) {
     CONFIG += release_with_debuginfo
 }
 
-release_with_debuginfo:*msvc* {
+release_with_debuginfo:msvc {
     # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
     QMAKE_CXXFLAGS_RELEASE += /Zi
     QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
 }
 
-*msvc* {
+msvc {
+    DEFINES += NOMINMAX
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
 }
-*g++*|*clang* {
+gcc|clang {
     QMAKE_CXXFLAGS += -std=c++17
 }
-*clang* {
+clang {
     # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
     QMAKE_CXXFLAGS += -Wno-undefined-var-template
 }
@@ -47,11 +49,11 @@ release_with_debuginfo:*msvc* {
     LIBS += -lc++fs
 }
 macx {
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
+#   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
 }
-
-*win* {
-    LIBS += -lUser32
+win32 {
+    LIBS += -lOpengl32 -lUser32
 }
 
 INCLUDEPATH += \
@@ -61,6 +63,8 @@ INCLUDEPATH += \
 HEADERS += \
     $$files(src/base/*.h) \
     $$files(src/io_occ/*.h) \
+    $$files(src/io_dxf/*.h) \
+    $$files(src/io_image/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
     $$files(src/app/*.h) \
@@ -68,11 +72,15 @@ HEADERS += \
 SOURCES += \
     $$files(src/base/*.cpp) \
     $$files(src/io_occ/*.cpp) \
+    $$files(src/io_dxf/*.cpp) \
+    $$files(src/io_image/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
     $$files(src/app/*.cpp) \
+    \
+    src/3rdparty/fmt/src/format.cc \
 
-win* {
+win32 {
     QT += winextras
     HEADERS += $$files(src/app/windows/*.h)
     SOURCES += $$files(src/app/windows/*.cpp)
@@ -98,7 +106,12 @@ OTHER_FILES += \
 
 # OpenCascade
 include(opencascade.pri)
-message(OpenCascade version $$OCC_VERSION_STR)
+!isEmpty(OCC_VERSION_STR) {
+    message(OpenCascade version $$OCC_VERSION_STR)
+} else {
+    warning(OpenCascade version <unknown>)
+}
+
 LIBS += \
     -lTKBin \
     -lTKBinL \
@@ -145,13 +158,16 @@ minOpenCascadeVersion(7, 4, 0) {
     SOURCES -= \
         src/io_occ/io_occ_base_mesh.cpp \
         src/io_occ/io_occ_gltf_reader.cpp \
-        src/io_occ/io_occ_obj.cpp
+        src/io_occ/io_occ_obj_reader.cpp
 }
 
 !minOpenCascadeVersion(7, 5, 0) {
     SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
 }
 
+!minOpenCascadeVersion(7, 6, 0) {
+    SOURCES -= src/io_occ/io_occ_obj_writer.cpp
+}
 # -- VRML support
 LIBS += -lTKVRML
 
@@ -178,7 +194,7 @@ for(binPath, CASCADE_LIST_OPTBIN_DIR) {
 # -- Create file "opencascade_dlls.iss" that will contain the required OpenCascade DLL files to be
 # -- added in the InnoSetup [Files] section
 # -- The list of OpenCascade libraries is retrieved from the LIBS QMake variable
-win* {
+win32 {
     for(lib, LIBS) {
         findTK = $$find(lib, "-lTK")
         !isEmpty(findTK) {

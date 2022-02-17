@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "widget_properties_editor.h"
+#include "qstring_conv.h"
 #include "ui_widget_properties_editor.h"
 
 #include <vector>
@@ -158,7 +159,7 @@ void WidgetPropertiesEditor::Private::createQtProperty(
     this->vecProperty.push_back(property);
     auto itemProp = new QTreeWidgetItem;
     const QString labelSpacer = parentItem ? "       " : "";
-    itemProp->setText(0, labelSpacer + property->label());
+    itemProp->setText(0, labelSpacer + to_QString(property->label()));
     itemProp->setData(1, Qt::DisplayRole, QVariant::fromValue<Property*>(property));
     itemProp->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
     if (parentItem)
@@ -172,12 +173,13 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::addLineWidgetItem(QWidget* wid
     widget->setAutoFillBackground(true);
     auto treeItem = new QTreeWidgetItem(this->ui->treeWidget_Browser);
     treeItem->setFlags(Qt::ItemIsEnabled);
+    treeItem->setFirstColumnSpanned(true);
     if (height > 0) {
         treeItem->setSizeHint(0, QSize(100, height));
         treeItem->setSizeHint(1, QSize(100, height));
     }
+
     this->vecLineWidget.push_back(widget);
-    this->ui->treeWidget_Browser->setFirstItemColumnSpanned(treeItem, true);
     this->ui->treeWidget_Browser->setItemWidget(treeItem, 0, widget);
     return treeItem;
 }

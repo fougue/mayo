@@ -24,34 +24,27 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QProxyStyle>
 #include <QtWidgets/QWidgetAction>
+#include <Standard_Version.hxx>
 
 namespace Mayo {
 
 namespace Internal {
 
-static ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip)
-{
-    auto btn = new ButtonFlat(parent);
-    btn->setBackgroundBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Background));
-    btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
-    btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
-    btn->setIcon(mayoTheme()->icon(icon));
-    btn->setIconSize(QSize(18, 18));
-    btn->setFixedSize(24, 24);
-    btn->setToolTip(tooltip);
-    return btn;
-}
-
 class PanelView3d : public QWidget {
 public:
-    PanelView3d(QWidget* parent = nullptr)
+    PanelView3d(WidgetGuiDocument* parent = nullptr)
         : QWidget(parent)
     {}
 
 protected:
-    void paintEvent(QPaintEvent*) override {
-        WidgetGuiDocument::paintPanel(this);
-    }
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+        const QRect frame = this->frameGeometry();
+        const QRect surface(0, 0, frame.width(), frame.height());
+        auto widgetGuiDocument = static_cast<const WidgetGuiDocument*>(this->parentWidget());
+        painter.fillRect(surface, widgetGuiDocument->panelBackgroundColor());
+    }    
 };
 
 class MenuIconSizeStyle : public QProxyStyle {
@@ -79,22 +72,23 @@ const int widgetMargin = 4;
 WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     : QWidget(parent),
       m_guiDoc(guiDoc),
-      m_qtOccView(new WidgetOccView(guiDoc->v3dView(), this)),
+      m_qtOccView(IWidgetOccView::create(guiDoc->v3dView(), this)),
       m_controller(new WidgetOccViewController(m_qtOccView))
 {
     {
         auto layout = new QVBoxLayout;
         layout->setContentsMargins(0, 0, 0, 0);
-        layout->addWidget(m_qtOccView);
+        layout->addWidget(m_qtOccView->widget());
         this->setLayout(layout);
     }
 
-    m_btnFitAll = Internal::createViewBtn(this, Theme::Icon::Expand, tr("Fit All"));
-    m_btnEditClipping = Internal::createViewBtn(this, Theme::Icon::ClipPlane, tr("Edit clip planes"));
+    m_btnFitAll = this->createViewBtn(this, Theme::Icon::Expand, tr("Fit All"));
+    m_btnEditClipping = this->createViewBtn(this, Theme::Icon::ClipPlane, tr("Edit clip planes"));
     m_btnEditClipping->setCheckable(true);
-    m_btnExplode = Internal::createViewBtn(this, Theme::Icon::Multiple, tr("Explode assemblies"));
+    m_btnExplode = this->createViewBtn(this, Theme::Icon::Multiple, tr("Explode assemblies"));
     m_btnExplode->setCheckable(true);
 
+    auto gfxScene = m_guiDoc->graphicsScene();
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
         m_guiDoc->runViewCameraAnimation(&GraphicsUtils::V3dView_fitAll);
     });
@@ -110,31 +104,35 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     QObject::connect(
                 m_controller, &V3dViewController::viewScaled,
                 m_guiDoc, &GuiDocument::stopViewCameraAnimation);
-    QObject::connect(
-                m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
-        if (btn == Qt::MouseButton::LeftButton) {
-            if (!m_guiDoc->processAction(m_guiDoc->graphicsScene()->currentHighlightedOwner()))
-                m_guiDoc->graphicsScene()->select();
+    QObject::connect(m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
+        if (btn == Qt::LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
+            gfxScene->select();
+            m_qtOccView->redraw();
         }
     });
     QObject::connect(m_controller, &WidgetOccViewController::multiSelectionToggled, this, [=](bool on) {
-        m_guiDoc->graphicsScene()->setSelectionMode(
-                    on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single);
+        auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
+        gfxScene->setSelectionMode(mode);
     });
     QObject::connect(
                 m_guiDoc, &GuiDocument::viewTrihedronModeChanged,
                 this, &WidgetGuiDocument::recreateViewControls);
 
+    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
+        if (view == m_qtOccView->v3dView())
+            m_qtOccView->redraw();
+    });
+
     this->recreateViewControls();
 }
 
-void WidgetGuiDocument::paintPanel(QWidget* widget)
+QColor WidgetGuiDocument::panelBackgroundColor() const
 {
-    QPainter painter(widget);
-    const QRect frame = widget->frameGeometry();
-    const QRect surface(0, 0, frame.width(), frame.height());
-    const QColor panelColor = mayoTheme()->color(Theme::Color::Palette_Window);
-    painter.fillRect(surface, panelColor);
+    QColor color = mayoTheme()->color(Theme::Color::Palette_Window);
+    if (m_qtOccView->supportsWidgetOpacity())
+        color.setAlpha(150);
+
+    return color;
 }
 
 void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
@@ -197,29 +195,46 @@ void WidgetGuiDocument::toggleWidgetExplode(bool on)
 void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 {
     auto fnPanelPos = [=](QWidget* panel) -> QPoint {
+        const QRect ctrlRect = this->viewControlsRect();
         const int margin = Internal::widgetMargin;
         if (m_guiDoc->viewTrihedronMode() != GuiDocument::ViewTrihedronMode::AisViewCube)
-            return QPoint(margin, this->viewControlsRect().bottom() + margin);
+            return QPoint(margin, ctrlRect.bottom() + margin);
 
         switch (m_guiDoc->viewTrihedronCorner()) {
         case Qt::TopLeftCorner:
-            return QPoint(margin, this->viewControlsRect().bottom() + margin);
+            return QPoint(ctrlRect.left(), ctrlRect.bottom() + margin);
         case Qt::TopRightCorner:
-            return QPoint(this->width() - panel->width(),
-                          this->viewControlsRect().bottom() + margin);
+            return QPoint(this->width() - panel->width(), ctrlRect.bottom() + margin);
         case Qt::BottomLeftCorner:
-            return QPoint(margin, this->viewControlsRect().top() - panel->height() - margin);
+            return QPoint(margin, ctrlRect.top() - panel->height() - margin);
         case Qt::BottomRightCorner:
-            return QPoint(this->width() - panel->width(),
-                          this->viewControlsRect().top() - panel->height() - margin);
+            return QPoint(this->width() - panel->width(), ctrlRect.top() - panel->height() - margin);
         } // endswitch
 
-        return QPoint(margin, this->viewControlsRect().bottom() + margin);
+        return QPoint(margin, ctrlRect.bottom() + margin);
     };
 
     QWidget* widget = panel ? panel->parentWidget() : nullptr;
     if (widget && widget->isVisible())
         widget->move(fnPanelPos(widget));
+}
+
+ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const
+{
+    const QColor bkgndColor =
+            m_qtOccView->supportsWidgetOpacity() ?
+                Qt::transparent :
+                mayoTheme()->color(Theme::Color::ButtonView3d_Background);
+
+    auto btn = new ButtonFlat(parent);
+    btn->setBackgroundBrush(bkgndColor);
+    btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
+    btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
+    btn->setIcon(mayoTheme()->icon(icon));
+    btn->setIconSize(QSize(18, 18));
+    btn->setFixedSize(24, 24);
+    btn->setToolTip(tooltip);
+    return btn;
 }
 
 void WidgetGuiDocument::recreateViewControls()
@@ -230,18 +245,18 @@ void WidgetGuiDocument::recreateViewControls()
     m_vecWidgetForViewProj.clear();
 
     struct ButtonCreationData {
+        V3d_TypeOfOrientation proj;
         Theme::Icon icon;
         QString text;
-        V3d_TypeOfOrientation proj;
     };
     const ButtonCreationData btnCreationData[] = {
-        { Theme::Icon::View3dIso, tr("Isometric"), V3d_XposYnegZpos },
-        { Theme::Icon::View3dBack, tr("Back"), V3d_Ypos },
-        { Theme::Icon::View3dFront, tr("Front"), V3d_Yneg },
-        { Theme::Icon::View3dLeft, tr("Left"), V3d_Xneg },
-        { Theme::Icon::View3dRight, tr("Right"), V3d_Xpos },
-        { Theme::Icon::View3dTop, tr("Top"), V3d_Zpos },
-        { Theme::Icon::View3dBottom, tr("Bottom"), V3d_Zneg }
+        { V3d_XposYnegZpos, Theme::Icon::View3dIso, tr("Isometric") },
+        { V3d_Ypos, Theme::Icon::View3dBack,   tr("Back")},
+        { V3d_Yneg, Theme::Icon::View3dFront,  tr("Front") },
+        { V3d_Xneg, Theme::Icon::View3dLeft,   tr("Left") },
+        { V3d_Xpos, Theme::Icon::View3dRight,  tr("Right") },
+        { V3d_Zpos, Theme::Icon::View3dTop,    tr("Top") },
+        { V3d_Zneg, Theme::Icon::View3dBottom, tr("Bottom") }
     };
     if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
         static Internal::MenuIconSizeStyle* menuStyle = nullptr;
@@ -253,11 +268,17 @@ void WidgetGuiDocument::recreateViewControls()
         const QString strTemplateTooltip =
                 tr("<b>Left-click</b>: popup menu of pre-defined views\n"
                    "<b>CTRL+Left-click</b>: apply '%1' view");
-        auto btnViewMenu = Internal::createViewBtn(this, Theme::Icon::View3dIso, QString());
+        auto btnViewMenu = this->createViewBtn(this, Theme::Icon::View3dIso, QString());
         btnViewMenu->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
         btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
         auto menuBtnView = new QMenu(btnViewMenu);
         menuBtnView->setStyle(menuStyle);
+        const QString strPanelBkgndColor = this->panelBackgroundColor().name(QColor::HexArgb);
+        menuBtnView->setStyleSheet(QString("QMenu { background:%1; border: 0px }").arg(strPanelBkgndColor));
+        menuBtnView->setWindowFlags(menuBtnView->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+        if (m_qtOccView->supportsWidgetOpacity())
+            menuBtnView->setAttribute(Qt::WA_TranslucentBackground);
+
         m_vecWidgetForViewProj.push_back(btnViewMenu);
         for (const ButtonCreationData& btnData : btnCreationData) {
             auto action = menuBtnView->addAction(mayoTheme()->icon(btnData.icon), btnData.text);
@@ -281,7 +302,7 @@ void WidgetGuiDocument::recreateViewControls()
     }
     else {
         for (const ButtonCreationData& btnData : btnCreationData) {
-            auto btnViewProj = Internal::createViewBtn(this, btnData.icon, btnData.text);
+            auto btnViewProj = this->createViewBtn(this, btnData.icon, btnData.text);
             QObject::connect(btnViewProj, &ButtonFlat::clicked, this, [=]{
                 m_guiDoc->setViewCameraOrientation(btnData.proj);
             });

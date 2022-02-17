@@ -14,8 +14,6 @@
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;
 
-#include <QtCore/QCoreApplication>
-
 namespace Mayo {
 namespace IO {
 
@@ -29,7 +27,7 @@ public:
 
     using LengthUnit = OccCommon::LengthUnit;
     struct Parameters {
-        QString rootPrefix;
+        std::string rootPrefix;
         LengthUnit systemLengthUnit = LengthUnit::Undefined;
         RWMesh_CoordinateSystem systemCoordinatesConverter = RWMesh_CoordinateSystem_Undefined;
     };
@@ -48,7 +46,6 @@ private:
 // Common properties for OccBaseMeshReader
 class OccBaseMeshReaderProperties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
-    Q_DECLARE_TR_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
 public:
     OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
 
@@ -58,7 +55,7 @@ public:
     static double lengthUnitFactor(LengthUnit lenUnit);
     static LengthUnit lengthUnit(double factor);
 
-    PropertyQString rootPrefix;
+    PropertyString rootPrefix;
     PropertyEnum<RWMesh_CoordinateSystem> systemCoordinatesConverter;
     PropertyEnum<LengthUnit> systemLengthUnit;
 };

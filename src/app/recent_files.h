@@ -9,7 +9,6 @@
 #include "../base/filepath.h"
 #include "../base/property_builtins.h"
 
-#include <QtCore/QMetaType>
 #include <QtGui/QPixmap>
 #include <vector>
 class QDataStream;
@@ -24,6 +23,7 @@ struct RecentFile {
     int64_t thumbnailTimestamp = 0;
     bool recordThumbnail(GuiDocument* guiDoc, QSize size);
     bool isThumbnailOutOfSync() const;
+    static int64_t timestampLastModified(const FilePath& fp);
 };
 
 using RecentFiles = std::vector<RecentFile>;
@@ -36,5 +36,3 @@ QDataStream& operator<<(QDataStream& stream, const RecentFiles& recentFiles);
 QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles);
 
 } // namespace Mayo
-
-Q_DECLARE_METATYPE(Mayo::RecentFiles)

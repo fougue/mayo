@@ -10,31 +10,45 @@
 #include "../base/messenger.h"
 #include "../base/settings.h"
 #include "../base/task_manager.h"
+#include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
+#include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
+#include "filepath_conv.h"
 #include "mainwindow.h"
+#include "qsettings_storage.h"
+#include "qstring_conv.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_mesh.h"
 #include "widget_model_tree_builder_xde.h"
+#include "widget_occ_view.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QDir>
+#include <QtCore/QReadWriteLock>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
+#include <QtCore/QVersionNumber>
+#include <QtGui/QOffscreenSurface>
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOpenGLFunctions>
 #include <QtWidgets/QApplication>
 
 #include <Message.hxx>
 
+#include <fmt/format.h>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <memory>
@@ -46,15 +60,90 @@
 
 namespace Mayo {
 
-class Main { Q_DECLARE_TR_FUNCTIONS(Mayo::Main) };
+// Declared in graphics/graphics_create_driver.cpp
+void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
+
+class Main {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Main)
+    Q_DECLARE_TR_FUNCTIONS(Mayo::Main)
+};
+
+namespace {
 
 struct CommandLineArguments {
     QString themeName;
     FilePath filepathSettings;
+    FilePath filepathLog;
+    bool includeDebugLogs = true;
     std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
     bool cliProgressReport = true;
 };
+
+class LogMessageHandler {
+public:
+    static LogMessageHandler& instance()
+    {
+        static LogMessageHandler object;
+        return object;
+    }
+
+    void enableDebugLogs(bool on)
+    {
+        m_enableDebugLogs = on;
+    }
+
+    void setOutputFilePath(const FilePath& fp)
+    {
+        m_outputFilePath = fp;
+        m_outputFile.open(fp, std::ios::out | std::ios::app);
+    }
+
+    std::ostream& outputStream(QtMsgType type)
+    {
+        if (!m_outputFilePath.empty() && m_outputFile.is_open())
+            return m_outputFile;
+
+        if (type == QtDebugMsg || type == QtInfoMsg)
+            return std::cout;
+
+        return std::cerr;
+    }
+
+    static void qtHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
+    {
+        const std::string localMsg = consoleToPrintable(msg);
+        std::ostream& outs = LogMessageHandler::instance().outputStream(type);
+        switch (type) {
+        case QtDebugMsg:
+            if (LogMessageHandler::instance().m_enableDebugLogs) {
+                outs << "DEBUG: " << localMsg << std::endl;
+            }
+            break;
+        case QtInfoMsg:
+            outs << "INFO: " << localMsg << std::endl;
+            break;
+        case QtWarningMsg:
+            outs << "WARNING: " << localMsg << std::endl;
+            break;
+        case QtCriticalMsg:
+            outs << "CRITICAL: " << localMsg << std::endl;
+            break;
+        case QtFatalMsg:
+            outs << "FATAL: " << localMsg << std::endl;
+            break;
+        }
+    }
+
+private:
+    LogMessageHandler() = default;
+
+    FilePath m_outputFilePath;
+    std::ofstream m_outputFile;
+    bool m_enableDebugLogs = true;
+};
+
+} // namespace
 
 static CommandLineArguments processCommandLine()
 {
@@ -86,6 +175,17 @@ static CommandLineArguments processCommandLine()
                 Main::tr("filepath"));
     cmdParser.addOption(cmdFileToExport);
 
+    const QCommandLineOption cmdFileLog(
+                QStringList{ "log-file" },
+                Main::tr("Writes log messages into output file"),
+                Main::tr("filepath"));
+    cmdParser.addOption(cmdFileLog);
+
+    const QCommandLineOption cmdDebugLogs(
+                QStringList{ "debug-logs" },
+                Main::tr("Don't filter out debug log messages in release build"));
+    cmdParser.addOption(cmdDebugLogs);
+
     const QCommandLineOption cmdCliNoProgress(
                 QStringList{ "no-progress" },
                 Main::tr("Disable progress reporting in console output(CLI-mode only)"));
@@ -106,6 +206,9 @@ static CommandLineArguments processCommandLine()
     if (cmdParser.isSet(cmdFileSettings))
         args.filepathSettings = filepathFrom(cmdParser.value(cmdFileSettings));
 
+    if (cmdParser.isSet(cmdFileLog))
+        args.filepathLog = filepathFrom(cmdParser.value(cmdFileLog));
+
     if (cmdParser.isSet(cmdFileToExport)) {
         for (const QString& strFilepath : cmdParser.values(cmdFileToExport))
             args.listFilepathToExport.push_back(filepathFrom(strFilepath));
@@ -114,35 +217,13 @@ static CommandLineArguments processCommandLine()
     for (const QString& posArg : cmdParser.positionalArguments())
         args.listFilepathToOpen.push_back(filepathFrom(posArg));
 
+#ifdef NDEBUG
+    // By default this will exclude debug logs in release build
+    args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
+#endif
     args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
 
     return args;
-}
-
-static void qtMessageHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
-{
-    const std::string localMsg = consoleToPrintable(msg);
-//    const char* file = context.file ? context.file : "";
-//    const char* function = context.function ? context.function : "";
-    switch (type) {
-    case QtDebugMsg:
-#ifndef NDEBUG
-        std::cout << "DEBUG: " << localMsg << std::endl;
-#endif
-        break;
-    case QtInfoMsg:
-        std::cout << "INFO: " << localMsg << std::endl;
-        break;
-    case QtWarningMsg:
-        std::cerr << "WARNING: " << localMsg << std::endl;
-        break;
-    case QtCriticalMsg:
-        std::cerr << "CRITICAL: " << localMsg << std::endl;
-        break;
-    case QtFatalMsg:
-        std::cerr << "FATAL: " << localMsg << std::endl;
-        break;
-    }
 }
 
 static std::unique_ptr<Theme> globalTheme;
@@ -153,11 +234,52 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
+static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
+{
+    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file doesn't exist or is not readable [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
+    if (occSettings.status() != QSettings::NoError) {
+        qDebug().noquote() << Main::tr("OpenCascade settings file could not be loaded with QSettings [path=%1]")
+                              .arg(strSettingsFilepath);
+        return;
+    }
+
+    // Process options
+    for (const char* varName : Application::envOpenCascadeOptions()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            const QString strValue = occSettings.value(qVarName).toString();
+            qputenv(varName, strValue.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
+        }
+    }
+
+    // Process paths
+    for (const char* varName : Application::envOpenCascadePaths()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            QString strPath = occSettings.value(qVarName).toString();
+            if (QFileInfo(strPath).isRelative())
+                strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
+
+            strPath = QDir::toNativeSeparators(strPath);
+            qputenv(varName, strPath.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
+        }
+    }
+}
+
 // Initializes "Base" objects
 static void initBase(QCoreApplication* qtApp)
 {
-    Application::setOpenCascadeEnvironment("opencascade.conf");
     auto app = Application::instance();
+    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
 
     // Load translation files
     {
@@ -166,11 +288,30 @@ static void initBase(QCoreApplication* qtApp)
         if (translator->load(qmFilePath))
             qtApp->installTranslator(translator);
         else
-            qWarning() << Main::tr("Failed to load translation for '%1'").arg(qmFilePath);
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
     }
+
+    // Set Qt i18n backend
+    app->addTranslator([=](const TextId& text, int n) -> std::string_view {
+        const QString qstr = qtApp->translate(text.trContext.data(), text.key.data(), nullptr, n);
+        auto qstrHash = qHash(qstr);
+        static std::unordered_map<unsigned, std::string> mapStr;
+        static QReadWriteLock mapStrLock;
+        {
+            QReadLocker locker(&mapStrLock);
+            auto it = mapStr.find(qstrHash);
+            if (it != mapStr.cend())
+                return it->second;
+        }
+
+        QWriteLocker locker(&mapStrLock);
+        auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
+        return ok ? it->second : std::string_view{};
+    });
 
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
     app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
     IO::addPredefinedFormatProbes(app->ioSystem());
@@ -182,11 +323,71 @@ static void initBase(QCoreApplication* qtApp)
                 std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 }
 
+// Helper to query the OpenGL version string
+static std::string queryGlVersionString()
+{
+    QOpenGLContext glContext;
+    if (!glContext.create())
+        return {};
+
+    QOffscreenSurface surface;
+    surface.create();
+    if (!glContext.makeCurrent(&surface))
+        return {};
+
+    auto glVersion = glContext.functions()->glGetString(GL_VERSION);
+    if (!glVersion)
+        return {};
+
+    return reinterpret_cast<const char*>(glVersion);
+}
+
+// Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
+// Note: only major and minor versions are detected
+static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
+{
+    if (strVersion.empty())
+        return {};
+
+    const char* ptrVersionStart = strVersion.data();
+    const char* ptrVersionEnd = ptrVersionStart + strVersion.size();
+    const int versionMajor = std::atoi(ptrVersionStart);
+    int versionMinor = 0;
+    auto ptrDot = std::find(ptrVersionStart, ptrVersionEnd, '.');
+    if (ptrDot != ptrVersionEnd)
+        versionMinor = std::atoi(ptrDot + 1);
+
+    return QVersionNumber(versionMajor, versionMinor);
+}
+
 // Initializes "GUI" objects
 static void initGui(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
+
+    // Retrieve OpenGL infos
+    const std::string strGlVersion = queryGlVersionString();
+    const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
+    qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
+
+    // Fallback for OpenGL
+    setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);
+    IWidgetOccView::setCreator(&QWidgetOccView::create);
+
+    // Use QOpenGLWidget if possible
+#if OCC_VERSION_HEX >= 0x070600
+    if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
+        setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
+        IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
+    }
+    else {
+        qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
+    }
+#endif
+
+    // Register I/O objects
+    guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
 
     // Register Graphics/TreeNode mapping drivers
     guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
@@ -221,12 +422,17 @@ static void cli_asyncExportDocuments(
     };
 
     // Collects emitted error messages into a single string object
-    struct ErrorMessageCollect : public Messenger {
-        QString message;
-        void emitMessage(MessageType msgType, const QString& text) override {
+    class ErrorMessageCollect : public Messenger {
+    public:
+        void emitMessage(MessageType msgType, std::string_view text) override {
             if (msgType == MessageType::Error)
-                message += text + " ";
+                m_message += to_QString(text) + " ";
         }
+
+        std::string message() const { return to_stdString(m_message); }
+
+    private:
+        QString m_message;
     };
 
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
@@ -244,8 +450,10 @@ static void cli_asyncExportDocuments(
         helper->lastPrintProgressLineCount = 0;
         std::cout << "\r";
         taskMgr->foreachTask([=](TaskId taskId) {
-            const std::string strMessage = consoleToPrintable(taskMgr->title(taskId).replace('\n', ' '));
-            int lineWidth = strMessage.size();
+            std::string strMessage = taskMgr->title(taskId);
+            std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
+            strMessage = consoleToPrintable(strMessage);
+            auto lineWidth = int(strMessage.size());
             const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
             const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
             if (taskFinished && !taskSuccess) {
@@ -283,7 +491,7 @@ static void cli_asyncExportDocuments(
         if (args.cliProgressReport)
             fnPrintProgress();
         else
-            qInfo() << taskMgr->title(taskId);
+            qInfo() << to_QString(taskMgr->title(taskId));
     });
     QObject::connect(taskMgr, &TaskManager::ended, app, [=](TaskId taskId) {
         if (args.cliProgressReport) {
@@ -291,9 +499,9 @@ static void cli_asyncExportDocuments(
         }
         else {
             if (helper->mapTaskStatus.at(taskId)->success)
-                qInfo() << taskMgr->title(taskId);
+                qInfo() << to_QString(taskMgr->title(taskId));
             else
-                qCritical() << taskMgr->title(taskId);
+                qCritical() << to_QString(taskMgr->title(taskId));
         }
     });
     QObject::connect(taskMgr, &TaskManager::progressChanged, app, [=]{
@@ -338,24 +546,24 @@ static void cli_asyncExportDocuments(
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
                     appModule->computeBRepMesh(labelEntity, progress);
                 })
-                .withEntityPostProcessRequiredIf([=](const IO::Format&){ return brepMeshRequired; })
-                .withEntityPostProcessInfoProgress(20, Main::tr("Mesh BRep shapes"))
+                .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
+                .withEntityPostProcessInfoProgress(20, Main::textIdTr("Mesh BRep shapes"))
                 .withMessenger(&errorCollect)
                 .withTaskProgress(progress)
                 .execute();
-            taskMgr->setTitle(progress->taskId(), okImport ? Main::tr("Imported") : errorCollect.message);
+            taskMgr->setTitle(progress->taskId(), okImport ? Main::textIdTr("Imported") : errorCollect.message());
             helper->mapTaskStatus.at(progress->taskId())->success = okImport;
             helper->mapTaskStatus.at(progress->taskId())->finished = true;
     });
     helper->mapTaskStatus.insert({ importTaskId, std::make_unique<TaskStatus>() });
-    taskMgr->setTitle(importTaskId, Main::tr("Importing..."));
+    taskMgr->setTitle(importTaskId, Main::textIdTr("Importing..."));
     taskMgr->exec(importTaskId, TaskAutoDestroy::Off);
     if (!okImport)
         return fnExit(EXIT_FAILURE); // Error
 
     // Run export operations(asynchronous)
     for (const FilePath& filepath : args.listFilepathToExport) {
-        const QString strFilename = filepathTo<QString>(filepath.filename());
+        const std::string strFilename = filepath.filename().u8string();
         const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 ErrorMessageCollect errorCollect;
                 const IO::Format format = app->ioSystem()->probeFormat(filepath);
@@ -368,14 +576,17 @@ static void cli_asyncExportDocuments(
                             .withMessenger(&errorCollect)
                             .withTaskProgress(progress)
                             .execute();
-                const QString msg = okExport ? Main::tr("Exported %1").arg(strFilename) : errorCollect.message;
+                const std::string msg =
+                        okExport ?
+                            fmt::format(Main::textIdTr("Exported {}"), strFilename) :
+                            errorCollect.message();
                 taskMgr->setTitle(progress->taskId(), msg);
                 helper->mapTaskStatus.at(progress->taskId())->success = okExport;
                 helper->mapTaskStatus.at(progress->taskId())->finished = true;
                 --(helper->exportTaskCount);
         });
         helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
-        taskMgr->setTitle(taskId, Main::tr("Exporting %1...").arg(strFilename));
+        taskMgr->setTitle(taskId, fmt::format(Main::textIdTr("Exporting {}..."), strFilename));
     }
 
     taskMgr->foreachTask([=](TaskId taskId) {
@@ -404,16 +615,26 @@ static int runApp(QCoreApplication* qtApp)
         else {
             const QString strFilepathSettings = filepathTo<QString>(args.filepathSettings);
             if (!filepathIsRegularFile(args.filepathSettings))
-                fnCriticalExit(Main::tr("Failed to load settings file '%1'").arg(strFilepathSettings));
+                fnCriticalExit(Main::tr("Failed to load application settings file [path=%1]").arg(strFilepathSettings));
 
-            QSettings fileSettings(strFilepathSettings, QSettings::IniFormat);
+            QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
             appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
         }
     };
 
+    // Message logging
+    LogMessageHandler::instance().enableDebugLogs(args.includeDebugLogs);
+    if (!args.filepathLog.empty())
+        LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
+
     // Initialize Base application
+    initOpenCascadeEnvironment("opencascade.conf");
     initBase(qtApp);
     auto app = Application::instance().get();
+
+    // Initialize Gui application
+    auto guiApp = new GuiApplication(app);
+    initGui(guiApp);
 
     // Register AppModule
     auto appModule = new AppModule(app);
@@ -424,6 +645,7 @@ static int runApp(QCoreApplication* qtApp)
         if (args.listFilepathToOpen.empty())
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
+        guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
         app->settings()->resetAll();
         fnLoadAppSettings(app->settings());
         QTimer::singleShot(0, qtApp, [=]{
@@ -432,9 +654,7 @@ static int runApp(QCoreApplication* qtApp)
         return qtApp->exec();
     }
 
-    // Initialize Gui application
-    auto guiApp = new GuiApplication(app);
-    initGui(guiApp);
+    // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
                 appModule, &AppModule::recordRecentFileThumbnail);
@@ -449,9 +669,15 @@ static int runApp(QCoreApplication* qtApp)
         fnCriticalExit(Main::tr("Failed to load theme '%1'").arg(args.themeName));
 
     mayoTheme()->setup();
+    const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
+    const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
+    GuiDocument::setDefaultGradientBackground({
+                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
+                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
+                Aspect_GFM_VER
+    });
 
     // Create MainWindow
-    app->settings()->loadProperty(app->settings()->findProperty(&appModule->recentFiles));
     MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
     mainWindow.show();
@@ -480,20 +706,22 @@ static void onQtAppExit()
 
 int main(int argc, char* argv[])
 {
-    qInstallMessageHandler(&Mayo::qtMessageHandler);
+    qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
     qAddPostRoutine(&Mayo::onQtAppExit);
 
-    auto fnArgEqual = [](const char* arg, const char* option) { return std::strcmp(arg, option) == 0; };
-    for (int i = 1; i < argc; ++i) {
-        const char* arg = argv[i];
-        if (fnArgEqual(arg, "-e") || fnArgEqual(arg, "--export")
-                || fnArgEqual(arg, "-h") || fnArgEqual(arg, "--help")
-                || fnArgEqual(arg, "-v") || fnArgEqual(arg, "--version"))
-        {
-            Mayo::isAppCliMode = true;
-            break;
-        }
+    // Running CLI mode?
+    for (int i = 1; i < argc && !Mayo::isAppCliMode; ++i) {
+        static const char* cliArgs[] = { "-e", "--export", "-h", "--help", "-v", "--version" };
+        auto itCliArg = std::find_if(std::cbegin(cliArgs), std::cend(cliArgs), [=](const char* cliArg) {
+            return std::strcmp(argv[i], cliArg) == 0;
+        });
+        Mayo::isAppCliMode = itCliArg != std::cend(cliArgs);
     }
+
+#if defined(Q_OS_WIN)
+    // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+#endif
 
     std::unique_ptr<QCoreApplication> ptrApp(
             Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));

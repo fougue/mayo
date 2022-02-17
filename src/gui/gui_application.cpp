@@ -64,8 +64,10 @@ GraphicsTreeNodeMappingDriverTable* GuiApplication::graphicsTreeNodeMappingDrive
 
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
-    m_vecGuiDocument.push_back(new GuiDocument(doc, this));
-    emit guiDocumentAdded(m_vecGuiDocument.back());
+    if (m_automaticDocumentMapping) {
+        m_vecGuiDocument.push_back(new GuiDocument(doc, this));
+        emit guiDocumentAdded(m_vecGuiDocument.back());
+    }
 }
 
 void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)

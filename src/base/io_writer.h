@@ -14,6 +14,7 @@
 namespace Mayo {
 
 class ApplicationItem;
+class Messenger;
 class PropertyGroup;
 class TaskProgress;
 
@@ -21,20 +22,26 @@ namespace IO {
 
 class Writer {
 public:
+    Writer();
     virtual ~Writer() = default;
+
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
     virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
+
+    Messenger* messenger() const { return m_messenger; }
+    void setMessenger(Messenger* messenger);
+
+private:
+    Messenger* m_messenger = nullptr;
 };
 
 class FactoryWriter {
 public:
     virtual ~FactoryWriter() = default;
     virtual Span<const Format> formats() const = 0;
-    virtual std::unique_ptr<Writer> create(const Format& format) const = 0;
-    virtual std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const = 0;
+    virtual std::unique_ptr<Writer> create(Format format) const = 0;
+    virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 
 } // namespace IO

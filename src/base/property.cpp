@@ -25,6 +25,12 @@ void PropertyGroup::restoreDefaults()
 {
 }
 
+void PropertyGroup::onPropertyAboutToChange(Property *prop)
+{
+    if (m_parentGroup)
+        m_parentGroup->onPropertyAboutToChange(prop);
+}
+
 void PropertyGroup::onPropertyChanged(Property* prop)
 {
     if (m_parentGroup)
@@ -37,9 +43,9 @@ void PropertyGroup::onPropertyEnabled(Property* prop, bool on)
         m_parentGroup->onPropertyEnabled(prop, on);
 }
 
-Result<void> PropertyGroup::isPropertyValid(const Property*) const
+bool PropertyGroup::isPropertyValid(const Property*) const
 {
-    return Result<void>::ok();
+    return true;
 }
 
 void PropertyGroup::blockPropertyChanged(bool on)
@@ -71,7 +77,7 @@ const TextId& Property::name() const
     return m_name;
 }
 
-QString Property::label() const
+std::string_view Property::label() const
 {
     return m_name.tr();
 }
@@ -92,6 +98,12 @@ Property::Property(PropertyGroup* group, const TextId& name)
         m_group->addProperty(this);
 }
 
+void Property::notifyAboutToChange()
+{
+    if (m_group && !m_group->isPropertyChangedBlocked())
+        m_group->onPropertyAboutToChange(this);
+}
+
 void Property::notifyChanged()
 {
     if (m_group && !m_group->isPropertyChangedBlocked())
@@ -104,12 +116,12 @@ void Property::notifyEnabled(bool on)
         m_group->onPropertyEnabled(this, on);
 }
 
-Result<void> Property::isValid() const
+bool Property::isValid() const
 {
     if (m_group)
         return m_group->isPropertyValid(this);
 
-    return Result<void>::ok();
+    return true;
 }
 
 bool Property::hasGroup() const
@@ -135,6 +147,12 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
 PropertyGroupSignals::PropertyGroupSignals(QObject* parent)
     : QObject(parent)
 {
+}
+
+void PropertyGroupSignals::onPropertyAboutToChange(Property* prop)
+{
+    PropertyGroup::onPropertyAboutToChange(prop);
+    emit propertyAboutToChange(prop);
 }
 
 void PropertyGroupSignals::onPropertyChanged(Property* prop)

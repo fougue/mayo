@@ -28,7 +28,7 @@ private:
     void onTaskStarted(TaskId taskId);
     void onTaskEnded(TaskId taskId);
     void onTaskProgress(TaskId taskId, int percent);
-    void onTaskProgressStep(TaskId taskId, const QString& name);
+    void onTaskProgressStep(TaskId taskId, std::string_view name);
     void interruptTask();
 
     class Ui_DialogTaskManager* m_ui = nullptr;

@@ -5,8 +5,7 @@
 ****************************************************************************/
 
 #include "widget_file_system.h"
-
-#include "../base/string_utils.h"
+#include "qstring_utils.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QDir>
@@ -80,8 +79,8 @@ void WidgetFileSystem::setLocation(const QFileInfo& fiLoc)
                     const QString itemTooltip =
                             tr("%1\nSize: %2\nLast modified: %3")
                             .arg(QDir::toNativeSeparators(fi.absoluteFilePath()))
-                            .arg(StringUtils::bytesText(fi.size()))
-                            .arg(fi.lastModified().toString(Qt::SystemLocaleShortDate));
+                            .arg(QStringUtils::bytesText(fi.size()))
+                            .arg(QLocale::system().toString(fi.lastModified(), QLocale::LongFormat));
                     item->setToolTip(0, itemTooltip);
                     if (fi.fileName() == fiLoc.fileName())
                         itemToBeSelected = item;

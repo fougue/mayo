@@ -6,15 +6,16 @@
 
 #pragma once
 
+#include "global.h"
 #include "property.h"
-#include "result.h"
-#include "qmeta_gp_pnt.h"
-#include "qmeta_gp_trsf.h"
-#include "qmeta_quantity_color.h"
-#include "qmeta_quantity.h"
+#include "filepath.h"
+#include "quantity.h"
 
-#include <QtCore/QDateTime>
-#include <QtCore/QVariant>
+#include <gp_Pnt.hxx>
+#include <gp_Trsf.hxx>
+#include <Quantity_Color.hxx>
+
+#include <string>
 #include <type_traits>
 
 namespace Mayo {
@@ -23,11 +24,12 @@ template<typename T>
 class GenericProperty : public Property {
 public:
     using ValueType = T;
+    // TODO Add value_type traits for T
 
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
     const T& value() const { return m_value; }
-    Result<void> setValue(const T& val);
+    bool setValue(const T& val);
     operator const T&() const { return this->value(); }
 
     const char* dynTypeName() const override { return TypeName; }
@@ -39,7 +41,7 @@ protected:
 
 template<typename T>
 class PropertyScalarConstraints {
-    static_assert(std::is_scalar<T>::value, "Requires scalar type");
+    static_assert(std::is_scalar_v<T>, "Requires scalar type");
 public:
     using ValueType = T;
 
@@ -87,7 +89,7 @@ class BasePropertyQuantity :
 public:
     virtual Unit quantityUnit() const = 0;
     virtual double quantityValue() const = 0;
-    virtual Result<void> setQuantityValue(double v) = 0;
+    virtual bool setQuantityValue(double v) = 0;
 
     inline static const char TypeName[] = "Mayo::BasePropertyQuantity";
     const char* dynTypeName() const override { return BasePropertyQuantity::TypeName; }
@@ -105,10 +107,10 @@ public:
 
     Unit quantityUnit() const override { return UNIT; }
     double quantityValue() const override { return this->quantity().value(); }
-    Result<void> setQuantityValue(double v) override;
+    bool setQuantityValue(double v) override;
 
     QuantityType quantity() const { return m_quantity; }
-    Result<void> setQuantity(QuantityType qty);
+    bool setQuantity(QuantityType qty);
 
 private:
     QuantityType m_quantity = {};
@@ -117,14 +119,13 @@ private:
 using PropertyBool = GenericProperty<bool>;
 using PropertyInt = GenericScalarProperty<int>;
 using PropertyDouble = GenericScalarProperty<double>;
-using PropertyCheckState = GenericProperty<Qt::CheckState>;
-using PropertyQByteArray = GenericProperty<QByteArray>;
-using PropertyQString = GenericProperty<QString>;
-using PropertyQStringList = GenericProperty<QStringList>;
-using PropertyQDateTime = GenericProperty<QDateTime>;
+using PropertyString = GenericProperty<std::string>;
+using PropertyCheckState = GenericProperty<CheckState>;
 using PropertyOccPnt = GenericProperty<gp_Pnt>;
+using PropertyOccVec = GenericProperty<gp_Vec>;
 using PropertyOccTrsf = GenericProperty<gp_Trsf>;
 using PropertyOccColor = GenericProperty<Quantity_Color>;
+using PropertyFilePath = GenericProperty<FilePath>;
 
 using PropertyLength = GenericPropertyQuantity<Unit::Length>;
 using PropertyArea = GenericPropertyQuantity<Unit::Area>;
@@ -133,6 +134,7 @@ using PropertyMass = GenericPropertyQuantity<Unit::Mass>;
 using PropertyTime = GenericPropertyQuantity<Unit::Time>;
 using PropertyAngle = GenericPropertyQuantity<Unit::Angle>;
 using PropertyVelocity = GenericPropertyQuantity<Unit::Velocity>;
+using PropertyDensity = GenericPropertyQuantity<Unit::Density>;
 
 // --
 // -- Implementation
@@ -145,7 +147,7 @@ GenericProperty<T>::GenericProperty(PropertyGroup* grp, const TextId& name)
     : Property(grp, name)
 { }
 
-template<typename T> Result<void> GenericProperty<T>::setValue(const T& val)
+template<typename T> bool GenericProperty<T>::setValue(const T& val)
 {
     return Property::setValueHelper(this, &m_value, val);
 }
@@ -190,13 +192,13 @@ GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const
 { }
 
 template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
+bool GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
 {
     return this->setQuantity(QuantityType(v));
 }
 
 template<Unit UNIT>
-Result<void> GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
+bool GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
 {
     return Property::setValueHelper(this, &m_quantity, qty);
 }

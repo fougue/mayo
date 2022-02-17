@@ -10,17 +10,17 @@
 #include "../base/brep_utils.h"
 #include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/filepath_conv.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
-#include "../base/string_utils.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
-#include <QtCore/QtDebug>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <RWStl.hxx>
 #include <StlAPI_Writer.hxx>
+#include <TDataStd_Name.hxx>
 #include <TDataXtd_Triangulation.hxx>
 #include <TopoDS_Compound.hxx>
 
@@ -82,7 +82,7 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
 
     const TDF_Label entityLabel = doc->newEntityLabel();
     TDataXtd_Triangulation::Set(entityLabel, m_mesh);
-    CafUtils::setLabelAttrStdName(entityLabel, filepathTo<QString>(m_baseFilename));
+    TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ entityLabel });
 }
 

@@ -139,10 +139,10 @@ public:
         FreeVertexMode freeVertexMode = FreeVertexMode::Compound;
         bool writeParametricCurves = true;
         bool writeSubShapesNames = false;
-        QString headerAuthor;
-        QString headerOrganization;
-        QString headerOriginatingSystem;
-        QString headerDescription;
+        std::string headerAuthor;            // utf8
+        std::string headerOrganization;      // utf8
+        std::string headerOriginatingSystem; // utf8
+        std::string headerDescription;       // utf8
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }

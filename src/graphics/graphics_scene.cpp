@@ -14,14 +14,15 @@
 #include <QtCore/QPoint>
 
 namespace Mayo {
-namespace Internal {
 
 // Defined in graphics_create_driver.cpp
-Handle_Graphic3d_GraphicDriver createGfxDriver();
+Handle_Graphic3d_GraphicDriver graphicsCreateDriver();
+
+namespace Internal {
 
 static Handle_V3d_Viewer createOccViewer()
 {
-    Handle_V3d_Viewer viewer = new V3d_Viewer(createGfxDriver());
+    Handle_V3d_Viewer viewer = new V3d_Viewer(graphicsCreateDriver());
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);
@@ -230,7 +231,7 @@ void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 
 void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
 {
-    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, true);
+    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, false);
 }
 
 void GraphicsScene::select()
@@ -239,9 +240,9 @@ void GraphicsScene::select()
         return;
 
     if (d->m_selectionMode == SelectionMode::Single)
-        d->m_aisContext->Select(true);
+        d->m_aisContext->Select(false);
     else if (d->m_selectionMode == SelectionMode::Multi)
-        d->m_aisContext->ShiftSelect(true);
+        d->m_aisContext->ShiftSelect(false);
 
     emit this->selectionChanged();
 }

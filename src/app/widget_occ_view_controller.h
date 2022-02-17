@@ -13,27 +13,34 @@ class QRubberBand;
 
 namespace Mayo {
 
-class WidgetOccView;
+class IWidgetOccView;
 
 class WidgetOccViewController : public V3dViewController {
     Q_OBJECT
 public:
-    WidgetOccViewController(WidgetOccView* widgetView = nullptr);
+    WidgetOccViewController(IWidgetOccView* occView = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
     void multiSelectionToggled(bool on);
 
+protected:
+    void redrawView() override;
+
 private:
+    void startDynamicAction(DynamicAction action) override;
+    void stopDynamicAction() override;
+
     void setViewCursor(const QCursor& cursor);
 
     AbstractRubberBand* createRubberBand() override;
     struct RubberBand;
 
-    WidgetOccView* m_widgetView = nullptr;
+    bool handleEvent(QEvent* event);
+
+    IWidgetOccView* m_occView = nullptr;
     QPoint m_prevPos;
-    QPoint m_posRubberBandStart;
 };
 
 } // namespace Mayo

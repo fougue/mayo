@@ -6,12 +6,18 @@
 
 #pragma once
 
+#include <string>
 #include <unordered_map>
 
 namespace Mayo {
 
 class CppUtils {
 public:
+    static const std::string& nullString() {
+        static std::string str;
+        return str;
+    }
+
     template<typename KEY, typename VALUE, typename... EXTRAS>
     static VALUE findValue(const KEY& key, const std::unordered_map<KEY, VALUE, EXTRAS...>& hashmap) {
         auto it = hashmap.find(key);

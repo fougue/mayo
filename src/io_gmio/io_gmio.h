@@ -17,10 +17,8 @@ namespace IO {
 class GmioFactoryWriter : public FactoryWriter {
 public:
     Span<const Format> formats() const override;
-    std::unique_ptr<Writer> create(const Format& format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(
-            const Format& format,
-            PropertyGroup* parentGroup) const override;
+    std::unique_ptr<Writer> create(Format format) const override;
+    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 
     static std::unique_ptr<FactoryWriter> create() {
 #ifdef HAVE_GMIO

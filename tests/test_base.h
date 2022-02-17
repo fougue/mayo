@@ -11,7 +11,7 @@
 
 namespace Mayo {
 
-class Test : public QObject {
+class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
@@ -43,14 +43,6 @@ private slots:
 
     void Quantity_test();
 
-    void Result_test();
-
-    void StringUtils_append_test();
-    void StringUtils_append_test_data();
-    void StringUtils_text_test();
-    void StringUtils_text_test_data();
-    void StringUtils_stringConversion_test();
-
     void TKernelUtils_colorToHex_test();
     void TKernelUtils_colorToHex_test_data();
     void TKernelUtils_colorFromHex_test();
@@ -61,8 +53,6 @@ private slots:
 
     void LibTask_test();
     void LibTree_test();
-
-    void QtGuiUtils_test();
 
     void initTestCase();
 };
