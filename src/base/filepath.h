@@ -27,7 +27,10 @@ inline bool filepathExists(const FilePath& fp) {
 // Exception-safe version of std::filesystem::equivalent()
 inline bool filepathEquivalent(const FilePath& lhs, const FilePath& rhs) {
     try {
-        return std::filesystem::equivalent(lhs, rhs);
+        if (lhs == rhs)
+            return true;
+        else
+            return std::filesystem::equivalent(lhs, rhs);
     } catch (...) { // fs::equivalent() might throw on non-existing files
         return false;
     }
