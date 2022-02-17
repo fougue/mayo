@@ -48,6 +48,7 @@
 
 #include <fmt/format.h>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <memory>
@@ -67,13 +68,82 @@ class Main {
     Q_DECLARE_TR_FUNCTIONS(Mayo::Main)
 };
 
+namespace {
+
 struct CommandLineArguments {
     QString themeName;
     FilePath filepathSettings;
+    FilePath filepathLog;
+    bool includeDebugLogs = true;
     std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
     bool cliProgressReport = true;
 };
+
+class LogMessageHandler {
+public:
+    static LogMessageHandler& instance()
+    {
+        static LogMessageHandler object;
+        return object;
+    }
+
+    void enableDebugLogs(bool on)
+    {
+        m_enableDebugLogs = on;
+    }
+
+    void setOutputFilePath(const FilePath& fp)
+    {
+        m_outputFilePath = fp;
+        m_outputFile.open(fp, std::ios::out | std::ios::app);
+    }
+
+    std::ostream& outputStream(QtMsgType type)
+    {
+        if (!m_outputFilePath.empty() && m_outputFile.is_open())
+            return m_outputFile;
+
+        if (type == QtDebugMsg || type == QtInfoMsg)
+            return std::cout;
+
+        return std::cerr;
+    }
+
+    static void qtHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
+    {
+        const std::string localMsg = consoleToPrintable(msg);
+        std::ostream& outs = LogMessageHandler::instance().outputStream(type);
+        switch (type) {
+        case QtDebugMsg:
+            if (LogMessageHandler::instance().m_enableDebugLogs) {
+                outs << "DEBUG: " << localMsg << std::endl;
+            }
+            break;
+        case QtInfoMsg:
+            outs << "INFO: " << localMsg << std::endl;
+            break;
+        case QtWarningMsg:
+            outs << "WARNING: " << localMsg << std::endl;
+            break;
+        case QtCriticalMsg:
+            outs << "CRITICAL: " << localMsg << std::endl;
+            break;
+        case QtFatalMsg:
+            outs << "FATAL: " << localMsg << std::endl;
+            break;
+        }
+    }
+
+private:
+    LogMessageHandler() = default;
+
+    FilePath m_outputFilePath;
+    std::ofstream m_outputFile;
+    bool m_enableDebugLogs = true;
+};
+
+} // namespace
 
 static CommandLineArguments processCommandLine()
 {
@@ -105,6 +175,17 @@ static CommandLineArguments processCommandLine()
                 Main::tr("filepath"));
     cmdParser.addOption(cmdFileToExport);
 
+    const QCommandLineOption cmdFileLog(
+                QStringList{ "log-file" },
+                Main::tr("Writes log messages into output file"),
+                Main::tr("filepath"));
+    cmdParser.addOption(cmdFileLog);
+
+    const QCommandLineOption cmdDebugLogs(
+                QStringList{ "debug-logs" },
+                Main::tr("Don't filter out debug log messages in release build"));
+    cmdParser.addOption(cmdDebugLogs);
+
     const QCommandLineOption cmdCliNoProgress(
                 QStringList{ "no-progress" },
                 Main::tr("Disable progress reporting in console output(CLI-mode only)"));
@@ -125,6 +206,9 @@ static CommandLineArguments processCommandLine()
     if (cmdParser.isSet(cmdFileSettings))
         args.filepathSettings = filepathFrom(cmdParser.value(cmdFileSettings));
 
+    if (cmdParser.isSet(cmdFileLog))
+        args.filepathLog = filepathFrom(cmdParser.value(cmdFileLog));
+
     if (cmdParser.isSet(cmdFileToExport)) {
         for (const QString& strFilepath : cmdParser.values(cmdFileToExport))
             args.listFilepathToExport.push_back(filepathFrom(strFilepath));
@@ -133,35 +217,13 @@ static CommandLineArguments processCommandLine()
     for (const QString& posArg : cmdParser.positionalArguments())
         args.listFilepathToOpen.push_back(filepathFrom(posArg));
 
+#ifdef NDEBUG
+    // By default this will exclude debug logs in release build
+    args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
+#endif
     args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
 
     return args;
-}
-
-static void qtMessageHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
-{
-    const std::string localMsg = consoleToPrintable(msg);
-//    const char* file = context.file ? context.file : "";
-//    const char* function = context.function ? context.function : "";
-    switch (type) {
-    case QtDebugMsg:
-#ifndef NDEBUG
-        std::cout << "DEBUG: " << localMsg << std::endl;
-#endif
-        break;
-    case QtInfoMsg:
-        std::cout << "INFO: " << localMsg << std::endl;
-        break;
-    case QtWarningMsg:
-        std::cerr << "WARNING: " << localMsg << std::endl;
-        break;
-    case QtCriticalMsg:
-        std::cerr << "CRITICAL: " << localMsg << std::endl;
-        break;
-    case QtFatalMsg:
-        std::cerr << "FATAL: " << localMsg << std::endl;
-        break;
-    }
 }
 
 static std::unique_ptr<Theme> globalTheme;
@@ -560,6 +622,11 @@ static int runApp(QCoreApplication* qtApp)
         }
     };
 
+    // Message logging
+    LogMessageHandler::instance().enableDebugLogs(args.includeDebugLogs);
+    if (!args.filepathLog.empty())
+        LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
+
     // Initialize Base application
     initOpenCascadeEnvironment("opencascade.conf");
     initBase(qtApp);
@@ -639,7 +706,7 @@ static void onQtAppExit()
 
 int main(int argc, char* argv[])
 {
-    qInstallMessageHandler(&Mayo::qtMessageHandler);
+    qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
     qAddPostRoutine(&Mayo::onQtAppExit);
 
     // Running CLI mode?
