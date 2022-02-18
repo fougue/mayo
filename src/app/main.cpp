@@ -366,23 +366,23 @@ static void initGui(GuiApplication* guiApp)
     if (!guiApp)
         return;
 
-    // Retrieve OpenGL infos
-    const std::string strGlVersion = queryGlVersionString();
-    const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
-    qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
-
     // Fallback for OpenGL
     setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);
     IWidgetOccView::setCreator(&QWidgetOccView::create);
 
     // Use QOpenGLWidget if possible
 #if OCC_VERSION_HEX >= 0x070600
-    if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
-        setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
-        IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
-    }
-    else {
-        qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
+    if (qobject_cast<QGuiApplication*>(QCoreApplication::instance())) { // QOpenGL requires QGuiApplication
+        const std::string strGlVersion = queryGlVersionString();
+        const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
+        qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
+        if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
+            setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
+            IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
+        }
+        else {
+            qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
+        }
     }
 #endif
 
