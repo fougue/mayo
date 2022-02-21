@@ -36,20 +36,6 @@ inline void toggle(bool& value)
     value = !value;
 }
 
-// Throws object of specified error type if 'condition' is met
-template<typename ERROR, typename... ERROR_ARGS> void throwErrorIf(bool condition, ERROR_ARGS... args)
-{
-    if (condition) {
-        throw ERROR(args...);
-    }
-}
-
-template<typename R, typename T> constexpr R safeStaticCast(T t) noexcept
-{
-    throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
-    return static_cast<R>(t);
-}
-
 // Implementation from https://en.cppreference.com/w/cpp/utility/intcmp
 template<typename T, typename U> constexpr bool cmpEqual(T t, U u) noexcept
 {
@@ -133,6 +119,21 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept
     return cmpGreaterEqual(t, std::numeric_limits<R>::lowest())
             && cmpLessEqual(t, std::numeric_limits<R>::max());
 #endif
+}
+
+// Throws object of specified error type if 'condition' is met
+template<typename ERROR, typename... ERROR_ARGS> void throwErrorIf(bool condition, ERROR_ARGS... args)
+{
+    if (condition) {
+        throw ERROR(args...);
+    }
+}
+
+// Same as static_cast<R>(t) but throw exception if 't' does not fit inside type 'R'
+template<typename R, typename T> constexpr R safeStaticCast(T t) noexcept
+{
+    throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
+    return static_cast<R>(t);
 }
 
 } // namespace CppUtils
