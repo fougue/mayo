@@ -50,7 +50,7 @@ Enumeration::Value Enumeration::findValueByName(std::string_view name) const
 {
     const Enumeration::Item* ptrItem = this->findItemByName(name);
     if (!ptrItem)
-        throw std::exception(fmt::format("No matching enumeration item found [name={}]", name).c_str());
+        throw std::runtime_error(fmt::format("No matching enumeration item found [name={}]", name));
 
     return ptrItem->value;
 }
