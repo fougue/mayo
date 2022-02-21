@@ -6,8 +6,10 @@
 
 #include "enumeration.h"
 
+#include <fmt/format.h>
 #include <algorithm>
 #include <cassert>
+#include <exception>
 
 namespace Mayo {
 
@@ -34,14 +36,7 @@ Enumeration& Enumeration::changeTrContext(std::string_view context)
     return *this;
 }
 
-const Enumeration::Item& Enumeration::findItem(Enumeration::Value value) const
-{
-    const int index = this->findIndex(value);
-    Expects(index != -1);
-    return this->itemAt(index);
-}
-
-int Enumeration::findIndex(Value value) const
+int Enumeration::findIndexByValue_untyped(Value value) const
 {
     auto it = std::find_if(
                 m_vecItem.cbegin(),
@@ -50,34 +45,21 @@ int Enumeration::findIndex(Value value) const
     return it != m_vecItem.cend() ? it - m_vecItem.cbegin() : -1;
 }
 
-Enumeration::Value Enumeration::findValue(std::string_view name) const
+Enumeration::Value Enumeration::findValueByName(std::string_view name) const
 {
-    const Enumeration::Item* ptrItem = this->findItem(name);
-    assert(ptrItem != nullptr);
-    return ptrItem ? ptrItem->value : -1;
+    const Enumeration::Item* ptrItem = this->findItemByName(name);
+    if (!ptrItem)
+        throw std::exception(fmt::format("No matching enumeration item found [name={}]", name).c_str());
+
+    return ptrItem->value;
 }
 
 bool Enumeration::contains(std::string_view name) const
 {
-    return this->findItem(name) != nullptr;
+    return this->findItemByName(name) != nullptr;
 }
 
-const Enumeration& Enumeration::null()
-{
-    static const Enumeration null;
-    return null;
-}
-
-std::string_view Enumeration::findName(Value value) const
-{
-    const int index = this->findIndex(value);
-    if (index != -1)
-        return this->itemAt(index).name.key;
-
-    return {};
-}
-
-const Enumeration::Item* Enumeration::findItem(std::string_view name) const
+const Enumeration::Item* Enumeration::findItemByName(std::string_view name) const
 {
     auto itFound = std::find_if(
                 m_vecItem.cbegin(),

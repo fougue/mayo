@@ -58,7 +58,7 @@ GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(Span<const GraphicsObjec
 
 void GraphicsObjectDriver::throwIf_invalidDisplayMode(Enumeration::Value mode) const
 {
-    if (this->displayModes().findIndex(mode) == -1)
+    if (this->displayModes().findIndexByValue(mode) == -1)
         throw std::invalid_argument("Invalid display mode");
 }
 

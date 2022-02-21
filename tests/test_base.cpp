@@ -14,6 +14,8 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/enumeration.h"
+#include "../src/base/enumeration_fromenum.h"
 #include "../src/base/filepath.h"
 #include "../src/base/filepath_conv.h"
 #include "../src/base/geom_utils.h"
@@ -442,6 +444,38 @@ void TestBase::MeshUtils_orientation_test_data()
 
         std::reverse(vecPoint.begin(), vecPoint.end());
         QTest::newRow("case8") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
+}
+
+void TestBase::Enumeration_test()
+{
+    enum class TestBase_Enum1 { Value0, Value1, Value2, Value3, Value4 };
+    using TestEnumType = TestBase_Enum1;
+
+    Enumeration baseEnum = Enumeration::fromType<TestEnumType>();
+    QVERIFY(!baseEnum.empty());
+    QCOMPARE(baseEnum.size(), MetaEnum::count<TestEnumType>());
+    QCOMPARE(baseEnum.items().size(), baseEnum.size());
+    for (const auto& enumEntry : MetaEnum::entries<TestEnumType>()) {
+        QVERIFY(baseEnum.contains(enumEntry.second));
+        QCOMPARE(baseEnum.findValueByName(enumEntry.second), int(enumEntry.first));
+        QCOMPARE(baseEnum.findItemByName(enumEntry.second)->value, int(enumEntry.first));
+        QCOMPARE(baseEnum.findItemByName(enumEntry.second)->name.key, enumEntry.second);
+        QCOMPARE(baseEnum.findItemByValue(enumEntry.first), baseEnum.findItemByName(enumEntry.second));
+        QCOMPARE(baseEnum.findNameByValue(enumEntry.first), enumEntry.second);
+        QCOMPARE(baseEnum.itemAt(baseEnum.findIndexByValue(enumEntry.first)).value, int(enumEntry.first));
+        QCOMPARE(baseEnum.itemAt(baseEnum.findIndexByValue(enumEntry.first)).name.key, enumEntry.second);
+    }
+
+    baseEnum.chopPrefix("Value");
+    for (const Enumeration::Item& item : baseEnum.items()) {
+        const int index = std::atoi(item.name.key.data());
+        QCOMPARE(&baseEnum.itemAt(index), &item);
+    }
+
+    baseEnum.changeTrContext("newTrContext");
+    for (const Enumeration::Item& item : baseEnum.items()) {
+        QCOMPARE(item.name.trContext, "newTrContext");
     }
 }
 

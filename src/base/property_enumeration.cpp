@@ -36,7 +36,7 @@ void PropertyEnumeration::clearDescriptions()
 
 std::string_view PropertyEnumeration::name() const
 {
-    return m_enumeration.findName(m_value);
+    return m_enumeration.findNameByValue(m_value);
 }
 
 Enumeration::Value PropertyEnumeration::value() const
@@ -52,7 +52,7 @@ bool PropertyEnumeration::setValue(Enumeration::Value value)
 
 bool PropertyEnumeration::setValueByName(std::string_view name)
 {
-    return Property::setValueHelper(this, &m_value, m_enumeration.findValue(name));
+    return Property::setValueHelper(this, &m_value, m_enumeration.findValueByName(name));
 }
 
 const char* PropertyEnumeration::dynTypeName() const

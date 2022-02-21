@@ -163,7 +163,7 @@ AppModule::AppModule(Application* app)
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
     settings->addResetFunction(this->groupId_application, [&]{
-        this->language.setValue(enumLanguages.findValue("en"));
+        this->language.setValue(enumLanguages.findValueByName("en"));
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
@@ -222,7 +222,7 @@ QByteArray AppModule::languageCode(const ApplicationPtr& app)
             return QByteArray::fromStdString(strCode);
     }
 
-    return QtCoreUtils::QByteArray_frowRawData(enumLanguages.findName(0));
+    return QtCoreUtils::QByteArray_frowRawData(enumLanguages.findNameByValue(0));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)

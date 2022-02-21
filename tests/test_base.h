@@ -39,6 +39,7 @@ private slots:
     void MeshUtils_orientation_test();
     void MeshUtils_orientation_test_data();
 
+    void Enumeration_test();
     void MetaEnum_test();
 
     void Quantity_test();
