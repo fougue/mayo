@@ -46,6 +46,7 @@ glTF                      |  &#10004; | &#10004; | Import requires OpenCascade &
 VRML                      |  &#10060; | &#10004; | v2.0 UTF8
 STL                       |  &#10004; | &#10004; | ASCII/binary
 AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gmio](https://github.com/fougue/gmio) &#8805; v0.4.0
+Image                     |  &#10060; | &#10004; | PNG, JPEG, BMP, GIF, ...<br>See export [options](https://github.com/fougue/mayo/wiki/Export-parameters-by-CAD-format#image)
 
 Mayo provides precise control over [import](https://github.com/fougue/mayo/wiki/Import-parameters-by-CAD-format) and [export](https://github.com/fougue/mayo/wiki/Export-parameters-by-CAD-format) with many parameters per format.
 
