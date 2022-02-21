@@ -44,17 +44,6 @@ template<typename ERROR, typename... ERROR_ARGS> void throwErrorIf(bool conditio
     }
 }
 
-// Implementation from https://en.cppreference.com/w/cpp/utility/in_range
-template<typename R, typename T> constexpr bool inRange(T t) noexcept
-{
-#ifdef __cpp_lib_integer_comparison_functions
-    return std::in_range(t, u);
-#else
-    return cmpGreaterEqual(t, std::numeric_limits<R>::lowest())
-            && cmpLessEqual(t, std::numeric_limits<R>::max());
-#endif
-}
-
 template<typename R, typename T> constexpr R safeStaticCast(T t) noexcept
 {
     throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
@@ -82,7 +71,7 @@ template<typename T, typename U> constexpr bool cmpEqual(T t, U u) noexcept
 template<typename T, typename U> constexpr bool cmpNotEqual(T t, U u) noexcept
 {
 #ifdef __cpp_lib_integer_comparison_functions
-    return std::cmp_no_equal(t, u);
+    return std::cmp_not_equal(t, u);
 #else
     return !cmpEqual(t, u);
 #endif
@@ -132,6 +121,17 @@ template<typename T, typename U> constexpr bool cmpGreaterEqual(T t, U u) noexce
     return std::cmp_greater_equal(t, u);
 #else
     return !cmpLess(t, u);
+#endif
+}
+
+// Implementation from https://en.cppreference.com/w/cpp/utility/in_range
+template<typename R, typename T> constexpr bool inRange(T t) noexcept
+{
+#ifdef __cpp_lib_integer_comparison_functions
+    return std::in_range(t, u);
+#else
+    return cmpGreaterEqual(t, std::numeric_limits<R>::lowest())
+            && cmpLessEqual(t, std::numeric_limits<R>::max());
 #endif
 }
 
