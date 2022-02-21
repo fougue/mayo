@@ -6,6 +6,7 @@
 
 #include "io_system.h"
 
+#include "cpp_utils.h"
 #include "document.h"
 #include "io_parameters_provider.h"
 #include "io_reader.h"
@@ -309,7 +310,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
 
         // Transfer to document
-        int taskDataCount = vecTaskData.size();
+        auto taskDataCount = CppUtils::safeStaticCast<int>(vecTaskData.size());
         while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
             auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
                 return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);

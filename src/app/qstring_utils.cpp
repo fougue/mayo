@@ -118,6 +118,7 @@ QString QStringUtils::yesNoText(CheckState state)
     case CheckState::Partially: return tr("Partially");
     case CheckState::On: return tr("Yes");
     }
+    return {};
 }
 
 void QStringUtils::append(QString* dst, const QString& str, const QLocale& locale)

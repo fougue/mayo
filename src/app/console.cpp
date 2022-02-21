@@ -6,10 +6,7 @@
 
 #include "console.h"
 
-#include "../base/global.h"
-
 #include <QtCore/QtGlobal>
-
 #ifdef Q_OS_WIN
 #  include <io.h>
 #  include <windows.h>
@@ -19,6 +16,9 @@
 #  include <iostream>
 #endif
 
+#include "../base/global.h"
+#include "qstring_conv.h"
+
 namespace Mayo {
 
 void consoleSetTextColor(ConsoleColor color)
@@ -27,12 +27,12 @@ void consoleSetTextColor(ConsoleColor color)
 #ifdef Q_OS_WIN
     auto fnColorFlags = [](ConsoleColor color) {
         switch (color) {
-        case ConsoleColor::Black: return 0;
-        case ConsoleColor::Red: return FOREGROUND_RED;
-        case ConsoleColor::Green: return FOREGROUND_GREEN;
-        case ConsoleColor::Blue: return FOREGROUND_BLUE;
-        case ConsoleColor::Yellow: return FOREGROUND_RED | FOREGROUND_GREEN;
-        case ConsoleColor::Cyan: return FOREGROUND_GREEN | FOREGROUND_BLUE;
+        case ConsoleColor::Black:   return 0;
+        case ConsoleColor::Red:     return FOREGROUND_RED;
+        case ConsoleColor::Green:   return FOREGROUND_GREEN;
+        case ConsoleColor::Blue:    return FOREGROUND_BLUE;
+        case ConsoleColor::Yellow:  return FOREGROUND_RED | FOREGROUND_GREEN;
+        case ConsoleColor::Cyan:    return FOREGROUND_GREEN | FOREGROUND_BLUE;
         case ConsoleColor::Magenta: return FOREGROUND_RED | FOREGROUND_BLUE;
         case ConsoleColor::Default:
         case ConsoleColor::White:
@@ -56,14 +56,14 @@ void consoleSetTextColor(ConsoleColor color)
 #else
     auto fnCode = [](ConsoleColor color, bool isBrightText) {
         switch (color) {
-        case ConsoleColor::Black: return isBrightText ? "\e[30;1m" : "\e[30m";
-        case ConsoleColor::Red: return isBrightText ? "\e[31;1m" : "\e[31m";
-        case ConsoleColor::Green: return isBrightText ? "\e[32;1m" : "\e[32m";
-        case ConsoleColor::Yellow: return isBrightText ? "\e[33;1m" : "\e[33m";
-        case ConsoleColor::Blue: return isBrightText ? "\e[34;1m" : "\e[34m";
+        case ConsoleColor::Black:   return isBrightText ? "\e[30;1m" : "\e[30m";
+        case ConsoleColor::Red:     return isBrightText ? "\e[31;1m" : "\e[31m";
+        case ConsoleColor::Green:   return isBrightText ? "\e[32;1m" : "\e[32m";
+        case ConsoleColor::Yellow:  return isBrightText ? "\e[33;1m" : "\e[33m";
+        case ConsoleColor::Blue:    return isBrightText ? "\e[34;1m" : "\e[34m";
         case ConsoleColor::Magenta: return isBrightText ? "\e[35;1m" : "\e[35m";
-        case ConsoleColor::Cyan: return isBrightText ? "\e[36;1m" : "\e[36m";
-        case ConsoleColor::White: return isBrightText ? "\e[37;1m" : "\e[37m";
+        case ConsoleColor::Cyan:    return isBrightText ? "\e[36;1m" : "\e[36m";
+        case ConsoleColor::White:   return isBrightText ? "\e[37;1m" : "\e[37m";
         case ConsoleColor::Default:
         default: return "\e[0m";
         }
@@ -155,7 +155,7 @@ std::string consoleToPrintable(const QString& str)
 std::string consoleToPrintable(std::string_view str)
 {
 #ifdef Q_OS_WIN
-    return consoleToPrintable(QString::fromUtf8(str.data(), str.size()));
+    return consoleToPrintable(to_QString(str));
 #else
     return std::string(str); // utf8
 #endif

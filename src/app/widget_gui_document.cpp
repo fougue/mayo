@@ -6,6 +6,7 @@
 
 #include "widget_gui_document.h"
 
+#include "../base/cpp_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "../graphics/v3d_view_camera_animation.h"
 #include "../gui/gui_document.h"
@@ -331,7 +332,7 @@ void WidgetGuiDocument::layoutViewControls()
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();
             const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize();
-            const int ctrlCount = 2 + m_vecWidgetForViewProj.size();
+            const int ctrlCount = CppUtils::safeStaticCast<int>(2 + m_vecWidgetForViewProj.size());
             const int ctrlWidth = ctrlCount * btnSize + (ctrlCount - 1) * margin;
             const int ctrlHeight = btnSize;
             const int ctrlXOffset = (viewCubeBndSize - ctrlWidth) / 2;

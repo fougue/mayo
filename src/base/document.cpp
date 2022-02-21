@@ -6,6 +6,7 @@
 
 #include "application.h"
 #include "caf_utils.h"
+#include "cpp_utils.h"
 #include "document.h"
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
@@ -79,7 +80,7 @@ bool Document::isEntity(TreeNodeId nodeId)
 
 int Document::entityCount() const
 {
-    return m_modelTree.roots().size();
+    return CppUtils::safeStaticCast<int>(m_modelTree.roots().size());
 }
 
 TDF_Label Document::entityLabel(int index) const

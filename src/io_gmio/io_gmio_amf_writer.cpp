@@ -9,6 +9,7 @@
 #include "../base/application_item.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/math_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
@@ -271,10 +272,11 @@ bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     auto fnAmfFloat64Format = [](FloatTextFormat format) {
         switch (format) {
-        case FloatTextFormat::Decimal: return GMIO_FLOAT_TEXT_FORMAT_DECIMAL_UPPERCASE;
+        case FloatTextFormat::Decimal:    return GMIO_FLOAT_TEXT_FORMAT_DECIMAL_UPPERCASE;
         case FloatTextFormat::Scientific: return GMIO_FLOAT_TEXT_FORMAT_SCIENTIFIC_UPPERCASE;
-        case FloatTextFormat::Shortest: return GMIO_FLOAT_TEXT_FORMAT_SHORTEST_UPPERCASE;
+        case FloatTextFormat::Shortest:   return GMIO_FLOAT_TEXT_FORMAT_SHORTEST_UPPERCASE;
         }
+        return GMIO_FLOAT_TEXT_FORMAT_DECIMAL_UPPERCASE;
     };
 
     gmio_amf_write_options amfOptions = {};
@@ -286,7 +288,7 @@ bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     amfOptions.create_zip_archive = m_params.createZipArchive;
     amfOptions.dont_use_zip64_extensions = !m_params.useZip64;
     amfOptions.zip_entry_filename = m_params.zipEntryFilename.c_str();
-    amfOptions.zip_entry_filename_len = m_params.zipEntryFilename.size();
+    amfOptions.zip_entry_filename_len = CppUtils::safeStaticCast<uint16_t>(m_params.zipEntryFilename.size());
     // TODO Handle gmio_amf_write_options::z_compress_options
     const int error = gmio_amf_write_file(filepath.u8string().c_str(), &amfDoc, &amfOptions);
     return gmio_no_error(error);
@@ -357,7 +359,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
             materialId = itColor - m_vecMaterial.cbegin();
         }
         else {
-            materialId = m_vecMaterial.size();
+            materialId = CppUtils::safeStaticCast<int>(m_vecMaterial.size());
             Material material;
             material.id = materialId;
             material.color = color;
@@ -368,9 +370,9 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 
     // Add object
     Object object;
-    object.id = m_vecObject.size();
+    object.id = CppUtils::safeStaticCast<int>(m_vecObject.size());
     object.firstMeshId = meshCount;
-    object.lastMeshId = m_vecMesh.size() - 1;
+    object.lastMeshId = CppUtils::safeStaticCast<int>(m_vecMesh.size()) - 1;
     object.name = to_stdString(CafUtils::labelAttrStdName(labelShape));
     object.materialId = materialId;
     m_vecObject.push_back(std::move(object));

@@ -184,7 +184,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
     int shapeCount = 0;
     for (const auto& [layerName, vecEntity] : m_layers) {
         if (!startsWith(layerName, "BLOCKS")) {
-            shapeCount += vecEntity.size();
+            shapeCount = CppUtils::safeStaticCast<int>(shapeCount + vecEntity.size());
             const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
             mapLayerNameLabel.insert({ layerName, layerLabel });
         }
@@ -245,7 +245,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
                 }
             }
 
-            iShape += vecEntity.size();
+            iShape = CppUtils::safeStaticCast<int>(iShape + vecEntity.size());
             fnUpdateProgressValue();
         }
     }
@@ -553,7 +553,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(stru
     TColStd_Array1OfReal occknots(1, numKnots);
     index = 1;
     for (auto k : unique) {
-        const size_t m = std::count(sd.knot.begin(), sd.knot.end(), k);
+        const auto m = CppUtils::safeStaticCast<int>(std::count(sd.knot.begin(), sd.knot.end(), k));
         occknots(index) = k;
         occmults(index) = m;
         index++;

@@ -8,6 +8,7 @@
 
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
 #include "../base/math_utils.h"
@@ -122,7 +123,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     Handle_V3d_View view = ImageWriter::createV3dView(&gfxScene, m_params);
 
     int itemProgress = 0;
-    const int itemCount = m_setDoc.size() + m_setNode.size();
+    const int itemCount = CppUtils::safeStaticCast<int>(m_setDoc.size() + m_setNode.size());
     // Render documents(iterate other root entities)
     for (const DocumentPtr& doc : m_setDoc) {
         for (int i = 0; i < doc->entityCount(); ++i) {
