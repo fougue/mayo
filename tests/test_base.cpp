@@ -14,6 +14,7 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/cpp_utils.h"
 #include "../src/base/enumeration.h"
 #include "../src/base/enumeration_fromenum.h"
 #include "../src/base/filepath.h"
@@ -51,6 +52,7 @@
 #include <gsl/util>
 #include <algorithm>
 #include <cmath>
+#include <climits>
 #include <cstring>
 #include <iostream>
 #include <memory>
@@ -149,6 +151,25 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+}
+
+void TestBase::CppUtils_toggle_test()
+{
+    bool v = false;
+    CppUtils::toggle(v);
+    QCOMPARE(v, true);
+    CppUtils::toggle(v);
+    QCOMPARE(v, false);
+}
+
+void TestBase::CppUtils_safeStaticCast_test()
+{
+    QCOMPARE(CppUtils::safeStaticCast<int>(42u), 42);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MIN), INT_MIN);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX), INT_MAX);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX - 1), INT_MAX - 1);
+    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(unsigned(INT_MAX) + 1), std::overflow_error);
+    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(UINT_MAX), std::overflow_error);
 }
 
 void TestBase::TextId_test()

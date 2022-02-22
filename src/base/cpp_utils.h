@@ -130,7 +130,7 @@ template<typename ERROR, typename... ERROR_ARGS> void throwErrorIf(bool conditio
 }
 
 // Same as static_cast<R>(t) but throw exception if 't' does not fit inside type 'R'
-template<typename R, typename T> constexpr R safeStaticCast(T t) noexcept
+template<typename R, typename T> constexpr R safeStaticCast(T t)
 {
     throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
     return static_cast<R>(t);

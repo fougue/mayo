@@ -16,6 +16,9 @@ class TestBase : public QObject {
 private slots:
     void Application_test();
 
+    void CppUtils_toggle_test();
+    void CppUtils_safeStaticCast_test();
+
     void TextId_test();
 
     void FilePath_test();
