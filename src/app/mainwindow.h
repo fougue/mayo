@@ -93,7 +93,7 @@ private:
     GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
-    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeDataProperties;
+    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
     std::unique_ptr<GraphicsObjectBasePropertyGroup> m_ptrCurrentNodeGraphicsProperties;
 };
 

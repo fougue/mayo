@@ -28,6 +28,7 @@
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "dialog_task_manager.h"
+#include "document_property_group.h"
 #include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
 #include "item_view_buttons.h"
@@ -46,10 +47,10 @@
 #  include "windows/win_taskbar_global_progress.h"
 #endif
 
-#include <QtCore/QMimeData>
 #include <QtCore/QElapsedTimer>
-#include <QtCore/QTimer>
+#include <QtCore/QMimeData>
 #include <QtCore/QSettings>
+#include <QtCore/QTimer>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
@@ -689,40 +690,45 @@ void MainWindow::onApplicationItemSelectionChanged()
     uiProps->clear();
     Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
-        const ApplicationItem& item = spanAppItem.front();
-        const DocumentTreeNode& docTreeNode = item.documentTreeNode();
-        if (item.isDocumentTreeNode()) {
+        const ApplicationItem& appItem = spanAppItem.front();
+        if (appItem.isDocument()) {
+            auto dataProps = new DocumentPropertyGroup(appItem.document());
+            uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
+            m_ptrCurrentNodeDataProperties.reset(dataProps);
+        }
+        else if (appItem.isDocumentTreeNode()) {
+            const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
             auto providerTable = m_guiApp->application()->documentTreeNodePropertiesProviderTable();
-            m_ptrCurrentNodeDataProperties = providerTable->properties(docTreeNode);
-            PropertyGroupSignals* dataProps = m_ptrCurrentNodeDataProperties.get();
+            auto dataProps = providerTable->properties(docTreeNode);
             if (dataProps) {
-                uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
-                QObject::connect(dataProps, &PropertyGroupSignals::propertyChanged, this, [=]{
-                    uiModelTree->refreshItemText(item);
+                uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
+                QObject::connect(dataProps.get(), &PropertyGroupSignals::propertyChanged, this, [=]{
+                    uiModelTree->refreshItemText(appItem);
                 });
+                m_ptrCurrentNodeDataProperties = std::move(dataProps);
             }
 
-            GuiDocument* guiDoc = m_guiApp->findGuiDocument(item.document());
+            GuiDocument* guiDoc = m_guiApp->findGuiDocument(appItem.document());
             std::vector<GraphicsObjectPtr> vecGfxObject;
             guiDoc->foreachGraphicsObject(docTreeNode.id(), [&](GraphicsObjectPtr gfxObject) {
                 vecGfxObject.push_back(std::move(gfxObject));
             });
             auto commonGfxDriver = GraphicsObjectDriver::getCommon(vecGfxObject);
             if (commonGfxDriver) {
-                m_ptrCurrentNodeGraphicsProperties = commonGfxDriver->properties(vecGfxObject);
-                GraphicsObjectBasePropertyGroup* gfxProps = m_ptrCurrentNodeGraphicsProperties.get();
+                auto gfxProps = commonGfxDriver->properties(vecGfxObject);
                 if (gfxProps) {
-                    uiProps->editProperties(gfxProps, uiProps->addGroup(tr("Graphics")));
-                    QObject::connect(gfxProps, &PropertyGroupSignals::propertyChanged, this, [=]{
+                    uiProps->editProperties(gfxProps.get(), uiProps->addGroup(tr("Graphics")));
+                    QObject::connect(gfxProps.get(), &PropertyGroupSignals::propertyChanged, this, [=]{
                         guiDoc->graphicsScene()->redraw();
                     });
+                    m_ptrCurrentNodeGraphicsProperties = std::move(gfxProps);
                 }
             }
         }
 
         auto app = m_guiApp->application();
         if (AppModule::get(app)->linkWithDocumentSelector.value()) {
-            const int index = app->findIndexOfDocument(item.document());
+            const int index = app->findIndexOfDocument(appItem.document());
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
         }
