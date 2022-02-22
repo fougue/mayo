@@ -8,6 +8,7 @@
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/property_enumeration.h"
 #include "graphics_object_base_property_group.h"
 #include "graphics_mesh_data_source.h"
@@ -313,7 +314,7 @@ public:
             if (count == 0)
                 return CheckState::Off;
             else
-                return count == spanObject.size() ? CheckState::On : CheckState::Partially;
+                return CppUtils::cmpEqual(count, spanObject.size()) ? CheckState::On : CheckState::Partially;
         };
 
         // Init properties
