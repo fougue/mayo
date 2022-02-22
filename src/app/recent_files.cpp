@@ -93,7 +93,11 @@ QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile)
     stream >> strFilepath;
     recentFile.filepath = filepathFrom(strFilepath);
     stream >> recentFile.thumbnail;
-    stream >> reinterpret_cast<qint64&>(recentFile.thumbnailTimestamp);
+    // Read thumbnail timestamp
+    // Warning: qint64 and int64_t may not be the exact same type(eg __int64 and longlong with Windows/MSVC)
+    qint64 timestamp;
+    stream >> timestamp;
+    recentFile.thumbnailTimestamp = timestamp;
     return stream;
 }
 
