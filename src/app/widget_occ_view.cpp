@@ -61,7 +61,7 @@ IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
 
 #if OCC_VERSION_HEX >= 0x070600
 
-constexpr bool isCoreProfile = false;
+constexpr bool isCoreProfile = true;
 
 QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     : QOpenGLWidget(parent),
@@ -76,7 +76,9 @@ QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget*
     QSurfaceFormat glFormat;
     glFormat.setDepthBufferSize(24);
     glFormat.setStencilBufferSize(8);
-    glFormat.setVersion(4, 5);
+    if (isCoreProfile)
+        glFormat.setVersion(4, 5);
+
     glFormat.setProfile(isCoreProfile ? QSurfaceFormat::CoreProfile : QSurfaceFormat::CompatibilityProfile);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
     glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
