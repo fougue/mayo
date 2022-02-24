@@ -89,7 +89,7 @@ public:
     struct DefaultValues {
         bool showEdges = false;
         bool showNodes = false;
-        Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTIC;
+        Graphic3d_NameOfMaterial material = Graphic3d_NOM_PLASTER;
         Quantity_Color color = Quantity_NOC_BISQUE;
         Quantity_Color edgeColor = Quantity_NOC_BLACK;
     };

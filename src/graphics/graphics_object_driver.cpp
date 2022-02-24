@@ -103,10 +103,9 @@ GraphicsObjectDriver::Support GraphicsShapeObjectDriver::supportStatus(const TDF
 GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label) const
 {
     if (XCaf::isShape(label)) {
-//        Handle_AIS_Shape object = new AIS_Shape(XCaf::shape(label));
-        Handle_XCAFPrs_AISObject object = new XCAFPrs_AISObject(label);
+        auto object = new XCAFPrs_AISObject(label);
         object->SetDisplayMode(AIS_Shaded);
-        //object->SetMaterial(Graphic3d_NOM_STEEL);
+        object->SetMaterial(Graphic3d_NOM_PLASTER);
         object->Attributes()->SetFaceBoundaryDraw(true);
         object->Attributes()->SetFaceBoundaryAspect(
                     new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.));
