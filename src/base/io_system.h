@@ -57,35 +57,78 @@ public:
     Span<const Format> readerFormats() const { return m_vecReaderFormat; }
     Span<const Format> writerFormats() const { return m_vecWriterFormat; }
 
+    //
     // Import service
+    //
 
+    // Contains arguments for the importInDocument() function
     struct Args_ImportInDocument {
+        // Target document where entities read from `filepaths` will be imported
         DocumentPtr targetDocument;
-        Span<const FilePath> filepaths; // The files to be imported in target document
+
+        // List of files to be imported in target document
+        Span<const FilePath> filepaths;
+
+        // Optional: provider of format-specific parameters to be considered when reading
         const ParametersProvider* parametersProvider = nullptr;
+
+        // Optional: function applied to each imported entity. Executed before adding entities into
+        // target document
+        //     1st arg: CAF label of the entity to "post-process"
+        //     2nd arg: progress indicator of the post-process function
         std::function<void(TDF_Label, TaskProgress*)> entityPostProcess;
+
+        // Optional: predicate telling whether imported entities have to be post-processed(ie whether
+        //           `entityPostProcess` function has to be called)
+        // The single argument being the format of the file from which entities were read
         std::function<bool(Format)> entityPostProcessRequiredIf;
+
+        // Optional: progress size(eg 25%) of the whole post-process operation
         int entityPostProcessProgressSize = 0;
+
+        // Optional: title of the whole post-process operation
         std::string entityPostProcessProgressStep;
+
+        // Optional: the messenger object used to report any additional infos, warnings and errors
         Messenger* messenger = nullptr;
+
+        // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
     bool importInDocument(const Args_ImportInDocument& args);
 
+    //
     // Export service
+    //
 
+    // Contains arguments for the exportApplicationItems() function
     struct Args_ExportApplicationItems {
+        // List of items to be exported
         Span<const ApplicationItem> applicationItems;
+
+        // Path to the target file where items will be written
         FilePath targetFilepath;
+
+        // Format in which items are exported
         Format targetFormat = Format_Unknown;
-        const PropertyGroup* parameters = nullptr;
+
+        // Optional: format-specific parameters to be considered when writting items
+        const PropertyGroup* parameters = nullptr; // TODO use ParametersProvider instead?
+
+        // Optional: the messenger object used to report any additional infos, warnings and errors
         Messenger* messenger = nullptr;
+
+        // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
     bool exportApplicationItems(const Args_ExportApplicationItems& args);
 
+    //
     // Fluent API: import service
+    //
 
+    // Helper struct to provide fluent-like interface over Args_ImportInDocument
+    // See also https://en.wikipedia.org/wiki/Fluent_interface
     struct Operation_ImportInDocument {
         using Operation = Operation_ImportInDocument;
         Operation& targetDocument(const DocumentPtr& document);
@@ -93,14 +136,13 @@ public:
         Operation& withFilepaths(Span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
 
-        // Post-processing executed before adding entities into Document
         Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
         Operation& withEntityPostProcessRequiredIf(std::function<bool(Format)> fn);
         Operation& withEntityPostProcessInfoProgress(int progressSize, std::string_view progressStep);
 
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
-        bool execute();
+        bool execute(); // Runs System::importInDocument() function
 
     private:
         friend class System;
@@ -110,8 +152,12 @@ public:
     };
     Operation_ImportInDocument importInDocument();
 
+    //
     // Fluent API: export service
+    //
 
+    // Helper struct to provide fluent-like interface over Args_ExportApplicationItems
+    // See also https://en.wikipedia.org/wiki/Fluent_interface
     struct Operation_ExportApplicationItems {
         using Operation = Operation_ExportApplicationItems;
         Operation& targetFile(const FilePath& filepath);
@@ -120,7 +166,7 @@ public:
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
-        bool execute();
+        bool execute(); // Runs System::exportApplicationItems() function
 
     private:
         friend class System;
