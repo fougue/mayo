@@ -64,7 +64,7 @@ Format System::probeFormat(const FilePath& filepath) const
         file.read(buff.data(), buff.size());
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
-        probeInput.contentsBegin = std::string_view(buff.data(), buff.size());
+        probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
         probeInput.hintFullSize = std::filesystem::file_size(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
@@ -487,70 +487,29 @@ System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
 
 namespace {
 
-bool isSpace(char c) {
-    return std::isspace(c, std::locale::classic());
-}
-
-bool matchToken(std::string_view::const_iterator itBegin, std::string_view token) {
-    return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
-}
-
-auto findFirstNonSpace(std::string_view str) {
-    return std::find_if_not(str.cbegin(), str.cend(), isSpace);
+bool matchRegExp(std::string_view str, const std::regex& rx)
+{
+    return std::regex_search(str.cbegin(), str.cend(), rx);
 }
 
 } // namespace
 
 Format probeFormat_STEP(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    // regex : ^\s*ISO-10303-21\s*;\s*HEADER
-    constexpr std::string_view stepIsoId = "ISO-10303-21";
-    constexpr std::string_view stepHeaderToken = "HEADER";
-    auto itContentsBegin = findFirstNonSpace(sample);
-    if (matchToken(itContentsBegin, stepIsoId)) {
-        auto itChar = std::find_if_not(itContentsBegin + stepIsoId.size(), sample.cend(), isSpace);
-        if (itChar != sample.cend() && *itChar == ';') {
-            itChar = std::find_if_not(itChar + 1, sample.cend(), isSpace);
-            if (matchToken(itChar, stepHeaderToken))
-                return Format_STEP;
-        }
-    }
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^\s*ISO-10303-21\s*;\s*HEADER)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_STEP : Format_Unknown;
 }
 
 Format probeFormat_IGES(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
-    bool isIges = true;
-    if (sample.size() >= 80 && sample[72] == 'S') {
-        for (int i = 73; i < 80 && isIges; ++i) {
-            if (sample[i] != ' ' && !std::isdigit(static_cast<unsigned char>(sample[i])))
-                isIges = false;
-        }
-
-        const char c80 = sample[80];
-        if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
-            const int sVal = std::atoi(sample.data() + 73);
-            if (sVal == 1)
-                return Format_IGES;
-        }
-    }
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^.{72}S\s*[0-9]+\s*[\n\r\f])" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_IGES : Format_Unknown;
 }
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
-    // regex : ^\s*DBRep_DrawableShape
-    auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
-    constexpr std::string_view occBRepToken = "DBRep_DrawableShape";
-    if (matchToken(itContentsBegin, occBRepToken))
-        return Format_OCCBREP;
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^\s*DBRep_DrawableShape)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OCCBREP : Format_Unknown;
 }
 
 Format probeFormat_STL(const System::FormatProbeInput& input)
@@ -575,10 +534,8 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
     // ASCII STL ?
     {
-        // regex : ^\s*solid
-        constexpr std::string_view asciiStlToken = "solid";
-        auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
-        if (matchToken(itContentsBegin, asciiStlToken))
+        const std::regex rx{ R"(^\s*solid)" };
+        if (matchRegExp(input.contentsBegin, rx))
             return Format_STL;
     }
 
@@ -587,12 +544,8 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    const std::regex rx{ R"("^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s")" };
-    if (std::regex_search(sample.cbegin(), sample.cend(), rx))
-        return Format_OBJ;
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
 }
 
 void addPredefinedFormatProbes(System* system)

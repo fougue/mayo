@@ -28,8 +28,9 @@ private slots:
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
-    void IO_test();
-    void IO_test_data();
+    void IO_probeFormat_test();
+    void IO_probeFormat_test_data();
+    void IO_probeFormatDirect_test();
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
 

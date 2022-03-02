@@ -54,6 +54,7 @@
 #include <cmath>
 #include <climits>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -285,7 +286,7 @@ void TestBase::PropertyQuantityValueConversion_test_data()
     QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
-void TestBase::IO_test()
+void TestBase::IO_probeFormat_test()
 {
     QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
@@ -294,7 +295,7 @@ void TestBase::IO_test()
     QCOMPARE(ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
 }
 
-void TestBase::IO_test_data()
+void TestBase::IO_probeFormat_test_data()
 {
     QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
@@ -306,6 +307,41 @@ void TestBase::IO_test_data()
     QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::Format_STL;
     QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::Format_STL;
     QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
+}
+
+void TestBase::IO_probeFormatDirect_test()
+{
+    char fileSample[1024];
+    IO::System::FormatProbeInput input;
+
+    auto fnSetProbeInput = [&](const FilePath& fp) {
+        std::memset(fileSample, 0, std::size(fileSample));
+        std::ifstream ifstr;
+        ifstr.open(fp, std::ios::in | std::ios::binary);
+        ifstr.read(fileSample, std::size(fileSample));
+
+        input.filepath = fp;
+        input.contentsBegin = std::string_view(fileSample, ifstr.gcount());
+        input.hintFullSize = filepathFileSize(fp);
+    };
+
+    fnSetProbeInput("inputs/cube.step");
+    QCOMPARE(IO::probeFormat_STEP(input), IO::Format_STEP);
+
+    fnSetProbeInput("inputs/cube.iges");
+    QCOMPARE(IO::probeFormat_IGES(input), IO::Format_IGES);
+
+    fnSetProbeInput("inputs/cube.brep");
+    QCOMPARE(IO::probeFormat_OCCBREP(input), IO::Format_OCCBREP);
+
+    fnSetProbeInput("inputs/cube.stla");
+    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
+
+    fnSetProbeInput("inputs/cube.stlb");
+    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
+
+    fnSetProbeInput("inputs/cube.obj");
+    QCOMPARE(IO::probeFormat_OBJ(input), IO::Format_OBJ);
 }
 
 void TestBase::IO_OccStaticVariablesRollback_test()
