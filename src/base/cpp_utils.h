@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #ifndef __cpp_lib_integer_comparison_functions
+#  include <limits>
 #  include <type_traits>
 #endif
 
