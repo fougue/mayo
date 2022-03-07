@@ -12,26 +12,65 @@
 
 namespace Mayo {
 
+// Tree node identifier type
 using TreeNodeId = uint32_t;
 
+// Provides tree-like organization of data
+//
+// A tree node satisfies the following properties:
+//     * accessible through an identifier which is unique in the tree it belongs to
+//     * null identifier(0) refers to null(void) tree node
+//     * single parent node. A tree node is a root in case its parent identifier is null
+//     * has 0..N child tree nodes. A tree node is a leaf in case it has no child
+//     * owns data of any type, though data type is the same for all nodes of the same tree
+//
+// Storage of nodes and associated data is memory efficient : all nodes are stored in a single array
+// Use the traverseTree_() family of functions to visit nodes of a Tree object
+//
+// Data type 'T' must be default-constructible(see https://www.cplusplus.com/reference/type_traits/is_default_constructible/)
+//
 template<typename T> class Tree {
 public:
     Tree();
 
+    // Identifier of the sibling node previous to 'id'. Might returns 0
     TreeNodeId nodeSiblingPrevious(TreeNodeId id) const;
+
+    // Identifier of the sibling node next to 'id'. Might returns 0
     TreeNodeId nodeSiblingNext(TreeNodeId id) const;
+
+    // Identifier of the first child of node 'id'. Might returns 0
     TreeNodeId nodeChildFirst(TreeNodeId id) const;
+
+    // Identifier of the last child of node 'id'. Might returns 0
     TreeNodeId nodeChildLast(TreeNodeId id) const;
+
+    // Identifier of the parent of node 'id'. Might returns 0(in such case 'id' is a root)
     TreeNodeId nodeParent(TreeNodeId id) const;
+
+    // Identifier of the node being root of node 'id'
     TreeNodeId nodeRoot(TreeNodeId id) const;
+
+    // Data associated to node of identifier 'id' or default-constructed object of type 'T' in case of error
     const T& nodeData(TreeNodeId id) const;
+
+    // Is node of identifier 'id' a root? Note: a root as parent nodes(ie nodeParent(id) == 0)
     bool nodeIsRoot(TreeNodeId id) const;
+
+    // Is node of identifier 'id' a leaf? Note: a leaf as no child nodes
     bool nodeIsLeaf(TreeNodeId id) const;
+
+    // Read-only array of all the roots
     Span<const TreeNodeId> roots() const;
 
+    // Removes all nodes, tree will become empty
     void clear();
+
+    // Appends child to node identified by 'parentId'. That new node will contain 'data'
     TreeNodeId appendChild(TreeNodeId parentId, const T& data);
     TreeNodeId appendChild(TreeNodeId parentId, T&& data);
+
+    // Remove root node identified by 'id'
     void removeRoot(TreeNodeId id);
 
 private:
@@ -204,7 +243,7 @@ template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
 {
     Expects(this->nodeIsRoot(id));
 
-    // TODO Mark all children nodes as 'deleted'
+    // TODO Mark all deep children nodes as 'deleted'
     auto it = std::find(m_vecRoot.begin(), m_vecRoot.end(), id);
     if (it != m_vecRoot.end()) {
         TreeNode* node = this->ptrNode(id);
