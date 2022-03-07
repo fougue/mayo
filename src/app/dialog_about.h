@@ -13,7 +13,7 @@ namespace Mayo {
 class DialogAbout : public QDialog {
     Q_OBJECT
 public:
-    DialogAbout(QWidget *parent = nullptr);
+    DialogAbout(QWidget* parent = nullptr);
     ~DialogAbout();
 
 private:
