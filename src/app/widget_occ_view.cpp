@@ -61,7 +61,7 @@ IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
 
 #if OCC_VERSION_HEX >= 0x070600
 
-constexpr bool isCoreProfile = true;
+constexpr bool isCoreProfile = false;
 
 QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     : QOpenGLWidget(parent),
