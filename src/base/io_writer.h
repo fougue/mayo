@@ -20,15 +20,27 @@ class TaskProgress;
 
 namespace IO {
 
+// Abstract base class for writers
+// Provides services for writing files in two steps:
+//     - transfer a list of items to be written
+//     - write transferred items into target file
 class Writer {
 public:
     Writer();
     virtual ~Writer() = default;
 
+    // Converts items(documents and document nodes) into data ready to be written
+    // Returns 'true' on success
     virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
+
+    // Writes contents(items passed to transfer()) to the file at path 'fp'
+    // Returns 'true' on success
     virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
+
+    // Apply properties contain in 'group' to the writer's parameter values(known in writer sub-class)
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
 
+    // Messenger object used to report infos, warnings and errors
     Messenger* messenger() const { return m_messenger; }
     void setMessenger(Messenger* messenger);
 
@@ -36,11 +48,19 @@ private:
     Messenger* m_messenger = nullptr;
 };
 
+// Abstract base class for all writer factories
 class FactoryWriter {
 public:
     virtual ~FactoryWriter() = default;
+
+    // Returns supported formats, ie the formats this factory can create writers for
     virtual Span<const Format> formats() const = 0;
+
+    // Creates and returns a Writer object that matches the given format, or nullptr if no matching writer is found
     virtual std::unique_ptr<Writer> create(Format format) const = 0;
+
+    // Creates and returns properties that match the given format. Those properties is a generic
+    // way to change parameter values of a Writer object corresponding to format(see also Writer::applyProperties())
     virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 

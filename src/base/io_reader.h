@@ -21,15 +21,27 @@ class TaskProgress;
 
 namespace IO {
 
+// Abstract base class for readers
+// Provides services for reading files in two steps:
+//     - parse input file into memory(service Reader::readFile())
+//     - convert data in memory into Document object(service Reader::transfer())
 class Reader {
 public:
     Reader();
     virtual ~Reader() = default;
 
+    // Reads file at path 'fp' into memory using indicator to report progress
+    // Returns 'true' on success
     virtual bool readFile(const FilePath& fp, TaskProgress* progress) = 0;
-    virtual TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) = 0;
-    virtual void applyProperties(const PropertyGroup* /*params*/) {}
 
+    // Converts data read during readFile() step into document 'doc' using indicator to report progress
+    // Returns the list of entities added to document 'doc'
+    virtual TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) = 0;
+
+    // Apply properties contain in 'group' to the reader's parameter values(known in reader sub-class)
+    virtual void applyProperties(const PropertyGroup* /*group*/) {}
+
+    // Messenger object used to report infos, warnings and errors
     Messenger* messenger() const { return m_messenger; }
     void setMessenger(Messenger* messenger);
 
@@ -37,11 +49,19 @@ private:
     Messenger* m_messenger = nullptr;
 };
 
+// Abstract base class for all reader factories
 class FactoryReader {
 public:
     virtual ~FactoryReader() = default;
+
+    // Returns supported formats, ie the formats this factory can create readers for
     virtual Span<const Format> formats() const = 0;
+
+    // Creates and returns a Reader object that matches the given format, or nullptr if no matching reader is found
     virtual std::unique_ptr<Reader> create(Format format) const = 0;
+
+    // Creates and returns properties that match the given format. Those properties is a generic
+    // way to change parameter values of a Reader object corresponding to format(see also Reader::applyProperties())
     virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 
