@@ -133,7 +133,8 @@ void QOpenGLWidgetOccView::initializeGL()
     }
     else {
         window = new Aspect_NeutralWindow;
-        Aspect_Drawable nativeWin = nullptr;
+        // On non-Windows systems Aspect_Drawable is aliased to 'unsigned long' so can't init with nullptr
+        Aspect_Drawable nativeWin = 0;
 #ifdef Q_OS_WIN
         HDC  wglDevCtx = wglGetCurrentDC();
         HWND wglWin = WindowFromDC(wglDevCtx);
