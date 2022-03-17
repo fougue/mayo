@@ -61,7 +61,41 @@ IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
 
 #if OCC_VERSION_HEX >= 0x070600
 
-constexpr bool isCoreProfile = false;
+namespace {
+
+// OpenGL FBO subclass for wrapping FBO created by Qt using GL_RGBA8 texture format instead of GL_SRGB8_ALPHA8.
+// This FBO is set to OpenGl_Context::SetDefaultFrameBuffer() as a final target.
+// Subclass calls OpenGl_Context::SetFrameBufferSRGB() with sRGB=false flag,
+// which asks OCCT to disable GL_FRAMEBUFFER_SRGB and apply sRGB gamma correction manually.
+//
+// Note this is using patch https://github.com/gkv311/occt-samples-qopenglwidget/commit/32c997ce281422ce7dcf4f7e1e529fbdf7dc642c
+// See also https://github.com/gkv311/occt-samples-qopenglwidget/issues/3
+class QtOccFrameBuffer : public OpenGl_FrameBuffer {
+    DEFINE_STANDARD_RTTI_INLINE(QtOccFrameBuffer, OpenGl_FrameBuffer)
+public:
+    QtOccFrameBuffer() {}
+
+    void BindBuffer(const Handle(OpenGl_Context)& ctx) override
+    {
+        OpenGl_FrameBuffer::BindBuffer(ctx);
+        ctx->SetFrameBufferSRGB(true, false);
+    }
+
+    void BindDrawBuffer(const Handle(OpenGl_Context)& ctx) override
+    {
+        OpenGl_FrameBuffer::BindDrawBuffer(ctx);
+        ctx->SetFrameBufferSRGB(true, false);
+    }
+
+    void BindReadBuffer(const Handle(OpenGl_Context)& ctx) override
+    {
+        OpenGl_FrameBuffer::BindReadBuffer(ctx);
+    }
+};
+
+constexpr bool isCoreProfile = true;
+
+} // namespace
 
 QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     : QOpenGLWidget(parent),
@@ -80,10 +114,12 @@ QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget*
         glFormat.setVersion(4, 5);
 
     glFormat.setProfile(isCoreProfile ? QSurfaceFormat::CoreProfile : QSurfaceFormat::CompatibilityProfile);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
-    this->setTextureFormat(GL_SRGB8_ALPHA8);
-#endif
+    // Use QtOccFrameBuffer fallback
+    // To request sRGBColorSpace colorspace to meet OCCT expectations then consider code below:
+    // #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    //     glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
+    //     this->setTextureFormat(GL_SRGB8_ALPHA8);
+    // #endif
     this->setFormat(glFormat);
 }
 
@@ -106,11 +142,11 @@ Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView::createCompatibleGraphicsDri
     gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
-#  if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
     Message::SendWarning("Warning! Qt 5.10+ is required for sRGB setup.\n"
                          "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n");
     gfxDriver->ChangeOptions().sRGBDisable = true;
-#  endif
+#endif
 
     return gfxDriver;
 }
@@ -146,8 +182,6 @@ void QOpenGLWidgetOccView::initializeGL()
         window->SetSize(viewSize.x(), viewSize.y());
         this->v3dView()->SetWindow(window, glCtx->RenderingContext());
     }
-
-    //dumpGlInfo(true);
 }
 
 void QOpenGLWidgetOccView::paintGL()
@@ -160,7 +194,8 @@ void QOpenGLWidgetOccView::paintGL()
     const Handle_OpenGl_Context& glCtx = driver->GetSharedContext();
     Handle_OpenGl_FrameBuffer defaultFbo = glCtx->DefaultFrameBuffer();
     if (!defaultFbo) {
-        defaultFbo = new OpenGl_FrameBuffer();
+        //defaultFbo = new OpenGl_FrameBuffer;
+        defaultFbo = new QtOccFrameBuffer;
         glCtx->SetDefaultFrameBuffer(defaultFbo);
     }
 
