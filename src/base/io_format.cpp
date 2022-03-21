@@ -25,6 +25,7 @@ std::string_view formatIdentifier(Format format)
     case Format_VRML:  return "VRML";
     case Format_AMF:   return "AMF";
     case Format_DXF:   return "DXF";
+    case Format_PLY:   return "PLY";
     }
 
     return "";
@@ -44,6 +45,7 @@ std::string_view formatName(Format format)
     case Format_VRML:  return "VRML(ISO/CEI 14772-2)";
     case Format_AMF:   return "Additive manufacturing file format(ISO/ASTM 52915:2016)";
     case Format_DXF:   return "Drawing Exchange Format";
+    case Format_PLY:   return "Polygon File Format";
     }
 
     return "";
@@ -61,6 +63,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view vrml_suffix[] = { "wrl", "wrz", "vrml" };
     static std::string_view amf_suffix[]  = { "amf" };
     static std::string_view dxf_suffix[]  = { "dxf" };
+    static std::string_view ply_suffix[]  = { "ply" };
 
     switch (format) {
     case Format_Unknown: return {};
@@ -74,6 +77,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     case Format_VRML:  return vrml_suffix;
     case Format_AMF:   return amf_suffix;
     case Format_DXF:   return dxf_suffix;
+    case Format_PLY:   return ply_suffix;
     }
 
     return {};
