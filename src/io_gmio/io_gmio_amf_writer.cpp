@@ -10,6 +10,7 @@
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
+#include "../base/data_triangulation.h"
 #include "../base/math_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
@@ -21,7 +22,6 @@
 
 #include <BRep_Tool.hxx>
 #include <Poly_Triangulation.hxx>
-#include <TDataXtd_Triangulation.hxx>
 #include <gp_Quaternion.hxx>
 
 #include <gmio_amf/amf_error.h>
@@ -338,7 +338,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     }
 
     // -- Triangulation ?
-    auto attrPolyTri = CafUtils::findAttribute<TDataXtd_Triangulation>(labelShape);
+    auto attrPolyTri = CafUtils::findAttribute<DataTriangulation>(labelShape);
     if (!attrPolyTri.IsNull()) {
         fnAddMesh(attrPolyTri->Get(), TopLoc_Location());
     }

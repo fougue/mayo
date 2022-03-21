@@ -9,6 +9,7 @@
 #include "../base/document.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
+#include "../base/data_triangulation.h"
 #include "../base/property_enumeration.h"
 #include "graphics_object_base_property_group.h"
 #include "graphics_mesh_data_source.h"
@@ -24,10 +25,10 @@
 #include <MeshVS_Drawer.hxx>
 #include <MeshVS_Mesh.hxx>
 #include <MeshVS_MeshPrsBuilder.hxx>
+#include <MeshVS_NodalColorPrsBuilder.hxx>
 #include <Prs3d_LineAspect.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
-#include <TDataXtd_Triangulation.hxx>
 #include <XCAFPrs_AISObject.hxx>
 #include <stdexcept>
 
@@ -94,7 +95,7 @@ GraphicsObjectDriver::Support GraphicsShapeObjectDriver::supportStatus(const TDF
     // TODO TNaming_Shape ?
     // TDataXtd_Shape ?
 
-    if (CafUtils::hasAttribute<TDataXtd_Triangulation>(label)) {
+    if (CafUtils::hasAttribute<DataTriangulation>(label)) {
         //return Support::Partial;
     }
 
@@ -114,7 +115,7 @@ GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label
         object->SetOwner(this);
         return object;
     }
-    else if (CafUtils::hasAttribute<TDataXtd_Triangulation>(label)) {
+    else if (CafUtils::hasAttribute<DataTriangulation>(label)) {
     }
 
     return {};
@@ -209,7 +210,7 @@ GraphicsMeshObjectDriver::GraphicsMeshObjectDriver()
 
 GraphicsObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const TDF_Label& label) const
 {
-    if (CafUtils::hasAttribute<TDataXtd_Triangulation>(label))
+    if (CafUtils::hasAttribute<DataTriangulation>(label))
         return Support::Complete;
 
     if (XCaf::isShape(label)) {
@@ -224,10 +225,12 @@ GraphicsObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const TDF_
 GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label) const
 {
     Handle_Poly_Triangulation polyTri;
+    Span<const Quantity_Color> spanNodeColor;
     //const TopLoc_Location* ptrLocationPolyTri = nullptr;
-    auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(label);
+    auto attrTriangulation = CafUtils::findAttribute<DataTriangulation>(label);
     if (attrTriangulation) {
         polyTri = attrTriangulation->Get();
+        spanNodeColor = attrTriangulation->nodeColors();
     }
     else if (XCaf::isShape(label)) {
         const TopoDS_Shape shape = XCaf::shape(label);
@@ -244,12 +247,21 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         Handle_MeshVS_Mesh object = new MeshVS_Mesh;
         object->SetDataSource(new GraphicsMeshDataSource(polyTri));
         // meshVisu->AddBuilder(..., false); -> No selection
-        object->AddBuilder(new MeshVS_MeshPrsBuilder(object), true);
+        if (!spanNodeColor.empty()) {
+            auto meshPrsBuilder = new MeshVS_NodalColorPrsBuilder(object, MeshVS_DMF_NodalColorDataPrs | MeshVS_DMF_OCCMask);
+            for (int i = 0; i < spanNodeColor.size(); ++i)
+                meshPrsBuilder->SetColor(i + 1, spanNodeColor[i]);
+
+            object->AddBuilder(meshPrsBuilder, true);
+        }
+        else {
+            object->AddBuilder(new MeshVS_MeshPrsBuilder(object), true);
+        }
 
         // -- MeshVS_DrawerAttribute
         object->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, defaultValues().showEdges);
         object->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
-        object->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTIC);
+        object->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTER);
         object->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         object->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));

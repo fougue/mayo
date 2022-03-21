@@ -8,8 +8,9 @@
 
 #include "../base/application_item.h"
 #include "../base/brep_utils.h"
-#include "../base/document.h"
 #include "../base/caf_utils.h"
+#include "../base/data_triangulation.h"
+#include "../base/document.h"
 #include "../base/filepath_conv.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
@@ -21,7 +22,6 @@
 #include <RWStl.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TDataStd_Name.hxx>
-#include <TDataXtd_Triangulation.hxx>
 #include <TopoDS_Compound.hxx>
 
 namespace Mayo {
@@ -81,7 +81,7 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
         return {};
 
     const TDF_Label entityLabel = doc->newEntityLabel();
-    TDataXtd_Triangulation::Set(entityLabel, m_mesh);
+    DataTriangulation::Set(entityLabel, m_mesh);
     TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ entityLabel });
 }
@@ -104,7 +104,7 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
                 m_shape = XCaf::shape(label);
             }
             else {
-                auto attrPolyTri = CafUtils::findAttribute<TDataXtd_Triangulation>(label);
+                auto attrPolyTri = CafUtils::findAttribute<DataTriangulation>(label);
                 if (!attrPolyTri.IsNull())
                     m_mesh = attrPolyTri->Get();
             }
