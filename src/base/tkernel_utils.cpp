@@ -107,4 +107,14 @@ bool TKernelUtils::colorFromHex(std::string_view strHex, Quantity_Color* color)
     return true;
 }
 
+Quantity_TypeOfColor TKernelUtils::preferredRgbColorType()
+{
+    // See https://dev.opencascade.org/content/occt-3d-viewer-becomes-srgb-aware
+#if OCC_VERSION_HEX >= 0x070500
+    return Quantity_TOC_sRGB;
+#else
+    return Quantity_TOC_RGB;
+#endif
+}
+
 } // namespace Mayo

@@ -19,6 +19,9 @@ struct MeshUtils {
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 
     static void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt);
+    static void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle);
+    static void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const gp_Vec3f& n);
+    static void allocateNormals(const Handle_Poly_Triangulation& triangulation);
 
     enum class Orientation {
         Unknown,

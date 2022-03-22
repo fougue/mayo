@@ -77,6 +77,36 @@ void MeshUtils::setNode(const Handle_Poly_Triangulation& triangulation, int inde
 #endif
 }
 
+void MeshUtils::setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->SetTriangle(index, triangle);
+#else
+    triangulation->ChangeTriangle(index) = triangle;
+#endif
+}
+
+void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int index, const gp_Vec3f& n)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->SetNormal(index, n);
+#else
+    triangulation->ChangeNormals(index * 3 - 2) = n.X();
+    triangulation->ChangeNormals(index * 3 - 1) = n.Y();
+    triangulation->ChangeNormals(index * 3)     = n.Z();
+#endif
+}
+
+void MeshUtils::allocateNormals(const Handle_Poly_Triangulation& triangulation)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->AddNormals();
+#else
+    auto normalCoords = new TShort_HArray1OfShortReal(1, 3 * triangulation->NbNodes());
+    triangulation->SetNormals(normalCoords);
+#endif
+}
+
 // Adapted from http://cs.smith.edu/~jorourke/Code/polyorient.C
 MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
 {
