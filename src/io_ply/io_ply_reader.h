@@ -7,25 +7,25 @@
 #pragma once
 
 #include "../base/io_reader.h"
-
-namespace miniply {
-struct PLYElement;
-class PLYReader;
-} // namespace miniply
+#include <vector>
 
 namespace Mayo {
 namespace IO {
 
+// Reader for PLY file format based on miniply library
 class PlyReader : public Reader {
 public:
-    ~PlyReader();
-
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
 private:
-    miniply::PLYReader* m_reader = nullptr;
     FilePath m_baseFilename;
+    uint32_t m_nodeCount = 0;
+    bool m_isValidMesh = false;
+    std::vector<float> m_vecNodeCoord;
+    std::vector<uint8_t> m_vecColorComponent;
+    std::vector<int> m_vecIndex;
+    std::vector<float> m_vecNormalCoord;
 };
 
 class PlyFactoryReader : public FactoryReader {

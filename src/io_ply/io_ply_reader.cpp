@@ -23,152 +23,155 @@
 namespace Mayo {
 namespace IO {
 
-PlyReader::~PlyReader()
-{
-    delete m_reader;
-}
-
 bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
-    delete m_reader;
-    m_reader = new miniply::PLYReader(filepath.u8string().c_str());
-    if (!m_reader->valid())
+    miniply::PLYReader reader(filepath.u8string().c_str());
+    if (!reader.valid())
         return false;
 
+    m_isValidMesh = false;
     m_baseFilename = filepath.stem();
-    return true;
-}
-
-TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
-{
-    if (!m_reader || !m_reader->valid())
-        return {};
-
+    m_nodeCount = 0;
+    m_vecNodeCoord.clear();
+    m_vecColorComponent.clear();
+    m_vecIndex.clear();
+    m_vecNormalCoord.clear();
     bool assumeTriangles = true;
+
     uint32_t faceIdxs[3] = {};
     if (assumeTriangles) {
-        miniply::PLYElement* faceElem = m_reader->get_element(m_reader->find_element(miniply::kPLYFaceElement));
+        miniply::PLYElement* faceElem = reader.get_element(reader.find_element(miniply::kPLYFaceElement));
         if (!faceElem)
             return {};
 
         assumeTriangles = faceElem->convert_list_to_fixed_size(faceElem->find_property("vertex_indices"), 3, faceIdxs);
     }
 
-    uint32_t nodeCount = 0;
-    std::vector<float> vecNodeCoord;
-    //std::vector<float> vecUvCoord;
-    std::vector<uint8_t> vecColorComponent;
-    std::vector<int> vecIndex;
-    std::vector<float> vecNormalCoord;
     bool gotVerts = false;
     bool gotFaces = false;
-    while (m_reader->has_element() && (!gotVerts || !gotFaces)) {
-        if (m_reader->element_is(miniply::kPLYVertexElement)) {
+    while (reader.has_element() && (!gotVerts || !gotFaces)) {
+        if (reader.element_is(miniply::kPLYVertexElement)) {
             uint32_t propIdxs[3] = {};
-            if (!m_reader->load_element() || !m_reader->find_pos(propIdxs))
+            if (!reader.load_element() || !reader.find_pos(propIdxs))
                 break;
 
-            nodeCount = m_reader->num_rows();
-            vecNodeCoord.resize(nodeCount * 3);
-            m_reader->extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, vecNodeCoord.data());
-            if (m_reader->find_normal(propIdxs)) {
-                vecNormalCoord.resize(nodeCount * 3);
-                m_reader->extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, vecNormalCoord.data());
+            m_nodeCount = reader.num_rows();
+            m_vecNodeCoord.resize(m_nodeCount * 3);
+            reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, m_vecNodeCoord.data());
+            if (reader.find_normal(propIdxs)) {
+                m_vecNormalCoord.resize(m_nodeCount * 3);
+                reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, m_vecNormalCoord.data());
             }
 
-            if (m_reader->find_color(propIdxs)) {
-                vecColorComponent.resize(nodeCount * 3);
-                m_reader->extract_properties(propIdxs, 3, miniply::PLYPropertyType::UChar, vecColorComponent.data());
+            if (reader.find_color(propIdxs)) {
+                m_vecColorComponent.resize(m_nodeCount * 3);
+                reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::UChar, m_vecColorComponent.data());
             }
 
-//            if (m_reader->find_texcoord(propIdxs)) {
+//            if (reader.find_texcoord(propIdxs)) {
 //                vecUvCoord.resize(nodeCount * 2);
-//                m_reader->extract_properties(propIdxs, 2, miniply::PLYPropertyType::Float, vecUvCoord.data());
+//                reader.extract_properties(propIdxs, 2, miniply::PLYPropertyType::Float, vecUvCoord.data());
 //            }
 
             gotVerts = true;
         }
-        else if (!gotFaces && m_reader->element_is(miniply::kPLYFaceElement)) {
-            if (!m_reader->load_element())
+        else if (!gotFaces && reader.element_is(miniply::kPLYFaceElement)) {
+            if (!reader.load_element())
                 break;
 
             if (assumeTriangles) {
-                vecIndex.resize(m_reader->num_rows() * 3);
-                m_reader->extract_properties(faceIdxs, 3, miniply::PLYPropertyType::Int, vecIndex.data());
+                m_vecIndex.resize(reader.num_rows() * 3);
+                reader.extract_properties(faceIdxs, 3, miniply::PLYPropertyType::Int, m_vecIndex.data());
             }
             else {
                 uint32_t propIdx = 0;
-                if (!m_reader->find_indices(&propIdx))
+                if (!reader.find_indices(&propIdx))
                     break;
 
-                const bool polys = m_reader->requires_triangulation(propIdx);
+                const bool polys = reader.requires_triangulation(propIdx);
                 if (polys && !gotVerts) {
                     this->messenger()->emitError("Face data needing triangulation found before vertex data");
                     break;
                 }
 
                 if (polys) {
-                    vecIndex.resize(m_reader->num_triangles(propIdx) * 3);
-                    m_reader->extract_triangles(propIdx, vecNodeCoord.data(), nodeCount, miniply::PLYPropertyType::Int, vecIndex.data());
+                    m_vecIndex.resize(reader.num_triangles(propIdx) * 3);
+                    reader.extract_triangles(propIdx, m_vecNodeCoord.data(), m_nodeCount, miniply::PLYPropertyType::Int, m_vecIndex.data());
                 }
                 else {
-                    vecIndex.resize(m_reader->num_rows() * 3);
-                    m_reader->extract_list_property(propIdx, miniply::PLYPropertyType::Int, vecIndex.data());
+                    m_vecIndex.resize(reader.num_rows() * 3);
+                    reader.extract_list_property(propIdx, miniply::PLYPropertyType::Int, m_vecIndex.data());
                 }
             }
 
             gotFaces = true;
         }
-        else if (!gotFaces && m_reader->element_is("tristrips")) {
-            if (!m_reader->load_element()) {
+        else if (!gotFaces && reader.element_is("tristrips")) {
+            if (!reader.load_element()) {
                 this->messenger()->emitError("Failed to load triangle strips");
                 break;
             }
 
-            uint32_t propIdx = m_reader->element()->find_property("vertex_indices");
+            uint32_t propIdx = reader.element()->find_property("vertex_indices");
             if (propIdx == miniply::kInvalidIndex) {
                 this->messenger()->emitError("Couldn't find 'vertex_indices' property for the 'tristrips' element");
                 break;
             }
 
-            vecIndex.resize(m_reader->sum_of_list_counts(propIdx));
-            m_reader->extract_list_property(propIdx, miniply::PLYPropertyType::Int, vecIndex.data());
+            m_vecIndex.resize(reader.sum_of_list_counts(propIdx));
+            reader.extract_list_property(propIdx, miniply::PLYPropertyType::Int, m_vecIndex.data());
             gotFaces = true;
         }
 
-        m_reader->next_element();
-    }
+        reader.next_element();
+    } // endwhile
 
-    if (!gotVerts || !gotFaces/* || !trimesh->all_indices_valid()*/)
+    auto fnCheckIndices = [](Span<const int> spanIndex, uint32_t nodeCount) {
+        for (int index : spanIndex) {
+              if (index < 0 || CppUtils::cmpGreaterEqual(index, nodeCount))
+                  return false;
+        }
+
+        return true;
+    };
+
+    m_isValidMesh = gotVerts && gotFaces && fnCheckIndices(m_vecIndex, m_nodeCount);
+    return m_isValidMesh;
+}
+
+TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
+{
+    if (!m_isValidMesh)
         return {};
 
-    const int triangleCount = CppUtils::safeStaticCast<int>(vecIndex.size() / 3);
-    Handle_Poly_Triangulation mesh = new Poly_Triangulation(nodeCount, triangleCount, false/*hasUvNodes*/);
-    if (!vecNormalCoord.empty())
+    const int triangleCount = CppUtils::safeStaticCast<int>(m_vecIndex.size() / 3);
+    Handle_Poly_Triangulation mesh = new Poly_Triangulation(m_nodeCount, triangleCount, false/*hasUvNodes*/);
+    if (!m_vecNormalCoord.empty())
         MeshUtils::allocateNormals(mesh);
 
-    for (int i = 0; CppUtils::cmpLess(i, vecNodeCoord.size()); i += 3) {
-        const gp_Pnt node = { vecNodeCoord.at(i), vecNodeCoord.at(i + 1), vecNodeCoord.at(i + 2) };
+    for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
+        const auto& vec = m_vecNodeCoord;
+        const gp_Pnt node = { vec.at(i), vec.at(i + 1), vec.at(i + 2) };
         MeshUtils::setNode(mesh, (i / 3) + 1, node);
     }
 
-    for (int i = 0; CppUtils::cmpLess(i, vecIndex.size()); i += 3) {
-        const Poly_Triangle tri = { 1 + vecIndex.at(i), 1 + vecIndex.at(i + 1), 1 + vecIndex.at(i + 2) };
+    for (int i = 0; CppUtils::cmpLess(i, m_vecIndex.size()); i += 3) {
+        const auto& vec = m_vecIndex;
+        const Poly_Triangle tri = { 1 + vec.at(i), 1 + vec.at(i + 1), 1 + vec.at(i + 2) };
         MeshUtils::setTriangle(mesh, (i / 3) + 1, tri);
     }
 
-    for (int i = 0; CppUtils::cmpLess(i, vecNormalCoord.size()); i += 3) {
-        const auto& vnc = vecNormalCoord;
-        const MeshUtils::Poly_Triangulation_NormalType n(vnc.at(i), vnc.at(i + 1), vnc.at(i + 2));
+    for (int i = 0; CppUtils::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
+        const auto& vec = m_vecNormalCoord;
+        const MeshUtils::Poly_Triangulation_NormalType n(vec.at(i), vec.at(i + 1), vec.at(i + 2));
         MeshUtils::setNormal(mesh, (i / 3) + 1, n);
     }
 
     std::vector<Quantity_Color> vecColor;
-    for (int i = 0; CppUtils::cmpLess(i, vecColorComponent.size()); i += 3) {
+    for (int i = 0; CppUtils::cmpLess(i, m_vecColorComponent.size()); i += 3) {
+        const auto& vec = m_vecColorComponent;
         const Quantity_Color color = {
-            vecColorComponent.at(i + 0) / 255.,
-            vecColorComponent.at(i + 1) / 255.,
-            vecColorComponent.at(i + 2) / 255.,
+            vec.at(i) / 255., vec.at(i + 1) / 255., vec.at(i + 2) / 255.,
             TKernelUtils::preferredRgbColorType()
         };
         vecColor.push_back(color);
@@ -194,7 +197,7 @@ std::unique_ptr<Reader> PlyFactoryReader::create(Format format) const
     return {};
 }
 
-std::unique_ptr<PropertyGroup> PlyFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
+std::unique_ptr<PropertyGroup> PlyFactoryReader::createProperties(Format /*format*/, PropertyGroup* /*parentGroup*/) const
 {
     return {};
 }
