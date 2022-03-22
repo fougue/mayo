@@ -21,11 +21,13 @@ HEADERS += \
     test_base.h \
     $$files(../src/base/*.h) \
     $$files(../src/io_occ/*.h) \
+    $$files(../src/io_ply/*.h) \
 
 SOURCES += \
     test_base.cpp \
     $$files(../src/base/*.cpp) \
     $$files(../src/io_occ/*.cpp) \
+    $$files(../src/io_ply/*.cpp) \
 
 # App --
 QT += widgets
