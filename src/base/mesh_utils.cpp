@@ -86,14 +86,15 @@ void MeshUtils::setTriangle(const Handle_Poly_Triangulation& triangulation, int 
 #endif
 }
 
-void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int index, const gp_Vec3f& n)
+void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetNormal(index, n);
 #else
-    triangulation->ChangeNormals(index * 3 - 2) = n.X();
-    triangulation->ChangeNormals(index * 3 - 1) = n.Y();
-    triangulation->ChangeNormals(index * 3)     = n.Z();
+    TShort_Array1OfShortReal& normals = triangulation->ChangeNormals();
+    normals.ChangeValue(index * 3 - 2) = n.X();
+    normals.ChangeValue(index * 3 - 1) = n.Y();
+    normals.ChangeValue(index * 3)     = n.Z();
 #endif
 }
 

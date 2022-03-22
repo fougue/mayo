@@ -25,7 +25,6 @@ public:
 
 private:
     miniply::PLYReader* m_reader = nullptr;
-    std::vector<const miniply::PLYElement*> m_vecElementPtr;
     FilePath m_baseFilename;
 };
 

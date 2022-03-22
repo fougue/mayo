@@ -10,8 +10,10 @@
 #include "../base/data_triangulation.h"
 #include "../base/filepath_conv.h"
 #include "../base/document.h"
+#include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
+#include "../base/tkernel_utils.h"
 #include "miniply.h"
 
 #include <Poly_Triangulation.hxx>
@@ -28,7 +30,6 @@ PlyReader::~PlyReader()
 
 bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
-    m_vecElementPtr.clear();
     delete m_reader;
     m_reader = new miniply::PLYReader(filepath.u8string().c_str());
     if (!m_reader->valid())
@@ -142,36 +143,33 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
         return {};
 
     const int triangleCount = CppUtils::safeStaticCast<int>(vecIndex.size() / 3);
-    const bool hasUV = false; /* !vecUvCoord.empty(); */
-    const bool hasNormals = !vecNormalCoord.empty();
-    Handle_Poly_Triangulation mesh = new Poly_Triangulation(nodeCount, triangleCount, hasUV, hasNormals);
-    for (int i = 0; i < vecNodeCoord.size(); i += 3) {
+    Handle_Poly_Triangulation mesh = new Poly_Triangulation(nodeCount, triangleCount, false/*hasUvNodes*/);
+    if (!vecNormalCoord.empty())
+        MeshUtils::allocateNormals(mesh);
+
+    for (int i = 0; CppUtils::cmpLess(i, vecNodeCoord.size()); i += 3) {
         const gp_Pnt node = { vecNodeCoord.at(i), vecNodeCoord.at(i + 1), vecNodeCoord.at(i + 2) };
-        mesh->SetNode((i / 3) + 1, node);
+        MeshUtils::setNode(mesh, (i / 3) + 1, node);
     }
 
-//    for (int i = 0; i < vecUvCoord.size(); i += 2) {
-//        const gp_Pnt2d uv = { vecUvCoord.at(i), vecUvCoord.at(i + 1) };
-//        mesh->SetUVNode((i / 2) + 1, uv);
-//    }
-
-    for (int i = 0; i < vecIndex.size(); i += 3) {
+    for (int i = 0; CppUtils::cmpLess(i, vecIndex.size()); i += 3) {
         const Poly_Triangle tri = { 1 + vecIndex.at(i), 1 + vecIndex.at(i + 1), 1 + vecIndex.at(i + 2) };
-        mesh->SetTriangle((i / 3) + 1, tri);
+        MeshUtils::setTriangle(mesh, (i / 3) + 1, tri);
     }
 
-    for (int i = 0; i < vecNormalCoord.size(); i += 3) {
-        const gp_Vec3f n(vecNormalCoord.at(i), vecNormalCoord.at(i + 1), vecNormalCoord.at(i + 2));
-        mesh->SetNormal((i / 3) + 1, n);
+    for (int i = 0; CppUtils::cmpLess(i, vecNormalCoord.size()); i += 3) {
+        const auto& vnc = vecNormalCoord;
+        const MeshUtils::Poly_Triangulation_NormalType n(vnc.at(i), vnc.at(i + 1), vnc.at(i + 2));
+        MeshUtils::setNormal(mesh, (i / 3) + 1, n);
     }
 
     std::vector<Quantity_Color> vecColor;
-    for (int i = 0; i < vecColorComponent.size(); i += 3) {
+    for (int i = 0; CppUtils::cmpLess(i, vecColorComponent.size()); i += 3) {
         const Quantity_Color color = {
             vecColorComponent.at(i + 0) / 255.,
             vecColorComponent.at(i + 1) / 255.,
             vecColorComponent.at(i + 2) / 255.,
-            Quantity_TOC_sRGB
+            TKernelUtils::preferredRgbColorType()
         };
         vecColor.push_back(color);
     }
