@@ -44,6 +44,9 @@ public:
     // Decodes a string containing a color with #RRGGBB format to a Quantity_Color object
     // RR, GG, BB are in hexadecimal notation
     static bool colorFromHex(std::string_view strHex, Quantity_Color* color);
+
+    // Returns the type to be used(by default) for RGB colors, depending on OpenCascasde version
+    static Quantity_TypeOfColor preferredRgbColorType();
 };
 
 } // namespace Mayo

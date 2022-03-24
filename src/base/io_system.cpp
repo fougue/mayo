@@ -548,6 +548,12 @@ Format probeFormat_OBJ(const System::FormatProbeInput& input)
     return matchRegExp(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
 }
 
+Format probeFormat_PLY(const System::FormatProbeInput& input)
+{
+    const std::regex rx{ R"(^\s*ply\s+format\s+(ascii|binary_little_endian|binary_big_endian)\s+)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
+}
+
 void addPredefinedFormatProbes(System* system)
 {
     if (!system)
@@ -558,6 +564,7 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OCCBREP);
     system->addFormatProbe(probeFormat_STL);
     system->addFormatProbe(probeFormat_OBJ);
+    system->addFormatProbe(probeFormat_PLY);
 }
 
 } // namespace IO

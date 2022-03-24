@@ -14,6 +14,7 @@
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
+#include "../io_ply/io_ply_reader.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/qtgui_utils.h"
@@ -312,6 +313,7 @@ static void initBase(QCoreApplication* qtApp)
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    app->ioSystem()->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
     app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
     IO::addPredefinedFormatProbes(app->ioSystem());

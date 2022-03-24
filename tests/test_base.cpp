@@ -307,6 +307,7 @@ void TestBase::IO_probeFormat_test_data()
     QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::Format_STL;
     QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::Format_STL;
     QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("cube.ply") << "inputs/cube.ply" << IO::Format_PLY;
 }
 
 void TestBase::IO_probeFormatDirect_test()
@@ -342,6 +343,9 @@ void TestBase::IO_probeFormatDirect_test()
 
     fnSetProbeInput("inputs/cube.obj");
     QCOMPARE(IO::probeFormat_OBJ(input), IO::Format_OBJ);
+
+    fnSetProbeInput("inputs/cube.ply");
+    QCOMPARE(IO::probeFormat_PLY(input), IO::Format_PLY);
 }
 
 void TestBase::IO_OccStaticVariablesRollback_test()

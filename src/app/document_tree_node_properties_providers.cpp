@@ -7,6 +7,7 @@
 #include "document_tree_node_properties_providers.h"
 
 #include "../base/caf_utils.h"
+#include "../base/data_triangulation.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
 #include "../base/mesh_utils.h"
@@ -15,7 +16,6 @@
 #include "qstring_conv.h"
 
 #include <TDataStd_Name.hxx>
-#include <TDataXtd_Triangulation.hxx>
 
 namespace Mayo {
 
@@ -211,7 +211,7 @@ class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
 public:
     Properties(const DocumentTreeNode& treeNode)
     {
-        auto attrTriangulation = CafUtils::findAttribute<TDataXtd_Triangulation>(treeNode.label());
+        auto attrTriangulation = CafUtils::findAttribute<DataTriangulation>(treeNode.label());
         Handle_Poly_Triangulation polyTri;
         if (!attrTriangulation.IsNull())
             polyTri = attrTriangulation->Get();
@@ -232,7 +232,7 @@ public:
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {
-    return CafUtils::hasAttribute<TDataXtd_Triangulation>(treeNode.label());
+    return CafUtils::hasAttribute<DataTriangulation>(treeNode.label());
 }
 
 std::unique_ptr<PropertyGroupSignals>

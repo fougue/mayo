@@ -24,7 +24,8 @@ enum Format {
     Format_GLTF,
     Format_VRML,
     Format_AMF,
-    Format_DXF
+    Format_DXF,
+    Format_PLY
 };
 
 // Returns identifier(unique short name) corresponding to 'format'
