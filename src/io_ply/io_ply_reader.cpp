@@ -28,6 +28,7 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
     if (!reader.valid())
         return false;
 
+    // Reset internal data
     m_isValidMesh = false;
     m_baseFilename = filepath.stem();
     m_nodeCount = 0;
@@ -37,6 +38,7 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
     m_vecNormalCoord.clear();
     bool assumeTriangles = true;
 
+    // Guess if PLY faces are triangles
     uint32_t faceIdxs[3] = {};
     if (assumeTriangles) {
         miniply::PLYElement* faceElem = reader.get_element(reader.find_element(miniply::kPLYFaceElement));
@@ -143,29 +145,34 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*
     if (!m_isValidMesh)
         return {};
 
+    // Create target mesh
     const int triangleCount = CppUtils::safeStaticCast<int>(m_vecIndex.size() / 3);
     Handle_Poly_Triangulation mesh = new Poly_Triangulation(m_nodeCount, triangleCount, false/*hasUvNodes*/);
     if (!m_vecNormalCoord.empty())
         MeshUtils::allocateNormals(mesh);
 
+    // Copy nodes(vertices) into mesh
     for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
         const auto& vec = m_vecNodeCoord;
         const gp_Pnt node = { vec.at(i), vec.at(i + 1), vec.at(i + 2) };
         MeshUtils::setNode(mesh, (i / 3) + 1, node);
     }
 
+    // Copy triangles indices into mesh
     for (int i = 0; CppUtils::cmpLess(i, m_vecIndex.size()); i += 3) {
         const auto& vec = m_vecIndex;
         const Poly_Triangle tri = { 1 + vec.at(i), 1 + vec.at(i + 1), 1 + vec.at(i + 2) };
         MeshUtils::setTriangle(mesh, (i / 3) + 1, tri);
     }
 
+    // Copy normals(optional) into mesh
     for (int i = 0; CppUtils::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
         const auto& vec = m_vecNormalCoord;
         const MeshUtils::Poly_Triangulation_NormalType n(vec.at(i), vec.at(i + 1), vec.at(i + 2));
         MeshUtils::setNormal(mesh, (i / 3) + 1, n);
     }
 
+    // Copy colors(optional) into mesh
     std::vector<Quantity_Color> vecColor;
     for (int i = 0; CppUtils::cmpLess(i, m_vecColorComponent.size()); i += 3) {
         const auto& vec = m_vecColorComponent;
@@ -176,6 +183,7 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*
         vecColor.push_back(color);
     }
 
+    // Insert mesh as a document entity
     const TDF_Label entityLabel = doc->newEntityLabel();
     DataTriangulation::Set(entityLabel, mesh, vecColor);
     TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));

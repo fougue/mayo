@@ -23,11 +23,12 @@ private:
     uint32_t m_nodeCount = 0;
     bool m_isValidMesh = false;
     std::vector<float> m_vecNodeCoord;
-    std::vector<uint8_t> m_vecColorComponent;
     std::vector<int> m_vecIndex;
     std::vector<float> m_vecNormalCoord;
+    std::vector<uint8_t> m_vecColorComponent;
 };
 
+// Provides factory to create PlyReader objects
 class PlyFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
