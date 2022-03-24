@@ -8,8 +8,8 @@
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/data_triangulation.h"
-#include "../base/filepath_conv.h"
 #include "../base/document.h"
+#include "../base/filepath_conv.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
@@ -18,7 +18,6 @@
 
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
-#include <vector>
 
 namespace Mayo {
 namespace IO {
@@ -68,10 +67,10 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
                 reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::UChar, m_vecColorComponent.data());
             }
 
-//            if (reader.find_texcoord(propIdxs)) {
-//                vecUvCoord.resize(nodeCount * 2);
-//                reader.extract_properties(propIdxs, 2, miniply::PLYPropertyType::Float, vecUvCoord.data());
-//            }
+            //if (reader.find_texcoord(propIdxs)) {
+            //    vecUvCoord.resize(nodeCount * 2);
+            //    reader.extract_properties(propIdxs, 2, miniply::PLYPropertyType::Float, vecUvCoord.data());
+            //}
 
             gotVerts = true;
         }
@@ -197,7 +196,7 @@ std::unique_ptr<Reader> PlyFactoryReader::create(Format format) const
     return {};
 }
 
-std::unique_ptr<PropertyGroup> PlyFactoryReader::createProperties(Format /*format*/, PropertyGroup* /*parentGroup*/) const
+std::unique_ptr<PropertyGroup> PlyFactoryReader::createProperties(Format, PropertyGroup*) const
 {
     return {};
 }
