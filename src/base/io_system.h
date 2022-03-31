@@ -176,6 +176,15 @@ public:
     };
     Operation_ExportApplicationItems exportApplicationItems();
 
+    // Helpers
+
+    // Iterate over `spanItems` and call `fnCallback` for each item. Garantees that doublon items
+    // will be visited only once
+    static void visitUniqueItems(
+            Span<const ApplicationItem> spanItem,
+            std::function<void(const ApplicationItem&)> fnCallback
+    );
+
     // Implementation
 private:
     std::vector<FormatProbe> m_vecFormatProbe;

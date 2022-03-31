@@ -6,6 +6,7 @@
 
 #include "io_system.h"
 
+#include "caf_utils.h"
 #include "cpp_utils.h"
 #include "document.h"
 #include "io_parameters_provider.h"
@@ -14,6 +15,7 @@
 #include "messenger.h"
 #include "task_manager.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 
 #include <fmt/format.h>
 #include <algorithm>
@@ -23,6 +25,7 @@
 #include <locale>
 #include <mutex>
 #include <regex>
+#include <unordered_set>
 #include <vector>
 
 namespace Mayo {
@@ -416,6 +419,32 @@ System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(Syste
 System::Operation_ExportApplicationItems System::exportApplicationItems()
 {
     return Operation_ExportApplicationItems(*this);
+}
+
+void System::visitUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void (const ApplicationItem &)> fnCallback)
+{
+    std::unordered_set<DocumentPtr> setDoc;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocument()) {
+            auto [it, ok] = setDoc.insert(item.document());
+            if (ok)
+                fnCallback(item);
+        }
+    }
+
+    std::unordered_set<TDF_Label> setNode;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocumentTreeNode()) {
+            auto itDoc = setDoc.find(item.document());
+            if (itDoc == setDoc.cend()) {
+                auto [it, ok] = setNode.insert(item.documentTreeNode().label());
+                if (ok)
+                    fnCallback(item);
+            }
+        }
+    }
 }
 
 System::Operation_ImportInDocument&
