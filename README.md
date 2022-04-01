@@ -11,29 +11,29 @@
 Mayo is an opensource 3D CAD viewer and converter
 
 ## Overview
-  * View and convert 3D files in different formats
-  * Explore assembly trees(product structure) and view properties
-  * Cross platform: runs on Windows, Linux and macOS
-  * Underlying toolkits: OpenCascade and Qt
+* View and convert 3D files in different formats
+* Explore assembly trees(product structure) and view properties
+* Cross platform: runs on Windows, Linux and macOS
+* Underlying toolkits: OpenCascade and Qt
 
 ## Current features
-  * 3D exploding of the model tree, allowing better exploration of complex designs
-  * 3D clip planes with configurable capping
-  * 3D view cube providing intuitive camera manipulation
-  * Save image(snapshot) of the current 3D view
-  * Quick access to the CAD files recently open thanks to thumbnails in the Home page
-  * Toggle visibility of any item from the Model tree(use checkbox)
-  * Customizable precision of the meshes computed from BRep shapes, affecting visualization quality and conversion into mesh formats
-  * Convert files to multiple CAD formats from command-line interface(CLI)
+* 3D exploding of the model tree, allowing better exploration of complex designs
+* 3D clip planes with configurable capping
+* 3D view cube providing intuitive camera manipulation
+* Save image(snapshot) of the current 3D view
+* Quick access to the CAD files recently open thanks to thumbnails in the Home page
+* Toggle visibility of any item from the Model tree(use checkbox)
+* Customizable precision of the meshes computed from BRep shapes, affecting visualization quality and conversion into mesh formats
+* Convert files to multiple CAD formats from command-line interface(CLI)
 
 3D viewer operations :
-  * Rotate : mouse left + move
-  * Pan : mouse right + move
-  * Zoom : mouse wheel(scroll)
-  * Window zoom : mouse wheel + move
-  * Instant zoom : space bar
-  * Select Object: mouse left click
-  * Select Objects: SHIFT + mouse left clicks
+* Rotate : mouse left + move
+* Pan : mouse right + move
+* Zoom : mouse wheel(scroll)
+* Window zoom : mouse wheel + move
+* Instant zoom : space bar
+* Select Object: mouse left click
+* Select Objects: SHIFT + mouse left clicks
 
 ## Supported formats
   Format  |  Import   |  Export  | Notes
