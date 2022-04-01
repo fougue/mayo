@@ -7,17 +7,16 @@
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
 
-
-# What is Mayo
+## What is Mayo
 Mayo is an opensource 3D CAD viewer and converter
 
-# Overview
+## Overview
 * View and convert 3D files in different formats
 * Explore assembly trees(product structure) and view properties
 * Cross platform: runs on Windows, Linux and macOS
 * Underlying toolkits: OpenCascade and Qt
 
-# Current features
+## Current features
 * 3D exploding of the model tree, allowing better exploration of complex designs
 * 3D clip planes with configurable capping
 * 3D view cube providing intuitive camera manipulation
@@ -36,24 +35,24 @@ Mayo is an opensource 3D CAD viewer and converter
 * Select Object: mouse left click
 * Select Objects: SHIFT + mouse left clicks
 
-# Supported formats
-  Formats                 |  Import   |  Export  | Notes
---------------------------|-----------|----------|------------------------------
-STEP                      |  &#10004; | &#10004; | AP203, 214, 242(some parts)
-IGES                      |  &#10004; | &#10004; | v5.3
-OpenCascade BREP          |  &#10004; | &#10004; |
-DXF                       |  &#10004; | &#10060; |
-OBJ                       |  &#10004; | &#10004; | Import requires OpenCascade &#8805; v7.4.0<br>Export requires OpenCascade &#8805; v7.6.0
-glTF                      |  &#10004; | &#10004; | Import requires OpenCascade &#8805; v7.4.0<br>Export requires OpenCascade &#8805; v7.5.0<br>Supports 1.0, 2.0 and GLB
-VRML                      |  &#10060; | &#10004; | v2.0 UTF8
-STL                       |  &#10004; | &#10004; | ASCII/binary
-AMF                       |  &#10060; | &#10004; | v1.2 Text/ZIP<br>Requires [gmio](https://github.com/fougue/gmio) &#8805; v0.4.0
-PLY                       |  &#10004; | &#10060; | ASCII/binary(little and big endian)<br>Colors supported
-Image                     |  &#10060; | &#10004; | PNG, JPEG, BMP, GIF, ...<br>See export [options](https://github.com/fougue/mayo/wiki/Export-parameters-by-CAD-format#image)
+## Supported formats
+  Format  |  Import   |  Export  | Notes
+----------|-----------|----------|------------------------------
+STEP      |  &#10004; | &#10004; | AP203, 214, 242
+IGES      |  &#10004; | &#10004; | v5.3
+BREP      |  &#10004; | &#10004; | OpenCascade format
+DXF       |  &#10004; | &#10060; |
+OBJ       |  &#10004; | &#10004; |
+glTF      |  &#10004; | &#10004; | 1.0, 2.0 and GLB
+VRML      |  &#10060; | &#10004; | v2.0 UTF8
+STL       |  &#10004; | &#10004; | ASCII/binary
+AMF       |  &#10060; | &#10004; | v1.2 Text/ZIP
+PLY       |  &#10004; | &#10060; | ASCII/binary
+Image     |  &#10060; | &#10004; | PNG, JPEG, ...
 
-Mayo provides precise control over [import](https://github.com/fougue/mayo/wiki/Import-parameters-by-CAD-format) and [export](https://github.com/fougue/mayo/wiki/Export-parameters-by-CAD-format) with many parameters per format.
+See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
 
-# Gallery
+## Gallery
 
 <img src="doc/screencast_1.gif"/>
 
@@ -67,6 +66,6 @@ Mayo provides precise control over [import](https://github.com/fougue/mayo/wiki/
 
 <img src="doc/screenshot_5.png"/>
 
-# How to build Mayo
+## How to build Mayo
 [Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
 [Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
