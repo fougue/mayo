@@ -134,20 +134,20 @@ private:
     std::ostringstream* m_ssLayer;
 
 protected:
-    void putLine(const Base::Vector3d s, const Base::Vector3d e,
-                 std::ostringstream* outStream, const std::string handle,
-                 const std::string ownerHandle);
-    void putText(const char* text, const Base::Vector3d location1, const Base::Vector3d location2,
+    void putLine(const Base::Vector3d& s, const Base::Vector3d& e,
+                 std::ostringstream* outStream, const std::string& handle,
+                 const std::string& ownerHandle);
+    void putText(const char* text, const Base::Vector3d& location1, const Base::Vector3d& location2,
                  const double height, const int horizJust,
-                 std::ostringstream* outStream, const std::string handle,
-                 const std::string ownerHandle);
-    void putArrow(Base::Vector3d arrowPos, Base::Vector3d barb1Pos, Base::Vector3d barb2Pos,
-                  std::ostringstream* outStream, const std::string handle,
-                  const std::string ownerHandle);
+                 std::ostringstream* outStream, const std::string& handle,
+                 const std::string& ownerHandle);
+    void putArrow(const Base::Vector3d& arrowPos, const Base::Vector3d& barb1Pos, const Base::Vector3d& barb2Pos,
+                  std::ostringstream* outStream, const std::string& handle,
+                  const std::string& ownerHandle);
 
     //! copy boiler plate file
-    std::string getPlateFile(std::string fileSpec);
-    void setDataDir(std::string s) { m_dataDir = s; }
+    std::string getPlateFile(const std::string& fileSpec);
+    void setDataDir(const std::string& s) { m_dataDir = s; }
     std::string getHandle(void);
     std::string getEntityHandle(void);
     std::string getLayerHandle(void);

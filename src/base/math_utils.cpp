@@ -10,6 +10,7 @@
 #include <Precision.hxx>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace Mayo {
 
@@ -43,8 +44,8 @@ std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& plan
     const gp_Vec n(isReversedStandardDir(planeNormal) ? planeNormal.Reversed() : planeNormal);
     bool isMaxValid = false;
     bool isMinValid = false;
-    double rmax;
-    double rmin;
+    double rmax = std::numeric_limits<double>::lowest();
+    double rmin = std::numeric_limits<double>::max();
     for (const gp_Pnt& bndPoint : bbc.vertices()) {
         const gp_Vec vec(bndPoint.XYZ());
         const double dot = n.Dot(vec);

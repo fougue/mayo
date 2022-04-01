@@ -735,7 +735,7 @@ int main(int argc, char* argv[])
         if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
             auto fnRedirectToConsole = [](DWORD hnd, FILE* file, const char* strPath) {
                 if (GetStdHandle(hnd) != INVALID_HANDLE_VALUE) {
-                    freopen(strPath, "w", file);
+                    file = freopen(strPath, "w", file);
                     setvbuf(file, nullptr, _IONBF, 0);
                 }
             };
