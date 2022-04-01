@@ -119,7 +119,7 @@ public:
     const Settings_SectionIndex sectionId_graphicsMeshDefaults;
     PropertyOccColor meshDefaultsColor{ this, textId("color") };
     PropertyOccColor meshDefaultsEdgeColor{ this, textId("edgeColor") };
-    PropertyEnumeration meshDefaultsMaterial{ this, textId("material"), OcctEnums::Graphic3d_NameOfMaterial() };
+    PropertyEnumeration meshDefaultsMaterial{ this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial() };
     PropertyBool meshDefaultsShowEdges{ this, textId("showEgesOn") };
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
 

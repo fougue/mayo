@@ -6,14 +6,34 @@
 
 #include "property_enumeration.h"
 
+#include <stdexcept>
+
 namespace Mayo {
 
 PropertyEnumeration::PropertyEnumeration(
-        PropertyGroup* grp, const TextId& name, const Enumeration& enumeration)
+        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration)
     : Property(grp, name),
       m_enumeration(enumeration),
-      m_value(!m_enumeration.empty() ? m_enumeration.itemAt(0).value : -1)
+      m_value(enumeration && enumeration->empty() ? enumeration->itemAt(0).value : -1)
 {
+}
+
+const Enumeration& PropertyEnumeration::enumeration() const
+{
+    if (!m_enumeration)
+        throw std::runtime_error("Internal Enumeration object must not be null");
+
+    return *m_enumeration;
+}
+
+PropertyEnumeration::PropertyEnumeration(PropertyGroup* grp, const TextId& name)
+    : Property(grp, name)
+{
+}
+
+void PropertyEnumeration::setEnumeration(const Enumeration* enumeration)
+{
+    m_enumeration = enumeration;
 }
 
 void PropertyEnumeration::addDescription(Enumeration::Value value, std::string_view descr)
@@ -37,7 +57,7 @@ void PropertyEnumeration::clearDescriptions()
 
 std::string_view PropertyEnumeration::name() const
 {
-    return m_enumeration.findNameByValue(m_value);
+    return m_enumeration ? m_enumeration->findNameByValue(m_value) : std::string_view{};
 }
 
 Enumeration::Value PropertyEnumeration::value() const
@@ -53,7 +73,10 @@ bool PropertyEnumeration::setValue(Enumeration::Value value)
 
 bool PropertyEnumeration::setValueByName(std::string_view name)
 {
-    return Property::setValueHelper(this, &m_value, m_enumeration.findValueByName(name));
+    if (!m_enumeration)
+        return false;
+
+    return Property::setValueHelper(this, &m_value, m_enumeration->findValueByName(name));
 }
 
 const char* PropertyEnumeration::dynTypeName() const

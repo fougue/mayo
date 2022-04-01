@@ -130,7 +130,7 @@ public:
     PropertyDouble scaling{ this, textId("scaling") };
     PropertyBool importAnnotations{ this, textId("importAnnotations") };
     PropertyBool groupLayers{ this, textId("groupLayers") };
-    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), systemFontNames() };
+    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &systemFontNames() };
 };
 
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)

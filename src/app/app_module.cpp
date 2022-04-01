@@ -44,7 +44,7 @@ AppModule::AppModule(Application* app)
       groupId_system(app->settings()->addGroup(textId("system"))),
       sectionId_systemUnits(app->settings()->addSection(this->groupId_system, textId("units"))),
       groupId_application(app->settings()->addGroup(textId("application"))),
-      language(this, textId("language"), enumLanguages),
+      language(this, textId("language"), &enumLanguages),
       groupId_meshing(app->settings()->addGroup(textId("meshing"))),
       groupId_graphics(app->settings()->addGroup(textId("graphics"))),
       sectionId_graphicsClipPlanes(
