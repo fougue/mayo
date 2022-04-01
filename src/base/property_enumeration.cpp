@@ -11,8 +11,8 @@ namespace Mayo {
 PropertyEnumeration::PropertyEnumeration(
         PropertyGroup* grp, const TextId& name, const Enumeration& enumeration)
     : Property(grp, name),
-      m_value(!enumeration.empty() ? enumeration.items().front().value : -1),
-      m_enumeration(enumeration)
+      m_enumeration(enumeration),
+      m_value(!m_enumeration.empty() ? m_enumeration.itemAt(0).value : -1)
 {
 }
 

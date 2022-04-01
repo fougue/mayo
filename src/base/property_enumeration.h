@@ -47,8 +47,8 @@ private:
         std::string text;
     };
 
-    Enumeration::Value m_value;
     const Enumeration& m_enumeration;
+    Enumeration::Value m_value;
     std::vector<Description> m_vecDescription;
 };
 

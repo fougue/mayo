@@ -42,7 +42,7 @@ public:
 
     // Count of enumeration items
     int size() const { return int(m_vecItem.size()); }
-    bool empty() const { return this->size() == 0; }
+    bool empty() const { return m_vecItem.empty(); }
 
     // Finds index of the item corresponding to an enumerated value. Returns -1 if not found
     template<typename ENUM> int findIndexByValue(ENUM value) const;
