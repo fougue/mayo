@@ -1,39 +1,48 @@
-<p align="center">
-  <img src="images/appicon_256.png" width="200px" align="center" />
-</p>
-
+<div align="center">
+  
 [![Build status](https://ci.appveyor.com/api/projects/status/6d1w0d6gw28npxpf?svg=true)](https://ci.appveyor.com/project/HuguesDelorme/mayo)
 [![Build Status](https://img.shields.io/travis/fougue/mayo/develop.svg?logo=travis)](https://app.travis-ci.com/fougue/mayo)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d51f8ca6fea34886b8308ff0246172ce)](https://www.codacy.com/gh/fougue/mayo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fougue/mayo&amp;utm_campaign=Badge_Grade)
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
+  
+</div>
 
-## What is Mayo
-Mayo is an opensource 3D CAD viewer and converter
+<div align="center">
+  <img src="images/appicon_256.png" alt="Logo" width="128px" align="center" />
+  <p></p>
+  <p align="center"><strong>Mayo</strong> the opensource 3D CAD viewer and converter</9>
+  <p></p>
+  <img src="doc/screencast_1.gif"/>
+</div>
 
 ## Overview
-* View and convert 3D files in different formats
-* Explore assembly trees(product structure) and view properties
-* Cross platform: runs on Windows, Linux and macOS
-* Underlying toolkits: OpenCascade and Qt
+**⮞ Convert 3D files** <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mayo can read/write 3D files from/to STEP, IGES, STL and many other [CAD formats](https://github.com/fougue/mayo/wiki/Supported-formats)
 
-## Current features
-* 3D exploding of the model tree, allowing better exploration of complex designs
-* 3D clip planes with configurable capping
-* 3D view cube providing intuitive camera manipulation
-* Save image(snapshot) of the current 3D view
-* Quick access to the CAD files recently open thanks to thumbnails in the Home page
-* Toggle visibility of any item from the Model tree(use checkbox)
-* Customizable precision of the meshes computed from BRep shapes, affecting visualization quality and conversion into mesh formats
-* Convert files to multiple CAD formats from command-line interface(CLI)
+**⮞ Visualize 3D files** <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mayo 3D viewer supports clip planes, exploding of assemblies, show/hide parts, meta-data, ...
 
-3D viewer operations :
-* Rotate : mouse left + move
-* Pan : mouse right + move
-* Zoom : mouse wheel(scroll)
-* Window zoom : mouse wheel + move
-* Instant zoom : space bar
-* Select Object: mouse left click
-* Select Objects: SHIFT + mouse left clicks
+**⮞ Cross platform** <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mayo runs on Windows, Linux and macOS
+
+**⮞ Solid foundations** <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mayo is developed in modern C++ with [Qt](https://www.qt.io) and [OpenCascade](https://dev.opencascade.org)
+
+## Features
+**☛ 3D exploding of the model tree** allowing better exploration of complex designs
+
+**☛ 3D clip planes** with configurable capping
+
+**☛ 3D view cube** providing intuitive camera manipulation
+
+**☛ Quick access to CAD files** recently open thanks to thumbnails in the [Home page](https://github.com/fougue/mayo/blob/develop/doc/screenshot_5.png)
+
+**☛ Toggle item visibility** within the Model tree(use checkbox)
+
+**☛ Customizable mesh precision** for BREP shapes, affecting visualization quality and conversion into mesh formats
+
+**☛ Convert files** to multiple CAD formats from [command-line interface(CLI)](https://github.com/fougue/mayo/blob/develop/doc/screencast_cli.gif)
 
 ## Supported formats
   Format  |  Import   |  Export  | Notes
@@ -52,12 +61,26 @@ Image     |  &#10060; | &#10004; | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
 
+## 3D viewer operations
+
+  Operation    |  Mouse/Keyboard controls
+---------------|--------------------------
+Rotate         | mouse left  + move
+Pan            | mouse right + move
+Zoom           | mouse wheel(scroll)
+Window zoom    | mouse wheel + move
+Instant zoom   | space bar
+Select Object  | mouse left click
+Select Objects | SHIFT + mouse left clicks
+
+## How to build Mayo
+[Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
+[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
+
 ## Gallery
 
-<img src="doc/screencast_1.gif"/>
-
 <img src="doc/screencast_cli.gif"/>
-
+  
 <img src="doc/screenshot_2.png"/>
 
 <img src="doc/screenshot_3.png"/>
@@ -65,7 +88,3 @@ See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported
 <img src="doc/screenshot_4.png"/>
 
 <img src="doc/screenshot_5.png"/>
-
-## How to build Mayo
-[Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
-[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
