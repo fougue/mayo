@@ -18,16 +18,16 @@
 </div>
 
 ## :eyeglasses: Overview
-- **Convert 3D files** <br/>&nbsp;&nbsp;
+- **Convert 3D files** <br/>
 Mayo can read/write 3D files from/to STEP, IGES, STL and many other [CAD formats](https://github.com/fougue/mayo/wiki/Supported-formats)
 
-- **Visualize 3D files** <br/>&nbsp;&nbsp;
+- **Visualize 3D files** <br/>
 Mayo 3D viewer supports clip planes, exploding of assemblies, show/hide parts, meta-data, ...
 
-- **Cross platform** <br/>&nbsp;&nbsp;
+- **Cross platform** <br/>
 Mayo runs on Windows, Linux and macOS
 
-- **Solid foundations** <br/>&nbsp;&nbsp;
+- **Solid foundations** <br/>
 Mayo is developed in modern C++ with [Qt](https://www.qt.io) and [OpenCascade](https://dev.opencascade.org)
 
 ## :zap: Features
