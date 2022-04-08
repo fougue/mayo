@@ -17,52 +17,52 @@
   <img src="doc/screencast_1.gif"/>
 </div>
 
-## Overview
-**⮞ Convert 3D files** <br/>&nbsp;&nbsp;
+## :eyeglasses: Overview
+- **Convert 3D files** <br/>&nbsp;&nbsp;
 Mayo can read/write 3D files from/to STEP, IGES, STL and many other [CAD formats](https://github.com/fougue/mayo/wiki/Supported-formats)
 
-**⮞ Visualize 3D files** <br/>&nbsp;&nbsp;
+- **Visualize 3D files** <br/>&nbsp;&nbsp;
 Mayo 3D viewer supports clip planes, exploding of assemblies, show/hide parts, meta-data, ...
 
-**⮞ Cross platform** <br/>&nbsp;&nbsp;
+- **Cross platform** <br/>&nbsp;&nbsp;
 Mayo runs on Windows, Linux and macOS
 
-**⮞ Solid foundations** <br/>&nbsp;&nbsp;
+- **Solid foundations** <br/>&nbsp;&nbsp;
 Mayo is developed in modern C++ with [Qt](https://www.qt.io) and [OpenCascade](https://dev.opencascade.org)
 
-## Features
-**☛ 3D exploding of the model tree** allowing better exploration of complex designs
+## :zap: Features
+- **3D exploding of the model tree** allowing better exploration of complex designs
 
-**☛ 3D clip planes** with configurable capping
+- **3D clip planes** with configurable capping
 
-**☛ 3D view cube** providing intuitive camera manipulation
+- **3D view cube** providing intuitive camera manipulation
 
-**☛ Quick access to CAD files** recently open thanks to thumbnails in the [Home page](https://github.com/fougue/mayo/blob/develop/doc/screenshot_5.png)
+- **Quick access to CAD files** recently open thanks to thumbnails in the [Home page](https://github.com/fougue/mayo/blob/develop/doc/screenshot_5.png)
 
-**☛ Toggle item visibility** within the Model tree(use checkbox)
+- **Toggle item visibility** within the Model tree(use checkbox)
 
-**☛ Customizable mesh precision** for BREP shapes, affecting visualization quality and conversion into mesh formats
+- **Customizable mesh precision** for BREP shapes, affecting visualization quality and conversion into mesh formats
 
-**☛ Convert files** to multiple CAD formats from [command-line interface(CLI)](https://github.com/fougue/mayo/blob/develop/doc/screencast_cli.gif)
+- **Convert files** to multiple CAD formats from [command-line interface](https://github.com/fougue/mayo/blob/develop/doc/screencast_cli.gif):computer:
 
-## Supported formats
-  Format  |  Import   |  Export  | Notes
-----------|-----------|----------|------------------------------
-STEP      |  &#10004; | &#10004; | AP203, 214, 242
-IGES      |  &#10004; | &#10004; | v5.3
-BREP      |  &#10004; | &#10004; | OpenCascade format
-DXF       |  &#10004; | &#10060; |
-OBJ       |  &#10004; | &#10004; |
-glTF      |  &#10004; | &#10004; | 1.0, 2.0 and GLB
-VRML      |  &#10060; | &#10004; | v2.0 UTF8
-STL       |  &#10004; | &#10004; | ASCII/binary
-AMF       |  &#10060; | &#10004; | v1.2 Text/ZIP
-PLY       |  &#10004; | &#10060; | ASCII/binary
-Image     |  &#10060; | &#10004; | PNG, JPEG, ...
+## :floppy_disk: Supported formats
+  Format  |  Import            |  Export            | Notes
+----------|--------------------|--------------------|------------------
+STEP      | :white_check_mark: | :white_check_mark: | AP203, 214, 242
+IGES      | :white_check_mark: | :white_check_mark: | v5.3
+BREP      | :white_check_mark: | :white_check_mark: | OpenCascade format
+DXF       | :white_check_mark: | :x:                |
+OBJ       | :white_check_mark: | :white_check_mark: |
+glTF      | :white_check_mark: | :white_check_mark: | 1.0, 2.0 and GLB
+VRML      | :x:                | :white_check_mark: | v2.0 UTF8
+STL       | :white_check_mark: | :white_check_mark: | ASCII/binary
+AMF       | :x:                | :white_check_mark: | v1.2 Text/ZIP
+PLY       | :white_check_mark: | :x:                | ASCII/binary
+Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
 
-## 3D viewer operations
+## :mag: 3D viewer operations
 
   Operation    |  Mouse/Keyboard controls
 ---------------|--------------------------
@@ -74,11 +74,11 @@ Instant zoom   | space bar
 Select Object  | mouse left click
 Select Objects | SHIFT + mouse left clicks
 
-## How to build Mayo
+## :hammer: How to build Mayo
 [Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
 [Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
 
-## Gallery
+## :clapper: Gallery
 
 <img src="doc/screencast_cli.gif"/>
   
