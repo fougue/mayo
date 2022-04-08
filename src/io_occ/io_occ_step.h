@@ -25,6 +25,8 @@ class OccStaticVariablesRollback;
 class OccStepReader : public Reader {
 public:
     OccStepReader();
+    OccStepReader(const OccStepReader&) = delete; // Not copyable
+    OccStepReader& operator=(const OccStepReader&) = delete; // Not copyable
     ~OccStepReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
@@ -108,6 +110,8 @@ private:
 class OccStepWriter : public Writer {
 public:
     OccStepWriter();
+    OccStepWriter(const OccStepWriter&) = delete; // Not copyable
+    OccStepWriter& operator=(const OccStepWriter&) = delete; // Not copyable
     ~OccStepWriter();
 
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;

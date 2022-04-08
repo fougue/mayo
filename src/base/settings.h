@@ -37,6 +37,8 @@ public:
     using ResetFunction = std::function<void()>;
 
     Settings(QObject* parent = nullptr);
+    Settings(const Settings&) = delete; // Not copyable
+    Settings& operator=(const Settings&) = delete; // Not copyable
     ~Settings();
 
     void setStorage(std::unique_ptr<Storage> ptrStorage);
