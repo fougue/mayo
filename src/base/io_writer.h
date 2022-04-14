@@ -8,13 +8,13 @@
 
 #include "filepath.h"
 #include "io_format.h"
+#include "messenger_client.h"
 #include "span.h"
 #include <memory>
 
 namespace Mayo {
 
 class ApplicationItem;
-class Messenger;
 class PropertyGroup;
 class TaskProgress;
 
@@ -24,9 +24,8 @@ namespace IO {
 // Provides services for writing files in two steps:
 //     - transfer a list of items to be written
 //     - write transferred items into target file
-class Writer {
+class Writer : public MessengerClient {
 public:
-    Writer();
     virtual ~Writer() = default;
 
     // Converts items(documents and document nodes) into data ready to be written
@@ -39,13 +38,6 @@ public:
 
     // Apply properties contain in 'group' to the writer's parameter values(known in writer sub-class)
     virtual void applyProperties(const PropertyGroup* /*params*/) {}
-
-    // Messenger object used to report infos, warnings and errors
-    Messenger* messenger() const { return m_messenger; }
-    void setMessenger(Messenger* messenger);
-
-private:
-    Messenger* m_messenger = nullptr;
 };
 
 // Abstract base class for all writer factories

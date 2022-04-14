@@ -9,13 +9,13 @@
 #include "document_ptr.h"
 #include "filepath.h"
 #include "io_format.h"
+#include "messenger_client.h"
 #include "span.h"
 #include <TDF_LabelSequence.hxx>
 #include <memory>
 
 namespace Mayo {
 
-class Messenger;
 class PropertyGroup;
 class TaskProgress;
 
@@ -25,9 +25,8 @@ namespace IO {
 // Provides services for reading files in two steps:
 //     - parse input file into memory(service Reader::readFile())
 //     - convert data in memory into Document object(service Reader::transfer())
-class Reader {
+class Reader : public MessengerClient {
 public:
-    Reader();
     virtual ~Reader() = default;
 
     // Reads file at path 'fp' into memory using indicator to report progress
@@ -40,13 +39,6 @@ public:
 
     // Apply properties contain in 'group' to the reader's parameter values(known in reader sub-class)
     virtual void applyProperties(const PropertyGroup* /*group*/) {}
-
-    // Messenger object used to report infos, warnings and errors
-    Messenger* messenger() const { return m_messenger; }
-    void setMessenger(Messenger* messenger);
-
-private:
-    Messenger* m_messenger = nullptr;
 };
 
 // Abstract base class for all reader factories
