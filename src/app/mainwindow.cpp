@@ -344,10 +344,10 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->actionToggleLeftSidebar, &QAction::toggled,
                 this, &MainWindow::toggleLeftSidebar);
-    QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, [=]{
+    QObject::connect(m_ui->actionPreviousDoc, &QAction::triggered, this, [=]{
         this->setCurrentDocumentIndex(this->currentDocumentIndex() - 1);
     });
-    QObject::connect(m_ui->actionNextDoc, &QAction::triggered, [=]{
+    QObject::connect(m_ui->actionNextDoc, &QAction::triggered, this, [=]{
         this->setCurrentDocumentIndex(this->currentDocumentIndex() + 1);
     });
     QObject::connect(
@@ -375,7 +375,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 this, &MainWindow::onApplicationItemSelectionChanged);
     QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
-                [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
+                this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
                 AppModule::get(guiApp->application()), &AppModule::message,
                 this, [=](Messenger::MessageType msgType, const QString& text) {
@@ -394,9 +394,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
         const int iconSize = this->style()->pixelMetric(QStyle::PM_ListViewIconSize);
         listViewBtns->setButtonIconSize(1, QSize(iconSize * 0.66, iconSize * 0.66));
         listViewBtns->installDefaultItemDelegate();
-        QObject::connect(
-                    listViewBtns, &ItemViewButtons::buttonClicked,
-                    [=](int btnId, const QModelIndex& index) {
+        QObject::connect(listViewBtns, &ItemViewButtons::buttonClicked, this, [=](int btnId, QModelIndex index) {
             if (btnId == 1)
                 this->closeDocument(index.row());
         });
@@ -766,8 +764,8 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     });
 
     V3dViewController* ctrl = widget->controller();
-    QObject::connect(ctrl, &V3dViewController::mouseMoved, [=](const QPoint& pos2d) {
-        guiDoc->graphicsScene()->highlightAt(pos2d, widget->guiDocument()->v3dView());
+    QObject::connect(ctrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
+        guiDoc->graphicsScene()->highlightAt(pos2d, guiDoc->v3dView());
         widget->view()->redraw();
         auto selector = guiDoc->graphicsScene()->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
@@ -1053,7 +1051,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     auto appModule = AppModule::get(m_guiApp->application());
     QAction* action = menu->addAction(to_QString(appModule->linkWithDocumentSelector.name().tr()));
     action->setCheckable(true);
-    QObject::connect(action, &QAction::triggered, [=](bool on) {
+    QObject::connect(action, &QAction::triggered, this, [=](bool on) {
         appModule->linkWithDocumentSelector.setValue(on);
     });
 
