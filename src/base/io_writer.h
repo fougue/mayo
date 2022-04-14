@@ -37,7 +37,7 @@ public:
     virtual bool writeFile(const FilePath& fp, TaskProgress* progress) = 0;
 
     // Apply properties contain in 'group' to the writer's parameter values(known in writer sub-class)
-    virtual void applyProperties(const PropertyGroup* /*params*/) {}
+    virtual void applyProperties(const PropertyGroup* group) = 0;
 };
 
 // Abstract base class for all writer factories

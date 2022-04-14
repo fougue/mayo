@@ -38,7 +38,7 @@ public:
     virtual TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) = 0;
 
     // Apply properties contain in 'group' to the reader's parameter values(known in reader sub-class)
-    virtual void applyProperties(const PropertyGroup* /*group*/) {}
+    virtual void applyProperties(const PropertyGroup* group) = 0;
 };
 
 // Abstract base class for all reader factories
