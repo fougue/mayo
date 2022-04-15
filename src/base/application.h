@@ -17,7 +17,6 @@
 
 namespace Mayo {
 
-class Settings;
 class DocumentTreeNodePropertiesProviderTable;
 
 namespace IO { class System; }
@@ -53,7 +52,6 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
-    Settings* settings() const;
     IO::System* ioSystem() const;
     DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 

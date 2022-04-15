@@ -59,7 +59,7 @@ protected:
 
 static QStringUtils::TextOptions appDefaultTextOptions()
 {
-    return AppModule::get(Application::instance())->defaultTextOptions();
+    return AppModule::get()->defaultTextOptions();
 }
 
 static QString toStringDHMS(QuantityTime time)
@@ -94,7 +94,7 @@ static QString propertyValueText(const PropertyBool* prop) {
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return AppModule::get(Application::instance())->locale().toString(prop->value());
+    return AppModule::get()->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {

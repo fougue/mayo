@@ -9,7 +9,6 @@
 #include "filepath_conv.h"
 #include "io_system.h"
 #include "property_builtins.h"
-#include "settings.h"
 #include "task_common.h"
 #include "tkernel_utils.h"
 
@@ -45,7 +44,6 @@ public:
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
-    Settings m_settings;
     IO::System m_ioSystem;
     DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
     std::vector<Application::Translator> m_vecTranslator;
@@ -151,11 +149,6 @@ void Application::closeDocument(const DocumentPtr& doc)
     TDocStd_Application::Close(doc);
 }
 
-Settings* Application::settings() const
-{
-    return &(d->m_settings);
-}
-
 IO::System* Application::ioSystem() const
 {
     return &(d->m_ioSystem);
@@ -245,7 +238,6 @@ Application::Application()
     : QObject(nullptr),
       d(new Private)
 {
-    d->m_settings.setParent(this);
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)

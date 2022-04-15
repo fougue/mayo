@@ -105,7 +105,7 @@ struct PropertyDoubleEditor : public InterfacePropertyEditor, public QDoubleSpin
             this->setButtonSymbols(QAbstractSpinBox::NoButtons);
         }
 
-        this->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
+        this->setDecimals(AppModule::get()->properties()->unitSystemDecimals.value());
         QObject::connect(this, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double val) {
             property->setValue(val);
         });
@@ -267,8 +267,8 @@ struct Property3dCoordsEditor : public InterfacePropertyEditor, public QWidget {
 
     void syncWithProperty() override {
         auto fnSetEditorCoord = [](QDoubleSpinBox* editor, double coord){
-            auto appModule = AppModule::get(Application::instance());
-            auto trRes = UnitSystem::translate(appModule->unitSystemSchema, coord * Quantity_Millimeter);
+            auto appModule = AppModule::get();
+            auto trRes = UnitSystem::translate(appModule->properties()->unitSystemSchema, coord * Quantity_Millimeter);
             QSignalBlocker _(editor);
             editor->setValue(trRes.value);
         };
@@ -281,10 +281,10 @@ struct Property3dCoordsEditor : public InterfacePropertyEditor, public QWidget {
     static QDoubleSpinBox* createCoordEditor(QWidget* parentWidget, PropertyCoordsType* property, Coord specCoord)
     {
         auto editor = new QDoubleSpinBox(parentWidget);
-        auto appModule = AppModule::get(Application::instance());
-        auto trRes = UnitSystem::translate(appModule->unitSystemSchema, 1., Unit::Length);
+        auto appModule = AppModule::get();
+        auto trRes = UnitSystem::translate(appModule->properties()->unitSystemSchema, 1., Unit::Length);
         //editor->setSuffix(QString::fromUtf8(trRes.strUnit));
-        editor->setDecimals(appModule->unitSystemDecimals.value());
+        editor->setDecimals(appModule->properties()->unitSystemDecimals);
         editor->setButtonSymbols(QDoubleSpinBox::NoButtons);
         editor->setRange(-std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
         QSizePolicy sp = editor->sizePolicy();
@@ -318,7 +318,7 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
     {
         const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(property);
         this->setSuffix(QString::fromUtf8(trRes.strUnit));
-        this->setDecimals(AppModule::get(Application::instance())->unitSystemDecimals.value());
+        this->setDecimals(AppModule::get()->properties()->unitSystemDecimals.value());
         const double rangeMin =
                 property->constraintsEnabled() ?
                     property->minimum() : std::numeric_limits<double>::min();
@@ -403,7 +403,7 @@ UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePrope
     }
 
     return UnitSystem::translate(
-                AppModule::get(Application::instance())->unitSystemSchema,
+                AppModule::get()->properties()->unitSystemSchema,
                 property->quantityValue(),
                 property->quantityUnit());
 }

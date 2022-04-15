@@ -67,7 +67,7 @@ enum TreeWidgetItemRole {
 
 static QStringUtils::TextOptions appDefaultTextOptions()
 {
-    return AppModule::get(Application::instance())->defaultTextOptions();
+    return AppModule::get()->defaultTextOptions();
 }
 
 static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeItem)

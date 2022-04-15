@@ -84,8 +84,7 @@ public:
             pixmap = fnPixmap(mayoTheme()->icon(Theme::Icon::OpenFiles), 128, 96);
         }
         else {
-            auto appModule = AppModule::get(Application::instance());
-            const RecentFile* recentFile = appModule ? appModule->findRecentFile(filepathFrom(url)) : nullptr;
+            const RecentFile* recentFile = AppModule::get()->findRecentFile(filepathFrom(url));
             pixmap = recentFile ? recentFile->thumbnail : QPixmap();
             if (pixmap.isNull()) {
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
@@ -110,9 +109,8 @@ public:
 private:
     void reloadRecentFiles()
     {
-        auto app = Application::instance();
-        auto appModule = AppModule::get(app);
-        const RecentFiles& listRecentFile = appModule->recentFiles.value();
+        auto appModule = AppModule::get();
+        const RecentFiles& listRecentFile = appModule->properties()->recentFiles.value();
         if (m_cacheRecentFiles == listRecentFile)
             return;
 
@@ -136,7 +134,6 @@ private:
                 return WidgetHomeFiles::tr("%1 days ago %2").arg(diffDays).arg(strTime);
             }
             else {
-                auto appModule = AppModule::get(Application::instance());
                 const QString strDate = appModule->locale().toString(date, QLocale::ShortFormat);
                 return WidgetHomeFiles::tr("%1 %2").arg(strDate, strTime);
             }
@@ -155,7 +152,7 @@ private:
                         "Modified: %4\n"
                         "Read: %5\n")
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
-                    .arg(QStringUtils::bytesText(fi.size(), AppModule::get(Application::instance())->locale()))
+                    .arg(QStringUtils::bytesText(fi.size(), appModule->locale()))
                     .arg(fnToString(fi.birthTime()))
                     .arg(fnToString(fi.lastModified()))
                     .arg(fnToString(fi.lastRead()))
@@ -208,8 +205,7 @@ private:
 WidgetHomeFiles::WidgetHomeFiles(QWidget* parent)
     : QWidget(parent)
 {
-    auto app = Application::instance();
-    auto appModule = AppModule::get(app);
+    auto appModule = AppModule::get();
 
     auto layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -226,8 +222,8 @@ WidgetHomeFiles::WidgetHomeFiles(QWidget* parent)
     m_gridDelegate->setItemPixmapSize(appModule->recentFileThumbnailSize());
     m_gridView->setItemDelegate(m_gridDelegate);
 
-    QObject::connect(app->settings(), &Settings::changed, this, [=](const Property* setting) {
-        if (setting == &appModule->recentFiles)
+    QObject::connect(appModule->settings(), &Settings::changed, this, [=](const Property* setting) {
+        if (setting == &appModule->properties()->recentFiles)
             model->reload();
     });
 }

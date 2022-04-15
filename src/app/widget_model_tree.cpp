@@ -194,9 +194,6 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
         return;
 
     m_guiApp = guiApp;
-    for (const BuilderPtr& builder : m_vecBuilder)
-        builder->registerGuiApplication(guiApp);
-
     auto app = guiApp->application();
     QObject::connect(
                 app.get(), &Application::documentAdded,

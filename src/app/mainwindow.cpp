@@ -112,15 +112,15 @@ struct ImportExportSettings {
     static ImportExportSettings load()
     {
         return {
-            AppModule::get(Application::instance())->lastOpenDir.value(),
-            to_QString(AppModule::get(Application::instance())->lastSelectedFormatFilter.value())
+            AppModule::get()->properties()->lastOpenDir.value(),
+            to_QString(AppModule::get()->properties()->lastSelectedFormatFilter.value())
         };
     }
 
     static void save(const ImportExportSettings& sets)
     {
-        AppModule::get(Application::instance())->lastOpenDir.setValue(sets.openDir);
-        AppModule::get(Application::instance())->lastSelectedFormatFilter.setValue(to_stdString(sets.selectedFilter));
+        AppModule::get()->properties()->lastOpenDir.setValue(sets.openDir);
+        AppModule::get()->properties()->lastSelectedFormatFilter.setValue(to_stdString(sets.selectedFilter));
     }
 };
 
@@ -179,12 +179,6 @@ struct OpenFileNames {
         return result;
     }
 };
-
-static void prependRecentFile(const FilePath& fp)
-{
-    auto appModule = AppModule::get(Application::instance());
-    appModule->prependRecentFile(fp);
-}
 
 static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
 {
@@ -377,7 +371,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
-                AppModule::get(guiApp->application()), &AppModule::message,
+                AppModule::get(), &AppModule::message,
                 this, [=](Messenger::MessageType msgType, const QString& text) {
         Internal::handleMessage(msgType, text, this);
     });
@@ -515,13 +509,13 @@ void MainWindow::importInCurrentDoc()
         QElapsedTimer chrono;
         chrono.start();
 
-        auto appModule = AppModule::get(app);
+        auto appModule = AppModule::get();
         const bool okImport = app->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
                 .withParametersProvider(appModule)
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                        AppModule::get(app)->computeBRepMesh(labelEntity, progress);
+                        appModule->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                 .withEntityPostProcessInfoProgress(20, textIdTr("Mesh BRep shapes"))
@@ -538,7 +532,7 @@ void MainWindow::importInCurrentDoc()
     taskMgr->setTitle(taskId, to_stdString(taskTitle));
     taskMgr->run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
-        Internal::prependRecentFile(fp);
+        AppModule::get()->prependRecentFile(fp);
 }
 
 void MainWindow::exportSelectedItems()
@@ -566,7 +560,7 @@ void MainWindow::exportSelectedItems()
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
-        auto appModule = AppModule::get(app);
+        auto appModule = AppModule::get();
         const bool okExport =
                 app->ioSystem()->exportApplicationItems()
                 .targetFile(filepathFrom(strFilepath))
@@ -620,7 +614,7 @@ void MainWindow::zoomOutCurrentDoc()
 
 void MainWindow::editOptions()
 {
-    auto dlg = new DialogOptions(m_guiApp->application()->settings(), this);
+    auto dlg = new DialogOptions(AppModule::get()->settings(), this);
     WidgetsUtils::asyncDialogExec(dlg);
 }
 
@@ -725,7 +719,7 @@ void MainWindow::onApplicationItemSelectionChanged()
         }
 
         auto app = m_guiApp->application();
-        if (AppModule::get(app)->linkWithDocumentSelector.value()) {
+        if (AppModule::get()->properties()->linkWithDocumentSelector) {
             const int index = app->findIndexOfDocument(appItem.document());
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
@@ -750,17 +744,17 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto app = m_guiApp->application();
-    auto appModule = AppModule::get(app);
+    auto appModule = AppModule::get();
     auto widget = new WidgetGuiDocument(guiDoc);
-    widget->controller()->setInstantZoomFactor(appModule->instantZoomFactor);
-    if (appModule->defaultShowOriginTrihedron.value()) {
+    widget->controller()->setInstantZoomFactor(appModule->properties()->instantZoomFactor);
+    if (appModule->properties()->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->graphicsScene()->redraw();
     }
 
-    QObject::connect(app->settings(), &Settings::changed, this, [=](Property* setting) {
-        if (setting == &appModule->instantZoomFactor)
-            widget->controller()->setInstantZoomFactor(appModule->instantZoomFactor);
+    QObject::connect(appModule->settings(), &Settings::changed, this, [=](Property* setting) {
+        if (setting == &appModule->properties()->instantZoomFactor)
+            widget->controller()->setInstantZoomFactor(appModule->properties()->instantZoomFactor);
     });
 
     V3dViewController* ctrl = widget->controller();
@@ -937,7 +931,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 doc->setName(fp.stem().u8string());
                 doc->setFilePath(fp);
 
-                auto appModule = AppModule::get(app);
+                auto appModule = AppModule::get();
                 const bool okImport =
                         app->ioSystem()->importInDocument()
                         .targetDocument(doc)
@@ -956,7 +950,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
             });
             taskMgr->setTitle(taskId, fp.stem().u8string());
             taskMgr->run(taskId);
-            Internal::prependRecentFile(fp);
+            AppModule::get()->prependRecentFile(fp);
         }
         else {
             if (listFilePath.size() == 1)
@@ -1048,11 +1042,11 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     menu->setToolTipsVisible(true);
 
     // Link with document selector
-    auto appModule = AppModule::get(m_guiApp->application());
-    QAction* action = menu->addAction(to_QString(appModule->linkWithDocumentSelector.name().tr()));
+    auto appModule = AppModule::get();
+    QAction* action = menu->addAction(to_QString(appModule->properties()->linkWithDocumentSelector.name().tr()));
     action->setCheckable(true);
     QObject::connect(action, &QAction::triggered, this, [=](bool on) {
-        appModule->linkWithDocumentSelector.setValue(on);
+        appModule->properties()->linkWithDocumentSelector.setValue(on);
     });
 
     // Model tree user actions
@@ -1063,7 +1057,7 @@ QMenu* MainWindow::createMenuModelTreeSettings()
 
     // Sync before menu show
     QObject::connect(menu, &QMenu::aboutToShow, this, [=]{
-        action->setChecked(appModule->linkWithDocumentSelector.value());
+        action->setChecked(appModule->properties()->linkWithDocumentSelector);
         if (userActions.fnSyncItems)
             userActions.fnSyncItems();
     });
@@ -1079,8 +1073,8 @@ QMenu* MainWindow::createMenuRecentFiles()
 
     menu->clear();
     int idFile = 0;
-    auto appModule = AppModule::get(m_guiApp->application());
-    const RecentFiles& recentFiles = appModule->recentFiles.value();
+    auto appModule = AppModule::get();
+    const RecentFiles& recentFiles = appModule->properties()->recentFiles.value();
     for (const RecentFile& recentFile : recentFiles) {
         const QString entryRecentFile = tr("%1 | %2").arg(++idFile).arg(filepathTo<QString>(recentFile.filepath));
         menu->addAction(entryRecentFile, this, [=]{ this->openDocument(recentFile.filepath); });
@@ -1090,7 +1084,7 @@ QMenu* MainWindow::createMenuRecentFiles()
         menu->addSeparator();
         menu->addAction(tr("Clear menu"), this, [=]{
             menu->clear();
-            appModule->recentFiles.setValue({});
+            appModule->properties()->recentFiles.setValue({});
         });
     }
 

@@ -63,11 +63,11 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
     };
 
 
-    const auto appModule = AppModule::get(Application::instance());
+    const auto appModule = AppModule::get();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
-        data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+        data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn.value());
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         data.graphics->SetCappingColor(fnGetCappingColor(data));
 #else
@@ -75,21 +75,21 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         cappingMaterial.SetColor(fnGetCappingColor(data));
         data.graphics->SetCappingMaterial(cappingMaterial);
 #endif
-        if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
+        if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
             data.graphics->SetCappingTexture(m_textureCapping);
     }
 
-    const auto settings = Application::instance()->settings();
+    const auto settings = appModule->settings();
     QObject::connect(settings, &Settings::changed, this, [=](Property* property) {
-        if (property == &appModule->clipPlanesCappingOn) {
+        if (property == &appModule->properties()->clipPlanesCappingOn) {
             for (ClipPlaneData& data : m_vecClipPlaneData)
-                data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+                data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn);
 
             m_view->Redraw();
         }
-        else if (property == &appModule->clipPlanesCappingHatchOn) {
+        else if (property == &appModule->properties()->clipPlanesCappingHatchOn) {
             Handle_Graphic3d_TextureMap hatchTexture;
-            if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
+            if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
                 hatchTexture = m_textureCapping;
 
             for (ClipPlaneData& data : m_vecClipPlaneData)

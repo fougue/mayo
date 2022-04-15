@@ -276,39 +276,28 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
-// Initializes "Base" objects
-static void initBase(QCoreApplication* qtApp)
+static std::string_view qtTranslate(const TextId& text, int n)
 {
-    auto app = Application::instance();
-    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
-
-    // Load translation files
+    const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
+    auto qstrHash = qHash(qstr);
+    static std::unordered_map<unsigned, std::string> mapStr;
+    static QReadWriteLock mapStrLock;
     {
-        const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
-        auto translator = new QTranslator(app.get());
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        QReadLocker locker(&mapStrLock);
+        auto it = mapStr.find(qstrHash);
+        if (it != mapStr.cend())
+            return it->second;
     }
 
-    // Set Qt i18n backend
-    app->addTranslator([=](const TextId& text, int n) -> std::string_view {
-        const QString qstr = qtApp->translate(text.trContext.data(), text.key.data(), nullptr, n);
-        auto qstrHash = qHash(qstr);
-        static std::unordered_map<unsigned, std::string> mapStr;
-        static QReadWriteLock mapStrLock;
-        {
-            QReadLocker locker(&mapStrLock);
-            auto it = mapStr.find(qstrHash);
-            if (it != mapStr.cend())
-                return it->second;
-        }
+    QWriteLocker locker(&mapStrLock);
+    auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
+    return ok ? it->second : std::string_view{};
+}
 
-        QWriteLocker locker(&mapStrLock);
-        auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
-        return ok ? it->second : std::string_view{};
-    });
+// Initializes "Base" objects
+static void initBase()
+{
+    auto app = Application::instance();
 
     // Register I/O objects
     app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
@@ -439,7 +428,7 @@ static void cli_asyncExportDocuments(
 
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
     auto taskMgr = &helper->taskMgr;
-    auto appModule = AppModule::get(app);
+    auto appModule = AppModule::get();
 
     // Helper function to exit current function
     auto fnExit = [=](int retCode) {
@@ -629,18 +618,30 @@ static int runApp(QCoreApplication* qtApp)
     if (!args.filepathLog.empty())
         LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
 
+    // Initialize AppModule
+    auto appModule = AppModule::get();
+    appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
+    {
+        // Load translation files
+        const QString qmFilePath = QString(":/i18n/mayo_%1.qm").arg(appModule->languageCode());
+        auto translator = new QTranslator(qtApp);
+        if (translator->load(qmFilePath))
+            qtApp->installTranslator(translator);
+        else
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+    }
+    Application::instance()->addTranslator(&qtTranslate); // Set Qt i18n backend
+
     // Initialize Base application
     initOpenCascadeEnvironment("opencascade.conf");
-    initBase(qtApp);
+    initBase();
+    appModule->properties()->IO_bindParameters(Application::instance()->ioSystem());
+    appModule->properties()->retranslate();
     auto app = Application::instance().get();
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
-
-    // Register AppModule
-    auto appModule = new AppModule(app);
-    app->settings()->setPropertyValueConversion(*appModule);
 
     // Process CLI
     if (!args.listFilepathToExport.empty()) {
@@ -648,8 +649,8 @@ static int runApp(QCoreApplication* qtApp)
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
         guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-        app->settings()->resetAll();
-        fnLoadAppSettings(app->settings());
+        appModule->settings()->resetAll();
+        fnLoadAppSettings(appModule->settings());
         QTimer::singleShot(0, qtApp, [=]{
             cli_asyncExportDocuments(app, args, [=](int retcode) { qtApp->exit(retcode); });
         });
@@ -659,7 +660,7 @@ static int runApp(QCoreApplication* qtApp)
     // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
-                appModule, &AppModule::recordRecentFileThumbnail);
+                AppModule::get(), &AppModule::recordRecentFileThumbnail);
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -687,11 +688,11 @@ static int runApp(QCoreApplication* qtApp)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
-    app->settings()->resetAll();
-    fnLoadAppSettings(app->settings());
+    appModule->settings()->resetAll();
+    fnLoadAppSettings(appModule->settings());
     const int code = qtApp->exec();
     appModule->recordRecentFileThumbnails(guiApp);
-    app->settings()->save();
+    appModule->settings()->save();
     return code;
 }
 
