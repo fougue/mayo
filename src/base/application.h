@@ -17,10 +17,6 @@
 
 namespace Mayo {
 
-class DocumentTreeNodePropertiesProviderTable;
-
-namespace IO { class System; }
-
 // Provides management of Document objects
 class Application : public QObject, public TDocStd_Application {
     Q_OBJECT
@@ -51,8 +47,6 @@ public:
     int findIndexOfDocument(const DocumentPtr& doc) const;
 
     void closeDocument(const DocumentPtr& doc);
-
-    DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 
     // Provides internationalization support for text output
     //     1st arg: message to be translated(TextId = context+key)

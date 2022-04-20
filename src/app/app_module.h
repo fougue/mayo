@@ -10,6 +10,7 @@
 #include "qstring_utils.h"
 
 #include "../base/application_ptr.h"
+#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
@@ -81,6 +82,10 @@ public:
     void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
+    // DocumentTreeNodePropertiesProviderTable object
+    const DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
+    DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable();
+
     // IO::System object
     const IO::System* ioSystem() const { return &m_ioSystem; }
     IO::System* ioSystem() { return &m_ioSystem; }
@@ -103,6 +108,7 @@ private:
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;
     AppModuleProperties m_props;
+    DocumentTreeNodePropertiesProviderTable m_docTreeNodePropsProviderTable;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
     QLocale m_locale;

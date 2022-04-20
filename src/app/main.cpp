@@ -294,18 +294,6 @@ static std::string_view qtTranslate(const TextId& text, int n)
     return ok ? it->second : std::string_view{};
 }
 
-// Initializes "Base" objects
-static void initBase()
-{
-    auto app = Application::instance();
-
-    // Register providers to query document tree node properties
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
-}
-
 // Helper to query the OpenGL version string
 static std::string queryGlVersionString()
 {
@@ -620,16 +608,21 @@ static int runApp(QCoreApplication* qtApp)
         else
             qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
     }
-    Application::instance()->addTranslator(&qtTranslate); // Set Qt i18n backend
 
     // Initialize Base application
-    initOpenCascadeEnvironment("opencascade.conf");
     auto app = Application::instance().get();
-    initBase();
+    app->addTranslator(&qtTranslate); // Set Qt i18n backend
+    initOpenCascadeEnvironment("opencascade.conf");
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
+
+    // Register providers to query document tree node properties
+    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();

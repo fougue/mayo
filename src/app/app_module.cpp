@@ -313,6 +313,16 @@ void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* prog
         this->computeBRepMesh(XCaf::shape(labelEntity), progress);
 }
 
+const DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable() const
+{
+    return &m_docTreeNodePropsProviderTable;
+}
+
+DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable()
+{
+    return &m_docTreeNodePropsProviderTable;
+}
+
 AppModule* AppModule::get()
 {
     static AppModule appModule;

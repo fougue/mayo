@@ -687,7 +687,7 @@ void MainWindow::onApplicationItemSelectionChanged()
         }
         else if (appItem.isDocumentTreeNode()) {
             const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-            auto providerTable = m_guiApp->application()->documentTreeNodePropertiesProviderTable();
+            auto providerTable = AppModule::get()->documentTreeNodePropertiesProviderTable();
             auto dataProps = providerTable->properties(docTreeNode);
             if (dataProps) {
                 uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));

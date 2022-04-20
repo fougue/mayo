@@ -5,9 +5,7 @@
 ****************************************************************************/
 
 #include "application.h"
-#include "document_tree_node_properties_provider.h"
 #include "filepath_conv.h"
-#include "io_system.h"
 #include "property_builtins.h"
 #include "task_common.h"
 #include "tkernel_utils.h"
@@ -54,7 +52,6 @@ private:
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
-    DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
     std::vector<Application::Translator> m_vecTranslator;
 };
 
@@ -156,11 +153,6 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 void Application::closeDocument(const DocumentPtr& doc)
 {
     TDocStd_Application::Close(doc);
-}
-
-DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodePropertiesProviderTable() const
-{
-    return &(d->m_documentTreeNodePropertiesProviderTable);
 }
 
 void Application::addTranslator(Application::Translator fn)
