@@ -274,7 +274,7 @@ Application::DocumentIterator::DocumentIterator(const ApplicationPtr& app)
 {
 }
 
-Application::DocumentIterator::DocumentIterator(const Application* app)
+Application::DocumentIterator::DocumentIterator([[maybe_unused]] const Application* app)
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     : CDF_DirectoryIterator(app->myDirectory)
 #else

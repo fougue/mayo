@@ -19,9 +19,9 @@ namespace Mayo {
 AppModuleProperties::AppModuleProperties(Settings* settings)
     : PropertyGroup(settings),
       m_settings(settings),
-      language(this, textId("language"), &AppModule::languages()),
       groupId_system(settings->addGroup(textId("system"))),
-      groupId_application(settings->addGroup(textId("application")))
+      groupId_application(settings->addGroup(textId("application"))),
+      language(this, textId("language"), &AppModule::languages())
 {
     const auto groupId_meshing = settings->addGroup(textId("meshing"));
     const auto groupId_graphics = settings->addGroup(textId("graphics"));

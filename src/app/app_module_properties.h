@@ -70,10 +70,10 @@ protected:
 
 private:
     friend class AppModule;
+    Settings* m_settings = nullptr;
     std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
     std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
-    Settings* m_settings = nullptr;
 };
 
 } // namespace Mayo

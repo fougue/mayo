@@ -9,6 +9,7 @@
 #include "../base/application.h"
 #include "../base/bnd_utils.h"
 #include "../base/brep_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
@@ -79,7 +80,7 @@ QString AppModule::languageCode() const
     }
 
     std::string_view langDefault = langs.findNameByValue(0);
-    return QString::fromUtf8(langDefault.data(), langDefault.size());
+    return QString::fromUtf8(langDefault.data(), CppUtils::safeStaticCast<int>(langDefault.size()));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
