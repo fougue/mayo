@@ -11,6 +11,8 @@
 
 namespace Mayo {
 
+namespace IO { class System; }
+
 class TestBase : public QObject {
     Q_OBJECT
 private slots:
@@ -60,6 +62,10 @@ private slots:
     void LibTree_test();
 
     void initTestCase();
+    void cleanupTestCase();
+
+private:
+    IO::System* m_ioSystem = nullptr;
 };
 
 } // namespace Mayo

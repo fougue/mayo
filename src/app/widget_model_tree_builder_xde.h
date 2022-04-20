@@ -18,7 +18,6 @@ public:
     void refreshTextTreeItem(const DocumentTreeNode& node, QTreeWidgetItem* treeItem) override;
     QTreeWidgetItem* createTreeItem(const DocumentTreeNode& node) override;
 
-    void registerGuiApplication(GuiApplication* guiApp) override;
     WidgetModelTree_UserActions createUserActions(QObject* parent) override;
 
     std::unique_ptr<WidgetModelTreeBuilder> clone() const override;
@@ -39,7 +38,6 @@ private:
     QByteArray instanceNameFormat() const;
     void setInstanceNameFormat(const QByteArray& format);
 
-    Module* m_module = nullptr;
     bool m_isMergeXdeReferredShapeOn = true;
 };
 

@@ -249,7 +249,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         // meshVisu->AddBuilder(..., false); -> No selection
         if (!spanNodeColor.empty()) {
             auto meshPrsBuilder = new MeshVS_NodalColorPrsBuilder(object, MeshVS_DMF_NodalColorDataPrs | MeshVS_DMF_OCCMask);
-            for (int i = 0; i < spanNodeColor.size(); ++i)
+            for (int i = 0; CppUtils::cmpLess(i, spanNodeColor.size()); ++i)
                 meshPrsBuilder->SetColor(i + 1, spanNodeColor[i]);
 
             object->AddBuilder(meshPrsBuilder, true);

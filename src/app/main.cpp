@@ -276,53 +276,22 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
-// Initializes "Base" objects
-static void initBase(QCoreApplication* qtApp)
+static std::string_view qtTranslate(const TextId& text, int n)
 {
-    auto app = Application::instance();
-    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
-
-    // Load translation files
+    const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
+    auto qstrHash = qHash(qstr);
+    static std::unordered_map<unsigned, std::string> mapStr;
+    static QReadWriteLock mapStrLock;
     {
-        const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
-        auto translator = new QTranslator(app.get());
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        QReadLocker locker(&mapStrLock);
+        auto it = mapStr.find(qstrHash);
+        if (it != mapStr.cend())
+            return it->second;
     }
 
-    // Set Qt i18n backend
-    app->addTranslator([=](const TextId& text, int n) -> std::string_view {
-        const QString qstr = qtApp->translate(text.trContext.data(), text.key.data(), nullptr, n);
-        auto qstrHash = qHash(qstr);
-        static std::unordered_map<unsigned, std::string> mapStr;
-        static QReadWriteLock mapStrLock;
-        {
-            QReadLocker locker(&mapStrLock);
-            auto it = mapStr.find(qstrHash);
-            if (it != mapStr.cend())
-                return it->second;
-        }
-
-        QWriteLocker locker(&mapStrLock);
-        auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
-        return ok ? it->second : std::string_view{};
-    });
-
-    // Register I/O objects
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
-    app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
-    IO::addPredefinedFormatProbes(app->ioSystem());
-
-    // Register providers to query document tree node properties
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+    QWriteLocker locker(&mapStrLock);
+    auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
+    return ok ? it->second : std::string_view{};
 }
 
 // Helper to query the OpenGL version string
@@ -388,9 +357,6 @@ static void initGui(GuiApplication* guiApp)
     }
 #endif
 
-    // Register I/O objects
-    guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
-
     // Register Graphics/TreeNode mapping drivers
     guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
@@ -439,7 +405,8 @@ static void cli_asyncExportDocuments(
 
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
     auto taskMgr = &helper->taskMgr;
-    auto appModule = AppModule::get(app);
+    auto appModule = AppModule::get();
+    auto ioSystem = appModule->ioSystem();
 
     // Helper function to exit current function
     auto fnExit = [=](int retCode) {
@@ -527,7 +494,7 @@ static void cli_asyncExportDocuments(
     // If export operation targets some mesh format then force meshing of imported BRep shapes
     bool brepMeshRequired = false;
     for (const FilePath& filepath : args.listFilepathToExport) {
-        const IO::Format format = app->ioSystem()->probeFormat(filepath);
+        const IO::Format format = ioSystem->probeFormat(filepath);
         brepMeshRequired = IO::formatProvidesMesh(format);
         if (brepMeshRequired)
             break; // Interrupt
@@ -541,7 +508,7 @@ static void cli_asyncExportDocuments(
     bool okImport = true;
     const TaskId importTaskId = taskMgr->newTask([&](TaskProgress* progress) {
             ErrorMessageCollect errorCollect;
-            okImport = app->ioSystem()->importInDocument()
+            okImport = ioSystem->importInDocument()
                 .targetDocument(doc)
                 .withFilepaths(args.listFilepathToOpen)
                 .withParametersProvider(appModule)
@@ -568,9 +535,9 @@ static void cli_asyncExportDocuments(
         const std::string strFilename = filepath.filename().u8string();
         const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 ErrorMessageCollect errorCollect;
-                const IO::Format format = app->ioSystem()->probeFormat(filepath);
+                const IO::Format format = ioSystem->probeFormat(filepath);
                 const ApplicationItem appItems[] = { doc };
-                const bool okExport = app->ioSystem()->exportApplicationItems()
+                const bool okExport = ioSystem->exportApplicationItems()
                             .targetFile(filepath)
                             .targetFormat(format)
                             .withItems(appItems)
@@ -629,18 +596,45 @@ static int runApp(QCoreApplication* qtApp)
     if (!args.filepathLog.empty())
         LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
 
+    // Initialize AppModule
+    auto appModule = AppModule::get();
+    appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
+    {
+        // Load translation files
+        const QString qmFilePath = QString(":/i18n/mayo_%1.qm").arg(appModule->languageCode());
+        auto translator = new QTranslator(qtApp);
+        if (translator->load(qmFilePath))
+            qtApp->installTranslator(translator);
+        else
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+    }
+
     // Initialize Base application
-    initOpenCascadeEnvironment("opencascade.conf");
-    initBase(qtApp);
     auto app = Application::instance().get();
+    app->addTranslator(&qtTranslate); // Set Qt i18n backend
+    initOpenCascadeEnvironment("opencascade.conf");
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
 
-    // Register AppModule
-    auto appModule = new AppModule(app);
-    app->settings()->setPropertyValueConversion(*appModule);
+    // Register providers to query document tree node properties
+    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
+                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+
+    // Register I/O objects
+    IO::System* ioSystem = appModule->ioSystem();
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    IO::addPredefinedFormatProbes(ioSystem);
+    appModule->properties()->IO_bindParameters(ioSystem);
+    appModule->properties()->retranslate();
 
     // Process CLI
     if (!args.listFilepathToExport.empty()) {
@@ -648,8 +642,8 @@ static int runApp(QCoreApplication* qtApp)
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
         guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-        app->settings()->resetAll();
-        fnLoadAppSettings(app->settings());
+        appModule->settings()->resetAll();
+        fnLoadAppSettings(appModule->settings());
         QTimer::singleShot(0, qtApp, [=]{
             cli_asyncExportDocuments(app, args, [=](int retcode) { qtApp->exit(retcode); });
         });
@@ -659,7 +653,7 @@ static int runApp(QCoreApplication* qtApp)
     // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
-                appModule, &AppModule::recordRecentFileThumbnail);
+                AppModule::get(), &AppModule::recordRecentFileThumbnail);
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -687,11 +681,11 @@ static int runApp(QCoreApplication* qtApp)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
-    app->settings()->resetAll();
-    fnLoadAppSettings(app->settings());
+    appModule->settings()->resetAll();
+    fnLoadAppSettings(appModule->settings());
     const int code = qtApp->exec();
     appModule->recordRecentFileThumbnails(guiApp);
-    app->settings()->save();
+    appModule->settings()->save();
     return code;
 }
 

@@ -9,12 +9,11 @@
 #include "../base/application.h"
 #include "../base/bnd_utils.h"
 #include "../base/brep_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
-#include "../base/occt_enums.h"
 #include "../base/settings.h"
-#include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "qtcore_utils.h"
@@ -32,25 +31,9 @@
 
 namespace Mayo {
 
-static inline const Enumeration enumLanguages = {
-    { 0, AppModule::textId("en") },
-    { 1, AppModule::textId("fr") }
-};
-
-AppModule::AppModule(Application* app)
-    : QObject(app),
-      PropertyGroup(app->settings()),
-      m_app(app),
-      groupId_system(app->settings()->addGroup(textId("system"))),
-      sectionId_systemUnits(app->settings()->addSection(this->groupId_system, textId("units"))),
-      groupId_application(app->settings()->addGroup(textId("application"))),
-      language(this, textId("language"), &enumLanguages),
-      groupId_meshing(app->settings()->addGroup(textId("meshing"))),
-      groupId_graphics(app->settings()->addGroup(textId("graphics"))),
-      sectionId_graphicsClipPlanes(
-          app->settings()->addSection(this->groupId_graphics, textId("clipPlanes"))),
-      sectionId_graphicsMeshDefaults(
-          app->settings()->addSection(this->groupId_graphics, textId("meshDefaults"))),
+AppModule::AppModule()
+    : m_settings(new Settings(this)),
+      m_props(m_settings),
       m_locale(QLocale::system())
 {
     static bool metaTypesRegistered = false;
@@ -59,146 +42,15 @@ AppModule::AppModule(Application* app)
         metaTypesRegistered = true;
     }
 
-    auto settings = app->settings();
-
-    // System
-    // -- Units
-    settings->addSetting(&this->unitSystemSchema, this->sectionId_systemUnits);
-    settings->addSetting(&this->unitSystemDecimals, this->sectionId_systemUnits);
-    this->unitSystemDecimals.setRange(1, 99);
-    this->unitSystemDecimals.setSingleStep(1);
-    this->unitSystemDecimals.setConstraintsEnabled(true);
-
-    // Application
-    this->language.setDescription(
-                textIdTr("Language used for the application. Change will take effect after application restart"));
-    this->linkWithDocumentSelector.setDescription(
-                textIdTr("In case where multiple documents are opened, make sure the document displayed in "
-                         "the 3D view corresponds to what is selected in the model tree"));
-    settings->addSetting(&this->language, this->groupId_application);
-    settings->addSetting(&this->recentFiles, this->groupId_application);
-    settings->addSetting(&this->lastOpenDir, this->groupId_application);
-    settings->addSetting(&this->lastSelectedFormatFilter, this->groupId_application);
-    settings->addSetting(&this->linkWithDocumentSelector, this->groupId_application);
-    this->recentFiles.setUserVisible(false);
-    this->lastOpenDir.setUserVisible(false);
-    this->lastSelectedFormatFilter.setUserVisible(false);
-
-    // Meshing
-    this->meshingQuality.setDescription(
-                textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
-    this->meshingQuality.mutableEnumeration().changeTrContext(AppModule::textIdContext());
-    this->meshingChordalDeflection.setDescription(
-                textIdTr("For the tesselation of faces the chordal deflection limits the distance between "
-                         "a curve and its tessellation"));
-    this->meshingAngularDeflection.setDescription(
-                textIdTr("For the tesselation of faces the angular deflection limits the angle between "
-                         "subsequent segments in a polyline"));
-    this->meshingRelative.setDescription(
-                textIdTr("Relative computation of edge tolerance\n\n"
-                         "If activated, deflection used for the polygonalisation of each edge will be "
-                         "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                         "the maximum deflection of their edges."));
-    settings->addSetting(&this->meshingQuality, this->groupId_meshing);
-    settings->addSetting(&this->meshingChordalDeflection, this->groupId_meshing);
-    settings->addSetting(&this->meshingAngularDeflection, this->groupId_meshing);
-    settings->addSetting(&this->meshingRelative, this->groupId_meshing);
-
-    // Graphics
-    this->defaultShowOriginTrihedron.setDescription(
-                textIdTr("Show or hide by default the trihedron centered at world origin. "
-                         "This doesn't affect 3D view of currently opened documents"));
-    settings->addSetting(&this->defaultShowOriginTrihedron, this->groupId_graphics);
-    settings->addSetting(&this->instantZoomFactor, this->groupId_graphics);
-    // -- Clip planes
-    this->clipPlanesCappingOn.setDescription(
-                textIdTr("Enable capping of currently clipped graphics"));
-    this->clipPlanesCappingHatchOn.setDescription(
-                textIdTr("Enable capping hatch texture of currently clipped graphics"));
-    settings->addSetting(&this->clipPlanesCappingOn, this->sectionId_graphicsClipPlanes);
-    settings->addSetting(&this->clipPlanesCappingHatchOn, this->sectionId_graphicsClipPlanes);
-    // -- Mesh defaults
-    settings->addSetting(&this->meshDefaultsColor, this->sectionId_graphicsMeshDefaults);
-    settings->addSetting(&this->meshDefaultsEdgeColor, this->sectionId_graphicsMeshDefaults);
-    settings->addSetting(&this->meshDefaultsMaterial, this->sectionId_graphicsMeshDefaults);
-    settings->addSetting(&this->meshDefaultsShowEdges, this->sectionId_graphicsMeshDefaults);
-    settings->addSetting(&this->meshDefaultsShowNodes, this->sectionId_graphicsMeshDefaults);
-    // Import
-    auto groupId_Import = settings->addGroup(textId("import"));
-    for (IO::Format format : app->ioSystem()->readerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Import, IO::formatIdentifier(format));
-        const IO::FactoryReader* factory = app->ioSystem()->findFactoryReader(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
-        if (ptrGroup) {
-            for (Property* property : ptrGroup->properties())
-                settings->addSetting(property, sectionId_format);
-
-            PropertyGroup* rawPtrGroup = ptrGroup.get();
-            settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatReaderParameters.insert({ format, rawPtrGroup });
-            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
-        }
-    }
-
-    // Export
-    auto groupId_Export = settings->addGroup(textId("export"));
-    for (IO::Format format : app->ioSystem()->writerFormats()) {
-        auto sectionId_format = settings->addSection(groupId_Export, IO::formatIdentifier(format));
-        const IO::FactoryWriter* factory = app->ioSystem()->findFactoryWriter(format);
-        std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, settings);
-        if (ptrGroup) {
-            for (Property* property : ptrGroup->properties())
-                settings->addSetting(property, sectionId_format);
-
-            PropertyGroup* rawPtrGroup = ptrGroup.get();
-            settings->addResetFunction(sectionId_format, [=]{ rawPtrGroup->restoreDefaults(); });
-            m_mapFormatWriterParameters.insert({ format, ptrGroup.get() });
-            m_vecPtrPropertyGroup.push_back(std::move(ptrGroup));
-        }
-    }
-
-    // Register reset functions
-    settings->addResetFunction(this->sectionId_systemUnits, [=]{
-        this->unitSystemDecimals.setValue(2);
-        this->unitSystemSchema.setValue(UnitSystem::SI);
-    });
-    settings->addResetFunction(this->groupId_application, [&]{
-        this->language.setValue(enumLanguages.findValueByName("en"));
-        this->recentFiles.setValue({});
-        this->lastOpenDir.setValue({});
-        this->lastSelectedFormatFilter.setValue({});
-        this->linkWithDocumentSelector.setValue(true);
-    });
-    settings->addResetFunction(this->groupId_graphics, [=]{
-        this->defaultShowOriginTrihedron.setValue(true);
-        this->instantZoomFactor.setValue(5.);
-    });
-    settings->addResetFunction(this->groupId_meshing, [&]{
-        this->meshingQuality.setValue(BRepMeshQuality::Normal);
-        this->meshingChordalDeflection.setQuantity(1 * Quantity_Millimeter);
-        this->meshingAngularDeflection.setQuantity(20 * Quantity_Degree);
-        this->meshingRelative.setValue(false);
-    });
-    settings->addResetFunction(this->sectionId_graphicsClipPlanes, [=]{
-        this->clipPlanesCappingOn.setValue(true);
-        this->clipPlanesCappingHatchOn.setValue(true);
-    });
-    settings->addResetFunction(this->sectionId_graphicsMeshDefaults, [=]{
-        const GraphicsMeshObjectDriver::DefaultValues meshDefaults;
-        this->meshDefaultsColor.setValue(meshDefaults.color);
-        this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
-        this->meshDefaultsMaterial.setValue(meshDefaults.material);
-        this->meshDefaultsShowEdges.setValue(meshDefaults.showEdges);
-        this->meshDefaultsShowNodes.setValue(meshDefaults.showNodes);
-    });
+    m_settings->setPropertyValueConversion(this);
 }
 
 QStringUtils::TextOptions AppModule::defaultTextOptions() const
 {
     QStringUtils::TextOptions opts;
     opts.locale = this->locale();
-    opts.unitDecimals = this->unitSystemDecimals;
-    opts.unitSchema = this->unitSystemSchema;
+    opts.unitDecimals = m_props.unitSystemDecimals;
+    opts.unitSchema = m_props.unitSystemSchema;
     return opts;
 }
 
@@ -207,22 +59,28 @@ const QLocale& AppModule::locale() const
     return m_locale;
 }
 
-QString AppModule::qmFilePath(const QByteArray& languageCode)
+const Enumeration& AppModule::languages()
 {
-    return QString(":/i18n/mayo_%1.qm").arg(QString::fromUtf8(languageCode));
+    static const Enumeration langs = {
+        { 0, AppModule::textId("en") },
+        { 1, AppModule::textId("fr") }
+    };
+    return langs;
 }
 
-QByteArray AppModule::languageCode(const ApplicationPtr& app)
+QString AppModule::languageCode() const
 {
     const char keyLang[] = "application/language";
-    const Settings::Variant code = app->settings()->findValueFromKey(keyLang);
+    const Settings::Variant code = m_settings->findValueFromKey(keyLang);
+    const Enumeration& langs = AppModule::languages();
     if (code.isConvertibleToConstRefString()) {
         const std::string& strCode = code.toConstRefString();
-        if (enumLanguages.contains(strCode))
-            return QByteArray::fromStdString(strCode);
+        if (langs.contains(strCode))
+            return QString::fromStdString(strCode);
     }
 
-    return QtCoreUtils::QByteArray_frowRawData(enumLanguages.findNameByValue(0));
+    std::string_view langDefault = langs.findNameByValue(0);
+    return QString::fromUtf8(langDefault.data(), CppUtils::safeStaticCast<int>(langDefault.size()));
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
@@ -232,14 +90,14 @@ bool AppModule::excludeSettingPredicate(const Property& prop)
 
 const PropertyGroup* AppModule::findReaderParameters(IO::Format format) const
 {
-    auto it = m_mapFormatReaderParameters.find(format);
-    return it != m_mapFormatReaderParameters.cend() ? it->second : nullptr;
+    auto it = m_props.m_mapFormatReaderParameters.find(format);
+    return it != m_props.m_mapFormatReaderParameters.cend() ? it->second : nullptr;
 }
 
 const PropertyGroup* AppModule::findWriterParameters(IO::Format format) const
 {
-    auto it = m_mapFormatWriterParameters.find(format);
-    return it != m_mapFormatWriterParameters.cend() ? it->second : nullptr;
+    auto it = m_props.m_mapFormatWriterParameters.find(format);
+    return it != m_props.m_mapFormatWriterParameters.cend() ? it->second : nullptr;
 }
 
 Settings::Variant AppModule::toVariant(const Property& prop) const
@@ -299,10 +157,10 @@ void AppModule::clearMessageLog()
 void AppModule::prependRecentFile(const FilePath& fp)
 {
     const RecentFile* ptrRecentFile = this->findRecentFile(fp);
-    RecentFiles newRecentFiles = this->recentFiles.value();
+    RecentFiles newRecentFiles = m_props.recentFiles.value();
     if (ptrRecentFile) {
         RecentFile& firstRecentFile = newRecentFiles.front();
-        RecentFile& recentFile = newRecentFiles.at(ptrRecentFile - &this->recentFiles.value().front());
+        RecentFile& recentFile = newRecentFiles.at(ptrRecentFile - &m_props.recentFiles.value().front());
         std::swap(firstRecentFile, recentFile);
     }
     else {
@@ -314,12 +172,12 @@ void AppModule::prependRecentFile(const FilePath& fp)
             newRecentFiles.pop_back();
     }
 
-    this->recentFiles.setValue(newRecentFiles);
+    m_props.recentFiles.setValue(newRecentFiles);
 }
 
 const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
 {
-    const RecentFiles& listRecentFile = this->recentFiles.value();
+    const RecentFiles& listRecentFile = m_props.recentFiles.value();
     auto itFound =
             std::find_if(
                 listRecentFile.cbegin(),
@@ -341,7 +199,7 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
                                 "    Function: {}\n    Document: {}\n    RecentFilesCount: {}",
                                 Q_FUNC_INFO,
                                 guiDoc->document()->filePath().u8string(),
-                                this->recentFiles.value().size())
+                                m_props.recentFiles.value().size())
                     .c_str();
         return;
     }
@@ -354,11 +212,11 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
     if (!okRecord)
         return;
 
-    const RecentFiles& listRecentFile = this->recentFiles.value();
+    const RecentFiles& listRecentFile = m_props.recentFiles.value();
     RecentFiles newListRecentFile = listRecentFile;
     const auto indexRecentFile = std::distance(&listRecentFile.front(), recentFile);
     newListRecentFile.at(indexRecentFile) = newRecentFile;
-    this->recentFiles.setValue(newListRecentFile);
+    m_props.recentFiles.setValue(newListRecentFile);
 }
 
 void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
@@ -366,7 +224,7 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
     if (!guiApp)
         return;
 
-    const RecentFiles& listRecentFile = this->recentFiles.value();
+    const RecentFiles& listRecentFile = m_props.recentFiles.value();
     RecentFiles newListRecentFile = listRecentFile;
     for (GuiDocument* guiDoc : guiApp->guiDocuments()) {
         const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
@@ -380,7 +238,7 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
         }
     }
 
-    this->recentFiles.setValue(newListRecentFile);
+    m_props.recentFiles.setValue(newListRecentFile);
 }
 
 static QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
@@ -409,15 +267,17 @@ static QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
 
 OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) const
 {
+    using BRepMeshQuality = AppModuleProperties::BRepMeshQuality;
+
     OccBRepMeshParameters params;
     params.InParallel = true;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     params.AllowQualityDecrease = true;
 #endif
-    if (this->meshingQuality == BRepMeshQuality::UserDefined) {
-        params.Deflection = UnitSystem::meters(this->meshingChordalDeflection.quantity());
-        params.Angle = UnitSystem::radians(this->meshingAngularDeflection.quantity());
-        params.Relative = this->meshingRelative;
+    if (m_props.meshingQuality == BRepMeshQuality::UserDefined) {
+        params.Deflection = UnitSystem::meters(m_props.meshingChordalDeflection.quantity());
+        params.Angle = UnitSystem::radians(m_props.meshingAngularDeflection.quantity());
+        params.Relative = m_props.meshingRelative;
     }
     else {
         struct Coefficients {
@@ -435,7 +295,7 @@ OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) c
             }
             return { 1, 1 };
         };
-        const Coefficients coeffs = fnCoefficients(this->meshingQuality);
+        const Coefficients coeffs = fnCoefficients(m_props.meshingQuality);
         params.Deflection = UnitSystem::meters(coeffs.chordalDeflection * shapeChordalDeflection(shape));
         params.Angle = UnitSystem::radians(coeffs.angularDeflection * (20 * Quantity_Degree));
     }
@@ -454,38 +314,20 @@ void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* prog
         this->computeBRepMesh(XCaf::shape(labelEntity), progress);
 }
 
-AppModule* AppModule::get(const ApplicationPtr& app)
+const DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable() const
 {
-    if (app)
-        return app->findChild<AppModule*>(QString(), Qt::FindDirectChildrenOnly);
-
-    return nullptr;
+    return &m_docTreeNodePropsProviderTable;
 }
 
-void AppModule::onPropertyChanged(Property* prop)
+DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable()
 {
-    if (prop == &this->meshDefaultsColor
-            || prop == &this->meshDefaultsEdgeColor
-            || prop == &this->meshDefaultsMaterial
-            || prop == &this->meshDefaultsShowEdges
-            || prop == &this->meshDefaultsShowNodes)
-    {
-        auto values = GraphicsMeshObjectDriver::defaultValues();
-        values.color = this->meshDefaultsColor.value();
-        values.edgeColor = this->meshDefaultsEdgeColor.value();
-        values.material = static_cast<Graphic3d_NameOfMaterial>(this->meshDefaultsMaterial.value());
-        values.showEdges = this->meshDefaultsShowEdges.value();
-        values.showNodes = this->meshDefaultsShowNodes.value();
-        GraphicsMeshObjectDriver::setDefaultValues(values);
-    }
-    else if (prop == &this->meshingQuality) {
-        const bool isUserDefined = this->meshingQuality.value() == BRepMeshQuality::UserDefined;
-        this->meshingChordalDeflection.setEnabled(isUserDefined);
-        this->meshingAngularDeflection.setEnabled(isUserDefined);
-        this->meshingRelative.setEnabled(isUserDefined);
-    }
+    return &m_docTreeNodePropsProviderTable;
+}
 
-    PropertyGroup::onPropertyChanged(prop);
+AppModule* AppModule::get()
+{
+    static AppModule appModule;
+    return &appModule;
 }
 
 } // namespace Mayo

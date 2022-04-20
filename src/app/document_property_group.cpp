@@ -22,7 +22,7 @@ DocumentPropertyGroup::DocumentPropertyGroup(const DocumentPtr& doc)
     this->filePath.setValue(filepathCanonical(doc->filePath()));
 
     const auto fileSize = filepathFileSize(doc->filePath());
-    auto appModule = AppModule::get(Application::instance());
+    auto appModule = AppModule::get();
     const QString strFileSize = QStringUtils::bytesText(fileSize, appModule->locale());
     this->strFileSize.setValue(to_stdString(strFileSize));
 

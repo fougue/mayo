@@ -19,6 +19,12 @@ namespace Mayo {
 class Property;
 
 // Provides a cohesive container of Property objects
+// PropertyGroup defines callbacks to be executed when special events happen on contained properties:
+//     - a property value is about to be changed
+//     - a property value was changed
+//     - the "enabled" status of a property was toggled
+// A PropertyGroup can be linked to a parent group(optional). In such case the child group executes
+// as well the parent group's callbacks.
 class PropertyGroup {
 public:
     PropertyGroup(PropertyGroup* parentGroup = nullptr);

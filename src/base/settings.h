@@ -53,7 +53,7 @@ public:
     void saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude = nullptr);
 
     const PropertyValueConversion& propertyValueConversion() const;
-    void setPropertyValueConversion(const PropertyValueConversion& conv);
+    void setPropertyValueConversion(const PropertyValueConversion* conv);
 
     int groupCount() const;
     std::string_view groupIdentifier(GroupIndex index) const;

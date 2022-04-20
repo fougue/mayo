@@ -5,11 +5,8 @@
 ****************************************************************************/
 
 #include "application.h"
-#include "document_tree_node_properties_provider.h"
 #include "filepath_conv.h"
-#include "io_system.h"
 #include "property_builtins.h"
-#include "settings.h"
 #include "task_common.h"
 #include "tkernel_utils.h"
 
@@ -30,24 +27,31 @@ namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
+    FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    Handle(CDM_Document) CreateDocument() override { return new Document;  }
+    Handle(CDM_Document) CreateDocument() override { return new Document(m_app);  }
 #endif
+
+private:
+    ApplicationPtr m_app;
 };
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
+    FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    Handle(CDM_Document) CreateDocument() override { return new Document; }
+    Handle(CDM_Document) CreateDocument() override { return new Document(m_app); }
 #endif
+
+private:
+    ApplicationPtr m_app;
 };
 
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
-    Settings m_settings;
-    IO::System m_ioSystem;
-    DocumentTreeNodePropertiesProviderTable m_documentTreeNodePropertiesProviderTable;
     std::vector<Application::Translator> m_vecTranslator;
 };
 
@@ -64,11 +68,11 @@ const ApplicationPtr& Application::instance()
         const char strFougueCopyright[] = "Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>";
         appPtr->DefineFormat(
                     Document::NameFormatBinary, qUtf8Printable(tr("Binary Mayo Document Format")), "myb",
-                    new Document::FormatBinaryRetrievalDriver,
+                    new Document::FormatBinaryRetrievalDriver(appPtr),
                     new BinXCAFDrivers_DocumentStorageDriver);
         appPtr->DefineFormat(
                     Document::NameFormatXml, qUtf8Printable(tr("XML Mayo Document Format")), "myx",
-                    new Document::FormatXmlRetrievalDriver,
+                    new Document::FormatXmlRetrievalDriver(appPtr),
                     new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright));
 
         qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
@@ -151,21 +155,6 @@ void Application::closeDocument(const DocumentPtr& doc)
     TDocStd_Application::Close(doc);
 }
 
-Settings* Application::settings() const
-{
-    return &(d->m_settings);
-}
-
-IO::System* Application::ioSystem() const
-{
-    return &(d->m_ioSystem);
-}
-
-DocumentTreeNodePropertiesProviderTable* Application::documentTreeNodePropertiesProviderTable() const
-{
-    return &(d->m_documentTreeNodePropertiesProviderTable);
-}
-
 void Application::addTranslator(Application::Translator fn)
 {
     if (fn)
@@ -225,7 +214,7 @@ void Application::NewDocument(const TCollection_ExtendedString&, Handle(TDocStd_
     // TODO: check format == "mayo" if not throw exception
     // Extended from TDocStd_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
-    DocumentPtr newDoc = new Document;
+    DocumentPtr newDoc = new Document(this);
     CDF_Application::Open(newDoc); // Add the document in the session
     this->addDocument(newDoc);
     outDocument = newDoc;
@@ -245,7 +234,6 @@ Application::Application()
     : QObject(nullptr),
       d(new Private)
 {
-    d->m_settings.setParent(this);
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)
@@ -286,7 +274,7 @@ Application::DocumentIterator::DocumentIterator(const ApplicationPtr& app)
 {
 }
 
-Application::DocumentIterator::DocumentIterator(const Application* app)
+Application::DocumentIterator::DocumentIterator([[maybe_unused]] const Application* app)
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     : CDF_DirectoryIterator(app->myDirectory)
 #else
