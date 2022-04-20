@@ -11,6 +11,7 @@
 
 #include "../base/application_ptr.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_brep_mesh_parameters.h"
 #include "../base/property_value_conversion.h"
@@ -80,8 +81,11 @@ public:
     void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
+    // IO::System object
+    const IO::System* ioSystem() const { return &m_ioSystem; }
+    IO::System* ioSystem() { return &m_ioSystem; }
+
     // -- from IO::ParametersProvider
-    IO::System* ioSystem() const { return nullptr; }
     const PropertyGroup* findReaderParameters(IO::Format format) const override;
     const PropertyGroup* findWriterParameters(IO::Format format) const override;
 
@@ -97,6 +101,7 @@ private:
 
     Application* m_app = nullptr;
     Settings* m_settings = nullptr;
+    IO::System m_ioSystem;
     AppModuleProperties m_props;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;

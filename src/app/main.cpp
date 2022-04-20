@@ -299,14 +299,6 @@ static void initBase()
 {
     auto app = Application::instance();
 
-    // Register I/O objects
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
-    app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
-    IO::addPredefinedFormatProbes(app->ioSystem());
-
     // Register providers to query document tree node properties
     app->documentTreeNodePropertiesProviderTable()->addProvider(
                 std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
@@ -377,9 +369,6 @@ static void initGui(GuiApplication* guiApp)
     }
 #endif
 
-    // Register I/O objects
-    guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
-
     // Register Graphics/TreeNode mapping drivers
     guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
                 std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
@@ -429,6 +418,7 @@ static void cli_asyncExportDocuments(
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
     auto taskMgr = &helper->taskMgr;
     auto appModule = AppModule::get();
+    auto ioSystem = appModule->ioSystem();
 
     // Helper function to exit current function
     auto fnExit = [=](int retCode) {
@@ -516,7 +506,7 @@ static void cli_asyncExportDocuments(
     // If export operation targets some mesh format then force meshing of imported BRep shapes
     bool brepMeshRequired = false;
     for (const FilePath& filepath : args.listFilepathToExport) {
-        const IO::Format format = app->ioSystem()->probeFormat(filepath);
+        const IO::Format format = ioSystem->probeFormat(filepath);
         brepMeshRequired = IO::formatProvidesMesh(format);
         if (brepMeshRequired)
             break; // Interrupt
@@ -530,7 +520,7 @@ static void cli_asyncExportDocuments(
     bool okImport = true;
     const TaskId importTaskId = taskMgr->newTask([&](TaskProgress* progress) {
             ErrorMessageCollect errorCollect;
-            okImport = app->ioSystem()->importInDocument()
+            okImport = ioSystem->importInDocument()
                 .targetDocument(doc)
                 .withFilepaths(args.listFilepathToOpen)
                 .withParametersProvider(appModule)
@@ -557,9 +547,9 @@ static void cli_asyncExportDocuments(
         const std::string strFilename = filepath.filename().u8string();
         const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 ErrorMessageCollect errorCollect;
-                const IO::Format format = app->ioSystem()->probeFormat(filepath);
+                const IO::Format format = ioSystem->probeFormat(filepath);
                 const ApplicationItem appItems[] = { doc };
-                const bool okExport = app->ioSystem()->exportApplicationItems()
+                const bool okExport = ioSystem->exportApplicationItems()
                             .targetFile(filepath)
                             .targetFormat(format)
                             .withItems(appItems)
@@ -634,14 +624,24 @@ static int runApp(QCoreApplication* qtApp)
 
     // Initialize Base application
     initOpenCascadeEnvironment("opencascade.conf");
-    initBase();
-    appModule->properties()->IO_bindParameters(Application::instance()->ioSystem());
-    appModule->properties()->retranslate();
     auto app = Application::instance().get();
+    initBase();
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
+
+    // Register I/O objects
+    IO::System* ioSystem = appModule->ioSystem();
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    IO::addPredefinedFormatProbes(ioSystem);
+    appModule->properties()->IO_bindParameters(ioSystem);
+    appModule->properties()->retranslate();
 
     // Process CLI
     if (!args.listFilepathToExport.empty()) {

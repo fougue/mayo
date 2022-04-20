@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "application_ptr.h"
 #include "document_ptr.h"
 #include "document_tree_node.h"
 #include "filepath.h"
@@ -18,7 +19,6 @@
 
 namespace Mayo {
 
-class Application;
 class DocumentTreeNode;
 
 class Document : public QObject, public TDocStd_Document {
@@ -79,17 +79,16 @@ public: // -- from TDocStd_Document
     DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 private:
+    Document(const ApplicationPtr& app);
+
     friend class Application;
     class FormatBinaryRetrievalDriver;
     class FormatXmlRetrievalDriver;
 
-    friend class XCafScopeImport;
-    friend class SingleScopeImport;
-
-    Document();
     void initXCaf();
     void setIdentifier(Identifier ident) { m_identifier = ident; }
 
+    ApplicationPtr m_app;
     Identifier m_identifier = -1;
     std::string m_name;
     FilePath m_filePath;

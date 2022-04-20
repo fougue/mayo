@@ -15,9 +15,10 @@
 
 namespace Mayo {
 
-Document::Document()
-    : QObject(nullptr),
-      TDocStd_Document(NameFormatBinary)
+Document::Document(const ApplicationPtr& app)
+    : QObject(app.get()),
+      TDocStd_Document(NameFormatBinary),
+      m_app(app)
 {
     TDF_TagSource::Set(this->rootLabel());
 }
@@ -173,7 +174,8 @@ void Document::destroyEntity(TreeNodeId entityTreeNodeId)
 void Document::BeforeClose()
 {
     TDocStd_Document::BeforeClose();
-    Application::instance()->notifyDocumentAboutToClose(m_identifier);
+    if (m_app)
+        m_app->notifyDocumentAboutToClose(m_identifier);
 }
 
 void Document::ChangeStorageFormat(const TCollection_ExtendedString& newStorageFormat)

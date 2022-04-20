@@ -91,12 +91,12 @@ static QString fileFilter(IO::Format format)
 
 static IO::Format formatFromFilter(const QString& filter)
 {
-    for (IO::Format format : Application::instance()->ioSystem()->readerFormats()) {
+    for (IO::Format format : AppModule::get()->ioSystem()->readerFormats()) {
         if (filter == fileFilter(format))
             return format;
     }
 
-    for (IO::Format format : Application::instance()->ioSystem()->writerFormats()) {
+    for (IO::Format format : AppModule::get()->ioSystem()->writerFormats()) {
         if (filter == fileFilter(format))
             return format;
     }
@@ -142,7 +142,7 @@ struct OpenFileNames {
         result.selectedFormat = IO::Format_Unknown;
         result.lastIoSettings = ImportExportSettings::load();
         QStringList listFormatFilter;
-        for (IO::Format format : Application::instance()->ioSystem()->readerFormats())
+        for (IO::Format format : AppModule::get()->ioSystem()->readerFormats())
             listFormatFilter += fileFilter(format);
 
         const QString allFilesFilter = MainWindow::tr("All files(*.*)");
@@ -503,14 +503,13 @@ void MainWindow::importInCurrentDoc()
     if (resFileNames.listFilepath.empty())
         return;
 
-    auto app = m_guiApp->application();
+    auto appModule = AppModule::get();
     auto taskMgr = TaskManager::globalInstance();
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
 
-        auto appModule = AppModule::get();
-        const bool okImport = app->ioSystem()->importInDocument()
+        const bool okImport = appModule->ioSystem()->importInDocument()
                 .targetDocument(widgetGuiDoc->guiDocument()->document())
                 .withFilepaths(resFileNames.listFilepath)
                 .withParametersProvider(appModule)
@@ -532,15 +531,14 @@ void MainWindow::importInCurrentDoc()
     taskMgr->setTitle(taskId, to_stdString(taskTitle));
     taskMgr->run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
-        AppModule::get()->prependRecentFile(fp);
+        appModule->prependRecentFile(fp);
 }
 
 void MainWindow::exportSelectedItems()
 {
-    auto app = m_guiApp->application();
-
+    auto appModule = AppModule::get();
     QStringList listWriterFileFilter;
-    for (IO::Format format : app->ioSystem()->writerFormats())
+    for (IO::Format format : appModule->ioSystem()->writerFormats())
         listWriterFileFilter.append(Internal::fileFilter(format));
 
     auto lastSettings = Internal::ImportExportSettings::load();
@@ -560,9 +558,8 @@ void MainWindow::exportSelectedItems()
     const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
-        auto appModule = AppModule::get();
         const bool okExport =
-                app->ioSystem()->exportApplicationItems()
+                appModule->ioSystem()->exportApplicationItems()
                 .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(m_guiApp->selectionModel()->selectedItems())
@@ -914,27 +911,21 @@ void MainWindow::openDocument(const FilePath& fp)
 void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
 {
     auto app = m_guiApp->application();
+    auto appModule = AppModule::get();
     auto taskMgr = TaskManager::globalInstance();
-    static std::mutex mutexApp;
     for (const FilePath& fp : listFilePath) {
-        const DocumentPtr docPtr = app->findDocumentByLocation(fp);
+        DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
+            docPtr = app->newDocument();
             const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
-                DocumentPtr doc;
-                {
-                    std::lock_guard<std::mutex> lock(mutexApp); MAYO_UNUSED(lock);
-                    doc = app->newDocument();
-                }
+                docPtr->setName(fp.stem().u8string());
+                docPtr->setFilePath(fp);
 
-                doc->setName(fp.stem().u8string());
-                doc->setFilePath(fp);
-
-                auto appModule = AppModule::get();
                 const bool okImport =
-                        app->ioSystem()->importInDocument()
-                        .targetDocument(doc)
+                        appModule->ioSystem()->importInDocument()
+                        .targetDocument(docPtr)
                         .withFilepath(fp)
                         .withParametersProvider(appModule)
                         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {

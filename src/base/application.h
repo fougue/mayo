@@ -52,7 +52,6 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
-    IO::System* ioSystem() const;
     DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
 
     // Provides internationalization support for text output

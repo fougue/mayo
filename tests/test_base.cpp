@@ -86,9 +86,8 @@ static bool operator==(
 void TestBase::Application_test()
 {
     auto app = Application::instance();
-    auto ioSystem = Application::instance()->ioSystem();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
-        return ioSystem->importInDocument()
+        return m_ioSystem->importInDocument()
                 .targetDocument(doc)
                 .withFilepath(fp)
                 .execute();
@@ -291,8 +290,7 @@ void TestBase::IO_probeFormat_test()
     QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
 
-    auto ioSystem = Application::instance()->ioSystem();
-    QCOMPARE(ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
+    QCOMPARE(m_ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
 }
 
 void TestBase::IO_probeFormat_test_data()
@@ -825,10 +823,16 @@ void TestBase::LibTree_test()
 
 void TestBase::initTestCase()
 {
-    IO::System* ioSystem = Application::instance()->ioSystem();
-    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    IO::addPredefinedFormatProbes(ioSystem);
+    m_ioSystem = new IO::System;
+    m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    IO::addPredefinedFormatProbes(m_ioSystem);
+}
+
+void TestBase::cleanupTestCase()
+{
+    delete m_ioSystem;
+    m_ioSystem = nullptr;
 }
 
 } // namespace Mayo
