@@ -36,8 +36,12 @@ Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicD
 #if defined(_WIN32)
     MAYO_UNUSED(gfxDriver);
     // Create a "virtual" WNT window being a pure WNT window redefined to be never shown
-    auto cursor = LoadCursor(NULL, IDC_ARROW);
-    auto wClass = new WNT_WClass("GW3D_Class", (void*)DefWindowProcW, CS_VREDRAW | CS_HREDRAW, 0, 0, cursor);
+    static Handle_WNT_WClass wClass;
+    if (wClass.IsNull()) {
+        auto cursor = LoadCursor(NULL, IDC_ARROW);
+        wClass = new WNT_WClass("GW3D_Class", nullptr, CS_VREDRAW | CS_HREDRAW, 0, 0, cursor);
+    }
+
     auto wnd = new WNT_Window("", wClass, WS_POPUP, 0, 0, wndWidth, wndHeight, Quantity_NOC_BLACK);
 #elif defined(__APPLE__)
     MAYO_UNUSED(gfxDriver);
