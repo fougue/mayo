@@ -24,7 +24,6 @@ class TaskManager : public QObject {
 public:
     TaskManager(QObject* parent = nullptr);
     ~TaskManager();
-    static TaskManager* globalInstance();
 
     TaskId newTask(TaskJob fn);
     void run(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On);

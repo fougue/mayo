@@ -202,7 +202,8 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     : QMainWindow(parent),
       m_guiApp(guiApp),
-      m_ui(new Ui_MainWindow)
+      m_ui(new Ui_MainWindow),
+      m_taskMgr(new TaskManager(this))
 {
     m_ui->setupUi(this);
     m_ui->widget_ModelTree->registerGuiApplication(guiApp);
@@ -394,7 +395,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
         });
     }
 
-    new DialogTaskManager(TaskManager::globalInstance(), this);
+    new DialogTaskManager(m_taskMgr, this);
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
@@ -474,7 +475,7 @@ void MainWindow::showEvent(QShowEvent* event)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
     auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
     if (!winProgress)
-        winProgress = new WinTaskbarGlobalProgress(TaskManager::globalInstance(), this);
+        winProgress = new WinTaskbarGlobalProgress(m_taskMgr, this);
     winProgress->setWindow(this->windowHandle());
 #endif
 }
@@ -504,8 +505,7 @@ void MainWindow::importInCurrentDoc()
         return;
 
     auto appModule = AppModule::get();
-    auto taskMgr = TaskManager::globalInstance();
-    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
+    const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
 
@@ -528,8 +528,8 @@ void MainWindow::importInCurrentDoc()
             resFileNames.listFilepath.size() > 1 ?
                 tr("Import") :
                 filepathTo<QString>(resFileNames.listFilepath.front().stem());
-    taskMgr->setTitle(taskId, to_stdString(taskTitle));
-    taskMgr->run(taskId);
+    m_taskMgr->setTitle(taskId, to_stdString(taskTitle));
+    m_taskMgr->run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
         appModule->prependRecentFile(fp);
 }
@@ -553,9 +553,8 @@ void MainWindow::exportSelectedItems()
         return;
 
     lastSettings.openDir = filepathFrom(strFilepath);
-    auto taskMgr = TaskManager::globalInstance();
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
-    const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
+    const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
         const bool okExport =
@@ -570,8 +569,8 @@ void MainWindow::exportSelectedItems()
         if (okExport)
             appModule->emitInfo(fmt::format(textIdTr("Export time: {}ms"), chrono.elapsed()));
     });
-    taskMgr->setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
-    taskMgr->run(taskId);
+    m_taskMgr->setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
+    m_taskMgr->run(taskId);
     Internal::ImportExportSettings::save(lastSettings);
 }
 
@@ -912,12 +911,11 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
 {
     auto app = m_guiApp->application();
     auto appModule = AppModule::get();
-    auto taskMgr = TaskManager::globalInstance();
     for (const FilePath& fp : listFilePath) {
         DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             docPtr = app->newDocument();
-            const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
+            const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
                 docPtr->setName(fp.stem().u8string());
@@ -939,8 +937,8 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 if (okImport)
                     appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
-            taskMgr->setTitle(taskId, fp.stem().u8string());
-            taskMgr->run(taskId);
+            m_taskMgr->setTitle(taskId, fp.stem().u8string());
+            m_taskMgr->run(taskId);
             AppModule::get()->prependRecentFile(fp);
         }
         else {
