@@ -9,7 +9,6 @@
 #include "app_module_properties.h"
 #include "qstring_utils.h"
 
-#include "../base/application_ptr.h"
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
@@ -17,7 +16,6 @@
 #include "../base/occ_brep_mesh_parameters.h"
 #include "../base/property_value_conversion.h"
 #include "../base/settings.h"
-#include "../base/settings_index.h"
 #include "../base/unit_system.h"
 
 #include <QtCore/QObject>
@@ -28,11 +26,8 @@ class TopoDS_Shape;
 
 namespace Mayo {
 
-namespace IO { class System; }
-
 class GuiApplication;
 class GuiDocument;
-class Settings;
 class TaskProgress;
 
 class AppModule :
@@ -103,8 +98,9 @@ public:
 
 private:
     AppModule();
+    AppModule(const AppModule&) = delete; // Not copyable
+    AppModule& operator=(const AppModule&) = delete; // Not copyable
 
-    Application* m_app = nullptr;
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;
     AppModuleProperties m_props;

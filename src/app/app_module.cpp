@@ -6,7 +6,6 @@
 
 #include "app_module.h"
 
-#include "../base/application.h"
 #include "../base/bnd_utils.h"
 #include "../base/brep_utils.h"
 #include "../base/cpp_utils.h"

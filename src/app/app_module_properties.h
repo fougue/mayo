@@ -16,13 +16,13 @@
 #include "../base/settings.h"
 #include "../base/unit_system.h"
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace Mayo {
 
 namespace IO { class System; }
-
 class Settings;
 
 class AppModuleProperties : public PropertyGroup {
