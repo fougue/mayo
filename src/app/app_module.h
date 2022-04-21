@@ -30,6 +30,8 @@ class GuiApplication;
 class GuiDocument;
 class TaskProgress;
 
+// Provides the root application object as a singleton
+// Implements also the behavior specific to the application
 class AppModule :
         public QObject,
         public IO::ParametersProvider,
@@ -39,24 +41,33 @@ class AppModule :
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
+    // Loggable message
     struct Message {
         MessageType type;
         QString text;
     };
 
+    // Query singleton instance
     static AppModule* get();
 
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
     AppModuleProperties* properties() { return &m_props; }
-
     Settings* settings() const { return m_settings; }
+
+    // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
 
+    // Text options corresponding to the active locale/units config
     QStringUtils::TextOptions defaultTextOptions() const;
+
+    // Current locale used by the application
     const QLocale& locale() const;
 
+    // Available supported languages
     static const Enumeration& languages();
+
+    // Short-name of the current language in use(eg. en=english)
     QString languageCode() const;
 
     // Logging
@@ -77,9 +88,9 @@ public:
     void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
-    // DocumentTreeNodePropertiesProviderTable object
-    const DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable() const;
-    DocumentTreeNodePropertiesProviderTable* documentTreeNodePropertiesProviderTable();
+    // Providers to query document tree node properties
+    void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
 
     // IO::System object
     const IO::System* ioSystem() const { return &m_ioSystem; }
@@ -104,10 +115,10 @@ private:
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;
     AppModuleProperties m_props;
-    DocumentTreeNodePropertiesProviderTable m_docTreeNodePropsProviderTable;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
     QLocale m_locale;
+    std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
 };
 
 } // namespace Mayo

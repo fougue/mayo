@@ -686,8 +686,7 @@ void MainWindow::onApplicationItemSelectionChanged()
         }
         else if (appItem.isDocumentTreeNode()) {
             const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-            auto providerTable = AppModule::get()->documentTreeNodePropertiesProviderTable();
-            auto dataProps = providerTable->properties(docTreeNode);
+            auto dataProps = AppModule::get()->properties(docTreeNode);
             if (dataProps) {
                 uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
                 QObject::connect(dataProps.get(), &PropertyGroupSignals::propertyChanged, this, [=]{

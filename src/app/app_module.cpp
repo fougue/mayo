@@ -313,14 +313,19 @@ void AppModule::computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* prog
         this->computeBRepMesh(XCaf::shape(labelEntity), progress);
 }
 
-const DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable() const
+void AppModule::addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr)
 {
-    return &m_docTreeNodePropsProviderTable;
+    m_vecDocTreeNodePropsProvider.push_back(std::move(ptr));
 }
 
-DocumentTreeNodePropertiesProviderTable* AppModule::documentTreeNodePropertiesProviderTable()
+std::unique_ptr<PropertyGroupSignals> AppModule::properties(const DocumentTreeNode& treeNode) const
 {
-    return &m_docTreeNodePropsProviderTable;
+    for (const auto& provider : m_vecDocTreeNodePropsProvider) {
+        if (provider->supports(treeNode))
+            return provider->properties(treeNode);
+    }
+
+    return std::unique_ptr<PropertyGroupSignals>();
 }
 
 AppModule* AppModule::get()

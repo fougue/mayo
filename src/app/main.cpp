@@ -357,10 +357,6 @@ static void initGui(GuiApplication* guiApp)
     }
 #endif
 
-    // Register Graphics/TreeNode mapping drivers
-    guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
-                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
-
     // Register Graphics entity drivers
     guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
@@ -619,10 +615,8 @@ static int runApp(QCoreApplication* qtApp)
     initGui(guiApp);
 
     // Register providers to query document tree node properties
-    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    appModule->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+    appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    appModule->addPropertiesProvider(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
