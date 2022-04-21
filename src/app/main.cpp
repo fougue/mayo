@@ -358,8 +358,8 @@ static void initGui(GuiApplication* guiApp)
 #endif
 
     // Register Graphics entity drivers
-    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
-    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
 }
 
 // Asynchronously exports input file(s) listed in 'args'

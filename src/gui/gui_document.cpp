@@ -13,7 +13,6 @@
 #include "../base/document.h"
 #include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
-#include "../graphics/graphics_object_driver_table.h"
 #include "../graphics/graphics_utils.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
@@ -85,7 +84,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     this->setViewTrihedronCorner(Qt::BottomLeftCorner);
 #endif
 
-    //m_v3dView->SetShadingModel(V3d_PHONG);
+    //m_v3dView->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr);
     // 3D view - Enable anti-aliasing with MSAA
     m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
@@ -541,7 +540,7 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
         if (docModelTree.nodeIsLeaf(id)) {
             GraphicsObjectPtr gfxProduct = CppUtils::findValue(nodeLabel, mapLabelGfxProduct);
             if (!gfxProduct) {
-                gfxProduct = m_guiApp->graphicsObjectDriverTable()->createObject(nodeLabel);
+                gfxProduct = m_guiApp->createGraphicsObject(nodeLabel);
                 if (!gfxProduct)
                     return;
 

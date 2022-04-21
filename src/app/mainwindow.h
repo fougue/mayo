@@ -16,7 +16,6 @@ class QFileInfo;
 
 namespace Mayo {
 
-class Document;
 class GuiApplication;
 class GuiDocument;
 class TaskManager;

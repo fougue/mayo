@@ -18,8 +18,7 @@ namespace Mayo {
 GuiApplication::GuiApplication(const ApplicationPtr& app)
     : QObject(app.get()),
       m_app(app),
-      m_selectionModel(new ApplicationItemSelectionModel(this)),
-      m_gfxObjectDriverTable(new GraphicsObjectDriverTable)
+      m_selectionModel(new ApplicationItemSelectionModel(this))
 {
     QObject::connect(
                 app.get(), &Application::documentAdded,
@@ -51,9 +50,32 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
     return m_selectionModel;
 }
 
-GraphicsObjectDriverTable* GuiApplication::graphicsObjectDriverTable() const
+void GuiApplication::addGraphicsObjectDriver(GraphicsObjectDriverPtr ptr)
 {
-    return m_gfxObjectDriverTable.get();
+    m_vecGfxObjectDriver.push_back(ptr);
+}
+
+void GuiApplication::addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDriver> ptr)
+{
+    m_vecGfxObjectDriver.push_back(ptr.release()); // Will be converted to opencascade::handle<>
+}
+
+GraphicsObjectPtr GuiApplication::createGraphicsObject(const TDF_Label& label) const
+{
+    GraphicsObjectDriver* driverPartialSupport = nullptr;
+    for (const GraphicsObjectDriverPtr& driver : m_vecGfxObjectDriver) {
+        const GraphicsObjectDriver::Support support = driver->supportStatus(label);
+        if (support == GraphicsObjectDriver::Support::Complete)
+            return driver->createObject(label);
+
+        if (support == GraphicsObjectDriver::Support::Partial)
+            driverPartialSupport = driver.get();
+    }
+
+    if (driverPartialSupport)
+        return driverPartialSupport->createObject(label);
+    else
+        return {};
 }
 
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)

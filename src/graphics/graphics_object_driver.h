@@ -20,7 +20,7 @@ namespace Mayo {
 
 class GraphicsObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsObjectDriver, Standard_Transient)
-using GraphicsObjectDriverPtr = opencascade::handle<GraphicsObjectDriver>;
+using GraphicsObjectDriverPtr = Handle(GraphicsObjectDriver);
 
 class GraphicsObjectDriver : public Standard_Transient {
 public:

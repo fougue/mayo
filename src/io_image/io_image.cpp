@@ -128,7 +128,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     for (const DocumentPtr& doc : m_setDoc) {
         for (int i = 0; i < doc->entityCount(); ++i) {
             const TDF_Label labelEntity = doc->entityLabel(i);
-            GraphicsObjectPtr gfxObject = m_guiApp->graphicsObjectDriverTable()->createObject(labelEntity);
+            GraphicsObjectPtr gfxObject = m_guiApp->createGraphicsObject(labelEntity);
             gfxScene.addObject(gfxObject);
         }
 
@@ -137,7 +137,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     // Render document tree nodes
     for (const TDF_Label& labelNode : m_setNode) {
-        GraphicsObjectPtr gfxObject = m_guiApp->graphicsObjectDriverTable()->createObject(labelNode);
+        GraphicsObjectPtr gfxObject = m_guiApp->createGraphicsObject(labelNode);
         gfxScene.addObject(gfxObject);
         progress->setValue(MathUtils::mappedValue(++itemProgress, 0, itemCount, 0, 100));
     }

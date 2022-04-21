@@ -1095,7 +1095,7 @@ QMenu* MainWindow::createMenuDisplayMode()
     if (!guiDoc)
         return menu;
 
-    const auto spanDrivers = m_guiApp->graphicsObjectDriverTable()->drivers();
+    const auto spanDrivers = m_guiApp->graphicsObjectDrivers();
     for (const GraphicsObjectDriverPtr& driver : spanDrivers) {
         if (driver->displayModes().empty())
             continue; // Skip
