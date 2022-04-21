@@ -90,6 +90,7 @@ public:
 
 signals:
     void selectionChanged();
+    void selectionModeChanged();
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;

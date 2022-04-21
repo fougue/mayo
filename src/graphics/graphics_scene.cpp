@@ -282,12 +282,17 @@ const GraphicsOwnerPtr& GraphicsScene::currentHighlightedOwner() const
 #endif
 }
 
-GraphicsScene::SelectionMode GraphicsScene::selectionMode() const {
+GraphicsScene::SelectionMode GraphicsScene::selectionMode() const
+{
     return d->m_selectionMode;
 }
 
-void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode) {
-    d->m_selectionMode = mode;
+void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode)
+{
+    if (mode != d->m_selectionMode) {
+        d->m_selectionMode = mode;
+        emit this->selectionModeChanged();
+    }
 }
 
 GraphicsSceneRedrawBlocker::GraphicsSceneRedrawBlocker(GraphicsScene* scene)
