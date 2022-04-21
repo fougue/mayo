@@ -10,7 +10,6 @@
 #include "../base/application_item_selection_model.h"
 #include "../base/span.h"
 #include "../graphics/graphics_object_driver_table.h"
-#include "../graphics/graphics_tree_node_mapping_driver_table.h"
 #include "gui_document.h"
 
 #include <QtCore/QObject>
@@ -35,7 +34,6 @@ public:
     ApplicationItemSelectionModel* selectionModel() const;
 
     GraphicsObjectDriverTable* graphicsObjectDriverTable() const;
-    GraphicsTreeNodeMappingDriverTable* graphicsTreeNodeMappingDriverTable() const;
 
     // Whether a GuiDocument object is automatically created once a Document is added in Application
     bool automaticDocumentMapping() const { return m_automaticDocumentMapping; }
@@ -60,7 +58,6 @@ private:
     std::vector<GuiDocument*> m_vecGuiDocument;
     ApplicationItemSelectionModel* m_selectionModel = nullptr;
     std::unique_ptr<GraphicsObjectDriverTable> m_gfxObjectDriverTable;
-    std::unique_ptr<GraphicsTreeNodeMappingDriverTable> m_gfxTreeNodeMappingDriverTable;
     QMetaObject::Connection m_connApplicationItemSelectionChanged;
     bool m_automaticDocumentMapping = true;
 };

@@ -19,8 +19,7 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     : QObject(app.get()),
       m_app(app),
       m_selectionModel(new ApplicationItemSelectionModel(this)),
-      m_gfxObjectDriverTable(new GraphicsObjectDriverTable),
-      m_gfxTreeNodeMappingDriverTable(new GraphicsTreeNodeMappingDriverTable)
+      m_gfxObjectDriverTable(new GraphicsObjectDriverTable)
 {
     QObject::connect(
                 app.get(), &Application::documentAdded,
@@ -55,11 +54,6 @@ ApplicationItemSelectionModel* GuiApplication::selectionModel() const
 GraphicsObjectDriverTable* GuiApplication::graphicsObjectDriverTable() const
 {
     return m_gfxObjectDriverTable.get();
-}
-
-GraphicsTreeNodeMappingDriverTable* GuiApplication::graphicsTreeNodeMappingDriverTable() const
-{
-    return m_gfxTreeNodeMappingDriverTable.get();
 }
 
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
