@@ -28,9 +28,6 @@ namespace Mayo {
 
 namespace Internal {
 
-// Defined in gui_create_gfx_driver.cpp
-Handle_Graphic3d_GraphicDriver createGfxDriver();
-
 static Handle_AIS_Trihedron createOriginTrihedron()
 {
     Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
