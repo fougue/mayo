@@ -93,7 +93,7 @@ public:
     }
 };
 
-constexpr bool isCoreProfile = true;
+constexpr bool isCoreProfile = false;
 
 } // namespace
 
