@@ -31,6 +31,17 @@ static Handle_V3d_Viewer createOccViewer()
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
     viewer->SetLightOn();
+#if 0
+    for (const Handle(Graphic3d_CLight)& light : viewer->DefinedLights()) {
+        if (light->Name() == "amblight") {
+            light->SetIntensity(0.2f);
+        }
+        else if (light->Name() == "headlight") {
+            light->SetIntensity(0.8f);
+        }
+    }
+#endif
+
     return viewer;
 }
 
@@ -239,10 +250,20 @@ void GraphicsScene::select()
     if (d->m_selectionMode == SelectionMode::None)
         return;
 
-    if (d->m_selectionMode == SelectionMode::Single)
+    if (d->m_selectionMode == SelectionMode::Single) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        d->m_aisContext->SelectDetected(AIS_SelectionScheme_Replace);
+#else
         d->m_aisContext->Select(false);
-    else if (d->m_selectionMode == SelectionMode::Multi)
+#endif
+    }
+    else if (d->m_selectionMode == SelectionMode::Multi) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        d->m_aisContext->SelectDetected(AIS_SelectionScheme_XOR);
+#else
         d->m_aisContext->ShiftSelect(false);
+#endif
+    }
 
     emit this->selectionChanged();
 }
