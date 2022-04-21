@@ -4,14 +4,14 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "document.h"
+
 #include "application.h"
 #include "caf_utils.h"
 #include "cpp_utils.h"
-#include "document.h"
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
-#include <set>
 
 namespace Mayo {
 

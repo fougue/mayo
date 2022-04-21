@@ -19,8 +19,6 @@
 
 namespace Mayo {
 
-class DocumentTreeNode;
-
 class Document : public QObject, public TDocStd_Document {
     Q_OBJECT
     Q_PROPERTY(int identifier READ identifier)
