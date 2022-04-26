@@ -33,17 +33,6 @@ namespace IO {
 
 namespace {
 
-TaskProgress* nullTaskProgress()
-{
-    static TaskProgress null;
-    return &null;
-}
-
-Messenger* nullMessenger()
-{
-    return NullMessenger::instance();
-}
-
 bool containsFormat(Span<const Format> spanFormat, Format format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
@@ -191,8 +180,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
-    TaskProgress* rootProgress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
 
     bool ok = true;
 
@@ -340,8 +329,8 @@ System::Operation_ImportInDocument System::importInDocument() {
 
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
-    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
     auto fnError = [=](std::string_view errorMsg) {
         const std::string strFilepath = args.targetFilepath.u8string();
         messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));

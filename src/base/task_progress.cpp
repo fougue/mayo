@@ -33,6 +33,17 @@ TaskProgress::~TaskProgress()
         this->setValue(100);
 }
 
+TaskProgress& TaskProgress::null()
+{
+    static TaskProgress null;
+    return null;
+}
+
+bool TaskProgress::isNull() const
+{
+    return m_task == nullptr;
+}
+
 TaskId TaskProgress::taskId() const
 {
     return m_task ? m_task->id() : std::numeric_limits<TaskId>::max();
@@ -45,6 +56,9 @@ TaskManager* TaskProgress::taskManager() const
 
 void TaskProgress::setValue(int pct)
 {
+    if (this->isNull())
+        return;
+
     if (m_isAbortRequested)
         return;
 
@@ -58,16 +72,16 @@ void TaskProgress::setValue(int pct)
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
-        if (m_task)
-            emit m_task->manager()->progressChanged(m_task->id(), m_value);
+        emit m_task->manager()->progressChanged(m_task->id(), m_value);
     }
 }
 
 void TaskProgress::setStep(std::string_view title)
 {
-    m_step = title;
-    if (m_task)
+    if (!this->isNull()) {
+        m_step = title;
         emit m_task->manager()->progressStep(m_task->id(), m_step);
+    }
 }
 
 void TaskProgress::setTask(const Task* task)
@@ -82,7 +96,8 @@ bool TaskProgress::isAbortRequested(const TaskProgress* progress)
 
 void TaskProgress::requestAbort()
 {
-    m_isAbortRequested = true;
+    if (!this->isNull())
+        m_isAbortRequested = true;
 }
 
 } // namespace Mayo

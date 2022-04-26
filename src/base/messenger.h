@@ -25,6 +25,8 @@ public:
     void emitWarning(std::string_view text);
     void emitError(std::string_view text);
     virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
+
+    static Messenger& null();
 };
 
 // Provides facility to construct a Messenger object from a lambda
@@ -36,15 +38,6 @@ public:
 
 private:
     std::function<void(MessageType, std::string_view)> m_fnCallback;
-};
-
-class NullMessenger : public Messenger {
-public:
-    static Messenger* instance();
-    void emitMessage(MessageType msgType, std::string_view text) override;
-
-private:
-    NullMessenger() = default;
 };
 
 } // namespace Mayo
