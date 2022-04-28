@@ -412,7 +412,7 @@ System::Operation_ExportApplicationItems System::exportApplicationItems()
 
 void System::visitUniqueItems(
         Span<const ApplicationItem> spanItem,
-        std::function<void (const ApplicationItem &)> fnCallback)
+        std::function<void (const ApplicationItem&)> fnCallback)
 {
     std::unordered_set<DocumentPtr> setDoc;
     for (const ApplicationItem& item : spanItem) {
@@ -434,6 +434,23 @@ void System::visitUniqueItems(
             }
         }
     }
+}
+
+void System::traverseUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void(const Tree<TDF_Label>&, TreeNodeId)> fnCallback,
+        TreeTraversal mode)
+{
+    System::visitUniqueItems(spanItem, [=](const ApplicationItem& item) {
+        const Tree<TDF_Label>& modelTree = item.document()->modelTree();
+        if (item.isDocument()) {
+            traverseTree(modelTree, [&](TreeNodeId id) { fnCallback(modelTree, id); }, mode);
+        }
+        else if (item.isDocumentTreeNode()) {
+            const TreeNodeId docTreeNodeId = item.documentTreeNode().id();
+            traverseTree(docTreeNodeId, modelTree, [&](TreeNodeId id) { fnCallback(modelTree, id); }, mode);
+        }
+    });
 }
 
 System::Operation_ImportInDocument&

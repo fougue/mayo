@@ -106,6 +106,10 @@ private:
     std::vector<TreeNodeId> m_vecRoot;
 };
 
+enum class TreeTraversal {
+    Unorder, PreOrder, PostOrder
+};
+
 // Fastest tree traversal, but nodes are visited unordered
 template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback);
@@ -122,13 +126,11 @@ void traverseTree_postOrder(const Tree<T>& tree, const FN& callback);
 template<typename T, typename FN>
 void traverseTree_postOrder(TreeNodeId id, const Tree<T>& tree, const FN& callback);
 
-// Same as traverseTree_preOrder()
 template<typename T, typename FN>
-void traverseTree(const Tree<T>& tree, const FN& callback);
+void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode = TreeTraversal::PreOrder);
 
-// Same as traverseTree_preOrder()
 template<typename T, typename FN>
-void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback);
+void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode = TreeTraversal::PreOrder);
 
 template<typename U, typename FN>
 void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback);
@@ -272,6 +274,29 @@ const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const {
 }
 
 template<typename T, typename FN>
+void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+    switch (mode) {
+    case TreeTraversal::Unorder:
+        return traverseTree_unorder(tree, callback);
+    case TreeTraversal::PreOrder:
+        return traverseTree_preOrder(tree, callback);
+    case TreeTraversal::PostOrder:
+        return traverseTree_postOrder(tree, callback);
+    }
+}
+
+template<typename T, typename FN>
+void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+    switch (mode) {
+    case TreeTraversal::Unorder:
+    case TreeTraversal::PreOrder:
+        return traverseTree_preOrder(id, tree, callback);
+    case TreeTraversal::PostOrder:
+        return traverseTree_postOrder(id, tree, callback);
+    }
+}
+
+template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 {
     for (const typename Tree<T>::TreeNode& node : tree.m_vecNode) {
@@ -279,16 +304,6 @@ void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
         if (!tree.isNodeDeleted(id))
             callback(id);
     }
-}
-
-template<typename T, typename FN>
-void traverseTree(const Tree<T>& tree, const FN& callback) {
-    return traverseTree_preOrder(tree, callback);
-}
-
-template<typename T, typename FN>
-void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback) {
-    return traverseTree_preOrder(id, tree, callback);
 }
 
 template<typename T, typename FN>
