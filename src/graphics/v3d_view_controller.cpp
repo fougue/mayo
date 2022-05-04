@@ -67,6 +67,11 @@ bool V3dViewController::isPanningStarted() const
     return m_dynamicAction == DynamicAction::Panning;
 }
 
+bool V3dViewController::isZoomStarted() const
+{
+    return m_dynamicAction == DynamicAction::Zoom;
+}
+
 bool V3dViewController::isWindowZoomingStarted() const
 {
     return m_dynamicAction == DynamicAction::WindowZoom;
@@ -74,6 +79,9 @@ bool V3dViewController::isWindowZoomingStarted() const
 
 void V3dViewController::rotation(const QPoint& currPos)
 {
+    if (this->currentDynamicAction() != DynamicAction::Rotation)
+        this->stopDynamicAction();
+
     if (!this->isRotationStarted()) {
         this->startDynamicAction(DynamicAction::Rotation);
         m_view->StartRotation(currPos.x(), currPos.y());
@@ -86,11 +94,29 @@ void V3dViewController::rotation(const QPoint& currPos)
 
 void V3dViewController::pan(const QPoint& prevPos, const QPoint& currPos)
 {
+    if (this->currentDynamicAction() != DynamicAction::Panning)
+        this->stopDynamicAction();
+
     if (!this->isPanningStarted())
         this->startDynamicAction(DynamicAction::Panning);
 
     m_view->Pan(currPos.x() - prevPos.x(), prevPos.y() - currPos.y());
     this->redrawView();
+}
+
+void V3dViewController::zoom(const QPoint& prevPos, const QPoint& currPos)
+{
+    if (this->currentDynamicAction() != DynamicAction::Zoom)
+        this->stopDynamicAction();
+
+    if (!this->isZoomStarted()) {
+        this->startDynamicAction(DynamicAction::Zoom);
+        m_view->StartZoomAtPoint(currPos.x(), currPos.y());
+    }
+    else {
+        m_view->Zoom(-prevPos.y(), 0, -currPos.y(), 0); // Zoom by vertical movement
+        this->redrawView();
+    }
 }
 
 void V3dViewController::windowFitAll(const QPoint& posMin, const QPoint& posMax)

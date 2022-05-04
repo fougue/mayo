@@ -20,6 +20,7 @@ public:
         None,
         Panning,
         Rotation,
+        Zoom,
         WindowZoom,
         InstantZoom
     };
@@ -56,10 +57,12 @@ protected:
 
     bool isRotationStarted() const;
     bool isPanningStarted() const;
+    bool isZoomStarted() const;
     bool isWindowZoomingStarted() const;
 
     void rotation(const QPoint& currPos);
     void pan(const QPoint& prevPos, const QPoint& currPos);
+    void zoom(const QPoint& prevPos, const QPoint& currPos);
 
     void windowFitAll(const QPoint& posMin, const QPoint& posMax);
 
@@ -69,7 +72,7 @@ protected:
     void startInstantZoom(const QPoint& currPos);
     void stopInstantZoom();
 
-    virtual AbstractRubberBand* createRubberBand() = 0;
+    virtual AbstractRubberBand* createRubberBand() = 0; // TODO Return std::unique_ptr<>
     void drawRubberBand(const QPoint& posMin, const QPoint& posMax);
     void hideRubberBand();
 
