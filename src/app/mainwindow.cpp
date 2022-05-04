@@ -740,20 +740,24 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
     auto app = m_guiApp->application();
     auto appModule = AppModule::get();
+    auto appProps = appModule->properties();
     auto widget = new WidgetGuiDocument(guiDoc);
-    widget->controller()->setInstantZoomFactor(appModule->properties()->instantZoomFactor);
-    if (appModule->properties()->defaultShowOriginTrihedron) {
+    auto widgetCtrl = widget->controller();
+    widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
+    widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+    if (appProps->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
         guiDoc->graphicsScene()->redraw();
     }
 
     QObject::connect(appModule->settings(), &Settings::changed, this, [=](Property* setting) {
-        if (setting == &appModule->properties()->instantZoomFactor)
-            widget->controller()->setInstantZoomFactor(appModule->properties()->instantZoomFactor);
+        if (setting == &appProps->instantZoomFactor)
+            widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
+        else if (setting == &appProps->navigationStyle)
+            widgetCtrl->setNavigationStyle(appProps->navigationStyle);
     });
 
-    V3dViewController* ctrl = widget->controller();
-    QObject::connect(ctrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
+    QObject::connect(widgetCtrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
         guiDoc->graphicsScene()->highlightAt(pos2d, guiDoc->v3dView());
         widget->view()->redraw();
         auto selector = guiDoc->graphicsScene()->mainSelector();

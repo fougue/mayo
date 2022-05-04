@@ -58,6 +58,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->meshingRelative, groupId_meshing);
 
     // Graphics
+    settings->addSetting(&this->navigationStyle, groupId_graphics);
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
     // -- Clip planes
@@ -83,6 +84,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->linkWithDocumentSelector.setValue(true);
     });
     settings->addResetFunction(groupId_graphics, [=]{
+        this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
     });
@@ -163,6 +165,8 @@ void AppModuleProperties::retranslate()
                          "If activated, deflection used for the polygonalisation of each edge will be "
                          "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
                          "the maximum deflection of their edges."));
+    this->navigationStyle.setDescription(
+                textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications"));
     this->defaultShowOriginTrihedron.setDescription(
                 textIdTr("Show or hide by default the trihedron centered at world origin. "
                          "This doesn't affect 3D view of currently opened documents"));

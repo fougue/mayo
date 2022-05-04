@@ -27,7 +27,7 @@ public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
-    V3dViewController* controller() const { return m_controller; }
+    WidgetOccViewController* controller() const { return m_controller; }
     IWidgetOccView* view() const { return m_qtOccView; }
 
     QColor panelBackgroundColor() const;
