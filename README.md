@@ -66,13 +66,16 @@ See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported
 
   Operation    |  Mouse/Keyboard controls
 ---------------|--------------------------
-Rotate         | mouse left  + move
-Pan            | mouse right + move
-Zoom           | mouse wheel(scroll)
-Window zoom    | mouse wheel + move
-Instant zoom   | space bar
-Select Object  | mouse left click
-Select Objects | SHIFT + mouse left clicks
+Rotate         | mouseLeft  + move
+Pan            | mouseRight + move
+Zoom           | mouseLeft  + mouseRight + move
+Zoom +/-       | mouseWheel(scroll)
+Window zoom    | CTRL + mouseLeft + move
+Instant zoom   | spaceBar
+Select Object  | mouseLeft click
+Select Objects | SHIFT + mouseLeft clicks
+
+Mayo supports also multiple 3D viewer navigation styles to mimic common CAD applications(CATIA, SOLIDWORKS, ...)
 
 ## :hammer: How to build Mayo
 [Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
