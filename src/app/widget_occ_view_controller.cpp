@@ -304,11 +304,12 @@ public:
     }
 
     bool matchZoom() const override {
-        return this->inputs.equal({ Qt::MiddleButton });
+        return this->inputs.equal({ Qt::LeftButton, Qt::RightButton })
+                || this->inputs.equal({ Qt::RightButton, Qt::LeftButton });
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::LeftButton });
     }
 };
 
