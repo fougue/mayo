@@ -30,7 +30,7 @@ public:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
     enum class NavigationStyle {
-        Mayo/*Default*/, Catia, SolidWorks, Unigraphics, ProEngineer
+        Mayo, Catia, SolidWorks, Unigraphics, ProEngineer
     };
     void setNavigationStyle(NavigationStyle style);
 
@@ -57,9 +57,12 @@ private:
     void handleMouseButtonRelease(const QMouseEvent* event);
     void handleMouseWheel(const QWheelEvent* event);
 
-    // -- Input matching
+    // -- Action matching
 
+    // User input: key, mouse button, ...
     using Input = int;
+
+    // Sequence of user inputs being "on" : key pressed, mouse button pressed, ...
     class InputSequence {
     public:
         void push(Input in);
@@ -86,10 +89,11 @@ private:
         std::function<void()> m_fnClearCallback;
     };
 
-    class InputMatcher {
+    // Base class to provide matching of DynamicAction from an InputSequence object
+    class ActionMatcher {
     public:
-        InputMatcher(const InputSequence* seq) : m_seq(*seq) {}
-        virtual ~InputMatcher() = default;
+        ActionMatcher(const InputSequence* seq) : inputs(*seq) {}
+        virtual ~ActionMatcher() = default;
 
         virtual bool matchRotation() const = 0;
         virtual bool matchPan() const = 0;
@@ -100,18 +104,16 @@ private:
         virtual void onInputPreRelease(Input) {}
         virtual void onInputCleared() {}
 
-    protected:
-        const InputSequence& inputs() const { return m_seq; }
-
-    private:
-        const InputSequence& m_seq;
+        const InputSequence& inputs;
     };
-    static std::unique_ptr<InputMatcher> createInputMatcher(NavigationStyle style, const InputSequence* seq);
-    class Mayo_InputMatcher;
-    class Catia_InputMatcher;
-    class SolidWorks_InputMatcher;
-    class Unigraphics_InputMatcher;
-    class ProEngineer_InputMatcher;
+
+    // Fabrication to create corresponding ActionMatcher from navigation style
+    static std::unique_ptr<ActionMatcher> createActionMatcher(NavigationStyle style, const InputSequence* seq);
+    class Mayo_ActionMatcher;
+    class Catia_ActionMatcher;
+    class SolidWorks_ActionMatcher;
+    class Unigraphics_ActionMatcher;
+    class ProEngineer_ActionMatcher;
 
     // -- Attributes
 
@@ -119,7 +121,7 @@ private:
     QPoint m_prevPos;
     NavigationStyle m_navigStyle = NavigationStyle::Mayo;
     InputSequence m_inputSequence;
-    std::unique_ptr<InputMatcher> m_inputMatcher;
+    std::unique_ptr<ActionMatcher> m_actionMatcher;
 };
 
 } // namespace Mayo

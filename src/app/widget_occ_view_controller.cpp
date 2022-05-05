@@ -102,12 +102,12 @@ WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     : V3dViewController(occView->v3dView(), occView->widget()),
       m_occView(occView),
       m_navigStyle(NavigationStyle::Catia),
-      m_inputMatcher(createInputMatcher(m_navigStyle, &m_inputSequence))
+      m_actionMatcher(createActionMatcher(m_navigStyle, &m_inputSequence))
 {
     m_occView->widget()->installEventFilter(this);
-    m_inputSequence.setPrePushCallback([=](Input in) { m_inputMatcher->onInputPrePush(in); });
-    m_inputSequence.setPreReleaseCallback([=](Input in) { m_inputMatcher->onInputPreRelease(in); });
-    m_inputSequence.setClearCallback([=] { m_inputMatcher->onInputCleared(); });
+    m_inputSequence.setPrePushCallback([=](Input in) { m_actionMatcher->onInputPrePush(in); });
+    m_inputSequence.setPreReleaseCallback([=](Input in) { m_actionMatcher->onInputPreRelease(in); });
+    m_inputSequence.setClearCallback([=] { m_actionMatcher->onInputCleared(); });
 }
 
 bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
@@ -133,7 +133,7 @@ void WidgetOccViewController::setNavigationStyle(NavigationStyle style)
 {
     m_navigStyle = style;
     m_inputSequence.clear();
-    m_inputMatcher = createInputMatcher(style, &m_inputSequence);
+    m_actionMatcher = createActionMatcher(style, &m_inputSequence);
 }
 
 void WidgetOccViewController::redrawView()
@@ -258,13 +258,13 @@ void WidgetOccViewController::handleMouseMove(const QMouseEvent* event)
     const QPoint currPos = m_occView->widget()->mapFromGlobal(event->globalPos());
     const QPoint prevPos = m_prevPos;
     m_prevPos = currPos;
-    if (m_inputMatcher->matchRotation())
+    if (m_actionMatcher->matchRotation())
         this->rotation(currPos);
-    else if (m_inputMatcher->matchPan())
+    else if (m_actionMatcher->matchPan())
         this->pan(prevPos, currPos);
-    else if (m_inputMatcher->matchZoom())
+    else if (m_actionMatcher->matchZoom())
         this->zoom(prevPos, currPos);
-    else if (m_inputMatcher->matchWindowZoom())
+    else if (m_actionMatcher->matchWindowZoom())
         this->windowZoomRubberBand(currPos);
     else
         emit mouseMoved(currPos);
@@ -291,54 +291,54 @@ void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)
         this->zoomOut();
 }
 
-class WidgetOccViewController::Mayo_InputMatcher : public InputMatcher {
+class WidgetOccViewController::Mayo_ActionMatcher : public ActionMatcher {
 public:
-    Mayo_InputMatcher(const InputSequence* seq) : InputMatcher(seq) {}
+    Mayo_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
 
     bool matchRotation() const override {
-        return this->inputs().equal({ Qt::LeftButton });
+        return this->inputs.equal({ Qt::LeftButton });
     }
 
     bool matchPan() const override {
-        return this->inputs().equal({ Qt::RightButton });
+        return this->inputs.equal({ Qt::RightButton });
     }
 
     bool matchZoom() const override {
-        return this->inputs().equal({ Qt::MiddleButton });
+        return this->inputs.equal({ Qt::MiddleButton });
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::MiddleButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
     }
 };
 
-class WidgetOccViewController::Catia_InputMatcher : public InputMatcher {
+class WidgetOccViewController::Catia_ActionMatcher : public ActionMatcher {
 public:
-    Catia_InputMatcher(const InputSequence* seq) : InputMatcher(seq) {
+    Catia_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {
         m_timer.start();
     }
 
     bool matchRotation() const override {
-        return this->inputs().equal({ Qt::MiddleButton, Qt::LeftButton })
-                || this->inputs().equal({ Qt::MiddleButton, Qt::RightButton });
+        return this->inputs.equal({ Qt::MiddleButton, Qt::LeftButton })
+                || this->inputs.equal({ Qt::MiddleButton, Qt::RightButton });
     }
 
     bool matchPan() const override {
-        return this->inputs().equal({ Qt::MiddleButton }) && !this->matchZoom();
+        return this->inputs.equal({ Qt::MiddleButton }) && !this->matchZoom();
     }
 
     bool matchZoom() const override {
-        return this->inputs().equal({ Qt::MiddleButton })
+        return this->inputs.equal({ Qt::MiddleButton })
                 && m_beforeLastOp == InputSequence::Operation::Push
                 && (m_beforeLastInput == Qt::LeftButton || m_beforeLastInput == Qt::RightButton)
-                && this->inputs().lastOperation() == InputSequence::Operation::Release
-                && this->inputs().lastInput() == m_beforeLastInput
+                && this->inputs.lastOperation() == InputSequence::Operation::Release
+                && this->inputs.lastInput() == m_beforeLastInput
                 && (m_lastTimestamp_ms - m_beforeLastTimestamp_ms) < 750
                 ;
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::MiddleButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
     }
 
     void onInputPrePush(Input /*in*/) override {
@@ -359,8 +359,8 @@ public:
 
 private:
     void recordBeforeLastOperation() {
-        m_beforeLastOp = this->inputs().lastOperation();
-        m_beforeLastInput = this->inputs().lastInput();
+        m_beforeLastOp = this->inputs.lastOperation();
+        m_beforeLastInput = this->inputs.lastInput();
         m_beforeLastTimestamp_ms = m_lastTimestamp_ms;
         m_lastTimestamp_ms = m_timer.elapsed();
     }
@@ -372,78 +372,78 @@ private:
     QElapsedTimer m_timer;
 };
 
-class WidgetOccViewController::SolidWorks_InputMatcher : public InputMatcher {
+class WidgetOccViewController::SolidWorks_ActionMatcher : public ActionMatcher {
 public:
-    SolidWorks_InputMatcher(const InputSequence* seq) : InputMatcher(seq) {}
+    SolidWorks_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
 
     bool matchRotation() const override {
-        return this->inputs().equal({ Qt::MiddleButton });
+        return this->inputs.equal({ Qt::MiddleButton });
     }
 
     bool matchPan() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::MiddleButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
     }
 
     bool matchZoom() const override {
-        return this->inputs().equal({ Qt::Key_Shift, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });;
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::LeftButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::LeftButton });
     }
 };
 
-class WidgetOccViewController::Unigraphics_InputMatcher : public InputMatcher {
+class WidgetOccViewController::Unigraphics_ActionMatcher : public ActionMatcher {
 public:
-    Unigraphics_InputMatcher(const InputSequence* seq) : InputMatcher(seq) {}
+    Unigraphics_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
 
     bool matchRotation() const override {
-        return this->inputs().equal({ Qt::MiddleButton });
+        return this->inputs.equal({ Qt::MiddleButton });
     }
 
     bool matchPan() const override {
-        return this->inputs().equal({ Qt::MiddleButton, Qt::RightButton });
+        return this->inputs.equal({ Qt::MiddleButton, Qt::RightButton });
     }
 
     bool matchZoom() const override {
-        return this->inputs().equal({ Qt::MiddleButton, Qt::LeftButton });;
+        return this->inputs.equal({ Qt::MiddleButton, Qt::LeftButton });;
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::LeftButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::LeftButton });
     }
 };
 
-class WidgetOccViewController::ProEngineer_InputMatcher : public InputMatcher {
+class WidgetOccViewController::ProEngineer_ActionMatcher : public ActionMatcher {
 public:
-    ProEngineer_InputMatcher(const InputSequence* seq) : InputMatcher(seq) {}
+    ProEngineer_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
 
     bool matchRotation() const override {
-        return this->inputs().equal({ Qt::MiddleButton });
+        return this->inputs.equal({ Qt::MiddleButton });
     }
 
     bool matchPan() const override {
-        return this->inputs().equal({ Qt::Key_Shift, Qt::MiddleButton });
+        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });
     }
 
     bool matchZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });;
     }
 
     bool matchWindowZoom() const override {
-        return this->inputs().equal({ Qt::Key_Control, Qt::LeftButton });
+        return this->inputs.equal({ Qt::Key_Control, Qt::LeftButton });
     }
 };
 
-std::unique_ptr<WidgetOccViewController::InputMatcher>
-WidgetOccViewController::createInputMatcher(NavigationStyle style, const InputSequence* seq)
+std::unique_ptr<WidgetOccViewController::ActionMatcher>
+WidgetOccViewController::createActionMatcher(NavigationStyle style, const InputSequence* seq)
 {
     switch(style) {
-    case NavigationStyle::Mayo: return std::make_unique<Mayo_InputMatcher>(seq);
-    case NavigationStyle::Catia: return std::make_unique<Catia_InputMatcher>(seq);
-    case NavigationStyle::SolidWorks: return std::make_unique<SolidWorks_InputMatcher>(seq);
-    case NavigationStyle::Unigraphics: return std::make_unique<Unigraphics_InputMatcher>(seq);
-    case NavigationStyle::ProEngineer: return std::make_unique<ProEngineer_InputMatcher>(seq);
+    case NavigationStyle::Mayo: return std::make_unique<Mayo_ActionMatcher>(seq);
+    case NavigationStyle::Catia: return std::make_unique<Catia_ActionMatcher>(seq);
+    case NavigationStyle::SolidWorks: return std::make_unique<SolidWorks_ActionMatcher>(seq);
+    case NavigationStyle::Unigraphics: return std::make_unique<Unigraphics_ActionMatcher>(seq);
+    case NavigationStyle::ProEngineer: return std::make_unique<ProEngineer_ActionMatcher>(seq);
     }
     return {};
 }
