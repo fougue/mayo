@@ -46,7 +46,7 @@ private:
 
     void setViewCursor(const QCursor& cursor);
 
-    AbstractRubberBand* createRubberBand() override;
+    std::unique_ptr<AbstractRubberBand> createRubberBand() override;
     struct RubberBand;
 
     void handleEvent(const QEvent* event);

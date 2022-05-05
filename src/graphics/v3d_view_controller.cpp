@@ -18,11 +18,6 @@ V3dViewController::V3dViewController(const Handle_V3d_View& view, QObject* paren
 {
 }
 
-V3dViewController::~V3dViewController()
-{
-    delete m_rubberBand;
-}
-
 void V3dViewController::zoomIn()
 {
     m_view->SetScale(m_view->Scale() * 1.1); // +10%

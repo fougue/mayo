@@ -186,9 +186,9 @@ private:
     Internal::RubberBandWidget m_rubberBand;
 };
 
-V3dViewController::AbstractRubberBand* WidgetOccViewController::createRubberBand()
+std::unique_ptr<V3dViewController::AbstractRubberBand> WidgetOccViewController::createRubberBand()
 {
-    return new RubberBand(m_occView->widget());
+    return std::make_unique<RubberBand>(m_occView->widget());
 }
 
 void WidgetOccViewController::handleEvent(const QEvent* event)
