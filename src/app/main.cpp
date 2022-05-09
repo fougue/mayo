@@ -153,7 +153,7 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo, an open-source 3D viewer based on Qt5/OpenCascade"));
+                Main::tr("Mayo the opensource 3D CAD viewer and converter"));
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
