@@ -164,7 +164,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         QSignalBlocker sigBlock(posSlider); Q_UNUSED(sigBlock);
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
@@ -172,14 +172,14 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         const double pos = ui.sliderValueToSpinValue(pct);
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
     QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, this, [=]{
         const gp_Dir invNormal = gfx->ToPlane().Axis().Direction().Reversed();
-        GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, invNormal);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
+        GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, invNormal);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
         m_view->Redraw();
     });
 
@@ -197,7 +197,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
                 this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));
-                GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, normal);
+                GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, normal);
                 m_view->Redraw();
             }
         });
@@ -242,7 +242,7 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
     posSpin->setRange(rmin - gap, rmax + gap);
     posSpin->setSingleStep(std::abs(posSpin->maximum() - posSpin->minimum()) / 100.);
     if (useMidValue) {
-        GraphicsUtils::Gpx3dClipPlane_setPosition(data->graphics, newPlanePos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(data->graphics, newPlanePos);
         posSpin->setValue(newPlanePos);
         posSlider->setValue(data->ui.spinValueToSliderValue(newPlanePos));
     }

@@ -17,11 +17,8 @@ namespace Mayo {
 
 struct GraphicsUtils {
     static void V3dView_fitAll(const Handle_V3d_View& view);
-    static bool V3dView_hasClipPlane(
-            const Handle_V3d_View& view,
-            const Handle_Graphic3d_ClipPlane& plane);
-    static gp_Pnt V3dView_to3dPosition(
-            const Handle_V3d_View& view, double x, double y);
+    static bool V3dView_hasClipPlane(const Handle_V3d_View& view, const Handle_Graphic3d_ClipPlane& plane);
+    static gp_Pnt V3dView_to3dPosition(const Handle_V3d_View& view, double x, double y);
 
     static void AisContext_eraseObject(
             const Handle_AIS_InteractiveContext& context,
@@ -39,11 +36,11 @@ struct GraphicsUtils {
     static int AspectWindow_width(const Handle_Aspect_Window& wnd);
     static int AspectWindow_height(const Handle_Aspect_Window& wnd);
 
-    static void Gpx3dClipPlane_setCappingHatch(
+    static void Gfx3dClipPlane_setCappingHatch(
             const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch);
-    static void Gpx3dClipPlane_setNormal(
+    static void Gfx3dClipPlane_setNormal(
             const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n);
-    static void Gpx3dClipPlane_setPosition(
+    static void Gfx3dClipPlane_setPosition(
             const Handle_Graphic3d_ClipPlane& plane, double pos);
 
     static bool ImagePixmap_flipY(Image_PixMap& pixmap);
