@@ -86,13 +86,6 @@ win32 {
     QT += winextras
     HEADERS += $$files(src/app/windows/*.h)
     SOURCES += $$files(src/app/windows/*.cpp)
-
-    COPIES += WinInstallerFiles
-    WinInstallerFiles.files  = $$files($$PWD/installer/*.iss)
-    WinInstallerFiles.files += $$files($$PWD/installer/*.conf)
-    WinInstallerFiles.path = $$OUT_PWD/installer
-
-    QMAKE_SUBSTITUTES += $$PWD/installer/setupvars.iss.in
 }
 
 FORMS += $$files(src/app/*.ui)
@@ -173,41 +166,6 @@ minOpenCascadeVersion(7, 4, 0) {
 # -- VRML support
 LIBS += -lTKVRML
 
-CASCADE_LIST_OPTBIN_DIR = $$split(CASCADE_OPTBIN_DIRS, ;)
-for(binPath, CASCADE_LIST_OPTBIN_DIR) {
-    lowerBinPath = $$lower($${binPath})
-
-    findLib = $$find(lowerBinPath, "ffmpeg")
-    !isEmpty(findLib):FFMPEG_BIN_DIR = $${binPath}
-
-    findLib = $$find(lowerBinPath, "freeimage")
-    !isEmpty(findLib):FREEIMAGE_BIN_DIR = $${binPath}
-
-    findLib = $$find(lowerBinPath, "freetype")
-    !isEmpty(findLib):FREETYPE_BIN_DIR = $${binPath}
-
-    findLib = $$find(lowerBinPath, "tbb")
-    !isEmpty(findLib):TBB_BIN_DIR = $${binPath}
-
-    findLib = $$find(lowerBinPath, "openvr")
-    !isEmpty(findLib):OPENVR_BIN_DIR = $${binPath}
-}
-
-# -- Create file "opencascade_dlls.iss" that will contain the required OpenCascade DLL files to be
-# -- added in the InnoSetup [Files] section
-# -- The list of OpenCascade libraries is retrieved from the LIBS QMake variable
-win32 {
-    for(lib, LIBS) {
-        findTK = $$find(lib, "-lTK")
-        !isEmpty(findTK) {
-            lib = $$replace(lib, "-l", "")
-            CASCADE_INNOSETUP_DLLS += "Source: \"$$CASCADE_BIN_DIR\\$${lib}.dll\"; DestDir: \"{app}\"; Flags: ignoreversion"
-        }
-    }
-
-    write_file($$OUT_PWD/installer/opencascade_dlls.iss, CASCADE_INNOSETUP_DLLS)
-}
-
 # gmio
 isEmpty(GMIO_ROOT) {
     message(gmio OFF)
@@ -230,4 +188,9 @@ isEmpty(GMIO_ROOT) {
 #        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
         $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
     DEFINES += HAVE_GMIO
+}
+
+# Developer custom processing
+exists($$PWD/custom.pri) {
+    include($$PWD/custom.pri)
 }

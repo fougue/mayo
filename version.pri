@@ -25,10 +25,8 @@ equals(QT_ARCH, i386) {
 QMAKE_TARGET_PRODUCT = Mayo
 QMAKE_TARGET_COMPANY = Fougue
 
-# Generate version files
-QMAKE_SUBSTITUTES += \
-    $$PWD/installer/version.iss.in \
-    $$PWD/src/app/version.h.in
+# Generate version file
+QMAKE_SUBSTITUTES += $$PWD/src/app/version.h.in
 
 INCLUDEPATH += $$OUT_PWD/src/app  # To allow inclusion as "version.h" from source code
 OTHER_FILES += $$PWD/src/app/version.h.in
