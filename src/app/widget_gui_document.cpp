@@ -296,7 +296,7 @@ void WidgetGuiDocument::recreateViewControls()
         QObject::connect(btnViewMenu, &ButtonFlat::clicked, this, [=]{
             const Qt::KeyboardModifiers keyMods = QGuiApplication::queryKeyboardModifiers();
             if (!keyMods.testFlag(Qt::ControlModifier))
-                menuBtnView->popup(btnViewMenu->mapToGlobal({ 0, btnViewMenu->height() }));
+                menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, btnViewMenu->height() }));
             else
                 m_guiDoc->setViewCameraOrientation(V3d_TypeOfOrientation(btnViewMenu->data().toInt()));
         });

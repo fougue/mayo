@@ -13,9 +13,12 @@ CONFIG(debug, debug|release) {
     message(Mayo version $$MAYO_VERSION release)
 }
 
-QT += core gui widgets
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 message(Qt version $$QT_VERSION)
+
+QT += core gui widgets
+greaterThan(QT_MAJOR_VERSION, 5) {
+    QT += openglwidgets
+}
 
 CONFIG += c++17
 CONFIG(debug, debug|release) {
@@ -24,6 +27,10 @@ CONFIG(debug, debug|release) {
     CONFIG -= console
     CONFIG += release_with_debuginfo
 }
+
+DEFINES += \
+    QT_DISABLE_DEPRECATED_BEFORE=0x050F00 \
+    QT_IMPLICIT_QFILEINFO_CONSTRUCTION
 
 release_with_debuginfo:msvc {
     # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
@@ -81,7 +88,7 @@ SOURCES += \
     \
     src/3rdparty/fmt/src/format.cc \
 
-win32 {
+win32:lessThan(QT_MAJOR_VERSION, 6) {
     QT += winextras
     HEADERS += $$files(src/app/windows/*.h)
     SOURCES += $$files(src/app/windows/*.cpp)

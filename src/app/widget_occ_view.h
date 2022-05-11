@@ -12,7 +12,7 @@
 
 #include <QtWidgets/QWidget>
 #if OCC_VERSION_HEX >= 0x070600
-#  include <QtWidgets/QOpenGLWidget>
+#  include <QOpenGLWidget> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtOpenGLWidgets/...>
 #endif
 
 #include <functional>

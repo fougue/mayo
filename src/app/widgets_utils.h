@@ -49,4 +49,12 @@ public:
     static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
 };
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// Qt6 QWidget::enterEvent(QEnterEvent*)
+using QWidgetEnterEvent = QEnterEvent;
+#else
+// Qt5 QWidget::enterEvent(QEvent*)
+using QWidgetEnterEvent = QEvent;
+#endif
+
 } // namespace Mayo

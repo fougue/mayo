@@ -13,7 +13,7 @@
 #include "theme.h"
 #include "widget_model_tree.h"
 
-#include <QtWidgets/QActionGroup>
+#include <QActionGroup> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 

@@ -527,7 +527,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(stru
             || sd.controlz.size() > numPoles
             || sd.weight.size() > numPoles)
     {
-        return nullptr;
+        return {};
     }
 
     // handle the poles
@@ -581,7 +581,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(struct S
 {
     const size_t numPoints = sd.fit_points;
     if (sd.fitx.size() > numPoints || sd.fity.size() > numPoints || sd.fitz.size() > numPoints)
-        return nullptr;
+        return {};
 
     // handle the poles
     Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, sd.fit_points);

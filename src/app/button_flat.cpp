@@ -11,8 +11,7 @@
 #include <QtGui/QCursor>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
-#include <QtWidgets/QAction>
-
+#include <QAction> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
 #include <QtCore/QtDebug>
 
 namespace Mayo {
@@ -147,7 +146,7 @@ void ButtonFlat::paintEvent(QPaintEvent*)
     m_icon.paint(&painter, iconRect, Qt::AlignCenter, iconMode);
 }
 
-void ButtonFlat::enterEvent(QEvent* event)
+void ButtonFlat::enterEvent(QWidgetEnterEvent* event)
 {
     m_isMouseHover = true;
     this->update();

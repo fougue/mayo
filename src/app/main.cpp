@@ -342,7 +342,7 @@ static void initGui(GuiApplication* guiApp)
     IWidgetOccView::setCreator(&QWidgetOccView::create);
 
     // Use QOpenGLWidget if possible
-#if OCC_VERSION_HEX >= 0x070600
+#if OCC_VERSION_HEX >= 0x070600 && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (qobject_cast<QGuiApplication*>(QCoreApplication::instance())) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);

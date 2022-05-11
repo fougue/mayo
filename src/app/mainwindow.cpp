@@ -54,7 +54,7 @@
 #include <QtGui/QDesktopServices>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
-#include <QtWidgets/QActionGroup>
+#include <QActionGroup> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #include <QtDebug>
@@ -471,11 +471,12 @@ void MainWindow::dropEvent(QDropEvent* event)
 void MainWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
     auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
     if (!winProgress)
         winProgress = new WinTaskbarGlobalProgress(m_taskMgr, this);
+
     winProgress->setWindow(this->windowHandle());
 #endif
 }

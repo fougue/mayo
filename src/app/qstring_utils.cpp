@@ -21,7 +21,12 @@ static QString valueText(double value, const QStringUtils::TextOptions& opt)
 
     const double c = std::abs(value) < Precision::Confusion() ? 0. : value;
     QString str = opt.locale.toString(c, 'f', opt.unitDecimals);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // TODO Consider QString decimal point
+    const QChar chDecPnt = opt.locale.decimalPoint().front();
+#else
     const QChar chDecPnt = opt.locale.decimalPoint();
+#endif
     const int posPnt = str.indexOf(chDecPnt);
     if (posPnt != -1) { // Remove useless trailing zeroes
         while (fnLastChar(str) == opt.locale.zeroDigit())
