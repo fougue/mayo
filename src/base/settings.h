@@ -24,6 +24,7 @@ public:
 
     class Storage {
     public:
+        virtual ~Storage() = default;
         virtual bool contains(std::string_view key) const = 0;
         virtual Variant value(std::string_view key) const = 0;
         virtual void setValue(std::string_view key, const Variant& value) = 0;
