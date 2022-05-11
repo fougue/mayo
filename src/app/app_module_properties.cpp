@@ -18,15 +18,15 @@ namespace Mayo {
 
 AppModuleProperties::AppModuleProperties(Settings* settings)
     : PropertyGroup(settings),
-      m_settings(settings),
       groupId_system(settings->addGroup(textId("system"))),
       groupId_application(settings->addGroup(textId("application"))),
-      language(this, textId("language"), &AppModule::languages())
+      language(this, textId("language"), &AppModule::languages()),
+      m_settings(settings)
 {
     const auto groupId_meshing = settings->addGroup(textId("meshing"));
     const auto groupId_graphics = settings->addGroup(textId("graphics"));
 
-    const auto sectionId_systemUnits = settings->addSection(groupId_system, textId("units"));
+    const auto sectionId_systemUnits = settings->addSection(this->groupId_system, textId("units"));
     const auto sectionId_graphicsClipPlanes = settings->addSection(groupId_graphics, textId("clipPlanes"));
     const auto sectionId_graphicsMeshDefaults = settings->addSection(groupId_graphics, textId("meshDefaults"));
 
