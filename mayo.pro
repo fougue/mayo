@@ -18,7 +18,6 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
 message(Qt version $$QT_VERSION)
 
 CONFIG += c++17
-CONFIG += file_copies
 CONFIG(debug, debug|release) {
     CONFIG += console
 } else {
