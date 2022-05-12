@@ -143,7 +143,7 @@ void AIS_Text::setDefaultTextStyle(Aspect_TypeOfStyleText style)
 }
 
 void AIS_Text::Compute(
-        const Handle(PrsMgr_PresentationManager3d)&,
+        const Handle(PrsMgr_PresentationManager)&,
         const Handle(Prs3d_Presentation)& pres,
         const int)
 {

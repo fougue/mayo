@@ -15,7 +15,7 @@
 #include <Graphic3d_AspectText3d.hxx>
 #include <Prs3d_Presentation.hxx>
 #include <Prs3d_TextAspect.hxx>
-#include <PrsMgr_PresentationManager3d.hxx>
+#include <PrsMgr_PresentationManager.hxx>
 #include <SelectMgr_Selection.hxx>
 #include <Quantity_Color.hxx>
 #include <TCollection_ExtendedString.hxx>
@@ -58,7 +58,7 @@ public:
 
 protected:
     void Compute(
-            const Handle(PrsMgr_PresentationManager3d)& pm,
+            const Handle(PrsMgr_PresentationManager)& pm,
             const Handle(Prs3d_Presentation)& pres,
             const int mode) override;
 
