@@ -1,0 +1,57 @@
+name: CI
+
+on: [push]
+
+jobs:
+    ci:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, macos-latest]
+
+        runs-on: ${{matrix.os}}
+
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+              path: 'source'
+              fetch-depth: 0
+              lfs: 'false'
+
+        - name: Cache Qt
+          id: cache-qt
+          uses: actions/cache@v1
+          with:
+              path: ../Qt
+              key: ${{ runner.os }}-QtCache
+
+        - name: Install Qt
+          uses: jurplel/install-qt-action@v2
+          with:
+              archives: 'qtbase qtsvg'
+              cached: ${{ steps.cache-qt.outputs.cache-hit }}
+
+        - name: Install OpenCascade on Ubuntu
+          if: startsWith(matrix.os, 'ubuntu')
+          run: |
+              sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev
+              echo "GH_CASCADE_INC_DIR=/usr/include/opencascade" >> $GITHUB_ENV
+              echo "GH_CASCADE_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+
+        - name: Install OpenCascade on macOS
+          if: startsWith(matrix.os, 'macos')
+          run: |
+              brew install opencascade
+              brew info opencascade
+              echo "GH_CASCADE_INC_DIR=/usr/local/Cellar/opencascade/7.6.2/include/opencascade" >> $GITHUB_ENV
+              echo "GH_CASCADE_LIB_DIR=/usr/local/Cellar/opencascade/7.6.2/lib" >> $GITHUB_ENV
+
+        - name: Create Build folder
+          run: mkdir ${{github.workspace}}/build
+
+        - name: Build
+          working-directory: ${{github.workspace}}/build
+          run: |
+              qmake ../source CASCADE_INC_DIR=$GH_CASCADE_INC_DIR CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
+              make -j2

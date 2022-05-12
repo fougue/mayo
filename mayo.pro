@@ -103,7 +103,10 @@ OTHER_FILES += \
     README.md \
     appveyor.yml \
     .travis.yml \
-    images/credits.txt
+    .github/workflows/ci.yml \
+    images/credits.txt \
+    scripts/bump-version.rb \
+    scripts/travis-build.sh \
 
 # OpenCascade
 include(opencascade.pri)
