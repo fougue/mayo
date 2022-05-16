@@ -190,7 +190,7 @@ public:
     // call `fnCallback` for each item. Garantees that doublon items will be visited only once
     static void traverseUniqueItems(
             Span<const ApplicationItem> spanItem,
-            std::function<void(const Tree<TDF_Label>&, TreeNodeId)> fnCallback,
+            std::function<void(const DocumentTreeNode&)> fnCallback,
             TreeTraversal mode = TreeTraversal::PreOrder
     );
 

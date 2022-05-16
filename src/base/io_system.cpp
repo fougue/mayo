@@ -438,17 +438,18 @@ void System::visitUniqueItems(
 
 void System::traverseUniqueItems(
         Span<const ApplicationItem> spanItem,
-        std::function<void(const Tree<TDF_Label>&, TreeNodeId)> fnCallback,
+        std::function<void(const DocumentTreeNode&)> fnCallback,
         TreeTraversal mode)
 {
     System::visitUniqueItems(spanItem, [=](const ApplicationItem& item) {
-        const Tree<TDF_Label>& modelTree = item.document()->modelTree();
+        const DocumentPtr doc = item.document();
+        const Tree<TDF_Label>& modelTree = doc->modelTree();
         if (item.isDocument()) {
-            traverseTree(modelTree, [&](TreeNodeId id) { fnCallback(modelTree, id); }, mode);
+            traverseTree(modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
         }
         else if (item.isDocumentTreeNode()) {
             const TreeNodeId docTreeNodeId = item.documentTreeNode().id();
-            traverseTree(docTreeNodeId, modelTree, [&](TreeNodeId id) { fnCallback(modelTree, id); }, mode);
+            traverseTree(docTreeNodeId, modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
         }
     });
 }
