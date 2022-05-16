@@ -22,6 +22,9 @@ public:
     TaskProgress(TaskProgress* parent, double portionSize, std::string_view step = {});
     ~TaskProgress();
 
+    static TaskProgress& null();
+    bool isNull() const;
+
     TaskId taskId() const;
     TaskManager* taskManager() const;
 

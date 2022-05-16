@@ -164,6 +164,11 @@ bool XCaf::isShapeSub(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::IsSubShape(lbl);
 }
 
+bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
+{
+    return this->shapeTool()->IsSubShape(lbl, shape);
+}
+
 bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 {
     Handle_XCAFDoc_ColorTool tool = this->colorTool();
@@ -192,6 +197,18 @@ Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
         return color;
 
     return color;
+}
+
+TDF_Label XCaf::findShapeLabel(const TopoDS_Shape& shape, FindShapeLabelFlags flags) const
+{
+    TDF_Label label;
+    const bool findInstance = (flags & FindShapeLabel_Instance) != 0;
+    const bool findComponent = (flags & FindShapeLabel_Component) != 0;
+    const bool findSubShape = (flags & FindShapeLabel_SubShape) != 0;
+    if (this->shapeTool()->Search(shape, label, findInstance, findComponent, findSubShape))
+        return label;
+
+    return {};
 }
 
 TopLoc_Location XCaf::shapeReferenceLocation(const TDF_Label& lbl)

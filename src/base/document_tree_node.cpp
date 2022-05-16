@@ -37,6 +37,14 @@ bool DocumentTreeNode::isEntity() const
     return this->isValid() ? m_document->isEntity(m_id) : false;
 }
 
+bool DocumentTreeNode::isLeaf() const
+{
+    if (this->isValid())
+        return m_document->modelTree().nodeIsLeaf(m_id);
+    else
+        return false;
+}
+
 bool DocumentTreeNode::operator==(const DocumentTreeNode& other) const
 {
     if (!this->isValid() || !other.isValid())

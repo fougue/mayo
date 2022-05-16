@@ -15,6 +15,7 @@
 #include "../base/property_builtins.h"
 #include "../base/tkernel_utils.h"
 #include "miniply.h"
+// TODO Move miniply library files into 3rdparty folder
 
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>

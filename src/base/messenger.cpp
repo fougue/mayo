@@ -8,6 +8,15 @@
 
 namespace Mayo {
 
+namespace {
+
+class NullMessenger : public Messenger {
+public:
+    void emitMessage(MessageType, std::string_view) override {}
+};
+
+} // namespace
+
 void Messenger::emitTrace(std::string_view text)
 {
     this->emitMessage(MessageType::Trace, text);
@@ -28,6 +37,12 @@ void Messenger::emitError(std::string_view text)
     this->emitMessage(MessageType::Error, text);
 }
 
+Messenger& Messenger::null()
+{
+    static NullMessenger null;
+    return null;
+}
+
 MessengerByCallback::MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback)
     : m_fnCallback(std::move(fnCallback))
 {
@@ -37,16 +52,6 @@ void MessengerByCallback::emitMessage(Messenger::MessageType msgType, std::strin
 {
     if (m_fnCallback)
         m_fnCallback(msgType, text);
-}
-
-void NullMessenger::emitMessage(Messenger::MessageType /*msgType*/, std::string_view /*text*/)
-{
-}
-
-Messenger* NullMessenger::instance()
-{
-    static NullMessenger nullMsg;
-    return &nullMsg;
 }
 
 } // namespace Mayo

@@ -138,7 +138,7 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_layers.clear();
     DxfReader::Internal internalReader(filepath, progress);
     internalReader.setParameters(m_params);
-    internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
+    internalReader.setMessenger(this->messenger() ? this->messenger() : &Messenger::null());
     internalReader.DoRead();
     m_layers = std::move(internalReader.layers());
     return !internalReader.Failed();

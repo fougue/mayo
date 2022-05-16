@@ -22,6 +22,8 @@ namespace MathUtils {
 // Returns the value 'val' which is in range [omin..omax] to the corresponding value in range [nmin..nmax]
 double mappedValue(double val, double omin, double omax, double nmin, double nmax);
 
+// TODO: add toPercent() function
+
 // Is 'n' a standard direction being reversed(ie -X, -Y or -Z) ?
 bool isReversedStandardDir(const gp_Dir& n);
 

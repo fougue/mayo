@@ -10,7 +10,7 @@
 namespace Mayo {
 
 MessengerClient::MessengerClient()
-    : m_messenger(NullMessenger::instance())
+    : m_messenger(&Messenger::null())
 {
 }
 
@@ -19,7 +19,7 @@ void MessengerClient::setMessenger(Messenger* messenger)
     if (messenger)
         m_messenger = messenger;
     else
-        m_messenger = NullMessenger::instance();
+        m_messenger = &Messenger::null();
 }
 
 } // namespace Mayo

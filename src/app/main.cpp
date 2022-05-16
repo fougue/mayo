@@ -15,6 +15,7 @@
 #include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
 #include "../io_ply/io_ply_reader.h"
+#include "../io_ply/io_ply_writer.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/qtgui_utils.h"
@@ -624,6 +625,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
     ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
     IO::addPredefinedFormatProbes(ioSystem);

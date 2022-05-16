@@ -6,6 +6,7 @@
 
 #include "io_system.h"
 
+#include "caf_utils.h"
 #include "cpp_utils.h"
 #include "document.h"
 #include "io_parameters_provider.h"
@@ -14,6 +15,7 @@
 #include "messenger.h"
 #include "task_manager.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 
 #include <fmt/format.h>
 #include <algorithm>
@@ -23,23 +25,13 @@
 #include <locale>
 #include <mutex>
 #include <regex>
+#include <unordered_set>
 #include <vector>
 
 namespace Mayo {
 namespace IO {
 
 namespace {
-
-TaskProgress* nullTaskProgress()
-{
-    static TaskProgress null;
-    return &null;
-}
-
-Messenger* nullMessenger()
-{
-    return NullMessenger::instance();
-}
 
 bool containsFormat(Span<const Format> spanFormat, Format format)
 {
@@ -188,8 +180,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
-    TaskProgress* rootProgress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
 
     bool ok = true;
 
@@ -337,8 +329,8 @@ System::Operation_ImportInDocument System::importInDocument() {
 
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
-    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
     auto fnError = [=](std::string_view errorMsg) {
         const std::string strFilepath = args.targetFilepath.u8string();
         messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));
@@ -416,6 +408,50 @@ System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(Syste
 System::Operation_ExportApplicationItems System::exportApplicationItems()
 {
     return Operation_ExportApplicationItems(*this);
+}
+
+void System::visitUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void (const ApplicationItem&)> fnCallback)
+{
+    std::unordered_set<DocumentPtr> setDoc;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocument()) {
+            auto [it, ok] = setDoc.insert(item.document());
+            if (ok)
+                fnCallback(item);
+        }
+    }
+
+    std::unordered_set<TDF_Label> setNode;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocumentTreeNode()) {
+            auto itDoc = setDoc.find(item.document());
+            if (itDoc == setDoc.cend()) {
+                auto [it, ok] = setNode.insert(item.documentTreeNode().label());
+                if (ok)
+                    fnCallback(item);
+            }
+        }
+    }
+}
+
+void System::traverseUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void(const DocumentTreeNode&)> fnCallback,
+        TreeTraversal mode)
+{
+    System::visitUniqueItems(spanItem, [=](const ApplicationItem& item) {
+        const DocumentPtr doc = item.document();
+        const Tree<TDF_Label>& modelTree = doc->modelTree();
+        if (item.isDocument()) {
+            traverseTree(modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
+        }
+        else if (item.isDocumentTreeNode()) {
+            const TreeNodeId docTreeNodeId = item.documentTreeNode().id();
+            traverseTree(docTreeNodeId, modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
+        }
+    });
 }
 
 System::Operation_ImportInDocument&

@@ -11,6 +11,7 @@
 #include "io_format.h"
 #include "io_reader.h"
 #include "io_writer.h"
+#include "libtree.h"
 #include "property.h"
 #include "span.h"
 #include "text_id.h"
@@ -175,6 +176,23 @@ public:
         Args_ExportApplicationItems m_args;
     };
     Operation_ExportApplicationItems exportApplicationItems();
+
+    // Helpers
+
+    // Iterate over `spanItem` and call `fnCallback` for each item. Garantees that doublon items
+    // will be visited only once
+    static void visitUniqueItems(
+            Span<const ApplicationItem> spanItem,
+            std::function<void(const ApplicationItem&)> fnCallback
+    );
+
+    // Iterate over `spanItem` and then deep traverse the corresponding tree node to
+    // call `fnCallback` for each item. Garantees that doublon items will be visited only once
+    static void traverseUniqueItems(
+            Span<const ApplicationItem> spanItem,
+            std::function<void(const DocumentTreeNode&)> fnCallback,
+            TreeTraversal mode = TreeTraversal::PreOrder
+    );
 
     // Implementation
 private:
