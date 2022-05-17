@@ -51,30 +51,12 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         }
     };
 
-    auto fnGetCappingColor = [=](const ClipPlaneData& data) {
-        if (&data == &m_vecClipPlaneData.at(0))
-            return Quantity_NOC_RED1;
-        else if (&data == &m_vecClipPlaneData.at(1))
-            return Quantity_NOC_GREEN1;
-        else if (&data == &m_vecClipPlaneData.at(2))
-            return Quantity_NOC_BLUE1;
-        else
-            return Quantity_NOC_GRAY;
-    };
-
-
     const auto appModule = AppModule::get();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
         data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn.value());
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        data.graphics->SetCappingColor(fnGetCappingColor(data));
-#else
-        Graphic3d_MaterialAspect cappingMaterial(Graphic3d_NOM_STEEL);
-        cappingMaterial.SetColor(fnGetCappingColor(data));
-        data.graphics->SetCappingMaterial(cappingMaterial);
-#endif
+        data.graphics->SetUseObjectMaterial(true);
         if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
             data.graphics->SetCappingTexture(m_textureCapping);
     }
