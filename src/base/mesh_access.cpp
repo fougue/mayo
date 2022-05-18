@@ -19,6 +19,8 @@
 #  include <XCAFDoc_VisMaterial.hxx>
 #endif
 
+#include <optional>
+
 namespace Mayo {
 
 // Provides mesh access to a TopoDS_Face object stored within XCAF document
@@ -28,22 +30,15 @@ public:
     {
         const DocumentPtr& doc = treeNode.document();
         const TDF_Label labelNode = treeNode.label();
-        TDF_Label labelShape = labelNode;
+        std::optional<Quantity_Color> faceColor;
         if (doc->xcaf().isShapeSubOf(labelNode, face))
-            labelShape = doc->xcaf().findShapeLabel(face);
+            faceColor = findShapeColor(doc, doc->xcaf().findShapeLabel(face));
 
-        if (doc->xcaf().hasShapeColor(labelShape)) {
-            m_faceColor = doc->xcaf().shapeColor(labelShape);
-            //const Quantity_Color sc{ c.Red(), c.Green(), c.Blue(), Quantity_TOC_sRGB };
-        }
-        else {
-#if OCC_VERSION_HEX >= 0x070500
-            Handle_XCAFDoc_VisMaterialTool visMaterialTool = doc->xcaf().visMaterialTool();
-            Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetShapeMaterial(labelShape);
-            if (visMaterial)
-                m_faceColor = visMaterial->BaseColor().GetRGB();
-#endif
-        }
+        if (!faceColor)
+            faceColor = findShapeColor(doc, labelNode);
+
+        if (faceColor)
+            m_faceColor = faceColor.value();
 
         const TopLoc_Location locShape = XCaf::shapeAbsoluteLocation(doc->modelTree(), treeNode.id());
         TopLoc_Location locFace;
@@ -56,6 +51,21 @@ public:
     const Handle(Poly_Triangulation)& triangulation() const override { return m_triangulation; }
 
 private:
+    static std::optional<Quantity_Color> findShapeColor(const DocumentPtr& doc, const TDF_Label& labelShape)
+    {
+        if (doc->xcaf().hasShapeColor(labelShape))
+            return doc->xcaf().shapeColor(labelShape);
+
+#if OCC_VERSION_HEX >= 0x070500
+        Handle_XCAFDoc_VisMaterialTool visMaterialTool = doc->xcaf().visMaterialTool();
+        Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetShapeMaterial(labelShape);
+        if (visMaterial)
+            return visMaterial->BaseColor().GetRGB();
+#endif
+
+        return {};
+    }
+
     Quantity_Color m_faceColor;
     TopLoc_Location m_location;
     Handle(Poly_Triangulation) m_triangulation;
@@ -90,13 +100,20 @@ void IMeshAccess_visitMeshes(
         const DocumentTreeNode& treeNode,
         std::function<void(const IMeshAccess&)> fnCallback)
 {
+    if (!fnCallback || !treeNode.isValid())
+        return;
+
+    auto fnProxyCallback = [&](const IMeshAccess& mesh) {
+        if (mesh.triangulation())
+            fnCallback(mesh);
+    };
     if (XCaf::isShape(treeNode.label())) {
         BRepUtils::forEachSubFace(XCaf::shape(treeNode.label()), [&](const TopoDS_Face& face) {
-            fnCallback(XCafFace_MeshAccess(treeNode, face));
+            fnProxyCallback(XCafFace_MeshAccess(treeNode, face));
         });
     }
     else if (CafUtils::hasAttribute<DataTriangulation>(treeNode.label())) {
-        fnCallback(DataTriangulation_MeshAccess(treeNode));
+        fnProxyCallback(DataTriangulation_MeshAccess(treeNode));
     }
 }
 
