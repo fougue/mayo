@@ -17,13 +17,14 @@ class TopLoc_Location;
 
 // CppStd
 #include <functional>
+#include <optional>
 
 namespace Mayo {
 
 // Provides an interface to access mesh geometry
 class IMeshAccess {
 public:
-    virtual Quantity_Color nodeColor(int i) const = 0;
+    virtual std::optional<Quantity_Color> nodeColor(int i) const = 0;
     virtual const TopLoc_Location& location() const = 0;
     virtual const Handle(Poly_Triangulation)& triangulation() const = 0;
 };

@@ -250,8 +250,11 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
         auto fnColor = [](const Quantity_Color& c) -> Color {
             return { uint8_t(c.Red() * 255), uint8_t(c.Green() * 255), uint8_t(c.Blue() * 255) };
         };
-        for (int i = 0; i < triangulation->NbNodes(); ++i)
-            m_vecNodeColor.push_back(fnColor(mesh.nodeColor(i)));
+        for (int i = 0; i < triangulation->NbNodes(); ++i) {
+            const std::optional<Quantity_Color> nodeColor = mesh.nodeColor(i);
+            const Quantity_Color& defaultNodeColor = m_params.defaultColor.GetRGB();
+            m_vecNodeColor.push_back(fnColor(nodeColor ? nodeColor.value() : defaultNodeColor));
+        }
     }
 }
 

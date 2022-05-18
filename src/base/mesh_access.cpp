@@ -30,15 +30,11 @@ public:
     {
         const DocumentPtr& doc = treeNode.document();
         const TDF_Label labelNode = treeNode.label();
-        std::optional<Quantity_Color> faceColor;
         if (doc->xcaf().isShapeSubOf(labelNode, face))
-            faceColor = findShapeColor(doc, doc->xcaf().findShapeLabel(face));
+            m_faceColor = findShapeColor(doc, doc->xcaf().findShapeLabel(face));
 
-        if (!faceColor)
-            faceColor = findShapeColor(doc, labelNode);
-
-        if (faceColor)
-            m_faceColor = faceColor.value();
+        if (!m_faceColor)
+            m_faceColor = findShapeColor(doc, labelNode);
 
         const TopLoc_Location locShape = XCaf::shapeAbsoluteLocation(doc->modelTree(), treeNode.id());
         TopLoc_Location locFace;
@@ -46,9 +42,17 @@ public:
         m_location = locShape * locFace;
     }
 
-    Quantity_Color nodeColor(int /*i*/) const override { return m_faceColor; }
-    const TopLoc_Location& location() const override { return m_location; }
-    const Handle(Poly_Triangulation)& triangulation() const override { return m_triangulation; }
+    std::optional<Quantity_Color> nodeColor(int /*i*/) const override {
+        return m_faceColor;
+    }
+
+    const TopLoc_Location& location() const override {
+        return m_location;
+    }
+
+    const Handle(Poly_Triangulation)& triangulation() const override {
+        return m_triangulation;
+    }
 
 private:
     static std::optional<Quantity_Color> findShapeColor(const DocumentPtr& doc, const TDF_Label& labelShape)
@@ -66,7 +70,7 @@ private:
         return {};
     }
 
-    Quantity_Color m_faceColor;
+    std::optional<Quantity_Color> m_faceColor;
     TopLoc_Location m_location;
     Handle(Poly_Triangulation) m_triangulation;
 };
@@ -79,15 +83,19 @@ public:
     {
     }
 
-    Quantity_Color nodeColor(int i) const override
+    std::optional<Quantity_Color> nodeColor(int i) const override
     {
-        return m_dataTriangulation->nodeColors()[i];
+        if (0 <= i && i < m_dataTriangulation->nodeColors().size())
+            return m_dataTriangulation->nodeColors()[i];
+        else
+            return {};
     }
 
-    const TopLoc_Location& location() const override { return m_location; }
+    const TopLoc_Location& location() const override {
+        return m_location;
+    }
 
-    const Handle(Poly_Triangulation)& triangulation() const override
-    {
+    const Handle(Poly_Triangulation)& triangulation() const override {
         return m_dataTriangulation->Get();
     }
 
