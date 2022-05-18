@@ -134,11 +134,8 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
         return;
 
     auto fnSetViewComputedMode = [=](bool on) {
-        V3d_ListOfViewIterator viewIter = context->CurrentViewer()->DefinedViewIterator();
-        while (viewIter.More()) {
-            viewIter.Value()->SetComputedMode(on);
-            viewIter.Next();
-        }
+        for (auto it = context->CurrentViewer()->DefinedViewIterator(); it.More(); it.Next())
+            it.Value()->SetComputedMode(on);
     };
 
     if (mode == DisplayMode_HiddenLineRemoval) {

@@ -143,10 +143,8 @@ template<typename FUNCTION>
 void GraphicsScene::foreachSelectedOwner(FUNCTION fn) const
 {
     auto context = this->aisContextPtr();
-    context->InitSelected();
-    while (context->MoreSelected()) {
+    for (context->InitSelected(); context->MoreSelected(); context->NextSelected()) {
         fn(context->SelectedOwner());
-        context->NextSelected();
     }
 }
 
@@ -154,15 +152,12 @@ template<typename PREDICATE>
 GraphicsOwnerPtr GraphicsScene::findSelectedOwner(PREDICATE fn) const
 {
     auto context = this->aisContextPtr();
-    context->InitSelected();
-    while (context->MoreSelected()) {
+    for (context->InitSelected(); context->MoreSelected(); context->NextSelected()) {
         if (fn(context->SelectedOwner()))
             return context->SelectedOwner();
-
-        context->NextSelected();
     }
 
-    return GraphicsOwnerPtr();
+    return {};
 }
 
 } // namespace Mayo

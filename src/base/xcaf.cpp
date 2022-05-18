@@ -252,12 +252,10 @@ TopLoc_Location XCaf::shapeAbsoluteLocation(TreeNodeId nodeId) const
 TopLoc_Location XCaf::shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, TreeNodeId nodeId)
 {
     TopLoc_Location absoluteLoc;
-    TreeNodeId it = nodeId;
-    while (it != 0) {
+    for (TreeNodeId it = nodeId; it != 0; it = modelTree.nodeParent(it)) {
         const TDF_Label& nodeLabel = modelTree.nodeData(it);
         const TopLoc_Location nodeLoc = XCaf::shapeReferenceLocation(nodeLabel);
         absoluteLoc = nodeLoc * absoluteLoc;
-        it = modelTree.nodeParent(it);
     }
 
     return absoluteLoc;
