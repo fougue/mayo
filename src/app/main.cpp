@@ -7,9 +7,7 @@
 #include "../base/application.h"
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
-#include "../base/messenger.h"
 #include "../base/settings.h"
-#include "../base/task_manager.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
@@ -20,6 +18,7 @@
 #include "../gui/gui_application.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "cli_export.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
@@ -46,13 +45,10 @@
 #include <QtGui/QOpenGLFunctions>
 #include <QtWidgets/QApplication>
 
-#include <Message.hxx>
-
 #include <fmt/format.h>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iomanip>
 #include <memory>
 #include <unordered_map>
 
@@ -363,203 +359,6 @@ static void initGui(GuiApplication* guiApp)
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
 }
 
-// Asynchronously exports input file(s) listed in 'args'
-// Calls 'fnContinuation' at the end of execution
-static void cli_asyncExportDocuments(
-        Application* app, const CommandLineArguments& args, std::function<void(int)> fnContinuation)
-{
-    struct TaskStatus {
-        std::atomic<bool> finished = {};
-        std::atomic<bool> success = {};
-    };
-
-    struct Helper : public QObject {
-        // Task manager object dedicated to the scope of current function
-        TaskManager taskMgr;
-        // Counter decremented for each export task finished, when 0 is reached then quit
-        std::atomic<int> exportTaskCount = {};
-        // Mapping between a task id and the task status
-        std::unordered_map<TaskId, std::unique_ptr<TaskStatus>> mapTaskStatus;
-        // Mapping between a task id and corresponding width of the progress line in console
-        std::unordered_map<TaskId, int> mapTaskLineWidth;
-        // Count of progress lines in console after last call to fnPrintProgress()
-        int lastPrintProgressLineCount = 0;
-    };
-
-    // Collects emitted error messages into a single string object
-    class ErrorMessageCollect : public Messenger {
-    public:
-        void emitMessage(MessageType msgType, std::string_view text) override {
-            if (msgType == MessageType::Error)
-                m_message += to_QString(text) + " ";
-        }
-
-        std::string message() const { return to_stdString(m_message); }
-
-    private:
-        QString m_message;
-    };
-
-    auto helper = new Helper; // Allocated on heap because current function is asynchronous
-    auto taskMgr = &helper->taskMgr;
-    auto appModule = AppModule::get();
-    auto ioSystem = appModule->ioSystem();
-
-    // Helper function to exit current function
-    auto fnExit = [=](int retCode) {
-        helper->deleteLater();
-        fnContinuation(retCode);
-    };
-    // Helper function to print in console the progress info of current function
-    auto fnPrintProgress = [=]{
-        consoleCursorMoveUp(helper->lastPrintProgressLineCount);
-        helper->lastPrintProgressLineCount = 0;
-        std::cout << "\r";
-        taskMgr->foreachTask([=](TaskId taskId) {
-            std::string strMessage = taskMgr->title(taskId);
-            std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
-            strMessage = consoleToPrintable(strMessage);
-            auto lineWidth = int(strMessage.size());
-            const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
-            const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
-            if (taskFinished && !taskSuccess) {
-                consoleSetTextColor(ConsoleColor::Red);
-                std::cout << strMessage;
-                consoleSetTextColor(ConsoleColor::Default);
-            }
-            else {
-                const int progress = taskMgr->progress(taskId);
-                if (progress >= 100)
-                    consoleSetTextColor(ConsoleColor::Green);
-
-                std::cout << std::setfill(' ') << std::right << std::setw(3) << progress << "% ";
-                std::cout << strMessage;
-                lineWidth += 5;
-                if (progress >= 100)
-                    consoleSetTextColor(ConsoleColor::Default);
-            }
-
-            const int printWidth = consoleWidth();
-            auto itLineFound = helper->mapTaskLineWidth.find(taskId);
-            const int lineWidthOld = itLineFound != helper->mapTaskLineWidth.cend() ? itLineFound->second : printWidth - 1;
-            for (int i = 0; i < (lineWidthOld - lineWidth); ++i)
-                std::cout << ' ';
-
-            helper->mapTaskLineWidth.insert_or_assign(taskId, lineWidth);
-            helper->lastPrintProgressLineCount += printWidth > 0 ? (lineWidth / printWidth) + 1 : 1;
-            std::cout << "\n";
-        });
-        std::cout.flush();
-    };
-
-    // Show progress/traces corresponding to task events
-    QObject::connect(taskMgr, &TaskManager::started, app, [=](TaskId taskId) {
-        if (args.cliProgressReport)
-            fnPrintProgress();
-        else
-            qInfo() << to_QString(taskMgr->title(taskId));
-    });
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=](TaskId taskId) {
-        if (args.cliProgressReport) {
-            fnPrintProgress();
-        }
-        else {
-            if (helper->mapTaskStatus.at(taskId)->success)
-                qInfo() << to_QString(taskMgr->title(taskId));
-            else
-                qCritical() << to_QString(taskMgr->title(taskId));
-        }
-    });
-    QObject::connect(taskMgr, &TaskManager::progressChanged, app, [=]{
-        if (args.cliProgressReport)
-            fnPrintProgress();
-    });
-
-    helper->exportTaskCount = int(args.listFilepathToExport.size());
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=]{
-        if (helper->exportTaskCount == 0) {
-            bool okExport = true;
-            for (const auto& mapPair : helper->mapTaskStatus) {
-                const TaskStatus* status = mapPair.second.get();
-                okExport = okExport && status->success;
-            }
-
-            fnExit(okExport ? EXIT_SUCCESS : EXIT_FAILURE);
-        }
-    });
-
-    // If export operation targets some mesh format then force meshing of imported BRep shapes
-    bool brepMeshRequired = false;
-    for (const FilePath& filepath : args.listFilepathToExport) {
-        const IO::Format format = ioSystem->probeFormat(filepath);
-        brepMeshRequired = IO::formatProvidesMesh(format);
-        if (brepMeshRequired)
-            break; // Interrupt
-    }
-
-    // Suppress output from OpenCascade
-    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());
-
-    // Execute import operation(synchronous)
-    DocumentPtr doc = app->newDocument();
-    bool okImport = true;
-    const TaskId importTaskId = taskMgr->newTask([&](TaskProgress* progress) {
-            ErrorMessageCollect errorCollect;
-            okImport = ioSystem->importInDocument()
-                .targetDocument(doc)
-                .withFilepaths(args.listFilepathToOpen)
-                .withParametersProvider(appModule)
-                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                    appModule->computeBRepMesh(labelEntity, progress);
-                })
-                .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
-                .withEntityPostProcessInfoProgress(20, Main::textIdTr("Mesh BRep shapes"))
-                .withMessenger(&errorCollect)
-                .withTaskProgress(progress)
-                .execute();
-            taskMgr->setTitle(progress->taskId(), okImport ? Main::textIdTr("Imported") : errorCollect.message());
-            helper->mapTaskStatus.at(progress->taskId())->success = okImport;
-            helper->mapTaskStatus.at(progress->taskId())->finished = true;
-    });
-    helper->mapTaskStatus.insert({ importTaskId, std::make_unique<TaskStatus>() });
-    taskMgr->setTitle(importTaskId, Main::textIdTr("Importing..."));
-    taskMgr->exec(importTaskId, TaskAutoDestroy::Off);
-    if (!okImport)
-        return fnExit(EXIT_FAILURE); // Error
-
-    // Run export operations(asynchronous)
-    for (const FilePath& filepath : args.listFilepathToExport) {
-        const std::string strFilename = filepath.filename().u8string();
-        const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-                ErrorMessageCollect errorCollect;
-                const IO::Format format = ioSystem->probeFormat(filepath);
-                const ApplicationItem appItems[] = { doc };
-                const bool okExport = ioSystem->exportApplicationItems()
-                            .targetFile(filepath)
-                            .targetFormat(format)
-                            .withItems(appItems)
-                            .withParameters(appModule->findWriterParameters(format))
-                            .withMessenger(&errorCollect)
-                            .withTaskProgress(progress)
-                            .execute();
-                const std::string msg =
-                        okExport ?
-                            fmt::format(Main::textIdTr("Exported {}"), strFilename) :
-                            errorCollect.message();
-                taskMgr->setTitle(progress->taskId(), msg);
-                helper->mapTaskStatus.at(progress->taskId())->success = okExport;
-                helper->mapTaskStatus.at(progress->taskId())->finished = true;
-                --(helper->exportTaskCount);
-        });
-        helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
-        taskMgr->setTitle(taskId, fmt::format(Main::textIdTr("Exporting {}..."), strFilename));
-    }
-
-    taskMgr->foreachTask([=](TaskId taskId) {
-        if (taskId != importTaskId)
-            taskMgr->run(taskId, TaskAutoDestroy::Off);
-    });
-}
 
 // Initializes and runs Mayo application
 static int runApp(QCoreApplication* qtApp)
@@ -641,7 +440,11 @@ static int runApp(QCoreApplication* qtApp)
         appModule->settings()->resetAll();
         fnLoadAppSettings(appModule->settings());
         QTimer::singleShot(0, qtApp, [=]{
-            cli_asyncExportDocuments(app, args, [=](int retcode) { qtApp->exit(retcode); });
+            CliExportArgs cliArgs;
+            cliArgs.progressReport = args.cliProgressReport;
+            cliArgs.filesToOpen = args.listFilepathToOpen;
+            cliArgs.filesToExport = args.listFilepathToExport;
+            cli_asyncExportDocuments(app, cliArgs, [=](int retcode) { qtApp->exit(retcode); });
         });
         return qtApp->exec();
     }

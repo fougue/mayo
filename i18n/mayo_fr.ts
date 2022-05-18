@@ -452,6 +452,34 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
     </message>
 </context>
 <context>
+    <name>Mayo::CliExport</name>
+    <message>
+        <location filename="../src/app/cli_export.cpp" line="126"/>
+        <source>Mesh BRep shapes</source>
+        <translation>Maillage des formes BRep</translation>
+    </message>
+    <message>
+        <location filename="../src/app/cli_export.cpp" line="130"/>
+        <source>Imported</source>
+        <translation>Importé</translation>
+    </message>
+    <message>
+        <location filename="../src/app/cli_export.cpp" line="153"/>
+        <source>Exported {}</source>
+        <translation>Export de {} terminé</translation>
+    </message>
+    <message>
+        <location filename="../src/app/cli_export.cpp" line="230"/>
+        <source>Importing...</source>
+        <translation>Import en cours ...</translation>
+    </message>
+    <message>
+        <location filename="../src/app/cli_export.cpp" line="242"/>
+        <source>Exporting {}...</source>
+        <translation>Export de {} en cours ...</translation>
+    </message>
+</context>
+<context>
     <name>Mayo::DialogAbout</name>
     <message>
         <location filename="../src/app/dialog_about.ui" line="14"/>
@@ -773,22 +801,22 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="378"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="376"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="379"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="377"/>
         <source>edgeColor</source>
         <translation>Couleur des arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="380"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="378"/>
         <source>showEdges</source>
         <translation>Montrer les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="381"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="379"/>
         <source>showNodes</source>
         <translation>Montrer les nœuds</translation>
     </message>
@@ -816,17 +844,17 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>[Forme] Ombré avec arêtes</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="204"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="202"/>
         <source>Mesh_Wireframe</source>
         <translation>[Maillage] Filaire</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="205"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="203"/>
         <source>Mesh_Shaded</source>
         <translation>[Maillage] Ombré</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="206"/>
+        <location filename="../src/graphics/graphics_object_driver.cpp" line="204"/>
         <source>Mesh_Shrink</source>
         <translation>[Maillage] Rétréci</translation>
     </message>
@@ -1813,72 +1841,70 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Mayo, une visionneuse 3D en code libre basée surQt5/OpenCascade</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="163"/>
+        <location filename="../src/app/main.cpp" line="159"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation>Thème de l&apos;IHM (classic|dark)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="164"/>
+        <location filename="../src/app/main.cpp" line="160"/>
         <source>name</source>
         <translation>nom</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="182"/>
+        <location filename="../src/app/main.cpp" line="178"/>
         <source>Writes log messages into output file</source>
-        <translation type="unfinished"></translation>
+        <translation>Écrit les messages de log dans un fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="188"/>
+        <location filename="../src/app/main.cpp" line="184"/>
         <source>Don&apos;t filter out debug log messages in release build</source>
-        <translation type="unfinished"></translation>
+        <translation>Ne pas filtrer les messages de debug dans la version &quot;release&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="193"/>
+        <location filename="../src/app/main.cpp" line="189"/>
         <source>Disable progress reporting in console output(CLI-mode only)</source>
         <translation>Désactiver l&apos;indicateur de progression dans la sortie console (mode CLI seulement)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="197"/>
+        <location filename="../src/app/main.cpp" line="193"/>
         <source>files</source>
         <translation>files</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="198"/>
+        <location filename="../src/app/main.cpp" line="194"/>
         <source>Files to open at startup, optionally</source>
         <translation>Fichiers à ouvrir au démarrage, optionnel</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="199"/>
+        <location filename="../src/app/main.cpp" line="195"/>
         <source>[files...]</source>
         <translation>[fichiers ...]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="243"/>
+        <location filename="../src/app/main.cpp" line="239"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation>Le fichier de configuration OpenCascade n&apos;existe pas ou non lisible [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="250"/>
+        <location filename="../src/app/main.cpp" line="246"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation>Le fichier de configuration OpenCascade n&apos;a pu être chargé par QSettings [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="606"/>
+        <location filename="../src/app/main.cpp" line="405"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>Échec chargement du fichier de traductions [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="547"/>
         <source>Exported {}</source>
-        <translation>Export de {} terminé</translation>
+        <translation type="vanished">Export de {} terminé</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="555"/>
         <source>Exporting {}...</source>
-        <translation>Export de {} en cours ...</translation>
+        <translation type="vanished">Export de {} en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="584"/>
+        <location filename="../src/app/main.cpp" line="383"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation variants="yes">
             <lengthvariant>Échec chargement du fichier de configuration [chemin=%1]</lengthvariant>
@@ -1889,41 +1915,38 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         </translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="169"/>
+        <location filename="../src/app/main.cpp" line="165"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation>Fichier de configuration (format INI) à charger au démarrage</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="157"/>
+        <location filename="../src/app/main.cpp" line="153"/>
         <source>Mayo the opensource 3D CAD viewer and converter</source>
-        <translation type="unfinished"></translation>
+        <translation>Mayo le visualiseur et convertisseur 3D pour la CAO</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="170"/>
-        <location filename="../src/app/main.cpp" line="177"/>
-        <location filename="../src/app/main.cpp" line="183"/>
+        <location filename="../src/app/main.cpp" line="166"/>
+        <location filename="../src/app/main.cpp" line="173"/>
+        <location filename="../src/app/main.cpp" line="179"/>
         <source>filepath</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="175"/>
+        <location filename="../src/app/main.cpp" line="171"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation>Exporter des fichiers dans un fichier de sortie, répétable selon les différents formats supportés (par exemple -e file.stp -e file.igs ...)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="516"/>
         <source>Mesh BRep shapes</source>
-        <translation>Maillage des formes BRep</translation>
+        <translation type="vanished">Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="520"/>
         <source>Imported</source>
-        <translation>Importé</translation>
+        <translation type="vanished">Importé</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="525"/>
         <source>Importing...</source>
-        <translation>Import en cours ...</translation>
+        <translation type="vanished">Import en cours ...</translation>
     </message>
     <message>
         <source>Exported %1</source>
@@ -1934,12 +1957,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de %1 en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="638"/>
+        <location filename="../src/app/main.cpp" line="437"/>
         <source>No input files -&gt; nothing to export</source>
         <translation>Auncun fichier en entrée -&gt; aucun export</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="661"/>
+        <location filename="../src/app/main.cpp" line="464"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>Impossible de charger le thème &apos;%1&apos;</translation>
     </message>
@@ -2102,7 +2125,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     <message>
         <location filename="../src/app/mainwindow.ui" line="703"/>
         <source>Alt+Left</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/app/mainwindow.ui" line="712"/>
