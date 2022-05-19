@@ -33,36 +33,41 @@ class CliExport {
 
 namespace {
 
+// Provides thread-safe status of a task
 struct TaskStatus {
     std::atomic<bool> finished = {};
     std::atomic<bool> success = {};
 };
 
+// Provides helper data that exists during execution of cli_asyncExportDocuments() function
 struct Helper : public QObject {
-    // Task manager object dedicated to the scope of current function
+    // Task manager object to be used
     TaskManager taskMgr;
-    // Counter decremented for each export task finished, when 0 is reached then quit
+    // Counter decremented for each finished export task, when 0 is reached then quit
     std::atomic<int> exportTaskCount = {};
     // Mapping between a task id and the task status
     std::unordered_map<TaskId, std::unique_ptr<TaskStatus>> mapTaskStatus;
     // Mapping between a task id and corresponding width of the progress line in console
     std::unordered_map<TaskId, int> mapTaskLineWidth;
-    // Count of progress lines in console after last call to fnPrintProgress()
+    // Count of progress lines in console after last call to printTaskProgress()
     int lastPrintProgressLineCount = 0;
 };
 
 // Collects emitted error messages into a single string object
 class ErrorMessageCollect : public Messenger {
 public:
-    void emitMessage(MessageType msgType, std::string_view text) override {
-        if (msgType == MessageType::Error)
-            m_message += to_QString(text) + " ";
+    void emitMessage(MessageType msgType, std::string_view text) override
+    {
+        if (msgType == MessageType::Error) {
+            m_message += text;
+            m_message += " ";
+        }
     }
 
-    std::string message() const { return to_stdString(m_message); }
+    const std::string& message() const { return m_message; }
 
 private:
-    QString m_message;
+    std::string m_message;
 };
 
 void printTaskProgress(Helper* helper, TaskId taskId)

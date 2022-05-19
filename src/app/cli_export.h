@@ -15,6 +15,7 @@ namespace Mayo {
 
 class Application;
 
+// Contains arguments for the cli_asyncExportDocuments() function
 struct CliExportArgs {
     bool progressReport = true;
     Span<const FilePath> filesToOpen;
