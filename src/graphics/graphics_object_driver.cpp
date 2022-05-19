@@ -112,6 +112,7 @@ GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label
         object->Attributes()->SetFaceBoundaryAspect(
                     new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.));
         object->Attributes()->SetIsoOnTriangulation(true);
+        //object->Attributes()->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr, true/*overrideDefaults*/);
         object->SetOwner(this);
         return object;
     }
@@ -258,11 +259,11 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         // -- MeshVS_DrawerAttribute
         object->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, defaultValues().showEdges);
         object->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
-        object->GetDrawer()->SetMaterial(MeshVS_DA_FrontMaterial, Graphic3d_NOM_PLASTER);
         object->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         object->GetDrawer()->SetMaterial(
                     MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material));
         object->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, defaultValues().edgeColor);
+        object->GetDrawer()->SetBoolean(MeshVS_DA_ColorReflection, true);
         object->SetDisplayMode(MeshVS_DMF_Shading);
 
         //object->SetHilightMode(MeshVS_DMF_WireFrame);
