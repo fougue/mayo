@@ -68,7 +68,7 @@ public:
     QWidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);
 
     void redraw() override;
-    virtual QWidget* widget() { return this; }
+    QWidget* widget() override { return this; }
     bool supportsWidgetOpacity() const override { return false; }
 
     static QWidgetOccView* create(const Handle_V3d_View& view, QWidget* parent);
