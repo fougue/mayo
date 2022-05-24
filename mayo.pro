@@ -55,6 +55,7 @@ clang {
     LIBS += -lc++fs
 }
 macx {
+    DEFINES += GL_SILENCE_DEPRECATION
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
 }
