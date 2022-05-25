@@ -43,10 +43,7 @@ jobs:
           if: startsWith(matrix.os, 'macos')
           run: |
               brew install opencascade
-              brew info opencascade
               GH_CASCADE_VERSION=`brew info opencascade | grep -E --only-matching --max-count=1 "[0-9]\.[0-9]\.[0-9]"`
-              echo GH_CASCADE_VERSION=$GH_CASCADE_VERSION
-              echo "GH_CASCADE_INC_DIR=/usr/local/Cellar/opencascade/$GH_CASCADE_VERSION/include/opencascade"
               echo "GH_CASCADE_INC_DIR=/usr/local/Cellar/opencascade/$GH_CASCADE_VERSION/include/opencascade" >> $GITHUB_ENV
               echo "GH_CASCADE_LIB_DIR=/usr/local/Cellar/opencascade/$GH_CASCADE_VERSION/lib" >> $GITHUB_ENV
 
