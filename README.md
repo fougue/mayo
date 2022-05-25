@@ -79,7 +79,8 @@ Mayo supports also multiple 3D viewer navigation styles to mimic common CAD appl
 
 ## :hammer: How to build Mayo
 [Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
-[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)
+[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)  
+[Instructions for macOS](https://github.com/fougue/mayo/wiki/Build-instructions-for-macOS)
 
 ## :clapper: Gallery
 
