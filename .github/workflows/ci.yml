@@ -48,6 +48,10 @@ jobs:
               echo "GH_CASCADE_INC_DIR=$GH_CASCADE_BASE_DIR/$GH_CASCADE_VERSION/include/opencascade" >> $GITHUB_ENV
               echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_BASE_DIR/$GH_CASCADE_VERSION/lib" >> $GITHUB_ENV
 
+        - name: Get count of CPU cores
+          uses: SimenB/github-actions-cpu-cores@v1
+          id: cpu-cores
+
         - name: Create Build folder
           run: mkdir ${{github.workspace}}/build
 
@@ -56,5 +60,6 @@ jobs:
           run: |
               echo CASCADE_INC_DIR=$GH_CASCADE_INC_DIR
               echo CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
+              echo CPU_CORE_COUNT=${{steps.cpu-cores.outputs.count}}
               qmake ../source CASCADE_INC_DIR=$GH_CASCADE_INC_DIR CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
-              make -j2
+              make -j${{steps.cpu-cores.outputs.count}}
