@@ -454,27 +454,27 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::CliExport</name>
     <message>
-        <location filename="../src/app/cli_export.cpp" line="126"/>
+        <location filename="../src/app/cli_export.cpp" line="131"/>
         <source>Mesh BRep shapes</source>
         <translation>Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/cli_export.cpp" line="130"/>
+        <location filename="../src/app/cli_export.cpp" line="135"/>
         <source>Imported</source>
         <translation>Importé</translation>
     </message>
     <message>
-        <location filename="../src/app/cli_export.cpp" line="153"/>
+        <location filename="../src/app/cli_export.cpp" line="158"/>
         <source>Exported {}</source>
         <translation>Export de {} terminé</translation>
     </message>
     <message>
-        <location filename="../src/app/cli_export.cpp" line="230"/>
+        <location filename="../src/app/cli_export.cpp" line="235"/>
         <source>Importing...</source>
         <translation>Import en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/cli_export.cpp" line="242"/>
+        <location filename="../src/app/cli_export.cpp" line="247"/>
         <source>Exporting {}...</source>
         <translation>Export de {} en cours ...</translation>
     </message>
@@ -1724,27 +1724,37 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::PlyWriterI18N</name>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="73"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="65"/>
+        <source>Line that will appear in header</source>
+        <translation>Texte qui apparaîtra dans l&apos;en-tête</translation>
+    </message>
+    <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="76"/>
         <source>targetFormat</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="74"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="77"/>
         <source>writeColors</source>
         <translation>Écrire la couleur des sommets</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="75"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="78"/>
         <source>defaultColor</source>
         <translation>Couleur par défaut</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="119"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
+        <source>comment</source>
+        <translation>Commentaire</translation>
+    </message>
+    <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="123"/>
         <source>Failed to open file</source>
         <translation>Impossible d&apos;ouvrir le fichier</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="132"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="136"/>
         <source>Unknown host endianness</source>
         <translation>Boutisme du CPU inconnu</translation>
     </message>

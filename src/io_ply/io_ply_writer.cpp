@@ -21,6 +21,7 @@
 #include <gsl/gsl_util>
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <fstream>
 #include <locale>
 #include <string>
@@ -61,6 +62,7 @@ public:
         : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(PlyWriterI18N::textIdContext());
+        this->comment.setDescription(PlyWriterI18N::textIdTr("Line that will appear in header"));
     }
 
     void restoreDefaults() override {
@@ -68,11 +70,13 @@ public:
         this->targetFormat.setValue(defaultParams.format);
         this->writeColors.setValue(defaultParams.writeColors);
         this->defaultColor.setValue(defaultParams.defaultColor.GetRGB());
+        this->comment.setValue(defaultParams.comment);
     }
 
     PropertyEnum<PlyWriter::Format> targetFormat{ this, PlyWriterI18N::textId("targetFormat") };
     PropertyBool writeColors{ this, PlyWriterI18N::textId("writeColors") };
     PropertyOccColor defaultColor{ this, PlyWriterI18N::textId("defaultColor") };
+    PropertyString comment{ this, PlyWriterI18N::textId("comment") };
 };
 
 bool PlyWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
@@ -141,11 +145,20 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     // Write PLY header
     fstr.imbue(std::locale::classic());
     fstr << "ply\n"
-         << "format " << strPlyFormat << " 1.0\n"
-         << "element vertex " << m_vecNode.size() << "\n"
+         << "format " << strPlyFormat << " 1.0\n";
+
+    if (!m_params.comment.empty()) {
+        std::string strComment = m_params.comment;
+        std::replace(strComment.begin(), strComment.end(), '\n', ' ');
+        std::replace(strComment.begin(), strComment.end(), '\r', ' ');
+        fstr << "comment " << m_params.comment << "\n";
+    }
+
+    fstr << "element vertex " << m_vecNode.size() << "\n"
          << "property float x\n"
          << "property float y\n"
          << "property float z\n";
+
     if (m_params.writeColors) {
         fstr << "property uchar red\n"
              << "property uchar green\n"
@@ -224,6 +237,7 @@ void PlyWriter::applyProperties(const PropertyGroup* params)
         m_params.format = ptr->targetFormat;
         m_params.writeColors = ptr->writeColors;
         m_params.defaultColor = Quantity_ColorRGBA(ptr->defaultColor);
+        m_params.comment = ptr->comment;
     }
 }
 

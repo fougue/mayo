@@ -32,9 +32,9 @@ public:
         Format format = Format::Binary;
         bool writeColors = true;
         Quantity_ColorRGBA defaultColor{ Quantity_Color(Quantity_NOC_GRAY) };
+        std::string comment;
         // TODO bool writeNormals = false;
         // TODO bool writeEdges = true;
-        // TODO add support for comments
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }
