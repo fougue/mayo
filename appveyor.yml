@@ -42,16 +42,13 @@ before_build:
 build_script:
   - mkdir build-%APPVEYOR_OCC_VERSION%
   - cd build-%APPVEYOR_OCC_VERSION%
-  - qmake ..\mayo.pro
+  - qmake ..\mayo.pro CONFIG+=withtests
   - jom -j%NUMBER_OF_PROCESSORS%
   - cd ..
 
 test_script:
-  - mkdir build-tests-%APPVEYOR_OCC_VERSION%
-  - cd build-tests-%APPVEYOR_OCC_VERSION%
-  - qmake ..\tests\mayo_tests.pro
-  - jom -j%NUMBER_OF_PROCESSORS%
-  - release\mayo_tests.exe
+  - cd build-%APPVEYOR_OCC_VERSION%
+  - release\mayo.exe --runtests
   - cd ..
 
 on_success:

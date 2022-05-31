@@ -194,6 +194,13 @@ static CommandLineArguments processCommandLine()
                 Main::tr("Files to open at startup, optionally"),
                 Main::tr("[files...]"));
 
+#ifdef MAYO_WITH_TESTS
+    const QCommandLineOption cmdRunTests(
+                QStringList{ "runtests" },
+                Main::tr("Execute unit tests and exit application"));
+    cmdParser.addOption(cmdRunTests);
+#endif
+
     cmdParser.process(QCoreApplication::arguments());
 
     // Retrieve arguments
@@ -497,6 +504,11 @@ static void onQtAppExit()
 #endif
 }
 
+#ifdef MAYO_WITH_TESTS
+// Defined in tests/runtests.cpp
+int runTests(const QStringList& args);
+#endif
+
 } // namespace Mayo
 
 int main(int argc, char* argv[])
@@ -519,7 +531,8 @@ int main(int argc, char* argv[])
 #endif
 
     std::unique_ptr<QCoreApplication> ptrApp(
-            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
+            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
+    );
 
 #if defined(Q_OS_WIN) && defined(NDEBUG)
     if (Mayo::isAppCliMode) {
@@ -543,5 +556,22 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
+
+#ifdef MAYO_WITH_TESTS
+    {
+        QStringList testArgs;
+        bool runTests = false;
+        for (int i = 0; i < argc; ++i) {
+            if (std::strcmp(argv[i], "--runtests") == 0)
+                runTests = true;
+            else
+                testArgs.push_back(QString::fromUtf8(argv[i]));
+        }
+
+        if (runTests)
+            return Mayo::runTests(testArgs);
+    }
+#endif
+
     return Mayo::runApp(ptrApp.get());
 }

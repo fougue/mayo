@@ -200,6 +200,12 @@ isEmpty(GMIO_ROOT) {
     DEFINES += HAVE_GMIO
 }
 
+# Unit tests
+CONFIG(withtests) {
+    include(tests/tests.pri)
+    DEFINES += MAYO_WITH_TESTS
+}
+
 # Developer custom processing
 exists($$PWD/custom.pri) {
     include($$PWD/custom.pri)

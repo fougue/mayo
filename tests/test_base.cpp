@@ -115,7 +115,7 @@ void TestBase::Application_test()
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
-        const bool okImport = fnImportInDocument(doc, "inputs/cube.step");
+        const bool okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
@@ -136,11 +136,11 @@ void TestBase::Application_test()
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         bool okImport = true;
-        okImport = fnImportInDocument(doc, "inputs/cube.stlb");
+        okImport = fnImportInDocument(doc, "tests/inputs/cube.stlb");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
 
-        okImport = fnImportInDocument(doc, "inputs/cube.step");
+        okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 2);
 
@@ -298,14 +298,14 @@ void TestBase::IO_probeFormat_test_data()
     QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
 
-    QTest::newRow("cube.step") << "inputs/cube.step" << IO::Format_STEP;
-    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::Format_IGES;
-    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::Format_OCCBREP;
-    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
-    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::Format_STL;
-    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::Format_STL;
-    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
-    QTest::newRow("cube.ply") << "inputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("cube.step") << "tests/inputs/cube.step" << IO::Format_STEP;
+    QTest::newRow("cube.iges") << "tests/inputs/cube.iges" << IO::Format_IGES;
+    QTest::newRow("cube.brep") << "tests/inputs/cube.brep" << IO::Format_OCCBREP;
+    QTest::newRow("bezier_curve.brep") << "tests/inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
+    QTest::newRow("cube.stla") << "tests/inputs/cube.stla" << IO::Format_STL;
+    QTest::newRow("cube.stlb") << "tests/inputs/cube.stlb" << IO::Format_STL;
+    QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
 }
 
 void TestBase::IO_probeFormatDirect_test()
@@ -324,25 +324,25 @@ void TestBase::IO_probeFormatDirect_test()
         input.hintFullSize = filepathFileSize(fp);
     };
 
-    fnSetProbeInput("inputs/cube.step");
+    fnSetProbeInput("tests/inputs/cube.step");
     QCOMPARE(IO::probeFormat_STEP(input), IO::Format_STEP);
 
-    fnSetProbeInput("inputs/cube.iges");
+    fnSetProbeInput("tests/inputs/cube.iges");
     QCOMPARE(IO::probeFormat_IGES(input), IO::Format_IGES);
 
-    fnSetProbeInput("inputs/cube.brep");
+    fnSetProbeInput("tests/inputs/cube.brep");
     QCOMPARE(IO::probeFormat_OCCBREP(input), IO::Format_OCCBREP);
 
-    fnSetProbeInput("inputs/cube.stla");
+    fnSetProbeInput("tests/inputs/cube.stla");
     QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
 
-    fnSetProbeInput("inputs/cube.stlb");
+    fnSetProbeInput("tests/inputs/cube.stlb");
     QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
 
-    fnSetProbeInput("inputs/cube.obj");
+    fnSetProbeInput("tests/inputs/cube.obj");
     QCOMPARE(IO::probeFormat_OBJ(input), IO::Format_OBJ);
 
-    fnSetProbeInput("inputs/cube.ply");
+    fnSetProbeInput("tests/inputs/cube.ply");
     QCOMPARE(IO::probeFormat_PLY(input), IO::Format_PLY);
 }
 
@@ -480,7 +480,7 @@ void TestBase::MeshUtils_orientation_test_data()
     QTest::newRow("case6") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
 
     {
-        QFile file("inputs/mayo_bezier_curve.brep");
+        QFile file("tests/inputs/mayo_bezier_curve.brep");
         QVERIFY(file.open(QIODevice::ReadOnly));
 
         const TopoDS_Shape shape = BRepUtils::shapeFromString(file.readAll().toStdString());
