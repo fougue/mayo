@@ -8,6 +8,7 @@
 
 #include "brep_utils.h"
 #include "caf_utils.h"
+#include "cpp_utils.h"
 #include "data_triangulation.h"
 #include "document.h"
 #include "document_tree_node.h"
@@ -85,7 +86,7 @@ public:
 
     std::optional<Quantity_Color> nodeColor(int i) const override
     {
-        if (0 <= i && i < m_dataTriangulation->nodeColors().size())
+        if (0 <= i && CppUtils::cmpLess(i, m_dataTriangulation->nodeColors().size()))
             return m_dataTriangulation->nodeColors()[i];
         else
             return {};
