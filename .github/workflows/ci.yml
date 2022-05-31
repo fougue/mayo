@@ -36,8 +36,10 @@ jobs:
           if: startsWith(matrix.os, 'ubuntu')
           run: |
               sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev
-              echo "GH_CASCADE_INC_DIR=/usr/include/opencascade" >> $GITHUB_ENV
-              echo "GH_CASCADE_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+              GH_CASCADE_INC_DIR=`dpkg -L libocct-foundation-dev | grep -i "Standard_Version.hxx" | sed "s/\/Standard_Version.hxx//i"`
+              GH_CASCADE_LIB_DIR=`dpkg -L libocct-foundation-dev | grep -i "libTKernel.so" | sed "s/\/libTKernel.so//i"`
+              echo "GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR" >> $GITHUB_ENV
+              echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR" >> $GITHUB_ENV
 
         - name: Install OpenCascade on macOS
           if: startsWith(matrix.os, 'macos')
