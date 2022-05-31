@@ -29,10 +29,9 @@ jobs:
         - name: Install Qt
           uses: jurplel/install-qt-action@v2
           with:
-              archives: 'qtbase qtsvg'
               cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
-        - name: Install OpenCascade on Ubuntu
+        - name: Install OpenCascade[Ubuntu]
           if: startsWith(matrix.os, 'ubuntu')
           run: |
               sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev
@@ -41,7 +40,7 @@ jobs:
               echo "GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR" >> $GITHUB_ENV
               echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR" >> $GITHUB_ENV
 
-        - name: Install OpenCascade on macOS
+        - name: Install OpenCascade[macOS]
           if: startsWith(matrix.os, 'macos')
           run: |
               brew install opencascade
@@ -57,11 +56,30 @@ jobs:
         - name: Create Build folder
           run: mkdir ${{github.workspace}}/build
 
+        - name: QMake
+          working-directory: ${{github.workspace}}/build
+          run: |
+              echo CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}
+              echo CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}
+              qmake ../source  CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}  CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}  CONFIG+=withtests
+
         - name: Build
           working-directory: ${{github.workspace}}/build
           run: |
-              echo CASCADE_INC_DIR=$GH_CASCADE_INC_DIR
-              echo CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
-              echo CPU_CORE_COUNT=${{steps.cpu-cores.outputs.count}}
-              qmake ../source CASCADE_INC_DIR=$GH_CASCADE_INC_DIR CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
               make -j${{steps.cpu-cores.outputs.count}}
+
+        - name: Execute Unit Tests[Ubuntu]
+          if: startsWith(matrix.os, 'ubuntu')
+          working-directory: ${{github.workspace}}/build
+          env:
+              DISPLAY: :0
+          run: |
+              Xvfb $DISPLAY -screen 0 1280x1024x24 &
+              sleep 5s
+              ./mayo --runtests
+
+        - name: Execute Unit Tests[macOS]
+          if: startsWith(matrix.os, 'macos')
+          working-directory: ${{github.workspace}}/build
+          run: |
+              ./mayo.app/Contents/MacOS/mayo --runtests
