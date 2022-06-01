@@ -12,8 +12,14 @@
 
 namespace Mayo {
 
-int runTests(const QStringList& args)
+int runTests(int argc, char* argv[])
 {
+    QStringList args;
+    for (int i = 0; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--runtests") != 0)
+            args.push_back(QString::fromUtf8(argv[i]));
+    }
+
     int retcode = 0;
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);

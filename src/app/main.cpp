@@ -506,7 +506,7 @@ static void onQtAppExit()
 
 #ifdef MAYO_WITH_TESTS
 // Defined in tests/runtests.cpp
-int runTests(const QStringList& args);
+int runTests(int argc, char* argv[]);
 #endif
 
 } // namespace Mayo
@@ -558,18 +558,9 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
 
 #ifdef MAYO_WITH_TESTS
-    {
-        QStringList testArgs;
-        bool runTests = false;
-        for (int i = 0; i < argc; ++i) {
-            if (std::strcmp(argv[i], "--runtests") == 0)
-                runTests = true;
-            else
-                testArgs.push_back(QString::fromUtf8(argv[i]));
-        }
-
-        if (runTests)
-            return Mayo::runTests(testArgs);
+    for (int i = 0; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--runtests") == 0)
+            return Mayo::runTests(argc, argv);
     }
 #endif
 
