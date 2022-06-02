@@ -7,6 +7,7 @@
 #include "test_base.h"
 #include "test_app.h"
 
+#include <cstring>
 #include <memory>
 #include <vector>
 
