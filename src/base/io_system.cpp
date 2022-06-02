@@ -580,7 +580,7 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
-    const std::regex rx{ R"(^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
+    const std::regex rx{ R"([^\n]\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
     return matchRegExp(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
 }
 
