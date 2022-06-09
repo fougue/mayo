@@ -19,6 +19,12 @@ namespace Mayo {
 
 namespace Internal {
 
+static const QIcon& nullQIcon()
+{
+    static const QIcon null;
+    return null;
+}
+
 static QString cssFlatComboBox(
         const QString& urlPixDownArrow,
         const QString& urlPixDownArrowDisabled)
@@ -101,8 +107,6 @@ static QString iconFileName(Theme::Icon icn)
     return QString();
 }
 
-static const QIcon nullQIcon = {};
-
 class ThemeClassic : public Theme {
 public:
     QColor color(Color role) const override
@@ -145,7 +149,7 @@ public:
     const QIcon& icon(Icon icn) const override
     {
         auto it = m_mapIcon.find(icn);
-        return it != m_mapIcon.cend() ? it->second : nullQIcon;
+        return it != m_mapIcon.cend() ? it->second : nullQIcon();
     }
 
     void setup() override
@@ -210,7 +214,7 @@ public:
     const QIcon& icon(Icon icn) const override
     {
         auto it = m_mapIcon.find(icn);
-        return it != m_mapIcon.cend() ? it->second : nullQIcon;
+        return it != m_mapIcon.cend() ? it->second : nullQIcon();
     }
 
     void setup() override
