@@ -19,6 +19,7 @@ class ButtonFlat;
 class GuiDocument;
 class WidgetClipPlanes;
 class WidgetExplodeAssembly;
+class WidgetMeasure;
 class IWidgetOccView;
 
 class WidgetGuiDocument : public QWidget {
@@ -36,8 +37,13 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
+    QWidget* createWidgetPanelContainer(QWidget* widgetContents);
+    void updageWidgetPanelControls(QWidget* panelWidget, ButtonFlat* btnPanel);
+
     void toggleWidgetClipPlanes(bool on);
     void toggleWidgetExplode(bool on);
+    void toggleWidgetMeasure(bool on);
+    void exclusiveButtonCheck(ButtonFlat* btn);
 
     void recreateViewControls();
     QRect viewControlsRect() const;
@@ -51,11 +57,13 @@ private:
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;
+    WidgetMeasure* m_widgetMeasure = nullptr;
     QRect m_rectControls;
 
     ButtonFlat* m_btnFitAll = nullptr;
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
+    ButtonFlat* m_btnMeasure = nullptr;
     std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 

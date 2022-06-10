@@ -23,12 +23,16 @@ class WidgetMessageIndicator : public QWidget {
 public:
     WidgetMessageIndicator(const QString& msg, QWidget* parent = nullptr);
 
+    void setTextColor(const QColor& color) { m_textColor = color; }
+    void setBackgroundColor(const QColor& color) { m_backgroundColor = color; }
+
     qreal opacity() const;
     void setOpacity(qreal value);
 
     void run();
 
-    static void showMessage(const QString& msg, QWidget* parent);
+    static void showInfo(const QString& msg, QWidget* parent);
+    static void showError(const QString& msg, QWidget* parent);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -41,6 +45,8 @@ private:
     const QString m_message;
     QRectF m_messageRect;
     qreal m_opacity = 1.;
+    QColor m_textColor = Qt::black;
+    QColor m_backgroundColor = Qt::white;
 };
 
 } // namespace Mayo

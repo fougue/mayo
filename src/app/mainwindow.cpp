@@ -186,7 +186,7 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
     case Messenger::MessageType::Trace:
         break;
     case Messenger::MessageType::Info:
-        WidgetMessageIndicator::showMessage(text, mainWnd);
+        WidgetMessageIndicator::showInfo(text, mainWnd);
         break;
     case Messenger::MessageType::Warning:
         WidgetsUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
@@ -732,7 +732,7 @@ void MainWindow::onApplicationItemSelectionChanged()
 void MainWindow::onOperationFinished(bool ok, const QString &msg)
 {
     if (ok)
-        WidgetMessageIndicator::showMessage(msg, this);
+        WidgetMessageIndicator::showInfo(msg, this);
     else
         WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }

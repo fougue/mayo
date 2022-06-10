@@ -153,6 +153,11 @@ void GraphicsScene::deactivateObjectSelection(const Mayo::GraphicsObjectPtr &obj
     d->m_aisContext->Deactivate(object, mode);
 }
 
+void GraphicsScene::deactivateObjectSelection(const GraphicsObjectPtr &object)
+{
+    d->m_aisContext->Deactivate(object);
+}
+
 void GraphicsScene::addSelectionFilter(const Handle_SelectMgr_Filter& filter)
 {
     d->m_aisContext->AddFilter(filter);
@@ -223,8 +228,11 @@ GraphicsOwnerPtr GraphicsScene::firstSelectedOwner() const
 
 void GraphicsScene::clearSelection()
 {
+    const bool onEntryOwnerSelected = !this->firstSelectedOwner().IsNull();
     d->m_aisContext->ClearDetected(false);
     d->m_aisContext->ClearSelected(false);
+    if (onEntryOwnerSelected)
+        emit this->selectionChanged();
 }
 
 AIS_InteractiveContext* GraphicsScene::aisContextPtr() const

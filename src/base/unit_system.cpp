@@ -45,27 +45,29 @@ struct UnitInfo {
 };
 const UnitInfo arrayUnitInfo_SI[] = {
     //Length
-    { Unit::Length, "mm", 1. },
-    { Unit::Length, "m", 1000. },
-    { Unit::Length, "nm", 1e-6 },
-    { Unit::Length, "µm", 0.001 },
-    { Unit::Length, "mm", 1. },
-    { Unit::Length, "m", 1000. },
-    { Unit::Length, "km", 1e6 },
+    { Unit::Length, "mm", Quantity_Millimeter.value() },
+    { Unit::Length, "cm", Quantity_Centimeter.value() },
+    { Unit::Length, "dm", Quantity_Decimeter.value() },
+    { Unit::Length, "m",  Quantity_Meter.value() },
+    { Unit::Length, "km", Quantity_Kilometer.value() },
+    { Unit::Length, "nm", Quantity_Nanometer.value() },
+    { Unit::Length, "µm", Quantity_Micrometer.value() },
     // Angle
-    { Unit::Angle, "rad", 1. },
+    { Unit::Angle, "rad", Quantity_Radian.value() },
     { Unit::Angle, "deg", Quantity_Degree.value() },
-    { Unit::Angle, "°", Quantity_Degree.value() },
+    { Unit::Angle, "°",   Quantity_Degree.value() },
     // Area
-    { Unit::Area, "mm²", 1. },
-    { Unit::Area, "m²", 1e6 },
-    { Unit::Area, "km²", 1e12 },
+    { Unit::Area, "mm²", Quantity_SquareMillimeter.value() },
+    { Unit::Area, "cm²", Quantity_SquareCentimeter.value() },
+    { Unit::Area, "m²",  Quantity_SquareMeter.value() },
+    { Unit::Area, "km²", Quantity_SquareKilometer.value() },
     // Volume
-    { Unit::Volume, "mm³", 1. },
-    { Unit::Volume, "m³", 1e9 },
-    { Unit::Volume, "km³", 1e18 },
+    { Unit::Volume, "mm³", Quantity_CubicMillimeter.value() },
+    { Unit::Volume, "cm³", Quantity_CubicCentimeter.value() },
+    { Unit::Volume, "m³",  Quantity_CubicMeter.value() },
+    { Unit::Volume, "L",   Quantity_Liter.value() },
     // Velocity
-    { Unit::Velocity, "mm/s", 1. },
+    { Unit::Velocity, "mm/s", Quantity_MillimeterPerSecond.value() },
     // Density
     { Unit::Density, "kg/m³", 1 },
     { Unit::Density, "g/m³", 1000. },
@@ -81,16 +83,25 @@ const UnitInfo arrayUnitInfo_SI[] = {
 
 const UnitInfo arrayUnitInfo_ImperialUK[] = {
     //Length
-    { Unit::Length, "in", 25.4 },
-    { Unit::Length, "thou", 0.0254 },
-    { Unit::Length, "\"", 25.4 },
-    { Unit::Length, "'", 304.8 },
-    { Unit::Length, "yd", 914.4 },
-    { Unit::Length, "mi", 1609344 },
+    { Unit::Length, "thou", Quantity_Thou.value() },
+    { Unit::Length, "in", Quantity_Inch.value() },
+    { Unit::Length, "\"", Quantity_Inch.value() },
+    { Unit::Length, "ft", Quantity_Foot.value() },
+    { Unit::Length, "'",  Quantity_Foot.value() },
+    { Unit::Length, "yd", Quantity_Yard.value() },
+    { Unit::Length, "mi", Quantity_Mile.value() },
     // Others
-    { Unit::Area, "in²", 654.16 },
-    { Unit::Volume, "in³", 16387.064 },
-    { Unit::Velocity, "in/min", 25.4 / 60. }
+    { Unit::Area, "in²", Quantity_SquareInch.value() },
+    { Unit::Area, "\"²", Quantity_SquareInch.value() },
+    { Unit::Area, "ft²", Quantity_SquareFoot.value() },
+    { Unit::Area, "'²",  Quantity_SquareFoot.value() },
+    { Unit::Area, "yd²", Quantity_SquareYard.value() },
+    { Unit::Volume, "in³", Quantity_CubicInch.value() },
+    { Unit::Volume, "\"³", Quantity_CubicInch.value() },
+    { Unit::Volume, "ft³", Quantity_CubicFoot.value() },
+    { Unit::Volume, "'³",  Quantity_CubicFoot.value() },
+    { Unit::Velocity, "in/min", Quantity_Inch.value() / 60. },
+    { Unit::Velocity, "\"/min", Quantity_Inch.value() / 60. },
 };
 
 static UnitSystem::TranslateResult translateSI(double value, Unit unit)
@@ -269,6 +280,65 @@ UnitSystem::TranslateResult UnitSystem::parseQuantity(std::string_view strQuanti
         }
     }
 
+    return {};
+}
+
+UnitSystem::TranslateResult UnitSystem::translateLength(QuantityLength length, LengthUnit unit)
+{
+    auto fnTrResult = [=](QuantityLength qtyFactor, const char* strUnit) {
+        return TranslateResult{ (length / qtyFactor.value()).value(), strUnit, qtyFactor.value() };
+    };
+    switch (unit) {
+        // SI
+    case LengthUnit::Nanometer:  return fnTrResult(Quantity_Nanometer, "nm");
+    case LengthUnit::Micrometer: return fnTrResult(Quantity_Micrometer, "µm");
+    case LengthUnit::Millimeter: return fnTrResult(Quantity_Millimeter, "mm");
+    case LengthUnit::Centimeter: return fnTrResult(Quantity_Centimeter, "cm");
+    case LengthUnit::Decimeter:  return fnTrResult(Quantity_Decimeter, "dm");
+    case LengthUnit::Meter: return fnTrResult(Quantity_Meter, "m");
+    case LengthUnit::Kilometer: return fnTrResult(Quantity_Kilometer, "km");
+    case LengthUnit::NauticalMile: return fnTrResult(Quantity_NauticalMile, "nmi");
+        // Imperial UK
+    case LengthUnit::Thou: return fnTrResult(Quantity_Thou, "thou");
+    case LengthUnit::Inch: return fnTrResult(Quantity_Inch, "in");
+    case LengthUnit::Link: return fnTrResult(Quantity_Link, "link");
+    case LengthUnit::Foot: return fnTrResult(Quantity_Foot, "ft");
+    case LengthUnit::Yard: return fnTrResult(Quantity_Yard, "yd");
+    case LengthUnit::Rod:  return fnTrResult(Quantity_Rod, "rod");
+    case LengthUnit::Chain: return fnTrResult(Quantity_Chain, "chain");
+    case LengthUnit::Furlong: return fnTrResult(Quantity_Furlong, "fur");
+    case LengthUnit::Mile:    return fnTrResult(Quantity_Mile, "mi");
+    case LengthUnit::League:  return fnTrResult(Quantity_League, "league");
+    }
+    return {};
+}
+
+UnitSystem::TranslateResult UnitSystem::translateArea(QuantityArea area, AreaUnit unit)
+{
+    auto fnTrResult = [=](QuantityArea qtyFactor, const char* strUnit) {
+        return TranslateResult{ (area / qtyFactor.value()).value(), strUnit, qtyFactor.value() };
+    };
+    switch (unit) {
+        // SI
+    case AreaUnit::SquareMillimeter:  return fnTrResult(Quantity_SquareMillimeter, "mm²");
+    case AreaUnit::SquareCentimeter: return fnTrResult(Quantity_SquareCentimeter, "cm²");
+    case AreaUnit::SquareMeter: return fnTrResult(Quantity_SquareMeter, "m²");
+    case AreaUnit::SquareKilometer: return fnTrResult(Quantity_SquareKilometer, "km²");
+        // Imperial UK
+    case AreaUnit::SquareInch: return fnTrResult(Quantity_SquareInch, "in²");
+    case AreaUnit::SquareFoot: return fnTrResult(Quantity_SquareFoot, "ft²");
+    case AreaUnit::SquareYard: return fnTrResult(Quantity_SquareYard, "yd²");
+    case AreaUnit::SquareMile: return fnTrResult(Quantity_SquareMile, "mi²");
+    }
+    return {};
+}
+
+UnitSystem::TranslateResult UnitSystem::translateAngle(QuantityAngle angle, AngleUnit unit)
+{
+    switch (unit) {
+    case AngleUnit::Radian: return UnitSystem::radians(angle);
+    case AngleUnit::Degree: return UnitSystem::degrees(angle);
+    }
     return {};
 }
 

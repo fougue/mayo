@@ -88,6 +88,7 @@ public:
     void setViewTrihedronCorner(Qt::Corner corner);
 
     int aisViewCubeBoundingSize() const;
+    static bool isAisViewCubeObject(const GraphicsObjectPtr& gfxObject);
 
     // -- Background
     struct GradientBackground {

@@ -29,8 +29,10 @@ public:
         View3d_BackgroundGradientEnd,
         RubberBandView3d_Line,
         RubberBandView3d_Fill,
-        MessageIndicator_Background,
-        MessageIndicator_Text
+        MessageIndicator_InfoBackground,
+        MessageIndicator_InfoText,
+        MessageIndicator_ErrorBackground,
+        MessageIndicator_ErrorText
     };
 
     enum class Icon {
@@ -56,6 +58,7 @@ public:
         ZoomIn,
         ZoomOut,
         ClipPlane,
+        Measure,
         View3dIso,
         View3dLeft,
         View3dRight,

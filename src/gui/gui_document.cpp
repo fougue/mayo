@@ -458,6 +458,15 @@ int GuiDocument::aisViewCubeBoundingSize() const
 #endif
 }
 
+bool GuiDocument::isAisViewCubeObject([[maybe_unused]] const GraphicsObjectPtr& gfxObject)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    return !opencascade::handle<AIS_ViewCube>::DownCast(gfxObject).IsNull();
+#else
+    return false;
+#endif
+}
+
 const GuiDocument::GradientBackground& GuiDocument::defaultGradientBackground()
 {
     return Internal::defaultGradientBackground();

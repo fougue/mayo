@@ -92,6 +92,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::ZoomIn: return "zoom-in.svg";
     case Theme::Icon::ZoomOut: return "zoom-out.svg";
     case Theme::Icon::ClipPlane: return "clip-plane.svg";
+    case Theme::Icon::Measure: return "measure.svg";
     case Theme::Icon::View3dIso: return "view-iso.svg";
     case Theme::Icon::View3dLeft: return "view-left.svg";
     case Theme::Icon::View3dRight: return "view-right.svg";
@@ -138,10 +139,13 @@ public:
             return QColor(65, 200, 250);
         case Theme::Color::RubberBandView3d_Fill:
             return QColor(65, 200, 250).lighter();
-        case Theme::Color::MessageIndicator_Background:
+        case Theme::Color::MessageIndicator_InfoBackground:
             return QColor(128, 200, 255);
-        case Theme::Color::MessageIndicator_Text:
+        case Theme::Color::MessageIndicator_InfoText:
+        case Theme::Color::MessageIndicator_ErrorText:
             return appPalette.color(QPalette::WindowText);
+        case Theme::Color::MessageIndicator_ErrorBackground:
+            return QColor(225, 127, 127, 140);
         }
         return QColor();
     }
@@ -203,10 +207,13 @@ public:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::RubberBandView3d_Fill:
             return appPalette.color(QPalette::Highlight).lighter();
-        case Theme::Color::MessageIndicator_Background:
+        case Theme::Color::MessageIndicator_InfoBackground:
             return appPalette.color(QPalette::Highlight);
-        case Theme::Color::MessageIndicator_Text:
+        case Theme::Color::MessageIndicator_InfoText:
+        case Theme::Color::MessageIndicator_ErrorText:
             return appPalette.color(QPalette::WindowText);
+        case Theme::Color::MessageIndicator_ErrorBackground:
+            return QColor(225, 127, 127, 140);
         }
         return QColor();
     }

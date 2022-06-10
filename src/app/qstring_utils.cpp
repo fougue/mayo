@@ -49,8 +49,7 @@ static QString coordsText(const gp_XYZ& coords, const QStringUtils::TextOptions&
 
 static QString pntCoordText(double coord, const QStringUtils::TextOptions& opt)
 {
-    const UnitSystem::TranslateResult trCoord =
-            UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
+    const auto trCoord = UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
     const QString strValue = valueText(trCoord.value, opt);
     return strValue + trCoord.strUnit;
 }

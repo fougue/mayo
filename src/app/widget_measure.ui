@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Mayo::WidgetMeasure</class>
+ <widget class="QWidget" name="Mayo::WidgetMeasure">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>229</width>
+    <height>156</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="layout_Main">
+   <property name="leftMargin">
+    <number>4</number>
+   </property>
+   <property name="topMargin">
+    <number>4</number>
+   </property>
+   <property name="rightMargin">
+    <number>4</number>
+   </property>
+   <property name="bottomMargin">
+    <number>4</number>
+   </property>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_AreaUnit">
+     <property name="text">
+      <string>Area Unit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_LengthUnit">
+     <property name="text">
+      <string>Length Unit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_MeasureType">
+     <property name="text">
+      <string>Measure</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_AngleUnit">
+     <property name="text">
+      <string>Angle Unit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="combo_LengthUnit">
+     <item>
+      <property name="text">
+       <string>Millimeter(mm)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Centimeter(cm)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Meter(m)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Inch(in)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Foot(ft)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Yard(yd)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="combo_AngleUnit">
+     <item>
+      <property name="text">
+       <string>Degree(°)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Radian(rad)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="combo_MeasureType">
+     <item>
+      <property name="text">
+       <string>Vertex Position</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Circle Center</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Circle Diameter</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Min Distance</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Length</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Angle</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Surface Area</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="combo_AreaUnit">
+     <item>
+      <property name="text">
+       <string>Square Millimeter(mm²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Centimeter(cm²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Meter(m²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Inch(in²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Foot(ft²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Yard(yd²)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QWidget" name="widget_Message" native="true">
+     <layout class="QVBoxLayout" name="layout_Message">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="widget_Void" native="true"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

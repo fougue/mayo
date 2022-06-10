@@ -44,6 +44,7 @@ public:
 
     void activateObjectSelection(const GraphicsObjectPtr& object, int mode);
     void deactivateObjectSelection(const GraphicsObjectPtr& object, int mode);
+    void deactivateObjectSelection(const GraphicsObjectPtr& object);
 
     void addSelectionFilter(const Handle_SelectMgr_Filter& filter);
     void removeSelectionFilter(const Handle_SelectMgr_Filter& filter);
@@ -78,6 +79,9 @@ public:
 
     template<typename FUNCTION>
     void foreachDisplayedObject(FUNCTION fn) const;
+
+    template<typename FUNCTION>
+    void foreachActiveSelectionMode(const GraphicsObjectPtr& object, FUNCTION fn) const;
 
     template<typename FUNCTION>
     void foreachOwner(const GraphicsObjectPtr& object, int selectionMode, FUNCTION fn) const;
@@ -128,6 +132,15 @@ void GraphicsScene::foreachDisplayedObject(FUNCTION fn) const
     this->aisContextPtr()->DisplayedObjects(listObject);
     for (const GraphicsObjectPtr& ptr : listObject)
         fn(ptr);
+}
+
+template<typename FUNCTION>
+void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, FUNCTION fn) const
+{
+    TColStd_ListOfInteger listMode;
+    this->aisContextPtr()->ActivatedModes(object, listMode);
+    for (GraphicsObjectSelectionMode mode : listMode)
+        fn(mode);
 }
 
 template<typename FUNCTION>

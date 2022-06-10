@@ -71,22 +71,36 @@ constexpr QuantityLength Quantity_Millimeter(1.);
 constexpr QuantityLength Quantity_Centimeter(10.);
 constexpr QuantityLength Quantity_Decimeter(100.);
 constexpr QuantityLength Quantity_Meter(1000.);
-constexpr QuantityLength Quantity_Kilometre(1e6);
+constexpr QuantityLength Quantity_Kilometer(1e6);
+constexpr QuantityLength Quantity_NauticalMile(1852 * Quantity_Kilometer.value());
 
-constexpr QuantityArea Quantity_SquaredMillimeter(1.);
-constexpr QuantityArea Quantity_SquaredCentimer(100.);
-constexpr QuantityArea Quantity_SquaredMeter(1e6);
-constexpr QuantityArea Quantity_SquaredKilometer(1e12);
+constexpr QuantityArea Quantity_SquareMillimeter(1.);
+constexpr QuantityArea Quantity_SquareCentimeter(100.);
+constexpr QuantityArea Quantity_SquareMeter(1e6);
+constexpr QuantityArea Quantity_SquareKilometer(1e12);
 
 constexpr QuantityVolume Quantity_CubicMillimeter(1.);
-constexpr QuantityVolume Quantity_CubicCentimer(1000.);
+constexpr QuantityVolume Quantity_CubicCentimeter(1000.);
 constexpr QuantityVolume Quantity_CubicMeter(1e9);
 
-constexpr QuantityLength Quantity_Inch(25.4);
-constexpr QuantityLength Quantity_Foot(304.8);
 constexpr QuantityLength Quantity_Thou(0.0254);
+constexpr QuantityLength Quantity_Inch(25.4);
+constexpr QuantityLength Quantity_Link(201.168);
+constexpr QuantityLength Quantity_Foot(304.8);
 constexpr QuantityLength Quantity_Yard(914.4);
-constexpr QuantityLength Quantity_Mile(1609344.);
+constexpr QuantityLength Quantity_Rod(5029.2);
+constexpr QuantityLength Quantity_Chain(20116.8);
+constexpr QuantityLength Quantity_Furlong(201168);
+constexpr QuantityLength Quantity_Mile(1609344);
+constexpr QuantityLength Quantity_League(4828032);
+
+constexpr QuantityArea Quantity_SquareInch(654.16);
+constexpr QuantityArea Quantity_SquareFoot(92903.04);
+constexpr QuantityArea Quantity_SquareYard(836127.36);
+constexpr QuantityArea Quantity_SquareMile(Quantity_Mile.value() * Quantity_Mile.value());
+
+constexpr QuantityVolume Quantity_CubicInch(16387.064);
+constexpr QuantityVolume Quantity_CubicFoot(Quantity_Foot.value() * Quantity_SquareFoot.value());
 
 constexpr QuantityVelocity Quantity_MillimeterPerSecond(1.);
 

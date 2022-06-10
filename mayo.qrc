@@ -76,5 +76,7 @@
         <file>images/themes/dark/multiple.svg</file>
         <file>images/themes/classic/reload.svg</file>
         <file>images/themes/dark/reload.svg</file>
+        <file>images/themes/classic/measure.svg</file>
+        <file>images/themes/dark/measure.svg</file>
     </qresource>
 </RCC>

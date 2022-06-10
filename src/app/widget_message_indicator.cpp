@@ -55,11 +55,11 @@ void WidgetMessageIndicator::paintEvent(QPaintEvent*)
 
     const QRectF& msgRect = m_messageRect;
     const QRectF boxRect(0, 0, msgRect.width() + 18, msgRect.height() + 8);
-    p.fillRect(boxRect, mayoTheme()->color(Theme::Color::MessageIndicator_Background));
+    p.fillRect(boxRect, m_backgroundColor);
 
     p.setFont(QtGuiUtils::FontChange(this->font()).bold());
     const QRectF textRect(9, 4, msgRect.width() + 4, msgRect.height());
-    p.setPen(mayoTheme()->color(Theme::Color::MessageIndicator_Text));
+    p.setPen(m_textColor);
     p.drawText(textRect, m_message);
 }
 
@@ -69,15 +69,24 @@ void WidgetMessageIndicator::runInternal()
     anim->setDuration(200);
     anim->setStartValue(1.);
     anim->setEndValue(0.);
-    QObject::connect(
-                anim, &QAbstractAnimation::finished,
-                this, &QObject::deleteLater);
+    QObject::connect(anim, &QAbstractAnimation::finished, this, &QObject::deleteLater);
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void WidgetMessageIndicator::showMessage(const QString& msg, QWidget* parent)
+void WidgetMessageIndicator::showInfo(const QString& msg, QWidget* parent)
 {
-    (new WidgetMessageIndicator(msg, parent))->run();
+    auto widget = new WidgetMessageIndicator(msg, parent);
+    widget->setTextColor(mayoTheme()->color(Theme::Color::MessageIndicator_InfoText));
+    widget->setBackgroundColor(mayoTheme()->color(Theme::Color::MessageIndicator_InfoBackground));
+    widget->run();
+}
+
+void WidgetMessageIndicator::showError(const QString &msg, QWidget *parent)
+{
+    auto widget = new WidgetMessageIndicator(msg, parent);
+    widget->setTextColor(mayoTheme()->color(Theme::Color::MessageIndicator_ErrorText));
+    widget->setBackgroundColor(mayoTheme()->color(Theme::Color::MessageIndicator_ErrorBackground));
+    widget->run();
 }
 
 bool WidgetMessageIndicator::eventFilter(QObject *watched, QEvent *event)

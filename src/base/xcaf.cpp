@@ -296,7 +296,7 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
         else if (&attrId == &XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             props.hasArea = true;
-            props.area = area.Get() * Quantity_SquaredMillimeter;
+            props.area = area.Get() * Quantity_SquareMillimeter;
         }
         else if (&attrId == &XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);

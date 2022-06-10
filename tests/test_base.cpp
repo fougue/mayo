@@ -706,7 +706,7 @@ void TestBase::UnitSystem_test_data()
             << UnitSystem::translate(schemaSI, 8 * Quantity_Meter)
             << UnitSystem::TranslateResult{ 8000., "mm", 1. };
     QTest::newRow("50mm²")
-            << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquaredCentimer)
+            << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquareCentimeter)
             << UnitSystem::TranslateResult{ 50., "mm²", 1. };
     QTest::newRow("50kg/m³")
             << UnitSystem::translate(schemaSI, 25 * Quantity_KilogramPerCubicMeter)

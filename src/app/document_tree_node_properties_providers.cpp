@@ -218,7 +218,7 @@ public:
 
         m_propertyNodeCount.setValue(!polyTri.IsNull() ? polyTri->NbNodes() : 0);
         m_propertyTriangleCount.setValue(!polyTri.IsNull() ? polyTri->NbTriangles() : 0);
-        m_propertyArea.setQuantity(MeshUtils::triangulationArea(polyTri) * Quantity_SquaredMillimeter);
+        m_propertyArea.setQuantity(MeshUtils::triangulationArea(polyTri) * Quantity_SquareMillimeter);
         m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(polyTri) * Quantity_CubicMillimeter);
         for (Property* property : this->properties())
             property->setUserReadOnly(true);

@@ -13,16 +13,14 @@ namespace Mayo {
 
 class UnitSystem {
 public:
-    enum Schema {
-        SI,
-        ImperialUK
-    };
+    enum Schema { SI, ImperialUK };
 
     struct TranslateResult {
         double value;
         const char* strUnit; // UTF8
         double factor;
         constexpr operator double() const { return this->value; }
+        constexpr operator bool() const { return this->strUnit != nullptr; }
     };
 
     template<Unit UNIT>
@@ -31,6 +29,10 @@ public:
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);
     static TranslateResult parseQuantity(std::string_view strQuantity, Unit* ptrUnit = nullptr);
+
+    static TranslateResult translateLength(QuantityLength length, LengthUnit unit);
+    static TranslateResult translateArea(QuantityArea area, AreaUnit unit);
+    static TranslateResult translateAngle(QuantityAngle angle, AngleUnit unit);
 
     static TranslateResult radians(QuantityAngle angle);
     static TranslateResult degrees(QuantityAngle angle);
