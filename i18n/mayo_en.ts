@@ -753,64 +753,114 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
     </message>
 </context>
 <context>
-    <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
+    <name>Mayo::GraphicsMeshObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="376"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="33"/>
+        <source>Mesh_Wireframe</source>
+        <translation>[Mesh] Wireframe</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="34"/>
+        <source>Mesh_Shaded</source>
+        <translation>[Mesh] Shaded</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="35"/>
+        <source>Mesh_Shrink</source>
+        <translation>[Mesh] Shrink</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="206"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="377"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="207"/>
         <source>edgeColor</source>
         <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="378"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="208"/>
         <source>showEdges</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="379"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="209"/>
         <source>showNodes</source>
         <translation>Show Nodes</translation>
     </message>
 </context>
 <context>
+    <name>Mayo::GraphicsMeshObjectDriver_ObjectProperties</name>
+    <message>
+        <source>color</source>
+        <translation type="vanished">Color</translation>
+    </message>
+    <message>
+        <source>edgeColor</source>
+        <translation type="vanished">Edge Color</translation>
+    </message>
+    <message>
+        <source>showEdges</source>
+        <translation type="vanished">Show Edges</translation>
+    </message>
+    <message>
+        <source>showNodes</source>
+        <translation type="vanished">Show Nodes</translation>
+    </message>
+</context>
+<context>
     <name>Mayo::GraphicsObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="82"/>
+        <source>Shape_Wireframe</source>
+        <translation type="vanished">[Shape] Wireframe</translation>
+    </message>
+    <message>
+        <source>Shape_HiddenLineRemoval</source>
+        <translation type="vanished">[Shape] Hidden Line Removal</translation>
+    </message>
+    <message>
+        <source>Shape_Shaded</source>
+        <translation type="vanished">[Shape] Shaded</translation>
+    </message>
+    <message>
+        <source>Shape_ShadedWithFaceBoundary</source>
+        <translation type="vanished">[Shape] Shaded With Edges</translation>
+    </message>
+    <message>
+        <source>Mesh_Wireframe</source>
+        <translation type="vanished">[Mesh] Wireframe</translation>
+    </message>
+    <message>
+        <source>Mesh_Shaded</source>
+        <translation type="vanished">[Mesh] Shaded</translation>
+    </message>
+    <message>
+        <source>Mesh_Shrink</source>
+        <translation type="vanished">[Mesh] Shrink</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::GraphicsShapeObjectDriver</name>
+    <message>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="27"/>
         <source>Shape_Wireframe</source>
         <translation>[Shape] Wireframe</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="83"/>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="28"/>
         <source>Shape_HiddenLineRemoval</source>
         <translation>[Shape] Hidden Line Removal</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="84"/>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="29"/>
         <source>Shape_Shaded</source>
         <translation>[Shape] Shaded</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="85"/>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="30"/>
         <source>Shape_ShadedWithFaceBoundary</source>
         <translation>[Shape] Shaded With Edges</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="202"/>
-        <source>Mesh_Wireframe</source>
-        <translation>[Mesh] Wireframe</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="203"/>
-        <source>Mesh_Shaded</source>
-        <translation>[Mesh] Shaded</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_object_driver.cpp" line="204"/>
-        <source>Mesh_Shrink</source>
-        <translation>[Mesh] Shrink</translation>
     </message>
 </context>
 <context>
@@ -1730,94 +1780,99 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="159"/>
+        <location filename="../src/app/main.cpp" line="160"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="160"/>
+        <location filename="../src/app/main.cpp" line="161"/>
         <source>name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="178"/>
+        <location filename="../src/app/main.cpp" line="179"/>
         <source>Writes log messages into output file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="184"/>
+        <location filename="../src/app/main.cpp" line="185"/>
         <source>Don&apos;t filter out debug log messages in release build</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="189"/>
+        <location filename="../src/app/main.cpp" line="190"/>
         <source>Disable progress reporting in console output(CLI-mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="193"/>
+        <location filename="../src/app/main.cpp" line="194"/>
         <source>files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="194"/>
+        <location filename="../src/app/main.cpp" line="195"/>
         <source>Files to open at startup, optionally</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="195"/>
+        <location filename="../src/app/main.cpp" line="196"/>
         <source>[files...]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="239"/>
+        <location filename="../src/app/main.cpp" line="201"/>
+        <source>Execute unit tests and exit application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="247"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="246"/>
+        <location filename="../src/app/main.cpp" line="254"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="405"/>
+        <location filename="../src/app/main.cpp" line="413"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="165"/>
+        <location filename="../src/app/main.cpp" line="166"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="153"/>
+        <location filename="../src/app/main.cpp" line="154"/>
         <source>Mayo the opensource 3D CAD viewer and converter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="166"/>
-        <location filename="../src/app/main.cpp" line="173"/>
-        <location filename="../src/app/main.cpp" line="179"/>
+        <location filename="../src/app/main.cpp" line="167"/>
+        <location filename="../src/app/main.cpp" line="174"/>
+        <location filename="../src/app/main.cpp" line="180"/>
         <source>filepath</source>
         <translation type="unfinished">File Path</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="171"/>
+        <location filename="../src/app/main.cpp" line="172"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="383"/>
+        <location filename="../src/app/main.cpp" line="391"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="437"/>
+        <location filename="../src/app/main.cpp" line="445"/>
         <source>No input files -&gt; nothing to export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="464"/>
+        <location filename="../src/app/main.cpp" line="472"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2408,57 +2463,62 @@ Last modified: %3</source>
 <context>
     <name>Mayo::WidgetGuiDocument</name>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="86"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="87"/>
         <source>Fit All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="87"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="88"/>
         <source>Edit clip planes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="89"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="90"/>
         <source>Explode assemblies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="254"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="92"/>
+        <source>Measure shapes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="292"/>
         <source>Isometric</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="255"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="293"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="256"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="294"/>
         <source>Front</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="257"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="295"/>
         <source>Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="258"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="296"/>
         <source>Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="259"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="297"/>
         <source>Top</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="260"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="298"/>
         <source>Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="270"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="308"/>
         <source>&lt;b&gt;Left-click&lt;/b&gt;: popup menu of pre-defined views
 &lt;b&gt;CTRL+Left-click&lt;/b&gt;: apply &apos;%1&apos; view</source>
         <translation type="unfinished"></translation>
@@ -2521,6 +2581,109 @@ Created: %3
 Modified: %4
 Read: %5
 </source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::WidgetMeasure</name>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="14"/>
+        <source>Form</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="32"/>
+        <source>Measure</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="40"/>
+        <source>Vertex Position</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="45"/>
+        <source>Circle Center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="50"/>
+        <source>Circle Diameter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="55"/>
+        <source>Min Distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="60"/>
+        <source>Length</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="65"/>
+        <source>Angle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="70"/>
+        <source>Surface Area</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="78"/>
+        <source>Length Unit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="86"/>
+        <source>Millimeter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="91"/>
+        <source>Centimeter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="96"/>
+        <source>Meter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="101"/>
+        <source>Inch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="106"/>
+        <source>Foot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="111"/>
+        <source>Yard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="119"/>
+        <source>Angle Unit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="127"/>
+        <source>Degree</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="132"/>
+        <source>Radian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_measure.ui" line="159"/>
+        <source>Select entities to measure</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

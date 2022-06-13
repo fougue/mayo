@@ -12,7 +12,7 @@
 #include "../base/io_system.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "../graphics/graphics_object_driver.h"
+#include "../graphics/graphics_mesh_object_driver.h"
 
 namespace Mayo {
 
