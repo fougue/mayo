@@ -10,6 +10,7 @@
 
 namespace Mayo {
 
+// Provides creation and configuration of graphics objects for meshes(triangulations)
 class GraphicsMeshObjectDriver : public GraphicsObjectDriver {
 public:
     GraphicsMeshObjectDriver();

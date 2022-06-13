@@ -10,6 +10,7 @@
 
 namespace Mayo {
 
+// Provides creation and configuration of graphics objects for BRep shapes
 class GraphicsShapeObjectDriver : public GraphicsObjectDriver {
 public:
     GraphicsShapeObjectDriver();

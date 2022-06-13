@@ -22,14 +22,11 @@ class GraphicsObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsObjectDriver, Standard_Transient)
 using GraphicsObjectDriverPtr = Handle(GraphicsObjectDriver);
 
+// Provides creation and configuration of graphics objects of a specific type
+// Each graphics object "knows" the driver which created it: use function GraphicsObjectDriver::get()
 class GraphicsObjectDriver : public Standard_Transient {
 public:
-    enum Support {
-        None,
-        Partial,
-        Complete
-    };
-
+    enum Support { None, Partial, Complete };
     virtual Support supportStatus(const TDF_Label& label) const = 0;
 
     virtual GraphicsObjectPtr createObject(const TDF_Label& label) const = 0;
