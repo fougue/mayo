@@ -9,7 +9,6 @@
 #include "../base/filepath.h"
 #include "../base/property.h"
 #include "../base/text_id.h"
-#include "../graphics/graphics_object_base_property_group.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
 class QFileInfo;
@@ -95,7 +94,7 @@ private:
     TaskManager* m_taskMgr = nullptr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<GraphicsObjectBasePropertyGroup> m_ptrCurrentNodeGraphicsProperties;
+    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
 };
 
 } // namespace Mayo

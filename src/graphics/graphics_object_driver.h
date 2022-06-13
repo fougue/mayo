@@ -7,7 +7,6 @@
 #pragma once
 
 #include "graphics_object_ptr.h"
-#include "graphics_object_base_property_group.h"
 #include "../base/enumeration.h"
 #include "../base/property.h"
 #include "../base/span.h"
@@ -36,7 +35,7 @@ public:
     virtual void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const = 0;
     virtual Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const = 0;
 
-    virtual std::unique_ptr<GraphicsObjectBasePropertyGroup> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
+    virtual std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
 
     static GraphicsObjectDriverPtr get(const GraphicsObjectPtr& object);
     static GraphicsObjectDriverPtr getCommon(Span<const GraphicsObjectPtr> spanObject);

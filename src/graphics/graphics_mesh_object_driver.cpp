@@ -9,6 +9,7 @@
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/data_triangulation.h"
+#include "../base/property_builtins.h"
 #include "../base/xcaf.h"
 #include "graphics_mesh_data_source.h"
 #include "graphics_utils.h"
@@ -120,10 +121,9 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
     return object->DisplayMode();
 }
 
-class GraphicsMeshObjectDriver::ObjectProperties : public GraphicsObjectBasePropertyGroup {
+class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroupSignals {
 public:
     ObjectProperties(Span<const GraphicsObjectPtr> spanObject)
-        : GraphicsObjectBasePropertyGroup(spanObject)
     {
         NCollection_Vec3<float> sumColor = {};
         NCollection_Vec3<float> sumEdgeColor = {};
@@ -165,7 +165,8 @@ public:
         m_propertyShowNodes.setValue(fnCheckState(countShowNodes));
     }
 
-    void onPropertyChanged(Property* prop) override {
+    void onPropertyChanged(Property* prop) override
+    {
         auto fnRedisplay = [](const GraphicsObjectPtr& object) {
             object->Redisplay(true); // All modes
         };
@@ -199,7 +200,7 @@ public:
             }
         }
 
-        GraphicsObjectBasePropertyGroup::onPropertyChanged(prop);
+        PropertyGroupSignals::onPropertyChanged(prop);
     }
 
     std::vector<Handle_MeshVS_Mesh> m_vecMeshVisu;
@@ -209,7 +210,7 @@ public:
     PropertyCheckState m_propertyShowNodes{ this, GraphicsMeshObjectDriverI18N::textId("showNodes") };
 };
 
-std::unique_ptr<GraphicsObjectBasePropertyGroup>
+std::unique_ptr<PropertyGroupSignals>
 GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
