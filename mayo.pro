@@ -103,11 +103,9 @@ RC_ICONS = images/appicon.ico
 OTHER_FILES += \
     README.md \
     appveyor.yml \
-    .travis.yml \
     .github/workflows/ci.yml \
     images/credits.txt \
     scripts/bump-version.rb \
-    scripts/travis-build.sh \
 
 # OpenCascade
 include(opencascade.pri)
