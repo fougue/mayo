@@ -10,6 +10,10 @@
 
 namespace Mayo {
 
+class GraphicsMeshObjectDriver;
+DEFINE_STANDARD_HANDLE(GraphicsMeshObjectDriver, GraphicsObjectDriver)
+using GraphicsMeshObjectDriverPtr = Handle(GraphicsMeshObjectDriver);
+
 // Provides creation and configuration of graphics objects for meshes(triangulations)
 class GraphicsMeshObjectDriver : public GraphicsObjectDriver {
 public:
@@ -30,6 +34,8 @@ public:
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);
+
+    DEFINE_STANDARD_RTTI_INLINE(GraphicsMeshObjectDriver, GraphicsObjectDriver)
 
 private:
     class ObjectProperties;

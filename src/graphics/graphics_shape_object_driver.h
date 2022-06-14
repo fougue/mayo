@@ -10,6 +10,10 @@
 
 namespace Mayo {
 
+class GraphicsShapeObjectDriver;
+DEFINE_STANDARD_HANDLE(GraphicsShapeObjectDriver, GraphicsObjectDriver)
+using GraphicsShapeObjectDriverPtr = Handle(GraphicsShapeObjectDriver);
+
 // Provides creation and configuration of graphics objects for BRep shapes
 class GraphicsShapeObjectDriver : public GraphicsObjectDriver {
 public:
@@ -27,6 +31,8 @@ public:
         DisplayMode_Shaded,
         DisplayMode_ShadedWithFaceBoundary
     };
+
+    DEFINE_STANDARD_RTTI_INLINE(GraphicsShapeObjectDriver, GraphicsObjectDriver)
 };
 
 } // namespace Mayo
