@@ -161,6 +161,7 @@ private:
     STEPCAFControl_Writer* m_writer = nullptr;
     std::aligned_storage_t<sizeof(STEPCAFControl_Writer)> m_writerStorage;
     Parameters m_params;
+    Schema m_schemaLastTransfer = Schema::AP214_IS;
 };
 
 } // namespace IO
