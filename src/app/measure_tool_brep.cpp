@@ -234,27 +234,24 @@ MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const Graphi
     const BRepAdaptor_Curve curve2(edge2);
 
     auto fnGetLineDirection = [](const Adaptor3d_Curve& curve) -> gp_Dir {
-        if (curve.GetType() == GeomAbs_Line) {
-            return curve.Line().Direction();
-        }
-        else {
-            throwErrorIf<ErrorCode::NotLinearEdge>(true);
+        throwErrorIf<ErrorCode::NotLinearEdge>(curve.GetType() != GeomAbs_Line);
+        return curve.Line().Direction();
 #if 0
-            const GCPnts_QuasiUniformAbscissa pnts(curve, 64);
-            throwErrorIf<ErrorCode::NotLinearEdge>(!pnts.IsDone());
-            const gp_Pnt pntFirst = GeomUtils::d0(curve, pnts.Parameter(1));
-            const gp_Pnt pntLast = GeomUtils::d0(curve, pnts.Parameter(pnts.NbPoints()));
-            throwErrorIf<ErrorCode::NotLinearEdge>(pntFirst.Distance(pntLast) < Precision::Confusion());
-            const gp_Dir dirLine(gp_Vec(pntFirst, pntLast));
-            for (int i = 2; i <= pnts.NbPoints() - 1; ++i) {
-                const gp_Pnt pntSample = GeomUtils::d0(curve, pnts.Parameter(i));
-                throwErrorIf<ErrorCode::NotLinearEdge>(pntFirst.Distance(pntSample) < Precision::Confusion());
-                const gp_Dir dirSample(gp_Vec(pntFirst, pntSample));
-                throwErrorIf<ErrorCode::NotLinearEdge>(!dirLine.IsEqual(dirSample, Precision::Angular()));
-            }
-            return dirLine;
-#endif
+        // Find the direction in case the curve is a pseudo line
+        const GCPnts_QuasiUniformAbscissa pnts(curve, 64);
+        throwErrorIf<ErrorCode::NotLinearEdge>(!pnts.IsDone());
+        const gp_Pnt pntFirst = GeomUtils::d0(curve, pnts.Parameter(1));
+        const gp_Pnt pntLast = GeomUtils::d0(curve, pnts.Parameter(pnts.NbPoints()));
+        throwErrorIf<ErrorCode::NotLinearEdge>(pntFirst.Distance(pntLast) < Precision::Confusion());
+        const gp_Dir dirLine(gp_Vec(pntFirst, pntLast));
+        for (int i = 2; i <= pnts.NbPoints() - 1; ++i) {
+            const gp_Pnt pntSample = GeomUtils::d0(curve, pnts.Parameter(i));
+            throwErrorIf<ErrorCode::NotLinearEdge>(pntFirst.Distance(pntSample) < Precision::Confusion());
+            const gp_Dir dirSample(gp_Vec(pntFirst, pntSample));
+            throwErrorIf<ErrorCode::NotLinearEdge>(!dirLine.IsEqual(dirSample, Precision::Angular()));
         }
+        return dirLine;
+#endif
     };
 
     // Check edges are not parallel
