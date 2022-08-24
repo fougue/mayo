@@ -157,9 +157,9 @@ public:
 
 private:
     MeasureAngle m_angle;
-    Handle_AIS_Circle m_gfxAngle;
     Handle_AIS_Line m_gfxEntity1;
     Handle_AIS_Line m_gfxEntity2;
+    Handle_AIS_Circle m_gfxAngle;
     Handle_AIS_TextLabel m_gfxAngleText;
 };
 

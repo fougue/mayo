@@ -179,9 +179,9 @@ GraphicsObjectPtr MeasureDisplayCircleCenter::graphicsObjectAt(int i) const
 
 MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& circle)
     : m_circle(circle.value),
+      m_gfxCircle(new AIS_Circle(new Geom_Circle(m_circle))),
       m_gfxDiameterText(new AIS_TextLabel)
 {
-    m_gfxCircle = new AIS_Circle(new Geom_Circle(m_circle));
     m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 
     const gp_Pnt otherPntAnchor = diameterOpposedPnt(circle.pntAnchor, m_circle);
@@ -231,16 +231,14 @@ gp_Pnt MeasureDisplayCircleDiameter::diameterOpposedPnt(const gp_Pnt& pntOnCircl
 
 MeasureDisplayMinDistance::MeasureDisplayMinDistance(const MeasureMinDistance& dist)
     : m_dist(dist),
+      m_gfxLength(new AIS_Line(new Geom_CartesianPoint(dist.pnt1), new Geom_CartesianPoint(dist.pnt2))),
       m_gfxDistText(new AIS_TextLabel),
       m_gfxPnt1(new AIS_Point(new Geom_CartesianPoint(dist.pnt1))),
       m_gfxPnt2(new AIS_Point(new Geom_CartesianPoint(dist.pnt2)))
 {
-    m_gfxLength = new AIS_Line(new Geom_CartesianPoint(dist.pnt1), new Geom_CartesianPoint(dist.pnt2));
     m_gfxLength->SetWidth(2.5);
     m_gfxLength->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
-
     m_gfxDistText->SetPosition(dist.pnt1.Translated(gp_Vec(dist.pnt1, dist.pnt2) / 2.));
-
     BaseMeasureDisplay::applyGraphicsColor(this);
 }
 
@@ -276,6 +274,8 @@ GraphicsObjectPtr MeasureDisplayMinDistance::graphicsObjectAt(int i) const
 
 MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     : m_angle(angle),
+      m_gfxEntity1(new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt1))),
+      m_gfxEntity2(new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt2))),
       m_gfxAngleText(new AIS_TextLabel)
 {
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
@@ -285,8 +285,6 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);
-    m_gfxEntity1 = new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt1));
-    m_gfxEntity2 = new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt2));
     BaseMeasureDisplay::applyGraphicsColor(this);
     m_gfxAngle->SetWidth(2);
     m_gfxEntity1->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
