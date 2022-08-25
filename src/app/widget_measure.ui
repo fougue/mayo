@@ -126,12 +126,12 @@
      </item>
      <item>
       <property name="text">
-       <string>Length</string>
+       <string>Angle</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>Angle</string>
+       <string>Length</string>
       </property>
      </item>
      <item>
