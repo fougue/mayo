@@ -78,19 +78,29 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
       m_controller(new WidgetOccViewController(m_qtOccView))
 {
     {
-        auto layout = new QVBoxLayout;
+        auto layout = new QVBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(m_qtOccView->widget());
-        this->setLayout(layout);
     }
 
-    m_btnFitAll = this->createViewBtn(this, Theme::Icon::Expand, tr("Fit All"));
-    m_btnEditClipping = this->createViewBtn(this, Theme::Icon::ClipPlane, tr("Edit clip planes"));
+    auto widgetBtnsContents = new QWidget;
+    auto layoutBtns = new QHBoxLayout(widgetBtnsContents);
+    layoutBtns->setSpacing(Internal::widgetMargin + 2);
+    layoutBtns->setContentsMargins(2, 2, 2, 2);
+    m_btnFitAll = this->createViewBtn(widgetBtnsContents, Theme::Icon::Expand, tr("Fit All"));
+    m_btnEditClipping = this->createViewBtn(widgetBtnsContents, Theme::Icon::ClipPlane, tr("Edit clip planes"));
     m_btnEditClipping->setCheckable(true);
-    m_btnExplode = this->createViewBtn(this, Theme::Icon::Multiple, tr("Explode assemblies"));
+    m_btnExplode = this->createViewBtn(widgetBtnsContents, Theme::Icon::Multiple, tr("Explode assemblies"));
     m_btnExplode->setCheckable(true);
-    m_btnMeasure = this->createViewBtn(this, Theme::Icon::Measure, tr("Measure shapes"));
+    m_btnMeasure = this->createViewBtn(widgetBtnsContents, Theme::Icon::Measure, tr("Measure shapes"));
     m_btnMeasure->setCheckable(true);
+
+    layoutBtns->addWidget(m_btnFitAll);
+    this->recreateMenuViewProjections(widgetBtnsContents);
+    layoutBtns->addWidget(m_btnEditClipping);
+    layoutBtns->addWidget(m_btnExplode);
+    layoutBtns->addWidget(m_btnMeasure);
+    m_widgetBtns = this->createWidgetPanelContainer(widgetBtnsContents);
 
     auto gfxScene = m_guiDoc->graphicsScene();
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
@@ -126,24 +136,18 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
         gfxScene->setSelectionMode(mode);
     });
-    QObject::connect(
-                m_guiDoc, &GuiDocument::viewTrihedronModeChanged,
-                this, &WidgetGuiDocument::recreateViewControls
-    );
 
     m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
-
-    this->recreateViewControls();
 }
 
 QColor WidgetGuiDocument::panelBackgroundColor() const
 {
     QColor color = mayoTheme()->color(Theme::Color::Palette_Window);
     if (m_qtOccView->supportsWidgetOpacity())
-        color.setAlpha(150);
+        color.setAlpha(175);
 
     return color;
 }
@@ -273,13 +277,13 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
     btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
     btn->setIcon(mayoTheme()->icon(icon));
-    btn->setIconSize(QSize(18, 18));
-    btn->setFixedSize(24, 24);
+    btn->setIconSize(QSize(20, 20));
+    btn->setFixedSize(28, 28);
     btn->setToolTip(tooltip);
     return btn;
 }
 
-void WidgetGuiDocument::recreateViewControls()
+void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
 {
     for (QWidget* widget : m_vecWidgetForViewProj)
         delete widget;
@@ -310,7 +314,8 @@ void WidgetGuiDocument::recreateViewControls()
         const QString strTemplateTooltip =
                 tr("<b>Left-click</b>: popup menu of pre-defined views\n"
                    "<b>CTRL+Left-click</b>: apply '%1' view");
-        auto btnViewMenu = this->createViewBtn(this, Theme::Icon::View3dIso, QString());
+        auto btnViewMenu = this->createViewBtn(container, Theme::Icon::View3dIso, QString());
+        container->layout()->addWidget(btnViewMenu);
         btnViewMenu->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
         btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
         auto menuBtnView = new QMenu(btnViewMenu);
@@ -337,46 +342,37 @@ void WidgetGuiDocument::recreateViewControls()
         QObject::connect(btnViewMenu, &ButtonFlat::clicked, this, [=]{
             const Qt::KeyboardModifiers keyMods = QGuiApplication::queryKeyboardModifiers();
             if (!keyMods.testFlag(Qt::ControlModifier))
-                menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, btnViewMenu->height() }));
+                menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, container->height() }));
             else
                 m_guiDoc->setViewCameraOrientation(V3d_TypeOfOrientation(btnViewMenu->data().toInt()));
         });
     }
     else {
         for (const ButtonCreationData& btnData : btnCreationData) {
-            auto btnViewProj = this->createViewBtn(this, btnData.icon, btnData.text);
+            auto btnViewProj = this->createViewBtn(container, btnData.icon, btnData.text);
+            container->layout()->addWidget(btnViewProj);
             QObject::connect(btnViewProj, &ButtonFlat::clicked, this, [=]{
                 m_guiDoc->setViewCameraOrientation(btnData.proj);
             });
             m_vecWidgetForViewProj.push_back(btnViewProj);
         }
     }
-
-    this->layoutViewControls();
 }
 
 QRect WidgetGuiDocument::viewControlsRect() const
 {
-    const QRect rectFirstBtn = m_btnFitAll->frameGeometry();
-    const QRect rectLastBtn = m_btnMeasure->frameGeometry();
-    QRect rect;
-    rect.setCoords(
-                rectFirstBtn.left(), rectFirstBtn.top(),
-                rectLastBtn.right(), rectLastBtn.bottom());
-    return rect;
+    return m_widgetBtns->frameGeometry();
 }
 
 void WidgetGuiDocument::layoutViewControls()
 {
-    const int margin = Internal::widgetMargin;
+    const int margin = Internal::widgetMargin + 2;
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();
             const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize();
-            const int ctrlCount = CppUtils::safeStaticCast<int>(2 + m_vecWidgetForViewProj.size());
-            const int ctrlWidth = ctrlCount * btnSize + (ctrlCount - 1) * margin;
             const int ctrlHeight = btnSize;
-            const int ctrlXOffset = (viewCubeBndSize - ctrlWidth) / 2;
+            const int ctrlXOffset = margin;
             switch (m_guiDoc->viewTrihedronCorner()) {
             case Qt::TopLeftCorner:
                 return { ctrlXOffset, viewCubeBndSize + margin };
@@ -393,16 +389,7 @@ void WidgetGuiDocument::layoutViewControls()
         return { margin, margin };
     };
 
-    m_btnFitAll->move(fnGetViewControlsPos());
-    const QWidget* widgetLast = m_btnFitAll;
-    for (QWidget* widget : m_vecWidgetForViewProj) {
-        WidgetsUtils::moveWidgetRightTo(widget, widgetLast, margin);
-        widgetLast = widget;
-    }
-
-    WidgetsUtils::moveWidgetRightTo(m_btnEditClipping, widgetLast, margin);
-    WidgetsUtils::moveWidgetRightTo(m_btnExplode, m_btnEditClipping, margin);
-    WidgetsUtils::moveWidgetRightTo(m_btnMeasure, m_btnExplode, margin);
+    m_widgetBtns->move(fnGetViewControlsPos());
 }
 
 } // namespace Mayo

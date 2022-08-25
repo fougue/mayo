@@ -45,7 +45,7 @@ private:
     void toggleWidgetMeasure(bool on);
     void exclusiveButtonCheck(ButtonFlat* btn);
 
-    void recreateViewControls();
+    void recreateMenuViewProjections(QWidget* container);
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
@@ -54,6 +54,7 @@ private:
 
     GuiDocument* m_guiDoc = nullptr;
     IWidgetOccView* m_qtOccView = nullptr;
+    QWidget* m_widgetBtns = nullptr;
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;
