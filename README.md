@@ -22,7 +22,7 @@
 Mayo can read/write 3D files from/to STEP, IGES, STL and many other [CAD formats](https://github.com/fougue/mayo/wiki/Supported-formats)
 
 - **Visualize 3D files** <br/>
-Mayo 3D viewer supports clip planes, exploding of assemblies, show/hide parts, meta-data, ...
+Mayo 3D viewer supports clip planes, exploding of assemblies, measurement of shapes, show/hide parts, ...
 
 - **Cross platform** <br/>
 Mayo runs on Windows, Linux and macOS
@@ -31,9 +31,11 @@ Mayo runs on Windows, Linux and macOS
 Mayo is developed in modern C++ with [Qt](https://www.qt.io) and [OpenCascade](https://dev.opencascade.org)
 
 ## :zap: Features
+- **3D clip planes** with configurable capping
+
 - **3D exploding of the model tree** allowing better exploration of complex designs
 
-- **3D clip planes** with configurable capping
+- **3D measure tools** for circles, angles, lengths, areas, ...
 
 - **3D view cube** providing intuitive camera manipulation
 
