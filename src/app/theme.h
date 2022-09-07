@@ -25,6 +25,7 @@ public:
         ButtonView3d_Background,
         ButtonView3d_Hover,
         ButtonView3d_Checked,
+        Graphic3d_AspectFillArea,
         View3d_BackgroundGradientStart,
         View3d_BackgroundGradientEnd,
         RubberBandView3d_Line,

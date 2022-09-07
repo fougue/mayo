@@ -131,6 +131,8 @@ public:
         case Theme::Color::ButtonView3d_Hover:
         case Theme::Color::ButtonView3d_Checked:
             return QColor(65, 200, 250);
+        case Theme::Color::Graphic3d_AspectFillArea:
+            return QColor(128, 200, 255);
         case Theme::Color::View3d_BackgroundGradientStart:
             return QColor(128, 148, 255);
         case Theme::Color::View3d_BackgroundGradientEnd:
@@ -198,6 +200,8 @@ public:
         case Theme::Color::ButtonView3d_Hover:
             return appPalette.color(QPalette::Button).lighter(160);
         case Theme::Color::ButtonView3d_Checked:
+            return appPalette.color(QPalette::Highlight);
+        case Theme::Color::Graphic3d_AspectFillArea:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::View3d_BackgroundGradientStart:
             return QColor(100, 100, 100);

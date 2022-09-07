@@ -22,6 +22,7 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/gui_document_list_model.h"
+#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "dialog_about.h"
 #include "dialog_inspect_xde.h"
@@ -739,7 +740,32 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
 
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 {
-    auto app = m_guiApp->application();
+    auto gfxScene = guiDoc->graphicsScene();
+    // Configure highlighting aspect
+    auto fnConfigureHighlightStyle = [=](Prs3d_Drawer* drawer) {
+        const QColor fillAreaQColor = mayoTheme()->color(Theme::Color::Graphic3d_AspectFillArea);
+        if (!fillAreaQColor.isValid())
+            return;
+
+        auto fillArea = new Graphic3d_AspectFillArea3d;
+        auto defaultShadingAspect = gfxScene->drawerDefault()->ShadingAspect();
+        if (defaultShadingAspect && defaultShadingAspect->Aspect())
+            *fillArea = *defaultShadingAspect->Aspect();
+
+        const Quantity_Color fillAreaColor = QtGuiUtils::toPreferredColorSpace(fillAreaQColor);
+        fillArea->SetInteriorColor(fillAreaColor);
+        Graphic3d_MaterialAspect fillMaterial(Graphic3d_NameOfMaterial_Plastered);
+        fillMaterial.SetColor(fillAreaColor);
+        //fillMaterial.SetTransparency(0.1f);
+        fillArea->SetFrontMaterial(fillMaterial);
+        fillArea->SetBackMaterial(fillMaterial);
+        drawer->SetDisplayMode(AIS_Shaded);
+        drawer->SetBasicFillAreaAspect(fillArea);
+    };
+    fnConfigureHighlightStyle(gfxScene->drawerHighlight(Prs3d_TypeOfHighlight_LocalSelected).get());
+    fnConfigureHighlightStyle(gfxScene->drawerHighlight(Prs3d_TypeOfHighlight_Selected).get());
+
+    // Configure 3D view behavior with respect to application settings
     auto appModule = AppModule::get();
     auto appProps = appModule->properties();
     auto widget = new WidgetGuiDocument(guiDoc);
@@ -748,7 +774,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
     if (appProps->defaultShowOriginTrihedron) {
         guiDoc->toggleOriginTrihedronVisibility();
-        guiDoc->graphicsScene()->redraw();
+        gfxScene->redraw();
     }
 
     QObject::connect(appModule->settings(), &Settings::changed, this, [=](Property* setting) {
@@ -758,10 +784,13 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
             widgetCtrl->setNavigationStyle(appProps->navigationStyle);
     });
 
+    // React to mouse move in 3D view:
+    //   * update highlighting
+    //   * compute and display 3D mouse coordinates(by silent picking)
     QObject::connect(widgetCtrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
-        guiDoc->graphicsScene()->highlightAt(pos2d, guiDoc->v3dView());
+        gfxScene->highlightAt(pos2d, guiDoc->v3dView());
         widget->view()->redraw();
-        auto selector = guiDoc->graphicsScene()->mainSelector();
+        auto selector = gfxScene->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         const gp_Pnt pos3d =
                 selector->NbPicked() > 0 ?
@@ -774,7 +803,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     m_ui->stack_GuiDocuments->addWidget(widget);
     this->updateControlsActivation();
-    const int newDocIndex = app->documentCount() - 1;
+    const int newDocIndex = m_guiApp->application()->documentCount() - 1;
     QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 

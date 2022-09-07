@@ -95,11 +95,6 @@ const opencascade::handle<V3d_Viewer>& GraphicsScene::v3dViewer() const
     return d->m_v3dViewer;
 }
 
-const opencascade::handle<Prs3d_Drawer>& GraphicsScene::defaultPrs3dDrawer() const
-{
-    return d->m_aisContext->DefaultDrawer();
-}
-
 const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelector() const
 {
     return d->m_aisContext->MainSelector();
@@ -108,6 +103,16 @@ const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelect
 bool GraphicsScene::hiddenLineDrawingOn() const
 {
     return d->m_aisContext->DrawHiddenLine();
+}
+
+const opencascade::handle<Prs3d_Drawer>& GraphicsScene::drawerDefault() const
+{
+    return d->m_aisContext->DefaultDrawer();
+}
+
+const opencascade::handle<Prs3d_Drawer>& GraphicsScene::drawerHighlight(Prs3d_TypeOfHighlight style) const
+{
+    return d->m_aisContext->HighlightStyle(style);
 }
 
 void GraphicsScene::addObject(const GraphicsObjectPtr& object)

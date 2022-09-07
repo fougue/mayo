@@ -29,9 +29,11 @@ public:
     opencascade::handle<V3d_View> createV3dView();
 
     const opencascade::handle<V3d_Viewer>& v3dViewer() const;
-    const opencascade::handle<Prs3d_Drawer>& defaultPrs3dDrawer() const;
     const opencascade::handle<StdSelect_ViewerSelector3d>& mainSelector() const;
     bool hiddenLineDrawingOn() const;
+
+    const opencascade::handle<Prs3d_Drawer>& drawerDefault() const;
+    const opencascade::handle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
 
     void addObject(const GraphicsObjectPtr& object);
     void eraseObject(const GraphicsObjectPtr& object);
