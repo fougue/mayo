@@ -754,7 +754,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
 
         const Quantity_Color fillAreaColor = QtGuiUtils::toPreferredColorSpace(fillAreaQColor);
         fillArea->SetInteriorColor(fillAreaColor);
-        Graphic3d_MaterialAspect fillMaterial(Graphic3d_NameOfMaterial_Plastered);
+        Graphic3d_MaterialAspect fillMaterial(Graphic3d_NOM_PLASTER);
         fillMaterial.SetColor(fillAreaColor);
         //fillMaterial.SetTransparency(0.1f);
         fillArea->SetFrontMaterial(fillMaterial);
