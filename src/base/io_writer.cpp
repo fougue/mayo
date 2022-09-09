@@ -5,23 +5,9 @@
 ****************************************************************************/
 
 #include "io_writer.h"
-#include "messenger.h"
 
 namespace Mayo {
 namespace IO {
-
-Writer::Writer()
-    : m_messenger(NullMessenger::instance())
-{
-}
-
-void Writer::setMessenger(Messenger* messenger)
-{
-    if (messenger)
-        m_messenger = messenger;
-    else
-        m_messenger = NullMessenger::instance();
-}
 
 } // namespace IO
 } // namespace Mayo

@@ -10,6 +10,7 @@
 #include <V3d_View.hxx>
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
+#include <memory>
 
 namespace Mayo {
 
@@ -20,6 +21,7 @@ public:
         None,
         Panning,
         Rotation,
+        Zoom,
         WindowZoom,
         InstantZoom
     };
@@ -31,7 +33,7 @@ public:
     };
 
     V3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
-    virtual ~V3dViewController();
+    virtual ~V3dViewController() = default;
 
     DynamicAction currentDynamicAction() const;
     bool hasCurrentDynamicAction() const;
@@ -56,10 +58,12 @@ protected:
 
     bool isRotationStarted() const;
     bool isPanningStarted() const;
+    bool isZoomStarted() const;
     bool isWindowZoomingStarted() const;
 
     void rotation(const QPoint& currPos);
     void pan(const QPoint& prevPos, const QPoint& currPos);
+    void zoom(const QPoint& prevPos, const QPoint& currPos);
 
     void windowFitAll(const QPoint& posMin, const QPoint& posMax);
 
@@ -69,7 +73,7 @@ protected:
     void startInstantZoom(const QPoint& currPos);
     void stopInstantZoom();
 
-    virtual AbstractRubberBand* createRubberBand() = 0;
+    virtual std::unique_ptr<AbstractRubberBand> createRubberBand() = 0;
     void drawRubberBand(const QPoint& posMin, const QPoint& posMax);
     void hideRubberBand();
 
@@ -81,7 +85,7 @@ protected:
 private:
     Handle_V3d_View m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;
-    AbstractRubberBand* m_rubberBand = nullptr;
+    std::unique_ptr<AbstractRubberBand> m_rubberBand;
     double m_instantZoomFactor = 5.;
     Handle_Graphic3d_Camera m_cameraBackup;
     QPoint m_posRubberBandStart;

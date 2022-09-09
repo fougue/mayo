@@ -8,8 +8,10 @@
 
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
+#include "../base/io_system.h"
 #include "../base/math_utils.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
@@ -90,23 +92,9 @@ ImageWriter::ImageWriter(GuiApplication* guiApp)
 
 bool ImageWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
-    m_setDoc.clear();
-    m_setNode.clear();
-
-    for (const ApplicationItem& item : appItems) {
-        if (item.isDocument())
-            m_setDoc.insert(item.document());
-    }
-
-    for (const ApplicationItem& item : appItems) {
-        if (item.isDocumentTreeNode()) {
-            auto itDoc = m_setDoc.find(item.document());
-            if (itDoc == m_setDoc.cend())
-                m_setNode.insert(item.documentTreeNode().label());
-        }
-    }
-
-    if (m_setDoc.empty() && m_setNode.empty())
+    m_vecAppItem.clear();
+    System::visitUniqueItems(appItems, [&](const ApplicationItem& item) { m_vecAppItem.push_back(item); });
+    if (m_vecAppItem.empty())
         this->messenger()->emitWarning(ImageWriterI18N::textIdTr("No transferred application items"));
 
     return true;
@@ -121,24 +109,24 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     GraphicsScene gfxScene;
     Handle_V3d_View view = ImageWriter::createV3dView(&gfxScene, m_params);
 
-    int itemProgress = 0;
-    const int itemCount = m_setDoc.size() + m_setNode.size();
-    // Render documents(iterate other root entities)
-    for (const DocumentPtr& doc : m_setDoc) {
-        for (int i = 0; i < doc->entityCount(); ++i) {
-            const TDF_Label labelEntity = doc->entityLabel(i);
-            GraphicsObjectPtr gfxObject = m_guiApp->graphicsObjectDriverTable()->createObject(labelEntity);
-            gfxScene.addObject(gfxObject);
+    const int itemCount = CppUtils::safeStaticCast<int>(m_vecAppItem.size());
+    // Render application items
+    for (const ApplicationItem& appItem : m_vecAppItem) {
+        if (appItem.isDocument()) {
+            // Iterate other root entities
+            const DocumentPtr doc = appItem.document();
+            for (int i = 0; i < doc->entityCount(); ++i) {
+                const TDF_Label labelEntity = doc->entityLabel(i);
+                gfxScene.addObject(m_guiApp->createGraphicsObject(labelEntity));
+            }
+        }
+        else if (appItem.isDocumentTreeNode()) {
+            const TDF_Label labelNode = appItem.documentTreeNode().label();
+            gfxScene.addObject(m_guiApp->createGraphicsObject(labelNode));
         }
 
-        progress->setValue(MathUtils::mappedValue(++itemProgress, 0, itemCount, 0, 100));
-    }
-
-    // Render document tree nodes
-    for (const TDF_Label& labelNode : m_setNode) {
-        GraphicsObjectPtr gfxObject = m_guiApp->graphicsObjectDriverTable()->createObject(labelNode);
-        gfxScene.addObject(gfxObject);
-        progress->setValue(MathUtils::mappedValue(++itemProgress, 0, itemCount, 0, 100));
+        const auto itemProgress = &appItem - &m_vecAppItem.front();
+        progress->setValue(MathUtils::mappedValue(itemProgress, 0, itemCount, 0, 100));
     }
 
     gfxScene.redraw();

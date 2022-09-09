@@ -21,6 +21,7 @@ public:
 
     TDF_Label label() const;
     bool isEntity() const;
+    bool isLeaf() const;
 
     const DocumentPtr& document() const { return m_document; }
     TreeNodeId id() const { return m_id; }

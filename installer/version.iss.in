@@ -1,5 +1,0 @@
-#define VersionNumber \"$$MAYO_VERSION\"
-#define TargetName \"$$TARGET\"
-#define TargetArch \"$$VERSION_TARGET_ARCH\"
-#define TargetProduct \"$$QMAKE_TARGET_PRODUCT\"
-#define TargetCompany \"$$QMAKE_TARGET_COMPANY\"

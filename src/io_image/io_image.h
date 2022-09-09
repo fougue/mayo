@@ -16,7 +16,8 @@
 #include <Quantity_Color.hxx>
 #include <TDF_Label.hxx>
 #include <V3d_View.hxx>
-#include <unordered_set>
+
+#include <vector>
 
 // Pre-decls
 namespace Mayo {
@@ -62,8 +63,7 @@ private:
     class Properties;
     GuiApplication* m_guiApp = nullptr;
     Parameters m_params;
-    std::unordered_set<DocumentPtr> m_setDoc;
-    std::unordered_set<TDF_Label> m_setNode;
+    std::vector<ApplicationItem> m_vecAppItem;
 };
 
 class ImageFactoryWriter : public FactoryWriter {

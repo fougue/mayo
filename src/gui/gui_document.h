@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/document.h"
+#include "../base/global.h"
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
@@ -87,6 +88,7 @@ public:
     void setViewTrihedronCorner(Qt::Corner corner);
 
     int aisViewCubeBoundingSize() const;
+    static bool isAisViewCubeObject(const GraphicsObjectPtr& gfxObject);
 
     // -- Background
     struct GradientBackground {

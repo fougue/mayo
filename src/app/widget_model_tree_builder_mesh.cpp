@@ -6,17 +6,17 @@
 
 #include "widget_model_tree_builder_mesh.h"
 #include "../base/caf_utils.h"
+#include "../base/data_triangulation.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
 #include <QtWidgets/QTreeWidgetItem>
-#include <TDataXtd_Triangulation.hxx>
 
 namespace Mayo {
 
 bool WidgetModelTreeBuilder_Mesh::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
-    return CafUtils::hasAttribute<TDataXtd_Triangulation>(node.label());
+    return CafUtils::hasAttribute<DataTriangulation>(node.label());
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Mesh::createTreeItem(const DocumentTreeNode& node)

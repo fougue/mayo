@@ -14,6 +14,9 @@
 #include "../src/base/application.h"
 #include "../src/base/brep_utils.h"
 #include "../src/base/caf_utils.h"
+#include "../src/base/cpp_utils.h"
+#include "../src/base/enumeration.h"
+#include "../src/base/enumeration_fromenum.h"
 #include "../src/base/filepath.h"
 #include "../src/base/filepath_conv.h"
 #include "../src/base/geom_utils.h"
@@ -49,7 +52,9 @@
 #include <gsl/util>
 #include <algorithm>
 #include <cmath>
+#include <climits>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -81,9 +86,8 @@ static bool operator==(
 void TestBase::Application_test()
 {
     auto app = Application::instance();
-    auto ioSystem = Application::instance()->ioSystem();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
-        return ioSystem->importInDocument()
+        return m_ioSystem->importInDocument()
                 .targetDocument(doc)
                 .withFilepath(fp)
                 .execute();
@@ -111,7 +115,7 @@ void TestBase::Application_test()
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
-        const bool okImport = fnImportInDocument(doc, "inputs/cube.step");
+        const bool okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(sigSpy_docEntityAdded.count(), 1);
         QCOMPARE(doc->entityCount(), 1);
@@ -132,11 +136,11 @@ void TestBase::Application_test()
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         bool okImport = true;
-        okImport = fnImportInDocument(doc, "inputs/cube.stlb");
+        okImport = fnImportInDocument(doc, "tests/inputs/cube.stlb");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
 
-        okImport = fnImportInDocument(doc, "inputs/cube.step");
+        okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 2);
 
@@ -147,6 +151,25 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+}
+
+void TestBase::CppUtils_toggle_test()
+{
+    bool v = false;
+    CppUtils::toggle(v);
+    QCOMPARE(v, true);
+    CppUtils::toggle(v);
+    QCOMPARE(v, false);
+}
+
+void TestBase::CppUtils_safeStaticCast_test()
+{
+    QCOMPARE(CppUtils::safeStaticCast<int>(42u), 42);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MIN), INT_MIN);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX), INT_MAX);
+    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX - 1), INT_MAX - 1);
+    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(unsigned(INT_MAX) + 1), std::overflow_error);
+    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(UINT_MAX), std::overflow_error);
 }
 
 void TestBase::TextId_test()
@@ -262,27 +285,65 @@ void TestBase::PropertyQuantityValueConversion_test_data()
     QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
-void TestBase::IO_test()
+void TestBase::IO_probeFormat_test()
 {
     QFETCH(QString, strFilePath);
     QFETCH(IO::Format, expectedPartFormat);
 
-    auto ioSystem = Application::instance()->ioSystem();
-    QCOMPARE(ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
+    QCOMPARE(m_ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
 }
 
-void TestBase::IO_test_data()
+void TestBase::IO_probeFormat_test_data()
 {
     QTest::addColumn<QString>("strFilePath");
     QTest::addColumn<IO::Format>("expectedPartFormat");
 
-    QTest::newRow("cube.step") << "inputs/cube.step" << IO::Format_STEP;
-    QTest::newRow("cube.iges") << "inputs/cube.iges" << IO::Format_IGES;
-    QTest::newRow("cube.brep") << "inputs/cube.brep" << IO::Format_OCCBREP;
-    QTest::newRow("bezier_curve.brep") << "inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
-    QTest::newRow("cube.stla") << "inputs/cube.stla" << IO::Format_STL;
-    QTest::newRow("cube.stlb") << "inputs/cube.stlb" << IO::Format_STL;
-    QTest::newRow("cube.obj") << "inputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("cube.step") << "tests/inputs/cube.step" << IO::Format_STEP;
+    QTest::newRow("cube.iges") << "tests/inputs/cube.iges" << IO::Format_IGES;
+    QTest::newRow("cube.brep") << "tests/inputs/cube.brep" << IO::Format_OCCBREP;
+    QTest::newRow("bezier_curve.brep") << "tests/inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
+    QTest::newRow("cube.stla") << "tests/inputs/cube.stla" << IO::Format_STL;
+    QTest::newRow("cube.stlb") << "tests/inputs/cube.stlb" << IO::Format_STL;
+    QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
+}
+
+void TestBase::IO_probeFormatDirect_test()
+{
+    char fileSample[1024];
+    IO::System::FormatProbeInput input;
+
+    auto fnSetProbeInput = [&](const FilePath& fp) {
+        std::memset(fileSample, 0, std::size(fileSample));
+        std::ifstream ifstr;
+        ifstr.open(fp, std::ios::in | std::ios::binary);
+        ifstr.read(fileSample, std::size(fileSample));
+
+        input.filepath = fp;
+        input.contentsBegin = std::string_view(fileSample, ifstr.gcount());
+        input.hintFullSize = filepathFileSize(fp);
+    };
+
+    fnSetProbeInput("tests/inputs/cube.step");
+    QCOMPARE(IO::probeFormat_STEP(input), IO::Format_STEP);
+
+    fnSetProbeInput("tests/inputs/cube.iges");
+    QCOMPARE(IO::probeFormat_IGES(input), IO::Format_IGES);
+
+    fnSetProbeInput("tests/inputs/cube.brep");
+    QCOMPARE(IO::probeFormat_OCCBREP(input), IO::Format_OCCBREP);
+
+    fnSetProbeInput("tests/inputs/cube.stla");
+    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
+
+    fnSetProbeInput("tests/inputs/cube.stlb");
+    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
+
+    fnSetProbeInput("tests/inputs/cube.obj");
+    QCOMPARE(IO::probeFormat_OBJ(input), IO::Format_OBJ);
+
+    fnSetProbeInput("tests/inputs/cube.ply");
+    QCOMPARE(IO::probeFormat_PLY(input), IO::Format_PLY);
 }
 
 void TestBase::IO_OccStaticVariablesRollback_test()
@@ -419,7 +480,7 @@ void TestBase::MeshUtils_orientation_test_data()
     QTest::newRow("case6") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
 
     {
-        QFile file("inputs/mayo_bezier_curve.brep");
+        QFile file("tests/inputs/mayo_bezier_curve.brep");
         QVERIFY(file.open(QIODevice::ReadOnly));
 
         const TopoDS_Shape shape = BRepUtils::shapeFromString(file.readAll().toStdString());
@@ -442,6 +503,38 @@ void TestBase::MeshUtils_orientation_test_data()
 
         std::reverse(vecPoint.begin(), vecPoint.end());
         QTest::newRow("case8") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
+}
+
+void TestBase::Enumeration_test()
+{
+    enum class TestBase_Enum1 { Value0, Value1, Value2, Value3, Value4 };
+    using TestEnumType = TestBase_Enum1;
+
+    Enumeration baseEnum = Enumeration::fromType<TestEnumType>();
+    QVERIFY(!baseEnum.empty());
+    QCOMPARE(baseEnum.size(), MetaEnum::count<TestEnumType>());
+    QCOMPARE(baseEnum.items().size(), baseEnum.size());
+    for (const auto& enumEntry : MetaEnum::entries<TestEnumType>()) {
+        QVERIFY(baseEnum.contains(enumEntry.second));
+        QCOMPARE(baseEnum.findValueByName(enumEntry.second), int(enumEntry.first));
+        QCOMPARE(baseEnum.findItemByName(enumEntry.second)->value, int(enumEntry.first));
+        QCOMPARE(baseEnum.findItemByName(enumEntry.second)->name.key, enumEntry.second);
+        QCOMPARE(baseEnum.findItemByValue(enumEntry.first), baseEnum.findItemByName(enumEntry.second));
+        QCOMPARE(baseEnum.findNameByValue(enumEntry.first), enumEntry.second);
+        QCOMPARE(baseEnum.itemAt(baseEnum.findIndexByValue(enumEntry.first)).value, int(enumEntry.first));
+        QCOMPARE(baseEnum.itemAt(baseEnum.findIndexByValue(enumEntry.first)).name.key, enumEntry.second);
+    }
+
+    baseEnum.chopPrefix("Value");
+    for (const Enumeration::Item& item : baseEnum.items()) {
+        const int index = std::atoi(item.name.key.data());
+        QCOMPARE(&baseEnum.itemAt(index), &item);
+    }
+
+    baseEnum.changeTrContext("newTrContext");
+    for (const Enumeration::Item& item : baseEnum.items()) {
+        QCOMPARE(item.name.trContext, "newTrContext");
     }
 }
 
@@ -613,7 +706,7 @@ void TestBase::UnitSystem_test_data()
             << UnitSystem::translate(schemaSI, 8 * Quantity_Meter)
             << UnitSystem::TranslateResult{ 8000., "mm", 1. };
     QTest::newRow("50mm²")
-            << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquaredCentimer)
+            << UnitSystem::translate(schemaSI, 0.5 * Quantity_SquareCentimeter)
             << UnitSystem::TranslateResult{ 50., "mm²", 1. };
     QTest::newRow("50kg/m³")
             << UnitSystem::translate(schemaSI, 25 * Quantity_KilogramPerCubicMeter)
@@ -730,10 +823,16 @@ void TestBase::LibTree_test()
 
 void TestBase::initTestCase()
 {
-    IO::System* ioSystem = Application::instance()->ioSystem();
-    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    IO::addPredefinedFormatProbes(ioSystem);
+    m_ioSystem = new IO::System;
+    m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    IO::addPredefinedFormatProbes(m_ioSystem);
+}
+
+void TestBase::cleanupTestCase()
+{
+    delete m_ioSystem;
+    m_ioSystem = nullptr;
 }
 
 } // namespace Mayo

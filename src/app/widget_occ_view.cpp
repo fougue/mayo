@@ -14,38 +14,19 @@
 #include "occt_window.h"
 
 #include <QtGui/QResizeEvent>
-
-#include <Aspect_DisplayConnection.hxx>
-#include <OpenGl_GraphicDriver.hxx>
 #if OCC_VERSION_HEX >= 0x070600
 #  include <Aspect_NeutralWindow.hxx>
-#  include <OpenGl_Context.hxx>
-#  include <OpenGl_FrameBuffer.hxx>
 #endif
 
 namespace Mayo {
 
-namespace {
-
-Handle_Aspect_DisplayConnection createDisplayConnection()
-{
-#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#else
-    return new Aspect_DisplayConnection;
-#endif
-}
-
-IWidgetOccView::Creator& getWidgetOccViewCreator()
+static IWidgetOccView::Creator& getWidgetOccViewCreator()
 {
     static IWidgetOccView::Creator fn = [](const Handle_V3d_View& view, QWidget* parent) {
         return new QWidgetOccView(view, parent);
     };
     return fn;
 }
-
-} // namespace
-
 
 void IWidgetOccView::setCreator(IWidgetOccView::Creator fn)
 {
@@ -58,10 +39,31 @@ IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
     return fn(view, parent);
 }
 
-
 #if OCC_VERSION_HEX >= 0x070600
 
-constexpr bool isCoreProfile = true;
+// Defined in widget_occ_view.cpp
+bool QOpenGLWidgetOccView_isCoreProfile();
+void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback);
+Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
+bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver&);
+Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Handle_Graphic3d_GraphicDriver&);
+
+
+static Handle_Aspect_NeutralWindow createNativeWindow([[maybe_unused]] QWidget* widget)
+{
+    auto window = new Aspect_NeutralWindow;
+    // On non-Windows systems Aspect_Drawable is aliased to 'unsigned long' so can't init with nullptr
+    Aspect_Drawable nativeWin = 0;
+#ifdef Q_OS_WIN
+    HDC  wglDevCtx = wglGetCurrentDC();
+    HWND wglWin = WindowFromDC(wglDevCtx);
+    nativeWin = (Aspect_Drawable)wglWin;
+#else
+    nativeWin = (Aspect_Drawable)widget->winId();
+#endif
+    window->SetNativeHandle(nativeWin);
+    return window;
+}
 
 QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     : QOpenGLWidget(parent),
@@ -76,14 +78,20 @@ QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget*
     QSurfaceFormat glFormat;
     glFormat.setDepthBufferSize(24);
     glFormat.setStencilBufferSize(8);
-    if (isCoreProfile)
+    if (QOpenGLWidgetOccView_isCoreProfile())
         glFormat.setVersion(4, 5);
 
-    glFormat.setProfile(isCoreProfile ? QSurfaceFormat::CoreProfile : QSurfaceFormat::CompatibilityProfile);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
-    this->setTextureFormat(GL_SRGB8_ALPHA8);
-#endif
+    glFormat.setProfile(
+                QOpenGLWidgetOccView_isCoreProfile() ?
+                    QSurfaceFormat::CoreProfile :
+                    QSurfaceFormat::CompatibilityProfile
+    );
+    // Use QtOccFrameBuffer fallback
+    // To request sRGBColorSpace colorspace to meet OCCT expectations then consider code below:
+    // #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    //     glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
+    //     this->setTextureFormat(GL_SRGB8_ALPHA8);
+    // #endif
     this->setFormat(glFormat);
 }
 
@@ -99,78 +107,34 @@ QOpenGLWidgetOccView* QOpenGLWidgetOccView::create(const Handle_V3d_View& view, 
 
 Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView::createCompatibleGraphicsDriver()
 {
-    auto gfxDriver = new OpenGl_GraphicDriver(createDisplayConnection(), false/*dontInit*/);
-    // Let QOpenGLWidget manage buffer swap
-    gfxDriver->ChangeOptions().buffersNoSwap = true;
-    // Don't write into alpha channel
-    gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
-    // Offscreen FBOs should be always used
-    gfxDriver->ChangeOptions().useSystemBuffer = false;
-#  if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning("Warning! Qt 5.10+ is required for sRGB setup.\n"
-                         "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n");
-    gfxDriver->ChangeOptions().sRGBDisable = true;
-#  endif
-
-    return gfxDriver;
+    return QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
 }
 
 void QOpenGLWidgetOccView::initializeGL()
 {
     const QRect wrect = this->rect();
     const Graphic3d_Vec2i viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
+    QOpenGLWidgetOccView_createOpenGlContext([=](Aspect_RenderingContext context) {
+        auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
+        if (!window)
+            window = createNativeWindow(this);
 
-    Handle_OpenGl_Context glCtx = new OpenGl_Context();
-    if (!glCtx->Init(isCoreProfile)) {
-        Message::SendFail() << "Error: OpenGl_Context is unable to wrap OpenGL context";
-        return;
-    }
-
-    auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
-    if (window) {
         window->SetSize(viewSize.x(), viewSize.y());
-        this->v3dView()->SetWindow(window, glCtx->RenderingContext());
-    }
-    else {
-        window = new Aspect_NeutralWindow;
-        Aspect_Drawable nativeWin = nullptr;
-#ifdef Q_OS_WIN
-        HDC  wglDevCtx = wglGetCurrentDC();
-        HWND wglWin = WindowFromDC(wglDevCtx);
-        nativeWin = (Aspect_Drawable)wglWin;
-#else
-        nativeWin = (Aspect_Drawable)this->winId();
-#endif
-        window->SetNativeHandle(nativeWin);
-        window->SetSize(viewSize.x(), viewSize.y());
-        this->v3dView()->SetWindow(window, glCtx->RenderingContext());
-    }
-
-    //dumpGlInfo(true);
+        this->v3dView()->SetWindow(window, context);
+    });
 }
 
 void QOpenGLWidgetOccView::paintGL()
 {
-    if (this->v3dView()->Window().IsNull())
+    if (!this->v3dView()->Window())
         return;
 
-    // Wrap FBO created by QOpenGLWidget
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(this->v3dView()->Viewer()->Driver());
-    const Handle_OpenGl_Context& glCtx = driver->GetSharedContext();
-    Handle_OpenGl_FrameBuffer defaultFbo = glCtx->DefaultFrameBuffer();
-    if (!defaultFbo) {
-        defaultFbo = new OpenGl_FrameBuffer();
-        glCtx->SetDefaultFrameBuffer(defaultFbo);
-    }
-
-    if (!defaultFbo->InitWrapper(glCtx)) {
-      defaultFbo.Nullify();
-      Message::SendFail() << "Default FBO wrapper creation failed";
-      return;
-    }
+    const Handle(Graphic3d_GraphicDriver)& driver = this->v3dView()->Viewer()->Driver();
+    if (!QOpenGLWidgetOccView_wrapFrameBuffer(driver))
+        return;
 
     Graphic3d_Vec2i viewSizeOld;
-    const Graphic3d_Vec2i viewSizeNew = defaultFbo->GetVPSize();
+    const Graphic3d_Vec2i viewSizeNew = QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(driver);
     auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
     window->Size(viewSizeOld.x(), viewSizeOld.y());
     if (viewSizeNew != viewSizeOld) {
@@ -200,9 +164,11 @@ QWidgetOccView::QWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
     this->setAttribute(Qt::WA_PaintOnScreen);
 }
 
+// Defined in widget_occ_view.cpp
+Handle_Graphic3d_GraphicDriver QWidgetOccView_createCompatibleGraphicsDriver();
 Handle_Graphic3d_GraphicDriver QWidgetOccView::createCompatibleGraphicsDriver()
 {
-    return new OpenGl_GraphicDriver(createDisplayConnection());
+    return QWidgetOccView_createCompatibleGraphicsDriver();
 }
 
 void QWidgetOccView::redraw()

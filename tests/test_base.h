@@ -11,10 +11,15 @@
 
 namespace Mayo {
 
+namespace IO { class System; }
+
 class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+
+    void CppUtils_toggle_test();
+    void CppUtils_safeStaticCast_test();
 
     void TextId_test();
 
@@ -25,8 +30,9 @@ private slots:
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
-    void IO_test();
-    void IO_test_data();
+    void IO_probeFormat_test();
+    void IO_probeFormat_test_data();
+    void IO_probeFormatDirect_test();
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
 
@@ -39,6 +45,7 @@ private slots:
     void MeshUtils_orientation_test();
     void MeshUtils_orientation_test_data();
 
+    void Enumeration_test();
     void MetaEnum_test();
 
     void Quantity_test();
@@ -55,6 +62,10 @@ private slots:
     void LibTree_test();
 
     void initTestCase();
+    void cleanupTestCase();
+
+private:
+    IO::System* m_ioSystem = nullptr;
 };
 
 } // namespace Mayo

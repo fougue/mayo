@@ -164,6 +164,11 @@ bool XCaf::isShapeSub(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::IsSubShape(lbl);
 }
 
+bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
+{
+    return this->shapeTool()->IsSubShape(lbl, shape);
+}
+
 bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 {
     Handle_XCAFDoc_ColorTool tool = this->colorTool();
@@ -192,6 +197,18 @@ Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
         return color;
 
     return color;
+}
+
+TDF_Label XCaf::findShapeLabel(const TopoDS_Shape& shape, FindShapeLabelFlags flags) const
+{
+    TDF_Label label;
+    const bool findInstance = (flags & FindShapeLabel_Instance) != 0;
+    const bool findComponent = (flags & FindShapeLabel_Component) != 0;
+    const bool findSubShape = (flags & FindShapeLabel_SubShape) != 0;
+    if (this->shapeTool()->Search(shape, label, findInstance, findComponent, findSubShape))
+        return label;
+
+    return {};
 }
 
 TopLoc_Location XCaf::shapeReferenceLocation(const TDF_Label& lbl)
@@ -235,12 +252,10 @@ TopLoc_Location XCaf::shapeAbsoluteLocation(TreeNodeId nodeId) const
 TopLoc_Location XCaf::shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, TreeNodeId nodeId)
 {
     TopLoc_Location absoluteLoc;
-    TreeNodeId it = nodeId;
-    while (it != 0) {
+    for (TreeNodeId it = nodeId; it != 0; it = modelTree.nodeParent(it)) {
         const TDF_Label& nodeLabel = modelTree.nodeData(it);
         const TopLoc_Location nodeLoc = XCaf::shapeReferenceLocation(nodeLabel);
         absoluteLoc = nodeLoc * absoluteLoc;
-        it = modelTree.nodeParent(it);
     }
 
     return absoluteLoc;
@@ -281,7 +296,7 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
         else if (&attrId == &XCAFDoc_Area::GetID()) {
             const auto& area = static_cast<const XCAFDoc_Area&>(*ptrAttr);
             props.hasArea = true;
-            props.area = area.Get() * Quantity_SquaredMillimeter;
+            props.area = area.Get() * Quantity_SquareMillimeter;
         }
         else if (&attrId == &XCAFDoc_Volume::GetID()) {
             const auto& volume = static_cast<const XCAFDoc_Volume&>(*ptrAttr);

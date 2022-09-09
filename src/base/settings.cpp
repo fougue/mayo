@@ -193,9 +193,9 @@ const PropertyValueConversion& Settings::propertyValueConversion() const
     return *(d->m_propValueConverter);
 }
 
-void Settings::setPropertyValueConversion(const PropertyValueConversion& conv)
+void Settings::setPropertyValueConversion(const PropertyValueConversion* conv)
 {
-    d->m_propValueConverter = &conv;
+    d->m_propValueConverter = conv;
 }
 
 int Settings::groupCount() const

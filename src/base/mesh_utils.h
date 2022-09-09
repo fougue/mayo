@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Poly_Triangulation.hxx>
+#include <Standard_Version.hxx>
 class gp_XYZ;
 
 namespace Mayo {
@@ -18,7 +19,16 @@ struct MeshUtils {
     static double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
     static double triangulationArea(const Handle_Poly_Triangulation& triangulation);
 
+#if OCC_VERSION_HEX >= 0x070600
+    using Poly_Triangulation_NormalType = gp_Vec3f;
+#else
+    using Poly_Triangulation_NormalType = gp_Vec;
+#endif
+
     static void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt);
+    static void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle);
+    static void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n);
+    static void allocateNormals(const Handle_Poly_Triangulation& triangulation);
 
     enum class Orientation {
         Unknown,

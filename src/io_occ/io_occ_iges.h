@@ -21,6 +21,8 @@ class OccStaticVariablesRollback;
 class OccIgesReader : public Reader {
 public:
     OccIgesReader();
+    OccIgesReader(const OccIgesReader&) = delete; // Not copyable
+    OccIgesReader& operator=(const OccIgesReader&) = delete; // Not copyable
     ~OccIgesReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
@@ -67,6 +69,8 @@ private:
 class OccIgesWriter : public Writer {
 public:
     OccIgesWriter();
+    OccIgesWriter(const OccIgesWriter&) = delete; // Not copyable
+    OccIgesWriter& operator=(const OccIgesWriter&) = delete; // Not copyable
     ~OccIgesWriter();
 
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;

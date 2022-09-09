@@ -36,8 +36,6 @@ public:
     QTreeWidget* treeWidget() const { return m_treeWidget; }
     void setTreeWidget(QTreeWidget* tree) { m_treeWidget = tree; }
 
-    virtual void registerGuiApplication(GuiApplication* /*guiApp*/) {}
-
     virtual WidgetModelTree_UserActions createUserActions(QObject* /*parent*/) { return {}; }
 
     virtual std::unique_ptr<WidgetModelTreeBuilder> clone() const;

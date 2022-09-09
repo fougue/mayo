@@ -42,6 +42,12 @@ std::string_view to_stdStringView(const STRING_TYPE& str) {
     return string_conv<std::string_view>(str);
 }
 
+// X -> TCollection_AsciiString
+template<typename STRING_TYPE>
+TCollection_AsciiString to_OccAsciiString(const STRING_TYPE& str) {
+    return string_conv<TCollection_AsciiString>(str);
+}
+
 // X -> TCollection_ExtendedString
 template<typename STRING_TYPE>
 TCollection_ExtendedString to_OccExtString(const STRING_TYPE& str) {
@@ -76,6 +82,17 @@ template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
     }
 };
 #endif
+
+// --
+// -- std::string_view -> X
+// --
+
+// std::string_view -> TCollection_AsciiString
+template<> struct StringConv<std::string_view, TCollection_AsciiString> {
+    static auto to(std::string_view str) {
+        return TCollection_AsciiString(str.data(), int(str.size()));
+    }
+};
 
 // --
 // -- Handle(TCollection_HAsciiString) -> X

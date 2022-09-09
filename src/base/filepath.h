@@ -15,6 +15,21 @@ namespace Mayo {
 
 using FilePath = std::filesystem::path;
 
+// Exception-safe version of std::filesystem::file_size()
+inline uintmax_t filepathFileSize(const FilePath& fp) {
+    std::error_code ec;
+    return std::filesystem::file_size(fp, ec);
+}
+
+// Exception-safe version of std::filesystem::canonical()
+inline FilePath filepathCanonical(const FilePath& fp) {
+    try {
+        return std::filesystem::canonical(fp);
+    } catch (...) { // fs::canonical() might throw on non-existing files
+        return fp;
+    }
+}
+
 // Exception-safe version of std::filesystem::equivalent()
 inline bool filepathExists(const FilePath& fp) {
     try {

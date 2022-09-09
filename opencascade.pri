@@ -47,7 +47,7 @@ equals(QT_ARCH, i386) {
 } else:equals(QT_ARCH, x86_64) {
     DEFINES += _OCC64
 } else {
-    error(Platform architecture not supported (QT_ARCH = $$QT_ARCH))
+    warning(Platform architecture may be not supported (QT_ARCH = $$QT_ARCH))
 }
 
 LIBS += $$system_path($$join(CASCADE_LIB_DIR, " -L", -L))

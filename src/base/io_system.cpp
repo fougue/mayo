@@ -6,6 +6,8 @@
 
 #include "io_system.h"
 
+#include "caf_utils.h"
+#include "cpp_utils.h"
 #include "document.h"
 #include "io_parameters_provider.h"
 #include "io_reader.h"
@@ -13,6 +15,7 @@
 #include "messenger.h"
 #include "task_manager.h"
 #include "task_progress.h"
+#include "tkernel_utils.h"
 
 #include <fmt/format.h>
 #include <algorithm>
@@ -22,23 +25,13 @@
 #include <locale>
 #include <mutex>
 #include <regex>
+#include <unordered_set>
 #include <vector>
 
 namespace Mayo {
 namespace IO {
 
 namespace {
-
-TaskProgress* nullTaskProgress()
-{
-    static TaskProgress null;
-    return &null;
-}
-
-Messenger* nullMessenger()
-{
-    return NullMessenger::instance();
-}
 
 bool containsFormat(Span<const Format> spanFormat, Format format)
 {
@@ -63,7 +56,7 @@ Format System::probeFormat(const FilePath& filepath) const
         file.read(buff.data(), buff.size());
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
-        probeInput.contentsBegin = std::string_view(buff.data(), buff.size());
+        probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
         probeInput.hintFullSize = std::filesystem::file_size(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
@@ -187,8 +180,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
 
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
-    TaskProgress* rootProgress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
 
     bool ok = true;
 
@@ -309,7 +302,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
 
         // Transfer to document
-        int taskDataCount = vecTaskData.size();
+        auto taskDataCount = CppUtils::safeStaticCast<int>(vecTaskData.size());
         while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
             auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
                 return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);
@@ -336,8 +329,8 @@ System::Operation_ImportInDocument System::importInDocument() {
 
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
-    TaskProgress* progress = args.progress ? args.progress : nullTaskProgress();
-    Messenger* messenger = args.messenger ? args.messenger : nullMessenger();
+    TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
+    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
     auto fnError = [=](std::string_view errorMsg) {
         const std::string strFilepath = args.targetFilepath.u8string();
         messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));
@@ -417,6 +410,50 @@ System::Operation_ExportApplicationItems System::exportApplicationItems()
     return Operation_ExportApplicationItems(*this);
 }
 
+void System::visitUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void (const ApplicationItem&)> fnCallback)
+{
+    std::unordered_set<DocumentPtr> setDoc;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocument()) {
+            auto [it, ok] = setDoc.insert(item.document());
+            if (ok)
+                fnCallback(item);
+        }
+    }
+
+    std::unordered_set<TDF_Label> setNode;
+    for (const ApplicationItem& item : spanItem) {
+        if (item.isDocumentTreeNode()) {
+            auto itDoc = setDoc.find(item.document());
+            if (itDoc == setDoc.cend()) {
+                auto [it, ok] = setNode.insert(item.documentTreeNode().label());
+                if (ok)
+                    fnCallback(item);
+            }
+        }
+    }
+}
+
+void System::traverseUniqueItems(
+        Span<const ApplicationItem> spanItem,
+        std::function<void(const DocumentTreeNode&)> fnCallback,
+        TreeTraversal mode)
+{
+    System::visitUniqueItems(spanItem, [=](const ApplicationItem& item) {
+        const DocumentPtr doc = item.document();
+        const Tree<TDF_Label>& modelTree = doc->modelTree();
+        if (item.isDocument()) {
+            traverseTree(modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
+        }
+        else if (item.isDocumentTreeNode()) {
+            const TreeNodeId docTreeNodeId = item.documentTreeNode().id();
+            traverseTree(docTreeNodeId, modelTree, [&](TreeNodeId id) { fnCallback({ doc, id }); }, mode);
+        }
+    });
+}
+
 System::Operation_ImportInDocument&
 System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document) {
     m_args.targetDocument = document;
@@ -486,70 +523,29 @@ System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
 
 namespace {
 
-bool isSpace(char c) {
-    return std::isspace(c, std::locale::classic());
-}
-
-bool matchToken(std::string_view::const_iterator itBegin, std::string_view token) {
-    return std::strncmp(&(*itBegin), token.data(), token.size()) == 0;
-}
-
-auto findFirstNonSpace(std::string_view str) {
-    return std::find_if_not(str.cbegin(), str.cend(), isSpace);
+bool matchRegExp(std::string_view str, const std::regex& rx)
+{
+    return std::regex_search(str.cbegin(), str.cend(), rx);
 }
 
 } // namespace
 
 Format probeFormat_STEP(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    // regex : ^\s*ISO-10303-21\s*;\s*HEADER
-    constexpr std::string_view stepIsoId = "ISO-10303-21";
-    constexpr std::string_view stepHeaderToken = "HEADER";
-    auto itContentsBegin = findFirstNonSpace(sample);
-    if (matchToken(itContentsBegin, stepIsoId)) {
-        auto itChar = std::find_if_not(itContentsBegin + stepIsoId.size(), sample.cend(), isSpace);
-        if (itChar != sample.cend() && *itChar == ';') {
-            itChar = std::find_if_not(itChar + 1, sample.cend(), isSpace);
-            if (matchToken(itChar, stepHeaderToken))
-                return Format_STEP;
-        }
-    }
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^\s*ISO-10303-21\s*;\s*HEADER)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_STEP : Format_Unknown;
 }
 
 Format probeFormat_IGES(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    // regex : ^.{72}S\s*[0-9]+\s*[\n\r\f]
-    bool isIges = true;
-    if (sample.size() >= 80 && sample[72] == 'S') {
-        for (int i = 73; i < 80 && isIges; ++i) {
-            if (sample[i] != ' ' && !std::isdigit(static_cast<unsigned char>(sample[i])))
-                isIges = false;
-        }
-
-        const char c80 = sample[80];
-        if (isIges && (c80 == '\n' || c80 == '\r' || c80 == '\f')) {
-            const int sVal = std::atoi(sample.data() + 73);
-            if (sVal == 1)
-                return Format_IGES;
-        }
-    }
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^.{72}S\s*[0-9]+\s*[\n\r\f])" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_IGES : Format_Unknown;
 }
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
-    // regex : ^\s*DBRep_DrawableShape
-    auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
-    constexpr std::string_view occBRepToken = "DBRep_DrawableShape";
-    if (matchToken(itContentsBegin, occBRepToken))
-        return Format_OCCBREP;
-
-    return Format_Unknown;
+    const std::regex rx{ R"(^\s*DBRep_DrawableShape)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OCCBREP : Format_Unknown;
 }
 
 Format probeFormat_STL(const System::FormatProbeInput& input)
@@ -574,10 +570,8 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
     // ASCII STL ?
     {
-        // regex : ^\s*solid
-        constexpr std::string_view asciiStlToken = "solid";
-        auto itContentsBegin = findFirstNonSpace(input.contentsBegin);
-        if (matchToken(itContentsBegin, asciiStlToken))
+        const std::regex rx{ R"(^\s*solid)" };
+        if (matchRegExp(input.contentsBegin, rx))
             return Format_STL;
     }
 
@@ -586,12 +580,14 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
-    std::string_view sample = input.contentsBegin;
-    const std::regex rx{ R"("^\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s")" };
-    if (std::regex_search(sample.cbegin(), sample.cend(), rx))
-        return Format_OBJ;
+    const std::regex rx{ R"([^\n]\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
+}
 
-    return Format_Unknown;
+Format probeFormat_PLY(const System::FormatProbeInput& input)
+{
+    const std::regex rx{ R"(^\s*ply\s+format\s+(ascii|binary_little_endian|binary_big_endian)\s+)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
 }
 
 void addPredefinedFormatProbes(System* system)
@@ -604,6 +600,7 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OCCBREP);
     system->addFormatProbe(probeFormat_STL);
     system->addFormatProbe(probeFormat_OBJ);
+    system->addFormatProbe(probeFormat_PLY);
 }
 
 } // namespace IO

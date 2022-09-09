@@ -29,13 +29,6 @@
 
 namespace Mayo {
 
-// Declared in app/theme.h
-Theme* mayoTheme()
-{
-    static std::unique_ptr<Theme> globalTheme(createTheme("classic"));
-    return globalTheme.get();
-}
-
 void TestApp::FilePathConv_test()
 {
     const char strTestPath[] = "../as1-oc-214 - 測試文件.stp";

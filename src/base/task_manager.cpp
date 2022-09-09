@@ -34,15 +34,6 @@ TaskManager::~TaskManager()
         it = m_mapEntity.erase(it);
 }
 
-TaskManager* TaskManager::globalInstance()
-{
-    static TaskManager* global = nullptr;
-    if (!global)
-        global = new TaskManager(Application::instance().get());
-
-    return global;
-}
-
 TaskId TaskManager::newTask(TaskJob fn)
 {
     const TaskId taskId = m_taskIdSeq.fetch_add(1);
@@ -120,7 +111,7 @@ int TaskManager::globalProgress() const
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    const int taskCount = m_mapEntity.size();
+    const int taskCount = CppUtils::safeStaticCast<int>(m_mapEntity.size());
     const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
     //qDebug() << "taskCount=" << taskCount << " taskAccumPct=" << taskAccumPct << " newGlobalPct=" << newGlobalPct;
     return newGlobalPct;

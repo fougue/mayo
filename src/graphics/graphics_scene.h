@@ -29,9 +29,11 @@ public:
     opencascade::handle<V3d_View> createV3dView();
 
     const opencascade::handle<V3d_Viewer>& v3dViewer() const;
-    const opencascade::handle<Prs3d_Drawer>& defaultPrs3dDrawer() const;
     const opencascade::handle<StdSelect_ViewerSelector3d>& mainSelector() const;
     bool hiddenLineDrawingOn() const;
+
+    const opencascade::handle<Prs3d_Drawer>& drawerDefault() const;
+    const opencascade::handle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
 
     void addObject(const GraphicsObjectPtr& object);
     void eraseObject(const GraphicsObjectPtr& object);
@@ -44,6 +46,7 @@ public:
 
     void activateObjectSelection(const GraphicsObjectPtr& object, int mode);
     void deactivateObjectSelection(const GraphicsObjectPtr& object, int mode);
+    void deactivateObjectSelection(const GraphicsObjectPtr& object);
 
     void addSelectionFilter(const Handle_SelectMgr_Filter& filter);
     void removeSelectionFilter(const Handle_SelectMgr_Filter& filter);
@@ -80,6 +83,9 @@ public:
     void foreachDisplayedObject(FUNCTION fn) const;
 
     template<typename FUNCTION>
+    void foreachActiveSelectionMode(const GraphicsObjectPtr& object, FUNCTION fn) const;
+
+    template<typename FUNCTION>
     void foreachOwner(const GraphicsObjectPtr& object, int selectionMode, FUNCTION fn) const;
 
     template<typename FUNCTION>
@@ -90,6 +96,7 @@ public:
 
 signals:
     void selectionChanged();
+    void selectionModeChanged();
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;
@@ -130,6 +137,15 @@ void GraphicsScene::foreachDisplayedObject(FUNCTION fn) const
 }
 
 template<typename FUNCTION>
+void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, FUNCTION fn) const
+{
+    TColStd_ListOfInteger listMode;
+    this->aisContextPtr()->ActivatedModes(object, listMode);
+    for (GraphicsObjectSelectionMode mode : listMode)
+        fn(mode);
+}
+
+template<typename FUNCTION>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, FUNCTION fn) const
 {
     opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
@@ -142,10 +158,8 @@ template<typename FUNCTION>
 void GraphicsScene::foreachSelectedOwner(FUNCTION fn) const
 {
     auto context = this->aisContextPtr();
-    context->InitSelected();
-    while (context->MoreSelected()) {
+    for (context->InitSelected(); context->MoreSelected(); context->NextSelected()) {
         fn(context->SelectedOwner());
-        context->NextSelected();
     }
 }
 
@@ -153,15 +167,12 @@ template<typename PREDICATE>
 GraphicsOwnerPtr GraphicsScene::findSelectedOwner(PREDICATE fn) const
 {
     auto context = this->aisContextPtr();
-    context->InitSelected();
-    while (context->MoreSelected()) {
+    for (context->InitSelected(); context->MoreSelected(); context->NextSelected()) {
         if (fn(context->SelectedOwner()))
             return context->SelectedOwner();
-
-        context->NextSelected();
     }
 
-    return GraphicsOwnerPtr();
+    return {};
 }
 
 } // namespace Mayo

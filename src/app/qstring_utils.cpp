@@ -21,7 +21,12 @@ static QString valueText(double value, const QStringUtils::TextOptions& opt)
 
     const double c = std::abs(value) < Precision::Confusion() ? 0. : value;
     QString str = opt.locale.toString(c, 'f', opt.unitDecimals);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // TODO Consider QString decimal point
+    const QChar chDecPnt = opt.locale.decimalPoint().front();
+#else
     const QChar chDecPnt = opt.locale.decimalPoint();
+#endif
     const int posPnt = str.indexOf(chDecPnt);
     if (posPnt != -1) { // Remove useless trailing zeroes
         while (fnLastChar(str) == opt.locale.zeroDigit())
@@ -44,8 +49,7 @@ static QString coordsText(const gp_XYZ& coords, const QStringUtils::TextOptions&
 
 static QString pntCoordText(double coord, const QStringUtils::TextOptions& opt)
 {
-    const UnitSystem::TranslateResult trCoord =
-            UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
+    const auto trCoord = UnitSystem::translate(opt.unitSchema, coord * Quantity_Millimeter);
     const QString strValue = valueText(trCoord.value, opt);
     return strValue + trCoord.strUnit;
 }
@@ -118,6 +122,7 @@ QString QStringUtils::yesNoText(CheckState state)
     case CheckState::Partially: return tr("Partially");
     case CheckState::On: return tr("Yes");
     }
+    return {};
 }
 
 void QStringUtils::append(QString* dst, const QString& str, const QLocale& locale)

@@ -9,6 +9,7 @@
 #include <gp_Pnt.hxx>
 #include <Graphic3d_AspectText3d.hxx>
 #include <OSD_Environment.hxx>
+#include <Prs3d_Root.hxx>
 #include <Prs3d_Text.hxx>
 #include <Prs3d_TextAspect.hxx>
 #include <SelectMgr_SelectableObject.hxx>
@@ -41,28 +42,22 @@ AIS_Text::AIS_Text(const TCollection_ExtendedString &text, const gp_Pnt& pos)
 
 Handle_Prs3d_TextAspect AIS_Text::presentationTextAspect(unsigned i) const
 {
-    if (this->isValidTextIndex(i))
-        return m_textProps.at(i).m_aspect;
-    return Handle_Prs3d_TextAspect();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect : Handle_Prs3d_TextAspect();
 }
 
 Handle_Graphic3d_AspectText3d AIS_Text::graphicTextAspect(unsigned i) const
 {
-    if (this->isValidTextIndex(i))
-        return m_textProps.at(i).m_aspect->Aspect();
-    return Handle_Graphic3d_AspectText3d();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect->Aspect() : Handle_Graphic3d_AspectText3d();
 }
 
 gp_Pnt AIS_Text::position(unsigned i) const
 {
-    return this->isValidTextIndex(i) ?
-                m_textProps.at(i).m_position : gp_Pnt();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_position : gp_Pnt();
 }
 
 TCollection_ExtendedString AIS_Text::text(unsigned i) const
 {
-    return this->isValidTextIndex(i) ?
-                m_textProps.at(i).m_text : TCollection_ExtendedString();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_text : TCollection_ExtendedString();
 }
 
 bool AIS_Text::isValidTextIndex(unsigned i) const
@@ -75,7 +70,7 @@ unsigned AIS_Text::textCount() const
     return static_cast<unsigned>(m_textProps.size());
 }
 
-void AIS_Text::addText(const TCollection_ExtendedString &text, const gp_Pnt& pos)
+void AIS_Text::addText(const TCollection_ExtendedString& text, const gp_Pnt& pos)
 {
     TextProperties newProps;
     m_textProps.push_back(newProps);
@@ -148,20 +143,21 @@ void AIS_Text::setDefaultTextStyle(Aspect_TypeOfStyleText style)
 }
 
 void AIS_Text::Compute(
-        const Handle(PrsMgr_PresentationManager3d)&,
+        const Handle(PrsMgr_PresentationManager)&,
         const Handle(Prs3d_Presentation)& pres,
         const int)
 {
     for (unsigned i = 0; i < this->textCount(); ++i) {
         Prs3d_Text::Draw(
-#if OCC_VERSION_HEX >= 0x070600
+#if OCC_VERSION_HEX >= 0x070400
                     pres->CurrentGroup(),
 #else
-                    pres,
+                    Prs3d_Root::CurrentGroup(pres),
 #endif
                     this->presentationTextAspect(i),
                     this->text(i),
-                    this->position(i));
+                    this->position(i)
+        );
     }
 }
 

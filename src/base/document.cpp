@@ -4,19 +4,21 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "document.h"
+
 #include "application.h"
 #include "caf_utils.h"
-#include "document.h"
+#include "cpp_utils.h"
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
-#include <set>
 
 namespace Mayo {
 
-Document::Document()
-    : QObject(nullptr),
-      TDocStd_Document(NameFormatBinary)
+Document::Document(const ApplicationPtr& app)
+    : QObject(app.get()),
+      TDocStd_Document(NameFormatBinary),
+      m_app(app)
 {
     TDF_TagSource::Set(this->rootLabel());
 }
@@ -79,7 +81,7 @@ bool Document::isEntity(TreeNodeId nodeId)
 
 int Document::entityCount() const
 {
-    return m_modelTree.roots().size();
+    return CppUtils::safeStaticCast<int>(m_modelTree.roots().size());
 }
 
 TDF_Label Document::entityLabel(int index) const
@@ -172,7 +174,8 @@ void Document::destroyEntity(TreeNodeId entityTreeNodeId)
 void Document::BeforeClose()
 {
     TDocStd_Document::BeforeClose();
-    Application::instance()->notifyDocumentAboutToClose(m_identifier);
+    if (m_app)
+        m_app->notifyDocumentAboutToClose(m_identifier);
 }
 
 void Document::ChangeStorageFormat(const TCollection_ExtendedString& newStorageFormat)

@@ -31,6 +31,17 @@ static Handle_V3d_Viewer createOccViewer()
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
     viewer->SetLightOn();
+#if 0
+    for (const Handle(Graphic3d_CLight)& light : viewer->DefinedLights()) {
+        if (light->Name() == "amblight") {
+            light->SetIntensity(0.2f);
+        }
+        else if (light->Name() == "headlight") {
+            light->SetIntensity(0.8f);
+        }
+    }
+#endif
+
     return viewer;
 }
 
@@ -84,11 +95,6 @@ const opencascade::handle<V3d_Viewer>& GraphicsScene::v3dViewer() const
     return d->m_v3dViewer;
 }
 
-const opencascade::handle<Prs3d_Drawer>& GraphicsScene::defaultPrs3dDrawer() const
-{
-    return d->m_aisContext->DefaultDrawer();
-}
-
 const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelector() const
 {
     return d->m_aisContext->MainSelector();
@@ -97,6 +103,16 @@ const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelect
 bool GraphicsScene::hiddenLineDrawingOn() const
 {
     return d->m_aisContext->DrawHiddenLine();
+}
+
+const opencascade::handle<Prs3d_Drawer>& GraphicsScene::drawerDefault() const
+{
+    return d->m_aisContext->DefaultDrawer();
+}
+
+const opencascade::handle<Prs3d_Drawer>& GraphicsScene::drawerHighlight(Prs3d_TypeOfHighlight style) const
+{
+    return d->m_aisContext->HighlightStyle(style);
 }
 
 void GraphicsScene::addObject(const GraphicsObjectPtr& object)
@@ -140,6 +156,11 @@ void GraphicsScene::activateObjectSelection(const GraphicsObjectPtr& object, int
 void GraphicsScene::deactivateObjectSelection(const Mayo::GraphicsObjectPtr &object, int mode)
 {
     d->m_aisContext->Deactivate(object, mode);
+}
+
+void GraphicsScene::deactivateObjectSelection(const GraphicsObjectPtr &object)
+{
+    d->m_aisContext->Deactivate(object);
 }
 
 void GraphicsScene::addSelectionFilter(const Handle_SelectMgr_Filter& filter)
@@ -212,8 +233,11 @@ GraphicsOwnerPtr GraphicsScene::firstSelectedOwner() const
 
 void GraphicsScene::clearSelection()
 {
+    const bool onEntryOwnerSelected = !this->firstSelectedOwner().IsNull();
     d->m_aisContext->ClearDetected(false);
     d->m_aisContext->ClearSelected(false);
+    if (onEntryOwnerSelected)
+        emit this->selectionChanged();
 }
 
 AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
@@ -239,10 +263,20 @@ void GraphicsScene::select()
     if (d->m_selectionMode == SelectionMode::None)
         return;
 
-    if (d->m_selectionMode == SelectionMode::Single)
+    if (d->m_selectionMode == SelectionMode::Single) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        d->m_aisContext->SelectDetected(AIS_SelectionScheme_Replace);
+#else
         d->m_aisContext->Select(false);
-    else if (d->m_selectionMode == SelectionMode::Multi)
+#endif
+    }
+    else if (d->m_selectionMode == SelectionMode::Multi) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        d->m_aisContext->SelectDetected(AIS_SelectionScheme_XOR);
+#else
         d->m_aisContext->ShiftSelect(false);
+#endif
+    }
 
     emit this->selectionChanged();
 }
@@ -261,12 +295,17 @@ const GraphicsOwnerPtr& GraphicsScene::currentHighlightedOwner() const
 #endif
 }
 
-GraphicsScene::SelectionMode GraphicsScene::selectionMode() const {
+GraphicsScene::SelectionMode GraphicsScene::selectionMode() const
+{
     return d->m_selectionMode;
 }
 
-void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode) {
-    d->m_selectionMode = mode;
+void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode)
+{
+    if (mode != d->m_selectionMode) {
+        d->m_selectionMode = mode;
+        emit this->selectionModeChanged();
+    }
 }
 
 GraphicsSceneRedrawBlocker::GraphicsSceneRedrawBlocker(GraphicsScene* scene)

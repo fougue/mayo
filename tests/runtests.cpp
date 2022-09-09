@@ -7,22 +7,28 @@
 #include "test_base.h"
 #include "test_app.h"
 
-#include <QtGui/QGuiApplication>
-
+#include <cstring>
 #include <memory>
 #include <vector>
 
-int main(int argc, char** argv)
+namespace Mayo {
+
+int runTests(int argc, char* argv[])
 {
-    // Required by TestApp
-    QGuiApplication guiApp(argc, argv);
+    QStringList args;
+    for (int i = 0; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--runtests") != 0)
+            args.push_back(QString::fromUtf8(argv[i]));
+    }
 
     int retcode = 0;
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);
     vecTest.emplace_back(new Mayo::TestApp);
     for (const std::unique_ptr<QObject>& test : vecTest)
-        retcode += QTest::qExec(test.get(), argc, argv);
+        retcode += QTest::qExec(test.get(), args);
 
     return retcode;
 }
+
+} // namespace Mayo

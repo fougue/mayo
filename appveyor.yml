@@ -1,4 +1,4 @@
-version: 0.5_build{build}
+version: 0.6_build{build}
 
 image: Visual Studio 2017
 platform: x64
@@ -36,35 +36,20 @@ before_build:
   - call "OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64\opencascade-%APPVEYOR_OCC_VERSION%\env.bat"
   - set PATH=C:\Qt\5.13\msvc2017_64\bin;%PATH%
   - set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
-  - set PATH="C:\Program Files (x86)\Inno Setup 5";%PATH%
   - qmake --version
   - echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
 
 build_script:
   - mkdir build-%APPVEYOR_OCC_VERSION%
   - cd build-%APPVEYOR_OCC_VERSION%
-  - qmake ..\mayo.pro
+  - qmake ..\mayo.pro CONFIG+=withtests
   - jom -j%NUMBER_OF_PROCESSORS%
   - cd ..
 
 test_script:
-  - mkdir build-tests-%APPVEYOR_OCC_VERSION%
-  - cd build-tests-%APPVEYOR_OCC_VERSION%
-  - qmake ..\tests\mayo_tests.pro
-  - jom -j%NUMBER_OF_PROCESSORS%
-  - release\mayo_tests.exe
+  - cd build-%APPVEYOR_OCC_VERSION%
+  - release\mayo.exe --runtests
   - cd ..
-
-after_test:
-  - if "%APPVEYOR_OCC_VERSION%"=="7.5.0" (
-      cd build-%APPVEYOR_OCC_VERSION%\installer &&
-      iscc setup.iss &&
-      cd ..\..
-    )
-
-artifacts:
-  - path: build-%APPVEYOR_OCC_VERSION%\installer\Output\mayo_*_installer.exe
-    name: MayoInstallerWin64
 
 on_success:
   - ps: >-

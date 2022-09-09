@@ -6,6 +6,7 @@
 
 #include "widget_gui_document.h"
 
+#include "../base/cpp_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "../graphics/v3d_view_camera_animation.h"
 #include "../gui/gui_document.h"
@@ -13,6 +14,7 @@
 #include "theme.h"
 #include "widget_clip_planes.h"
 #include "widget_explode_assembly.h"
+#include "widget_measure.h"
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
 #include "widgets_utils.h"
@@ -76,17 +78,29 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
       m_controller(new WidgetOccViewController(m_qtOccView))
 {
     {
-        auto layout = new QVBoxLayout;
+        auto layout = new QVBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(m_qtOccView->widget());
-        this->setLayout(layout);
     }
 
-    m_btnFitAll = this->createViewBtn(this, Theme::Icon::Expand, tr("Fit All"));
-    m_btnEditClipping = this->createViewBtn(this, Theme::Icon::ClipPlane, tr("Edit clip planes"));
+    auto widgetBtnsContents = new QWidget;
+    auto layoutBtns = new QHBoxLayout(widgetBtnsContents);
+    layoutBtns->setSpacing(Internal::widgetMargin + 2);
+    layoutBtns->setContentsMargins(2, 2, 2, 2);
+    m_btnFitAll = this->createViewBtn(widgetBtnsContents, Theme::Icon::Expand, tr("Fit All"));
+    m_btnEditClipping = this->createViewBtn(widgetBtnsContents, Theme::Icon::ClipPlane, tr("Edit clip planes"));
     m_btnEditClipping->setCheckable(true);
-    m_btnExplode = this->createViewBtn(this, Theme::Icon::Multiple, tr("Explode assemblies"));
+    m_btnExplode = this->createViewBtn(widgetBtnsContents, Theme::Icon::Multiple, tr("Explode assemblies"));
     m_btnExplode->setCheckable(true);
+    m_btnMeasure = this->createViewBtn(widgetBtnsContents, Theme::Icon::Measure, tr("Measure shapes"));
+    m_btnMeasure->setCheckable(true);
+
+    layoutBtns->addWidget(m_btnFitAll);
+    this->recreateMenuViewProjections(widgetBtnsContents);
+    layoutBtns->addWidget(m_btnEditClipping);
+    layoutBtns->addWidget(m_btnExplode);
+    layoutBtns->addWidget(m_btnMeasure);
+    m_widgetBtns = this->createWidgetPanelContainer(widgetBtnsContents);
 
     auto gfxScene = m_guiDoc->graphicsScene();
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
@@ -94,16 +108,24 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     });
     QObject::connect(
                 m_btnEditClipping, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetClipPlanes);
+                this, &WidgetGuiDocument::toggleWidgetClipPlanes
+    );
     QObject::connect(
                 m_btnExplode, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetExplode);
+                this, &WidgetGuiDocument::toggleWidgetExplode
+    );
+    QObject::connect(
+                m_btnMeasure, &ButtonFlat::checked,
+                this, &WidgetGuiDocument::toggleWidgetMeasure
+    );
     QObject::connect(
                 m_controller, &V3dViewController::dynamicActionStarted,
-                m_guiDoc, &GuiDocument::stopViewCameraAnimation);
+                m_guiDoc, &GuiDocument::stopViewCameraAnimation
+    );
     QObject::connect(
                 m_controller, &V3dViewController::viewScaled,
-                m_guiDoc, &GuiDocument::stopViewCameraAnimation);
+                m_guiDoc, &GuiDocument::stopViewCameraAnimation
+    );
     QObject::connect(m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
         if (btn == Qt::LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
             gfxScene->select();
@@ -114,23 +136,18 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
         gfxScene->setSelectionMode(mode);
     });
-    QObject::connect(
-                m_guiDoc, &GuiDocument::viewTrihedronModeChanged,
-                this, &WidgetGuiDocument::recreateViewControls);
 
     m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
-
-    this->recreateViewControls();
 }
 
 QColor WidgetGuiDocument::panelBackgroundColor() const
 {
     QColor color = mayoTheme()->color(Theme::Color::Palette_Window);
     if (m_qtOccView->supportsWidgetOpacity())
-        color.setAlpha(150);
+        color.setAlpha(175);
 
     return color;
 }
@@ -141,55 +158,84 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
     this->layoutViewControls();
     this->layoutWidgetPanel(m_widgetClipPlanes);
     this->layoutWidgetPanel(m_widgetExplodeAsm);
+    this->layoutWidgetPanel(m_widgetMeasure);
+}
+
+QWidget* WidgetGuiDocument::createWidgetPanelContainer(QWidget* widgetContents)
+{
+    auto panel = new Internal::PanelView3d(this);
+    WidgetsUtils::addContentsWidget(panel, widgetContents);
+    panel->show();
+    panel->adjustSize();
+    return panel;
+}
+
+void WidgetGuiDocument::updageWidgetPanelControls(QWidget* panelWidget, ButtonFlat* btnPanel)
+{
+    this->exclusiveButtonCheck(btnPanel);
+    if (panelWidget) {
+        panelWidget->parentWidget()->setVisible(btnPanel->isChecked());
+        this->layoutWidgetPanel(panelWidget);
+    }
 }
 
 void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
 {
-    if (!m_widgetClipPlanes) {
-        if (on) {
-            auto panel = new Internal::PanelView3d(this);
-            auto widget = new WidgetClipPlanes(m_guiDoc->v3dView(), panel);
-            WidgetsUtils::addContentsWidget(panel, widget);
-            panel->show();
-            panel->adjustSize();
-            m_widgetClipPlanes = widget;
-            QObject::connect(
-                        m_guiDoc, &GuiDocument::graphicsBoundingBoxChanged,
-                        widget, &WidgetClipPlanes::setRanges);
-            widget->setRanges(m_guiDoc->graphicsBoundingBox());
-        }
+    if (m_widgetClipPlanes) {
+        m_widgetClipPlanes->setClippingOn(on);
     }
-    else {
-        QWidget* panel = m_widgetClipPlanes->parentWidget();
-        panel->setVisible(on);
-        m_widgetClipPlanes->setClippingOn(panel->isVisible());
+    else if (on) {
+        m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->v3dView());
+        this->createWidgetPanelContainer(m_widgetClipPlanes);
+        QObject::connect(
+                    m_guiDoc, &GuiDocument::graphicsBoundingBoxChanged,
+                    m_widgetClipPlanes, &WidgetClipPlanes::setRanges
+        );
+        m_widgetClipPlanes->setRanges(m_guiDoc->graphicsBoundingBox());
     }
 
-    this->layoutWidgetPanel(m_widgetClipPlanes);
-    if (on)
-        m_btnExplode->setChecked(false);
+    this->updageWidgetPanelControls(m_widgetClipPlanes, m_btnEditClipping);
 }
 
 void WidgetGuiDocument::toggleWidgetExplode(bool on)
 {
-    if (!m_widgetExplodeAsm) {
-        if (on) {
-            auto panel = new Internal::PanelView3d(this);
-            auto widget = new WidgetExplodeAssembly(m_guiDoc, panel);
-            WidgetsUtils::addContentsWidget(panel, widget);
-            panel->show();
-            panel->adjustSize();
-            m_widgetExplodeAsm = widget;
-        }
-    }
-    else {
-        QWidget* panel = m_widgetExplodeAsm->parentWidget();
-        panel->setVisible(on);
+    if (!m_widgetExplodeAsm && on) {
+        m_widgetExplodeAsm = new WidgetExplodeAssembly(m_guiDoc);
+        this->createWidgetPanelContainer(m_widgetExplodeAsm);
     }
 
-    this->layoutWidgetPanel(m_widgetExplodeAsm);
-    if (on)
-        m_btnEditClipping->setChecked(false);
+    this->updageWidgetPanelControls(m_widgetExplodeAsm, m_btnExplode);
+}
+
+void WidgetGuiDocument::toggleWidgetMeasure(bool on)
+{
+    if (!m_widgetMeasure && on) {
+        m_widgetMeasure = new WidgetMeasure(m_guiDoc);
+        auto container = this->createWidgetPanelContainer(m_widgetMeasure);
+        QObject::connect(
+                    m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
+                    container, &QWidget::adjustSize,
+                    Qt::QueuedConnection
+        );
+    }
+
+    if (m_widgetMeasure)
+        m_widgetMeasure->setMeasureOn(on);
+
+    this->updageWidgetPanelControls(m_widgetMeasure, m_btnMeasure);
+}
+
+void WidgetGuiDocument::exclusiveButtonCheck(ButtonFlat* btnCheck)
+{
+    if (!btnCheck || !btnCheck->isChecked())
+        return;
+
+    ButtonFlat* arrayToggleBtn[] = { m_btnEditClipping, m_btnExplode, m_btnMeasure };
+    for (ButtonFlat* btn : arrayToggleBtn) {
+        assert(btn->isCheckable());
+        if (btn != btnCheck)
+            btn->setChecked(false);
+    }
 }
 
 void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
@@ -231,13 +277,13 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
     btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
     btn->setIcon(mayoTheme()->icon(icon));
-    btn->setIconSize(QSize(18, 18));
-    btn->setFixedSize(24, 24);
+    btn->setIconSize(QSize(20, 20));
+    btn->setFixedSize(28, 28);
     btn->setToolTip(tooltip);
     return btn;
 }
 
-void WidgetGuiDocument::recreateViewControls()
+void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
 {
     for (QWidget* widget : m_vecWidgetForViewProj)
         delete widget;
@@ -268,7 +314,8 @@ void WidgetGuiDocument::recreateViewControls()
         const QString strTemplateTooltip =
                 tr("<b>Left-click</b>: popup menu of pre-defined views\n"
                    "<b>CTRL+Left-click</b>: apply '%1' view");
-        auto btnViewMenu = this->createViewBtn(this, Theme::Icon::View3dIso, QString());
+        auto btnViewMenu = this->createViewBtn(container, Theme::Icon::View3dIso, QString());
+        container->layout()->addWidget(btnViewMenu);
         btnViewMenu->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
         btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
         auto menuBtnView = new QMenu(btnViewMenu);
@@ -295,46 +342,37 @@ void WidgetGuiDocument::recreateViewControls()
         QObject::connect(btnViewMenu, &ButtonFlat::clicked, this, [=]{
             const Qt::KeyboardModifiers keyMods = QGuiApplication::queryKeyboardModifiers();
             if (!keyMods.testFlag(Qt::ControlModifier))
-                menuBtnView->popup(btnViewMenu->mapToGlobal({ 0, btnViewMenu->height() }));
+                menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, container->height() }));
             else
                 m_guiDoc->setViewCameraOrientation(V3d_TypeOfOrientation(btnViewMenu->data().toInt()));
         });
     }
     else {
         for (const ButtonCreationData& btnData : btnCreationData) {
-            auto btnViewProj = this->createViewBtn(this, btnData.icon, btnData.text);
+            auto btnViewProj = this->createViewBtn(container, btnData.icon, btnData.text);
+            container->layout()->addWidget(btnViewProj);
             QObject::connect(btnViewProj, &ButtonFlat::clicked, this, [=]{
                 m_guiDoc->setViewCameraOrientation(btnData.proj);
             });
             m_vecWidgetForViewProj.push_back(btnViewProj);
         }
     }
-
-    this->layoutViewControls();
 }
 
 QRect WidgetGuiDocument::viewControlsRect() const
 {
-    const QRect rectFirstBtn = m_btnFitAll->frameGeometry();
-    const QRect rectLastBtn = m_btnExplode->frameGeometry();
-    QRect rect;
-    rect.setCoords(
-                rectFirstBtn.left(), rectFirstBtn.top(),
-                rectLastBtn.right(), rectLastBtn.bottom());
-    return rect;
+    return m_widgetBtns->frameGeometry();
 }
 
 void WidgetGuiDocument::layoutViewControls()
 {
-    const int margin = Internal::widgetMargin;
+    const int margin = Internal::widgetMargin + 2;
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();
             const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize();
-            const int ctrlCount = 2 + m_vecWidgetForViewProj.size();
-            const int ctrlWidth = ctrlCount * btnSize + (ctrlCount - 1) * margin;
             const int ctrlHeight = btnSize;
-            const int ctrlXOffset = (viewCubeBndSize - ctrlWidth) / 2;
+            const int ctrlXOffset = margin;
             switch (m_guiDoc->viewTrihedronCorner()) {
             case Qt::TopLeftCorner:
                 return { ctrlXOffset, viewCubeBndSize + margin };
@@ -351,15 +389,7 @@ void WidgetGuiDocument::layoutViewControls()
         return { margin, margin };
     };
 
-    m_btnFitAll->move(fnGetViewControlsPos());
-    const QWidget* widgetLast = m_btnFitAll;
-    for (QWidget* widget : m_vecWidgetForViewProj) {
-        WidgetsUtils::moveWidgetRightTo(widget, widgetLast, margin);
-        widgetLast = widget;
-    }
-
-    WidgetsUtils::moveWidgetRightTo(m_btnEditClipping, widgetLast, margin);
-    WidgetsUtils::moveWidgetRightTo(m_btnExplode, m_btnEditClipping, margin);
+    m_widgetBtns->move(fnGetViewControlsPos());
 }
 
 } // namespace Mayo

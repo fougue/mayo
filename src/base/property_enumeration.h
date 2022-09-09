@@ -24,9 +24,10 @@ namespace Mayo {
 
 class PropertyEnumeration : public Property {
 public:
-    PropertyEnumeration(PropertyGroup* grp, const TextId& name, const Enumeration& enumeration);
+    // This constructor should be used when 'enumeration' is garanteed to be fully constructed
+    PropertyEnumeration(PropertyGroup* grp, const TextId& name, const Enumeration* enumeration);
 
-    constexpr const Enumeration& enumeration() const { return m_enumeration; }
+    const Enumeration& enumeration() const;
 
     bool descriptionsEmpty() const { return m_vecDescription.empty(); }
     void addDescription(Enumeration::Value value, std::string_view descr);
@@ -41,14 +42,21 @@ public:
     const char* dynTypeName() const override;
     static const char TypeName[];
 
+protected:
+    // This constructor should be used when 'enumeration' isn't completely constructed, as in
+    // PropertyEnum<> subclass. The enumeration member is set with the setEnumeration() helper
+    PropertyEnumeration(PropertyGroup* grp, const TextId& name);
+
+    void setEnumeration(const Enumeration* enumeration);
+
 private:
     struct Description {
         Enumeration::Value value;
         std::string text;
     };
 
-    Enumeration::Value m_value;
-    const Enumeration& m_enumeration;
+    const Enumeration* m_enumeration = nullptr;
+    Enumeration::Value m_value = -1;
     std::vector<Description> m_vecDescription;
 };
 
@@ -79,9 +87,11 @@ private:
 
 template<typename ENUM>
 PropertyEnum<ENUM>::PropertyEnum(PropertyGroup* grp, const TextId& name)
-    : m_enum(Enumeration::fromType<EnumType>()),
-      PropertyEnumeration(grp, name, m_enum)
-{ }
+    : PropertyEnumeration(grp, name),
+      m_enum(Enumeration::fromType<EnumType>())
+{
+    this->setEnumeration(&m_enum);
+}
 
 template<typename ENUM>
 ENUM PropertyEnum<ENUM>::value() const {

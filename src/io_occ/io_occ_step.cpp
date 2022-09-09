@@ -308,6 +308,14 @@ bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
     this->changeStaticVariables(&rollback);
+    if (m_params.schema != m_schemaLastTransfer) {
+        // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
+        // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
+        // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
+        m_writer->ChangeWriter().Model(true);
+        m_schemaLastTransfer = m_params.schema;
+    }
+
     return Private::cafTransfer(*m_writer, appItems, progress);
 }
 
@@ -355,15 +363,7 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
 
 void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
 {
-    const int previousSchema = Interface_Static::IVal("write.step.schema");
     rollback->change("write.step.schema", int(m_params.schema));
-    if (int(m_params.schema) != previousSchema) {
-        // NOTE from $OCC_7.4.0_DIR/doc/pdf/user_guides/occt_step.pdf (page 26)
-        // For the parameter "write.step.schema" to take effect, method STEPControl_Writer::Model(true)
-        // should be called after changing this parameter (corresponding command in DRAW is "newmodel")
-        m_writer->ChangeWriter().Model(true);
-    }
-
     rollback->change("write.step.unit", OccCommon::toCafString(m_params.lengthUnit));
     rollback->change("write.step.assembly", int(m_params.assemblyMode));
     rollback->change("write.step.vertex.mode", int(m_params.freeVertexMode));

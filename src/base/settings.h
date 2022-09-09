@@ -24,6 +24,7 @@ public:
 
     class Storage {
     public:
+        virtual ~Storage() = default;
         virtual bool contains(std::string_view key) const = 0;
         virtual Variant value(std::string_view key) const = 0;
         virtual void setValue(std::string_view key, const Variant& value) = 0;
@@ -37,6 +38,8 @@ public:
     using ResetFunction = std::function<void()>;
 
     Settings(QObject* parent = nullptr);
+    Settings(const Settings&) = delete; // Not copyable
+    Settings& operator=(const Settings&) = delete; // Not copyable
     ~Settings();
 
     void setStorage(std::unique_ptr<Storage> ptrStorage);
@@ -51,7 +54,7 @@ public:
     void saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude = nullptr);
 
     const PropertyValueConversion& propertyValueConversion() const;
-    void setPropertyValueConversion(const PropertyValueConversion& conv);
+    void setPropertyValueConversion(const PropertyValueConversion* conv);
 
     int groupCount() const;
     std::string_view groupIdentifier(GroupIndex index) const;

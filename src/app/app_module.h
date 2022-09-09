@@ -6,27 +6,20 @@
 
 #pragma once
 
-#include "recent_files.h"
+#include "app_module_properties.h"
+#include "qstring_utils.h"
 
-#include "../base/application_ptr.h"
+#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_brep_mesh_parameters.h"
-#include "../base/occt_enums.h"
-#include "../base/property.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../base/property_value_conversion.h"
 #include "../base/settings.h"
-#include "../base/settings_index.h"
 #include "../base/unit_system.h"
-#include "qtcore_hfuncs.h"
-#include "qstring_utils.h"
 
 #include <QtCore/QObject>
 #include <mutex>
-#include <unordered_map>
-#include <vector>
 
 class TDF_Label;
 class TopoDS_Shape;
@@ -37,9 +30,10 @@ class GuiApplication;
 class GuiDocument;
 class TaskProgress;
 
+// Provides the root application object as a singleton
+// Implements also the behavior specific to the application
 class AppModule :
         public QObject,
-        public PropertyGroup,
         public IO::ParametersProvider,
         public PropertyValueConversion,
         public Messenger
@@ -47,94 +41,84 @@ class AppModule :
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
+    // Loggable message
     struct Message {
         MessageType type;
         QString text;
     };
 
-    AppModule(Application* app);
-    static AppModule* get(const ApplicationPtr& app);
+    // Query singleton instance
+    static AppModule* get();
 
-    QStringUtils::TextOptions defaultTextOptions() const;
-    const QLocale& locale() const;
+    // Settings
+    const AppModuleProperties* properties() const { return &m_props; }
+    AppModuleProperties* properties() { return &m_props; }
+    Settings* settings() const { return m_settings; }
 
-    static QString qmFilePath(const QByteArray& languageCode);
-    static QByteArray languageCode(const ApplicationPtr& app);
-
+    // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
 
+    // Text options corresponding to the active locale/units config
+    QStringUtils::TextOptions defaultTextOptions() const;
+
+    // Current locale used by the application
+    const QLocale& locale() const;
+
+    // Available supported languages
+    static const Enumeration& languages();
+
+    // Short-name of the current language in use(eg. en=english)
+    QString languageCode() const;
+
+    // Logging
+    void clearMessageLog();
+    Span<const Message> messageLog() const { return m_messageLog; }
+    Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
+    Q_SIGNAL void messageLogCleared();
+
+    // Recent files
     void prependRecentFile(const FilePath& fp);
     const RecentFile* findRecentFile(const FilePath& fp) const;
     void recordRecentFileThumbnail(GuiDocument* guiDoc);
     void recordRecentFileThumbnails(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
 
+    // Meshing of BRep shapes
     OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
     void computeBRepMesh(const TopoDS_Shape& shape, TaskProgress* progress = nullptr);
     void computeBRepMesh(const TDF_Label& labelEntity, TaskProgress* progress = nullptr);
 
-    // from IO::ParametersProvider
+    // Providers to query document tree node properties
+    void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
+
+    // IO::System object
+    const IO::System* ioSystem() const { return &m_ioSystem; }
+    IO::System* ioSystem() { return &m_ioSystem; }
+
+    // -- from IO::ParametersProvider
     const PropertyGroup* findReaderParameters(IO::Format format) const override;
     const PropertyGroup* findWriterParameters(IO::Format format) const override;
 
-    // from PropertyValueConversion
+    // -- from PropertyValueConversion
     Settings::Variant toVariant(const Property& prop) const override;
     bool fromVariant(Property* prop, const Settings::Variant& variant) const override;
 
-    // from Messenger
+    // -- from Messenger
     void emitMessage(MessageType msgType, std::string_view text) override;
-    void clearMessageLog();
-    Span<const Message> messageLog() const { return m_messageLog; }
-    Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
-    Q_SIGNAL void messageLogCleared();
-
-    // System
-    const Settings_GroupIndex groupId_system;
-    const Settings_SectionIndex sectionId_systemUnits;
-    PropertyInt unitSystemDecimals{ this, textId("decimalCount") };
-    PropertyEnum<UnitSystem::Schema> unitSystemSchema{ this, textId("schema") };
-    // Application
-    const Settings_GroupIndex groupId_application;
-    PropertyEnumeration language;
-    PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
-    PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
-    PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
-    PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
-    // Meshing
-    const Settings_GroupIndex groupId_meshing;
-    enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
-    PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
-    PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
-    PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
-    PropertyBool meshingRelative{ this, textId("meshingRelative") };
-    // Graphics
-    const Settings_GroupIndex groupId_graphics;
-    PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
-    PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
-    // -- ClipPlanes
-    const Settings_SectionIndex sectionId_graphicsClipPlanes;
-    PropertyBool clipPlanesCappingOn{ this, textId("cappingOn") };
-    PropertyBool clipPlanesCappingHatchOn{ this, textId("cappingHatchOn") };
-    // -- MeshDefaults
-    const Settings_SectionIndex sectionId_graphicsMeshDefaults;
-    PropertyOccColor meshDefaultsColor{ this, textId("color") };
-    PropertyOccColor meshDefaultsEdgeColor{ this, textId("edgeColor") };
-    PropertyEnumeration meshDefaultsMaterial{ this, textId("material"), OcctEnums::Graphic3d_NameOfMaterial() };
-    PropertyBool meshDefaultsShowEdges{ this, textId("showEgesOn") };
-    PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
-
-protected:
-    // from PropertyGroup
-    void onPropertyChanged(Property* prop) override;
 
 private:
-    Application* m_app = nullptr;
-    std::vector<std::unique_ptr<PropertyGroup>> m_vecPtrPropertyGroup;
-    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatReaderParameters;
-    std::unordered_map<IO::Format, PropertyGroup*> m_mapFormatWriterParameters;
+    AppModule();
+    AppModule(const AppModule&) = delete; // Not copyable
+    AppModule& operator=(const AppModule&) = delete; // Not copyable
+
+    Settings* m_settings = nullptr;
+    IO::System m_ioSystem;
+    AppModuleProperties m_props;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
     QLocale m_locale;
+    std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
 };
 
 } // namespace Mayo

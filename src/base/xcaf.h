@@ -57,8 +57,27 @@ public:
     static bool isShapeCompound(const TDF_Label& lbl);
     static bool isShapeSub(const TDF_Label& lbl);
 
+    // Is 'shape' a subshape of the shape stored in 'lbl' ?
+    bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape);
+
     bool hasShapeColor(const TDF_Label& lbl) const;
     Quantity_Color shapeColor(const TDF_Label& lbl) const;
+
+    // Various flags for findShapeLabel()
+    enum FindShapeLabelFlag {
+        // findShapeLabel() will first try to find the shape among the top-level shapes
+        FindShapeLabel_Instance = 0x01,
+        // findShapeLabel() will try to find the shape find the shape among the components of assemblies
+        FindShapeLabel_Component = 0x02,
+        // findShapeLabel() will try tries to find a shape as a subshape of top-level simple shapes
+        FindShapeLabel_SubShape = 0x04,
+        // Enables all flags
+        FindShapeLabel_All = 0xFF
+    };
+    using FindShapeLabelFlags = unsigned;
+
+    // Finds a (sub) shape in the document, returns null label if not found
+    TDF_Label findShapeLabel(const TopoDS_Shape& shape, FindShapeLabelFlags flags = FindShapeLabel_All) const;
 
     TopLoc_Location shapeAbsoluteLocation(TreeNodeId nodeId) const;
     static TopLoc_Location shapeAbsoluteLocation(const Tree<TDF_Label>& modelTree, TreeNodeId nodeId);

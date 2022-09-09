@@ -30,6 +30,25 @@ enum class Unit {
     Pressure  // kg/m.s² (or N/m²)
 };
 
+enum LengthUnit {
+    // SI
+    Nanometer, Micrometer, Millimeter, Centimeter, Decimeter, Meter, Kilometer,
+    NauticalMile,
+    // Imperial UK
+    Thou, Inch, Link, Foot, Yard, Rod, Chain, Furlong, Mile, League
+};
+
+enum AngleUnit {
+    Radian, Degree
+};
+
+enum AreaUnit {
+    // SI
+    SquareMillimeter, SquareCentimeter, SquareMeter, SquareKilometer,
+    // Imperial UK
+    SquareInch, SquareFoot, SquareYard, SquareMile
+};
+
 #if 0
 enum class BaseUnit {
     Length = 0, // Meter(m)

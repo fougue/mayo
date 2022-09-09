@@ -19,6 +19,7 @@ class ButtonFlat;
 class GuiDocument;
 class WidgetClipPlanes;
 class WidgetExplodeAssembly;
+class WidgetMeasure;
 class IWidgetOccView;
 
 class WidgetGuiDocument : public QWidget {
@@ -27,7 +28,7 @@ public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
-    V3dViewController* controller() const { return m_controller; }
+    WidgetOccViewController* controller() const { return m_controller; }
     IWidgetOccView* view() const { return m_qtOccView; }
 
     QColor panelBackgroundColor() const;
@@ -36,10 +37,15 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
+    QWidget* createWidgetPanelContainer(QWidget* widgetContents);
+    void updageWidgetPanelControls(QWidget* panelWidget, ButtonFlat* btnPanel);
+
     void toggleWidgetClipPlanes(bool on);
     void toggleWidgetExplode(bool on);
+    void toggleWidgetMeasure(bool on);
+    void exclusiveButtonCheck(ButtonFlat* btn);
 
-    void recreateViewControls();
+    void recreateMenuViewProjections(QWidget* container);
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
@@ -48,14 +54,17 @@ private:
 
     GuiDocument* m_guiDoc = nullptr;
     IWidgetOccView* m_qtOccView = nullptr;
+    QWidget* m_widgetBtns = nullptr;
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;
+    WidgetMeasure* m_widgetMeasure = nullptr;
     QRect m_rectControls;
 
     ButtonFlat* m_btnFitAll = nullptr;
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
+    ButtonFlat* m_btnMeasure = nullptr;
     std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 

@@ -10,45 +10,72 @@
 #include "text_id.h"
 #include <initializer_list>
 #include <vector>
+#include <type_traits>
 
 namespace Mayo {
 
+// Provides meta-data about enumerated values
 class Enumeration {
 public:
+    // Common type to store enumerated values
     using Value = int;
+
+    // Enumeration item being a value-name pair
     struct Item {
         Value value;
         TextId name;
     };
 
+    // Ctors
     Enumeration() = default;
     Enumeration(std::initializer_list<Item> listItem);
 
+    // Adds an enumerated item
     template<typename VALUE>
     Enumeration& addItem(VALUE value, const TextId& name);
 
+    // Iterates over name of items and removes 'prefix' string that may appear at the beginning
     Enumeration& chopPrefix(std::string_view prefix);
+
+    // Assigns 'context' to TextId::trContext of all Item objects
     Enumeration& changeTrContext(std::string_view context);
 
+    // Count of enumeration items
     int size() const { return int(m_vecItem.size()); }
-    bool empty() const { return this->size() == 0; }
+    bool empty() const { return m_vecItem.empty(); }
 
-    const Item& findItem(Value value) const;
-    int findIndex(Value value) const;
-    std::string_view findName(Value value) const;
-    Value findValue(std::string_view name) const;
+    // Finds index of the item corresponding to an enumerated value. Returns -1 if not found
+    template<typename ENUM> int findIndexByValue(ENUM value) const;
+
+    // Finds the item corresponding to an enumerated value. Returns nullptr if not found
+    template<typename ENUM> const Item* findItemByValue(ENUM value) const;
+
+    // Finds the item corresponding to a name. Returns nullptr if not found
+    const Item* findItemByName(std::string_view name) const;
+
+    // Finds the name of an enumerated value. Returns empty string if not found
+    template<typename ENUM> std::string_view findNameByValue(ENUM value) const;
+
+    // Finds the enumerated value corresponding to a name. Throws exception if not found
+    Value findValueByName(std::string_view name) const;
+
+    // Returns 'true' if there is an item matching 'name'
     bool contains(std::string_view name) const;
 
+    // Returns item at 'index'
     const Item& itemAt(int index) const { return m_vecItem.at(index); }
-    Span<const Item> items() const { return m_vecItem; }
-    const Item* findItem(std::string_view name) const;
 
+    // Returns read-only array of the items
+    Span<const Item> items() const { return m_vecItem; }
+
+    // Creates an Enumeration object from an enumerated type, using MetaEnum helper
+    // Note: client code has to include header "enumeration_fromenum.h"
     template<typename ENUM>
     static Enumeration fromType();
 
-    static const Enumeration& null();
-
 private:
+    int findIndexByValue_untyped(Value value) const;
+
     std::vector<Item> m_vecItem;
 };
 
@@ -61,6 +88,28 @@ template<typename VALUE> Enumeration& Enumeration::addItem(VALUE value, const Te
     const Item item = { Enumeration::Value(value), name };
     m_vecItem.emplace_back(std::move(item));
     return *this;
+}
+
+template<typename ENUM> int Enumeration::findIndexByValue(ENUM value) const
+{
+    static_assert(std::is_enum_v<ENUM> || std::is_integral_v<ENUM>, "ENUM must be an enumeration or integer type");
+    return this->findIndexByValue_untyped(static_cast<Enumeration::Value>(value));
+}
+
+template<typename ENUM> const Enumeration::Item* Enumeration::findItemByValue(ENUM value) const
+{
+    static_assert(std::is_enum_v<ENUM> || std::is_integral_v<ENUM>, "ENUM must be an enumeration or integer type");
+    const int index = this->findIndexByValue_untyped(static_cast<Enumeration::Value>(value));
+    return index != -1 ? &(this->itemAt(index)) : nullptr;
+}
+
+template<typename ENUM> std::string_view Enumeration::findNameByValue(ENUM value) const
+{
+    const int index = this->findIndexByValue(value);
+    if (index != -1)
+        return this->itemAt(index).name.key;
+    else
+        return {};
 }
 
 } // namespace Mayo

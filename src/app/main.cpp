@@ -7,17 +7,19 @@
 #include "../base/application.h"
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
-#include "../base/messenger.h"
 #include "../base/settings.h"
-#include "../base/task_manager.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
-#include "../graphics/graphics_object_driver.h"
+#include "../io_ply/io_ply_reader.h"
+#include "../io_ply/io_ply_writer.h"
+#include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "cli_export.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
@@ -44,13 +46,10 @@
 #include <QtGui/QOpenGLFunctions>
 #include <QtWidgets/QApplication>
 
-#include <Message.hxx>
-
 #include <fmt/format.h>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iomanip>
 #include <memory>
 #include <unordered_map>
 
@@ -152,7 +151,7 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo, an open-source 3D viewer based on Qt5/OpenCascade"));
+                Main::tr("Mayo the opensource 3D CAD viewer and converter"));
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
@@ -195,6 +194,13 @@ static CommandLineArguments processCommandLine()
                 Main::tr("files"),
                 Main::tr("Files to open at startup, optionally"),
                 Main::tr("[files...]"));
+
+#ifdef MAYO_WITH_TESTS
+    const QCommandLineOption cmdRunTests(
+                QStringList{ "runtests" },
+                Main::tr("Execute unit tests and exit application"));
+    cmdParser.addOption(cmdRunTests);
+#endif
 
     cmdParser.process(QCoreApplication::arguments());
 
@@ -275,52 +281,22 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
-// Initializes "Base" objects
-static void initBase(QCoreApplication* qtApp)
+static std::string_view qtTranslate(const TextId& text, int n)
 {
-    auto app = Application::instance();
-    app->settings()->setStorage(std::make_unique<QSettingsStorage>());
-
-    // Load translation files
+    const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
+    auto qstrHash = qHash(qstr);
+    static std::unordered_map<unsigned, std::string> mapStr;
+    static QReadWriteLock mapStrLock;
     {
-        const QString qmFilePath = AppModule::qmFilePath(AppModule::languageCode(app));
-        auto translator = new QTranslator(app.get());
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        QReadLocker locker(&mapStrLock);
+        auto it = mapStr.find(qstrHash);
+        if (it != mapStr.cend())
+            return it->second;
     }
 
-    // Set Qt i18n backend
-    app->addTranslator([=](const TextId& text, int n) -> std::string_view {
-        const QString qstr = qtApp->translate(text.trContext.data(), text.key.data(), nullptr, n);
-        auto qstrHash = qHash(qstr);
-        static std::unordered_map<unsigned, std::string> mapStr;
-        static QReadWriteLock mapStrLock;
-        {
-            QReadLocker locker(&mapStrLock);
-            auto it = mapStr.find(qstrHash);
-            if (it != mapStr.cend())
-                return it->second;
-        }
-
-        QWriteLocker locker(&mapStrLock);
-        auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
-        return ok ? it->second : std::string_view{};
-    });
-
-    // Register I/O objects
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    app->ioSystem()->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    app->ioSystem()->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    app->ioSystem()->addFactoryWriter(IO::GmioFactoryWriter::create());
-    IO::addPredefinedFormatProbes(app->ioSystem());
-
-    // Register providers to query document tree node properties
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    app->documentTreeNodePropertiesProviderTable()->addProvider(
-                std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+    QWriteLocker locker(&mapStrLock);
+    auto [it, ok] = mapStr.insert({ qstrHash, to_stdString(qstr) });
+    return ok ? it->second : std::string_view{};
 }
 
 // Helper to query the OpenGL version string
@@ -371,7 +347,7 @@ static void initGui(GuiApplication* guiApp)
     IWidgetOccView::setCreator(&QWidgetOccView::create);
 
     // Use QOpenGLWidget if possible
-#if OCC_VERSION_HEX >= 0x070600
+#if OCC_VERSION_HEX >= 0x070600 && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (qobject_cast<QGuiApplication*>(QCoreApplication::instance())) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
@@ -386,214 +362,11 @@ static void initGui(GuiApplication* guiApp)
     }
 #endif
 
-    // Register I/O objects
-    guiApp->application()->ioSystem()->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
-
-    // Register Graphics/TreeNode mapping drivers
-    guiApp->graphicsTreeNodeMappingDriverTable()->addDriver(
-                std::make_unique<GraphicsShapeTreeNodeMappingDriver>());
-
     // Register Graphics entity drivers
-    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsShapeObjectDriver>());
-    guiApp->graphicsObjectDriverTable()->addDriver(std::make_unique<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
 }
 
-// Asynchronously exports input file(s) listed in 'args'
-// Calls 'fnContinuation' at the end of execution
-static void cli_asyncExportDocuments(
-        Application* app, const CommandLineArguments& args, std::function<void(int)> fnContinuation)
-{
-    struct TaskStatus {
-        std::atomic<bool> finished = {};
-        std::atomic<bool> success = {};
-    };
-
-    struct Helper : public QObject {
-        // Task manager object dedicated to the scope of current function
-        TaskManager taskMgr;
-        // Counter decremented for each export task finished, when 0 is reached then quit
-        std::atomic<int> exportTaskCount = {};
-        // Mapping between a task id and the task status
-        std::unordered_map<TaskId, std::unique_ptr<TaskStatus>> mapTaskStatus;
-        // Mapping between a task id and corresponding width of the progress line in console
-        std::unordered_map<TaskId, int> mapTaskLineWidth;
-        // Count of progress lines in console after last call to fnPrintProgress()
-        int lastPrintProgressLineCount = 0;
-    };
-
-    // Collects emitted error messages into a single string object
-    class ErrorMessageCollect : public Messenger {
-    public:
-        void emitMessage(MessageType msgType, std::string_view text) override {
-            if (msgType == MessageType::Error)
-                m_message += to_QString(text) + " ";
-        }
-
-        std::string message() const { return to_stdString(m_message); }
-
-    private:
-        QString m_message;
-    };
-
-    auto helper = new Helper; // Allocated on heap because current function is asynchronous
-    auto taskMgr = &helper->taskMgr;
-    auto appModule = AppModule::get(app);
-
-    // Helper function to exit current function
-    auto fnExit = [=](int retCode) {
-        helper->deleteLater();
-        fnContinuation(retCode);
-    };
-    // Helper function to print in console the progress info of current function
-    auto fnPrintProgress = [=]{
-        consoleCursorMoveUp(helper->lastPrintProgressLineCount);
-        helper->lastPrintProgressLineCount = 0;
-        std::cout << "\r";
-        taskMgr->foreachTask([=](TaskId taskId) {
-            std::string strMessage = taskMgr->title(taskId);
-            std::replace(strMessage.begin(), strMessage.end(), '\n', ' ');
-            strMessage = consoleToPrintable(strMessage);
-            auto lineWidth = int(strMessage.size());
-            const bool taskFinished = helper->mapTaskStatus.at(taskId)->finished;
-            const bool taskSuccess = helper->mapTaskStatus.at(taskId)->success;
-            if (taskFinished && !taskSuccess) {
-                consoleSetTextColor(ConsoleColor::Red);
-                std::cout << strMessage;
-                consoleSetTextColor(ConsoleColor::Default);
-            }
-            else {
-                const int progress = taskMgr->progress(taskId);
-                if (progress >= 100)
-                    consoleSetTextColor(ConsoleColor::Green);
-
-                std::cout << std::setfill(' ') << std::right << std::setw(3) << progress << "% ";
-                std::cout << strMessage;
-                lineWidth += 5;
-                if (progress >= 100)
-                    consoleSetTextColor(ConsoleColor::Default);
-            }
-
-            const int printWidth = consoleWidth();
-            auto itLineFound = helper->mapTaskLineWidth.find(taskId);
-            const int lineWidthOld = itLineFound != helper->mapTaskLineWidth.cend() ? itLineFound->second : printWidth - 1;
-            for (int i = 0; i < (lineWidthOld - lineWidth); ++i)
-                std::cout << ' ';
-
-            helper->mapTaskLineWidth.insert_or_assign(taskId, lineWidth);
-            helper->lastPrintProgressLineCount += printWidth > 0 ? (lineWidth / printWidth) + 1 : 1;
-            std::cout << "\n";
-        });
-        std::cout.flush();
-    };
-
-    // Show progress/traces corresponding to task events
-    QObject::connect(taskMgr, &TaskManager::started, app, [=](TaskId taskId) {
-        if (args.cliProgressReport)
-            fnPrintProgress();
-        else
-            qInfo() << to_QString(taskMgr->title(taskId));
-    });
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=](TaskId taskId) {
-        if (args.cliProgressReport) {
-            fnPrintProgress();
-        }
-        else {
-            if (helper->mapTaskStatus.at(taskId)->success)
-                qInfo() << to_QString(taskMgr->title(taskId));
-            else
-                qCritical() << to_QString(taskMgr->title(taskId));
-        }
-    });
-    QObject::connect(taskMgr, &TaskManager::progressChanged, app, [=]{
-        if (args.cliProgressReport)
-            fnPrintProgress();
-    });
-
-    helper->exportTaskCount = int(args.listFilepathToExport.size());
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=]{
-        if (helper->exportTaskCount == 0) {
-            bool okExport = true;
-            for (const auto& mapPair : helper->mapTaskStatus) {
-                const TaskStatus* status = mapPair.second.get();
-                okExport = okExport && status->success;
-            }
-
-            fnExit(okExport ? EXIT_SUCCESS : EXIT_FAILURE);
-        }
-    });
-
-    // If export operation targets some mesh format then force meshing of imported BRep shapes
-    bool brepMeshRequired = false;
-    for (const FilePath& filepath : args.listFilepathToExport) {
-        const IO::Format format = app->ioSystem()->probeFormat(filepath);
-        brepMeshRequired = IO::formatProvidesMesh(format);
-        if (brepMeshRequired)
-            break; // Interrupt
-    }
-
-    // Suppress output from OpenCascade
-    Message::DefaultMessenger()->RemovePrinters(Message_Printer::get_type_descriptor());
-
-    // Execute import operation(synchronous)
-    DocumentPtr doc = app->newDocument();
-    bool okImport = true;
-    const TaskId importTaskId = taskMgr->newTask([&](TaskProgress* progress) {
-            ErrorMessageCollect errorCollect;
-            okImport = app->ioSystem()->importInDocument()
-                .targetDocument(doc)
-                .withFilepaths(args.listFilepathToOpen)
-                .withParametersProvider(appModule)
-                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                    appModule->computeBRepMesh(labelEntity, progress);
-                })
-                .withEntityPostProcessRequiredIf([=](IO::Format){ return brepMeshRequired; })
-                .withEntityPostProcessInfoProgress(20, Main::textIdTr("Mesh BRep shapes"))
-                .withMessenger(&errorCollect)
-                .withTaskProgress(progress)
-                .execute();
-            taskMgr->setTitle(progress->taskId(), okImport ? Main::textIdTr("Imported") : errorCollect.message());
-            helper->mapTaskStatus.at(progress->taskId())->success = okImport;
-            helper->mapTaskStatus.at(progress->taskId())->finished = true;
-    });
-    helper->mapTaskStatus.insert({ importTaskId, std::make_unique<TaskStatus>() });
-    taskMgr->setTitle(importTaskId, Main::textIdTr("Importing..."));
-    taskMgr->exec(importTaskId, TaskAutoDestroy::Off);
-    if (!okImport)
-        return fnExit(EXIT_FAILURE); // Error
-
-    // Run export operations(asynchronous)
-    for (const FilePath& filepath : args.listFilepathToExport) {
-        const std::string strFilename = filepath.filename().u8string();
-        const TaskId taskId = taskMgr->newTask([=](TaskProgress* progress) {
-                ErrorMessageCollect errorCollect;
-                const IO::Format format = app->ioSystem()->probeFormat(filepath);
-                const ApplicationItem appItems[] = { doc };
-                const bool okExport = app->ioSystem()->exportApplicationItems()
-                            .targetFile(filepath)
-                            .targetFormat(format)
-                            .withItems(appItems)
-                            .withParameters(appModule->findWriterParameters(format))
-                            .withMessenger(&errorCollect)
-                            .withTaskProgress(progress)
-                            .execute();
-                const std::string msg =
-                        okExport ?
-                            fmt::format(Main::textIdTr("Exported {}"), strFilename) :
-                            errorCollect.message();
-                taskMgr->setTitle(progress->taskId(), msg);
-                helper->mapTaskStatus.at(progress->taskId())->success = okExport;
-                helper->mapTaskStatus.at(progress->taskId())->finished = true;
-                --(helper->exportTaskCount);
-        });
-        helper->mapTaskStatus.insert({ taskId, std::make_unique<TaskStatus>() });
-        taskMgr->setTitle(taskId, fmt::format(Main::textIdTr("Exporting {}..."), strFilename));
-    }
-
-    taskMgr->foreachTask([=](TaskId taskId) {
-        if (taskId != importTaskId)
-            taskMgr->run(taskId, TaskAutoDestroy::Off);
-    });
-}
 
 // Initializes and runs Mayo application
 static int runApp(QCoreApplication* qtApp)
@@ -627,18 +400,44 @@ static int runApp(QCoreApplication* qtApp)
     if (!args.filepathLog.empty())
         LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
 
+    // Initialize AppModule
+    auto appModule = AppModule::get();
+    appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
+    {
+        // Load translation files
+        const QString qmFilePath = QString(":/i18n/mayo_%1.qm").arg(appModule->languageCode());
+        auto translator = new QTranslator(qtApp);
+        if (translator->load(qmFilePath))
+            qtApp->installTranslator(translator);
+        else
+            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+    }
+
     // Initialize Base application
-    initOpenCascadeEnvironment("opencascade.conf");
-    initBase(qtApp);
     auto app = Application::instance().get();
+    app->addTranslator(&qtTranslate); // Set Qt i18n backend
+    initOpenCascadeEnvironment("opencascade.conf");
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
 
-    // Register AppModule
-    auto appModule = new AppModule(app);
-    app->settings()->setPropertyValueConversion(*appModule);
+    // Register providers to query document tree node properties
+    appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
+    appModule->addPropertiesProvider(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+
+    // Register I/O objects
+    IO::System* ioSystem = appModule->ioSystem();
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
+    ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    IO::addPredefinedFormatProbes(ioSystem);
+    appModule->properties()->IO_bindParameters(ioSystem);
+    appModule->properties()->retranslate();
 
     // Process CLI
     if (!args.listFilepathToExport.empty()) {
@@ -646,10 +445,14 @@ static int runApp(QCoreApplication* qtApp)
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
         guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-        app->settings()->resetAll();
-        fnLoadAppSettings(app->settings());
+        appModule->settings()->resetAll();
+        fnLoadAppSettings(appModule->settings());
         QTimer::singleShot(0, qtApp, [=]{
-            cli_asyncExportDocuments(app, args, [=](int retcode) { qtApp->exit(retcode); });
+            CliExportArgs cliArgs;
+            cliArgs.progressReport = args.cliProgressReport;
+            cliArgs.filesToOpen = args.listFilepathToOpen;
+            cliArgs.filesToExport = args.listFilepathToExport;
+            cli_asyncExportDocuments(app, cliArgs, [=](int retcode) { qtApp->exit(retcode); });
         });
         return qtApp->exec();
     }
@@ -657,7 +460,7 @@ static int runApp(QCoreApplication* qtApp)
     // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
-                appModule, &AppModule::recordRecentFileThumbnail);
+                AppModule::get(), &AppModule::recordRecentFileThumbnail);
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -685,11 +488,11 @@ static int runApp(QCoreApplication* qtApp)
         QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
-    app->settings()->resetAll();
-    fnLoadAppSettings(app->settings());
+    appModule->settings()->resetAll();
+    fnLoadAppSettings(appModule->settings());
     const int code = qtApp->exec();
     appModule->recordRecentFileThumbnails(guiApp);
-    app->settings()->save();
+    appModule->settings()->save();
     return code;
 }
 
@@ -701,6 +504,11 @@ static void onQtAppExit()
         consoleSendEnterKey();
 #endif
 }
+
+#ifdef MAYO_WITH_TESTS
+// Defined in tests/runtests.cpp
+int runTests(int argc, char* argv[]);
+#endif
 
 } // namespace Mayo
 
@@ -724,7 +532,8 @@ int main(int argc, char* argv[])
 #endif
 
     std::unique_ptr<QCoreApplication> ptrApp(
-            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
+            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
+    );
 
 #if defined(Q_OS_WIN) && defined(NDEBUG)
     if (Mayo::isAppCliMode) {
@@ -733,7 +542,7 @@ int main(int argc, char* argv[])
         if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
             auto fnRedirectToConsole = [](DWORD hnd, FILE* file, const char* strPath) {
                 if (GetStdHandle(hnd) != INVALID_HANDLE_VALUE) {
-                    freopen(strPath, "w", file);
+                    file = freopen(strPath, "w", file);
                     setvbuf(file, nullptr, _IONBF, 0);
                 }
             };
@@ -748,5 +557,13 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
+
+#ifdef MAYO_WITH_TESTS
+    for (int i = 0; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--runtests") == 0)
+            return Mayo::runTests(argc, argv);
+    }
+#endif
+
     return Mayo::runApp(ptrApp.get());
 }

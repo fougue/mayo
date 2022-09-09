@@ -51,45 +51,27 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
         }
     };
 
-    auto fnGetCappingColor = [=](const ClipPlaneData& data) {
-        if (&data == &m_vecClipPlaneData.at(0))
-            return Quantity_NOC_RED1;
-        else if (&data == &m_vecClipPlaneData.at(1))
-            return Quantity_NOC_GREEN1;
-        else if (&data == &m_vecClipPlaneData.at(2))
-            return Quantity_NOC_BLUE1;
-        else
-            return Quantity_NOC_GRAY;
-    };
-
-
-    const auto appModule = AppModule::get(Application::instance());
+    const auto appModule = AppModule::get();
     for (ClipPlaneData& data : m_vecClipPlaneData) {
         data.ui.widget_Control->setEnabled(data.ui.check_On->isChecked());
         this->connectUi(&data);
-        data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        data.graphics->SetCappingColor(fnGetCappingColor(data));
-#else
-        Graphic3d_MaterialAspect cappingMaterial(Graphic3d_NOM_STEEL);
-        cappingMaterial.SetColor(fnGetCappingColor(data));
-        data.graphics->SetCappingMaterial(cappingMaterial);
-#endif
-        if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
+        data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn.value());
+        data.graphics->SetUseObjectMaterial(true);
+        if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
             data.graphics->SetCappingTexture(m_textureCapping);
     }
 
-    const auto settings = Application::instance()->settings();
+    const auto settings = appModule->settings();
     QObject::connect(settings, &Settings::changed, this, [=](Property* property) {
-        if (property == &appModule->clipPlanesCappingOn) {
+        if (property == &appModule->properties()->clipPlanesCappingOn) {
             for (ClipPlaneData& data : m_vecClipPlaneData)
-                data.graphics->SetCapping(appModule->clipPlanesCappingOn.value());
+                data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn);
 
             m_view->Redraw();
         }
-        else if (property == &appModule->clipPlanesCappingHatchOn) {
+        else if (property == &appModule->properties()->clipPlanesCappingHatchOn) {
             Handle_Graphic3d_TextureMap hatchTexture;
-            if (m_textureCapping && appModule->clipPlanesCappingHatchOn.value())
+            if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
                 hatchTexture = m_textureCapping;
 
             for (ClipPlaneData& data : m_vecClipPlaneData)
@@ -164,7 +146,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         QSignalBlocker sigBlock(posSlider); Q_UNUSED(sigBlock);
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
@@ -172,14 +154,14 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         const double pos = ui.sliderValueToSpinValue(pct);
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, pos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
         m_view->Redraw();
     });
 
     QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, this, [=]{
         const gp_Dir invNormal = gfx->ToPlane().Axis().Direction().Reversed();
-        GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, invNormal);
-        GraphicsUtils::Gpx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
+        GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, invNormal);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
         m_view->Redraw();
     });
 
@@ -197,7 +179,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
                 this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));
-                GraphicsUtils::Gpx3dClipPlane_setNormal(gfx, normal);
+                GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, normal);
                 m_view->Redraw();
             }
         });
@@ -242,7 +224,7 @@ void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
     posSpin->setRange(rmin - gap, rmax + gap);
     posSpin->setSingleStep(std::abs(posSpin->maximum() - posSpin->minimum()) / 100.);
     if (useMidValue) {
-        GraphicsUtils::Gpx3dClipPlane_setPosition(data->graphics, newPlanePos);
+        GraphicsUtils::Gfx3dClipPlane_setPosition(data->graphics, newPlanePos);
         posSpin->setValue(newPlanePos);
         posSlider->setValue(data->ui.spinValueToSliderValue(newPlanePos));
     }

@@ -248,7 +248,7 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
     else if (isType<PropertyEnumeration>(prop)) {
         if (variant.isConvertibleToConstRefString()) {
             const std::string& name = variant.toConstRefString();
-            const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItem(name);
+            const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItemByName(name);
             if (ptrItem)
                 return ptr<PropertyEnumeration>(prop)->setValue(ptrItem->value);
 

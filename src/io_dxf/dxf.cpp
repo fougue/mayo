@@ -432,7 +432,7 @@ void CDxfWrite::makeBlockSectionHead(void)
     }
 }
 
-std::string CDxfWrite::getPlateFile(std::string fileSpec)
+std::string CDxfWrite::getPlateFile(const std::string& fileSpec)
 {
     std::stringstream outString;
     const std::filesystem::path fpath(fileSpec);
@@ -519,9 +519,9 @@ void CDxfWrite::writeLine(const double* s, const double* e)
     putLine(toVector3d(s),toVector3d(e),m_ssEntity, getEntityHandle(), m_saveModelSpaceHandle);
 }
 
-void CDxfWrite::putLine(const Base::Vector3d s, const Base::Vector3d e,
-                          std::ostringstream* outStream, const std::string handle,
-                          const std::string ownerHandle)
+void CDxfWrite::putLine(const Base::Vector3d& s, const Base::Vector3d& e,
+                          std::ostringstream* outStream, const std::string& handle,
+                          const std::string& ownerHandle)
 {
     (*outStream) << "  0"       << endl;
     (*outStream) << "LINE"      << endl;
@@ -951,10 +951,10 @@ void CDxfWrite::writeText(const char* text, const double* location1, const doubl
 //***************************
 //putText
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
-void CDxfWrite::putText(const char* text, const Base::Vector3d location1, const Base::Vector3d location2,
+void CDxfWrite::putText(const char* text, const Base::Vector3d& location1, const Base::Vector3d& location2,
                           const double height, const int horizJust,
-                          std::ostringstream* outStream, const std::string handle,
-                          const std::string ownerHandle)
+                          std::ostringstream* outStream, const std::string& handle,
+                          const std::string& ownerHandle)
 {
     (void) location2;
 
@@ -1020,9 +1020,9 @@ void CDxfWrite::putText(const char* text, const Base::Vector3d location1, const 
     
 }
 
-void CDxfWrite::putArrow(Base::Vector3d arrowPos, Base::Vector3d barb1Pos, Base::Vector3d barb2Pos,
-                         std::ostringstream* outStream, const std::string handle,
-                         const std::string ownerHandle)
+void CDxfWrite::putArrow(const Base::Vector3d& arrowPos, const Base::Vector3d& barb1Pos, const Base::Vector3d& barb2Pos,
+                         std::ostringstream* outStream, const std::string& handle,
+                         const std::string& ownerHandle)
 {
     (*outStream) << "  0"          << endl;
     (*outStream) << "SOLID"        << endl;

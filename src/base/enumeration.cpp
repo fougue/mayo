@@ -6,8 +6,12 @@
 
 #include "enumeration.h"
 
+#include "cpp_utils.h"
+
+#include <fmt/format.h>
 #include <algorithm>
 #include <cassert>
+#include <exception>
 
 namespace Mayo {
 
@@ -34,50 +38,29 @@ Enumeration& Enumeration::changeTrContext(std::string_view context)
     return *this;
 }
 
-const Enumeration::Item& Enumeration::findItem(Enumeration::Value value) const
+int Enumeration::findIndexByValue_untyped(Value value) const
 {
-    const int index = this->findIndex(value);
-    Expects(index != -1);
-    return this->itemAt(index);
+    auto it = std::find_if(m_vecItem.cbegin(), m_vecItem.cend(), [=](const Item& item) {
+        return item.value == value;
+    });
+    return it != m_vecItem.cend() ? CppUtils::safeStaticCast<int>(it - m_vecItem.cbegin()) : -1;
 }
 
-int Enumeration::findIndex(Value value) const
+Enumeration::Value Enumeration::findValueByName(std::string_view name) const
 {
-    auto it = std::find_if(
-                m_vecItem.cbegin(),
-                m_vecItem.cend(),
-                [=](const Item& item) { return item.value == value; });
-    return it != m_vecItem.cend() ? it - m_vecItem.cbegin() : -1;
-}
+    const Enumeration::Item* ptrItem = this->findItemByName(name);
+    if (!ptrItem)
+        throw std::runtime_error(fmt::format("No matching enumeration item found [name={}]", name));
 
-Enumeration::Value Enumeration::findValue(std::string_view name) const
-{
-    const Enumeration::Item* ptrItem = this->findItem(name);
-    assert(ptrItem != nullptr);
-    return ptrItem ? ptrItem->value : -1;
+    return ptrItem->value;
 }
 
 bool Enumeration::contains(std::string_view name) const
 {
-    return this->findItem(name) != nullptr;
+    return this->findItemByName(name) != nullptr;
 }
 
-const Enumeration& Enumeration::null()
-{
-    static const Enumeration null;
-    return null;
-}
-
-std::string_view Enumeration::findName(Value value) const
-{
-    const int index = this->findIndex(value);
-    if (index != -1)
-        return this->itemAt(index).name.key;
-
-    return {};
-}
-
-const Enumeration::Item* Enumeration::findItem(std::string_view name) const
+const Enumeration::Item* Enumeration::findItemByName(std::string_view name) const
 {
     auto itFound = std::find_if(
                 m_vecItem.cbegin(),

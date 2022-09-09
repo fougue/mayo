@@ -11,10 +11,12 @@
 #include "../base/unit_system.h"
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
+#include "filepath_conv.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
 
+#include <QtCore/QDir>
 #include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
@@ -57,7 +59,7 @@ protected:
 
 static QStringUtils::TextOptions appDefaultTextOptions()
 {
-    return AppModule::get(Application::instance())->defaultTextOptions();
+    return AppModule::get()->defaultTextOptions();
 }
 
 static QString toStringDHMS(QuantityTime time)
@@ -92,7 +94,7 @@ static QString propertyValueText(const PropertyBool* prop) {
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return AppModule::get(Application::instance())->locale().toString(prop->value());
+    return AppModule::get()->locale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
@@ -105,6 +107,11 @@ static QString propertyValueText(const PropertyCheckState* prop) {
 
 static QString propertyValueText(const PropertyString* prop) {
     return to_QString(prop->value());
+}
+
+static QString propertyValueText(const PropertyFilePath* prop) {
+    const FilePath filepath = filepathCanonical(prop->value());
+    return QDir::toNativeSeparators(filepathTo<QString>(filepath));
 }
 
 static QString propertyValueText(const PropertyOccColor* prop) {
@@ -253,6 +260,9 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
 
         if (propTypeName == PropertyString::TypeName)
             return propertyValueText(static_cast<const PropertyString*>(prop));
+
+        if (propTypeName == PropertyFilePath::TypeName)
+            return propertyValueText(static_cast<const PropertyFilePath*>(prop));
 
         if (propTypeName == PropertyOccColor::TypeName)
             return propertyValueText(static_cast<const PropertyOccColor*>(prop));

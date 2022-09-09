@@ -130,7 +130,7 @@ public:
     PropertyDouble scaling{ this, textId("scaling") };
     PropertyBool importAnnotations{ this, textId("importAnnotations") };
     PropertyBool groupLayers{ this, textId("groupLayers") };
-    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), systemFontNames() };
+    PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &systemFontNames() };
 };
 
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
@@ -138,7 +138,7 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_layers.clear();
     DxfReader::Internal internalReader(filepath, progress);
     internalReader.setParameters(m_params);
-    internalReader.setMessenger(this->messenger() ? this->messenger() : NullMessenger::instance());
+    internalReader.setMessenger(this->messenger() ? this->messenger() : &Messenger::null());
     internalReader.DoRead();
     m_layers = std::move(internalReader.layers());
     return !internalReader.Failed();
@@ -169,7 +169,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         if (it != mapAciColorLabel.cend())
             return it->second;
 
-        if (0 <= aci && aci < std::size(aciTable)) {
+        if (0 <= aci && CppUtils::cmpLess(aci, std::size(aciTable))) {
             const RGB_Color& c = aciTable[aci].second;
             const TDF_Label colorLabel = colorTool->AddColor(
                         Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB));
@@ -184,7 +184,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
     int shapeCount = 0;
     for (const auto& [layerName, vecEntity] : m_layers) {
         if (!startsWith(layerName, "BLOCKS")) {
-            shapeCount += vecEntity.size();
+            shapeCount = CppUtils::safeStaticCast<int>(shapeCount + vecEntity.size());
             const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
             mapLayerNameLabel.insert({ layerName, layerLabel });
         }
@@ -245,7 +245,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
                 }
             }
 
-            iShape += vecEntity.size();
+            iShape = CppUtils::safeStaticCast<int>(iShape + vecEntity.size());
             fnUpdateProgressValue();
         }
     }
@@ -527,7 +527,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(stru
             || sd.controlz.size() > numPoles
             || sd.weight.size() > numPoles)
     {
-        return nullptr;
+        return {};
     }
 
     // handle the poles
@@ -553,7 +553,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(stru
     TColStd_Array1OfReal occknots(1, numKnots);
     index = 1;
     for (auto k : unique) {
-        const size_t m = std::count(sd.knot.begin(), sd.knot.end(), k);
+        const auto m = CppUtils::safeStaticCast<int>(std::count(sd.knot.begin(), sd.knot.end(), k));
         occknots(index) = k;
         occmults(index) = m;
         index++;
@@ -581,7 +581,7 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(struct S
 {
     const size_t numPoints = sd.fit_points;
     if (sd.fitx.size() > numPoints || sd.fity.size() > numPoints || sd.fitz.size() > numPoints)
-        return nullptr;
+        return {};
 
     // handle the poles
     Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, sd.fit_points);

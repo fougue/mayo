@@ -6,14 +6,13 @@
 
 #!/usr/bin/ruby
 
-if ARGV.empty? then
+if ARGV.empty?
     puts "Error: no version argument"
     return
 end
 
-version_str = ARGV.first
 version_array = ARGV.first.split('.')
-if version_array.size != 3 then
+if version_array.size != 3
     puts "Error: wrong version format(maj.min.patch)"
     return
 end

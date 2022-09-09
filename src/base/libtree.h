@@ -12,26 +12,65 @@
 
 namespace Mayo {
 
+// Tree node identifier type
 using TreeNodeId = uint32_t;
 
+// Provides tree-like organization of data
+//
+// A tree node satisfies the following properties:
+//     * accessible through an identifier which is unique in the tree it belongs to
+//     * null identifier(0) refers to null(void) tree node
+//     * single parent node. A tree node is a root in case its parent identifier is null
+//     * has 0..N child tree nodes. A tree node is a leaf in case it has no child
+//     * owns data of any type, though data type is the same for all nodes of the same tree
+//
+// Storage of nodes and associated data is memory efficient : all nodes are stored in a single array
+// Use the traverseTree_() family of functions to visit nodes of a Tree object
+//
+// Data type 'T' must be default-constructible(see https://www.cplusplus.com/reference/type_traits/is_default_constructible/)
+//
 template<typename T> class Tree {
 public:
     Tree();
 
+    // Identifier of the sibling node previous to 'id'. Might returns 0
     TreeNodeId nodeSiblingPrevious(TreeNodeId id) const;
+
+    // Identifier of the sibling node next to 'id'. Might returns 0
     TreeNodeId nodeSiblingNext(TreeNodeId id) const;
+
+    // Identifier of the first child of node 'id'. Might returns 0
     TreeNodeId nodeChildFirst(TreeNodeId id) const;
+
+    // Identifier of the last child of node 'id'. Might returns 0
     TreeNodeId nodeChildLast(TreeNodeId id) const;
+
+    // Identifier of the parent of node 'id'. Might returns 0(in such case 'id' is a root)
     TreeNodeId nodeParent(TreeNodeId id) const;
+
+    // Identifier of the node being root of node 'id'
     TreeNodeId nodeRoot(TreeNodeId id) const;
+
+    // Data associated to node of identifier 'id' or default-constructed object of type 'T' in case of error
     const T& nodeData(TreeNodeId id) const;
+
+    // Is node of identifier 'id' a root? Note: a root as parent nodes(ie nodeParent(id) == 0)
     bool nodeIsRoot(TreeNodeId id) const;
+
+    // Is node of identifier 'id' a leaf? Note: a leaf as no child nodes
     bool nodeIsLeaf(TreeNodeId id) const;
+
+    // Read-only array of all the roots
     Span<const TreeNodeId> roots() const;
 
+    // Removes all nodes, tree will become empty
     void clear();
+
+    // Appends child to node identified by 'parentId'. That new node will contain 'data'
     TreeNodeId appendChild(TreeNodeId parentId, const T& data);
     TreeNodeId appendChild(TreeNodeId parentId, T&& data);
+
+    // Remove root node identified by 'id'
     void removeRoot(TreeNodeId id);
 
 private:
@@ -67,6 +106,10 @@ private:
     std::vector<TreeNodeId> m_vecRoot;
 };
 
+enum class TreeTraversal {
+    Unorder, PreOrder, PostOrder
+};
+
 // Fastest tree traversal, but nodes are visited unordered
 template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback);
@@ -83,13 +126,11 @@ void traverseTree_postOrder(const Tree<T>& tree, const FN& callback);
 template<typename T, typename FN>
 void traverseTree_postOrder(TreeNodeId id, const Tree<T>& tree, const FN& callback);
 
-// Same as traverseTree_preOrder()
 template<typename T, typename FN>
-void traverseTree(const Tree<T>& tree, const FN& callback);
+void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode = TreeTraversal::PreOrder);
 
-// Same as traverseTree_preOrder()
 template<typename T, typename FN>
-void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback);
+void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode = TreeTraversal::PreOrder);
 
 template<typename U, typename FN>
 void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback);
@@ -204,7 +245,7 @@ template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
 {
     Expects(this->nodeIsRoot(id));
 
-    // TODO Mark all children nodes as 'deleted'
+    // TODO Mark all deep children nodes as 'deleted'
     auto it = std::find(m_vecRoot.begin(), m_vecRoot.end(), id);
     if (it != m_vecRoot.end()) {
         TreeNode* node = this->ptrNode(id);
@@ -233,6 +274,29 @@ const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const {
 }
 
 template<typename T, typename FN>
+void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+    switch (mode) {
+    case TreeTraversal::Unorder:
+        return traverseTree_unorder(tree, callback);
+    case TreeTraversal::PreOrder:
+        return traverseTree_preOrder(tree, callback);
+    case TreeTraversal::PostOrder:
+        return traverseTree_postOrder(tree, callback);
+    }
+}
+
+template<typename T, typename FN>
+void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+    switch (mode) {
+    case TreeTraversal::Unorder:
+    case TreeTraversal::PreOrder:
+        return traverseTree_preOrder(id, tree, callback);
+    case TreeTraversal::PostOrder:
+        return traverseTree_postOrder(id, tree, callback);
+    }
+}
+
+template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 {
     for (const typename Tree<T>::TreeNode& node : tree.m_vecNode) {
@@ -240,16 +304,6 @@ void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
         if (!tree.isNodeDeleted(id))
             callback(id);
     }
-}
-
-template<typename T, typename FN>
-void traverseTree(const Tree<T>& tree, const FN& callback) {
-    return traverseTree_preOrder(tree, callback);
-}
-
-template<typename T, typename FN>
-void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback) {
-    return traverseTree_preOrder(id, tree, callback);
 }
 
 template<typename T, typename FN>

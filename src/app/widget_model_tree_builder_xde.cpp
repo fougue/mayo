@@ -13,7 +13,7 @@
 #include "theme.h"
 #include "widget_model_tree.h"
 
-#include <QtWidgets/QActionGroup>
+#include <QActionGroup> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
@@ -23,23 +23,12 @@
 
 namespace Mayo {
 
-class WidgetModelTreeBuilder_Xde::Module : public QObject, public PropertyGroup {
+class WidgetModelTreeBuilder_Xde::Module : public PropertyGroup {
 public:
-    Module(const ApplicationPtr& app)
-        : QObject(app.get()),
-          PropertyGroup(app->settings())
+    static Module* get()
     {
-        this->setObjectName("WidgetModelTreeBuilder_Xde::Module");
-        auto settings = app->settings();
-        settings->addSetting(&this->instanceNameFormat, AppModule::get(app)->groupId_application);
-        settings->addResetFunction(AppModule::get(app)->groupId_application, [=]{
-            this->instanceNameFormat.setValue(NameFormat::Product);
-        });
-        this->instanceNameFormat.mutableEnumeration().changeTrContext(WidgetModelTreeBuilder_Xde::textIdContext());
-    }
-
-    static Module* get(const ApplicationPtr& app) {
-        return app->findChild<Module*>("WidgetModelTreeBuilder_Xde::Module", Qt::FindDirectChildrenOnly);
+        static Module module;
+        return &module;
     }
 
     enum class NameFormat { Instance, Product, Both };
@@ -75,6 +64,19 @@ public:
     }
 
     PropertyEnum<NameFormat> instanceNameFormat{ this, textId("instanceNameFormat") };
+
+private:
+    Module()
+        : PropertyGroup(AppModule::get()->settings())
+    {
+        auto appModule = AppModule::get();
+        auto settings = appModule->settings();
+        settings->addSetting(&this->instanceNameFormat, appModule->properties()->groupId_application);
+        settings->addResetFunction(appModule->properties()->groupId_application, [=]{
+            this->instanceNameFormat.setValue(NameFormat::Product);
+        });
+        this->instanceNameFormat.mutableEnumeration().changeTrContext(WidgetModelTreeBuilder_Xde::textIdContext());
+    }
 };
 
 bool WidgetModelTreeBuilder_Xde::supportsDocumentTreeNode(const DocumentTreeNode& node) const
@@ -88,7 +90,7 @@ void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(
     const TDF_Label labelNode = node.label();
     TDF_LabelSequence seqLabelRefresh;
     if (XCaf::isShapeReference(labelNode)
-            && m_module->instanceNameTemplate().contains("%product"))
+            && Module::get()->instanceNameTemplate().contains("%product"))
     {
         XCAFDoc_ShapeTool::GetUsers(
                     XCaf::shapeReferred(labelNode),
@@ -112,20 +114,12 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::createTreeItem(const DocumentTreeNo
     return this->buildXdeTree(nullptr, node);
 }
 
-// BEWARE Not thread-safe, should be called from main(GUI) thread
-void WidgetModelTreeBuilder_Xde::registerGuiApplication(GuiApplication* guiApp)
-{
-    m_module = Module::get(guiApp->application());
-    if (!m_module)
-        m_module = new Module(guiApp->application());
-}
-
 WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObject *parent)
 {
     WidgetModelTree_UserActions userActions;
     auto group = new QActionGroup(parent);
     group->setExclusive(true);
-    for (const Enumeration::Item& item : m_module->instanceNameFormat.enumeration().items()) {
+    for (const Enumeration::Item& item : Module::get()->instanceNameFormat.enumeration().items()) {
         const QString actionText = to_QString(fmt::format(textIdTr("Show {}"), item.name.tr()));
         auto action = new QAction(actionText, parent);
         action->setCheckable(true);
@@ -216,7 +210,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
 QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return QtCoreUtils::QByteArray_frowRawData(m_module->instanceNameFormat.name());
+    return QtCoreUtils::QByteArray_frowRawData(Module::get()->instanceNameFormat.name());
 }
 
 void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
@@ -224,7 +218,7 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
     if (format == this->instanceNameFormat())
         return;
 
-    m_module->instanceNameFormat.setValueByName(format.constData());
+    Module::get()->instanceNameFormat.setValueByName(format.constData());
     for (QTreeWidgetItemIterator it(this->treeWidget()); *it; ++it) {
         if (WidgetModelTree::holdsDocumentTreeNode(*it))
             this->refreshXdeAssemblyNodeItemText(*it);
@@ -234,7 +228,6 @@ void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
 std::unique_ptr<WidgetModelTreeBuilder> WidgetModelTreeBuilder_Xde::clone() const
 {
     auto builder = std::make_unique<WidgetModelTreeBuilder_Xde>();
-    builder->m_module = this->m_module;
     builder->m_isMergeXdeReferredShapeOn = this->m_isMergeXdeReferredShapeOn;
     return builder;
 }
@@ -259,7 +252,7 @@ QString WidgetModelTreeBuilder_Xde::referenceItemText(
 {
     const QString instanceName = to_QString(CafUtils::labelAttrStdName(instanceLabel)).trimmed();
     const QString productName = to_QString(CafUtils::labelAttrStdName(productLabel)).trimmed();
-    const QByteArray strTemplate = Module::toInstanceNameTemplate(m_module->instanceNameFormat);
+    const QByteArray strTemplate = Module::toInstanceNameTemplate(Module::get()->instanceNameFormat);
     QString itemText = QString::fromUtf8(strTemplate);
     itemText.replace("%instance", instanceName)
             .replace("%product", productName);
