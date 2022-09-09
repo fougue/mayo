@@ -5,7 +5,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/d51f8ca6fea34886b8308ff0246172ce)](https://www.codacy.com/gh/fougue/mayo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fougue/mayo&amp;utm_campaign=Badge_Grade)
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
-[![Version](https://img.shields.io/badge/version-v0.5.2-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
+[![Version](https://img.shields.io/badge/version-v0.6.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
   
 </div>
 
