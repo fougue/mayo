@@ -99,15 +99,21 @@ std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureCon
     return BaseMeasureDisplay;
 }
 
-Quantity_Color BaseMeasureDisplay::graphicsColor()
+void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 {
-    return Quantity_NOC_BLACK;
-}
-
-void BaseMeasureDisplay::applyGraphicsColor(IMeasureDisplay* measureDisplay)
-{
-    for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i)
-        measureDisplay->graphicsObjectAt(i)->SetColor(BaseMeasureDisplay::graphicsColor());
+    for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i) {
+        auto gfxObject = measureDisplay->graphicsObjectAt(i);
+        auto gfxText = Handle_AIS_TextLabel::DownCast(gfxObject);
+        if (gfxText) {
+            gfxText->SetDisplayType(Aspect_TODT_SUBTITLE);
+            gfxText->SetColorSubTitle(Quantity_NOC_BLACK);
+            gfxText->SetColor(Quantity_NOC_WHITE);
+            gfxText->SetTransparency(0.2);
+        }
+        else {
+            gfxObject->SetColor(Quantity_NOC_BLACK);
+        }
+    }
 }
 
 // --
@@ -119,7 +125,7 @@ MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
       m_gfxText(new AIS_TextLabel)
 {
     m_gfxText->SetPosition(pnt);
-    BaseMeasureDisplay::applyGraphicsColor(this);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
 void MeasureDisplayVertex::update(const MeasureConfig& config)
@@ -145,11 +151,10 @@ MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circ
     m_gfxText->SetPosition(m_circle.Location());
     if (circle.isArc) {
         m_gfxCircle = new AIS_Circle(new Geom_Circle(m_circle));
-        m_gfxCircle->SetColor(Quantity_NOC_GRAY50);
         m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
     }
 
-    BaseMeasureDisplay::applyGraphicsColor(this);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
 void MeasureDisplayCircleCenter::update(const MeasureConfig& config)
@@ -182,18 +187,15 @@ MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& 
       m_gfxCircle(new AIS_Circle(new Geom_Circle(m_circle))),
       m_gfxDiameterText(new AIS_TextLabel)
 {
-    m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
-
     const gp_Pnt otherPntAnchor = diameterOpposedPnt(circle.pntAnchor, m_circle);
     m_gfxDiameter = new AIS_Line(new Geom_CartesianPoint(circle.pntAnchor), new Geom_CartesianPoint(otherPntAnchor));
     m_gfxDiameter->SetWidth(2.5);
     m_gfxDiameter->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 
     m_gfxDiameterText->SetPosition(m_circle.Location());
-    //m_gfxDiameterText->SetFont("Arial");
 
-    BaseMeasureDisplay::applyGraphicsColor(this);
-    m_gfxCircle->SetColor(Quantity_NOC_GRAY50);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
+    m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 }
 
 void MeasureDisplayCircleDiameter::update(const MeasureConfig& config)
@@ -239,7 +241,7 @@ MeasureDisplayMinDistance::MeasureDisplayMinDistance(const MeasureMinDistance& d
     m_gfxLength->SetWidth(2.5);
     m_gfxLength->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
     m_gfxDistText->SetPosition(dist.pnt1.Translated(gp_Vec(dist.pnt1, dist.pnt2) / 2.));
-    BaseMeasureDisplay::applyGraphicsColor(this);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
 void MeasureDisplayMinDistance::update(const MeasureConfig& config)
@@ -285,7 +287,7 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);
-    BaseMeasureDisplay::applyGraphicsColor(this);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
     m_gfxAngle->SetWidth(2);
     m_gfxEntity1->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
     m_gfxEntity2->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);

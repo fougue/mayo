@@ -62,9 +62,7 @@ protected:
     static std::string text(double value);
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureConfig& config);
 
-    // Default color used for graphics
-    static Quantity_Color graphicsColor();
-    static void applyGraphicsColor(IMeasureDisplay* measureDisplay);
+    static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 
 private:
     std::string m_text;
