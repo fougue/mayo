@@ -37,7 +37,7 @@ struct BRepUtils {
 
     // Returns hash code computed from 'shape'
     // Computation uses the internal TShape and Location, but Orientation is not considered
-    // Returnd hash code is in the range [1, max(int)]
+    // Returned hash code is in the range [1, max(int)]
     static int hashCode(const TopoDS_Shape& shape);
 
     // Serializes 'shape' into a string representation

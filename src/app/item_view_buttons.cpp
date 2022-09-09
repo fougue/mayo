@@ -174,7 +174,7 @@ void ItemViewButtons::Private::resetButtonUnderMouseState()
  *
  *  \param btnId Identifier of the button clicked (this is the id that was
  *               passed to addButton())
- *  \param index Index of the item model where the button click occured
+ *  \param index Index of the item model where the button click occurred
  */
 
 ItemViewButtons::ItemViewButtons(QAbstractItemView* view, QObject* parent)

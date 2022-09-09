@@ -155,10 +155,10 @@ void AppModuleProperties::retranslate()
     this->meshingQuality.setDescription(
                 textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
     this->meshingChordalDeflection.setDescription(
-                textIdTr("For the tesselation of faces the chordal deflection limits the distance between "
+                textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
                          "a curve and its tessellation"));
     this->meshingAngularDeflection.setDescription(
-                textIdTr("For the tesselation of faces the angular deflection limits the angle between "
+                textIdTr("For the tessellation of faces the angular deflection limits the angle between "
                          "subsequent segments in a polyline"));
     this->meshingRelative.setDescription(
                 textIdTr("Relative computation of edge tolerance\n\n"

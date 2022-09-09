@@ -62,7 +62,7 @@ protected:
 };
 #endif
 
-// Fallback using traditional QWidget wrapper, no translucid brackground support
+// Fallback using traditional QWidget wrapper, no translucid background support
 class QWidgetOccView : public QWidget, public IWidgetOccView {
 public:
     QWidgetOccView(const Handle_V3d_View& view, QWidget* parent = nullptr);

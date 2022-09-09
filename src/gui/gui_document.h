@@ -50,7 +50,7 @@ public:
     // Toggles selected status of an application item(doesn't affect Application's selection model)
     void toggleItemSelected(const ApplicationItem& appItem);
 
-    // Executes action associated to a 3D sensistive item
+    // Executes action associated to a 3D sensitive item
     bool processAction(const GraphicsOwnerPtr& graphicsOwner);
 
     // -- Display mode
