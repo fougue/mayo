@@ -24,7 +24,7 @@ namespace Mayo {
 
 class PropertyEnumeration : public Property {
 public:
-    // This constructor should be used when 'enumeration' is garanteed to be fully constructed
+    // This constructor should be used when 'enumeration' is guaranteed to be fully constructed
     PropertyEnumeration(PropertyGroup* grp, const TextId& name, const Enumeration* enumeration);
 
     const Enumeration& enumeration() const;

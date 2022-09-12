@@ -404,7 +404,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     m_ui->combo_GuiDocuments->setModel(guiDocModel);
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
 
-    // Finialize setup
+    // Finalize setup
     this->setAcceptDrops(true);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);

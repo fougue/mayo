@@ -113,7 +113,7 @@ public:
         // Format in which items are exported
         Format targetFormat = Format_Unknown;
 
-        // Optional: format-specific parameters to be considered when writting items
+        // Optional: format-specific parameters to be considered when writing items
         const PropertyGroup* parameters = nullptr; // TODO use ParametersProvider instead?
 
         // Optional: the messenger object used to report any additional infos, warnings and errors
@@ -179,7 +179,7 @@ public:
 
     // Helpers
 
-    // Iterate over `spanItem` and call `fnCallback` for each item. Garantees that doublon items
+    // Iterate over `spanItem` and call `fnCallback` for each item. Guarantees that doublon items
     // will be visited only once
     static void visitUniqueItems(
             Span<const ApplicationItem> spanItem,
@@ -187,7 +187,7 @@ public:
     );
 
     // Iterate over `spanItem` and then deep traverse the corresponding tree node to
-    // call `fnCallback` for each item. Garantees that doublon items will be visited only once
+    // call `fnCallback` for each item. Guarantees that doublon items will be visited only once
     static void traverseUniqueItems(
             Span<const ApplicationItem> spanItem,
             std::function<void(const DocumentTreeNode&)> fnCallback,

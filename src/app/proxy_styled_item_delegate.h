@@ -11,7 +11,7 @@
 namespace Mayo {
 
 // Convenience class that simplifies dynamically overriding of QStyledItemDelegate
-// QStyledItemDelegate protected functions cannot be overriden through proxy technique, this is a
+// QStyledItemDelegate protected functions cannot be overridden through proxy technique, this is a
 // limitation that applies to :
 //     - QStyledItemDelegate::initStyleOption()
 //     - QStyledItemDelegate::eventFilter()

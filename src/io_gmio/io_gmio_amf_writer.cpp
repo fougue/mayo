@@ -129,7 +129,7 @@ public:
     {
         this->float64Format.mutableEnumeration().changeTrContext(this->textIdContext());
         this->float64Format.setDescription(
-                    textIdTr("Format used when writting `double` values as strings"));
+                    textIdTr("Format used when writing `double` values as strings"));
         this->float64Format.setDescriptions({
                     { FloatTextFormat::Decimal, textIdTr("Decimal floating point(ex: 392.65)") },
                     { FloatTextFormat::Scientific, textIdTr("Scientific notation(ex: 3.9265E+2)") },
@@ -139,7 +139,7 @@ public:
         this->float64Precision.setConstraintsEnabled(true);
         this->float64Precision.setRange(1, 16);
         this->float64Precision.setDescription(
-                    textIdTr("Maximum number of significant digits when writting `double` values"));
+                    textIdTr("Maximum number of significant digits when writing `double` values"));
 
         this->createZipArchive.setDescription(
                     textIdTr("Write AMF document in ZIP archive containing one file entry"));

@@ -114,7 +114,7 @@ public:
         this->importAnnotations.setDescription(
                     textIdTr("Import text/dimension objects"));
         this->groupLayers.setDescription(
-                    textIdTr("Group all objects within a layer into a single coumpound shape"));
+                    textIdTr("Group all objects within a layer into a single compound shape"));
         this->fontNameForTextObjects.setDescription(
                     textIdTr("Name of the font to be used when creating shape for text objects"));
     }
