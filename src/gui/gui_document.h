@@ -45,13 +45,13 @@ public:
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     // Finds the tree node id associated to graphics object
-    TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& object) const;
+    TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const;
 
     // Toggles selected status of an application item(doesn't affect Application's selection model)
     void toggleItemSelected(const ApplicationItem& appItem);
 
     // Executes action associated to a 3D sensitive item
-    bool processAction(const GraphicsOwnerPtr& graphicsOwner);
+    bool processAction(const GraphicsOwnerPtr& gfxOwner);
 
     // -- Display mode
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;

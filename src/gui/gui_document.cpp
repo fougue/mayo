@@ -46,7 +46,8 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
     aisTrihedron->SetTransformPersistence(
-                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location()));
+                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
+    );
     aisTrihedron->Attributes()->SetZLayer(Graphic3d_ZLayerId_Topmost);
     aisTrihedron->SetInfiniteState(true);
     return aisTrihedron;
@@ -87,7 +88,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
-                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20));
+                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
+    );
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
                 GuiDocument::defaultGradientBackground().color1,
@@ -104,10 +106,12 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     QObject::connect(doc.get(), &Document::entityAdded, this, &GuiDocument::onDocumentEntityAdded);
     QObject::connect(
                 doc.get(), &Document::entityAboutToBeDestroyed,
-                this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
+                this, &GuiDocument::onDocumentEntityAboutToBeDestroyed
+    );
     QObject::connect(
                 &m_gfxScene, &GraphicsScene::selectionChanged,
-                this, &GuiDocument::onGraphicsSelectionChanged);
+                this, &GuiDocument::onGraphicsSelectionChanged
+    );
 }
 
 void GuiDocument::foreachGraphicsObject(
@@ -128,13 +132,13 @@ void GuiDocument::foreachGraphicsObject(
     });
 }
 
-TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& object) const
+TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const
 {
-    if (!object)
+    if (!gfxObject)
         return 0;
 
     for (const GraphicsEntity& gfxEntity: m_vecGraphicsEntity) {
-        auto it = gfxEntity.mapGfxObjectTreeNode.find(object);
+        auto it = gfxEntity.mapGfxObjectTreeNode.find(gfxObject);
         if (it != gfxEntity.mapGfxObjectTreeNode.cend())
             return it->second;
     }
@@ -227,7 +231,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     traverseTree(nodeId, docModelTree , [=](TreeNodeId id) {
         fnSetNodeVisibleState(id, nodeVisibleState);
     });
-    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject){
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
         GraphicsUtils::AisObject_setVisible(gfxObject, on);
     });
 
@@ -312,13 +316,13 @@ void GuiDocument::toggleOriginTrihedronVisibility()
     m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
 }
 
-bool GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
+bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
 {
-    if (graphicsOwner.IsNull())
+    if (!gfxOwner)
         return false;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(graphicsOwner);
+    auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
     if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
         return true;
@@ -509,7 +513,8 @@ void GuiDocument::onGraphicsSelectionChanged()
     std::vector<ApplicationItem> vecSelected;
     m_gfxScene.foreachSelectedOwner([&](const GraphicsOwnerPtr& gfxOwner) {
         auto gfxObject = GraphicsObjectPtr::DownCast(
-                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject()
+        );
         const TreeNodeId nodeId = this->nodeFromGraphicsObject(gfxObject);
         if (nodeId != 0) {
             const ApplicationItem appItem({ m_document, nodeId });
@@ -621,7 +626,8 @@ const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId en
     auto itFound = std::find_if(
                 m_vecGraphicsEntity.cbegin(),
                 m_vecGraphicsEntity.cend(),
-                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; });
+                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
+    );
     return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
 }
 
