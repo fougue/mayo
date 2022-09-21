@@ -460,7 +460,8 @@ static int runApp(QCoreApplication* qtApp)
     // Record recent files when documents are closed
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
-                AppModule::get(), &AppModule::recordRecentFileThumbnail);
+                AppModule::get(), &AppModule::recordRecentFileThumbnail
+    );
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -496,47 +497,50 @@ static int runApp(QCoreApplication* qtApp)
     return code;
 }
 
-static bool isAppCliMode = false;
-static void onQtAppExit()
-{
-#if defined(Q_OS_WIN) && defined(NDEBUG)
-    if (isAppCliMode)
-        consoleSendEnterKey();
-#endif
-}
-
-#ifdef MAYO_WITH_TESTS
 // Defined in tests/runtests.cpp
 int runTests(int argc, char* argv[]);
-#endif
 
 } // namespace Mayo
 
 int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
-    qAddPostRoutine(&Mayo::onQtAppExit);
 
-    // Running CLI mode?
-    for (int i = 1; i < argc && !Mayo::isAppCliMode; ++i) {
-        static const char* cliArgs[] = { "-e", "--export", "-h", "--help", "-v", "--version" };
-        auto itCliArg = std::find_if(std::cbegin(cliArgs), std::cend(cliArgs), [=](const char* cliArg) {
-            return std::strcmp(argv[i], cliArg) == 0;
-        });
-        Mayo::isAppCliMode = itCliArg != std::cend(cliArgs);
-    }
+    // Helper function to check if application arguments contain any option listed in 'listOption'
+    auto fnArgsContainAnyOf = [=](std::initializer_list<const char*> listOption) {
+        for (int i = 1; i < argc; ++i) {
+            for (const char* option : listOption) {
+                if (std::strcmp(argv[i], option) == 0)
+                    return true;
+            }
+        }
+        return false;
+    };
 
+    // Configure and create Qt application object
 #if defined(Q_OS_WIN)
     // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 #endif
-
+    QCoreApplication::setOrganizationName("Fougue Ltd");
+    QCoreApplication::setOrganizationDomain("www.fougue.pro");
+    QCoreApplication::setApplicationName("Mayo");
+    QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
+    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
     std::unique_ptr<QCoreApplication> ptrApp(
-            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
+            isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
     );
 
+    // Handle unit tests
+#ifdef MAYO_WITH_TESTS
+    if (fnArgsContainAnyOf({ "--runtests" }))
+        return Mayo::runTests(argc, argv);
+#endif
+
+    // Configure for CLI mode
+    if (isAppCliMode) {
 #if defined(Q_OS_WIN) && defined(NDEBUG)
-    if (Mayo::isAppCliMode) {
+        qAddPostRoutine(&Mayo::consoleSendEnterKey);
         // https://devblogs.microsoft.com/oldnewthing/20090101-00/?p=19643
         // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
         if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
@@ -550,20 +554,9 @@ int main(int argc, char* argv[])
             fnRedirectToConsole(STD_ERROR_HANDLE, stderr, "CONOUT$");
             std::ios::sync_with_stdio();
         }
-    }
 #endif
-
-    QCoreApplication::setOrganizationName("Fougue Ltd");
-    QCoreApplication::setOrganizationDomain("www.fougue.pro");
-    QCoreApplication::setApplicationName("Mayo");
-    QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-
-#ifdef MAYO_WITH_TESTS
-    for (int i = 0; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--runtests") == 0)
-            return Mayo::runTests(argc, argv);
     }
-#endif
 
+    // Run Mayo application in CLI or GUI mode
     return Mayo::runApp(ptrApp.get());
 }
