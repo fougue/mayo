@@ -285,7 +285,7 @@ static std::string_view qtTranslate(const TextId& text, int n)
 {
     const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
     auto qstrHash = qHash(qstr);
-    static std::unordered_map<unsigned, std::string> mapStr;
+    static std::unordered_map<decltype(qstrHash), std::string> mapStr;
     static QReadWriteLock mapStrLock;
     {
         QReadLocker locker(&mapStrLock);
