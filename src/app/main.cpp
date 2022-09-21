@@ -95,7 +95,10 @@ public:
     void setOutputFilePath(const FilePath& fp)
     {
         m_outputFilePath = fp;
-        m_outputFile.open(fp, std::ios::out | std::ios::app);
+        if (!fp.empty())
+            m_outputFile.open(fp, std::ios::out | std::ios::app);
+        else
+            m_outputFile.close();
     }
 
     std::ostream& outputStream(QtMsgType type)
@@ -396,8 +399,7 @@ static int runApp(QCoreApplication* qtApp)
 
     // Message logging
     LogMessageHandler::instance().enableDebugLogs(args.includeDebugLogs);
-    if (!args.filepathLog.empty())
-        LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
+    LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
 
     // Initialize AppModule
     auto appModule = AppModule::get();
