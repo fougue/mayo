@@ -367,7 +367,6 @@ static void initGui(GuiApplication* guiApp)
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
 }
 
-
 // Initializes and runs Mayo application
 static int runApp(QCoreApplication* qtApp)
 {
@@ -486,7 +485,7 @@ static int runApp(QCoreApplication* qtApp)
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
-        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
+        QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
     appModule->settings()->resetAll();
