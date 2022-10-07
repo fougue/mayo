@@ -222,7 +222,7 @@ WidgetHomeFiles::WidgetHomeFiles(QWidget* parent)
     m_gridDelegate->setItemPixmapSize(appModule->recentFileThumbnailSize());
     m_gridView->setItemDelegate(m_gridDelegate);
 
-    QObject::connect(appModule->settings(), &Settings::changed, this, [=](const Property* setting) {
+    appModule->settings()->signalChanged.connectSlot([=](const Property* setting) {
         if (setting == &appModule->properties()->recentFiles)
             model->reload();
     });

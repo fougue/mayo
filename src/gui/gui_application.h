@@ -25,22 +25,22 @@ public:
     GuiApplication(const ApplicationPtr& app);
     ~GuiApplication();
 
-    const ApplicationPtr& application() const { return m_app; }
+    const ApplicationPtr& application() const;
 
-    Span<GuiDocument*> guiDocuments() { return m_vecGuiDocument; }
-    Span<GuiDocument* const> guiDocuments() const { return m_vecGuiDocument; }
+    Span<GuiDocument*> guiDocuments();
+    Span<GuiDocument* const> guiDocuments() const;
     GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
 
     void addGraphicsObjectDriver(GraphicsObjectDriverPtr ptr);
     void addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDriver> ptr);
-    Span<const GraphicsObjectDriverPtr> graphicsObjectDrivers() const { return m_vecGfxObjectDriver; }
+    Span<const GraphicsObjectDriverPtr> graphicsObjectDrivers() const;
     GraphicsObjectPtr createGraphicsObject(const TDF_Label& label) const;
 
     // Whether a GuiDocument object is automatically created once a Document is added in Application
-    bool automaticDocumentMapping() const { return m_automaticDocumentMapping; }
-    void setAutomaticDocumentMapping(bool on) { m_automaticDocumentMapping = on; }
+    bool automaticDocumentMapping() const;
+    void setAutomaticDocumentMapping(bool on);
 
 signals:
     void guiDocumentAdded(Mayo::GuiDocument* guiDoc);
@@ -53,16 +53,9 @@ protected:
 private:
     friend class GuiDocument;
     void connectApplicationItemSelectionChanged(bool on);
-    void onApplicationItemSelectionCleared();
-    void onApplicationItemSelectionChanged(
-            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
 
-    ApplicationPtr m_app;
-    std::vector<GuiDocument*> m_vecGuiDocument;
-    ApplicationItemSelectionModel* m_selectionModel = nullptr;
-    std::vector<GraphicsObjectDriverPtr> m_vecGfxObjectDriver;
-    QMetaObject::Connection m_connApplicationItemSelectionChanged;
-    bool m_automaticDocumentMapping = true;
+    struct Private;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo

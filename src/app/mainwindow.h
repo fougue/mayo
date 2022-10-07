@@ -8,6 +8,7 @@
 
 #include "../base/filepath.h"
 #include "../base/property.h"
+#include "../base/task_manager.h"
 #include "../base/text_id.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
@@ -17,7 +18,6 @@ namespace Mayo {
 
 class GuiApplication;
 class GuiDocument;
-class TaskManager;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
@@ -91,7 +91,7 @@ private:
 
     GuiApplication* m_guiApp = nullptr;
     class Ui_MainWindow* m_ui = nullptr;
-    TaskManager* m_taskMgr = nullptr;
+    TaskManager m_taskMgr;
     Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
     std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;

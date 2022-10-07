@@ -106,9 +106,8 @@ public:
     const PropertyValueConversion* m_propValueConverter = nullptr;
 };
 
-Settings::Settings(QObject* parent)
-    : QObject(parent),
-      d(new Private)
+Settings::Settings()
+    : d(new Private)
 {
 }
 
@@ -394,19 +393,19 @@ void Settings::resetSection(SectionIndex index)
 void Settings::onPropertyAboutToChange(Property* prop)
 {
     PropertyGroup::onPropertyAboutToChange(prop);
-    emit this->aboutToChange(prop);
+    this->signalAboutToChange.send(prop);
 }
 
 void Settings::onPropertyChanged(Property* prop)
 {
     PropertyGroup::onPropertyChanged(prop);
-    emit this->changed(prop);
+    this->signalChanged.send(prop);
 }
 
 void Settings::onPropertyEnabled(Property* prop, bool on)
 {
     PropertyGroup::onPropertyEnabled(prop, on);
-    emit this->enabled(prop, on);
+    this->signalEnabled.send(prop, on);
 }
 
 } // namespace Mayo

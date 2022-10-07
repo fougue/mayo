@@ -61,8 +61,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             data.graphics->SetCappingTexture(m_textureCapping);
     }
 
-    const auto settings = appModule->settings();
-    QObject::connect(settings, &Settings::changed, this, [=](Property* property) {
+    appModule->settings()->signalChanged.connectSlot([=](Property* property) {
         if (property == &appModule->properties()->clipPlanesCappingOn) {
             for (ClipPlaneData& data : m_vecClipPlaneData)
                 data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn);
@@ -80,6 +79,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             m_view->Redraw();
         }
     });
+
     m_ui->widget_CustomDir->setVisible(false);
 }
 

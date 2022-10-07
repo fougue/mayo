@@ -55,6 +55,10 @@ struct Application::Private {
     std::vector<Application::Translator> m_vecTranslator;
 };
 
+struct ApplicationI18N {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Application)
+};
+
 Application::~Application()
 {
     delete d;
@@ -63,25 +67,19 @@ Application::~Application()
 const ApplicationPtr& Application::instance()
 {
     static ApplicationPtr appPtr;
-    if (appPtr.IsNull()) {
+    if (!appPtr) {
         appPtr = new Application;
         const char strFougueCopyright[] = "Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>";
         appPtr->DefineFormat(
-                    Document::NameFormatBinary, qUtf8Printable(tr("Binary Mayo Document Format")), "myb",
+                    Document::NameFormatBinary, ApplicationI18N::textIdTr("Binary Mayo Document Format").data(), "myb",
                     new Document::FormatBinaryRetrievalDriver(appPtr),
-                    new BinXCAFDrivers_DocumentStorageDriver);
+                    new BinXCAFDrivers_DocumentStorageDriver
+        );
         appPtr->DefineFormat(
-                    Document::NameFormatXml, qUtf8Printable(tr("XML Mayo Document Format")), "myx",
+                    Document::NameFormatXml, ApplicationI18N::textIdTr("XML Mayo Document Format").data(), "myx",
                     new Document::FormatXmlRetrievalDriver(appPtr),
-                    new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright));
-
-        qRegisterMetaType<TreeNodeId>("Mayo::TreeNodeId");
-        qRegisterMetaType<TreeNodeId>("TreeNodeId");
-        qRegisterMetaType<DocumentPtr>("Mayo::DocumentPtr");
-        qRegisterMetaType<DocumentPtr>("DocumentPtr");
-        qRegisterMetaType<TaskId>("Mayo::TaskId");
-        qRegisterMetaType<TaskId>("TaskId");
-        qRegisterMetaType<std::string>("std::string");
+                    new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright)
+        );
     }
 
     return appPtr;
@@ -231,8 +229,7 @@ void Application::InitDocument(const Handle(TDocStd_Document)& doc) const
 }
 
 Application::Application()
-    : QObject(nullptr),
-      d(new Private)
+    : d(new Private)
 {
 }
 
@@ -240,7 +237,7 @@ void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)
 {
     auto itFound = d->m_mapIdentifierDocument.find(docIdent);
     if (itFound != d->m_mapIdentifierDocument.end()) {
-        emit this->documentAboutToClose(itFound->second);
+        this->signalDocumentAboutToClose.send(itFound->second);
         d->m_mapIdentifierDocument.erase(itFound);
     }
 }
@@ -253,19 +250,16 @@ void Application::addDocument(const DocumentPtr& doc)
         this->InitDocument(doc);
         doc->initXCaf();
 
-        QObject::connect(
-                    doc.get(), &Document::nameChanged,
-                    this, [=](const std::string& name) { emit this->documentNameChanged(doc, name); });
-        QObject::connect(
-                    doc.get(), &Document::entityAdded,
-                    this, [=](TreeNodeId entityId) { emit this->documentEntityAdded(doc, entityId); });
-        QObject::connect(
-                    doc.get(), &Document::entityAboutToBeDestroyed,
-                    this, [=](TreeNodeId entityId) { emit this->documentEntityAboutToBeDestroyed(doc, entityId); });
-//      QObject::connect(
-//                  doc, &Document::itemPropertyChanged,
-//                  this, &Application::documentItemPropertyChanged);
-        emit documentAdded(doc);
+        doc->signalNameChanged.connectSlot([=](const std::string& name) {
+            this->signalDocumentNameChanged.send(doc, name);
+        });
+        doc->signalEntityAdded.connectSlot([=](TreeNodeId entityId) {
+            this->signalDocumentEntityAdded.send(doc, entityId);
+        });
+        doc->signalEntityAboutToBeDestroyed.connectSlot([=](TreeNodeId entityId) {
+            this->signalDocumentEntityAboutToBeDestroyed.send(doc, entityId);
+        });
+        this->signalDocumentAdded.send(doc);
     }
 }
 

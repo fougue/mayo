@@ -16,8 +16,7 @@
 namespace Mayo {
 
 Document::Document(const ApplicationPtr& app)
-    : QObject(app.get()),
-      TDocStd_Document(NameFormatBinary),
+    : TDocStd_Document(NameFormatBinary),
       m_app(app)
 {
     TDF_TagSource::Set(this->rootLabel());
@@ -37,7 +36,7 @@ const std::string& Document::name() const
 void Document::setName(std::string_view name)
 {
     m_name = name;
-    emit this->nameChanged(m_name);
+    this->signalNameChanged.send(m_name);
 }
 
 const FilePath& Document::filePath() const
@@ -148,7 +147,7 @@ void Document::addEntityTreeNode(const TDF_Label& label)
 
     // TODO Allow custom population of the model tree for the new entity
     const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
-    emit this->entityAdded(nodeId);
+    this->signalEntityAdded.send(nodeId);
 
 #if 0
     // Remove 'label'
@@ -165,7 +164,7 @@ void Document::destroyEntity(TreeNodeId entityTreeNodeId)
     if (CafUtils::isNullOrEmpty(entityLabel))
         return;
 
-    emit this->entityAboutToBeDestroyed(entityTreeNodeId);
+    this->signalEntityAboutToBeDestroyed.send(entityTreeNodeId);
     entityLabel.ForgetAllAttributes();
     entityLabel.Nullify();
     m_modelTree.removeRoot(entityTreeNodeId);

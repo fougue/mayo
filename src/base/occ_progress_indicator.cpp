@@ -8,6 +8,8 @@
 #include "string_conv.h"
 #include "task_progress.h"
 
+#include <algorithm>
+
 namespace Mayo {
 
 OccProgressIndicator::OccProgressIndicator(TaskProgress* progress)
@@ -28,7 +30,7 @@ void OccProgressIndicator::Show(const Message_ProgressScope& scope, const bool i
         }
 
         const double pc = this->GetPosition(); // Always within [0,1]
-        const int val = pc * 100;
+        const int val = std::clamp(static_cast<int>(pc * 100), 0, 100);
         if (m_lastProgress != val || isForce) {
             m_progress->setValue(val);
             m_lastProgress = val;

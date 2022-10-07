@@ -116,10 +116,10 @@ DialogTaskManager::DialogTaskManager(TaskManager* taskMgr, QWidget* parent)
     this->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
     this->setWindowModality(Qt::WindowModal);
 
-    QObject::connect(taskMgr, &TaskManager::started, this, &DialogTaskManager::onTaskStarted);
-    QObject::connect(taskMgr, &TaskManager::ended, this, &DialogTaskManager::onTaskEnded);
-    QObject::connect(taskMgr, &TaskManager::progressChanged, this, &DialogTaskManager::onTaskProgress);
-    QObject::connect(taskMgr, &TaskManager::progressStep, this, &DialogTaskManager::onTaskProgressStep);
+    taskMgr->signalStarted.connectSlot(&DialogTaskManager::onTaskStarted, this);
+    taskMgr->signalEnded.connectSlot(&DialogTaskManager::onTaskEnded, this);
+    taskMgr->signalProgressChanged.connectSlot(&DialogTaskManager::onTaskProgress, this);
+    taskMgr->signalProgressStep.connectSlot(&DialogTaskManager::onTaskProgressStep, this);
 }
 
 DialogTaskManager::~DialogTaskManager()

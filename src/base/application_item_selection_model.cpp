@@ -24,11 +24,6 @@ static std::vector<ApplicationItem>::iterator findApplicationItem(
 
 } // namespace Internal
 
-ApplicationItemSelectionModel::ApplicationItemSelectionModel(QObject* parent)
-    : QObject(parent)
-{
-}
-
 Span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
 {
     return m_vecSelectedItem;
@@ -44,7 +39,7 @@ void ApplicationItemSelectionModel::add(const ApplicationItem& item)
     if (!Internal::hasApplicationItem(m_vecSelectedItem, item)) {
         m_vecSelectedItem.push_back(item);
         std::vector<ApplicationItem> vecItem = { item };
-        emit changed(vecItem, {});
+        this->signalChanged.send(vecItem, {});
     }
 }
 
@@ -59,7 +54,7 @@ void ApplicationItemSelectionModel::add(Span<ApplicationItem> vecItem)
     }
 
     if (!signalVecItem.empty())
-        emit changed(signalVecItem, {});
+        this->signalChanged.send(signalVecItem, {});
 }
 
 void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
@@ -68,7 +63,7 @@ void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
     if (itFound != m_vecSelectedItem.end()) {
         m_vecSelectedItem.erase(itFound);
         std::vector<ApplicationItem> vecItem = { item };
-        emit changed({}, vecItem);
+        this->signalChanged.send({}, vecItem);
     }
 }
 
@@ -84,7 +79,7 @@ void ApplicationItemSelectionModel::remove(Span<ApplicationItem> vecItem)
     }
 
     if (!signalVecItem.empty())
-        emit changed({}, signalVecItem);
+        this->signalChanged.send({}, signalVecItem);
 }
 
 void ApplicationItemSelectionModel::clear()
@@ -93,7 +88,7 @@ void ApplicationItemSelectionModel::clear()
         // Warning: slots connected to changed() signal may indirectly access m_vecSelectedItem
         const auto vecDeselectedItem = m_vecSelectedItem;
         m_vecSelectedItem.clear();
-        emit changed({}, vecDeselectedItem);
+        this->signalChanged.send({}, vecDeselectedItem);
     }
 }
 

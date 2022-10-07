@@ -72,7 +72,7 @@ void TaskProgress::setValue(int pct)
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
-        emit m_task->manager()->progressChanged(m_task->id(), m_value);
+        m_task->manager()->signalProgressChanged.send(m_task->id(), m_value);
     }
 }
 
@@ -80,7 +80,7 @@ void TaskProgress::setStep(std::string_view title)
 {
     if (!this->isNull()) {
         m_step = title;
-        emit m_task->manager()->progressStep(m_task->id(), m_step);
+        m_task->manager()->signalProgressStep.send(m_task->id(), m_step);
     }
 }
 

@@ -11,20 +11,15 @@
 #include "document_tree_node.h"
 #include "filepath.h"
 #include "libtree.h"
+#include "signal.h"
 #include "xcaf.h"
 
-#include <QtCore/QObject>
 #include <string>
 #include <string_view>
 
 namespace Mayo {
 
-class Document : public QObject, public TDocStd_Document {
-    Q_OBJECT
-    Q_PROPERTY(int identifier READ identifier)
-    Q_PROPERTY(std::string name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(FilePath filePath READ filePath WRITE setFilePath)
-    Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
+class Document : public TDocStd_Document {
 public:
     using Identifier = int;
     enum class Format { Binary, Xml };
@@ -64,11 +59,11 @@ public:
     void addEntityTreeNode(const TDF_Label& label);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
-signals:
-    void nameChanged(const std::string& name);
-    void entityAdded(Mayo::TreeNodeId entityTreeNodeId);
-    void entityAboutToBeDestroyed(Mayo::TreeNodeId entityTreeNodeId);
-    //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+    // Signals
+    Signal<const std::string&> signalNameChanged;
+    Signal<TreeNodeId> signalEntityAdded;
+    Signal<TreeNodeId> signalEntityAboutToBeDestroyed;
+    //void connectSignalNameChanged(std::function<void(const std::string&)> slot);
 
 public: // -- from TDocStd_Document
     void BeforeClose() override;

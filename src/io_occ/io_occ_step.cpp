@@ -6,6 +6,7 @@
 
 #include "io_occ_step.h"
 #include "io_occ_caf.h"
+#include "../base/meta_enum.h"
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -18,6 +19,8 @@
 #include <Interface_Static.hxx>
 #include <Interface_Version.hxx>
 #include <STEPCAFControl_Controller.hxx>
+#include <fmt/format.h>
+#include <stdexcept>
 
 namespace Mayo {
 namespace IO {
@@ -199,7 +202,7 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
         case Encoding::ISO_8859_9: return "iso8859-9";
 #endif
         }
-        Q_UNREACHABLE();
+        throw std::invalid_argument(fmt::format("{} isn't supported", MetaEnum::name(code)));
     };
 
     const char strKeyReadStepCodePage[] =

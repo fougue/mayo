@@ -4,12 +4,11 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "gui_document_list_model.h"
-
 #include "../base/application.h"
 #include "../base/document.h"
 #include "gui_application.h"
 #include "gui_document.h"
+#include "gui_document_list_model.h"
 
 namespace Mayo {
 
@@ -19,15 +18,17 @@ GuiDocumentListModel::GuiDocumentListModel(const GuiApplication* guiApp, QObject
     for (const GuiDocument* doc : guiApp->guiDocuments())
         this->appendGuiDocument(doc);
 
+    guiApp->application()->signalDocumentNameChanged.connectSlot(
+                &GuiDocumentListModel::onDocumentNameChanged, this
+    );
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentAdded,
-                this, &GuiDocumentListModel::appendGuiDocument);
+                this, &GuiDocumentListModel::appendGuiDocument
+    );
     QObject::connect(
                 guiApp, &GuiApplication::guiDocumentErased,
-                this, &GuiDocumentListModel::removeGuiDocument);
-    QObject::connect(
-                guiApp->application().get(), &Application::documentNameChanged,
-                this, &GuiDocumentListModel::onDocumentNameChanged);
+                this, &GuiDocumentListModel::removeGuiDocument
+    );
 }
 
 QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const

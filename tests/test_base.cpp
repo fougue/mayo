@@ -47,7 +47,6 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>
 #include <QtCore/QVariant>
-#include <QtTest/QSignalSpy>
 
 #include <gsl/util>
 #include <algorithm>
@@ -58,7 +57,9 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
@@ -74,17 +75,61 @@ Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 namespace Mayo {
 
 // For the sake of QCOMPARE()
-static bool operator==(
-        const UnitSystem::TranslateResult& lhs,
-        const UnitSystem::TranslateResult& rhs)
+static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
 {
     return std::abs(lhs.value - rhs.value) < 1e-6
             && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
             && std::abs(lhs.factor - rhs.factor) < 1e-6;
 }
 
+// Equivalent of QSignalSpy for KDBindings signals
+struct SignalEmitSpy {
+    struct UnknownType {};
+    using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
+    using SignalArguments = std::vector<ArgValue>;
+
+    template<typename... ARGS>
+    SignalEmitSpy(Signal<ARGS...>* signal) {
+        sigConnection = signal->connect([=](ARGS... args) {
+            ++this->count;
+            SignalArguments sigArgs;
+            SignalEmitSpy::recordArgs(&sigArgs, args...);
+            this->vecSignals.push_back(std::move(sigArgs));
+        });
+    }
+
+    ~SignalEmitSpy() {
+        sigConnection.disconnect();
+    }
+
+    static void recordArgs(SignalArguments* /*ptr*/) {
+    }
+
+    template<typename ARG, typename... ARGS>
+    static void recordArgs(SignalArguments* ptr, ARG arg, ARGS... args) {
+        if constexpr (std::is_integral_v<ARG>) {
+            if constexpr (std::is_signed_v<ARG>) {
+                ptr->push_back(static_cast<std::int64_t>(arg));
+            }
+            else {
+                ptr->push_back(static_cast<std::uint64_t>(arg));
+            }
+        }
+        else {
+            ptr->push_back(UnknownType{});
+        }
+
+        SignalEmitSpy::recordArgs(ptr, args...);
+    }
+
+    int count = 0;
+    std::vector<SignalArguments> vecSignals;
+    SignalConnectionHandle sigConnection;
+};
+
 void TestBase::Application_test()
 {
+
     auto app = Application::instance();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return m_ioSystem->importInDocument()
@@ -95,18 +140,18 @@ void TestBase::Application_test()
     QCOMPARE(app->documentCount(), 0);
 
     {   // Add & remove a document
-        QSignalSpy sigSpy_documentAdded(app.get(), &Application::documentAdded);
+        SignalEmitSpy spyDocAdded(&app->signalDocumentAdded);
         DocumentPtr doc = app->newDocument();
         QVERIFY(!doc.IsNull());
-        QCOMPARE(sigSpy_documentAdded.count(), 1);
+        QCOMPARE(spyDocAdded.count, 1);
         QCOMPARE(app->documentCount(), 1);
         QCOMPARE(app->findIndexOfDocument(doc), 0);
         QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
         QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
 
-        QSignalSpy sigSpy_documentAboutToClose(app.get(), &Application::documentAboutToClose);
+        SignalEmitSpy spyDocClosed(&app->signalDocumentAboutToClose);
         app->closeDocument(doc);
-        QCOMPARE(sigSpy_documentAboutToClose.count(), 1);
+        QCOMPARE(spyDocClosed.count, 1);
         QCOMPARE(app->documentCount(), 0);
     }
 
@@ -114,17 +159,17 @@ void TestBase::Application_test()
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
-        QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
+        SignalEmitSpy spyEntityAdded(&app->signalDocumentEntityAdded);
         const bool okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
-        QCOMPARE(sigSpy_docEntityAdded.count(), 1);
+        QCOMPARE(spyEntityAdded.count, 1);
         QCOMPARE(doc->entityCount(), 1);
         QVERIFY(XCaf::isShape(doc->entityLabel(0)));
         QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), to_OccExtString("Cube"));
 
-        QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
+        SignalEmitSpy spyEntityDestroyed(&app->signalDocumentEntityAboutToBeDestroyed);
         doc->destroyEntity(doc->entityTreeNodeId(0));
-        QCOMPARE(sigSpy_docEntityAboutToBeDestroyed.count(), 1);
+        QCOMPARE(spyEntityDestroyed.count, 1);
         QCOMPARE(doc->entityCount(), 0);
     }
 
@@ -187,7 +232,7 @@ void TestBase::TextId_test()
 void TestBase::FilePath_test()
 {
     const char strTestPath[] = "../as1-oc-214 - 測試文件.stp";
-    const FilePath testPath = std::filesystem::u8path(strTestPath);
+    const FilePath testPath = std_filesystem::u8path(strTestPath);
 
     {
         const TCollection_AsciiString ascStrTestPath(strTestPath);
@@ -743,19 +788,19 @@ void TestBase::LibTask_test()
         }
     });
     std::vector<ProgressRecord> vecProgressRec;
-    QObject::connect(
-                &taskMgr, &TaskManager::progressChanged,
-                [&](TaskId taskId, int pct) { vecProgressRec.push_back({ taskId, pct }); });
+    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+        vecProgressRec.push_back({ taskId, pct });
+    });
 
-    QSignalSpy sigSpy_started(&taskMgr, &TaskManager::started);
-    QSignalSpy sigSpy_ended(&taskMgr, &TaskManager::ended);
+    SignalEmitSpy sigStarted(&taskMgr.signalStarted);
+    SignalEmitSpy sigEnded(&taskMgr.signalEnded);
     taskMgr.run(taskId);
     taskMgr.waitForDone(taskId);
 
-    QCOMPARE(sigSpy_started.count(), 1);
-    QCOMPARE(sigSpy_ended.count(), 1);
-    QCOMPARE(qvariant_cast<TaskId>(sigSpy_started.front().at(0)), taskId);
-    QCOMPARE(qvariant_cast<TaskId>(sigSpy_ended.front().at(0)), taskId);
+    QCOMPARE(sigStarted.count, 1);
+    QCOMPARE(sigEnded.count, 1);
+    QCOMPARE(std::get<TaskId>(sigStarted.vecSignals.front().at(0)), taskId);
+    QCOMPARE(std::get<TaskId>(sigEnded.vecSignals.front().at(0)), taskId);
     QVERIFY(!vecProgressRec.empty());
     int prevPct = 0;
     for (const ProgressRecord& rec : vecProgressRec) {

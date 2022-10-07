@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "widget_properties_editor.h"
+#include "qmeta_property.h"
 #include "qstring_conv.h"
 #include "ui_widget_properties_editor.h"
 

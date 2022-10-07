@@ -31,6 +31,7 @@ private:
 
     void loadFromFile();
     void saveAs();
+    void cancelChanges();
 
     void handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index);
 
@@ -39,6 +40,8 @@ private:
     std::unordered_map<const Property*, QWidget*> m_mapSettingEditor;
     std::unordered_map<Property*, Settings::Variant> m_mapSettingInitialValue;
     Settings* m_settings = nullptr;
+    SignalConnectionHandle m_connSettingsAboutToChange;
+    SignalConnectionHandle m_connSettingsChanged;
 };
 
 } // namespace Mayo

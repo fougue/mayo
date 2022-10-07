@@ -50,6 +50,8 @@ public:
     // Query singleton instance
     static AppModule* get();
 
+    ~AppModule();
+
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
     AppModuleProperties* properties() { return &m_props; }

@@ -285,7 +285,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         vecTaskData.resize(listFilepath.size());
 
         TaskManager childTaskManager;
-        QObject::connect(&childTaskManager, &TaskManager::progressChanged, [&](TaskId, int) {
+        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, int) {
             rootProgress->setValue(childTaskManager.globalProgress());
         });
 

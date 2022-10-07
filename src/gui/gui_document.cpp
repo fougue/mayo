@@ -6,6 +6,7 @@
 
 #include "gui_document.h"
 
+#include "../base/application.h"
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
 #include "../base/caf_utils.h"
@@ -103,11 +104,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
 
-    QObject::connect(doc.get(), &Document::entityAdded, this, &GuiDocument::onDocumentEntityAdded);
-    QObject::connect(
-                doc.get(), &Document::entityAboutToBeDestroyed,
-                this, &GuiDocument::onDocumentEntityAboutToBeDestroyed
-    );
+    doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
+    doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     QObject::connect(
                 &m_gfxScene, &GraphicsScene::selectionChanged,
                 this, &GuiDocument::onGraphicsSelectionChanged

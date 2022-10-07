@@ -129,7 +129,6 @@ bool Property::hasGroup() const
     return m_group != nullptr;
 }
 
-
 PropertyChangedBlocker::PropertyChangedBlocker(PropertyGroup* group)
     : m_group(group)
 {
@@ -143,22 +142,16 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
         m_group->blockPropertyChanged(false);
 }
 
-
-PropertyGroupSignals::PropertyGroupSignals(QObject* parent)
-    : QObject(parent)
-{
-}
-
 void PropertyGroupSignals::onPropertyAboutToChange(Property* prop)
 {
     PropertyGroup::onPropertyAboutToChange(prop);
-    emit propertyAboutToChange(prop);
+    this->signalPropertyAboutToChange.send(prop);
 }
 
 void PropertyGroupSignals::onPropertyChanged(Property* prop)
 {
     PropertyGroup::onPropertyChanged(prop);
-    emit propertyChanged(prop);
+    this->signalPropertyChanged.send(prop);
 }
 
 } // namespace Mayo

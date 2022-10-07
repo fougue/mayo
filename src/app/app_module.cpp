@@ -31,7 +31,7 @@
 namespace Mayo {
 
 AppModule::AppModule()
-    : m_settings(new Settings(this)),
+    : m_settings(new Settings),
       m_props(m_settings),
       m_locale(QLocale::system())
 {
@@ -332,6 +332,12 @@ AppModule* AppModule::get()
 {
     static AppModule appModule;
     return &appModule;
+}
+
+AppModule::~AppModule()
+{
+    delete m_settings;
+    m_settings = nullptr;
 }
 
 } // namespace Mayo

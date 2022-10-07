@@ -30,7 +30,7 @@ CONFIG(debug, debug|release) {
 
 DEFINES += \
     QT_DISABLE_DEPRECATED_BEFORE=0x050F00 \
-    QT_IMPLICIT_QFILEINFO_CONSTRUCTION
+    QT_IMPLICIT_QFILEINFO_CONSTRUCTION \
 
 release_with_debuginfo:msvc {
     # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build

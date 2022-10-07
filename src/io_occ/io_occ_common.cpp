@@ -5,7 +5,11 @@
 ****************************************************************************/
 
 #include "io_occ_common.h"
+#include "../base/meta_enum.h"
 #include "../base/text_id.h"
+
+#include <fmt/format.h>
+#include <stdexcept>
 
 namespace Mayo {
 namespace IO {
@@ -23,7 +27,7 @@ const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
     case LengthUnit::Foot: return "FT";
     case LengthUnit::Mile: return "MI";
     }
-    Q_UNREACHABLE();
+    throw std::invalid_argument(fmt::format("{} isn't supported", MetaEnum::name(unit)));
 }
 
 } // namespace IO

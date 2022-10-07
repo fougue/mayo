@@ -30,6 +30,7 @@
 #include <gmio_stl/stl_error.h>
 
 #include <fmt/format.h>
+#include <cmath>
 #include <unordered_map>
 
 namespace Mayo {
@@ -48,7 +49,7 @@ void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
     auto progress = static_cast<TaskProgress*>(cookie);
     if (progress && maxValue > 0) {
         const auto pctNorm = value / double(maxValue);
-        const auto pct = qRound(pctNorm * 100);
+        const auto pct = std::round(pctNorm * 100);
         progress->setValue(pct);
     }
 }

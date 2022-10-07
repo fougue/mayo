@@ -203,8 +203,7 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     : QMainWindow(parent),
       m_guiApp(guiApp),
-      m_ui(new Ui_MainWindow),
-      m_taskMgr(new TaskManager(this))
+      m_ui(new Ui_MainWindow)
 {
     m_ui->setupUi(this);
     m_ui->widget_ModelTree->registerGuiApplication(guiApp);
@@ -367,9 +366,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 guiApp, &GuiApplication::guiDocumentAdded,
                 this, &MainWindow::onGuiDocumentAdded);
     QObject::connect(
-                guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
-                this, &MainWindow::onApplicationItemSelectionChanged);
-    QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
@@ -377,6 +373,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 this, [=](Messenger::MessageType msgType, const QString& text) {
         Internal::handleMessage(msgType, text, this);
     });
+    guiApp->selectionModel()->signalChanged.connectSlot(&MainWindow::onApplicationItemSelectionChanged, this);
     // Creation of annex objects
     {
         // Opened documents GUI
@@ -396,7 +393,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
         });
     }
 
-    new DialogTaskManager(m_taskMgr, this);
+    new DialogTaskManager(&m_taskMgr, this);
 
     // BEWARE MainWindow::onGuiDocumentAdded() must be called before
     // MainWindow::onCurrentDocumentIndexChanged()
@@ -476,7 +473,7 @@ void MainWindow::showEvent(QShowEvent* event)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
     auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
     if (!winProgress)
-        winProgress = new WinTaskbarGlobalProgress(m_taskMgr, this);
+        winProgress = new WinTaskbarGlobalProgress(&m_taskMgr, this);
 
     winProgress->setWindow(this->windowHandle());
 #endif
@@ -507,7 +504,7 @@ void MainWindow::importInCurrentDoc()
         return;
 
     auto appModule = AppModule::get();
-    const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
+    const TaskId taskId = m_taskMgr.newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
 
@@ -530,8 +527,8 @@ void MainWindow::importInCurrentDoc()
             resFileNames.listFilepath.size() > 1 ?
                 tr("Import") :
                 filepathTo<QString>(resFileNames.listFilepath.front().stem());
-    m_taskMgr->setTitle(taskId, to_stdString(taskTitle));
-    m_taskMgr->run(taskId);
+    m_taskMgr.setTitle(taskId, to_stdString(taskTitle));
+    m_taskMgr.run(taskId);
     for (const FilePath& fp : resFileNames.listFilepath)
         appModule->prependRecentFile(fp);
 }
@@ -556,7 +553,7 @@ void MainWindow::exportSelectedItems()
 
     lastSettings.openDir = filepathFrom(strFilepath);
     const IO::Format format = Internal::formatFromFilter(lastSettings.selectedFilter);
-    const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
+    const TaskId taskId = m_taskMgr.newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
         const bool okExport =
@@ -571,8 +568,8 @@ void MainWindow::exportSelectedItems()
         if (okExport)
             appModule->emitInfo(fmt::format(textIdTr("Export time: {}ms"), chrono.elapsed()));
     });
-    m_taskMgr->setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
-    m_taskMgr->run(taskId);
+    m_taskMgr.setTitle(taskId, to_stdString(QFileInfo(strFilepath).fileName()));
+    m_taskMgr.run(taskId);
     Internal::ImportExportSettings::save(lastSettings);
 }
 
@@ -691,9 +688,7 @@ void MainWindow::onApplicationItemSelectionChanged()
             auto dataProps = AppModule::get()->properties(docTreeNode);
             if (dataProps) {
                 uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
-                QObject::connect(dataProps.get(), &PropertyGroupSignals::propertyChanged, this, [=]{
-                    uiModelTree->refreshItemText(appItem);
-                });
+                dataProps->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(appItem); });
                 m_ptrCurrentNodeDataProperties = std::move(dataProps);
             }
 
@@ -707,9 +702,7 @@ void MainWindow::onApplicationItemSelectionChanged()
                 auto gfxProps = commonGfxDriver->properties(vecGfxObject);
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps.get(), uiProps->addGroup(tr("Graphics")));
-                    QObject::connect(gfxProps.get(), &PropertyGroupSignals::propertyChanged, this, [=]{
-                        guiDoc->graphicsScene()->redraw();
-                    });
+                    gfxProps->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
                     m_ptrCurrentNodeGraphicsProperties = std::move(gfxProps);
                 }
             }
@@ -777,7 +770,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         gfxScene->redraw();
     }
 
-    QObject::connect(appModule->settings(), &Settings::changed, this, [=](Property* setting) {
+    appModule->settings()->signalChanged.connectSlot([=](Property* setting) {
         if (setting == &appProps->instantZoomFactor)
             widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
         else if (setting == &appProps->navigationStyle)
@@ -948,7 +941,7 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
         DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             docPtr = app->newDocument();
-            const TaskId taskId = m_taskMgr->newTask([=](TaskProgress* progress) {
+            const TaskId taskId = m_taskMgr.newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
                 docPtr->setName(fp.stem().u8string());
@@ -970,8 +963,8 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
                 if (okImport)
                     appModule->emitInfo(fmt::format(textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
-            m_taskMgr->setTitle(taskId, fp.stem().u8string());
-            m_taskMgr->run(taskId);
+            m_taskMgr.setTitle(taskId, fp.stem().u8string());
+            m_taskMgr.run(taskId);
             AppModule::get()->prependRecentFile(fp);
         }
         else {

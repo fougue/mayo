@@ -219,16 +219,20 @@ GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) c
 
 namespace Internal {
 
-Q_GLOBAL_STATIC(GraphicsMeshObjectDriver::DefaultValues, graphicsMeshDefaultValues)
+GraphicsMeshObjectDriver::DefaultValues& graphicsMeshDefaultValues()
+{
+    static GraphicsMeshObjectDriver::DefaultValues global;
+    return global;
+}
 
 } // namespace Internal
 
 const GraphicsMeshObjectDriver::DefaultValues& GraphicsMeshObjectDriver::defaultValues() {
-    return *Internal::graphicsMeshDefaultValues;
+    return Internal::graphicsMeshDefaultValues();
 }
 
 void GraphicsMeshObjectDriver::setDefaultValues(const DefaultValues& values) {
-    *Internal::graphicsMeshDefaultValues = values;
+    Internal::graphicsMeshDefaultValues() = values;
 }
-}
-// namespace Mayo
+
+} // namespace Mayo

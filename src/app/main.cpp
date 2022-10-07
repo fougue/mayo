@@ -145,6 +145,24 @@ private:
     bool m_enableDebugLogs = true;
 };
 
+// Provides handling of signal/slot thread mismatch with the help of Qt
+// There will be a single QObject created per thread, so it can be used to enqueue slot functions
+class QtSignalThreadHelper : public ISignalThreadHelper {
+public:
+    std::any getCurrentThreadContext() override
+    {
+        // Note: thread_local implies "static"
+        //       See https://en.cppreference.com/w/cpp/language/storage_duration
+        thread_local QObject obj;
+        return &obj;
+    }
+
+    void execInThread(const std::any& context, const std::function<void()>& fn) override
+    {
+        QTimer::singleShot(0, std::any_cast<QObject*>(context), fn);
+    }
+};
+
 } // namespace
 
 static CommandLineArguments processCommandLine()
@@ -396,6 +414,9 @@ static int runApp(QCoreApplication* qtApp)
             appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
         }
     };
+
+    // Signals
+    setGlobalSignalThreadHelper(std::make_unique<QtSignalThreadHelper>());
 
     // Message logging
     LogMessageHandler::instance().enableDebugLogs(args.includeDebugLogs);

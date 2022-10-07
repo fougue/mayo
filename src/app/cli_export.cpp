@@ -187,13 +187,13 @@ void cli_asyncExportDocuments(
     };
 
     // Show progress/traces corresponding to task events
-    QObject::connect(taskMgr, &TaskManager::started, app, [=](TaskId taskId) {
+    taskMgr->signalStarted.connectSlot([=](TaskId taskId) {
         if (args.progressReport)
             fnPrintProgress();
         else
             qInfo() << to_QString(taskMgr->title(taskId));
     });
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=](TaskId taskId) {
+    taskMgr->signalEnded.connectSlot([=](TaskId taskId) {
         if (args.progressReport) {
             fnPrintProgress();
         }
@@ -204,13 +204,13 @@ void cli_asyncExportDocuments(
                 qCritical() << to_QString(taskMgr->title(taskId));
         }
     });
-    QObject::connect(taskMgr, &TaskManager::progressChanged, app, [=]{
+    taskMgr->signalProgressChanged.connectSlot([=]{
         if (args.progressReport)
             fnPrintProgress();
     });
 
     helper->exportTaskCount = int(args.filesToExport.size());
-    QObject::connect(taskMgr, &TaskManager::ended, app, [=]{
+    taskMgr->signalEnded.connectSlot([=]{
         if (helper->exportTaskCount == 0) {
             bool okExport = true;
             for (const auto& mapPair : helper->mapTaskStatus) {

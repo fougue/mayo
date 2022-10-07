@@ -14,11 +14,6 @@
 
 namespace Mayo {
 
-TaskManager::TaskManager(QObject* parent)
-    : QObject(parent)
-{
-}
-
 TaskManager::~TaskManager()
 {
     // Make sure all tasks are really finished
@@ -91,7 +86,7 @@ void TaskManager::requestAbort(TaskId id)
 {
     Entity* entity = this->findEntity(id);
     if (entity) {
-        emit this->abortRequested(id);
+        this->signalAbortRequested.send(id);
         entity->taskProgress.requestAbort();
     }
 }
@@ -147,13 +142,13 @@ void TaskManager::execEntity(Entity* entity)
     if (!entity)
         return;
 
-    emit this->started(entity->task.id());
+    this->signalStarted.send(entity->task.id());
     const TaskJob& fn = entity->task.job();
     fn(&entity->taskProgress);
     if (!entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 
-    emit this->ended(entity->task.id());
+    this->signalEnded.send(entity->task.id());
     entity->isFinished = true;
 }
 

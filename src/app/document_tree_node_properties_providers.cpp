@@ -16,6 +16,7 @@
 #include "qstring_conv.h"
 
 #include <TDataStd_Name.hxx>
+#include <QtCore/QStringList>
 
 namespace Mayo {
 

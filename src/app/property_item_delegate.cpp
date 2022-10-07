@@ -12,6 +12,7 @@
 #include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "filepath_conv.h"
+#include "qmeta_property.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"

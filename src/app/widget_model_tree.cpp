@@ -195,22 +195,13 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
 
     m_guiApp = guiApp;
     auto app = guiApp->application();
-    QObject::connect(
-                app.get(), &Application::documentAdded,
-                this, &WidgetModelTree::onDocumentAdded);
-    QObject::connect(
-                app.get(), &Application::documentAboutToClose,
-                this, &WidgetModelTree::onDocumentAboutToClose);
-    QObject::connect(
-                app.get(), &Application::documentNameChanged,
-                this, &WidgetModelTree::onDocumentNameChanged);
-    QObject::connect(
-                app.get(), &Application::documentEntityAdded,
-                this, &WidgetModelTree::onDocumentEntityAdded);
-    QObject::connect(
-                app.get(), &Application::documentEntityAboutToBeDestroyed,
-                this, &WidgetModelTree::onDocumentEntityAboutToBeDestroyed);
+    app->signalDocumentAdded.connectSlot(&WidgetModelTree::onDocumentAdded, this);
+    app->signalDocumentAboutToClose.connectSlot(&WidgetModelTree::onDocumentAboutToClose, this);
+    app->signalDocumentNameChanged.connectSlot(&WidgetModelTree::onDocumentNameChanged, this);
+    app->signalDocumentEntityAdded.connectSlot(&WidgetModelTree::onDocumentEntityAdded, this);
+    app->signalDocumentEntityAboutToBeDestroyed.connectSlot(&WidgetModelTree::onDocumentEntityAboutToBeDestroyed, this);
 
+    m_guiApp->selectionModel()->signalChanged.connectSlot(&WidgetModelTree::onApplicationItemSelectionModelChanged, this);
     QObject::connect(m_guiApp, &GuiApplication::guiDocumentAdded, this, [=](GuiDocument* guiDoc) {
         QObject::connect(
                     guiDoc, &GuiDocument::nodesVisibilityChanged,
@@ -218,10 +209,6 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
             this->onNodesVisibilityChanged(guiDoc, mapNodeId);
         });
     });
-
-    QObject::connect(
-                m_guiApp->selectionModel(), &ApplicationItemSelectionModel::changed,
-                this, &WidgetModelTree::onApplicationItemSelectionModelChanged);
 
     this->connectTreeWidgetDocumentSelectionChanged(true);
 }

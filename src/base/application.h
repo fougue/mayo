@@ -8,6 +8,7 @@
 
 #include "application_ptr.h"
 #include "document.h"
+#include "signal.h"
 #include "span.h"
 #include "text_id.h"
 
@@ -18,8 +19,7 @@
 namespace Mayo {
 
 // Provides management of Document objects
-class Application : public QObject, public TDocStd_Application {
-    Q_OBJECT
+class Application : public TDocStd_Application {
 public:
     ~Application();
 
@@ -59,6 +59,13 @@ public:
     static Span<const char*> envOpenCascadeOptions();
     static Span<const char*> envOpenCascadePaths();
 
+    // Signals
+    Signal<const DocumentPtr&> signalDocumentAdded;
+    Signal<const DocumentPtr&> signalDocumentAboutToClose;
+    Signal<const DocumentPtr&, const std::string&> signalDocumentNameChanged;
+    Signal<const DocumentPtr&, TreeNodeId> signalDocumentEntityAdded;
+    Signal<const DocumentPtr&, TreeNodeId> signalDocumentEntityAboutToBeDestroyed;
+
 public: // -- from TDocStd_Application
 #if OCC_VERSION_HEX >= 0x070600
     void NewDocument(const TCollection_ExtendedString& format, Handle(CDM_Document)& outDoc) override;
@@ -76,13 +83,6 @@ public: // -- from TDocStd_Application
 
     DEFINE_STANDARD_RTTI_INLINE(Application, TDocStd_Application)
 
-signals:
-    void documentAdded(const Mayo::DocumentPtr& doc);
-    void documentAboutToClose(const Mayo::DocumentPtr& doc);
-    void documentNameChanged(const Mayo::DocumentPtr& doc, const std::string& name);
-    void documentEntityAdded(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
-    void documentEntityAboutToBeDestroyed(const Mayo::DocumentPtr& doc, Mayo::TreeNodeId entityId);
-
 private: // Implementation
     friend class Document;
 
@@ -91,7 +91,7 @@ private: // Implementation
     void addDocument(const DocumentPtr& doc);
 
     struct Private;
-    Private* const d;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo
