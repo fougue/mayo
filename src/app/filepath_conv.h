@@ -14,7 +14,7 @@
 namespace Mayo {
 
 // Returns a FilePath object constructed from input
-inline FilePath filepathFrom(const QByteArray& bytes) { return std::filesystem::u8path(bytes.constData()); }
+inline FilePath filepathFrom(const QByteArray& bytes) { return filepathFrom(std::string_view{ bytes.constData() }); }
 inline FilePath filepathFrom(const QString& str) { return reinterpret_cast<const char16_t*>(str.utf16()); }
 inline FilePath filepathFrom(const QFileInfo& fi) { return filepathFrom(fi.filePath()); }
 

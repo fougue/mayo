@@ -10,8 +10,8 @@
 #include <cmath>
 
 #include <iomanip>
-#include <filesystem>
 
+#include "../base/filepath.h"
 #include "dxf.h"
 
 using namespace std;
@@ -435,8 +435,8 @@ void CDxfWrite::makeBlockSectionHead(void)
 std::string CDxfWrite::getPlateFile(const std::string& fileSpec)
 {
     std::stringstream outString;
-    const std::filesystem::path fpath(fileSpec);
-    if (!std::filesystem::exists(fpath)) { // TODO Check read permissions
+    const Mayo::FilePath fpath(fileSpec);
+    if (!Mayo::filepathExists(fpath)) { // TODO Check read permissions
         //Base::Console().Message("dxf unable to open %s!\n",fileSpec.c_str());
     } else {
         string line;

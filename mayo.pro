@@ -49,10 +49,8 @@ gcc|clang {
 clang {
     # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
     QMAKE_CXXFLAGS += -Wno-undefined-var-template
-}
-*clang-libc++* {
     # See https://libcxx.llvm.org/docs/UsingLibcxx.html
-    LIBS += -lc++fs
+    # LIBS += -lstdc++fs
 }
 macx {
     DEFINES += GL_SILENCE_DEPRECATION

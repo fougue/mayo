@@ -57,7 +57,7 @@ Format System::probeFormat(const FilePath& filepath) const
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
         probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
-        probeInput.hintFullSize = std::filesystem::file_size(filepath);
+        probeInput.hintFullSize = filepathFileSize(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
             if (format != Format_Unknown)

@@ -8,6 +8,7 @@
 
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/filepath.h"
 #include "../base/math_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
@@ -304,7 +305,7 @@ DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
       m_progress(progress)
 {
     if (!this->Failed())
-        m_fileSize = std::filesystem::file_size(filepath);
+        m_fileSize = filepathFileSize(filepath);
 }
 
 void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hidden*/)

@@ -10,6 +10,7 @@
 
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
+#include <string_view>
 
 namespace Mayo {
 
@@ -43,4 +44,11 @@ template<> struct FilePathConv<TCollection_ExtendedString> {
     }
 };
 
+// std::string_view -> FilePath
+// Assumes utf8 encoding
+inline FilePath filepathFrom(std::string_view strUtf8) {
+    return std_filesystem::u8path(strUtf8);
+}
+
 } // namespace Mayo
+
