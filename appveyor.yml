@@ -6,10 +6,10 @@ configuration: Release
 
 clone_folder: c:\projects\mayo
 
-branches:
-  only:
-    - develop
-    - master
+#branches:
+#  only:
+#    - develop
+#    - master
 
 matrix:
   fast_finish: true
