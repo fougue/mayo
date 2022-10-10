@@ -122,6 +122,7 @@ constexpr QuantityMass Quantity_Ounce(0.0283495231);
 constexpr QuantityMass Quantity_Stone(6.35029318);
 constexpr QuantityMass Quantity_Hundredweights(50.80234544);
 
+constexpr QuantityTime Quantity_Millisecond(1e-3);
 constexpr QuantityTime Quantity_Second(1.);
 constexpr QuantityTime Quantity_Minute(60.);
 constexpr QuantityTime Quantity_Hour(3600.);

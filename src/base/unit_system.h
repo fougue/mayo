@@ -40,6 +40,7 @@ public:
     static TranslateResult millimeters(QuantityLength length);
     static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
+    static TranslateResult milliseconds(QuantityTime duration);
     static TranslateResult seconds(QuantityTime duration);
 
 private:

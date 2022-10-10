@@ -326,8 +326,8 @@ void TestBase::PropertyQuantityValueConversion_test_data()
     QTest::addColumn<Variant>("variantTo");
     QTest::newRow("Length(25mm)") << "PropertyLength" << Variant("25mm") << Variant("25mm");
     QTest::newRow("Length(2m)") << "PropertyLength" << Variant("2m") << Variant("2000mm");
-    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
-    QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
+    QTest::newRow("Angle(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
+    QTest::newRow("Angle(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
 void TestBase::IO_probeFormat_test()
@@ -764,6 +764,16 @@ void TestBase::UnitSystem_test_data()
     QTest::newRow("degrees(PIrad)")
             << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
             << UnitSystem::TranslateResult{ 180., "°", radDeg };
+
+    QTest::newRow("time(1s)")
+            << UnitSystem::milliseconds(1 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 1000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(5s)")
+            << UnitSystem::milliseconds(5 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(5s)")
+            << UnitSystem::milliseconds(5 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
 }
 
 void TestBase::LibTask_test()

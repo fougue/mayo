@@ -6,24 +6,55 @@
 
 #include "v3d_view_camera_animation.h"
 
+#include "../base/unit_system.h"
+
 namespace Mayo {
 
-V3dViewCameraAnimation::V3dViewCameraAnimation(const Handle_V3d_View& view, QObject* parent)
-    : QAbstractAnimation(parent),
-      m_view(view),
-      m_cameraStart(new Graphic3d_Camera),
+V3dViewCameraAnimation::V3dViewCameraAnimation()
+    : m_cameraStart(new Graphic3d_Camera),
       m_cameraEnd(new Graphic3d_Camera)
 {
 }
 
-int V3dViewCameraAnimation::duration() const
+void V3dViewCameraAnimation::setBackend(std::unique_ptr<IAnimationBackend> anim)
 {
-    return m_duration_ms;
+    m_backend = std::move(anim);
+    if (m_backend) {
+        m_backend->setDuration(m_duration);
+        m_backend->setTimerCallback([=](QuantityTime t){ this->updateCurrentTime(t); });
+    }
 }
 
-void V3dViewCameraAnimation::setDuration(int msecs)
+void V3dViewCameraAnimation::setView(const Handle_V3d_View& view)
 {
-    m_duration_ms = msecs;
+    if (this->isRunning())
+        this->stop();
+
+    m_view = view;
+}
+
+void V3dViewCameraAnimation::setDuration(QuantityTime t)
+{
+    m_duration = t;
+    if (m_backend)
+        m_backend->setDuration(t);
+}
+
+bool V3dViewCameraAnimation::isRunning() const
+{
+    return m_backend ? m_backend->isRunning() : false;
+}
+
+void V3dViewCameraAnimation::start()
+{
+    if (m_backend)
+        m_backend->start();
+}
+
+void V3dViewCameraAnimation::stop()
+{
+    if (m_backend)
+        m_backend->stop();
 }
 
 void V3dViewCameraAnimation::setCameraStart(const Handle_Graphic3d_Camera& camera)
@@ -36,19 +67,12 @@ void V3dViewCameraAnimation::setCameraEnd(const Handle_Graphic3d_Camera& camera)
     m_cameraEnd->Copy(camera);
 }
 
-const QEasingCurve& V3dViewCameraAnimation::easingCurve() const
+void V3dViewCameraAnimation::configureCameraChange(const ViewFunction& fnViewChange)
 {
-    return m_easingCurve;
-}
+    if (!m_view)
+        return;
 
-void V3dViewCameraAnimation::setEasingCurve(const QEasingCurve& easingCurve)
-{
-    m_easingCurve = easingCurve;
-}
-
-void V3dViewCameraAnimation::configure(const ViewFunction& fnViewChange)
-{
-    if (this->state() == QAbstractAnimation::Running)
+    if (this->isRunning())
         this->stop();
 
     const bool wasImmediateUpdateOn = m_view->SetImmediateUpdate(false);
@@ -64,9 +88,14 @@ void V3dViewCameraAnimation::setRenderFunction(ViewFunction fnViewRender)
     m_fnViewRender = std::move(fnViewRender);
 }
 
-void V3dViewCameraAnimation::updateCurrentTime(int currentTime)
+void V3dViewCameraAnimation::updateCurrentTime(QuantityTime currTime)
 {
-    const double t = m_easingCurve.valueForProgress(currentTime / double(m_duration_ms));
+    if (!m_view)
+        return;
+
+    const double currTime_ms = UnitSystem::milliseconds(currTime);
+    const double duration_ms = UnitSystem::milliseconds(m_duration);
+    const double t = m_backend ? m_backend->valueForProgress(currTime_ms / duration_ms) : 0.;
     const bool prevImmediateUpdate = m_view->SetImmediateUpdate(false);
     const Graphic3d_CameraLerp cameraLerp(m_cameraStart, m_cameraEnd);
     Handle_Graphic3d_Camera camera = m_view->Camera();

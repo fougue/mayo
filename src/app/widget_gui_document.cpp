@@ -7,6 +7,7 @@
 #include "widget_gui_document.h"
 
 #include "../base/cpp_utils.h"
+#include "../base/unit_system.h"
 #include "../graphics/graphics_utils.h"
 #include "../graphics/v3d_view_camera_animation.h"
 #include "../gui/gui_document.h"
@@ -20,6 +21,8 @@
 #include "widgets_utils.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QAbstractAnimation>
+#include <QtCore/QEasingCurve>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -30,8 +33,61 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
+// Provides implementation of IAnimationBackend based on QAbstractAnimation
+class QtAnimationBackend : public IAnimationBackend {
+public:
+    QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear)
+        : m_easingCurve(easingType)
+    {
+    }
+
+    void setDuration(QuantityTime t) {
+        m_impl.m_duration_ms = UnitSystem::milliseconds(t);
+    }
+
+    bool isRunning() const override {
+        return m_impl.state() == QAbstractAnimation::Running;
+    }
+
+    void start() override {
+        m_impl.start(QAbstractAnimation::KeepWhenStopped);
+    }
+
+    void stop() override {
+        m_impl.stop();
+    }
+
+    double valueForProgress(double p) const override {
+        return m_easingCurve.valueForProgress(p);
+    }
+
+    void setTimerCallback(std::function<void(QuantityTime)> fn) override {
+        m_impl.m_callback = std::move(fn);
+    }
+
+private:
+    class AnimationImpl : public QAbstractAnimation {
+    public:
+        double m_duration_ms = 1000.;
+        std::function<void(QuantityTime)> m_callback;
+
+        int duration() const override {
+            return static_cast<int>(m_duration_ms);
+        }
+
+    protected:
+        void updateCurrentTime(int currentTime) override {
+            m_callback(currentTime * Quantity_Millisecond);
+        }
+    };
+
+    AnimationImpl m_impl;
+    QEasingCurve m_easingCurve;
+};
+
+// Provides an overlay widget to be used within 3D view
 class PanelView3d : public QWidget {
 public:
     PanelView3d(WidgetGuiDocument* parent = nullptr)
@@ -49,6 +105,7 @@ protected:
     }    
 };
 
+// Provides style to redefine icon size of menu items
 class MenuIconSizeStyle : public QProxyStyle {
 public:
     void setMenuIconSize(int size) {
@@ -67,9 +124,10 @@ private:
     int m_menuIconSize = -1;
 };
 
-const int widgetMargin = 4;
+// Default margin to be used in widgets
+const int Internal_widgetMargin = 4;
 
-} // namespace Internal
+} // namespace
 
 WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     : QWidget(parent),
@@ -85,7 +143,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
 
     auto widgetBtnsContents = new QWidget;
     auto layoutBtns = new QHBoxLayout(widgetBtnsContents);
-    layoutBtns->setSpacing(Internal::widgetMargin + 2);
+    layoutBtns->setSpacing(Internal_widgetMargin + 2);
     layoutBtns->setContentsMargins(2, 2, 2, 2);
     m_btnFitAll = this->createViewBtn(widgetBtnsContents, Theme::Icon::Expand, tr("Fit All"));
     m_btnEditClipping = this->createViewBtn(widgetBtnsContents, Theme::Icon::ClipPlane, tr("Edit clip planes"));
@@ -118,25 +176,20 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
                 m_btnMeasure, &ButtonFlat::checked,
                 this, &WidgetGuiDocument::toggleWidgetMeasure
     );
-    QObject::connect(
-                m_controller, &V3dViewController::dynamicActionStarted,
-                this, [=]{ m_guiDoc->stopViewCameraAnimation(); }
-    );
-    QObject::connect(
-                m_controller, &V3dViewController::viewScaled,
-                this, [=]{ m_guiDoc->stopViewCameraAnimation(); }
-    );
-    QObject::connect(m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
-        if (btn == Qt::LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
+    m_controller->signalDynamicActionStarted.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
+    m_controller->signalViewScaled.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
+    m_controller->signalMouseButtonClicked.connectSlot([=](Aspect_VKeyMouse btn) {
+        if (btn == Aspect_VKeyMouse_LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
             gfxScene->select();
             m_qtOccView->redraw();
         }
     });
-    QObject::connect(m_controller, &WidgetOccViewController::multiSelectionToggled, this, [=](bool on) {
+    m_controller->signalMultiSelectionToggled.connectSlot([=](bool on) {
         auto mode = on ? GraphicsScene::SelectionMode::Multi : GraphicsScene::SelectionMode::Single;
         gfxScene->setSelectionMode(mode);
     });
 
+    m_guiDoc->viewCameraAnimation()->setBackend(std::make_unique<QtAnimationBackend>(QEasingCurve::OutExpo));
     m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
@@ -163,7 +216,7 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
 
 QWidget* WidgetGuiDocument::createWidgetPanelContainer(QWidget* widgetContents)
 {
-    auto panel = new Internal::PanelView3d(this);
+    auto panel = new PanelView3d(this);
     WidgetsUtils::addContentsWidget(panel, widgetContents);
     panel->show();
     panel->adjustSize();
@@ -239,7 +292,7 @@ void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 {
     auto fnPanelPos = [=](QWidget* panel) -> QPoint {
         const QRect ctrlRect = this->viewControlsRect();
-        const int margin = Internal::widgetMargin;
+        const int margin = Internal_widgetMargin;
         if (m_guiDoc->viewTrihedronMode() != GuiDocument::ViewTrihedronMode::AisViewCube)
             return QPoint(margin, ctrlRect.bottom() + margin);
 
@@ -302,9 +355,9 @@ void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
         { V3d_Zneg, Theme::Icon::View3dBottom, tr("Bottom") }
     };
     if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
-        static Internal::MenuIconSizeStyle* menuStyle = nullptr;
+        static MenuIconSizeStyle* menuStyle = nullptr;
         if (!menuStyle) {
-            menuStyle = new Internal::MenuIconSizeStyle;
+            menuStyle = new MenuIconSizeStyle;
             menuStyle->setMenuIconSize(m_btnFitAll->iconSize().width());
         }
 
@@ -363,7 +416,7 @@ QRect WidgetGuiDocument::viewControlsRect() const
 
 void WidgetGuiDocument::layoutViewControls()
 {
-    const int margin = Internal::widgetMargin + 2;
+    const int margin = Internal_widgetMargin + 2;
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();

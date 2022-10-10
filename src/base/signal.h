@@ -62,10 +62,10 @@ template<typename... ARGS>
 class Signal : public KDBindings::Signal<ARGS...> {
 public:
     Signal() = default;
-    Signal(const Signal &) = delete;
-    Signal &operator=(Signal const &other) = delete;
-    Signal(Signal &&other) noexcept = default;
-    Signal &operator=(Signal &&other) noexcept = default;
+    Signal(const Signal&) = delete;
+    Signal& operator=(Signal const &other) = delete;
+    Signal(Signal&& other) noexcept = default;
+    Signal& operator=(Signal&& other) noexcept = default;
 
     // Emits the Signal, which causes all connected slots to be called, as long as they are not
     // blocked.

@@ -140,6 +140,14 @@ static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
     }
 }
 
+template<typename QUANTITY>
+UnitSystem::TranslateResult translateHelper(QUANTITY qty, QUANTITY qtyFactor, const char* strUnit)
+{
+    const double factor = qtyFactor.value();
+    return { qty.value() / factor, strUnit, factor };
+}
+
+
 #if 0
 struct Threshold_UnitInfo {
     double threshold;
@@ -286,7 +294,7 @@ UnitSystem::TranslateResult UnitSystem::parseQuantity(std::string_view strQuanti
 UnitSystem::TranslateResult UnitSystem::translateLength(QuantityLength length, LengthUnit unit)
 {
     auto fnTrResult = [=](QuantityLength qtyFactor, const char* strUnit) {
-        return TranslateResult{ (length / qtyFactor.value()).value(), strUnit, qtyFactor.value() };
+        return Internal::translateHelper(length, qtyFactor, strUnit);
     };
     switch (unit) {
         // SI
@@ -316,7 +324,7 @@ UnitSystem::TranslateResult UnitSystem::translateLength(QuantityLength length, L
 UnitSystem::TranslateResult UnitSystem::translateArea(QuantityArea area, AreaUnit unit)
 {
     auto fnTrResult = [=](QuantityArea qtyFactor, const char* strUnit) {
-        return TranslateResult{ (area / qtyFactor.value()).value(), strUnit, qtyFactor.value() };
+        return Internal::translateHelper(area, qtyFactor, strUnit);
     };
     switch (unit) {
         // SI
@@ -349,16 +357,12 @@ UnitSystem::TranslateResult UnitSystem::radians(QuantityAngle angle)
 
 UnitSystem::TranslateResult UnitSystem::degrees(QuantityAngle angle)
 {
-    const double factor = Quantity_Degree.value();
-    const double rad = angle.value();
-    return { rad / factor, "°", factor };
+    return Internal::translateHelper(angle, Quantity_Degree, "°");
 }
 
 UnitSystem::TranslateResult UnitSystem::meters(QuantityLength length)
 {
-    const double factor = Quantity_Meter.value();
-    const double mm = length.value();
-    return { mm / factor, "m", factor };
+    return Internal::translateHelper(length, Quantity_Meter, "m");
 }
 
 UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
@@ -374,6 +378,11 @@ UnitSystem::TranslateResult UnitSystem::cubicMillimeters(QuantityVolume volume)
 UnitSystem::TranslateResult UnitSystem::millimetersPerSecond(QuantityVelocity speed)
 {
     return { speed.value(), "mm/s", 1. };
+}
+
+UnitSystem::TranslateResult UnitSystem::milliseconds(QuantityTime duration)
+{
+    return Internal::translateHelper(duration, Quantity_Millisecond, "ms");
 }
 
 UnitSystem::TranslateResult UnitSystem::seconds(QuantityTime duration)

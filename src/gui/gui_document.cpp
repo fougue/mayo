@@ -69,7 +69,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
       m_document(doc),
       m_v3dView(m_gfxScene.createV3dView()),
       m_aisOriginTrihedron(Internal::createOriginTrihedron()),
-      m_cameraAnimation(new V3dViewCameraAnimation(m_v3dView))
+      m_cameraAnimation(new V3dViewCameraAnimation)
 {
     Expects(!doc.IsNull());
 
@@ -97,7 +97,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     );
     //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
-    m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
+    m_cameraAnimation->setView(m_v3dView);
 
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
@@ -340,8 +340,8 @@ void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
 
 void GuiDocument::runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange)
 {
-    m_cameraAnimation->configure(fnViewChange);
-    m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
+    m_cameraAnimation->configureCameraChange(fnViewChange);
+    m_cameraAnimation->start();
 }
 
 void GuiDocument::stopViewCameraAnimation()

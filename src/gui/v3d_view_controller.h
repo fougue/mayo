@@ -6,16 +6,16 @@
 
 #pragma once
 
+#include "../base/signal.h"
+#include "gui_vkey_mouse.h"
+
 #include <Graphic3d_Camera.hxx>
 #include <V3d_View.hxx>
-#include <QtCore/QObject>
-#include <QtCore/QPoint>
 #include <memory>
 
 namespace Mayo {
 
-class V3dViewController : public QObject {
-    Q_OBJECT
+class V3dViewController {
 public:
     enum class DynamicAction {
         None,
@@ -28,11 +28,11 @@ public:
 
     struct AbstractRubberBand {
         virtual ~AbstractRubberBand() {}
-        virtual void updateGeometry(const QRect& rect) = 0;
+        virtual void updateGeometry(int x, int y, int width, int height) = 0;
         virtual void setVisible(bool on) = 0;
     };
 
-    V3dViewController(const Handle_V3d_View& view, QObject* parent = nullptr);
+    V3dViewController(const Handle_V3d_View& view);
     virtual ~V3dViewController() = default;
 
     DynamicAction currentDynamicAction() const;
@@ -44,15 +44,17 @@ public:
     double instantZoomFactor() const { return m_instantZoomFactor; }
     void setInstantZoomFactor(double factor) { m_instantZoomFactor = factor; }
 
-signals:
-    void dynamicActionStarted(DynamicAction dynAction);
-    void dynamicActionEnded(DynamicAction dynAction);
-    void viewScaled();
-
-    void mouseMoved(const QPoint& posMouseInView);
-    void mouseClicked(Qt::MouseButton btn);
+    // Signals
+    Signal<DynamicAction> signalDynamicActionStarted;
+    Signal<DynamicAction> signalDynamicActionEnded;
+    Signal<> signalViewScaled;
+    Signal<int, int> signalMouseMoved; // x,y: mouse position in view
+    Signal<Aspect_VKeyMouse> signalMouseButtonClicked;
+    Signal<bool> signalMultiSelectionToggled;
 
 protected:
+    struct Position { int x; int y; };
+
     virtual void startDynamicAction(DynamicAction dynAction);
     virtual void stopDynamicAction();
 
@@ -61,20 +63,20 @@ protected:
     bool isZoomStarted() const;
     bool isWindowZoomingStarted() const;
 
-    void rotation(const QPoint& currPos);
-    void pan(const QPoint& prevPos, const QPoint& currPos);
-    void zoom(const QPoint& prevPos, const QPoint& currPos);
+    void rotation(const Position& currPos);
+    void pan(const Position& prevPos, const Position& currPos);
+    void zoom(const Position& prevPos, const Position& currPos);
 
-    void windowFitAll(const QPoint& posMin, const QPoint& posMax);
+    void windowFitAll(const Position& posMin, const Position& posMax);
 
-    void windowZoomRubberBand(const QPoint& currPos);
-    void windowZoom(const QPoint& currPos);
+    void windowZoomRubberBand(const Position& currPos);
+    void windowZoom(const Position& currPos);
 
-    void startInstantZoom(const QPoint& currPos);
+    void startInstantZoom(const Position& currPos);
     void stopInstantZoom();
 
     virtual std::unique_ptr<AbstractRubberBand> createRubberBand() = 0;
-    void drawRubberBand(const QPoint& posMin, const QPoint& posMax);
+    void drawRubberBand(const Position& posMin, const Position& posMax);
     void hideRubberBand();
 
     void backupCamera();
@@ -88,7 +90,7 @@ private:
     std::unique_ptr<AbstractRubberBand> m_rubberBand;
     double m_instantZoomFactor = 5.;
     Handle_Graphic3d_Camera m_cameraBackup;
-    QPoint m_posRubberBandStart;
+    Position m_posRubberBandStart;
 };
 
 } // namespace Mayo

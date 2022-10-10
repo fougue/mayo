@@ -92,7 +92,7 @@ public:
     template<typename PREDICATE>
     GraphicsOwnerPtr findSelectedOwner(PREDICATE fn) const;
 
-// Signals
+    // Signals
     Signal<> signalSelectionChanged;
     Signal<> signalSelectionModeChanged;
 

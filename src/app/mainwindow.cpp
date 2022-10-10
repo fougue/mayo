@@ -778,15 +778,15 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     // React to mouse move in 3D view:
     //   * update highlighting
     //   * compute and display 3D mouse coordinates(by silent picking)
-    QObject::connect(widgetCtrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
-        gfxScene->highlightAt(pos2d.x(), pos2d.y(), guiDoc->v3dView());
+    widgetCtrl->signalMouseMoved.connectSlot([=](int xPos, int yPos) {
+        gfxScene->highlightAt(xPos, yPos, guiDoc->v3dView());
         widget->view()->redraw();
         auto selector = gfxScene->mainSelector();
-        selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());
+        selector->Pick(xPos, yPos, guiDoc->v3dView());
         const gp_Pnt pos3d =
                 selector->NbPicked() > 0 ?
                     selector->PickedPoint(1) :
-                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), pos2d.x(), pos2d.y());
+                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), xPos, yPos);
         m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
