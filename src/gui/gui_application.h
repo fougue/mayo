@@ -12,15 +12,13 @@
 #include "../graphics/graphics_object_driver.h"
 #include "gui_document.h"
 
-#include <QtCore/QObject>
 #include <memory>
 
 namespace Mayo {
 
 class GuiDocument;
 
-class GuiApplication : public QObject {
-    Q_OBJECT
+class GuiApplication {
 public:
     GuiApplication(const ApplicationPtr& app);
     ~GuiApplication();
@@ -42,9 +40,9 @@ public:
     bool automaticDocumentMapping() const;
     void setAutomaticDocumentMapping(bool on);
 
-signals:
-    void guiDocumentAdded(Mayo::GuiDocument* guiDoc);
-    void guiDocumentErased(Mayo::GuiDocument* guiDoc);
+    // Signals
+    mutable Signal<GuiDocument*> signalGuiDocumentAdded;
+    mutable Signal<GuiDocument*> signalGuiDocumentErased;
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);

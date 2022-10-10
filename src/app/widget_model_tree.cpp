@@ -202,10 +202,8 @@ void WidgetModelTree::registerGuiApplication(GuiApplication* guiApp)
     app->signalDocumentEntityAboutToBeDestroyed.connectSlot(&WidgetModelTree::onDocumentEntityAboutToBeDestroyed, this);
 
     m_guiApp->selectionModel()->signalChanged.connectSlot(&WidgetModelTree::onApplicationItemSelectionModelChanged, this);
-    QObject::connect(m_guiApp, &GuiApplication::guiDocumentAdded, this, [=](GuiDocument* guiDoc) {
-        QObject::connect(
-                    guiDoc, &GuiDocument::nodesVisibilityChanged,
-                    this, [=](const std::unordered_map<TreeNodeId, CheckState>& mapNodeId) {
+    m_guiApp->signalGuiDocumentAdded.connectSlot([=](GuiDocument* guiDoc) {
+        guiDoc->signalNodesVisibilityChanged.connectSlot([=](const GuiDocument::MapVisibilityByTreeNodeId& mapNodeId) {
             this->onNodesVisibilityChanged(guiDoc, mapNodeId);
         });
     });

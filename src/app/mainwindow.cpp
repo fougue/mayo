@@ -363,9 +363,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->combo_LeftContents, sigComboIndexChanged,
                 this, &MainWindow::onLeftContentsPageChanged);
     QObject::connect(
-                guiApp, &GuiApplication::guiDocumentAdded,
-                this, &MainWindow::onGuiDocumentAdded);
-    QObject::connect(
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); });
     QObject::connect(
@@ -373,6 +370,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 this, [=](Messenger::MessageType msgType, const QString& text) {
         Internal::handleMessage(msgType, text, this);
     });
+    guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
     guiApp->selectionModel()->signalChanged.connectSlot(&MainWindow::onApplicationItemSelectionChanged, this);
     // Creation of annex objects
     {

@@ -120,11 +120,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     );
     QObject::connect(
                 m_controller, &V3dViewController::dynamicActionStarted,
-                m_guiDoc, &GuiDocument::stopViewCameraAnimation
+                this, [=]{ m_guiDoc->stopViewCameraAnimation(); }
     );
     QObject::connect(
                 m_controller, &V3dViewController::viewScaled,
-                m_guiDoc, &GuiDocument::stopViewCameraAnimation
+                this, [=]{ m_guiDoc->stopViewCameraAnimation(); }
     );
     QObject::connect(m_controller, &V3dViewController::mouseClicked, this, [=](Qt::MouseButton btn) {
         if (btn == Qt::LeftButton && !m_guiDoc->processAction(gfxScene->currentHighlightedOwner())) {
@@ -187,10 +187,7 @@ void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
     else if (on) {
         m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->v3dView());
         this->createWidgetPanelContainer(m_widgetClipPlanes);
-        QObject::connect(
-                    m_guiDoc, &GuiDocument::graphicsBoundingBoxChanged,
-                    m_widgetClipPlanes, &WidgetClipPlanes::setRanges
-        );
+        m_guiDoc->signalGraphicsBoundingBoxChanged.connectSlot(&WidgetClipPlanes::setRanges, m_widgetClipPlanes);
         m_widgetClipPlanes->setRanges(m_guiDoc->graphicsBoundingBox());
     }
 
@@ -247,13 +244,13 @@ void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
             return QPoint(margin, ctrlRect.bottom() + margin);
 
         switch (m_guiDoc->viewTrihedronCorner()) {
-        case Qt::TopLeftCorner:
+        case Aspect_TOTP_LEFT_UPPER:
             return QPoint(ctrlRect.left(), ctrlRect.bottom() + margin);
-        case Qt::TopRightCorner:
+        case Aspect_TOTP_RIGHT_UPPER:
             return QPoint(this->width() - panel->width(), ctrlRect.bottom() + margin);
-        case Qt::BottomLeftCorner:
+        case Aspect_TOTP_LEFT_LOWER:
             return QPoint(margin, ctrlRect.top() - panel->height() - margin);
-        case Qt::BottomRightCorner:
+        case Aspect_TOTP_RIGHT_LOWER:
             return QPoint(this->width() - panel->width(), ctrlRect.top() - panel->height() - margin);
         } // endswitch
 
@@ -374,13 +371,13 @@ void WidgetGuiDocument::layoutViewControls()
             const int ctrlHeight = btnSize;
             const int ctrlXOffset = margin;
             switch (m_guiDoc->viewTrihedronCorner()) {
-            case Qt::TopLeftCorner:
+            case Aspect_TOTP_LEFT_UPPER:
                 return { ctrlXOffset, viewCubeBndSize + margin };
-            case Qt::TopRightCorner:
+            case Aspect_TOTP_RIGHT_UPPER:
                 return { this->width() - viewCubeBndSize + ctrlXOffset, viewCubeBndSize + margin };
-            case Qt::BottomLeftCorner:
+            case Aspect_TOTP_LEFT_LOWER:
                 return { ctrlXOffset, this->height() - viewCubeBndSize - margin - ctrlHeight };
-            case Qt::BottomRightCorner:
+            case Aspect_TOTP_RIGHT_LOWER:
                 return { this->width() - viewCubeBndSize + ctrlXOffset,
                          this->height() - viewCubeBndSize - margin - ctrlHeight };
             } // endswitch

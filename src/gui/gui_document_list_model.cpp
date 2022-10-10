@@ -18,17 +18,10 @@ GuiDocumentListModel::GuiDocumentListModel(const GuiApplication* guiApp, QObject
     for (const GuiDocument* doc : guiApp->guiDocuments())
         this->appendGuiDocument(doc);
 
-    guiApp->application()->signalDocumentNameChanged.connectSlot(
-                &GuiDocumentListModel::onDocumentNameChanged, this
-    );
-    QObject::connect(
-                guiApp, &GuiApplication::guiDocumentAdded,
-                this, &GuiDocumentListModel::appendGuiDocument
-    );
-    QObject::connect(
-                guiApp, &GuiApplication::guiDocumentErased,
-                this, &GuiDocumentListModel::removeGuiDocument
-    );
+    auto app = guiApp->application();
+    app->signalDocumentNameChanged.connectSlot(&GuiDocumentListModel::onDocumentNameChanged, this);
+    guiApp->signalGuiDocumentAdded.connectSlot(&GuiDocumentListModel::appendGuiDocument, this);
+    guiApp->signalGuiDocumentErased.connectSlot(&GuiDocumentListModel::removeGuiDocument, this);
 }
 
 QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const

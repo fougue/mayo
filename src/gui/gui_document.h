@@ -8,12 +8,13 @@
 
 #include "../base/document.h"
 #include "../base/global.h"
+#include "../base/signal.h"
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/v3d_view_camera_animation.h"
 
-#include <QtCore/QObject>
+#include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_View.hxx>
 #include <functional>
@@ -25,12 +26,13 @@ namespace Mayo {
 
 class ApplicationItem;
 class GuiApplication;
+class V3dViewCameraAnimation;
 
 // Provides the link between Base::Document and graphical representations
-class GuiDocument : public QObject {
-    Q_OBJECT
+class GuiDocument {
 public:
     GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
+    ~GuiDocument();
 
     const DocumentPtr& document() const { return m_document; }
 
@@ -84,8 +86,8 @@ public:
     ViewTrihedronMode viewTrihedronMode() const { return m_viewTrihedronMode; }
     void setViewTrihedronMode(ViewTrihedronMode mode);
 
-    Qt::Corner viewTrihedronCorner() const { return m_viewTrihedronCorner; }
-    void setViewTrihedronCorner(Qt::Corner corner);
+    Aspect_TypeOfTriedronPosition viewTrihedronCorner() const { return m_viewTrihedronCorner; }
+    void setViewTrihedronCorner(Aspect_TypeOfTriedronPosition corner);
 
     int aisViewCubeBoundingSize() const;
     static bool isAisViewCubeObject(const GraphicsObjectPtr& gfxObject);
@@ -99,13 +101,12 @@ public:
     static const GradientBackground& defaultGradientBackground();
     static void setDefaultGradientBackground(const GradientBackground& gradientBkgnd);
 
-signals:
-    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
-
-    void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
-
-    void viewTrihedronModeChanged(ViewTrihedronMode mode);
-    void viewTrihedronCornerChanged(Qt::Corner corner);
+    // Signals
+    using MapVisibilityByTreeNodeId = std::unordered_map<TreeNodeId, CheckState>;
+    mutable Signal<const MapVisibilityByTreeNodeId&> signalNodesVisibilityChanged;
+    mutable Signal<const Bnd_Box&> signalGraphicsBoundingBoxChanged;
+    mutable Signal<ViewTrihedronMode> signalViewTrihedronModeChanged;
+    mutable Signal<Aspect_TypeOfTriedronPosition> signalViewTrihedronCornerChanged;
 
     // -- Implementation
 private:
@@ -133,7 +134,7 @@ private:
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
-    void v3dViewTrihedronDisplay(Qt::Corner corner);
+    void v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner);
 
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;
@@ -141,9 +142,9 @@ private:
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
 
-    V3dViewCameraAnimation* m_cameraAnimation;
+    V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;
-    Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
+    Aspect_TypeOfTriedronPosition m_viewTrihedronCorner = Aspect_TOTP_LEFT_UPPER;
     Handle_AIS_InteractiveObject m_aisViewCube;
 
     std::vector<GraphicsEntity> m_vecGraphicsEntity;

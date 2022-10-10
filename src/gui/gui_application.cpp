@@ -48,8 +48,7 @@ struct GuiApplication::Private {
 };
 
 GuiApplication::GuiApplication(const ApplicationPtr& app)
-    : QObject(nullptr),
-      d(new Private)
+    : d(new Private)
 {
     d->m_backPtr = this;
     d->m_app = app;
@@ -144,7 +143,7 @@ void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
     if (d->m_automaticDocumentMapping) {
         d->m_vecGuiDocument.push_back(new GuiDocument(doc, this));
-        emit guiDocumentAdded(d->m_vecGuiDocument.back());
+        this->signalGuiDocumentAdded.send(d->m_vecGuiDocument.back());
     }
 }
 
@@ -157,7 +156,7 @@ void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
     if (itFound != d->m_vecGuiDocument.end()) {
         GuiDocument* guiDoc = *itFound;
         d->m_vecGuiDocument.erase(itFound);
-        emit guiDocumentErased(guiDoc);
+        this->signalGuiDocumentErased.send(guiDoc);
         delete guiDoc;
     }
 }
