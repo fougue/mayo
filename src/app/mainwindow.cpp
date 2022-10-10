@@ -781,7 +781,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     //   * update highlighting
     //   * compute and display 3D mouse coordinates(by silent picking)
     QObject::connect(widgetCtrl, &V3dViewController::mouseMoved, this, [=](const QPoint& pos2d) {
-        gfxScene->highlightAt(pos2d, guiDoc->v3dView());
+        gfxScene->highlightAt(pos2d.x(), pos2d.y(), guiDoc->v3dView());
         widget->view()->redraw();
         auto selector = gfxScene->mainSelector();
         selector->Pick(pos2d.x(), pos2d.y(), guiDoc->v3dView());

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/signal.h"
 #include "measure_display.h"
 #include "measure_tool.h"
 
@@ -68,7 +69,7 @@ private:
     std::vector<GraphicsOwner_MeasureDisplay> m_vecLinkGfxOwnerMeasure;
     IMeasureTool* m_tool = nullptr;
     QString m_errorMessage;
-    QMetaObject::Connection m_connGraphicsSelectionChanged;
+    SignalConnectionHandle m_connGraphicsSelectionChanged;
 };
 
 } // namespace Mayo

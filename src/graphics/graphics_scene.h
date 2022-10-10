@@ -6,24 +6,22 @@
 
 #pragma once
 
+#include "../base/signal.h"
 #include "graphics_object_ptr.h"
 #include "graphics_owner_ptr.h"
 
 #include <AIS_InteractiveContext.hxx>
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
-#include <QtCore/QObject>
 #include <unordered_set>
-class QPoint;
 
 namespace Mayo {
 
 // Provides a container for GraphicsObject items(actually AIS_InteractiveObject)
 // It's a wrapper(incomplete though) around AIS_InteractiveContext to provide a more consistent API
-class GraphicsScene : public QObject {
-    Q_OBJECT
+class GraphicsScene {
 public:
-    GraphicsScene(QObject* parent = nullptr);
+    GraphicsScene();
     ~GraphicsScene();
 
     opencascade::handle<V3d_View> createV3dView();
@@ -70,7 +68,7 @@ public:
     void setSelectionMode(SelectionMode mode);
 
     const GraphicsOwnerPtr& currentHighlightedOwner() const;
-    void highlightAt(const QPoint& pos, const Handle_V3d_View& view);
+    void highlightAt(int xPos, int yPos, const Handle_V3d_View& view);
     void select();
 
     int selectedCount() const;
@@ -94,15 +92,15 @@ public:
     template<typename PREDICATE>
     GraphicsOwnerPtr findSelectedOwner(PREDICATE fn) const;
 
-signals:
-    void selectionChanged();
-    void selectionModeChanged();
+// Signals
+    Signal<> signalSelectionChanged;
+    Signal<> signalSelectionModeChanged;
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;
 
     class Private;
-    Private* const d;
+    Private* const d = nullptr;
 };
 
 class GraphicsSceneRedrawBlocker {

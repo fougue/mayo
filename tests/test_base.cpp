@@ -90,7 +90,7 @@ struct SignalEmitSpy {
 
     template<typename... ARGS>
     SignalEmitSpy(Signal<ARGS...>* signal) {
-        sigConnection = signal->connect([=](ARGS... args) {
+        this->sigConnection = signal->connect([=](ARGS... args) {
             ++this->count;
             SignalArguments sigArgs;
             SignalEmitSpy::recordArgs(&sigArgs, args...);
@@ -99,7 +99,7 @@ struct SignalEmitSpy {
     }
 
     ~SignalEmitSpy() {
-        sigConnection.disconnect();
+        this->sigConnection.disconnect();
     }
 
     static void recordArgs(SignalArguments* /*ptr*/) {

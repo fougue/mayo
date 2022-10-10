@@ -68,7 +68,6 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     : QObject(guiApp),
       m_guiApp(guiApp),
       m_document(doc),
-      m_gfxScene(this),
       m_v3dView(m_gfxScene.createV3dView()),
       m_aisOriginTrihedron(Internal::createOriginTrihedron()),
       m_cameraAnimation(new V3dViewCameraAnimation(m_v3dView, this))
@@ -106,10 +105,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
-    QObject::connect(
-                &m_gfxScene, &GraphicsScene::selectionChanged,
-                this, &GuiDocument::onGraphicsSelectionChanged
-    );
+    m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
 }
 
 void GuiDocument::foreachGraphicsObject(

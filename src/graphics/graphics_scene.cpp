@@ -11,7 +11,6 @@
 
 #include <Graphic3d_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <QtCore/QPoint>
 
 namespace Mayo {
 
@@ -72,9 +71,8 @@ public:
     SelectionMode m_selectionMode = SelectionMode::Single;
 };
 
-GraphicsScene::GraphicsScene(QObject* parent)
-    : QObject(parent),
-      d(new Private)
+GraphicsScene::GraphicsScene()
+    : d(new Private)
 {
     d->m_v3dViewer = Internal::createOccViewer();
     d->m_aisContext = new InteractiveContext(d->m_v3dViewer);
@@ -237,7 +235,7 @@ void GraphicsScene::clearSelection()
     d->m_aisContext->ClearDetected(false);
     d->m_aisContext->ClearSelected(false);
     if (onEntryOwnerSelected)
-        emit this->selectionChanged();
+        this->signalSelectionChanged.send();
 }
 
 AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
@@ -253,9 +251,9 @@ void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
         d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }
 
-void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
+void GraphicsScene::highlightAt(int xPos, int yPos, const Handle_V3d_View& view)
 {
-    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, false);
+    d->m_aisContext->MoveTo(xPos, yPos, view, false);
 }
 
 void GraphicsScene::select()
@@ -278,7 +276,7 @@ void GraphicsScene::select()
 #endif
     }
 
-    emit this->selectionChanged();
+    this->signalSelectionChanged.send();
 }
 
 int GraphicsScene::selectedCount() const
@@ -304,7 +302,7 @@ void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode)
 {
     if (mode != d->m_selectionMode) {
         d->m_selectionMode = mode;
-        emit this->selectionModeChanged();
+        this->signalSelectionModeChanged.send();
     }
 }
 

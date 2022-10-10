@@ -106,10 +106,8 @@ void WidgetMeasure::setMeasureOn(bool on)
     auto gfxScene = m_guiDoc->graphicsScene();
     if (on) {
         this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
-        m_connGraphicsSelectionChanged = QObject::connect(
-                    gfxScene, &GraphicsScene::selectionChanged,
-                    this, &WidgetMeasure::onGraphicsSelectionChanged
-        );
+        m_connGraphicsSelectionChanged =
+                gfxScene->signalSelectionChanged.connectSlot(&WidgetMeasure::onGraphicsSelectionChanged, this);
     }
     else {
         gfxScene->foreachDisplayedObject([=](const GraphicsObjectPtr& gfxObject) {
@@ -117,7 +115,7 @@ void WidgetMeasure::setMeasureOn(bool on)
             gfxScene->activateObjectSelection(gfxObject, 0);
         });
         gfxScene->clearSelection();
-        QObject::disconnect(m_connGraphicsSelectionChanged);
+        m_connGraphicsSelectionChanged.disconnect();
     }
 }
 
