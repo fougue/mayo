@@ -105,7 +105,7 @@ private:
     mutable QModelIndex m_previousIndex;
     mutable QVariantAnimation m_itemAnimation;
     mutable QRect m_area;
-    mutable QAbstractItemView* m_widget;
+    mutable QAbstractItemView* m_widget = nullptr;
     mutable QPixmap m_blurredPixmap;
 };
 
