@@ -4,11 +4,12 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "gui_document_list_model.h"
+
 #include "../base/application.h"
 #include "../base/document.h"
-#include "gui_application.h"
-#include "gui_document.h"
-#include "gui_document_list_model.h"
+#include "../gui/gui_application.h"
+#include "../gui/gui_document.h"
 
 namespace Mayo {
 
