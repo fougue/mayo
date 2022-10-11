@@ -12,12 +12,12 @@
 #include "../base/meta_enum.h"
 #include "../base/settings.h"
 #include "../base/tkernel_utils.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "qmeta_tdf_label.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
-#include "widgets_utils.h"
+#include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <TDF_AttributeIterator.hxx>
@@ -655,7 +655,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
 {
     m_doc = doc;
     if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc)) {
-        WidgetsUtils::asyncMsgBoxCritical(
+        QtWidgetsUtils::asyncMsgBoxCritical(
                     this, tr("Error"), tr("This document is not suitable for XDE"));
         return;
     }

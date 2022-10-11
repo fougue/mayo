@@ -9,10 +9,10 @@
 #include "../base/meta_enum.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
-#include "../gui/qtgui_utils.h"
 #include "../io_image/io_image.h"
 #include "filepath_conv.h"
 #include "qstring_conv.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <fmt/format.h>

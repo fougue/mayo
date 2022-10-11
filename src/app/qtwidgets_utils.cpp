@@ -4,9 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "widgets_utils.h"
-
-#include "../gui/qtgui_utils.h"
+#include "qtwidgets_utils.h"
+#include "qtgui_utils.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
@@ -17,28 +16,28 @@
 
 namespace Mayo {
 
-QScreen* WidgetsUtils::screen(const QWidget* widget)
+QScreen* QtWidgetsUtils::screen(const QWidget* widget)
 {
     const QWindow* window = widget ? widget->windowHandle() : nullptr;
     return window ? window->screen() : QGuiApplication::primaryScreen();
 }
 
-int WidgetsUtils::screenPixelWidth(double screenRatio, const QWidget* parentWidget)
+int QtWidgetsUtils::screenPixelWidth(double screenRatio, const QWidget* parentWidget)
 {
-    return QtGuiUtils::screenPixelWidth(screenRatio, WidgetsUtils::screen(parentWidget));
+    return QtGuiUtils::screenPixelWidth(screenRatio, QtWidgetsUtils::screen(parentWidget));
 }
 
-int WidgetsUtils::screenPixelHeight(double screenRatio, const QWidget* parentWidget)
+int QtWidgetsUtils::screenPixelHeight(double screenRatio, const QWidget* parentWidget)
 {
-    return QtGuiUtils::screenPixelHeight(screenRatio, WidgetsUtils::screen(parentWidget));
+    return QtGuiUtils::screenPixelHeight(screenRatio, QtWidgetsUtils::screen(parentWidget));
 }
 
-QSize WidgetsUtils::screenPixelSize(double widthRatio, double heightRatio, const QWidget* parentWidget)
+QSize QtWidgetsUtils::screenPixelSize(double widthRatio, double heightRatio, const QWidget* parentWidget)
 {
-    return QtGuiUtils::screenPixelSize(widthRatio, heightRatio, WidgetsUtils::screen(parentWidget));
+    return QtGuiUtils::screenPixelSize(widthRatio, heightRatio, QtWidgetsUtils::screen(parentWidget));
 }
 
-void WidgetsUtils::addContentsWidget(QWidget* containerWidget, QWidget* contentsWidget)
+void QtWidgetsUtils::addContentsWidget(QWidget* containerWidget, QWidget* contentsWidget)
 {
     if (containerWidget && contentsWidget) {
         if (!containerWidget->layout()) {
@@ -51,7 +50,7 @@ void WidgetsUtils::addContentsWidget(QWidget* containerWidget, QWidget* contents
     }
 }
 
-void WidgetsUtils::asyncMenuExec(QMenu* menu, const QPoint& pos)
+void QtWidgetsUtils::asyncMenuExec(QMenu* menu, const QPoint& pos)
 {
     if (menu) {
         QObject::connect(menu, &QMenu::aboutToHide, menu, &QObject::deleteLater);
@@ -59,7 +58,7 @@ void WidgetsUtils::asyncMenuExec(QMenu* menu, const QPoint& pos)
     }
 }
 
-void WidgetsUtils::asyncDialogExec(QDialog* dialog)
+void QtWidgetsUtils::asyncDialogExec(QDialog* dialog)
 {
     if (!dialog)
         return;
@@ -68,46 +67,46 @@ void WidgetsUtils::asyncDialogExec(QDialog* dialog)
     dialog->show();
 }
 
-QMessageBox* WidgetsUtils::asyncMsgBoxInfo(
+QMessageBox* QtWidgetsUtils::asyncMsgBoxInfo(
         QWidget* parent,
         const QString& title,
         const QString& text,
         QMessageBox::StandardButtons buttons)
 {
     auto msgBox = new QMessageBox(QMessageBox::Information, title, text, buttons, parent);
-    WidgetsUtils::asyncDialogExec(msgBox);
+    QtWidgetsUtils::asyncDialogExec(msgBox);
     return msgBox;
 }
 
-QMessageBox* WidgetsUtils::asyncMsgBoxWarning(
+QMessageBox* QtWidgetsUtils::asyncMsgBoxWarning(
         QWidget* parent,
         const QString& title,
         const QString& text,
         QMessageBox::StandardButtons buttons)
 {
     auto msgBox = new QMessageBox(QMessageBox::Warning, title, text, buttons, parent);
-    WidgetsUtils::asyncDialogExec(msgBox);
+    QtWidgetsUtils::asyncDialogExec(msgBox);
     return msgBox;
 }
 
-QMessageBox* WidgetsUtils::asyncMsgBoxCritical(
+QMessageBox* QtWidgetsUtils::asyncMsgBoxCritical(
         QWidget* parent,
         const QString& title,
         const QString& text,
         QMessageBox::StandardButtons buttons)
 {
     auto msgBox = new QMessageBox(QMessageBox::Critical, title, text, buttons, parent);
-    WidgetsUtils::asyncDialogExec(msgBox);
+    QtWidgetsUtils::asyncDialogExec(msgBox);
     return msgBox;
 }
 
-void WidgetsUtils::moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin)
+void QtWidgetsUtils::moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin)
 {
     const QRect frameGeom = nextTo->frameGeometry();
     widget->move(nextTo->mapToParent(QPoint(frameGeom.width() + margin, 0)));
 }
 
-void WidgetsUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin)
+void QtWidgetsUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin)
 {
     const QRect frameGeom = widget->frameGeometry();
     widget->move(nextTo->mapToParent(QPoint(-frameGeom.width() - margin, 0)));

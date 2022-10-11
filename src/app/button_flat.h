@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "widgets_utils.h"
+#include "qtwidgets_utils.h"
 
 #include <QtCore/QVariant>
 #include <QtGui/QIcon>

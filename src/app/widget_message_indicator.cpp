@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 #include "widget_message_indicator.h"
-#include "../gui/qtgui_utils.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QTimer>

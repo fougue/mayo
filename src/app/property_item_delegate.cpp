@@ -9,12 +9,12 @@
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "filepath_conv.h"
 #include "qmeta_property.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QDir>

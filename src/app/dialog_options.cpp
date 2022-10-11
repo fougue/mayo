@@ -10,13 +10,13 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
 #include "qsettings_storage.h"
 #include "qstring_conv.h"
+#include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
-#include "widgets_utils.h"
 #include "ui_dialog_options.h"
 
 #include <QtCore/QSettings>
@@ -354,12 +354,12 @@ void DialogOptions::loadFromFile()
 
     const QFileInfo fi(filepath);
     if (!fi.exists()) {
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' doesn't exist").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' doesn't exist").arg(filepath));
         return;
     }
 
     if (!fi.isReadable()) {
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' is not readable").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' is not readable").arg(filepath));
         return;
     }
 
@@ -379,7 +379,7 @@ void DialogOptions::saveAs()
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
     if (fileSettings.get().status() != QSettings::NoError)
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
 }
 
 void DialogOptions::cancelChanges()
@@ -411,7 +411,7 @@ void DialogOptions::handleTreeViewButtonClick_restoreDefaults(const QModelIndex&
             menu->addAction(tr("Restore values for the whole group"), this, [=]{
                 m_settings->resetGroup(groupIndex);
             });
-            WidgetsUtils::asyncMenuExec(menu);
+            QtWidgetsUtils::asyncMenuExec(menu);
         }
         else {
             m_settings->resetGroup(groupIndex);

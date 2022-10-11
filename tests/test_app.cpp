@@ -14,10 +14,10 @@
 #include "../src/app/filepath_conv.h"
 #include "../src/app/qstring_conv.h"
 #include "../src/app/qstring_utils.h"
+#include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/app/theme.h"
 #include "../src/io_occ/io_occ.h"
-#include "../src/gui/qtgui_utils.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>
