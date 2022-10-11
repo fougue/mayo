@@ -42,6 +42,10 @@ msvc {
     DEFINES += NOMINMAX
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
+
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        DEFINES += _USE_MATH_DEFINES
+    }
 }
 gcc|clang {
     QMAKE_CXXFLAGS += -std=c++17
