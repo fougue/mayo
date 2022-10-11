@@ -10,11 +10,11 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/unit_system.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
-#include "qtcore_utils.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
+#include "qtcore_utils.h"
+#include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 
 #include <QtWidgets/QDoubleSpinBox>

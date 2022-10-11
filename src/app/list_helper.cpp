@@ -6,7 +6,7 @@
 
 #include "list_helper.h"
 
-#include "../gui/qtgui_utils.h"
+#include "qtgui_utils.h"
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>

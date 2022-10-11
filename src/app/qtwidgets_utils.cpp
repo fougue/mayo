@@ -5,8 +5,7 @@
 ****************************************************************************/
 
 #include "qtwidgets_utils.h"
-
-#include "../gui/qtgui_utils.h"
+#include "qtgui_utils.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>

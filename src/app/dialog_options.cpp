@@ -10,13 +10,13 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
 #include "qsettings_storage.h"
 #include "qstring_conv.h"
-#include "theme.h"
+#include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
+#include "theme.h"
 #include "ui_dialog_options.h"
 
 #include <QtCore/QSettings>
