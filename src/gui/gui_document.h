@@ -12,7 +12,7 @@
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
-#include "../graphics/v3d_view_camera_animation.h"
+#include "v3d_view_camera_animation.h"
 
 #include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Bnd_Box.hxx>
