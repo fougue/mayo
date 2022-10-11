@@ -14,7 +14,7 @@ class QWidget;
 
 namespace Mayo {
 
-class WidgetsUtils {
+class QtWidgetsUtils {
 public:
     static QScreen* screen(const QWidget* widget);
     static int screenPixelWidth(double screenRatio, const QWidget* parentWidget = nullptr);

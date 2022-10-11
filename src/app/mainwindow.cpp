@@ -42,7 +42,7 @@
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
 #include "widget_properties_editor.h"
-#include "widgets_utils.h"
+#include "qtwidgets_utils.h"
 
 #ifdef Q_OS_WIN
 #  include "windows/win_taskbar_global_progress.h"
@@ -190,10 +190,10 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
         WidgetMessageIndicator::showInfo(text, mainWnd);
         break;
     case Messenger::MessageType::Warning:
-        WidgetsUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
+        QtWidgetsUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
         break;
     case Messenger::MessageType::Error:
-        WidgetsUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
+        QtWidgetsUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
         break;
     }
 }
@@ -608,14 +608,14 @@ void MainWindow::zoomOutCurrentDoc()
 void MainWindow::editOptions()
 {
     auto dlg = new DialogOptions(AppModule::get()->settings(), this);
-    WidgetsUtils::asyncDialogExec(dlg);
+    QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::saveImageView()
 {
     auto widgetGuiDoc = this->currentWidgetGuiDocument();
     auto dlg = new DialogSaveImageView(widgetGuiDoc->guiDocument()->v3dView());
-    WidgetsUtils::asyncDialogExec(dlg);
+    QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::inspectXde()
@@ -632,7 +632,7 @@ void MainWindow::inspectXde()
     if (!xcafDoc.IsNull()) {
         auto dlg = new DialogInspectXde(this);
         dlg->load(xcafDoc);
-        WidgetsUtils::asyncDialogExec(dlg);
+        QtWidgetsUtils::asyncDialogExec(dlg);
     }
 }
 
@@ -659,7 +659,7 @@ void MainWindow::toggleLeftSidebar()
 void MainWindow::aboutMayo()
 {
     auto dlg = new DialogAbout(this);
-    WidgetsUtils::asyncDialogExec(dlg);
+    QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
 void MainWindow::reportbug()
@@ -726,7 +726,7 @@ void MainWindow::onOperationFinished(bool ok, const QString &msg)
     if (ok)
         WidgetMessageIndicator::showInfo(msg, this);
     else
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), msg);
 }
 
 void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)

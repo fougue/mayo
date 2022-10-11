@@ -15,7 +15,7 @@
 #include "qtcore_utils.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
-#include "widgets_utils.h"
+#include "qtwidgets_utils.h"
 
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QCheckBox>
@@ -200,7 +200,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
                 property->setValue(QtGuiUtils::toColor<Quantity_Color>(c));
                 this->syncWithProperty();
             });
-            WidgetsUtils::asyncDialogExec(dlg);
+            QtWidgetsUtils::asyncDialogExec(dlg);
         });
 
         frameLayout->addWidget(m_labelColor);

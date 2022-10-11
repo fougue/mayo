@@ -18,7 +18,7 @@
 #include "widget_measure.h"
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
-#include "widgets_utils.h"
+#include "qtwidgets_utils.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QAbstractAnimation>
@@ -217,7 +217,7 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
 QWidget* WidgetGuiDocument::createWidgetPanelContainer(QWidget* widgetContents)
 {
     auto panel = new PanelView3d(this);
-    WidgetsUtils::addContentsWidget(panel, widgetContents);
+    QtWidgetsUtils::addContentsWidget(panel, widgetContents);
     panel->show();
     panel->adjustSize();
     return panel;
