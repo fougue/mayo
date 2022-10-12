@@ -169,7 +169,7 @@ void WidgetOccViewController::setViewCursor(const QCursor &cursor)
         m_occView->widget()->setCursor(cursor);
 }
 
-struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractRubberBand {
+struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBand {
     RubberBand(QWidget* parent)
         : m_rubberBand(parent)
     {
@@ -187,7 +187,7 @@ private:
     Internal::RubberBandWidget m_rubberBand;
 };
 
-std::unique_ptr<V3dViewController::AbstractRubberBand> WidgetOccViewController::createRubberBand()
+std::unique_ptr<V3dViewController::IRubberBand> WidgetOccViewController::createRubberBand()
 {
     return std::make_unique<RubberBand>(m_occView->widget());
 }

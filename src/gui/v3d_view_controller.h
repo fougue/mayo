@@ -26,8 +26,8 @@ public:
         InstantZoom
     };
 
-    struct AbstractRubberBand {
-        virtual ~AbstractRubberBand() {}
+    struct IRubberBand {
+        virtual ~IRubberBand() {}
         virtual void updateGeometry(int x, int y, int width, int height) = 0;
         virtual void setVisible(bool on) = 0;
     };
@@ -75,7 +75,7 @@ protected:
     void startInstantZoom(const Position& currPos);
     void stopInstantZoom();
 
-    virtual std::unique_ptr<AbstractRubberBand> createRubberBand() = 0;
+    virtual std::unique_ptr<IRubberBand> createRubberBand() = 0;
     void drawRubberBand(const Position& posMin, const Position& posMax);
     void hideRubberBand();
 
@@ -87,7 +87,7 @@ protected:
 private:
     Handle_V3d_View m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;
-    std::unique_ptr<AbstractRubberBand> m_rubberBand;
+    std::unique_ptr<IRubberBand> m_rubberBand;
     double m_instantZoomFactor = 5.;
     Handle_Graphic3d_Camera m_cameraBackup;
     Position m_posRubberBandStart;
