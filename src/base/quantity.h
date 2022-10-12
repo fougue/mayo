@@ -11,6 +11,7 @@
 
 namespace Mayo {
 
+// Numerical value of a unit of measurement
 template<Unit U> class Quantity {
     using Qty = Quantity<U>;
 public:
@@ -47,6 +48,11 @@ private:
     double m_value;
 };
 
+template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs);
+template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs);
+template<Unit U> constexpr double operator/(Quantity<U> lhs, Quantity<U> rhs);
+
+// Type aliases for most used quantity types in Mayo
 using QuantityLength = Quantity<Unit::Length>;
 using QuantityArea = Quantity<Unit::Area>;
 using QuantityVolume = Quantity<Unit::Volume>;
@@ -55,9 +61,6 @@ using QuantityTime = Quantity<Unit::Time>;
 using QuantityAngle = Quantity<Unit::Angle>;
 using QuantityVelocity = Quantity<Unit::Velocity>;
 using QuantityDensity = Quantity<Unit::Density>;
-
-template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs);
-template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs);
 
 constexpr QuantityArea operator*(QuantityLength lhs, QuantityLength rhs);
 constexpr QuantityVolume operator*(QuantityLength lhs, QuantityArea rhs);
@@ -152,6 +155,10 @@ template<Unit U> constexpr Quantity<U> operator*(Quantity<U> lhs, double rhs) {
 
 template<Unit U> constexpr Quantity<U> operator*(double lhs, Quantity<U> rhs) {
     return rhs * lhs;
+}
+
+template<Unit U> constexpr double operator/(Quantity<U> lhs, Quantity<U> rhs) {
+    return lhs.value() / rhs.value();
 }
 
 constexpr QuantityArea operator*(QuantityLength lhs, QuantityLength rhs) {

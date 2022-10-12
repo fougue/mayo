@@ -93,9 +93,7 @@ void V3dViewCameraAnimation::updateCurrentTime(QuantityTime currTime)
     if (!m_view)
         return;
 
-    const double currTime_ms = UnitSystem::milliseconds(currTime);
-    const double duration_ms = UnitSystem::milliseconds(m_duration);
-    const double t = m_backend ? m_backend->valueForProgress(currTime_ms / duration_ms) : 0.;
+    const double t = m_backend ? m_backend->valueForProgress(currTime / m_duration) : 0.;
     const bool prevImmediateUpdate = m_view->SetImmediateUpdate(false);
     const Graphic3d_CameraLerp cameraLerp(m_cameraStart, m_cameraEnd);
     Handle_Graphic3d_Camera camera = m_view->Camera();
