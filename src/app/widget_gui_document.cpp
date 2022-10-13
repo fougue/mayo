@@ -196,6 +196,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     });
 }
 
+Document::Identifier WidgetGuiDocument::documentIdentifier() const
+{
+    return m_guiDoc->document()->identifier();
+}
+
 QColor WidgetGuiDocument::panelBackgroundColor() const
 {
     QColor color = mayoTheme()->color(Theme::Color::Palette_Window);
