@@ -16,8 +16,10 @@ class QFileInfo;
 
 namespace Mayo {
 
+class Command;
 class GuiApplication;
 class GuiDocument;
+class IAppContext;
 class WidgetGuiDocument;
 
 class MainWindow : public QMainWindow {
@@ -32,49 +34,18 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-signals:
-    void currentDocumentIndexChanged(int docIdx);
-
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dropEvent(QDropEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
 private:
-    // -- File menu
-    void newDocument();
-    void openDocuments();
-    void importInCurrentDoc();
-    void exportSelectedItems();
-    void closeCurrentDocument();
-    void closeAllDocumentsExceptCurrent();
-    void closeAllDocuments();
-    void quitApp();
-    // -- Display menu
-    void toggleCurrentDocOriginTrihedron();
-    void toggleCurrentDocPerformanceStats();
-    void zoomInCurrentDoc();
-    void zoomOutCurrentDoc();
-    // -- Tools menu
-    void editOptions();
-    void saveImageView();
-    void inspectXde();
-    // -- Window menu
-    void toggleFullscreen();
-    void toggleLeftSidebar();
-    // -- Help menu
-    void aboutMayo();
-    void reportbug();
-
     void onApplicationItemSelectionChanged();
     void onOperationFinished(bool ok, const QString& msg);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
     void onCurrentDocumentIndexChanged(int idx);
-
-    void closeDocument(WidgetGuiDocument* widget);
-    void closeDocument(int docIndex);
 
     void updateControlsActivation();
 
@@ -86,15 +57,32 @@ private:
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
     QMenu* createMenuModelTreeSettings();
-    QMenu* createMenuRecentFiles();
-    QMenu* createMenuDisplayMode();
 
+    Command* getCommand(std::string_view name) const;
+    template<typename CMD, typename... ARGS> CMD* addCommand(std::string_view name, ARGS... p);
+
+    friend class AppContext;
+
+    IAppContext* m_appContext = nullptr;
     GuiApplication* m_guiApp = nullptr;
-    class Ui_MainWindow* m_ui = nullptr;
     TaskManager m_taskMgr;
-    Qt::WindowStates m_previousWindowState = Qt::WindowNoState;
+    class Ui_MainWindow* m_ui = nullptr;
+    std::unordered_map<std::string_view, Command*> m_mapCommand;
     std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
 };
+
+
+
+// --
+// -- Implementation
+// --
+
+template<typename CMD, typename... ARGS> CMD* MainWindow::addCommand(std::string_view name, ARGS... p)
+{
+    auto cmd = new CMD(m_appContext, p...);
+    m_mapCommand.insert({ name, cmd });
+    return cmd;
+}
 
 } // namespace Mayo

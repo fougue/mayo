@@ -16,7 +16,7 @@ namespace Mayo {
 class DialogSaveImageView : public QDialog {
     Q_OBJECT
 public:
-    DialogSaveImageView(const Handle_V3d_View& view, QWidget *parent = nullptr);
+    DialogSaveImageView(const Handle_V3d_View& view, QWidget* parent = nullptr);
     ~DialogSaveImageView();
 
 private:

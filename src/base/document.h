@@ -21,7 +21,7 @@ namespace Mayo {
 
 class Document : public TDocStd_Document {
 public:
-    using Identifier = int;
+    using Identifier = int; // TODO alias TypedScalar<int, DocumentIdentifierTag>
     enum class Format { Binary, Xml };
 
     Identifier identifier() const { return m_identifier; }
