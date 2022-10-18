@@ -22,6 +22,7 @@ class GuiDocument;
 class V3dViewController;
 class TaskManager;
 
+// Provides interface to access/interact with application
 class IAppContext : public QObject {
     Q_OBJECT
 public:
@@ -49,6 +50,7 @@ signals:
     void currentDocumentChanged(Mayo::Document::Identifier docId);
 };
 
+// Represents a single action in the application
 class Command : public QObject {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Command)

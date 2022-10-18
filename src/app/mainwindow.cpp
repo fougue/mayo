@@ -9,18 +9,15 @@
 
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
-#include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/global.h"
-#include "../base/io_format.h"
-#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/settings.h"
-#include "../base/task_manager.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "app_context.h"
 #include "app_module.h"
 #include "commands_file.h"
 #include "commands_display.h"
@@ -29,7 +26,6 @@
 #include "commands_help.h"
 #include "dialog_task_manager.h"
 #include "document_property_group.h"
-#include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
 #include "gui_document_list_model.h"
 #include "item_view_buttons.h"
@@ -42,7 +38,6 @@
 #include "widget_message_indicator.h"
 #include "widget_model_tree.h"
 #include "widget_occ_view.h"
-#include "widget_occ_view_controller.h"
 #include "widget_properties_editor.h"
 
 #ifdef Q_OS_WIN
@@ -77,121 +72,6 @@ static void handleMessage(Messenger::MessageType msgType, const QString& text, Q
 }
 
 } // namespace Internal
-
-class AppContext : public IAppContext {
-public:
-    AppContext(MainWindow* wnd)
-        : m_wnd(wnd)
-    {
-        QObject::connect(
-                    m_wnd->m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
-                    this, &AppContext::onCurrentDocumentIndexChanged
-        );
-    }
-
-    GuiApplication* guiApp() const override {
-        return m_wnd->m_guiApp;
-    }
-
-    TaskManager* taskMgr() const override {
-        return &m_wnd->m_taskMgr;
-    }
-
-    QWidget* widgetMain() const override {
-        return m_wnd;
-    }
-
-    QWidget* widgetLeftSidebar() const override {
-        return m_wnd->m_ui->widget_Left;
-    }
-
-    ModeWidgetMain modeWidgetMain() const override
-    {
-        auto widget = m_wnd->m_ui->stack_Main->currentWidget();
-        if (widget == m_wnd->m_ui->page_MainHome)
-            return ModeWidgetMain::Home;
-        else if (widget == m_wnd->m_ui->page_MainControl)
-            return ModeWidgetMain::Documents;
-
-        return ModeWidgetMain::Unknown;
-    }
-
-    V3dViewController* v3dViewController(const GuiDocument* guiDoc) const override
-    {
-        auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* candidate) {
-            return candidate->guiDocument() == guiDoc;
-        });
-        return widgetDoc ? widgetDoc->controller() : nullptr;
-    }
-
-    int findDocumentIndex(Document::Identifier docId) const override
-    {
-        int index = -1;
-        auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* candidate) {
-                ++index;
-                return candidate->documentIdentifier() == docId;
-        });
-        return widgetDoc ? index : -1;
-    }
-
-    Document::Identifier findDocumentFromIndex(int index) const override
-    {
-        auto widgetDoc = m_wnd->widgetGuiDocument(index);
-        return widgetDoc ? widgetDoc->documentIdentifier() : -1;
-    }
-
-    Document::Identifier currentDocument() const override
-    {
-        const int index = m_wnd->m_ui->combo_GuiDocuments->currentIndex();
-        auto widgetDoc = m_wnd->widgetGuiDocument(index);
-        return widgetDoc ? widgetDoc->documentIdentifier() : -1;
-    }
-
-    void setCurrentDocument(Document::Identifier docId) override
-    {
-        auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* widgetDoc) {
-            return widgetDoc->documentIdentifier() == docId;
-        });
-        const int docIndex = m_wnd->m_ui->stack_GuiDocuments->indexOf(widgetDoc);
-        m_wnd->m_ui->combo_GuiDocuments->setCurrentIndex(docIndex);
-    }
-
-    void updateControlsEnabledStatus() override {
-        m_wnd->updateControlsActivation();
-    }
-
-    void deleteDocumentWidget(const DocumentPtr& doc) override
-    {
-        QWidget* widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
-            return widgetDoc->documentIdentifier() == doc->identifier();
-        });
-        if (widgetDoc) {
-            m_wnd->m_ui->stack_GuiDocuments->removeWidget(widgetDoc);
-            widgetDoc->deleteLater();
-        }
-    }
-
-private:
-    WidgetGuiDocument* findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const
-    {
-        const int widgetCount = m_wnd->m_ui->stack_GuiDocuments->count();
-        for (int i = 0; i < widgetCount; ++i) {
-            auto candidate = m_wnd->widgetGuiDocument(i);
-            if (candidate && fn(candidate))
-                return candidate;
-        }
-
-        return nullptr;
-    }
-
-    void onCurrentDocumentIndexChanged(int docIndex)
-    {
-        auto widgetDoc = m_wnd->widgetGuiDocument(docIndex);
-        emit this->currentDocumentChanged(widgetDoc ? widgetDoc->documentIdentifier() : -1);
-    }
-
-    MainWindow* m_wnd = nullptr;
-};
 
 MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     : QMainWindow(parent),
@@ -433,6 +313,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
+    // TODO Move to CommandOpenDocuments with event filter on IAppContext::widgetMain()?
     const QList<QUrl> listUrl = event->mimeData()->urls();
     std::vector<FilePath> listFilePath;
     for (const QUrl& url : listUrl) {
