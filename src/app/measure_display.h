@@ -195,7 +195,6 @@ public:
 
 private:
     QuantityArea m_area;
-    int m_sumCount = 0;
 };
 
 } // namespace Mayo

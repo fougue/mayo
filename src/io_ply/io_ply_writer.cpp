@@ -18,7 +18,7 @@
 
 #include <Poly_Triangulation.hxx>
 
-#include <gsl/gsl_util>
+#include <gsl/util>
 #include <fmt/format.h>
 
 #include <algorithm>

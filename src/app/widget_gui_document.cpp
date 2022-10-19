@@ -43,7 +43,7 @@ public:
     {
     }
 
-    void setDuration(QuantityTime t) {
+    void setDuration(QuantityTime t) override {
         m_impl.m_duration_ms = UnitSystem::milliseconds(t);
     }
 
