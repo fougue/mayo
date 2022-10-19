@@ -34,6 +34,10 @@ public:
     GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
     ~GuiDocument();
 
+    // Not copyable
+    GuiDocument(const GuiDocument&) = delete;
+    GuiDocument& operator=(const GuiDocument&) = delete;
+
     const DocumentPtr& document() const { return m_document; }
 
     GuiApplication* guiApplication() const { return m_guiApp; }

@@ -90,7 +90,7 @@ private:
     std::unique_ptr<IRubberBand> m_rubberBand;
     double m_instantZoomFactor = 5.;
     Handle_Graphic3d_Camera m_cameraBackup;
-    Position m_posRubberBandStart;
+    Position m_posRubberBandStart = {};
 };
 
 } // namespace Mayo

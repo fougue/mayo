@@ -23,6 +23,10 @@ public:
     GuiApplication(const ApplicationPtr& app);
     ~GuiApplication();
 
+    // Not copyable
+    GuiApplication(const GuiApplication&) = delete;
+    GuiApplication& operator=(const GuiApplication&) = delete;
+
     const ApplicationPtr& application() const;
 
     Span<GuiDocument*> guiDocuments();

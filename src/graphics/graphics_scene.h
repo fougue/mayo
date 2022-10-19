@@ -24,6 +24,10 @@ public:
     GraphicsScene();
     ~GraphicsScene();
 
+    // Not copyable
+    GraphicsScene(const GraphicsScene&) = delete;
+    GraphicsScene& operator=(const GraphicsScene&) = delete;
+
     opencascade::handle<V3d_View> createV3dView();
 
     const opencascade::handle<V3d_Viewer>& v3dViewer() const;

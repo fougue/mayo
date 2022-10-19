@@ -126,23 +126,23 @@ struct LWPolyDataOut
 
 class ImportExport CDxfWrite{
 private:
-    std::ofstream* m_ofs;
+    std::ofstream m_ofs;
     bool m_fail;
-    std::ostringstream* m_ssBlock;
-    std::ostringstream* m_ssBlkRecord;
-    std::ostringstream* m_ssEntity;
-    std::ostringstream* m_ssLayer;
+    std::ostringstream m_ssBlock;
+    std::ostringstream m_ssBlkRecord;
+    std::ostringstream m_ssEntity;
+    std::ostringstream m_ssLayer;
 
 protected:
     void putLine(const Base::Vector3d& s, const Base::Vector3d& e,
-                 std::ostringstream* outStream, const std::string& handle,
+                 std::ostringstream& outStream, const std::string& handle,
                  const std::string& ownerHandle);
     void putText(const char* text, const Base::Vector3d& location1, const Base::Vector3d& location2,
                  const double height, const int horizJust,
-                 std::ostringstream* outStream, const std::string& handle,
+                 std::ostringstream& outStream, const std::string& handle,
                  const std::string& ownerHandle);
     void putArrow(const Base::Vector3d& arrowPos, const Base::Vector3d& barb1Pos, const Base::Vector3d& barb2Pos,
-                  std::ostringstream* outStream, const std::string& handle,
+                  std::ostringstream& outStream, const std::string& handle,
                   const std::string& ownerHandle);
 
     //! copy boiler plate file
@@ -247,7 +247,7 @@ public:
 // derive a class from this and implement it's virtual functions
 class ImportExport CDxfRead{
 private:
-    std::ifstream* m_ifs;
+    std::ifstream m_ifs;
 
     bool m_fail;
     char m_str[1024];
