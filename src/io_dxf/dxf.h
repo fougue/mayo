@@ -5,9 +5,6 @@
 
 // MAYO: file initially taken from FreeCad/src/Mod/Import/App/dxf.h -- commit #47d5707
 
-#ifndef _dxf_h_
-#define _dxf_h_
-
 #pragma once
 
 #include <algorithm>
@@ -17,13 +14,12 @@
 #include <set>
 #include <fstream>
 #include <sstream>
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include <iosfwd>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
 
 #include "freecad.h"
-#define ImportExport
 
 //Following is required to be defined on Ubuntu with OCC 6.3.1
 #ifndef HAVE_IOSTREAM
@@ -124,7 +120,7 @@ struct LWPolyDataOut
 };
 //********************
 
-class ImportExport CDxfWrite{
+class CDxfWrite{
 private:
     std::ofstream m_ofs;
     bool m_fail;
@@ -245,7 +241,7 @@ public:
 };
 
 // derive a class from this and implement it's virtual functions
-class ImportExport CDxfRead{
+class CDxfRead{
 private:
     std::ifstream m_ifs;
 
@@ -320,4 +316,3 @@ public:
     std::string LayerName() const;
 
 };
-#endif
