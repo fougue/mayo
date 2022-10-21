@@ -95,7 +95,7 @@ static QString propertyValueText(const PropertyBool* prop) {
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return AppModule::get()->locale().toString(prop->value());
+    return AppModule::get()->qtLocale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {

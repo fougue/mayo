@@ -6,14 +6,14 @@
 
 #include "measure_display.h"
 
-#include "app_module.h"
+#include "../base/text_id.h"
+#include "../base/unit_system.h"
 #include "measure_tool.h"
-#include "qstring_conv.h"
-#include "qstring_utils.h"
 
 #include <ElCLib.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_Circle.hxx>
+#include <Prs3d_LineAspect.hxx>
 
 #include <fmt/format.h>
 
@@ -67,7 +67,7 @@ std::string_view BaseMeasureDisplay::sumTextOr(std::string_view singleItemText) 
     return m_sumCount > 1 ? MeasureDisplayI18N::textIdTr("Sum") : singleItemText;
 }
 
-std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureConfig& config)
+std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureDisplayConfig& config)
 {
     auto trPntX = UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit);
     auto trPntY = UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit);
@@ -76,25 +76,24 @@ std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureConfig& con
                 MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">X</font>{0} "
                                              "<font color=\"#55FF00\">Y</font>{1} "
                                              "<font color=\"#0077FF\">Z</font>{2}){3}"),
-                text(trPntX), text(trPntY), text(trPntZ),
+                text(trPntX, config), text(trPntY, config), text(trPntZ, config),
                 trPntX.strUnit
     );
     return str;
 }
 
-std::string BaseMeasureDisplay::text(double value)
+std::string BaseMeasureDisplay::text(double value, const MeasureDisplayConfig& config)
 {
-    const QStringUtils::TextOptions textOpts = AppModule::get()->defaultTextOptions();
-    return to_stdString(QStringUtils::text(value, textOpts));
+    return to_stdString(value, config.doubleToStringOptions);
 }
 
-std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureConfig& config)
+std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config)
 {
     const std::string BaseMeasureDisplay = fmt::format(
                 MeasureDisplayI18N::textIdTr(" X{0} Y{1} Z{2}"),
-                text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit)),
-                text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit)),
-                text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit))
+                text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit), config),
+                text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit), config),
+                text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit), config)
     );
     return BaseMeasureDisplay;
 }
@@ -128,7 +127,7 @@ MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
     BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
-void MeasureDisplayVertex::update(const MeasureConfig& config)
+void MeasureDisplayVertex::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_pnt, config));
     m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_pnt, config)));
@@ -157,7 +156,7 @@ MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circ
     BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
-void MeasureDisplayCircleCenter::update(const MeasureConfig& config)
+void MeasureDisplayCircleCenter::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_circle.Location(), config));
     m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_circle.Location(), config)));
@@ -198,14 +197,14 @@ MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& 
     m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 }
 
-void MeasureDisplayCircleDiameter::update(const MeasureConfig& config)
+void MeasureDisplayCircleDiameter::update(const MeasureDisplayConfig& config)
 {
     const QuantityLength diameter = 2 * m_circle.Radius() * Quantity_Millimeter;
     const auto trDiameter = UnitSystem::translateLength(diameter, config.lengthUnit);
-    const auto strDiameter = BaseMeasureDisplay::text(trDiameter);
+    const auto strDiameter = BaseMeasureDisplay::text(trDiameter, config);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
-                  ));
+    ));
 
     m_gfxDiameterText->SetText(to_OccExtString(fmt::format(MeasureDisplayI18N::textIdTr(" Ø{0}"), strDiameter)));
 
@@ -244,17 +243,17 @@ MeasureDisplayMinDistance::MeasureDisplayMinDistance(const MeasureMinDistance& d
     BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
-void MeasureDisplayMinDistance::update(const MeasureConfig& config)
+void MeasureDisplayMinDistance::update(const MeasureDisplayConfig& config)
 {
     const auto trLength = UnitSystem::translateLength(m_dist.value, config.lengthUnit);
-    const auto strLength = BaseMeasureDisplay::text(trLength);
+    const auto strLength = BaseMeasureDisplay::text(trLength, config);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("Min Distance: {0}{1}<br>Point1: {2}<br>Point2: {3}"),
                       strLength,
                       trLength.strUnit,
                       BaseMeasureDisplay::text(m_dist.pnt1, config),
                       BaseMeasureDisplay::text(m_dist.pnt2, config)
-                  ));
+    ));
     m_gfxDistText->SetText(to_OccExtString(" " + strLength));
 }
 
@@ -294,10 +293,10 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     m_gfxAngleText->SetPosition(ElCLib::Value(param1 + std::abs((param2 - param1) / 2.), geomCircle->Circ()));
 }
 
-void MeasureDisplayAngle::update(const MeasureConfig& config)
+void MeasureDisplayAngle::update(const MeasureDisplayConfig& config)
 {
     const auto trAngle = UnitSystem::translateAngle(m_angle.value, config.angleUnit);
-    const auto strAngle = BaseMeasureDisplay::text(trAngle);
+    const auto strAngle = BaseMeasureDisplay::text(trAngle, config);
     this->setText(fmt::format(MeasureDisplayI18N::textIdTr("Angle: {0}{1}"), strAngle, trAngle.strUnit));
     m_gfxAngleText->SetText(to_OccExtString(" " + strAngle));
 }
@@ -328,15 +327,15 @@ MeasureDisplayLength::MeasureDisplayLength(QuantityLength length)
 {
 }
 
-void MeasureDisplayLength::update(const MeasureConfig& config)
+void MeasureDisplayLength::update(const MeasureDisplayConfig& config)
 {
     const auto trLength = UnitSystem::translateLength(m_length, config.lengthUnit);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
                       BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
-                      BaseMeasureDisplay::text(trLength),
+                      BaseMeasureDisplay::text(trLength, config),
                       trLength.strUnit
-                  ));
+    ));
 }
 
 void MeasureDisplayLength::sumAdd(const IMeasureDisplay& other)
@@ -355,15 +354,15 @@ MeasureDisplayArea::MeasureDisplayArea(QuantityArea area)
 {
 }
 
-void MeasureDisplayArea::update(const MeasureConfig& config)
+void MeasureDisplayArea::update(const MeasureDisplayConfig& config)
 {
     const auto trArea = UnitSystem::translateArea(m_area, config.areaUnit);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
                       BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
-                      BaseMeasureDisplay::text(trArea),
+                      BaseMeasureDisplay::text(trArea, config),
                       trArea.strUnit
-                      ));
+    ));
 }
 
 void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)

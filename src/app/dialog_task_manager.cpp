@@ -185,7 +185,7 @@ void DialogTaskManager::onTaskProgressStep(TaskId taskId, std::string_view name)
     const QString taskTitle = to_QString(m_taskMgr->title(taskId));
     QString text = taskTitle;
     if (!name.empty()) {
-        const QLocale& locale = AppModule::get()->locale();
+        const QLocale& locale = AppModule::get()->qtLocale();
         if (!text.isEmpty())
             QStringUtils::append(&text, tr(" / "), locale);
 

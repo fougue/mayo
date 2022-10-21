@@ -52,27 +52,6 @@
 
 namespace Mayo {
 
-namespace Internal {
-
-static void handleMessage(Messenger::MessageType msgType, const QString& text, QWidget* mainWnd)
-{
-    switch (msgType) {
-    case Messenger::MessageType::Trace:
-        break;
-    case Messenger::MessageType::Info:
-        WidgetMessageIndicator::showInfo(text, mainWnd);
-        break;
-    case Messenger::MessageType::Warning:
-        QtWidgetsUtils::asyncMsgBoxWarning(mainWnd, MainWindow::tr("Warning"), text);
-        break;
-    case Messenger::MessageType::Error:
-        QtWidgetsUtils::asyncMsgBoxCritical(mainWnd, MainWindow::tr("Error"), text);
-        break;
-    }
-}
-
-} // namespace Internal
-
 MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     : QMainWindow(parent),
       m_guiApp(guiApp),
@@ -222,11 +201,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
     );
-    QObject::connect(
-                AppModule::get(), &AppModule::message,
-                this, [=](Messenger::MessageType msgType, const QString& text) {
-        Internal::handleMessage(msgType, text, this);
-    });
+    AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
     guiApp->selectionModel()->signalChanged.connectSlot(&MainWindow::onApplicationItemSelectionChanged, this);
     // Creation of annex objects
@@ -505,7 +480,24 @@ void MainWindow::onCurrentDocumentIndexChanged(int idx)
     const DocumentPtr docPtr = m_guiApp->application()->findDocumentByIndex(idx);
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(docFilePath));
- }
+}
+
+void MainWindow::onMessage(Messenger::MessageType msgType, const QString& text)
+{
+    switch (msgType) {
+    case Messenger::MessageType::Trace:
+        break;
+    case Messenger::MessageType::Info:
+        WidgetMessageIndicator::showInfo(text, this);
+        break;
+    case Messenger::MessageType::Warning:
+        QtWidgetsUtils::asyncMsgBoxWarning(this, tr("Warning"), text);
+        break;
+    case Messenger::MessageType::Error:
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), text);
+        break;
+    }
+}
 
 void MainWindow::openDocument(const FilePath& fp)
 {

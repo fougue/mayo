@@ -36,6 +36,8 @@ private slots:
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
 
+    void DoubleToString_test();
+
     void BRepUtils_test();
 
     void CafUtils_test();

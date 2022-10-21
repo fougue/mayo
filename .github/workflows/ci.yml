@@ -75,8 +75,14 @@ jobs:
           env:
               DISPLAY: :0
           run: |
+              # Install french locale for testing case
+              echo "fr_FR ISO-8859-1" | sudo tee -a /etc/locale.gen
+              sudo locale-gen
+              localectl list-locales
+              # Start X11 display server
               Xvfb $DISPLAY -screen 0 1280x1024x24 &
               sleep 5s
+              # Run tests
               ./mayo --runtests
 
         - name: Execute Unit Tests[macOS]

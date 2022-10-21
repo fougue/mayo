@@ -134,7 +134,7 @@ private:
                 return WidgetHomeFiles::tr("%1 days ago %2").arg(diffDays).arg(strTime);
             }
             else {
-                const QString strDate = appModule->locale().toString(date, QLocale::ShortFormat);
+                const QString strDate = appModule->qtLocale().toString(date, QLocale::ShortFormat);
                 return WidgetHomeFiles::tr("%1 %2").arg(strDate, strTime);
             }
         };
@@ -152,7 +152,7 @@ private:
                         "Modified: %4\n"
                         "Read: %5\n")
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
-                    .arg(QStringUtils::bytesText(fi.size(), appModule->locale()))
+                    .arg(QStringUtils::bytesText(fi.size(), appModule->qtLocale()))
                     .arg(fnToString(fi.birthTime()))
                     .arg(fnToString(fi.lastModified()))
                     .arg(fnToString(fi.lastRead()))

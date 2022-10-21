@@ -26,10 +26,11 @@ inline const std::string& nullString()
     return str;
 }
 
-template<typename KEY, typename VALUE, typename... EXTRAS>
-VALUE findValue(const KEY& key, const std::unordered_map<KEY, VALUE, EXTRAS...>& hashmap) {
+template<typename Key, typename Value, typename... Extras>
+Value findValue(const Key& key, const std::unordered_map<Key, Value, Extras...>& hashmap)
+{
     auto it = hashmap.find(key);
-    const VALUE defaultValue = {};
+    const Value defaultValue = {};
     return it != hashmap.cend() ? it->second : defaultValue;
 }
 
@@ -124,10 +125,10 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept
 }
 
 // Throws object of specified error type if 'condition' is met
-template<typename ERROR, typename... ERROR_ARGS> void throwErrorIf(bool condition, ERROR_ARGS... args)
+template<typename Error, typename... ErrorArgs> void throwErrorIf(bool condition, ErrorArgs... args)
 {
     if (condition) {
-        throw ERROR(args...);
+        throw Error(args...);
     }
 }
 
