@@ -82,7 +82,7 @@ public:
 
 // Union type for all the various measure values returned by IMeasureTool services
 using MeasureValue = std::variant<
-            MeasureNone, // Warning: ensure this is the first value type in the variant
+            MeasureNone, // WARNING: ensure this is the first value type in the variant
             gp_Pnt,
             MeasureCircle,
             MeasureMinDistance,

@@ -5,19 +5,20 @@
 ****************************************************************************/
 
 #include "widget_measure.h"
-#include "measure_display.h"
-#include "measure_tool_brep.h"
+#include "app_module.h"
 #include "qstring_conv.h"
 #include "theme.h"
 #include "ui_widget_measure.h"
 
 #include "../base/unit_system.h"
 #include "../gui/gui_document.h"
+#include "../measure/measure_tool_brep.h"
 
 #include <QtCore/QtDebug>
 #include <QtGui/QFontDatabase>
 
 #include <cmath>
+#include <codecvt>
 #include <vector>
 
 namespace Mayo {
@@ -214,7 +215,7 @@ void WidgetMeasure::onMeasureTypeChanged(int id)
 
 void WidgetMeasure::onMeasureUnitsChanged()
 {
-    const MeasureConfig config = this->currentMeasureConfig();
+    const MeasureDisplayConfig config = this->currentMeasureDisplayConfig();
     for (IMeasureDisplayPtr& measure : m_vecMeasureDisplay) {
         measure->update(config);
         foreachGraphicsObject(measure, [](const GraphicsObjectPtr& gfxObject) {
@@ -231,13 +232,15 @@ MeasureType WidgetMeasure::currentMeasureType() const
     return WidgetMeasure::toMeasureType(m_ui->combo_MeasureType->currentIndex());
 }
 
-MeasureConfig WidgetMeasure::currentMeasureConfig() const
+MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
 {
-    return {
-        WidgetMeasure::toMeasureLengthUnit(m_ui->combo_LengthUnit->currentIndex()),
-        WidgetMeasure::toMeasureAngleUnit(m_ui->combo_AngleUnit->currentIndex()),
-        WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex())
-    };
+    MeasureDisplayConfig cfg;
+    cfg.lengthUnit = WidgetMeasure::toMeasureLengthUnit(m_ui->combo_LengthUnit->currentIndex());
+    cfg.angleUnit = WidgetMeasure::toMeasureAngleUnit(m_ui->combo_AngleUnit->currentIndex());
+    cfg.areaUnit = WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex());
+    cfg.doubleToStringOptions.locale = AppModule::get()->stdLocale();
+    cfg.doubleToStringOptions.decimalCount = AppModule::get()->defaultTextOptions().unitDecimals;
+    return cfg;
 }
 
 void WidgetMeasure::onGraphicsSelectionChanged()
@@ -326,7 +329,7 @@ void WidgetMeasure::onGraphicsSelectionChanged()
 
     // Display new measure graphics objects
     for (IMeasureDisplayPtr& measure : vecNewMeasureDisplay) {
-        measure->update(this->currentMeasureConfig());
+        measure->update(this->currentMeasureDisplayConfig());
         foreachGraphicsObject(measure, [=](const GraphicsObjectPtr& gfxObject) {
             gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
             gfxScene->addObject(gfxObject);
@@ -389,7 +392,7 @@ void WidgetMeasure::updateMessagePanel()
                 for (const IMeasureDisplayPtr& measure : m_vecMeasureDisplay)
                     sumMeasure->sumAdd(*measure);
 
-                sumMeasure->update(this->currentMeasureConfig());
+                sumMeasure->update(this->currentMeasureDisplayConfig());
                 fnAddMeasureText(sumMeasure);
             }
         }

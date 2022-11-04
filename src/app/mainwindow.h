@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/filepath.h"
+#include "../base/messenger.h"
 #include "../base/property.h"
 #include "../base/task_manager.h"
 #include "../base/text_id.h"
@@ -46,6 +47,7 @@ private:
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
     void onLeftContentsPageChanged(int pageId);
     void onCurrentDocumentIndexChanged(int idx);
+    void onMessage(Messenger::MessageType msgType, const QString& text);
 
     void updateControlsActivation();
 

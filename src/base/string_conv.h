@@ -9,6 +9,7 @@
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TCollection_HAsciiString.hxx>
+#include <locale>
 #include <string>
 #include <string_view>
 
@@ -54,6 +55,33 @@ TCollection_ExtendedString to_OccExtString(const STRING_TYPE& str) {
     return string_conv<TCollection_ExtendedString>(str);
 }
 
+// double -> std::string
+
+struct DoubleToStringOptions {
+    std::locale locale;
+    int decimalCount = 6;
+    bool removeTrailingZeroes = true;
+    bool roundToZero = true;
+    // double zeroPrecision = 0.000000000001;
+};
+
+class DoubleToStringOperation {
+public:
+    DoubleToStringOperation(double value);
+    DoubleToStringOperation& locale(const std::locale& l);
+    DoubleToStringOperation& decimalCount(int c);
+    DoubleToStringOperation& removeTrailingZeroes(bool on);
+    DoubleToStringOperation& roundToZero(bool on);
+    operator std::string();
+    std::string get() const;
+
+private:
+    double m_value;
+    DoubleToStringOptions m_opts;
+};
+
+std::string to_stdString(double value, const DoubleToStringOptions& opts);
+DoubleToStringOperation to_stdString(double value);
 
 // --
 // -- Converters(misc)

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "measure_tool.h"
+#include "../base/string_conv.h"
 #include "../graphics/graphics_object_ptr.h"
 
 #include <AIS_Circle.hxx>
@@ -22,17 +23,18 @@
 
 namespace Mayo {
 
-struct MeasureConfig {
+struct MeasureDisplayConfig {
     LengthUnit lengthUnit = LengthUnit::Millimeter;
     AngleUnit angleUnit = AngleUnit::Degree;
     AreaUnit areaUnit = AreaUnit::SquareMillimeter;
+    DoubleToStringOptions doubleToStringOptions;
 };
 
 // Provides an interface to textual/graphics representation of a measure
 class IMeasureDisplay {
 public:
     virtual ~IMeasureDisplay() = default;
-    virtual void update(const MeasureConfig& config) = 0;
+    virtual void update(const MeasureDisplayConfig& config) = 0;
     virtual std::string text() const = 0;
     virtual int graphicsObjectsCount() const = 0;
     virtual GraphicsObjectPtr graphicsObjectAt(int i) const = 0;
@@ -58,9 +60,9 @@ protected:
     int sumCount() const { return m_sumCount; }
     std::string_view sumTextOr(std::string_view singleItemText) const;
 
-    static std::string text(const gp_Pnt& pnt, const MeasureConfig& config);
-    static std::string text(double value);
-    static std::string graphicsText(const gp_Pnt& pnt, const MeasureConfig& config);
+    static std::string text(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
+    static std::string text(double value, const MeasureDisplayConfig& config);
+    static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
 
     static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 
@@ -76,7 +78,7 @@ private:
 class MeasureDisplayVertex : public BaseMeasureDisplay {
 public:
     MeasureDisplayVertex(const gp_Pnt& pnt);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
@@ -92,7 +94,7 @@ private:
 class MeasureDisplayCircleCenter : public BaseMeasureDisplay {
 public:
     MeasureDisplayCircleCenter(const MeasureCircle& circle);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
@@ -110,7 +112,7 @@ private:
 class MeasureDisplayCircleDiameter : public BaseMeasureDisplay {
 public:
     MeasureDisplayCircleDiameter(const MeasureCircle& circle);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 3; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
@@ -130,7 +132,7 @@ private:
 class MeasureDisplayMinDistance : public BaseMeasureDisplay {
 public:
     MeasureDisplayMinDistance(const MeasureMinDistance& dist);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
@@ -149,7 +151,7 @@ private:
 class MeasureDisplayAngle : public BaseMeasureDisplay {
 public:
     MeasureDisplayAngle(MeasureAngle angle);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
@@ -168,7 +170,7 @@ private:
 class MeasureDisplayLength : public BaseMeasureDisplay {
 public:
     MeasureDisplayLength(QuantityLength length);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 0; }
     GraphicsObjectPtr graphicsObjectAt(int /*i*/) const override { return {}; }
 
@@ -186,7 +188,7 @@ private:
 class MeasureDisplayArea : public BaseMeasureDisplay {
 public:
     MeasureDisplayArea(QuantityArea area);
-    void update(const MeasureConfig& config) override;
+    void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 0; }
     GraphicsObjectPtr graphicsObjectAt(int /*i*/) const override { return {}; }
 

@@ -50,6 +50,7 @@
 
 #include <gsl/util>
 #include <algorithm>
+#include <clocale>
 #include <cmath>
 #include <climits>
 #include <cstring>
@@ -449,6 +450,63 @@ void TestBase::IO_OccStaticVariablesRollback_test_data()
     QTest::newRow("var_double2") << "mayo.test.variable_double2" << QVariant(50.7) << QVariant(25.8);
     QTest::newRow("var_str1") << "mayo.test.variable_str1" << QVariant("") << QVariant("value");
     QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
+}
+
+void TestBase::DoubleToString_test()
+{
+    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
+        try {
+            return std::locale(name);
+        } catch (...) {
+            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
+        }
+
+        return {};
+    };
+
+    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
+    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
+#ifndef MAYO_OS_WINDOWS
+    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
+    frLocaleNames.push_back("fr_FR.utf8");
+#endif
+    frLocaleNames.push_back("fr_FR");
+
+    std::optional<std::locale> frLocale;
+    for (const char* localeName : frLocaleNames) {
+        if (!frLocale)
+            frLocale = fnGetLocale(localeName);
+    }
+
+    if (frLocale) {
+        qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
+        // 1258.
+        {
+            //QCOMPARE(QString::fromStdString(to_stdString(1258.).locale(locale)), QLocale("fr_FR").toString(1258.));
+            // Note: on Windows the QLocale unicode thousand separator is different from what's returned
+            //       by internal toUtf8String()
+            //           to_stdString():      U+00A0(NO-BREAK SPACE)
+            //           QLocale::toString(): U+202F(NARROW NO-BREAK SPACE)
+            //       Caused by usage of ICU in Qt?
+            const QString str = QString::fromStdString(to_stdString(1258.).locale(frLocale.value()));
+            QCOMPARE(str.at(0), '1');
+            QVERIFY(str.at(1).isSpace());
+            QCOMPARE(str.right(3), "258");
+        }
+
+        // 57.89
+        {
+            QCOMPARE(to_stdString(57.89).locale(frLocale.value()).get(), "57,89");
+        }
+    }
+
+    // Tests with "C" locale
+    const std::locale& cLocale = std::locale::classic();
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(4).get(), "0.5578");
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).get(), "0.5578");
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).removeTrailingZeroes(false).get(), "0.557800");
+    QCOMPARE(to_stdString(0.0).locale(cLocale).decimalCount(6).get(), "0");
+    QCOMPARE(to_stdString(-45.6789).locale(cLocale).decimalCount(6).get(), "-45.6789");
 }
 
 void TestBase::BRepUtils_test()

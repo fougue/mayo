@@ -59,6 +59,7 @@ clang {
 macx {
     DEFINES += GL_SILENCE_DEPRECATION
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
+    LIBS += -liconv
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
 }
 win32 {
@@ -77,6 +78,7 @@ HEADERS += \
     $$files(src/io_ply/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
+    $$files(src/measure/*.h) \
     $$files(src/app/*.h) \
 
 SOURCES += \
@@ -87,6 +89,7 @@ SOURCES += \
     $$files(src/io_ply/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
+    $$files(src/measure/*.cpp) \
     $$files(src/app/*.cpp) \
     \
     src/3rdparty/fmt/src/format.cc \
