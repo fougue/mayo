@@ -153,10 +153,6 @@ protected:
     std::string m_optionSource;
     int m_version;
     int m_handle;
-    int m_entityHandle;
-    int m_layerHandle;
-    int m_blockHandle;
-    int m_blkRecordHandle;
     bool m_polyOverride;
     
     std::string m_saveModelSpaceHandle;

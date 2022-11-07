@@ -455,41 +455,21 @@ std::string CDxfWrite::getHandle(void)
 std::string CDxfWrite::getEntityHandle(void)
 {
     return getHandle();
-//    m_entityHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_entityHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getLayerHandle(void)
 {
     return getHandle();
-//    m_layerHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_layerHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getBlockHandle(void)
 {
     return getHandle();
-//    m_blockHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_blockHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getBlkRecordHandle(void)
 {
     return getHandle();
-//    m_blkRecordHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_blkRecordHandle;
-//    return ss.str();
 }
 
 void CDxfWrite::addBlockName(std::string b, std::string h) 
