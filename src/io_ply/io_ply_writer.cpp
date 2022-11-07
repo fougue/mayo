@@ -102,7 +102,7 @@ bool PlyWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* pro
         if (docTreeNode.isLeaf() && !progress->isAbortRequested()) {
             IMeshAccess_visitMeshes(docTreeNode, [&](const IMeshAccess& mesh) {
                 this->addMesh(mesh);
-                progress->setValue(MathUtils::mappedValue(++iFace, 0, faceCount, 0, 100));
+                progress->setValue(MathUtils::toPercent(++iFace, 0, faceCount));
             });
         }
     });
@@ -175,7 +175,7 @@ bool PlyWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     auto fnUpdateProgress = [&]{
         ++iElement;
         if (iElement % 50 == 0) {
-            progress->setValue(MathUtils::mappedValue(iElement, 0, elementCount, 0, 100));
+            progress->setValue(MathUtils::toPercent(iElement, 0, elementCount));
             if (progress->isAbortRequested())
                 return false;
         }

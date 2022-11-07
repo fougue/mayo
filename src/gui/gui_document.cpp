@@ -598,7 +598,7 @@ void GuiDocument::unmapEntity(TreeNodeId entityTreeNodeId)
         for (const GraphicsEntity::Object& object : ptrItem->vecObject)
             m_gfxScene.eraseObject(object.ptr);
 
-        const int indexItem = ptrItem - &m_vecGraphicsEntity.front();
+        const auto indexItem = ptrItem - &m_vecGraphicsEntity.front();
         m_vecGraphicsEntity.erase(m_vecGraphicsEntity.begin() + indexItem);
         m_gfxScene.redraw();
     }

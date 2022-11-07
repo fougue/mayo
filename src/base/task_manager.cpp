@@ -106,10 +106,8 @@ int TaskManager::globalProgress() const
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    const int taskCount = CppUtils::safeStaticCast<int>(m_mapEntity.size());
-    const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
+    return MathUtils::toPercent(taskAccumPct, 0, m_mapEntity.size() * 100);
     //qDebug() << "taskCount=" << taskCount << " taskAccumPct=" << taskAccumPct << " newGlobalPct=" << newGlobalPct;
-    return newGlobalPct;
 }
 
 const std::string& TaskManager::title(TaskId id) const

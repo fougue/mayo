@@ -321,9 +321,9 @@ Settings::SettingIndex Settings::findProperty(const Property* property) const
         for (const Settings_Section& section : group.vecSection) {
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (setting.property == property) {
-                    const int idSetting = &setting - &section.vecSetting.front();
-                    const int idSection = &section - &group.vecSection.front();
-                    const int idGroup = &group - &d->m_vecGroup.front();
+                    const auto idSetting = &setting - &section.vecSetting.front();
+                    const auto idSection = &section - &group.vecSection.front();
+                    const auto idGroup = &group - &d->m_vecGroup.front();
                     return SettingIndex(SectionIndex(GroupIndex(idGroup), idSection), idSetting);
                 }
             }

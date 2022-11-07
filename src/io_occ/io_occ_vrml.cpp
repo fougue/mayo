@@ -60,14 +60,15 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 converter.AddShape(XCaf::shape(label));
         }
 
-        const int index = &appItem - &spanAppItem.front();
-        progress->setValue(MathUtils::mappedValue(index, 0, spanAppItem.size() - 1, 0, 100));
+        const auto index = &appItem - &spanAppItem.front();
+        progress->setValue(MathUtils::toPercent(index, 0, spanAppItem.size() - 1));
     }
 
     const auto rep = m_shapeRepresentation;
     converter.Convert(
                 rep == VrmlAPI_ShadedRepresentation || rep == VrmlAPI_BothRepresentation,
-                rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation);
+                rep == VrmlAPI_WireFrameRepresentation || rep == VrmlAPI_BothRepresentation
+    );
     return true;
 }
 

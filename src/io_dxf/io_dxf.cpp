@@ -191,7 +191,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         }
     }
     auto fnUpdateProgressValue = [&]{
-        progress->setValue(MathUtils::mappedValue(iShape, 0, shapeCount, 0, 100));
+        progress->setValue(MathUtils::toPercent(iShape, 0, shapeCount));
     };
 
     if (!m_params.groupLayers) {
@@ -297,7 +297,7 @@ void DxfReader::Internal::get_line()
     CDxfRead::get_line();
     m_fileReadSize += this->gcount();
     if (m_progress)
-        m_progress->setValue(MathUtils::mappedValue(m_fileReadSize, 0, m_fileSize, 0, 100));
+        m_progress->setValue(MathUtils::toPercent(m_fileReadSize, 0, m_fileSize));
 }
 
 DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)

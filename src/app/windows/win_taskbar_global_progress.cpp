@@ -71,7 +71,7 @@ void WinTaskbarGlobalProgress::updateTaskbar()
     taskbarProgress->show();
     taskbarProgress->resume();
     if (!isProgressIndeterminate) {
-        const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
+        const int newGlobalPct = MathUtils::toPercent(taskAccumPct, 0, taskCount * 100);
         m_globalPct = std::max(newGlobalPct, m_globalPct);
         taskbarProgress->setRange(0, 100);
         taskbarProgress->setValue(m_globalPct);

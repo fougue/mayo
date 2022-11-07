@@ -240,8 +240,8 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     };
 
     for (const ApplicationItem& appItem : spanAppItem) {
-        const int appItemIndex = &appItem - &spanAppItem.front();
-        progress->setValue(MathUtils::mappedValue(appItemIndex, 0, spanAppItem.size() - 1, 0, 100));
+        const auto appItemIndex = &appItem - &spanAppItem.front();
+        progress->setValue(MathUtils::toPercent(appItemIndex, 0, spanAppItem.size() - 1));
         const Tree<TDF_Label>& modelTree = appItem.document()->modelTree();
         if (appItem.isDocument()) {
             traverseTree(modelTree, [&](TreeNodeId id) { fnCreateObject(modelTree, id); });
