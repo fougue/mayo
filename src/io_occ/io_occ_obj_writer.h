@@ -28,7 +28,8 @@ public:
     // Parameters
 
     struct Parameters {
-        RWMesh_CoordinateSystem coordinatesConverter = RWMesh_CoordinateSystem_glTF;
+        RWMesh_CoordinateSystem inputCoordinateSystem = RWMesh_CoordinateSystem_Undefined;
+        RWMesh_CoordinateSystem outputCoordinateSystem = RWMesh_CoordinateSystem_glTF;
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }

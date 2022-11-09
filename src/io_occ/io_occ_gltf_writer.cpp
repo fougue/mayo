@@ -27,8 +27,10 @@ public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
-        this->coordinatesConverter.setDescription(
-                    textIdTr("Coordinate system transformation from OpenCascade to glTF"));
+        this->inputCoordinateSystem.setDescription(
+                    textIdTr("Source coordinate system transformation"));
+        this->outputCoordinateSystem.setDescription(
+                    textIdTr("Target coordinate system transformation"));
         this->transformationFormat.setDescription(
                     textIdTr("Preferred transformation format for writing into glTF file"));
         this->forceExportUV.setDescription(
@@ -50,22 +52,27 @@ public:
                                          "If set to `false` then texture images will be written as separate files.\n\n"
                                          "Applicable only if option `{0}` is set to `{1}`"),
                                 this->format.label(),
-                                MetaEnum::name<Format>(Format::Binary))
+                                MetaEnum::name<Format>(Format::Binary)
+                    )
         );
         this->mergeFaces.setDescription(
                     textIdTr("Merge faces within a single part.\n\n"
-                             "May reduce JSON size thanks to smaller number of primitive arrays"));
+                             "May reduce JSON size thanks to smaller number of primitive arrays")
+        );
         this->keepIndices16b.setDescription(
                     fmt::format(textIdTr("Prefer keeping 16-bit indexes while merging face.\n\n"
                                          "May reduce binary data size thanks to smaller triangle indexes.\n\n"
                                          "Applicable only if option `{}` is on"),
-                                this->mergeFaces.label())
+                                this->mergeFaces.label()
+                    )
         );
     }
 
-    void restoreDefaults() override {
+    void restoreDefaults() override
+    {
         const Parameters defaults;
-        this->coordinatesConverter.setValue(defaults.coordinatesConverter);
+        this->inputCoordinateSystem.setValue(defaults.inputCoordinateSystem);
+        this->outputCoordinateSystem.setValue(defaults.outputCoordinateSystem);
         this->transformationFormat.setValue(defaults.transformationFormat);
         this->format.setValue(defaults.format);
         this->forceExportUV.setValue(defaults.forceExportUV);
@@ -94,7 +101,8 @@ public:
         PropertyGroup::onPropertyChanged(prop);
     }
 
-    PropertyEnum<RWMesh_CoordinateSystem> coordinatesConverter{ this, textId("coordinatesConverter") };
+    PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, textId("inputCoordinateSystem") };
+    PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, textId("outputCoordinateSystem") };
     PropertyEnum<RWGltf_WriterTrsfFormat> transformationFormat{ this, textId("transformationFormat") };
     PropertyEnum<Format> format{ this, textId("format") };
     PropertyBool forceExportUV{ this, textId("forceExportUV") };
@@ -136,6 +144,8 @@ bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
     const bool isBinary = m_params.format == Format::Binary;
     RWGltf_CafWriter writer(filepath.u8string().c_str(), isBinary);
+    writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);
+    writer.ChangeCoordinateSystemConverter().SetOutputCoordinateSystem(m_params.outputCoordinateSystem);
 #if OCC_VERSION_HEX >= 0x070600
     auto fnToOccNameFormat = [](ShapeNameFormat format) {
         switch (format) {
@@ -193,7 +203,8 @@ void OccGltfWriter::applyProperties(const PropertyGroup* params)
 {
     auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        m_params.coordinatesConverter = ptr->coordinatesConverter;
+        m_params.inputCoordinateSystem = ptr->inputCoordinateSystem;
+        m_params.outputCoordinateSystem = ptr->outputCoordinateSystem;
         m_params.forceExportUV = ptr->forceExportUV;
         m_params.format = ptr->format;
         m_params.transformationFormat = ptr->transformationFormat;
