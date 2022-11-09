@@ -16,11 +16,6 @@ namespace Mayo {
 
 namespace MathUtils {
 
-double mappedValue(double val, double omin, double omax, double nmin, double nmax)
-{
-    return (((val - omin) * (nmax - nmin)) / (omax - omin)) + nmin;
-}
-
 bool isReversedStandardDir(const gp_Dir& n)
 {
     for (int i = 0; i < 3; ++i) {

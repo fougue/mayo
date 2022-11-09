@@ -8,6 +8,8 @@
 
 #include "measure_tool.h"
 
+class TopoDS_Shape;
+
 namespace Mayo {
 
 // Provides measurement services for BRep shapes
@@ -23,6 +25,11 @@ public:
     MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const override;
     QuantityLength length(const GraphicsOwnerPtr& owner) const override;
     QuantityArea area(const GraphicsOwnerPtr& owner) const override;
+
+    static gp_Pnt brepVertexPosition(const TopoDS_Shape& shape);
+    static MeasureCircle brepCircle(const TopoDS_Shape& shape);
+    static MeasureMinDistance brepMinDistance(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
+    static MeasureAngle brepAngle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
 };
 
 } // namespace Mayo

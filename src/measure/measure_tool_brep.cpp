@@ -53,13 +53,13 @@ enum class ErrorCode {
     ParallelEdges
 };
 
-template<ErrorCode ERRCODE>
+template<ErrorCode Err>
 class BRepMeasureError : public IMeasureError {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::BRepMeasureError)
 public:
     std::string_view message() const override
     {
-        switch (ERRCODE) {
+        switch (Err) {
         case ErrorCode::NotVertex:
             return textIdTr("Entity must be a vertex");
         case ErrorCode::NotCircularEdge:
@@ -82,17 +82,17 @@ public:
     }
 };
 
-template<ErrorCode ERRCODE> void throwErrorIf(bool cond)
+template<ErrorCode Err> void throwErrorIf(bool cond)
 {
     if (cond)
-        throw BRepMeasureError<ERRCODE>();
+        throw BRepMeasureError<Err>();
 }
 
-const TopoDS_Shape& getShape(const GraphicsOwnerPtr& owner)
+const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
 {
     static const TopoDS_Shape nullShape;
     auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
-    return brepOwner ? brepOwner->Shape() : nullShape;
+    return brepOwner ? brepOwner->Shape().Moved(owner->Location()) : nullShape;
 }
 
 } // namespace
@@ -141,20 +141,55 @@ bool MeasureToolBRep::supports(MeasureType type) const
 
 gp_Pnt MeasureToolBRep::vertexPosition(const GraphicsOwnerPtr& owner) const
 {
-    const TopoDS_Shape& shape = getShape(owner);
-    if (shape.IsNull() || shape.ShapeType() != TopAbs_VERTEX)
-        throw BRepMeasureError<ErrorCode::NotVertex>();
-
-    return BRep_Tool::Pnt(TopoDS::Vertex(shape)).Transformed(owner->Location());
+    return brepVertexPosition(getShape(owner));
 }
 
 MeasureCircle MeasureToolBRep::circle(const GraphicsOwnerPtr& owner) const
+{
+    return brepCircle(getShape(owner));
+}
+
+MeasureMinDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+{
+    return brepMinDistance(getShape(owner1), getShape(owner2));
+}
+
+MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+{
+    return brepAngle(getShape(owner1), getShape(owner2));
+}
+
+QuantityLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
+{
+    const TopoDS_Shape shape = getShape(owner);
+    throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
+    const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
+    const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
+    return len * Quantity_Millimeter;
+}
+
+QuantityArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
+{
+    const TopoDS_Shape shape = getShape(owner);
+    throwErrorIf<ErrorCode::NotAllFaces>(shape.IsNull() || shape.ShapeType() != TopAbs_FACE);
+    GProp_GProps gprops;
+    BRepGProp::SurfaceProperties(TopoDS::Face(shape), gprops);
+    const double area = gprops.Mass();
+    return area * Quantity_SquareMillimeter;
+}
+
+gp_Pnt MeasureToolBRep::brepVertexPosition(const TopoDS_Shape& shape)
+{
+    throwErrorIf<ErrorCode::NotVertex>(shape.IsNull() || shape.ShapeType() != TopAbs_VERTEX);
+    return BRep_Tool::Pnt(TopoDS::Vertex(shape));
+}
+
+MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
 {
     auto fnThrowErrorIf = [](bool cond) {
         throwErrorIf<ErrorCode::NotCircularEdge>(cond);
     };
 
-    const TopoDS_Shape& shape = getShape(owner);
     fnThrowErrorIf(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
 
     const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
@@ -196,16 +231,15 @@ MeasureCircle MeasureToolBRep::circle(const GraphicsOwnerPtr& owner) const
 
     fnThrowErrorIf(!circle);
     MeasureCircle result;
-    result.pntAnchor = GeomUtils::d0(curve, curve.FirstParameter()).Transformed(owner->Location());
+    result.pntAnchor = GeomUtils::d0(curve, curve.FirstParameter());
     result.isArc = !curve.IsClosed();
-    result.value = circle->Transformed(owner->Location());
+    result.value = circle.value();
     return result;
 }
 
-MeasureMinDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+MeasureMinDistance MeasureToolBRep::brepMinDistance(
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
 {
-    const TopoDS_Shape shape1 = getShape(owner1).Moved(owner1->Location());
-    const TopoDS_Shape shape2 = getShape(owner2).Moved(owner2->Location());
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
@@ -219,12 +253,10 @@ MeasureMinDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, 
     return distResult;
 }
 
-MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
 {
     MeasureAngle angleResult;
 
-    const TopoDS_Shape& shape1 = getShape(owner1);
-    const TopoDS_Shape& shape2 = getShape(owner2);
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
@@ -275,33 +307,14 @@ MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const Graphi
 
     // Compute angle by delegating to PrsDim_AngleDimension
     PrsDim_AngleDimension dimAngle(edge1, edge2);
-    angleResult.pnt1 = dimAngle.FirstPoint().Transformed(owner1->Location());
-    angleResult.pnt2 = dimAngle.SecondPoint().Transformed(owner2->Location());
-    angleResult.pntCenter = dimAngle.CenterPoint().Transformed(owner1->Location());
+    angleResult.pnt1 = dimAngle.FirstPoint();
+    angleResult.pnt2 = dimAngle.SecondPoint();
+    angleResult.pntCenter = dimAngle.CenterPoint();
     const gp_Vec vec1(angleResult.pntCenter, angleResult.pnt1);
     const gp_Vec vec2(angleResult.pntCenter, angleResult.pnt2);
     angleResult.value = vec1.Angle(vec2) * Quantity_Radian;
 
     return angleResult;
-}
-
-QuantityLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
-{
-    const TopoDS_Shape& shape = getShape(owner);
-    throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
-    const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
-    const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
-    return len * Quantity_Millimeter;
-}
-
-QuantityArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
-{
-    const TopoDS_Shape& shape = getShape(owner);
-    throwErrorIf<ErrorCode::NotAllFaces>(shape.IsNull() || shape.ShapeType() != TopAbs_FACE);
-    GProp_GProps gprops;
-    BRepGProp::SurfaceProperties(TopoDS::Face(shape), gprops);
-    const double area = gprops.Mass();
-    return area * Quantity_SquareMillimeter;
 }
 
 } // namespace Mayo
