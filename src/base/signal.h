@@ -58,8 +58,8 @@ void setGlobalSignalThreadHelper(std::unique_ptr<ISignalThreadHelper> helper);
 // uses ISignalThreadHelper to handle signal/slot thread mismatch
 // On signal emission KDBindings::Signal makes direct call to the connected slot functions which is
 // cause of problems
-template<typename... ARGS>
-class Signal : public KDBindings::Signal<ARGS...> {
+template<typename... Args>
+class Signal : public KDBindings::Signal<Args...> {
 public:
     Signal() = default;
     Signal(const Signal&) = delete;
@@ -70,20 +70,20 @@ public:
     // Emits the Signal, which causes all connected slots to be called, as long as they are not
     // blocked.
     // The arguments provided to emit will be passed to each slot by copy, therefore consider
-    // using (const) references as the ARGS to the Signal wherever possible.
-    void send(ARGS... p) const
+    // using (const) references as the Args to the Signal wherever possible.
+    void send(Args... p) const
     {
         this->emit(p...);
     }
 
     // Connects 'fnSlot' to the signal
     // When send() is called, the functions will be executed with the arguments provided to send()
-    SignalConnectionHandle connectSlot(const std::function<void(ARGS...)>& fnSlot)
+    SignalConnectionHandle connectSlot(const std::function<void(Args...)>& fnSlot)
     {
         if (getGlobalSignalThreadHelper()) {
             auto threadContext = getGlobalSignalThreadHelper()->getCurrentThreadContext();
             auto connectThreadId = std::this_thread::get_id();
-            auto fnWrap = [=](ARGS... args) {
+            auto fnWrap = [=](Args... args) {
                 auto emitThreadId = std::this_thread::get_id();
                 if (emitThreadId == connectThreadId)
                     fnSlot(args...);
@@ -102,10 +102,10 @@ public:
     // It connects a function to this Signal, binds any provided arguments to that function and
     // discards any values emitted by this Signal that aren't needed by the resulting function.
     // Especially useful for connecting member functions to signals
-    template<typename FN_SLOT, typename... FN_SLOT_ARGS, typename = std::enable_if_t<std::disjunction_v<std::negation<std::is_convertible<FN_SLOT, std::function<void(ARGS...)>>>, std::integral_constant<bool, sizeof...(FN_SLOT_ARGS) /*Also enable this function if we want to bind at least one argument*/>>>>
-    SignalConnectionHandle connectSlot(FN_SLOT&& fnSlot, FN_SLOT_ARGS&&... args)
+    template<typename FunctionSlot, typename... FunctionSlotArgs, typename = std::enable_if_t<std::disjunction_v<std::negation<std::is_convertible<FunctionSlot, std::function<void(Args...)>>>, std::integral_constant<bool, sizeof...(FunctionSlotArgs) /*Also enable this function if we want to bind at least one argument*/>>>>
+    SignalConnectionHandle connectSlot(FunctionSlot&& fnSlot, FunctionSlotArgs&&... args)
     {
-        std::function<void(ARGS...)> bound = KDBindings::Private::bind_first(std::forward<FN_SLOT>(fnSlot), std::forward<FN_SLOT_ARGS>(args)...);
+        std::function<void(Args...)> bound = KDBindings::Private::bind_first(std::forward<FunctionSlot>(fnSlot), std::forward<FunctionSlotArgs>(args)...);
         return this->connectSlot(bound);
     }
 };

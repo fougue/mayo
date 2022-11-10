@@ -89,9 +89,9 @@ struct SignalEmitSpy {
     using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
     using SignalArguments = std::vector<ArgValue>;
 
-    template<typename... ARGS>
-    SignalEmitSpy(Signal<ARGS...>* signal) {
-        this->sigConnection = signal->connect([=](ARGS... args) {
+    template<typename... Args>
+    SignalEmitSpy(Signal<Args...>* signal) {
+        this->sigConnection = signal->connect([=](Args... args) {
             ++this->count;
             SignalArguments sigArgs;
             SignalEmitSpy::recordArgs(&sigArgs, args...);
@@ -106,10 +106,10 @@ struct SignalEmitSpy {
     static void recordArgs(SignalArguments* /*ptr*/) {
     }
 
-    template<typename ARG, typename... ARGS>
-    static void recordArgs(SignalArguments* ptr, ARG arg, ARGS... args) {
-        if constexpr (std::is_integral_v<ARG>) {
-            if constexpr (std::is_signed_v<ARG>) {
+    template<typename Arg, typename... Args>
+    static void recordArgs(SignalArguments* ptr, Arg arg, Args... args) {
+        if constexpr (std::is_integral_v<Arg>) {
+            if constexpr (std::is_signed_v<Arg>) {
                 ptr->push_back(static_cast<std::int64_t>(arg));
             }
             else {

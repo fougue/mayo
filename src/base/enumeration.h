@@ -31,8 +31,8 @@ public:
     Enumeration(std::initializer_list<Item> listItem);
 
     // Adds an enumerated item
-    template<typename VALUE>
-    Enumeration& addItem(VALUE value, const TextId& name);
+    template<typename ValueType>
+    Enumeration& addItem(ValueType value, const TextId& name);
 
     // Iterates over name of items and removes 'prefix' string that may appear at the beginning
     Enumeration& chopPrefix(std::string_view prefix);
@@ -45,16 +45,16 @@ public:
     bool empty() const { return m_vecItem.empty(); }
 
     // Finds index of the item corresponding to an enumerated value. Returns -1 if not found
-    template<typename ENUM> int findIndexByValue(ENUM value) const;
+    template<typename EnumType> int findIndexByValue(EnumType value) const;
 
     // Finds the item corresponding to an enumerated value. Returns nullptr if not found
-    template<typename ENUM> const Item* findItemByValue(ENUM value) const;
+    template<typename EnumType> const Item* findItemByValue(EnumType value) const;
 
     // Finds the item corresponding to a name. Returns nullptr if not found
     const Item* findItemByName(std::string_view name) const;
 
     // Finds the name of an enumerated value. Returns empty string if not found
-    template<typename ENUM> std::string_view findNameByValue(ENUM value) const;
+    template<typename EnumType> std::string_view findNameByValue(EnumType value) const;
 
     // Finds the enumerated value corresponding to a name. Throws exception if not found
     Value findValueByName(std::string_view name) const;
@@ -70,7 +70,7 @@ public:
 
     // Creates an Enumeration object from an enumerated type, using MetaEnum helper
     // Note: client code has to include header "enumeration_fromenum.h"
-    template<typename ENUM>
+    template<typename EnumType>
     static Enumeration fromType();
 
 private:
@@ -83,27 +83,27 @@ private:
 
 // -- Implementation
 
-template<typename VALUE> Enumeration& Enumeration::addItem(VALUE value, const TextId& name)
+template<typename ValueType> Enumeration& Enumeration::addItem(ValueType value, const TextId& name)
 {
     const Item item = { Enumeration::Value(value), name };
     m_vecItem.emplace_back(std::move(item));
     return *this;
 }
 
-template<typename ENUM> int Enumeration::findIndexByValue(ENUM value) const
+template<typename EnumType> int Enumeration::findIndexByValue(EnumType value) const
 {
-    static_assert(std::is_enum_v<ENUM> || std::is_integral_v<ENUM>, "ENUM must be an enumeration or integer type");
+    static_assert(std::is_enum_v<EnumType> || std::is_integral_v<EnumType>, "ENUM must be an enumeration or integer type");
     return this->findIndexByValue_untyped(static_cast<Enumeration::Value>(value));
 }
 
-template<typename ENUM> const Enumeration::Item* Enumeration::findItemByValue(ENUM value) const
+template<typename EnumType> const Enumeration::Item* Enumeration::findItemByValue(EnumType value) const
 {
-    static_assert(std::is_enum_v<ENUM> || std::is_integral_v<ENUM>, "ENUM must be an enumeration or integer type");
+    static_assert(std::is_enum_v<EnumType> || std::is_integral_v<EnumType>, "EnumType must be an enumeration or integer type");
     const int index = this->findIndexByValue_untyped(static_cast<Enumeration::Value>(value));
     return index != -1 ? &(this->itemAt(index)) : nullptr;
 }
 
-template<typename ENUM> std::string_view Enumeration::findNameByValue(ENUM value) const
+template<typename EnumType> std::string_view Enumeration::findNameByValue(EnumType value) const
 {
     const int index = this->findIndexByValue(value);
     if (index != -1)

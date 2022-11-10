@@ -36,8 +36,8 @@ public:
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
 
-    template<typename FUNCTION>
-    void foreachTask(FUNCTION fn) {
+    template<typename Function>
+    void foreachTask(Function fn) {
         for (const auto& mapPair : m_mapEntity)
             fn(mapPair.first);
     }

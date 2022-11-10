@@ -98,14 +98,14 @@ protected:
     BasePropertyQuantity(PropertyGroup* grp, const TextId& name);
 };
 
-template<Unit UNIT>
+template<Unit U>
 class GenericPropertyQuantity : public BasePropertyQuantity {
 public:
-    using QuantityType = Quantity<UNIT>;
+    using QuantityType = Quantity<U>;
 
     GenericPropertyQuantity(PropertyGroup* grp, const TextId& name);
 
-    Unit quantityUnit() const override { return UNIT; }
+    Unit quantityUnit() const override { return U; }
     double quantityValue() const override { return this->quantity().value(); }
     bool setQuantityValue(double v) override;
 
@@ -186,19 +186,19 @@ GenericScalarProperty<T>::GenericScalarProperty(
 
 // GenericPropertyQuantity<>
 
-template<Unit UNIT>
-GenericPropertyQuantity<UNIT>::GenericPropertyQuantity(PropertyGroup* grp, const TextId& name)
+template<Unit U>
+GenericPropertyQuantity<U>::GenericPropertyQuantity(PropertyGroup* grp, const TextId& name)
     : BasePropertyQuantity(grp, name)
 { }
 
-template<Unit UNIT>
-bool GenericPropertyQuantity<UNIT>::setQuantityValue(double v)
+template<Unit U>
+bool GenericPropertyQuantity<U>::setQuantityValue(double v)
 {
     return this->setQuantity(QuantityType(v));
 }
 
-template<Unit UNIT>
-bool GenericPropertyQuantity<UNIT>::setQuantity(Quantity<UNIT> qty)
+template<Unit U>
+bool GenericPropertyQuantity<U>::setQuantity(Quantity<U> qty)
 {
     return Property::setValueHelper(this, &m_quantity, qty);
 }

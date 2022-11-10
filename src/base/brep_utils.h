@@ -20,16 +20,16 @@ class TaskProgress;
 // Provides helper functions for OpenCascade TKBRep library
 struct BRepUtils {
     // Iterates with 'explorer' and executes 'fn' for each sub-shape
-    template<typename FUNC>
-    static void forEachSubShape(TopExp_Explorer& explorer, FUNC fn);
+    template<typename Function>
+    static void forEachSubShape(TopExp_Explorer& explorer, Function fn);
 
     // Explores 'shape' and executes 'fn' for each sub-shape of type 'shapeType'
-    template<typename FUNC>
-    static void forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn);
+    template<typename Function>
+    static void forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Function fn);
 
     // Explores 'shape' and executes 'fn' for each sub-face
-    template<typename FUNC>
-    static void forEachSubFace(const TopoDS_Shape& shape, FUNC fn);
+    template<typename Function>
+    static void forEachSubFace(const TopoDS_Shape& shape, Function fn);
 
     // Is shape type 'lhs' more complex than 'rhs'?
     // Complexity here is the degree of abstraction provided(eg face type is more complex than edge type)
@@ -59,8 +59,8 @@ struct BRepUtils {
 // -- Implementation
 // --
 
-template<typename FUNC>
-void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, Function fn)
 {
     while (explorer.More()) {
         fn(explorer.Current());
@@ -68,15 +68,15 @@ void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, FUNC fn)
     }
 }
 
-template<typename FUNC>
-void BRepUtils::forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Function fn)
 {
     TopExp_Explorer expl(shape, shapeType);
     BRepUtils::forEachSubShape(expl, std::move(fn));
 }
 
-template<typename FUNC>
-void BRepUtils::forEachSubFace(const TopoDS_Shape& shape, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubFace(const TopoDS_Shape& shape, Function fn)
 {
     for (TopExp_Explorer expl(shape, TopAbs_FACE); expl.More(); expl.Next())
         fn(TopoDS::Face(expl.Current()));

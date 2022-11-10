@@ -14,8 +14,8 @@ namespace Mayo {
 
 // General API
 
-template<typename STRING_TYPE>
-QString to_QString(const STRING_TYPE& str) {
+template<typename StringType>
+QString to_QString(const StringType& str) {
     return string_conv<QString>(str);
 }
 

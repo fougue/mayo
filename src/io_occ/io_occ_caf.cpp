@@ -23,16 +23,16 @@ namespace IO {
 
 namespace {
 
-template<typename CAF_READER>
-bool cafGenericReadFile(CAF_READER& reader, const FilePath& filepath, TaskProgress* /*progress*/)
+template<typename CafReaderType>
+bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskProgress* /*progress*/)
 {
     //readFile_prepare(reader);
     const IFSelect_ReturnStatus error = reader.ReadFile(filepath.u8string().c_str());
     return error == IFSelect_RetDone;
 }
 
-template<typename CAF_READER>
-TDF_LabelSequence cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, TaskProgress* progress)
+template<typename CafReaderType>
+TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
     const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
@@ -49,8 +49,8 @@ TDF_LabelSequence cafGenericReadTransfer(CAF_READER& reader, DocumentPtr doc, Ta
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 
-template<typename CAF_WRITER>
-bool cafGenericWriteTransfer(CAF_WRITER& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
+template<typename CafWriterType>
+bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)

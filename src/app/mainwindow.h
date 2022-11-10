@@ -61,7 +61,7 @@ private:
     QMenu* createMenuModelTreeSettings();
 
     Command* getCommand(std::string_view name) const;
-    template<typename CMD, typename... ARGS> CMD* addCommand(std::string_view name, ARGS... p);
+    template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
 
     friend class AppContext;
 
@@ -80,9 +80,9 @@ private:
 // -- Implementation
 // --
 
-template<typename CMD, typename... ARGS> CMD* MainWindow::addCommand(std::string_view name, ARGS... p)
+template<typename CmdType, typename... Args> CmdType* MainWindow::addCommand(std::string_view name, Args... p)
 {
-    auto cmd = new CMD(m_appContext, p...);
+    auto cmd = new CmdType(m_appContext, p...);
     m_mapCommand.insert({ name, cmd });
     return cmd;
 }

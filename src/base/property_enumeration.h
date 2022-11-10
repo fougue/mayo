@@ -60,12 +60,10 @@ private:
     std::vector<Description> m_vecDescription;
 };
 
-template<typename ENUM>
+template<typename EnumType>
 class PropertyEnum : public PropertyEnumeration {
-    static_assert(std::is_enum<ENUM>::value, "ENUM must be an enumeration type");
+    static_assert(std::is_enum<EnumType>::value, "ENUM must be an enumeration type");
 public:
-    using EnumType = ENUM;
-
     PropertyEnum(PropertyGroup* grp, const TextId& name);
 
     Enumeration& mutableEnumeration() { return m_enum; }
@@ -85,31 +83,31 @@ private:
 
 // -- Implementation
 
-template<typename ENUM>
-PropertyEnum<ENUM>::PropertyEnum(PropertyGroup* grp, const TextId& name)
+template<typename EnumType>
+PropertyEnum<EnumType>::PropertyEnum(PropertyGroup* grp, const TextId& name)
     : PropertyEnumeration(grp, name),
       m_enum(Enumeration::fromType<EnumType>())
 {
     this->setEnumeration(&m_enum);
 }
 
-template<typename ENUM>
-ENUM PropertyEnum<ENUM>::value() const {
+template<typename EnumType>
+EnumType PropertyEnum<EnumType>::value() const {
     return static_cast<EnumType>(PropertyEnumeration::value());
 }
 
-template<typename ENUM>
-bool PropertyEnum<ENUM>::setValue(EnumType value) {
+template<typename EnumType>
+bool PropertyEnum<EnumType>::setValue(EnumType value) {
     return PropertyEnumeration::setValue(static_cast<Enumeration::Value>(value));
 }
 
-template<typename ENUM>
-void PropertyEnum<ENUM>::addDescription(EnumType value, std::string_view descr) {
+template<typename EnumType>
+void PropertyEnum<EnumType>::addDescription(EnumType value, std::string_view descr) {
     PropertyEnumeration::addDescription(static_cast<Enumeration::Value>(value), descr);
 }
 
-template<typename ENUM>
-void PropertyEnum<ENUM>::setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList)
+template<typename EnumType>
+void PropertyEnum<EnumType>::setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList)
 {
     this->clearDescriptions();
     for (const auto& [value, description] : initList)

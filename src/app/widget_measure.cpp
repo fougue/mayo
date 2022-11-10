@@ -48,8 +48,8 @@ IMeasureTool* findSupportingMeasureTool(const GraphicsObjectPtr& gfxObject, Meas
 
 // Helper function to iterate and execute function 'fn' on all the graphics objects owned by a
 // measure display
-template<typename FUNCTION>
-void foreachGraphicsObject(const IMeasureDisplay* ptr, FUNCTION fn)
+template<typename Function>
+void foreachGraphicsObject(const IMeasureDisplay* ptr, Function fn)
 {
     if (ptr) {
         const int count = ptr->graphicsObjectsCount();
@@ -59,8 +59,8 @@ void foreachGraphicsObject(const IMeasureDisplay* ptr, FUNCTION fn)
 }
 
 // Overload of the helper function above
-template<typename FUNCTION>
-void foreachGraphicsObject(const std::unique_ptr<IMeasureDisplay>& ptr, FUNCTION fn) {
+template<typename Function>
+void foreachGraphicsObject(const std::unique_ptr<IMeasureDisplay>& ptr, Function fn) {
     foreachGraphicsObject(ptr.get(), fn);
 }
 

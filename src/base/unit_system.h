@@ -23,9 +23,9 @@ public:
         constexpr operator bool() const { return this->strUnit != nullptr; }
     };
 
-    template<Unit UNIT>
-    static TranslateResult translate(Schema schema, Quantity<UNIT> qty) {
-        return UnitSystem::translate(schema, qty.value(), UNIT);
+    template<Unit U>
+    static TranslateResult translate(Schema schema, Quantity<U> qty) {
+        return UnitSystem::translate(schema, qty.value(), U);
     }
     static TranslateResult translate(Schema schema, double value, Unit unit);
     static TranslateResult parseQuantity(std::string_view strQuantity, Unit* ptrUnit = nullptr);

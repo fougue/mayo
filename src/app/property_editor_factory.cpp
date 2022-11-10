@@ -221,7 +221,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
 };
 
 // Helper generic interface over a XYZ-value property type to get/set the coordinates with gp_XYZ
-template<typename PROPERTY_COORDS_TYPE> class IProperty3dCoords {
+template<typename PropertyCoordsType> class IProperty3dCoords {
     // Expected functions
     //     static const gp_XYZ& coords(const PROPERTY_COORDS_TYPE* prop);
     //     static void setCoords(PROPERTY_COORDS_TYPE* prop, const gp_XYZ& coords);
@@ -241,9 +241,9 @@ template<> struct IProperty3dCoords<PropertyOccVec> {
 
 // Generic editor of XYZ-value properties
 // The property type must provide a partial specialization of IProperty3dCoords
-template<typename PROPERTY_XYZ_TYPE>
+template<typename PropertyXyzType>
 struct Property3dCoordsEditor : public InterfacePropertyEditor, public QWidget {
-    using PropertyCoordsType = PROPERTY_XYZ_TYPE;
+    using PropertyCoordsType = PropertyXyzType;
     using IProperty3dCoordsType = IProperty3dCoords<PropertyCoordsType>;
     enum class Coord { X, Y, Z };
 

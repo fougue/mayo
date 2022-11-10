@@ -20,8 +20,8 @@ namespace Mayo {
 
 namespace {
 
-template<typename CALL_VALUE_TYPE, typename VALUE_TYPE, typename CLASS>
-void checkedAssign(VALUE_TYPE CLASS::*attrMember, CLASS* object, CALL_VALUE_TYPE value)
+template<typename CallValueType, typename ValueType, typename ClassType>
+void checkedAssign(ValueType ClassType::*attrMember, ClassType* object, CallValueType value)
 {
     if (object && attrMember)
         object->*attrMember = value;

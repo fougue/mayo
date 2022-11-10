@@ -10,24 +10,23 @@
 
 namespace Mayo {
 
-template<typename SCALAR, typename TAG>
+template<typename Scalar, typename Tag>
 class TypedScalar {
 public:
-    using ScalarType = SCALAR;
-
-    static_assert(std::is_scalar<SCALAR>::value, "Type T is not scalar");
+    using ScalarType = Scalar;
+    static_assert(std::is_scalar<Scalar>::value, "Type T is not scalar");
 
     TypedScalar() = default;
-    explicit TypedScalar(SCALAR scalar) : m_scalar(scalar) {}
+    explicit TypedScalar(Scalar scalar) : m_scalar(scalar) {}
 
-    SCALAR get() const { return m_scalar; }
+    Scalar get() const { return m_scalar; }
 
-    bool operator==(const TypedScalar<SCALAR, TAG>& other) const {
+    bool operator==(const TypedScalar<Scalar, Tag>& other) const {
         return m_scalar == other.m_scalar;
     }
 
 private:
-    SCALAR m_scalar;
+    Scalar m_scalar;
 };
 
 } // namespace Mayo

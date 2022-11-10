@@ -27,10 +27,10 @@ QColor toQColor(const Quantity_Color& c);
 QColor toQColor(const Quantity_ColorRGBA& c);
 QColor toQColor(Quantity_NameOfColor c);
 
-template <typename OTHER_COLOR_TYPE>
-OTHER_COLOR_TYPE toColor(const QColor& c);
+template <typename OtherColorType>
+OtherColorType toColor(const QColor& c);
 
-template <Quantity_TypeOfColor OTHER_COLOR_TYPE>
+template <Quantity_TypeOfColor OtherColorType>
 Quantity_Color toColor(const QColor& c);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
@@ -77,23 +77,23 @@ private:
 // -- Implementation
 // --
 
-template <typename OTHER_COLOR_TYPE>
-OTHER_COLOR_TYPE toColor(const QColor& c) {
-    if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_Color>) {
+template <typename OtherColorType>
+OtherColorType toColor(const QColor& c) {
+    if constexpr(std::is_same_v<OtherColorType, Quantity_Color>) {
         return Quantity_Color(c.redF(), c.greenF(), c.blueF(), Quantity_TOC_RGB);
     }
-    if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_ColorRGBA>) {
+    if constexpr(std::is_same_v<OtherColorType, Quantity_ColorRGBA>) {
         return Quantity_ColorRGBA(c.redF(), c.greenF(), c.blueF(), c.alphaF());
     }
-    else if constexpr(std::is_same_v<OTHER_COLOR_TYPE, Quantity_NameOfColor>) {
+    else if constexpr(std::is_same_v<OtherColorType, Quantity_NameOfColor>) {
         return QtGuiUtils::toColor<Quantity_Color>(c).Name();
     }
 }
 
-template <Quantity_TypeOfColor OTHER_COLOR_TYPE>
+template <Quantity_TypeOfColor OtherColorType>
 Quantity_Color toColor(const QColor& c)
 {
-    return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OTHER_COLOR_TYPE);
+    return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OtherColorType);
 }
 
 } // namespace QtGuiUtils

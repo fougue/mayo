@@ -27,8 +27,8 @@ namespace Mayo {
 
 class TKernelUtils {
 public:
-    template<typename STD_TRANSIENT>
-    static opencascade::handle<STD_TRANSIENT> makeHandle(const STD_TRANSIENT* ptr) { return ptr; }
+    template<typename TransientType>
+    static opencascade::handle<TransientType> makeHandle(const TransientType* ptr) { return ptr; }
 
     using ReturnType_StartProgressIndicator =
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)

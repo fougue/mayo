@@ -140,8 +140,8 @@ static UnitSystem::TranslateResult translateImperialUK(double value, Unit unit)
     }
 }
 
-template<typename QUANTITY>
-UnitSystem::TranslateResult translateHelper(QUANTITY qty, QUANTITY qtyFactor, const char* strUnit)
+template<typename QuantityType>
+UnitSystem::TranslateResult translateHelper(QuantityType qty, QuantityType qtyFactor, const char* strUnit)
 {
     const double factor = qtyFactor.value();
     return { qty.value() / factor, strUnit, factor };
