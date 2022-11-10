@@ -141,12 +141,13 @@ bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) co
 
 void AppModule::emitMessage(Messenger::MessageType msgType, std::string_view text)
 {
+    const QString qtext = to_QString(text);
     {
         [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
-        m_messageLog.push_back({ msgType, to_QString(text) });
+        m_messageLog.push_back({ msgType, qtext });
     }
 
-    this->signalMessage.send(msgType, to_QString(text));
+    this->signalMessage.send(msgType, qtext);
 }
 
 void AppModule::clearMessageLog()

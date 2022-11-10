@@ -18,9 +18,9 @@ WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(TaskManager* taskMgr, QObject
     : QObject(parent),
       m_taskbarBtn(new QWinTaskbarButton(this))
 {
-    taskMgr->signalStarted.connect([=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
-    taskMgr->signalProgressChanged.connect(&WinTaskbarGlobalProgress::onTaskProgress, this);
-    taskMgr->signalEnded.connect(&WinTaskbarGlobalProgress::onTaskEnded, this);
+    taskMgr->signalStarted.connectSlot([=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
+    taskMgr->signalProgressChanged.connectSlot(&WinTaskbarGlobalProgress::onTaskProgress, this);
+    taskMgr->signalEnded.connectSlot(&WinTaskbarGlobalProgress::onTaskEnded, this);
 }
 
 void WinTaskbarGlobalProgress::setWindow(QWindow* window)
