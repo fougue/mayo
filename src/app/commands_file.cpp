@@ -170,12 +170,11 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
         DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             docPtr = app->newDocument();
+            docPtr->setName(fp.stem().u8string());
+            docPtr->setFilePath(fp);
             const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
-                docPtr->setName(fp.stem().u8string());
-                docPtr->setFilePath(fp);
-
                 const bool okImport =
                         appModule->ioSystem()->importInDocument()
                         .targetDocument(docPtr)

@@ -253,6 +253,9 @@ void Application::addDocument(const DocumentPtr& doc)
         doc->signalNameChanged.connectSlot([=](const std::string& name) {
             this->signalDocumentNameChanged.send(doc, name);
         });
+        doc->signalFilePathChanged.connectSlot([=](const FilePath& fp) {
+            this->signalDocumentFilePathChanged.send(doc, fp);
+        });
         doc->signalEntityAdded.connectSlot([=](TreeNodeId entityId) {
             this->signalDocumentEntityAdded.send(doc, entityId);
         });

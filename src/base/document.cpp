@@ -47,6 +47,7 @@ const FilePath& Document::filePath() const
 void Document::setFilePath(const FilePath& fp)
 {
     m_filePath = fp;
+    this->signalFilePathChanged.send(fp);
 }
 
 const char* Document::toNameFormat(Document::Format format)

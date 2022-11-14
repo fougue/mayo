@@ -201,6 +201,10 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
                 m_ui->listView_OpenedDocuments, &QListView::clicked,
                 this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
     );
+    guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {
+        if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
+            m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
+    });
     AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
     guiApp->selectionModel()->signalChanged.connectSlot(&MainWindow::onApplicationItemSelectionChanged, this);

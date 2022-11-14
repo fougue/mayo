@@ -61,9 +61,9 @@ public:
 
     // Signals
     Signal<const std::string&> signalNameChanged;
+    Signal<const FilePath&> signalFilePathChanged;
     Signal<TreeNodeId> signalEntityAdded;
     Signal<TreeNodeId> signalEntityAboutToBeDestroyed;
-    //void connectSignalNameChanged(std::function<void(const std::string&)> slot);
 
 public: // -- from TDocStd_Document
     void BeforeClose() override;
