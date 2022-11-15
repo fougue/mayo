@@ -439,8 +439,8 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                tr("Close \"%1\"").arg(strFilepathQuoted(docName)) :
-                tr("Close");
+                Command::tr("Close \"%1\"").arg(strFilepathQuoted(docName)) :
+                Command::tr("Close");
     this->action()->setText(textActionClose);
 }
 
