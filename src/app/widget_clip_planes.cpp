@@ -61,7 +61,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             data.graphics->SetCappingTexture(m_textureCapping);
     }
 
-    appModule->settings()->signalChanged.connectSlot([=](Property* property) {
+    appModule->settings()->signalChanged.connectSlot([=](const Property* property) {
         if (property == &appModule->properties()->clipPlanesCappingOn) {
             for (ClipPlaneData& data : m_vecClipPlaneData)
                 data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn);

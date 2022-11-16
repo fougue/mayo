@@ -226,9 +226,9 @@ TDF_Label XCaf::shapeReferred(const TDF_Label& lbl)
 TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
 {
     TDF_LabelSequence seq;
-    auto layerTool = this->layerTool();
-    if (layerTool)
-        layerTool->GetLayers(lbl, seq);
+    auto tool = this->layerTool();
+    if (tool)
+        tool->GetLayers(lbl, seq);
 
     return seq;
 }
@@ -236,9 +236,9 @@ TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
 TCollection_ExtendedString XCaf::layerName(const TDF_Label &lbl) const
 {
     TCollection_ExtendedString name;
-    auto layerTool = this->layerTool();
-    if (layerTool)
-        layerTool->GetLayer(lbl, name);
+    auto tool = this->layerTool();
+    if (tool)
+        tool->GetLayer(lbl, name);
 
     return name;
 }

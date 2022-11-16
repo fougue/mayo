@@ -264,7 +264,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             args.entityPostProcess(labelEntity, &subProgress);
         }
     };
-    auto fnAddModelTreeEntities = [&](TaskData& taskData) {
+    auto fnAddModelTreeEntities = [&](const TaskData& taskData) {
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity)
             doc->addEntityTreeNode(labelEntity);
     };

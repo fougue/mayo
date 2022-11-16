@@ -35,7 +35,7 @@ void IWidgetOccView::setCreator(IWidgetOccView::Creator fn)
 
 IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
 {
-    auto& fn = getWidgetOccViewCreator();
+    const auto& fn = getWidgetOccViewCreator();
     return fn(view, parent);
 }
 

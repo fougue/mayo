@@ -238,8 +238,8 @@ typename Tree<T>::TreeNode* Tree<T>::appendChild(TreeNodeId parentId)
 
 template<typename T> bool Tree<T>::isNodeDeleted(TreeNodeId id) const
 {
-    const typename Tree<T>::TreeNode* ptrNode = this->ptrNode(id);
-    return !ptrNode || ptrNode->isDeleted;
+    const auto node = this->ptrNode(id);
+    return !node || node->isDeleted;
 }
 
 template<typename T> void Tree<T>::removeRoot(TreeNodeId id)

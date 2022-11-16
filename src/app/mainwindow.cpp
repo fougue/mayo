@@ -418,7 +418,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         gfxScene->redraw();
     }
 
-    appModule->settings()->signalChanged.connectSlot([=](Property* setting) {
+    appModule->settings()->signalChanged.connectSlot([=](const Property* setting) {
         if (setting == &appProps->instantZoomFactor)
             widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
         else if (setting == &appProps->navigationStyle)
@@ -584,8 +584,8 @@ QMenu* MainWindow::createMenuModelTreeSettings()
     // Model tree user actions
     menu->addSeparator();
     const WidgetModelTree_UserActions userActions = m_ui->widget_ModelTree->createUserActions(menu);
-    for (QAction* action : userActions.items)
-        menu->addAction(action);
+    for (QAction* usrAction : userActions.items)
+        menu->addAction(usrAction);
 
     // Sync before menu show
     QObject::connect(menu, &QMenu::aboutToShow, this, [=]{

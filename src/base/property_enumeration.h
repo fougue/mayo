@@ -110,8 +110,8 @@ template<typename EnumType>
 void PropertyEnum<EnumType>::setDescriptions(std::initializer_list<std::pair<EnumType, std::string_view>> initList)
 {
     this->clearDescriptions();
-    for (const auto& [value, description] : initList)
-        this->addDescription(value, description);
+    for (const auto& [val, descr] : initList)
+        this->addDescription(val, descr);
 }
 
 } // namespace Mayo

@@ -23,8 +23,8 @@ DocumentPropertyGroup::DocumentPropertyGroup(const DocumentPtr& doc)
 
     const auto fileSize = filepathFileSize(doc->filePath());
     auto appModule = AppModule::get();
-    const QString strFileSize = QStringUtils::bytesText(fileSize, appModule->qtLocale());
-    this->strFileSize.setValue(to_stdString(strFileSize));
+    const QString qstrFileSize = QStringUtils::bytesText(fileSize, appModule->qtLocale());
+    this->strFileSize.setValue(to_stdString(qstrFileSize));
 
     const QFileInfo fileInfo = filepathTo<QFileInfo>(doc->filePath());
     const QString strCreated = appModule->qtLocale().toString(fileInfo.birthTime(), QLocale::ShortFormat);

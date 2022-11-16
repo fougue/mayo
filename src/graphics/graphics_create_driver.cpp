@@ -33,7 +33,7 @@ void setFunctionCreateGraphicsDriver(FunctionCreateGraphicsDriver fn)
 
 Handle_Graphic3d_GraphicDriver graphicsCreateDriver()
 {
-    auto& fn = getFunctionCreateGraphicsDriver();
+    const auto& fn = getFunctionCreateGraphicsDriver();
     if (fn)
         return fn();
 

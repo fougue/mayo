@@ -43,7 +43,7 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
     action->setMenu(menu);
     this->setAction(action);
 
-    QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
+    QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
         const GuiDocument* guiDoc = this->currentGuiDocument();
         if (guiDoc) {
             guiDoc->v3dView()->Camera()->SetProjectionType(
