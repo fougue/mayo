@@ -8,6 +8,7 @@
 
 #include "occ_brep_mesh_parameters.h"
 
+#include <Poly_Triangulation.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -19,6 +20,12 @@ class TaskProgress;
 
 // Provides helper functions for OpenCascade TKBRep library
 struct BRepUtils {
+    // Creates a valid and empty TopoDS_Compound shape
+    static TopoDS_Compound makeEmptyCompound();
+
+    // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
+    static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);
+
     // Iterates with 'explorer' and executes 'fn' for each sub-shape
     template<typename Function>
     static void forEachSubShape(TopExp_Explorer& explorer, Function fn);
@@ -45,6 +52,9 @@ struct BRepUtils {
 
     // Deserializes string 'str' obtained from 'shapeToToString()' into a shape object
     static TopoDS_Shape shapeFromString(const std::string& str);
+
+    // Does 'face' rely on a geometric surface?
+    static bool isGeometric(const TopoDS_Face& face);
 
     // Computes a mesh representation of 'shape' using OpenCascade meshing algorithm
     static void computeMesh(
