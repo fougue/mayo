@@ -12,6 +12,7 @@
 #include "../base/cpp_utils.h"
 #include "../base/data_triangulation.h"
 #include "../base/math_utils.h"
+#include "../base/mesh_access.h"
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -333,15 +334,9 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     if (!shape.IsNull()) {
         BRepUtils::forEachSubFace(shape, [=](const TopoDS_Face& face){
             TopLoc_Location loc;
-            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
-            fnAddMesh(polyTri, loc);
+            const auto& mesh = BRep_Tool::Triangulation(face, loc);
+            fnAddMesh(mesh, loc);
         });
-    }
-
-    // -- Triangulation ?
-    auto attrPolyTri = CafUtils::findAttribute<DataTriangulation>(labelShape);
-    if (!attrPolyTri.IsNull()) {
-        fnAddMesh(attrPolyTri->Get(), TopLoc_Location());
     }
 
     if (m_vecMesh.size() == meshCount)
@@ -352,8 +347,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     DocumentPtr doc = Document::findFrom(labelShape);
     if (doc && doc->xcaf().hasShapeColor(labelShape)) {
         const Quantity_Color color = doc->xcaf().shapeColor(labelShape);
-        auto itColor = std::find_if(
-                    m_vecMaterial.cbegin(), m_vecMaterial.cend(), [=](const Material& mat) {
+        auto itColor = std::find_if(m_vecMaterial.cbegin(), m_vecMaterial.cend(), [=](const Material& mat) {
             return mat.color == color;
         });
         if (itColor != m_vecMaterial.cend()) {

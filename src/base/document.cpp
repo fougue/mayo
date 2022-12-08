@@ -134,6 +134,11 @@ TDF_Label Document::newEntityLabel()
     return this->rootLabel().NewChild();
 }
 
+TDF_Label Document::newEntityShapeLabel()
+{
+    return m_xcaf.shapeTool()->NewShape();
+}
+
 void Document::addEntityTreeNode(const TDF_Label& label)
 {
     // Check if 'label' belongs to current document

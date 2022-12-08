@@ -163,6 +163,7 @@ public:
         using Operation = Operation_ExportApplicationItems;
         Operation& targetFile(const FilePath& filepath);
         Operation& targetFormat(Format format);
+        Operation& withItem(const ApplicationItem& appItem);
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);

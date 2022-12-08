@@ -6,6 +6,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/xcaf.h"
+#include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
 #include "app_module.h"
 #include "qtcore_utils.h"
@@ -81,7 +82,7 @@ private:
 
 bool WidgetModelTreeBuilder_Xde::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
-    return XCaf::isShape(node.label());
+    return GraphicsShapeObjectDriver::shapeSupportStatus(node.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(

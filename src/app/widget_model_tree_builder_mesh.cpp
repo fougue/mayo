@@ -6,7 +6,7 @@
 
 #include "widget_model_tree_builder_mesh.h"
 #include "../base/caf_utils.h"
-#include "../base/data_triangulation.h"
+#include "../graphics/graphics_mesh_object_driver.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
@@ -16,7 +16,7 @@ namespace Mayo {
 
 bool WidgetModelTreeBuilder_Mesh::supportsDocumentTreeNode(const DocumentTreeNode& node) const
 {
-    return CafUtils::hasAttribute<DataTriangulation>(node.label());
+    return GraphicsMeshObjectDriver::meshSupportStatus(node.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Mesh::createTreeItem(const DocumentTreeNode& node)

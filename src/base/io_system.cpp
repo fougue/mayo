@@ -373,6 +373,13 @@ System::Operation_ExportApplicationItems::targetFormat(Format format) {
 }
 
 System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem) {
+    m_args.applicationItems = { &appItem, 1 };
+    return *this;
+}
+
+
+System::Operation_ExportApplicationItems&
 System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems) {
     m_args.applicationItems = appItems;
     return *this;

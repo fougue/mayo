@@ -55,7 +55,12 @@ public:
 
     static DocumentPtr findFrom(const TDF_Label& label);
 
+    // Creates general-purpose entity, not bound to a specific type
     TDF_Label newEntityLabel();
+
+    // Creates entity bound to a BRep shape and registered as top-level into XCAFDoc_ShapeTool
+    TDF_Label newEntityShapeLabel();
+
     void addEntityTreeNode(const TDF_Label& label);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 

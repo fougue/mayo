@@ -25,6 +25,8 @@ public:
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
     std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const override;
 
+    static Support shapeSupportStatus(const TDF_Label& label);
+
     enum DisplayMode {
         DisplayMode_Wireframe,
         DisplayMode_HiddenLineRemoval,

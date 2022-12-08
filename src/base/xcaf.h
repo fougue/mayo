@@ -43,11 +43,17 @@ public:
     Handle_XCAFDoc_VisMaterialTool visMaterialTool() const;
 #endif
 
+    // --
+    // -- XCAFDoc_ShapeTool  helpers
+    // --
+
     TDF_LabelSequence topLevelFreeShapes() const;
     static TDF_LabelSequence shapeComponents(const TDF_Label& lbl);
     static TDF_LabelSequence shapeSubs(const TDF_Label& lbl);
 
     static TopoDS_Shape shape(const TDF_Label& lbl);
+    void setShape(const TDF_Label& label, const TopoDS_Shape& shape);
+
     static bool isShape(const TDF_Label& lbl);
     static bool isShapeFree(const TDF_Label& lbl);
     static bool isShapeAssembly(const TDF_Label& lbl);
@@ -59,9 +65,6 @@ public:
 
     // Is 'shape' a subshape of the shape stored in 'lbl' ?
     bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape);
-
-    bool hasShapeColor(const TDF_Label& lbl) const;
-    Quantity_Color shapeColor(const TDF_Label& lbl) const;
 
     // Various flags for findShapeLabel()
     enum FindShapeLabelFlag {
@@ -84,17 +87,32 @@ public:
     static TopLoc_Location shapeReferenceLocation(const TDF_Label& lbl);
     static TDF_Label shapeReferred(const TDF_Label& lbl);
 
+    // Returns labels of the top-level free shapes that were not found in 'seqOther'
+    TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
+
+    // --
+    // -- XCAFDoc_ColorTool helpers
+    // --
+
+    bool hasShapeColor(const TDF_Label& lbl) const;
+    Quantity_Color shapeColor(const TDF_Label& lbl) const;
+
+    // --
+    // -- XCAFDoc_Material helpers
+    // --
+
     static QuantityDensity shapeMaterialDensity(const TDF_Label& lbl);
     static QuantityDensity shapeMaterialDensity(const Handle_XCAFDoc_Material& material);
     static Handle_XCAFDoc_Material shapeMaterial(const TDF_Label& lbl);
+
+    // --
+    // -- XCAFDoc_LayerTool helpers
+    // --
 
     TDF_LabelSequence layers(const TDF_Label& lbl) const;
     TCollection_ExtendedString layerName(const TDF_Label& lbl) const;
 
     static ValidationProperties validationProperties(const TDF_Label& lbl);
-
-    // Returns labels of the top-level free shapes that were not found in 'seqOther'
-    TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
 
 private:
     XCaf() = default;

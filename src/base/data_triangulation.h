@@ -9,25 +9,20 @@
 #include "span.h"
 
 #include <Quantity_Color.hxx>
-#include <TDataXtd_Triangulation.hxx>
+#include <TDF_Attribute.hxx>
 #include <vector>
 
 namespace Mayo {
 
-class DataTriangulation;
-DEFINE_STANDARD_HANDLE(DataTriangulation, TDataXtd_Triangulation)
-using DataTriangulationPtr = Handle(DataTriangulation);
+class TriangulationAnnexData;
+DEFINE_STANDARD_HANDLE(TriangulationAnnexData, TDF_Attribute)
+using TriangulationAnnexDataPtr = Handle(TriangulationAnnexData);
 
-class DataTriangulation : public TDataXtd_Triangulation {
+class TriangulationAnnexData : public TDF_Attribute {
 public:
     static const Standard_GUID& GetID();
-    static DataTriangulationPtr Set(const TDF_Label& label);
-    static DataTriangulationPtr Set(const TDF_Label& label, const Handle(Poly_Triangulation)& mesh);
-    static DataTriangulationPtr Set(
-            const TDF_Label& label,
-            const Handle(Poly_Triangulation)& mesh,
-            Span<const Quantity_Color> spanNodeColor
-    );
+    static TriangulationAnnexDataPtr Set(const TDF_Label& label);
+    static TriangulationAnnexDataPtr Set(const TDF_Label& label, Span<const Quantity_Color> spanNodeColor);
 
     Span<const Quantity_Color> nodeColors() const { return m_vecNodeColor; }
 
@@ -38,7 +33,7 @@ public:
     void Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)& table) const override;
     Standard_OStream& Dump(Standard_OStream& ostr) const override;
 
-    DEFINE_STANDARD_RTTI_INLINE(DataTriangulation, TDataXtd_Triangulation)
+    DEFINE_STANDARD_RTTI_INLINE(TriangulationAnnexData, TDF_Attribute)
 
 private:
     void copyNodeColors(Span<const Quantity_Color> spanNodeColor);

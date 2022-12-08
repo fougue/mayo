@@ -6,8 +6,10 @@
 
 #include "graphics_shape_object_driver.h"
 
+#include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/data_triangulation.h"
+#include "../base/label_data.h"
 #include "../base/xcaf.h"
 #include "graphics_utils.h"
 
@@ -34,17 +36,7 @@ GraphicsShapeObjectDriver::GraphicsShapeObjectDriver()
 
 GraphicsObjectDriver::Support GraphicsShapeObjectDriver::supportStatus(const TDF_Label& label) const
 {
-    if (XCaf::isShape(label))
-        return Support::Complete;
-
-    // TODO TNaming_Shape ?
-    // TDataXtd_Shape ?
-
-    if (CafUtils::hasAttribute<DataTriangulation>(label)) {
-        //return Support::Partial;
-    }
-
-    return Support::None;
+    return shapeSupportStatus(label);
 }
 
 GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label) const
@@ -55,13 +47,12 @@ GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label
         object->SetMaterial(Graphic3d_NOM_PLASTER);
         object->Attributes()->SetFaceBoundaryDraw(true);
         object->Attributes()->SetFaceBoundaryAspect(
-                    new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.));
+                    new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.)
+        );
         object->Attributes()->SetIsoOnTriangulation(true);
         //object->Attributes()->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr, true/*overrideDefaults*/);
         object->SetOwner(this);
         return object;
-    }
-    else if (CafUtils::hasAttribute<DataTriangulation>(label)) {
     }
 
     return {};
@@ -139,6 +130,23 @@ GraphicsShapeObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) 
     this->throwIf_differentDriver(spanObject);
     //return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);
     return {};
+}
+
+GraphicsObjectDriver::Support GraphicsShapeObjectDriver::shapeSupportStatus(const TDF_Label& label)
+{
+    const LabelDataFlags flags = findLabelDataFlags(label);
+    if (flags & LabelData_ShapeIsFace) {
+        if (flags & LabelData_ShapeIsGeometricFace)
+            return GraphicsObjectDriver::Support::Complete;
+        else if (flags & LabelData_HasTriangulationAnnexData)
+            return GraphicsObjectDriver::Support::Partial;
+    }
+
+    if (flags & LabelData_HasShape)
+        return GraphicsObjectDriver::Support::Complete;
+
+    return GraphicsObjectDriver::Support::None;
+    // TODO TNaming_Shape? TDataXtd_Shape?
 }
 
 } // namespace Mayo
