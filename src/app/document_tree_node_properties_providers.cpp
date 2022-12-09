@@ -7,12 +7,16 @@
 #include "document_tree_node_properties_providers.h"
 
 #include "../base/caf_utils.h"
+#include "../base/label_data.h"
 #include "../base/data_triangulation.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
+#include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/xcaf.h"
+#include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_shape_object_driver.h"
 #include "qstring_conv.h"
 
 #include <TDataStd_Name.hxx>
@@ -195,7 +199,7 @@ public:
 
 bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {
-    return XCaf::isShape(treeNode.label());
+    return GraphicsShapeObjectDriver::shapeSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 std::unique_ptr<PropertyGroupSignals>
@@ -212,15 +216,15 @@ class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
 public:
     Properties(const DocumentTreeNode& treeNode)
     {
-        auto attrTriangulation = CafUtils::findAttribute<DataTriangulation>(treeNode.label());
-        Handle_Poly_Triangulation polyTri;
-        if (!attrTriangulation.IsNull())
-            polyTri = attrTriangulation->Get();
+        Handle_Poly_Triangulation mesh;
+        IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& access) {
+            mesh = access.triangulation();
+        });
 
-        m_propertyNodeCount.setValue(!polyTri.IsNull() ? polyTri->NbNodes() : 0);
-        m_propertyTriangleCount.setValue(!polyTri.IsNull() ? polyTri->NbTriangles() : 0);
-        m_propertyArea.setQuantity(MeshUtils::triangulationArea(polyTri) * Quantity_SquareMillimeter);
-        m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(polyTri) * Quantity_CubicMillimeter);
+        m_propertyNodeCount.setValue(!mesh.IsNull() ? mesh->NbNodes() : 0);
+        m_propertyTriangleCount.setValue(!mesh.IsNull() ? mesh->NbTriangles() : 0);
+        m_propertyArea.setQuantity(MeshUtils::triangulationArea(mesh) * Quantity_SquareMillimeter);
+        m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
         for (Property* property : this->properties())
             property->setUserReadOnly(true);
     }
@@ -233,7 +237,7 @@ public:
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {
-    return CafUtils::hasAttribute<DataTriangulation>(treeNode.label());
+    return GraphicsMeshObjectDriver::meshSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 std::unique_ptr<PropertyGroupSignals>

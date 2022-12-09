@@ -5,6 +5,8 @@
 ****************************************************************************/
 
 #include "io_ply_reader.h"
+
+#include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/data_triangulation.h"
@@ -185,8 +187,9 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*
     }
 
     // Insert mesh as a document entity
-    const TDF_Label entityLabel = doc->newEntityLabel();
-    DataTriangulation::Set(entityLabel, mesh, vecColor);
+    const TDF_Label entityLabel = doc->newEntityShapeLabel();
+    doc->xcaf().setShape(entityLabel, BRepUtils::makeFace(mesh)); // IMPORTANT: pure mesh part marker!
+    TriangulationAnnexData::Set(entityLabel, vecColor);
     TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
     return CafUtils::makeLabelSequence({ entityLabel });
 }

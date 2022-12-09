@@ -48,7 +48,6 @@ private:
     class Properties;
     Parameters m_params;
     TopoDS_Shape m_shape;
-    Handle_Poly_Triangulation m_mesh;
 };
 
 } // namespace IO

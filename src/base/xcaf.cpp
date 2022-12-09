@@ -97,6 +97,11 @@ TopoDS_Shape XCaf::shape(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::GetShape(lbl);
 }
 
+void XCaf::setShape(const TDF_Label& label, const TopoDS_Shape& shape)
+{
+    this->shapeTool()->SetShape(label, shape);
+}
+
 //QString XCaf::findLabelName(const TDF_Label& lbl)
 //{
 //    QString name = CafUtils::labelAttrStdName(lbl);

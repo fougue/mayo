@@ -35,6 +35,8 @@ private slots:
     void IO_probeFormatDirect_test();
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
+    void IO_bugGitHub166_test();
+    void IO_bugGitHub166_test_data();
 
     void DoubleToString_test();
 

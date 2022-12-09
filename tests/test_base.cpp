@@ -33,7 +33,10 @@
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/io_dxf/io_dxf.h"
 #include "../src/io_occ/io_occ.h"
+#include "../src/io_ply/io_ply_reader.h"
+#include "../src/io_ply/io_ply_writer.h"
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -130,7 +133,6 @@ struct SignalEmitSpy {
 
 void TestBase::Application_test()
 {
-
     auto app = Application::instance();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return m_ioSystem->importInDocument()
@@ -450,6 +452,62 @@ void TestBase::IO_OccStaticVariablesRollback_test_data()
     QTest::newRow("var_double2") << "mayo.test.variable_double2" << QVariant(50.7) << QVariant(25.8);
     QTest::newRow("var_str1") << "mayo.test.variable_str1" << QVariant("") << QVariant("value");
     QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
+}
+
+void TestBase::IO_bugGitHub166_test()
+{
+    QFETCH(QString, strInputFilePath);
+    QFETCH(QString, strOutputFilePath);
+    QFETCH(IO::Format, outputFormat);
+
+    auto app = Application::instance();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument()
+            .targetDocument(doc)
+            .withFilepath(strInputFilePath.toStdString())
+            .execute();
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() > 0);
+
+    const bool okExport = m_ioSystem->exportApplicationItems()
+            .targetFile(strOutputFilePath.toStdString())
+            .targetFormat(outputFormat)
+            .withItem(doc)
+            .execute();
+    QVERIFY(okExport);
+    app->closeDocument(doc);
+
+    doc = app->newDocument();
+    const bool okImportOutput = m_ioSystem->importInDocument()
+            .targetDocument(doc)
+            .withFilepath(strOutputFilePath.toStdString())
+            .execute();
+    QVERIFY(okImportOutput);
+    QVERIFY(doc->entityCount() > 0);
+}
+
+void TestBase::IO_bugGitHub166_test_data()
+{
+    QTest::addColumn<QString>("strInputFilePath");
+    QTest::addColumn<QString>("strOutputFilePath");
+    QTest::addColumn<IO::Format>("outputFormat");
+
+    QTest::newRow("PLY->STL") << "tests/inputs/cube.ply" << "tests/outputs/cube.stl" << IO::Format_STL;
+    QTest::newRow("STL->PLY") << "tests/inputs/cube.stla" << "tests/outputs/cube.ply" << IO::Format_PLY;
+
+#if OCC_VERSION_HEX >= 0x070400
+    QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
+    QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
+#endif
+
+#if OCC_VERSION_HEX >= 0x070600
+    QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj" << "tests/outputs/cube.glTF" << IO::Format_GLTF;
+#endif
 }
 
 void TestBase::DoubleToString_test()
@@ -937,6 +995,9 @@ void TestBase::LibTree_test()
 void TestBase::initTestCase()
 {
     m_ioSystem = new IO::System;
+    m_ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     IO::addPredefinedFormatProbes(m_ioSystem);

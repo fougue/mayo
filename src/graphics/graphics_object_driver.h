@@ -8,6 +8,7 @@
 
 #include "graphics_object_ptr.h"
 #include "../base/enumeration.h"
+#include "../base/label_data.h"
 #include "../base/property.h"
 #include "../base/span.h"
 
@@ -25,9 +26,9 @@ using GraphicsObjectDriverPtr = Handle(GraphicsObjectDriver);
 // Each graphics object "knows" the driver which created it: use function GraphicsObjectDriver::get()
 class GraphicsObjectDriver : public Standard_Transient {
 public:
-    enum Support { None, Partial, Complete };
-    virtual Support supportStatus(const TDF_Label& label) const = 0;
+    enum class Support { None, Partial, Complete };
 
+    virtual Support supportStatus(const TDF_Label& label) const = 0;
     virtual GraphicsObjectPtr createObject(const TDF_Label& label) const = 0;
 
     Enumeration::Value defaultDisplayMode() const { return m_defaultDisplayMode; }

@@ -13,72 +13,63 @@
 
 namespace Mayo {
 
-const Standard_GUID& DataTriangulation::GetID()
+const Standard_GUID& TriangulationAnnexData::GetID()
 {
-    static const Standard_GUID DataTriangulationID("3020FF98-2B49-4E0B-A414-949A534F24F7");
-    return DataTriangulationID;
+    static const Standard_GUID TriangulationAnnexDataID("2a2c7df4-6d97-4c70-b20c-84cb149e26ed");
+    return TriangulationAnnexDataID;
 }
 
-DataTriangulationPtr DataTriangulation::Set(const TDF_Label& label)
+TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 {
-    DataTriangulationPtr dataMesh;
-    if (!label.FindAttribute(DataTriangulation::GetID(), dataMesh)) {
-        dataMesh = new DataTriangulation;
-        label.AddAttribute(dataMesh);
+    TriangulationAnnexDataPtr data;
+    if (!label.FindAttribute(TriangulationAnnexData::GetID(), data)) {
+        data = new TriangulationAnnexData;
+        label.AddAttribute(data);
     }
 
-    return dataMesh;
+    return data;
 }
 
-DataTriangulationPtr DataTriangulation::Set(const TDF_Label& label, const Handle(Poly_Triangulation)& mesh)
+TriangulationAnnexDataPtr TriangulationAnnexData::Set(
+        const TDF_Label& label, Span<const Quantity_Color> spanNodeColor)
 {
-    DataTriangulationPtr dataMesh = DataTriangulation::Set(label);
-    dataMesh->TDataXtd_Triangulation::Set(mesh);
-    return dataMesh;
+    TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
+    data->copyNodeColors(spanNodeColor);
+    return data;
 }
 
-DataTriangulationPtr DataTriangulation::Set(
-        const TDF_Label& label, const Handle(Poly_Triangulation)& mesh, Span<const Quantity_Color> spanNodeColor)
+const Standard_GUID& TriangulationAnnexData::ID() const
 {
-    DataTriangulationPtr dataMesh = DataTriangulation::Set(label, mesh);
-    dataMesh->copyNodeColors(spanNodeColor);
-    return dataMesh;
+    return TriangulationAnnexData::GetID();
 }
 
-const Standard_GUID& DataTriangulation::ID() const
+void TriangulationAnnexData::Restore(const Handle(TDF_Attribute)& attribute)
 {
-    return DataTriangulation::GetID();
+    auto data = TriangulationAnnexDataPtr::DownCast(attribute);
+    if (data)
+        this->copyNodeColors(data->m_vecNodeColor);
 }
 
-void DataTriangulation::Restore(const Handle(TDF_Attribute)& attribute)
+Handle(TDF_Attribute) TriangulationAnnexData::NewEmpty() const
 {
-    TDataXtd_Triangulation::Restore(attribute);
-    auto dataMesh = DataTriangulationPtr::DownCast(attribute);
-    if (dataMesh)
-        this->copyNodeColors(dataMesh->m_vecNodeColor);
+    return new TriangulationAnnexData;
 }
 
-Handle(TDF_Attribute) DataTriangulation::NewEmpty() const
+void TriangulationAnnexData::Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)&) const
 {
-    return new DataTriangulation;
+    auto data = TriangulationAnnexDataPtr::DownCast(into);
+    if (data)
+        data->copyNodeColors(m_vecNodeColor);
 }
 
-void DataTriangulation::Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)& table) const
+Standard_OStream& TriangulationAnnexData::Dump(Standard_OStream& ostr) const
 {
-    TDataXtd_Triangulation::Paste(into, table);
-    auto dataMesh = DataTriangulationPtr::DownCast(into);
-    if (dataMesh)
-        dataMesh->copyNodeColors(m_vecNodeColor);
-}
-
-Standard_OStream& DataTriangulation::Dump(Standard_OStream& ostr) const
-{
-    ostr << "DataTriangulation -- ";
-    TDataXtd_Triangulation::Dump(ostr);
+    ostr << "TriangulationAnnexData -- ";
+    TDF_Attribute::Dump(ostr);
     return ostr;
 }
 
-void Mayo::DataTriangulation::copyNodeColors(Span<const Quantity_Color> spanNodeColor)
+void Mayo::TriangulationAnnexData::copyNodeColors(Span<const Quantity_Color> spanNodeColor)
 {
     m_vecNodeColor.clear();
     std::copy(spanNodeColor.begin(), spanNodeColor.end(), std::back_inserter(m_vecNodeColor));

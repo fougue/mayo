@@ -25,7 +25,7 @@ void PropertyGroup::restoreDefaults()
 {
 }
 
-void PropertyGroup::onPropertyAboutToChange(Property *prop)
+void PropertyGroup::onPropertyAboutToChange(Property* prop)
 {
     if (m_parentGroup)
         m_parentGroup->onPropertyAboutToChange(prop);

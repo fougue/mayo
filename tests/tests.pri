@@ -22,3 +22,5 @@ CONFIG += file_copies
 COPIES += MayoTestsInputs
 MayoTestsInputs.files = $$files($$PWD/inputs/*.*)
 MayoTestsInputs.path = $$OUT_PWD/tests/inputs
+
+mkpath($$OUT_PWD/tests/outputs)
