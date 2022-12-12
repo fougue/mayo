@@ -359,6 +359,11 @@ CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAp
 void CommandExportSelectedApplicationItems::execute()
 {
     auto appModule = AppModule::get();
+    if (this->guiApp()->selectionModel()->selectedItems().empty()) {
+        appModule->emitError(Command::textIdTr("No item selected for export"));
+        return;
+    }
+
     QStringList listWriterFileFilter;
     for (IO::Format format : appModule->ioSystem()->writerFormats())
         listWriterFileFilter.append(fileFilter(format));
