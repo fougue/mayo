@@ -17,6 +17,7 @@ class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+    void DocumentRefCount_test();
 
     void CppUtils_toggle_test();
     void CppUtils_safeStaticCast_test();

@@ -172,12 +172,16 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
             docPtr = app->newDocument();
             docPtr->setName(fp.stem().u8string());
             docPtr->setFilePath(fp);
+            // Use the Document identifier instead of handle within the job function(capture)
+            // Using the handle increases the ref count and the task will be released on next
+            // task creation, so the document won't be destroyed
+            const Document::Identifier newDocId = docPtr->identifier();
             const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
                 QElapsedTimer chrono;
                 chrono.start();
                 const bool okImport =
                         appModule->ioSystem()->importInDocument()
-                        .targetDocument(docPtr)
+                        .targetDocument(app->findDocumentByIdentifier(newDocId))
                         .withFilepath(fp)
                         .withParametersProvider(appModule)
                         .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {

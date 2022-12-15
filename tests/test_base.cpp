@@ -201,6 +201,14 @@ void TestBase::Application_test()
     QCOMPARE(app->documentCount(), 0);
 }
 
+void TestBase::DocumentRefCount_test()
+{
+    DocumentPtr doc = Application::instance()->newDocument();
+    QVERIFY(doc->GetRefCount() > 1);
+    Application::instance()->closeDocument(doc);
+    QCOMPARE(doc->GetRefCount(), 1);
+}
+
 void TestBase::CppUtils_toggle_test()
 {
     bool v = false;

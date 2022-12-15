@@ -22,6 +22,10 @@ Document::Document(const ApplicationPtr& app)
     TDF_TagSource::Set(this->rootLabel());
 }
 
+Document::~Document()
+{
+}
+
 void Document::initXCaf()
 {
     m_xcaf.setLabelMain(this->Main());

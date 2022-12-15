@@ -151,6 +151,11 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 void Application::closeDocument(const DocumentPtr& doc)
 {
     TDocStd_Application::Close(doc);
+    doc->signalNameChanged.disconnectAll();
+    doc->signalFilePathChanged.disconnectAll();
+    doc->signalEntityAdded.disconnectAll();
+    doc->signalEntityAboutToBeDestroyed.disconnectAll();
+    //doc->Main().ForgetAllAttributes(true/*clearChildren*/);
 }
 
 void Application::addTranslator(Application::Translator fn)
