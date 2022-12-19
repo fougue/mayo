@@ -303,34 +303,37 @@ public:
 
     QVariant data(int column, int role) const override
     {
-        if (role == Qt::ToolTipRole) {
-            auto itItem = m_mapColumnItemData.find(column);
-            ItemData* ptrItem = itItem != m_mapColumnItemData.end() ? &itItem->second : nullptr;
-            if (ptrItem && ptrItem->strToolTip.isEmpty()) {
-                QPixmap pixmap(ptrItem->strFilePath);
-                if (!pixmap.isNull()) {
-                    pixmap = pixmap.scaledToWidth(std::min(pixmap.width(), 400));
-                    QBuffer bufferPixmap;
-                    pixmap.save(&bufferPixmap, "PNG");
-                    const auto imageSize = QFileInfo(ptrItem->strFilePath).size();
-                    const QString strImageSize = QStringUtils::bytesText(imageSize, appDefaultTextOptions().locale);
-                    ptrItem->strToolTip =
-                            QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
-                            .arg(QString::fromLatin1(bufferPixmap.data().toBase64()))
-                            .arg(pixmap.width())
-                            .arg(pixmap.height())
-                            .arg(DialogInspectXde::tr("File Size: %1").arg(strImageSize))
-                            ;
-                }
-                else {
-                    ptrItem->strToolTip = DialogInspectXde::tr("Error when loading texture file(invalid path?)");
-                }
-            }
+        if (role != Qt::ToolTipRole)
+            return QTreeWidgetItem::data(column, role);
 
-            return ptrItem ? ptrItem->strToolTip : QString();
+        auto itItem = m_mapColumnItemData.find(column);
+        ItemData* ptrItem = itItem != m_mapColumnItemData.end() ? &itItem->second : nullptr;
+        if (!ptrItem)
+            return {};
+
+        if (ptrItem->strToolTip.isEmpty()) {
+            const QPixmap pixmap(ptrItem->strFilePath);
+            if (!pixmap.isNull()) {
+                QBuffer bufferPixmap;
+                const QPixmap pixmapClamped = pixmap.scaledToWidth(std::min(pixmap.width(), 400));
+                pixmapClamped.save(&bufferPixmap, "PNG");
+                const auto imageSize = QFileInfo(ptrItem->strFilePath).size();
+                const QString strImageSize = QStringUtils::bytesText(imageSize, appDefaultTextOptions().locale);
+                ptrItem->strToolTip =
+                        QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
+                        .arg(QString::fromLatin1(bufferPixmap.data().toBase64()))
+                        .arg(pixmapClamped.width())
+                        .arg(pixmapClamped.height())
+                        .arg(DialogInspectXde::tr("File Size: %1<br>Dimensions: %2x%3 Depth: %4")
+                             .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth()))
+                        ;
+            }
+            else {
+                ptrItem->strToolTip = DialogInspectXde::tr("Error when loading texture file(invalid path?)");
+            }
         }
 
-        return QTreeWidgetItem::data(column, role);
+        return ptrItem->strToolTip;
     }
 
 private:
