@@ -20,9 +20,11 @@ public:
     void applyProperties(const PropertyGroup*) override {}
 
 private:
+    TDF_Label transferMesh(DocumentPtr doc, TaskProgress* progress);
+    TDF_Label transferPointCloud(DocumentPtr doc, TaskProgress* progress);
+
     FilePath m_baseFilename;
     uint32_t m_nodeCount = 0;
-    bool m_isValidMesh = false;
     std::vector<float> m_vecNodeCoord;
     std::vector<int> m_vecIndex;
     std::vector<float> m_vecNormalCoord;

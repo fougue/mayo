@@ -14,6 +14,7 @@
 #include "../base/filepath_conv.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
+#include "../base/point_cloud_data.h"
 #include "../base/property_builtins.h"
 #include "../base/tkernel_utils.h"
 #include "miniply.h"
@@ -32,7 +33,6 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
         return false;
 
     // Reset internal data
-    m_isValidMesh = false;
     m_baseFilename = filepath.stem();
     m_nodeCount = 0;
     m_vecNodeCoord.clear();
@@ -45,31 +45,32 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
     uint32_t faceIdxs[3] = {};
     if (assumeTriangles) {
         miniply::PLYElement* faceElem = reader.get_element(reader.find_element(miniply::kPLYFaceElement));
-        if (!faceElem)
-            return {};
-
-        assumeTriangles = faceElem->convert_list_to_fixed_size(faceElem->find_property("vertex_indices"), 3, faceIdxs);
+        if (faceElem)
+            assumeTriangles = faceElem->convert_list_to_fixed_size(faceElem->find_property("vertex_indices"), 3, faceIdxs);
     }
 
+    bool okLoad = true;
     bool gotVerts = false;
     bool gotFaces = false;
     while (reader.has_element() && (!gotVerts || !gotFaces)) {
         if (reader.element_is(miniply::kPLYVertexElement)) {
-            uint32_t propIdxs[3] = {};
-            if (!reader.load_element() || !reader.find_pos(propIdxs))
+            uint32_t prop3Idxs[3] = {};
+            if (!reader.load_element() || !reader.find_pos(prop3Idxs)) {
+                okLoad = false;
                 break;
+            }
 
             m_nodeCount = reader.num_rows();
             m_vecNodeCoord.resize(m_nodeCount * 3);
-            reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, m_vecNodeCoord.data());
-            if (reader.find_normal(propIdxs)) {
+            reader.extract_properties(prop3Idxs, 3, miniply::PLYPropertyType::Float, m_vecNodeCoord.data());
+            if (reader.find_normal(prop3Idxs)) {
                 m_vecNormalCoord.resize(m_nodeCount * 3);
-                reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::Float, m_vecNormalCoord.data());
+                reader.extract_properties(prop3Idxs, 3, miniply::PLYPropertyType::Float, m_vecNormalCoord.data());
             }
 
-            if (reader.find_color(propIdxs)) {
+            if (reader.find_color(prop3Idxs)) {
                 m_vecColorComponent.resize(m_nodeCount * 3);
-                reader.extract_properties(propIdxs, 3, miniply::PLYPropertyType::UChar, m_vecColorComponent.data());
+                reader.extract_properties(prop3Idxs, 3, miniply::PLYPropertyType::UChar, m_vecColorComponent.data());
             }
 
             //if (reader.find_texcoord(propIdxs)) {
@@ -130,24 +131,28 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
         reader.next_element();
     } // endwhile
 
-    auto fnCheckIndices = [](Span<const int> spanIndex, uint32_t nodeCount) {
-        for (int index : spanIndex) {
-              if (index < 0 || CppUtils::cmpGreaterEqual(index, nodeCount))
-                  return false;
-        }
-
-        return true;
-    };
-
-    m_isValidMesh = gotVerts && gotFaces && fnCheckIndices(m_vecIndex, m_nodeCount);
-    return m_isValidMesh;
+    return okLoad;
 }
 
-TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
+TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
-    if (!m_isValidMesh)
-        return {};
+    TDF_Label entityLabel;
+    if (!m_vecNodeCoord.empty() && !m_vecIndex.empty())
+        entityLabel = this->transferMesh(doc, progress);
 
+    if (!m_vecNodeCoord.empty() && m_vecIndex.empty())
+        entityLabel = this->transferPointCloud(doc, progress);
+
+    if (!entityLabel.IsNull()) {
+        TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
+        return CafUtils::makeLabelSequence({ entityLabel });
+    }
+
+    return {};
+}
+
+TDF_Label PlyReader::transferMesh(DocumentPtr doc, TaskProgress* /*progress*/)
+{
     // Create target mesh
     const int triangleCount = CppUtils::safeStaticCast<int>(m_vecIndex.size() / 3);
     Handle_Poly_Triangulation mesh = new Poly_Triangulation(m_nodeCount, triangleCount, false/*hasUvNodes*/);
@@ -190,8 +195,46 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* /*progress*
     const TDF_Label entityLabel = doc->newEntityShapeLabel();
     doc->xcaf().setShape(entityLabel, BRepUtils::makeFace(mesh)); // IMPORTANT: pure mesh part marker!
     TriangulationAnnexData::Set(entityLabel, vecColor);
-    TDataStd_Name::Set(entityLabel, filepathTo<TCollection_ExtendedString>(m_baseFilename));
-    return CafUtils::makeLabelSequence({ entityLabel });
+    return entityLabel;
+}
+
+TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progress*/)
+{
+    const bool hasColors = !m_vecColorComponent.empty();
+    const bool hasNormals = false; //!m_vecNormalCoord.empty();
+    auto gfxPoints = new Graphic3d_ArrayOfPoints(m_vecNodeCoord.size(), hasColors, hasNormals);
+
+    // Add nodes(vertices) into point cloud
+    for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
+        const auto& vec = m_vecNodeCoord;
+        const gp_Pnt node = { vec.at(i), vec.at(i + 1), vec.at(i + 2) };
+        gfxPoints->AddVertex(node);
+    }
+
+    if (hasColors) {
+        for (int i = 0; CppUtils::cmpLess(i, m_vecColorComponent.size()); i += 3) {
+            const auto& vec = m_vecColorComponent;
+            const Quantity_Color color{
+                        vec.at(i) / 255., vec.at(i + 1) / 255., vec.at(i + 2) / 255.,
+                        TKernelUtils::preferredRgbColorType()
+            };
+            gfxPoints->SetVertexColor((i / 3) + 1, color);
+        }
+    }
+
+#if 0
+    if (hasNormals) {
+        for (int i = 0; CppUtils::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
+            const auto& vec = m_vecNormalCoord;
+            gfxPoints->SetVertexNormal((i / 3) + 1, vec.at(i), vec.at(i + 1), vec.at(i + 2));
+        }
+    }
+#endif
+
+    // Insert point cloud as a document entity
+    const TDF_Label entityLabel = doc->newEntityLabel();
+    PointCloudData::Set(entityLabel, gfxPoints);
+    return entityLabel;
 }
 
 Span<const Format> PlyFactoryReader::formats() const

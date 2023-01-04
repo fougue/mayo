@@ -31,4 +31,13 @@ private:
     class Properties;
 };
 
+class PointCloud_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
+public:
+    bool supports(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
+
+private:
+    class Properties;
+};
+
 } // namespace Mayo
