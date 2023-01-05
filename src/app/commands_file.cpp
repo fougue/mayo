@@ -170,7 +170,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
         DocumentPtr docPtr = app->findDocumentByLocation(fp);
         if (docPtr.IsNull()) {
             docPtr = app->newDocument();
-            docPtr->setName(fp.stem().u8string());
+            docPtr->setName(fp.filename().u8string());
             docPtr->setFilePath(fp);
             // Use the Document identifier instead of handle within the job function(capture)
             // Using the handle increases the ref count and the task will be released on next
