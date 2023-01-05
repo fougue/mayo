@@ -8,7 +8,7 @@
 
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/label_data.h"
 #include "../base/xcaf.h"
 #include "graphics_utils.h"

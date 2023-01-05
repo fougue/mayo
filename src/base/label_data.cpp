@@ -2,7 +2,7 @@
 
 #include "caf_utils.h"
 #include "brep_utils.h"
-#include "data_triangulation.h"
+#include "triangulation_annex_data.h"
 #include "point_cloud_data.h"
 #include "xcaf.h"
 

@@ -10,7 +10,7 @@
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_access.h"
 #include "../base/meta_enum.h"

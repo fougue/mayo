@@ -8,7 +8,7 @@
 
 #include "../base/caf_utils.h"
 #include "../base/label_data.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
 #include "../base/mesh_access.h"

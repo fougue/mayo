@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "data_triangulation.h"
+#include "triangulation_annex_data.h"
 
 #include <Standard_GUID.hxx>
 #include <TDF_Label.hxx>

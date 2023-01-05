@@ -9,7 +9,7 @@
 #include "../base/application_item.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
 #include "../base/messenger.h"

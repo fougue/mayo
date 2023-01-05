@@ -10,7 +10,7 @@
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/label_data.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/property_builtins.h"
 #include "../base/xcaf.h"
 #include "graphics_mesh_data_source.h"
