@@ -117,4 +117,13 @@ Quantity_TypeOfColor TKernelUtils::preferredRgbColorType()
 #endif
 }
 
+Quantity_Color TKernelUtils::toLinearRgbColor(const Quantity_Color& color)
+{
+#if OCC_VERSION_HEX >= 0x070500
+    return Quantity_Color{ Quantity_Color::Convert_LinearRGB_To_sRGB(color.Rgb()) };
+#else
+    return color;
+#endif
+}
+
 } // namespace Mayo

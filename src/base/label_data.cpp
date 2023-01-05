@@ -3,6 +3,7 @@
 #include "caf_utils.h"
 #include "brep_utils.h"
 #include "data_triangulation.h"
+#include "point_cloud_data.h"
 #include "xcaf.h"
 
 namespace Mayo {
@@ -23,6 +24,9 @@ LabelDataFlags findLabelDataFlags(const TDF_Label& label)
                 flags |= LabelData_ShapeIsGeometricFace;
         }
     }
+
+    if (CafUtils::hasAttribute<PointCloudData>(label))
+        flags |= LabelData_HasPointCloudData;
 
     return flags;
 }

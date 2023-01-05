@@ -47,6 +47,9 @@ public:
 
     // Returns the type to be used(by default) for RGB colors, depending on OpenCascasde version
     static Quantity_TypeOfColor preferredRgbColorType();
+
+    // Returns a linear-space RGB color from input 'color' expressed with preferredRgbColorType()
+    static Quantity_Color toLinearRgbColor(const Quantity_Color& color);
 };
 
 } // namespace Mayo

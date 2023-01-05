@@ -8,6 +8,7 @@
 
 #include "../base/document_ptr.h"
 #include "../base/io_writer.h"
+#include "../base/point_cloud_data.h"
 #include <Quantity_ColorRGBA.hxx>
 #include <vector>
 
@@ -43,7 +44,12 @@ private:
     struct Vertex { float x; float y; float z; };
     struct Color { uint8_t red; uint8_t green; uint8_t blue; };
     struct Face { int32_t v1; int32_t v2; int32_t v3; };
+
+    static Vertex toVertex(const gp_Pnt& pnt);
+    static Color toColor(const Quantity_Color& c);
+
     void addMesh(const IMeshAccess& mesh);
+    void addPointCloud(const PointCloudDataPtr& pntCloud);
 
     class Properties;
     Parameters m_params;

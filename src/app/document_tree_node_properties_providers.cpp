@@ -14,11 +14,14 @@
 #include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
+#include "../base/point_cloud_data.h"
 #include "../base/xcaf.h"
 #include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "qstring_conv.h"
 
+#include <Bnd_Box.hxx>
 #include <TDataStd_Name.hxx>
 #include <QtCore/QStringList>
 
@@ -242,6 +245,50 @@ bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
 
 std::unique_ptr<PropertyGroupSignals>
 Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
+{
+    if (!treeNode.isValid())
+        return {};
+
+    return std::make_unique<Properties>(treeNode);
+}
+
+class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::PointCloud_DocumentTreeNodeProperties)
+public:
+    Properties(const DocumentTreeNode& treeNode)
+    {
+        auto attrPointCloudData = CafUtils::findAttribute<PointCloudData>(treeNode.label());
+
+        const bool hasAttrData = !attrPointCloudData.IsNull() && !attrPointCloudData->points().IsNull();
+        m_propertyPointCount.setValue(hasAttrData ? attrPointCloudData->points()->VertexNumber() : 0);
+        m_propertyHasColors.setValue(hasAttrData ? attrPointCloudData->points()->HasVertexColors() : false);
+        if (hasAttrData) {
+            Bnd_Box bndBox;
+            const int pntCount = attrPointCloudData->points()->VertexNumber();
+            for (int i = 1; i <= pntCount; ++i)
+                bndBox.Add(attrPointCloudData->points()->Vertice(i));
+
+            m_propertyCornerMin.setValue(bndBox.CornerMin());
+            m_propertyCornerMax.setValue(bndBox.CornerMax());
+        }
+
+        for (Property* property : this->properties())
+            property->setUserReadOnly(true);
+    }
+
+    PropertyInt m_propertyPointCount{ this, textId("PointCount") };
+    PropertyBool m_propertyHasColors{ this, textId("HasColors") };
+    PropertyOccPnt m_propertyCornerMin{ this, textId("CornerMin") };
+    PropertyOccPnt m_propertyCornerMax{ this, textId("CornerMax") };
+};
+
+bool PointCloud_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
+{
+    return GraphicsPointCloudObjectDriver::pointCloudSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
+}
+
+std::unique_ptr<PropertyGroupSignals>
+PointCloud_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};

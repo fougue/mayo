@@ -15,6 +15,7 @@
 #include "../io_ply/io_ply_reader.h"
 #include "../io_ply/io_ply_writer.h"
 #include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
 #include "app_module.h"
@@ -386,6 +387,7 @@ static void initGui(GuiApplication* guiApp)
     // Register Graphics entity drivers
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
 }
 
 // Initializes and runs Mayo application
@@ -447,6 +449,7 @@ static int runApp(QCoreApplication* qtApp)
     // Register providers to query document tree node properties
     appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
     appModule->addPropertiesProvider(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+    appModule->addPropertiesProvider(std::make_unique<PointCloud_DocumentTreeNodePropertiesProvider>());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
