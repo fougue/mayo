@@ -30,8 +30,11 @@ using FilePath = std_filesystem::path;
 
 // Exception-safe version of std::filesystem::file_size()
 inline uintmax_t filepathFileSize(const FilePath& fp) {
-    std::error_code ec;
-    return std_filesystem::file_size(fp, ec);
+    try {
+        return std_filesystem::file_size(fp);
+    } catch (...) { // fs::file_size() might throw on non-existing files
+        return 0;
+    }
 }
 
 // Exception-safe version of std::filesystem::canonical()
