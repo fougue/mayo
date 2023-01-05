@@ -11,10 +11,12 @@
 
 namespace Mayo {
 
+// Pre-declarations
 class PointCloudData;
 DEFINE_STANDARD_HANDLE(PointCloudData, TDF_Attribute)
 using PointCloudDataPtr = Handle(PointCloudData);
 
+// Provides a label attribute to store point cloud data
 class PointCloudData : public TDF_Attribute {
 public:
     static const Standard_GUID& GetID();

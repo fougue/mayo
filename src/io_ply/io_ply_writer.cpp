@@ -6,8 +6,10 @@
 
 #include "io_ply_writer.h"
 
+#include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/label_data.h"
 #include "../base/io_system.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_access.h"
@@ -15,6 +17,7 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 
 #include <Poly_Triangulation.hxx>
 
@@ -90,20 +93,34 @@ bool PlyWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* pro
     // TODO Investigate task abort issue
 
     // Count number of faces for progress report
-    int faceCount = 0;
+    int count = 0;
     System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& docTreeNode) {
-        if (docTreeNode.isLeaf())
-            IMeshAccess_visitMeshes(docTreeNode, [&](const IMeshAccess&) { ++faceCount; });
+        if (docTreeNode.isLeaf()) {
+            IMeshAccess_visitMeshes(docTreeNode, [&](const IMeshAccess&) { ++count; });
+            if (findLabelDataFlags(docTreeNode.label()) & LabelData_HasPointCloudData)
+                ++count;
+        }
     });
 
     // Record face meshes
-    int iFace = 0;
+    int iCount = 0;
     System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& docTreeNode) {
         if (docTreeNode.isLeaf() && !progress->isAbortRequested()) {
             IMeshAccess_visitMeshes(docTreeNode, [&](const IMeshAccess& mesh) {
                 this->addMesh(mesh);
-                progress->setValue(MathUtils::toPercent(++iFace, 0, faceCount));
+                progress->setValue(MathUtils::toPercent(++iCount, 0, count));
             });
+        }
+    });
+
+    // Record point clouds
+    System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& docTreeNode) {
+        if (docTreeNode.isLeaf()
+                && (findLabelDataFlags(docTreeNode.label()) & LabelData_HasPointCloudData)
+                && !progress->isAbortRequested())
+        {
+            this->addPointCloud(CafUtils::findAttribute<PointCloudData>(docTreeNode.label()));
+            progress->setValue(MathUtils::toPercent(++iCount, 0, count));
         }
     });
 
@@ -254,22 +271,46 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
     }
 
     for (int i = 1; i <= triangulation->NbNodes(); ++i) {
-        const gp_Pnt node = triangulation->Node(i).Transformed(mesh.location());
-        const Vertex vertex{ float(node.X()), float(node.Y()), float(node.Z()) };
+        const Vertex vertex = PlyWriter::toVertex(triangulation->Node(i).Transformed(mesh.location()));
         m_vecNode.push_back(std::move(vertex));
     }
 
     if (m_params.writeColors) {
-        // Helper color conversion function
-        auto fnColor = [](const Quantity_Color& c) -> Color {
-            return { uint8_t(c.Red() * 255), uint8_t(c.Green() * 255), uint8_t(c.Blue() * 255) };
-        };
         for (int i = 0; i < triangulation->NbNodes(); ++i) {
             const std::optional<Quantity_Color> nodeColor = mesh.nodeColor(i);
             const Quantity_Color& defaultNodeColor = m_params.defaultColor.GetRGB();
-            m_vecNodeColor.push_back(fnColor(nodeColor ? nodeColor.value() : defaultNodeColor));
+            m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor ? nodeColor.value() : defaultNodeColor));
         }
     }
+}
+
+void PlyWriter::addPointCloud(const PointCloudDataPtr& pntCloud)
+{
+    const Handle(Graphic3d_ArrayOfPoints)& points = pntCloud->points();
+    const int pntCount = points->VertexNumber();
+    for (int i = 1; i <= pntCount; ++i) {
+        const Vertex vertex = PlyWriter::toVertex(points->Vertice(i));
+        m_vecNode.push_back(std::move(vertex));
+    }
+
+    if (m_params.writeColors) {
+        const bool hasColors = points->HasVertexColors();
+        for (int i = 1; i <= pntCount; ++i) {
+            const Quantity_Color pntColor = hasColors ? points->VertexColor(i) : m_params.defaultColor.GetRGB();
+            m_vecNodeColor.push_back(PlyWriter::toColor(pntColor));
+        }
+    }
+}
+
+PlyWriter::Vertex PlyWriter::toVertex(const gp_Pnt& pnt)
+{
+    return Vertex{ float(pnt.X()), float(pnt.Y()), float(pnt.Z()) };
+}
+
+PlyWriter::Color PlyWriter::toColor(const Quantity_Color& c)
+{
+    const Quantity_Color cc = TKernelUtils::toLinearRgbColor(c);
+    return { uint8_t(cc.Red() * 255), uint8_t(cc.Green() * 255), uint8_t(cc.Blue() * 255) };
 }
 
 Span<const Format> PlyFactoryWriter::formats() const

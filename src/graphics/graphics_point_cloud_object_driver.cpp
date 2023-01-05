@@ -6,13 +6,9 @@
 
 #include "graphics_point_cloud_object_driver.h"
 
-#include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/label_data.h"
 #include "../base/point_cloud_data.h"
-#include "../base/property_builtins.h"
-#include "graphics_utils.h"
 
 #include <AIS_PointCloud.hxx>
 
@@ -33,7 +29,6 @@ GraphicsObjectPtr GraphicsPointCloudObjectDriver::createObject(const TDF_Label& 
         auto attrPointCloudData = CafUtils::findAttribute<PointCloudData>(label);
         auto object = new AIS_PointCloud;
         object->SetPoints(attrPointCloudData->points());
-        object->SetMaterial(Graphic3d_NameOfMaterial_Plastered);
         object->SetOwner(this);
         return object;
     }
