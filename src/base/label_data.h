@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "span.h"
-
 class TDF_Label;
 
 namespace Mayo {
