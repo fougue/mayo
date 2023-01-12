@@ -86,12 +86,20 @@ Mayo supports also multiple 3D viewer navigation styles to mimic common CAD appl
 
 ## :clapper: Gallery
 
-<img src="doc/screencast_cli.gif"/>
-  
+_Easy to use command-line utility for batch conversion of CAD files_
+<img src="doc/screencast_cli.gif"/> 
+
+_Import of glTF file with textures_
 <img src="doc/screenshot_2.png"/>
 
+_Import of STEP file with many parts_
 <img src="doc/screenshot_3.png"/>
 
+_Import of PLY file defining point cloud_
+<img src="doc/screenshot_6.png"/>
+
+_Options dialog with import/export configuration per CAD format_
 <img src="doc/screenshot_4.png"/>
 
+_Home page with quick access to recent files_
 <img src="doc/screenshot_5.png"/>
