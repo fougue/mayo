@@ -546,13 +546,23 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
             }
 
             if (!docModelTree.nodeIsRoot(id)) {
-                Handle_AIS_ConnectedInteractive gfxInstance = new AIS_ConnectedInteractive;
-                gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
-                gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
-                gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
-                gfxInstance->SetOwner(gfxProduct->GetOwner());
-                gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
-                if (XCaf::isShapeReference(docModelTree.nodeData(docModelTree.nodeParent(id))))
+                const TDF_Label parentNodeLabel = docModelTree.nodeData(docModelTree.nodeParent(id));
+                if (XCaf::isShapeReference(parentNodeLabel) && m_document->xcaf().hasShapeColor(parentNodeLabel)) {
+                    // Parent node is a reference and it redefines color attribute, so the graphics
+                    // can't be shared with the product
+                    auto gfxObject = m_guiApp->createGraphicsObject(parentNodeLabel);
+                    gfxEntity.vecObject.push_back(gfxObject);
+                }
+                else {
+                    auto gfxInstance = new AIS_ConnectedInteractive;
+                    gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
+                    gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
+                    gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
+                    gfxInstance->SetOwner(gfxProduct->GetOwner());
+                    gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
+                }
+
+                if (XCaf::isShapeReference(parentNodeLabel))
                     id = docModelTree.nodeParent(id);
             }
             else {
