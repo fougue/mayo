@@ -31,8 +31,11 @@ public:
     {
         const DocumentPtr& doc = treeNode.document();
         const TDF_Label labelNode = treeNode.label();
-        if (doc->xcaf().isShapeSubOf(labelNode, face))
-            m_faceColor = findShapeColor(doc, doc->xcaf().findShapeLabel(face));
+        if (doc->xcaf().isShapeSubOf(labelNode, face)) {
+            const TDF_Label shapeLabel = doc->xcaf().findShapeLabel(face);
+            if (!shapeLabel.IsNull())
+                m_faceColor = findShapeColor(doc, shapeLabel);
+        }
 
         if (!m_faceColor)
             m_faceColor = findShapeColor(doc, labelNode);

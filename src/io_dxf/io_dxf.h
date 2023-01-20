@@ -7,6 +7,8 @@
 #pragma once
 
 #include "../base/io_reader.h"
+#include "../base/io_single_format_factory.h"
+
 #include <TopoDS_Shape.hxx>
 #include <unordered_map>
 #include <string>
@@ -45,12 +47,8 @@ private:
     Parameters m_params;
 };
 
-class DxfFactoryReader : public FactoryReader {
-public:
-    Span<const Format> formats() const override;
-    std::unique_ptr<Reader> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
-};
+// Provides factory to create DxfReader objects
+class DxfFactoryReader : public SingleFormatFactoryReader<Format_DXF, DxfReader> {};
 
 } // namespace IO
 } // namespace Mayo

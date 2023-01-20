@@ -313,27 +313,5 @@ PlyWriter::Color PlyWriter::toColor(const Quantity_Color& c)
     return { uint8_t(cc.Red() * 255), uint8_t(cc.Green() * 255), uint8_t(cc.Blue() * 255) };
 }
 
-Span<const Format> PlyFactoryWriter::formats() const
-{
-    static const Format arrayFormat[] = { Format_PLY };
-    return arrayFormat;
-}
-
-std::unique_ptr<Writer> PlyFactoryWriter::create(Format format) const
-{
-    if (format == Format_PLY)
-        return std::make_unique<PlyWriter>();
-
-    return {};
-}
-
-std::unique_ptr<PropertyGroup> PlyFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
-{
-    if (format == Format_PLY)
-        return PlyWriter::createProperties(parentGroup);
-
-    return {};
-}
-
 } // namespace IO
 } // namespace Mayo

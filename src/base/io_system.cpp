@@ -597,6 +597,12 @@ Format probeFormat_PLY(const System::FormatProbeInput& input)
     return matchRegExp(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
 }
 
+Format probeFormat_OFF(const System::FormatProbeInput& input)
+{
+    const std::regex rx{ R"(^\s*[CN4]?OFF\s+)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OFF : Format_Unknown;
+}
+
 void addPredefinedFormatProbes(System* system)
 {
     if (!system)
@@ -608,6 +614,7 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_STL);
     system->addFormatProbe(probeFormat_OBJ);
     system->addFormatProbe(probeFormat_PLY);
+    system->addFormatProbe(probeFormat_OFF);
 }
 
 } // namespace IO

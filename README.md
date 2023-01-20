@@ -60,6 +60,7 @@ VRML      | :x:                | :white_check_mark: | v2.0 UTF8
 STL       | :white_check_mark: | :white_check_mark: | ASCII/binary
 AMF       | :x:                | :white_check_mark: | v1.2 Text/ZIP
 PLY       | :white_check_mark: | :white_check_mark: | ASCII/binary
+OFF       | :white_check_mark: | :white_check_mark: |
 Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
