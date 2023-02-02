@@ -148,12 +148,13 @@ MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circ
       m_gfxText(new AIS_TextLabel)
 {
     m_gfxText->SetPosition(m_circle.Location());
-    if (circle.isArc) {
+    if (circle.isArc)
         m_gfxCircle = new AIS_Circle(new Geom_Circle(m_circle));
-        m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
-    }
 
     BaseMeasureDisplay::applyGraphicsDefaults(this);
+    // BEWARE LineAspect() is created indirectly by SetColor() call in applyGraphicsDefaults() function
+    if (m_gfxCircle)
+        m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 }
 
 void MeasureDisplayCircleCenter::update(const MeasureDisplayConfig& config)
@@ -194,6 +195,7 @@ MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& 
     m_gfxDiameterText->SetPosition(m_circle.Location());
 
     BaseMeasureDisplay::applyGraphicsDefaults(this);
+    // BEWARE LineAspect() is created indirectly by SetColor() call in applyGraphicsDefaults() function
     m_gfxCircle->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 }
 

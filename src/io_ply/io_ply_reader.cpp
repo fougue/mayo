@@ -237,24 +237,5 @@ TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progres
     return entityLabel;
 }
 
-Span<const Format> PlyFactoryReader::formats() const
-{
-    static const Format arrayFormat[] = { Format_PLY };
-    return arrayFormat;
-}
-
-std::unique_ptr<Reader> PlyFactoryReader::create(Format format) const
-{
-    if (format == Format_PLY)
-        return std::make_unique<PlyReader>();
-
-    return {};
-}
-
-std::unique_ptr<PropertyGroup> PlyFactoryReader::createProperties(Format, PropertyGroup*) const
-{
-    return {};
-}
-
 } // namespace IO
 } // namespace Mayo

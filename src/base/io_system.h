@@ -211,6 +211,7 @@ Format probeFormat_OCCBREP(const System::FormatProbeInput& input);
 Format probeFormat_STL(const System::FormatProbeInput& input);
 Format probeFormat_OBJ(const System::FormatProbeInput& input);
 Format probeFormat_PLY(const System::FormatProbeInput& input);
+Format probeFormat_OFF(const System::FormatProbeInput& input);
 void addPredefinedFormatProbes(System* system);
 
 } // namespace IO

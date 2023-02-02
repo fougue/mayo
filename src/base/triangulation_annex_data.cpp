@@ -38,6 +38,14 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(
     return data;
 }
 
+TriangulationAnnexDataPtr TriangulationAnnexData::Set(
+        const TDF_Label& label, std::vector<Quantity_Color>&& vecNodeColor)
+{
+    TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
+    data->m_vecNodeColor = std::move(vecNodeColor);
+    return data;
+}
+
 const Standard_GUID& TriangulationAnnexData::ID() const
 {
     return TriangulationAnnexData::GetID();

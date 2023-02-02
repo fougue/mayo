@@ -270,28 +270,6 @@ void DxfReader::applyProperties(const PropertyGroup* group)
     }
 }
 
-Span<const Format> DxfFactoryReader::formats() const
-{
-    static const Format arrayFormat[] = { Format_DXF };
-    return arrayFormat;
-}
-
-std::unique_ptr<Reader> DxfFactoryReader::create(Format format) const
-{
-    if (format == Format_DXF)
-        return std::make_unique<DxfReader>();
-
-    return {};
-}
-
-std::unique_ptr<PropertyGroup> DxfFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
-{
-    if (format == Format_DXF)
-        return DxfReader::createProperties(parentGroup);
-
-    return {};
-}
-
 void DxfReader::Internal::get_line()
 {
     CDxfRead::get_line();

@@ -23,6 +23,7 @@ public:
     static const Standard_GUID& GetID();
     static TriangulationAnnexDataPtr Set(const TDF_Label& label);
     static TriangulationAnnexDataPtr Set(const TDF_Label& label, Span<const Quantity_Color> spanNodeColor);
+    static TriangulationAnnexDataPtr Set(const TDF_Label& label, std::vector<Quantity_Color>&& vecNodeColor);
 
     Span<const Quantity_Color> nodeColors() const { return m_vecNodeColor; }
 
