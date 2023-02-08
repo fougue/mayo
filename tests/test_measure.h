@@ -25,6 +25,8 @@ private slots:
 
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
+
+    void BRepLength_PolygonEdge_test();
 };
 
 } // namespace Mayo

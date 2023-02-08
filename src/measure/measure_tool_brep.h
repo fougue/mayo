@@ -30,6 +30,7 @@ public:
     static MeasureCircle brepCircle(const TopoDS_Shape& shape);
     static MeasureMinDistance brepMinDistance(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
     static MeasureAngle brepAngle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
+    static QuantityLength brepLength(const TopoDS_Shape& shape);
 };
 
 } // namespace Mayo

@@ -10,6 +10,7 @@
 #include "../src/base/unit_system.h"
 #include "../src/measure/measure_tool_brep.h"
 
+#include <BRep_Builder.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
@@ -125,6 +126,21 @@ void TestMeasure::BRepAngle_TwoLinesParallelError_test()
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeEdge(gp_Lin(gp::Origin(), gp::DX()));
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeEdge(gp_Lin({ 0, 5, 5 }, gp::DX()));
     QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepAngle(shape1, shape2), IMeasureError);
+}
+
+void TestMeasure::BRepLength_PolygonEdge_test()
+{
+    TColgp_Array1OfPnt points(1, 5);
+    points.ChangeValue(1) = gp::Origin();
+    points.ChangeValue(2) = gp_Pnt{0, 10, 0};
+    points.ChangeValue(3) = gp_Pnt{0, 10, 5};
+    points.ChangeValue(4) = gp_Pnt{7, 10, 5};
+    points.ChangeValue(5) = gp_Pnt{7, 12, 5};
+    TopoDS_Edge edge;
+    BRep_Builder builder;
+    builder.MakeEdge(edge, new Poly_Polygon3D(points));
+    const QuantityLength len = MeasureToolBRep::brepLength(edge);
+    QCOMPARE(UnitSystem::millimeters(len).value, 24.);
 }
 
 } // namespace Mayo

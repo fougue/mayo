@@ -46,6 +46,7 @@ enum class ErrorCode {
     NotVertex,
     NotCircularEdge,
     NotBRepShape,
+    NotGeometricOrPolygonEdge,
     MinDistanceFailure,
     NotAllEdges,
     NotLinearEdge,
@@ -66,6 +67,8 @@ public:
             return textIdTr("Entity must be a circular edge");
         case ErrorCode::NotBRepShape:
             return textIdTr("Entity must be a shape(BREP)");
+        case ErrorCode::NotGeometricOrPolygonEdge:
+            return textIdTr("Entity must be a geometric or polygon edge");
         case ErrorCode::MinDistanceFailure:
             return textIdTr("Computation of minimum distance failed");
         case ErrorCode::NotAllEdges:
@@ -161,11 +164,7 @@ MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const Graphi
 
 QuantityLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
 {
-    const TopoDS_Shape shape = getShape(owner);
-    throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
-    const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
-    const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
-    return len * Quantity_Millimeter;
+    return brepLength(getShape(owner));
 }
 
 QuantityArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
@@ -315,6 +314,30 @@ MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS
     angleResult.value = vec1.Angle(vec2) * Quantity_Radian;
 
     return angleResult;
+}
+
+QuantityLength MeasureToolBRep::brepLength(const TopoDS_Shape& shape)
+{
+    throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
+    const TopoDS_Edge& edge = TopoDS::Edge(shape);
+    if (BRep_Tool::IsGeometric(edge)) {
+        const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
+        const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
+        return len * Quantity_Millimeter;
+    }
+    else {
+        TopLoc_Location loc;
+        const Handle(Poly_Polygon3D)& polyline = BRep_Tool::Polygon3D(edge, loc);
+        throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull());
+        double len = 0.;
+        for (int i = 2; i <= polyline->NbNodes(); ++i) {
+            const gp_Pnt& pnt1 = polyline->Nodes().Value(i - 1);
+            const gp_Pnt& pnt2 = polyline->Nodes().Value(i);
+            len += pnt1.Distance(pnt2);
+        }
+
+        return len * Quantity_Millimeter;
+    }
 }
 
 } // namespace Mayo
