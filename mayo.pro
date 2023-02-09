@@ -180,6 +180,9 @@ minOpenCascadeVersion(7, 4, 0) {
 }
 # -- VRML support
 LIBS += -lTKVRML
+!minOpenCascadeVersion(7, 7, 0) {
+    SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
+}
 
 # gmio
 isEmpty(GMIO_ROOT) {

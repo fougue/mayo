@@ -12,7 +12,7 @@
 #include "io_occ_iges.h"
 #include "io_occ_step.h"
 #include "io_occ_stl.h"
-#include "io_occ_vrml.h"
+#include "io_occ_vrml_writer.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include "io_occ_gltf_reader.h"
@@ -27,6 +27,10 @@
 #  include "io_occ_obj_writer.h"
 #endif
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
+#  include "io_occ_vrml_reader.h"
+#endif
+
 namespace Mayo {
 namespace IO {
 
@@ -38,6 +42,9 @@ Span<const Format> OccFactoryReader::formats() const
         Format_STEP, Format_IGES, Format_OCCBREP, Format_STL
     #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
         , Format_GLTF, Format_OBJ
+    #endif
+    #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
+        , Format_VRML
     #endif
     };
     return arrayFormat;
@@ -61,6 +68,11 @@ std::unique_ptr<Reader> OccFactoryReader::create(Format format) const
         return std::make_unique<OccObjReader>();
 #endif
 
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
+    if (format == Format_VRML)
+        return std::make_unique<OccVrmlReader>();
+#endif
+
     return {};
 }
 
@@ -76,6 +88,11 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
         return OccGltfReader::createProperties(parentGroup);
     if (format == Format_OBJ)
         return OccObjReader::createProperties(parentGroup);
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 7, 0)
+    if (format == Format_VRML)
+        return OccVrmlReader::createProperties(parentGroup);
 #endif
 
     return {};
