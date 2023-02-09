@@ -60,7 +60,8 @@ struct BRepUtils {
     static void computeMesh(
             const TopoDS_Shape& shape,
             const OccBRepMeshParameters& params,
-            TaskProgress* progress = nullptr);
+            TaskProgress* progress = nullptr
+    );
 };
 
 

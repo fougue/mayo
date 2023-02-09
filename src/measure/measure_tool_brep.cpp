@@ -7,6 +7,7 @@
 #include "measure_tool_brep.h"
 
 #include "../base/geom_utils.h"
+#include "../base/math_utils.h"
 #include "../base/text_id.h"
 #include "../graphics/graphics_shape_object_driver.h"
 
@@ -183,15 +184,9 @@ gp_Pnt MeasureToolBRep::brepVertexPosition(const TopoDS_Shape& shape)
     return BRep_Tool::Pnt(TopoDS::Vertex(shape));
 }
 
-MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
+MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& edge)
 {
-    auto fnThrowErrorIf = [](bool cond) {
-        throwErrorIf<ErrorCode::NotCircularEdge>(cond);
-    };
-
-    fnThrowErrorIf(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
-
-    const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
+    const BRepAdaptor_Curve curve(edge);
     std::optional<gp_Circ> circle;
     if (curve.GetType() == GeomAbs_Circle) {
         circle = curve.Circle();
@@ -205,13 +200,13 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
         // Try to create a circle from 3 sample points on the curve
         {
             const GCPnts_QuasiUniformAbscissa pnts(curve, 4); // More points to avoid confusion
-            fnThrowErrorIf(!pnts.IsDone() || pnts.NbPoints() < 3);
+            throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone() || pnts.NbPoints() < 3);
             const GC_MakeCircle makeCirc(
                         GeomUtils::d0(curve, pnts.Parameter(1)),
                         GeomUtils::d0(curve, pnts.Parameter(2)),
                         GeomUtils::d0(curve, pnts.Parameter(3))
                         );
-            fnThrowErrorIf(!makeCirc.IsDone());
+            throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
             circle = makeCirc.Value()->Circ();
         }
 
@@ -219,21 +214,60 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
         //     dist(pntSample, pntCircleCenter) - circleRadius < tolerance
         {
             const GCPnts_QuasiUniformAbscissa pnts(curve, 64);
-            fnThrowErrorIf(!pnts.IsDone());
+            throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone());
             for (int i = 1; i <= pnts.NbPoints(); ++i) {
                 const gp_Pnt pntSample = GeomUtils::d0(curve, pnts.Parameter(i));
                 const double dist = pntSample.Distance(circle->Location());
-                fnThrowErrorIf(std::abs(dist - circle->Radius()) > 1e-4);
+                throwErrorIf<ErrorCode::NotCircularEdge>(std::abs(dist - circle->Radius()) > 1e-4);
             }
         }
     }
 
-    fnThrowErrorIf(!circle);
+    throwErrorIf<ErrorCode::NotCircularEdge>(!circle);
     MeasureCircle result;
     result.pntAnchor = GeomUtils::d0(curve, curve.FirstParameter());
     result.isArc = !curve.IsClosed();
     result.value = circle.value();
     return result;
+}
+
+MeasureCircle MeasureToolBRep::brepCircleFromPolygonEdge(const TopoDS_Edge& edge)
+{
+    TopLoc_Location loc;
+    const Handle(Poly_Polygon3D)& polyline = BRep_Tool::Polygon3D(edge, loc);
+    throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull() || polyline->NbNodes() < 7);
+    // Try to create a circle from 3 sample points
+    const GC_MakeCircle makeCirc(
+                polyline->Nodes().First(),
+                polyline->Nodes().Value(1 + polyline->NbNodes() / 3),
+                polyline->Nodes().Value(1 + 2 * polyline->NbNodes() / 3)
+                );
+    throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
+    const gp_Circ circle = makeCirc.Value()->Circ();
+
+    // Check for all points that:
+    //     dist(pnt, pntCircleCenter) - circleRadius < tolerance
+    const double tol = !MathUtils::fuzzyIsNull(polyline->Deflection()) ? 1.5 * polyline->Deflection() : 1e-4;
+    for (const gp_Pnt& pnt : polyline->Nodes()) {
+        const double dist = pnt.Distance(circle.Location());
+        throwErrorIf<ErrorCode::NotCircularEdge>(std::abs(dist - circle.Radius()) > tol);
+    }
+
+    MeasureCircle result;
+    result.pntAnchor = polyline->Nodes().First().Transformed(loc);
+    result.isArc = !polyline->Nodes().First().IsEqual(polyline->Nodes().Last(), Precision::Confusion());
+    result.value = circle;
+    return result;
+}
+
+MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
+{
+    throwErrorIf<ErrorCode::NotCircularEdge>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
+    const TopoDS_Edge& edge = TopoDS::Edge(shape);
+    if (BRep_Tool::IsGeometric(edge))
+        return MeasureToolBRep::brepCircleFromGeometricEdge(edge);
+    else
+        return MeasureToolBRep::brepCircleFromPolygonEdge(edge);
 }
 
 MeasureMinDistance MeasureToolBRep::brepMinDistance(

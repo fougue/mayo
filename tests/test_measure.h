@@ -19,6 +19,7 @@ private slots:
     void BRepCircle_Regular_test();
     void BRepCircle_Ellipse_test();
     void BRepCircle_PseudoCircle_test();
+    void BRepCircle_PolygonEdge_test();
 
     void BRepMinDistance_TwoPoints_test();
     void BRepMinDistance_TwoBoxes_test();
