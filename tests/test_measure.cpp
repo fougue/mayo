@@ -10,6 +10,7 @@
 #include "../src/base/unit_system.h"
 #include "../src/measure/measure_tool_brep.h"
 
+#include <BRep_Builder.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
@@ -22,6 +23,7 @@
 #include <TopoDS_Vertex.hxx>
 
 #include <QtCore/QtDebug>
+#include <cmath>
 
 namespace Mayo {
 
@@ -32,6 +34,14 @@ bool compareCircle(const gp_Circ& lhs, const gp_Circ& rhs, double tolerance = Pr
     return lhs.Location().IsEqual(rhs.Location(), tolerance)
             && lhs.Axis().Direction().IsEqual(rhs.Axis().Direction(), tolerance)
             && std::abs(lhs.Radius() - rhs.Radius()) < tolerance;
+}
+
+TopoDS_Edge makePolygonEdge(const TColgp_Array1OfPnt& points)
+{
+    TopoDS_Edge edge;
+    BRep_Builder builder;
+    builder.MakeEdge(edge, new Poly_Polygon3D(points));
+    return edge;
 }
 
 } // namespace
@@ -86,6 +96,27 @@ void TestMeasure::BRepCircle_PseudoCircle_test()
     QVERIFY(compareCircle(circleRes.value, makeCircle.Value()->Circ(), Precision::Approximation()));
 }
 
+void TestMeasure::BRepCircle_PolygonEdge_test()
+{
+    const gp_Pnt pntCenter{ 41.85, 1547.27, 45.89 };
+    const double radius = 25.48;
+    const int pntCount = 128;
+    TColgp_Array1OfPnt points(1, pntCount);
+    for (int i = 0; i < pntCount; ++i) {
+        const double pi = 3.14159265358979323846;
+        const double a = 1.5 * pi * (static_cast<double>(i) / static_cast<double>(pntCount));
+        const double x = radius * std::cos(a);
+        const double y = radius * std::sin(a);
+        points.ChangeValue(i + 1) = gp_Pnt{ pntCenter.X() + x, pntCenter.Y() + y, pntCenter.Z() };
+    }
+
+    const TopoDS_Edge edge = makePolygonEdge(points);
+    const MeasureCircle circle = MeasureToolBRep::brepCircle(edge);
+    const GC_MakeCircle makeGeomCircle(gp_Ax2(pntCenter, gp::DZ()), radius);
+    QVERIFY(compareCircle(circle.value, makeGeomCircle.Value()->Circ()));
+    QVERIFY(circle.isArc);
+}
+
 void TestMeasure::BRepMinDistance_TwoPoints_test()
 {
     const gp_Pnt pnt1{ 41.85, 1547.27, 45.89 };
@@ -125,6 +156,19 @@ void TestMeasure::BRepAngle_TwoLinesParallelError_test()
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeEdge(gp_Lin(gp::Origin(), gp::DX()));
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeEdge(gp_Lin({ 0, 5, 5 }, gp::DX()));
     QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepAngle(shape1, shape2), IMeasureError);
+}
+
+void TestMeasure::BRepLength_PolygonEdge_test()
+{
+    TColgp_Array1OfPnt points(1, 5);
+    points.ChangeValue(1) = gp::Origin();
+    points.ChangeValue(2) = gp_Pnt{0, 10, 0};
+    points.ChangeValue(3) = gp_Pnt{0, 10, 5};
+    points.ChangeValue(4) = gp_Pnt{7, 10, 5};
+    points.ChangeValue(5) = gp_Pnt{7, 12, 5};
+    const TopoDS_Edge edge = makePolygonEdge(points);
+    const QuantityLength len = MeasureToolBRep::brepLength(edge);
+    QCOMPARE(UnitSystem::millimeters(len).value, 24.);
 }
 
 } // namespace Mayo

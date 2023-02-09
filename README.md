@@ -56,7 +56,7 @@ BREP      | :white_check_mark: | :white_check_mark: | OpenCascade format
 DXF       | :white_check_mark: | :x:                |
 OBJ       | :white_check_mark: | :white_check_mark: |
 glTF      | :white_check_mark: | :white_check_mark: | 1.0, 2.0 and GLB
-VRML      | :x:                | :white_check_mark: | v2.0 UTF8
+VRML      | :white_check_mark: | :white_check_mark: | v2.0 UTF8
 STL       | :white_check_mark: | :white_check_mark: | ASCII/binary
 AMF       | :x:                | :white_check_mark: | v1.2 Text/ZIP
 PLY       | :white_check_mark: | :white_check_mark: | ASCII/binary

@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "io_occ_vrml.h"
+#include "io_occ_vrml_writer.h"
 
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
