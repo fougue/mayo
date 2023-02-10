@@ -12,6 +12,7 @@
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
@@ -24,6 +25,8 @@
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
+
+#include <cmath>
 
 namespace Mayo {
 
@@ -105,6 +108,43 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
+}
+
+void GuiDocument::setDevicePixelRatio(double ratio)
+{
+    if (MathUtils::fuzzyEqual(m_devicePixelRatio, ratio))
+        return;
+
+    m_devicePixelRatio = ratio;
+    switch (m_viewTrihedronMode) {
+    case ViewTrihedronMode::None: {
+        break;
+    }
+    case ViewTrihedronMode::V3dViewZBuffer: {
+        this->v3dViewTrihedronDisplay(m_viewTrihedronCorner);
+        break;
+    }
+    case ViewTrihedronMode::AisViewCube: {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        auto viewCube = Handle(AIS_ViewCube)::DownCast(m_aisViewCube);
+        if (viewCube) {
+            viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
+            viewCube->SetFontHeight(12 * m_devicePixelRatio);
+            const int xyOffset = int(std::round(85 * m_devicePixelRatio));
+            viewCube->SetTransformPersistence(
+                        new Graphic3d_TransformPers(
+                            Graphic3d_TMF_TriedronPers,
+                            m_viewTrihedronCorner,
+                            Graphic3d_Vec2i(xyOffset, xyOffset)
+                            )
+            );
+            viewCube->Redisplay(true/*allModes*/);
+#endif
+        }
+
+        break;
+    }
+    } // endswitch
 }
 
 GuiDocument::~GuiDocument()
@@ -320,7 +360,7 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
         return false;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
+    auto viewCubeOwner = Handle(AIS_ViewCubeOwner)::DownCast(gfxOwner);
     if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
         return true;
@@ -630,7 +670,7 @@ const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId en
 
 void GuiDocument::v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner)
 {
-    constexpr double scale = 0.075;
+    const double scale = 0.075 * m_devicePixelRatio;
     m_v3dView->TriedronDisplay(corner, Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
 }
 

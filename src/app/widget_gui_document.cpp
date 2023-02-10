@@ -425,7 +425,7 @@ void WidgetGuiDocument::layoutViewControls()
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();
-            const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize();
+            const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize() / m_guiDoc->devicePixelRatio();
             const int ctrlHeight = btnSize;
             const int ctrlXOffset = margin;
             switch (m_guiDoc->viewTrihedronCorner()) {

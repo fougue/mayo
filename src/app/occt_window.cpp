@@ -1,9 +1,7 @@
-#include <Standard_Version.hxx>
-#if OCC_VERSION_HEX <= 0x070400
-#include "occt_window_740.h"
+#include "occt_window.h"
 
 // --
-// -- Copy from $OCC7.4.0/samples/qt/Common/src/OcctWindow.h
+// -- Copy from $OCC7.5.0/samples/qt/Common/src/OcctWindow.h
 // --
 
 IMPLEMENT_STANDARD_RTTIEXT(OcctWindow,Aspect_Window)
@@ -17,10 +15,11 @@ OcctWindow::OcctWindow ( QWidget* theWidget, const Quantity_NameOfColor theBackC
   myWidget( theWidget )
 {
   SetBackground (theBackColor);
-  myXLeft   = myWidget->rect().left();
-  myYTop    = myWidget->rect().top();
-  myXRight  = myWidget->rect().right();
-  myYBottom = myWidget->rect().bottom();
+  const auto scale = myWidget->devicePixelRatioF();
+  myXLeft   = qRound(scale * myWidget->rect().left());
+  myYTop    = qRound(scale * myWidget->rect().top());
+  myXRight  = qRound(scale * myWidget->rect().right());
+  myYBottom = qRound(scale * myWidget->rect().bottom());
 }
 
 // =======================================================================
@@ -87,17 +86,22 @@ void OcctWindow::Unmap() const
 // function : DoResize
 // purpose  :
 // =======================================================================
+#if OCC_VERSION_HEX >= 0x070500
+Aspect_TypeOfResize OcctWindow::DoResize()
+#else
 Aspect_TypeOfResize OcctWindow::DoResize() const
+#endif
 {
   int                 aMask = 0;
   Aspect_TypeOfResize aMode = Aspect_TOR_UNKNOWN;
 
+  const auto scale = myWidget->devicePixelRatioF();
   if ( !myWidget->isMinimized() )
   {
-    if ( Abs ( myWidget->rect().left()   - myXLeft   ) > 2 ) aMask |= 1;
-    if ( Abs ( myWidget->rect().right()  - myXRight  ) > 2 ) aMask |= 2;
-    if ( Abs ( myWidget->rect().top()    - myYTop    ) > 2 ) aMask |= 4;
-    if ( Abs ( myWidget->rect().bottom() - myYBottom ) > 2 ) aMask |= 8;
+    if ( Abs ( scale * myWidget->rect().left()   - myXLeft   ) > 2 ) aMask |= 1;
+    if ( Abs ( scale * myWidget->rect().right()  - myXRight  ) > 2 ) aMask |= 2;
+    if ( Abs ( scale * myWidget->rect().top()    - myYTop    ) > 2 ) aMask |= 4;
+    if ( Abs ( scale * myWidget->rect().bottom() - myYBottom ) > 2 ) aMask |= 8;
 
     switch ( aMask )
     {
@@ -132,10 +136,16 @@ Aspect_TypeOfResize OcctWindow::DoResize() const
         break;
     }  // end switch
 
-    *( ( Standard_Integer* )&myXLeft  ) = myWidget->rect().left();
-    *( ( Standard_Integer* )&myXRight ) = myWidget->rect().right();
-    *( ( Standard_Integer* )&myYTop   ) = myWidget->rect().top();
-    *( ( Standard_Integer* )&myYBottom) = myWidget->rect().bottom();
+#if OCC_VERSION_HEX >= 0x070500
+    OcctWindow* mutableThis = this;
+#else
+    OcctWindow* mutableThis = const_cast<OcctWindow*>(this);
+#endif
+
+    mutableThis->myXLeft   = qRound(scale * myWidget->rect().left());
+    mutableThis->myXRight  = qRound(scale * myWidget->rect().right());
+    mutableThis->myYTop    = qRound(scale * myWidget->rect().top());
+    mutableThis->myYBottom = qRound(scale * myWidget->rect().bottom());
   }
 
   return aMode;
@@ -158,8 +168,9 @@ Standard_Real OcctWindow::Ratio() const
 void OcctWindow::Size ( Standard_Integer& theWidth, Standard_Integer& theHeight ) const
 {
   QRect aRect = myWidget->rect();
-  theWidth  = aRect.right();
-  theHeight = aRect.bottom();
+  const auto scale = myWidget->devicePixelRatioF();
+  theWidth  = qRound(scale * aRect.width());
+  theHeight = qRound(scale * aRect.height());
 }
 
 // =======================================================================
@@ -169,10 +180,9 @@ void OcctWindow::Size ( Standard_Integer& theWidth, Standard_Integer& theHeight 
 void OcctWindow::Position ( Standard_Integer& theX1, Standard_Integer& theY1,
                             Standard_Integer& theX2, Standard_Integer& theY2 ) const
 {
-  theX1 = myWidget->rect().left();
-  theX2 = myWidget->rect().right();
-  theY1 = myWidget->rect().top();
-  theY2 = myWidget->rect().bottom();
+  const auto scale = myWidget->devicePixelRatioF();
+  theX1 = qRound(scale * myWidget->rect().left());
+  theX2 = qRound(scale * myWidget->rect().right());
+  theY1 = qRound(scale * myWidget->rect().top());
+  theY2 = qRound(scale * myWidget->rect().bottom());
 }
-
-#endif // OCC <= v7.4.0
