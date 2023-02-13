@@ -99,7 +99,7 @@ std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDis
     return BaseMeasureDisplay;
 }
 
-void BaseMeasureDisplay::adaptScale(const Handle(AIS_TextLabel)& gfxText, const MeasureDisplayConfig& config)
+void BaseMeasureDisplay::adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config)
 {
     static const Prs3d_TextAspect defaultTextAspect;
     gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);

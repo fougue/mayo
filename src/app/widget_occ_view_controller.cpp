@@ -279,8 +279,8 @@ void WidgetOccViewController::handleMouseButtonRelease(const QMouseEvent* event)
         case Qt::LeftButton: return Aspect_VKeyMouse_LeftButton;
         case Qt::RightButton: return Aspect_VKeyMouse_RightButton;
         case Qt::MiddleButton: return Aspect_VKeyMouse_MiddleButton;
+        default: return Aspect_VKeyMouse_UNKNOWN;
         }
-        return Aspect_VKeyMouse_UNKNOWN;
     };
 
     m_inputSequence.release(event->button());

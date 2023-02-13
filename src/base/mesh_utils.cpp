@@ -37,7 +37,7 @@ double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangula
 
     double volume = 0;
     // TODO Parallelize computation
-    for (const Poly_Triangle& tri : triangulation->Triangles()) {
+    for (const Poly_Triangle& tri : MeshUtils::triangles(triangulation)) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         volume += MeshUtils::triangleSignedVolume(
@@ -56,7 +56,7 @@ double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulati
 
     double area = 0;
     // TODO Parallelize computation
-    for (const Poly_Triangle& tri : triangulation->Triangles()) {
+    for (const Poly_Triangle& tri : MeshUtils::triangles(triangulation)) {
         int v1, v2, v3;
         tri.Get(v1, v2, v3);
         area += MeshUtils::triangleArea(
