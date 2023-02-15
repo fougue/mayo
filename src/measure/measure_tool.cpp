@@ -12,7 +12,6 @@ MeasureValue IMeasureTool_computeValue(
         const IMeasureTool& tool, MeasureType type, const GraphicsOwnerPtr& owner)
 {
     MeasureValue value;
-
     switch (type) {
     case MeasureType::VertexPosition:
         return tool.vertexPosition(owner);
@@ -23,9 +22,9 @@ MeasureValue IMeasureTool_computeValue(
         return tool.length(owner);
     case MeasureType::Area:
         return tool.area(owner);
+    default:
+        return value;
     } // endswitch
-
-    return value;
 }
 
 MeasureValue IMeasureTool_computeValue(
@@ -35,15 +34,14 @@ MeasureValue IMeasureTool_computeValue(
         const GraphicsOwnerPtr& owner2)
 {
     MeasureValue value;
-
     switch (type) {
     case MeasureType::MinDistance:
         return tool.minDistance(owner1, owner2);
     case MeasureType::Angle:
         return tool.angle(owner1, owner2);
+    default:
+        return value;
     } // endswitch
-
-    return value;
 }
 
 bool MeasureValue_isValid(const MeasureValue& value)

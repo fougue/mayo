@@ -30,6 +30,15 @@ struct MeshUtils {
     static void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n);
     static void allocateNormals(const Handle_Poly_Triangulation& triangulation);
 
+    static const Poly_Array1OfTriangle& triangles(const Handle_Poly_Triangulation& triangulation) {
+#if OCC_VERSION_HEX < 0x070600
+        return triangulation->Triangles();
+#else
+        // Note: Poly_Triangulation::Triangles() was deprecated starting from OpenCascade v7.6.0
+        return triangulation->InternalTriangles();
+#endif
+    }
+
     enum class Orientation {
         Unknown,
         Clockwise,

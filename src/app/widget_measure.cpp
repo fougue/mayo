@@ -240,6 +240,7 @@ MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
     cfg.areaUnit = WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex());
     cfg.doubleToStringOptions.locale = AppModule::get()->stdLocale();
     cfg.doubleToStringOptions.decimalCount = AppModule::get()->defaultTextOptions().unitDecimals;
+    cfg.devicePixelRatio = this->devicePixelRatioF();
     return cfg;
 }
 

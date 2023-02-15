@@ -14,6 +14,7 @@
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_Circle.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <Prs3d_TextAspect.hxx>
 
 #include <fmt/format.h>
 
@@ -98,11 +99,17 @@ std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDis
     return BaseMeasureDisplay;
 }
 
+void BaseMeasureDisplay::adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config)
+{
+    static const Prs3d_TextAspect defaultTextAspect;
+    gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);
+}
+
 void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 {
     for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i) {
         auto gfxObject = measureDisplay->graphicsObjectAt(i);
-        auto gfxText = Handle_AIS_TextLabel::DownCast(gfxObject);
+        auto gfxText = Handle(AIS_TextLabel)::DownCast(gfxObject);
         if (gfxText) {
             gfxText->SetDisplayType(Aspect_TODT_SUBTITLE);
             gfxText->SetColorSubTitle(Quantity_NOC_BLACK);
@@ -131,6 +138,7 @@ void MeasureDisplayVertex::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_pnt, config));
     m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_pnt, config)));
+    BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
 GraphicsObjectPtr MeasureDisplayVertex::graphicsObjectAt(int i) const
@@ -161,6 +169,7 @@ void MeasureDisplayCircleCenter::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_circle.Location(), config));
     m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_circle.Location(), config)));
+    BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
 int MeasureDisplayCircleCenter::graphicsObjectsCount() const
@@ -209,7 +218,7 @@ void MeasureDisplayCircleDiameter::update(const MeasureDisplayConfig& config)
     ));
 
     m_gfxDiameterText->SetText(to_OccExtString(fmt::format(MeasureDisplayI18N::textIdTr(" Ø{0}"), strDiameter)));
-
+    BaseMeasureDisplay::adaptScale(m_gfxDiameterText, config);
 }
 
 GraphicsObjectPtr MeasureDisplayCircleDiameter::graphicsObjectAt(int i) const
@@ -257,6 +266,7 @@ void MeasureDisplayMinDistance::update(const MeasureDisplayConfig& config)
                       BaseMeasureDisplay::text(m_dist.pnt2, config)
     ));
     m_gfxDistText->SetText(to_OccExtString(" " + strLength));
+    BaseMeasureDisplay::adaptScale(m_gfxDistText, config);
 }
 
 GraphicsObjectPtr MeasureDisplayMinDistance::graphicsObjectAt(int i) const
@@ -301,6 +311,7 @@ void MeasureDisplayAngle::update(const MeasureDisplayConfig& config)
     const auto strAngle = BaseMeasureDisplay::text(trAngle, config);
     this->setText(fmt::format(MeasureDisplayI18N::textIdTr("Angle: {0}{1}"), strAngle, trAngle.strUnit));
     m_gfxAngleText->SetText(to_OccExtString(" " + strAngle));
+    BaseMeasureDisplay::adaptScale(m_gfxAngleText, config);
 }
 
 int MeasureDisplayAngle::graphicsObjectsCount() const

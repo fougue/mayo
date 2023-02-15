@@ -127,9 +127,10 @@ Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureT
         static const GraphicsObjectSelectionMode modes[] = { AIS_Shape::SelectionMode(TopAbs_FACE) };
         return modes;
     }
+    default: {
+        return {};
+    }
     } // endswitch
-
-    return {};
 }
 
 bool MeasureToolBRep::supports(const GraphicsObjectPtr& object) const

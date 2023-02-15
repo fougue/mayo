@@ -6,6 +6,8 @@
 
 #include "graphics_mesh_data_source.h"
 
+#include "../base/mesh_utils.h"
+
 #include <Precision.hxx>
 #include <Standard_Type.hxx>
 #include <TColgp_SequenceOfXYZ.hxx>
@@ -29,7 +31,7 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const Handle_Poly_Triangulation& 
             m_nodeCoords->SetValue(i, 3, xyz.Z());
         }
 
-        const Poly_Array1OfTriangle& aSeq = m_mesh->Triangles();
+        const Poly_Array1OfTriangle& aSeq = MeshUtils::triangles(m_mesh);
         const int lenTriangles = aSeq.Length();
         m_elemNormals = new TColStd_HArray2OfReal(1, lenTriangles, 1, 3);
         m_elemNodes = new TColStd_HArray2OfInteger(1, lenTriangles, 1, 3);

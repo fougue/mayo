@@ -310,9 +310,9 @@ void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
             return QPoint(margin, ctrlRect.top() - panel->height() - margin);
         case Aspect_TOTP_RIGHT_LOWER:
             return QPoint(this->width() - panel->width(), ctrlRect.top() - panel->height() - margin);
+        default:
+            return QPoint(margin, ctrlRect.bottom() + margin);
         } // endswitch
-
-        return QPoint(margin, ctrlRect.bottom() + margin);
     };
 
     QWidget* widget = panel ? panel->parentWidget() : nullptr;
@@ -425,7 +425,7 @@ void WidgetGuiDocument::layoutViewControls()
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
             const int btnSize = m_btnFitAll->width();
-            const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize();
+            const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize() / m_guiDoc->devicePixelRatio();
             const int ctrlHeight = btnSize;
             const int ctrlXOffset = margin;
             switch (m_guiDoc->viewTrihedronCorner()) {
@@ -438,6 +438,8 @@ void WidgetGuiDocument::layoutViewControls()
             case Aspect_TOTP_RIGHT_LOWER:
                 return { this->width() - viewCubeBndSize + ctrlXOffset,
                          this->height() - viewCubeBndSize - margin - ctrlHeight };
+            default:
+                return { margin, margin };
             } // endswitch
         }
 

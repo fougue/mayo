@@ -36,7 +36,7 @@ GraphicsObjectPtr GraphicsPointCloudObjectDriver::createObject(const TDF_Label& 
     return {};
 }
 
-void GraphicsPointCloudObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const
+void GraphicsPointCloudObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value /*mode*/) const
 {
     this->throwIf_differentDriver(object);
 //    this->throwIf_invalidDisplayMode(mode);

@@ -28,6 +28,7 @@ struct MeasureDisplayConfig {
     AngleUnit angleUnit = AngleUnit::Degree;
     AreaUnit areaUnit = AreaUnit::SquareMillimeter;
     DoubleToStringOptions doubleToStringOptions;
+    double devicePixelRatio = 1.;
 };
 
 // Provides an interface to textual/graphics representation of a measure
@@ -63,6 +64,7 @@ protected:
     static std::string text(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static std::string text(double value, const MeasureDisplayConfig& config);
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
+    static void adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config);
 
     static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 

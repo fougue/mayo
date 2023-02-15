@@ -46,6 +46,13 @@ public:
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
 
+    // Gets/sets the ratio between physical pixels and device-independent pixels for the target window.
+    // This value is dependent on the screen the window is on, and may have to be updated when the
+    // target window is moved.
+    // Common values are 1.0(default) on normal displays and 2.0 on Apple "retina" displays
+    double devicePixelRatio() const { return m_devicePixelRatio; }
+    void setDevicePixelRatio(double ratio);
+
     // Executes callback 'fn' on all graphics objects associated to tree node 'nodeId'
     // This also includes all children(deep node traversal)
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
@@ -145,6 +152,7 @@ private:
     GraphicsScene m_gfxScene;
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
+    double m_devicePixelRatio = 1.;
 
     V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;

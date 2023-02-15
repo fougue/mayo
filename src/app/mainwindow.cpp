@@ -410,6 +410,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto appModule = AppModule::get();
     auto appProps = appModule->properties();
     auto widget = new WidgetGuiDocument(guiDoc);
+    guiDoc->setDevicePixelRatio(widget->devicePixelRatioF());
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
@@ -429,7 +430,8 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     //   * update highlighting
     //   * compute and display 3D mouse coordinates(by silent picking)
     widgetCtrl->signalMouseMoved.connectSlot([=](int xPos, int yPos) {
-        gfxScene->highlightAt(xPos, yPos, guiDoc->v3dView());
+        const double dpRatio = this->devicePixelRatioF();
+        gfxScene->highlightAt(xPos * dpRatio, yPos * dpRatio, guiDoc->v3dView());
         widget->view()->redraw();
         auto selector = gfxScene->mainSelector();
         selector->Pick(xPos, yPos, guiDoc->v3dView());

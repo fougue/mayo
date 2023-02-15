@@ -216,13 +216,13 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     auto fnUpdateProgress = [=]{
         const auto total = vertexCount + facetCount;
         const auto current = m_vecVertex.size() + m_vecFacet.size();
-        if (current % 100 || current >= total)
+        if (current % 100 || CppUtils::cmpGreaterEqual(current, total))
             progress->setValue(MathUtils::toPercent(current, 0, total));
     };
 
     // Consume vertices
     m_vecVertex.reserve(vertexCount);
-    while (!ifs.eof() && m_vecVertex.size() < vertexCount) {
+    while (!ifs.eof() && CppUtils::cmpLess(m_vecVertex.size(), vertexCount)) {
         getNonCommentLine(ifs, strLine);
         const auto arrayStrCoord = getWords<3>(strLine);
         if (hasEmptyString(arrayStrCoord))
@@ -246,11 +246,11 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_vecAllFacetIndex.reserve(facetCount * 3);
     m_vecFacet.reserve(facetCount);
     std::vector<std::string_view> vecWord;
-    while (!ifs.eof() && m_vecFacet.size() < facetCount) {
+    while (!ifs.eof() && CppUtils::cmpLess(m_vecFacet.size(), facetCount)) {
         getNonCommentLine(ifs, strLine);
         getWords(strLine, vecWord);
         const Facet facet = { int(m_vecAllFacetIndex.size()), strToNum<int>(vecWord.front()) };
-        if ((vecWord.size() + 1) < facet.vertexCount)
+        if (CppUtils::cmpLess((vecWord.size() + 1), facet.vertexCount))
             return fnError(OffReaderI18N::textIdTr("Inconsistent vertex count of face"));
 
         for (int i = 0; i < facet.vertexCount; ++i) {

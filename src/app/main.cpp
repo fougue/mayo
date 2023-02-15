@@ -557,6 +557,8 @@ int main(int argc, char* argv[])
             isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
     );
 
+    //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     // Handle unit tests
 #ifdef MAYO_WITH_TESTS
     if (fnArgsContainAnyOf({ "--runtests" }))
