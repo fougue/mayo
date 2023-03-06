@@ -149,11 +149,14 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
 
 void AppModuleProperties::retranslate()
 {
+    // Application
     this->language.setDescription(
                 textIdTr("Language used for the application. Change will take effect after application restart"));
     this->linkWithDocumentSelector.setDescription(
                 textIdTr("In case where multiple documents are opened, make sure the document displayed in "
                          "the 3D view corresponds to what is selected in the model tree"));
+
+    // Meshing
     this->meshingQuality.setDescription(
                 textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
     this->meshingChordalDeflection.setDescription(
@@ -167,8 +170,14 @@ void AppModuleProperties::retranslate()
                          "If activated, deflection used for the polygonalisation of each edge will be "
                          "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
                          "the maximum deflection of their edges."));
+
+    // Graphics
     this->navigationStyle.setDescription(
                 textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications"));
+    this->turnViewAngleIncrement.setDescription(
+                textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)"));
+
+    // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
                 textIdTr("Show or hide by default the trihedron centered at world origin. "
                          "This doesn't affect 3D view of currently opened documents"));
