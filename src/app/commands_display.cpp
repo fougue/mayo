@@ -8,9 +8,11 @@
 
 #include "../base/application.h"
 #include "../base/cpp_utils.h"
+#include "../base/unit_system.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_controller.h"
+#include "app_module.h"
 #include "qstring_conv.h"
 #include "theme.h"
 
@@ -277,6 +279,52 @@ void CommandZoomOutCurrentDocument::execute()
 }
 
 bool CommandZoomOutCurrentDocument::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0;
+}
+
+CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setText(Command::tr("Turn Counter Clockwise"));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
+    action->setShortcut(Qt::CTRL + Qt::Key_Left);
+    this->setAction(action);
+}
+
+void CommandTurnViewCounterClockWise::execute()
+{
+    const QuantityAngle increment = AppModule::get()->properties()->turnViewAngleIncrement.quantity();
+    auto ctrl = this->context()->v3dViewController(this->currentGuiDocument());
+    if (ctrl)
+        ctrl->turn(V3d_Z, -increment);
+}
+
+bool CommandTurnViewCounterClockWise::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0;
+}
+
+CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setText(Command::tr("Turn Clockwise"));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
+    action->setShortcut(Qt::CTRL + Qt::Key_Right);
+    this->setAction(action);
+}
+
+void CommandTurnViewClockWise::execute()
+{
+    const QuantityAngle increment = AppModule::get()->properties()->turnViewAngleIncrement.quantity();
+    auto ctrl = this->context()->v3dViewController(this->currentGuiDocument());
+    if (ctrl)
+        ctrl->turn(V3d_Z, increment);
+}
+
+bool CommandTurnViewClockWise::getEnabledStatus() const
 {
     return this->app()->documentCount() != 0;
 }

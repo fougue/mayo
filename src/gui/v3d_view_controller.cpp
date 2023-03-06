@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "v3d_view_controller.h"
+#include "../base/unit_system.h"
 
 #include <V3d_View.hxx>
 #include <algorithm>
@@ -29,6 +30,12 @@ void V3dViewController::zoomOut()
     m_view->SetScale(m_view->Scale() / 1.1); // -10%
     this->redrawView();
     this->signalViewScaled.send();
+}
+
+void V3dViewController::turn(V3d_TypeOfAxe axis, QuantityAngle angle)
+{
+    m_view->Turn(axis, UnitSystem::radians(angle), true/*start*/);
+    this->redrawView();
 }
 
 void V3dViewController::startDynamicAction(DynamicAction dynAction)

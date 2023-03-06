@@ -67,6 +67,8 @@ public:
         View3dBottom,
         View3dFront,
         View3dBack,
+        TurnClockwise,
+        TurnCounterClockwise,
         //
         ItemMesh,
         ItemXde,

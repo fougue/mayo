@@ -61,6 +61,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->navigationStyle, groupId_graphics);
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
+    settings->addSetting(&this->turnViewAngleIncrement, groupId_graphics);
     // -- Clip planes
     settings->addSetting(&this->clipPlanesCappingOn, sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, sectionId_graphicsClipPlanes);
@@ -87,6 +88,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
+        this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
     });
     settings->addResetFunction(groupId_meshing, [&]{
         this->meshingQuality.setValue(BRepMeshQuality::Normal);
