@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/quantity.h"
 #include "../base/signal.h"
 #include "gui_vkey_mouse.h"
 
@@ -40,6 +41,10 @@ public:
 
     void zoomIn();
     void zoomOut();
+
+    // Rotates the view point around an axis of frame of reference for which the origin is the
+    // eye of the projection
+    void turn(V3d_TypeOfAxe axis, QuantityAngle angle);
 
     double instantZoomFactor() const { return m_instantZoomFactor; }
     void setInstantZoomFactor(double factor) { m_instantZoomFactor = factor; }

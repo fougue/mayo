@@ -93,6 +93,8 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     this->addCommand<CommandTogglePerformanceStats>("toggle-performance-stats");
     this->addCommand<CommandZoomInCurrentDocument>("current-doc-zoom-in");
     this->addCommand<CommandZoomOutCurrentDocument>("current-doc-zoom-out");
+    this->addCommand<CommandTurnViewCounterClockWise>("current-doc-turn-view-ccw");
+    this->addCommand<CommandTurnViewClockWise>("current-doc-turn-view-cw");
     // "Tools" commands
     this->addCommand<CommandSaveViewImage>("save-view-image");
     this->addCommand<CommandInspectXde>("inspect-xde");
@@ -131,6 +133,8 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
         menu->addSeparator();
         menu->addAction(fnGetAction("current-doc-zoom-in"));
         menu->addAction(fnGetAction("current-doc-zoom-out"));
+        menu->addAction(fnGetAction("current-doc-turn-view-ccw"));
+        menu->addAction(fnGetAction("current-doc-turn-view-cw"));
     }
 
     {

@@ -69,4 +69,18 @@ public:
     bool getEnabledStatus() const override;
 };
 
+class CommandTurnViewCounterClockWise : public Command {
+public:
+    CommandTurnViewCounterClockWise(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+};
+
+class CommandTurnViewClockWise : public Command {
+public:
+    CommandTurnViewClockWise(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+};
+
 } // namespace Mayo
