@@ -288,7 +288,7 @@ CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* co
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Counter Clockwise"));
-    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
     action->setShortcut(Qt::CTRL + Qt::Key_Left);
     this->setAction(action);
 }
@@ -311,7 +311,7 @@ CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Clockwise"));
-    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
+    action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
     action->setShortcut(Qt::CTRL + Qt::Key_Right);
     this->setAction(action);
 }
