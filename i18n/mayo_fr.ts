@@ -270,37 +270,54 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Maillage par défauts</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="116"/>
+        <location filename="../src/app/app_module_properties.cpp" line="122"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="133"/>
+        <location filename="../src/app/app_module_properties.cpp" line="139"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="154"/>
+        <location filename="../src/app/app_module_properties.cpp" line="160"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation>Langage de l&apos;application. Tout changement sera effectif après redémarrage de l&apos;application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="156"/>
+        <location filename="../src/app/app_module_properties.cpp" line="162"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation>Dans le cas où plusieurs documents sont ouverts, fait en sort que le document affiché dans la vue 2D correspond à ce qui est sélectionné dans l&apos;arborescence du modèle</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="161"/>
+        <location filename="../src/app/app_module_properties.cpp" line="165"/>
+        <source>Force usage of the fallback Qt widget to display OpenGL graphics.
+
+When `OFF` the application will try to use OpenGL framebuffer for rendering, this allows to display overlay widgets(eg measure tools panel) with translucid background. However using OpenGL framebuffer might cause troubles for some users(eg empty 3D window) especially on macOS.
+
+When `ON` the application will use a regular Qt widget for rendering which proved to be more supported.
+
+This option is applicable when OpenCascade ≥ 7.6 version. Change will take effect after application restart</source>
+        <translation>Force l&apos;utilisation du widget Qt de secours pour le rendu des graphismes OpenGL.
+
+Quand l&apos;option est désactivée alors l&apos;application essaiera d&apos;employer un framebuffer OpenGL pour le rendu, permettant la translucidité du fond des widgets Qt (voir le panneau des outils de mesure). Mais la technique du framebuffer OpenGL peut causer des problèmes pour certains utilisateurs (par ex : fenêtre 3D vide) en particulier sur macOS.
+
+Quand l&apos;option est activée alors l&apos;application utilisera un widget Qt normal pour le rendu OpenGL, solution ayant fait ses preuves et mieux supportée.
+
+Cette option est appliquable seulement avec la version ≥ 7.6 d&apos;OpenCascade. Tout changement sera effectif après redémarrage de l&apos;application</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="179"/>
         <source>Controls precision of the mesh to be computed from the BRep shape</source>
         <translation>Contrôle la précision du maillage calculé à partir de la forme BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="163"/>
+        <location filename="../src/app/app_module_properties.cpp" line="181"/>
         <source>For the tessellation of faces the chordal deflection limits the distance between a curve and its tessellation</source>
         <translation>Pour la tesselation des faces, la déflection chordale limite la distance entre une courbe et sa discrétisation</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="166"/>
+        <location filename="../src/app/app_module_properties.cpp" line="184"/>
         <source>For the tessellation of faces the angular deflection limits the angle between subsequent segments in a polyline</source>
         <translation>Pour la tesselation des faces, la déflection angulaire limite l&apos;angle entre les segments successifs d&apos;une polyligne</translation>
     </message>
@@ -313,7 +330,7 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation type="vanished">Pour la tesselation des faces, la déflection angulaire limite l&apos;angle entre les segments successifs d&apos;une polyligne</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="169"/>
+        <location filename="../src/app/app_module_properties.cpp" line="187"/>
         <source>Relative computation of edge tolerance
 
 If activated, deflection used for the polygonalisation of each edge will be `ChordalDeflection` &amp;#215; `SizeOfEdge`. The deflection used for the faces will be the maximum deflection of their edges.</source>
@@ -322,27 +339,27 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 Si actif, la déflection utilisée pour la polygonisation de chaque arête sera de `DéflectionChordale` &amp;#215; `TailleArête`. La déflection utilisée pour les faces sera la déflection maximale de ses arêtes.</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="176"/>
+        <location filename="../src/app/app_module_properties.cpp" line="194"/>
         <source>3D view manipulation shortcuts configuration to mimic other common CAD applications</source>
         <translation>Configuration des raccourcis pour manipuler la vue 3D, permet d&apos;imiter les autres application CAO</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="178"/>
+        <location filename="../src/app/app_module_properties.cpp" line="196"/>
         <source>Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)</source>
         <translation>Incrément angulaire utilisé pour tourner la vue 3D autour de la normale au plan de vue (axe Z de référence)</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="182"/>
+        <location filename="../src/app/app_module_properties.cpp" line="200"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation>Montrer/cacher par défaut le trièdre positionné à l&apos;orgine &quot;monde&quot;. N&apos;affecte pas la vue 3D des documents actuellement ouverts</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="185"/>
+        <location filename="../src/app/app_module_properties.cpp" line="203"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation>Activer le bouchage des graphismes actuellement coupés</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="187"/>
+        <location filename="../src/app/app_module_properties.cpp" line="205"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation>Activer le hachage texturé pour le bouchage des graphismes actuellement coupés</translation>
     </message>
@@ -377,77 +394,82 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Lier au sélecteur de documents</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="57"/>
+        <location filename="../src/app/app_module_properties.h" line="55"/>
+        <source>forceOpenGlFallbackWidget</source>
+        <translation>Forcer usage du widget OpenGL de secours</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.h" line="58"/>
         <source>meshingQuality</source>
         <translation>Qualité</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="58"/>
+        <location filename="../src/app/app_module_properties.h" line="59"/>
         <source>meshingChordalDeflection</source>
         <translation>Déflection chordale</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="59"/>
+        <location filename="../src/app/app_module_properties.h" line="60"/>
         <source>meshingAngularDeflection</source>
         <translation>Déflection angulaire</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="60"/>
+        <location filename="../src/app/app_module_properties.h" line="61"/>
         <source>meshingRelative</source>
         <translation>Relatif</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="62"/>
+        <location filename="../src/app/app_module_properties.h" line="63"/>
         <source>navigationStyle</source>
         <translation>Style de navigation de la vue</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="63"/>
+        <location filename="../src/app/app_module_properties.h" line="64"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Afficher le trihèdre Origine par défaut</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="64"/>
+        <location filename="../src/app/app_module_properties.h" line="65"/>
         <source>instantZoomFactor</source>
         <translation>Coefficient du zoom instantané</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="65"/>
+        <location filename="../src/app/app_module_properties.h" line="66"/>
         <source>turnViewAngleIncrement</source>
         <translation>Incrément de rotation de la vue</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="67"/>
+        <location filename="../src/app/app_module_properties.h" line="68"/>
         <source>cappingOn</source>
         <translation>Bouchage</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="68"/>
+        <location filename="../src/app/app_module_properties.h" line="69"/>
         <source>cappingHatchOn</source>
         <translation>Bouchages avec hachures</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="70"/>
+        <location filename="../src/app/app_module_properties.h" line="71"/>
         <source>color</source>
         <translation>Couleur</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="71"/>
+        <location filename="../src/app/app_module_properties.h" line="72"/>
         <source>edgeColor</source>
         <translation>Couleur des arêtes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="72"/>
+        <location filename="../src/app/app_module_properties.h" line="73"/>
         <source>material</source>
         <translation>Matériau</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="73"/>
+        <location filename="../src/app/app_module_properties.h" line="74"/>
         <source>showEgesOn</source>
         <translation>Afficher les arêtes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="74"/>
+        <location filename="../src/app/app_module_properties.h" line="75"/>
         <source>showNodesOn</source>
         <translation>Afficher les nœuds</translation>
     </message>
@@ -2356,7 +2378,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Le fichier de configuration OpenCascade n&apos;a pu être chargé par QSettings [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="439"/>
+        <location filename="../src/app/main.cpp" line="442"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>Échec chargement du fichier de traductions [chemin=%1]</translation>
     </message>
@@ -2369,7 +2391,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de {} en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="415"/>
+        <location filename="../src/app/main.cpp" line="418"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation variants="yes">
             <lengthvariant>Échec chargement du fichier de configuration [chemin=%1]</lengthvariant>
@@ -2422,12 +2444,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de %1 en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="474"/>
+        <location filename="../src/app/main.cpp" line="477"/>
         <source>No input files -&gt; nothing to export</source>
         <translation>Auncun fichier en entrée -&gt; aucun export</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="499"/>
+        <location filename="../src/app/main.cpp" line="502"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>Impossible de charger le thème &apos;%1&apos;</translation>
     </message>

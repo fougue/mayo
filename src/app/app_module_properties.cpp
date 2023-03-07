@@ -46,6 +46,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
+    settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
@@ -83,6 +84,11 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
         this->linkWithDocumentSelector.setValue(true);
+#ifndef MAYO_OS_MAC
+        this->forceOpenGlFallbackWidget.setValue(false);
+#else
+        this->forceOpenGlFallbackWidget.setValue(true);
+#endif
     });
     settings->addResetFunction(groupId_graphics, [=]{
         this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
@@ -155,6 +161,18 @@ void AppModuleProperties::retranslate()
     this->linkWithDocumentSelector.setDescription(
                 textIdTr("In case where multiple documents are opened, make sure the document displayed in "
                          "the 3D view corresponds to what is selected in the model tree"));
+    this->forceOpenGlFallbackWidget.setDescription(
+                textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
+                         "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
+                         "this allows to display overlay widgets(eg measure tools panel) with translucid "
+                         "background. "
+                         "However using OpenGL framebuffer might cause troubles for some users(eg empty "
+                         "3D window) especially on macOS.\n\n"
+                         "When `ON` the application will use a regular Qt widget for rendering which "
+                         "proved to be more supported.\n\n"
+                         "This option is applicable when OpenCascade ≥ 7.6 version. "
+                         "Change will take effect after application restart")
+    );
 
     // Meshing
     this->meshingQuality.setDescription(

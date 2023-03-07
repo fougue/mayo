@@ -45,6 +45,7 @@ public:
 
     void load();
     void loadProperty(SettingIndex index);
+    void loadProperty(const Property* property);
     Variant findValueFromKey(std::string_view strKey) const;
     void save();
 

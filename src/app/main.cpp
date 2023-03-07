@@ -371,8 +371,11 @@ static void initGui(GuiApplication* guiApp)
     IWidgetOccView::setCreator(&QWidgetOccView::create);
 
     // Use QOpenGLWidget if possible
-#if OCC_VERSION_HEX >= 0x070600 /*&& QT_VERSION < QT_VERSION_CHECK(6, 0, 0)*/
-    if (qobject_cast<QGuiApplication*>(QCoreApplication::instance())) { // QOpenGL requires QGuiApplication
+#if OCC_VERSION_HEX >= 0x070600
+    const auto& propForceOpenGlFallbackWidget = AppModule::get()->properties()->forceOpenGlFallbackWidget;
+    AppModule::get()->settings()->loadProperty(&propForceOpenGlFallbackWidget);
+    const bool hasQGuiApplication = qobject_cast<QGuiApplication*>(QCoreApplication::instance());
+    if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
         qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();

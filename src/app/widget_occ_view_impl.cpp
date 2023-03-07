@@ -51,6 +51,7 @@ public:
     {
         OpenGl_FrameBuffer::BindBuffer(ctx);
         ctx->SetFrameBufferSRGB(true, false);
+        // NOTE: commenting the line just above makes the FBO to work on some configs(eg VM Ubuntu 18.04)
     }
 
     void BindDrawBuffer(const Handle(OpenGl_Context)& ctx) override
@@ -93,8 +94,10 @@ Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriv
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
 #if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning("Warning! Qt 5.10+ is required for sRGB setup.\n"
-                         "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n");
+    Message::SendWarning(
+                "Warning! Qt 5.10+ is required for sRGB setup.\n"
+                "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n"
+    );
     gfxDriver->ChangeOptions().sRGBDisable = true;
 #endif
 
@@ -117,9 +120,9 @@ bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver& 
     }
 
     if (!defaultFbo->InitWrapper(glCtx)) {
-      defaultFbo.Nullify();
-      Message::SendFail() << "Default FBO wrapper creation failed";
-      return false;
+        defaultFbo.Nullify();
+        Message::SendFail() << "Default FBO wrapper creation failed";
+        return false;
     }
 
     return true;

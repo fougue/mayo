@@ -230,69 +230,80 @@
         <translation>Mesh Defaults</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="116"/>
+        <location filename="../src/app/app_module_properties.cpp" line="122"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="133"/>
+        <location filename="../src/app/app_module_properties.cpp" line="139"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="154"/>
+        <location filename="../src/app/app_module_properties.cpp" line="160"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="156"/>
+        <location filename="../src/app/app_module_properties.cpp" line="162"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="161"/>
+        <location filename="../src/app/app_module_properties.cpp" line="165"/>
+        <source>Force usage of the fallback Qt widget to display OpenGL graphics.
+
+When `OFF` the application will try to use OpenGL framebuffer for rendering, this allows to display overlay widgets(eg measure tools panel) with translucid background. However using OpenGL framebuffer might cause troubles for some users(eg empty 3D window) especially on macOS.
+
+When `ON` the application will use a regular Qt widget for rendering which proved to be more supported.
+
+This option is applicable when OpenCascade ≥ 7.6 version. Change will take effect after application restart</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="179"/>
         <source>Controls precision of the mesh to be computed from the BRep shape</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="163"/>
+        <location filename="../src/app/app_module_properties.cpp" line="181"/>
         <source>For the tessellation of faces the chordal deflection limits the distance between a curve and its tessellation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="166"/>
+        <location filename="../src/app/app_module_properties.cpp" line="184"/>
         <source>For the tessellation of faces the angular deflection limits the angle between subsequent segments in a polyline</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="169"/>
+        <location filename="../src/app/app_module_properties.cpp" line="187"/>
         <source>Relative computation of edge tolerance
 
 If activated, deflection used for the polygonalisation of each edge will be `ChordalDeflection` &amp;#215; `SizeOfEdge`. The deflection used for the faces will be the maximum deflection of their edges.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="176"/>
+        <location filename="../src/app/app_module_properties.cpp" line="194"/>
         <source>3D view manipulation shortcuts configuration to mimic other common CAD applications</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="178"/>
+        <location filename="../src/app/app_module_properties.cpp" line="196"/>
         <source>Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="182"/>
+        <location filename="../src/app/app_module_properties.cpp" line="200"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="185"/>
+        <location filename="../src/app/app_module_properties.cpp" line="203"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="187"/>
+        <location filename="../src/app/app_module_properties.cpp" line="205"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation></translation>
     </message>
@@ -327,77 +338,82 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation>Link With Document Selector</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="57"/>
+        <location filename="../src/app/app_module_properties.h" line="55"/>
+        <source>forceOpenGlFallbackWidget</source>
+        <translation>Force OpenGL Fallback Widget</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.h" line="58"/>
         <source>meshingQuality</source>
         <translation>Quality</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="58"/>
+        <location filename="../src/app/app_module_properties.h" line="59"/>
         <source>meshingChordalDeflection</source>
         <translation>Chordal Deflection</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="59"/>
+        <location filename="../src/app/app_module_properties.h" line="60"/>
         <source>meshingAngularDeflection</source>
         <translation>Angular Deflection</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="60"/>
+        <location filename="../src/app/app_module_properties.h" line="61"/>
         <source>meshingRelative</source>
         <translation>Relative</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="62"/>
+        <location filename="../src/app/app_module_properties.h" line="63"/>
         <source>navigationStyle</source>
         <translation>View Navigation Style</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="63"/>
+        <location filename="../src/app/app_module_properties.h" line="64"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Show Origin Trihedron By Default</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="64"/>
+        <location filename="../src/app/app_module_properties.h" line="65"/>
         <source>instantZoomFactor</source>
         <translation>Instant Zoom Factor</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="65"/>
+        <location filename="../src/app/app_module_properties.h" line="66"/>
         <source>turnViewAngleIncrement</source>
         <translation>Turn View Angle Increment</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="67"/>
+        <location filename="../src/app/app_module_properties.h" line="68"/>
         <source>cappingOn</source>
         <translation>Capping</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="68"/>
+        <location filename="../src/app/app_module_properties.h" line="69"/>
         <source>cappingHatchOn</source>
         <translation>Capping Hatch</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="70"/>
+        <location filename="../src/app/app_module_properties.h" line="71"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="71"/>
+        <location filename="../src/app/app_module_properties.h" line="72"/>
         <source>edgeColor</source>
         <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="72"/>
+        <location filename="../src/app/app_module_properties.h" line="73"/>
         <source>material</source>
         <translation>Material</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="73"/>
+        <location filename="../src/app/app_module_properties.h" line="74"/>
         <source>showEgesOn</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="74"/>
+        <location filename="../src/app/app_module_properties.h" line="75"/>
         <source>showNodesOn</source>
         <translation>Show Nodes</translation>
     </message>
@@ -2161,7 +2177,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="439"/>
+        <location filename="../src/app/main.cpp" line="442"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2188,17 +2204,17 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="415"/>
+        <location filename="../src/app/main.cpp" line="418"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="474"/>
+        <location filename="../src/app/main.cpp" line="477"/>
         <source>No input files -&gt; nothing to export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="499"/>
+        <location filename="../src/app/main.cpp" line="502"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>

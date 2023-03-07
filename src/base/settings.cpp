@@ -147,6 +147,12 @@ void Settings::loadProperty(Settings::SettingIndex index)
     this->loadPropertyFrom(d->storage(), index);
 }
 
+void Settings::loadProperty(const Property* property)
+{
+    const auto idProp = this->findProperty(property);
+    this->loadPropertyFrom(d->storage(), idProp);
+}
+
 void Settings::loadPropertyFrom(const Storage& source, SettingIndex index)
 {
     Property* prop = this->property(index);

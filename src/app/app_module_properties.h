@@ -52,6 +52,7 @@ public:
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
+    PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     // Meshing
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
