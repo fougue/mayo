@@ -20,9 +20,11 @@ class QScreen;
 #include <type_traits>
 
 namespace Mayo {
+
+// Provides a collection of tools for the QtGui module
 namespace QtGuiUtils {
 
-// Color conversion
+// Color conversion functions OCCT -> Qt
 QColor toQColor(const Quantity_Color& c);
 QColor toQColor(const Quantity_ColorRGBA& c);
 QColor toQColor(Quantity_NameOfColor c);
@@ -35,7 +37,7 @@ Quantity_Color toColor(const QColor& c);
 
 Quantity_Color toPreferredColorSpace(const QColor& c);
 
-// Image conversion
+// Converts (OCCT)Image_Pixmap -> QPixmap
 QPixmap toQPixmap(const Image_PixMap& pixmap);
 
 // Returns linear interpolated color between 'a' and 'b' at parameter 't'

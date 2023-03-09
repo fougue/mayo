@@ -15,6 +15,8 @@ namespace Mayo {
 class GuiApplication;
 class GuiDocument;
 
+// Provides a Qt item model of the documents owned by a GuiApplication object
+// Contents is automatically updated in reaction of Application and GuiApplication signals
 class GuiDocumentListModel : public QAbstractListModel {
 public:
     GuiDocumentListModel(const GuiApplication* guiApp, QObject* parent = nullptr);

@@ -23,6 +23,8 @@ class GuiDocument;
 class IAppContext;
 class WidgetGuiDocument;
 
+// Provides the root widget of the application GUI
+// It creates and owns the various available commands(actions)
 class MainWindow : public QMainWindow {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::MainWindow)

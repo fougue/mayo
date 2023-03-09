@@ -11,6 +11,8 @@
 
 namespace Mayo {
 
+// Provides relevant properties for a Document object
+// TODO Connect to Document "changed" signals to update the properties
 class DocumentPropertyGroup : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::DocumentPropertyGroup)
 public:

@@ -17,6 +17,7 @@ namespace Mayo {
 
 class GuiDocument;
 
+// Provides information about a "recently" opened file
 struct RecentFile {
     FilePath filepath;
     QPixmap thumbnail;
@@ -26,13 +27,25 @@ struct RecentFile {
     static int64_t timestampLastModified(const FilePath& fp);
 };
 
+// Alias for "array of RecentFile objects"
 using RecentFiles = std::vector<RecentFile>;
+
+// Alias for Property type owning an array of RecentFile objects
+// This is useful to store recent files into application settings
 using PropertyRecentFiles = GenericProperty<RecentFiles>;
 
 bool operator==(const RecentFile& lhs, const RecentFile& rhs);
+
+// Writes a RecentFile object to QDataStream
 QDataStream& operator<<(QDataStream& stream, const RecentFile& recentFile);
-QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile);
+
+// Writes array of RecentFile objects to QDataStream
 QDataStream& operator<<(QDataStream& stream, const RecentFiles& recentFiles);
+
+// Extracts a RecentFile object from QDataStream
+QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile);
+
+// Extracts array of RecentFile objects from QDataStream
 QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles);
 
 } // namespace Mayo

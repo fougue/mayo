@@ -33,27 +33,23 @@ public:
       const char* strUnit; // UTF8
       double factor;
     };
-    bool overridePropertyUnitTranslation(
-            const BasePropertyQuantity* prop, UnitTranslation unitTr);
+    bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
     void paint(
             QPainter* painter,
             const QStyleOptionViewItem& option,
-            const QModelIndex& index) const override;
+            const QModelIndex& index
+      ) const override;
 
     QString displayText(const QVariant& value, const QLocale&) const override;
 
     QWidget* createEditor(
-            QWidget* parent,
-            const QStyleOptionViewItem&,
-            const QModelIndex& index) const override;
+            QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index
+      ) const override;
 
-    void setModelData(
-            QWidget*, QAbstractItemModel*, const QModelIndex&) const override;
+    void setModelData(QWidget*, QAbstractItemModel*, const QModelIndex&) const override;
 
-    QSize sizeHint(
-            const QStyleOptionViewItem& option,
-            const QModelIndex& index) const override;
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
 private:
     std::unique_ptr<PropertyEditorFactory> m_editorFactory;
