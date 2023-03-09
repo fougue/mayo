@@ -25,8 +25,8 @@ public:
     double rowHeightFactor() const { return m_rowHeightFactor; }
     void setRowHeightFactor(double v) { m_rowHeightFactor = v; }
 
-    PropertyEditorFactory* editorFactory() const { return m_editorFactory.get(); }
-    void setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory);
+    IPropertyEditorFactory* editorFactory() const { return m_editorFactory.get(); }
+    void setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory);
 
     struct UnitTranslation {
       Unit unit;
@@ -52,7 +52,7 @@ public:
     QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
 private:
-    std::unique_ptr<PropertyEditorFactory> m_editorFactory;
+    std::unique_ptr<IPropertyEditorFactory> m_editorFactory;
     double m_rowHeightFactor = 1.;
     std::unordered_map<const BasePropertyQuantity*, UnitTranslation> m_mapPropUnitTr;
 };

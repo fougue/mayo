@@ -17,9 +17,9 @@ class BasePropertyQuantity;
 class Property;
 
 // Provides widgets for editing Property objects within views and delegates
-class PropertyEditorFactory {
+class IPropertyEditorFactory {
 public:
-    virtual ~PropertyEditorFactory() = default;
+    virtual ~IPropertyEditorFactory() = default;
 
     virtual QWidget* createEditor(Property* property, QWidget* parentWidget) const = 0;
     virtual void syncEditorWithProperty(QWidget* editor) const = 0;
@@ -29,7 +29,7 @@ public:
     static QPixmap colorSquarePixmap(const QColor& c, int sideLen = 16);
 };
 
-class DefaultPropertyEditorFactory : public PropertyEditorFactory {
+class DefaultPropertyEditorFactory : public IPropertyEditorFactory {
 public:
     QWidget* createEditor(Property* property, QWidget* parentWidget) const override;
     void syncEditorWithProperty(QWidget* editor) const override;

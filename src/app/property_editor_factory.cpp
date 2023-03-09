@@ -211,7 +211,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
 
     void syncWithProperty() override {
         const QColor qtColor = QtGuiUtils::toQColor(m_property->value());
-        m_labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(qtColor));
+        m_labelColor->setPixmap(IPropertyEditorFactory::colorSquarePixmap(qtColor));
         m_labelRgb->setText(QStringUtils::text(m_property->value()));
     }
 
@@ -316,7 +316,7 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
     PropertyQuantityEditor(BasePropertyQuantity* property, QWidget* parentWidget)
         : QDoubleSpinBox(parentWidget), m_property(property)
     {
-        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(property);
+        const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(property);
         this->setSuffix(QString::fromUtf8(trRes.strUnit));
         this->setDecimals(AppModule::get()->properties()->unitSystemDecimals.value());
         const double rangeMin =
@@ -336,7 +336,7 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
     }
 
     void syncWithProperty() override {
-        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(m_property);
+        const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(m_property);
         this->setValue(trRes.value);
     }
 
@@ -392,7 +392,7 @@ void DefaultPropertyEditorFactory::syncEditorWithProperty(QWidget* editor) const
     }
 }
 
-UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePropertyQuantity* property)
+UnitSystem::TranslateResult IPropertyEditorFactory::unitTranslate(const BasePropertyQuantity* property)
 {
     if (!property)
         return {};
@@ -408,7 +408,7 @@ UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePrope
                 property->quantityUnit());
 }
 
-QPixmap PropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)
+QPixmap IPropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)
 {
     QPixmap pixColor(sideLen, sideLen);
     pixColor.fill(c);

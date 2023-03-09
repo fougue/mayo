@@ -280,7 +280,7 @@ DialogOptions::~DialogOptions()
     delete m_ui;
 }
 
-void DialogOptions::setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory)
+void DialogOptions::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
 {
     m_editorFactory = std::move(editorFactory);
 }

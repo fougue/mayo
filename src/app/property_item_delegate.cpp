@@ -144,7 +144,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
         return toStringDHMS(propTime->quantity());
     }
 
-    const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(prop);
+    const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(prop);
     return PropertyItemDelegate::tr("%1%2")
             .arg(QStringUtils::text(trRes.value, appDefaultTextOptions()))
             .arg(trRes.strUnit);
@@ -167,7 +167,7 @@ PropertyItemDelegate::PropertyItemDelegate(QObject* parent)
       m_editorFactory(new DefaultPropertyEditorFactory)
 {}
 
-void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory)
+void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
 {
     m_editorFactory = std::move(editorFactory);
 }
@@ -199,7 +199,7 @@ void PropertyItemDelegate::paint(
                         option.widget);
 
             const QColor color = QtGuiUtils::toQColor(propColor->value());
-            const QPixmap pixColor = PropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
+            const QPixmap pixColor = IPropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
             painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
             const QString strColor = propertyValueText(propColor);
 
