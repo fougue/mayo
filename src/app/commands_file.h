@@ -29,6 +29,7 @@ class CommandOpenDocuments : public Command {
 public:
     CommandOpenDocuments(IAppContext* context);
     void execute() override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 };
 
 class CommandRecentFiles : public Command {

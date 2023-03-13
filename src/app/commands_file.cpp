@@ -18,6 +18,9 @@
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QMimeData>
+#include <QtGui/QDragEnterEvent>
+#include <QtGui/QDropEvent>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMenu>
@@ -236,6 +239,9 @@ CommandOpenDocuments::CommandOpenDocuments(IAppContext* context)
     action->setToolTip(Command::tr("Open Documents"));
     action->setShortcut(Qt::CTRL + Qt::Key_O);
     this->setAction(action);
+
+    context->widgetMain()->setAcceptDrops(true);
+    context->widgetMain()->installEventFilter(this);
 }
 
 void CommandOpenDocuments::execute()
@@ -243,6 +249,37 @@ void CommandOpenDocuments::execute()
     const auto resFileNames = OpenFileNames::get(this->widgetMain());
     if (!resFileNames.listFilepath.empty())
         FileCommandTools::openDocumentsFromList(this->context(), resFileNames.listFilepath);
+}
+
+bool CommandOpenDocuments::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == this->widgetMain()) {
+        if (event->type() == QEvent::DragEnter) {
+            auto dragEnterEvent = static_cast<QDragEnterEvent*>(event);
+            if (dragEnterEvent->mimeData()->hasUrls())
+                dragEnterEvent->acceptProposedAction();
+
+            return true;
+        }
+        else if (event->type() == QEvent::Drop) {
+            auto dropEvent = static_cast<QDropEvent*>(event);
+            const QList<QUrl> listUrl = dropEvent->mimeData()->urls();
+            std::vector<FilePath> listFilePath;
+            for (const QUrl& url : listUrl) {
+                if (url.isLocalFile())
+                    listFilePath.push_back(filepathFrom(url.toLocalFile()));
+            }
+
+            dropEvent->acceptProposedAction();
+            FileCommandTools::openDocumentsFromList(this->context(), listFilePath);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    return Command::eventFilter(watched, event);
 }
 
 CommandRecentFiles::CommandRecentFiles(IAppContext* context)

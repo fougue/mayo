@@ -44,10 +44,7 @@
 #  include "windows/win_taskbar_global_progress.h"
 #endif
 
-#include <QtCore/QMimeData>
 #include <QtCore/QTimer>
-#include <QtGui/QDragEnterEvent>
-#include <QtGui/QDropEvent>
 #include <QtDebug>
 
 namespace Mayo {
@@ -243,7 +240,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     m_ui->listView_OpenedDocuments->setModel(guiDocModel);
 
     // Finalize setup
-    this->setAcceptDrops(true);
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     m_ui->stack_GuiDocuments->installEventFilter(this);
@@ -286,26 +282,6 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
     }
 
     return false;
-}
-
-void MainWindow::dragEnterEvent(QDragEnterEvent* event)
-{
-    if (event->mimeData()->hasUrls())
-        event->acceptProposedAction();
-}
-
-void MainWindow::dropEvent(QDropEvent* event)
-{
-    // TODO Move to CommandOpenDocuments with event filter on IAppContext::widgetMain()?
-    const QList<QUrl> listUrl = event->mimeData()->urls();
-    std::vector<FilePath> listFilePath;
-    for (const QUrl& url : listUrl) {
-        if (url.isLocalFile())
-            listFilePath.push_back(filepathFrom(url.toLocalFile()));
-    }
-
-    event->acceptProposedAction();
-    FileCommandTools::openDocumentsFromList(m_appContext, listFilePath);
 }
 
 void MainWindow::showEvent(QShowEvent* event)

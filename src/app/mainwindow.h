@@ -38,8 +38,6 @@ public:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 protected:
-    void dragEnterEvent(QDragEnterEvent* event) override;
-    void dropEvent(QDropEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
 private:
