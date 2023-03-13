@@ -65,6 +65,7 @@ namespace Mayo {
 // Declared in graphics/graphics_create_driver.cpp
 void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
 
+// Provides an i18n context for the current file(main.cpp)
 class Main {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Main)
     Q_DECLARE_TR_FUNCTIONS(Mayo::Main)
@@ -72,6 +73,7 @@ class Main {
 
 namespace {
 
+// Stores arguments(options) passed at command line
 struct CommandLineArguments {
     QString themeName;
     FilePath filepathSettings;
@@ -82,6 +84,7 @@ struct CommandLineArguments {
     bool cliProgressReport = true;
 };
 
+// Provides customization of Qt message handler
 class LogMessageHandler {
 public:
     static LogMessageHandler& instance()
@@ -90,11 +93,13 @@ public:
         return object;
     }
 
+    // Corresponds to CommandLineArguments::includeDebugLogs
     void enableDebugLogs(bool on)
     {
         m_enableDebugLogs = on;
     }
 
+    // Corresponds to CommandLineArguments::filepathLog
     void setOutputFilePath(const FilePath& fp)
     {
         m_outputFilePath = fp;
@@ -115,6 +120,7 @@ public:
         return std::cerr;
     }
 
+    // Function called for Qt message handling
     static void qtHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
     {
         const std::string localMsg = consoleToPrintable(msg);
@@ -168,6 +174,7 @@ public:
 
 } // namespace
 
+// Parses command line and process Qt builtin options(basically --version and --help)
 static CommandLineArguments processCommandLine()
 {
     CommandLineArguments args;
@@ -175,54 +182,63 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo the opensource 3D CAD viewer and converter"));
+                Main::tr("Mayo the opensource 3D CAD viewer and converter")
+    );
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
     const QCommandLineOption cmdOptionTheme(
                 QStringList{ "t", "theme" },
                 Main::tr("Theme for the UI(classic|dark)"),
-                Main::tr("name"));
+                Main::tr("name")
+     );
     cmdParser.addOption(cmdOptionTheme);
 
     const QCommandLineOption cmdFileSettings(
                 QStringList{ "s", "settings" },
                 Main::tr("Settings file(INI format) to load at startup"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileSettings);
 
     const QCommandLineOption cmdFileToExport(
                 QStringList{ "e", "export" },
                 Main::tr("Export opened files into an output file, can be repeated for different "
                          "formats(eg. -e file.stp -e file.igs...)"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileToExport);
 
     const QCommandLineOption cmdFileLog(
                 QStringList{ "log-file" },
                 Main::tr("Writes log messages into output file"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileLog);
 
     const QCommandLineOption cmdDebugLogs(
                 QStringList{ "debug-logs" },
-                Main::tr("Don't filter out debug log messages in release build"));
+                Main::tr("Don't filter out debug log messages in release build")
+    );
     cmdParser.addOption(cmdDebugLogs);
 
     const QCommandLineOption cmdCliNoProgress(
                 QStringList{ "no-progress" },
-                Main::tr("Disable progress reporting in console output(CLI-mode only)"));
+                Main::tr("Disable progress reporting in console output(CLI-mode only)")
+    );
     cmdParser.addOption(cmdCliNoProgress);
 
     cmdParser.addPositionalArgument(
                 Main::tr("files"),
                 Main::tr("Files to open at startup, optionally"),
-                Main::tr("[files...]"));
+                Main::tr("[files...]")
+    );
 
 #ifdef MAYO_WITH_TESTS
     const QCommandLineOption cmdRunTests(
                 QStringList{ "runtests" },
-                Main::tr("Execute unit tests and exit application"));
+                Main::tr("Execute unit tests and exit application")
+    );
     cmdParser.addOption(cmdRunTests);
 #endif
 
@@ -264,6 +280,7 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
+// Set OpenCascade environment variables defined in a settings file(INI format)
 static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
 {
     const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
@@ -305,6 +322,7 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
+// Function called by the Application i18n system, see Application::addTranslator()
 static std::string_view qtTranslate(const TextId& text, int n)
 {
     const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
