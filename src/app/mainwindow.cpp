@@ -69,102 +69,17 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     m_ui->widget_Properties->setRowHeightFactor(1.4);
     m_ui->widget_Properties->clear();
 
-    m_appContext = new AppContext(this);
-    auto fnGetAction = [=](std::string_view name) {
-        return this->getCommand(name)->action();
-    };
-    // "File" commands
-    this->addCommand<CommandNewDocument>("new-doc");
-    this->addCommand<CommandOpenDocuments>("open-docs");
-    this->addCommand<CommandRecentFiles>("recent-files", m_ui->menu_File);
-    this->addCommand<CommandImportInCurrentDocument>("import");
-    this->addCommand<CommandExportSelectedApplicationItems>("export");
-    this->addCommand<CommandCloseCurrentDocument>("close-doc");
-    this->addCommand<CommandCloseAllDocuments>("close-all-docs");
-    this->addCommand<CommandCloseAllDocumentsExceptCurrent>("close-all-docs-except-current");
-    this->addCommand<CommandQuitApplication>("quit");
-    // "Display" commands
-    this->addCommand<CommandChangeProjection>("change-projection");
-    this->addCommand<CommandChangeDisplayMode>("change-display-mode", m_ui->menu_Display);
-    this->addCommand<CommandToggleOriginTrihedron>("toggle-origin-trihedron");
-    this->addCommand<CommandTogglePerformanceStats>("toggle-performance-stats");
-    this->addCommand<CommandZoomInCurrentDocument>("current-doc-zoom-in");
-    this->addCommand<CommandZoomOutCurrentDocument>("current-doc-zoom-out");
-    this->addCommand<CommandTurnViewCounterClockWise>("current-doc-turn-view-ccw");
-    this->addCommand<CommandTurnViewClockWise>("current-doc-turn-view-cw");
-    // "Tools" commands
-    this->addCommand<CommandSaveViewImage>("save-view-image");
-    this->addCommand<CommandInspectXde>("inspect-xde");
-    this->addCommand<CommandEditOptions>("edit-options");
-    // "Window" commands
-    this->addCommand<CommandLeftSidebarWidgetToggle>("toggle-left-sidebar");
-    this->addCommand<CommandMainWidgetToggleFullscreen>("toggle-fullscreen");
-    this->addCommand<CommandPreviousDocument>("previous-doc");
-    this->addCommand<CommandNextDocument>("next-doc");
-    // "Help" commands
-    this->addCommand<CommandReportBug>("report-bug");
-    this->addCommand<CommandAbout>("about");
-
-    {
-        auto menu = m_ui->menu_File;
-        menu->addAction(fnGetAction("new-doc"));
-        menu->addAction(fnGetAction("open-docs"));
-        menu->addAction(fnGetAction("recent-files"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("import"));
-        menu->addAction(fnGetAction("export"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("close-doc"));
-        menu->addAction(fnGetAction("close-all-docs-except-current"));
-        menu->addAction(fnGetAction("close-all-docs"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("quit"));
-    }
-
-    {
-        auto menu = m_ui->menu_Display;
-        menu->addAction(fnGetAction("change-projection"));
-        menu->addAction(fnGetAction("change-display-mode"));
-        menu->addAction(fnGetAction("toggle-origin-trihedron"));
-        menu->addAction(fnGetAction("toggle-performance-stats"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("current-doc-zoom-in"));
-        menu->addAction(fnGetAction("current-doc-zoom-out"));
-        menu->addAction(fnGetAction("current-doc-turn-view-ccw"));
-        menu->addAction(fnGetAction("current-doc-turn-view-cw"));
-    }
-
-    {
-        auto menu = m_ui->menu_Tools;
-        menu->addAction(fnGetAction("save-view-image"));
-        menu->addAction(fnGetAction("inspect-xde"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("edit-options"));
-    }
-
-    {
-        auto menu = m_ui->menu_Window;
-        menu->addAction(fnGetAction("toggle-left-sidebar"));
-        menu->addAction(fnGetAction("toggle-fullscreen"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("previous-doc"));
-        menu->addAction(fnGetAction("next-doc"));
-    }
-
-    {
-        auto menu = m_ui->menu_Help;
-        menu->addAction(fnGetAction("report-bug"));
-        menu->addSeparator();
-        menu->addAction(fnGetAction("about"));
-    }
-
-    m_ui->btn_PreviousGuiDocument->setDefaultAction(fnGetAction("previous-doc"));
-    m_ui->btn_NextGuiDocument->setDefaultAction(fnGetAction("next-doc"));
-    m_ui->btn_CloseGuiDocument->setDefaultAction(fnGetAction("close-doc"));
-    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
-
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
+
+    m_appContext = new AppContext(this);
+    this->createCommands();
+    this->createMenus();
+
+    m_ui->btn_PreviousGuiDocument->setDefaultAction(this->getCommandAction("previous-doc"));
+    m_ui->btn_NextGuiDocument->setDefaultAction(this->getCommandAction("next-doc"));
+    m_ui->btn_CloseGuiDocument->setDefaultAction(this->getCommandAction("close-doc"));
+    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
 
     // "HomeFiles" actions
     QObject::connect(
@@ -213,7 +128,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     {
         // Opened documents GUI
         auto listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
-        auto actionCloseDoc = fnGetAction("close-doc");
+        auto actionCloseDoc = this->getCommandAction("close-doc");
         listViewBtns->addButton(1, actionCloseDoc->icon(), actionCloseDoc->toolTip());
         listViewBtns->setButtonDetection(1, -1, QVariant());
         listViewBtns->setButtonDisplayColumn(1, 0);
@@ -295,6 +210,106 @@ void MainWindow::showEvent(QShowEvent* event)
 
     winProgress->setWindow(this->windowHandle());
 #endif
+}
+
+void MainWindow::createCommands()
+{
+    // "File" commands
+    this->addCommand<CommandNewDocument>("new-doc");
+    this->addCommand<CommandOpenDocuments>("open-docs");
+    this->addCommand<CommandRecentFiles>("recent-files", m_ui->menu_File);
+    this->addCommand<CommandImportInCurrentDocument>("import");
+    this->addCommand<CommandExportSelectedApplicationItems>("export");
+    this->addCommand<CommandCloseCurrentDocument>("close-doc");
+    this->addCommand<CommandCloseAllDocuments>("close-all-docs");
+    this->addCommand<CommandCloseAllDocumentsExceptCurrent>("close-all-docs-except-current");
+    this->addCommand<CommandQuitApplication>("quit");
+
+    // "Display" commands
+    this->addCommand<CommandChangeProjection>("change-projection");
+    this->addCommand<CommandChangeDisplayMode>("change-display-mode", m_ui->menu_Display);
+    this->addCommand<CommandToggleOriginTrihedron>("toggle-origin-trihedron");
+    this->addCommand<CommandTogglePerformanceStats>("toggle-performance-stats");
+    this->addCommand<CommandZoomInCurrentDocument>("current-doc-zoom-in");
+    this->addCommand<CommandZoomOutCurrentDocument>("current-doc-zoom-out");
+    this->addCommand<CommandTurnViewCounterClockWise>("current-doc-turn-view-ccw");
+    this->addCommand<CommandTurnViewClockWise>("current-doc-turn-view-cw");
+
+    // "Tools" commands
+    this->addCommand<CommandSaveViewImage>("save-view-image");
+    this->addCommand<CommandInspectXde>("inspect-xde");
+    this->addCommand<CommandEditOptions>("edit-options");
+
+    // "Window" commands
+    this->addCommand<CommandLeftSidebarWidgetToggle>("toggle-left-sidebar");
+    this->addCommand<CommandMainWidgetToggleFullscreen>("toggle-fullscreen");
+    this->addCommand<CommandPreviousDocument>("previous-doc");
+    this->addCommand<CommandNextDocument>("next-doc");
+
+    // "Help" commands
+    this->addCommand<CommandReportBug>("report-bug");
+    this->addCommand<CommandAbout>("about");
+}
+
+void MainWindow::createMenus()
+{
+    // Helper function to retrieve the QAction associated to the name of a command
+    auto fnGetAction = [=](std::string_view commandName) {
+        return this->getCommandAction(commandName);
+    };
+
+    {   // File
+        auto menu = m_ui->menu_File;
+        menu->addAction(fnGetAction("new-doc"));
+        menu->addAction(fnGetAction("open-docs"));
+        menu->addAction(fnGetAction("recent-files"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("import"));
+        menu->addAction(fnGetAction("export"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("close-doc"));
+        menu->addAction(fnGetAction("close-all-docs-except-current"));
+        menu->addAction(fnGetAction("close-all-docs"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("quit"));
+    }
+
+    {   // Display
+        auto menu = m_ui->menu_Display;
+        menu->addAction(fnGetAction("change-projection"));
+        menu->addAction(fnGetAction("change-display-mode"));
+        menu->addAction(fnGetAction("toggle-origin-trihedron"));
+        menu->addAction(fnGetAction("toggle-performance-stats"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("current-doc-zoom-in"));
+        menu->addAction(fnGetAction("current-doc-zoom-out"));
+        menu->addAction(fnGetAction("current-doc-turn-view-ccw"));
+        menu->addAction(fnGetAction("current-doc-turn-view-cw"));
+    }
+
+    {   // Tools
+        auto menu = m_ui->menu_Tools;
+        menu->addAction(fnGetAction("save-view-image"));
+        menu->addAction(fnGetAction("inspect-xde"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("edit-options"));
+    }
+
+    {   // Window
+        auto menu = m_ui->menu_Window;
+        menu->addAction(fnGetAction("toggle-left-sidebar"));
+        menu->addAction(fnGetAction("toggle-fullscreen"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("previous-doc"));
+        menu->addAction(fnGetAction("next-doc"));
+    }
+
+    {   // Help
+        auto menu = m_ui->menu_Help;
+        menu->addAction(fnGetAction("report-bug"));
+        menu->addSeparator();
+        menu->addAction(fnGetAction("about"));
+    }
 }
 
 void MainWindow::onApplicationItemSelectionChanged()
@@ -534,7 +549,8 @@ WidgetGuiDocument* MainWindow::currentWidgetGuiDocument() const
 QWidget* MainWindow::findLeftHeaderPlaceHolder() const
 {
     return m_ui->widget_LeftHeader->findChild<QWidget*>(
-                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
+                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly
+    );
 }
 
 QWidget* MainWindow::recreateLeftHeaderPlaceHolder()
@@ -583,6 +599,12 @@ Command* MainWindow::getCommand(std::string_view name) const
 {
     auto it = m_mapCommand.find(name);
     return it != m_mapCommand.cend() ? it->second : nullptr;
+}
+
+QAction* MainWindow::getCommandAction(std::string_view name) const
+{
+    auto cmd = this->getCommand(name);
+    return cmd ? cmd->action() : nullptr;
 }
 
 } // namespace Mayo

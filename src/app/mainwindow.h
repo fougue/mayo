@@ -41,6 +41,13 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
+    void createCommands();
+    void createMenus();
+
+    Command* getCommand(std::string_view name) const;
+    QAction* getCommandAction(std::string_view name) const;
+    template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
+
     void onApplicationItemSelectionChanged();
     void onOperationFinished(bool ok, const QString& msg);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
@@ -59,9 +66,6 @@ private:
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
     QMenu* createMenuModelTreeSettings();
-
-    Command* getCommand(std::string_view name) const;
-    template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
 
     friend class AppContext;
 
