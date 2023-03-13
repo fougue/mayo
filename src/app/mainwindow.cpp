@@ -79,7 +79,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     m_ui->btn_PreviousGuiDocument->setDefaultAction(this->getCommandAction("previous-doc"));
     m_ui->btn_NextGuiDocument->setDefaultAction(this->getCommandAction("next-doc"));
     m_ui->btn_CloseGuiDocument->setDefaultAction(this->getCommandAction("close-doc"));
-    m_ui->btn_CloseLeftSideBar->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
+    m_ui->btn_CloseLeftSideBar->setDefaultAction(this->getCommandAction("toggle-left-sidebar"));
 
     // "HomeFiles" actions
     QObject::connect(
@@ -102,11 +102,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget *parent)
     QObject::connect(
                 m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
                 this, &MainWindow::onWidgetFileSystemLocationActivated
-    );
-    // Left header bar of controls
-    QObject::connect(
-                m_ui->btn_CloseLeftSideBar, &QAbstractButton::clicked,
-                this->getCommand("toggle-left-sidebar"), &Command::execute
     );
     // ...
     QObject::connect(

@@ -9,6 +9,7 @@
 #include "../base/application.h"
 #include "theme.h"
 
+#include <QtGui/QShowEvent>
 #include <QtWidgets/QWidget>
 
 namespace Mayo {
@@ -44,13 +45,13 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
     : Command(context)
 {
     auto action = new QAction(this);
-    action->setText(Command::tr("Show Left Sidebar"));
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
-    action->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
     action->setShortcut(Qt::ALT + Qt::Key_0);
     action->setCheckable(true);
     action->setChecked(context->widgetLeftSidebar()->isVisible());
     this->setAction(action);
+    this->updateAction();
+    context->widgetLeftSidebar()->installEventFilter(this);
 }
 
 void CommandLeftSidebarWidgetToggle::execute()
@@ -62,6 +63,33 @@ void CommandLeftSidebarWidgetToggle::execute()
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 {
     return this->context()->modeWidgetMain() != IAppContext::ModeWidgetMain::Home;
+}
+
+bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == this->context()->widgetLeftSidebar()) {
+        if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
+            this->updateAction();
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    return Command::eventFilter(watched, event);
+}
+
+void CommandLeftSidebarWidgetToggle::updateAction()
+{
+    if (this->context()->widgetLeftSidebar()->isVisible()) {
+        this->action()->setText(Command::tr("Hide Left Sidebar"));
+        this->action()->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
+    }
+    else {
+        this->action()->setText(Command::tr("Show Left Sidebar"));
+        this->action()->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
+    }
 }
 
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
