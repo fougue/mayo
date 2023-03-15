@@ -30,6 +30,10 @@ Mayo runs on Windows, Linux and macOS
 - **Solid foundations** <br/>
 Mayo is developed in modern C++ with [Qt](https://www.qt.io) and [OpenCascade](https://dev.opencascade.org)
 
+For more details have a look at this fine review [Introducing Mayo](https://librearts.org/2023/01/introducing-mayo-free-cad-files-viewer) by Libre Arts<br/>
+There's also a complete [video transcript](https://www.youtube.com/watch?v=qg6IamnlfxE&ab_channel=LibreArts) on YouTube
+
+
 ## :zap: Features
 - **3D clip planes** with configurable capping
 
