@@ -40,14 +40,14 @@ AIS_Text::AIS_Text(const TCollection_ExtendedString &text, const gp_Pnt& pos)
     this->setPosition(pos);
 }
 
-Handle_Prs3d_TextAspect AIS_Text::presentationTextAspect(unsigned i) const
+OccHandle<Prs3d_TextAspect> AIS_Text::presentationTextAspect(unsigned i) const
 {
-    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect : Handle_Prs3d_TextAspect();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect : OccHandle<Prs3d_TextAspect>();
 }
 
-Handle_Graphic3d_AspectText3d AIS_Text::graphicTextAspect(unsigned i) const
+OccHandle<Graphic3d_AspectText3d> AIS_Text::graphicTextAspect(unsigned i) const
 {
-    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect->Aspect() : Handle_Graphic3d_AspectText3d();
+    return this->isValidTextIndex(i) ? m_textProps.at(i).m_aspect->Aspect() : OccHandle<Graphic3d_AspectText3d>();
 }
 
 gp_Pnt AIS_Text::position(unsigned i) const
@@ -143,8 +143,8 @@ void AIS_Text::setDefaultTextStyle(Aspect_TypeOfStyleText style)
 }
 
 void AIS_Text::Compute(
-        const Handle(PrsMgr_PresentationManager)&,
-        const Handle(Prs3d_Presentation)& pres,
+        const OccHandle<PrsMgr_PresentationManager>&,
+        const OccHandle<Prs3d_Presentation>& pres,
         const int)
 {
     for (unsigned i = 0; i < this->textCount(); ++i) {
@@ -161,7 +161,7 @@ void AIS_Text::Compute(
     }
 }
 
-void AIS_Text::ComputeSelection(const Handle(SelectMgr_Selection)&, const int)
+void AIS_Text::ComputeSelection(const OccHandle<SelectMgr_Selection>&, const int)
 {
 }
 

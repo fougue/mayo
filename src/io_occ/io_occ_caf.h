@@ -36,11 +36,11 @@ std::mutex& cafGlobalMutex();
 #define MayoIO_CafGlobalScopedLock(name) \
     [[maybe_unused]] std::lock_guard<std::mutex> name(Mayo::IO::Private::cafGlobalMutex());
 
-Handle_XSControl_WorkSession cafWorkSession(const IGESCAFControl_Reader& reader);
-Handle_XSControl_WorkSession cafWorkSession(const STEPCAFControl_Reader& reader);
+OccHandle<XSControl_WorkSession> cafWorkSession(const IGESCAFControl_Reader& reader);
+OccHandle<XSControl_WorkSession> cafWorkSession(const STEPCAFControl_Reader& reader);
 
-Handle_Transfer_FinderProcess cafFinderProcess(const IGESCAFControl_Writer& writer);
-Handle_Transfer_FinderProcess cafFinderProcess(const STEPCAFControl_Writer& writer);
+OccHandle<Transfer_FinderProcess> cafFinderProcess(const IGESCAFControl_Writer& writer);
+OccHandle<Transfer_FinderProcess> cafFinderProcess(const STEPCAFControl_Writer& writer);
 
 bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
 bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);

@@ -155,7 +155,7 @@ TDF_Label PlyReader::transferMesh(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     // Create target mesh
     const int triangleCount = CppUtils::safeStaticCast<int>(m_vecIndex.size() / 3);
-    Handle_Poly_Triangulation mesh = new Poly_Triangulation(m_nodeCount, triangleCount, false/*hasUvNodes*/);
+    OccHandle<Poly_Triangulation> mesh = new Poly_Triangulation(m_nodeCount, triangleCount, false/*hasUvNodes*/);
     if (!m_vecNormalCoord.empty())
         MeshUtils::allocateNormals(mesh);
 

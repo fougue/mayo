@@ -95,7 +95,7 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
 
         if (object->Attributes()->FaceBoundaryDraw() != showFaceBounds) {
             object->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
-            auto aisLink = Handle_AIS_ConnectedInteractive::DownCast(object);
+            auto aisLink = OccHandle<AIS_ConnectedInteractive>::DownCast(object);
             if (aisLink && aisLink->HasConnection()) {
                 aisLink->ConnectedTo()->Attributes()->SetFaceBoundaryDraw(showFaceBounds);
                 aisLink->ConnectedTo()->Redisplay(true);

@@ -13,7 +13,7 @@ namespace Mayo {
 // Pre-declarations
 class GraphicsPointCloudObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsPointCloudObjectDriver, GraphicsObjectDriver)
-using GraphicsPointCloudObjectDriverPtr = Handle(GraphicsPointCloudObjectDriver);
+using GraphicsPointCloudObjectDriverPtr = OccHandle<GraphicsPointCloudObjectDriver>;
 
 // Provides creation and configuration of graphics objects for point clouds
 class GraphicsPointCloudObjectDriver : public GraphicsObjectDriver {

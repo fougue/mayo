@@ -104,7 +104,7 @@ public:
         // Material
         {
             const TDF_Label labelPart = XCaf::isShapeReference(label) ? XCaf::shapeReferred(label) : label;
-            const Handle_XCAFDoc_Material material = XCaf::shapeMaterial(labelPart);
+            const OccHandle<XCAFDoc_Material> material = XCaf::shapeMaterial(labelPart);
             if (material) {
                 m_propertyMaterialDensity.setQuantity(XCaf::shapeMaterialDensity(material));
                 m_propertyMaterialName.setValue(to_stdString(material->GetName()));
@@ -219,7 +219,7 @@ class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
 public:
     Properties(const DocumentTreeNode& treeNode)
     {
-        Handle_Poly_Triangulation mesh;
+        OccHandle<Poly_Triangulation> mesh;
         IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& access) {
             mesh = access.triangulation();
         });

@@ -45,13 +45,13 @@ struct GraphicsUtils {
     static void V3dViewer_setGridColors(const OccHandle<V3d_Viewer>& viewer, const AspectGridColors& colors);
 
     static void AisContext_eraseObject(
-            const OccHandle<AIS_InteractiveContext>& context,
-            const OccHandle<AIS_InteractiveObject>& object
+        const OccHandle<AIS_InteractiveContext>& context,
+        const OccHandle<AIS_InteractiveObject>& object
     );
     static void AisContext_setObjectVisible(
-            const OccHandle<AIS_InteractiveContext>& context,
-            const OccHandle<AIS_InteractiveObject>& object,
-            bool on
+        const OccHandle<AIS_InteractiveContext>& context,
+        const OccHandle<AIS_InteractiveObject>& object,
+        bool on
     );
 
     static AIS_InteractiveContext* AisObject_contextPtr(const OccHandle<AIS_InteractiveObject>& object);
@@ -64,16 +64,17 @@ struct GraphicsUtils {
     static OccHandle<Aspect_DisplayConnection> AspectDisplayConnection_create();
 
     static void Gfx3dClipPlane_setCappingHatch(
-            const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch
+        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch
     );
     static void Gfx3dClipPlane_setNormal(
-            const OccHandle<Graphic3d_ClipPlane>& plane, const gp_Dir& n
+        const OccHandle<Graphic3d_ClipPlane>& plane, const gp_Dir& n
     );
     static void Gfx3dClipPlane_setPosition(
-            const OccHandle<Graphic3d_ClipPlane>& plane, double pos
+        const OccHandle<Graphic3d_ClipPlane>& plane, double pos
     );
 
     static bool ImagePixmap_flipY(Image_PixMap& pixmap);
+
 };
 
 } // namespace Mayo

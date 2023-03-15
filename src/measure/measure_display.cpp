@@ -130,7 +130,7 @@ std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDis
     return BaseMeasureDisplay;
 }
 
-void BaseMeasureDisplay::adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config)
+void BaseMeasureDisplay::adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config)
 {
     static const Prs3d_TextAspect defaultTextAspect;
     gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);
@@ -141,7 +141,7 @@ void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
     for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i) {
         auto gfxObject = measureDisplay->graphicsObjectAt(i);
         gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
-        auto gfxText = Handle(AIS_TextLabel)::DownCast(gfxObject);
+        auto gfxText = OccHandle<AIS_TextLabel>::DownCast(gfxObject);
         if (gfxText) {
             gfxText->SetDisplayType(Aspect_TODT_SUBTITLE);
             gfxText->SetColorSubTitle(Quantity_NOC_BLACK);
@@ -343,7 +343,7 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
     const gp_Ax2 axCircle(angle.pntCenter, vec1.Crossed(vec2), vec1);
-    Handle_Geom_Circle geomCircle = new Geom_Circle(axCircle, 0.8 * vec1.Magnitude());
+    OccHandle<Geom_Circle> geomCircle = new Geom_Circle(axCircle, 0.8 * vec1.Magnitude());
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);

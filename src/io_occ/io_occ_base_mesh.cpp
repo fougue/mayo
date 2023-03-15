@@ -77,7 +77,7 @@ TDF_LabelSequence OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* pro
     this->applyParameters();
     m_reader.SetDocument(doc);
     const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
-    Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+    OccHandle<Message_ProgressIndicator> indicator = new OccProgressIndicator(progress);
     m_reader.Perform(m_filepath.u8string().c_str(), TKernelUtils::start(indicator));
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }

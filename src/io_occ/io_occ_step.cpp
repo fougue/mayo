@@ -8,6 +8,7 @@
 #include "io_occ_caf.h"
 #include "../base/messenger.h"
 #include "../base/meta_enum.h"
+#include "../base/occ_handle.h"
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -232,12 +233,14 @@ public:
         this->lengthUnit.setDescription(
                     textIdTr("Defines a unit in which the STEP file should be written. If set to "
                              "unit other than millimeter, the model is converted to these units "
-                             "during the translation"));
+                             "during the translation")
+        );
 
         this->freeVertexMode.setDescription(
                     textIdTr("Parameter to write all free vertices in one SDR (name and style of "
                              "vertex are lost) or each vertex in its own SDR (name and style of "
-                             "vertex are exported)"));
+                             "vertex are exported)")
+        );
         this->freeVertexMode.setDescriptions({
                     { FreeVertexMode::Compound, textIdTr("All free vertices are united into one "
                       "compound and exported in one shape definition representation (vertex name "
@@ -250,11 +253,13 @@ public:
         this->writePCurves.setDescription(
                     textIdTr("Indicates whether parametric curves (curves in parametric space of surface) should be "
                              "written into the STEP file.\n"
-                             "It can be disabled in order to minimize the size of the resulting file."));
+                             "It can be disabled in order to minimize the size of the resulting file.")
+        );
 
         this->writeSubShapesNames.setDescription(
                     textIdTr("Indicates whether to write sub-shape names to 'Name' attributes of "
-                             "STEP Representation Items"));
+                             "STEP Representation Items")
+        );
 
         this->headerAuthor.setDescription(textIdTr("Author attribute in STEP header"));
         this->headerOrganization.setDescription(textIdTr("Organization(of author) attribute in STEP header"));
@@ -334,7 +339,6 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
     makeHeader.SetOrganizationValue(1, to_OccHandleHAsciiString(m_params.headerOrganization));
     makeHeader.SetOriginatingSystem(to_OccHandleHAsciiString(m_params.headerOriginatingSystem));
     makeHeader.SetDescriptionValue(1, to_OccHandleHAsciiString(m_params.headerDescription));
-
     const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;
 }

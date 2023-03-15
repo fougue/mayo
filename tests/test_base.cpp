@@ -848,7 +848,7 @@ void TestBase::MeshUtils_test()
     int countTriangle = 0;
     BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
         TopLoc_Location loc;
-        const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+        const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
         if (!polyTri.IsNull()) {
             countNode += polyTri->NbNodes();
             countTriangle += polyTri->NbTriangles();
@@ -856,13 +856,13 @@ void TestBase::MeshUtils_test()
     });
 
     // Merge all face triangulations into one
-    Handle_Poly_Triangulation polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
+    OccHandle<Poly_Triangulation> polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
     {
         int idNodeOffset = 0;
         int idTriangleOffset = 0;
         BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
             TopLoc_Location loc;
-            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+            const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
             if (!polyTri.IsNull()) {
                 for (int i = 1; i <= polyTri->NbNodes(); ++i)
                     MeshUtils::setNode(polyTriBox, idNodeOffset + i, polyTri->Node(i));

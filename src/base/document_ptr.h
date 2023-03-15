@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include "occ_handle.h"
 #include <TDocStd_Document.hxx>
 
 namespace Mayo {
 
 class Document;
 DEFINE_STANDARD_HANDLE(Document, TDocStd_Document)
-using DocumentPtr = Handle(Document);
+using DocumentPtr = OccHandle<Document>;
 
 } // namespace Mayo

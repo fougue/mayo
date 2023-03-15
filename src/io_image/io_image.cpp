@@ -35,7 +35,7 @@
 namespace Mayo {
 
 // Defined in graphics_create_virtual_window.cpp
-Handle_Aspect_Window graphicsCreateVirtualWindow(const Handle_Graphic3d_GraphicDriver&, int , int);
+OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>&, int , int);
 
 namespace IO {
 
@@ -110,7 +110,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     // Create 3D view
     GraphicsScene gfxScene;
-    Handle_V3d_View view = ImageWriter::createV3dView(&gfxScene, m_params);
+    OccHandle<V3d_View> view = ImageWriter::createV3dView(&gfxScene, m_params);
 
     const int itemCount = CppUtils::safeStaticCast<int>(m_vecAppItem.size());
     // Render application items
@@ -134,7 +134,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
-    Handle_Image_AlienPixMap pixmap = ImageWriter::createImage(view);
+    OccHandle<Image_AlienPixMap> pixmap = ImageWriter::createImage(view);
     if (!pixmap)
         return false;
 
@@ -159,14 +159,14 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-Handle_Image_AlienPixMap ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
+OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const Parameters& params)
 {
     if (!guiDoc)
         return {};
 
     const GuiDocument::ViewTrihedronMode onEntryTrihedronMode = guiDoc->viewTrihedronMode();
     const bool onEntryOriginTrihedronVisible = guiDoc->isOriginTrihedronVisible();
-    Handle_V3d_View view = ImageWriter::createV3dView(guiDoc->graphicsScene(), params);
+    OccHandle<V3d_View> view = ImageWriter::createV3dView(guiDoc->graphicsScene(), params);
 
     auto _ = gsl::finally([=]{
         guiDoc->graphicsScene()->v3dViewer()->SetViewOff(view);
@@ -184,9 +184,9 @@ Handle_Image_AlienPixMap ImageWriter::createImage(GuiDocument* guiDoc, const Par
     return ImageWriter::createImage(view);
 }
 
-Handle_Image_AlienPixMap ImageWriter::createImage(Handle_V3d_View view)
+OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
 {
-    Handle_Image_AlienPixMap pixmap = new Image_AlienPixMap;
+    OccHandle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);
@@ -198,7 +198,7 @@ Handle_Image_AlienPixMap ImageWriter::createImage(Handle_V3d_View view)
     return pixmap;
 }
 
-Handle_V3d_View ImageWriter::createV3dView(GraphicsScene* gfxScene, const Parameters& params)
+OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Parameters& params)
 {
     auto fnToGfxCamProjection = [](ImageWriter::CameraProjection proj) {
         switch (proj) {
@@ -209,7 +209,7 @@ Handle_V3d_View ImageWriter::createV3dView(GraphicsScene* gfxScene, const Parame
     };
 
     // Create 3D view
-    Handle_V3d_View view = gfxScene->createV3dView();
+    OccHandle<V3d_View> view = gfxScene->createV3dView();
     view->ChangeRenderingParams().IsAntialiasingEnabled = true;
     view->ChangeRenderingParams().NbMsaaSamples = 4;
     view->SetBackgroundColor(params.backgroundColor);

@@ -33,7 +33,7 @@ static QImage qtImageTemp(const Image_PixMap& occImg)
 
 } // namespace Internal
 
-DialogSaveImageView::DialogSaveImageView(const Handle_V3d_View& view, QWidget* parent)
+DialogSaveImageView::DialogSaveImageView(const OccHandle<V3d_View>& view, QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogSaveImageView),
       m_view(view)

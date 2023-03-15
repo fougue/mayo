@@ -158,7 +158,7 @@ void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, 
 template<typename Function>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, Function fn) const
 {
-    opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+    OccHandle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
     this->aisContextPtr()->EntityOwners(mapEntityOwner, object, selectionMode);
     for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
         fn(*it);

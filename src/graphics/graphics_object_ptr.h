@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include <AIS_InteractiveObject.hxx>
 
 namespace Mayo {
 
-using GraphicsObjectPtr = Handle(AIS_InteractiveObject);
+using GraphicsObjectPtr = OccHandle<AIS_InteractiveObject>;
 using GraphicsObjectSelectionMode = int;
 
 } // namespace Mayo

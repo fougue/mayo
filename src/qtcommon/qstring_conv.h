@@ -65,8 +65,8 @@ template<> struct StringConv<TCollection_AsciiString, QString> {
 };
 
 // Handle(TCollection_HAsciiString) -> QString
-template<> struct StringConv<Handle(TCollection_HAsciiString), QString> {
-    static auto to(const Handle(TCollection_HAsciiString)& str) {
+template<> struct StringConv<OccHandle<TCollection_HAsciiString>, QString> {
+    static auto to(const OccHandle<TCollection_HAsciiString>& str) {
         return string_conv<QString>(str ? str->String() : TCollection_AsciiString());
     }
 };
@@ -126,9 +126,9 @@ template<> struct StringConv<QString, TCollection_AsciiString> {
 };
 
 // QString -> Handle(TCollection_HAsciiString)
-template<> struct StringConv<QString, Handle(TCollection_HAsciiString)> {
+template<> struct StringConv<QString, OccHandle<TCollection_HAsciiString>> {
     static auto to(const QString& str) {
-        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(qUtf8Printable(str));
+        OccHandle<TCollection_HAsciiString> hnd = new TCollection_HAsciiString(qUtf8Printable(str));
         return hnd;
     }
 };

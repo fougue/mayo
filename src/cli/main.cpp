@@ -53,7 +53,7 @@
 namespace Mayo {
 
 // Declared in graphics/graphics_create_driver.cpp
-void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
+void setFunctionCreateGraphicsDriver(std::function<OccHandle<Graphic3d_GraphicDriver>()> fn);
 
 // Provides an i18n context for the current file(main.cpp)
 class Main {
@@ -340,7 +340,7 @@ static void initGui(GuiApplication* guiApp)
         return;
 
     guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-    setFunctionCreateGraphicsDriver([]() -> Handle_Graphic3d_GraphicDriver {
+    setFunctionCreateGraphicsDriver([]() -> OccHandle<Graphic3d_GraphicDriver> {
         return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
     });
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());

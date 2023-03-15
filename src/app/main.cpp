@@ -65,7 +65,7 @@
 namespace Mayo {
 
 // Declared in graphics/graphics_create_driver.cpp
-void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
+void setFunctionCreateGraphicsDriver(std::function<OccHandle<Graphic3d_GraphicDriver>()> fn);
 
 // Provides an i18n context for the current file(main.cpp)
 class Main {
@@ -267,7 +267,7 @@ Thumbnail createGuiDocumentThumbnail(GuiDocument* guiDoc, QSize size)
     params.width = size.width();
     params.height = size.height();
     params.backgroundColor = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
-    Handle_Image_AlienPixMap pixmap = IO::ImageWriter::createImage(guiDoc, params);
+    OccHandle<Image_AlienPixMap> pixmap = IO::ImageWriter::createImage(guiDoc, params);
     if (!pixmap) {
         qDebug() << "Empty pixmap returned by IO::ImageWriter::createImage()";
         return thumbnail;

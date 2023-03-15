@@ -9,8 +9,8 @@
 #  include <windows.h>
 #endif
 
+#include "../base/occ_handle.h"
 #include "widget_occ_view.h"
-
 #include "occt_window.h"
 
 #include <QtGui/QResizeEvent>
@@ -22,7 +22,7 @@ namespace Mayo {
 
 static IWidgetOccView::Creator& getWidgetOccViewCreator()
 {
-    static IWidgetOccView::Creator fn = [](const Handle_V3d_View& view, QWidget* parent) {
+    static IWidgetOccView::Creator fn = [](const OccHandle<V3d_View>& view, QWidget* parent) {
         return new QWidgetOccView(view, parent);
     };
     return fn;
@@ -33,7 +33,7 @@ void IWidgetOccView::setCreator(IWidgetOccView::Creator fn)
     getWidgetOccViewCreator() = std::move(fn);
 }
 
-IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+IWidgetOccView* IWidgetOccView::create(const OccHandle<V3d_View>& view, QWidget* parent)
 {
     const auto& fn = getWidgetOccViewCreator();
     return fn(view, parent);
@@ -44,12 +44,12 @@ IWidgetOccView* IWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
 // Defined in widget_occ_view.cpp
 bool QOpenGLWidgetOccView_isCoreProfile();
 void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback);
-Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
-bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver&);
-Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Handle_Graphic3d_GraphicDriver&);
+OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
+bool QOpenGLWidgetOccView_wrapFrameBuffer(const OccHandle<Graphic3d_GraphicDriver>&);
+Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const OccHandle<Graphic3d_GraphicDriver>&);
 
 
-static Handle_Aspect_NeutralWindow createNativeWindow([[maybe_unused]] QWidget* widget)
+static OccHandle<Aspect_NeutralWindow> createNativeWindow([[maybe_unused]] QWidget* widget)
 {
     auto window = new Aspect_NeutralWindow;
     // On non-Windows systems Aspect_Drawable is aliased to 'unsigned long' so can't init with nullptr
@@ -65,7 +65,7 @@ static Handle_Aspect_NeutralWindow createNativeWindow([[maybe_unused]] QWidget* 
     return window;
 }
 
-QOpenGLWidgetOccView::QOpenGLWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
+QOpenGLWidgetOccView::QOpenGLWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent)
     : QOpenGLWidget(parent),
       IWidgetOccView(view)
 {
@@ -100,12 +100,12 @@ void QOpenGLWidgetOccView::redraw()
     this->update();
 }
 
-QOpenGLWidgetOccView* QOpenGLWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+QOpenGLWidgetOccView* QOpenGLWidgetOccView::create(const OccHandle<V3d_View>& view, QWidget* parent)
 {
     return new QOpenGLWidgetOccView(view, parent);
 }
 
-Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView::createCompatibleGraphicsDriver()
+OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView::createCompatibleGraphicsDriver()
 {
     return QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
 }
@@ -115,7 +115,7 @@ void QOpenGLWidgetOccView::initializeGL()
     const QRect wrect = this->rect();
     const Graphic3d_Vec2i viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
     QOpenGLWidgetOccView_createOpenGlContext([=](Aspect_RenderingContext context) {
-        auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
+        auto window = OccHandle<Aspect_NeutralWindow>::DownCast(this->v3dView()->Window());
         if (!window)
             window = createNativeWindow(this);
 
@@ -129,13 +129,13 @@ void QOpenGLWidgetOccView::paintGL()
     if (!this->v3dView()->Window())
         return;
 
-    const Handle(Graphic3d_GraphicDriver)& driver = this->v3dView()->Viewer()->Driver();
+    const OccHandle<Graphic3d_GraphicDriver>& driver = this->v3dView()->Viewer()->Driver();
     if (!QOpenGLWidgetOccView_wrapFrameBuffer(driver))
         return;
 
     Graphic3d_Vec2i viewSizeOld;
     const Graphic3d_Vec2i viewSizeNew = QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(driver);
-    auto window = Handle_Aspect_NeutralWindow::DownCast(this->v3dView()->Window());
+    auto window = OccHandle<Aspect_NeutralWindow>::DownCast(this->v3dView()->Window());
     window->Size(viewSizeOld.x(), viewSizeOld.y());
     if (viewSizeNew != viewSizeOld) {
         window->SetSize(viewSizeNew.x(), viewSizeNew.y());
@@ -151,7 +151,7 @@ void QOpenGLWidgetOccView::paintGL()
 #endif // OCC_VERSION_HEX >= 0x070600
 
 
-QWidgetOccView::QWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
+QWidgetOccView::QWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent)
     : QWidget(parent),
       IWidgetOccView(view)
 {
@@ -165,8 +165,8 @@ QWidgetOccView::QWidgetOccView(const Handle_V3d_View& view, QWidget* parent)
 }
 
 // Defined in widget_occ_view.cpp
-Handle_Graphic3d_GraphicDriver QWidgetOccView_createCompatibleGraphicsDriver();
-Handle_Graphic3d_GraphicDriver QWidgetOccView::createCompatibleGraphicsDriver()
+OccHandle<Graphic3d_GraphicDriver> QWidgetOccView_createCompatibleGraphicsDriver();
+OccHandle<Graphic3d_GraphicDriver> QWidgetOccView::createCompatibleGraphicsDriver()
 {
     return QWidgetOccView_createCompatibleGraphicsDriver();
 }
@@ -176,7 +176,7 @@ void QWidgetOccView::redraw()
     this->v3dView()->Redraw();
 }
 
-QWidgetOccView* QWidgetOccView::create(const Handle_V3d_View& view, QWidget* parent)
+QWidgetOccView* QWidgetOccView::create(const OccHandle<V3d_View>& view, QWidget* parent)
 {
     return new QWidgetOccView(view, parent);
 }
@@ -184,7 +184,7 @@ QWidgetOccView* QWidgetOccView::create(const Handle_V3d_View& view, QWidget* par
 void QWidgetOccView::showEvent(QShowEvent*)
 {
     if (this->v3dView()->Window().IsNull()) {
-        Handle_Aspect_Window hWnd = new OcctWindow(this);
+        OccHandle<Aspect_Window> hWnd = new OcctWindow(this);
         this->v3dView()->SetWindow(hWnd);
         if (!hWnd->IsMapped())
             hWnd->Map();

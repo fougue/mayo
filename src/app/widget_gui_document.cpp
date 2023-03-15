@@ -154,7 +154,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     });
 
     m_guiDoc->viewCameraAnimation()->setBackend(std::make_unique<QtAnimationBackend>(QEasingCurve::OutExpo));
-    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
+    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const OccHandle<V3d_View>& view){
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });

@@ -21,8 +21,8 @@ namespace MeshUtils {
 double triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
 double triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
 
-double triangulationVolume(const Handle_Poly_Triangulation& triangulation);
-double triangulationArea(const Handle_Poly_Triangulation& triangulation);
+double triangulationVolume(const OccHandle<Poly_Triangulation>& triangulation);
+double triangulationArea(const OccHandle<Poly_Triangulation>& triangulation);
 
 #if OCC_VERSION_HEX >= 0x070600
 using Poly_Triangulation_NormalType = gp_Vec3f;
@@ -30,13 +30,13 @@ using Poly_Triangulation_NormalType = gp_Vec3f;
 using Poly_Triangulation_NormalType = gp_Vec;
 #endif
 
-void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt);
-void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle);
-void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n);
-void setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double u, double v);
-void allocateNormals(const Handle_Poly_Triangulation& triangulation);
+void setNode(const OccHandle<Poly_Triangulation>& triangulation, int index, const gp_Pnt& pnt);
+void setTriangle(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangle& triangle);
+void setNormal(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangulation_NormalType& n);
+void setUvNode(const OccHandle<Poly_Triangulation>& triangulation, int index, double u, double v);
+void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation);
 
-const Poly_Array1OfTriangle& triangles(const Handle_Poly_Triangulation& triangulation);
+const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation);
 
 enum class Orientation {
     Unknown,

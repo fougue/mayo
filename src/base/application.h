@@ -8,6 +8,7 @@
 
 #include "application_ptr.h"
 #include "document.h"
+#include "occ_handle.h"
 #include "signal.h"
 #include "span.h"
 #include "text_id.h"
@@ -69,16 +70,16 @@ public:
 
 public: // -- from TDocStd_Application
 #if OCC_VERSION_HEX >= 0x070600
-    void NewDocument(const TCollection_ExtendedString& format, Handle(CDM_Document)& outDoc) override;
-    void InitDocument(const opencascade::handle<CDM_Document>& doc) const override;
+    void NewDocument(const TCollection_ExtendedString& format, OccHandle<CDM_Document>& outDoc) override;
+    void InitDocument(const OccHandle<CDM_Document>& doc) const override;
 #else
-    void NewDocument(const TCollection_ExtendedString& format, Handle(TDocStd_Document)& outDoc) override;
-    void InitDocument(const Handle(TDocStd_Document)& doc) const override;
+    void NewDocument(const TCollection_ExtendedString& format, OccHandle<TDocStd_Document>& outDoc) override;
+    void InitDocument(const OccHandle<TDocStd_Document>& doc) const override;
 #endif
 
 // TODO: Redefine TDocStd_Document::BeforeClose() to emit signal documentClosed
 // class Document : public TDocStd_Document { ... };
-// using DocumentPtr = Handle_Document
+// using DocumentPtr = OccHandle<Document>
 // -> Can't do because PCDM_RetrievalDriver subclasses create explicitly "new TDocStd_Document(...)"
 //    This would break TDocStd_Application::Open(...)
 

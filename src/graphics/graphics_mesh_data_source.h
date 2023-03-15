@@ -10,6 +10,8 @@
 // -- Basically the same as XSDRAWSTLVRML_DataSource but it allows to be free of TKXSDRAW
 // --
 
+#include "../base/occ_handle.h"
+
 #include <MeshVS_DataSource.hxx>
 #include <MeshVS_EntityType.hxx>
 #include <Poly_Triangulation.hxx>
@@ -21,7 +23,7 @@ namespace Mayo {
 
 class GraphicsMeshDataSource : public MeshVS_DataSource {
 public:
-    GraphicsMeshDataSource(const Handle_Poly_Triangulation& mesh);
+    GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh);
 
     bool GetGeom(const int ID, const bool IsElement, TColStd_Array1OfReal& Coords, int& NbNodes, MeshVS_EntityType& Type) const override;
     bool GetGeomType(const int ID, const bool IsElement, MeshVS_EntityType& Type) const override;
@@ -32,12 +34,12 @@ public:
     bool GetNormal(const int Id, const int Max, double& nx, double& ny, double& nz) const override;
 
 private:
-  Handle_Poly_Triangulation m_mesh;
+  OccHandle<Poly_Triangulation> m_mesh;
   TColStd_PackedMapOfInteger m_nodes;
   TColStd_PackedMapOfInteger m_elements;
-  Handle_TColStd_HArray2OfInteger m_elemNodes;
-  Handle_TColStd_HArray2OfReal m_nodeCoords;
-  Handle_TColStd_HArray2OfReal m_elemNormals;
+  OccHandle<TColStd_HArray2OfInteger> m_elemNodes;
+  OccHandle<TColStd_HArray2OfReal> m_nodeCoords;
+  OccHandle<TColStd_HArray2OfReal> m_elemNormals;
 };
 
 } // namespace Mayo

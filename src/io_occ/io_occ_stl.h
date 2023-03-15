@@ -8,6 +8,7 @@
 
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
+#include "../base/occ_handle.h"
 #include <Poly_Triangulation.hxx>
 #include <TopoDS_Shape.hxx>
 
@@ -22,7 +23,7 @@ public:
     void applyProperties(const PropertyGroup*) override {}
 
 private:
-    Handle_Poly_Triangulation m_mesh;
+    OccHandle<Poly_Triangulation> m_mesh;
     FilePath m_baseFilename;
 };
 

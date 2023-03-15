@@ -46,7 +46,7 @@ double triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
     return 0.5 * std::sqrt(cx*cx + cy*cy + cz*cz);
 }
 
-double triangulationVolume(const Handle_Poly_Triangulation& triangulation)
+double triangulationVolume(const OccHandle<Poly_Triangulation>& triangulation)
 {
     if (!triangulation)
         return 0;
@@ -59,13 +59,14 @@ double triangulationVolume(const Handle_Poly_Triangulation& triangulation)
         volume += MeshUtils::triangleSignedVolume(
                     triangulation->Node(v1).Coord(),
                     triangulation->Node(v2).Coord(),
-                    triangulation->Node(v3).Coord());
+                    triangulation->Node(v3).Coord()
+            );
     }
 
     return std::abs(volume);
 }
 
-double triangulationArea(const Handle_Poly_Triangulation& triangulation)
+double triangulationArea(const OccHandle<Poly_Triangulation>& triangulation)
 {
     if (!triangulation)
         return 0;
@@ -78,13 +79,14 @@ double triangulationArea(const Handle_Poly_Triangulation& triangulation)
         area += MeshUtils::triangleArea(
                     triangulation->Node(v1).Coord(),
                     triangulation->Node(v2).Coord(),
-                    triangulation->Node(v3).Coord());
+                    triangulation->Node(v3).Coord()
+            );
     }
 
     return area;
 }
 
-void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt)
+void setNode(const OccHandle<Poly_Triangulation>& triangulation, int index, const gp_Pnt& pnt)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetNode(index, pnt);
@@ -93,7 +95,7 @@ void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp
 #endif
 }
 
-void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle)
+void setTriangle(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangle& triangle)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetTriangle(index, triangle);
@@ -102,7 +104,7 @@ void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, cons
 #endif
 }
 
-void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n)
+void setNormal(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangulation_NormalType& n)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetNormal(index, n);
@@ -114,7 +116,7 @@ void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const 
 #endif
 }
 
-void setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double u, double v)
+void setUvNode(const OccHandle<Poly_Triangulation>& triangulation, int index, double u, double v)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetUVNode(index, gp_Pnt2d{u, v});
@@ -123,7 +125,7 @@ void setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double
 #endif
 }
 
-void allocateNormals(const Handle_Poly_Triangulation& triangulation)
+void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->AddNormals();
@@ -133,7 +135,7 @@ void allocateNormals(const Handle_Poly_Triangulation& triangulation)
 #endif
 }
 
-const Poly_Array1OfTriangle& triangles(const Handle_Poly_Triangulation& triangulation)
+const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation)
 {
 #if OCC_VERSION_HEX < 0x070600
     return triangulation->Triangles();

@@ -59,9 +59,9 @@ public:
     const Parameters& constParameters() const { return m_params; }
 
     // Helper
-    static Handle_Image_AlienPixMap createImage(GuiDocument* guiDoc, const Parameters& params);
-    static Handle_Image_AlienPixMap createImage(Handle_V3d_View view);
-    static Handle_V3d_View createV3dView(GraphicsScene* gfxScene, const Parameters& params);
+    static OccHandle<Image_AlienPixMap> createImage(GuiDocument* guiDoc, const Parameters& params);
+    static OccHandle<Image_AlienPixMap> createImage(OccHandle<V3d_View> view);
+    static OccHandle<V3d_View> createV3dView(GraphicsScene* gfxScene, const Parameters& params);
 
 private:
     class Properties;

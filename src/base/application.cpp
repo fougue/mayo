@@ -30,7 +30,7 @@ public:
     FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    Handle(CDM_Document) CreateDocument() override { return new Document(m_app);  }
+    OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app);  }
 #endif
 
 private:
@@ -42,7 +42,7 @@ public:
     FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
-    Handle(CDM_Document) CreateDocument() override { return new Document(m_app); }
+    OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app); }
 #endif
 
 private:
@@ -94,9 +94,9 @@ DocumentPtr Application::newDocument(Document::Format docFormat)
 {
     const char* docNameFormat = Document::toNameFormat(docFormat);
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-    Handle(CDM_Document) stdDoc;
+    OccHandle<CDM_Document> stdDoc;
 #else
-    Handle(TDocStd_Document) stdDoc;
+    OccHandle<TDocStd_Document> stdDoc;
 #endif
     this->NewDocument(docNameFormat, stdDoc);
     return DocumentPtr::DownCast(stdDoc);
@@ -104,7 +104,7 @@ DocumentPtr Application::newDocument(Document::Format docFormat)
 
 DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus)
 {
-    Handle_TDocStd_Document stdDoc;
+    OccHandle<TDocStd_Document> stdDoc;
     const PCDM_ReaderStatus readStatus = this->Open(filepathTo<TCollection_ExtendedString>(filepath), stdDoc);
     if (ptrReadStatus)
         *ptrReadStatus = readStatus;
@@ -116,7 +116,7 @@ DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatu
 
 DocumentPtr Application::findDocumentByIndex(int docIndex) const
 {
-    Handle_TDocStd_Document doc;
+    OccHandle<TDocStd_Document> doc;
     TDocStd_Application::GetDocument(docIndex + 1, doc);
     return !doc.IsNull() ? DocumentPtr::DownCast(doc) : DocumentPtr();
 }
@@ -209,9 +209,9 @@ Span<const char*> Application::envOpenCascadePaths()
     return arrayPathName;
 }
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-void Application::NewDocument(const TCollection_ExtendedString&, Handle(CDM_Document)& outDocument)
+void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<CDM_Document>& outDocument)
 #else
-void Application::NewDocument(const TCollection_ExtendedString&, Handle(TDocStd_Document)& outDocument)
+void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<TDocStd_Document>& outDocument)
 #endif
 {
     // TODO: check format == "mayo" if not throw exception
@@ -224,9 +224,9 @@ void Application::NewDocument(const TCollection_ExtendedString&, Handle(TDocStd_
 }
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-void Application::InitDocument(const Handle(CDM_Document)& doc) const
+void Application::InitDocument(const OccHandle<CDM_Document>& doc) const
 #else
-void Application::InitDocument(const Handle(TDocStd_Document)& doc) const
+void Application::InitDocument(const OccHandle<TDocStd_Document>& doc) const
 #endif
 {
     TDocStd_Application::InitDocument(doc);
