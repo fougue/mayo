@@ -155,6 +155,10 @@ LIBS += \
     -lTKXmlXCAF \
     -lTKXSBase \
 
+minOpenCascadeVersion(7, 7, 0) {
+    LIBS += -lTKXDE
+}
+
 # -- IGES support
 LIBS += -lTKIGES -lTKXDEIGES
 # -- STEP support
