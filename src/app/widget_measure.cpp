@@ -331,6 +331,7 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     // Display new measure graphics objects
     for (IMeasureDisplayPtr& measure : vecNewMeasureDisplay) {
         measure->update(this->currentMeasureDisplayConfig());
+        measure->adaptGraphics(gfxScene->v3dViewer()->Driver());
         foreachGraphicsObject(measure, [=](const GraphicsObjectPtr& gfxObject) {
             gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
             gfxScene->addObject(gfxObject);

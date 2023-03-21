@@ -13,6 +13,8 @@
 #include <ElCLib.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_Circle.hxx>
+#include <OpenGl_GraphicDriver.hxx>
+#include <OpenGl_Context.hxx>
 #include <Prs3d_LineAspect.hxx>
 #include <Prs3d_TextAspect.hxx>
 
@@ -55,6 +57,27 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureT
         return std::make_unique<MeasureDisplayArea>(Mayo::QuantityArea{0});
     default:
         return {};
+    }
+}
+
+void BaseMeasureDisplay::adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver)
+{
+    const auto openGlDriver = Handle_OpenGl_GraphicDriver::DownCast(driver);
+    const auto openGlContext = openGlDriver ? openGlDriver->GetSharedContext() : nullptr;
+    if (!openGlContext)
+        return;
+
+    const bool useVbo = openGlContext->ToUseVbo();
+    for (int i = 0; i < this->graphicsObjectsCount(); ++i) {
+        auto gfxText = Handle(AIS_TextLabel)::DownCast(this->graphicsObjectAt(i));
+        if (gfxText) {
+            // NOTE
+            // Usage of Aspect_TODT_SUBTITLE is causing a crash when VBO are not available(eg because
+            // of too old OpenGL version)
+            gfxText->SetDisplayType(useVbo ? Aspect_TODT_SUBTITLE : Aspect_TODT_NORMAL);
+            gfxText->SetColor(useVbo ? Quantity_NOC_WHITE : Quantity_NOC_BLACK);
+            gfxText->SetTransparency(useVbo ? 0.2 : 0.);
+        }
     }
 }
 

@@ -14,6 +14,7 @@
 #include <AIS_Line.hxx>
 #include <AIS_Point.hxx>
 #include <AIS_TextLabel.hxx>
+#include <Graphic3d_GraphicDriver.hxx>
 #include <gp_Circ.hxx>
 #include <Quantity_Color.hxx>
 
@@ -35,11 +36,32 @@ struct MeasureDisplayConfig {
 class IMeasureDisplay {
 public:
     virtual ~IMeasureDisplay() = default;
+
+    // Update the textual and graphical representations regarding some display configuration
     virtual void update(const MeasureDisplayConfig& config) = 0;
+
+    // Textual representation of the measure
     virtual std::string text() const = 0;
+
+    // Count of objects for the 3D graphics representation of the measure
     virtual int graphicsObjectsCount() const = 0;
+
+    // 3D graphics object at index 'i'
+    // Valid index is within [0 .. graphicsObjectsCount[
     virtual GraphicsObjectPtr graphicsObjectAt(int i) const = 0;
+
+    // Adapt 3D graphics objects to what is supported by 'driver'
+    // This function must be called before adding the graphical objects to the 3D scene(Mayo::GraphicsScene
+    // or AIS_InteractiveContext)
+    virtual void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) = 0;
+
+    // Whether "sum" mode is supported by the measure display
+    // This is relevant when multiple measureable 3D objects are selected. The cumulative sum of
+    // each measure is computed and made available in the textual and/or graphics representations
     virtual bool isSumSupported() const = 0;
+
+    // Add 'other' to this measure display(see isSumSupported())
+    // 'other' should be of the same base type as this IMeasureDisplay object
     virtual void sumAdd(const IMeasureDisplay& other) = 0;
 };
 
@@ -51,6 +73,8 @@ public:
     // Factory method to create an IMeasureDisplay object suited to input measure value
     static std::unique_ptr<IMeasureDisplay> createFrom(MeasureType type, const MeasureValue& value);
     static std::unique_ptr<IMeasureDisplay> createEmptySumFrom(MeasureType type);
+
+    void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) override;
 
     bool isSumSupported() const override { return false; }
     void sumAdd(const IMeasureDisplay& other) override;
