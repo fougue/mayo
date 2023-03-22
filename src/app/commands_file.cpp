@@ -488,6 +488,7 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
                 Command::tr("Close \"%1\"").arg(strFilepathQuoted(docName)) :
                 Command::tr("Close");
     this->action()->setText(textActionClose);
+    this->action()->setToolTip(textActionClose);
 }
 
 CommandCloseAllDocuments::CommandCloseAllDocuments(IAppContext* context)

@@ -90,6 +90,8 @@ void CommandLeftSidebarWidgetToggle::updateAction()
         this->action()->setText(Command::tr("Show Left Sidebar"));
         this->action()->setIcon(mayoTheme()->icon(Theme::Icon::LeftSidebar));
     }
+
+    this->action()->setToolTip(this->action()->text());
 }
 
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
