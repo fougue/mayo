@@ -148,8 +148,8 @@ void GraphicsScene::redraw()
         return;
 
     //d->m_aisContext->UpdateCurrentViewer();
-    for (const Handle_V3d_View& view : d->m_v3dViewer->DefinedViews())
-        this->signalRedrawRequested.send(view);
+    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next())
+        this->signalRedrawRequested.send(itView.Value());
 }
 
 void GraphicsScene::redraw(const Handle_V3d_View& view)
@@ -157,10 +157,12 @@ void GraphicsScene::redraw(const Handle_V3d_View& view)
     if (d->m_isRedrawBlocked)
         return;
 
-    if (!d->m_v3dViewer->DefinedViews().Contains(view))
-        return;
-
-    this->signalRedrawRequested.send(view);
+    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next()) {
+        if (itView.Value() == view) {
+            this->signalRedrawRequested.send(view);
+            break;
+        }
+    }
 }
 
 bool GraphicsScene::isRedrawBlocked() const
