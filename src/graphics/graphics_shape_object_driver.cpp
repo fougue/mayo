@@ -97,12 +97,10 @@ void GraphicsShapeObjectDriver::applyDisplayMode(GraphicsObjectPtr object, Enume
                 aisLink->ConnectedTo()->Redisplay(true);
             }
             else {
-                object->Redisplay(true);
+                object->Redisplay(true/*AllModes*/);
             }
         }
     }
-
-    // context->UpdateCurrentViewer();
 }
 
 Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsObjectPtr& object) const

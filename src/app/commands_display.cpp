@@ -46,13 +46,14 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
     this->setAction(action);
 
     QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
-        const GuiDocument* guiDoc = this->currentGuiDocument();
+        GuiDocument* guiDoc = this->currentGuiDocument();
         if (guiDoc) {
             guiDoc->v3dView()->Camera()->SetProjectionType(
                         action == m_actionOrtho ?
                             Graphic3d_Camera::Projection_Orthographic :
-                            Graphic3d_Camera::Projection_Perspective);
-            guiDoc->v3dView()->Update();
+                            Graphic3d_Camera::Projection_Perspective
+            );
+            guiDoc->graphicsView().redraw();
         }
     });
 
@@ -80,7 +81,8 @@ void CommandChangeProjection::onCurrentDocumentChanged()
     // Sync menu with current projection type
     const auto viewProjType = guiDoc->v3dView()->Camera()->ProjectionType();
     Q_ASSERT(viewProjType == Graphic3d_Camera::Projection_Perspective
-             || viewProjType == Graphic3d_Camera::Projection_Orthographic);
+             || viewProjType == Graphic3d_Camera::Projection_Orthographic
+    );
     QAction* actionProj = viewProjType == Graphic3d_Camera::Projection_Perspective ? m_actionPersp : m_actionOrtho;
     [[maybe_unused]] QSignalBlocker sigBlk(this->action());
     actionProj->setChecked(true);
@@ -148,7 +150,7 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
 
         QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
             guiDoc->setActiveDisplayMode(driver, action->data().toInt());
-            guiDoc->graphicsScene()->redraw();
+            guiDoc->graphicsView().redraw();
         });
     }
 }
@@ -217,7 +219,7 @@ void CommandTogglePerformanceStats::execute()
     GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
         CppUtils::toggle(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
-        guiDoc->graphicsScene()->redraw();
+        guiDoc->graphicsView().redraw();
     }
 }
 

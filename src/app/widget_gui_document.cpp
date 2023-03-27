@@ -161,6 +161,10 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_widgetBtns = this->createWidgetPanelContainer(widgetBtnsContents);
 
     auto gfxScene = m_guiDoc->graphicsScene();
+    gfxScene->signalRedrawRequested.connectSlot([=](const Handle_V3d_View& view) {
+        if (view == m_qtOccView->v3dView())
+            m_qtOccView->redraw();
+    });
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
         m_guiDoc->runViewCameraAnimation(&GraphicsUtils::V3dView_fitAll);
     });
@@ -243,7 +247,7 @@ void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
         m_widgetClipPlanes->setClippingOn(on);
     }
     else if (on) {
-        m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->v3dView());
+        m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->graphicsView());
         this->createWidgetPanelContainer(m_widgetClipPlanes);
         m_guiDoc->signalGraphicsBoundingBoxChanged.connectSlot(&WidgetClipPlanes::setRanges, m_widgetClipPlanes);
         m_widgetClipPlanes->setRanges(m_guiDoc->graphicsBoundingBox());

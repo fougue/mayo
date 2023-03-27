@@ -12,6 +12,7 @@
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
+#include "../graphics/graphics_view_ptr.h"
 #include "v3d_view_camera_animation.h"
 
 #include <Aspect_TypeOfTriedronPosition.hxx>
@@ -44,6 +45,7 @@ public:
 
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
+    GraphicsViewPtr graphicsView() { return GraphicsViewPtr{ &m_gfxScene, m_v3dView }; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
 
     // Gets/sets the ratio between physical pixels and device-independent pixels for the target window.

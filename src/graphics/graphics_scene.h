@@ -41,6 +41,7 @@ public:
     void eraseObject(const GraphicsObjectPtr& object);
 
     void redraw();
+    void redraw(const Handle_V3d_View& view);
     bool isRedrawBlocked() const;
     void blockRedraw(bool on);
 
@@ -99,6 +100,7 @@ public:
     // Signals
     Signal<> signalSelectionChanged;
     Signal<> signalSelectionModeChanged;
+    Signal<const Handle_V3d_View&> signalRedrawRequested;
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;

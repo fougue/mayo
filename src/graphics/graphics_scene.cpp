@@ -144,8 +144,23 @@ void GraphicsScene::eraseObject(const GraphicsObjectPtr& object)
 
 void GraphicsScene::redraw()
 {
-    if (!d->m_isRedrawBlocked)
-        d->m_aisContext->UpdateCurrentViewer();
+    if (d->m_isRedrawBlocked)
+        return;
+
+    //d->m_aisContext->UpdateCurrentViewer();
+    for (const Handle_V3d_View& view : d->m_v3dViewer->DefinedViews())
+        this->signalRedrawRequested.send(view);
+}
+
+void GraphicsScene::redraw(const Handle_V3d_View& view)
+{
+    if (d->m_isRedrawBlocked)
+        return;
+
+    if (!d->m_v3dViewer->DefinedViews().Contains(view))
+        return;
+
+    this->signalRedrawRequested.send(view);
 }
 
 bool GraphicsScene::isRedrawBlocked() const
@@ -263,7 +278,8 @@ AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
 void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 {
     auto gfxObject = GraphicsObjectPtr::DownCast(
-                gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+                gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject()
+    );
     if (GraphicsUtils::AisObject_isVisible(gfxObject))
         d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }

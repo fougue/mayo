@@ -129,7 +129,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         progress->setValue(MathUtils::toPercent(itemProgress, 0, itemCount));
     }
 
-    gfxScene.redraw();
+    view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
     Handle_Image_AlienPixMap pixmap = ImageWriter::createImage(view);
     if (!pixmap)

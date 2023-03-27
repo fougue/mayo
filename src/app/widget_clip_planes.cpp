@@ -21,13 +21,14 @@
 #include <Graphic3d_ClipPlane.hxx>
 #include <Graphic3d_Texture2Dmanual.hxx>
 #include <Image_AlienPixMap.hxx>
+#include <V3d_View.hxx>
 
 namespace Mayo {
 
-WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* parent)
+WidgetClipPlanes::WidgetClipPlanes(GraphicsViewPtr view, QWidget* parent)
     : QWidget(parent),
       m_ui(new Ui_WidgetClipPlanes),
-      m_view(view3d)
+      m_view(view)
 {
     m_ui->setupUi(this);
     this->createPlaneCappingTexture();
@@ -66,7 +67,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             for (ClipPlaneData& data : m_vecClipPlaneData)
                 data.graphics->SetCapping(appModule->properties()->clipPlanesCappingOn);
 
-            m_view->Redraw();
+            m_view.redraw();
         }
         else if (property == &appModule->properties()->clipPlanesCappingHatchOn) {
             Handle_Graphic3d_TextureMap hatchTexture;
@@ -76,7 +77,7 @@ WidgetClipPlanes::WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* paren
             for (ClipPlaneData& data : m_vecClipPlaneData)
                 data.graphics->SetCappingTexture(hatchTexture);
 
-            m_view->Redraw();
+            m_view.redraw();
         }
     });
 
@@ -101,7 +102,7 @@ void WidgetClipPlanes::setRanges(const Bnd_Box& bndBox)
             data.ui.check_On->setChecked(false);
     }
 
-    m_view->Redraw();
+    m_view.redraw();
 }
 
 void WidgetClipPlanes::setClippingOn(bool on)
@@ -109,7 +110,7 @@ void WidgetClipPlanes::setClippingOn(bool on)
     for (ClipPlaneData& data : m_vecClipPlaneData)
         data.graphics->SetOn(on ? data.ui.check_On->isChecked() : false);
 
-    m_view->Redraw();
+    m_view.redraw();
 }
 
 void WidgetClipPlanes::connectUi(ClipPlaneData* data)
@@ -123,7 +124,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     QObject::connect(ui.check_On, &QCheckBox::clicked, this, [=](bool on) {
         ui.widget_Control->setEnabled(on);
         this->setPlaneOn(gfx, on);
-        m_view->Redraw();
+        m_view.redraw();
     });
 
     if (data->ui.customXDirSpin()) {
@@ -147,7 +148,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         const double dPct = ui.spinValueToSliderValue(pos);
         posSlider->setValue(qRound(dPct));
         GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
-        m_view->Redraw();
+        m_view.redraw();
     });
 
     QObject::connect(posSlider, &QSlider::valueChanged, this, [=](int pct) {
@@ -155,14 +156,14 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
         QSignalBlocker sigBlock(posSpin); Q_UNUSED(sigBlock);
         posSpin->setValue(pos);
         GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, pos);
-        m_view->Redraw();
+        m_view.redraw();
     });
 
     QObject::connect(ui.inverseBtn(), &QAbstractButton::clicked, this, [=]{
         const gp_Dir invNormal = gfx->ToPlane().Axis().Direction().Reversed();
         GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, invNormal);
         GraphicsUtils::Gfx3dClipPlane_setPosition(gfx, data->ui.posSpin()->value());
-        m_view->Redraw();
+        m_view.redraw();
     });
 
     // Custom plane normal
@@ -180,7 +181,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
                 const auto bbc = BndBoxCoords::get(m_bndBox);
                 this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));
                 GraphicsUtils::Gfx3dClipPlane_setNormal(gfx, normal);
-                m_view->Redraw();
+                m_view.redraw();
             }
         });
     };
@@ -203,8 +204,8 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
 void WidgetClipPlanes::setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on)
 {
     plane->SetOn(on);
-    if (!GraphicsUtils::V3dView_hasClipPlane(m_view, plane))
-        m_view->AddClipPlane(plane);
+    if (!GraphicsUtils::V3dView_hasClipPlane(m_view.v3dView(), plane))
+        m_view.v3dView()->AddClipPlane(plane);
 }
 
 void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)
