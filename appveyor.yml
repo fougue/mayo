@@ -16,14 +16,18 @@ matrix:
 
 environment:
   matrix:
+    - APPVEYOR_OCC_VERSION: 7.3.0
     - APPVEYOR_OCC_VERSION: 7.4.0
     - APPVEYOR_OCC_VERSION: 7.5.0
     - APPVEYOR_OCC_VERSION: 7.6.0
+    - APPVEYOR_OCC_VERSION: 7.7.0
 
 cache:
+  - OpenCASCADE-7.3.0-vc14-64.rar
   - OpenCASCADE-7.4.0-vc14-64.rar
   - OpenCASCADE-7.5.0-vc14-64.rar
   - OpenCASCADE-7.6.0-vc14-64.rar
+  - OpenCASCADE-7.7.0-vc14-64.rar
 
 install:
   - if not exist OpenCASCADE-%APPVEYOR_OCC_VERSION%-vc14-64.rar
