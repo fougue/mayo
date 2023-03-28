@@ -57,7 +57,7 @@ Format System::probeFormat(const FilePath& filepath) const
         FormatProbeInput probeInput = {};
         probeInput.filepath = filepath;
         probeInput.contentsBegin = std::string_view(buff.data(), file.gcount());
-        probeInput.hintFullSize = std::filesystem::file_size(filepath);
+        probeInput.hintFullSize = filepathFileSize(filepath);
         for (const FormatProbe& fnProbe : m_vecFormatProbe) {
             const Format format = fnProbe(probeInput);
             if (format != Format_Unknown)
@@ -264,7 +264,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             args.entityPostProcess(labelEntity, &subProgress);
         }
     };
-    auto fnAddModelTreeEntities = [&](TaskData& taskData) {
+    auto fnAddModelTreeEntities = [&](const TaskData& taskData) {
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity)
             doc->addEntityTreeNode(labelEntity);
     };
@@ -285,7 +285,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         vecTaskData.resize(listFilepath.size());
 
         TaskManager childTaskManager;
-        QObject::connect(&childTaskManager, &TaskManager::progressChanged, [&](TaskId, int) {
+        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, int) {
             rootProgress->setValue(childTaskManager.globalProgress());
         });
 
@@ -371,6 +371,13 @@ System::Operation_ExportApplicationItems::targetFormat(Format format) {
     m_args.targetFormat = format;
     return *this;
 }
+
+System::Operation_ExportApplicationItems&
+System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem) {
+    m_args.applicationItems = { &appItem, 1 };
+    return *this;
+}
+
 
 System::Operation_ExportApplicationItems&
 System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems) {
@@ -590,6 +597,12 @@ Format probeFormat_PLY(const System::FormatProbeInput& input)
     return matchRegExp(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
 }
 
+Format probeFormat_OFF(const System::FormatProbeInput& input)
+{
+    const std::regex rx{ R"(^\s*[CN4]?OFF\s+)" };
+    return matchRegExp(input.contentsBegin, rx) ? Format_OFF : Format_Unknown;
+}
+
 void addPredefinedFormatProbes(System* system)
 {
     if (!system)
@@ -601,6 +614,7 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_STL);
     system->addFormatProbe(probeFormat_OBJ);
     system->addFormatProbe(probeFormat_PLY);
+    system->addFormatProbe(probeFormat_OFF);
 }
 
 } // namespace IO

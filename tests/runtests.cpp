@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "test_base.h"
+#include "test_measure.h"
 #include "test_app.h"
 
 #include <cstring>
@@ -24,6 +25,7 @@ int runTests(int argc, char* argv[])
     int retcode = 0;
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);
+    vecTest.emplace_back(new Mayo::TestMeasure);
     vecTest.emplace_back(new Mayo::TestApp);
     for (const std::unique_ptr<QObject>& test : vecTest)
         retcode += QTest::qExec(test.get(), args);

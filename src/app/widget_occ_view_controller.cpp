@@ -99,7 +99,8 @@ protected:
 } // namespace Internal
 
 WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
-    : V3dViewController(occView->v3dView(), occView->widget()),
+    : QObject(occView->widget()),
+      V3dViewController(occView->v3dView()),
       m_occView(occView),
       m_navigStyle(NavigationStyle::Catia),
       m_actionMatcher(createActionMatcher(m_navigStyle, &m_inputSequence))
@@ -168,14 +169,14 @@ void WidgetOccViewController::setViewCursor(const QCursor &cursor)
         m_occView->widget()->setCursor(cursor);
 }
 
-struct WidgetOccViewController::RubberBand : public V3dViewController::AbstractRubberBand {
+struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBand {
     RubberBand(QWidget* parent)
         : m_rubberBand(parent)
     {
     }
 
-    void updateGeometry(const QRect& rect) override {
-        m_rubberBand.setGeometry(rect);
+    void updateGeometry(int x, int y, int width, int height) override {
+        m_rubberBand.setGeometry(x, y, width, height);
     }
 
     void setVisible(bool on) override {
@@ -186,7 +187,7 @@ private:
     Internal::RubberBandWidget m_rubberBand;
 };
 
-std::unique_ptr<V3dViewController::AbstractRubberBand> WidgetOccViewController::createRubberBand()
+std::unique_ptr<V3dViewController::IRubberBand> WidgetOccViewController::createRubberBand()
 {
     return std::make_unique<RubberBand>(m_occView->widget());
 }
@@ -224,10 +225,10 @@ void WidgetOccViewController::handleKeyPress(const QKeyEvent* event)
 
     m_inputSequence.push(event->key());
     if (m_inputSequence.equal({ Qt::Key_Space }))
-        this->startInstantZoom(m_occView->widget()->mapFromGlobal(QCursor::pos()));
+        this->startInstantZoom(toPosition(m_occView->widget()->mapFromGlobal(QCursor::pos())));
 
     if (m_inputSequence.equal({ Qt::Key_Shift }) && !this->hasCurrentDynamicAction())
-        emit this->multiSelectionToggled(true);
+        this->signalMultiSelectionToggled.send(true);
 }
 
 void WidgetOccViewController::handleKeyRelease(const QKeyEvent* event)
@@ -243,20 +244,20 @@ void WidgetOccViewController::handleKeyRelease(const QKeyEvent* event)
         this->stopInstantZoom();
 
     if (m_inputSequence.lastInput() == Qt::Key_Shift && !this->hasCurrentDynamicAction())
-        emit this->multiSelectionToggled(false);
+        this->signalMultiSelectionToggled.send(false);
 }
 
 void WidgetOccViewController::handleMouseButtonPress(const QMouseEvent* event)
 {
     m_inputSequence.push(event->button());
     const QPoint currPos = m_occView->widget()->mapFromGlobal(event->globalPos());
-    m_prevPos = currPos;
+    m_prevPos = toPosition(currPos);
 }
 
 void WidgetOccViewController::handleMouseMove(const QMouseEvent* event)
 {
-    const QPoint currPos = m_occView->widget()->mapFromGlobal(event->globalPos());
-    const QPoint prevPos = m_prevPos;
+    const Position currPos = toPosition(m_occView->widget()->mapFromGlobal(event->globalPos()));
+    const Position prevPos = m_prevPos;
     m_prevPos = currPos;
     if (m_actionMatcher->matchRotation())
         this->rotation(currPos);
@@ -267,19 +268,29 @@ void WidgetOccViewController::handleMouseMove(const QMouseEvent* event)
     else if (m_actionMatcher->matchWindowZoom())
         this->windowZoomRubberBand(currPos);
     else
-        emit mouseMoved(currPos);
+        this->signalMouseMoved.send(currPos.x, currPos.y);
 }
 
 void WidgetOccViewController::handleMouseButtonRelease(const QMouseEvent* event)
 {
+    auto fnOccMouseBtn = [](Qt::MouseButton btn) -> Aspect_VKeyMouse {
+        switch (btn) {
+        case Qt::NoButton: return Aspect_VKeyMouse_NONE;
+        case Qt::LeftButton: return Aspect_VKeyMouse_LeftButton;
+        case Qt::RightButton: return Aspect_VKeyMouse_RightButton;
+        case Qt::MiddleButton: return Aspect_VKeyMouse_MiddleButton;
+        default: return Aspect_VKeyMouse_UNKNOWN;
+        }
+    };
+
     m_inputSequence.release(event->button());
     const bool hadDynamicAction = this->hasCurrentDynamicAction();
     if (this->isWindowZoomingStarted())
-        this->windowZoom(m_occView->widget()->mapFromGlobal(event->globalPos()));
+        this->windowZoom(toPosition(m_occView->widget()->mapFromGlobal(event->globalPos())));
 
     this->stopDynamicAction();
     if (!hadDynamicAction)
-        emit mouseClicked(event->button());
+        this->signalMouseButtonClicked.send(fnOccMouseBtn(event->button()));
 }
 
 void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)

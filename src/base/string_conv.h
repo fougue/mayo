@@ -9,6 +9,7 @@
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TCollection_HAsciiString.hxx>
+#include <locale>
 #include <string>
 #include <string_view>
 
@@ -16,44 +17,71 @@ namespace Mayo {
 
 // Base converter between string types
 // Note: unicode(utf8/utf16) conversion is preferred when possible
-template<typename IN_STRING_TYPE, typename OUT_STRING_TYPE> struct StringConv {};
+template<typename InputStringType, typename OutputStringType> struct StringConv {};
 
 // --
 // -- General API
 // --
 
 // X -> Y
-// Note: 'IN_STRING_TYPE' should be automatically deduced by the compiler
-template<typename OUT_STRING_TYPE, typename IN_STRING_TYPE>
-OUT_STRING_TYPE string_conv(const IN_STRING_TYPE& str) {
-    return StringConv<IN_STRING_TYPE, OUT_STRING_TYPE>::to(str);
+// Note: 'InputStringType' should be automatically deduced by the compiler
+template<typename OutputStringType, typename InputStringType>
+OutputStringType string_conv(const InputStringType& str) {
+    return StringConv<InputStringType, OutputStringType>::to(str);
 }
 
 
 // X -> std::string
-template<typename STRING_TYPE>
-std::string to_stdString(const STRING_TYPE& str) {
+template<typename StringType>
+std::string to_stdString(const StringType& str) {
     return string_conv<std::string>(str);
 }
 
 // X -> std::string_view
-template<typename STRING_TYPE>
-std::string_view to_stdStringView(const STRING_TYPE& str) {
+template<typename StringType>
+std::string_view to_stdStringView(const StringType& str) {
     return string_conv<std::string_view>(str);
 }
 
 // X -> TCollection_AsciiString
-template<typename STRING_TYPE>
-TCollection_AsciiString to_OccAsciiString(const STRING_TYPE& str) {
+template<typename StringType>
+TCollection_AsciiString to_OccAsciiString(const StringType& str) {
     return string_conv<TCollection_AsciiString>(str);
 }
 
 // X -> TCollection_ExtendedString
-template<typename STRING_TYPE>
-TCollection_ExtendedString to_OccExtString(const STRING_TYPE& str) {
+template<typename StringType>
+TCollection_ExtendedString to_OccExtString(const StringType& str) {
     return string_conv<TCollection_ExtendedString>(str);
 }
 
+// double -> std::string
+
+struct DoubleToStringOptions {
+    std::locale locale;
+    int decimalCount = 6;
+    bool removeTrailingZeroes = true;
+    bool roundToZero = true;
+    // double zeroPrecision = 0.000000000001;
+};
+
+class DoubleToStringOperation {
+public:
+    DoubleToStringOperation(double value);
+    DoubleToStringOperation& locale(const std::locale& l);
+    DoubleToStringOperation& decimalCount(int c);
+    DoubleToStringOperation& removeTrailingZeroes(bool on);
+    DoubleToStringOperation& roundToZero(bool on);
+    operator std::string();
+    std::string get() const;
+
+private:
+    double m_value;
+    DoubleToStringOptions m_opts;
+};
+
+std::string to_stdString(double value, const DoubleToStringOptions& opts);
+DoubleToStringOperation to_stdString(double value);
 
 // --
 // -- Converters(misc)

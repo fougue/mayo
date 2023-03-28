@@ -12,12 +12,14 @@
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
 #include "../io_occ/io_occ.h"
+#include "../io_off/io_off_reader.h"
+#include "../io_off/io_off_writer.h"
 #include "../io_ply/io_ply_reader.h"
 #include "../io_ply/io_ply_writer.h"
 #include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "cli_export.h"
 #include "console.h"
@@ -26,6 +28,7 @@
 #include "mainwindow.h"
 #include "qsettings_storage.h"
 #include "qstring_conv.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 #include "version.h"
 #include "widget_model_tree.h"
@@ -62,6 +65,7 @@ namespace Mayo {
 // Declared in graphics/graphics_create_driver.cpp
 void setFunctionCreateGraphicsDriver(std::function<Handle_Graphic3d_GraphicDriver()> fn);
 
+// Provides an i18n context for the current file(main.cpp)
 class Main {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Main)
     Q_DECLARE_TR_FUNCTIONS(Mayo::Main)
@@ -69,6 +73,7 @@ class Main {
 
 namespace {
 
+// Stores arguments(options) passed at command line
 struct CommandLineArguments {
     QString themeName;
     FilePath filepathSettings;
@@ -79,6 +84,7 @@ struct CommandLineArguments {
     bool cliProgressReport = true;
 };
 
+// Provides customization of Qt message handler
 class LogMessageHandler {
 public:
     static LogMessageHandler& instance()
@@ -87,15 +93,20 @@ public:
         return object;
     }
 
+    // Corresponds to CommandLineArguments::includeDebugLogs
     void enableDebugLogs(bool on)
     {
         m_enableDebugLogs = on;
     }
 
+    // Corresponds to CommandLineArguments::filepathLog
     void setOutputFilePath(const FilePath& fp)
     {
         m_outputFilePath = fp;
-        m_outputFile.open(fp, std::ios::out | std::ios::app);
+        if (!fp.empty())
+            m_outputFile.open(fp, std::ios::out | std::ios::app);
+        else
+            m_outputFile.close();
     }
 
     std::ostream& outputStream(QtMsgType type)
@@ -109,6 +120,7 @@ public:
         return std::cerr;
     }
 
+    // Function called for Qt message handling
     static void qtHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
     {
         const std::string localMsg = consoleToPrintable(msg);
@@ -142,8 +154,27 @@ private:
     bool m_enableDebugLogs = true;
 };
 
+// Provides handling of signal/slot thread mismatch with the help of Qt
+// There will be a single QObject created per thread, so it can be used to enqueue slot functions
+class QtSignalThreadHelper : public ISignalThreadHelper {
+public:
+    std::any getCurrentThreadContext() override
+    {
+        // Note: thread_local implies "static"
+        //       See https://en.cppreference.com/w/cpp/language/storage_duration
+        thread_local QObject obj;
+        return &obj;
+    }
+
+    void execInThread(const std::any& context, const std::function<void()>& fn) override
+    {
+        QTimer::singleShot(0, std::any_cast<QObject*>(context), fn);
+    }
+};
+
 } // namespace
 
+// Parses command line and process Qt builtin options(basically --version and --help)
 static CommandLineArguments processCommandLine()
 {
     CommandLineArguments args;
@@ -151,54 +182,63 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo the opensource 3D CAD viewer and converter"));
+                Main::tr("Mayo the opensource 3D CAD viewer and converter")
+    );
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
     const QCommandLineOption cmdOptionTheme(
                 QStringList{ "t", "theme" },
                 Main::tr("Theme for the UI(classic|dark)"),
-                Main::tr("name"));
+                Main::tr("name")
+     );
     cmdParser.addOption(cmdOptionTheme);
 
     const QCommandLineOption cmdFileSettings(
                 QStringList{ "s", "settings" },
                 Main::tr("Settings file(INI format) to load at startup"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileSettings);
 
     const QCommandLineOption cmdFileToExport(
                 QStringList{ "e", "export" },
                 Main::tr("Export opened files into an output file, can be repeated for different "
                          "formats(eg. -e file.stp -e file.igs...)"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileToExport);
 
     const QCommandLineOption cmdFileLog(
                 QStringList{ "log-file" },
                 Main::tr("Writes log messages into output file"),
-                Main::tr("filepath"));
+                Main::tr("filepath")
+    );
     cmdParser.addOption(cmdFileLog);
 
     const QCommandLineOption cmdDebugLogs(
                 QStringList{ "debug-logs" },
-                Main::tr("Don't filter out debug log messages in release build"));
+                Main::tr("Don't filter out debug log messages in release build")
+    );
     cmdParser.addOption(cmdDebugLogs);
 
     const QCommandLineOption cmdCliNoProgress(
                 QStringList{ "no-progress" },
-                Main::tr("Disable progress reporting in console output(CLI-mode only)"));
+                Main::tr("Disable progress reporting in console output(CLI-mode only)")
+    );
     cmdParser.addOption(cmdCliNoProgress);
 
     cmdParser.addPositionalArgument(
                 Main::tr("files"),
                 Main::tr("Files to open at startup, optionally"),
-                Main::tr("[files...]"));
+                Main::tr("[files...]")
+    );
 
 #ifdef MAYO_WITH_TESTS
     const QCommandLineOption cmdRunTests(
                 QStringList{ "runtests" },
-                Main::tr("Execute unit tests and exit application"));
+                Main::tr("Execute unit tests and exit application")
+    );
     cmdParser.addOption(cmdRunTests);
 #endif
 
@@ -240,6 +280,7 @@ Theme* mayoTheme()
     return globalTheme.get();
 }
 
+// Set OpenCascade environment variables defined in a settings file(INI format)
 static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
 {
     const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
@@ -281,11 +322,12 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
+// Function called by the Application i18n system, see Application::addTranslator()
 static std::string_view qtTranslate(const TextId& text, int n)
 {
     const QString qstr = QCoreApplication::translate(text.trContext.data(), text.key.data(), nullptr, n);
     auto qstrHash = qHash(qstr);
-    static std::unordered_map<unsigned, std::string> mapStr;
+    static std::unordered_map<decltype(qstrHash), std::string> mapStr;
     static QReadWriteLock mapStrLock;
     {
         QReadLocker locker(&mapStrLock);
@@ -347,8 +389,11 @@ static void initGui(GuiApplication* guiApp)
     IWidgetOccView::setCreator(&QWidgetOccView::create);
 
     // Use QOpenGLWidget if possible
-#if OCC_VERSION_HEX >= 0x070600 && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    if (qobject_cast<QGuiApplication*>(QCoreApplication::instance())) { // QOpenGL requires QGuiApplication
+#if OCC_VERSION_HEX >= 0x070600
+    const auto& propForceOpenGlFallbackWidget = AppModule::get()->properties()->forceOpenGlFallbackWidget;
+    AppModule::get()->settings()->loadProperty(&propForceOpenGlFallbackWidget);
+    const bool hasQGuiApplication = qobject_cast<QGuiApplication*>(QCoreApplication::instance());
+    if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
         qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
@@ -365,8 +410,8 @@ static void initGui(GuiApplication* guiApp)
     // Register Graphics entity drivers
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
 }
-
 
 // Initializes and runs Mayo application
 static int runApp(QCoreApplication* qtApp)
@@ -395,10 +440,12 @@ static int runApp(QCoreApplication* qtApp)
         }
     };
 
+    // Signals
+    setGlobalSignalThreadHelper(std::make_unique<QtSignalThreadHelper>());
+
     // Message logging
     LogMessageHandler::instance().enableDebugLogs(args.includeDebugLogs);
-    if (!args.filepathLog.empty())
-        LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
+    LogMessageHandler::instance().setOutputFilePath(args.filepathLog);
 
     // Initialize AppModule
     auto appModule = AppModule::get();
@@ -425,13 +472,16 @@ static int runApp(QCoreApplication* qtApp)
     // Register providers to query document tree node properties
     appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
     appModule->addPropertiesProvider(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
+    appModule->addPropertiesProvider(std::make_unique<PointCloud_DocumentTreeNodePropertiesProvider>());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
-    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
     ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
@@ -458,9 +508,7 @@ static int runApp(QCoreApplication* qtApp)
     }
 
     // Record recent files when documents are closed
-    QObject::connect(
-                guiApp, &GuiApplication::guiDocumentErased,
-                AppModule::get(), &AppModule::recordRecentFileThumbnail);
+    guiApp->signalGuiDocumentErased.connectSlot(&AppModule::recordRecentFileThumbnail, AppModule::get());
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -485,7 +533,7 @@ static int runApp(QCoreApplication* qtApp)
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
-        QTimer::singleShot(0, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
+        QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
     }
 
     appModule->settings()->resetAll();
@@ -496,47 +544,60 @@ static int runApp(QCoreApplication* qtApp)
     return code;
 }
 
-static bool isAppCliMode = false;
-static void onQtAppExit()
-{
-#if defined(Q_OS_WIN) && defined(NDEBUG)
-    if (isAppCliMode)
-        consoleSendEnterKey();
-#endif
-}
-
-#ifdef MAYO_WITH_TESTS
 // Defined in tests/runtests.cpp
 int runTests(int argc, char* argv[]);
-#endif
 
 } // namespace Mayo
 
 int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
-    qAddPostRoutine(&Mayo::onQtAppExit);
 
-    // Running CLI mode?
-    for (int i = 1; i < argc && !Mayo::isAppCliMode; ++i) {
-        static const char* cliArgs[] = { "-e", "--export", "-h", "--help", "-v", "--version" };
-        auto itCliArg = std::find_if(std::cbegin(cliArgs), std::cend(cliArgs), [=](const char* cliArg) {
-            return std::strcmp(argv[i], cliArg) == 0;
-        });
-        Mayo::isAppCliMode = itCliArg != std::cend(cliArgs);
-    }
+    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
+    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
+    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
+    // As a workaround the Qt platform is forced to xcb
+#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
+    qputenv("QT_QPA_PLATFORM", "xcb");
+#endif
 
+    // Helper function to check if application arguments contain any option listed in 'listOption'
+    auto fnArgsContainAnyOf = [=](std::initializer_list<const char*> listOption) {
+        for (int i = 1; i < argc; ++i) {
+            for (const char* option : listOption) {
+                if (std::strcmp(argv[i], option) == 0)
+                    return true;
+            }
+        }
+        return false;
+    };
+
+    // Configure and create Qt application object
 #if defined(Q_OS_WIN)
     // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 #endif
-
+    QCoreApplication::setOrganizationName("Fougue Ltd");
+    QCoreApplication::setOrganizationDomain("www.fougue.pro");
+    QCoreApplication::setApplicationName("Mayo");
+    QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
+    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
     std::unique_ptr<QCoreApplication> ptrApp(
-            Mayo::isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
+            isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
     );
 
+    //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    // Handle unit tests
+#ifdef MAYO_WITH_TESTS
+    if (fnArgsContainAnyOf({ "--runtests" }))
+        return Mayo::runTests(argc, argv);
+#endif
+
+    // Configure for CLI mode
+    if (isAppCliMode) {
 #if defined(Q_OS_WIN) && defined(NDEBUG)
-    if (Mayo::isAppCliMode) {
+        qAddPostRoutine(&Mayo::consoleSendEnterKey);
         // https://devblogs.microsoft.com/oldnewthing/20090101-00/?p=19643
         // https://www.tillett.info/2013/05/13/how-to-create-a-windows-program-that-works-as-both-as-a-gui-and-console-application/
         if (AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
@@ -550,20 +611,9 @@ int main(int argc, char* argv[])
             fnRedirectToConsole(STD_ERROR_HANDLE, stderr, "CONOUT$");
             std::ios::sync_with_stdio();
         }
-    }
 #endif
-
-    QCoreApplication::setOrganizationName("Fougue Ltd");
-    QCoreApplication::setOrganizationDomain("www.fougue.pro");
-    QCoreApplication::setApplicationName("Mayo");
-    QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-
-#ifdef MAYO_WITH_TESTS
-    for (int i = 0; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--runtests") == 0)
-            return Mayo::runTests(argc, argv);
     }
-#endif
 
+    // Run Mayo application in CLI or GUI mode
     return Mayo::runApp(ptrApp.get());
 }

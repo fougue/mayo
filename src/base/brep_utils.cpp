@@ -14,11 +14,30 @@
 
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRep_Builder.hxx>
+#include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
+#include <TopoDS_Compound.hxx>
 #include <climits>
 #include <sstream>
 
 namespace Mayo {
+
+TopoDS_Compound BRepUtils::makeEmptyCompound()
+{
+    BRep_Builder builder;
+    TopoDS_Compound comp;
+    builder.MakeCompound(comp);
+    return comp;
+}
+
+TopoDS_Face BRepUtils::makeFace(const Handle(Poly_Triangulation)& mesh)
+{
+    TopoDS_Face face;
+    BRep_Builder builder;
+    builder.MakeFace(face);
+    builder.UpdateFace(face, mesh);
+    return face;
+}
 
 bool BRepUtils::moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs)
 {
@@ -44,6 +63,16 @@ TopoDS_Shape BRepUtils::shapeFromString(const std::string& str)
     std::istringstream iss(str, std::ios_base::in);
     BRepTools::Read(shape, iss, brepBuilder);
     return shape;
+}
+
+bool BRepUtils::isGeometric(const TopoDS_Face& face)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    return BRep_Tool::IsGeometric(face);
+#else
+    auto tface = static_cast<const BRep_TFace*>(face.TShape().get());
+    return !tface->Surface().IsNull();
+#endif
 }
 
 void BRepUtils::computeMesh(

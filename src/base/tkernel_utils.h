@@ -27,8 +27,8 @@ namespace Mayo {
 
 class TKernelUtils {
 public:
-    template<typename STD_TRANSIENT>
-    static opencascade::handle<STD_TRANSIENT> makeHandle(const STD_TRANSIENT* ptr) { return ptr; }
+    template<typename TransientType>
+    static opencascade::handle<TransientType> makeHandle(const TransientType* ptr) { return ptr; }
 
     using ReturnType_StartProgressIndicator =
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
@@ -47,6 +47,9 @@ public:
 
     // Returns the type to be used(by default) for RGB colors, depending on OpenCascasde version
     static Quantity_TypeOfColor preferredRgbColorType();
+
+    // Returns a linear-space RGB color from input 'color' expressed with preferredRgbColorType()
+    static Quantity_Color toLinearRgbColor(const Quantity_Color& color);
 };
 
 } // namespace Mayo

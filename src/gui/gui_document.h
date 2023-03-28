@@ -8,12 +8,14 @@
 
 #include "../base/document.h"
 #include "../base/global.h"
+#include "../base/signal.h"
 #include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
-#include "../graphics/v3d_view_camera_animation.h"
+#include "../graphics/graphics_view_ptr.h"
+#include "v3d_view_camera_animation.h"
 
-#include <QtCore/QObject>
+#include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Bnd_Box.hxx>
 #include <V3d_View.hxx>
 #include <functional>
@@ -25,12 +27,17 @@ namespace Mayo {
 
 class ApplicationItem;
 class GuiApplication;
+class V3dViewCameraAnimation;
 
 // Provides the link between Base::Document and graphical representations
-class GuiDocument : public QObject {
-    Q_OBJECT
+class GuiDocument {
 public:
     GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
+    ~GuiDocument();
+
+    // Not copyable
+    GuiDocument(const GuiDocument&) = delete;
+    GuiDocument& operator=(const GuiDocument&) = delete;
 
     const DocumentPtr& document() const { return m_document; }
 
@@ -38,20 +45,28 @@ public:
 
     const Handle_V3d_View& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
+    GraphicsViewPtr graphicsView() { return GraphicsViewPtr{ &m_gfxScene, m_v3dView }; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
+
+    // Gets/sets the ratio between physical pixels and device-independent pixels for the target window.
+    // This value is dependent on the screen the window is on, and may have to be updated when the
+    // target window is moved.
+    // Common values are 1.0(default) on normal displays and 2.0 on Apple "retina" displays
+    double devicePixelRatio() const { return m_devicePixelRatio; }
+    void setDevicePixelRatio(double ratio);
 
     // Executes callback 'fn' on all graphics objects associated to tree node 'nodeId'
     // This also includes all children(deep node traversal)
     void foreachGraphicsObject(TreeNodeId nodeId, const std::function<void(GraphicsObjectPtr)>& fn) const;
 
     // Finds the tree node id associated to graphics object
-    TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& object) const;
+    TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const;
 
     // Toggles selected status of an application item(doesn't affect Application's selection model)
     void toggleItemSelected(const ApplicationItem& appItem);
 
-    // Executes action associated to a 3D sensistive item
-    bool processAction(const GraphicsOwnerPtr& graphicsOwner);
+    // Executes action associated to a 3D sensitive item
+    bool processAction(const GraphicsOwnerPtr& gfxOwner);
 
     // -- Display mode
     int activeDisplayMode(const GraphicsObjectDriverPtr& driver) const;
@@ -84,8 +99,8 @@ public:
     ViewTrihedronMode viewTrihedronMode() const { return m_viewTrihedronMode; }
     void setViewTrihedronMode(ViewTrihedronMode mode);
 
-    Qt::Corner viewTrihedronCorner() const { return m_viewTrihedronCorner; }
-    void setViewTrihedronCorner(Qt::Corner corner);
+    Aspect_TypeOfTriedronPosition viewTrihedronCorner() const { return m_viewTrihedronCorner; }
+    void setViewTrihedronCorner(Aspect_TypeOfTriedronPosition corner);
 
     int aisViewCubeBoundingSize() const;
     static bool isAisViewCubeObject(const GraphicsObjectPtr& gfxObject);
@@ -99,13 +114,12 @@ public:
     static const GradientBackground& defaultGradientBackground();
     static void setDefaultGradientBackground(const GradientBackground& gradientBkgnd);
 
-signals:
-    void nodesVisibilityChanged(const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
-
-    void graphicsBoundingBoxChanged(const Bnd_Box& bndBox);
-
-    void viewTrihedronModeChanged(ViewTrihedronMode mode);
-    void viewTrihedronCornerChanged(Qt::Corner corner);
+    // Signals
+    using MapVisibilityByTreeNodeId = std::unordered_map<TreeNodeId, CheckState>;
+    mutable Signal<const MapVisibilityByTreeNodeId&> signalNodesVisibilityChanged;
+    mutable Signal<const Bnd_Box&> signalGraphicsBoundingBoxChanged;
+    mutable Signal<ViewTrihedronMode> signalViewTrihedronModeChanged;
+    mutable Signal<Aspect_TypeOfTriedronPosition> signalViewTrihedronCornerChanged;
 
     // -- Implementation
 private:
@@ -133,17 +147,18 @@ private:
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
-    void v3dViewTrihedronDisplay(Qt::Corner corner);
+    void v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner);
 
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;
     GraphicsScene m_gfxScene;
     Handle_V3d_View m_v3dView;
     Handle_AIS_InteractiveObject m_aisOriginTrihedron;
+    double m_devicePixelRatio = 1.;
 
-    V3dViewCameraAnimation* m_cameraAnimation;
+    V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;
-    Qt::Corner m_viewTrihedronCorner = Qt::BottomLeftCorner;
+    Aspect_TypeOfTriedronPosition m_viewTrihedronCorner = Aspect_TOTP_LEFT_UPPER;
     Handle_AIS_InteractiveObject m_aisViewCube;
 
     std::vector<GraphicsEntity> m_vecGraphicsEntity;

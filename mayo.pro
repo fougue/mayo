@@ -30,7 +30,7 @@ CONFIG(debug, debug|release) {
 
 DEFINES += \
     QT_DISABLE_DEPRECATED_BEFORE=0x050F00 \
-    QT_IMPLICIT_QFILEINFO_CONSTRUCTION
+    QT_IMPLICIT_QFILEINFO_CONSTRUCTION \
 
 release_with_debuginfo:msvc {
     # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
@@ -42,6 +42,10 @@ msvc {
     DEFINES += NOMINMAX
     QMAKE_CXXFLAGS += /we4150 # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     QMAKE_CXXFLAGS += /std:c++17
+
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        DEFINES += _USE_MATH_DEFINES
+    }
 }
 gcc|clang {
     QMAKE_CXXFLAGS += -std=c++17
@@ -49,14 +53,13 @@ gcc|clang {
 clang {
     # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
     QMAKE_CXXFLAGS += -Wno-undefined-var-template
-}
-*clang-libc++* {
     # See https://libcxx.llvm.org/docs/UsingLibcxx.html
-    LIBS += -lc++fs
+    # LIBS += -lstdc++fs
 }
 macx {
     DEFINES += GL_SILENCE_DEPRECATION
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
+    LIBS += -liconv
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
 }
 win32 {
@@ -69,22 +72,26 @@ INCLUDEPATH += \
 
 HEADERS += \
     $$files(src/base/*.h) \
-    $$files(src/io_occ/*.h) \
     $$files(src/io_dxf/*.h) \
     $$files(src/io_image/*.h) \
+    $$files(src/io_occ/*.h) \
+    $$files(src/io_off/*.h) \
     $$files(src/io_ply/*.h) \
     $$files(src/graphics/*.h) \
     $$files(src/gui/*.h) \
+    $$files(src/measure/*.h) \
     $$files(src/app/*.h) \
 
 SOURCES += \
     $$files(src/base/*.cpp) \
-    $$files(src/io_occ/*.cpp) \
     $$files(src/io_dxf/*.cpp) \
     $$files(src/io_image/*.cpp) \
+    $$files(src/io_occ/*.cpp) \
+    $$files(src/io_off/*.cpp) \
     $$files(src/io_ply/*.cpp) \
     $$files(src/graphics/*.cpp) \
     $$files(src/gui/*.cpp) \
+    $$files(src/measure/*.cpp) \
     $$files(src/app/*.cpp) \
     \
     src/3rdparty/fmt/src/format.cc \
@@ -148,6 +155,10 @@ LIBS += \
     -lTKXmlXCAF \
     -lTKXSBase \
 
+minOpenCascadeVersion(7, 7, 0) {
+    LIBS += -lTKXDE
+}
+
 # -- IGES support
 LIBS += -lTKIGES -lTKXDEIGES
 # -- STEP support
@@ -173,6 +184,9 @@ minOpenCascadeVersion(7, 4, 0) {
 }
 # -- VRML support
 LIBS += -lTKVRML
+!minOpenCascadeVersion(7, 7, 0) {
+    SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
+}
 
 # gmio
 isEmpty(GMIO_ROOT) {

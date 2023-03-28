@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "cpp_utils.h"
 #include "span.h"
 #include <algorithm>
 #include <vector>
@@ -237,8 +238,8 @@ typename Tree<T>::TreeNode* Tree<T>::appendChild(TreeNodeId parentId)
 
 template<typename T> bool Tree<T>::isNodeDeleted(TreeNodeId id) const
 {
-    const typename Tree<T>::TreeNode* ptrNode = this->ptrNode(id);
-    return !ptrNode || ptrNode->isDeleted;
+    const auto node = this->ptrNode(id);
+    return !node || node->isDeleted;
 }
 
 template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
@@ -300,7 +301,7 @@ template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 {
     for (const typename Tree<T>::TreeNode& node : tree.m_vecNode) {
-        const TreeNodeId id = (&node - &tree.m_vecNode.front()) + 1;
+        const auto id = CppUtils::safeStaticCast<TreeNodeId>((&node - &tree.m_vecNode.front()) + 1);
         if (!tree.isNodeDeleted(id))
             callback(id);
     }

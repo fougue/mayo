@@ -20,9 +20,12 @@ struct BndBoxCoords;
 namespace MathUtils {
 
 // Returns the value 'val' which is in range [omin..omax] to the corresponding value in range [nmin..nmax]
-double mappedValue(double val, double omin, double omax, double nmin, double nmax);
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+double mappedValue(T val, T1 omin, T2 omax, T3 nmin, T4 nmax);
 
-// TODO: add toPercent() function
+// Returns the value 'val' which is in range [omin..omax] to the corresponding percent [0..100]
+template<typename T, typename T1, typename T2>
+double toPercent(T val, T1 omin, T2 omax);
 
 // Is 'n' a standard direction being reversed(ie -X, -Y or -Z) ?
 bool isReversedStandardDir(const gp_Dir& n);
@@ -60,6 +63,21 @@ inline bool fuzzyEqual(double d1, double d2) {
 // --
 // -- Implementation
 // --
+
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+double mappedValue(T val, T1 omin, T2 omax, T3 nmin, T4 nmax)
+{
+    const auto dist1 = static_cast<double>(omax - omin);
+    const auto dist2 = nmax - nmin;
+    const auto distVal = val - omin;
+    return ((distVal * dist2) / dist1) + nmin;
+}
+
+template<typename T, typename T1, typename T2>
+double toPercent(T val, T1 omin, T2 omax)
+{
+    return mappedValue(val, omin, omax, 0, 100);
+}
 
 template<typename T, typename U> T lerp(T a, T b, U t)
 {

@@ -9,11 +9,12 @@
 #include "../base/property_builtins.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "filepath_conv.h"
+#include "qmeta_property.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QDir>
@@ -94,7 +95,7 @@ static QString propertyValueText(const PropertyBool* prop) {
 }
 
 static QString propertyValueText(const PropertyInt* prop) {
-    return AppModule::get()->locale().toString(prop->value());
+    return AppModule::get()->qtLocale().toString(prop->value());
 }
 
 static QString propertyValueText(const PropertyDouble* prop) {
@@ -143,7 +144,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
         return toStringDHMS(propTime->quantity());
     }
 
-    const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(prop);
+    const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(prop);
     return PropertyItemDelegate::tr("%1%2")
             .arg(QStringUtils::text(trRes.value, appDefaultTextOptions()))
             .arg(trRes.strUnit);
@@ -166,7 +167,7 @@ PropertyItemDelegate::PropertyItemDelegate(QObject* parent)
       m_editorFactory(new DefaultPropertyEditorFactory)
 {}
 
-void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory)
+void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
 {
     m_editorFactory = std::move(editorFactory);
 }
@@ -198,7 +199,7 @@ void PropertyItemDelegate::paint(
                         option.widget);
 
             const QColor color = QtGuiUtils::toQColor(propColor->value());
-            const QPixmap pixColor = PropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
+            const QPixmap pixColor = IPropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
             painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
             const QString strColor = propertyValueText(propColor);
 

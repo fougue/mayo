@@ -9,10 +9,10 @@
 #include "../base/meta_enum.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
-#include "../gui/qtgui_utils.h"
 #include "../io_image/io_image.h"
 #include "filepath_conv.h"
 #include "qstring_conv.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <fmt/format.h>
@@ -62,7 +62,7 @@ int64_t RecentFile::timestampLastModified(const FilePath& fp)
 {
     // Qt: QFileInfo(filepath).lastModified().toSecsSinceEpoch();
     try {
-        const auto lastModifiedTime = std::filesystem::last_write_time(fp).time_since_epoch();
+        const auto lastModifiedTime = filepathLastWriteTime(fp).time_since_epoch();
         return std::chrono::duration_cast<std::chrono::seconds>(lastModifiedTime).count();
     } catch (const std::exception& err) {
         qDebug() << fmt::format("Exception caught\n    Function {}\n    Filepath: {}\n    Error: {}",

@@ -17,6 +17,7 @@ class TestBase : public QObject {
     Q_OBJECT
 private slots:
     void Application_test();
+    void DocumentRefCount_test();
 
     void CppUtils_toggle_test();
     void CppUtils_safeStaticCast_test();
@@ -35,6 +36,10 @@ private slots:
     void IO_probeFormatDirect_test();
     void IO_OccStaticVariablesRollback_test();
     void IO_OccStaticVariablesRollback_test_data();
+    void IO_bugGitHub166_test();
+    void IO_bugGitHub166_test_data();
+
+    void DoubleToString_test();
 
     void BRepUtils_test();
 

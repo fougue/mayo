@@ -7,15 +7,23 @@
 #include "document_tree_node_properties_providers.h"
 
 #include "../base/caf_utils.h"
-#include "../base/data_triangulation.h"
+#include "../base/label_data.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
+#include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
+#include "../base/point_cloud_data.h"
 #include "../base/xcaf.h"
+#include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_point_cloud_object_driver.h"
+#include "../graphics/graphics_shape_object_driver.h"
 #include "qstring_conv.h"
 
+#include <Bnd_Box.hxx>
 #include <TDataStd_Name.hxx>
+#include <QtCore/QStringList>
 
 namespace Mayo {
 
@@ -194,7 +202,7 @@ public:
 
 bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {
-    return XCaf::isShape(treeNode.label());
+    return GraphicsShapeObjectDriver::shapeSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 std::unique_ptr<PropertyGroupSignals>
@@ -211,15 +219,15 @@ class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup
 public:
     Properties(const DocumentTreeNode& treeNode)
     {
-        auto attrTriangulation = CafUtils::findAttribute<DataTriangulation>(treeNode.label());
-        Handle_Poly_Triangulation polyTri;
-        if (!attrTriangulation.IsNull())
-            polyTri = attrTriangulation->Get();
+        Handle_Poly_Triangulation mesh;
+        IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& access) {
+            mesh = access.triangulation();
+        });
 
-        m_propertyNodeCount.setValue(!polyTri.IsNull() ? polyTri->NbNodes() : 0);
-        m_propertyTriangleCount.setValue(!polyTri.IsNull() ? polyTri->NbTriangles() : 0);
-        m_propertyArea.setQuantity(MeshUtils::triangulationArea(polyTri) * Quantity_SquareMillimeter);
-        m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(polyTri) * Quantity_CubicMillimeter);
+        m_propertyNodeCount.setValue(!mesh.IsNull() ? mesh->NbNodes() : 0);
+        m_propertyTriangleCount.setValue(!mesh.IsNull() ? mesh->NbTriangles() : 0);
+        m_propertyArea.setQuantity(MeshUtils::triangulationArea(mesh) * Quantity_SquareMillimeter);
+        m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
         for (Property* property : this->properties())
             property->setUserReadOnly(true);
     }
@@ -232,11 +240,55 @@ public:
 
 bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {
-    return CafUtils::hasAttribute<DataTriangulation>(treeNode.label());
+    return GraphicsMeshObjectDriver::meshSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
 std::unique_ptr<PropertyGroupSignals>
 Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
+{
+    if (!treeNode.isValid())
+        return {};
+
+    return std::make_unique<Properties>(treeNode);
+}
+
+class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::PointCloud_DocumentTreeNodeProperties)
+public:
+    Properties(const DocumentTreeNode& treeNode)
+    {
+        auto attrPointCloudData = CafUtils::findAttribute<PointCloudData>(treeNode.label());
+
+        const bool hasAttrData = !attrPointCloudData.IsNull() && !attrPointCloudData->points().IsNull();
+        m_propertyPointCount.setValue(hasAttrData ? attrPointCloudData->points()->VertexNumber() : 0);
+        m_propertyHasColors.setValue(hasAttrData ? attrPointCloudData->points()->HasVertexColors() : false);
+        if (hasAttrData) {
+            Bnd_Box bndBox;
+            const int pntCount = attrPointCloudData->points()->VertexNumber();
+            for (int i = 1; i <= pntCount; ++i)
+                bndBox.Add(attrPointCloudData->points()->Vertice(i));
+
+            m_propertyCornerMin.setValue(bndBox.CornerMin());
+            m_propertyCornerMax.setValue(bndBox.CornerMax());
+        }
+
+        for (Property* property : this->properties())
+            property->setUserReadOnly(true);
+    }
+
+    PropertyInt m_propertyPointCount{ this, textId("PointCount") };
+    PropertyBool m_propertyHasColors{ this, textId("HasColors") };
+    PropertyOccPnt m_propertyCornerMin{ this, textId("CornerMin") };
+    PropertyOccPnt m_propertyCornerMax{ this, textId("CornerMax") };
+};
+
+bool PointCloud_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
+{
+    return GraphicsPointCloudObjectDriver::pointCloudSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
+}
+
+std::unique_ptr<PropertyGroupSignals>
+PointCloud_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
         return {};

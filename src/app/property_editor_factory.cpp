@@ -10,12 +10,12 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/unit_system.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
-#include "qtcore_utils.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
-#include "widgets_utils.h"
+#include "qtcore_utils.h"
+#include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QCheckBox>
@@ -200,7 +200,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
                 property->setValue(QtGuiUtils::toColor<Quantity_Color>(c));
                 this->syncWithProperty();
             });
-            WidgetsUtils::asyncDialogExec(dlg);
+            QtWidgetsUtils::asyncDialogExec(dlg);
         });
 
         frameLayout->addWidget(m_labelColor);
@@ -211,7 +211,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
 
     void syncWithProperty() override {
         const QColor qtColor = QtGuiUtils::toQColor(m_property->value());
-        m_labelColor->setPixmap(PropertyEditorFactory::colorSquarePixmap(qtColor));
+        m_labelColor->setPixmap(IPropertyEditorFactory::colorSquarePixmap(qtColor));
         m_labelRgb->setText(QStringUtils::text(m_property->value()));
     }
 
@@ -221,7 +221,7 @@ struct PropertyOccColorEditor : public InterfacePropertyEditor, public QWidget {
 };
 
 // Helper generic interface over a XYZ-value property type to get/set the coordinates with gp_XYZ
-template<typename PROPERTY_COORDS_TYPE> class IProperty3dCoords {
+template<typename PropertyCoordsType> class IProperty3dCoords {
     // Expected functions
     //     static const gp_XYZ& coords(const PROPERTY_COORDS_TYPE* prop);
     //     static void setCoords(PROPERTY_COORDS_TYPE* prop, const gp_XYZ& coords);
@@ -241,9 +241,9 @@ template<> struct IProperty3dCoords<PropertyOccVec> {
 
 // Generic editor of XYZ-value properties
 // The property type must provide a partial specialization of IProperty3dCoords
-template<typename PROPERTY_XYZ_TYPE>
+template<typename PropertyXyzType>
 struct Property3dCoordsEditor : public InterfacePropertyEditor, public QWidget {
-    using PropertyCoordsType = PROPERTY_XYZ_TYPE;
+    using PropertyCoordsType = PropertyXyzType;
     using IProperty3dCoordsType = IProperty3dCoords<PropertyCoordsType>;
     enum class Coord { X, Y, Z };
 
@@ -316,7 +316,7 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
     PropertyQuantityEditor(BasePropertyQuantity* property, QWidget* parentWidget)
         : QDoubleSpinBox(parentWidget), m_property(property)
     {
-        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(property);
+        const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(property);
         this->setSuffix(QString::fromUtf8(trRes.strUnit));
         this->setDecimals(AppModule::get()->properties()->unitSystemDecimals.value());
         const double rangeMin =
@@ -336,7 +336,7 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
     }
 
     void syncWithProperty() override {
-        const UnitSystem::TranslateResult trRes = PropertyEditorFactory::unitTranslate(m_property);
+        const UnitSystem::TranslateResult trRes = IPropertyEditorFactory::unitTranslate(m_property);
         this->setValue(trRes.value);
     }
 
@@ -392,7 +392,7 @@ void DefaultPropertyEditorFactory::syncEditorWithProperty(QWidget* editor) const
     }
 }
 
-UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePropertyQuantity* property)
+UnitSystem::TranslateResult IPropertyEditorFactory::unitTranslate(const BasePropertyQuantity* property)
 {
     if (!property)
         return {};
@@ -408,7 +408,7 @@ UnitSystem::TranslateResult PropertyEditorFactory::unitTranslate(const BasePrope
                 property->quantityUnit());
 }
 
-QPixmap PropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)
+QPixmap IPropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)
 {
     QPixmap pixColor(sideLen, sideLen);
     pixColor.fill(c);

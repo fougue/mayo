@@ -12,6 +12,6 @@ namespace Mayo {
 
 class Document;
 DEFINE_STANDARD_HANDLE(Document, TDocStd_Document)
-using DocumentPtr = opencascade::handle<Document>;
+using DocumentPtr = Handle(Document);
 
 } // namespace Mayo

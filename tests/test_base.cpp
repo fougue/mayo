@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 // Avoid MSVC conflicts with M_E, M_LOG2, ...
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
 #  define _USE_MATH_DEFINES
 #endif
 
@@ -33,7 +33,10 @@
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
+#include "../src/io_dxf/io_dxf.h"
 #include "../src/io_occ/io_occ.h"
+#include "../src/io_ply/io_ply_reader.h"
+#include "../src/io_ply/io_ply_writer.h"
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -47,10 +50,10 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>
 #include <QtCore/QVariant>
-#include <QtTest/QSignalSpy>
 
 #include <gsl/util>
 #include <algorithm>
+#include <clocale>
 #include <cmath>
 #include <climits>
 #include <cstring>
@@ -58,7 +61,9 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
@@ -74,14 +79,57 @@ Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 namespace Mayo {
 
 // For the sake of QCOMPARE()
-static bool operator==(
-        const UnitSystem::TranslateResult& lhs,
-        const UnitSystem::TranslateResult& rhs)
+static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
 {
     return std::abs(lhs.value - rhs.value) < 1e-6
             && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
             && std::abs(lhs.factor - rhs.factor) < 1e-6;
 }
+
+// Equivalent of QSignalSpy for KDBindings signals
+struct SignalEmitSpy {
+    struct UnknownType {};
+    using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
+    using SignalArguments = std::vector<ArgValue>;
+
+    template<typename... Args>
+    SignalEmitSpy(Signal<Args...>* signal) {
+        this->sigConnection = signal->connect([=](Args... args) {
+            ++this->count;
+            SignalArguments sigArgs;
+            SignalEmitSpy::recordArgs(&sigArgs, args...);
+            this->vecSignals.push_back(std::move(sigArgs));
+        });
+    }
+
+    ~SignalEmitSpy() {
+        this->sigConnection.disconnect();
+    }
+
+    static void recordArgs(SignalArguments* /*ptr*/) {
+    }
+
+    template<typename Arg, typename... Args>
+    static void recordArgs(SignalArguments* ptr, Arg arg, Args... args) {
+        if constexpr (std::is_integral_v<Arg>) {
+            if constexpr (std::is_signed_v<Arg>) {
+                ptr->push_back(static_cast<std::int64_t>(arg));
+            }
+            else {
+                ptr->push_back(static_cast<std::uint64_t>(arg));
+            }
+        }
+        else {
+            ptr->push_back(UnknownType{});
+        }
+
+        SignalEmitSpy::recordArgs(ptr, args...);
+    }
+
+    int count = 0;
+    std::vector<SignalArguments> vecSignals;
+    SignalConnectionHandle sigConnection;
+};
 
 void TestBase::Application_test()
 {
@@ -95,18 +143,18 @@ void TestBase::Application_test()
     QCOMPARE(app->documentCount(), 0);
 
     {   // Add & remove a document
-        QSignalSpy sigSpy_documentAdded(app.get(), &Application::documentAdded);
+        SignalEmitSpy spyDocAdded(&app->signalDocumentAdded);
         DocumentPtr doc = app->newDocument();
         QVERIFY(!doc.IsNull());
-        QCOMPARE(sigSpy_documentAdded.count(), 1);
+        QCOMPARE(spyDocAdded.count, 1);
         QCOMPARE(app->documentCount(), 1);
         QCOMPARE(app->findIndexOfDocument(doc), 0);
         QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
         QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
 
-        QSignalSpy sigSpy_documentAboutToClose(app.get(), &Application::documentAboutToClose);
+        SignalEmitSpy spyDocClosed(&app->signalDocumentAboutToClose);
         app->closeDocument(doc);
-        QCOMPARE(sigSpy_documentAboutToClose.count(), 1);
+        QCOMPARE(spyDocClosed.count, 1);
         QCOMPARE(app->documentCount(), 0);
     }
 
@@ -114,17 +162,17 @@ void TestBase::Application_test()
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
-        QSignalSpy sigSpy_docEntityAdded(doc.get(), &Document::entityAdded);
+        SignalEmitSpy spyEntityAdded(&app->signalDocumentEntityAdded);
         const bool okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
         QVERIFY(okImport);
-        QCOMPARE(sigSpy_docEntityAdded.count(), 1);
+        QCOMPARE(spyEntityAdded.count, 1);
         QCOMPARE(doc->entityCount(), 1);
         QVERIFY(XCaf::isShape(doc->entityLabel(0)));
         QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), to_OccExtString("Cube"));
 
-        QSignalSpy sigSpy_docEntityAboutToBeDestroyed(doc.get(), &Document::entityAboutToBeDestroyed);
+        SignalEmitSpy spyEntityDestroyed(&app->signalDocumentEntityAboutToBeDestroyed);
         doc->destroyEntity(doc->entityTreeNodeId(0));
-        QCOMPARE(sigSpy_docEntityAboutToBeDestroyed.count(), 1);
+        QCOMPARE(spyEntityDestroyed.count, 1);
         QCOMPARE(doc->entityCount(), 0);
     }
 
@@ -151,6 +199,14 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+}
+
+void TestBase::DocumentRefCount_test()
+{
+    DocumentPtr doc = Application::instance()->newDocument();
+    QVERIFY(doc->GetRefCount() > 1);
+    Application::instance()->closeDocument(doc);
+    QCOMPARE(doc->GetRefCount(), 1);
 }
 
 void TestBase::CppUtils_toggle_test()
@@ -187,7 +243,7 @@ void TestBase::TextId_test()
 void TestBase::FilePath_test()
 {
     const char strTestPath[] = "../as1-oc-214 - 測試文件.stp";
-    const FilePath testPath = std::filesystem::u8path(strTestPath);
+    const FilePath testPath = std_filesystem::u8path(strTestPath);
 
     {
         const TCollection_AsciiString ascStrTestPath(strTestPath);
@@ -281,8 +337,8 @@ void TestBase::PropertyQuantityValueConversion_test_data()
     QTest::addColumn<Variant>("variantTo");
     QTest::newRow("Length(25mm)") << "PropertyLength" << Variant("25mm") << Variant("25mm");
     QTest::newRow("Length(2m)") << "PropertyLength" << Variant("2m") << Variant("2000mm");
-    QTest::newRow("Length(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
-    QTest::newRow("Length(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
+    QTest::newRow("Angle(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
+    QTest::newRow("Angle(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
 }
 
 void TestBase::IO_probeFormat_test()
@@ -306,6 +362,7 @@ void TestBase::IO_probeFormat_test_data()
     QTest::newRow("cube.stlb") << "tests/inputs/cube.stlb" << IO::Format_STL;
     QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("cube.off") << "tests/inputs/cube.off" << IO::Format_OFF;
 }
 
 void TestBase::IO_probeFormatDirect_test()
@@ -344,6 +401,9 @@ void TestBase::IO_probeFormatDirect_test()
 
     fnSetProbeInput("tests/inputs/cube.ply");
     QCOMPARE(IO::probeFormat_PLY(input), IO::Format_PLY);
+
+    fnSetProbeInput("tests/inputs/cube.off");
+    QCOMPARE(IO::probeFormat_OFF(input), IO::Format_OFF);
 }
 
 void TestBase::IO_OccStaticVariablesRollback_test()
@@ -404,6 +464,119 @@ void TestBase::IO_OccStaticVariablesRollback_test_data()
     QTest::newRow("var_double2") << "mayo.test.variable_double2" << QVariant(50.7) << QVariant(25.8);
     QTest::newRow("var_str1") << "mayo.test.variable_str1" << QVariant("") << QVariant("value");
     QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
+}
+
+void TestBase::IO_bugGitHub166_test()
+{
+    QFETCH(QString, strInputFilePath);
+    QFETCH(QString, strOutputFilePath);
+    QFETCH(IO::Format, outputFormat);
+
+    auto app = Application::instance();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument()
+            .targetDocument(doc)
+            .withFilepath(strInputFilePath.toStdString())
+            .execute();
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() > 0);
+
+    const bool okExport = m_ioSystem->exportApplicationItems()
+            .targetFile(strOutputFilePath.toStdString())
+            .targetFormat(outputFormat)
+            .withItem(doc)
+            .execute();
+    QVERIFY(okExport);
+    app->closeDocument(doc);
+
+    doc = app->newDocument();
+    const bool okImportOutput = m_ioSystem->importInDocument()
+            .targetDocument(doc)
+            .withFilepath(strOutputFilePath.toStdString())
+            .execute();
+    QVERIFY(okImportOutput);
+    QVERIFY(doc->entityCount() > 0);
+}
+
+void TestBase::IO_bugGitHub166_test_data()
+{
+    QTest::addColumn<QString>("strInputFilePath");
+    QTest::addColumn<QString>("strOutputFilePath");
+    QTest::addColumn<IO::Format>("outputFormat");
+
+    QTest::newRow("PLY->STL") << "tests/inputs/cube.ply" << "tests/outputs/cube.stl" << IO::Format_STL;
+    QTest::newRow("STL->PLY") << "tests/inputs/cube.stla" << "tests/outputs/cube.ply" << IO::Format_PLY;
+
+#if OCC_VERSION_HEX >= 0x070400
+    QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
+    QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
+    QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
+#endif
+
+#if OCC_VERSION_HEX >= 0x070600
+    QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+    QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj" << "tests/outputs/cube.glTF" << IO::Format_GLTF;
+#endif
+}
+
+void TestBase::DoubleToString_test()
+{
+    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
+        try {
+            return std::locale(name);
+        } catch (...) {
+            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
+        }
+
+        return {};
+    };
+
+    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
+    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
+#ifndef MAYO_OS_WINDOWS
+    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
+    frLocaleNames.push_back("fr_FR.utf8");
+#endif
+    frLocaleNames.push_back("fr_FR");
+
+    std::optional<std::locale> frLocale;
+    for (const char* localeName : frLocaleNames) {
+        if (!frLocale)
+            frLocale = fnGetLocale(localeName);
+    }
+
+    if (frLocale) {
+        qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
+        // 1258.
+        {
+            //QCOMPARE(QString::fromStdString(to_stdString(1258.).locale(locale)), QLocale("fr_FR").toString(1258.));
+            // Note: on Windows the QLocale unicode thousand separator is different from what's returned
+            //       by internal toUtf8String()
+            //           to_stdString():      U+00A0(NO-BREAK SPACE)
+            //           QLocale::toString(): U+202F(NARROW NO-BREAK SPACE)
+            //       Caused by usage of ICU in Qt?
+            const QString str = QString::fromStdString(to_stdString(1258.).locale(frLocale.value()));
+            QCOMPARE(str.at(0), '1');
+            QVERIFY(str.at(1).isSpace());
+            QCOMPARE(str.right(3), "258");
+        }
+
+        // 57.89
+        {
+            QCOMPARE(to_stdString(57.89).locale(frLocale.value()).get(), "57,89");
+        }
+    }
+
+    // Tests with "C" locale
+    const std::locale& cLocale = std::locale::classic();
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(4).get(), "0.5578");
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).get(), "0.5578");
+    QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).removeTrailingZeroes(false).get(), "0.557800");
+    QCOMPARE(to_stdString(0.0).locale(cLocale).decimalCount(6).get(), "0");
+    QCOMPARE(to_stdString(-45.6789).locale(cLocale).decimalCount(6).get(), "-45.6789");
 }
 
 void TestBase::BRepUtils_test()
@@ -719,6 +892,16 @@ void TestBase::UnitSystem_test_data()
     QTest::newRow("degrees(PIrad)")
             << UnitSystem::degrees(3.14159265358979323846 * Quantity_Radian)
             << UnitSystem::TranslateResult{ 180., "°", radDeg };
+
+    QTest::newRow("time(1s)")
+            << UnitSystem::milliseconds(1 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 1000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(5s)")
+            << UnitSystem::milliseconds(5 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(5s)")
+            << UnitSystem::milliseconds(5 * Quantity_Second)
+            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
 }
 
 void TestBase::LibTask_test()
@@ -743,19 +926,19 @@ void TestBase::LibTask_test()
         }
     });
     std::vector<ProgressRecord> vecProgressRec;
-    QObject::connect(
-                &taskMgr, &TaskManager::progressChanged,
-                [&](TaskId taskId, int pct) { vecProgressRec.push_back({ taskId, pct }); });
+    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+        vecProgressRec.push_back({ taskId, pct });
+    });
 
-    QSignalSpy sigSpy_started(&taskMgr, &TaskManager::started);
-    QSignalSpy sigSpy_ended(&taskMgr, &TaskManager::ended);
+    SignalEmitSpy sigStarted(&taskMgr.signalStarted);
+    SignalEmitSpy sigEnded(&taskMgr.signalEnded);
     taskMgr.run(taskId);
     taskMgr.waitForDone(taskId);
 
-    QCOMPARE(sigSpy_started.count(), 1);
-    QCOMPARE(sigSpy_ended.count(), 1);
-    QCOMPARE(qvariant_cast<TaskId>(sigSpy_started.front().at(0)), taskId);
-    QCOMPARE(qvariant_cast<TaskId>(sigSpy_ended.front().at(0)), taskId);
+    QCOMPARE(sigStarted.count, 1);
+    QCOMPARE(sigEnded.count, 1);
+    QCOMPARE(std::get<TaskId>(sigStarted.vecSignals.front().at(0)), taskId);
+    QCOMPARE(std::get<TaskId>(sigEnded.vecSignals.front().at(0)), taskId);
     QVERIFY(!vecProgressRec.empty());
     int prevPct = 0;
     for (const ProgressRecord& rec : vecProgressRec) {
@@ -824,6 +1007,9 @@ void TestBase::LibTree_test()
 void TestBase::initTestCase()
 {
     m_ioSystem = new IO::System;
+    m_ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     IO::addPredefinedFormatProbes(m_ioSystem);

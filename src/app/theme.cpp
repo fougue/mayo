@@ -100,6 +100,8 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::View3dBottom: return "view-bottom.svg";
     case Theme::Icon::View3dFront: return "view-front.svg";
     case Theme::Icon::View3dBack: return "view-back.svg";
+    case Theme::Icon::TurnClockwise: return "turn-cw.svg";
+    case Theme::Icon::TurnCounterClockwise: return "turn-ccw.svg";
     case Theme::Icon::ItemMesh: return "item-mesh.svg";
     case Theme::Icon::ItemXde: return "item-xde.svg";
     case Theme::Icon::XdeAssembly: return "xde-assembly.svg";

@@ -27,6 +27,8 @@ signals:
 
 private:
     void onTreeItemActivated(QTreeWidgetItem* item, int column);
+    void setCurrentFolder(const QDir& dir);
+    void selectFileInCurrentFolder(const QString& fileName);
 
     QTreeWidget* m_treeWidget = nullptr;
     QFileInfo m_location;

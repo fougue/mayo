@@ -32,25 +32,32 @@ void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
         });
         QObject::connect(
                     newModel, &QAbstractItemModel::modelAboutToBeReset,
-                    this, &ProxyModel::beginResetModel);
+                    this, &ProxyModel::beginResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::modelReset,
-                    this, &ProxyModel::endResetModel);
+                    this, &ProxyModel::endResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::rowsAboutToBeInserted,
-                    this, &ProxyModel::beginResetModel);
+                    this, &ProxyModel::beginResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::rowsInserted,
-                    this, &ProxyModel::endResetModel);
+                    this, &ProxyModel::endResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::rowsAboutToBeRemoved,
-                    this, &ProxyModel::beginResetModel);
+                    this, &ProxyModel::beginResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::rowsRemoved,
-                    this, &ProxyModel::endResetModel);
+                    this, &ProxyModel::endResetModel
+        );
         QObject::connect(
                     newModel, &QAbstractItemModel::dataChanged,
-                    this, &ProxyModel::onDataChanged);
+                    this, &ProxyModel::onDataChanged
+        );
     }
 }
 

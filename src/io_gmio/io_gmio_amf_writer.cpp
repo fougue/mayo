@@ -10,8 +10,9 @@
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
-#include "../base/data_triangulation.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/math_utils.h"
+#include "../base/mesh_access.h"
 #include "../base/meta_enum.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -30,6 +31,7 @@
 #include <gmio_stl/stl_error.h>
 
 #include <fmt/format.h>
+#include <cmath>
 #include <unordered_map>
 
 namespace Mayo {
@@ -48,7 +50,7 @@ void gmio_handleProgress(void* cookie, intmax_t value, intmax_t maxValue)
     auto progress = static_cast<TaskProgress*>(cookie);
     if (progress && maxValue > 0) {
         const auto pctNorm = value / double(maxValue);
-        const auto pct = qRound(pctNorm * 100);
+        const auto pct = std::round(pctNorm * 100);
         progress->setValue(pct);
     }
 }
@@ -129,7 +131,7 @@ public:
     {
         this->float64Format.mutableEnumeration().changeTrContext(this->textIdContext());
         this->float64Format.setDescription(
-                    textIdTr("Format used when writting `double` values as strings"));
+                    textIdTr("Format used when writing `double` values as strings"));
         this->float64Format.setDescriptions({
                     { FloatTextFormat::Decimal, textIdTr("Decimal floating point(ex: 392.65)") },
                     { FloatTextFormat::Scientific, textIdTr("Scientific notation(ex: 3.9265E+2)") },
@@ -139,7 +141,7 @@ public:
         this->float64Precision.setConstraintsEnabled(true);
         this->float64Precision.setRange(1, 16);
         this->float64Precision.setDescription(
-                    textIdTr("Maximum number of significant digits when writting `double` values"));
+                    textIdTr("Maximum number of significant digits when writing `double` values"));
 
         this->createZipArchive.setDescription(
                     textIdTr("Write AMF document in ZIP archive containing one file entry"));
@@ -239,8 +241,8 @@ bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
     };
 
     for (const ApplicationItem& appItem : spanAppItem) {
-        const int appItemIndex = &appItem - &spanAppItem.front();
-        progress->setValue(MathUtils::mappedValue(appItemIndex, 0, spanAppItem.size() - 1, 0, 100));
+        const auto appItemIndex = &appItem - &spanAppItem.front();
+        progress->setValue(MathUtils::toPercent(appItemIndex, 0, spanAppItem.size() - 1));
         const Tree<TDF_Label>& modelTree = appItem.document()->modelTree();
         if (appItem.isDocument()) {
             traverseTree(modelTree, [&](TreeNodeId id) { fnCreateObject(modelTree, id); });
@@ -332,15 +334,9 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     if (!shape.IsNull()) {
         BRepUtils::forEachSubFace(shape, [=](const TopoDS_Face& face){
             TopLoc_Location loc;
-            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
-            fnAddMesh(polyTri, loc);
+            const auto& mesh = BRep_Tool::Triangulation(face, loc);
+            fnAddMesh(mesh, loc);
         });
-    }
-
-    // -- Triangulation ?
-    auto attrPolyTri = CafUtils::findAttribute<DataTriangulation>(labelShape);
-    if (!attrPolyTri.IsNull()) {
-        fnAddMesh(attrPolyTri->Get(), TopLoc_Location());
     }
 
     if (m_vecMesh.size() == meshCount)
@@ -351,8 +347,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     DocumentPtr doc = Document::findFrom(labelShape);
     if (doc && doc->xcaf().hasShapeColor(labelShape)) {
         const Quantity_Color color = doc->xcaf().shapeColor(labelShape);
-        auto itColor = std::find_if(
-                    m_vecMaterial.cbegin(), m_vecMaterial.cend(), [=](const Material& mat) {
+        auto itColor = std::find_if(m_vecMaterial.cbegin(), m_vecMaterial.cend(), [=](const Material& mat) {
             return mat.color == color;
         });
         if (itColor != m_vecMaterial.cend()) {

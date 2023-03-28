@@ -9,7 +9,7 @@
 #include "brep_utils.h"
 #include "caf_utils.h"
 #include "cpp_utils.h"
-#include "data_triangulation.h"
+#include "triangulation_annex_data.h"
 #include "document.h"
 #include "document_tree_node.h"
 
@@ -31,11 +31,20 @@ public:
     {
         const DocumentPtr& doc = treeNode.document();
         const TDF_Label labelNode = treeNode.label();
-        if (doc->xcaf().isShapeSubOf(labelNode, face))
-            m_faceColor = findShapeColor(doc, doc->xcaf().findShapeLabel(face));
+        if (doc->xcaf().isShapeSubOf(labelNode, face)) {
+            const TDF_Label shapeLabel = doc->xcaf().findShapeLabel(face);
+            if (!shapeLabel.IsNull())
+                m_faceColor = findShapeColor(doc, shapeLabel);
+        }
 
         if (!m_faceColor)
             m_faceColor = findShapeColor(doc, labelNode);
+
+        if (!m_faceColor) {
+            auto annexData = CafUtils::findAttribute<TriangulationAnnexData>(labelNode);
+            if (annexData)
+                m_nodeColors = annexData->nodeColors();
+        }
 
         const TopLoc_Location locShape = XCaf::shapeAbsoluteLocation(doc->modelTree(), treeNode.id());
         TopLoc_Location locFace;
@@ -43,8 +52,14 @@ public:
         m_location = locShape * locFace;
     }
 
-    std::optional<Quantity_Color> nodeColor(int /*i*/) const override {
-        return m_faceColor;
+    std::optional<Quantity_Color> nodeColor(int i) const override
+    {
+        if (m_faceColor)
+            return m_faceColor;
+        else if (!m_nodeColors.empty())
+            return m_nodeColors[i];
+        else
+            return {};
     }
 
     const TopLoc_Location& location() const override {
@@ -72,37 +87,9 @@ private:
     }
 
     std::optional<Quantity_Color> m_faceColor;
+    Span<const Quantity_Color> m_nodeColors;
     TopLoc_Location m_location;
     Handle(Poly_Triangulation) m_triangulation;
-};
-
-// Provides access to a mesh stored within a DataTriangulation attribute
-class DataTriangulation_MeshAccess : public IMeshAccess {
-public:
-    DataTriangulation_MeshAccess(const DocumentTreeNode& treeNode)
-        : m_dataTriangulation(CafUtils::findAttribute<DataTriangulation>(treeNode.label()))
-    {
-    }
-
-    std::optional<Quantity_Color> nodeColor(int i) const override
-    {
-        if (0 <= i && CppUtils::cmpLess(i, m_dataTriangulation->nodeColors().size()))
-            return m_dataTriangulation->nodeColors()[i];
-        else
-            return {};
-    }
-
-    const TopLoc_Location& location() const override {
-        return m_location;
-    }
-
-    const Handle(Poly_Triangulation)& triangulation() const override {
-        return m_dataTriangulation->Get();
-    }
-
-private:
-    opencascade::handle<DataTriangulation> m_dataTriangulation;
-    TopLoc_Location m_location;
 };
 
 void IMeshAccess_visitMeshes(
@@ -120,9 +107,6 @@ void IMeshAccess_visitMeshes(
         BRepUtils::forEachSubFace(XCaf::shape(treeNode.label()), [&](const TopoDS_Face& face) {
             fnProxyCallback(XCafFace_MeshAccess(treeNode, face));
         });
-    }
-    else if (CafUtils::hasAttribute<DataTriangulation>(treeNode.label())) {
-        fnProxyCallback(DataTriangulation_MeshAccess(treeNode));
     }
 }
 

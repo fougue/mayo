@@ -6,11 +6,10 @@
 
 #pragma once
 
+#include "signal.h"
 #include "span.h"
 #include "text_id.h"
 
-#include <QtCore/QMetaType>
-#include <QtCore/QObject>
 #include <vector>
 #include <string_view>
 
@@ -74,8 +73,7 @@ struct PropertyChangedBlocker {
 };
 
 #define Mayo_PropertyChangedBlocker(group) \
-            Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group); \
-            Q_UNUSED(__Mayo_PropertyChangedBlocker);
+            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group);
 
 class Property {
 public:
@@ -127,20 +125,15 @@ private:
     bool m_isEnabled = true;
 };
 
-class PropertyGroupSignals : public QObject, public PropertyGroup {
-    Q_OBJECT
+class PropertyGroupSignals : public PropertyGroup {
 public:
-    PropertyGroupSignals(QObject* parent = nullptr);
-
-signals:
-    void propertyAboutToChange(Mayo::Property* prop);
-    void propertyChanged(Mayo::Property* prop);
+    Signal<Property*> signalPropertyAboutToChange;
+    Signal<Property*> signalPropertyChanged;
 
 protected:
     void onPropertyAboutToChange(Property* prop) override;
     void onPropertyChanged(Property* prop) override;
 };
-
 
 // --
 // -- Implementation
@@ -168,6 +161,3 @@ template<typename T> bool Property::setValueHelper(Property* prop, T* ptrValue, 
 }
 
 } // namespace Mayo
-
-Q_DECLARE_METATYPE(Mayo::Property*)
-Q_DECLARE_METATYPE(const Mayo::Property*)

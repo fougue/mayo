@@ -556,289 +556,40 @@
      <x>0</x>
      <y>0</y>
      <width>950</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionNewDoc"/>
-    <addaction name="actionOpen"/>
-    <addaction name="actionRecentFiles"/>
-    <addaction name="separator"/>
-    <addaction name="actionImport"/>
-    <addaction name="actionExportSelectedItems"/>
-    <addaction name="separator"/>
-    <addaction name="actionCloseDoc"/>
-    <addaction name="actionCloseAllDocuments"/>
-    <addaction name="actionCloseAllExcept"/>
-    <addaction name="separator"/>
-    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionReportBug"/>
-    <addaction name="separator"/>
-    <addaction name="actionAboutMayo"/>
    </widget>
-   <widget class="QMenu" name="menu_Options">
+   <widget class="QMenu" name="menu_Tools">
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="actionSaveImageView"/>
-    <addaction name="actionInspectXDE"/>
-    <addaction name="separator"/>
-    <addaction name="actionOptions"/>
    </widget>
    <widget class="QMenu" name="menu_Window">
     <property name="title">
      <string>&amp;Window</string>
     </property>
-    <addaction name="actionToggleFullscreen"/>
-    <addaction name="actionToggleLeftSidebar"/>
-    <addaction name="separator"/>
-    <addaction name="actionPreviousDoc"/>
-    <addaction name="actionNextDoc"/>
    </widget>
    <widget class="QMenu" name="menu_Display">
     <property name="title">
      <string>&amp;Display</string>
     </property>
-    <widget class="QMenu" name="menu_Projection">
-     <property name="title">
-      <string>Projection</string>
-     </property>
-     <addaction name="actionProjectionOrthographic"/>
-     <addaction name="actionProjectionPerspective"/>
-    </widget>
-    <addaction name="menu_Projection"/>
-    <addaction name="actionDisplayMode"/>
-    <addaction name="actionToggleOriginTrihedron"/>
-    <addaction name="actionTogglePerformanceStats"/>
-    <addaction name="separator"/>
-    <addaction name="actionZoomIn"/>
-    <addaction name="actionZoomOut"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Display"/>
-   <addaction name="menu_Options"/>
+   <addaction name="menu_Tools"/>
    <addaction name="menu_Window"/>
    <addaction name="menu_Help"/>
   </widget>
-  <action name="actionNewDoc">
-   <property name="text">
-    <string>New</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="actionImport">
-   <property name="text">
-    <string>Import</string>
-   </property>
-  </action>
-  <action name="actionQuit">
-   <property name="text">
-    <string>Quit</string>
-   </property>
-  </action>
-  <action name="actionOpen">
-   <property name="text">
-    <string>Open</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionAboutMayo">
-   <property name="text">
-    <string>About Mayo</string>
-   </property>
-  </action>
-  <action name="actionReportBug">
-   <property name="text">
-    <string>Report Bug</string>
-   </property>
-  </action>
-  <action name="actionOptions">
-   <property name="text">
-    <string>Options</string>
-   </property>
-  </action>
-  <action name="actionSaveImageView">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/images/themes/classic/camera_32.png</normaloff>:/images/themes/classic/camera_32.png</iconset>
-   </property>
-   <property name="text">
-    <string>Save View to Image</string>
-   </property>
-  </action>
-  <action name="actionExportSelectedItems">
-   <property name="text">
-    <string>Export selected items</string>
-   </property>
-  </action>
-  <action name="actionInspectXDE">
-   <property name="text">
-    <string>Inspect XDE</string>
-   </property>
-  </action>
-  <action name="actionPreviousDoc">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/images/previous.png</normaloff>:/images/previous.png</iconset>
-   </property>
-   <property name="text">
-    <string>Previous Document</string>
-   </property>
-   <property name="toolTip">
-    <string>Previous Document</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+Left</string>
-   </property>
-  </action>
-  <action name="actionNextDoc">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
-   </property>
-   <property name="text">
-    <string>Next Document</string>
-   </property>
-   <property name="toolTip">
-    <string>Next Document</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+Right</string>
-   </property>
-  </action>
-  <action name="actionCloseDoc">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/images/close.png</normaloff>:/images/close.png</iconset>
-   </property>
-   <property name="text">
-    <string>Close &quot;%1&quot;</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+W</string>
-   </property>
-  </action>
-  <action name="actionToggleFullscreen">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Fullscreen</string>
-   </property>
-   <property name="toolTip">
-    <string>Switch Fullscreen/Normal</string>
-   </property>
-   <property name="shortcut">
-    <string>F11</string>
-   </property>
-  </action>
-  <action name="actionToggleLeftSidebar">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>:/images/themes/classic/left-sidebar_32.png</normaloff>:/images/themes/classic/left-sidebar_32.png</iconset>
-   </property>
-   <property name="text">
-    <string>Show Left Sidebar</string>
-   </property>
-   <property name="toolTip">
-    <string>Show/Hide Left Sidebar</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+0</string>
-   </property>
-  </action>
-  <action name="actionRecentFiles">
-   <property name="text">
-    <string>Recent files</string>
-   </property>
-  </action>
-  <action name="actionToggleOriginTrihedron">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show Origin Trihedron</string>
-   </property>
-   <property name="toolTip">
-    <string>Show/Hide Origin Trihedron</string>
-   </property>
-  </action>
-  <action name="actionZoomIn">
-   <property name="text">
-    <string>Zoom In</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl++</string>
-   </property>
-  </action>
-  <action name="actionZoomOut">
-   <property name="text">
-    <string>Zoom Out</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+-</string>
-   </property>
-  </action>
-  <action name="actionCloseAllDocuments">
-   <property name="text">
-    <string>Close all</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+W</string>
-   </property>
-  </action>
-  <action name="actionCloseAllExcept">
-   <property name="text">
-    <string>Close all except &quot;%1&quot;</string>
-   </property>
-  </action>
-  <action name="actionProjectionPerspective">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Perspective</string>
-   </property>
-  </action>
-  <action name="actionProjectionOrthographic">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Orthographic</string>
-   </property>
-  </action>
-  <action name="actionDisplayMode">
-   <property name="text">
-    <string>Mode</string>
-   </property>
-  </action>
-  <action name="actionTogglePerformanceStats">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show Performance Stats</string>
-   </property>
-   <property name="toolTip">
-    <string>Show/Hide rendering performance statistics</string>
-   </property>
-  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

@@ -6,7 +6,7 @@
 
 #include "list_helper.h"
 
-#include "../gui/qtgui_utils.h"
+#include "qtgui_utils.h"
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -97,12 +97,11 @@ void Model::setStorage(std::unique_ptr<ModelStorage> ptr)
 }
 
 ItemDelegate::ItemDelegate(QObject* parent)
-    : QStyledItemDelegate(parent)
+    : QStyledItemDelegate(parent),
+      m_frameColor(220, 220, 220),
+      m_pixmapColor(qApp->palette().color(QPalette::Button)),
+      m_textColor(qApp->palette().color(QPalette::WindowText))
 {
-    m_frameColor = QColor(220, 220, 220);
-    m_pixmapColor = qApp->palette().color(QPalette::Button);
-    m_textColor = qApp->palette().color(QPalette::WindowText);
-
     m_itemAnimation.setDuration(250);
     m_itemAnimation.setEasingCurve(QEasingCurve::OutQuad);
     m_itemAnimation.setLoopCount(1);
@@ -110,7 +109,8 @@ ItemDelegate::ItemDelegate(QObject* parent)
     m_itemAnimation.setEndValue(m_itemSize.height());
     QObject::connect(
                 &m_itemAnimation, &QVariantAnimation::valueChanged,
-                this, &ItemDelegate::drawItem);
+                this, &ItemDelegate::drawItem
+    );
 }
 
 void ItemDelegate::paint(

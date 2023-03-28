@@ -16,18 +16,18 @@ namespace Mayo {
 // Currently it wraps magic_enum 3rdparty library
 class MetaEnum {
 public:
-    template<typename ENUM>
-    static std::string_view name(ENUM enumValue) {
+    template<typename EnumType>
+    static std::string_view name(EnumType enumValue) {
         return magic_enum::enum_name(enumValue);
     }
 
-    template<typename ENUM>
+    template<typename EnumType>
     static int count() {
-        return magic_enum::enum_count<ENUM>();
+        return magic_enum::enum_count<EnumType>();
     }
 
-    template<typename ENUM>
-    static std::string_view nameWithoutPrefix(ENUM enumValue, std::string_view strPrefix) {
+    template<typename EnumType>
+    static std::string_view nameWithoutPrefix(EnumType enumValue, std::string_view strPrefix) {
         std::string_view strEnumValueName = MetaEnum::name(enumValue);
         if (strEnumValueName.find(strPrefix) == 0)
             return strEnumValueName.substr(strPrefix.size());
@@ -36,14 +36,14 @@ public:
     }
 
     // Returns std::array with pairs(value, name), sorted by enum value
-    template<typename ENUM>
+    template<typename EnumType>
     static auto entries() {
-        return magic_enum::enum_entries<ENUM>();
+        return magic_enum::enum_entries<EnumType>();
     }
 
-    template<typename ENUM>
+    template<typename EnumType>
     static auto values() {
-        return magic_enum::enum_values<ENUM>();
+        return magic_enum::enum_values<EnumType>();
     }
 };
 

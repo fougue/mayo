@@ -9,16 +9,15 @@
 #include "property.h"
 #include "property_value_conversion.h"
 #include "settings_index.h"
+#include "signal.h"
 
-#include <QtCore/QObject>
 #include <functional>
 #include <memory>
 #include <string_view>
 
 namespace Mayo {
 
-class Settings : public QObject, public PropertyGroup {
-    Q_OBJECT
+class Settings : public PropertyGroup {
 public:
     using Variant = PropertyValueConversion::Variant;
 
@@ -37,7 +36,7 @@ public:
     using ExcludePropertyPredicate = std::function<bool(const Property&)>;
     using ResetFunction = std::function<void()>;
 
-    Settings(QObject* parent = nullptr);
+    Settings();
     Settings(const Settings&) = delete; // Not copyable
     Settings& operator=(const Settings&) = delete; // Not copyable
     ~Settings();
@@ -46,6 +45,7 @@ public:
 
     void load();
     void loadProperty(SettingIndex index);
+    void loadProperty(const Property* property);
     Variant findValueFromKey(std::string_view strKey) const;
     void save();
 
@@ -84,10 +84,10 @@ public:
     void resetGroup(GroupIndex index);
     void resetSection(SectionIndex index);
 
-signals:
-    void aboutToChange(Mayo::Property* setting);
-    void changed(Mayo::Property* setting);
-    void enabled(Mayo::Property* setting, bool on);
+    // Signals
+    Signal<Property*> signalAboutToChange;
+    Signal<Property*> signalChanged;
+    Signal<Property*, bool> signalEnabled;
 
 protected:
     void onPropertyAboutToChange(Property* prop) override;

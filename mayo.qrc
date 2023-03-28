@@ -78,5 +78,9 @@
         <file>images/themes/dark/reload.svg</file>
         <file>images/themes/classic/measure.svg</file>
         <file>images/themes/dark/measure.svg</file>
+        <file>images/themes/classic/turn-ccw.svg</file>
+        <file>images/themes/classic/turn-cw.svg</file>
+        <file>images/themes/dark/turn-ccw.svg</file>
+        <file>images/themes/dark/turn-cw.svg</file>
     </qresource>
 </RCC>

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "signal.h"
 #include "task.h"
 #include "task_progress.h"
 
-#include <QtCore/QObject>
 #include <atomic>
 #include <future>
 #include <memory>
@@ -19,10 +19,8 @@
 
 namespace Mayo {
 
-class TaskManager : public QObject {
-    Q_OBJECT
+class TaskManager {
 public:
-    TaskManager(QObject* parent = nullptr);
     ~TaskManager();
 
     TaskId newTask(TaskJob fn);
@@ -38,18 +36,18 @@ public:
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
 
-    template<typename FUNCTION>
-    void foreachTask(FUNCTION fn) {
+    template<typename Function>
+    void foreachTask(Function fn) {
         for (const auto& mapPair : m_mapEntity)
             fn(mapPair.first);
     }
 
-signals:
-    void started(Mayo::TaskId id);
-    void progressStep(Mayo::TaskId id, const std::string& stepTitle);
-    void progressChanged(Mayo::TaskId id, int percent);
-    void abortRequested(Mayo::TaskId id);
-    void ended(Mayo::TaskId id);
+    // Signals
+    Signal<TaskId> signalStarted;
+    Signal<TaskId, const std::string&> signalProgressStep;
+    Signal<TaskId, int> signalProgressChanged;
+    Signal<TaskId> signalAbortRequested;
+    Signal<TaskId> signalEnded;
 
 private:
     struct Entity {

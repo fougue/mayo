@@ -12,12 +12,12 @@
 #include "../base/meta_enum.h"
 #include "../base/settings.h"
 #include "../base/tkernel_utils.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "qmeta_tdf_label.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
-#include "widgets_utils.h"
+#include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
 #include <TDF_AttributeIterator.hxx>
@@ -55,7 +55,12 @@
 #  include <XCAFDoc_VisMaterialTool.hxx>
 #endif
 
+#include <QtCore/QBuffer>
+#include <QtCore/QFileInfo>
+
+#include <algorithm>
 #include <sstream>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -283,14 +288,73 @@ static void loadLabelMaterialProperties(
 }
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-static QTreeWidgetItem* createPropertyTreeItem(
-        const QString& text, const opencascade::handle<Image_Texture>& imgTexture)
+
+// Provides a QTreeWidgetItem specialized to display an image file with a tooltip
+// QTreeWidgetItem::setToolTip() could be used but it forces all image files to be loaded on
+// tree item construction
+// This helper allows "lazy" loading of the image files
+class ImageFileTreeWidgetItem : public QTreeWidgetItem {
+public:
+    void setImageFilePath(int col, const QString& strFilePath)
+    {
+        const ItemData item{strFilePath, {}};
+        m_mapColumnItemData.insert({ col, item });
+    }
+
+    QVariant data(int column, int role) const override
+    {
+        if (role != Qt::ToolTipRole)
+            return QTreeWidgetItem::data(column, role);
+
+        auto itItem = m_mapColumnItemData.find(column);
+        ItemData* ptrItem = itItem != m_mapColumnItemData.end() ? &itItem->second : nullptr;
+        if (!ptrItem)
+            return {};
+
+        if (ptrItem->strToolTip.isEmpty()) {
+            const QPixmap pixmap(ptrItem->strFilePath);
+            if (!pixmap.isNull()) {
+                QBuffer bufferPixmap;
+                const QPixmap pixmapClamped = pixmap.scaledToWidth(std::min(pixmap.width(), 400));
+                pixmapClamped.save(&bufferPixmap, "PNG");
+                const auto imageSize = QFileInfo(ptrItem->strFilePath).size();
+                const QString strImageSize = QStringUtils::bytesText(imageSize, appDefaultTextOptions().locale);
+                ptrItem->strToolTip =
+                        QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
+                        .arg(QString::fromLatin1(bufferPixmap.data().toBase64()))
+                        .arg(pixmapClamped.width())
+                        .arg(pixmapClamped.height())
+                        .arg(DialogInspectXde::tr("File Size: %1<br>Dimensions: %2x%3 Depth: %4")
+                             .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth()))
+                        ;
+            }
+            else {
+                ptrItem->strToolTip = DialogInspectXde::tr("Error when loading texture file(invalid path?)");
+            }
+        }
+
+        return ptrItem->strToolTip;
+    }
+
+private:
+    struct ItemData {
+        QString strFilePath;
+        QString strToolTip;
+    };
+
+    mutable std::unordered_map<int, ItemData> m_mapColumnItemData;
+};
+
+static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Handle(Image_Texture)& imgTexture)
 {
     if (imgTexture.IsNull())
         return static_cast<QTreeWidgetItem*>(nullptr);
 
-    auto item = createPropertyTreeItem(text);
-    item->setText(1, to_QString(imgTexture->FilePath()));
+    const QString strTextureFilePath = to_QString(imgTexture->FilePath());
+    auto item = new ImageFileTreeWidgetItem;
+    item->setText(0, text);
+    item->setText(1, strTextureFilePath);
+    item->setImageFilePath(1, strTextureFilePath);
     return item;
 }
 #endif
@@ -655,7 +719,7 @@ void DialogInspectXde::load(const Handle_TDocStd_Document& doc)
 {
     m_doc = doc;
     if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc)) {
-        WidgetsUtils::asyncMsgBoxCritical(
+        QtWidgetsUtils::asyncMsgBoxCritical(
                     this, tr("Error"), tr("This document is not suitable for XDE"));
         return;
     }

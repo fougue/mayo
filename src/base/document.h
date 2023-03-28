@@ -11,22 +11,17 @@
 #include "document_tree_node.h"
 #include "filepath.h"
 #include "libtree.h"
+#include "signal.h"
 #include "xcaf.h"
 
-#include <QtCore/QObject>
 #include <string>
 #include <string_view>
 
 namespace Mayo {
 
-class Document : public QObject, public TDocStd_Document {
-    Q_OBJECT
-    Q_PROPERTY(int identifier READ identifier)
-    Q_PROPERTY(std::string name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(FilePath filePath READ filePath WRITE setFilePath)
-    Q_PROPERTY(bool isXCafDocument READ isXCafDocument)
+class Document : public TDocStd_Document {
 public:
-    using Identifier = int;
+    using Identifier = int; // TODO alias TypedScalar<int, DocumentIdentifierTag>
     enum class Format { Binary, Xml };
 
     Identifier identifier() const { return m_identifier; }
@@ -60,15 +55,20 @@ public:
 
     static DocumentPtr findFrom(const TDF_Label& label);
 
+    // Creates general-purpose entity, not bound to a specific type
     TDF_Label newEntityLabel();
+
+    // Creates entity bound to a BRep shape and registered as top-level into XCAFDoc_ShapeTool
+    TDF_Label newEntityShapeLabel();
+
     void addEntityTreeNode(const TDF_Label& label);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
-signals:
-    void nameChanged(const std::string& name);
-    void entityAdded(Mayo::TreeNodeId entityTreeNodeId);
-    void entityAboutToBeDestroyed(Mayo::TreeNodeId entityTreeNodeId);
-    //void itemPropertyChanged(DocumentItem* docItem, Property* prop);
+    // Signals
+    Signal<const std::string&> signalNameChanged;
+    Signal<const FilePath&> signalFilePathChanged;
+    Signal<TreeNodeId> signalEntityAdded;
+    Signal<TreeNodeId> signalEntityAboutToBeDestroyed;
 
 public: // -- from TDocStd_Document
     void BeforeClose() override;
@@ -78,6 +78,7 @@ public: // -- from TDocStd_Document
 
 private:
     Document(const ApplicationPtr& app);
+    ~Document();
 
     friend class Application;
     class FormatBinaryRetrievalDriver;

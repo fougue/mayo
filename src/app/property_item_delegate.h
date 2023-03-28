@@ -25,38 +25,34 @@ public:
     double rowHeightFactor() const { return m_rowHeightFactor; }
     void setRowHeightFactor(double v) { m_rowHeightFactor = v; }
 
-    PropertyEditorFactory* editorFactory() const { return m_editorFactory.get(); }
-    void setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory);
+    IPropertyEditorFactory* editorFactory() const { return m_editorFactory.get(); }
+    void setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory);
 
     struct UnitTranslation {
       Unit unit;
       const char* strUnit; // UTF8
       double factor;
     };
-    bool overridePropertyUnitTranslation(
-            const BasePropertyQuantity* prop, UnitTranslation unitTr);
+    bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
     void paint(
             QPainter* painter,
             const QStyleOptionViewItem& option,
-            const QModelIndex& index) const override;
+            const QModelIndex& index
+      ) const override;
 
     QString displayText(const QVariant& value, const QLocale&) const override;
 
     QWidget* createEditor(
-            QWidget* parent,
-            const QStyleOptionViewItem&,
-            const QModelIndex& index) const override;
+            QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index
+      ) const override;
 
-    void setModelData(
-            QWidget*, QAbstractItemModel*, const QModelIndex&) const override;
+    void setModelData(QWidget*, QAbstractItemModel*, const QModelIndex&) const override;
 
-    QSize sizeHint(
-            const QStyleOptionViewItem& option,
-            const QModelIndex& index) const override;
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
 private:
-    std::unique_ptr<PropertyEditorFactory> m_editorFactory;
+    std::unique_ptr<IPropertyEditorFactory> m_editorFactory;
     double m_rowHeightFactor = 1.;
     std::unordered_map<const BasePropertyQuantity*, UnitTranslation> m_mapPropUnitTr;
 };

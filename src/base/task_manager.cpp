@@ -14,11 +14,6 @@
 
 namespace Mayo {
 
-TaskManager::TaskManager(QObject* parent)
-    : QObject(parent)
-{
-}
-
 TaskManager::~TaskManager()
 {
     // Make sure all tasks are really finished
@@ -91,7 +86,7 @@ void TaskManager::requestAbort(TaskId id)
 {
     Entity* entity = this->findEntity(id);
     if (entity) {
-        emit this->abortRequested(id);
+        this->signalAbortRequested.send(id);
         entity->taskProgress.requestAbort();
     }
 }
@@ -111,10 +106,8 @@ int TaskManager::globalProgress() const
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    const int taskCount = CppUtils::safeStaticCast<int>(m_mapEntity.size());
-    const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
+    return MathUtils::toPercent(taskAccumPct, 0, m_mapEntity.size() * 100);
     //qDebug() << "taskCount=" << taskCount << " taskAccumPct=" << taskAccumPct << " newGlobalPct=" << newGlobalPct;
-    return newGlobalPct;
 }
 
 const std::string& TaskManager::title(TaskId id) const
@@ -147,13 +140,13 @@ void TaskManager::execEntity(Entity* entity)
     if (!entity)
         return;
 
-    emit this->started(entity->task.id());
+    this->signalStarted.send(entity->task.id());
     const TaskJob& fn = entity->task.job();
     fn(&entity->taskProgress);
     if (!entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 
-    emit this->ended(entity->task.id());
+    this->signalEnded.send(entity->task.id());
     entity->isFinished = true;
 }
 

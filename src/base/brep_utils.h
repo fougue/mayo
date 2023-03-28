@@ -8,6 +8,7 @@
 
 #include "occ_brep_mesh_parameters.h"
 
+#include <Poly_Triangulation.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -19,17 +20,23 @@ class TaskProgress;
 
 // Provides helper functions for OpenCascade TKBRep library
 struct BRepUtils {
+    // Creates a valid and empty TopoDS_Compound shape
+    static TopoDS_Compound makeEmptyCompound();
+
+    // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
+    static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);
+
     // Iterates with 'explorer' and executes 'fn' for each sub-shape
-    template<typename FUNC>
-    static void forEachSubShape(TopExp_Explorer& explorer, FUNC fn);
+    template<typename Function>
+    static void forEachSubShape(TopExp_Explorer& explorer, Function fn);
 
     // Explores 'shape' and executes 'fn' for each sub-shape of type 'shapeType'
-    template<typename FUNC>
-    static void forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn);
+    template<typename Function>
+    static void forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Function fn);
 
     // Explores 'shape' and executes 'fn' for each sub-face
-    template<typename FUNC>
-    static void forEachSubFace(const TopoDS_Shape& shape, FUNC fn);
+    template<typename Function>
+    static void forEachSubFace(const TopoDS_Shape& shape, Function fn);
 
     // Is shape type 'lhs' more complex than 'rhs'?
     // Complexity here is the degree of abstraction provided(eg face type is more complex than edge type)
@@ -37,7 +44,7 @@ struct BRepUtils {
 
     // Returns hash code computed from 'shape'
     // Computation uses the internal TShape and Location, but Orientation is not considered
-    // Returnd hash code is in the range [1, max(int)]
+    // Returned hash code is in the range [1, max(int)]
     static int hashCode(const TopoDS_Shape& shape);
 
     // Serializes 'shape' into a string representation
@@ -46,11 +53,15 @@ struct BRepUtils {
     // Deserializes string 'str' obtained from 'shapeToToString()' into a shape object
     static TopoDS_Shape shapeFromString(const std::string& str);
 
+    // Does 'face' rely on a geometric surface?
+    static bool isGeometric(const TopoDS_Face& face);
+
     // Computes a mesh representation of 'shape' using OpenCascade meshing algorithm
     static void computeMesh(
             const TopoDS_Shape& shape,
             const OccBRepMeshParameters& params,
-            TaskProgress* progress = nullptr);
+            TaskProgress* progress = nullptr
+    );
 };
 
 
@@ -59,8 +70,8 @@ struct BRepUtils {
 // -- Implementation
 // --
 
-template<typename FUNC>
-void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, Function fn)
 {
     while (explorer.More()) {
         fn(explorer.Current());
@@ -68,15 +79,15 @@ void BRepUtils::forEachSubShape(TopExp_Explorer& explorer, FUNC fn)
     }
 }
 
-template<typename FUNC>
-void BRepUtils::forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubShape(const TopoDS_Shape& shape, TopAbs_ShapeEnum shapeType, Function fn)
 {
     TopExp_Explorer expl(shape, shapeType);
     BRepUtils::forEachSubShape(expl, std::move(fn));
 }
 
-template<typename FUNC>
-void BRepUtils::forEachSubFace(const TopoDS_Shape& shape, FUNC fn)
+template<typename Function>
+void BRepUtils::forEachSubFace(const TopoDS_Shape& shape, Function fn)
 {
     for (TopExp_Explorer expl(shape, TopAbs_FACE); expl.More(); expl.Next())
         fn(TopoDS::Face(expl.Current()));

@@ -30,12 +30,12 @@ struct ModelStorage {
     virtual const ModelItem* at(int i) const = 0;
 };
 
-template<typename ITEM> struct DefaultModelStorage : public ModelStorage {
-    static_assert(!std::is_pointer<ITEM>::value);
-    static_assert(std::is_base_of<ModelItem, ITEM>::value);
+template<typename ItemType> struct DefaultModelStorage : public ModelStorage {
+    static_assert(!std::is_pointer<ItemType>::value);
+    static_assert(std::is_base_of<ModelItem, ItemType>::value);
     int count() const override { return int(m_items.size()); }
-    const ITEM* at(int i) const override { return &m_items.at(i); }
-    std::vector<ITEM> m_items;
+    const ItemType* at(int i) const override { return &m_items.at(i); }
+    std::vector<ItemType> m_items;
 };
 
 class Model : public QAbstractListModel {
@@ -105,7 +105,7 @@ private:
     mutable QModelIndex m_previousIndex;
     mutable QVariantAnimation m_itemAnimation;
     mutable QRect m_area;
-    mutable QAbstractItemView* m_widget;
+    mutable QAbstractItemView* m_widget = nullptr;
     mutable QPixmap m_blurredPixmap;
 };
 

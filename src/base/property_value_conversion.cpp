@@ -15,7 +15,9 @@
 #include "unit_system.h"
 
 #include <fmt/format.h>
-#include <charconv>
+#if __cpp_lib_to_chars
+#  include <charconv>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <iostream>

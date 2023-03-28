@@ -46,6 +46,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
+    settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
@@ -61,6 +62,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->navigationStyle, groupId_graphics);
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
+    settings->addSetting(&this->turnViewAngleIncrement, groupId_graphics);
     // -- Clip planes
     settings->addSetting(&this->clipPlanesCappingOn, sectionId_graphicsClipPlanes);
     settings->addSetting(&this->clipPlanesCappingHatchOn, sectionId_graphicsClipPlanes);
@@ -82,11 +84,17 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
         this->linkWithDocumentSelector.setValue(true);
+#ifndef MAYO_OS_MAC
+        this->forceOpenGlFallbackWidget.setValue(false);
+#else
+        this->forceOpenGlFallbackWidget.setValue(true);
+#endif
     });
     settings->addResetFunction(groupId_graphics, [=]{
         this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
+        this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
     });
     settings->addResetFunction(groupId_meshing, [&]{
         this->meshingQuality.setValue(BRepMeshQuality::Normal);
@@ -147,26 +155,47 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
 
 void AppModuleProperties::retranslate()
 {
+    // Application
     this->language.setDescription(
                 textIdTr("Language used for the application. Change will take effect after application restart"));
     this->linkWithDocumentSelector.setDescription(
                 textIdTr("In case where multiple documents are opened, make sure the document displayed in "
                          "the 3D view corresponds to what is selected in the model tree"));
+    this->forceOpenGlFallbackWidget.setDescription(
+                textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
+                         "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
+                         "this allows to display overlay widgets(eg measure tools panel) with translucid "
+                         "background. "
+                         "However using OpenGL framebuffer might cause troubles for some users(eg empty "
+                         "3D window) especially on macOS.\n\n"
+                         "When `ON` the application will use a regular Qt widget for rendering which "
+                         "proved to be more supported.\n\n"
+                         "This option is applicable when OpenCascade ≥ 7.6 version. "
+                         "Change will take effect after application restart")
+    );
+
+    // Meshing
     this->meshingQuality.setDescription(
                 textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
     this->meshingChordalDeflection.setDescription(
-                textIdTr("For the tesselation of faces the chordal deflection limits the distance between "
+                textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
                          "a curve and its tessellation"));
     this->meshingAngularDeflection.setDescription(
-                textIdTr("For the tesselation of faces the angular deflection limits the angle between "
+                textIdTr("For the tessellation of faces the angular deflection limits the angle between "
                          "subsequent segments in a polyline"));
     this->meshingRelative.setDescription(
                 textIdTr("Relative computation of edge tolerance\n\n"
                          "If activated, deflection used for the polygonalisation of each edge will be "
                          "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
                          "the maximum deflection of their edges."));
+
+    // Graphics
     this->navigationStyle.setDescription(
                 textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications"));
+    this->turnViewAngleIncrement.setDescription(
+                textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)"));
+
+    // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
                 textIdTr("Show or hide by default the trihedron centered at world origin. "
                          "This doesn't affect 3D view of currently opened documents"));

@@ -39,7 +39,8 @@ public:
     };
 
     struct Parameters {
-        RWMesh_CoordinateSystem coordinatesConverter = RWMesh_CoordinateSystem_glTF;
+        RWMesh_CoordinateSystem inputCoordinateSystem = RWMesh_CoordinateSystem_Undefined;
+        RWMesh_CoordinateSystem outputCoordinateSystem = RWMesh_CoordinateSystem_glTF;
         RWGltf_WriterTrsfFormat transformationFormat = RWGltf_WriterTrsfFormat_Compact;
         Format format = Format::Binary;
         bool forceExportUV = false;

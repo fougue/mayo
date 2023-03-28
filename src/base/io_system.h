@@ -113,7 +113,7 @@ public:
         // Format in which items are exported
         Format targetFormat = Format_Unknown;
 
-        // Optional: format-specific parameters to be considered when writting items
+        // Optional: format-specific parameters to be considered when writing items
         const PropertyGroup* parameters = nullptr; // TODO use ParametersProvider instead?
 
         // Optional: the messenger object used to report any additional infos, warnings and errors
@@ -163,6 +163,7 @@ public:
         using Operation = Operation_ExportApplicationItems;
         Operation& targetFile(const FilePath& filepath);
         Operation& targetFormat(Format format);
+        Operation& withItem(const ApplicationItem& appItem);
         Operation& withItems(Span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
@@ -179,7 +180,7 @@ public:
 
     // Helpers
 
-    // Iterate over `spanItem` and call `fnCallback` for each item. Garantees that doublon items
+    // Iterate over `spanItem` and call `fnCallback` for each item. Guarantees that doublon items
     // will be visited only once
     static void visitUniqueItems(
             Span<const ApplicationItem> spanItem,
@@ -187,7 +188,7 @@ public:
     );
 
     // Iterate over `spanItem` and then deep traverse the corresponding tree node to
-    // call `fnCallback` for each item. Garantees that doublon items will be visited only once
+    // call `fnCallback` for each item. Guarantees that doublon items will be visited only once
     static void traverseUniqueItems(
             Span<const ApplicationItem> spanItem,
             std::function<void(const DocumentTreeNode&)> fnCallback,
@@ -210,6 +211,7 @@ Format probeFormat_OCCBREP(const System::FormatProbeInput& input);
 Format probeFormat_STL(const System::FormatProbeInput& input);
 Format probeFormat_OBJ(const System::FormatProbeInput& input);
 Format probeFormat_PLY(const System::FormatProbeInput& input);
+Format probeFormat_OFF(const System::FormatProbeInput& input);
 void addPredefinedFormatProbes(System* system);
 
 } // namespace IO

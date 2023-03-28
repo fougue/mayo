@@ -6,9 +6,11 @@
 
 #pragma once
 
-#include "../graphics/v3d_view_controller.h"
+#include "../gui/v3d_view_controller.h"
 #include "../base/span.h"
 
+#include <QtCore/QObject>
+#include <QtCore/QPoint>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -22,7 +24,7 @@ namespace Mayo {
 
 class IWidgetOccView;
 
-class WidgetOccViewController : public V3dViewController {
+class WidgetOccViewController : public QObject, public V3dViewController {
     Q_OBJECT
 public:
     WidgetOccViewController(IWidgetOccView* occView = nullptr);
@@ -34,19 +36,19 @@ public:
     };
     void setNavigationStyle(NavigationStyle style);
 
-signals:
-    void multiSelectionToggled(bool on);
-
 protected:
     void redrawView() override;
 
 private:
+    static Position toPosition(const QPoint& pnt) { return { pnt.x(), pnt.y() }; }
+    static QPoint toQPoint(const Position& pos) { return { pos.x, pos.y }; }
+
     void startDynamicAction(DynamicAction action) override;
     void stopDynamicAction() override;
 
     void setViewCursor(const QCursor& cursor);
 
-    std::unique_ptr<AbstractRubberBand> createRubberBand() override;
+    std::unique_ptr<IRubberBand> createRubberBand() override;
     struct RubberBand;
 
     void handleEvent(const QEvent* event);
@@ -118,7 +120,7 @@ private:
     // -- Attributes
 
     IWidgetOccView* m_occView = nullptr;
-    QPoint m_prevPos;
+    Position m_prevPos;
     NavigationStyle m_navigStyle = NavigationStyle::Mayo;
     InputSequence m_inputSequence;
     std::unique_ptr<ActionMatcher> m_actionMatcher;

@@ -1,18 +1,14 @@
 /*
 MIT License
-
 Copyright (c) 2019 Vilya Harvey
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -558,7 +554,7 @@ namespace miniply {
         uint32_t propIdx = listPropIdx + 1 + i;
 
         PLYProperty& itemProp = properties[propIdx];
-        snprintf(nameBuf, sizeof(nameBuf), "%s_%u", oldListProp.name.c_str(), i);
+        snprintf(nameBuf, nameBufSize, "%s_%u", oldListProp.name.c_str(), i);
         itemProp.name = nameBuf;
         itemProp.type = oldListProp.type;
         itemProp.countType = PLYPropertyType::None;
@@ -1320,13 +1316,13 @@ namespace miniply {
   bool PLYReader::find_color(uint32_t propIdxs[3]) const
   {
     return find_properties(propIdxs, 3, "r", "g", "b") ||
-           find_properties(propIdxs, 3, "red", "green", "blue"); 
+           find_properties(propIdxs, 3, "red", "green", "blue") ||
+           find_properties(propIdxs, 3, "diffuse_red", "diffuse_green", "diffuse_blue");
   }
-
 
   bool PLYReader::find_indices(uint32_t propIdxs[1]) const
   {
-    return find_properties(propIdxs, 1, "vertex_indices") || 
+    return find_properties(propIdxs, 1, "vertex_indices") ||
            find_properties(propIdxs, 1, "vertex_index");
   }
 
@@ -1608,7 +1604,7 @@ namespace miniply {
 
   bool PLYReader::load_fixed_size_element(PLYElement& elem)
   {
-    size_t numBytes = elem.count * elem.rowStride;
+    size_t numBytes = static_cast<size_t>(elem.count) * elem.rowStride;
 
     m_elementData.resize(numBytes);
 
@@ -1679,7 +1675,7 @@ namespace miniply {
 
   bool PLYReader::load_variable_size_element(PLYElement& elem)
   {
-    m_elementData.resize(elem.count * elem.rowStride);
+    m_elementData.resize(static_cast<size_t>(elem.count) * elem.rowStride);
 
     // Preallocate enough space for each row in the property to contain three
     // items. This is based on the assumptions that (a) the most common use for

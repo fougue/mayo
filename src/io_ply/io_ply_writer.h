@@ -8,6 +8,9 @@
 
 #include "../base/document_ptr.h"
 #include "../base/io_writer.h"
+#include "../base/io_single_format_factory.h"
+#include "../base/point_cloud_data.h"
+
 #include <Quantity_ColorRGBA.hxx>
 #include <vector>
 
@@ -16,7 +19,7 @@ namespace Mayo { class IMeshAccess; }
 namespace Mayo {
 namespace IO {
 
-// Writer for PLY file format based on the msh_ply library
+// Writer for PLY file format
 class PlyWriter : public Writer {
 public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
@@ -43,7 +46,12 @@ private:
     struct Vertex { float x; float y; float z; };
     struct Color { uint8_t red; uint8_t green; uint8_t blue; };
     struct Face { int32_t v1; int32_t v2; int32_t v3; };
+
+    static Vertex toVertex(const gp_Pnt& pnt);
+    static Color toColor(const Quantity_Color& c);
+
     void addMesh(const IMeshAccess& mesh);
+    void addPointCloud(const PointCloudDataPtr& pntCloud);
 
     class Properties;
     Parameters m_params;
@@ -53,12 +61,7 @@ private:
 };
 
 // Provides factory to create PlyWriter objects
-class PlyFactoryWriter : public FactoryWriter {
-public:
-    Span<const Format> formats() const override;
-    std::unique_ptr<Writer> create(Format format) const override;
-    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
-};
+class PlyFactoryWriter : public SingleFormatFactoryWriter<Format_PLY, PlyWriter> {};
 
 } // namespace IO
 } // namespace Mayo

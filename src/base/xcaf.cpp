@@ -97,6 +97,11 @@ TopoDS_Shape XCaf::shape(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::GetShape(lbl);
 }
 
+void XCaf::setShape(const TDF_Label& label, const TopoDS_Shape& shape)
+{
+    this->shapeTool()->SetShape(label, shape);
+}
+
 //QString XCaf::findLabelName(const TDF_Label& lbl)
 //{
 //    QString name = CafUtils::labelAttrStdName(lbl);
@@ -226,9 +231,9 @@ TDF_Label XCaf::shapeReferred(const TDF_Label& lbl)
 TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
 {
     TDF_LabelSequence seq;
-    auto layerTool = this->layerTool();
-    if (layerTool)
-        layerTool->GetLayers(lbl, seq);
+    auto tool = this->layerTool();
+    if (tool)
+        tool->GetLayers(lbl, seq);
 
     return seq;
 }
@@ -236,9 +241,9 @@ TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
 TCollection_ExtendedString XCaf::layerName(const TDF_Label &lbl) const
 {
     TCollection_ExtendedString name;
-    auto layerTool = this->layerTool();
-    if (layerTool)
-        layerTool->GetLayer(lbl, name);
+    auto tool = this->layerTool();
+    if (tool)
+        tool->GetLayer(lbl, name);
 
     return name;
 }

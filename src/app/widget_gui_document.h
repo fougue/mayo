@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "widget_occ_view_controller.h"
+#include "../base/document.h"
 #include "theme.h"
+#include "widget_occ_view_controller.h"
 
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
@@ -30,6 +31,8 @@ public:
     GuiDocument* guiDocument() const { return m_guiDoc; }
     WidgetOccViewController* controller() const { return m_controller; }
     IWidgetOccView* view() const { return m_qtOccView; }
+
+    Document::Identifier documentIdentifier() const;
 
     QColor panelBackgroundColor() const;
 

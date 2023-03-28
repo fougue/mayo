@@ -25,6 +25,8 @@ public:
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
     std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const override;
 
+    static Support meshSupportStatus(const TDF_Label& label);
+
     struct DefaultValues {
         bool showEdges = false;
         bool showNodes = false;

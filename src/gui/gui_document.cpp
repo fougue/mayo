@@ -6,14 +6,16 @@
 
 #include "gui_document.h"
 
+#include "../base/application.h"
 #include "../base/application_item.h"
 #include "../base/bnd_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
-#include "../gui/gui_application.h"
 #include "../graphics/graphics_utils.h"
+#include "../gui/gui_application.h"
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 #  include <AIS_ViewCube.hxx>
@@ -23,6 +25,8 @@
 #include <Geom_Axis2Placement.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
+
+#include <cmath>
 
 namespace Mayo {
 
@@ -46,7 +50,8 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
     aisTrihedron->SetTransformPersistence(
-                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location()));
+                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
+    );
     aisTrihedron->Attributes()->SetZLayer(Graphic3d_ZLayerId_Topmost);
     aisTrihedron->SetInfiniteState(true);
     return aisTrihedron;
@@ -63,22 +68,20 @@ static GuiDocument::GradientBackground& defaultGradientBackground()
 } // namespace Internal
 
 GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
-    : QObject(guiApp),
-      m_guiApp(guiApp),
+    : m_guiApp(guiApp),
       m_document(doc),
-      m_gfxScene(this),
       m_v3dView(m_gfxScene.createV3dView()),
       m_aisOriginTrihedron(Internal::createOriginTrihedron()),
-      m_cameraAnimation(new V3dViewCameraAnimation(m_v3dView, this))
+      m_cameraAnimation(new V3dViewCameraAnimation)
 {
     Expects(!doc.IsNull());
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     this->setViewTrihedronMode(ViewTrihedronMode::AisViewCube);
-    this->setViewTrihedronCorner(Qt::TopLeftCorner);
+    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_UPPER);
 #else
     this->setViewTrihedronMode(ViewTrihedronMode::V3dViewZBuffer);
-    this->setViewTrihedronCorner(Qt::BottomLeftCorner);
+    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
 #endif
 
     //m_v3dView->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr);
@@ -87,7 +90,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
-                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20));
+                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
+    );
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
                 GuiDocument::defaultGradientBackground().color1,
@@ -96,18 +100,56 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     );
     //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
-    m_cameraAnimation->setEasingCurve(QEasingCurve::OutExpo);
+    m_cameraAnimation->setView(m_v3dView);
 
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
 
-    QObject::connect(doc.get(), &Document::entityAdded, this, &GuiDocument::onDocumentEntityAdded);
-    QObject::connect(
-                doc.get(), &Document::entityAboutToBeDestroyed,
-                this, &GuiDocument::onDocumentEntityAboutToBeDestroyed);
-    QObject::connect(
-                &m_gfxScene, &GraphicsScene::selectionChanged,
-                this, &GuiDocument::onGraphicsSelectionChanged);
+    doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
+    doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
+    m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
+}
+
+void GuiDocument::setDevicePixelRatio(double ratio)
+{
+    if (MathUtils::fuzzyEqual(m_devicePixelRatio, ratio))
+        return;
+
+    m_devicePixelRatio = ratio;
+    switch (m_viewTrihedronMode) {
+    case ViewTrihedronMode::None: {
+        break;
+    }
+    case ViewTrihedronMode::V3dViewZBuffer: {
+        this->v3dViewTrihedronDisplay(m_viewTrihedronCorner);
+        break;
+    }
+    case ViewTrihedronMode::AisViewCube: {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+        auto viewCube = Handle(AIS_ViewCube)::DownCast(m_aisViewCube);
+        if (viewCube) {
+            viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
+            viewCube->SetFontHeight(12 * m_devicePixelRatio);
+            const int xyOffset = int(std::round(85 * m_devicePixelRatio));
+            viewCube->SetTransformPersistence(
+                        new Graphic3d_TransformPers(
+                            Graphic3d_TMF_TriedronPers,
+                            m_viewTrihedronCorner,
+                            Graphic3d_Vec2i(xyOffset, xyOffset)
+                            )
+            );
+            viewCube->Redisplay(true/*allModes*/);
+        }
+#endif
+
+        break;
+    }
+    } // endswitch
+}
+
+GuiDocument::~GuiDocument()
+{
+    delete m_cameraAnimation;
 }
 
 void GuiDocument::foreachGraphicsObject(
@@ -128,13 +170,13 @@ void GuiDocument::foreachGraphicsObject(
     });
 }
 
-TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& object) const
+TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const
 {
-    if (!object)
+    if (!gfxObject)
         return 0;
 
     for (const GraphicsEntity& gfxEntity: m_vecGraphicsEntity) {
-        auto it = gfxEntity.mapGfxObjectTreeNode.find(object);
+        auto it = gfxEntity.mapGfxObjectTreeNode.find(gfxObject);
         if (it != gfxEntity.mapGfxObjectTreeNode.cend())
             return it->second;
     }
@@ -227,7 +269,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     traverseTree(nodeId, docModelTree , [=](TreeNodeId id) {
         fnSetNodeVisibleState(id, nodeVisibleState);
     });
-    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject){
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
         GraphicsUtils::AisObject_setVisible(gfxObject, on);
     });
 
@@ -282,7 +324,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 
     // Notify all node visibility changes
     if (!mapNodeIdVisibleState.empty())
-        emit nodesVisibilityChanged(mapNodeIdVisibleState);
+        this->signalNodesVisibilityChanged.send(mapNodeIdVisibleState);
 }
 
 void GuiDocument::setExplodingFactor(double t)
@@ -312,13 +354,13 @@ void GuiDocument::toggleOriginTrihedronVisibility()
     m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
 }
 
-bool GuiDocument::processAction(const GraphicsOwnerPtr& graphicsOwner)
+bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
 {
-    if (graphicsOwner.IsNull())
+    if (!gfxOwner)
         return false;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    auto viewCubeOwner = opencascade::handle<AIS_ViewCubeOwner>::DownCast(graphicsOwner);
+    auto viewCubeOwner = Handle(AIS_ViewCubeOwner)::DownCast(gfxOwner);
     if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
         return true;
@@ -338,25 +380,13 @@ void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
 
 void GuiDocument::runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange)
 {
-    m_cameraAnimation->configure(fnViewChange);
-    m_cameraAnimation->start(QAbstractAnimation::KeepWhenStopped);
+    m_cameraAnimation->configureCameraChange(fnViewChange);
+    m_cameraAnimation->start();
 }
 
 void GuiDocument::stopViewCameraAnimation()
 {
     m_cameraAnimation->stop();
-}
-
-static Aspect_TypeOfTriedronPosition toOccCorner(Qt::Corner corner)
-{
-    switch (corner) {
-    case Qt::TopLeftCorner: return Aspect_TOTP_LEFT_UPPER;
-    case Qt::TopRightCorner: return Aspect_TOTP_RIGHT_UPPER;
-    case Qt::BottomLeftCorner: return Aspect_TOTP_LEFT_LOWER;
-    case Qt::BottomRightCorner: return Aspect_TOTP_RIGHT_LOWER;
-    }
-
-    return Aspect_TOTP_LEFT_UPPER; // Fallback
 }
 
 void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
@@ -391,8 +421,9 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             aisViewCube->SetTransformPersistence(
                         new Graphic3d_TransformPers(
                             Graphic3d_TMF_TriedronPers,
-                            toOccCorner(m_viewTrihedronCorner),
-                            Graphic3d_Vec2i(85, 85)));
+                            m_viewTrihedronCorner,
+                            Graphic3d_Vec2i(85, 85))
+            );
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             const Handle_Prs3d_DatumAspect& datumAspect = aisViewCube->Attributes()->DatumAspect();
@@ -410,10 +441,10 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
     } // endswitch
 
     m_viewTrihedronMode = mode;
-    emit this->viewTrihedronModeChanged(mode);
+    this->signalViewTrihedronModeChanged.send(mode);
 }
 
-void GuiDocument::setViewTrihedronCorner(Qt::Corner corner)
+void GuiDocument::setViewTrihedronCorner(Aspect_TypeOfTriedronPosition corner)
 {
     if (corner == m_viewTrihedronCorner)
         return;
@@ -428,14 +459,14 @@ void GuiDocument::setViewTrihedronCorner(Qt::Corner corner)
     }
     case ViewTrihedronMode::AisViewCube: {
         if (m_aisViewCube)
-            m_aisViewCube->TransformPersistence()->SetCorner2d(toOccCorner(corner));
+            m_aisViewCube->TransformPersistence()->SetCorner2d(corner);
 
         break;
     }
     } // endswitch
 
     m_viewTrihedronCorner = corner;
-    emit this->viewTrihedronCornerChanged(corner);
+    this->signalViewTrihedronCornerChanged.send(corner);
 }
 
 int GuiDocument::aisViewCubeBoundingSize() const
@@ -481,7 +512,7 @@ void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapEntity(entityTreeNodeId);
     BndUtils::add(&m_gfxBoundingBox, m_vecGraphicsEntity.back().bndBox);
-    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
+    this->signalGraphicsBoundingBoxChanged.send(m_gfxBoundingBox);
 }
 
 void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId)
@@ -492,7 +523,7 @@ void GuiDocument::onDocumentEntityAboutToBeDestroyed(TreeNodeId entityTreeNodeId
     for (const GraphicsEntity& gfxEntity : m_vecGraphicsEntity)
         BndUtils::add(&m_gfxBoundingBox, gfxEntity.bndBox);
 
-    emit graphicsBoundingBoxChanged(m_gfxBoundingBox);
+    this->signalGraphicsBoundingBoxChanged.send(m_gfxBoundingBox);
 }
 
 void GuiDocument::onGraphicsSelectionChanged()
@@ -509,7 +540,8 @@ void GuiDocument::onGraphicsSelectionChanged()
     std::vector<ApplicationItem> vecSelected;
     m_gfxScene.foreachSelectedOwner([&](const GraphicsOwnerPtr& gfxOwner) {
         auto gfxObject = GraphicsObjectPtr::DownCast(
-                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject()
+        );
         const TreeNodeId nodeId = this->nodeFromGraphicsObject(gfxObject);
         if (nodeId != 0) {
             const ApplicationItem appItem({ m_document, nodeId });
@@ -554,13 +586,23 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
             }
 
             if (!docModelTree.nodeIsRoot(id)) {
-                Handle_AIS_ConnectedInteractive gfxInstance = new AIS_ConnectedInteractive;
-                gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
-                gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
-                gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
-                gfxInstance->SetOwner(gfxProduct->GetOwner());
-                gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
-                if (XCaf::isShapeReference(docModelTree.nodeData(docModelTree.nodeParent(id))))
+                const TDF_Label parentNodeLabel = docModelTree.nodeData(docModelTree.nodeParent(id));
+                if (XCaf::isShapeReference(parentNodeLabel) && m_document->xcaf().hasShapeColor(parentNodeLabel)) {
+                    // Parent node is a reference and it redefines color attribute, so the graphics
+                    // can't be shared with the product
+                    auto gfxObject = m_guiApp->createGraphicsObject(parentNodeLabel);
+                    gfxEntity.vecObject.push_back(gfxObject);
+                }
+                else {
+                    auto gfxInstance = new AIS_ConnectedInteractive;
+                    gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
+                    gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
+                    gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
+                    gfxInstance->SetOwner(gfxProduct->GetOwner());
+                    gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
+                }
+
+                if (XCaf::isShapeReference(parentNodeLabel))
                     id = docModelTree.nodeParent(id);
             }
             else {
@@ -606,7 +648,7 @@ void GuiDocument::unmapEntity(TreeNodeId entityTreeNodeId)
         for (const GraphicsEntity::Object& object : ptrItem->vecObject)
             m_gfxScene.eraseObject(object.ptr);
 
-        const int indexItem = ptrItem - &m_vecGraphicsEntity.front();
+        const auto indexItem = ptrItem - &m_vecGraphicsEntity.front();
         m_vecGraphicsEntity.erase(m_vecGraphicsEntity.begin() + indexItem);
         m_gfxScene.redraw();
     }
@@ -621,14 +663,15 @@ const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId en
     auto itFound = std::find_if(
                 m_vecGraphicsEntity.cbegin(),
                 m_vecGraphicsEntity.cend(),
-                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; });
+                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
+    );
     return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
 }
 
-void GuiDocument::v3dViewTrihedronDisplay(Qt::Corner corner)
+void GuiDocument::v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner)
 {
-    constexpr double scale = 0.075;
-    m_v3dView->TriedronDisplay(toOccCorner(corner), Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
+    const double scale = 0.075 * m_devicePixelRatio;
+    m_v3dView->TriedronDisplay(corner, Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
 }
 
 } // namespace Mayo

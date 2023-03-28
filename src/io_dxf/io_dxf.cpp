@@ -8,6 +8,7 @@
 
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
+#include "../base/filepath.h"
 #include "../base/math_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
@@ -114,7 +115,7 @@ public:
         this->importAnnotations.setDescription(
                     textIdTr("Import text/dimension objects"));
         this->groupLayers.setDescription(
-                    textIdTr("Group all objects within a layer into a single coumpound shape"));
+                    textIdTr("Group all objects within a layer into a single compound shape"));
         this->fontNameForTextObjects.setDescription(
                     textIdTr("Name of the font to be used when creating shape for text objects"));
     }
@@ -190,7 +191,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         }
     }
     auto fnUpdateProgressValue = [&]{
-        progress->setValue(MathUtils::mappedValue(iShape, 0, shapeCount, 0, 100));
+        progress->setValue(MathUtils::toPercent(iShape, 0, shapeCount));
     };
 
     if (!m_params.groupLayers) {
@@ -269,34 +270,12 @@ void DxfReader::applyProperties(const PropertyGroup* group)
     }
 }
 
-Span<const Format> DxfFactoryReader::formats() const
-{
-    static const Format arrayFormat[] = { Format_DXF };
-    return arrayFormat;
-}
-
-std::unique_ptr<Reader> DxfFactoryReader::create(Format format) const
-{
-    if (format == Format_DXF)
-        return std::make_unique<DxfReader>();
-
-    return {};
-}
-
-std::unique_ptr<PropertyGroup> DxfFactoryReader::createProperties(Format format, PropertyGroup* parentGroup) const
-{
-    if (format == Format_DXF)
-        return DxfReader::createProperties(parentGroup);
-
-    return {};
-}
-
 void DxfReader::Internal::get_line()
 {
     CDxfRead::get_line();
     m_fileReadSize += this->gcount();
     if (m_progress)
-        m_progress->setValue(MathUtils::mappedValue(m_fileReadSize, 0, m_fileSize, 0, 100));
+        m_progress->setValue(MathUtils::toPercent(m_fileReadSize, 0, m_fileSize));
 }
 
 DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
@@ -304,7 +283,7 @@ DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
       m_progress(progress)
 {
     if (!this->Failed())
-        m_fileSize = std::filesystem::file_size(filepath);
+        m_fileSize = filepathFileSize(filepath);
 }
 
 void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hidden*/)

@@ -6,7 +6,7 @@
 
 #include "dialog_save_image_view.h"
 #include "ui_dialog_save_image_view.h"
-#include "widgets_utils.h"
+#include "qtwidgets_utils.h"
 #include "../graphics/graphics_utils.h"
 
 #include <QtCore/QHash>
@@ -33,7 +33,7 @@ static QImage qtImageTemp(const Image_PixMap& occImg)
 
 } // namespace Internal
 
-DialogSaveImageView::DialogSaveImageView(const Handle_V3d_View& view, QWidget *parent)
+DialogSaveImageView::DialogSaveImageView(const Handle_V3d_View& view, QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogSaveImageView),
       m_view(view)
@@ -97,7 +97,7 @@ void DialogSaveImageView::saveFile()
             saveOk = img.save(fileName, format);
         }
         if (!saveOk) {
-            WidgetsUtils::asyncMsgBoxCritical(
+            QtWidgetsUtils::asyncMsgBoxCritical(
                         this, tr("Error"), tr("Failed to save image '%1'").arg(fileName));
         }
     }

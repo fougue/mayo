@@ -5,16 +5,16 @@
 
 // MAYO: file initially taken from FreeCad/src/Mod/Import/App/dxf.cpp -- commit #1ac35d2
 
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
 //required by windows for M_PI definition
-#define _USE_MATH_DEFINES
+#  define _USE_MATH_DEFINES
+#endif
 #include <cmath>
 
 #include <iomanip>
-#include <filesystem>
 
+#include "../base/filepath.h"
 #include "dxf.h"
-
-using namespace std;
 
 namespace {
 
@@ -35,6 +35,7 @@ Base::Vector3d toVector3d(const double* a)
 }
 
 CDxfWrite::CDxfWrite(const char* filepath) :
+m_ofs(filepath, std::ios::out),
 //TODO: these should probably be parameters in config file
 //handles:
 //boilerplate 0 - A00
@@ -52,26 +53,15 @@ m_layerName("none")
     // start the file
     m_fail = false;
     m_version = 12;
-    m_ofs = new std::ofstream(filepath, ios::out);
-    m_ssBlock     = new std::ostringstream();
-    m_ssBlkRecord = new std::ostringstream();
-    m_ssEntity    = new std::ostringstream();
-    m_ssLayer     = new std::ostringstream();
 
-    if(!(*m_ofs)){
+    if(!m_ofs)
         m_fail = true;
-        return;
-    }
-    m_ofs->imbue(std::locale("C"));
+    else
+        m_ofs.imbue(std::locale::classic());
 }
 
 CDxfWrite::~CDxfWrite()
 {
-    delete m_ofs;
-    delete m_ssBlock;
-    delete m_ssBlkRecord;
-    delete m_ssEntity;
-    delete m_ssLayer;
 }
 
 void CDxfWrite::init(void)
@@ -93,8 +83,8 @@ void CDxfWrite::endRun(void)
     writeEntitiesSection();
     writeObjectsSection();
 
-    (*m_ofs) << "  0"         << endl;
-    (*m_ofs) << "EOF";
+    m_ofs << "  0"         << std::endl;
+    m_ofs << "EOF";
 }
 
 //***************************
@@ -113,15 +103,15 @@ void CDxfWrite::writeHeaderSection(void)
 #endif
 
     //header & version
-    (*m_ofs) << "999"      << endl;
-    (*m_ofs) << ss.str()   << endl;
+    m_ofs << "999"      << std::endl;
+    m_ofs << ss.str()   << std::endl;
 
     //static header content
     ss.str("");
     ss.clear();
     ss << "header" << m_version << ".rub";
     std::string fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
 }
 
 //***************************
@@ -137,7 +127,7 @@ void CDxfWrite::writeClassesSection(void)
     std::stringstream ss;
     ss << "classes" << m_version << ".rub";
     std::string fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
 }
 
 //***************************
@@ -149,24 +139,24 @@ void CDxfWrite::writeTablesSection(void)
     std::stringstream ss;
     ss << "tables1" << m_version << ".rub";
     std::string fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
 
-    (*m_ofs) << (*m_ssLayer).str();
+    m_ofs << m_ssLayer.str();
 
     //static tables section tail end content
     ss.str("");
     ss.clear();
     ss << "tables2" << m_version << ".rub";
     fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
 
     if (m_version > 12) {
-        (*m_ofs) << (*m_ssBlkRecord).str();
-        (*m_ofs) << "  0"      << endl;
-        (*m_ofs) << "ENDTAB"   << endl;
+        m_ofs << m_ssBlkRecord.str();
+        m_ofs << "  0"      << std::endl;
+        m_ofs << "ENDTAB"   << std::endl;
     }
-    (*m_ofs) << "  0"      << endl;
-    (*m_ofs) << "ENDSEC"   << endl;
+    m_ofs << "  0"      << std::endl;
+    m_ofs << "ENDSEC"   << std::endl;
 }
 
 //***************************
@@ -175,66 +165,66 @@ void CDxfWrite::writeTablesSection(void)
 void CDxfWrite::makeLayerTable(void)
 {
     std::string tablehash = getLayerHandle();
-    (*m_ssLayer) << "  0"      << endl;
-    (*m_ssLayer) << "TABLE"    << endl;
-    (*m_ssLayer) << "  2"      << endl;
-    (*m_ssLayer) << "LAYER"    << endl;
-    (*m_ssLayer) << "  5"      << endl;
-    (*m_ssLayer) << tablehash  << endl;
+    m_ssLayer << "  0"      << std::endl;
+    m_ssLayer << "TABLE"    << std::endl;
+    m_ssLayer << "  2"      << std::endl;
+    m_ssLayer << "LAYER"    << std::endl;
+    m_ssLayer << "  5"      << std::endl;
+    m_ssLayer << tablehash  << std::endl;
     if (m_version > 12) {
-        (*m_ssLayer) << "330"      << endl;
-        (*m_ssLayer) << 0          << endl;
-        (*m_ssLayer) << "100"      << endl;
-        (*m_ssLayer) << "AcDbSymbolTable"   << endl;
+        m_ssLayer << "330"      << std::endl;
+        m_ssLayer << 0          << std::endl;
+        m_ssLayer << "100"      << std::endl;
+        m_ssLayer << "AcDbSymbolTable"   << std::endl;
     }
-    (*m_ssLayer) << " 70"      << endl;
-    (*m_ssLayer) << m_layerList.size() + 1 << endl;
+    m_ssLayer << " 70"      << std::endl;
+    m_ssLayer << m_layerList.size() + 1 << std::endl;
 
-    (*m_ssLayer) << "  0"      << endl;
-    (*m_ssLayer) << "LAYER"    << endl;
-    (*m_ssLayer) << "  5"      << endl;
-    (*m_ssLayer) << getLayerHandle()  << endl;
+    m_ssLayer << "  0"      << std::endl;
+    m_ssLayer << "LAYER"    << std::endl;
+    m_ssLayer << "  5"      << std::endl;
+    m_ssLayer << getLayerHandle()  << std::endl;
     if (m_version > 12) {
-        (*m_ssLayer) << "330"      << endl;
-        (*m_ssLayer) << tablehash  << endl;
-        (*m_ssLayer) << "100"      << endl;
-        (*m_ssLayer) << "AcDbSymbolTableRecord"      << endl;
-        (*m_ssLayer) << "100"      << endl;
-        (*m_ssLayer) << "AcDbLayerTableRecord"      << endl;
+        m_ssLayer << "330"      << std::endl;
+        m_ssLayer << tablehash  << std::endl;
+        m_ssLayer << "100"      << std::endl;
+        m_ssLayer << "AcDbSymbolTableRecord"      << std::endl;
+        m_ssLayer << "100"      << std::endl;
+        m_ssLayer << "AcDbLayerTableRecord"      << std::endl;
     }
-    (*m_ssLayer) << "  2"      << endl;
-    (*m_ssLayer) << "0"        << endl;
-    (*m_ssLayer) << " 70"      << endl;
-    (*m_ssLayer) << "   0"     << endl;
-    (*m_ssLayer) << " 62"      << endl;
-    (*m_ssLayer) << "   7"     << endl;
-    (*m_ssLayer) << "  6"      << endl;
-    (*m_ssLayer) << "CONTINUOUS" << endl;
+    m_ssLayer << "  2"      << std::endl;
+    m_ssLayer << "0"        << std::endl;
+    m_ssLayer << " 70"      << std::endl;
+    m_ssLayer << "   0"     << std::endl;
+    m_ssLayer << " 62"      << std::endl;
+    m_ssLayer << "   7"     << std::endl;
+    m_ssLayer << "  6"      << std::endl;
+    m_ssLayer << "CONTINUOUS" << std::endl;
 
     for (auto& l: m_layerList) {
-        (*m_ssLayer) << "  0"      << endl;
-        (*m_ssLayer) << "LAYER"      << endl;
-        (*m_ssLayer) << "  5"      << endl;
-        (*m_ssLayer) << getLayerHandle() << endl;
+        m_ssLayer << "  0"      << std::endl;
+        m_ssLayer << "LAYER"      << std::endl;
+        m_ssLayer << "  5"      << std::endl;
+        m_ssLayer << getLayerHandle() << std::endl;
         if (m_version > 12) {
-            (*m_ssLayer) << "330"      << endl;
-            (*m_ssLayer) << tablehash  << endl;
-            (*m_ssLayer) << "100"      << endl;
-            (*m_ssLayer) << "AcDbSymbolTableRecord"      << endl;
-            (*m_ssLayer) << "100"      << endl;
-            (*m_ssLayer) << "AcDbLayerTableRecord"      << endl;
+            m_ssLayer << "330"      << std::endl;
+            m_ssLayer << tablehash  << std::endl;
+            m_ssLayer << "100"      << std::endl;
+            m_ssLayer << "AcDbSymbolTableRecord"      << std::endl;
+            m_ssLayer << "100"      << std::endl;
+            m_ssLayer << "AcDbLayerTableRecord"      << std::endl;
         }
-        (*m_ssLayer) << "  2"      << endl;
-        (*m_ssLayer) << l << endl;
-        (*m_ssLayer) << " 70"      << endl;
-        (*m_ssLayer) << "    0"      << endl;
-        (*m_ssLayer) << " 62"      << endl;
-        (*m_ssLayer) << "    7"      << endl;
-        (*m_ssLayer) << "  6"      << endl;
-        (*m_ssLayer) << "CONTINUOUS"      << endl;
+        m_ssLayer << "  2"      << std::endl;
+        m_ssLayer << l << std::endl;
+        m_ssLayer << " 70"      << std::endl;
+        m_ssLayer << "    0"      << std::endl;
+        m_ssLayer << " 62"      << std::endl;
+        m_ssLayer << "    7"      << std::endl;
+        m_ssLayer << "  6"      << std::endl;
+        m_ssLayer << "CONTINUOUS"      << std::endl;
     }
-    (*m_ssLayer) << "  0"      << endl;
-    (*m_ssLayer) << "ENDTAB"   << endl;
+    m_ssLayer << "  0"      << std::endl;
+    m_ssLayer << "ENDTAB"   << std::endl;
 }
 
 //***************************
@@ -247,50 +237,50 @@ void CDxfWrite::makeBlockRecordTableHead(void)
     }
         std::string tablehash = getBlkRecordHandle();
         m_saveBlockRecordTableHandle = tablehash;
-        (*m_ssBlkRecord) << "  0"      << endl;
-        (*m_ssBlkRecord) << "TABLE"      << endl;
-        (*m_ssBlkRecord) << "  2"      << endl;
-        (*m_ssBlkRecord) << "BLOCK_RECORD"      << endl;
-        (*m_ssBlkRecord) << "  5"      << endl;
-        (*m_ssBlkRecord) << tablehash  << endl;
-        (*m_ssBlkRecord) << "330"      << endl;
-        (*m_ssBlkRecord) << "0"        << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbSymbolTable"      << endl;
-        (*m_ssBlkRecord) << "  70"      << endl;
-        (*m_ssBlkRecord) << (m_blockList.size() + 5)   << endl;
+        m_ssBlkRecord << "  0"      << std::endl;
+        m_ssBlkRecord << "TABLE"      << std::endl;
+        m_ssBlkRecord << "  2"      << std::endl;
+        m_ssBlkRecord << "BLOCK_RECORD"      << std::endl;
+        m_ssBlkRecord << "  5"      << std::endl;
+        m_ssBlkRecord << tablehash  << std::endl;
+        m_ssBlkRecord << "330"      << std::endl;
+        m_ssBlkRecord << "0"        << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbSymbolTable"      << std::endl;
+        m_ssBlkRecord << "  70"      << std::endl;
+        m_ssBlkRecord << (m_blockList.size() + 5)   << std::endl;
         
         m_saveModelSpaceHandle = getBlkRecordHandle();
-        (*m_ssBlkRecord) << "  0"      << endl;
-        (*m_ssBlkRecord) << "BLOCK_RECORD"      << endl;
-        (*m_ssBlkRecord) << "  5"      << endl;
-        (*m_ssBlkRecord) << m_saveModelSpaceHandle  << endl;
-        (*m_ssBlkRecord) << "330"      << endl;
-        (*m_ssBlkRecord) << tablehash  << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbSymbolTableRecord"      << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbBlockTableRecord"      << endl;
-        (*m_ssBlkRecord) << "  2"      << endl;
-        (*m_ssBlkRecord) << "*MODEL_SPACE"   << endl;
-//        (*m_ssBlkRecord) << "  1"      << endl;
-//        (*m_ssBlkRecord) << " "        << endl;
+        m_ssBlkRecord << "  0"      << std::endl;
+        m_ssBlkRecord << "BLOCK_RECORD"      << std::endl;
+        m_ssBlkRecord << "  5"      << std::endl;
+        m_ssBlkRecord << m_saveModelSpaceHandle  << std::endl;
+        m_ssBlkRecord << "330"      << std::endl;
+        m_ssBlkRecord << tablehash  << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbSymbolTableRecord"      << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbBlockTableRecord"      << std::endl;
+        m_ssBlkRecord << "  2"      << std::endl;
+        m_ssBlkRecord << "*MODEL_SPACE"   << std::endl;
+//        m_ssBlkRecord << "  1"      << std::endl;
+//        m_ssBlkRecord << " "        << std::endl;
 
         m_savePaperSpaceHandle = getBlkRecordHandle();
-        (*m_ssBlkRecord) << "  0"      << endl;
-        (*m_ssBlkRecord) << "BLOCK_RECORD"  << endl;
-        (*m_ssBlkRecord) << "  5"      << endl;
-        (*m_ssBlkRecord) << m_savePaperSpaceHandle  << endl;
-        (*m_ssBlkRecord) << "330"      << endl;
-        (*m_ssBlkRecord) << tablehash  << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbSymbolTableRecord"      << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbBlockTableRecord"      << endl;
-        (*m_ssBlkRecord) << "  2"      << endl;
-        (*m_ssBlkRecord) << "*PAPER_SPACE"   << endl;
-//        (*m_ssBlkRecord) << "  1"      << endl;
-//        (*m_ssBlkRecord) << " "        << endl;
+        m_ssBlkRecord << "  0"      << std::endl;
+        m_ssBlkRecord << "BLOCK_RECORD"  << std::endl;
+        m_ssBlkRecord << "  5"      << std::endl;
+        m_ssBlkRecord << m_savePaperSpaceHandle  << std::endl;
+        m_ssBlkRecord << "330"      << std::endl;
+        m_ssBlkRecord << tablehash  << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbSymbolTableRecord"      << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbBlockTableRecord"      << std::endl;
+        m_ssBlkRecord << "  2"      << std::endl;
+        m_ssBlkRecord << "*PAPER_SPACE"   << std::endl;
+//        m_ssBlkRecord << "  1"      << std::endl;
+//        m_ssBlkRecord << " "        << std::endl;
 }
  
 //***************************
@@ -304,20 +294,20 @@ void CDxfWrite::makeBlockRecordTableBody(void)
     
     int iBlkRecord = 0;
     for (auto& b: m_blockList) {
-        (*m_ssBlkRecord) << "  0"      << endl;
-        (*m_ssBlkRecord) << "BLOCK_RECORD"      << endl;
-        (*m_ssBlkRecord) << "  5"      << endl;
-        (*m_ssBlkRecord) << m_blkRecordList.at(iBlkRecord)      << endl;
-        (*m_ssBlkRecord) << "330"      << endl;
-        (*m_ssBlkRecord) << m_saveBlockRecordTableHandle  << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbSymbolTableRecord"      << endl;
-        (*m_ssBlkRecord) << "100"      << endl;
-        (*m_ssBlkRecord) << "AcDbBlockTableRecord"      << endl;
-        (*m_ssBlkRecord) << "  2"      << endl;
-        (*m_ssBlkRecord) << b          << endl;
-//        (*m_ssBlkRecord) << " 70"      << endl;
-//        (*m_ssBlkRecord) << "    0"      << endl;
+        m_ssBlkRecord << "  0"      << std::endl;
+        m_ssBlkRecord << "BLOCK_RECORD"      << std::endl;
+        m_ssBlkRecord << "  5"      << std::endl;
+        m_ssBlkRecord << m_blkRecordList.at(iBlkRecord)      << std::endl;
+        m_ssBlkRecord << "330"      << std::endl;
+        m_ssBlkRecord << m_saveBlockRecordTableHandle  << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbSymbolTableRecord"      << std::endl;
+        m_ssBlkRecord << "100"      << std::endl;
+        m_ssBlkRecord << "AcDbBlockTableRecord"      << std::endl;
+        m_ssBlkRecord << "  2"      << std::endl;
+        m_ssBlkRecord << b          << std::endl;
+//        m_ssBlkRecord << " 70"      << std::endl;
+//        m_ssBlkRecord << "    0"      << std::endl;
         iBlkRecord++;
     }
 }
@@ -327,124 +317,124 @@ void CDxfWrite::makeBlockRecordTableBody(void)
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::makeBlockSectionHead(void)
 {
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "SECTION"      << endl;
-    (*m_ssBlock) << "  2"          << endl;
-    (*m_ssBlock) << "BLOCKS"       << endl;
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "BLOCK"        << endl;
-    (*m_ssBlock) << "  5"          << endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "SECTION"      << std::endl;
+    m_ssBlock << "  2"          << std::endl;
+    m_ssBlock << "BLOCKS"       << std::endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "BLOCK"        << std::endl;
+    m_ssBlock << "  5"          << std::endl;
     m_currentBlock = getBlockHandle();
-    (*m_ssBlock) << m_currentBlock << endl;
+    m_ssBlock << m_currentBlock << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_saveModelSpaceHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"      << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_saveModelSpaceHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"      << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << "0"            << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << "0"            << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbBlockBegin"  << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbBlockBegin"  << std::endl;
     }
-    (*m_ssBlock) << "  2"          << endl;
-    (*m_ssBlock) << "*MODEL_SPACE" << endl;
-    (*m_ssBlock) << " 70"          << endl;
-    (*m_ssBlock) << "   0"         << endl;
-    (*m_ssBlock) << " 10"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 20"          << endl; 
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 30"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << "  3"          << endl;
-    (*m_ssBlock) << "*MODEL_SPACE" << endl;
-    (*m_ssBlock) << "  1"          << endl;
-    (*m_ssBlock) << " "            << endl;
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "ENDBLK"       << endl;
-    (*m_ssBlock) << "  5"          << endl;
-    (*m_ssBlock) << getBlockHandle()   << endl;
+    m_ssBlock << "  2"          << std::endl;
+    m_ssBlock << "*MODEL_SPACE" << std::endl;
+    m_ssBlock << " 70"          << std::endl;
+    m_ssBlock << "   0"         << std::endl;
+    m_ssBlock << " 10"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 20"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 30"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << "  3"          << std::endl;
+    m_ssBlock << "*MODEL_SPACE" << std::endl;
+    m_ssBlock << "  1"          << std::endl;
+    m_ssBlock << " "            << std::endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "ENDBLK"       << std::endl;
+    m_ssBlock << "  5"          << std::endl;
+    m_ssBlock << getBlockHandle()   << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_saveModelSpaceHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"  << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_saveModelSpaceHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"  << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << "0"            << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << "0"            << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbBlockEnd"      << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbBlockEnd"      << std::endl;
     }
 
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "BLOCK"        << endl;
-    (*m_ssBlock) << "  5"          << endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "BLOCK"        << std::endl;
+    m_ssBlock << "  5"          << std::endl;
     m_currentBlock = getBlockHandle();
-    (*m_ssBlock) << m_currentBlock << endl;
+    m_ssBlock << m_currentBlock << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_savePaperSpaceHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"      << endl;
-        (*m_ssBlock) << " 67"          << endl;
-        (*m_ssBlock) << "1"            << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_savePaperSpaceHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"      << std::endl;
+        m_ssBlock << " 67"          << std::endl;
+        m_ssBlock << "1"            << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << "0"            << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << "0"            << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbBlockBegin"  << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbBlockBegin"  << std::endl;
     }
-    (*m_ssBlock) << "  2"          << endl;
-    (*m_ssBlock) << "*PAPER_SPACE" << endl;
-    (*m_ssBlock) << " 70"          << endl;
-    (*m_ssBlock) << "   0"         << endl;
-    (*m_ssBlock) << " 10"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 20"          << endl; 
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 30"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << "  3"          << endl;
-    (*m_ssBlock) << "*PAPER_SPACE" << endl;
-    (*m_ssBlock) << "  1"          << endl;
-    (*m_ssBlock) << " "            << endl;
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "ENDBLK"       << endl;
-    (*m_ssBlock) << "  5"          << endl;
-    (*m_ssBlock) << getBlockHandle()   << endl;
+    m_ssBlock << "  2"          << std::endl;
+    m_ssBlock << "*PAPER_SPACE" << std::endl;
+    m_ssBlock << " 70"          << std::endl;
+    m_ssBlock << "   0"         << std::endl;
+    m_ssBlock << " 10"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 20"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 30"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << "  3"          << std::endl;
+    m_ssBlock << "*PAPER_SPACE" << std::endl;
+    m_ssBlock << "  1"          << std::endl;
+    m_ssBlock << " "            << std::endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "ENDBLK"       << std::endl;
+    m_ssBlock << "  5"          << std::endl;
+    m_ssBlock << getBlockHandle()   << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_savePaperSpaceHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"      << endl;
-        (*m_ssBlock) << " 67"      << endl;      //paper_space flag
-        (*m_ssBlock) << "    1"    << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_savePaperSpaceHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"      << std::endl;
+        m_ssBlock << " 67"      << std::endl;      //paper_space flag
+        m_ssBlock << "    1"    << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << "0"            << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << "0"            << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbBlockEnd" << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbBlockEnd" << std::endl;
     }
 }
 
 std::string CDxfWrite::getPlateFile(const std::string& fileSpec)
 {
     std::stringstream outString;
-    const std::filesystem::path fpath(fileSpec);
-    if (!std::filesystem::exists(fpath)) { // TODO Check read permissions
+    const Mayo::FilePath fpath(fileSpec);
+    if (!Mayo::filepathExists(fpath)) { // TODO Check read permissions
         //Base::Console().Message("dxf unable to open %s!\n",fileSpec.c_str());
     } else {
-        string line;
-        ifstream inFile (fpath);
+        std::string line;
+        std::ifstream inFile (fpath);
 
         while (!inFile.eof())
         {
-            getline(inFile,line);
+            std::getline(inFile,line);
             if (!inFile.eof()) {
                 outString << line << '\n';
             }
@@ -465,41 +455,21 @@ std::string CDxfWrite::getHandle(void)
 std::string CDxfWrite::getEntityHandle(void)
 {
     return getHandle();
-//    m_entityHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_entityHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getLayerHandle(void)
 {
     return getHandle();
-//    m_layerHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_layerHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getBlockHandle(void)
 {
     return getHandle();
-//    m_blockHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_blockHandle;
-//    return ss.str();
 }
 
 std::string CDxfWrite::getBlkRecordHandle(void)
 {
     return getHandle();
-//    m_blkRecordHandle++;
-//    std::stringstream ss;
-//    ss << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
-//    ss << m_blkRecordHandle;
-//    return ss.str();
 }
 
 void CDxfWrite::addBlockName(std::string b, std::string h) 
@@ -520,37 +490,37 @@ void CDxfWrite::writeLine(const double* s, const double* e)
 }
 
 void CDxfWrite::putLine(const Base::Vector3d& s, const Base::Vector3d& e,
-                          std::ostringstream* outStream, const std::string& handle,
+                          std::ostringstream& outStream, const std::string& handle,
                           const std::string& ownerHandle)
 {
-    (*outStream) << "  0"       << endl;
-    (*outStream) << "LINE"      << endl;
-    (*outStream) << "  5"       << endl;
-    (*outStream) << handle      << endl;
+    outStream << "  0"       << std::endl;
+    outStream << "LINE"      << std::endl;
+    outStream << "  5"       << std::endl;
+    outStream << handle      << std::endl;
     if (m_version > 12) {
-        (*outStream) << "330"      << endl;
-        (*outStream) << ownerHandle  << endl;
-        (*outStream) << "100"      << endl;
-        (*outStream) << "AcDbEntity"      << endl;
+        outStream << "330"      << std::endl;
+        outStream << ownerHandle  << std::endl;
+        outStream << "100"      << std::endl;
+        outStream << "AcDbEntity"      << std::endl;
     }
-    (*outStream) << "  8"       << endl;    // Group code for layer name
-    (*outStream) << getLayerName()  << endl;    // Layer number
+    outStream << "  8"       << std::endl;    // Group code for layer name
+    outStream << getLayerName()  << std::endl;    // Layer number
     if (m_version > 12) {
-        (*outStream) << "100"      << endl;
-        (*outStream) << "AcDbLine" << endl;
+        outStream << "100"      << std::endl;
+        outStream << "AcDbLine" << std::endl;
     }
-    (*outStream) << " 10"       << endl;    // Start point of line
-    (*outStream) << s.x         << endl;    // X in WCS coordinates
-    (*outStream) << " 20"       << endl;
-    (*outStream) << s.y         << endl;    // Y in WCS coordinates
-    (*outStream) << " 30"       << endl;
-    (*outStream) << s.z         << endl;    // Z in WCS coordinates
-    (*outStream) << " 11"       << endl;    // End point of line
-    (*outStream) << e.x         << endl;    // X in WCS coordinates
-    (*outStream) << " 21"       << endl;
-    (*outStream) << e.y         << endl;    // Y in WCS coordinates
-    (*outStream) << " 31"       << endl;
-    (*outStream) << e.z         << endl;    // Z in WCS coordinates
+    outStream << " 10"       << std::endl;    // Start point of line
+    outStream << s.x         << std::endl;    // X in WCS coordinates
+    outStream << " 20"       << std::endl;
+    outStream << s.y         << std::endl;    // Y in WCS coordinates
+    outStream << " 30"       << std::endl;
+    outStream << s.z         << std::endl;    // Z in WCS coordinates
+    outStream << " 11"       << std::endl;    // End point of line
+    outStream << e.x         << std::endl;    // X in WCS coordinates
+    outStream << " 21"       << std::endl;
+    outStream << e.y         << std::endl;    // Y in WCS coordinates
+    outStream << " 31"       << std::endl;
+    outStream << e.z         << std::endl;    // Z in WCS coordinates
 }
 
 
@@ -559,57 +529,57 @@ void CDxfWrite::putLine(const Base::Vector3d& s, const Base::Vector3d& e,
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::writeLWPolyLine(const LWPolyDataOut &pd)
 {
-    (*m_ssEntity) << "  0"               << endl;
-    (*m_ssEntity) << "LWPOLYLINE"     << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"               << std::endl;
+    m_ssEntity << "LWPOLYLINE"     << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
     if (m_version > 12) {
-        (*m_ssEntity) << "100"            << endl;    //100 groups are not part of R12
-        (*m_ssEntity) << "AcDbPolyline"   << endl;
+        m_ssEntity << "100"            << std::endl;    //100 groups are not part of R12
+        m_ssEntity << "AcDbPolyline"   << std::endl;
     }
-    (*m_ssEntity) << "  8"            << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()   << endl;    // Layer name
-    (*m_ssEntity) << " 90"            << endl;
-    (*m_ssEntity) << pd.nVert         << endl;    // number of vertices
-    (*m_ssEntity) << " 70"            << endl;
-    (*m_ssEntity) << pd.Flag          << endl;
-    (*m_ssEntity) << " 43"            << endl;
-    (*m_ssEntity) << "0"              << endl;    //Constant width opt
-//    (*m_ssEntity) << pd.Width         << endl;    //Constant width opt
-//    (*m_ssEntity) << " 38"            << endl;
-//    (*m_ssEntity) << pd.Elev          << endl;    // Elevation
-//    (*m_ssEntity) << " 39"            << endl;
-//    (*m_ssEntity) << pd.Thick         << endl;    // Thickness
+    m_ssEntity << "  8"            << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()   << std::endl;    // Layer name
+    m_ssEntity << " 90"            << std::endl;
+    m_ssEntity << pd.nVert         << std::endl;    // number of vertices
+    m_ssEntity << " 70"            << std::endl;
+    m_ssEntity << pd.Flag          << std::endl;
+    m_ssEntity << " 43"            << std::endl;
+    m_ssEntity << "0"              << std::endl;    //Constant width opt
+//    m_ssEntity << pd.Width         << std::endl;    //Constant width opt
+//    m_ssEntity << " 38"            << std::endl;
+//    m_ssEntity << pd.Elev          << std::endl;    // Elevation
+//    m_ssEntity << " 39"            << std::endl;
+//    m_ssEntity << pd.Thick         << std::endl;    // Thickness
     for (auto& p: pd.Verts) {
-        (*m_ssEntity) << " 10"        << endl;    // Vertices
-        (*m_ssEntity) << p.x          << endl;
-        (*m_ssEntity) << " 20"        << endl;
-        (*m_ssEntity) << p.y          << endl;
+        m_ssEntity << " 10"        << std::endl;    // Vertices
+        m_ssEntity << p.x          << std::endl;
+        m_ssEntity << " 20"        << std::endl;
+        m_ssEntity << p.y          << std::endl;
     } 
     for (auto& s: pd.StartWidth) {
-        (*m_ssEntity) << " 40"        << endl;
-        (*m_ssEntity) << s            << endl;    // Start Width
+        m_ssEntity << " 40"        << std::endl;
+        m_ssEntity << s            << std::endl;    // Start Width
     }
     for (auto& e: pd.EndWidth) {
-        (*m_ssEntity) << " 41"        << endl;
-        (*m_ssEntity) << e            << endl;    // End Width
+        m_ssEntity << " 41"        << std::endl;
+        m_ssEntity << e            << std::endl;    // End Width
     }
     for (auto& b: pd.Bulge) {                // Bulge
-        (*m_ssEntity) << " 42"        << endl;
-        (*m_ssEntity) << b            << endl;
+        m_ssEntity << " 42"        << std::endl;
+        m_ssEntity << b            << std::endl;
     }
-//    (*m_ssEntity) << "210"            << endl;    //Extrusion dir
-//    (*m_ssEntity) << pd.Extr.x        << endl;
-//    (*m_ssEntity) << "220"            << endl;
-//    (*m_ssEntity) << pd.Extr.y        << endl;
-//    (*m_ssEntity) << "230"            << endl;
-//    (*m_ssEntity) << pd.Extr.z        << endl;
+//    m_ssEntity << "210"            << std::endl;    //Extrusion dir
+//    m_ssEntity << pd.Extr.x        << std::endl;
+//    m_ssEntity << "220"            << std::endl;
+//    m_ssEntity << pd.Extr.y        << std::endl;
+//    m_ssEntity << "230"            << std::endl;
+//    m_ssEntity << pd.Extr.z        << std::endl;
 }
 
 //***************************
@@ -617,78 +587,78 @@ void CDxfWrite::writeLWPolyLine(const LWPolyDataOut &pd)
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::writePolyline(const LWPolyDataOut &pd)
 {
-    (*m_ssEntity) << "  0"            << endl;
-    (*m_ssEntity) << "POLYLINE"       << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"            << std::endl;
+    m_ssEntity << "POLYLINE"       << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"            << endl;
-    (*m_ssEntity) << getLayerName()       << endl;    // Layer name
+    m_ssEntity << "  8"            << std::endl;
+    m_ssEntity << getLayerName()       << std::endl;    // Layer name
     if (m_version > 12) {
-        (*m_ssEntity) << "100"            << endl;    //100 groups are not part of R12
-        (*m_ssEntity) << "AcDbPolyline"   << endl;
+        m_ssEntity << "100"            << std::endl;    //100 groups are not part of R12
+        m_ssEntity << "AcDbPolyline"   << std::endl;
     }
-    (*m_ssEntity) << " 66"            << endl;
-    (*m_ssEntity) << "     1"         << endl;    // vertices follow
-    (*m_ssEntity) << " 10"            << endl;
-    (*m_ssEntity) << "0.0"            << endl;
-    (*m_ssEntity) << " 20"            << endl;
-    (*m_ssEntity) << "0.0"            << endl;
-    (*m_ssEntity) << " 30"            << endl;
-    (*m_ssEntity) << "0.0"            << endl;
-    (*m_ssEntity) << " 70"            << endl;
-    (*m_ssEntity) << "0"              << endl;
+    m_ssEntity << " 66"            << std::endl;
+    m_ssEntity << "     1"         << std::endl;    // vertices follow
+    m_ssEntity << " 10"            << std::endl;
+    m_ssEntity << "0.0"            << std::endl;
+    m_ssEntity << " 20"            << std::endl;
+    m_ssEntity << "0.0"            << std::endl;
+    m_ssEntity << " 30"            << std::endl;
+    m_ssEntity << "0.0"            << std::endl;
+    m_ssEntity << " 70"            << std::endl;
+    m_ssEntity << "0"              << std::endl;
     for (auto& p: pd.Verts) {
-        (*m_ssEntity) << "  0"        << endl;
-        (*m_ssEntity) << "VERTEX"     << endl;
-        (*m_ssEntity) << "  5"      << endl;
-        (*m_ssEntity) << getEntityHandle() << endl;
-        (*m_ssEntity) << "  8"        << endl;
-        (*m_ssEntity) << getLayerName()   << endl;
-        (*m_ssEntity) << " 10"        << endl;
-        (*m_ssEntity) << p.x          << endl;
-        (*m_ssEntity) << " 20"        << endl;
-        (*m_ssEntity) << p.y          << endl;
-        (*m_ssEntity) << " 30"        << endl;
-        (*m_ssEntity) << "0.0"        << endl;
+        m_ssEntity << "  0"        << std::endl;
+        m_ssEntity << "VERTEX"     << std::endl;
+        m_ssEntity << "  5"      << std::endl;
+        m_ssEntity << getEntityHandle() << std::endl;
+        m_ssEntity << "  8"        << std::endl;
+        m_ssEntity << getLayerName()   << std::endl;
+        m_ssEntity << " 10"        << std::endl;
+        m_ssEntity << p.x          << std::endl;
+        m_ssEntity << " 20"        << std::endl;
+        m_ssEntity << p.y          << std::endl;
+        m_ssEntity << " 30"        << std::endl;
+        m_ssEntity << "0.0"        << std::endl;
     } 
-    (*m_ssEntity) << "  0"            << endl;
-    (*m_ssEntity) << "SEQEND"         << endl;
-    (*m_ssEntity) << "  5"            << endl;
-    (*m_ssEntity) << getEntityHandle()      << endl;
-    (*m_ssEntity) << "  8"            << endl;
-    (*m_ssEntity) << getLayerName()       << endl;
+    m_ssEntity << "  0"            << std::endl;
+    m_ssEntity << "SEQEND"         << std::endl;
+    m_ssEntity << "  5"            << std::endl;
+    m_ssEntity << getEntityHandle()      << std::endl;
+    m_ssEntity << "  8"            << std::endl;
+    m_ssEntity << getLayerName()       << std::endl;
 }
 
 void CDxfWrite::writePoint(const double* s)
 {
-    (*m_ssEntity) << "  0"            << endl;
-    (*m_ssEntity) << "POINT"          << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"            << std::endl;
+    m_ssEntity << "POINT"          << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"            << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()       << endl;    // Layer name
+    m_ssEntity << "  8"            << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()       << std::endl;    // Layer name
     if (m_version > 12) {
-        (*m_ssEntity) << "100"       << endl;
-        (*m_ssEntity) << "AcDbPoint" << endl;
+        m_ssEntity << "100"       << std::endl;
+        m_ssEntity << "AcDbPoint" << std::endl;
     }
-    (*m_ssEntity) << " 10"            << endl;
-    (*m_ssEntity) << s[0]             << endl;    // X in WCS coordinates
-    (*m_ssEntity) << " 20"            << endl;
-    (*m_ssEntity) << s[1]             << endl;    // Y in WCS coordinates
-    (*m_ssEntity) << " 30"            << endl;
-    (*m_ssEntity) << s[2]             << endl;    // Z in WCS coordinates
+    m_ssEntity << " 10"            << std::endl;
+    m_ssEntity << s[0]             << std::endl;    // X in WCS coordinates
+    m_ssEntity << " 20"            << std::endl;
+    m_ssEntity << s[1]             << std::endl;    // Y in WCS coordinates
+    m_ssEntity << " 30"            << std::endl;
+    m_ssEntity << s[2]             << std::endl;    // Z in WCS coordinates
 }
 
 void CDxfWrite::writeArc(const double* s, const double* e, const double* c, bool dir)
@@ -706,69 +676,69 @@ void CDxfWrite::writeArc(const double* s, const double* e, const double* c, bool
         start_angle = end_angle;
         end_angle = temp;
     }
-    (*m_ssEntity) << "  0"       << endl;
-    (*m_ssEntity) << "ARC"       << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"       << std::endl;
+    m_ssEntity << "ARC"       << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"       << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()  << endl;    // Layer number
-//    (*m_ssEntity) << " 62"          << endl;
-//    (*m_ssEntity) << "     0"       << endl;
+    m_ssEntity << "  8"       << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()  << std::endl;    // Layer number
+//    m_ssEntity << " 62"          << std::endl;
+//    m_ssEntity << "     0"       << std::endl;
      if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbCircle"   << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbCircle"   << std::endl;
     }
-    (*m_ssEntity) << " 10"       << endl;    // Centre X
-    (*m_ssEntity) << c[0]        << endl;    // X in WCS coordinates
-    (*m_ssEntity) << " 20"       << endl;
-    (*m_ssEntity) << c[1]        << endl;    // Y in WCS coordinates
-    (*m_ssEntity) << " 30"       << endl;
-    (*m_ssEntity) << c[2]        << endl;    // Z in WCS coordinates
-    (*m_ssEntity) << " 40"       << endl;    //
-    (*m_ssEntity) << radius      << endl;    // Radius
+    m_ssEntity << " 10"       << std::endl;    // Centre X
+    m_ssEntity << c[0]        << std::endl;    // X in WCS coordinates
+    m_ssEntity << " 20"       << std::endl;
+    m_ssEntity << c[1]        << std::endl;    // Y in WCS coordinates
+    m_ssEntity << " 30"       << std::endl;
+    m_ssEntity << c[2]        << std::endl;    // Z in WCS coordinates
+    m_ssEntity << " 40"       << std::endl;    //
+    m_ssEntity << radius      << std::endl;    // Radius
 
     if (m_version > 12) {
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbArc" << endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbArc" << std::endl;
     }
-    (*m_ssEntity) << " 50"       << endl;
-    (*m_ssEntity) << start_angle << endl;    // Start angle
-    (*m_ssEntity) << " 51"       << endl;
-    (*m_ssEntity) << end_angle   << endl;    // End angle
+    m_ssEntity << " 50"       << std::endl;
+    m_ssEntity << start_angle << std::endl;    // Start angle
+    m_ssEntity << " 51"       << std::endl;
+    m_ssEntity << end_angle   << std::endl;    // End angle
 }
 
 void CDxfWrite::writeCircle(const double* c, double radius)
 {
-    (*m_ssEntity) << "  0"       << endl;
-    (*m_ssEntity) << "CIRCLE"    << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"       << std::endl;
+    m_ssEntity << "CIRCLE"    << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"       << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()  << endl;    // Layer number
+    m_ssEntity << "  8"       << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()  << std::endl;    // Layer number
      if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbCircle"   << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbCircle"   << std::endl;
     }
-    (*m_ssEntity) << " 10"       << endl;    // Centre X
-    (*m_ssEntity) << c[0]        << endl;    // X in WCS coordinates
-    (*m_ssEntity) << " 20"       << endl;
-    (*m_ssEntity) << c[1]        << endl;    // Y in WCS coordinates
-//    (*m_ssEntity) << " 30"       << endl;
-//    (*m_ssEntity) << c[2]        << endl;    // Z in WCS coordinates
-    (*m_ssEntity) << " 40"       << endl;    //
-    (*m_ssEntity) << radius      << endl;    // Radius
+    m_ssEntity << " 10"       << std::endl;    // Centre X
+    m_ssEntity << c[0]        << std::endl;    // X in WCS coordinates
+    m_ssEntity << " 20"       << std::endl;
+    m_ssEntity << c[1]        << std::endl;    // Y in WCS coordinates
+//    m_ssEntity << " 30"       << std::endl;
+//    m_ssEntity << c[2]        << std::endl;    // Z in WCS coordinates
+    m_ssEntity << " 40"       << std::endl;    //
+    m_ssEntity << radius      << std::endl;    // Radius
 }
 
 void CDxfWrite::writeEllipse(const double* c, double major_radius, double minor_radius, 
@@ -787,46 +757,46 @@ void CDxfWrite::writeEllipse(const double* c, double major_radius, double minor_
         start_angle = end_angle;
         end_angle = temp;
     }
-    (*m_ssEntity) << "  0"       << endl;
-    (*m_ssEntity) << "ELLIPSE"   << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"       << std::endl;
+    m_ssEntity << "ELLIPSE"   << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"       << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()  << endl;    // Layer number
+    m_ssEntity << "  8"       << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()  << std::endl;    // Layer number
      if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbEllipse"   << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbEllipse"   << std::endl;
     }
-    (*m_ssEntity) << " 10"       << endl;    // Centre X
-    (*m_ssEntity) << c[0]        << endl;    // X in WCS coordinates
-    (*m_ssEntity) << " 20"       << endl;
-    (*m_ssEntity) << c[1]        << endl;    // Y in WCS coordinates
-    (*m_ssEntity) << " 30"       << endl;
-    (*m_ssEntity) << c[2]        << endl;    // Z in WCS coordinates
-    (*m_ssEntity) << " 11"       << endl;    //
-    (*m_ssEntity) << m[0]        << endl;    // Major X
-    (*m_ssEntity) << " 21"       << endl;
-    (*m_ssEntity) << m[1]        << endl;    // Major Y
-    (*m_ssEntity) << " 31"       << endl;
-    (*m_ssEntity) << m[2]        << endl;    // Major Z
-    (*m_ssEntity) << " 40"       << endl;    //
-    (*m_ssEntity) << ratio       << endl;    // Ratio
-//    (*m_ssEntity) << "210"       << endl;    //extrusion dir??
-//    (*m_ssEntity) << "0"         << endl;
-//    (*m_ssEntity) << "220"       << endl;
-//    (*m_ssEntity) << "0"         << endl;
-//    (*m_ssEntity) << "230"       << endl;
-//    (*m_ssEntity) << "1"         << endl;
-    (*m_ssEntity) << " 41"       << endl;
-    (*m_ssEntity) << start_angle << endl;    // Start angle (radians [0..2pi])
-    (*m_ssEntity) << " 42"       << endl;
-    (*m_ssEntity) << end_angle   << endl;    // End angle
+    m_ssEntity << " 10"       << std::endl;    // Centre X
+    m_ssEntity << c[0]        << std::endl;    // X in WCS coordinates
+    m_ssEntity << " 20"       << std::endl;
+    m_ssEntity << c[1]        << std::endl;    // Y in WCS coordinates
+    m_ssEntity << " 30"       << std::endl;
+    m_ssEntity << c[2]        << std::endl;    // Z in WCS coordinates
+    m_ssEntity << " 11"       << std::endl;    //
+    m_ssEntity << m[0]        << std::endl;    // Major X
+    m_ssEntity << " 21"       << std::endl;
+    m_ssEntity << m[1]        << std::endl;    // Major Y
+    m_ssEntity << " 31"       << std::endl;
+    m_ssEntity << m[2]        << std::endl;    // Major Z
+    m_ssEntity << " 40"       << std::endl;    //
+    m_ssEntity << ratio       << std::endl;    // Ratio
+//    m_ssEntity << "210"       << std::endl;    //extrusion dir??
+//    m_ssEntity << "0"         << std::endl;
+//    m_ssEntity << "220"       << std::endl;
+//    m_ssEntity << "0"         << std::endl;
+//    m_ssEntity << "230"       << std::endl;
+//    m_ssEntity << "1"         << std::endl;
+    m_ssEntity << " 41"       << std::endl;
+    m_ssEntity << start_angle << std::endl;    // Start angle (radians [0..2pi])
+    m_ssEntity << " 42"       << std::endl;
+    m_ssEntity << end_angle   << std::endl;    // End angle
 }
 
 //***************************
@@ -834,78 +804,78 @@ void CDxfWrite::writeEllipse(const double* c, double major_radius, double minor_
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::writeSpline(const SplineDataOut &sd)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "SPLINE"       << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "SPLINE"       << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;    // Group code for layer name
-    (*m_ssEntity) << getLayerName()     << endl;    // Layer name
+    m_ssEntity << "  8"          << std::endl;    // Group code for layer name
+    m_ssEntity << getLayerName()     << std::endl;    // Layer name
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbSpline"   << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbSpline"   << std::endl;
     }
-    (*m_ssEntity) << "210"          << endl;
-    (*m_ssEntity) << "0"            << endl;
-    (*m_ssEntity) << "220"          << endl;
-    (*m_ssEntity) << "0"            << endl;
-    (*m_ssEntity) << "230"          << endl;
-    (*m_ssEntity) << "1"            << endl;
+    m_ssEntity << "210"          << std::endl;
+    m_ssEntity << "0"            << std::endl;
+    m_ssEntity << "220"          << std::endl;
+    m_ssEntity << "0"            << std::endl;
+    m_ssEntity << "230"          << std::endl;
+    m_ssEntity << "1"            << std::endl;
 
-    (*m_ssEntity) << " 70"          << endl;
-    (*m_ssEntity) << sd.flag        << endl;      //flags
-    (*m_ssEntity) << " 71"          << endl; 
-    (*m_ssEntity) << sd.degree      << endl;
-    (*m_ssEntity) << " 72"          << endl;
-    (*m_ssEntity) << sd.knots       << endl;
-    (*m_ssEntity) << " 73"          << endl;
-    (*m_ssEntity) << sd.control_points   << endl;
-    (*m_ssEntity) << " 74"          << endl; 
-    (*m_ssEntity) << 0              << endl;
+    m_ssEntity << " 70"          << std::endl;
+    m_ssEntity << sd.flag        << std::endl;      //flags
+    m_ssEntity << " 71"          << std::endl;
+    m_ssEntity << sd.degree      << std::endl;
+    m_ssEntity << " 72"          << std::endl;
+    m_ssEntity << sd.knots       << std::endl;
+    m_ssEntity << " 73"          << std::endl;
+    m_ssEntity << sd.control_points   << std::endl;
+    m_ssEntity << " 74"          << std::endl;
+    m_ssEntity << 0              << std::endl;
 
-//    (*m_ssEntity) << " 12"          << endl;
-//    (*m_ssEntity) << sd.starttan.x  << endl;
-//    (*m_ssEntity) << " 22"          << endl;
-//    (*m_ssEntity) << sd.starttan.y  << endl;
-//    (*m_ssEntity) << " 32"          << endl;
-//    (*m_ssEntity) << sd.starttan.z  << endl;
-//    (*m_ssEntity) << " 13"          << endl;
-//    (*m_ssEntity) << sd.endtan.x    << endl;
-//    (*m_ssEntity) << " 23"          << endl;
-//    (*m_ssEntity) << sd.endtan.y    << endl;
-//    (*m_ssEntity) << " 33"          << endl;
-//    (*m_ssEntity) << sd.endtan.z    << endl;
+//    m_ssEntity << " 12"          << std::endl;
+//    m_ssEntity << sd.starttan.x  << std::endl;
+//    m_ssEntity << " 22"          << std::endl;
+//    m_ssEntity << sd.starttan.y  << std::endl;
+//    m_ssEntity << " 32"          << std::endl;
+//    m_ssEntity << sd.starttan.z  << std::endl;
+//    m_ssEntity << " 13"          << std::endl;
+//    m_ssEntity << sd.endtan.x    << std::endl;
+//    m_ssEntity << " 23"          << std::endl;
+//    m_ssEntity << sd.endtan.y    << std::endl;
+//    m_ssEntity << " 33"          << std::endl;
+//    m_ssEntity << sd.endtan.z    << std::endl;
 
     for (auto& k: sd.knot) {
-        (*m_ssEntity) << " 40"      << endl;  
-        (*m_ssEntity) << k          << endl;  
+        m_ssEntity << " 40"      << std::endl;
+        m_ssEntity << k          << std::endl;
     }
 
     for (auto& w : sd.weight) {
-        (*m_ssEntity) << " 41"      << endl;  
-        (*m_ssEntity) << w          << endl;  
+        m_ssEntity << " 41"      << std::endl;
+        m_ssEntity << w          << std::endl;
     }
 
     for (auto& c: sd.control) {
-        (*m_ssEntity) << " 10"      << endl;
-        (*m_ssEntity) << c.x        << endl;    // X in WCS coordinates
-        (*m_ssEntity) << " 20"      << endl;
-        (*m_ssEntity) << c.y        << endl;    // Y in WCS coordinates
-        (*m_ssEntity) << " 30"      << endl;
-        (*m_ssEntity) << c.z        << endl;    // Z in WCS coordinates
+        m_ssEntity << " 10"      << std::endl;
+        m_ssEntity << c.x        << std::endl;    // X in WCS coordinates
+        m_ssEntity << " 20"      << std::endl;
+        m_ssEntity << c.y        << std::endl;    // Y in WCS coordinates
+        m_ssEntity << " 30"      << std::endl;
+        m_ssEntity << c.z        << std::endl;    // Z in WCS coordinates
     }
     for (auto& f: sd.fit) {
-        (*m_ssEntity) << " 11"      << endl;
-        (*m_ssEntity) << f.x        << endl;    // X in WCS coordinates
-        (*m_ssEntity) << " 21"      << endl;
-        (*m_ssEntity) << f.y        << endl;    // Y in WCS coordinates
-        (*m_ssEntity) << " 31"      << endl;
-        (*m_ssEntity) << f.z        << endl;    // Z in WCS coordinates
+        m_ssEntity << " 11"      << std::endl;
+        m_ssEntity << f.x        << std::endl;    // X in WCS coordinates
+        m_ssEntity << " 21"      << std::endl;
+        m_ssEntity << f.y        << std::endl;    // Y in WCS coordinates
+        m_ssEntity << " 31"      << std::endl;
+        m_ssEntity << f.z        << std::endl;    // Z in WCS coordinates
     }
 }
 
@@ -914,30 +884,30 @@ void CDxfWrite::writeSpline(const SplineDataOut &sd)
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::writeVertex(double x, double y, double z)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "VERTEX"       << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "VERTEX"       << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;
-    (*m_ssEntity) << getLayerName()     << endl;
+    m_ssEntity << "  8"          << std::endl;
+    m_ssEntity << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbVertex"   << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbVertex"   << std::endl;
     }
-    (*m_ssEntity) << " 10"          << endl;
-    (*m_ssEntity) << x              << endl;
-    (*m_ssEntity) << " 20"          << endl; 
-    (*m_ssEntity) << y              << endl;
-    (*m_ssEntity) << " 30"          << endl;
-    (*m_ssEntity) << z              << endl;
-    (*m_ssEntity) << " 70"          << endl;
-    (*m_ssEntity) << 0              << endl;
+    m_ssEntity << " 10"          << std::endl;
+    m_ssEntity << x              << std::endl;
+    m_ssEntity << " 20"          << std::endl;
+    m_ssEntity << y              << std::endl;
+    m_ssEntity << " 30"          << std::endl;
+    m_ssEntity << z              << std::endl;
+    m_ssEntity << " 70"          << std::endl;
+    m_ssEntity << 0              << std::endl;
 }
 
 void CDxfWrite::writeText(const char* text, const double* location1, const double* location2,
@@ -953,119 +923,119 @@ void CDxfWrite::writeText(const char* text, const double* location1, const doubl
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::putText(const char* text, const Base::Vector3d& location1, const Base::Vector3d& location2,
                           const double height, const int horizJust,
-                          std::ostringstream* outStream, const std::string& handle,
+                          std::ostringstream& outStream, const std::string& handle,
                           const std::string& ownerHandle)
 {
     (void) location2;
 
-    (*outStream) << "  0"          << endl;
-    (*outStream) << "TEXT"         << endl;
-    (*outStream) << "  5"      << endl;
-    (*outStream) << handle << endl;
+    outStream << "  0"          << std::endl;
+    outStream << "TEXT"         << std::endl;
+    outStream << "  5"      << std::endl;
+    outStream << handle << std::endl;
     if (m_version > 12) {
-        (*outStream) << "330"      << endl;
-        (*outStream) << ownerHandle  << endl;
-        (*outStream) << "100"      << endl;
-        (*outStream) << "AcDbEntity"      << endl;
+        outStream << "330"      << std::endl;
+        outStream << ownerHandle  << std::endl;
+        outStream << "100"      << std::endl;
+        outStream << "AcDbEntity"      << std::endl;
     }
-    (*outStream) << "  8"          << endl;
-    (*outStream) << getLayerName()     << endl;
+    outStream << "  8"          << std::endl;
+    outStream << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*outStream) << "100"          << endl;
-        (*outStream) << "AcDbText"     << endl;
+        outStream << "100"          << std::endl;
+        outStream << "AcDbText"     << std::endl;
     }
-//    (*outStream) << " 39"          << endl;
-//    (*outStream) << 0              << endl;     //thickness
-    (*outStream) << " 10"          << endl;     //first alignment point
-    (*outStream) << location1.x    << endl;
-    (*outStream) << " 20"          << endl; 
-    (*outStream) << location1.y    << endl;
-    (*outStream) << " 30"          << endl;
-    (*outStream) << location1.z    << endl;
-    (*outStream) << " 40"          << endl;
-    (*outStream) << height         << endl;
-    (*outStream) << "  1"          << endl;
-    (*outStream) << text           << endl;
-//    (*outStream) << " 50"          << endl;
-//    (*outStream) << 0              << endl;    //rotation
-//    (*outStream) << " 41"          << endl;
-//    (*outStream) << 1              << endl;
-//    (*outStream) << " 51"          << endl;
-//    (*outStream) << 0              << endl;
+//    outStream << " 39"          << std::endl;
+//    outStream << 0              << std::endl;     //thickness
+    outStream << " 10"          << std::endl;     //first alignment point
+    outStream << location1.x    << std::endl;
+    outStream << " 20"          << std::endl;
+    outStream << location1.y    << std::endl;
+    outStream << " 30"          << std::endl;
+    outStream << location1.z    << std::endl;
+    outStream << " 40"          << std::endl;
+    outStream << height         << std::endl;
+    outStream << "  1"          << std::endl;
+    outStream << text           << std::endl;
+//    outStream << " 50"          << std::endl;
+//    outStream << 0              << std::endl;    //rotation
+//    outStream << " 41"          << std::endl;
+//    outStream << 1              << std::endl;
+//    outStream << " 51"          << std::endl;
+//    outStream << 0              << std::endl;
 
-    (*outStream) << "  7"          << endl;
-    (*outStream) << "STANDARD"     << endl;    //style
-//    (*outStream) << " 71"          << endl;  //default
-//    (*outStream) << "0"            << endl;
-    (*outStream) << " 72"          << endl;
-    (*outStream) << horizJust      << endl;
-////    (*outStream) << " 73"          << endl;
-////    (*outStream) << "0"            << endl;
-    (*outStream) << " 11"          << endl;    //second alignment point
-    (*outStream) << location2.x    << endl;
-    (*outStream) << " 21"          << endl; 
-    (*outStream) << location2.y    << endl;
-    (*outStream) << " 31"          << endl;
-    (*outStream) << location2.z    << endl;
-//    (*outStream) << "210"          << endl;
-//    (*outStream) << "0"            << endl;
-//    (*outStream) << "220"          << endl;
-//    (*outStream) << "0"            << endl;
-//    (*outStream) << "230"          << endl;
-//    (*outStream) << "1"            << endl;
+    outStream << "  7"          << std::endl;
+    outStream << "STANDARD"     << std::endl;    //style
+//    outStream << " 71"          << std::endl;  //default
+//    outStream << "0"            << std::endl;
+    outStream << " 72"          << std::endl;
+    outStream << horizJust      << std::endl;
+////    outStream << " 73"          << std::endl;
+////    outStream << "0"            << std::endl;
+    outStream << " 11"          << std::endl;    //second alignment point
+    outStream << location2.x    << std::endl;
+    outStream << " 21"          << std::endl;
+    outStream << location2.y    << std::endl;
+    outStream << " 31"          << std::endl;
+    outStream << location2.z    << std::endl;
+//    outStream << "210"          << std::endl;
+//    outStream << "0"            << std::endl;
+//    outStream << "220"          << std::endl;
+//    outStream << "0"            << std::endl;
+//    outStream << "230"          << std::endl;
+//    outStream << "1"            << std::endl;
     if (m_version > 12) {
-        (*outStream) << "100"          << endl;
-        (*outStream) << "AcDbText"     << endl;
+        outStream << "100"          << std::endl;
+        outStream << "AcDbText"     << std::endl;
     }
     
 }
 
 void CDxfWrite::putArrow(const Base::Vector3d& arrowPos, const Base::Vector3d& barb1Pos, const Base::Vector3d& barb2Pos,
-                         std::ostringstream* outStream, const std::string& handle,
+                         std::ostringstream& outStream, const std::string& handle,
                          const std::string& ownerHandle)
 {
-    (*outStream) << "  0"          << endl;
-    (*outStream) << "SOLID"        << endl;
-    (*outStream) << "  5"          << endl;
-    (*outStream) << handle         << endl;
+    outStream << "  0"          << std::endl;
+    outStream << "SOLID"        << std::endl;
+    outStream << "  5"          << std::endl;
+    outStream << handle         << std::endl;
     if (m_version > 12) {
-        (*outStream) << "330"      << endl;
-        (*outStream) << ownerHandle << endl;
-        (*outStream) << "100"      << endl;
-        (*outStream) << "AcDbEntity"      << endl;
+        outStream << "330"      << std::endl;
+        outStream << ownerHandle << std::endl;
+        outStream << "100"      << std::endl;
+        outStream << "AcDbEntity"      << std::endl;
     }
-    (*outStream) << "  8"          << endl;
-    (*outStream) << "0"            << endl;
-    (*outStream) << " 62"          << endl;
-    (*outStream) << "     0"       << endl;
+    outStream << "  8"          << std::endl;
+    outStream << "0"            << std::endl;
+    outStream << " 62"          << std::endl;
+    outStream << "     0"       << std::endl;
     if (m_version > 12) {
-        (*outStream) << "100"      << endl;
-        (*outStream) << "AcDbTrace" << endl;
+        outStream << "100"      << std::endl;
+        outStream << "AcDbTrace" << std::endl;
     }
-    (*outStream) << " 10"          << endl;
-    (*outStream) << barb1Pos.x     << endl;
-    (*outStream) << " 20"          << endl;
-    (*outStream) << barb1Pos.y     << endl;
-    (*outStream) << " 30"          << endl;
-    (*outStream) << barb1Pos.z     << endl;
-    (*outStream) << " 11"          << endl;
-    (*outStream) << barb2Pos.x     << endl;
-    (*outStream) << " 21"          << endl;
-    (*outStream) << barb2Pos.y     << endl;
-    (*outStream) << " 31"          << endl;
-    (*outStream) << barb2Pos.z     << endl;
-    (*outStream) << " 12"          << endl;
-    (*outStream) << arrowPos.x     << endl;
-    (*outStream) << " 22"          << endl;
-    (*outStream) << arrowPos.y     << endl;
-    (*outStream) << " 32"          << endl;
-    (*outStream) << arrowPos.z     << endl;
-    (*outStream) << " 13"          << endl;
-    (*outStream) << arrowPos.x     << endl;
-    (*outStream) << " 23"          << endl;
-    (*outStream) << arrowPos.y     << endl;
-    (*outStream) << " 33"          << endl;
-    (*outStream) << arrowPos.z     << endl;
+    outStream << " 10"          << std::endl;
+    outStream << barb1Pos.x     << std::endl;
+    outStream << " 20"          << std::endl;
+    outStream << barb1Pos.y     << std::endl;
+    outStream << " 30"          << std::endl;
+    outStream << barb1Pos.z     << std::endl;
+    outStream << " 11"          << std::endl;
+    outStream << barb2Pos.x     << std::endl;
+    outStream << " 21"          << std::endl;
+    outStream << barb2Pos.y     << std::endl;
+    outStream << " 31"          << std::endl;
+    outStream << barb2Pos.z     << std::endl;
+    outStream << " 12"          << std::endl;
+    outStream << arrowPos.x     << std::endl;
+    outStream << " 22"          << std::endl;
+    outStream << arrowPos.y     << std::endl;
+    outStream << " 32"          << std::endl;
+    outStream << arrowPos.z     << std::endl;
+    outStream << " 13"          << std::endl;
+    outStream << arrowPos.x     << std::endl;
+    outStream << " 23"          << std::endl;
+    outStream << arrowPos.y     << std::endl;
+    outStream << " 33"          << std::endl;
+    outStream << arrowPos.z     << std::endl;
 }
 
 //***************************
@@ -1078,77 +1048,77 @@ void CDxfWrite::writeLinearDim(const double* textMidPoint, const double* lineDef
                          const double* extLine1, const double* extLine2,
                          const char* dimText, int type)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "DIMENSION"    << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "DIMENSION"    << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;
-    (*m_ssEntity) << getLayerName()     << endl;
+    m_ssEntity << "  8"          << std::endl;
+    m_ssEntity << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbDimension"     << std::endl;
     }
-    (*m_ssEntity) << "  2"          << endl;
-    (*m_ssEntity) << "*" << getLayerName()     << endl;     // blockName
-    (*m_ssEntity) << " 10"          << endl;     //dimension line definition point
-    (*m_ssEntity) << lineDefPoint[0]    << endl;
-    (*m_ssEntity) << " 20"          << endl; 
-    (*m_ssEntity) << lineDefPoint[1]    << endl;
-    (*m_ssEntity) << " 30"          << endl;
-    (*m_ssEntity) << lineDefPoint[2]    << endl;
-    (*m_ssEntity) << " 11"          << endl;     //text mid point
-    (*m_ssEntity) << textMidPoint[0]    << endl;
-    (*m_ssEntity) << " 21"          << endl; 
-    (*m_ssEntity) << textMidPoint[1]    << endl;
-    (*m_ssEntity) << " 31"          << endl;
-    (*m_ssEntity) << textMidPoint[2]    << endl;
+    m_ssEntity << "  2"          << std::endl;
+    m_ssEntity << "*" << getLayerName()     << std::endl;     // blockName
+    m_ssEntity << " 10"          << std::endl;     //dimension line definition point
+    m_ssEntity << lineDefPoint[0]    << std::endl;
+    m_ssEntity << " 20"          << std::endl;
+    m_ssEntity << lineDefPoint[1]    << std::endl;
+    m_ssEntity << " 30"          << std::endl;
+    m_ssEntity << lineDefPoint[2]    << std::endl;
+    m_ssEntity << " 11"          << std::endl;     //text mid point
+    m_ssEntity << textMidPoint[0]    << std::endl;
+    m_ssEntity << " 21"          << std::endl;
+    m_ssEntity << textMidPoint[1]    << std::endl;
+    m_ssEntity << " 31"          << std::endl;
+    m_ssEntity << textMidPoint[2]    << std::endl;
     if (type == ALIGNED) {
-        (*m_ssEntity) << " 70"          << endl;
-        (*m_ssEntity) << 1              << endl;    // dimType1 = Aligned
+        m_ssEntity << " 70"          << std::endl;
+        m_ssEntity << 1              << std::endl;    // dimType1 = Aligned
     }
     if ( (type == HORIZONTAL) ||
          (type == VERTICAL) ) {
-        (*m_ssEntity) << " 70"          << endl;
-        (*m_ssEntity) << 32             << endl;  // dimType0 = Aligned + 32 (bit for unique block)?
+        m_ssEntity << " 70"          << std::endl;
+        m_ssEntity << 32             << std::endl;  // dimType0 = Aligned + 32 (bit for unique block)?
     }
-//    (*m_ssEntity) << " 71"          << endl;    // not R12
-//    (*m_ssEntity) << 1              << endl;    // attachPoint ??1 = topleft
-    (*m_ssEntity) << "  1"          << endl;
-    (*m_ssEntity) << dimText        << endl;    
-    (*m_ssEntity) << "  3"          << endl;
-    (*m_ssEntity) << "STANDARD"     << endl;    //style
+//    m_ssEntity << " 71"          << std::endl;    // not R12
+//    m_ssEntity << 1              << std::endl;    // attachPoint ??1 = topleft
+    m_ssEntity << "  1"          << std::endl;
+    m_ssEntity << dimText        << std::endl;
+    m_ssEntity << "  3"          << std::endl;
+    m_ssEntity << "STANDARD"     << std::endl;    //style
 //linear dims
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbAlignedDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbAlignedDimension"     << std::endl;
     }
-    (*m_ssEntity) << " 13"          << endl;
-    (*m_ssEntity) << extLine1[0]    << endl;
-    (*m_ssEntity) << " 23"          << endl; 
-    (*m_ssEntity) << extLine1[1]    << endl;
-    (*m_ssEntity) << " 33"          << endl;
-    (*m_ssEntity) << extLine1[2]    << endl;
-    (*m_ssEntity) << " 14"          << endl;
-    (*m_ssEntity) << extLine2[0]    << endl;
-    (*m_ssEntity) << " 24"          << endl; 
-    (*m_ssEntity) << extLine2[1]    << endl;
-    (*m_ssEntity) << " 34"          << endl;
-    (*m_ssEntity) << extLine2[2]    << endl;
+    m_ssEntity << " 13"          << std::endl;
+    m_ssEntity << extLine1[0]    << std::endl;
+    m_ssEntity << " 23"          << std::endl;
+    m_ssEntity << extLine1[1]    << std::endl;
+    m_ssEntity << " 33"          << std::endl;
+    m_ssEntity << extLine1[2]    << std::endl;
+    m_ssEntity << " 14"          << std::endl;
+    m_ssEntity << extLine2[0]    << std::endl;
+    m_ssEntity << " 24"          << std::endl;
+    m_ssEntity << extLine2[1]    << std::endl;
+    m_ssEntity << " 34"          << std::endl;
+    m_ssEntity << extLine2[2]    << std::endl;
     if (m_version > 12) {
         if (type == VERTICAL) {
-            (*m_ssEntity) << " 50"          << endl;
-            (*m_ssEntity) << "90"     << endl;
+            m_ssEntity << " 50"          << std::endl;
+            m_ssEntity << "90"     << std::endl;
         }
         if ( (type == HORIZONTAL) ||
              (type == VERTICAL) ) {
-            (*m_ssEntity) << "100"          << endl;
-            (*m_ssEntity) << "AcDbRotatedDimension"     << endl;
+            m_ssEntity << "100"          << std::endl;
+            m_ssEntity << "AcDbRotatedDimension"     << std::endl;
         }
     }
 
@@ -1167,80 +1137,80 @@ void CDxfWrite::writeAngularDim(const double* textMidPoint, const double* lineDe
                          const double* startExt2, const double* endExt2,
                          const char* dimText)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "DIMENSION"    << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "DIMENSION"    << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;
-    (*m_ssEntity) << getLayerName()     << endl;
+    m_ssEntity << "  8"          << std::endl;
+    m_ssEntity << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbDimension"     << std::endl;
     }
-    (*m_ssEntity) << "  2"          << endl;
-    (*m_ssEntity) << "*" << getLayerName()     << endl;     // blockName
+    m_ssEntity << "  2"          << std::endl;
+    m_ssEntity << "*" << getLayerName()     << std::endl;     // blockName
 
-    (*m_ssEntity) << " 10"          << endl;
-    (*m_ssEntity) << endExt2[0]     << endl;
-    (*m_ssEntity) << " 20"          << endl; 
-    (*m_ssEntity) << endExt2[1]     << endl;
-    (*m_ssEntity) << " 30"          << endl;
-    (*m_ssEntity) << endExt2[2]     << endl;
+    m_ssEntity << " 10"          << std::endl;
+    m_ssEntity << endExt2[0]     << std::endl;
+    m_ssEntity << " 20"          << std::endl;
+    m_ssEntity << endExt2[1]     << std::endl;
+    m_ssEntity << " 30"          << std::endl;
+    m_ssEntity << endExt2[2]     << std::endl;
 
-    (*m_ssEntity) << " 11"          << endl;
-    (*m_ssEntity) << textMidPoint[0]  << endl;
-    (*m_ssEntity) << " 21"          << endl; 
-    (*m_ssEntity) << textMidPoint[1]  << endl;
-    (*m_ssEntity) << " 31"          << endl;
-    (*m_ssEntity) << textMidPoint[2]  << endl;
+    m_ssEntity << " 11"          << std::endl;
+    m_ssEntity << textMidPoint[0]  << std::endl;
+    m_ssEntity << " 21"          << std::endl;
+    m_ssEntity << textMidPoint[1]  << std::endl;
+    m_ssEntity << " 31"          << std::endl;
+    m_ssEntity << textMidPoint[2]  << std::endl;
 
-    (*m_ssEntity) << " 70"          << endl;
-    (*m_ssEntity) << 2             << endl;    // dimType 2 = Angular  5 = Angular 3 point
+    m_ssEntity << " 70"          << std::endl;
+    m_ssEntity << 2             << std::endl;    // dimType 2 = Angular  5 = Angular 3 point
                                            // +32 for block?? (not R12)
-//    (*m_ssEntity) << " 71"          << endl;    // not R12?  not required?
-//    (*m_ssEntity) << 5              << endl;    // attachPoint 5 = middle
-    (*m_ssEntity) << "  1"          << endl;
-    (*m_ssEntity) << dimText        << endl;    
-    (*m_ssEntity) << "  3"          << endl;
-    (*m_ssEntity) << "STANDARD"     << endl;    //style
+//    m_ssEntity << " 71"          << std::endl;    // not R12?  not required?
+//    m_ssEntity << 5              << std::endl;    // attachPoint 5 = middle
+    m_ssEntity << "  1"          << std::endl;
+    m_ssEntity << dimText        << std::endl;
+    m_ssEntity << "  3"          << std::endl;
+    m_ssEntity << "STANDARD"     << std::endl;    //style
 //angular dims
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDb2LineAngularDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDb2LineAngularDimension"     << std::endl;
     }
-    (*m_ssEntity) << " 13"           << endl;
-    (*m_ssEntity) << startExt1[0]    << endl;
-    (*m_ssEntity) << " 23"           << endl; 
-    (*m_ssEntity) << startExt1[1]    << endl;
-    (*m_ssEntity) << " 33"           << endl;
-    (*m_ssEntity) << startExt1[2]    << endl;
+    m_ssEntity << " 13"           << std::endl;
+    m_ssEntity << startExt1[0]    << std::endl;
+    m_ssEntity << " 23"           << std::endl;
+    m_ssEntity << startExt1[1]    << std::endl;
+    m_ssEntity << " 33"           << std::endl;
+    m_ssEntity << startExt1[2]    << std::endl;
 
-    (*m_ssEntity) << " 14"           << endl;
-    (*m_ssEntity) << endExt1[0]      << endl;
-    (*m_ssEntity) << " 24"           << endl; 
-    (*m_ssEntity) << endExt1[1]      << endl;
-    (*m_ssEntity) << " 34"           << endl;
-    (*m_ssEntity) << endExt1[2]      << endl;
+    m_ssEntity << " 14"           << std::endl;
+    m_ssEntity << endExt1[0]      << std::endl;
+    m_ssEntity << " 24"           << std::endl;
+    m_ssEntity << endExt1[1]      << std::endl;
+    m_ssEntity << " 34"           << std::endl;
+    m_ssEntity << endExt1[2]      << std::endl;
 
-    (*m_ssEntity) << " 15"           << endl;
-    (*m_ssEntity) << startExt2[0]    << endl;
-    (*m_ssEntity) << " 25"           << endl; 
-    (*m_ssEntity) << startExt2[1]    << endl;
-    (*m_ssEntity) << " 35"           << endl;
-    (*m_ssEntity) << startExt2[2]    << endl;
+    m_ssEntity << " 15"           << std::endl;
+    m_ssEntity << startExt2[0]    << std::endl;
+    m_ssEntity << " 25"           << std::endl;
+    m_ssEntity << startExt2[1]    << std::endl;
+    m_ssEntity << " 35"           << std::endl;
+    m_ssEntity << startExt2[2]    << std::endl;
 
-    (*m_ssEntity) << " 16"           << endl;
-    (*m_ssEntity) << lineDefPoint[0] << endl;
-    (*m_ssEntity) << " 26"           << endl; 
-    (*m_ssEntity) << lineDefPoint[1] << endl;
-    (*m_ssEntity) << " 36"           << endl;
-    (*m_ssEntity) << lineDefPoint[2] << endl;
+    m_ssEntity << " 16"           << std::endl;
+    m_ssEntity << lineDefPoint[0] << std::endl;
+    m_ssEntity << " 26"           << std::endl;
+    m_ssEntity << lineDefPoint[1] << std::endl;
+    m_ssEntity << " 36"           << std::endl;
+    m_ssEntity << lineDefPoint[2] << std::endl;
     writeDimBlockPreamble();
     writeAngularDimBlock(textMidPoint, lineDefPoint,
                          startExt1, endExt1,
@@ -1256,57 +1226,57 @@ void CDxfWrite::writeRadialDim(const double* centerPoint, const double* textMidP
                          const double* arcPoint,
                          const char* dimText)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "DIMENSION"    << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "DIMENSION"    << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;
-    (*m_ssEntity) << getLayerName()     << endl;
+    m_ssEntity << "  8"          << std::endl;
+    m_ssEntity << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbDimension"     << std::endl;
     }
-    (*m_ssEntity) << "  2"          << endl;
-    (*m_ssEntity) << "*" << getLayerName()     << endl;     // blockName
-    (*m_ssEntity) << " 10"          << endl;     // arc center point
-    (*m_ssEntity) << centerPoint[0] << endl;
-    (*m_ssEntity) << " 20"          << endl; 
-    (*m_ssEntity) << centerPoint[1] << endl;
-    (*m_ssEntity) << " 30"          << endl;
-    (*m_ssEntity) << centerPoint[2] << endl;
-    (*m_ssEntity) << " 11"          << endl;     //text mid point
-    (*m_ssEntity) << textMidPoint[0]   << endl;
-    (*m_ssEntity) << " 21"          << endl; 
-    (*m_ssEntity) << textMidPoint[1]   << endl;
-    (*m_ssEntity) << " 31"          << endl;
-    (*m_ssEntity) << textMidPoint[2]   << endl;
-    (*m_ssEntity) << " 70"          << endl;
-    (*m_ssEntity) << 4              << endl;    // dimType 4 = Radius
-//    (*m_ssEntity) << " 71"          << endl;    // not R12
-//    (*m_ssEntity) << 1              << endl;    // attachPoint 5 = middle center
-    (*m_ssEntity) << "  1"          << endl;
-    (*m_ssEntity) << dimText        << endl;    
-    (*m_ssEntity) << "  3"          << endl;
-    (*m_ssEntity) << "STANDARD"     << endl;    //style
+    m_ssEntity << "  2"          << std::endl;
+    m_ssEntity << "*" << getLayerName()     << std::endl;     // blockName
+    m_ssEntity << " 10"          << std::endl;     // arc center point
+    m_ssEntity << centerPoint[0] << std::endl;
+    m_ssEntity << " 20"          << std::endl;
+    m_ssEntity << centerPoint[1] << std::endl;
+    m_ssEntity << " 30"          << std::endl;
+    m_ssEntity << centerPoint[2] << std::endl;
+    m_ssEntity << " 11"          << std::endl;     //text mid point
+    m_ssEntity << textMidPoint[0]   << std::endl;
+    m_ssEntity << " 21"          << std::endl;
+    m_ssEntity << textMidPoint[1]   << std::endl;
+    m_ssEntity << " 31"          << std::endl;
+    m_ssEntity << textMidPoint[2]   << std::endl;
+    m_ssEntity << " 70"          << std::endl;
+    m_ssEntity << 4              << std::endl;    // dimType 4 = Radius
+//    m_ssEntity << " 71"          << std::endl;    // not R12
+//    m_ssEntity << 1              << std::endl;    // attachPoint 5 = middle center
+    m_ssEntity << "  1"          << std::endl;
+    m_ssEntity << dimText        << std::endl;
+    m_ssEntity << "  3"          << std::endl;
+    m_ssEntity << "STANDARD"     << std::endl;    //style
 //radial dims
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbRadialDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbRadialDimension"     << std::endl;
     }
-    (*m_ssEntity) << " 15"          << endl;
-    (*m_ssEntity) << arcPoint[0]    << endl;
-    (*m_ssEntity) << " 25"          << endl; 
-    (*m_ssEntity) << arcPoint[1]    << endl;
-    (*m_ssEntity) << " 35"          << endl;
-    (*m_ssEntity) << arcPoint[2]    << endl;
-    (*m_ssEntity) << " 40"          << endl;   // leader length????
-    (*m_ssEntity) << 0              << endl;
+    m_ssEntity << " 15"          << std::endl;
+    m_ssEntity << arcPoint[0]    << std::endl;
+    m_ssEntity << " 25"          << std::endl;
+    m_ssEntity << arcPoint[1]    << std::endl;
+    m_ssEntity << " 35"          << std::endl;
+    m_ssEntity << arcPoint[2]    << std::endl;
+    m_ssEntity << " 40"          << std::endl;   // leader length????
+    m_ssEntity << 0              << std::endl;
 
     writeDimBlockPreamble();
     writeRadialDimBlock(centerPoint, textMidPoint, arcPoint, dimText);
@@ -1320,57 +1290,57 @@ void CDxfWrite::writeDiametricDim(const double* textMidPoint,
                          const double* arcPoint1, const double* arcPoint2,
                          const char* dimText)
 {
-    (*m_ssEntity) << "  0"          << endl;
-    (*m_ssEntity) << "DIMENSION"    << endl;
-    (*m_ssEntity) << "  5"      << endl;
-    (*m_ssEntity) << getEntityHandle() << endl;
+    m_ssEntity << "  0"          << std::endl;
+    m_ssEntity << "DIMENSION"    << std::endl;
+    m_ssEntity << "  5"      << std::endl;
+    m_ssEntity << getEntityHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "330"      << endl;
-        (*m_ssEntity) << m_saveModelSpaceHandle  << endl;
-        (*m_ssEntity) << "100"      << endl;
-        (*m_ssEntity) << "AcDbEntity"      << endl;
+        m_ssEntity << "330"      << std::endl;
+        m_ssEntity << m_saveModelSpaceHandle  << std::endl;
+        m_ssEntity << "100"      << std::endl;
+        m_ssEntity << "AcDbEntity"      << std::endl;
     }
-    (*m_ssEntity) << "  8"          << endl;
-    (*m_ssEntity) << getLayerName()     << endl;
+    m_ssEntity << "  8"          << std::endl;
+    m_ssEntity << getLayerName()     << std::endl;
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbDimension"     << std::endl;
     }
-    (*m_ssEntity) << "  2"          << endl;
-    (*m_ssEntity) << "*" << getLayerName()     << endl;     // blockName
-    (*m_ssEntity) << " 10"          << endl;
-    (*m_ssEntity) << arcPoint1[0]   << endl;
-    (*m_ssEntity) << " 20"          << endl; 
-    (*m_ssEntity) << arcPoint1[1]   << endl;
-    (*m_ssEntity) << " 30"          << endl;
-    (*m_ssEntity) << arcPoint1[2]   << endl;
-    (*m_ssEntity) << " 11"          << endl;     //text mid point
-    (*m_ssEntity) << textMidPoint[0]   << endl;
-    (*m_ssEntity) << " 21"          << endl; 
-    (*m_ssEntity) << textMidPoint[1]   << endl;
-    (*m_ssEntity) << " 31"          << endl;
-    (*m_ssEntity) << textMidPoint[2]   << endl;
-    (*m_ssEntity) << " 70"          << endl;
-    (*m_ssEntity) << 3              << endl;    // dimType 3 = Diameter
-//    (*m_ssEntity) << " 71"          << endl;    // not R12
-//    (*m_ssEntity) << 5              << endl;    // attachPoint 5 = middle center
-    (*m_ssEntity) << "  1"          << endl;
-    (*m_ssEntity) << dimText        << endl;    
-    (*m_ssEntity) << "  3"          << endl;
-    (*m_ssEntity) << "STANDARD"     << endl;    //style
+    m_ssEntity << "  2"          << std::endl;
+    m_ssEntity << "*" << getLayerName()     << std::endl;     // blockName
+    m_ssEntity << " 10"          << std::endl;
+    m_ssEntity << arcPoint1[0]   << std::endl;
+    m_ssEntity << " 20"          << std::endl;
+    m_ssEntity << arcPoint1[1]   << std::endl;
+    m_ssEntity << " 30"          << std::endl;
+    m_ssEntity << arcPoint1[2]   << std::endl;
+    m_ssEntity << " 11"          << std::endl;     //text mid point
+    m_ssEntity << textMidPoint[0]   << std::endl;
+    m_ssEntity << " 21"          << std::endl;
+    m_ssEntity << textMidPoint[1]   << std::endl;
+    m_ssEntity << " 31"          << std::endl;
+    m_ssEntity << textMidPoint[2]   << std::endl;
+    m_ssEntity << " 70"          << std::endl;
+    m_ssEntity << 3              << std::endl;    // dimType 3 = Diameter
+//    m_ssEntity << " 71"          << std::endl;    // not R12
+//    m_ssEntity << 5              << std::endl;    // attachPoint 5 = middle center
+    m_ssEntity << "  1"          << std::endl;
+    m_ssEntity << dimText        << std::endl;
+    m_ssEntity << "  3"          << std::endl;
+    m_ssEntity << "STANDARD"     << std::endl;    //style
 //diametric dims
     if (m_version > 12) {
-        (*m_ssEntity) << "100"          << endl;
-        (*m_ssEntity) << "AcDbDiametricDimension"     << endl;
+        m_ssEntity << "100"          << std::endl;
+        m_ssEntity << "AcDbDiametricDimension"     << std::endl;
     }
-    (*m_ssEntity) << " 15"          << endl;
-    (*m_ssEntity) << arcPoint2[0]   << endl;
-    (*m_ssEntity) << " 25"          << endl; 
-    (*m_ssEntity) << arcPoint2[1]   << endl;
-    (*m_ssEntity) << " 35"          << endl;
-    (*m_ssEntity) << arcPoint2[2]   << endl;
-    (*m_ssEntity) << " 40"          << endl;   // leader length????
-    (*m_ssEntity) << 0              << endl;
+    m_ssEntity << " 15"          << std::endl;
+    m_ssEntity << arcPoint2[0]   << std::endl;
+    m_ssEntity << " 25"          << std::endl;
+    m_ssEntity << arcPoint2[1]   << std::endl;
+    m_ssEntity << " 35"          << std::endl;
+    m_ssEntity << arcPoint2[2]   << std::endl;
+    m_ssEntity << " 40"          << std::endl;   // leader length????
+    m_ssEntity << 0              << std::endl;
 
     writeDimBlockPreamble();
     writeDiametricDimBlock(textMidPoint, arcPoint1, arcPoint2, dimText);
@@ -1390,36 +1360,36 @@ void CDxfWrite::writeDimBlockPreamble(void)
     }
 
     m_currentBlock = getBlockHandle();
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "BLOCK"        << endl;
-    (*m_ssBlock) << "  5"      << endl;
-    (*m_ssBlock) << m_currentBlock << endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "BLOCK"        << std::endl;
+    m_ssBlock << "  5"      << std::endl;
+    m_ssBlock << m_currentBlock << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_saveBlkRecordHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"      << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_saveBlkRecordHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"      << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << getLayerName() << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << getLayerName() << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"          << endl;
-        (*m_ssBlock) << "AcDbBlockBegin"  << endl;
+        m_ssBlock << "100"          << std::endl;
+        m_ssBlock << "AcDbBlockBegin"  << std::endl;
     }
-    (*m_ssBlock) << "  2"          << endl;
-    (*m_ssBlock) << "*" << getLayerName()     << endl;     // blockName
-    (*m_ssBlock) << " 70"          << endl;
-    (*m_ssBlock) << "   1"         << endl;
-    (*m_ssBlock) << " 10"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 20"          << endl; 
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << " 30"          << endl;
-    (*m_ssBlock) << 0.0            << endl;
-    (*m_ssBlock) << "  3"          << endl;
-    (*m_ssBlock) << "*" << getLayerName()     << endl;     // blockName
-    (*m_ssBlock) << "  1"          << endl;
-    (*m_ssBlock) << " "            << endl;
+    m_ssBlock << "  2"          << std::endl;
+    m_ssBlock << "*" << getLayerName()     << std::endl;     // blockName
+    m_ssBlock << " 70"          << std::endl;
+    m_ssBlock << "   1"         << std::endl;
+    m_ssBlock << " 10"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 20"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << " 30"          << std::endl;
+    m_ssBlock << 0.0            << std::endl;
+    m_ssBlock << "  3"          << std::endl;
+    m_ssBlock << "*" << getLayerName()     << std::endl;     // blockName
+    m_ssBlock << "  1"          << std::endl;
+    m_ssBlock << " "            << std::endl;
 }
 
 //***************************
@@ -1427,23 +1397,23 @@ void CDxfWrite::writeDimBlockPreamble(void)
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
 void CDxfWrite::writeBlockTrailer(void)
 {
-    (*m_ssBlock) << "  0"    << endl;
-    (*m_ssBlock) << "ENDBLK" << endl;
-    (*m_ssBlock) << "  5"      << endl;
-    (*m_ssBlock) << getBlockHandle() << endl;
+    m_ssBlock << "  0"    << std::endl;
+    m_ssBlock << "ENDBLK" << std::endl;
+    m_ssBlock << "  5"      << std::endl;
+    m_ssBlock << getBlockHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"    << endl;
-        (*m_ssBlock) << m_saveBlkRecordHandle    << endl;
-        (*m_ssBlock) << "100"    << endl;
-        (*m_ssBlock) << "AcDbEntity"    << endl;
+        m_ssBlock << "330"    << std::endl;
+        m_ssBlock << m_saveBlkRecordHandle    << std::endl;
+        m_ssBlock << "100"    << std::endl;
+        m_ssBlock << "AcDbEntity"    << std::endl;
     }
-//    (*m_ssBlock) << " 67"    << endl;
-//    (*m_ssBlock) << "1"    << endl;
-    (*m_ssBlock) << "  8"    << endl;
-    (*m_ssBlock) << getLayerName() << endl;
+//    m_ssBlock << " 67"    << std::endl;
+//    m_ssBlock << "1"    << std::endl;
+    m_ssBlock << "  8"    << std::endl;
+    m_ssBlock << getLayerName() << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"    << endl;
-        (*m_ssBlock) << "AcDbBlockEnd"    << endl;
+        m_ssBlock << "100"    << std::endl;
+        m_ssBlock << "AcDbBlockEnd"    << std::endl;
     }
 }
 
@@ -1565,40 +1535,40 @@ void CDxfWrite::writeAngularDimBlock(const double* textMidPoint, const double* l
     Base::Vector3d linePt(lineDefPoint[0],lineDefPoint[1],lineDefPoint[2]);
     double radius = (e2S - linePt).Length();
 
-    (*m_ssBlock) << "  0"          << endl;
-    (*m_ssBlock) << "ARC"          << endl;       //dimline arc
-    (*m_ssBlock) << "  5"          << endl;
-    (*m_ssBlock) << getBlockHandle() << endl;
+    m_ssBlock << "  0"          << std::endl;
+    m_ssBlock << "ARC"          << std::endl;       //dimline arc
+    m_ssBlock << "  5"          << std::endl;
+    m_ssBlock << getBlockHandle() << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "330"      << endl;
-        (*m_ssBlock) << m_saveBlkRecordHandle << endl;
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbEntity"      << endl;
+        m_ssBlock << "330"      << std::endl;
+        m_ssBlock << m_saveBlkRecordHandle << std::endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbEntity"      << std::endl;
     }
-    (*m_ssBlock) << "  8"          << endl;
-    (*m_ssBlock) << "0"            << endl;
-//    (*m_ssBlock) << " 62"          << endl;
-//    (*m_ssBlock) << "     0"       << endl;
+    m_ssBlock << "  8"          << std::endl;
+    m_ssBlock << "0"            << std::endl;
+//    m_ssBlock << " 62"          << std::endl;
+//    m_ssBlock << "     0"       << std::endl;
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbCircle" << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbCircle" << std::endl;
     }
-    (*m_ssBlock) << " 10"          << endl;
-    (*m_ssBlock) << startExt2[0]   << endl;      //arc center
-    (*m_ssBlock) << " 20"          << endl;
-    (*m_ssBlock) << startExt2[1]   << endl;
-    (*m_ssBlock) << " 30"          << endl;
-    (*m_ssBlock) << startExt2[2]   << endl;
-    (*m_ssBlock) << " 40"          << endl;
-    (*m_ssBlock) << radius         << endl;      //radius
+    m_ssBlock << " 10"          << std::endl;
+    m_ssBlock << startExt2[0]   << std::endl;      //arc center
+    m_ssBlock << " 20"          << std::endl;
+    m_ssBlock << startExt2[1]   << std::endl;
+    m_ssBlock << " 30"          << std::endl;
+    m_ssBlock << startExt2[2]   << std::endl;
+    m_ssBlock << " 40"          << std::endl;
+    m_ssBlock << radius         << std::endl;      //radius
     if (m_version > 12) {
-        (*m_ssBlock) << "100"      << endl;
-        (*m_ssBlock) << "AcDbArc" << endl;
+        m_ssBlock << "100"      << std::endl;
+        m_ssBlock << "AcDbArc" << std::endl;
     }
-    (*m_ssBlock) << " 50"          << endl;
-    (*m_ssBlock) << startAngle     << endl;            //start angle
-    (*m_ssBlock) << " 51"          << endl;
-    (*m_ssBlock) << endAngle       << endl;            //end angle
+    m_ssBlock << " 50"          << std::endl;
+    m_ssBlock << startAngle     << std::endl;            //start angle
+    m_ssBlock << " 51"          << std::endl;
+    m_ssBlock << endAngle       << std::endl;            //end angle
 
     putText(dimText,toVector3d(textMidPoint), toVector3d(textMidPoint),3.5,1,
             m_ssBlock,getBlockHandle(),m_saveBlkRecordHandle);
@@ -1704,14 +1674,14 @@ void CDxfWrite::writeBlocksSection(void)
         std::stringstream ss;
         ss << "blocks1" << m_version << ".rub";
         std::string fileSpec = m_dataDir + ss.str();
-        (*m_ofs) << getPlateFile(fileSpec);
+        m_ofs << getPlateFile(fileSpec);
     }
     
     //write blocks content
-    (*m_ofs) << (*m_ssBlock).str();
+    m_ofs << m_ssBlock.str();
 
-    (*m_ofs) << "  0"      << endl;
-    (*m_ofs) << "ENDSEC"   << endl;
+    m_ofs << "  0"      << std::endl;
+    m_ofs << "ENDSEC"   << std::endl;
 }
 
 //***************************
@@ -1722,14 +1692,14 @@ void CDxfWrite::writeEntitiesSection(void)
     std::stringstream ss;
     ss << "entities" << m_version << ".rub";
     std::string fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
     
     //write entities content
-    (*m_ofs) << (*m_ssEntity).str();
+    m_ofs << m_ssEntity.str();
     
 
-    (*m_ofs) << "  0"      << endl;
-    (*m_ofs) << "ENDSEC"   << endl;
+    m_ofs << "  0"      << std::endl;
+    m_ofs << "ENDSEC"   << std::endl;
 }
 
 //***************************
@@ -1743,10 +1713,11 @@ void CDxfWrite::writeObjectsSection(void)
     std::stringstream ss;
     ss << "objects" << m_version << ".rub";
     std::string fileSpec = m_dataDir + ss.str();
-    (*m_ofs) << getPlateFile(fileSpec);
+    m_ofs << getPlateFile(fileSpec);
 }
 
 CDxfRead::CDxfRead(const char* filepath)
+    : m_ifs(filepath)
 {
     // start the file
     memset( m_str, '\0', sizeof(m_str) );
@@ -1760,18 +1731,14 @@ CDxfRead::CDxfRead(const char* filepath)
     memset( m_block_name, '\0', sizeof(m_block_name) );
     m_ignore_errors = true;
 
-    m_ifs = new ifstream(filepath);
-    if(!(*m_ifs)){
+    if (!m_ifs)
         m_fail = true;
-        return;
-    }
-    m_ifs->imbue(std::locale("C"));
-
+    else
+        m_ifs.imbue(std::locale::classic());
 }
 
 CDxfRead::~CDxfRead()
 {
-    delete m_ifs;
 }
 
 double CDxfRead::mm( double value ) const
@@ -1815,7 +1782,7 @@ bool CDxfRead::ReadLine()
     double e[3] = {0, 0, 0};
     bool hidden = false;
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -1913,7 +1880,7 @@ bool CDxfRead::ReadPoint()
 {
     double s[3] = {0, 0, 0};
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -1997,7 +1964,7 @@ bool CDxfRead::ReadArc()
     double z_extrusion_dir = 1.0;
     bool hidden = false;
     
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2103,7 +2070,7 @@ bool CDxfRead::ReadSpline()
 
     double temp_double;
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2277,7 +2244,7 @@ bool CDxfRead::ReadCircle()
     double c[3] = {0,0,0}; // centre
     bool hidden = false;
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2361,7 +2328,7 @@ bool CDxfRead::ReadText()
 
     memset( c, 0, sizeof(c) );
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2448,7 +2415,7 @@ bool CDxfRead::ReadEllipse()
     double start=0; //start of arc
     double end=0;  // end of arc
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2618,7 +2585,7 @@ bool CDxfRead::ReadLwPolyLine()
     int flags;
     bool next_item_found = false;
 
-    while(!((*m_ifs).eof()) && !next_item_found)
+    while(!m_ifs.eof() && !next_item_found)
     {
         get_line();
         int n;
@@ -2725,7 +2692,7 @@ bool CDxfRead::ReadVertex(double *pVertex, bool *bulge_found, double *bulge)
     pVertex[1] = 0.0;
     pVertex[2] = 0.0;
 
-    while(!(*m_ifs).eof()) {
+    while(!m_ifs.eof()) {
         get_line();
         int n;
         if(sscanf(m_str, "%d", &n) != 1) {
@@ -2798,7 +2765,7 @@ bool CDxfRead::ReadPolyLine()
     bool bulge_found;
     double bulge;
 
-    while(!(*m_ifs).eof())
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -2920,7 +2887,7 @@ bool CDxfRead::ReadInsert()
     double rot = 0.0; // rotation
     char name[1024] = {0};
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -3012,7 +2979,7 @@ bool CDxfRead::ReadDimension()
     double p[3] = {0,0,0}; // dimpoint
     double rot = -1.0; // rotation
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -3109,7 +3076,7 @@ bool CDxfRead::ReadDimension()
 
 bool CDxfRead::ReadBlockInfo()
 {
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -3150,7 +3117,7 @@ void CDxfRead::get_line()
         return;
     }
 
-    m_ifs->getline(m_str, 1024);
+    m_ifs.getline(m_str, 1024);
     ++m_lineNum;
 
     char str[1024];
@@ -3210,7 +3177,7 @@ bool CDxfRead::ReadLayer()
     std::string layername;
     int aci = -1;
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         get_line();
         int n;
@@ -3267,7 +3234,7 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
 
     get_line();
 
-    while(!((*m_ifs).eof()))
+    while(!m_ifs.eof())
     {
         m_aci = 256;
 
@@ -3453,9 +3420,9 @@ void CDxfRead::ReportError_readInteger(const char* context)
     this->ReportError(msg.c_str());
 }
 
-streamsize CDxfRead::gcount() const
+std::streamsize CDxfRead::gcount() const
 {
-    return m_ifs ? m_ifs->gcount() : 0;
+    return m_ifs.gcount();
 }
 
 std::string CDxfRead::LayerName() const

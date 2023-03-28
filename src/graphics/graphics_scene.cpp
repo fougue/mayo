@@ -11,7 +11,8 @@
 
 #include <Graphic3d_GraphicDriver.hxx>
 #include <V3d_TypeOfOrientation.hxx>
-#include <QtCore/QPoint>
+#include <V3d_AmbientLight.hxx>
+#include <V3d_DirectionalLight.hxx>
 
 namespace Mayo {
 
@@ -30,14 +31,29 @@ static Handle_V3d_Viewer createOccViewer()
 //    viewer->SetDefaultVisualization(V3d_ZBUFFER);
 //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
+
+//    auto ambientLight = new V3d_AmbientLight;
+//    ambientLight->SetIntensity(0.7f);
+//    viewer->AddLight(ambientLight);
+
+//    auto dirLight = new V3d_DirectionalLight;
+//    dirLight->SetIntensity(0.8f);
+//    dirLight->SetHeadlight(true);
+//    dirLight->SetDirection(0, 0, -1);
+//    dirLight->SetSmoothAngle(3.14159265f * 6.f / 180.f);
+//    viewer->AddLight(dirLight);
+
     viewer->SetLightOn();
+
 #if 0
     for (const Handle(Graphic3d_CLight)& light : viewer->DefinedLights()) {
-        if (light->Name() == "amblight") {
-            light->SetIntensity(0.2f);
+        if (light->Name() == "amblight" || light->Type() == Graphic3d_TypeOfLightSource_Ambient) {
+            light->SetIntensity(1.f);
         }
-        else if (light->Name() == "headlight") {
-            light->SetIntensity(0.8f);
+        else if (light->Name() == "headlight" || light->Type() == Graphic3d_TypeOfLightSource_Directional) {
+            light->SetIntensity(5.f);
+            light->SetHeadlight(true);
+            light->SetDirection(0, 0, -1);
         }
     }
 #endif
@@ -72,9 +88,8 @@ public:
     SelectionMode m_selectionMode = SelectionMode::Single;
 };
 
-GraphicsScene::GraphicsScene(QObject* parent)
-    : QObject(parent),
-      d(new Private)
+GraphicsScene::GraphicsScene()
+    : d(new Private)
 {
     d->m_v3dViewer = Internal::createOccViewer();
     d->m_aisContext = new InteractiveContext(d->m_v3dViewer);
@@ -129,8 +144,25 @@ void GraphicsScene::eraseObject(const GraphicsObjectPtr& object)
 
 void GraphicsScene::redraw()
 {
-    if (!d->m_isRedrawBlocked)
-        d->m_aisContext->UpdateCurrentViewer();
+    if (d->m_isRedrawBlocked)
+        return;
+
+    //d->m_aisContext->UpdateCurrentViewer();
+    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next())
+        this->signalRedrawRequested.send(itView.Value());
+}
+
+void GraphicsScene::redraw(const Handle_V3d_View& view)
+{
+    if (d->m_isRedrawBlocked)
+        return;
+
+    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next()) {
+        if (itView.Value() == view) {
+            this->signalRedrawRequested.send(view);
+            break;
+        }
+    }
 }
 
 bool GraphicsScene::isRedrawBlocked() const
@@ -237,7 +269,7 @@ void GraphicsScene::clearSelection()
     d->m_aisContext->ClearDetected(false);
     d->m_aisContext->ClearSelected(false);
     if (onEntryOwnerSelected)
-        emit this->selectionChanged();
+        this->signalSelectionChanged.send();
 }
 
 AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
@@ -248,14 +280,15 @@ AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
 void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
 {
     auto gfxObject = GraphicsObjectPtr::DownCast(
-                gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject());
+                gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject()
+    );
     if (GraphicsUtils::AisObject_isVisible(gfxObject))
         d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }
 
-void GraphicsScene::highlightAt(const QPoint& pos, const Handle_V3d_View& view)
+void GraphicsScene::highlightAt(int xPos, int yPos, const Handle_V3d_View& view)
 {
-    d->m_aisContext->MoveTo(pos.x(), pos.y(), view, false);
+    d->m_aisContext->MoveTo(xPos, yPos, view, false);
 }
 
 void GraphicsScene::select()
@@ -278,7 +311,7 @@ void GraphicsScene::select()
 #endif
     }
 
-    emit this->selectionChanged();
+    this->signalSelectionChanged.send();
 }
 
 int GraphicsScene::selectedCount() const
@@ -304,7 +337,7 @@ void GraphicsScene::setSelectionMode(GraphicsScene::SelectionMode mode)
 {
     if (mode != d->m_selectionMode) {
         d->m_selectionMode = mode;
-        emit this->selectionModeChanged();
+        this->signalSelectionModeChanged.send();
     }
 }
 

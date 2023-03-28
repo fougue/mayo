@@ -31,9 +31,10 @@
 namespace Mayo {
 
 AppModule::AppModule()
-    : m_settings(new Settings(this)),
+    : m_settings(new Settings),
       m_props(m_settings),
-      m_locale(QLocale::system())
+      m_stdLocale(std::locale("")),
+      m_qtLocale(QLocale::system())
 {
     static bool metaTypesRegistered = false;
     if (!metaTypesRegistered) {
@@ -47,15 +48,20 @@ AppModule::AppModule()
 QStringUtils::TextOptions AppModule::defaultTextOptions() const
 {
     QStringUtils::TextOptions opts;
-    opts.locale = this->locale();
+    opts.locale = this->qtLocale();
     opts.unitDecimals = m_props.unitSystemDecimals;
     opts.unitSchema = m_props.unitSystemSchema;
     return opts;
 }
 
-const QLocale& AppModule::locale() const
+const std::locale& AppModule::stdLocale() const
 {
-    return m_locale;
+    return m_stdLocale;
+}
+
+const QLocale& AppModule::qtLocale() const
+{
+    return m_qtLocale;
 }
 
 const Enumeration& AppModule::languages()
@@ -135,22 +141,23 @@ bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) co
 
 void AppModule::emitMessage(Messenger::MessageType msgType, std::string_view text)
 {
+    const QString qtext = to_QString(text);
     {
-        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
-        m_messageLog.push_back({ msgType, to_QString(text) });
+        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        m_messageLog.push_back({ msgType, qtext });
     }
 
-    emit this->message(msgType, to_QString(text));
+    this->signalMessage.send(msgType, qtext);
 }
 
 void AppModule::clearMessageLog()
 {
     {
-        std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
         m_messageLog.clear();
     }
 
-    emit this->messageLogCleared();
+    this->signalMessageLogCleared.send();
 }
 
 void AppModule::prependRecentFile(const FilePath& fp)
@@ -332,6 +339,12 @@ AppModule* AppModule::get()
 {
     static AppModule appModule;
     return &appModule;
+}
+
+AppModule::~AppModule()
+{
+    delete m_settings;
+    m_settings = nullptr;
 }
 
 } // namespace Mayo

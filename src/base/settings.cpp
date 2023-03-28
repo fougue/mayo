@@ -106,9 +106,8 @@ public:
     const PropertyValueConversion* m_propValueConverter = nullptr;
 };
 
-Settings::Settings(QObject* parent)
-    : QObject(parent),
-      d(new Private)
+Settings::Settings()
+    : d(new Private)
 {
 }
 
@@ -146,6 +145,12 @@ void Settings::loadFrom(const Storage& source, const ExcludePropertyPredicate& f
 void Settings::loadProperty(Settings::SettingIndex index)
 {
     this->loadPropertyFrom(d->storage(), index);
+}
+
+void Settings::loadProperty(const Property* property)
+{
+    const auto idProp = this->findProperty(property);
+    this->loadPropertyFrom(d->storage(), idProp);
 }
 
 void Settings::loadPropertyFrom(const Storage& source, SettingIndex index)
@@ -322,9 +327,9 @@ Settings::SettingIndex Settings::findProperty(const Property* property) const
         for (const Settings_Section& section : group.vecSection) {
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (setting.property == property) {
-                    const int idSetting = &setting - &section.vecSetting.front();
-                    const int idSection = &section - &group.vecSection.front();
-                    const int idGroup = &group - &d->m_vecGroup.front();
+                    const auto idSetting = &setting - &section.vecSetting.front();
+                    const auto idSection = &section - &group.vecSection.front();
+                    const auto idGroup = &group - &d->m_vecGroup.front();
                     return SettingIndex(SectionIndex(GroupIndex(idGroup), idSection), idSetting);
                 }
             }
@@ -394,19 +399,19 @@ void Settings::resetSection(SectionIndex index)
 void Settings::onPropertyAboutToChange(Property* prop)
 {
     PropertyGroup::onPropertyAboutToChange(prop);
-    emit this->aboutToChange(prop);
+    this->signalAboutToChange.send(prop);
 }
 
 void Settings::onPropertyChanged(Property* prop)
 {
     PropertyGroup::onPropertyChanged(prop);
-    emit this->changed(prop);
+    this->signalChanged.send(prop);
 }
 
 void Settings::onPropertyEnabled(Property* prop, bool on)
 {
     PropertyGroup::onPropertyEnabled(prop, on);
-    emit this->enabled(prop, on);
+    this->signalEnabled.send(prop, on);
 }
 
 } // namespace Mayo

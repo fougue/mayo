@@ -18,7 +18,7 @@
 #include "../base/settings.h"
 #include "../base/unit_system.h"
 
-#include <QtCore/QObject>
+#include <locale>
 #include <mutex>
 
 class TDF_Label;
@@ -33,12 +33,10 @@ class TaskProgress;
 // Provides the root application object as a singleton
 // Implements also the behavior specific to the application
 class AppModule :
-        public QObject,
         public IO::ParametersProvider,
         public PropertyValueConversion,
         public Messenger
 {
-    Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
     // Loggable message
@@ -49,6 +47,8 @@ public:
 
     // Query singleton instance
     static AppModule* get();
+
+    ~AppModule();
 
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
@@ -62,7 +62,8 @@ public:
     QStringUtils::TextOptions defaultTextOptions() const;
 
     // Current locale used by the application
-    const QLocale& locale() const;
+    const std::locale& stdLocale() const;
+    const QLocale& qtLocale() const;
 
     // Available supported languages
     static const Enumeration& languages();
@@ -73,8 +74,8 @@ public:
     // Logging
     void clearMessageLog();
     Span<const Message> messageLog() const { return m_messageLog; }
-    Q_SIGNAL void message(Messenger::MessageType msgType, const QString& text);
-    Q_SIGNAL void messageLogCleared();
+    Signal<Messenger::MessageType, QString> signalMessage;
+    Signal<> signalMessageLogCleared;
 
     // Recent files
     void prependRecentFile(const FilePath& fp);
@@ -117,7 +118,8 @@ private:
     AppModuleProperties m_props;
     std::vector<Message> m_messageLog;
     std::mutex m_mutexMessageLog;
-    QLocale m_locale;
+    std::locale m_stdLocale;
+    QLocale m_qtLocale;
     std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
 };
 

@@ -25,16 +25,18 @@ public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
-        this->coordinatesConverter.setDescription(
-                    textIdTr("Coordinate system transformation from OpenCascade to OBJ"));
+        this->inputCoordinateSystem.setDescription(textIdTr("Source coordinate system transformation"));
+        this->outputCoordinateSystem.setDescription(textIdTr("Target coordinate system transformation"));
     }
 
     void restoreDefaults() override {
         const Parameters defaults;
-        this->coordinatesConverter.setValue(defaults.coordinatesConverter);
+        this->inputCoordinateSystem.setValue(defaults.inputCoordinateSystem);
+        this->outputCoordinateSystem.setValue(defaults.outputCoordinateSystem);
     }
 
-    PropertyEnum<RWMesh_CoordinateSystem> coordinatesConverter{ this, textId("coordinatesConverter") };
+    PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, textId("inputCoordinateSystem") };
+    PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, textId("outputCoordinateSystem") };
 };
 
 bool OccObjWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
@@ -67,6 +69,8 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 
     Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
     RWObj_CafWriter writer(filepath.u8string().c_str());
+    writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);
+    writer.ChangeCoordinateSystemConverter().SetOutputCoordinateSystem(m_params.outputCoordinateSystem);
     const TColStd_IndexedDataMapOfStringString fileInfo;
     if (m_seqRootLabel.IsEmpty())
         return writer.Perform(m_document, fileInfo, occProgress->Start());
@@ -83,7 +87,8 @@ void OccObjWriter::applyProperties(const PropertyGroup* params)
 {
     auto ptr = dynamic_cast<const Properties*>(params);
     if (ptr) {
-        m_params.coordinatesConverter = ptr->coordinatesConverter;
+        m_params.inputCoordinateSystem = ptr->inputCoordinateSystem;
+        m_params.outputCoordinateSystem = ptr->outputCoordinateSystem;
     }
 }
 

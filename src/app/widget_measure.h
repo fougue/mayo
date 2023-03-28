@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "measure_display.h"
-#include "measure_tool.h"
+#include "../base/signal.h"
+#include "../measure/measure_display.h"
+#include "../measure/measure_tool.h"
 
 #include <QtWidgets/QWidget>
 #include <memory>
@@ -42,7 +43,7 @@ private:
     static AreaUnit toMeasureAreaUnit(int comboBoxId);
 
     MeasureType currentMeasureType() const;
-    MeasureConfig currentMeasureConfig() const;
+    MeasureDisplayConfig currentMeasureDisplayConfig() const;
 
     void onGraphicsSelectionChanged();
 
@@ -68,7 +69,7 @@ private:
     std::vector<GraphicsOwner_MeasureDisplay> m_vecLinkGfxOwnerMeasure;
     IMeasureTool* m_tool = nullptr;
     QString m_errorMessage;
-    QMetaObject::Connection m_connGraphicsSelectionChanged;
+    SignalConnectionHandle m_connGraphicsSelectionChanged;
 };
 
 } // namespace Mayo

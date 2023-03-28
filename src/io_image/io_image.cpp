@@ -126,10 +126,10 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         }
 
         const auto itemProgress = &appItem - &m_vecAppItem.front();
-        progress->setValue(MathUtils::mappedValue(itemProgress, 0, itemCount, 0, 100));
+        progress->setValue(MathUtils::toPercent(itemProgress, 0, itemCount));
     }
 
-    gfxScene.redraw();
+    view->Redraw();
     GraphicsUtils::V3dView_fitAll(view);
     Handle_Image_AlienPixMap pixmap = ImageWriter::createImage(view);
     if (!pixmap)

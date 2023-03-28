@@ -5,7 +5,7 @@
 ****************************************************************************/
 
 // Avoid MSVC conflicts with M_E, M_LOG2, ...
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
 #  define _USE_MATH_DEFINES
 #endif
 
@@ -14,10 +14,10 @@
 #include "../src/app/filepath_conv.h"
 #include "../src/app/qstring_conv.h"
 #include "../src/app/qstring_utils.h"
+#include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/app/theme.h"
 #include "../src/io_occ/io_occ.h"
-#include "../src/gui/qtgui_utils.h"
 
 #include <QtCore/QtDebug>
 #include <QtCore/QFile>

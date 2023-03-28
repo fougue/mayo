@@ -7,16 +7,13 @@
 #pragma once
 
 #include "application_item.h"
+#include "signal.h"
 #include "span.h"
-#include <QtCore/QObject>
 
 namespace Mayo {
 
-class ApplicationItemSelectionModel : public QObject {
-    Q_OBJECT
+class ApplicationItemSelectionModel {
 public:
-    ApplicationItemSelectionModel(QObject* parent = nullptr);
-
     Span<const ApplicationItem> selectedItems() const;
 
     bool isSelected(const ApplicationItem& item);
@@ -30,8 +27,7 @@ public:
 
     void clear();
 
-signals:
-    void changed(Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
+    Signal<Span<const ApplicationItem>, Span<const ApplicationItem>> signalChanged;
 
 private:
     std::vector<ApplicationItem> m_vecSelectedItem;

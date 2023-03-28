@@ -15,23 +15,23 @@
 
 namespace Mayo {
 
-template<typename ENUM>
+template<typename EnumType>
 struct EnumNames {
     static inline const std::string_view trContext = "";
     static inline const std::string_view junkPrefix = "";
 };
 
-template<typename ENUM>
+template<typename EnumType>
 Enumeration Enumeration::fromType()
 {
-    const bool hasJunkPrefix = !EnumNames<ENUM>::junkPrefix.empty();
+    const bool hasJunkPrefix = !EnumNames<EnumType>::junkPrefix.empty();
     Enumeration enumObject;
-    for (const ENUM value : MetaEnum::values<ENUM>()) {
+    for (const EnumType value : MetaEnum::values<EnumType>()) {
         std::string_view key =
                 hasJunkPrefix ?
-                    MetaEnum::nameWithoutPrefix<ENUM>(value, EnumNames<ENUM>::junkPrefix) :
-                    MetaEnum::name<ENUM>(value);
-        const TextId keyTextId = { EnumNames<ENUM>::trContext, key };
+                    MetaEnum::nameWithoutPrefix<EnumType>(value, EnumNames<EnumType>::junkPrefix) :
+                    MetaEnum::name<EnumType>(value);
+        const TextId keyTextId = { EnumNames<EnumType>::trContext, key };
         enumObject.addItem(int(value), keyTextId);
     }
 

@@ -10,13 +10,13 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../gui/qtgui_utils.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
 #include "qsettings_storage.h"
 #include "qstring_conv.h"
+#include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
-#include "widgets_utils.h"
 #include "ui_dialog_options.h"
 
 #include <QtCore/QSettings>
@@ -147,7 +147,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         treeViewBtns->addButton(
                     idBtnRestore,
                     mayoTheme()->icon(Theme::Icon::Reload),
-                    tr("Restore default values"));
+                    tr("Restore default values")
+        );
         treeViewBtns->setButtonDetection(idBtnRestore, -1, {});
         treeViewBtns->setButtonDisplayColumn(idBtnRestore, 0);
         treeViewBtns->setButtonDisplayModes(idBtnRestore, ItemViewButtons::DisplayWhenItemSelected);
@@ -204,15 +205,14 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     }
 
     // Enable/disable editor widget when the corresponding setting status is changed
-    QObject::connect(settings, &Settings::enabled, this, [=](const Property* setting, bool on) {
+    settings->signalEnabled.connectSlot([=](const Property* setting, bool on) {
         QWidget* editor = CppUtils::findValue(setting, m_mapSettingEditor);
         if (editor)
             editor->setEnabled(on);
     });
 
     // Backup initial value of changed settings, so they can be restored on dialog cancellation
-    auto connSettingsAboutToChange =
-            QObject::connect(m_settings, &Settings::aboutToChange, this, [=](Property* property) {
+    m_connSettingsAboutToChange = m_settings->signalAboutToChange.connectSlot([=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
             const Settings::Variant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
             m_mapSettingInitialValue.insert({ property, propertyValue});
@@ -220,8 +220,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     });
 
     // Synchronize editor widget when value of the corresponding property is changed
-    auto connSettingsChanged =
-            QObject::connect(m_settings, &Settings::changed, this, [=](const Property* property) {
+    m_connSettingsChanged = m_settings->signalChanged.connectSlot([=](const Property* property) {
         auto itFound = m_mapSettingEditor.find(property);
         if (itFound != m_mapSettingEditor.cend())
             this->syncEditor(itFound->second);
@@ -229,13 +228,12 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
     // When a setting is clicked in the "right-side" view then scroll to and select corresponding
     // tree item in the "left-side" view
-    QObject::connect(m_ui->listWidget_Settings, &QListWidget::currentRowChanged, [=](int listRow) {
+    QObject::connect(m_ui->listWidget_Settings, &QListWidget::currentRowChanged, this, [=](int listRow) {
         auto listItem = m_ui->listWidget_Settings->item(listRow);
         const QVariant variantNodeId = listItem ? listItem->data(ItemSettingNodeId_Role) : QVariant();
         const Qt::MatchFlags matchFlags = Qt::MatchRecursive | Qt::MatchExactly;
         const QModelIndex indexFirst = treeModel->index(0, 0);
-        const QModelIndexList indexList = treeModel->match(
-                    indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, matchFlags);
+        const QModelIndexList indexList = treeModel->match(indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, matchFlags);
         if (!indexList.isEmpty()) {
             m_ui->treeView_GroupSections->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
             QSignalBlocker _(m_ui->treeView_GroupSections);
@@ -259,16 +257,11 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     });
 
     // Action for "Cancel" button : restore changed properties to their initial values
-    QObject::connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, [=]{
-        QObject::disconnect(connSettingsAboutToChange);
-        QObject::disconnect(connSettingsChanged);
-        for (const auto& [prop, propInitialValue] : m_mapSettingInitialValue)
-            m_settings->propertyValueConversion().fromVariant(prop, propInitialValue);
-    });
+    QObject::connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &DialogOptions::cancelChanges);
 
     // Action for "Restore defaults" button
     auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, m_settings, &Settings::resetAll);
+    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, [=]{ m_settings->resetAll(); });
 
     // Actions for "Exchange" button
     auto btnExchange = m_ui->buttonBox->addButton(tr("Exchange"), QDialogButtonBox::ActionRole);
@@ -282,10 +275,12 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
 DialogOptions::~DialogOptions()
 {
+    m_connSettingsAboutToChange.disconnect();
+    m_connSettingsChanged.disconnect();
     delete m_ui;
 }
 
-void DialogOptions::setPropertyEditorFactory(std::unique_ptr<PropertyEditorFactory> editorFactory)
+void DialogOptions::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
 {
     m_editorFactory = std::move(editorFactory);
 }
@@ -359,12 +354,12 @@ void DialogOptions::loadFromFile()
 
     const QFileInfo fi(filepath);
     if (!fi.exists()) {
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' doesn't exist").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' doesn't exist").arg(filepath));
         return;
     }
 
     if (!fi.isReadable()) {
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' is not readable").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("'%1' is not readable").arg(filepath));
         return;
     }
 
@@ -384,7 +379,18 @@ void DialogOptions::saveAs()
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
     if (fileSettings.get().status() != QSettings::NoError)
-        WidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+}
+
+void DialogOptions::cancelChanges()
+{
+    m_connSettingsAboutToChange.block(true);
+    m_connSettingsChanged.block(true);
+    for (const auto& [prop, propInitialValue] : m_mapSettingInitialValue)
+        m_settings->propertyValueConversion().fromVariant(prop, propInitialValue);
+
+    m_connSettingsAboutToChange.block(false);
+    m_connSettingsChanged.block(false);
 }
 
 void DialogOptions::handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index)
@@ -405,7 +411,7 @@ void DialogOptions::handleTreeViewButtonClick_restoreDefaults(const QModelIndex&
             menu->addAction(tr("Restore values for the whole group"), this, [=]{
                 m_settings->resetGroup(groupIndex);
             });
-            WidgetsUtils::asyncMenuExec(menu);
+            QtWidgetsUtils::asyncMenuExec(menu);
         }
         else {
             m_settings->resetGroup(groupIndex);

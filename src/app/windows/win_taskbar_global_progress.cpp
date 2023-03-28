@@ -14,20 +14,13 @@
 
 namespace Mayo {
 
-WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(const TaskManager* taskMgr, QObject* parent)
+WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(TaskManager* taskMgr, QObject* parent)
     : QObject(parent),
-      m_taskbarBtn(new QWinTaskbarButton(this)),
-      m_taskMgr(taskMgr)
+      m_taskbarBtn(new QWinTaskbarButton(this))
 {
-    QObject::connect(
-                taskMgr, &TaskManager::started,
-                this, [=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
-    QObject::connect(
-                taskMgr, &TaskManager::progressChanged,
-                this, &WinTaskbarGlobalProgress::onTaskProgress);
-    QObject::connect(
-                taskMgr, &TaskManager::ended,
-                this, &WinTaskbarGlobalProgress::onTaskEnded);
+    taskMgr->signalStarted.connectSlot([=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
+    taskMgr->signalProgressChanged.connectSlot(&WinTaskbarGlobalProgress::onTaskProgress, this);
+    taskMgr->signalEnded.connectSlot(&WinTaskbarGlobalProgress::onTaskEnded, this);
 }
 
 void WinTaskbarGlobalProgress::setWindow(QWindow* window)
@@ -78,7 +71,7 @@ void WinTaskbarGlobalProgress::updateTaskbar()
     taskbarProgress->show();
     taskbarProgress->resume();
     if (!isProgressIndeterminate) {
-        const int newGlobalPct = MathUtils::mappedValue(taskAccumPct, 0, taskCount * 100, 0, 100);
+        const int newGlobalPct = MathUtils::toPercent(taskAccumPct, 0, taskCount * 100);
         m_globalPct = std::max(newGlobalPct, m_globalPct);
         taskbarProgress->setRange(0, 100);
         taskbarProgress->setValue(m_globalPct);

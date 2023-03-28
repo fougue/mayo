@@ -26,6 +26,7 @@ std::string_view formatIdentifier(Format format)
     case Format_AMF:   return "AMF";
     case Format_DXF:   return "DXF";
     case Format_PLY:   return "PLY";
+    case Format_OFF:   return "OFF";
     }
 
     return "";
@@ -46,6 +47,7 @@ std::string_view formatName(Format format)
     case Format_AMF:   return "Additive manufacturing file format(ISO/ASTM 52915:2016)";
     case Format_DXF:   return "Drawing Exchange Format";
     case Format_PLY:   return "Polygon File Format";
+    case Format_OFF:   return "Object File Format";
     }
 
     return "";
@@ -64,6 +66,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view amf_suffix[]  = { "amf" };
     static std::string_view dxf_suffix[]  = { "dxf" };
     static std::string_view ply_suffix[]  = { "ply" };
+    static std::string_view off_suffix[]  = { "off" };
 
     switch (format) {
     case Format_Unknown: return {};
@@ -78,6 +81,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     case Format_AMF:   return amf_suffix;
     case Format_DXF:   return dxf_suffix;
     case Format_PLY:   return ply_suffix;
+    case Format_OFF:   return off_suffix;
     }
 
     return {};
@@ -89,7 +93,8 @@ bool formatProvidesBRep(Format format)
     return std::any_of(
                 std::cbegin(brepFormats),
                 std::cend(brepFormats),
-                [=](Format candidate) { return candidate == format; });
+                [=](Format candidate) { return candidate == format; }
+    );
 }
 
 bool formatProvidesMesh(Format format)

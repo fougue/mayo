@@ -52,6 +52,7 @@ public:
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
+    PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     // Meshing
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
@@ -62,6 +63,7 @@ public:
     PropertyEnum<WidgetOccViewController::NavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
+    PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };
     // -- Graphics/ClipPlanes
     PropertyBool clipPlanesCappingOn{ this, textId("cappingOn") };
     PropertyBool clipPlanesCappingHatchOn{ this, textId("cappingHatchOn") };

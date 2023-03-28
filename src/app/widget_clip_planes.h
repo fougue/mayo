@@ -6,23 +6,24 @@
 
 #pragma once
 
+#include "../graphics/graphics_view_ptr.h"
+
 #include <QtWidgets/QWidget>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
 #include <Graphic3d_TextureMap.hxx>
-#include <V3d_View.hxx>
 #include <vector>
+class QAbstractButton;
+class QAbstractSlider;
 class QCheckBox;
 class QDoubleSpinBox;
-class QAbstractSlider;
-class QAbstractButton;
 
 namespace Mayo {
 
 class WidgetClipPlanes : public QWidget {
     Q_OBJECT
 public:
-    WidgetClipPlanes(const Handle_V3d_View& view3d, QWidget* parent = nullptr);
+    WidgetClipPlanes(GraphicsViewPtr view, QWidget* parent = nullptr);
     ~WidgetClipPlanes();
 
     void setRanges(const Bnd_Box& box);
@@ -59,7 +60,7 @@ private:
     void createPlaneCappingTexture();
 
     class Ui_WidgetClipPlanes* m_ui;
-    Handle_V3d_View m_view;
+    GraphicsViewPtr m_view;
     std::vector<ClipPlaneData> m_vecClipPlaneData;
     Bnd_Box m_bndBox;
     Handle_Graphic3d_TextureMap m_textureCapping;

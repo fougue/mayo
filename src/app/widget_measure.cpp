@@ -5,19 +5,20 @@
 ****************************************************************************/
 
 #include "widget_measure.h"
-#include "measure_display.h"
-#include "measure_tool_brep.h"
+#include "app_module.h"
 #include "qstring_conv.h"
 #include "theme.h"
 #include "ui_widget_measure.h"
 
 #include "../base/unit_system.h"
 #include "../gui/gui_document.h"
+#include "../measure/measure_tool_brep.h"
 
 #include <QtCore/QtDebug>
 #include <QtGui/QFontDatabase>
 
 #include <cmath>
+#include <codecvt>
 #include <vector>
 
 namespace Mayo {
@@ -47,8 +48,8 @@ IMeasureTool* findSupportingMeasureTool(const GraphicsObjectPtr& gfxObject, Meas
 
 // Helper function to iterate and execute function 'fn' on all the graphics objects owned by a
 // measure display
-template<typename FUNCTION>
-void foreachGraphicsObject(const IMeasureDisplay* ptr, FUNCTION fn)
+template<typename Function>
+void foreachGraphicsObject(const IMeasureDisplay* ptr, Function fn)
 {
     if (ptr) {
         const int count = ptr->graphicsObjectsCount();
@@ -58,8 +59,8 @@ void foreachGraphicsObject(const IMeasureDisplay* ptr, FUNCTION fn)
 }
 
 // Overload of the helper function above
-template<typename FUNCTION>
-void foreachGraphicsObject(const std::unique_ptr<IMeasureDisplay>& ptr, FUNCTION fn) {
+template<typename Function>
+void foreachGraphicsObject(const std::unique_ptr<IMeasureDisplay>& ptr, Function fn) {
     foreachGraphicsObject(ptr.get(), fn);
 }
 
@@ -106,10 +107,8 @@ void WidgetMeasure::setMeasureOn(bool on)
     auto gfxScene = m_guiDoc->graphicsScene();
     if (on) {
         this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
-        m_connGraphicsSelectionChanged = QObject::connect(
-                    gfxScene, &GraphicsScene::selectionChanged,
-                    this, &WidgetMeasure::onGraphicsSelectionChanged
-        );
+        m_connGraphicsSelectionChanged =
+                gfxScene->signalSelectionChanged.connectSlot(&WidgetMeasure::onGraphicsSelectionChanged, this);
     }
     else {
         gfxScene->foreachDisplayedObject([=](const GraphicsObjectPtr& gfxObject) {
@@ -117,7 +116,7 @@ void WidgetMeasure::setMeasureOn(bool on)
             gfxScene->activateObjectSelection(gfxObject, 0);
         });
         gfxScene->clearSelection();
-        QObject::disconnect(m_connGraphicsSelectionChanged);
+        m_connGraphicsSelectionChanged.disconnect();
     }
 }
 
@@ -216,7 +215,7 @@ void WidgetMeasure::onMeasureTypeChanged(int id)
 
 void WidgetMeasure::onMeasureUnitsChanged()
 {
-    const MeasureConfig config = this->currentMeasureConfig();
+    const MeasureDisplayConfig config = this->currentMeasureDisplayConfig();
     for (IMeasureDisplayPtr& measure : m_vecMeasureDisplay) {
         measure->update(config);
         foreachGraphicsObject(measure, [](const GraphicsObjectPtr& gfxObject) {
@@ -233,13 +232,16 @@ MeasureType WidgetMeasure::currentMeasureType() const
     return WidgetMeasure::toMeasureType(m_ui->combo_MeasureType->currentIndex());
 }
 
-MeasureConfig WidgetMeasure::currentMeasureConfig() const
+MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
 {
-    return {
-        WidgetMeasure::toMeasureLengthUnit(m_ui->combo_LengthUnit->currentIndex()),
-        WidgetMeasure::toMeasureAngleUnit(m_ui->combo_AngleUnit->currentIndex()),
-        WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex())
-    };
+    MeasureDisplayConfig cfg;
+    cfg.lengthUnit = WidgetMeasure::toMeasureLengthUnit(m_ui->combo_LengthUnit->currentIndex());
+    cfg.angleUnit = WidgetMeasure::toMeasureAngleUnit(m_ui->combo_AngleUnit->currentIndex());
+    cfg.areaUnit = WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex());
+    cfg.doubleToStringOptions.locale = AppModule::get()->stdLocale();
+    cfg.doubleToStringOptions.decimalCount = AppModule::get()->defaultTextOptions().unitDecimals;
+    cfg.devicePixelRatio = this->devicePixelRatioF();
+    return cfg;
 }
 
 void WidgetMeasure::onGraphicsSelectionChanged()
@@ -328,7 +330,8 @@ void WidgetMeasure::onGraphicsSelectionChanged()
 
     // Display new measure graphics objects
     for (IMeasureDisplayPtr& measure : vecNewMeasureDisplay) {
-        measure->update(this->currentMeasureConfig());
+        measure->update(this->currentMeasureDisplayConfig());
+        measure->adaptGraphics(gfxScene->v3dViewer()->Driver());
         foreachGraphicsObject(measure, [=](const GraphicsObjectPtr& gfxObject) {
             gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
             gfxScene->addObject(gfxObject);
@@ -391,7 +394,7 @@ void WidgetMeasure::updateMessagePanel()
                 for (const IMeasureDisplayPtr& measure : m_vecMeasureDisplay)
                     sumMeasure->sumAdd(*measure);
 
-                sumMeasure->update(this->currentMeasureConfig());
+                sumMeasure->update(this->currentMeasureDisplayConfig());
                 fnAddMeasureText(sumMeasure);
             }
         }

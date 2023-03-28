@@ -22,7 +22,7 @@ class TaskManager;
 class WinTaskbarGlobalProgress : public QObject {
     Q_OBJECT
 public:
-    WinTaskbarGlobalProgress(const TaskManager* taskMgr, QObject* parent = nullptr);
+    WinTaskbarGlobalProgress(TaskManager* taskMgr, QObject* parent = nullptr);
 
     void setWindow(QWindow* window);
 
@@ -31,7 +31,6 @@ private:
     void onTaskEnded(TaskId taskId);
     void updateTaskbar();
 
-    const TaskManager* m_taskMgr = nullptr;
     std::unordered_map<TaskId, int> m_mapTaskIdProgress;
     QWinTaskbarButton* m_taskbarBtn = nullptr;
     int m_globalPct = 0;
