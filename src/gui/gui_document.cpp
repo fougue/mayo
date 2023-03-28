@@ -139,8 +139,8 @@ void GuiDocument::setDevicePixelRatio(double ratio)
                             )
             );
             viewCube->Redisplay(true/*allModes*/);
-#endif
         }
+#endif
 
         break;
     }
