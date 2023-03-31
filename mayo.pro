@@ -61,6 +61,7 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
     LIBS += -liconv
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
+    ICON = images/appicon.icns
 }
 win32 {
     LIBS += -lOpengl32 -lUser32
