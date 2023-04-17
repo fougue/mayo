@@ -10,7 +10,10 @@
 
 namespace Mayo {
 
+// Task identifier type
 using TaskId = uint64_t;
+
+// Syntactic sugar for task auto-deletion flag(see TaskManager::run/exec())
 enum class TaskAutoDestroy { On, Off };
 
 } // namespace Mayo

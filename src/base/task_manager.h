@@ -10,17 +10,16 @@
 #include "task.h"
 #include "task_progress.h"
 
-#include <atomic>
-#include <future>
-#include <memory>
+#include <functional>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 namespace Mayo {
 
+// Central class providing management of Task objects
 class TaskManager {
 public:
+    TaskManager();
     ~TaskManager();
 
     TaskId newTask(TaskJob fn);
@@ -36,11 +35,7 @@ public:
     bool waitForDone(TaskId id, int msecs = -1);
     void requestAbort(TaskId id);
 
-    template<typename Function>
-    void foreachTask(Function fn) {
-        for (const auto& mapPair : m_mapEntity)
-            fn(mapPair.first);
-    }
+    void foreachTask(const std::function<void(TaskId)>& fn);
 
     // Signals
     Signal<TaskId> signalStarted;
@@ -50,22 +45,9 @@ public:
     Signal<TaskId> signalEnded;
 
 private:
-    struct Entity {
-        Task task;
-        TaskProgress taskProgress;
-        std::string title;
-        std::future<void> control;
-        std::atomic<bool> isFinished = false;
-        TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;
-    };
-
-    Entity* findEntity(TaskId id);
-    const Entity* findEntity(TaskId id) const;
-    void execEntity(Entity* entity);
-    void cleanGarbage();
-
-    std::atomic<TaskId> m_taskIdSeq = {};
-    std::unordered_map<TaskId, std::unique_ptr<Entity>> m_mapEntity;
+    struct Entity;
+    struct Private;
+    Private* const d = nullptr;
 };
 
 } // namespace Mayo

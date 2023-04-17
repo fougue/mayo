@@ -16,6 +16,7 @@ namespace Mayo {
 class Task;
 class TaskManager;
 
+// Provides feedback on the progress of a running/executing task
 class TaskProgress {
 public:
     TaskProgress();

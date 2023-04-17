@@ -15,8 +15,10 @@ namespace Mayo {
 class TaskManager;
 class TaskProgress;
 
+// Piece of code that has to be executed as a task(ie with TaskManager::run/exec())
 using TaskJob = std::function<void(TaskProgress*)>;
 
+// Provides a task(job) to be executed by the owning task manager
 class Task {
 public:
     TaskId id() const { return m_id; }
