@@ -13,6 +13,7 @@
 #include "../base/text_id.h"
 #include <QtWidgets/QMainWindow>
 #include <memory>
+#include <unordered_map>
 class QFileInfo;
 
 namespace Mayo {
