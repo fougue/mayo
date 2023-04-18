@@ -17,6 +17,7 @@
 
 namespace Mayo {
 
+// Helper struct providing all required data to manage a Task object
 struct TaskManager::Entity {
     Task task;
     TaskProgress taskProgress;
@@ -26,12 +27,19 @@ struct TaskManager::Entity {
     TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;
 };
 
+// Pimpl struct providing private(hidden) interface of TaskManager class
 struct TaskManager::Private {
+    // Ctor
     Private(TaskManager* mgr) : taskMgr(mgr) {}
 
+    // Const/mutable functions to find an Entity from a task identifier. Returns null if not found
     TaskManager::Entity* findEntity(TaskId id);
     const TaskManager::Entity* findEntity(TaskId id) const;
+
+    // Execute(synchronous) task entity, sending started/ended signals accordingly
     void execEntity(TaskManager::Entity* entity);
+
+    // Destroy finished task entities whose policy was set to TaskAutoDestroy::On
     void cleanGarbage();
 
     TaskManager* taskMgr = nullptr;
