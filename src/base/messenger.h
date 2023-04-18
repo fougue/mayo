@@ -11,6 +11,10 @@
 
 namespace Mayo {
 
+// Provides a general-purpose interface to issue text messages without knowledge of how these
+// messages will be further processed
+// TODO Support stream-like syntax, eg:
+//      messenger->info() << "Something happened, value: " << valueInt;
 class Messenger {
 public:
     enum class MessageType {
@@ -18,13 +22,16 @@ public:
         Info,
         Warning,
         Error
-    };
+    }; 
 
+    // Dispatch the message 'text' to all observers
+    virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
+
+    // Convenience functions around emitMessage()
     void emitTrace(std::string_view text);
     void emitInfo(std::string_view text);
     void emitWarning(std::string_view text);
     void emitError(std::string_view text);
-    virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
 
     static Messenger& null();
 };

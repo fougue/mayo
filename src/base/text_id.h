@@ -23,11 +23,19 @@ private:
 
 namespace Mayo {
 
+// Provides translatable text(message) identifier
 struct TextId {
+    // Context used to find the text(key) to translate, typically a class name
     std::string_view trContext;
+
+    // Source text
     std::string_view key;
 
+    // Returns the translation text of 'key' by querying registered Application::Translator objects
+    // 'n' is used to support plural forms
     std::string_view tr(int n = -1) const;
+
+    // Whether source text(key) is empty or not
     bool isEmpty() const;
 };
 

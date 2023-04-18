@@ -12,6 +12,7 @@
 
 namespace Mayo {
 
+// Keeps track of the items selected in an Application object
 class ApplicationItemSelectionModel {
 public:
     Span<const ApplicationItem> selectedItems() const;

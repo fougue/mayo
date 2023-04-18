@@ -12,6 +12,7 @@ class gp_XYZ;
 
 namespace Mayo {
 
+// Provides helper functions for mesh and triangle objects
 struct MeshUtils {
     static double triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);
     static double triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3);

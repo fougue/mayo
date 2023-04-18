@@ -11,6 +11,7 @@
 
 namespace Mayo {
 
+// Provides a convenient item for model tree nodes within a Document object
 class DocumentTreeNode {
 public:
     DocumentTreeNode() = default;

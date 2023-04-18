@@ -11,6 +11,7 @@
 
 namespace Mayo {
 
+// Provides a common item that could be either a Document or some model tree node within a Document
 class ApplicationItem {
 public:
     ApplicationItem() = default;
