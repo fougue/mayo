@@ -19,7 +19,8 @@ namespace Mayo {
 
 // Helper struct providing all required data to manage a Task object
 struct TaskManager::Entity {
-    Task task;
+    TaskId taskId;
+    TaskJob taskJob;
     TaskProgress taskProgress;
     std::string title;
     std::future<void> control;
@@ -73,10 +74,10 @@ TaskId TaskManager::newTask(TaskJob fn)
 {
     const TaskId taskId = d->taskIdSeq.fetch_add(1);
     std::unique_ptr<Entity> ptrEntity(new Entity);
-    ptrEntity->task.m_id = taskId;
-    ptrEntity->task.m_fn = std::move(fn);
-    ptrEntity->task.m_manager = this;
-    ptrEntity->taskProgress.setTask(&ptrEntity->task);
+    ptrEntity->taskId = taskId;
+    ptrEntity->taskJob = std::move(fn);
+    ptrEntity->taskProgress.setTaskId(taskId);
+    ptrEntity->taskProgress.setTaskManager(this);
     d->mapEntity.insert({ taskId, std::move(ptrEntity) });
     return taskId;
 }
@@ -185,13 +186,13 @@ void TaskManager::Private::execEntity(Entity* entity)
     if (!entity)
         return;
 
-    this->taskMgr->signalStarted.send(entity->task.id());
-    const TaskJob& fn = entity->task.job();
+    this->taskMgr->signalStarted.send(entity->taskId);
+    const TaskJob& fn = entity->taskJob;
     fn(&entity->taskProgress);
     if (!entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 
-    this->taskMgr->signalEnded.send(entity->task.id());
+    this->taskMgr->signalEnded.send(entity->taskId);
     entity->isFinished = true;
 }
 

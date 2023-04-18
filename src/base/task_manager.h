@@ -7,7 +7,6 @@
 #pragma once
 
 #include "signal.h"
-#include "task.h"
 #include "task_progress.h"
 
 #include <functional>
@@ -16,7 +15,10 @@
 
 namespace Mayo {
 
-// Central class providing management of Task objects
+// Piece of code to be executed as a task(ie with TaskManager::run/exec())
+using TaskJob = std::function<void(TaskProgress*)>;
+
+// Central class providing creation/execution/deletion of Task objects
 class TaskManager {
 public:
     // Ctor & dtor
@@ -39,7 +41,7 @@ public:
     // just like a regular function call)
     void exec(TaskId id, TaskAutoDestroy policy = TaskAutoDestroy::On);
 
-    // Current progress of running task identified by 'id'
+    // Current progress of task identified by 'id'
     // NOTE The task must have been allocated previously with newTask()
     int progress(TaskId id) const;
 

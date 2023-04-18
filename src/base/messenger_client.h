@@ -10,7 +10,7 @@ namespace Mayo {
 
 class Messenger;
 
-// Provides a link to a messenger object
+// Provides a link to a Messenger object
 // The object returned by MessengerClient::messenger() is guaranteed to be non-nullptr
 class MessengerClient {
 public:
