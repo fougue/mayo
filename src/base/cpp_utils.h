@@ -9,7 +9,6 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #ifndef __cpp_lib_integer_comparison_functions
 #  include <limits>
@@ -26,12 +25,20 @@ inline const std::string& nullString()
     return str;
 }
 
-template<typename KeyType, typename ValueType, typename... Extras>
-ValueType findValue(const KeyType& key, const std::unordered_map<KeyType, ValueType, Extras...>& hashmap)
+template<typename AssociativeContainer>
+typename AssociativeContainer::mapped_type findValue(
+        const typename AssociativeContainer::key_type& key,
+        const AssociativeContainer& container
+    )
 {
-    auto it = hashmap.find(key);
-    const ValueType defaultValue = {};
-    return it != hashmap.cend() ? it->second : defaultValue;
+    auto it = container.find(key);
+    if (it != container.cend()) {
+        return it->second;
+    }
+    else {
+        const typename AssociativeContainer::mapped_type defaultValue = {};
+        return defaultValue;
+    }
 }
 
 inline void toggle(bool& value)
@@ -140,4 +147,7 @@ template<typename R, typename T> constexpr R safeStaticCast(T t)
 }
 
 } // namespace CppUtils
+
+namespace Cpp = CppUtils;
+
 } // namespace Mayo
