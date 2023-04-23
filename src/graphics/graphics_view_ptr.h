@@ -34,6 +34,8 @@ public:
         m_scene->redraw(m_view);
     }
 
+    const Handle_V3d_View& operator->() const { return m_view; }
+
 private:
     GraphicsScene* m_scene = nullptr;
     Handle_V3d_View m_view;

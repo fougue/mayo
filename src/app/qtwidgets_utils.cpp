@@ -112,4 +112,9 @@ void QtWidgetsUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, in
     widget->move(nextTo->mapToParent(QPoint(-frameGeom.width() - margin, 0)));
 }
 
+void QtWidgetsUtils::collapseWidget(QWidget *widget, bool on)
+{
+    widget->setMaximumHeight(on ? 0 : 16777215/*Qt_defaultMaximumWidth*/);
+}
+
 } // namespace Mayo
