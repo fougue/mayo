@@ -174,7 +174,7 @@
            <item row="1" column="0" colspan="2">
             <widget class="QStackedWidget" name="stack_Config">
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="page_Rectangular">
               <layout class="QGridLayout" name="gridLayout">
@@ -700,6 +700,9 @@
  </widget>
  <tabstops>
   <tabstop>check_ShowGrid</tabstop>
+  <tabstop>combo_Plane</tabstop>
+  <tabstop>btn_Config</tabstop>
+  <tabstop>combo_Type</tabstop>
   <tabstop>edit_RectOriginX</tabstop>
   <tabstop>edit_RectOriginY</tabstop>
   <tabstop>edit_RectStepX</tabstop>
@@ -708,6 +711,10 @@
   <tabstop>edit_RectSizeY</tabstop>
   <tabstop>edit_RectRotation</tabstop>
   <tabstop>edit_RectOffset</tabstop>
+  <tabstop>btn_Graphics</tabstop>
+  <tabstop>combo_DrawMode</tabstop>
+  <tabstop>btn_Color</tabstop>
+  <tabstop>btn_ColorTenth</tabstop>
   <tabstop>edit_CircOriginX</tabstop>
   <tabstop>edit_CircOriginY</tabstop>
   <tabstop>edit_CircRadius</tabstop>
