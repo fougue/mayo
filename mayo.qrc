@@ -82,5 +82,7 @@
         <file>images/themes/classic/turn-cw.svg</file>
         <file>images/themes/dark/turn-ccw.svg</file>
         <file>images/themes/dark/turn-cw.svg</file>
+        <file>images/themes/classic/grid.svg</file>
+        <file>images/themes/dark/grid.svg</file>
     </qresource>
 </RCC>

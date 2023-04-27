@@ -20,6 +20,7 @@ class ButtonFlat;
 class GuiDocument;
 class WidgetClipPlanes;
 class WidgetExplodeAssembly;
+class WidgetGrid;
 class WidgetMeasure;
 class IWidgetOccView;
 
@@ -43,6 +44,7 @@ private:
     QWidget* createWidgetPanelContainer(QWidget* widgetContents);
     void updageWidgetPanelControls(QWidget* panelWidget, ButtonFlat* btnPanel);
 
+    void toggleWidgetGrid(bool on);
     void toggleWidgetClipPlanes(bool on);
     void toggleWidgetExplode(bool on);
     void toggleWidgetMeasure(bool on);
@@ -61,10 +63,12 @@ private:
     WidgetOccViewController* m_controller = nullptr;
     WidgetClipPlanes* m_widgetClipPlanes = nullptr;
     WidgetExplodeAssembly* m_widgetExplodeAsm = nullptr;
+    WidgetGrid* m_widgetGrid = nullptr;
     WidgetMeasure* m_widgetMeasure = nullptr;
     QRect m_rectControls;
 
     ButtonFlat* m_btnFitAll = nullptr;
+    ButtonFlat* m_btnGrid = nullptr;
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
     ButtonFlat* m_btnMeasure = nullptr;

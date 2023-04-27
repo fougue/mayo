@@ -45,6 +45,7 @@ public:
         Export,
         Expand,
         Cross,
+        Grid,
         Link,
         Back,
         Next,
