@@ -24,14 +24,15 @@ public:
     MeasureCircle circle(const GraphicsOwnerPtr& owner) const override;
     MeasureMinDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const override;
     MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const override;
-    QuantityLength length(const GraphicsOwnerPtr& owner) const override;
-    QuantityArea area(const GraphicsOwnerPtr& owner) const override;
+    MeasureLength length(const GraphicsOwnerPtr& owner) const override;
+    MeasureArea area(const GraphicsOwnerPtr& owner) const override;
 
     static gp_Pnt brepVertexPosition(const TopoDS_Shape& shape);
     static MeasureCircle brepCircle(const TopoDS_Shape& shape);
     static MeasureMinDistance brepMinDistance(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
     static MeasureAngle brepAngle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
-    static QuantityLength brepLength(const TopoDS_Shape& shape);
+    static MeasureLength brepLength(const TopoDS_Shape& shape);
+    static MeasureArea brepArea(const TopoDS_Shape& shape);
 
 private:
     static MeasureCircle brepCircleFromGeometricEdge(const TopoDS_Edge& edge);

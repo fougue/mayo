@@ -167,8 +167,8 @@ void TestMeasure::BRepLength_PolygonEdge_test()
     points.ChangeValue(4) = gp_Pnt{7, 10, 5};
     points.ChangeValue(5) = gp_Pnt{7, 12, 5};
     const TopoDS_Edge edge = makePolygonEdge(points);
-    const QuantityLength len = MeasureToolBRep::brepLength(edge);
-    QCOMPARE(UnitSystem::millimeters(len).value, 24.);
+    const MeasureLength len = MeasureToolBRep::brepLength(edge);
+    QCOMPARE(UnitSystem::millimeters(len.value).value, 24.);
 }
 
 } // namespace Mayo

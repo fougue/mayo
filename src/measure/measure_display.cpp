@@ -38,11 +38,11 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
     case MeasureType::MinDistance:
         return std::make_unique<MeasureDisplayMinDistance>(std::get<MeasureMinDistance>(value));
     case MeasureType::Length:
-        return std::make_unique<MeasureDisplayLength>(std::get<QuantityLength>(value));
+        return std::make_unique<MeasureDisplayLength>(std::get<MeasureLength>(value));
     case MeasureType::Angle:
         return std::make_unique<MeasureDisplayAngle>(std::get<MeasureAngle>(value));
     case MeasureType::Area:
-        return std::make_unique<MeasureDisplayArea>(std::get<QuantityArea>(value));
+        return std::make_unique<MeasureDisplayArea>(std::get<MeasureArea>(value));
     default:
         return {};
     }
@@ -52,9 +52,9 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureT
 {
     switch (type) {
     case MeasureType::Length:
-        return std::make_unique<MeasureDisplayLength>(Mayo::QuantityLength{0});
+        return std::make_unique<MeasureDisplayLength>(Mayo::MeasureLength{});
     case MeasureType::Area:
-        return std::make_unique<MeasureDisplayArea>(Mayo::QuantityArea{0});
+        return std::make_unique<MeasureDisplayArea>(Mayo::MeasureArea{});
     default:
         return {};
     }
@@ -358,26 +358,37 @@ GraphicsObjectPtr MeasureDisplayAngle::graphicsObjectAt(int i) const
 // -- Length
 // --
 
-MeasureDisplayLength::MeasureDisplayLength(QuantityLength length)
-    : m_length(length)
+MeasureDisplayLength::MeasureDisplayLength(const MeasureLength& length)
+    : m_length(length),
+      m_gfxLenText(new AIS_TextLabel)
 {
+    m_gfxLenText->SetPosition(length.middlePnt);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
 void MeasureDisplayLength::update(const MeasureDisplayConfig& config)
 {
-    const auto trLength = UnitSystem::translateLength(m_length, config.lengthUnit);
+    const auto trLength = UnitSystem::translateLength(m_length.value, config.lengthUnit);
+    const auto strLength = BaseMeasureDisplay::text(trLength, config);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
                       BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
-                      BaseMeasureDisplay::text(trLength, config),
+                      strLength,
                       trLength.strUnit
     ));
+    m_gfxLenText->SetText(to_OccExtString(" " + strLength));
+    BaseMeasureDisplay::adaptScale(m_gfxLenText, config);
+}
+
+GraphicsObjectPtr MeasureDisplayLength::graphicsObjectAt(int i) const
+{
+    return i == 0 ? m_gfxLenText : GraphicsObjectPtr{};
 }
 
 void MeasureDisplayLength::sumAdd(const IMeasureDisplay& other)
 {
     const auto& otherLen = dynamic_cast<const MeasureDisplayLength&>(other);
-    m_length += otherLen.m_length;
+    m_length.value += otherLen.m_length.value;
     BaseMeasureDisplay::sumAdd(other);
 }
 
@@ -385,26 +396,37 @@ void MeasureDisplayLength::sumAdd(const IMeasureDisplay& other)
 // -- Area
 // --
 
-MeasureDisplayArea::MeasureDisplayArea(QuantityArea area)
-    : m_area(area)
+MeasureDisplayArea::MeasureDisplayArea(const MeasureArea& area)
+    : m_area(area),
+      m_gfxAreaText(new AIS_TextLabel)
 {
+    m_gfxAreaText->SetPosition(area.middlePnt);
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
 void MeasureDisplayArea::update(const MeasureDisplayConfig& config)
 {
-    const auto trArea = UnitSystem::translateArea(m_area, config.areaUnit);
+    const auto trArea = UnitSystem::translateArea(m_area.value, config.areaUnit);
+    const auto strArea = BaseMeasureDisplay::text(trArea, config);
     this->setText(fmt::format(
                       MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
                       BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
-                      BaseMeasureDisplay::text(trArea, config),
+                      strArea,
                       trArea.strUnit
     ));
+    m_gfxAreaText->SetText(to_OccExtString(" " + strArea));
+    BaseMeasureDisplay::adaptScale(m_gfxAreaText, config);
+}
+
+GraphicsObjectPtr MeasureDisplayArea::graphicsObjectAt(int i) const
+{
+    return i == 0 ? m_gfxAreaText : GraphicsObjectPtr{};
 }
 
 void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)
 {
     const auto& otherArea = dynamic_cast<const MeasureDisplayArea&>(other);
-    m_area += otherArea.m_area;
+    m_area.value += otherArea.m_area.value;
     BaseMeasureDisplay::sumAdd(other);
 }
 
