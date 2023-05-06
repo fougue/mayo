@@ -6,6 +6,7 @@
 
 #include "measure_tool_brep.h"
 
+#include "../base/brep_utils.h"
 #include "../base/geom_utils.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
@@ -278,7 +279,7 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
 {
     throwErrorIf<ErrorCode::NotCircularEdge>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
     const TopoDS_Edge& edge = TopoDS::Edge(shape);
-    if (BRep_Tool::IsGeometric(edge))
+    if (BRepUtils::isGeometric(edge))
         return MeasureToolBRep::brepCircleFromGeometricEdge(edge);
     else
         return MeasureToolBRep::brepCircleFromPolygonEdge(edge);
@@ -371,7 +372,7 @@ MeasureLength MeasureToolBRep::brepLength(const TopoDS_Shape& shape)
 
     throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
     const TopoDS_Edge& edge = TopoDS::Edge(shape);
-    if (BRep_Tool::IsGeometric(edge)) {
+    if (BRepUtils::isGeometric(edge)) {
         const BRepAdaptor_Curve curve(edge);
         const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
         lenResult.value = len * Quantity_Millimeter;
@@ -421,7 +422,7 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
     throwErrorIf<ErrorCode::NotAllFaces>(shape.IsNull() || shape.ShapeType() != TopAbs_FACE);
     const TopoDS_Face& face = TopoDS::Face(shape);
 
-    if (BRep_Tool::IsGeometric(face)) {
+    if (BRepUtils::isGeometric(face)) {
         GProp_GProps gprops;
         BRepGProp::SurfaceProperties(face, gprops);
         const double area = gprops.Mass();

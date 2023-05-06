@@ -28,6 +28,8 @@ private slots:
     void BRepAngle_TwoLinesParallelError_test();
 
     void BRepLength_PolygonEdge_test();
+
+    void BRepArea_TriangulationFace();
 };
 
 } // namespace Mayo

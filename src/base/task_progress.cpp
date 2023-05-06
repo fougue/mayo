@@ -64,9 +64,10 @@ void TaskProgress::setValue(int pct)
 
 void TaskProgress::setStep(std::string_view title)
 {
-    m_step = title;
-    if (m_taskMgr && m_taskId != TaskId_null)
+    if (m_taskMgr && m_taskId != TaskId_null) {
+        m_step = title;
         m_taskMgr->signalProgressStep.send(m_taskId, m_step);
+    }
 }
 
 bool TaskProgress::isAbortRequested(const TaskProgress* progress)

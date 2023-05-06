@@ -6,8 +6,11 @@
 
 #include "test_measure.h"
 
+#include "../src/base/application.h"
 #include "../src/base/geom_utils.h"
+#include "../src/base/task_progress.h"
 #include "../src/base/unit_system.h"
+#include "../src/io_occ/io_occ_stl.h"
 #include "../src/measure/measure_tool_brep.h"
 
 #include <BRep_Builder.hxx>
@@ -169,6 +172,21 @@ void TestMeasure::BRepLength_PolygonEdge_test()
     const TopoDS_Edge edge = makePolygonEdge(points);
     const MeasureLength len = MeasureToolBRep::brepLength(edge);
     QCOMPARE(UnitSystem::millimeters(len.value).value, 24.);
+}
+
+void TestMeasure::BRepArea_TriangulationFace()
+{
+    auto progress = &TaskProgress::null();
+    IO::OccStlReader reader;
+    const bool okRead = reader.readFile("tests/inputs/face_trsf_scale_almost_1.stl", progress);
+    QVERIFY(okRead);
+
+    auto doc = Application::instance()->newDocument();
+    const TDF_LabelSequence seqLabel = reader.transfer(doc, progress);
+    QCOMPARE(seqLabel.Size(), 1);
+    const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
+    const MeasureArea area = MeasureToolBRep::brepArea(shape);
+    QVERIFY(std::abs(double(UnitSystem::squareMillimeters(area.value)) - 597.6224) < 0.0001);
 }
 
 } // namespace Mayo
