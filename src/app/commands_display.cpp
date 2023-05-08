@@ -218,7 +218,7 @@ void CommandTogglePerformanceStats::execute()
 {
     GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
-        CppUtils::toggle(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
+        CppUtils::toggle(guiDoc->graphicsView()->ChangeRenderingParams().ToShowStats);
         guiDoc->graphicsView().redraw();
     }
 }

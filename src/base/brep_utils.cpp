@@ -65,6 +65,11 @@ TopoDS_Shape BRepUtils::shapeFromString(const std::string& str)
     return shape;
 }
 
+bool Mayo::BRepUtils::isGeometric(const TopoDS_Edge &edge)
+{
+    return BRep_Tool::IsGeometric(edge);
+}
+
 bool BRepUtils::isGeometric(const TopoDS_Face& face)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)

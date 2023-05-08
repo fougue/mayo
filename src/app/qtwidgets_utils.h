@@ -57,6 +57,8 @@ public:
     static void moveWidgetRightTo(QWidget* widget, const QWidget* nextTo, int margin);
     // Move position of 'widget' so it's displayed stuck to the left of 'nextTo'
     static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
+
+    static void collapseWidget(QWidget* widget, bool on);
 };
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)

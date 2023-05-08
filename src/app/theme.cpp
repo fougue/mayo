@@ -78,6 +78,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::Export: return "export.svg";
     case Theme::Icon::Expand: return "expand.svg";
     case Theme::Icon::Cross: return "cross.svg";
+    case Theme::Icon::Grid: return "grid.svg";
     case Theme::Icon::Link: return "link.svg";
     case Theme::Icon::Back: return "back.svg";
     case Theme::Icon::Next: return "next.svg";

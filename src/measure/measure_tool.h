@@ -56,6 +56,24 @@ struct MeasureAngle {
     QuantityAngle value;
 };
 
+// Measure of the length of an entity
+struct MeasureLength {
+    // Point being at the middle of the entity
+    gp_Pnt middlePnt;
+    // Value of the length
+    QuantityLength value;
+};
+
+// Measure of the area of an entity
+struct MeasureArea {
+    // Point being at the middle of the entity
+    gp_Pnt middlePnt;
+    // Value of the area
+    QuantityArea value;
+};
+
+
+
 // Provides an interface to various measurement services
 // Input data of a measure service is one or many graphics entities pointed to by GraphicsOwner objects
 class IMeasureTool {
@@ -70,8 +88,8 @@ public:
     virtual MeasureCircle circle(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureMinDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
-    virtual QuantityLength length(const GraphicsOwnerPtr& owner) const = 0;
-    virtual QuantityArea area(const GraphicsOwnerPtr& owner) const = 0;
+    virtual MeasureLength length(const GraphicsOwnerPtr& owner) const = 0;
+    virtual MeasureArea area(const GraphicsOwnerPtr& owner) const = 0;
 };
 
 // Base interface for errors reported by measurement services of IMeasureTool
@@ -87,8 +105,8 @@ using MeasureValue = std::variant<
             MeasureCircle,
             MeasureMinDistance,
             MeasureAngle,
-            QuantityLength,
-            QuantityArea
+            MeasureLength,
+            MeasureArea
       >;
 
 bool MeasureValue_isValid(const MeasureValue& res);

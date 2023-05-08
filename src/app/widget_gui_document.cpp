@@ -15,6 +15,7 @@
 #include "theme.h"
 #include "widget_clip_planes.h"
 #include "widget_explode_assembly.h"
+#include "widget_grid.h"
 #include "widget_measure.h"
 #include "widget_occ_view.h"
 #include "widget_occ_view_controller.h"
@@ -145,16 +146,24 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     auto layoutBtns = new QHBoxLayout(widgetBtnsContents);
     layoutBtns->setSpacing(Internal_widgetMargin + 2);
     layoutBtns->setContentsMargins(2, 2, 2, 2);
+
     m_btnFitAll = this->createViewBtn(widgetBtnsContents, Theme::Icon::Expand, tr("Fit All"));
+
+    m_btnGrid = this->createViewBtn(widgetBtnsContents, Theme::Icon::Grid, tr("Edit Grid"));
+    m_btnGrid->setCheckable(true);
+
     m_btnEditClipping = this->createViewBtn(widgetBtnsContents, Theme::Icon::ClipPlane, tr("Edit clip planes"));
     m_btnEditClipping->setCheckable(true);
+
     m_btnExplode = this->createViewBtn(widgetBtnsContents, Theme::Icon::Multiple, tr("Explode assemblies"));
     m_btnExplode->setCheckable(true);
+
     m_btnMeasure = this->createViewBtn(widgetBtnsContents, Theme::Icon::Measure, tr("Measure shapes"));
     m_btnMeasure->setCheckable(true);
 
     layoutBtns->addWidget(m_btnFitAll);
     this->recreateMenuViewProjections(widgetBtnsContents);
+    layoutBtns->addWidget(m_btnGrid);
     layoutBtns->addWidget(m_btnEditClipping);
     layoutBtns->addWidget(m_btnExplode);
     layoutBtns->addWidget(m_btnMeasure);
@@ -168,6 +177,10 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
         m_guiDoc->runViewCameraAnimation(&GraphicsUtils::V3dView_fitAll);
     });
+    QObject::connect(
+                m_btnGrid, &ButtonFlat::checked,
+                this, &WidgetGuiDocument::toggleWidgetGrid
+    );
     QObject::connect(
                 m_btnEditClipping, &ButtonFlat::checked,
                 this, &WidgetGuiDocument::toggleWidgetClipPlanes
@@ -218,6 +231,7 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     this->layoutViewControls();
+    this->layoutWidgetPanel(m_widgetGrid);
     this->layoutWidgetPanel(m_widgetClipPlanes);
     this->layoutWidgetPanel(m_widgetExplodeAsm);
     this->layoutWidgetPanel(m_widgetMeasure);
@@ -239,6 +253,28 @@ void WidgetGuiDocument::updageWidgetPanelControls(QWidget* panelWidget, ButtonFl
         panelWidget->parentWidget()->setVisible(btnPanel->isChecked());
         this->layoutWidgetPanel(panelWidget);
     }
+}
+
+void adjustWidgetSize(QWidget* widget)
+{
+    widget->updateGeometry();
+    if (static_cast<const PanelView3d*>(widget->parentWidget()))
+        widget->parentWidget()->adjustSize();
+}
+
+void WidgetGuiDocument::toggleWidgetGrid(bool on)
+{
+    if (!m_widgetGrid && on) {
+        m_widgetGrid = new WidgetGrid(m_guiDoc->graphicsView());
+        auto container = this->createWidgetPanelContainer(m_widgetGrid);
+        QObject::connect(
+                    m_widgetGrid, &WidgetGrid::sizeAdjustmentRequested,
+                    container, [=]{ adjustWidgetSize(m_widgetGrid); },
+                    Qt::QueuedConnection
+        );
+    }
+
+    this->updageWidgetPanelControls(m_widgetGrid, m_btnGrid);
 }
 
 void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
@@ -273,7 +309,7 @@ void WidgetGuiDocument::toggleWidgetMeasure(bool on)
         auto container = this->createWidgetPanelContainer(m_widgetMeasure);
         QObject::connect(
                     m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
-                    container, &QWidget::adjustSize,
+                    container, [=]{ adjustWidgetSize(m_widgetMeasure); },
                     Qt::QueuedConnection
         );
     }
@@ -289,7 +325,7 @@ void WidgetGuiDocument::exclusiveButtonCheck(ButtonFlat* btnCheck)
     if (!btnCheck || !btnCheck->isChecked())
         return;
 
-    ButtonFlat* arrayToggleBtn[] = { m_btnEditClipping, m_btnExplode, m_btnMeasure };
+    ButtonFlat* arrayToggleBtn[] = { m_btnGrid, m_btnEditClipping, m_btnExplode, m_btnMeasure };
     for (ButtonFlat* btn : arrayToggleBtn) {
         assert(btn->isCheckable());
         if (btn != btnCheck)

@@ -205,7 +205,7 @@ void WidgetClipPlanes::setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool 
 {
     plane->SetOn(on);
     if (!GraphicsUtils::V3dView_hasClipPlane(m_view.v3dView(), plane))
-        m_view.v3dView()->AddClipPlane(plane);
+        m_view->AddClipPlane(plane);
 }
 
 void WidgetClipPlanes::setPlaneRange(ClipPlaneData* data, const Range& range)

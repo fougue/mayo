@@ -370,6 +370,11 @@ UnitSystem::TranslateResult UnitSystem::millimeters(QuantityLength length)
     return { length.value(), "mm", 1. };
 }
 
+UnitSystem::TranslateResult UnitSystem::squareMillimeters(QuantityArea area)
+{
+    return { area.value(), "mm²", 1. };
+}
+
 UnitSystem::TranslateResult UnitSystem::cubicMillimeters(QuantityVolume volume)
 {
     return { volume.value(), "mm³", 1. };
