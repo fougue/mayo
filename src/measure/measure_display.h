@@ -155,15 +155,15 @@ private:
 // -- MinDistance
 // --
 
-class MeasureDisplayMinDistance : public BaseMeasureDisplay {
+class MeasureDisplayDistance : public BaseMeasureDisplay {
 public:
-    MeasureDisplayMinDistance(const MeasureMinDistance& dist);
+    MeasureDisplayDistance(const MeasureDistance& dist);
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
 private:
-    MeasureMinDistance m_dist;
+    MeasureDistance m_dist;
     Handle_AIS_Line m_gfxLength;
     Handle_AIS_TextLabel m_gfxDistText;
     Handle_AIS_Point m_gfxPnt1;

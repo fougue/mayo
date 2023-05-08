@@ -133,9 +133,10 @@ MeasureType WidgetMeasure::toMeasureType(int comboBoxId)
     case 1: return MeasureType::CircleCenter;
     case 2: return MeasureType::CircleDiameter;
     case 3: return MeasureType::MinDistance;
-    case 4: return MeasureType::Angle;
-    case 5: return MeasureType::Length;
-    case 6: return MeasureType::Area;
+    case 4: return MeasureType::CenterDistance;
+    case 5: return MeasureType::Angle;
+    case 6: return MeasureType::Length;
+    case 7: return MeasureType::Area;
     }
     return MeasureType::None;
 }

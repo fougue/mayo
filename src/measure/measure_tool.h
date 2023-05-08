@@ -21,17 +21,25 @@
 
 namespace Mayo {
 
+enum class DistanceType {
+    None,
+    MinDistance,
+    CenterDistance
+};
+
 // Void measure value
 struct MeasureNone {};
 
-// Measure of minimum distance between two entities
-struct MeasureMinDistance {
-    // Point on 1st entity where minimum distance is located
+// Measure of a distance between two entities
+struct MeasureDistance {
+    // Point on 1st entity from which the distance is measured
     gp_Pnt pnt1;
-    // Point on 2nd entity where minimum distance is located
+    // Point on 2nd entity from which the distance is measured
     gp_Pnt pnt2;
-    // Length of the minimum distance
+    // Length of the distance
     QuantityLength value;
+    // Distance type
+    DistanceType type = DistanceType::None;
 };
 
 // Measure of a circle entity
@@ -68,7 +76,8 @@ public:
 
     virtual gp_Pnt vertexPosition(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureCircle circle(const GraphicsOwnerPtr& owner) const = 0;
-    virtual MeasureMinDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
+    virtual MeasureDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
+    virtual MeasureDistance centerDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual QuantityLength length(const GraphicsOwnerPtr& owner) const = 0;
     virtual QuantityArea area(const GraphicsOwnerPtr& owner) const = 0;
@@ -85,7 +94,7 @@ using MeasureValue = std::variant<
             MeasureNone, // WARNING: ensure this is the first value type in the variant
             gp_Pnt,
             MeasureCircle,
-            MeasureMinDistance,
+            MeasureDistance,
             MeasureAngle,
             QuantityLength,
             QuantityArea

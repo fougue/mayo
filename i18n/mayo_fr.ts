@@ -3228,6 +3228,11 @@ Lu: %5
         <translation>Distance min</translation>
     </message>
     <message>
+        <location filename="../src/app/widget_measure.ui" line="124"/>
+        <source>Center-to-center Distance</source>
+        <translation>Distance entre les centres</translation>
+    </message>
+    <message>
         <location filename="../src/app/widget_measure.ui" line="134"/>
         <source>Length</source>
         <translation>Longueur</translation>
