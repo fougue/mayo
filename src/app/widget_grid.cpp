@@ -20,6 +20,18 @@
 
 namespace Mayo {
 
+namespace {
+
+QPixmap colorSquarePixmap(const Quantity_Color& color) {
+    return IPropertyEditorFactory::colorSquarePixmap(QtGuiUtils::toQColor(color));
+}
+
+QPixmap colorSquarePixmap(const QColor& color) {
+    return IPropertyEditorFactory::colorSquarePixmap(color);
+}
+
+} // namespace
+
 WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     : QWidget(parent),
       m_ui(new Ui_WidgetGrid),
@@ -125,12 +137,10 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     }
 
     // Install grid draw colors
-    if (gridAspect) {
-        Quantity_Color color, colorTenth;
-        gridAspect->Colors(color, colorTenth);
-        m_ui->btn_Color->setIcon(IPropertyEditorFactory::colorSquarePixmap(QtGuiUtils::toQColor(color)));
-        m_ui->btn_ColorTenth->setIcon(IPropertyEditorFactory::colorSquarePixmap(QtGuiUtils::toQColor(colorTenth)));
-    }
+    auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
+    m_ui->btn_Color->setIcon(colorSquarePixmap(gridColors.base));
+    m_ui->btn_ColorTenth->setIcon(colorSquarePixmap(gridColors.tenth));
+    m_gridColorTenth = gridColors.tenth;
 
     // Install widgets enable status
     m_ui->combo_Plane->setEnabled(GraphicsUtils::V3dViewer_isGridActive(viewer));
@@ -182,6 +192,9 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     );
     QObject::connect(
                 m_ui->btn_ColorTenth, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Tenth); }
+    );
+    QObject::connect(
+                m_ui->check_ColorTenth, &QAbstractButton::toggled, this, &WidgetGrid::enableGridColorTenth
     );
 
     auto sigGridParamChanged_double = qOverload<double>(&QDoubleSpinBox::valueChanged);
@@ -307,10 +320,14 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
     auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
     // Helper function to apply some base/tenth grid color
     auto fnApplyGridColor = [=](const Quantity_Color& color) {
-        if (colorType == GridColorType::Base)
-            GraphicsUtils::V3dViewer_setGridColors(viewer, { color, gridColors.tenth });
-        else
+        if (colorType == GridColorType::Base) {
+            const auto colorTenth = m_ui->check_ColorTenth->isChecked() ? gridColors.tenth : color;
+            GraphicsUtils::V3dViewer_setGridColors(viewer, { color, colorTenth });
+        }
+        else {
             GraphicsUtils::V3dViewer_setGridColors(viewer, { gridColors.base, color });
+        }
+
         m_viewPtr.redraw();
     };
 
@@ -324,15 +341,28 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
     });
     QObject::connect(dlg, &QDialog::accepted, this, [=]{
         auto btn = colorType == GridColorType::Base ? m_ui->btn_Color : m_ui->btn_ColorTenth;
-        btn->setIcon(IPropertyEditorFactory::colorSquarePixmap(dlg->selectedColor()));
+        btn->setIcon(colorSquarePixmap(dlg->selectedColor()));
+        if (colorType == GridColorType::Tenth)
+            m_gridColorTenth = QtGuiUtils::toColor<Quantity_Color>(dlg->selectedColor());
     });
     QObject::connect(dlg, &QDialog::rejected, this, [=]{
         auto btn = colorType == GridColorType::Base ? m_ui->btn_Color : m_ui->btn_ColorTenth;
-        btn->setIcon(IPropertyEditorFactory::colorSquarePixmap(QtGuiUtils::toQColor(onEntryGridColor)));
+        btn->setIcon(colorSquarePixmap(onEntryGridColor));
         fnApplyGridColor(onEntryGridColor);
     });
 
     QtWidgetsUtils::asyncDialogExec(dlg);
+}
+
+void WidgetGrid::enableGridColorTenth(bool on)
+{
+    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    m_ui->label_ColorTenth->setEnabled(on);
+    m_ui->btn_ColorTenth->setEnabled(on);
+    auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
+    const auto gridColorTenth = on ? m_gridColorTenth : gridColors.base;
+    GraphicsUtils::V3dViewer_setGridColors(viewer, { gridColors.base, gridColorTenth });
+    m_viewPtr.redraw();
 }
 
 } // namespace Mayo

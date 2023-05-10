@@ -34,9 +34,11 @@ private:
     void applyGridParams();
     void applyGridGraphicsParams();
     void chooseGridColor(GridColorType colorType);
+    void enableGridColorTenth(bool on);
 
     class Ui_WidgetGrid* m_ui = nullptr;
     GraphicsViewPtr m_viewPtr;
+    Quantity_Color m_gridColorTenth;
 };
 
 } // namespace Mayo
