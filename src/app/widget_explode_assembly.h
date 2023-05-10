@@ -12,6 +12,7 @@ namespace Mayo {
 
 class GuiDocument;
 
+// Widget panel dedicated to exploding of assemblies within a GuiDocument object
 class WidgetExplodeAssembly : public QWidget {
     Q_OBJECT
 public:

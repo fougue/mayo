@@ -20,6 +20,7 @@ namespace Mayo {
 
 class GuiDocument;
 
+// Widget panel dedicated to measurements in 3D view
 class WidgetMeasure : public QWidget {
     Q_OBJECT
 public:
