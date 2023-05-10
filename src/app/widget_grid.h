@@ -13,6 +13,7 @@ class gp_Ax2;
 
 namespace Mayo {
 
+// Widget panel dedicated to management of the grid in 3D view
 class WidgetGrid : public QWidget {
     Q_OBJECT
 public:

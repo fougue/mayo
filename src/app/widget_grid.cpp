@@ -148,10 +148,12 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     );
     QObject::connect(m_ui->combo_Type, sigComboBoxActivated_int, this, [=](int typeIndex) {
         m_ui->stack_Config->setCurrentIndex(typeIndex);
+        auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
         viewer->ActivateGrid(
                     toGridType(m_ui->combo_Type->currentIndex()),
                     toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
         );
+        GraphicsUtils::V3dViewer_setGridColors(viewer, gridColors);
         m_viewPtr.redraw();
     });
     QObject::connect(m_ui->combo_Plane, sigComboBoxActivated_int, this, [=](int planeIndex) {
@@ -306,9 +308,9 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
     // Helper function to apply some base/tenth grid color
     auto fnApplyGridColor = [=](const Quantity_Color& color) {
         if (colorType == GridColorType::Base)
-            GraphicsUtils::V3dViewer_grid(viewer)->SetColors(color, gridColors.tenth);
+            GraphicsUtils::V3dViewer_setGridColors(viewer, { color, gridColors.tenth });
         else
-            GraphicsUtils::V3dViewer_grid(viewer)->SetColors(gridColors.base, color);
+            GraphicsUtils::V3dViewer_setGridColors(viewer, { gridColors.base, color });
         m_viewPtr.redraw();
     };
 
@@ -318,7 +320,7 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
     dlg->setCurrentColor(QtGuiUtils::toQColor(onEntryGridColor));
 
     QObject::connect(dlg, &QColorDialog::currentColorChanged, this, [=](const QColor& color) {
-        fnApplyGridColor(QtGuiUtils::toPreferredColorSpace(color));
+        fnApplyGridColor(QtGuiUtils::toColor<Quantity_Color>(color));
     });
     QObject::connect(dlg, &QDialog::accepted, this, [=]{
         auto btn = colorType == GridColorType::Base ? m_ui->btn_Color : m_ui->btn_ColorTenth;

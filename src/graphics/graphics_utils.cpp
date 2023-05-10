@@ -108,6 +108,13 @@ GraphicsUtils::AspectGridColors GraphicsUtils::V3dViewer_gridColors(const Handle
     return colors;
 }
 
+void GraphicsUtils::V3dViewer_setGridColors(const Handle_V3d_Viewer &viewer, const AspectGridColors &colors)
+{
+    Handle_Aspect_Grid gridAspect = V3dViewer_grid(viewer);
+    if (gridAspect)
+        gridAspect->SetColors(colors.base, colors.tenth);
+}
+
 void GraphicsUtils::AisContext_eraseObject(
         const Handle_AIS_InteractiveContext& context,
         const Handle_AIS_InteractiveObject& object)

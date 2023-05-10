@@ -31,6 +31,7 @@ struct GraphicsUtils {
     static bool V3dViewer_isGridActive(const Handle_V3d_Viewer& viewer);
     static Handle_Aspect_Grid V3dViewer_grid(const Handle_V3d_Viewer& viewer);
     static AspectGridColors V3dViewer_gridColors(const Handle_V3d_Viewer& viewer);
+    static void V3dViewer_setGridColors(const Handle_V3d_Viewer& viewer, const AspectGridColors& colors);
 
     static void AisContext_eraseObject(
             const Handle_AIS_InteractiveContext& context,
