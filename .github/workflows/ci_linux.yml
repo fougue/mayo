@@ -1,23 +1,14 @@
-name: CI
+name: Linux
 
 on: [push]
 
 jobs:
-    ci:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, macos-latest]
-
-        runs-on: ${{matrix.os}}
+    build-linux:
+        runs-on: ubuntu-latest
 
         steps:
         - name: Checkout
           uses: actions/checkout@v2
-          with:
-              path: 'source'
-              fetch-depth: 0
-              lfs: 'false'
 
         - name: Cache Qt
           id: cache-qt
@@ -31,8 +22,7 @@ jobs:
           with:
               cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
-        - name: Install OpenCascade[Ubuntu]
-          if: startsWith(matrix.os, 'ubuntu')
+        - name: Install OpenCascade
           run: |
               sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev
               GH_CASCADE_INC_DIR=`dpkg -L libocct-foundation-dev | grep -i "Standard_Version.hxx" | sed "s/\/Standard_Version.hxx//i"`
@@ -40,37 +30,22 @@ jobs:
               echo "GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR" >> $GITHUB_ENV
               echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR" >> $GITHUB_ENV
 
-        - name: Install OpenCascade[macOS]
-          if: startsWith(matrix.os, 'macos')
-          run: |
-              brew install opencascade
-              GH_CASCADE_BASE_DIR=`brew info opencascade | grep -E -i --only-matching --max-count=1 "^(/[a-z\.\-_0-9]+)+"`
-              echo "GH_CASCADE_INC_DIR=$GH_CASCADE_BASE_DIR/include/opencascade" >> $GITHUB_ENV
-              echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_BASE_DIR/lib" >> $GITHUB_ENV
-
         - name: Get count of CPU cores
           uses: SimenB/github-actions-cpu-cores@v1
           id: cpu-cores
 
-        - name: Create Build folder
-          run: mkdir ${{github.workspace}}/build
-
-        - name: QMake
-          working-directory: ${{github.workspace}}/build
+        - name: Build
           run: |
+              mkdir ${{github.workspace}}/build
+              cd ${{github.workspace}}/build
               echo CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}
               echo CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}
               [ ! -d $CASCADE_INC_DIR ] && echo "ERROR: OpenCascade include dir doesn't exist"
               [ ! -d $CASCADE_LIB_DIR ] && echo "ERROR: OpenCascade lib dir doesn't exist"
-              qmake ../source  CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}  CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}  CONFIG+=withtests
-
-        - name: Build
-          working-directory: ${{github.workspace}}/build
-          run: |
+              qmake ..  CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}  CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}  CONFIG+=withtests
               make -j${{steps.cpu-cores.outputs.count}}
 
-        - name: Execute Unit Tests[Ubuntu]
-          if: startsWith(matrix.os, 'ubuntu')
+        - name: Execute Unit Tests
           working-directory: ${{github.workspace}}/build
           env:
               DISPLAY: :0
@@ -84,9 +59,3 @@ jobs:
               sleep 5s
               # Run tests
               ./mayo --runtests
-
-        - name: Execute Unit Tests[macOS]
-          if: startsWith(matrix.os, 'macos')
-          working-directory: ${{github.workspace}}/build
-          run: |
-              ./mayo.app/Contents/MacOS/mayo --runtests
