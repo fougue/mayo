@@ -110,8 +110,9 @@ RC_ICONS = images/appicon.ico
 
 OTHER_FILES += \
     README.md \
-    appveyor.yml \
-    .github/workflows/ci.yml \
+    .github/workflows/ci_linux.yml \
+    .github/workflows/ci_macos.yml \
+    .github/workflows/ci_windows.yml \
     images/credits.txt \
     scripts/bump-version.rb \
 

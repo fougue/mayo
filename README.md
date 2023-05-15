@@ -1,8 +1,8 @@
 <div align="center">
   
+[![Windows CI](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml)
 [![Linux CI](https://github.com/fougue/mayo/actions/workflows/ci_linux.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_linux.yml)
 [![macOS CI](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml)
-[![Windows CI](https://ci.appveyor.com/api/projects/status/6d1w0d6gw28npxpf/branch/develop?svg=true)](https://ci.appveyor.com/project/HuguesDelorme/mayo)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/d51f8ca6fea34886b8308ff0246172ce)](https://www.codacy.com/gh/fougue/mayo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fougue/mayo&amp;utm_campaign=Badge_Grade)
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
