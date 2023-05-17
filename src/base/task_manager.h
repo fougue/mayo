@@ -25,6 +25,10 @@ public:
     TaskManager();
     ~TaskManager();
 
+    // Not copyable
+    TaskManager(const TaskManager&) = delete;
+    TaskManager& operator=(const TaskManager&) = delete;
+
     // Allocates a new task entity in manager
     // Returns the task identifier(unique in the scope of the owning TaskManager)
     TaskId newTask(TaskJob fn);
