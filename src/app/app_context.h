@@ -20,10 +20,13 @@ public:
 
     GuiApplication* guiApp() const override;
     TaskManager* taskMgr() const override;
-    QWidget* widgetMain() const override;
     QWidget* widgetLeftSidebar() const override;
-    ModeWidgetMain modeWidgetMain() const override;
     V3dViewController* v3dViewController(const GuiDocument* guiDoc) const override;
+
+    QWidget* widgetMain() const override;
+    QWidget* widgetMainByMode(ModeWidgetMain mode) const override;
+    ModeWidgetMain modeWidgetMain() const override;
+    void setModeWidgetMain(ModeWidgetMain mode) override;
 
     int findDocumentIndex(Document::Identifier docId) const override;
     Document::Identifier findDocumentFromIndex(int index) const override;

@@ -312,7 +312,7 @@ void CommandRecentFiles::recreateEntries()
     menu->clear();
     int idFile = 0;
     auto appModule = AppModule::get();
-    const RecentFiles& recentFiles = appModule->properties()->recentFiles.value();
+    const RecentFiles& recentFiles = appModule->properties()->recentFiles;
     for (const RecentFile& recentFile : recentFiles) {
         const QString strFilePath = filepathTo<QString>(recentFile.filepath);
         const QString strEntryRecentFile = Command::tr("%1 | %2").arg(++idFile).arg(strFilePath);

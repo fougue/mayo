@@ -32,10 +32,13 @@ public:
 
     virtual GuiApplication* guiApp() const = 0;
     virtual TaskManager* taskMgr() const = 0;
-    virtual QWidget* widgetMain() const = 0;
     virtual QWidget* widgetLeftSidebar() const = 0;
-    virtual ModeWidgetMain modeWidgetMain() const = 0;
     virtual V3dViewController* v3dViewController(const GuiDocument* guiDoc) const = 0;
+
+    virtual QWidget* widgetMain() const = 0;
+    virtual QWidget* widgetMainByMode(ModeWidgetMain mode) const = 0;
+    virtual ModeWidgetMain modeWidgetMain() const = 0;
+    virtual void setModeWidgetMain(ModeWidgetMain mode) = 0;
 
     virtual Document::Identifier currentDocument() const = 0;
     virtual void setCurrentDocument(Document::Identifier docId) = 0;

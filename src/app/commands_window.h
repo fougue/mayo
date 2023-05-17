@@ -31,6 +31,18 @@ private:
     void updateAction();
 };
 
+class CommandSwitchMainWidgetMode : public Command {
+public:
+    CommandSwitchMainWidgetMode(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+private:
+    void updateAction();
+};
+
 class CommandPreviousDocument : public Command {
 public:
     CommandPreviousDocument(IAppContext* context);

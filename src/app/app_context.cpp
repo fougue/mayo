@@ -31,14 +31,24 @@ TaskManager* AppContext::taskMgr() const
     return &m_wnd->m_taskMgr;
 }
 
+QWidget* AppContext::widgetLeftSidebar() const
+{
+    return m_wnd->m_ui->widget_Left;
+}
+
 QWidget* AppContext::widgetMain() const
 {
     return m_wnd;
 }
 
-QWidget* AppContext::widgetLeftSidebar() const
+QWidget* AppContext::widgetMainByMode(ModeWidgetMain mode) const
 {
-    return m_wnd->m_ui->widget_Left;
+    if (mode == ModeWidgetMain::Home)
+        return m_wnd->m_ui->page_MainHome;
+    else if (mode == ModeWidgetMain::Documents)
+        return m_wnd->m_ui->page_MainControl;
+    else
+        return nullptr;
 }
 
 IAppContext::ModeWidgetMain AppContext::modeWidgetMain() const
@@ -50,6 +60,13 @@ IAppContext::ModeWidgetMain AppContext::modeWidgetMain() const
         return ModeWidgetMain::Documents;
 
     return ModeWidgetMain::Unknown;
+}
+
+void AppContext::setModeWidgetMain(ModeWidgetMain mode)
+{
+    QWidget* widgetPage = this->widgetMainByMode(mode);
+    if (widgetPage)
+        m_wnd->m_ui->stack_Main->setCurrentWidget(widgetPage);
 }
 
 V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) const

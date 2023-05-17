@@ -238,6 +238,7 @@ void MainWindow::createCommands()
     // "Window" commands
     this->addCommand<CommandLeftSidebarWidgetToggle>("toggle-left-sidebar");
     this->addCommand<CommandMainWidgetToggleFullscreen>("toggle-fullscreen");
+    this->addCommand<CommandSwitchMainWidgetMode>("switch-main-widget-mode");
     this->addCommand<CommandPreviousDocument>("previous-doc");
     this->addCommand<CommandNextDocument>("next-doc");
 
@@ -295,6 +296,7 @@ void MainWindow::createMenus()
         menu->addAction(fnGetAction("toggle-left-sidebar"));
         menu->addAction(fnGetAction("toggle-fullscreen"));
         menu->addSeparator();
+        menu->addAction(fnGetAction("switch-main-widget-mode"));
         menu->addAction(fnGetAction("previous-doc"));
         menu->addAction(fnGetAction("next-doc"));
     }

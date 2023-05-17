@@ -56,8 +56,8 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
 
 void CommandLeftSidebarWidgetToggle::execute()
 {
-    const bool isVisible = this->context()->widgetLeftSidebar()->isVisible();
-    this->context()->widgetLeftSidebar()->setVisible(!isVisible);
+    QWidget* widget = this->context()->widgetLeftSidebar();
+    widget->setVisible(!widget->isVisible());
 }
 
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
@@ -92,6 +92,67 @@ void CommandLeftSidebarWidgetToggle::updateAction()
     }
 
     this->action()->setToolTip(this->action()->text());
+}
+
+CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setToolTip(Command::tr("Go To Home Page"));
+    action->setShortcut(Qt::CTRL + Qt::Key_0);
+    this->setAction(action);
+    this->updateAction();
+    context->widgetMainByMode(IAppContext::ModeWidgetMain::Home)->installEventFilter(this);
+    context->widgetMainByMode(IAppContext::ModeWidgetMain::Documents)->installEventFilter(this);
+}
+
+void CommandSwitchMainWidgetMode::execute()
+{
+    auto newMode = IAppContext::ModeWidgetMain::Unknown;
+    switch (this->context()->modeWidgetMain()) {
+    case IAppContext::ModeWidgetMain::Home:
+        newMode = IAppContext::ModeWidgetMain::Documents;
+        break;
+    case IAppContext::ModeWidgetMain::Documents:
+        newMode = IAppContext::ModeWidgetMain::Home;
+        break;
+    }
+
+    this->context()->setModeWidgetMain(newMode);
+}
+
+bool CommandSwitchMainWidgetMode::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0;
+}
+
+bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == this->context()->widgetMainByMode(IAppContext::ModeWidgetMain::Home)
+            || watched == this->context()->widgetMainByMode(IAppContext::ModeWidgetMain::Documents))
+    {
+        if (event->type() == QEvent::Show) {
+            this->updateAction();
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    return Command::eventFilter(watched, event);
+}
+
+void CommandSwitchMainWidgetMode::updateAction()
+{
+    switch (this->context()->modeWidgetMain()) {
+    case IAppContext::ModeWidgetMain::Home:
+        this->action()->setText(Command::tr("Go To Documents"));
+        break;
+    case IAppContext::ModeWidgetMain::Documents:
+        this->action()->setText(Command::tr("Go To Home Page"));
+        break;
+    }
 }
 
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
