@@ -36,7 +36,8 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
     case MeasureType::CircleDiameter:
         return std::make_unique<MeasureDisplayCircleDiameter>(std::get<MeasureCircle>(value));
     case MeasureType::MinDistance:
-        return std::make_unique<MeasureDisplayMinDistance>(std::get<MeasureMinDistance>(value));
+    case MeasureType::CenterDistance:
+        return std::make_unique<MeasureDisplayDistance>(std::get<MeasureDistance>(value));
     case MeasureType::Length:
         return std::make_unique<MeasureDisplayLength>(std::get<MeasureLength>(value));
     case MeasureType::Angle:
@@ -264,7 +265,7 @@ gp_Pnt MeasureDisplayCircleDiameter::diameterOpposedPnt(const gp_Pnt& pntOnCircl
 // -- MinDistance
 // --
 
-MeasureDisplayMinDistance::MeasureDisplayMinDistance(const MeasureMinDistance& dist)
+MeasureDisplayDistance::MeasureDisplayDistance(const MeasureDistance& dist)
     : m_dist(dist),
       m_gfxLength(new AIS_Line(new Geom_CartesianPoint(dist.pnt1), new Geom_CartesianPoint(dist.pnt2))),
       m_gfxDistText(new AIS_TextLabel),
@@ -277,12 +278,29 @@ MeasureDisplayMinDistance::MeasureDisplayMinDistance(const MeasureMinDistance& d
     BaseMeasureDisplay::applyGraphicsDefaults(this);
 }
 
-void MeasureDisplayMinDistance::update(const MeasureDisplayConfig& config)
+void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
 {
     const auto trLength = UnitSystem::translateLength(m_dist.value, config.lengthUnit);
     const auto strLength = BaseMeasureDisplay::text(trLength, config);
+    
+    std::string distStr;
+    switch(m_dist.type)
+    {
+        case DistanceType::MinDistance:
+            distStr = "Min Distance";
+            break;
+        case DistanceType::CenterDistance:
+            distStr = "Distance";
+            break;
+        default:
+            distStr = "Distance";
+            break;
+    }
+    
+    distStr += ": {0}{1}<br>Point1: {2}<br>Point2: {3}";
+    
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("Min Distance: {0}{1}<br>Point1: {2}<br>Point2: {3}"),
+                      MeasureDisplayI18N::textIdTr(distStr.c_str()),
                       strLength,
                       trLength.strUnit,
                       BaseMeasureDisplay::text(m_dist.pnt1, config),
@@ -292,7 +310,7 @@ void MeasureDisplayMinDistance::update(const MeasureDisplayConfig& config)
     BaseMeasureDisplay::adaptScale(m_gfxDistText, config);
 }
 
-GraphicsObjectPtr MeasureDisplayMinDistance::graphicsObjectAt(int i) const
+GraphicsObjectPtr MeasureDisplayDistance::graphicsObjectAt(int i) const
 {
     switch (i) {
     case 0: return m_gfxLength;
