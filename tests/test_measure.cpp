@@ -126,7 +126,7 @@ void TestMeasure::BRepMinDistance_TwoPoints_test()
     const gp_Pnt pnt2{ -57.4, 4487.56, 1.8 };
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeVertex(pnt1);
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeVertex(pnt2);
-    const MeasureMinDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
+    const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
     QVERIFY(minDist.pnt1.IsEqual(pnt1, Precision::Confusion()));
     QVERIFY(minDist.pnt2.IsEqual(pnt2, Precision::Confusion()));
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, pnt1.Distance(pnt2));
@@ -140,7 +140,7 @@ void TestMeasure::BRepMinDistance_TwoBoxes_test()
     const gp_Pnt box2_max{ 55, 7, 7 };
     const TopoDS_Shape shape1 = BRepPrimAPI_MakeBox(box1_min, box1_max);
     const TopoDS_Shape shape2 = BRepPrimAPI_MakeBox(box2_min, box2_max);
-    const MeasureMinDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
+    const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, std::abs(box1_max.X() - box2_min.X()));
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, minDist.pnt1.Distance(minDist.pnt2));
 }
