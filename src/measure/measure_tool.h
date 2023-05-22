@@ -23,8 +23,8 @@ namespace Mayo {
 
 enum class DistanceType {
     None,
-    MinDistance,
-    CenterDistance
+    Mininmum,
+    CenterToCenter
 };
 
 // Void measure value

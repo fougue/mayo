@@ -121,6 +121,37 @@ const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
     return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : nullShape;
 }
 
+gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
+{
+    const TopAbs_ShapeEnum shapeType = shape.ShapeType();
+
+    if (shapeType == TopAbs_VERTEX)
+        return BRep_Tool::Pnt(TopoDS::Vertex(shape));
+
+    GProp_GProps shapeProps;
+    if (shapeType == TopAbs_FACE) {
+        // TODO Consider case where the face is cylindrical
+        BRepGProp::SurfaceProperties(shape, shapeProps);
+    }
+    else if (shapeType == TopAbs_WIRE) {
+        BRepGProp::LinearProperties(shape, shapeProps);
+    }
+    else if (shapeType == TopAbs_EDGE) {
+        try {
+            const MeasureCircle circle = MeasureToolBRep::brepCircle(shape);
+            return circle.value.Location();
+        }
+        catch (const BRepMeasureError<ErrorCode::NotCircularEdge>&) {
+            BRepGProp::LinearProperties(shape, shapeProps);
+        }
+    }
+    else {
+        throw BRepMeasureError<ErrorCode::CenterFailure>();
+    }
+
+    throwErrorIf<ErrorCode::CenterFailure>(shapeProps.Mass() < Precision::Confusion());
+    return shapeProps.CentreOfMass();
+}
 } // namespace
 
 Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
@@ -307,7 +338,7 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
     distResult.pnt1 = dist.PointOnShape1(1);
     distResult.pnt2 = dist.PointOnShape2(1);
     distResult.value = dist.Value() * Quantity_Millimeter;
-    distResult.type = DistanceType::MinDistance;
+    distResult.type = DistanceType::Mininmum;
     return distResult;
 }
 
@@ -317,56 +348,14 @@ MeasureDistance MeasureToolBRep::brepCenterDistance(
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
     
-    struct Local
-    {
-        static gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
-        {
-            GProp_GProps shellProps;
-            
-            if(shape.ShapeType() == TopAbs_VERTEX)
-            {
-                return BRep_Tool::Pnt(TopoDS::Vertex(shape));
-            }
-            else
-            {
-                switch(shape.ShapeType())
-                {
-                    case TopAbs_FACE:
-                        BRepGProp::SurfaceProperties(shape, shellProps);
-                        break;
-                    case TopAbs_WIRE:
-                        BRepGProp::LinearProperties(shape, shellProps);
-                        break;
-                    case TopAbs_EDGE: {
-                        try
-                        {
-                            MeasureCircle circle = brepCircle(shape);
-                            return circle.value.Location();
-                        }
-                        catch(const BRepMeasureError<ErrorCode::NotCircularEdge>& e)
-                        {
-                            BRepGProp::LinearProperties(shape, shellProps);
-                        }
-                        break;
-                    }
-                    default:
-                        throwErrorIf<ErrorCode::CenterFailure>(true);
-                }
-
-                throwErrorIf<ErrorCode::CenterFailure>(shellProps.Mass() < Precision::Confusion());
-                return shellProps.CentreOfMass();
-            }
-        }
-    };
-
-    const gp_Pnt centerOfMass1 = Local::computeShapeCenter(shape1);
-    const gp_Pnt centerOfMass2 = Local::computeShapeCenter(shape2);
+    const gp_Pnt centerOfMass1 = computeShapeCenter(shape1);
+    const gp_Pnt centerOfMass2 = computeShapeCenter(shape2);
 
     MeasureDistance distResult;
     distResult.pnt1 = centerOfMass1;
     distResult.pnt2 = centerOfMass2;
     distResult.value = centerOfMass1.Distance(centerOfMass2) * Quantity_Millimeter;
-    distResult.type = DistanceType::CenterDistance;
+    distResult.type = DistanceType::CenterToCenter;
     return distResult;
 }
 

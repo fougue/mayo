@@ -286,10 +286,10 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
     std::string distStr;
     switch(m_dist.type)
     {
-        case DistanceType::MinDistance:
+        case DistanceType::Mininmum:
             distStr = "Min Distance";
             break;
-        case DistanceType::CenterDistance:
+        case DistanceType::CenterToCenter:
             distStr = "Distance";
             break;
         default:
