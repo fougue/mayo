@@ -15,6 +15,7 @@
 #include "recent_files.h"
 #include "theme.h"
 
+#include <cassert>
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
 #include <QtCore/QElapsedTimer>
@@ -167,6 +168,7 @@ void FileCommandTools::closeDocument(IAppContext* context, Document::Identifier 
 
 void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)
 {
+    assert(context != nullptr);
     auto app = context->guiApp()->application();
     auto appModule = AppModule::get();
     for (const FilePath& fp : listFilePath) {
@@ -416,7 +418,8 @@ void CommandExportSelectedApplicationItems::execute()
                 Command::tr("Select Output File"),
                 filepathTo<QString>(lastSettings.openDir),
                 listWriterFileFilter.join(QLatin1String(";;")),
-                &lastSettings.selectedFilter);
+                &lastSettings.selectedFilter
+            );
     if (strFilepath.isEmpty())
         return;
 

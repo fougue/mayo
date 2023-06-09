@@ -33,7 +33,7 @@ DEFINES += \
     QT_IMPLICIT_QFILEINFO_CONSTRUCTION \
 
 release_with_debuginfo:msvc {
-    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
+    # https://learn.microsoft.com/en-us/cpp/build/how-to-debug-a-release-build?view=msvc-170
     QMAKE_CXXFLAGS_RELEASE += /Zi
     QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
 }

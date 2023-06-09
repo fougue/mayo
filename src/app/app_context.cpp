@@ -9,14 +9,22 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "widget_gui_document.h"
+#include "widget_main_control.h"
+#include "widget_main_home.h"
+
+#include <cassert>
 
 namespace Mayo {
 
 AppContext::AppContext(MainWindow* wnd)
-    : m_wnd(wnd)
+    : IAppContext(wnd),
+      m_wnd(wnd)
 {
+    assert(m_wnd != nullptr);
+    assert(m_wnd->widgetPageDocuments() != nullptr);
+
     QObject::connect(
-                m_wnd->m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
+                m_wnd->widgetPageDocuments(), &WidgetMainControl::currentDocumentIndexChanged,
                 this, &AppContext::onCurrentDocumentIndexChanged
     );
 }
@@ -31,9 +39,9 @@ TaskManager* AppContext::taskMgr() const
     return &m_wnd->m_taskMgr;
 }
 
-QWidget* AppContext::widgetLeftSidebar() const
+QWidget* AppContext::pageDocuments_widgetLeftSideBar() const
 {
-    return m_wnd->m_ui->widget_Left;
+    return m_wnd->widgetPageDocuments()->widgetLeftSideBar();
 }
 
 QWidget* AppContext::widgetMain() const
@@ -41,32 +49,32 @@ QWidget* AppContext::widgetMain() const
     return m_wnd;
 }
 
-QWidget* AppContext::widgetMainByMode(ModeWidgetMain mode) const
+QWidget* AppContext::widgetPage(Page page) const
 {
-    if (mode == ModeWidgetMain::Home)
-        return m_wnd->m_ui->page_MainHome;
-    else if (mode == ModeWidgetMain::Documents)
-        return m_wnd->m_ui->page_MainControl;
+    if (page == Page::Home)
+        return m_wnd->widgetPageHome();
+    else if (page == Page::Documents)
+        return m_wnd->widgetPageDocuments();
     else
         return nullptr;
 }
 
-IAppContext::ModeWidgetMain AppContext::modeWidgetMain() const
+IAppContext::Page AppContext::currentPage() const
 {
     auto widget = m_wnd->m_ui->stack_Main->currentWidget();
-    if (widget == m_wnd->m_ui->page_MainHome)
-        return ModeWidgetMain::Home;
-    else if (widget == m_wnd->m_ui->page_MainControl)
-        return ModeWidgetMain::Documents;
+    if (widget == m_wnd->widgetPageHome())
+        return Page::Home;
+    else if (widget == m_wnd->widgetPageDocuments())
+        return Page::Documents;
 
-    return ModeWidgetMain::Unknown;
+    return Page::Unknown;
 }
 
-void AppContext::setModeWidgetMain(ModeWidgetMain mode)
+void AppContext::setCurrentPage(Page page)
 {
-    QWidget* widgetPage = this->widgetMainByMode(mode);
-    if (widgetPage)
-        m_wnd->m_ui->stack_Main->setCurrentWidget(widgetPage);
+    QWidget* widgetPage = this->widgetPage(page);
+    assert(widgetPage);
+    m_wnd->m_ui->stack_Main->setCurrentWidget(widgetPage);
 }
 
 V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) const
@@ -89,14 +97,14 @@ int AppContext::findDocumentIndex(Document::Identifier docId) const
 
 Document::Identifier AppContext::findDocumentFromIndex(int index) const
 {
-    auto widgetDoc = m_wnd->widgetGuiDocument(index);
+    auto widgetDoc = this->widgetGuiDocument(index);
     return widgetDoc ? widgetDoc->documentIdentifier() : -1;
 }
 
 Document::Identifier AppContext::currentDocument() const
 {
-    const int index = m_wnd->m_ui->combo_GuiDocuments->currentIndex();
-    auto widgetDoc = m_wnd->widgetGuiDocument(index);
+    const int index = m_wnd->widgetPageDocuments()->currentDocumentIndex();
+    auto widgetDoc = this->widgetGuiDocument(index);
     return widgetDoc ? widgetDoc->documentIdentifier() : -1;
 }
 
@@ -105,8 +113,8 @@ void AppContext::setCurrentDocument(Document::Identifier docId)
     auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* widgetDoc) {
         return widgetDoc->documentIdentifier() == docId;
     });
-    const int docIndex = m_wnd->m_ui->stack_GuiDocuments->indexOf(widgetDoc);
-    m_wnd->m_ui->combo_GuiDocuments->setCurrentIndex(docIndex);
+    const int docIndex = m_wnd->widgetPageDocuments()->indexOfWidgetGuiDocument(widgetDoc);
+    m_wnd->widgetPageDocuments()->setCurrentDocumentIndex(docIndex);
 }
 
 void AppContext::updateControlsEnabledStatus()
@@ -116,20 +124,22 @@ void AppContext::updateControlsEnabledStatus()
 
 void AppContext::deleteDocumentWidget(const DocumentPtr& doc)
 {
-    QWidget* widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
+    auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
             return widgetDoc->documentIdentifier() == doc->identifier();
     });
-    if (widgetDoc) {
-        m_wnd->m_ui->stack_GuiDocuments->removeWidget(widgetDoc);
-        widgetDoc->deleteLater();
-    }
+    m_wnd->widgetPageDocuments()->removeWidgetGuiDocument(widgetDoc);
+}
+
+WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
+{
+    return m_wnd->widgetPageDocuments()->widgetGuiDocument(idx);
 }
 
 WidgetGuiDocument* AppContext::findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const
 {
-    const int widgetCount = m_wnd->m_ui->stack_GuiDocuments->count();
+    const int widgetCount = m_wnd->widgetPageDocuments()->widgetGuiDocumentCount();
     for (int i = 0; i < widgetCount; ++i) {
-        auto candidate = m_wnd->widgetGuiDocument(i);
+        auto candidate = this->widgetGuiDocument(i);
         if (candidate && fn(candidate))
             return candidate;
     }
@@ -139,7 +149,7 @@ WidgetGuiDocument* AppContext::findWidgetGuiDocument(std::function<bool(WidgetGu
 
 void AppContext::onCurrentDocumentIndexChanged(int docIndex)
 {
-    auto widgetDoc = m_wnd->widgetGuiDocument(docIndex);
+    auto widgetDoc = this->widgetGuiDocument(docIndex);
     emit this->currentDocumentChanged(widgetDoc ? widgetDoc->documentIdentifier() : -1);
 }
 

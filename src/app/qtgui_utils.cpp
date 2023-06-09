@@ -56,7 +56,8 @@ QColor lerp(const QColor& a, const QColor& b, double t)
                 MathUtils::lerp(a.red(), b.red(), t),
                 MathUtils::lerp(a.green(), b.green(), t),
                 MathUtils::lerp(a.blue(), b.blue(), t),
-                MathUtils::lerp(a.alpha(), b.alpha(), t));
+                MathUtils::lerp(a.alpha(), b.alpha(), t)
+    );
 }
 
 QColor linearColorAt(const QGradient& gradient, double t)

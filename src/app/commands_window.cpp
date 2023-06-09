@@ -48,32 +48,29 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
     action->setShortcut(Qt::ALT + Qt::Key_0);
     action->setCheckable(true);
-    action->setChecked(context->widgetLeftSidebar()->isVisible());
+    action->setChecked(context->pageDocuments_widgetLeftSideBar()->isVisible());
     this->setAction(action);
     this->updateAction();
-    context->widgetLeftSidebar()->installEventFilter(this);
+    context->pageDocuments_widgetLeftSideBar()->installEventFilter(this);
 }
 
 void CommandLeftSidebarWidgetToggle::execute()
 {
-    QWidget* widget = this->context()->widgetLeftSidebar();
+    QWidget* widget = this->context()->pageDocuments_widgetLeftSideBar();
     widget->setVisible(!widget->isVisible());
 }
 
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 {
-    return this->context()->modeWidgetMain() != IAppContext::ModeWidgetMain::Home;
+    return this->context()->currentPage() != IAppContext::Page::Home;
 }
 
 bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == this->context()->widgetLeftSidebar()) {
-        if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
+    if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
+        if (watched == this->context()->pageDocuments_widgetLeftSideBar()) {
             this->updateAction();
             return true;
-        }
-        else {
-            return false;
         }
     }
 
@@ -82,7 +79,7 @@ bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event
 
 void CommandLeftSidebarWidgetToggle::updateAction()
 {
-    if (this->context()->widgetLeftSidebar()->isVisible()) {
+    if (this->context()->pageDocuments_widgetLeftSideBar()->isVisible()) {
         this->action()->setText(Command::tr("Hide Left Sidebar"));
         this->action()->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
     }
@@ -102,23 +99,23 @@ CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
     action->setShortcut(Qt::CTRL + Qt::Key_0);
     this->setAction(action);
     this->updateAction();
-    context->widgetMainByMode(IAppContext::ModeWidgetMain::Home)->installEventFilter(this);
-    context->widgetMainByMode(IAppContext::ModeWidgetMain::Documents)->installEventFilter(this);
+    context->widgetPage(IAppContext::Page::Home)->installEventFilter(this);
+    context->widgetPage(IAppContext::Page::Documents)->installEventFilter(this);
 }
 
 void CommandSwitchMainWidgetMode::execute()
 {
-    auto newMode = IAppContext::ModeWidgetMain::Unknown;
-    switch (this->context()->modeWidgetMain()) {
-    case IAppContext::ModeWidgetMain::Home:
-        newMode = IAppContext::ModeWidgetMain::Documents;
+    auto newPage = IAppContext::Page::Unknown;
+    switch (this->context()->currentPage()) {
+    case IAppContext::Page::Home:
+        newPage = IAppContext::Page::Documents;
         break;
-    case IAppContext::ModeWidgetMain::Documents:
-        newMode = IAppContext::ModeWidgetMain::Home;
+    case IAppContext::Page::Documents:
+        newPage = IAppContext::Page::Home;
         break;
     }
 
-    this->context()->setModeWidgetMain(newMode);
+    this->context()->setCurrentPage(newPage);
 }
 
 bool CommandSwitchMainWidgetMode::getEnabledStatus() const
@@ -128,15 +125,12 @@ bool CommandSwitchMainWidgetMode::getEnabledStatus() const
 
 bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == this->context()->widgetMainByMode(IAppContext::ModeWidgetMain::Home)
-            || watched == this->context()->widgetMainByMode(IAppContext::ModeWidgetMain::Documents))
-    {
-        if (event->type() == QEvent::Show) {
+    if (event->type() == QEvent::Show) {
+        if (watched == this->context()->widgetPage(IAppContext::Page::Home)
+                || watched == this->context()->widgetPage(IAppContext::Page::Documents))
+        {
             this->updateAction();
             return true;
-        }
-        else {
-            return false;
         }
     }
 
@@ -145,11 +139,11 @@ bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
 
 void CommandSwitchMainWidgetMode::updateAction()
 {
-    switch (this->context()->modeWidgetMain()) {
-    case IAppContext::ModeWidgetMain::Home:
+    switch (this->context()->currentPage()) {
+    case IAppContext::Page::Home:
         this->action()->setText(Command::tr("Go To Documents"));
         break;
-    case IAppContext::ModeWidgetMain::Documents:
+    case IAppContext::Page::Documents:
         this->action()->setText(Command::tr("Go To Home Page"));
         break;
     }

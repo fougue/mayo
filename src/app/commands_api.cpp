@@ -10,6 +10,8 @@
 #include "../gui/gui_application.h"
 
 #include <QtWidgets/QWidget>
+#include <fmt/format.h>
+#include <exception>
 
 namespace Mayo {
 
@@ -49,6 +51,37 @@ void Command::setAction(QAction* action)
 {
     m_action = action;
     QObject::connect(action, &QAction::triggered, this, &Command::execute);
+}
+
+CommandContainer::CommandContainer(IAppContext* appContext)
+    : m_appContext(appContext)
+{
+}
+
+void CommandContainer::setAppContext(IAppContext* appContext)
+{
+    assert(!m_appContext && m_mapCommand.empty());
+    m_appContext = appContext;
+}
+
+Command* CommandContainer::findCommand(std::string_view name) const
+{
+    auto it = m_mapCommand.find(name);
+    return it != m_mapCommand.cend() ? it->second : nullptr;
+}
+
+QAction* CommandContainer::findCommandAction(std::string_view name) const
+{
+    auto cmd = this->findCommand(name);
+    return cmd ? cmd->action() : nullptr;
+}
+
+void CommandContainer::addCommand_impl(std::string_view name, Command* cmd)
+{
+    assert(m_appContext != nullptr);
+    auto [it, ok] = m_mapCommand.insert({ name, cmd });
+    if (!ok)
+        throw std::invalid_argument(fmt::format("Command name {} already exists", name));
 }
 
 } // namespace Mayo

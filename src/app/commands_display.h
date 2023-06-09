@@ -8,6 +8,8 @@
 
 #include "commands_api.h"
 
+#include <string_view>
+
 class QMenu;
 
 namespace Mayo {
@@ -17,6 +19,8 @@ public:
     CommandChangeProjection(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "change-projection";
 
 private:
     void onCurrentDocumentChanged();
@@ -31,6 +35,8 @@ public:
     void execute() override;
     bool getEnabledStatus() const override;
 
+    static constexpr std::string_view Name = "change-display-mode";
+
 private:
     void recreateMenuDisplayMode();
 };
@@ -40,6 +46,8 @@ public:
     CommandToggleOriginTrihedron(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "toggle-origin-trihedron";
 
 private:
     void onCurrentDocumentChanged();
@@ -51,6 +59,8 @@ public:
     void execute() override;
     bool getEnabledStatus() const override;
 
+    static constexpr std::string_view Name = "toggle-performance-stats";
+
 private:
     void onCurrentDocumentChanged();
 };
@@ -60,6 +70,8 @@ public:
     CommandZoomInCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "current-doc-zoom-in";
 };
 
 class CommandZoomOutCurrentDocument : public Command {
@@ -67,6 +79,8 @@ public:
     CommandZoomOutCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "current-doc-zoom-out";
 };
 
 class CommandTurnViewCounterClockWise : public Command {
@@ -74,6 +88,8 @@ public:
     CommandTurnViewCounterClockWise(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "current-doc-turn-view-ccw";
 };
 
 class CommandTurnViewClockWise : public Command {
@@ -81,6 +97,8 @@ public:
     CommandTurnViewClockWise(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "current-doc-turn-view-cw";
 };
 
 } // namespace Mayo

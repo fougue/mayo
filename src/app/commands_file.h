@@ -23,6 +23,8 @@ class CommandNewDocument : public Command {
 public:
     CommandNewDocument(IAppContext* context);
     void execute() override;
+
+    static constexpr std::string_view Name = "new-doc";
 };
 
 class CommandOpenDocuments : public Command {
@@ -30,6 +32,8 @@ public:
     CommandOpenDocuments(IAppContext* context);
     void execute() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
+
+    static constexpr std::string_view Name = "open-docs";
 };
 
 class CommandRecentFiles : public Command {
@@ -38,6 +42,8 @@ public:
     CommandRecentFiles(IAppContext* context, QMenu* containerMenu);
     void execute() override;
     void recreateEntries();
+
+    static constexpr std::string_view Name = "recent-files";
 };
 
 class CommandImportInCurrentDocument : public Command {
@@ -45,6 +51,8 @@ public:
     CommandImportInCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "import";
 };
 
 class CommandExportSelectedApplicationItems : public Command {
@@ -52,6 +60,8 @@ public:
     CommandExportSelectedApplicationItems(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "export";
 };
 
 class CommandCloseCurrentDocument : public Command {
@@ -59,6 +69,8 @@ public:
     CommandCloseCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "close-doc";
 
 private:
     void updateActionText(Document::Identifier docId);
@@ -69,6 +81,8 @@ public:
     CommandCloseAllDocuments(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "close-all-docs";
 };
 
 class CommandCloseAllDocumentsExceptCurrent : public Command {
@@ -76,6 +90,8 @@ public:
     CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "close-all-docs-except-current";
 
 private:
     void updateActionText(Document::Identifier docId);
@@ -85,6 +101,8 @@ class CommandQuitApplication : public Command {
 public:
     CommandQuitApplication(IAppContext* context);
     void execute() override;
+
+    static constexpr std::string_view Name = "quit-app";
 };
 
 } // namespace Mayo

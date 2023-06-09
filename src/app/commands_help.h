@@ -14,12 +14,16 @@ class CommandReportBug : public Command {
 public:
     CommandReportBug(IAppContext* context);
     void execute() override;
+
+    static constexpr std::string_view Name = "report-bug";
 };
 
 class CommandAbout : public Command {
 public:
     CommandAbout(IAppContext* context);
     void execute() override;
+
+    static constexpr std::string_view Name = "about";
 };
 
 } // namespace Mayo
