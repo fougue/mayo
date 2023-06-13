@@ -10,17 +10,11 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v2
 
-        - name: Cache Qt
-          id: cache-qt
-          uses: actions/cache@v1
-          with:
-              path: ../Qt
-              key: ${{ runner.os }}-QtCache
-
         - name: Install Qt
-          uses: jurplel/install-qt-action@v2
+          uses: jurplel/install-qt-action@v3
           with:
-              cached: ${{ steps.cache-qt.outputs.cache-hit }}
+              cache: true
+              cache-key-prefix: ${{ runner.os }}-QtCache
 
         - name: Install OpenCascade
           run: |
