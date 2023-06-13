@@ -6,7 +6,8 @@ jobs:
     build-windows-msvc:
         strategy:
             matrix:
-                occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0]
+                #occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0]
+                occ_version: [7.7.0]
 
         runs-on: windows-latest
 
