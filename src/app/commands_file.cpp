@@ -386,7 +386,8 @@ void CommandImportInCurrentDocument::execute()
 
 bool CommandImportInCurrentDocument::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAppContext* context)
@@ -447,7 +448,8 @@ void CommandExportSelectedApplicationItems::execute()
 
 bool CommandExportSelectedApplicationItems::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)

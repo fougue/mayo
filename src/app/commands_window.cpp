@@ -116,6 +116,7 @@ void CommandSwitchMainWidgetMode::execute()
     }
 
     this->context()->setCurrentPage(newPage);
+    this->context()->updateControlsEnabledStatus();
 }
 
 bool CommandSwitchMainWidgetMode::getEnabledStatus() const

@@ -57,6 +57,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
 
     AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
+    guiApp->signalGuiDocumentErased.connectSlot(&MainWindow::onGuiDocumentAdded, this);
 
     new DialogTaskManager(&m_taskMgr, this);
 
@@ -232,6 +233,13 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
     fnConfigureHighlightStyle(gfxScene->drawerHighlight(Prs3d_TypeOfHighlight_LocalSelected).get());
     fnConfigureHighlightStyle(gfxScene->drawerHighlight(Prs3d_TypeOfHighlight_Selected).get());
 
+    this->updateCurrentPage();
+    this->updateControlsActivation();
+}
+
+void MainWindow::onGuiDocumentErased(GuiDocument* /*guiDoc*/)
+{
+    this->updateCurrentPage();
     this->updateControlsActivation();
 }
 
@@ -259,19 +267,18 @@ void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
 
 void MainWindow::updateControlsActivation()
 {
-    const QWidget* currentPage = m_ui->stack_Main->currentWidget();
-    const int appDocumentsCount = m_guiApp->application()->documentCount();
-    const bool appDocumentsEmpty = appDocumentsCount == 0;
-    QWidget* newPage =
-            appDocumentsEmpty ?
-                static_cast<QWidget*>(this->widgetPageHome())
-              : static_cast<QWidget*>(this->widgetPageDocuments());
-    if (currentPage != newPage)
-        m_ui->stack_Main->setCurrentWidget(newPage);
-
     m_cmdContainer.foreachCommand([](std::string_view, Command* cmd) {
         cmd->action()->setEnabled(cmd->getEnabledStatus());
     });
+}
+
+void MainWindow::updateCurrentPage()
+{
+    const IAppContext::Page currentPage = m_appContext->currentPage();
+    const bool appDocumentsEmpty = m_guiApp->guiDocuments().empty();
+    const auto newPage = appDocumentsEmpty ? IAppContext::Page::Home : IAppContext::Page::Documents;
+    if (currentPage != newPage)
+        m_appContext->setCurrentPage(newPage);
 }
 
 WidgetMainHome* MainWindow::widgetPageHome() const

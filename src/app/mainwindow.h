@@ -47,10 +47,12 @@ private:
 
     void onOperationFinished(bool ok, const QString& msg);
     void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onGuiDocumentErased(GuiDocument* guiDoc);
 
     void onMessage(Messenger::MessageType msgType, const QString& text);
 
     void updateControlsActivation();
+    void updateCurrentPage();
 
     WidgetMainHome* widgetPageHome() const;
     WidgetMainControl* widgetPageDocuments() const;

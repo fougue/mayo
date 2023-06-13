@@ -23,8 +23,19 @@
 
 namespace Mayo {
 
-CommandChangeProjection::CommandChangeProjection(IAppContext* context)
+BaseCommandDisplay::BaseCommandDisplay(IAppContext* context)
     : Command(context)
+{
+}
+
+bool BaseCommandDisplay::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0
+           && this->context()->currentPage() == IAppContext::Page::Documents;
+}
+
+CommandChangeProjection::CommandChangeProjection(IAppContext* context)
+    : BaseCommandDisplay(context)
 {
     m_actionOrtho = new QAction(Command::tr("Orthographic"), this);
     m_actionPersp = new QAction(Command::tr("Perspective"), this);
@@ -67,11 +78,6 @@ void CommandChangeProjection::execute()
 {
 }
 
-bool CommandChangeProjection::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 void CommandChangeProjection::onCurrentDocumentChanged()
 {
     const GuiDocument* guiDoc = this->currentGuiDocument();
@@ -89,7 +95,7 @@ void CommandChangeProjection::onCurrentDocumentChanged()
 }
 
 CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Mode"));
@@ -107,11 +113,6 @@ CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* 
 
 void CommandChangeDisplayMode::execute()
 {
-}
-
-bool CommandChangeDisplayMode::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
 }
 
 void CommandChangeDisplayMode::recreateMenuDisplayMode()
@@ -156,7 +157,7 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
 }
 
 CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Show Origin Trihedron"));
@@ -180,11 +181,6 @@ void CommandToggleOriginTrihedron::execute()
     }
 }
 
-bool CommandToggleOriginTrihedron::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 {
     GuiDocument* guiDoc = this->currentGuiDocument();
@@ -199,7 +195,7 @@ void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 }
 
 CommandTogglePerformanceStats::CommandTogglePerformanceStats(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Show Performance Stats"));
@@ -223,11 +219,6 @@ void CommandTogglePerformanceStats::execute()
     }
 }
 
-bool CommandTogglePerformanceStats::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 {
     GuiDocument* guiDoc = this->currentGuiDocument();
@@ -242,7 +233,7 @@ void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 }
 
 CommandZoomInCurrentDocument::CommandZoomInCurrentDocument(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom In"));
@@ -258,13 +249,8 @@ void CommandZoomInCurrentDocument::execute()
         ctrl->zoomIn();
 }
 
-bool CommandZoomInCurrentDocument::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 CommandZoomOutCurrentDocument::CommandZoomOutCurrentDocument(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom Out"));
@@ -280,13 +266,8 @@ void CommandZoomOutCurrentDocument::execute()
         ctrl->zoomOut();
 }
 
-bool CommandZoomOutCurrentDocument::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Counter Clockwise"));
@@ -303,13 +284,8 @@ void CommandTurnViewCounterClockWise::execute()
         ctrl->turn(V3d_Z, -increment);
 }
 
-bool CommandTurnViewCounterClockWise::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
-}
-
 CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
-    : Command(context)
+    : BaseCommandDisplay(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Clockwise"));
@@ -324,11 +300,6 @@ void CommandTurnViewClockWise::execute()
     auto ctrl = this->context()->v3dViewController(this->currentGuiDocument());
     if (ctrl)
         ctrl->turn(V3d_Z, increment);
-}
-
-bool CommandTurnViewClockWise::getEnabledStatus() const
-{
-    return this->app()->documentCount() != 0;
 }
 
 } // namespace Mayo

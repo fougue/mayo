@@ -251,7 +251,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
         const QVariant variantNodeId = current.data(ItemSettingNodeId_Role);
         const QModelIndex indexFirst = settingsModel->index(0, 0);
         const QModelIndexList indexList = settingsModel->match(
-                    indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, Qt::MatchExactly);
+                    indexFirst, ItemSettingNodeId_Role, variantNodeId, 1, Qt::MatchExactly
+        );
         if (!indexList.isEmpty())
             m_ui->listWidget_Settings->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
     });
