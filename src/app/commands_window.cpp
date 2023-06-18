@@ -169,7 +169,9 @@ void CommandPreviousDocument::execute()
 
 bool CommandPreviousDocument::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0 && this->currentDocumentIndex() > 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents
+            && this->currentDocumentIndex() > 0;
 }
 
 CommandNextDocument::CommandNextDocument(IAppContext* context)
@@ -192,7 +194,9 @@ void CommandNextDocument::execute()
 bool CommandNextDocument::getEnabledStatus() const
 {
     const int appDocumentCount = this->app()->documentCount();
-    return appDocumentCount != 0 && this->currentDocumentIndex() < appDocumentCount - 1;
+    return appDocumentCount != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents
+            && this->currentDocumentIndex() < appDocumentCount - 1;
 }
 
 } // namespace Mayo
