@@ -8,6 +8,7 @@
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../io_assimp/io_assimp.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
@@ -492,6 +493,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    ioSystem->addFactoryReader(IO::AssimpFactoryReader::create());
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
@@ -503,6 +505,7 @@ static int runApp(QCoreApplication* qtApp)
 
     // Register library infos
     CommandSystemInformation::addLibraryInfo(IO::GmioLib::strName(), IO::GmioLib::strVersion());
+    CommandSystemInformation::addLibraryInfo(IO::AssimpLib::strName(), IO::AssimpLib::strVersion());
 
     // Process CLI
     if (args.showSystemInformation) {
