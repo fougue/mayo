@@ -28,7 +28,7 @@ Command::Command(IAppContext* context)
 
 Application* Command::app() const
 {
-    return m_context->guiApp()->application().get();
+    return m_context ? m_context->guiApp()->application().get() : nullptr;
 }
 
 GuiDocument* Command::currentGuiDocument() const
@@ -39,7 +39,7 @@ GuiDocument* Command::currentGuiDocument() const
 
 int Command::currentDocumentIndex() const
 {
-    return this->context()->findDocumentIndex(this->currentDocument());
+    return m_context ? m_context->findDocumentIndex(this->currentDocument()) : -1;
 }
 
 void Command::setCurrentDocument(const DocumentPtr& doc)
