@@ -116,6 +116,11 @@ OTHER_FILES += \
     images/credits.txt \
     scripts/bump-version.rb \
 
+# Optional developer-specific QMake pri file for environment related settings
+exists($$PWD/env.pri) {
+    include($$PWD/env.pri)
+}
+
 # OpenCascade
 include(opencascade.pri)
 !isEmpty(OCC_VERSION_STR) {
@@ -220,7 +225,7 @@ CONFIG(withtests) {
     DEFINES += MAYO_WITH_TESTS
 }
 
-# Developer custom processing
+# Optional developer-specific QMake pri file for custom processing
 exists($$PWD/custom.pri) {
     include($$PWD/custom.pri)
 }
