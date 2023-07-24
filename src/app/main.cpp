@@ -22,6 +22,7 @@
 #include "../gui/gui_application.h"
 #include "app_module.h"
 #include "cli_export.h"
+#include "commands_help.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
@@ -82,6 +83,7 @@ struct CommandLineArguments {
     std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
     bool cliProgressReport = true;
+    bool showSystemInformation = false;
 };
 
 // Provides customization of Qt message handler
@@ -228,6 +230,12 @@ static CommandLineArguments processCommandLine()
     );
     cmdParser.addOption(cmdCliNoProgress);
 
+    const QCommandLineOption cmdSysInfo(
+                QStringList{ "system-info" },
+                Main::tr("Show detailed system information and quit")
+    );
+    cmdParser.addOption(cmdSysInfo);
+
     cmdParser.addPositionalArgument(
                 Main::tr("files"),
                 Main::tr("Files to open at startup, optionally"),
@@ -268,6 +276,7 @@ static CommandLineArguments processCommandLine()
     args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
 #endif
     args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
+    args.showSystemInformation = cmdParser.isSet(cmdSysInfo);
 
     return args;
 }
@@ -396,7 +405,6 @@ static void initGui(GuiApplication* guiApp)
     if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
-        qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
         if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
             setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
             IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
@@ -490,6 +498,12 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->retranslate();
 
     // Process CLI
+    if (args.showSystemInformation) {
+        CommandSystemInformation cmdSysInfo(nullptr);
+        cmdSysInfo.execute();
+        return qtApp->exec();
+    }
+
     if (!args.listFilepathToExport.empty()) {
         if (args.listFilepathToOpen.empty())
             fnCriticalExit(Main::tr("No input files -> nothing to export"));

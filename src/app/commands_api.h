@@ -73,10 +73,10 @@ public:
 
 protected:
     Application* app() const;
-    GuiApplication* guiApp() const { return m_context->guiApp(); }
-    TaskManager* taskMgr() const { return m_context->taskMgr(); }
-    QWidget* widgetMain() const { return m_context->widgetMain(); }
-    Document::Identifier currentDocument() const { return m_context->currentDocument(); }
+    GuiApplication* guiApp() const { return m_context ? m_context->guiApp() : nullptr; }
+    TaskManager* taskMgr() const { return m_context ? m_context->taskMgr() : nullptr; }
+    QWidget* widgetMain() const { return m_context ? m_context->widgetMain() : nullptr; }
+    Document::Identifier currentDocument() const { return m_context ? m_context->currentDocument() : -1; }
     GuiDocument* currentGuiDocument() const;
     int currentDocumentIndex() const;
 

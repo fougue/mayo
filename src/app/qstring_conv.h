@@ -38,6 +38,11 @@ template<> struct StringConv<std::string, QString> {
     static auto to(const std::string& str) { return QString::fromStdString(str); }
 };
 
+// std::wstring -> QString
+template<> struct StringConv<std::wstring, QString> {
+    static auto to(const std::wstring& str) { return QString::fromStdWString(str); }
+};
+
 // std::string_view -> QString
 template<> struct StringConv<std::string_view, QString> {
     static auto to(std::string_view str) { return QString::fromUtf8(str.data(), int(str.size())); }
@@ -95,6 +100,11 @@ template<> struct StringConv<QString, std::u16string_view> {
     static auto to(const QString& str) {
         return std::u16string_view(reinterpret_cast<const char16_t*>(str.utf16()), str.length());
     }
+};
+
+// QString -> std::wstring
+template<> struct StringConv<QString, std::wstring> {
+    static auto to(const QString& str) { return str.toStdWString(); }
 };
 
 // QString -> TCollection_ExtendedString

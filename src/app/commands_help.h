@@ -18,6 +18,16 @@ public:
     static constexpr std::string_view Name = "report-bug";
 };
 
+class CommandSystemInformation : public Command {
+public:
+    CommandSystemInformation(IAppContext* context);
+    void execute() override;
+
+    static QString data();
+
+    static constexpr std::string_view Name = "system-info";
+};
+
 class CommandAbout : public Command {
 public:
     CommandAbout(IAppContext* context);
