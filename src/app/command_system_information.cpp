@@ -248,11 +248,15 @@ QString CommandSystemInformation::data()
         const auto& numFacet = std::use_facet<std::numpunct<wchar_t>>(stdLoc);
         const QChar charDecPnt(numFacet.decimal_point());
         const QChar char1000Sep(numFacet.thousands_sep());
+        std::string strGrouping;
+        for (char c : numFacet.grouping())
+            strGrouping += std::to_string(static_cast<int>(c)) + " ";
+
         ostr << indent << "std::locale:" << '\n'
              << indentx2 << "name: " << to_QString(stdLoc.name()) << '\n'
-             << indentx2 << "numpunct.decimal_point: " << charDecPnt << "  " << fnStrUnicodeChar(charDecPnt) << '\n'
-             << indentx2 << "numpunct.thousands_sep: " << char1000Sep << "  " << fnStrUnicodeChar(char1000Sep) << '\n'
-             << indentx2 << "numpunct.grouping: " << to_QString(numFacet.grouping()) << '\n'
+             << indentx2 << "numpunct.decimal_point: " << charDecPnt << " " << fnStrUnicodeChar(charDecPnt) << '\n'
+             << indentx2 << "numpunct.thousands_sep: " << char1000Sep << " " << fnStrUnicodeChar(char1000Sep) << '\n'
+             << indentx2 << "numpunct.grouping: " << to_QString(strGrouping) << '\n'
              << indentx2 << "numpunct.truename: " << to_QString(numFacet.truename()) << '\n'
              << indentx2 << "numpunct.falsename: " << to_QString(numFacet.falsename()) << '\n';
         const QLocale& qtLoc = AppModule::get()->qtLocale();
@@ -261,8 +265,8 @@ QString CommandSystemInformation::data()
              << indentx2 << "language: " << MetaEnum::name(qtLoc.language()) << '\n'
              << indentx2 << "measurementSytem: " << MetaEnum::name(qtLoc.measurementSystem()) << '\n'
              << indentx2 << "textDirection: " << MetaEnum::name(qtLoc.textDirection()) << '\n'
-             << indentx2 << "decimalPoint: " << qtLoc.decimalPoint() << "  " << fnStrUnicodeChar(qtLoc.decimalPoint()) << '\n'
-             << indentx2 << "groupSeparator: " << qtLoc.groupSeparator() << "  " << fnStrUnicodeChar(qtLoc.groupSeparator()) << '\n';
+             << indentx2 << "decimalPoint: " << qtLoc.decimalPoint() << " " << fnStrUnicodeChar(qtLoc.decimalPoint()) << '\n'
+             << indentx2 << "groupSeparator: " << qtLoc.groupSeparator() << " " << fnStrUnicodeChar(qtLoc.groupSeparator()) << '\n';
     }
 
     // C++ StdLib
@@ -270,7 +274,7 @@ QString CommandSystemInformation::data()
     {
         const QChar dirSeparator(FilePath::preferred_separator);
         ostr << indent << "std::thread::hardware_concurrency: " << std::thread::hardware_concurrency() << '\n'
-             << indent << "std::filepath::path::preferred_separator: " << dirSeparator << "  " << fnStrUnicodeChar(dirSeparator) << '\n';
+             << indent << "std::filepath::path::preferred_separator: " << dirSeparator << " " << fnStrUnicodeChar(dirSeparator) << '\n';
     }
 
     // OpenGL
@@ -342,7 +346,7 @@ QString CommandSystemInformation::data()
              << indentx2 << "keyboardInputInterval: " << sh->keyboardInputInterval() << '\n'
              << indentx2 << "mouseDoubleClickInterval: " << sh->mouseDoubleClickInterval() << '\n'
              << indentx2 << "mousePressAndHoldInterval: " << sh->mousePressAndHoldInterval() << '\n'
-             << indentx2 << "passwordMaskCharacter: " << pwdChar << "  " << fnStrUnicodeChar(pwdChar) << '\n'
+             << indentx2 << "passwordMaskCharacter: " << pwdChar << " " << fnStrUnicodeChar(pwdChar) << '\n'
              << indentx2 << "passwordMaskDelay: " << sh->passwordMaskDelay() << '\n'
              << indentx2 << "setFocusOnTouchRelease: " << sh->setFocusOnTouchRelease() << '\n'
              << indentx2 << "showIsFullScreen: " << sh->showIsFullScreen() << '\n'
