@@ -14,6 +14,10 @@ CONFIG(debug, debug|release) {
 }
 
 message(Qt version $$QT_VERSION)
+!versionAtLeast(QT_VERSION, 5.14) {
+    error(Qt >= 5.14 is required but detected version is $$QT_VERSION)
+}
+
 
 QT += core gui widgets
 greaterThan(QT_MAJOR_VERSION, 5) {
