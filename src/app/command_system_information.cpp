@@ -188,7 +188,9 @@ QString CommandSystemInformation::data()
     auto fnStrUnicodeChar = [](const QChar& ch) {
         QString str;
         QTextStream ostr(&str);
-        ostr << "U+" << qSetFieldWidth(4) << qSetPadChar('0') << Qt::uppercasedigits << Qt::hex << ch.unicode();
+        ostr.setNumberFlags(ostr.numberFlags() | QTextStream::UppercaseDigits);
+        ostr.setIntegerBase(16); // Same as Qt::hex
+        ostr << "U+" << qSetFieldWidth(4) << qSetPadChar('0') << ch.unicode();
         return str;
     };
 
@@ -209,7 +211,7 @@ QString CommandSystemInformation::data()
     // OpenCascade version
     ostr << '\n' << "OpenCascade(build): " << OCC_VERSION_STRING_EXT << '\n';
 
-// gmio version
+    // gmio version
 #ifdef HAVE_GMIO
     ostr << '\n' << "gmio(build): " << GMIO_VERSION_STR << '\n';
 #endif
@@ -349,9 +351,11 @@ QString CommandSystemInformation::data()
              << indentx2 << "useHoverEffects: " << sh->useHoverEffects() << '\n'
              << indentx2 << "wheelScrollLines: " << sh->wheelScrollLines() << '\n'
              << indentx2 << "mouseQuickSelectionThreshold: " << sh->mouseQuickSelectionThreshold() << '\n'
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
              << indentx2 << "mouseDoubleClickDistance: " << sh->mouseDoubleClickDistance() << '\n'
-             << indentx2 << "mouseQuickSelectionThreshold: " << sh->mouseQuickSelectionThreshold() << '\n'
-             << indentx2 << "touchDoubleTapDistance: " << sh->touchDoubleTapDistance() << '\n';
+             << indentx2 << "touchDoubleTapDistance: " << sh->touchDoubleTapDistance() << '\n'
+#endif
+            ;
     }
 
     // Fonts
