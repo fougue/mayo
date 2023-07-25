@@ -18,7 +18,6 @@ message(Qt version $$QT_VERSION)
     error(Qt >= 5.14 is required but detected version is $$QT_VERSION)
 }
 
-
 QT += core gui widgets
 greaterThan(QT_MAJOR_VERSION, 5) {
     QT += openglwidgets
@@ -166,7 +165,7 @@ LIBS += \
     -lTKXmlXCAF \
     -lTKXSBase \
 
-minOpenCascadeVersion(7, 7, 0) {
+versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     LIBS += -lTKXDE
 }
 
@@ -177,7 +176,7 @@ LIBS += -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKXDESTEP
 # -- STL support
 LIBS += -lTKSTL
 # -- OBJ/glTF support
-minOpenCascadeVersion(7, 4, 0) {
+versionAtLeast(OCC_VERSION_STR, 7.4.0) {
     LIBS += -lTKRWMesh
 } else {
     SOURCES -= \
@@ -186,16 +185,16 @@ minOpenCascadeVersion(7, 4, 0) {
         src/io_occ/io_occ_obj_reader.cpp
 }
 
-!minOpenCascadeVersion(7, 5, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.5.0) {
     SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
 }
 
-!minOpenCascadeVersion(7, 6, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.6.0) {
     SOURCES -= src/io_occ/io_occ_obj_writer.cpp
 }
 # -- VRML support
 LIBS += -lTKVRML
-!minOpenCascadeVersion(7, 7, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
 }
 
@@ -216,10 +215,7 @@ isEmpty(GMIO_ROOT) {
 
     INCLUDEPATH += $$GMIO_ROOT/include
     LIBS += -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
-    SOURCES += \
-#        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-#        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
-        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
+    SOURCES += $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
     DEFINES += HAVE_GMIO
 }
 

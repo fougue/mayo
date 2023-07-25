@@ -47,35 +47,8 @@ equals(QT_ARCH, i386) {
 } else:equals(QT_ARCH, x86_64) {
     DEFINES += _OCC64
 } else {
-    warning(Platform architecture may be not supported (QT_ARCH = $$QT_ARCH))
+    warning(Platform architecture may be not supported(QT_ARCH = $$QT_ARCH))
 }
 
 LIBS += $$system_path($$join(CASCADE_LIB_DIR, " -L", -L))
 QMAKE_RPATHDIR += $$CASCADE_LIB_DIR
-
-defineTest(minOpenCascadeVersion) {
-    maj = $$1
-    min = $$2
-    patch = $$3
-    isEqual(OCC_VERSION_MAJOR, $$maj) {
-        isEqual(OCC_VERSION_MINOR, $$min) {
-            isEqual(OCC_VERSION_PATCH, $$patch) {
-                return(true)
-            }
-
-            greaterThan(OCC_VERSION_PATCH, $$patch) {
-                return(true)
-            }
-        }
-
-        greaterThan(OCC_VERSION_MINOR, $$min) {
-            return(true)
-        }
-    }
-
-    greaterThan(OCC_VERSION_MAJOR, $$maj) {
-        return(true)
-    }
-
-    return(false)
-}
