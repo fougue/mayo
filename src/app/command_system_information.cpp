@@ -230,14 +230,6 @@ QString CommandSystemInformation::data()
         ostr << '\n';
     }
 
-    // Environment
-    ostr << '\n' << "Environment:\n";
-    {
-        const QProcessEnvironment sysEnv = QProcessEnvironment::systemEnvironment();
-        for (const QString& key : sysEnv.keys())
-            ostr << indent << key << "=\"" << sysEnv.value(key) << "\"\n";
-    }
-
     // Locales
     ostr << '\n' << "Locale:\n";
     {
@@ -268,6 +260,97 @@ QString CommandSystemInformation::data()
         const QChar dirSeparator(FilePath::preferred_separator);
         ostr << indent << "std::thread::hardware_concurrency: " << std::thread::hardware_concurrency() << '\n'
              << indent << "std::filepath::path::preferred_separator: " << dirSeparator << "  " << fnStrUnicodeChar(dirSeparator) << '\n';
+    }
+
+    // OpenGL
+    ostr << '\n' << "OpenGL:" << '\n';
+    dumpOpenGlInfo(ostr);
+
+    // File selectors
+    ostr << '\n' << "File selectors(increasing order of precedence):\n" << indent;
+    for (const QString& selector : QFileSelector().allSelectors())
+        ostr << selector << " ";
+
+    ostr << '\n';
+
+    // Fonts
+    ostr << '\n' << "Fonts:\n";
+    ostr << indent << "General font: " << QFontDatabase::systemFont(QFontDatabase::GeneralFont) << '\n'
+         << indent << "Fixed font: " << QFontDatabase::systemFont(QFontDatabase::FixedFont) << '\n'
+         << indent << "Title font: " << QFontDatabase::systemFont(QFontDatabase::TitleFont) << '\n'
+         << indent << "Smallest font: " << QFontDatabase::systemFont(QFontDatabase::SmallestReadableFont) << '\n';
+
+    // Screens
+    ostr << '\n' << "Screens:\n";
+    {
+        const QList<QScreen*> listScreen = QGuiApplication::screens();
+        ostr << indent << "Count: " << listScreen.size() << '\n';
+        for (int i = 0; i < listScreen.size(); ++i) {
+            const QScreen* screen = listScreen.at(i);
+            ostr << indent << "Screen #" << i << '\n';
+            ostr << indentx2 << "name: " << screen->name() << '\n'
+                 << indentx2 << "model: " << screen->model() << '\n'
+                 << indentx2 << "manufacturer: " << screen->manufacturer() << '\n'
+                 << indentx2 << "serialNumber: " << screen->serialNumber() << '\n'
+                 << indentx2 << "depth: " << screen->depth() << '\n'
+                 << indentx2 << "size: " << screen->size() << '\n'
+                 << indentx2 << "availableSize: " << screen->availableSize() << '\n'
+                 << indentx2 << "virtualSize: " << screen->virtualSize() << '\n'
+                 << indentx2 << "availableVirtualSize: " << screen->availableVirtualSize() << '\n'
+                 << indentx2 << "geometry: " << screen->geometry() << '\n'
+                 << indentx2 << "availableGeometry: " << screen->availableGeometry() << '\n'
+                 << indentx2 << "virtualGeometry: " << screen->virtualGeometry() << '\n'
+                 << indentx2 << "availableVirtualGeometry: " << screen->availableVirtualGeometry() << '\n'
+                 << indentx2 << "physicalSize: " << screen->physicalSize() << '\n'
+                 << indentx2 << "physicalDotsPerInchX: " << screen->physicalDotsPerInchX() << '\n'
+                 << indentx2 << "physicalDotsPerInchY: " << screen->physicalDotsPerInchY() << '\n'
+                 << indentx2 << "physicalDotsPerInch: " << screen->physicalDotsPerInch() << '\n'
+                 << indentx2 << "logicalDotsPerInchX: " << screen->logicalDotsPerInchX() << '\n'
+                 << indentx2 << "logicalDotsPerInchY: " << screen->logicalDotsPerInchY() << '\n'
+                 << indentx2 << "logicalDotsPerInch: " << screen->logicalDotsPerInch() << '\n'
+                 << indentx2 << "devicePixelRatio: " << screen->devicePixelRatio() << '\n'
+                 << indentx2 << "logicalDotsPerInch: " << screen->logicalDotsPerInch() << '\n'
+                 << indentx2 << "primaryOrientation: " << MetaEnum::name(screen->primaryOrientation()) << '\n'
+                 << indentx2 << "orientation: " << MetaEnum::name(screen->orientation()) << '\n'
+                 << indentx2 << "nativeOrientation: " << MetaEnum::name(screen->nativeOrientation()) << '\n'
+                 << indentx2 << "refreshRate: " << screen->refreshRate() << "Hz" << '\n';
+        }
+    }
+
+    // QGuiApplication
+    ostr << '\n' << "QGuiApplication:\n";
+    ostr << indent << "platformName: " << QGuiApplication::platformName() << '\n'
+         << indent << "desktopFileName: " << QGuiApplication::desktopFileName() << '\n'
+         << indent << "desktopSettingsAware: " << QGuiApplication::desktopSettingsAware() << '\n'
+         << indent << "layoutDirection: " << MetaEnum::name(QGuiApplication::layoutDirection()) << '\n';
+    const QStyleHints* sh = QGuiApplication::styleHints();
+    if (sh) {
+        const QChar pwdChar = sh->passwordMaskCharacter();
+        ostr << indent << "styleHints:\n"
+             << indentx2 << "keyboardAutoRepeatRate: " << sh->keyboardAutoRepeatRate() << '\n'
+             << indentx2 << "keyboardInputInterval: " << sh->keyboardInputInterval() << '\n'
+             << indentx2 << "mouseDoubleClickInterval: " << sh->mouseDoubleClickInterval() << '\n'
+             << indentx2 << "mousePressAndHoldInterval: " << sh->mousePressAndHoldInterval() << '\n'
+             << indentx2 << "passwordMaskCharacter: " << pwdChar << "  " << fnStrUnicodeChar(pwdChar) << '\n'
+             << indentx2 << "passwordMaskDelay: " << sh->passwordMaskDelay() << '\n'
+             << indentx2 << "setFocusOnTouchRelease: " << sh->setFocusOnTouchRelease() << '\n'
+             << indentx2 << "showIsFullScreen: " << sh->showIsFullScreen() << '\n'
+             << indentx2 << "showIsMaximized: " << sh->showIsMaximized() << '\n'
+             << indentx2 << "showShortcutsInContextMenus: " << sh->showShortcutsInContextMenus() << '\n'
+             << indentx2 << "startDragDistance: " << sh->startDragDistance() << '\n'
+             << indentx2 << "startDragTime: " << sh->startDragTime() << '\n'
+             << indentx2 << "startDragVelocity: " << sh->startDragVelocity() << '\n'
+             << indentx2 << "useRtlExtensions: " << sh->useRtlExtensions() << '\n'
+             << indentx2 << "tabFocusBehavior: " << MetaEnum::name(sh->tabFocusBehavior()) << '\n'
+             << indentx2 << "singleClickActivation: " << sh->singleClickActivation() << '\n'
+             << indentx2 << "useHoverEffects: " << sh->useHoverEffects() << '\n'
+             << indentx2 << "wheelScrollLines: " << sh->wheelScrollLines() << '\n'
+             << indentx2 << "mouseQuickSelectionThreshold: " << sh->mouseQuickSelectionThreshold() << '\n'
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+             << indentx2 << "mouseDoubleClickDistance: " << sh->mouseDoubleClickDistance() << '\n'
+             << indentx2 << "touchDoubleTapDistance: " << sh->touchDoubleTapDistance() << '\n'
+#endif
+            ;
     }
 
     // Library info
@@ -315,96 +398,13 @@ QString CommandSystemInformation::data()
         fnStdPath(QStandardPaths::AppConfigLocation);
     }
 
-    // File selectors
-    ostr << '\n' << "File selectors(increasing order of precedence):\n" << indent;
-    for (const QString& selector : QFileSelector().allSelectors())
-        ostr << selector << " ";
-
-    ostr << '\n';
-
-    // QGuiApplication
-    ostr << '\n' << "QGuiApplication:\n";
-    ostr << indent << "platformName: " << QGuiApplication::platformName() << '\n'
-         << indent << "desktopFileName: " << QGuiApplication::desktopFileName() << '\n'
-         << indent << "desktopSettingsAware: " << QGuiApplication::desktopSettingsAware() << '\n'
-         << indent << "layoutDirection: " << MetaEnum::name(QGuiApplication::layoutDirection()) << '\n';
-    const QStyleHints* sh = QGuiApplication::styleHints();
-    if (sh) {
-        const QChar pwdChar = sh->passwordMaskCharacter();
-        ostr << indent << "styleHints:\n"
-             << indentx2 << "keyboardAutoRepeatRate: " << sh->keyboardAutoRepeatRate() << '\n'
-             << indentx2 << "keyboardInputInterval: " << sh->keyboardInputInterval() << '\n'
-             << indentx2 << "mouseDoubleClickInterval: " << sh->mouseDoubleClickInterval() << '\n'
-             << indentx2 << "mousePressAndHoldInterval: " << sh->mousePressAndHoldInterval() << '\n'
-             << indentx2 << "passwordMaskCharacter: " << pwdChar << "  " << fnStrUnicodeChar(pwdChar) << '\n'
-             << indentx2 << "passwordMaskDelay: " << sh->passwordMaskDelay() << '\n'
-             << indentx2 << "setFocusOnTouchRelease: " << sh->setFocusOnTouchRelease() << '\n'
-             << indentx2 << "showIsFullScreen: " << sh->showIsFullScreen() << '\n'
-             << indentx2 << "showIsMaximized: " << sh->showIsMaximized() << '\n'
-             << indentx2 << "showShortcutsInContextMenus: " << sh->showShortcutsInContextMenus() << '\n'
-             << indentx2 << "startDragDistance: " << sh->startDragDistance() << '\n'
-             << indentx2 << "startDragTime: " << sh->startDragTime() << '\n'
-             << indentx2 << "startDragVelocity: " << sh->startDragVelocity() << '\n'
-             << indentx2 << "useRtlExtensions: " << sh->useRtlExtensions() << '\n'
-             << indentx2 << "tabFocusBehavior: " << MetaEnum::name(sh->tabFocusBehavior()) << '\n'
-             << indentx2 << "singleClickActivation: " << sh->singleClickActivation() << '\n'
-             << indentx2 << "useHoverEffects: " << sh->useHoverEffects() << '\n'
-             << indentx2 << "wheelScrollLines: " << sh->wheelScrollLines() << '\n'
-             << indentx2 << "mouseQuickSelectionThreshold: " << sh->mouseQuickSelectionThreshold() << '\n'
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
-             << indentx2 << "mouseDoubleClickDistance: " << sh->mouseDoubleClickDistance() << '\n'
-             << indentx2 << "touchDoubleTapDistance: " << sh->touchDoubleTapDistance() << '\n'
-#endif
-            ;
-    }
-
-    // Fonts
-    ostr << '\n' << "Fonts:\n";
-    ostr << indent << "General font: " << QFontDatabase::systemFont(QFontDatabase::GeneralFont) << '\n'
-         << indent << "Fixed font: " << QFontDatabase::systemFont(QFontDatabase::FixedFont) << '\n'
-         << indent << "Title font: " << QFontDatabase::systemFont(QFontDatabase::TitleFont) << '\n'
-         << indent << "Smallest font: " << QFontDatabase::systemFont(QFontDatabase::SmallestReadableFont) << '\n';
-
-    // Screens
-    ostr << '\n' << "Screens:\n";
+    // Environment
+    ostr << '\n' << "Environment:\n";
     {
-        const QList<QScreen*> listScreen = QGuiApplication::screens();
-        ostr << indent << "Count: " << listScreen.size() << '\n';
-        for (int i = 0; i < listScreen.size(); ++i) {
-            const QScreen* screen = listScreen.at(i);
-            ostr << indent << "Screen #" << i << '\n';
-            ostr << indentx2 << "name: " << screen->name() << '\n'
-                 << indentx2 << "model: " << screen->model() << '\n'
-                 << indentx2 << "manufacturer: " << screen->manufacturer() << '\n'
-                 << indentx2 << "serialNumber: " << screen->serialNumber() << '\n'
-                 << indentx2 << "depth: " << screen->depth() << '\n'
-                 << indentx2 << "size: " << screen->size() << '\n'
-                 << indentx2 << "availableSize: " << screen->availableSize() << '\n'
-                 << indentx2 << "virtualSize: " << screen->virtualSize() << '\n'
-                 << indentx2 << "availableVirtualSize: " << screen->availableVirtualSize() << '\n'
-                 << indentx2 << "geometry: " << screen->geometry() << '\n'
-                 << indentx2 << "availableGeometry: " << screen->availableGeometry() << '\n'
-                 << indentx2 << "virtualGeometry: " << screen->virtualGeometry() << '\n'
-                 << indentx2 << "availableVirtualGeometry: " << screen->availableVirtualGeometry() << '\n'
-                 << indentx2 << "physicalSize: " << screen->physicalSize() << '\n'
-                 << indentx2 << "physicalDotsPerInchX: " << screen->physicalDotsPerInchX() << '\n'
-                 << indentx2 << "physicalDotsPerInchY: " << screen->physicalDotsPerInchY() << '\n'
-                 << indentx2 << "physicalDotsPerInch: " << screen->physicalDotsPerInch() << '\n'
-                 << indentx2 << "logicalDotsPerInchX: " << screen->logicalDotsPerInchX() << '\n'
-                 << indentx2 << "logicalDotsPerInchY: " << screen->logicalDotsPerInchY() << '\n'
-                 << indentx2 << "logicalDotsPerInch: " << screen->logicalDotsPerInch() << '\n'
-                 << indentx2 << "devicePixelRatio: " << screen->devicePixelRatio() << '\n'
-                 << indentx2 << "logicalDotsPerInch: " << screen->logicalDotsPerInch() << '\n'
-                 << indentx2 << "primaryOrientation: " << MetaEnum::name(screen->primaryOrientation()) << '\n'
-                 << indentx2 << "orientation: " << MetaEnum::name(screen->orientation()) << '\n'
-                 << indentx2 << "nativeOrientation: " << MetaEnum::name(screen->nativeOrientation()) << '\n'
-                 << indentx2 << "refreshRate: " << screen->refreshRate() << "Hz" << '\n';
-        }
+        const QProcessEnvironment sysEnv = QProcessEnvironment::systemEnvironment();
+        for (const QString& key : sysEnv.keys())
+            ostr << indent << key << "=\"" << sysEnv.value(key) << "\"\n";
     }
-
-    // OpenGL
-    ostr << '\n' << "OpenGL:" << '\n';
-    dumpOpenGlInfo(ostr);
 
     ostr.flush();
     return strSysInfo;
