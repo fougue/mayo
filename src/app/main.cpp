@@ -497,6 +497,9 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
 
+    // Register library infos
+    CommandSystemInformation::addLibraryInfo(IO::GmioLib::strName, IO::GmioLib::strVersion);
+
     // Process CLI
     if (args.showSystemInformation) {
         CommandSystemInformation cmdSysInfo(nullptr);

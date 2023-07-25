@@ -8,6 +8,11 @@
 
 #include "../base/io_writer.h"
 #include "../base/property.h"
+
+#ifdef HAVE_GMIO
+#  include <gmio_core/version.h>
+#endif
+
 #include <memory>
 
 namespace Mayo {
@@ -27,6 +32,17 @@ public:
         return {};
 #endif
     }
+};
+
+struct GmioLib {
+    static constexpr char strName[] = "gmio(build)";
+    static constexpr char strVersion[] =
+#ifdef HAVE_GMIO
+        GMIO_VERSION_STR
+#else
+        ""
+#endif
+        ;
 };
 
 } // namespace IO

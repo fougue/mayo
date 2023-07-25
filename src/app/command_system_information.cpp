@@ -48,6 +48,7 @@
 #endif
 
 #include <thread>
+#include <vector>
 
 namespace Mayo {
 
@@ -127,6 +128,17 @@ QTextStream& operator<<(QTextStream& str, std::string_view sv)
 
 const char indent[] = "    ";
 const char indentx2[] = "        ";
+
+struct LibraryInfo {
+    std::string name;
+    std::string data;
+};
+
+std::vector<LibraryInfo>& getLibraryInfos()
+{
+    static std::vector<LibraryInfo> vec;
+    return vec;
+}
 
 } // namespace
 
@@ -211,10 +223,9 @@ QString CommandSystemInformation::data()
     // OpenCascade version
     ostr << '\n' << "OpenCascade(build): " << OCC_VERSION_STRING_EXT << '\n';
 
-    // gmio version
-#ifdef HAVE_GMIO
-    ostr << '\n' << "gmio(build): " << GMIO_VERSION_STR << '\n';
-#endif
+    // Other registered libraries
+    for (const LibraryInfo& libInfo : getLibraryInfos())
+        ostr << '\n' << to_QString(libInfo.name) << ": " << to_QString(libInfo.data) << '\n';
 
     // I/O supported formats
     {
@@ -408,6 +419,14 @@ QString CommandSystemInformation::data()
 
     ostr.flush();
     return strSysInfo;
+}
+
+void CommandSystemInformation::addLibraryInfo(std::string_view libName, std::string_view data)
+{
+    if (!libName.empty() && !data.empty()) {
+        LibraryInfo libInfo{ std::string(libName), std::string(data) };
+        getLibraryInfos().push_back(std::move(libInfo));
+    }
 }
 
 } // namespace Mayo

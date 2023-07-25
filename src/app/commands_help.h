@@ -24,6 +24,7 @@ public:
     void execute() override;
 
     static QString data();
+    static void addLibraryInfo(std::string_view libName, std::string_view data);
 
     static constexpr std::string_view Name = "system-info";
 };
