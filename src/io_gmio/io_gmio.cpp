@@ -8,6 +8,8 @@
 
 #include "io_gmio_amf_writer.h"
 
+#include <gmio_core/version.h>
+
 namespace Mayo {
 namespace IO {
 
@@ -32,6 +34,11 @@ GmioFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) c
         return GmioAmfWriter::createProperties(parentGroup);
 
     return {};
+}
+
+std::string_view GmioLib::strVersion()
+{
+    return GMIO_VERSION_STR;
 }
 
 } // namespace IO

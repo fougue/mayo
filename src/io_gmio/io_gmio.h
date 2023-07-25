@@ -9,10 +9,6 @@
 #include "../base/io_writer.h"
 #include "../base/property.h"
 
-#ifdef HAVE_GMIO
-#  include <gmio_core/version.h>
-#endif
-
 #include <memory>
 
 namespace Mayo {
@@ -35,14 +31,12 @@ public:
 };
 
 struct GmioLib {
-    static constexpr char strName[] = "gmio(build)";
-    static constexpr char strVersion[] =
+    static std::string_view strName() { return "gmio(build)"; }
 #ifdef HAVE_GMIO
-        GMIO_VERSION_STR
+    static std::string_view strVersion();
 #else
-        ""
+    static std::string_view strVersion() { return ""; }
 #endif
-        ;
 };
 
 } // namespace IO
