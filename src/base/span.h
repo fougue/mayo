@@ -22,7 +22,7 @@ constexpr int Span_itemIndex(Span<T> span, typename Span<T>::const_reference ite
     auto index = &item - &span.front();
     assert(index >= 0);
     assert(index <= INT_MAX);
-    assert(&span[static_cast<Span<T>::size_type>(index)] == &item);
+    assert(&span[static_cast<typename Span<T>::size_type>(index)] == &item);
     return static_cast<int>(index);
 }
 
