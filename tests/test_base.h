@@ -66,6 +66,8 @@ private slots:
     void LibTask_test();
     void LibTree_test();
 
+    void Span_test();
+
     void initTestCase();
     void cleanupTestCase();
 

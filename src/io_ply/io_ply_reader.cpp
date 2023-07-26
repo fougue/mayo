@@ -202,7 +202,9 @@ TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progres
 {
     const bool hasColors = !m_vecColorComponent.empty();
     const bool hasNormals = false; //!m_vecNormalCoord.empty();
-    auto gfxPoints = new Graphic3d_ArrayOfPoints(m_vecNodeCoord.size(), hasColors, hasNormals);
+    auto gfxPoints = new Graphic3d_ArrayOfPoints(
+        CppUtils::safeStaticCast<int>(m_vecNodeCoord.size()), hasColors, hasNormals
+    );
 
     // Add nodes(vertices) into point cloud
     for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {

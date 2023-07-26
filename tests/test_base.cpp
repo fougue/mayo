@@ -1004,6 +1004,21 @@ void TestBase::LibTree_test()
     }
 }
 
+void TestBase::Span_test()
+{
+    const std::vector<std::string> vecString = { "first", "second", "third", "fourth", "fifth" };
+    const std::string& item0 = vecString.at(0);
+    const std::string& item1 = vecString.at(1);
+    const std::string& item2 = vecString.at(2);
+    const std::string& item3 = vecString.at(3);
+    const std::string& item4 = vecString.at(4);
+    QCOMPARE(Span_itemIndex(vecString, item0), 0);
+    QCOMPARE(Span_itemIndex(vecString, item1), 1);
+    QCOMPARE(Span_itemIndex(vecString, item2), 2);
+    QCOMPARE(Span_itemIndex(vecString, item3), 3);
+    QCOMPARE(Span_itemIndex(vecString, item4), 4);
+}
+
 void TestBase::initTestCase()
 {
     m_ioSystem = new IO::System;

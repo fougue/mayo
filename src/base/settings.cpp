@@ -232,7 +232,7 @@ Settings::GroupIndex Settings::addGroup(std::string_view identifier)
 
     for (const Settings_Group& group : d->m_vecGroup) {
         if (group.identifier.key == identifier)
-            return GroupIndex(&group - &d->m_vecGroup.front());
+            return GroupIndex(Span_itemIndex(d->m_vecGroup, group));
     }
 
     d->m_vecGroup.push_back({});
@@ -327,9 +327,9 @@ Settings::SettingIndex Settings::findProperty(const Property* property) const
         for (const Settings_Section& section : group.vecSection) {
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (setting.property == property) {
-                    const auto idSetting = &setting - &section.vecSetting.front();
-                    const auto idSection = &section - &group.vecSection.front();
-                    const auto idGroup = &group - &d->m_vecGroup.front();
+                    const auto idSetting = Span_itemIndex(section.vecSetting, setting);
+                    const auto idSection = Span_itemIndex(group.vecSection, section);
+                    const auto idGroup = Span_itemIndex(d->m_vecGroup, group);
                     return SettingIndex(SectionIndex(GroupIndex(idGroup), idSection), idSetting);
                 }
             }
@@ -360,7 +360,7 @@ Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex group
 //    sectionDefault->identifier = "DEFAULT";
 //    sectionDefault->title = tr("DEFAULT");
     sectionDefault->isDefault = true;
-    const SectionIndex sectionId(groupId, sectionDefault - &group.vecSection.front());
+    const SectionIndex sectionId(groupId, Span_itemIndex(group.vecSection, *sectionDefault));
     return this->addSetting(property, sectionId);
 }
 
