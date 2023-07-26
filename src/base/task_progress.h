@@ -31,6 +31,7 @@ public:
     // Value in [0,100]
     int value() const { return m_value; }
     void setValue(int pct);
+    void setValue(double pct);
 
     const std::string& step() const { return m_step; }
     void setStep(std::string_view title);

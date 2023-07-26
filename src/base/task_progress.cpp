@@ -62,6 +62,11 @@ void TaskProgress::setValue(int pct)
     }
 }
 
+void TaskProgress::setValue(double pct)
+{
+    this->setValue(static_cast<int>(pct));
+}
+
 void TaskProgress::setStep(std::string_view title)
 {
     if (m_taskMgr && m_taskId != TaskId_null) {
