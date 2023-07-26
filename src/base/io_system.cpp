@@ -216,7 +216,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (taskData.fileFormat == Format_Unknown)
             return fnReadFileError(taskData.filepath, textIdTr("Unknown format"));
 
-        int portionSize = 40;
+        double portionSize = 40;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
@@ -237,7 +237,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         return true;
     };
     auto fnTransfer = [&](TaskData& taskData) {
-        int portionSize = 60;
+        double portionSize = 60;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
