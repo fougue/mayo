@@ -26,8 +26,12 @@ private slots:
 
     void FilePath_test();
 
+    void PropertyValueConversionVariant_doubleToInt_test();
+    void PropertyValueConversionVariant_doubleToInt_test_data();
+
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
+
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 

@@ -300,12 +300,17 @@ bool PropertyValueConversion::Variant::toBool(bool* ok) const
 int PropertyValueConversion::Variant::toInt(bool* ok) const
 {
     assignBoolPtr(ok, true);
-    if (std::holds_alternative<int>(*this))
+    if (std::holds_alternative<int>(*this)) {
         return std::get<int>(*this);
-    else if (std::holds_alternative<double>(*this))
-        return std::get<double>(*this);
-    else if (std::holds_alternative<std::string>(*this))
+    }
+    else if (std::holds_alternative<double>(*this)) {
+        auto dval = std::floor(std::get<double>(*this));
+        if (std::isgreaterequal(dval, INT_MIN) && std::islessequal(dval, INT_MAX))
+            return static_cast<int>(dval);
+    }
+    else if (std::holds_alternative<std::string>(*this)) {
         return std::stoi(std::get<std::string>(*this));
+    }
 
     assignBoolPtr(ok, false);
     return 0;

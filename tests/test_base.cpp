@@ -256,6 +256,37 @@ void TestBase::FilePath_test()
     }
 }
 
+void TestBase::PropertyValueConversionVariant_doubleToInt_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QFETCH(double, doubleValue);
+    QFETCH(bool, ok);
+
+    const Variant dvar(doubleValue);
+    bool okActual = false;
+    const int asIntValue = dvar.toInt(&okActual);
+    if (ok) {
+        QCOMPARE(asIntValue, std::floor(doubleValue));
+    } else {
+        QCOMPARE(asIntValue, 0);
+    }
+
+    QCOMPARE(okActual, ok);
+}
+
+void TestBase::PropertyValueConversionVariant_doubleToInt_test_data()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QTest::addColumn<double>("doubleValue");
+    QTest::addColumn<bool>("ok");
+    QTest::newRow("50.25") << 50.25 << true;
+    QTest::newRow("-50.25") << -50.25 << true;
+    QTest::newRow("INT_MAX+1") << (double(INT_MAX) + 1.) << false;
+    QTest::newRow("INT_MIN-1") << (double(INT_MIN) - 1.) << false;
+    QTest::newRow("INT_MAX") << double(INT_MAX) << true;
+    QTest::newRow("INT_MIN") << double(INT_MIN) << true;
+}
+
 void TestBase::PropertyValueConversion_test()
 {
     QFETCH(QString, strPropertyName);

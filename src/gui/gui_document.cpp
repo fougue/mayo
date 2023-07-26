@@ -481,7 +481,8 @@ int GuiDocument::aisViewCubeBoundingSize() const
                 + hnd->BoxEdgeGap()
                 + hnd->BoxEdgeMinSize()
                 + hnd->BoxCornerMinSize()
-                + hnd->RoundRadius())
+                + hnd->RoundRadius()
+               )
             + hnd->AxesPadding()
             + hnd->FontHeight();
 #else
