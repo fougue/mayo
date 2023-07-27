@@ -130,12 +130,12 @@ void GuiDocument::setDevicePixelRatio(double ratio)
         if (viewCube) {
             viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
             viewCube->SetFontHeight(12 * m_devicePixelRatio);
-            const int xyOffset = int(std::round(85 * m_devicePixelRatio));
+            const int xyOffset = std::lround(85 * m_devicePixelRatio);
             viewCube->SetTransformPersistence(
                         new Graphic3d_TransformPers(
-                            Graphic3d_TMF_TriedronPers,
-                            m_viewTrihedronCorner,
-                            Graphic3d_Vec2i(xyOffset, xyOffset)
+                                Graphic3d_TMF_TriedronPers,
+                                m_viewTrihedronCorner,
+                                Graphic3d_Vec2i(xyOffset, xyOffset)
                             )
             );
             viewCube->Redisplay(true/*allModes*/);
@@ -476,15 +476,17 @@ int GuiDocument::aisViewCubeBoundingSize() const
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto hnd = opencascade::handle<AIS_ViewCube>::DownCast(m_aisViewCube);
-    return 2 * (hnd->Size()
-                + hnd->BoxFacetExtension()
-                + hnd->BoxEdgeGap()
-                + hnd->BoxEdgeMinSize()
-                + hnd->BoxCornerMinSize()
-                + hnd->RoundRadius()
-               )
-            + hnd->AxesPadding()
-            + hnd->FontHeight();
+    auto size =
+        2 * (hnd->Size()
+             + hnd->BoxFacetExtension()
+             + hnd->BoxEdgeGap()
+             + hnd->BoxEdgeMinSize()
+             + hnd->BoxCornerMinSize()
+             + hnd->RoundRadius()
+             )
+        + hnd->AxesPadding()
+        + hnd->FontHeight();
+    return std::lround(size);
 #else
     return 0;
 #endif

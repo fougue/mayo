@@ -12,6 +12,7 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
+#include "../base/global.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
@@ -138,6 +139,7 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
         return writer.Write(m_shape, strFilepath.c_str(), TKernelUtils::start(indicator));
 #else
+        MAYO_UNUSED(progress);
         return writer.Write(m_shape, strFilepath.c_str());
 #endif
     }

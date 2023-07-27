@@ -113,6 +113,8 @@ void CommandSwitchMainWidgetMode::execute()
     case IAppContext::Page::Documents:
         newPage = IAppContext::Page::Home;
         break;
+    case IAppContext::Page::Unknown:
+        break;
     }
 
     this->context()->setCurrentPage(newPage);
@@ -146,6 +148,8 @@ void CommandSwitchMainWidgetMode::updateAction()
         break;
     case IAppContext::Page::Documents:
         this->action()->setText(Command::tr("Go To Home Page"));
+        break;
+    case IAppContext::Page::Unknown:
         break;
     }
 }

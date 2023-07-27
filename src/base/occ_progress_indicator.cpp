@@ -43,8 +43,7 @@ bool OccProgressIndicator::Show(const bool /*force*/)
     if (m_progress) {
         m_progress->setStep(to_stdStringView(this->GetScope(1).GetName()));
         const double pc = this->GetPosition(); // Always within [0,1]
-        const int val = pc * 100;
-        m_progress->setValue(val);
+        m_progress->setValue(pc * 100);
     }
 
     return true;
