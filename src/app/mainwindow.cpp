@@ -57,7 +57,7 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
 
     AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
-    guiApp->signalGuiDocumentErased.connectSlot(&MainWindow::onGuiDocumentAdded, this);
+    guiApp->signalGuiDocumentErased.connectSlot(&MainWindow::onGuiDocumentErased, this);
 
     new DialogTaskManager(&m_taskMgr, this);
 
