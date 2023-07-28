@@ -72,8 +72,8 @@ gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x
 
     const gp_Pln planeView(pntAt, dirEye);
     double px, py, pz;
-    const int ix = static_cast<int>(std::round(x));
-    const int iy = static_cast<int>(std::round(y));
+    const int ix = std::lround(x);
+    const int iy = std::lround(y);
     view->Convert(ix, iy, px, py, pz);
     const gp_Pnt pntConverted(px, py, pz);
     const gp_Pnt2d pntConvertedOnPlane = ProjLib::Project(planeView, pntConverted);

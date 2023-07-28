@@ -378,7 +378,11 @@ static void loadLabelVisMaterialProperties(
         item->addChild(createPropertyTreeItem("BaseColor", material->BaseColor()));
         item->addChild(createPropertyTreeItem("AlphaMode", MetaEnum::name(material->AlphaMode())));
         item->addChild(createPropertyTreeItem("AlphaCutOff", material->AlphaCutOff()));
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        item->addChild(createPropertyTreeItem("FaceCulling", MetaEnum::name(material->FaceCulling())));
+#else
         item->addChild(createPropertyTreeItem("IsDoubleSided", material->IsDoubleSided()));
+#endif
         if (!material->RawName().IsNull())
             item->addChild(createPropertyTreeItem("RawName", to_QString(material->RawName())));
 

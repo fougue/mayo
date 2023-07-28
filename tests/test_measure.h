@@ -6,6 +6,9 @@
 
 #pragma once
 
+#ifdef _MSC_VER
+#  define _USE_MATH_DEFINES // Fix M_E, M_PI, ... macro redefinitions with qmath.h
+#endif
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 

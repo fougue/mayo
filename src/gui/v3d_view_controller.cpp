@@ -146,7 +146,7 @@ void V3dViewController::startInstantZoom(const Position& currPos)
 {
     this->startDynamicAction(DynamicAction::InstantZoom);
     this->backupCamera();
-    const int dX = m_instantZoomFactor * 100;
+    const int dX = std::lround(m_instantZoomFactor * 100);
     m_view->StartZoomAtPoint(currPos.x, currPos.y);
     m_view->ZoomAtPoint(currPos.x, currPos.y, currPos.x + dX, currPos.y);
     this->redrawView();

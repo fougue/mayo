@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <cmath>
 #include <future>
 #include <memory>
 #include <unordered_map>
@@ -153,7 +154,8 @@ int TaskManager::globalProgress() const
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    return MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
+    const auto pct = MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
+    return std::lround(pct);
 }
 
 const std::string& TaskManager::title(TaskId id) const

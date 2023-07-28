@@ -81,8 +81,7 @@ DEFINE_STANDARD_HANDLE(InteractiveContext, AIS_InteractiveContext)
 
 class GraphicsScene::Private {
 public:
-    Handle_V3d_Viewer m_v3dViewer;
-    Handle_InteractiveContext m_aisContext;
+    opencascade::handle<InteractiveContext> m_aisContext;
     std::unordered_set<const AIS_InteractiveObject*> m_setClipPlaneSensitive;
     bool m_isRedrawBlocked = false;
     SelectionMode m_selectionMode = SelectionMode::Single;
@@ -91,23 +90,27 @@ public:
 GraphicsScene::GraphicsScene()
     : d(new Private)
 {
-    d->m_v3dViewer = Internal::createOccViewer();
-    d->m_aisContext = new InteractiveContext(d->m_v3dViewer);
+    d->m_aisContext = new InteractiveContext(Internal::createOccViewer());
 }
 
 GraphicsScene::~GraphicsScene()
 {
+    // Preventive cleaning fixes weird crash happening in MSVC Debug mode
+    d->m_aisContext->RemoveFilters();
+    d->m_aisContext->Deactivate();
+    d->m_aisContext->EraseAll(false);
+    d->m_aisContext->RemoveAll(false);
     delete d;
 }
 
 opencascade::handle<V3d_View> GraphicsScene::createV3dView()
 {
-    return d->m_v3dViewer->CreateView();
+    return this->v3dViewer()->CreateView();
 }
 
 const opencascade::handle<V3d_Viewer>& GraphicsScene::v3dViewer() const
 {
-    return d->m_v3dViewer;
+    return d->m_aisContext->CurrentViewer();
 }
 
 const opencascade::handle<StdSelect_ViewerSelector3d>& GraphicsScene::mainSelector() const
@@ -148,7 +151,7 @@ void GraphicsScene::redraw()
         return;
 
     //d->m_aisContext->UpdateCurrentViewer();
-    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next())
+    for (auto itView = this->v3dViewer()->DefinedViewIterator(); itView.More(); itView.Next())
         this->signalRedrawRequested.send(itView.Value());
 }
 
@@ -157,7 +160,7 @@ void GraphicsScene::redraw(const Handle_V3d_View& view)
     if (d->m_isRedrawBlocked)
         return;
 
-    for (auto itView = d->m_v3dViewer->DefinedViewIterator(); itView.More(); itView.Next()) {
+    for (auto itView = this->v3dViewer()->DefinedViewIterator(); itView.More(); itView.Next()) {
         if (itView.Value() == view) {
             this->signalRedrawRequested.send(view);
             break;

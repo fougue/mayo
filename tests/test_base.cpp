@@ -276,7 +276,6 @@ void TestBase::PropertyValueConversionVariant_doubleToInt_test()
 
 void TestBase::PropertyValueConversionVariant_doubleToInt_test_data()
 {
-    using Variant = PropertyValueConversion::Variant;
     QTest::addColumn<double>("doubleValue");
     QTest::addColumn<bool>("ok");
     QTest::newRow("50.25") << 50.25 << true;
@@ -718,7 +717,7 @@ void TestBase::Enumeration_test()
     Enumeration baseEnum = Enumeration::fromType<TestEnumType>();
     QVERIFY(!baseEnum.empty());
     QCOMPARE(baseEnum.size(), MetaEnum::count<TestEnumType>());
-    QCOMPARE(baseEnum.items().size(), baseEnum.size());
+    QCOMPARE(baseEnum.items().size(), static_cast<unsigned>(baseEnum.size()));
     for (const auto& enumEntry : MetaEnum::entries<TestEnumType>()) {
         QVERIFY(baseEnum.contains(enumEntry.second));
         QCOMPARE(baseEnum.findValueByName(enumEntry.second), int(enumEntry.first));
@@ -798,8 +797,11 @@ void TestBase::MeshUtils_test()
                 for (int i = 1; i <= polyTri->NbTriangles(); ++i) {
                     int n1, n2, n3;
                     polyTri->Triangle(i).Get(n1, n2, n3);
-                    polyTriBox->ChangeTriangle(idTriangleOffset + i).Set(
-                                idNodeOffset + n1, idNodeOffset + n2, idNodeOffset + n3);
+                    MeshUtils::setTriangle(
+                        polyTriBox,
+                        idTriangleOffset + i,
+                        { idNodeOffset + n1, idNodeOffset + n2, idNodeOffset + n3 }
+                    );
                 }
 
                 idNodeOffset += polyTri->NbNodes();

@@ -92,9 +92,9 @@ void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int in
     triangulation->SetNormal(index, n);
 #else
     TShort_Array1OfShortReal& normals = triangulation->ChangeNormals();
-    normals.ChangeValue(index * 3 - 2) = n.X();
-    normals.ChangeValue(index * 3 - 1) = n.Y();
-    normals.ChangeValue(index * 3)     = n.Z();
+    normals.ChangeValue(index * 3 - 2) = static_cast<float>(n.X());
+    normals.ChangeValue(index * 3 - 1) = static_cast<float>(n.Y());
+    normals.ChangeValue(index * 3)     = static_cast<float>(n.Z());
 #endif
 }
 

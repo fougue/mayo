@@ -131,14 +131,14 @@ int screenPixelWidth(double screenRatio, const QScreen* screen)
 {
     screen = !screen ? QGuiApplication::primaryScreen() : screen;
     const int screenWidth = screen ? screen->geometry().width() : 800;
-    return std::round(screenWidth * screenRatio);
+    return qRound(screenWidth * screenRatio);
 }
 
 int screenPixelHeight(double screenRatio, const QScreen* screen)
 {
     screen = !screen ? QGuiApplication::primaryScreen() : screen;
     const int screenHeight = screen ? screen->geometry().height() : 600;
-    return std::round(screenHeight * screenRatio);
+    return qRound(screenHeight * screenRatio);
 }
 
 QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen)

@@ -11,6 +11,7 @@
 #include "../base/math_utils.h"
 #include "../base/settings.h"
 #include "../base/tkernel_utils.h"
+#include "../graphics/graphics_texture2d.h"
 #include "../graphics/graphics_utils.h"
 #include "app_module.h"
 #include "ui_widget_clip_planes.h"
@@ -19,7 +20,6 @@
 #include <QtCore/QFile>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
-#include <Graphic3d_Texture2Dmanual.hxx>
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
 
@@ -244,7 +244,7 @@ void WidgetClipPlanes::createPlaneCappingTexture()
         auto fileContentsData = reinterpret_cast<const Standard_Byte*>(fileContents.constData());
         Handle_Image_AlienPixMap imageCapping = new Image_AlienPixMap;
         imageCapping->Load(fileContentsData, fileContents.size(), filenameUtf8.constData());
-        m_textureCapping = new Graphic3d_Texture2Dmanual(imageCapping);
+        m_textureCapping = new GraphicsTexture2D(imageCapping);
         m_textureCapping->EnableModulate();
         m_textureCapping->EnableRepeat();
         m_textureCapping->GetParams()->SetScale(Graphic3d_Vec2(0.05f, -0.05f));
