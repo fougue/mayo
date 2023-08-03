@@ -4,6 +4,10 @@ on: [push]
 
 jobs:
     build-linux:
+        strategy:
+            matrix:
+                qt_version: [5.15.2, 6.5.2]
+
         runs-on: ubuntu-latest
 
         steps:
@@ -13,8 +17,14 @@ jobs:
         - name: Install Qt
           uses: jurplel/install-qt-action@v3
           with:
+              version: ${{matrix.qt_version}}
               cache: true
-              cache-key-prefix: ${{ runner.os }}-QtCache
+              cache-key-prefix: ${{runner.os}}-QtCache
+
+        # Actually needed for Qt6
+        - name: Install dependencies for "xcb" Qt plugin
+          run: |
+              sudo apt-get -y install libxcb-cursor0
 
         - name: Install OpenCascade
           run: |
