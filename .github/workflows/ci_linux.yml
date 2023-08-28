@@ -19,7 +19,7 @@ jobs:
           with:
               version: ${{matrix.qt_version}}
               cache: true
-              cache-key-prefix: ${{runner.os}}-QtCache
+              cache-key-prefix: QtCache
 
         # Actually needed for Qt6
         - name: Install dependencies for "xcb" Qt plugin

@@ -18,7 +18,7 @@ jobs:
           uses: jurplel/install-qt-action@v3
           with:
               cache: true
-              cache-key-prefix: ${{runner.os}}-QtCache
+              cache-key-prefix: QtCache
 
         - name: Cache OpenCascade archive
           id: cache-occ
