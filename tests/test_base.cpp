@@ -932,9 +932,9 @@ void TestBase::UnitSystem_test_data()
     QTest::newRow("time(5s)")
             << UnitSystem::milliseconds(5 * Quantity_Second)
             << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
-    QTest::newRow("time(5s)")
-            << UnitSystem::milliseconds(5 * Quantity_Second)
-            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(2min)")
+            << UnitSystem::milliseconds(2 * Quantity_Minute)
+            << UnitSystem::TranslateResult{ 2 * 60 * 1000., "ms", Quantity_Millisecond.value() };
 }
 
 void TestBase::LibTask_test()
