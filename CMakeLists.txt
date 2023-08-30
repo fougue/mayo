@@ -211,6 +211,10 @@ target_compile_definitions(
     mayo PRIVATE ${Mayo_CompileDefinitions}
 )
 
+target_compile_options(
+    mayo PRIVATE -Wno-deprecated-declarations -Wno-undefined-var-template -Wno-macro-redefined
+)
+
 target_link_libraries(
     mayo PRIVATE ${Mayo_LinkLibraries}
 )
