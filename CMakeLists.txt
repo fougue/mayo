@@ -58,11 +58,16 @@ endif()
 # Qt
 ##########
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
-# TODO Add openglwidget module for Qt6
-message(STATUS "Qt version = ${QT_VERSION}")
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
+if(${QT_VERSION_MAJOR} EQUAL 5)
+    find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
+    list(APPEND Mayo_LinkLibraries Qt5::Core Qt5::Gui Qt5::Widgets)
+elseif(${QT_VERSION_MAJOR} EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
+    list(APPEND Mayo_LinkLibraries Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets)
+endif()
 
-list(APPEND Mayo_LinkLibraries Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets)
+message(STATUS "Qt version = ${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}")
 
 #qt_standard_project_setup()
 set(CMAKE_AUTOMOC ON)
