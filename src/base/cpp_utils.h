@@ -17,19 +17,85 @@
 
 namespace Mayo {
 
+// Declare CppUtils namespace and its "short" alias
+namespace CppUtils {}
+namespace Cpp = CppUtils;
+
+// --
+// -- Declaration
+// --
+
 namespace CppUtils {
 
-inline const std::string& nullString()
+// Type alias for the value type associated(mapped) to a key for an associative container(eg std::map)
+template<typename AssociativeContainer>
+using MappedType = typename AssociativeContainer::mapped_type;
+
+// Type alias for the key type of an associative container(eg std::map)
+template<typename AssociativeContainer>
+using KeyType = typename AssociativeContainer::key_type;
+
+// Returns a default empty std::string object, whose memory address can be used safely
+inline const std::string& nullString();
+
+// Finds in associative container the value mapped to 'key'
+// If 'key' isn't found then a default-constructed value is returned
+// The value(mapped) type must default-constructible
+template<typename AssociativeContainer>
+MappedType<AssociativeContainer> findValue(
+    const KeyType<AssociativeContainer>& key,
+    const AssociativeContainer& container
+);
+
+// Toggles input boolean value(eg true->false)
+inline void toggle(bool& value);
+
+// Same as std::cmp_equal() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpEqual(T t, U u) noexcept;
+
+// Same as std::cmp_not_equal() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpNotEqual(T t, U u) noexcept;
+
+// Same as std::cmp_less() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpLess(T t, U u) noexcept;
+
+// Same as std::cmp_greater() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpGreater(T t, U u) noexcept;
+
+// Same as std::cmp_less_equal() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpLessEqual(T t, U u) noexcept;
+
+// Same as std::cmp_greater_equal() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename T, typename U> constexpr bool cmpGreaterEqual(T t, U u) noexcept;
+
+// Same as std::in_range() but provides an implementation if !__cpp_lib_integer_comparison_functions
+template<typename R, typename T> constexpr bool inRange(T t) noexcept;
+
+// Throws object of specified error type if 'condition' is met
+template<typename ErrorType, typename... ErrorArgs>
+void throwErrorIf(bool condition, ErrorArgs... args);
+
+// Same as static_cast<R>(t) but throws exception if 't' does not fit inside type 'R'
+template<typename R, typename T> constexpr R safeStaticCast(T t);
+
+} // namespace CppUtils
+
+// --
+// -- Implementation
+// --
+
+namespace CppUtils {
+
+const std::string& nullString()
 {
     static std::string str;
     return str;
 }
 
 template<typename AssociativeContainer>
-typename AssociativeContainer::mapped_type findValue(
-        const typename AssociativeContainer::key_type& key,
-        const AssociativeContainer& container
-    )
+MappedType<AssociativeContainer> findValue(
+    const KeyType<AssociativeContainer>& key, const AssociativeContainer& container
+)
 {
     auto it = container.find(key);
     if (it != container.cend()) {
@@ -41,7 +107,7 @@ typename AssociativeContainer::mapped_type findValue(
     }
 }
 
-inline void toggle(bool& value)
+void toggle(bool& value)
 {
     value = !value;
 }
@@ -131,7 +197,6 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept
 #endif
 }
 
-// Throws object of specified error type if 'condition' is met
 template<typename ErrorType, typename... ErrorArgs> void throwErrorIf(bool condition, ErrorArgs... args)
 {
     if (condition) {
@@ -139,7 +204,6 @@ template<typename ErrorType, typename... ErrorArgs> void throwErrorIf(bool condi
     }
 }
 
-// Same as static_cast<R>(t) but throw exception if 't' does not fit inside type 'R'
 template<typename R, typename T> constexpr R safeStaticCast(T t)
 {
     throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
@@ -147,7 +211,5 @@ template<typename R, typename T> constexpr R safeStaticCast(T t)
 }
 
 } // namespace CppUtils
-
-namespace Cpp = CppUtils;
 
 } // namespace Mayo
