@@ -9,6 +9,7 @@
 #include "cpp_utils.h"
 #include "span.h"
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 namespace Mayo {
