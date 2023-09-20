@@ -570,16 +570,10 @@ int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
 
-    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
-    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
-    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
-    // As a workaround the Qt platform is forced to xcb
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
-    qputenv("QT_QPA_PLATFORM", "xcb");
-#endif
-
     // Helper function to check if application arguments contain any option listed in 'listOption'
-    auto fnArgsContainAnyOf = [=](std::initializer_list<const char*> listOption) {
+    // IMPORTANT: capture by reference, because QApplication constructor may alter argc(due to
+    //            parsing of arguments)
+    auto fnArgsContainAnyOf = [&](std::initializer_list<const char*> listOption) {
         for (int i = 1; i < argc; ++i) {
             for (const char* option : listOption) {
                 if (std::strcmp(argv[i], option) == 0)
@@ -588,6 +582,24 @@ int main(int argc, char* argv[])
         }
         return false;
     };
+
+    // If the arguments(argv) contain any of the following option, then Mayo has to run in CLI mode
+    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
+
+    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
+    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
+    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
+    // As a workaround the Qt platform is forced to xcb
+#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
+    if (
+        !isAppCliMode
+        && !qEnvironmentVariableIsSet("QT_QPA_PLATFORM")
+        && !fnArgsContainAnyOf({ "-platform" })
+       )
+    {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
+#endif
 
     // Configure and create Qt application object
 #if defined(Q_OS_WIN)
@@ -598,7 +610,6 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
     std::unique_ptr<QCoreApplication> ptrApp(
             isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
     );

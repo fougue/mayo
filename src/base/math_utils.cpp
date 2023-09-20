@@ -13,7 +13,6 @@
 #include <limits>
 
 namespace Mayo {
-
 namespace MathUtils {
 
 bool isReversedStandardDir(const gp_Dir& n)
