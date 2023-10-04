@@ -51,7 +51,9 @@ int GuiDocumentListModel::rowCount(const QModelIndex& /*parent*/) const
 
 void GuiDocumentListModel::appendGuiDocument(const GuiDocument* guiDoc)
 {
-    const int row = this->rowCount();
+    // NOTE: don't use rowCount() as it's virtual and appendGuiDocument() is called in constructor
+    //       of this class(virtual dispatch would be bypassed)
+    const auto row = int(m_vecGuiDocument.size());
     this->beginInsertRows(QModelIndex(), row, row);
     m_vecGuiDocument.emplace_back(guiDoc);
     this->endInsertRows();
