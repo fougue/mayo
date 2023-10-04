@@ -839,7 +839,7 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
     <message>
         <location filename="../src/app/commands_help.cpp" line="37"/>
         <source>About %1</source>
-        <translation>À propos %1</translation>
+        <translation>À propos de %1</translation>
     </message>
     <message>
         <location filename="../src/app/commands_tools.cpp" line="28"/>
