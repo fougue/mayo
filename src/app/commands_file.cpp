@@ -490,7 +490,7 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                Command::tr("Close \"%1\"").arg(strFilepathQuoted(docName)) :
+                Command::tr("Close %1").arg(strFilepathQuoted(docName)) :
                 Command::tr("Close");
     this->action()->setText(textActionClose);
     this->action()->setToolTip(textActionClose);
@@ -561,7 +561,7 @@ void CommandCloseAllDocumentsExceptCurrent::updateActionText(Document::Identifie
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                Command::tr("Close all except \"%1\"").arg(strFilepathQuoted(docName)) :
+                Command::tr("Close all except %1").arg(strFilepathQuoted(docName)) :
                 Command::tr("Close all except current");
     this->action()->setText(textActionClose);
 }

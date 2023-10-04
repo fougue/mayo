@@ -58,6 +58,7 @@ public:
 
         this->cameraOrientation.setDescription(
                     ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector"));
+        this->cameraProjection.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
     }
 
     void restoreDefaults() override {

@@ -155,6 +155,9 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
 
 void AppModuleProperties::retranslate()
 {
+    // System
+    this->unitSystemSchema.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
+
     // Application
     this->language.setDescription(
                 textIdTr("Language used for the application. Change will take effect after application restart"));

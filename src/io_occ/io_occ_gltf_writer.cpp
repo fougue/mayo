@@ -45,6 +45,8 @@ public:
                       "vector, Rotation quaternion and Scale factor(T * R * S)") }
         });
 
+        this->format.mutableEnumeration().changeTrContext(OccGltfWriter::Properties::textIdContext());
+
         this->nodeNameFormat.setDescription(textIdTr("Name format for exporting nodes"));
         this->meshNameFormat.setDescription(textIdTr("Name format for exporting meshes"));
         this->embedTextures.setDescription(
