@@ -13,6 +13,7 @@
 #include "../base/settings.h"
 #include "../base/tkernel_utils.h"
 #include "app_module.h"
+#include "filepath_conv.h"
 #include "qmeta_tdf_label.h"
 #include "qstring_conv.h"
 #include "qstring_utils.h"
@@ -295,9 +296,15 @@ static void loadLabelMaterialProperties(
 // This helper allows "lazy" loading of the image files
 class ImageFileTreeWidgetItem : public QTreeWidgetItem {
 public:
-    void setImageFilePath(int col, const QString& strFilePath)
+    void setImage(int col, const FilePath& filePath)
     {
-        const ItemData item{strFilePath, {}};
+        const ItemData item{filePath, {}, {}};
+        m_mapColumnItemData.insert({ col, item });
+    }
+
+    void setImage(int col, const QByteArray& data)
+    {
+        const ItemData item{{}, data, {}};
         m_mapColumnItemData.insert({ col, item });
     }
 
@@ -312,12 +319,23 @@ public:
             return {};
 
         if (ptrItem->strToolTip.isEmpty()) {
-            const QPixmap pixmap(ptrItem->strFilePath);
+            QPixmap pixmap;
+            uintmax_t imageSize = 0;
+
+            if (!ptrItem->filePath.empty()) {
+                pixmap.load(filepathTo<QString>(ptrItem->filePath));
+                imageSize = filepathFileSize(ptrItem->filePath);
+            }
+            else {
+                pixmap.loadFromData(ptrItem->fileData);
+                imageSize = ptrItem->fileData.size();
+            }
+
             if (!pixmap.isNull()) {
                 QBuffer bufferPixmap;
-                const QPixmap pixmapClamped = pixmap.scaledToWidth(std::min(pixmap.width(), 400));
+                const int pixmapWidth = std::min(pixmap.width(), int(400 * qGuiApp->devicePixelRatio()));
+                const QPixmap pixmapClamped = pixmap.scaledToWidth(pixmapWidth);
                 pixmapClamped.save(&bufferPixmap, "PNG");
-                const auto imageSize = QFileInfo(ptrItem->strFilePath).size();
                 const QString strImageSize = QStringUtils::bytesText(imageSize, appDefaultTextOptions().locale);
                 ptrItem->strToolTip =
                         QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
@@ -325,7 +343,7 @@ public:
                         .arg(pixmapClamped.width())
                         .arg(pixmapClamped.height())
                         .arg(DialogInspectXde::tr("File Size: %1<br>Dimensions: %2x%3 Depth: %4")
-                             .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth()))
+                        .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth()))
                         ;
             }
             else {
@@ -338,7 +356,8 @@ public:
 
 private:
     struct ItemData {
-        QString strFilePath;
+        FilePath filePath;
+        QByteArray fileData;
         QString strToolTip;
     };
 
@@ -350,11 +369,36 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const Handle
     if (imgTexture.IsNull())
         return static_cast<QTreeWidgetItem*>(nullptr);
 
-    const QString strTextureFilePath = to_QString(imgTexture->FilePath());
     auto item = new ImageFileTreeWidgetItem;
     item->setText(0, text);
-    item->setText(1, strTextureFilePath);
-    item->setImageFilePath(1, strTextureFilePath);
+    if (!imgTexture->FilePath().IsEmpty()) {
+        // Texture is provided through a file reference
+        const FilePath filePath = filepathCanonical(filepathFrom(imgTexture->FilePath()));
+        const QString strFilePath = filepathTo<QString>(filePath);
+        const auto fileOffset = imgTexture->FileOffset();
+        if (fileOffset > 0) {
+            // Texture is defined in a file portion
+            item->setText(1, DialogInspectXde::tr("%1,offset:%2").arg(strFilePath).arg(fileOffset));
+            QFile file(strFilePath);
+            if (file.open(QIODevice::ReadOnly)) {
+                file.seek(fileOffset);
+                const QByteArray buff = file.read(imgTexture->FileLength());
+                item->setImage(1, buff);
+            }
+        }
+        else {
+            // Texture is defined in a file
+            item->setText(1, strFilePath);
+            item->setImage(1, filePath);
+        }
+    }
+    else if (imgTexture->DataBuffer() && !imgTexture->DataBuffer()->IsEmpty()) {
+        // Texture is provided by some embedded data
+        item->setText(1, DialogInspectXde::tr("<data>"));
+        const Handle(NCollection_Buffer)& buff = imgTexture->DataBuffer();
+        item->setImage(1, QByteArray::fromRawData(reinterpret_cast<const char*>(buff->Data()), buff->Size()));
+    }
+
     return item;
 }
 #endif
