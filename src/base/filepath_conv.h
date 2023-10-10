@@ -51,5 +51,11 @@ inline FilePath filepathFrom(std::string_view strUtf8) {
     return std_filesystem::u8path(strUtf8);
 }
 
+// TCollection_AsciiString -> FilePath
+// Assumes utf8 encoding
+inline FilePath filepathFrom(const TCollection_AsciiString& strUtf8) {
+    return std_filesystem::u8path(strUtf8.ToCString());
+}
+
 } // namespace Mayo
 
