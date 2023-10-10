@@ -119,6 +119,14 @@ OTHER_FILES += \
     images/credits.txt \
     scripts/bump-version.rb \
 
+# Embed qtbase_*.qm files as a resource
+qtBaseQmRes.files = \
+    $$[QT_INSTALL_TRANSLATIONS]/qtbase_en.qm \
+    $$[QT_INSTALL_TRANSLATIONS]/qtbase_fr.qm
+qtBaseQmRes.base = $$[QT_INSTALL_TRANSLATIONS]
+qtBaseQmRes.prefix = "/i18n"
+RESOURCES += qtBaseQmRes
+
 # Optional developer-specific QMake pri file for environment related settings
 exists($$PWD/env.pri) {
     include($$PWD/env.pri)

@@ -460,12 +460,16 @@ static int runApp(QCoreApplication* qtApp)
     appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
     {
         // Load translation files
-        const QString qmFilePath = QString(":/i18n/mayo_%1.qm").arg(appModule->languageCode());
-        auto translator = new QTranslator(qtApp);
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        auto fnLoadQmFile = [=](const QString& qmFilePath) {
+            auto translator = new QTranslator(qtApp);
+            if (translator->load(qmFilePath))
+                qtApp->installTranslator(translator);
+            else
+                qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        };
+        const QString appLangCode = appModule->languageCode();
+        fnLoadQmFile(QString(":/i18n/mayo_%1.qm").arg(appLangCode));
+        fnLoadQmFile(QString(":/i18n/qtbase_%1.qm").arg(appLangCode));
     }
 
     // Initialize Base application
