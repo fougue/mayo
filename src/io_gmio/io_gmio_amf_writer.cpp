@@ -157,7 +157,8 @@ public:
                                 this->createZipArchive.label()));
     }
 
-    void restoreDefaults() override {
+    void restoreDefaults() override
+    {
         const GmioAmfWriter::Parameters params;
         this->float64Format.setValue(params.float64Format);
         this->float64Precision.setValue(params.float64Precision);

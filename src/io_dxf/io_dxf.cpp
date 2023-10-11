@@ -6,6 +6,7 @@
 
 #include "io_dxf.h"
 
+#include "../base/brep_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/document.h"
 #include "../base/filepath.h"
@@ -213,12 +214,10 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
             if (startsWith(layerName, "BLOCKS"))
                 continue; // Skip
 
-            BRep_Builder builder;
-            TopoDS_Compound comp;
-            builder.MakeCompound(comp);
+            TopoDS_Compound comp = BRepUtils::makeEmptyCompound();
             for (const Entity& entity : vecEntity) {
                 if (!entity.shape.IsNull())
-                    builder.Add(comp, entity.shape);
+                    BRepUtils::addShape(&comp, entity.shape);
             }
 
             if (!comp.IsNull()) {
@@ -421,12 +420,10 @@ void DxfReader::Internal::OnReadInsert(const double* point, const double* scale,
         if (!startsWith(k, prefix))
             continue; // Skip
 
-        BRep_Builder builder;
-        TopoDS_Compound comp;
-        builder.MakeCompound(comp);
+        TopoDS_Compound comp = BRepUtils::makeEmptyCompound();
         for (const DxfReader::Entity& entity : vecEntity) {
             if (!entity.shape.IsNull())
-                builder.Add(comp, entity.shape);
+                BRepUtils::addShape(&comp, entity.shape);
         }
 
         if (comp.IsNull())

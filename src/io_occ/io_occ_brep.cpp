@@ -7,10 +7,12 @@
 #include "io_occ_brep.h"
 
 #include "../base/application_item.h"
+#include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
 #include "../base/occ_progress_indicator.h"
+#include "../base/io_system.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -52,7 +54,7 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
 
     std::vector<TopoDS_Shape> vecShape;
     vecShape.reserve(appItems.size());
-    for (const ApplicationItem& item : appItems) {
+    System::visitUniqueItems(appItems, [&](const ApplicationItem& item) {
         if (item.isDocument()) {
             for (const TDF_Label& label : item.document()->xcaf().topLevelFreeShapes())
                 vecShape.push_back(XCaf::shape(label));
@@ -61,16 +63,12 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
             const TDF_Label labelNode = item.documentTreeNode().label();
             vecShape.push_back(XCaf::shape(labelNode));
         }
-    }
+    });
 
     if (vecShape.size() > 1) {
-        TopoDS_Compound cmpd;
-        BRep_Builder builder;
-        builder.MakeCompound(cmpd);
+        m_shape = BRepUtils::makeEmptyCompound();
         for (const TopoDS_Shape& subShape : vecShape)
-            builder.Add(cmpd, subShape);
-
-        m_shape = cmpd;
+            BRepUtils::addShape(&m_shape, subShape);
     }
     else if (vecShape.size() == 1) {
         m_shape = vecShape.front();

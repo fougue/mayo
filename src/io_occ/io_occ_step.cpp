@@ -6,6 +6,7 @@
 
 #include "io_occ_step.h"
 #include "io_occ_caf.h"
+#include "../base/messenger.h"
 #include "../base/meta_enum.h"
 #include "../base/occ_static_variables_rollback.h"
 #include "../base/property_builtins.h"

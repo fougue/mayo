@@ -426,7 +426,7 @@ void System::visitUniqueItems(
 {
     std::unordered_set<DocumentPtr> setDoc;
     for (const ApplicationItem& item : spanItem) {
-        if (item.isDocument()) {
+        if (item.isDocument() && item.document()->entityCount() > 0) {
             auto [it, ok] = setDoc.insert(item.document());
             if (ok)
                 fnCallback(item);
