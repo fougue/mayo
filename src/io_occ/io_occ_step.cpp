@@ -329,14 +329,10 @@ bool OccStepWriter::writeFile(const FilePath& filepath, TaskProgress* /*progress
     this->changeStaticVariables(&rollback);
 
     APIHeaderSection_MakeHeader makeHeader(m_writer->ChangeWriter().Model());
-    makeHeader.SetAuthorValue(
-                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerAuthor));
-    makeHeader.SetOrganizationValue(
-                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerOrganization));
-    makeHeader.SetOriginatingSystem(
-                string_conv<Handle(TCollection_HAsciiString)>(m_params.headerOriginatingSystem));
-    makeHeader.SetDescriptionValue(
-                1, string_conv<Handle(TCollection_HAsciiString)>(m_params.headerDescription));
+    makeHeader.SetAuthorValue(1, to_OccHandleHAsciiString(m_params.headerAuthor));
+    makeHeader.SetOrganizationValue(1, to_OccHandleHAsciiString(m_params.headerOrganization));
+    makeHeader.SetOriginatingSystem(to_OccHandleHAsciiString(m_params.headerOriginatingSystem));
+    makeHeader.SetDescriptionValue(1, to_OccHandleHAsciiString(m_params.headerDescription));
 
     const IFSelect_ReturnStatus err = m_writer->Write(filepath.u8string().c_str());
     return err == IFSelect_RetDone;

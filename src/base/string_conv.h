@@ -49,6 +49,12 @@ TCollection_AsciiString to_OccAsciiString(const StringType& str) {
     return string_conv<TCollection_AsciiString>(str);
 }
 
+// X -> Handle(TCollection_HAsciiString)
+template<typename StringType>
+Handle(TCollection_HAsciiString) to_OccHandleHAsciiString(const StringType& str) {
+    return string_conv<Handle(TCollection_HAsciiString)>(str);
+}
+
 // X -> TCollection_ExtendedString
 template<typename StringType>
 TCollection_ExtendedString to_OccExtString(const StringType& str) {
