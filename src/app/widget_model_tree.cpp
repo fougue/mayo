@@ -143,11 +143,13 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     modelTreeBtns->addButton(
                 idBtnRemove,
                 mayoTheme()->icon(Theme::Icon::Cross),
-                tr("Remove from document"));
+                tr("Remove from document")
+        );
     modelTreeBtns->setButtonDetection(
                 idBtnRemove,
                 Internal::TreeItemTypeRole,
-                QVariant(Internal::TreeItemType_DocumentEntity));
+                QVariant(Internal::TreeItemType_DocumentEntity)
+        );
     modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
     modelTreeBtns->setButtonDisplayModes(idBtnRemove, ItemViewButtons::DisplayOnDetection);
     modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
@@ -318,7 +320,8 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentPtr& d
     auto it = std::find_if(
                 std::next(m_vecBuilder.cbegin()),
                 m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); });
+                [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); }
+        );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -328,7 +331,8 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNo
     auto it = std::find_if(
                 std::next(m_vecBuilder.cbegin()),
                 m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); });
+                [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); }
+        );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -409,7 +413,8 @@ void WidgetModelTree::connectTreeModelDataChanged(bool on)
     if (on) {
         m_connTreeModelDataChanged = QObject::connect(
                     m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
-                    this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection);
+                    this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection
+            );
     }
     else {
         QObject::disconnect(m_connTreeModelDataChanged);
@@ -422,7 +427,8 @@ void WidgetModelTree::connectTreeWidgetDocumentSelectionChanged(bool on)
         m_connTreeWidgetDocumentSelectionChanged = QObject::connect(
                     m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
                     this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
-                    Qt::UniqueConnection);
+                    Qt::UniqueConnection
+            );
     }
     else {
         QObject::disconnect(m_connTreeWidgetDocumentSelectionChanged);
@@ -430,7 +436,8 @@ void WidgetModelTree::connectTreeWidgetDocumentSelectionChanged(bool on)
 }
 
 void WidgetModelTree::onTreeModelDataChanged(
-        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
+    )
 {
     if (roles.contains(Qt::CheckStateRole) && topLeft == bottomRight) {
         const QModelIndex& indexItem = topLeft;
@@ -454,7 +461,8 @@ void WidgetModelTree::onTreeModelDataChanged(
 }
 
 void WidgetModelTree::onNodesVisibilityChanged(
-        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId)
+        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId
+    )
 {
     QTreeWidgetItem* treeItemDoc = this->findTreeItem(guiDoc->document());
     if (!treeItemDoc)
