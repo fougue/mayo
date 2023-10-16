@@ -24,10 +24,16 @@ namespace Mayo {
 
 TopoDS_Compound BRepUtils::makeEmptyCompound()
 {
-    BRep_Builder builder;
+    TopoDS_Builder builder;
     TopoDS_Compound comp;
     builder.MakeCompound(comp);
     return comp;
+}
+
+void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape)
+{
+    TopoDS_Builder builder;
+    builder.Add(*ptrTargetShape, shape);
 }
 
 TopoDS_Face BRepUtils::makeFace(const Handle(Poly_Triangulation)& mesh)

@@ -7,6 +7,7 @@
 #include "io_occ_obj_writer.h"
 
 #include "../base/application_item.h"
+#include "../base/io_system.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -43,7 +44,7 @@ bool OccObjWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgres
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();
-    for (const ApplicationItem& appItem : spanAppItem) {
+    System::visitUniqueItems(spanAppItem, [=](const ApplicationItem& appItem) {
         if (appItem.isDocument() && m_document.IsNull()) {
             m_document = appItem.document();
         }
@@ -54,7 +55,7 @@ bool OccObjWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgres
             if (appItem.document().get() == m_document.get())
                 m_seqRootLabel.Append(appItem.documentTreeNode().label());
         }
-    }
+    });
 
     if (!m_document)
         return false;

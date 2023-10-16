@@ -8,6 +8,7 @@
 #include "../base/global.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
+#include "../base/io_system.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -58,7 +59,11 @@ bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> 
     auto _ = gsl::finally([&]{ Private::cafFinderProcess(writer)->SetProgress(nullptr); });
 #endif
 
-    for (const ApplicationItem& item : appItems) {
+    bool okTransfer = true;
+    System::visitUniqueItems(appItems, [&](const ApplicationItem& item) {
+        if (!okTransfer)
+            return; // Skip if already in error state
+
         bool okItemTransfer = false;
         if (item.isDocument())
             okItemTransfer = writer.Transfer(item.document());
@@ -66,10 +71,10 @@ bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> 
             okItemTransfer = writer.Transfer(item.documentTreeNode().label());
 
         if (!okItemTransfer)
-            return false;
-    }
+            okTransfer = false;
+    });
 
-    return true;
+    return okTransfer;
 }
 
 } // namespace

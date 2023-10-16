@@ -23,6 +23,9 @@ struct BRepUtils {
     // Creates a valid and empty TopoDS_Compound shape
     static TopoDS_Compound makeEmptyCompound();
 
+    // Adds 'shape' in target shape 'ptrTargetShape'
+    static void addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape);
+
     // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
     static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);
 

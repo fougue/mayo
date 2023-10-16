@@ -8,6 +8,7 @@
 
 #include "../base/application_item.h"
 #include "../base/enumeration_fromenum.h"
+#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_builtins.h"
@@ -119,7 +120,7 @@ bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();
-    for (const ApplicationItem& appItem : spanAppItem) {
+    System::visitUniqueItems(spanAppItem, [=](const ApplicationItem& appItem) {
         if (appItem.isDocument() && m_document.IsNull()) {
             m_document = appItem.document();
         }
@@ -130,7 +131,7 @@ bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
             if (appItem.document().get() == m_document.get())
                 m_seqRootLabel.Append(appItem.documentTreeNode().label());
         }
-    }
+    });
 
     if (!m_document)
         return false;

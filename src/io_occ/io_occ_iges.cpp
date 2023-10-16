@@ -31,7 +31,9 @@ public:
                              "This parameter does not change the continuity of curves that are used "
                              "in the construction of IGES BRep entities. In this case, the parameter "
                              "does not influence the continuity of the resulting Open CASCADE curves "
-                             "(it is ignored)."));
+                             "(it is ignored)."
+                     )
+            );
 
         this->surfaceCurveMode.setDescription(
                     textIdTr("Preference for the computation of curves in case of 2D/3D inconsistency "
@@ -49,7 +51,9 @@ public:
                              "of sub-curves given in the IGES file or because of splitting of curves during "
                              "translation\n"
                              "- 3D or 2D curve is a Circular Arc (entity type 100) starting and ending "
-                             "in the same point (note that this case is incorrect according to the IGES standard)"));
+                             "in the same point (note that this case is incorrect according to the IGES standard)"
+                     )
+            );
 
         this->readFaultyEntities.setDescription(textIdTr("Read failed entities"));
 
