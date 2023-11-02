@@ -78,6 +78,35 @@ Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 
 namespace Mayo {
 
+static std::optional<std::locale> findFrLocale()
+{
+    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
+        try {
+            return std::locale(name);
+        } catch (...) {
+            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
+        }
+
+        return {};
+    };
+
+    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
+    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
+#ifndef MAYO_OS_WINDOWS
+    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
+    frLocaleNames.push_back("fr_FR.utf8");
+#endif
+    frLocaleNames.push_back("fr_FR");
+
+    std::optional<std::locale> frLocale;
+    for (const char* localeName : frLocaleNames) {
+        if (!frLocale)
+            frLocale = fnGetLocale(localeName);
+    }
+
+    return frLocale;
+}
+
 // For the sake of QCOMPARE()
 static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
 {
@@ -311,6 +340,9 @@ void TestBase::PropertyValueConversion_test()
         enum class MayoTest_Color { Bleu, Blanc, Rouge };
         prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
     }
+    else if (strPropertyName == PropertyFilePath::TypeName) {
+        prop.reset(new PropertyFilePath(nullptr, {}));
+    }
 
     QVERIFY(prop);
 
@@ -335,6 +367,18 @@ void TestBase::PropertyValueConversion_test_data()
     QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << Variant("#FFFFFF");
     QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << Variant("#BB0000");
     QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
+}
+
+void TestBase::PropertyValueConversion_bugGitHub219_test()
+{
+    const std::string strPath = "c:\\é_à_À_œ_ç";
+    PropertyValueConversion conv;
+    PropertyFilePath propFilePath(nullptr, {});
+    const bool ok = conv.fromVariant(&propFilePath, strPath);
+    QVERIFY(ok);
+    //qDebug() << "strPath:" << QByteArray::fromStdString(strPath);
+    //qDebug() << "propFilePath:" << QByteArray::fromStdString(propFilePath.value().u8string());
+    QCOMPARE(propFilePath.value().u8string(), strPath);
 }
 
 void TestBase::PropertyQuantityValueConversion_test()
@@ -554,30 +598,7 @@ void TestBase::IO_bugGitHub166_test_data()
 
 void TestBase::DoubleToString_test()
 {
-    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
-        try {
-            return std::locale(name);
-        } catch (...) {
-            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
-        }
-
-        return {};
-    };
-
-    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
-    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
-#ifndef MAYO_OS_WINDOWS
-    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
-    frLocaleNames.push_back("fr_FR.utf8");
-#endif
-    frLocaleNames.push_back("fr_FR");
-
-    std::optional<std::locale> frLocale;
-    for (const char* localeName : frLocaleNames) {
-        if (!frLocale)
-            frLocale = fnGetLocale(localeName);
-    }
-
+    std::optional<std::locale> frLocale = findFrLocale();
     if (frLocale) {
         qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
         // 1258.

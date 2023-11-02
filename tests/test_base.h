@@ -31,6 +31,7 @@ private slots:
 
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
+    void PropertyValueConversion_bugGitHub219_test();
 
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();

@@ -7,6 +7,7 @@
 #include "property_value_conversion.h"
 
 #include "cpp_utils.h"
+#include "filepath_conv.h"
 #include "math_utils.h"
 #include "property_builtins.h"
 #include "property_enumeration.h"
@@ -205,8 +206,11 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
         return fnError("Variant not convertible to string");
     }
     else if (isType<PropertyFilePath>(prop)) {
+        // Note: explicit conversion from utf8 std::string to std::filesystem::path
+        //       If character type of the source string is "char" then FilePath constructor assumes
+        //       native narrow encoding(which might cause encoding issues)
         if (variant.isConvertibleToConstRefString())
-            return ptr<PropertyFilePath>(prop)->setValue(variant.toConstRefString());
+            return ptr<PropertyFilePath>(prop)->setValue(filepathFrom(variant.toConstRefString()));
         else
             return fnError("Variant expected to hold string");
     }
