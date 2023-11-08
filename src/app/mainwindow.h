@@ -49,7 +49,7 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onGuiDocumentErased(GuiDocument* guiDoc);
 
-    void onMessage(Messenger::MessageType msgType, const QString& text);
+    void onMessage(MessageType msgType, const QString& text);
 
     void updateControlsActivation();
     void updateCurrentPage();
