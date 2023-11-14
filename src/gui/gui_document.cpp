@@ -589,11 +589,15 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
             }
 
             if (!docModelTree.nodeIsRoot(id)) {
-                const TDF_Label parentNodeLabel = docModelTree.nodeData(docModelTree.nodeParent(id));
+                const TreeNodeId parentNodeId = docModelTree.nodeParent(id);
+                const TDF_Label parentNodeLabel = docModelTree.nodeData(parentNodeId);
                 if (XCaf::isShapeReference(parentNodeLabel) && m_document->xcaf().hasShapeColor(parentNodeLabel)) {
                     // Parent node is a reference and it redefines color attribute, so the graphics
                     // can't be shared with the product
                     auto gfxObject = m_guiApp->createGraphicsObject(parentNodeLabel);
+                    const TreeNodeId grandParentNodeId = docModelTree.nodeParent(parentNodeId);
+                    const TopLoc_Location locGrandParentShape = XCaf::shapeAbsoluteLocation(docModelTree, grandParentNodeId);
+                    gfxObject->SetLocalTransformation(locGrandParentShape);
                     gfxEntity.vecObject.push_back(gfxObject);
                 }
                 else {

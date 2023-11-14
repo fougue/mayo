@@ -121,9 +121,14 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
         }
         else if (attrId == TNaming_NamedShape::GetID()) {
             const auto& namedShape = static_cast<const TNaming_NamedShape&>(*ptrAttr);
+            const TopoDS_Shape shape = namedShape.Get();
             text = "TNaming_NamedShape";
-            value = DialogInspectXde::tr("ShapeType=%1, Evolution=%2")
-                    .arg(MetaEnum::name(namedShape.Get().ShapeType()).data())
+            value = DialogInspectXde::tr("ShapeType=%1, ShapeLocation=%2, Evolution=%3")
+                    .arg(MetaEnum::name(shape.ShapeType()).data())
+                    .arg(shape.Location().Transformation().Form() != gp_Identity ?
+                             QStringUtils::text(shape.Location(), appDefaultTextOptions())
+                             : QString("id")
+                        )
                     .arg(MetaEnum::name(namedShape.Evolution()).data());
         }
         else {
