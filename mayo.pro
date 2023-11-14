@@ -238,18 +238,7 @@ defined(ASSIMP_IS_ON, var) {
     }
 
     INCLUDEPATH += $$ASSIMP_INC_DIR/..
-    LIBS += -L$$ASSIMP_LIB_DIR
-    win32 {
-        CONFIG(debug, debug|release) {
-            LIBS += -lassimp-vc142-mtd -lzlibstaticd
-        } else {
-            LIBS +=-lassimp-vc142-mtd -lzlibstatic
-        }
-    }
-    else {
-        LIBS += -lassimp
-    }
-
+    LIBS += -L$$ASSIMP_LIB_DIR -lassimp$$ASSIMP_LIBNAME_SUFFIX
     DEFINES += HAVE_ASSIMP
 }
 

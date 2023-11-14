@@ -238,7 +238,8 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
     const unsigned flags =
             aiProcess_Triangulate
             | aiProcess_JoinIdenticalVertices
-            | aiProcess_SortByPType
+            //| aiProcess_SortByPType /* Crashes with assimp-5.3.1 on Windows */
+
             //| aiProcess_OptimizeGraph
             //| aiProcess_TransformUVCoords
             //| aiProcess_FlipUVs
