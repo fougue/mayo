@@ -504,8 +504,12 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->retranslate();
 
     // Register library infos
-    CommandSystemInformation::addLibraryInfo(IO::GmioLib::strName(), IO::GmioLib::strVersion());
-    CommandSystemInformation::addLibraryInfo(IO::AssimpLib::strName(), IO::AssimpLib::strVersion());
+    CommandSystemInformation::addLibraryInfo(
+        IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
+    );
+    CommandSystemInformation::addLibraryInfo(
+        IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
+    );
 
     // Process CLI
     if (args.showSystemInformation) {

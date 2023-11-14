@@ -31,8 +31,10 @@ struct AssimpLib {
     static std::string_view strName() { return "Assimp"; }
 #ifdef HAVE_ASSIMP
     static std::string_view strVersion();
+    static std::string_view strVersionDetails();
 #else
     static std::string_view strVersion() { return ""; }
+    static std::string_view strVersionDetails() { return ""; }
 #endif
 };
 

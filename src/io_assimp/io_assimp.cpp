@@ -45,6 +45,24 @@ std::string_view AssimpLib::strVersion()
     static std::string str;
 
     if (str.empty()) {
+        str += std::to_string(aiGetVersionMajor())
+               + "." + std::to_string(aiGetVersionMinor())
+#ifndef NO_ASSIMP_aiGetVersionPatch
+               + "." + std::to_string(aiGetVersionPatch())
+#else
+               + ".?"
+#endif
+            ;
+    }
+
+    return str;
+}
+
+std::string_view AssimpLib::strVersionDetails()
+{
+    static std::string str;
+
+    if (str.empty()) {
         const std::string strBranchName = aiGetBranchName() ? aiGetBranchName() : "";
 
         std::string strCompileFlags;
@@ -67,14 +85,7 @@ std::string_view AssimpLib::strVersion()
 #endif
         }
 
-        str += std::to_string(aiGetVersionMajor())
-               + "." + std::to_string(aiGetVersionMinor())
-#ifndef NO_ASSIMP_aiGetVersionPatch
-               + "." + std::to_string(aiGetVersionPatch())
-#else
-               + ".?"
-#endif
-               + " rev:" + std::to_string(aiGetVersionRevision())
+        str += "rev:" + std::to_string(aiGetVersionRevision())
                + " branch:" + (!strBranchName.empty() ? strBranchName : "?")
                + " flags:" + strCompileFlags
             ;
@@ -82,6 +93,5 @@ std::string_view AssimpLib::strVersion()
 
     return str;
 }
-
 } // namespace IO
 } // namespace Mayo

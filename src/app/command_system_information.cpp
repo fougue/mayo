@@ -129,14 +129,9 @@ QTextStream& operator<<(QTextStream& str, std::string_view sv)
 const char indent[] = "    ";
 const char indentx2[] = "        ";
 
-struct LibraryInfo {
-    std::string name;
-    std::string data;
-};
-
-std::vector<LibraryInfo>& getLibraryInfos()
+std::vector<CommandSystemInformation::LibraryInfo>& getLibraryInfos()
 {
-    static std::vector<LibraryInfo> vec;
+    static std::vector<CommandSystemInformation::LibraryInfo> vec;
     return vec;
 }
 
@@ -235,11 +230,14 @@ QString CommandSystemInformation::data()
          << indent << "Image formats(write): " << QImageWriter::supportedImageFormats().join(' ') << '\n';
 
     // OpenCascade version
-    ostr << '\n' << "OpenCascade(build): " << OCC_VERSION_STRING_EXT << '\n';
+    ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
 
     // Other registered libraries
-    for (const LibraryInfo& libInfo : getLibraryInfos())
-        ostr << '\n' << to_QString(libInfo.name) << ": " << to_QString(libInfo.data) << '\n';
+    for (const LibraryInfo& libInfo : getLibraryInfos()) {
+        ostr << '\n' << to_QString(libInfo.name) << ": " << to_QString(libInfo.version)
+             << " " << to_QString(libInfo.versionDetails)
+             << '\n';
+    }
 
     // I/O supported formats
     {
@@ -439,12 +437,25 @@ QString CommandSystemInformation::data()
     return strSysInfo;
 }
 
-void CommandSystemInformation::addLibraryInfo(std::string_view libName, std::string_view data)
+void CommandSystemInformation::addLibraryInfo(
+        std::string_view libName,
+        std::string_view version,
+        std::string_view versionDetails
+    )
 {
-    if (!libName.empty() && !data.empty()) {
-        LibraryInfo libInfo{ std::string(libName), std::string(data) };
+    if (!libName.empty() && !version.empty()) {
+        const LibraryInfo libInfo{
+                std::string(libName),
+                std::string(version),
+                std::string(versionDetails)
+        };
         getLibraryInfos().push_back(std::move(libInfo));
     }
+}
+
+Span<const CommandSystemInformation::LibraryInfo> CommandSystemInformation::libraryInfos()
+{
+    return getLibraryInfos();
 }
 
 } // namespace Mayo

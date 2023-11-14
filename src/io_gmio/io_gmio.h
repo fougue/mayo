@@ -31,11 +31,13 @@ public:
 };
 
 struct GmioLib {
-    static std::string_view strName() { return "gmio(build)"; }
+    static std::string_view strName() { return "gmio"; }
 #ifdef HAVE_GMIO
     static std::string_view strVersion();
+    static std::string_view strVersionDetails() { return "(build)"; }
 #else
     static std::string_view strVersion() { return ""; }
+    static std::string_view strVersionDetails() { return ""; }
 #endif
 };
 
