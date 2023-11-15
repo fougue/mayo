@@ -31,7 +31,8 @@ enum Format {
     Format_STEP,
     Format_STL,
     Format_VRML,
-    Format_X3D
+    Format_X3D,
+    Format_Blender
 };
 
 // Returns identifier(unique short name) corresponding to 'format'

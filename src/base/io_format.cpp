@@ -32,6 +32,7 @@ std::string_view formatIdentifier(Format format)
     case Format_COLLADA: return "COLLADA";
     case Format_FBX:   return "FBX";
     case Format_X3D:   return "X3D";
+    case Format_Blender: return "Blender";
     }
 
     return "";
@@ -58,6 +59,7 @@ std::string_view formatName(Format format)
     case Format_COLLADA: return "COLLAborative Design Activity(ISO/PAS 17506)";
     case Format_FBX:   return "Filmbox";
     case Format_X3D:   return "Extensible 3D Graphics(ISO/IEC 19775/19776/19777)";
+    case Format_Blender: return "Blender File Format";
     }
 
     return "";
@@ -82,6 +84,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     static std::string_view suffix_stl[]  = { "stl" };
     static std::string_view suffix_vrml[] = { "wrl", "wrz", "vrml" };
     static std::string_view suffix_x3d[]  = { "x3d", "x3dv", "x3db", "x3dz", "x3dbz", "x3dvz" };
+    static std::string_view suffix_blender[]  = { "blend", "blender", "blend1", "blend2" };
 
     switch (format) {
     case Format_Unknown: return {};
@@ -102,6 +105,7 @@ Span<std::string_view> formatFileSuffixes(Format format)
     case Format_STL:   return suffix_stl;
     case Format_VRML:  return suffix_vrml;
     case Format_X3D:   return suffix_x3d;
+    case Format_Blender: return suffix_blender;
     }
 
     return {};
@@ -121,7 +125,8 @@ bool formatProvidesMesh(Format format)
 {
     return !formatProvidesBRep(format)
             && format != Format_Unknown
-            && format != Format_Image;
+            && format != Format_Image
+        ;
 }
 
 } // namespace IO
