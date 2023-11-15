@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>288</width>
-    <height>175</height>
+    <width>270</width>
+    <height>160</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="../mayo.qrc">:/images/appicon_64.png</pixmap>
+      <pixmap resource="../../mayo.qrc">:/images/appicon_64.png</pixmap>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -46,7 +46,6 @@
     <widget class="QLabel" name="label_AppByOrg">
      <property name="font">
       <font>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -86,25 +85,18 @@
     </spacer>
    </item>
    <item row="3" column="2">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
+    <layout class="QVBoxLayout" name="layout_Infos">
+     <item>
       <widget class="QLabel" name="label_Qt">
        <property name="text">
         <string>Qt %1</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item>
       <widget class="QLabel" name="label_Occ">
        <property name="text">
         <string>OpenCascade %1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_Gmio">
-       <property name="text">
-        <string>gmio %1</string>
        </property>
       </widget>
      </item>
@@ -136,7 +128,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../mayo.qrc"/>
+  <include location="../../mayo.qrc"/>
  </resources>
  <connections>
   <connection>

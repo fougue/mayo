@@ -191,19 +191,55 @@ versionAtLeast(OCC_VERSION_STR, 7.4.0) {
         src/io_occ/io_occ_base_mesh.cpp \
         src/io_occ/io_occ_gltf_reader.cpp \
         src/io_occ/io_occ_obj_reader.cpp
+
+    message(glTF reader disabled because OpenCascade < v7.4)
+    message(OBJ reader disabled because OpenCascade < v7.4)
 }
 
 !versionAtLeast(OCC_VERSION_STR, 7.5.0) {
     SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
+    message(glTF writer disabled because OpenCascade < v7.5)
 }
 
 !versionAtLeast(OCC_VERSION_STR, 7.6.0) {
     SOURCES -= src/io_occ/io_occ_obj_writer.cpp
+    message(OBJ writer disabled because OpenCascade < v7.6)
 }
 # -- VRML support
 LIBS += -lTKVRML
 !versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
+    message(VRML reader disabled because OpenCascade < v7.7)
+}
+
+# assimp
+isEmpty(ASSIMP_INC_DIR) | isEmpty(ASSIMP_LIB_DIR) {
+    message(assimp OFF)
+} else {
+    !versionAtLeast(OCC_VERSION_STR, 7.5.0) {
+        message(assimp reader disabled because OpenCascade < v7.5)
+    }
+    else {
+        message(assimp ON)
+        ASSIMP_IS_ON = 1
+    }
+}
+
+defined(ASSIMP_IS_ON, var) {
+    HEADERS += $$files(src/io_assimp/*.h)
+    SOURCES += $$files(src/io_assimp/*.cpp)
+
+    ASSIMP_VERSION_FILE_CONTENTS = $$cat($$ASSIMP_INC_DIR/version.h, lines)
+    ASSIMP_aiGetVersionPatch = $$find(ASSIMP_VERSION_FILE_CONTENTS, aiGetVersionPatch)
+    !isEmpty(ASSIMP_aiGetVersionPatch) {
+    } else {
+        DEFINES += NO_ASSIMP_aiGetVersionPatch
+        message(Assimp function aiGetVersionPatch() not available)
+    }
+
+    INCLUDEPATH += $$ASSIMP_INC_DIR/..
+    LIBS += -L$$ASSIMP_LIB_DIR -lassimp$$ASSIMP_LIBNAME_SUFFIX
+    DEFINES += HAVE_ASSIMP
 }
 
 # gmio

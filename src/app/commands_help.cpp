@@ -41,6 +41,9 @@ CommandAbout::CommandAbout(IAppContext* context)
 void CommandAbout::execute()
 {
     auto dlg = new DialogAbout(this->widgetMain());
+    for (const auto& libInfo : CommandSystemInformation::libraryInfos())
+        dlg->addLibraryInfo(libInfo.name, libInfo.version);
+
     QtWidgetsUtils::asyncDialogExec(dlg);
 }
 

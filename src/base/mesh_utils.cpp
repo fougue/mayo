@@ -98,6 +98,15 @@ void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int in
 #endif
 }
 
+void MeshUtils::setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double u, double v)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->SetUVNode(index, gp_Pnt2d{u, v});
+#else
+    triangulation->ChangeUVNode(index) = gp_Pnt2d{u, v};
+#endif
+}
+
 void MeshUtils::allocateNormals(const Handle_Poly_Triangulation& triangulation)
 {
 #if OCC_VERSION_HEX >= 0x070600

@@ -1,40 +1,37 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
+** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#pragma once
-
-#include "../base/io_writer.h"
+#include "../base/io_reader.h"
 #include "../base/property.h"
-
 #include <memory>
 
 namespace Mayo {
 namespace IO {
 
-// Provides factory for gmio-based Writer objects
-class GmioFactoryWriter : public FactoryWriter {
+// Provides factory for Assimp-based Reader objects
+class AssimpFactoryReader : public FactoryReader {
 public:
     Span<const Format> formats() const override;
-    std::unique_ptr<Writer> create(Format format) const override;
+    std::unique_ptr<Reader> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 
-    static std::unique_ptr<FactoryWriter> create() {
-#ifdef HAVE_GMIO
-        return std::make_unique<GmioFactoryWriter>();
+    static std::unique_ptr<FactoryReader> create() {
+#ifdef HAVE_ASSIMP
+        return std::make_unique<AssimpFactoryReader>();
 #else
         return {};
 #endif
     }
 };
 
-struct GmioLib {
-    static std::string_view strName() { return "gmio"; }
-#ifdef HAVE_GMIO
+struct AssimpLib {
+    static std::string_view strName() { return "Assimp"; }
+#ifdef HAVE_ASSIMP
     static std::string_view strVersion();
-    static std::string_view strVersionDetails() { return "(build)"; }
+    static std::string_view strVersionDetails();
 #else
     static std::string_view strVersion() { return ""; }
     static std::string_view strVersionDetails() { return ""; }

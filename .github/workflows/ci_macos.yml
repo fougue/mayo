@@ -23,6 +23,13 @@ jobs:
               echo "GH_CASCADE_INC_DIR=$GH_CASCADE_BASE_DIR/include/opencascade" >> $GITHUB_ENV
               echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_BASE_DIR/lib" >> $GITHUB_ENV
 
+        - name: Install Assimp
+          run: |
+              brew install assimp
+              GH_ASSIMP_BASE_DIR=`brew info assimp | grep -E -i --only-matching --max-count=1 "^(/[a-z\.\-_0-9]+)+"`
+              echo "GH_ASSIMP_INC_DIR=$GH_ASSIMP_BASE_DIR/include/assimp" >> $GITHUB_ENV
+              echo "GH_ASSIMP_LIB_DIR=$GH_ASSIMP_BASE_DIR/lib" >> $GITHUB_ENV
+
         - name: Get count of CPU cores
           uses: SimenB/github-actions-cpu-cores@v1
           id: cpu-cores
@@ -33,9 +40,17 @@ jobs:
               cd ${{github.workspace}}/build
               echo CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}
               echo CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}
+              echo ASSIMP_INC_DIR=${{env.GH_ASSIMP_INC_DIR}}
+              echo ASSIMP_LIB_DIR=${{env.GH_ASSIMP_LIB_DIR}}
               [ ! -d $CASCADE_INC_DIR ] && echo "ERROR: OpenCascade include dir doesn't exist"
               [ ! -d $CASCADE_LIB_DIR ] && echo "ERROR: OpenCascade lib dir doesn't exist"
-              qmake ..  CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}  CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}  CONFIG+=withtests
+              [ ! -d $ASSIMP_INC_DIR ] && echo "ERROR: assimp include dir doesn't exist"
+              [ ! -d $ASSIMP_LIB_DIR ] && echo "ERROR: assimp lib dir doesn't exist"
+              qmake .. CONFIG+=withtests \
+                       CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}} \
+                       CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}} \
+                       ASSIMP_INC_DIR=${{env.GH_ASSIMP_INC_DIR}} \
+                       ASSIMP_LIB_DIR=${{env.GH_ASSIMP_LIB_DIR}}
               make -j${{steps.cpu-cores.outputs.count}}
 
         - name: Execute Unit Tests

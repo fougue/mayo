@@ -74,7 +74,7 @@ public:
     // Logging
     void clearMessageLog();
     Span<const Message> messageLog() const { return m_messageLog; }
-    Signal<Messenger::MessageType, QString> signalMessage;
+    Signal<MessageType, QString> signalMessage;
     Signal<> signalMessageLogCleared;
 
     // Recent files

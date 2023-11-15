@@ -11,7 +11,7 @@
 #  include <io.h>
 #  include <windows.h>
 #else
-#  include <sys/ioctl.h> //ioctl() and TIOCGWINSZ
+#  include <sys/ioctl.h> // ioctl() and TIOCGWINSZ
 #  include <unistd.h>    // for STDOUT_FILENO
 #  include <iostream>
 #endif

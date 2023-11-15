@@ -128,6 +128,14 @@ template<> struct StringConv<std::string_view, TCollection_AsciiString> {
     }
 };
 
+// std::string_view -> Handle(TCollection_HAsciiString)
+template<> struct StringConv<std::string_view, Handle(TCollection_HAsciiString)> {
+    static auto to(std::string_view str) {
+        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(to_OccAsciiString(str));
+        return hnd;
+    }
+};
+
 // --
 // -- Handle(TCollection_HAsciiString) -> X
 // --

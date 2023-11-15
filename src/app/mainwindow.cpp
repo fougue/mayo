@@ -245,18 +245,19 @@ void MainWindow::onGuiDocumentErased(GuiDocument* /*guiDoc*/)
     this->updateControlsActivation();
 }
 
-void MainWindow::onMessage(Messenger::MessageType msgType, const QString& text)
+void MainWindow::onMessage(MessageType msgType, const QString& text)
 {
     switch (msgType) {
-    case Messenger::MessageType::Trace:
+    case MessageType::Trace:
+        qDebug() << text;
         break;
-    case Messenger::MessageType::Info:
+    case MessageType::Info:
         WidgetMessageIndicator::showInfo(text, this);
         break;
-    case Messenger::MessageType::Warning:
+    case MessageType::Warning:
         QtWidgetsUtils::asyncMsgBoxWarning(this, tr("Warning"), text);
         break;
-    case Messenger::MessageType::Error:
+    case MessageType::Error:
         QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), text);
         break;
     }

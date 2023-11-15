@@ -29,6 +29,7 @@ struct MeshUtils {
     static void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt);
     static void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle);
     static void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n);
+    static void setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double u, double v);
     static void allocateNormals(const Handle_Poly_Triangulation& triangulation);
 
     static const Poly_Array1OfTriangle& triangles(const Handle_Poly_Triangulation& triangulation) {

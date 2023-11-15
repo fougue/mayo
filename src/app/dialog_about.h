@@ -7,6 +7,7 @@
 #pragma once
 
 #include <QtWidgets/QDialog>
+#include <string_view>
 
 namespace Mayo {
 
@@ -15,6 +16,8 @@ class DialogAbout : public QDialog {
 public:
     DialogAbout(QWidget* parent = nullptr);
     ~DialogAbout();
+
+    void addLibraryInfo(std::string_view libName, std::string_view libVersion);
 
 private:
     class Ui_DialogAbout* m_ui = nullptr;

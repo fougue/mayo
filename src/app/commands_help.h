@@ -7,6 +7,7 @@
 #pragma once
 
 #include "commands_api.h"
+#include "../base/span.h"
 
 namespace Mayo {
 
@@ -24,7 +25,18 @@ public:
     void execute() override;
 
     static QString data();
-    static void addLibraryInfo(std::string_view libName, std::string_view data);
+
+    struct LibraryInfo {
+        std::string name;
+        std::string version;
+        std::string versionDetails;
+    };
+    static void addLibraryInfo(
+        std::string_view libName,
+        std::string_view version,
+        std::string_view versionDetails = ""
+    );
+    static Span<const LibraryInfo> libraryInfos();
 
     static constexpr std::string_view Name = "system-info";
 };
