@@ -16,6 +16,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
 #include "../base/string_conv.h"
+#include "../base/tkernel_utils.h"
 #include "../base/unit_system.h"
 #include "aci_table.h"
 #include "dxf.h"
@@ -26,16 +27,20 @@
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
+#include <Graphic3d_HorizontalTextAlignment.hxx>
+#include <Graphic3d_VerticalTextAlignment.hxx>
 #include <Font_BRepTextBuilder.hxx>
 #include <Font_FontMgr.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Precision.hxx>
+#include <Resource_Unicode.hxx>
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
 #include <fmt/format.h>
+#include <optional>
 #include <sstream>
 #include <string_view>
 
@@ -74,9 +79,12 @@ private:
     TaskProgress* m_progress = nullptr;
     std::uintmax_t m_fileSize = 0;
     std::uintmax_t m_fileReadSize = 0;
+    Resource_FormatType m_srcEncoding = Resource_ANSI;
 
 protected:
     void get_line() override;
+    bool setSourceEncoding(const std::string& codepage) override;
+    std::string toUtf8(const std::string& strSource) override;
 
 public:
     Internal(const FilePath& filepath, TaskProgress* progress = nullptr);
@@ -88,7 +96,7 @@ public:
     // CDxfRead's virtual functions
     void OnReadLine(const double* s, const double* e, bool hidden) override;
     void OnReadPoint(const double* s) override;
-    void OnReadText(const double* point, const double height, double rotation, const char* text) override;
+    void OnReadText(const DxfText& text) override;
     void OnReadArc(const double* s, const double* e, const double* c, bool dir, bool hidden) override;
     void OnReadCircle(const double* s, const double* c, bool dir, bool hidden) override;
     void OnReadEllipse(const double* c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
@@ -96,7 +104,7 @@ public:
     void OnReadInsert(const double* point, const double* scale, const char* name, double rotation) override;
     void OnReadDimension(const double* s, const double* e, const double* point, double rotation) override;
 
-    void ReportError(const char* msg) override;
+    void ReportError(const std::string& msg) override;
 
     static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(struct SplineData& sd);
     static Handle_Geom_BSplineCurve createInterpolationSpline(struct SplineData& sd);
@@ -153,7 +161,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
     Handle_XCAFDoc_ColorTool colorTool = doc->xcaf().colorTool();
     Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
     std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
-    std::unordered_map<Aci_t, TDF_Label> mapAciColorLabel;
+    std::unordered_map<ColorIndex_t, TDF_Label> mapAciColorLabel;
 
     auto fnAddRootShape = [&](const TopoDS_Shape& shape, const std::string& shapeName, TDF_Label layer) {
         const TDF_Label labelShape = shapeTool->NewShape();
@@ -166,7 +174,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         return labelShape;
     };
 
-    auto fnAddAci = [&](Aci_t aci) {
+    auto fnAddAci = [&](ColorIndex_t aci) {
         auto it = mapAciColorLabel.find(aci);
         if (it != mapAciColorLabel.cend())
             return it->second;
@@ -225,7 +233,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
                 const TDF_Label compLabel = fnAddRootShape(comp, layerName, layerLabel);
                 // Check if all entities have the same color
                 bool uniqueColor = true;
-                const Aci_t aci = !vecEntity.empty() ? vecEntity.front().aci : -1;
+                const ColorIndex_t aci = !vecEntity.empty() ? vecEntity.front().aci : -1;
                 for (const Entity& entity : vecEntity) {
                     uniqueColor = entity.aci == aci;
                     if (!uniqueColor)
@@ -277,6 +285,76 @@ void DxfReader::Internal::get_line()
         m_progress->setValue(MathUtils::toPercent(m_fileReadSize, 0, m_fileSize));
 }
 
+bool DxfReader::Internal::setSourceEncoding(const std::string& codepage)
+{
+    std::optional<Resource_FormatType> encoding;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    if (codepage == "UTF8")
+        encoding = Resource_FormatType_UTF8;
+    else if (codepage == "ANSI_932") // Japanese
+        encoding = Resource_FormatType_SJIS;
+    else if (codepage == "ANSI_936") // UnifiedChinese
+        encoding = Resource_FormatType_GB;
+    else if (codepage == "ANSI_949") // Korean
+        encoding = Resource_FormatType_EUC;
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
+    if (encoding)
+        ; // NOP: encoding already found above
+    else if (codepage == "ANSI_936") // UnifiedChinese
+        encoding = Resource_FormatType_GBK;
+    else if (codepage == "ANSI_950") // TradChinese
+        encoding = Resource_FormatType_Big5;
+    else if (codepage == "ANSI_1250")
+        encoding = Resource_FormatType_CP1250;
+    else if (codepage == "ANSI_1251")
+        encoding = Resource_FormatType_CP1251;
+    else if (codepage == "ANSI_1252")
+        encoding = Resource_FormatType_CP1252;
+    else if (codepage == "ANSI_1253")
+        encoding = Resource_FormatType_CP1253;
+    else if (codepage == "ANSI_1254")
+        encoding = Resource_FormatType_CP1254;
+    else if (codepage == "ANSI_1255")
+        encoding = Resource_FormatType_CP1255;
+    else if (codepage == "ANSI_1256")
+        encoding = Resource_FormatType_CP1256;
+    else if (codepage == "ANSI_1257")
+        encoding = Resource_FormatType_CP1257;
+    else if (codepage == "ANSI_1258")
+        encoding = Resource_FormatType_CP1258;
+#endif
+
+    if (encoding) {
+        m_srcEncoding = encoding.value();
+    }
+    else {
+        m_srcEncoding = Resource_ANSI;
+        m_messenger->emitWarning("Codepage " + codepage + " not supported");
+    }
+
+    return true;
+}
+
+std::string DxfReader::Internal::toUtf8(const std::string& strSource)
+{
+    if (m_srcEncoding == Resource_ANSI) // Resource_ANSI is a pass-through(OpenCascade)
+        return strSource;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    if (m_srcEncoding == Resource_FormatType_UTF8)
+        return strSource;
+
+    TCollection_ExtendedString extStr;
+    Resource_Unicode::ConvertFormatToUnicode(m_srcEncoding, strSource.c_str(), extStr);
+    return to_stdString(extStr);
+#else
+    return strSource;
+#endif
+}
+
 DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
     : CDxfRead(filepath.u8string().c_str()),
       m_progress(progress)
@@ -302,25 +380,40 @@ void DxfReader::Internal::OnReadPoint(const double* s)
     this->addShape(vertex);
 }
 
-void DxfReader::Internal::OnReadText(const double* point, const double height, double rotation, const char* text)
+void DxfReader::Internal::OnReadText(const DxfText& text)
 {
     if (!m_params.importAnnotations)
         return;
 
-    const gp_Pnt pt = this->toPnt(point);
+    const gp_Pnt pt = this->toPnt(text.point);
     const std::string layerName = this->LayerName();
     if (!startsWith(layerName, "BLOCKS")) {
         const std::string& fontName = m_params.fontNameForTextObjects;
-        const double fontHeight = 4 * height * m_params.scaling;
+        const double fontHeight = 4 * text.height * m_params.scaling;
         Font_BRepFont brepFont;
         if (brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight)) {
             gp_Trsf rotTrsf;
-            if (rotation != 0.)
-                rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), UnitSystem::radians(rotation * Quantity_Degree));
+            if (!MathUtils::fuzzyIsNull(text.rotation))
+                rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotation);
+
+            const int ap = static_cast<int>(text.attachPoint);
+            Graphic3d_HorizontalTextAlignment hAttachPnt = Graphic3d_HTA_LEFT;
+            if (ap == 2 || ap == 5 || ap == 8)
+                hAttachPnt = Graphic3d_HTA_CENTER;
+            else if (ap == 3 || ap == 6 || ap == 9)
+                hAttachPnt = Graphic3d_HTA_RIGHT;
+
+            Graphic3d_VerticalTextAlignment vAttachPnt = Graphic3d_VTA_TOP;
+            if (ap == 4 || ap == 5 || ap == 6)
+                vAttachPnt = Graphic3d_VTA_CENTER;
+            else if (ap == 7 || ap == 8 || ap == 9)
+                vAttachPnt = Graphic3d_VTA_BOTTOM;
 
             const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
             Font_BRepTextBuilder brepTextBuilder;
-            const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, text, locText);
+            const TopoDS_Shape shapeText = brepTextBuilder.Perform(
+                brepFont, string_conv<NCollection_String>(text.str), locText, hAttachPnt, vAttachPnt
+            );
             this->addShape(shapeText);
         }
         else {
@@ -368,7 +461,8 @@ void DxfReader::Internal::OnReadEllipse(
         double major_radius, double minor_radius,
         double rotation,
         double /*start_angle*/, double /*end_angle*/,
-        bool dir)
+        bool dir
+    )
 {
     const gp_Dir up = dir ? gp::DZ() : -gp::DZ();
     const gp_Pnt pc = this->toPnt(c);
@@ -435,7 +529,8 @@ void DxfReader::Internal::OnReadInsert(const double* point, const double* scale,
         trsfScale.SetValues(
                 nscale[0], 0,         0,         0,
                 0,         nscale[1], 0,         0,
-                0,         0,         nscale[2], 0);
+                0,         0,         nscale[2], 0
+        );
         gp_Trsf trsfRotZ;
         trsfRotZ.SetRotation(gp::OZ(), rotation);
         gp_Trsf trsfMove;
@@ -460,7 +555,7 @@ void DxfReader::Internal::OnReadDimension(const double* s, const double* e, cons
     }
 }
 
-void DxfReader::Internal::ReportError(const char* msg)
+void DxfReader::Internal::ReportError(const std::string& msg)
 {
     m_messenger->emitError(msg);
 }
@@ -481,7 +576,7 @@ gp_Pnt DxfReader::Internal::toPnt(const double* coords) const
 
 void DxfReader::Internal::addShape(const TopoDS_Shape& shape)
 {
-    const Entity newEntity{ m_aci, shape };
+    const Entity newEntity{ m_ColorIndex, shape };
     const std::string layerName = this->LayerName();
     auto itFound = m_layers.find(layerName);
     if (itFound != m_layers.end()) {
