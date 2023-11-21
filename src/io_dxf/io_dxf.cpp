@@ -302,7 +302,7 @@ bool DxfReader::Internal::setSourceEncoding(const std::string& codepage)
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     if (encoding)
-        ; // NOP: encoding already found above
+        ; // Encoding already found above
     else if (codepage == "ANSI_936") // UnifiedChinese
         encoding = Resource_FormatType_GBK;
     else if (codepage == "ANSI_950") // TradChinese
@@ -325,6 +325,13 @@ bool DxfReader::Internal::setSourceEncoding(const std::string& codepage)
         encoding = Resource_FormatType_CP1257;
     else if (codepage == "ANSI_1258")
         encoding = Resource_FormatType_CP1258;
+#endif
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    if (encoding)
+        ; // Encoding already found above
+    else if (codepage == "ANSI_850" || codepage == "DOS850")
+        encoding = Resource_FormatType_CP850;
 #endif
 
     if (encoding) {
