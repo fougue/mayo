@@ -64,6 +64,60 @@ struct DxfText {
     AttachmentPoint attachPoint = AttachmentPoint::TopLeft;
 };
 
+struct DxfVertex {
+    enum class Bulge { StraightSegment = 0, SemiCircle = 1 };
+    enum Flag {
+        None = 0,
+        ExtraVertex = 1,
+        CurveFitTangent = 2,
+        NotUsed = 4,
+        SplineVertex = 8,
+        SplineFrameControlPoint = 16,
+        Polyline3dVertex = 32,
+        Polygon3dVertex = 64,
+        PolyfaceMesgVertex = 128
+    };
+    using Flags = unsigned;
+
+    double point[3] = {};
+    Bulge bulge = Bulge::StraightSegment;
+    Flags flags = Flag::None;
+};
+
+struct DxfPolyline {
+    enum Flag {
+        None = 0,
+        Closed = 1,
+        CurveFit = 2,
+        SplineFit = 4,
+        Polyline3d = 8,
+        PolygonMesh3d = 16,
+        PolygonMeshClosedNDir = 32,
+        PolyfaceMesh = 64,
+        ContinuousLinetypePattern = 128
+    };
+    using Flags = unsigned;
+
+    enum Type {
+        NoSmoothSurfaceFitted = 0,
+        QuadraticBSplineSurface = 5,
+        CubicBSplineSurface = 6,
+        BezierSurface = 8
+    };
+
+    double elevation = 0.;
+    double thickness = 0.;
+    Flags flags = Flag::None;
+    double defaultStartWidth = 0.;
+    double defaultEndWidth = 0.;
+    int polygonMeshMVertexCount = 0;
+    int polygonMeshNVertexCount = 0;
+    double smoothSurfaceMDensity = 0.;
+    double smoothSurfaceNDensity = 0.;
+    double extrusionDir[3] = { 0., 0., 1. };
+    std::vector<DxfVertex> vertices;
+};
+
 //spline data for reading
 struct SplineData
 {
@@ -327,10 +381,12 @@ private:
     char m_unused_line[1024];
     eDxfUnits_t m_eUnits;
     bool m_measurement_inch;
-    char m_layer_name[1024];
+    std::string m_layer_name;
     char m_section_name[1024];
     char m_block_name[1024];
     bool m_ignore_errors;
+
+    int m_line_nb = 0;
 
 
     std::map<std::string, ColorIndex_t>
@@ -348,7 +404,8 @@ private:
     bool ReadSpline();
     bool ReadLwPolyLine();
     bool ReadPolyLine();
-    bool ReadVertex(double *pVertex, bool *bulge_found, double *bulge);
+    bool ReadVertex(DxfVertex* vertex);
+
     void OnReadArc(double start_angle,
                    double end_angle,
                    double radius,
@@ -367,6 +424,8 @@ private:
     bool ReadVersion();
     bool ReadDWGCodePage();
     bool ResolveEncoding();
+
+    void HandleCommonGroupCode(int n);
 
     void put_line(const char *value);
     void ResolveColorIndex();
@@ -407,6 +466,9 @@ public:
 
     virtual void OnReadLine(const double* /*s*/, const double* /*e*/, bool /*hidden*/)
     {}
+
+    virtual void OnReadPolyline(const DxfPolyline&) {}
+
     virtual void OnReadPoint(const double* /*s*/)
     {}
     virtual void OnReadText(const DxfText&) {}

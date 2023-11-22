@@ -95,6 +95,7 @@ public:
 
     // CDxfRead's virtual functions
     void OnReadLine(const double* s, const double* e, bool hidden) override;
+    void OnReadPolyline(const DxfPolyline& polyline) override;
     void OnReadPoint(const double* s) override;
     void OnReadText(const DxfText& text) override;
     void OnReadArc(const double* s, const double* e, const double* c, bool dir, bool hidden) override;
@@ -174,7 +175,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         return labelShape;
     };
 
-    auto fnAddAci = [&](ColorIndex_t aci) {
+    auto fnAddAci = [&](ColorIndex_t aci) -> TDF_Label {
         auto it = mapAciColorLabel.find(aci);
         if (it != mapAciColorLabel.cend())
             return it->second;
@@ -182,7 +183,8 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         if (0 <= aci && CppUtils::cmpLess(aci, std::size(aciTable))) {
             const RGB_Color& c = aciTable[aci].second;
             const TDF_Label colorLabel = colorTool->AddColor(
-                        Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB));
+                        Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB)
+            );
             mapAciColorLabel.insert({ aci, colorLabel });
             return colorLabel;
         }
@@ -201,6 +203,12 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
     }
     auto fnUpdateProgressValue = [&]{
         progress->setValue(MathUtils::toPercent(iShape, 0, shapeCount));
+    };
+
+    auto fnSetShapeColor = [=](const TDF_Label& labelShape, int aci) {
+        const TDF_Label labelColor = fnAddAci(aci);
+        if (!labelColor.IsNull())
+            colorTool->SetColor(labelShape, labelColor, XCAFDoc_ColorGen);
     };
 
     if (!m_params.groupLayers) {
@@ -241,13 +249,13 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
                 }
 
                 if (uniqueColor) {
-                    colorTool->SetColor(compLabel, fnAddAci(aci), XCAFDoc_ColorGen);
+                    fnSetShapeColor(compLabel, aci);
                 }
                 else {
                     for (const Entity& entity : vecEntity) {
                         if (!entity.shape.IsNull()) {
                             const TDF_Label entityLabel = shapeTool->AddSubShape(compLabel, entity.shape);
-                            colorTool->SetColor(entityLabel, fnAddAci(entity.aci), XCAFDoc_ColorGen);
+                            fnSetShapeColor(entityLabel, entity.aci);
                         }
                     }
                 }
@@ -379,6 +387,19 @@ void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hi
 
     const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(p0, p1);
     this->addShape(edge);
+}
+
+void DxfReader::Internal::OnReadPolyline(const DxfPolyline& polyline)
+{
+    const auto& vertices = polyline.vertices;
+    Handle(Poly_Polygon3D) polygon = new Poly_Polygon3D(
+        CppUtils::safeStaticCast<int>(vertices.size()),
+        false/*!hasParams*/
+    );
+    for (unsigned i = 0; i < vertices.size(); ++i)
+        polygon->ChangeNodes().ChangeValue(i + 1) = this->toPnt(vertices.at(i).point);
+
+    this->addShape(BRepUtils::makeEdge(polygon));
 }
 
 void DxfReader::Internal::OnReadPoint(const double* s)
@@ -572,7 +593,7 @@ gp_Pnt DxfReader::Internal::toPnt(const double* coords) const
     double sp1(coords[0]);
     double sp2(coords[1]);
     double sp3(coords[2]);
-    if (m_params.scaling != 1.0) {
+    if (!MathUtils::fuzzyEqual(m_params.scaling, 1.)) {
         sp1 = sp1 * m_params.scaling;
         sp2 = sp2 * m_params.scaling;
         sp3 = sp3 * m_params.scaling;

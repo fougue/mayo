@@ -19,6 +19,8 @@
 #include "../base/filepath.h"
 #include "dxf.h"
 
+#include <iostream>
+
 namespace {
 
 template<size_t N1, size_t N2>
@@ -31,7 +33,7 @@ class ScopedCLocale {
 public:
     ScopedCLocale(int category)
         : m_category(category),
-        m_savedLocale(std::setlocale(category, nullptr))
+          m_savedLocale(std::setlocale(category, nullptr))
     {
         std::setlocale(category, "C");
     }
@@ -63,6 +65,17 @@ int stringToInt(const std::string& line)
         return std::stoi(line);
     } catch (...) {
         throw std::runtime_error("Failed to fetch int value from line:\n" + line);
+    }
+
+    return 0;
+}
+
+unsigned stringToUnsigned(const std::string& line)
+{
+    try {
+        return std::stoul(line);
+    } catch (...) {
+        throw std::runtime_error("Failed to fetch unsigned int value from line:\n" + line);
     }
 
     return 0;
@@ -138,15 +151,6 @@ void CDxfWrite::endRun()
 void CDxfWrite::writeHeaderSection()
 {
     std::stringstream ss;
-#if 0
-    ss << "FreeCAD v"
-        << App::Application::Config()["BuildVersionMajor"]
-        << "."
-        << App::Application::Config()["BuildVersionMinor"]
-        << " "
-        << App::Application::Config()["BuildRevision"];
-#endif
-
     //header & version
     m_ofs << "999"      << std::endl;
     m_ofs << ss.str()   << std::endl;
@@ -1844,7 +1848,7 @@ CDxfRead::CDxfRead(const char* filepath)
     m_ColorIndex = 0;
     m_eUnits = eMillimeters;
     m_measurement_inch = false;
-    safe_strcpy(m_layer_name, "0");  // Default layer name
+    m_layer_name = "0";  // Default layer name
     memset( m_section_name, '\0', sizeof(m_section_name) );
     memset( m_block_name, '\0', sizeof(m_block_name) );
     m_ignore_errors = true;
@@ -1950,11 +1954,6 @@ bool CDxfRead::ReadLine()
             hidden = false;
             return true;
 
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
-
         case 6: // line style name follows
             get_line();
             if (m_str[0] == 'h' || m_str[0] == 'H') {
@@ -2022,16 +2021,6 @@ bool CDxfRead::ReadLine()
                 return false;
             }
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
-
         case 100:
         case 39:
         case 210:
@@ -2041,8 +2030,8 @@ bool CDxfRead::ReadLine()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2082,11 +2071,6 @@ bool CDxfRead::ReadPoint()
             OnReadPoint(s);
             return true;
 
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
-
         case 10:
             // start x
             get_line();
@@ -2118,16 +2102,6 @@ bool CDxfRead::ReadPoint()
             }
             break;
 
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
-
         case 100:
         case 39:
         case 210:
@@ -2137,8 +2111,8 @@ bool CDxfRead::ReadPoint()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2182,11 +2156,6 @@ bool CDxfRead::ReadArc()
             OnReadArc(start_angle, end_angle, radius, c,z_extrusion_dir, hidden);
             hidden = false;
             return true;
-
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
 
         case 6: // line style name follows
             get_line();
@@ -2253,16 +2222,6 @@ bool CDxfRead::ReadArc()
                 return false;
             }
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
-
 
         case 100:
         case 39:
@@ -2282,8 +2241,8 @@ bool CDxfRead::ReadArc()
             break;
 
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2315,25 +2274,12 @@ bool CDxfRead::ReadSpline()
         }
         std::istringstream ss;
         ss.imbue(std::locale::classic());
-        switch (n){
+        switch (n) {
         case 0:
             // next item found, so finish with Spline
             ResolveColorIndex();
             OnReadSpline(sd);
             return true;
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 210:
             // normal x
             get_line();
@@ -2567,8 +2513,8 @@ bool CDxfRead::ReadSpline()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2606,11 +2552,6 @@ bool CDxfRead::ReadCircle()
             if (m_str[0] == 'h' || m_str[0] == 'H') {
                 hidden = true;
             }
-            break;
-
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
             break;
 
         case 10:
@@ -2653,15 +2594,6 @@ bool CDxfRead::ReadCircle()
                 return false;
             }
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
 
         case 100:
         case 39:
@@ -2672,8 +2604,8 @@ bool CDxfRead::ReadCircle()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2704,11 +2636,6 @@ void CDxfRead::ReadText()
                 OnReadText(text);
             }
             return;
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
-
         case 10:
             // centre x
             get_line();
@@ -2748,12 +2675,6 @@ void CDxfRead::ReadText()
             text.str.append(m_str);
             break;
 
-        case 62:
-            // color index
-            get_line();
-            m_ColorIndex = stringToInt(m_str);
-            break;
-
         case 71: {
             // attachment point
             get_line();
@@ -2770,8 +2691,8 @@ void CDxfRead::ReadText()
         case 220:
         case 230:
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2801,10 +2722,6 @@ bool CDxfRead::ReadEllipse()
             ResolveColorIndex();
             OnReadEllipse(c, m, ratio, start, end);
             return true;
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
 
         case 10:
             // centre x
@@ -2893,15 +2810,6 @@ bool CDxfRead::ReadEllipse()
                 return false;
             }
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 100:
         case 210:
         case 220:
@@ -2910,8 +2818,8 @@ bool CDxfRead::ReadEllipse()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -2920,7 +2828,7 @@ bool CDxfRead::ReadEllipse()
     return false;
 }
 
-
+// TODO Remove this(refactoring of CDxfRead::ReadLwPolyLine()
 static bool poly_prev_found = false;
 static double poly_prev_x;
 static double poly_prev_y;
@@ -2932,6 +2840,7 @@ static double poly_first_x;
 static double poly_first_y;
 static double poly_first_z;
 
+// TODO Remove this(refactoring of CDxfRead::ReadLwPolyLine()
 static void
 AddPolyLinePoint(CDxfRead* dxf_read, double x, double y, double z, bool bulge_found, double bulge)
 {
@@ -2977,12 +2886,14 @@ AddPolyLinePoint(CDxfRead* dxf_read, double x, double y, double z, bool bulge_fo
     }
 }
 
+// TODO Remove this(refactoring of CDxfRead::ReadLwPolyLine()
 static void PolyLineStart()
 {
     poly_prev_found = false;
     poly_first_found = false;
 }
 
+// TODO Reimplement this function(refactoring of CDxfRead::ReadLwPolyLine()
 bool CDxfRead::ReadLwPolyLine()
 {
     PolyLineStart();
@@ -3010,7 +2921,6 @@ bool CDxfRead::ReadLwPolyLine()
         switch (n){
         case 0:
             // next item found
-
             ResolveColorIndex();
             if (x_found && y_found){
                 // add point
@@ -3020,10 +2930,6 @@ bool CDxfRead::ReadLwPolyLine()
                 y_found = false;
             }
             next_item_found = true;
-            break;
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
             break;
         case 10:
             // x
@@ -3082,18 +2988,9 @@ bool CDxfRead::ReadLwPolyLine()
             }
             closed = ((flags & 1) != 0);
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -3110,22 +3007,10 @@ bool CDxfRead::ReadLwPolyLine()
     return false;
 }
 
-
-bool CDxfRead::ReadVertex(double *pVertex, bool *bulge_found, double *bulge)
+bool CDxfRead::ReadVertex(DxfVertex* vertex)
 {
     bool x_found = false;
     bool y_found = false;
-
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-    *bulge = 0.0;
-    *bulge_found = false;
-
-    pVertex[0] = 0.0;
-    pVertex[1] = 0.0;
-    pVertex[2] = 0.0;
-
     while (!m_ifs.eof()) {
         get_line();
         int n;
@@ -3133,75 +3018,51 @@ bool CDxfRead::ReadVertex(double *pVertex, bool *bulge_found, double *bulge)
             this->ReportError_readInteger("DXF::ReadVertex()");
             return false;
         }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
+
         switch (n){
         case 0:
             ResolveColorIndex();
             put_line(m_str);    // read one line too many.  put it back.
             return (x_found && y_found);
             break;
-
-        case 8: // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
-
         case 10:
             // x
             get_line();
-            ss.str(m_str);
-            ss >> x;
-            pVertex[0] = mm(x);
-            if (ss.fail()) {
-                return false;
-            }
+            vertex->point[0] = mm(stringToDouble(m_str));
             x_found = true;
             break;
         case 20:
             // y
             get_line();
-            ss.str(m_str);
-            ss >> y;
-            pVertex[1] = mm(y);
-            if (ss.fail()) {
-                return false;
-            }
+            vertex->point[1] = mm(stringToDouble(m_str));
             y_found = true;
             break;
         case 30:
             // z
             get_line();
-            ss.str(m_str);
-            ss >> z;
-            pVertex[2] = mm(z);
-            if (ss.fail()) {
-                return false;
-            }
+            vertex->point[2] = mm(stringToDouble(m_str));
             break;
 
-        case 42:
+        case 42: {
+            // bulge
             get_line();
-            *bulge_found = true;
-            ss.str(m_str);
-            ss >> *bulge;
-            if (ss.fail()) {
-                return false;
-            }
+            const int bulge = stringToInt(m_str);
+            if (bulge == 0)
+                vertex->bulge = DxfVertex::Bulge::StraightSegment;
+            else
+                vertex->bulge = DxfVertex::Bulge::SemiCircle;
+        }
             break;
-        case 62:
-            // color index
+
+        case 70:
+            // flags
             get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
+            vertex->flags = stringToUnsigned(m_str);
             break;
 
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -3212,15 +3073,8 @@ bool CDxfRead::ReadVertex(double *pVertex, bool *bulge_found, double *bulge)
 
 bool CDxfRead::ReadPolyLine()
 {
-    PolyLineStart();
-
-    bool closed = false;
-    int flags;
-    bool first_vertex_section_found = false;
-    double first_vertex[3] = {0,0,0};
-    bool bulge_found;
-    double bulge;
-
+    ScopedCLocale _(LC_NUMERIC);
+    DxfPolyline polyline;
     while (!m_ifs.eof()) {
         get_line();
         int n;
@@ -3228,58 +3082,32 @@ bool CDxfRead::ReadPolyLine()
             this->ReportError_readInteger("DXF::ReadPolyLine()");
             return false;
         }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
+
+        switch (n) {
         case 0:
             // next item found
             ResolveColorIndex();
             get_line();
             if (!strcmp(m_str, "VERTEX")) {
-                double vertex[3] = {0,0,0};
-                if (CDxfRead::ReadVertex(vertex, &bulge_found, &bulge)) {
-                    if (!first_vertex_section_found) {
-                        first_vertex_section_found = true;
-                        memcpy(first_vertex, vertex, 3*sizeof(double));
-                    }
-                    AddPolyLinePoint(this, vertex[0], vertex[1], vertex[2], bulge_found, bulge);
-                    break;
-                }
+                DxfVertex vertex;
+                if (ReadVertex(&vertex))
+                    polyline.vertices.push_back(vertex);
             }
+
             if (!strcmp(m_str, "SEQEND")) {
-                if (closed && first_vertex_section_found) {
-                    AddPolyLinePoint(this,
-                                     first_vertex[0],
-                                     first_vertex[1],
-                                     first_vertex[2],
-                                     0,
-                                     0);
-                }
-                first_vertex_section_found = false;
-                PolyLineStart();
-                return (true);
+                OnReadPolyline(polyline);
+                return true;
             }
+
             break;
         case 70:
             // flags
             get_line();
-            if (sscanf(m_str, "%d", &flags) != 1) {
-                return false;
-            }
-            closed = ((flags & 1) != 0);
-            break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
+            polyline.flags = stringToUnsigned(m_str);
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -3376,11 +3204,6 @@ bool CDxfRead::ReadInsert()
             ResolveColorIndex();
             OnReadInsert(c, s, name, rot * M_PI/180);
             return(true);
-        case 8:
-            // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
         case 10:
             // coord x
             get_line();
@@ -3452,15 +3275,6 @@ bool CDxfRead::ReadInsert()
             get_line();
             strcpy(name, m_str);
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 100:
         case 39:
         case 210:
@@ -3470,8 +3284,8 @@ bool CDxfRead::ReadInsert()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -3501,11 +3315,6 @@ bool CDxfRead::ReadDimension()
             ResolveColorIndex();
             OnReadDimension(s, e, p, rot * M_PI/180);
             return(true);
-        case 8:
-            // Layer name follows
-            get_line();
-            safe_strcpy(m_layer_name, m_str);
-            break;
         case 13:
             // start x
             get_line();
@@ -3605,15 +3414,6 @@ bool CDxfRead::ReadDimension()
                 return false;
             }
             break;
-        case 62:
-            // color index
-            get_line();
-            ss.str(m_str);
-            ss >> m_ColorIndex;
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 100:
         case 39:
         case 210:
@@ -3623,8 +3423,8 @@ bool CDxfRead::ReadDimension()
             get_line();
             break;
         default:
-            // skip the next line
             get_line();
+            HandleCommonGroupCode(n);
             break;
         }
     }
@@ -3689,6 +3489,7 @@ void CDxfRead::get_line()
     }
     str[j] = 0;
     safe_strcpy(m_str, str);
+    ++m_line_nb;
 }
 
 void dxf_strncpy(char* dst, const char* src, size_t size)
@@ -3740,7 +3541,7 @@ bool CDxfRead::ReadLayer()
 
         std::istringstream ss;
         ss.imbue(std::locale::classic());
-        switch (n){
+        switch (n) {
         case 0: // next item found, so finish with line
             if (layername.empty()) {
                 this->ReportError_readInteger("DXF::ReadLayer() - no layer name");
@@ -3847,36 +3648,19 @@ bool CDxfRead::ResolveEncoding()
     }
 }
 
-#if 0
-const char* CDxfRead::UTF8ToUTF8(const char* encoded) const
+void CDxfRead::HandleCommonGroupCode(int n)
 {
-    return encoded;
-}
-
-const char* CDxfRead::GeneralToUTF8(const char* encoded) const
-{
-    Base::PyGILStateLocker lock;
-    PyObject* decoded = PyUnicode_Decode(encoded, strlen(encoded), m_encoding->c_str(), "strict");
-    if (decoded == nullptr) {
-        return nullptr;
+    switch (n) {
+    case 8:
+        // layer name
+        m_layer_name = m_str;
+        break;
+    case 62:
+        // color index
+        m_ColorIndex = stringToInt(m_str);
+        break;
     }
-    Py_ssize_t len;
-    const char* converted = PyUnicode_AsUTF8AndSize(decoded, &len);
-    char* result = nullptr;
-    if (converted != nullptr) {
-        // converted only has lifetime of decoded so we must save a copy.
-        result = (char*)malloc(len + 1);
-        if (result == nullptr) {
-            PyErr_SetString(PyExc_MemoryError, "Out of memory");
-        }
-        else {
-            memcpy(result, converted, len + 1);
-        }
-    }
-    Py_DECREF(decoded);
-    return result;
 }
-#endif
 
 void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
 {
@@ -3888,6 +3672,8 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
     get_line();
 
     while (!m_ifs.eof()) {
+        m_ColorIndex = ColorBylayer; // Default
+
         if (!strcmp(m_str, "$INSUNITS" )) {
             if (!ReadUnits()) {
                 return;
@@ -3923,6 +3709,9 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
 
         if (!strcmp(m_str, "0")) {
             get_line();
+            if (!strcmp(m_str, "0"))
+                get_line(); // Skip again
+
             if (!strcmp( m_str, "SECTION" )) {
                 safe_strcpy(m_section_name, "");
                 get_line();
@@ -3939,8 +3728,8 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
             }
 
             else if (!strcmp( m_str, "LAYER" )) {
-                get_line();
-                get_line();
+                //get_line();
+                //get_line();
                 if (!ReadLayer()) {
                     this->ReportError("DXF::DoRead() - Failed to read layer");
                     //return; Some objects or tables can have "LAYER" as name...
@@ -4052,7 +3841,7 @@ void  CDxfRead::ResolveColorIndex()
 
     if (m_ColorIndex == ColorBylayer)  // if color = layer color, replace by color from layer
     {
-        m_ColorIndex = m_layer_ColorIndex_map[std::string(m_layer_name)];
+        m_ColorIndex = m_layer_ColorIndex_map[m_layer_name];
     }
 }
 
@@ -4089,7 +3878,7 @@ std::string CDxfRead::LayerName() const
         result.append(" ");
     }
 
-    if (strlen(m_layer_name) > 0) {
+    if (!m_layer_name.empty()) {
         result.append(m_layer_name);
     }
 
