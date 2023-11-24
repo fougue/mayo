@@ -56,8 +56,20 @@ enum class AttachmentPoint {
     BottomLeft,  BottomCenter, BottomRight
 };
 
+struct DxfCoords {
+    double x;
+    double y;
+    double z;
+};
+
+struct DxfScale {
+    double x;
+    double y;
+    double z;
+};
+
 struct DxfText {
-    double point[3] = {};
+    DxfCoords point = {};
     double height = 0.03082;
     std::string str;
     double rotation = 0.; // radians
@@ -79,7 +91,7 @@ struct DxfVertex {
     };
     using Flags = unsigned;
 
-    double point[3] = {};
+    DxfCoords point = {};
     Bulge bulge = Bulge::StraightSegment;
     Flags flags = Flag::None;
 };
@@ -121,7 +133,7 @@ struct DxfPolyline {
 //spline data for reading
 struct SplineData
 {
-    double norm[3];
+    DxfCoords norm;
     int degree;
     int knots;
     int control_points;
@@ -370,6 +382,27 @@ public:
     void makeBlockSectionHead();
 };
 
+namespace DxfPrivate {
+
+enum class StringToErrorMode { Throw = 0x1, ReturnErrorValue = 0x2 };
+
+double stringToDouble(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+int stringToInt(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+unsigned stringToUnsigned(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+} // namespace DxfPrivate
+
 // derive a class from this and implement it's virtual functions
 class CDxfRead
 {
@@ -377,20 +410,21 @@ private:
     std::ifstream m_ifs;
 
     bool m_fail;
-    char m_str[1024];
-    char m_unused_line[1024];
+    std::string m_str;
+    std::string m_unused_line;
     eDxfUnits_t m_eUnits;
     bool m_measurement_inch;
     std::string m_layer_name;
-    char m_section_name[1024];
-    char m_block_name[1024];
+    std::string m_section_name;
+    std::string m_block_name;
     bool m_ignore_errors;
 
+    std::streamsize m_gcount = 0;
     int m_line_nb = 0;
 
 
-    std::map<std::string, ColorIndex_t>
-        m_layer_ColorIndex_map;  // Mapping from layer name -> layer color index
+    // Mapping from layer name -> layer color index
+    std::map<std::string, ColorIndex_t> m_layer_ColorIndex_map;
     const ColorIndex_t ColorBylayer = 256;
 
     bool ReadUnits();
@@ -406,18 +440,22 @@ private:
     bool ReadPolyLine();
     bool ReadVertex(DxfVertex* vertex);
 
-    void OnReadArc(double start_angle,
-                   double end_angle,
-                   double radius,
-                   const double* c,
-                   double z_extrusion_dir,
-                   bool hidden);
-    void OnReadCircle(const double* c, double radius, bool hidden);
-    void OnReadEllipse(const double* c,
-                       const double* m,
-                       double ratio,
-                       double start_angle,
-                       double end_angle);
+    void OnReadArc(
+        double start_angle,
+        double end_angle,
+        double radius,
+        const DxfCoords& c,
+        double z_extrusion_dir,
+        bool hidden
+    );
+    void OnReadCircle(const DxfCoords& c, double radius, bool hidden);
+    void OnReadEllipse(
+        const DxfCoords& c,
+        const DxfCoords& m,
+        double ratio,
+        double start_angle,
+        double end_angle
+    );
     bool ReadInsert();
     bool ReadDimension();
     bool ReadBlockInfo();
@@ -425,9 +463,25 @@ private:
     bool ReadDWGCodePage();
     bool ResolveEncoding();
 
+    template<unsigned XCode = 10, unsigned YCode = 20, unsigned ZCode = 30>
+    void HandleCoordCode(int n, DxfCoords* coords)
+    {
+        switch (n) {
+        case XCode:
+            coords->x = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        case YCode:
+            coords->y = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        case ZCode:
+            coords->z = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        }
+    }
+
     void HandleCommonGroupCode(int n);
 
-    void put_line(const char *value);
+    void put_line(const std::string& value);
     void ResolveColorIndex();
 
     void ReportError_readInteger(const char* context);
@@ -450,58 +504,54 @@ public:
     CDxfRead(const char* filepath); // this opens the file
     virtual ~CDxfRead(); // this closes the file
 
-    bool Failed()
-    {
-        return m_fail;
-    }
-    void DoRead(
-        const bool ignore_errors = false); // this reads the file and calls the following functions
+    bool IgnoreErrors() const { return m_ignore_errors; }
+    bool Failed() const { return m_fail; }
 
-    double mm( double value ) const;
+    double mm(double value) const;
 
-    bool IgnoreErrors() const
-    {
-        return(m_ignore_errors);
-    }
+    void DoRead(bool ignore_errors = false); // this reads the file and calls the following functions
 
-    virtual void OnReadLine(const double* /*s*/, const double* /*e*/, bool /*hidden*/)
-    {}
+    virtual void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) = 0;
 
-    virtual void OnReadPolyline(const DxfPolyline&) {}
+    virtual void OnReadPolyline(const DxfPolyline&) = 0;
 
-    virtual void OnReadPoint(const double* /*s*/)
-    {}
-    virtual void OnReadText(const DxfText&) {}
-    virtual void OnReadArc(const double* /*s*/,
-                           const double* /*e*/,
-                           const double* /*c*/,
-                           bool /*dir*/,
-                           bool /*hidden*/)
-    {}
-    virtual void OnReadCircle(const double* /*s*/, const double* /*c*/, bool /*dir*/, bool /*hidden*/)
-    {}
-    virtual void OnReadEllipse(const double* /*c*/,
-                               double /*major_radius*/,
-                               double /*minor_radius*/,
-                               double /*rotation*/,
-                               double /*start_angle*/,
-                               double /*end_angle*/,
-                               bool /*dir*/)
-    {}
-    virtual void OnReadSpline(struct SplineData& /*sd*/)
-    {}
-    virtual void OnReadInsert(const double* /*point*/,
-                              const double* /*scale*/,
-                              const char* /*name*/,
-                              double /*rotation*/)
-    {}
-    virtual void OnReadDimension(const double* /*s*/,
-                                 const double* /*e*/,
-                                 const double* /*point*/,
-                                 double /*rotation*/)
-    {}
-    virtual void AddGraphics() const
-    {}
+    virtual void OnReadPoint(const DxfCoords& s) = 0;
+
+    virtual void OnReadText(const DxfText&) = 0;
+
+    virtual void OnReadArc(
+        const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden
+    ) = 0;
+
+    virtual void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) = 0;
+
+    virtual void OnReadEllipse(
+        const DxfCoords& c,
+        double major_radius,
+        double minor_radius,
+        double rotation,
+        double start_angle,
+        double end_angle,
+        bool dir
+    ) = 0;
+
+    virtual void OnReadSpline(struct SplineData& sd) = 0;
+
+    virtual void OnReadInsert(
+        const DxfCoords& point,
+        const DxfScale& scale,
+        const std::string& name,
+        double rotation
+    ) = 0;
+
+    virtual void OnReadDimension(
+        const DxfCoords& s,
+        const DxfCoords& e,
+        const DxfCoords& point,
+        double rotation
+    ) = 0;
+
+    virtual void AddGraphics() const = 0;
 
     std::string LayerName() const;
 };

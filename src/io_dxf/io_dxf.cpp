@@ -11,6 +11,7 @@
 #include "../base/document.h"
 #include "../base/filepath.h"
 #include "../base/math_utils.h"
+#include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -27,6 +28,7 @@
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
 #include <Graphic3d_HorizontalTextAlignment.hxx>
 #include <Graphic3d_VerticalTextAlignment.hxx>
 #include <Font_BRepTextBuilder.hxx>
@@ -43,6 +45,8 @@
 #include <optional>
 #include <sstream>
 #include <string_view>
+
+#include <iostream>
 
 namespace Mayo {
 namespace IO {
@@ -94,23 +98,24 @@ public:
     const auto& layers() const { return m_layers; }
 
     // CDxfRead's virtual functions
-    void OnReadLine(const double* s, const double* e, bool hidden) override;
+    void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) override;
     void OnReadPolyline(const DxfPolyline& polyline) override;
-    void OnReadPoint(const double* s) override;
+    void OnReadPoint(const DxfCoords& s) override;
     void OnReadText(const DxfText& text) override;
-    void OnReadArc(const double* s, const double* e, const double* c, bool dir, bool hidden) override;
-    void OnReadCircle(const double* s, const double* c, bool dir, bool hidden) override;
-    void OnReadEllipse(const double* c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
+    void OnReadArc(const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden) override;
+    void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) override;
+    void OnReadEllipse(const DxfCoords& c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
     void OnReadSpline(struct SplineData& sd) override;
-    void OnReadInsert(const double* point, const double* scale, const char* name, double rotation) override;
-    void OnReadDimension(const double* s, const double* e, const double* point, double rotation) override;
+    void OnReadInsert(const DxfCoords& point, const DxfScale& scale, const std::string& name, double rotation) override;
+    void OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation) override;
 
     void ReportError(const std::string& msg) override;
+    void AddGraphics() const override;
 
     static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(struct SplineData& sd);
     static Handle_Geom_BSplineCurve createInterpolationSpline(struct SplineData& sd);
 
-    gp_Pnt toPnt(const double* coords) const;
+    gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape);
 };
 
@@ -378,7 +383,7 @@ DxfReader::Internal::Internal(const FilePath& filepath, TaskProgress* progress)
         m_fileSize = filepathFileSize(filepath);
 }
 
-void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hidden*/)
+void DxfReader::Internal::OnReadLine(const DxfCoords& s, const DxfCoords& e, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Pnt p1 = this->toPnt(e);
@@ -392,17 +397,16 @@ void DxfReader::Internal::OnReadLine(const double* s, const double* e, bool /*hi
 void DxfReader::Internal::OnReadPolyline(const DxfPolyline& polyline)
 {
     const auto& vertices = polyline.vertices;
-    Handle(Poly_Polygon3D) polygon = new Poly_Polygon3D(
-        CppUtils::safeStaticCast<int>(vertices.size()),
-        false/*!hasParams*/
-    );
+    const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size());
+    MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
-        polygon->ChangeNodes().ChangeValue(i + 1) = this->toPnt(vertices.at(i).point);
+        polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
 
-    this->addShape(BRepUtils::makeEdge(polygon));
+    polygonBuilder.finalize();
+    this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
 }
 
-void DxfReader::Internal::OnReadPoint(const double* s)
+void DxfReader::Internal::OnReadPoint(const DxfCoords& s)
 {
     const TopoDS_Vertex vertex = BRepBuilderAPI_MakeVertex(this->toPnt(s));
     this->addShape(vertex);
@@ -451,7 +455,7 @@ void DxfReader::Internal::OnReadText(const DxfText& text)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadArc(const double* s, const double* e, const double* c, bool dir, bool /*hidden*/)
+void DxfReader::Internal::OnReadArc(const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Pnt p1 = this->toPnt(e);
@@ -468,7 +472,7 @@ void DxfReader::Internal::OnReadArc(const double* s, const double* e, const doub
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadCircle(const double* s, const double* c, bool dir, bool /*hidden*/)
+void DxfReader::Internal::OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool /*hidden*/)
 {
     const gp_Pnt p0 = this->toPnt(s);
     const gp_Dir up = dir ? gp::DZ() : -gp::DZ();
@@ -485,7 +489,7 @@ void DxfReader::Internal::OnReadCircle(const double* s, const double* c, bool di
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 void DxfReader::Internal::OnReadEllipse(
-        const double* c,
+        const DxfCoords& c,
         double major_radius, double minor_radius,
         double rotation,
         double /*start_angle*/, double /*end_angle*/,
@@ -534,15 +538,16 @@ void DxfReader::Internal::OnReadSpline(SplineData& sd)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadInsert(const double* point, const double* scale, const char* name, double rotation)
+void DxfReader::Internal::OnReadInsert(
+    const DxfCoords& point, const DxfScale& scale, const std::string& name, double rotation
+    )
 {
-    //std::cout << "Inserting block " << name << " rotation " << rotation << " pos " << point[0] << "," << point[1] << "," << point[2] << " scale " << scale[0] << "," << scale[1] << "," << scale[2] << std::endl;
     const std::string prefix = std::string("BLOCKS ") + name + " ";
     for (const auto& [k, vecEntity] : m_layers) {
         if (!startsWith(k, prefix))
             continue; // Skip
 
-        TopoDS_Compound comp = BRepUtils::makeEmptyCompound();
+        TopoDS_Shape comp = BRepUtils::makeEmptyCompound();
         for (const DxfReader::Entity& entity : vecEntity) {
             if (!entity.shape.IsNull())
                 BRepUtils::addShape(&comp, entity.shape);
@@ -551,33 +556,51 @@ void DxfReader::Internal::OnReadInsert(const double* point, const double* scale,
         if (comp.IsNull())
             continue; // Skip
 
-        auto nonNull = [](double v) { return !MathUtils::fuzzyIsNull(v) ? v : 1.; };
-        const double nscale[] = { nonNull(scale[0]), nonNull(scale[1]), nonNull(scale[2]) };
-        gp_Trsf trsfScale;
-        trsfScale.SetValues(
-                nscale[0], 0,         0,         0,
-                0,         nscale[1], 0,         0,
-                0,         0,         nscale[2], 0
-        );
+        if (!MathUtils::fuzzyEqual(scale.x, scale.y) || !MathUtils::fuzzyEqual(scale.x, scale.y)) {
+            m_messenger->emitWarning(
+                fmt::format("OnReadInsert('{}') - non-uniform scales aren't supported({}, {}, {})",
+                            name, scale.x, scale.y, scale.z
+                )
+            );
+        }
+
+        auto fnNonNull = [](double v) { return !MathUtils::fuzzyIsNull(v) ? v : 1.; };
+        const double avgScale = std::abs(fnNonNull((scale.x + scale.y + scale.z) / 3.));
+        if (!MathUtils::fuzzyEqual(avgScale, 1.)) {
+            gp_Trsf trsf;
+            trsf.SetScaleFactor(avgScale);
+            BRepBuilderAPI_Transform brepTrsf(comp, trsf);
+            if (brepTrsf.IsDone()) {
+                comp = brepTrsf.Shape();
+            }
+            else {
+                m_messenger->emitWarning(
+                    fmt::format("OnReadInsert('{}') - scaling failed({}, {}, {})", name, scale.x, scale.y, scale.z)
+                );
+            }
+        }
+
         gp_Trsf trsfRotZ;
-        trsfRotZ.SetRotation(gp::OZ(), rotation);
+        if (!MathUtils::fuzzyIsNull(rotation))
+            trsfRotZ.SetRotation(gp::OZ(), rotation);
+
         gp_Trsf trsfMove;
         trsfMove.SetTranslation(this->toPnt(point).XYZ());
-        const gp_Trsf trsf = trsfScale * trsfRotZ * trsfMove;
-        comp.Location(trsf);
+
+        comp.Location(trsfRotZ * trsfMove);
         this->addShape(comp);
     }
 }
 
-void DxfReader::Internal::OnReadDimension(const double* s, const double* e, const double* point, double rotation)
+void DxfReader::Internal::OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation)
 {
     if (m_params.importAnnotations) {
         // TODO
         std::stringstream sstr;
         sstr << "DxfReader::OnReadDimension() - Not yet implemented" << std::endl
-             << "    s: " << s[0] << ", " << s[1] << ", " << s[2] << std::endl
-             << "    e: " << e[0] << ", " << e[1] << ", " << e[2] << std::endl
-             << "    point: " << point[0] << ", " << point[1] << ", " << point[2] << std::endl
+             << "    s: " << s.x << ", " << s.y << ", " << s.z << std::endl
+             << "    e: " << e.x << ", " << e.y << ", " << e.z << std::endl
+             << "    point: " << point.x << ", " << point.y << ", " << point.z << std::endl
              << "    rotation: " << rotation << std::endl;
         m_messenger->emitWarning(sstr.str());
     }
@@ -588,11 +611,16 @@ void DxfReader::Internal::ReportError(const std::string& msg)
     m_messenger->emitError(msg);
 }
 
-gp_Pnt DxfReader::Internal::toPnt(const double* coords) const
+void DxfReader::Internal::AddGraphics() const
 {
-    double sp1(coords[0]);
-    double sp2(coords[1]);
-    double sp3(coords[2]);
+    // Nothing
+}
+
+gp_Pnt DxfReader::Internal::toPnt(const DxfCoords& coords) const
+{
+    double sp1(coords.x);
+    double sp2(coords.y);
+    double sp3(coords.z);
     if (!MathUtils::fuzzyEqual(m_params.scaling, 1.)) {
         sp1 = sp1 * m_params.scaling;
         sp2 = sp2 * m_params.scaling;

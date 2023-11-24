@@ -10,8 +10,12 @@
 #  define _USE_MATH_DEFINES
 #endif
 #include <cassert>
+#include <cctype>
 #include <clocale>
 #include <cmath>
+#if __cpp_lib_to_chars
+#  include <charconv>
+#endif
 
 #include <iomanip>
 #include <stdexcept>
@@ -22,12 +26,6 @@
 #include <iostream>
 
 namespace {
-
-template<size_t N1, size_t N2>
-void safe_strcpy(char (&dst)[N1], const char (&src)[N2])
-{
-    strncpy(dst, src, std::min(N1, N2));
-}
 
 class ScopedCLocale {
 public:
@@ -48,40 +46,93 @@ private:
     const char* m_savedLocale = nullptr;
 };
 
-double stringToDouble(const std::string& line)
-{
-    try {
-        return std::stod(line);
-    } catch (...) {
-        throw std::runtime_error("Failed to fetch double value from line:\n" + line);
-    }
-
-    return 0.;
-}
-
-int stringToInt(const std::string& line)
-{
-    try {
-        return std::stoi(line);
-    } catch (...) {
-        throw std::runtime_error("Failed to fetch int value from line:\n" + line);
-    }
-
-    return 0;
-}
-
-unsigned stringToUnsigned(const std::string& line)
-{
-    try {
-        return std::stoul(line);
-    } catch (...) {
-        throw std::runtime_error("Failed to fetch unsigned int value from line:\n" + line);
-    }
-
-    return 0;
-}
-
 } // namespace
+
+namespace DxfPrivate {
+
+template<typename T> bool isStringToErrorValue(T value)
+{
+    if constexpr(std::is_same_v<T, int>) {
+        return value == std::numeric_limits<int>::max();
+    }
+    else if constexpr(std::is_same_v<T, unsigned>) {
+        return value == std::numeric_limits<unsigned>::max();
+    }
+    else if constexpr(std::is_same_v<T, double>) {
+        constexpr double dMax = std::numeric_limits<double>::max();
+        return std::abs(value - dMax) * 1000000000000. <= std::min(std::abs(value), std::abs(dMax));
+    }
+    else {
+        return false;
+    }
+}
+
+template<typename T>
+T stringToNumeric(const std::string& line, StringToErrorMode errorMode)
+{
+#if __cpp_lib_to_chars
+    T value;
+    auto [ptr, err] = std::from_chars(line.c_str(), line.c_str() + line.size(), value);
+    if (err == std::errc())
+        return value;
+#else
+    try {
+        if constexpr(std::is_same_v<T, int>) {
+            return std::stoi(line);
+        }
+        else if constexpr(std::is_same_v<T, unsigned>) {
+            return std::stoul(line);
+        }
+        else if constexpr(std::is_same_v<T, double>) {
+            return std::stod(line);
+        }
+        else {
+            if (errorMode == StringToErrorMode::ReturnErrorValue)
+                return std::numeric_limits<T>::max();
+            else
+                throw std::runtime_error("Failed to fetch numeric value from line:\n" + line);
+        }
+    } catch (...) {
+#endif
+
+    if (errorMode == StringToErrorMode::ReturnErrorValue) {
+        return std::numeric_limits<T>::max();
+    }
+    else {
+        std::string strTypeName = "?";
+        if constexpr(std::is_same_v<T, int>)
+            strTypeName = "int";
+        else if constexpr(std::is_same_v<T, unsigned>)
+            strTypeName = "unsigned";
+        else if constexpr(std::is_same_v<T, double>)
+            strTypeName = "double";
+
+        throw std::runtime_error("Failed to fetch " + strTypeName + " value from line:\n" + line);
+    }
+
+#ifndef __cpp_lib_to_chars
+    }
+#endif
+}
+
+int stringToInt(const std::string& line, StringToErrorMode errorMode)
+{
+    return stringToNumeric<int>(line, errorMode);
+}
+
+unsigned stringToUnsigned(const std::string& line, StringToErrorMode errorMode)
+{
+    return stringToNumeric<unsigned>(line, errorMode);
+}
+
+double stringToDouble(const std::string& line, StringToErrorMode errorMode)
+{
+    return stringToNumeric<double>(line, errorMode);
+}
+
+} // namespace DxfPrivate
+
+using namespace DxfPrivate;
 
 Base::Vector3d toVector3d(const double* a)
 {
@@ -1842,20 +1893,14 @@ CDxfRead::CDxfRead(const char* filepath)
     : m_ifs(filepath)
 {
     // start the file
-    memset( m_str, '\0', sizeof(m_str) );
-    memset( m_unused_line, '\0', sizeof(m_unused_line) );
     m_fail = false;
     m_ColorIndex = 0;
     m_eUnits = eMillimeters;
     m_measurement_inch = false;
     m_layer_name = "0";  // Default layer name
-    memset( m_section_name, '\0', sizeof(m_section_name) );
-    memset( m_block_name, '\0', sizeof(m_block_name) );
     m_ignore_errors = true;
 
     m_version = RUnknown;
-    //m_CodePage = nullptr;
-    //m_encoding = nullptr;
 
     if (!m_ifs)
         m_fail = true;
@@ -1865,11 +1910,9 @@ CDxfRead::CDxfRead(const char* filepath)
 
 CDxfRead::~CDxfRead()
 {
-    //delete m_CodePage;
-    //delete m_encoding;
 }
 
-double CDxfRead::mm( double value ) const
+double CDxfRead::mm(double value) const
 {
     // re #6461
     // this if handles situation of malformed DXF file where
@@ -1931,95 +1974,42 @@ double CDxfRead::mm( double value ) const
 
 bool CDxfRead::ReadLine()
 {
-    double s[3] = {0, 0, 0};
-    double e[3] = {0, 0, 0};
+    DxfCoords s = {};
+    DxfCoords e = {};
     bool hidden = false;
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-
-        if (sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            // next item found, so finish with line
+            ResolveColorIndex();
+            OnReadLine(s, e, hidden);
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadLine()");
             return false;
         }
 
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
-            // next item found, so finish with line
-            ResolveColorIndex();
-            OnReadLine(s, e, hidden);
-            hidden = false;
-            return true;
-
+        get_line();
+        switch (n) {
         case 6: // line style name follows
-            get_line();
-            if (m_str[0] == 'h' || m_str[0] == 'H') {
+            if (!m_str.empty() && (m_str[0] == 'h' || m_str[0] == 'H')) {
                 hidden = true;
             }
             break;
-
         case 10:
-            // start x
-            get_line();
-            ss.str(m_str);
-            ss >> s[0];
-            s[0] = mm(s[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // start y
-            get_line();
-            ss.str(m_str);
-            ss >> s[1];
-            s[1] = mm(s[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // start z
-            get_line();
-            ss.str(m_str);
-            ss >> s[2];
-            s[2] = mm(s[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // start coords
+            HandleCoordCode(n, &s);
             break;
         case 11:
-            // end x
-            get_line();
-            ss.str(m_str);
-            ss >> e[0];
-            e[0] = mm(e[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 21:
-            // end y
-            get_line();
-            ss.str(m_str);
-            ss >> e[1];
-            e[1] = mm(e[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 31:
-            // end z
-            get_line();
-            ss.str(m_str);
-            ss >> e[2];
-            e[2] = mm(e[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // end coords
+            HandleCoordCode<11, 21, 31>(n, &e);
             break;
         case 100:
         case 39:
@@ -2027,10 +2017,8 @@ bool CDxfRead::ReadLine()
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
@@ -2051,55 +2039,29 @@ bool CDxfRead::ReadLine()
 
 bool CDxfRead::ReadPoint()
 {
-    double s[3] = {0, 0, 0};
+    DxfCoords s = {};
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadPoint()");
-            return false;
-        }
-
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found, so finish with line
             ResolveColorIndex();
             OnReadPoint(s);
             return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadPoint()");
+            return false;
+        }
 
+        get_line();
+        switch (n){
         case 10:
-            // start x
-            get_line();
-            ss.str(m_str);
-            ss >> s[0];
-            s[0] = mm(s[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // start y
-            get_line();
-            ss.str(m_str);
-            ss >> s[1];
-            s[1] = mm(s[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // start z
-            get_line();
-            ss.str(m_str);
-            ss >> s[2];
-            s[2] = mm(s[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // start coords
+            HandleCoordCode(n, &s);
             break;
 
         case 100:
@@ -2108,10 +2070,8 @@ bool CDxfRead::ReadPoint()
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
@@ -2135,92 +2095,50 @@ bool CDxfRead::ReadArc()
     double start_angle = 0.0;// in degrees
     double end_angle = 0.0;
     double radius = 0.0;
-    double c[3] = {0,0,0}; // centre
+    DxfCoords c = {}; // centre
     double z_extrusion_dir = 1.0;
     bool hidden = false;
     
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            // next item found, so finish with arc
+            ResolveColorIndex();
+            OnReadArc(start_angle, end_angle, radius, c, z_extrusion_dir, hidden);
+            hidden = false;
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadArc()");
             return false;
         }
 
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
+        get_line();
         switch (n){
-        case 0:
-            // next item found, so finish with arc
-            ResolveColorIndex();
-            OnReadArc(start_angle, end_angle, radius, c,z_extrusion_dir, hidden);
-            hidden = false;
-            return true;
-
         case 6: // line style name follows
-            get_line();
-            if (m_str[0] == 'h' || m_str[0] == 'H') {
+            if (!m_str.empty() && (m_str[0] == 'h' || m_str[0] == 'H')) {
                 hidden = true;
             }
             break;
 
         case 10:
-            // centre x
-            get_line();
-            ss.str(m_str);
-            ss >> c[0];
-            c[0] = mm(c[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // centre y
-            get_line();
-            ss.str(m_str);
-            ss >> c[1];
-            c[1] = mm(c[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // centre z
-            get_line();
-            ss.str(m_str);
-            ss >> c[2];
-            c[2] = mm(c[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // centre coords
+            HandleCoordCode(n, &c);
             break;
         case 40:
             // radius
-            get_line();
-            ss.str(m_str);
-            ss >> radius;
-            radius = mm(radius);
-            if (ss.fail()) {
-                return false;
-            }
+            radius = mm(stringToDouble(m_str));
             break;
         case 50:
             // start angle
-            get_line();
-            ss.str(m_str);
-            ss >> start_angle;
-            if (ss.fail()) {
-                return false;
-            }
+            start_angle = mm(stringToDouble(m_str));
             break;
         case 51:
             // end angle
-            get_line();
-            ss.str(m_str);
-            ss >> end_angle;
-            if (ss.fail()) {
-                return false;
-            }
+            end_angle = mm(stringToDouble(m_str));
             break;
 
         case 100:
@@ -2228,24 +2146,18 @@ bool CDxfRead::ReadArc()
         case 210:
         case 220:
             // skip the next line
-            get_line();
             break;
         case 230:
             //Z extrusion direction for arc
-            get_line();
-            ss.str(m_str);
-            ss >> z_extrusion_dir;
-            if (ss.fail()) {
-                return false;
-            }
+            z_extrusion_dir = mm(stringToDouble(m_str));
             break;
 
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     ResolveColorIndex();
     OnReadArc(start_angle, end_angle, radius, c, z_extrusion_dir, false);
     return false;
@@ -2254,270 +2166,122 @@ bool CDxfRead::ReadArc()
 bool CDxfRead::ReadSpline()
 {
     struct SplineData sd;
-    sd.norm[0] = 0;
-    sd.norm[1] = 0;
-    sd.norm[2] = 1;
+    sd.norm = {0., 0., 1.};
     sd.degree = 0;
     sd.knots = 0;
     sd.flag = 0;
     sd.control_points = 0;
     sd.fit_points = 0;
 
-    double temp_double;
-
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadSpline()");
-            return false;
-        }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n) {
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found, so finish with Spline
             ResolveColorIndex();
             OnReadSpline(sd);
             return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadSpline()");
+            return false;
+        }
+
+        get_line();
+        switch (n) {
         case 210:
-            // normal x
-            get_line();
-            ss.str(m_str);
-            ss >> sd.norm[0];
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 220:
-            // normal y
-            get_line();
-            ss.str(m_str);
-            ss >> sd.norm[1];
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 230:
-            // normal z
-            get_line();
-            ss.str(m_str);
-            ss >> sd.norm[2];
-            if (ss.fail()) {
-                return false;
-            }
+            // normal coords
+            HandleCoordCode<210, 220, 230>(n, &sd.norm);
             break;
         case 70:
             // flag
-            get_line();
-            ss.str(m_str);
-            ss >> sd.flag;
-            if (ss.fail()) {
-                return false;
-            }
+            sd.flag = stringToInt(m_str);
             break;
         case 71:
             // degree
-            get_line();
-            ss.str(m_str);
-            ss >> sd.degree;
-            if (ss.fail()) {
-                return false;
-            }
+            sd.degree = stringToInt(m_str);
             break;
         case 72:
             // knots
-            get_line();
-            ss.str(m_str);
-            ss >> sd.knots;
-            if (ss.fail()) {
-                return false;
-            }
+            sd.knots = stringToInt(m_str);
             break;
         case 73:
             // control points
-            get_line();
-            ss.str(m_str);
-            ss >> sd.control_points;
-            if (ss.fail()) {
-                return false;
-            }
+            sd.control_points = stringToInt(m_str);
             break;
         case 74:
             // fit points
-            get_line();
-            ss.str(m_str);
-            ss >> sd.fit_points;
-            if (ss.fail()) {
-                return false;
-            }
+            sd.fit_points = stringToInt(m_str);
             break;
         case 12:
             // starttan x
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.starttanx.push_back(temp_double);
+            sd.starttanx.push_back(mm(stringToDouble(m_str)));
             break;
         case 22:
             // starttan y
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.starttany.push_back(temp_double);
+            sd.starttany.push_back(mm(stringToDouble(m_str)));
             break;
         case 32:
             // starttan z
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.starttanz.push_back(temp_double);
+            sd.starttanz.push_back(mm(stringToDouble(m_str)));
             break;
         case 13:
             // endtan x
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.endtanx.push_back(temp_double);
+            sd.endtanx.push_back(mm(stringToDouble(m_str)));
             break;
         case 23:
             // endtan y
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.endtany.push_back(temp_double);
+            sd.endtany.push_back(mm(stringToDouble(m_str)));
             break;
         case 33:
             // endtan z
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.endtanz.push_back(temp_double);
+            sd.endtanz.push_back(mm(stringToDouble(m_str)));
             break;
         case 40:
             // knot
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.knot.push_back(temp_double);
+            sd.knot.push_back(mm(stringToDouble(m_str)));
             break;
         case 41:
             // weight
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.weight.push_back(temp_double);
+            sd.weight.push_back(mm(stringToDouble(m_str)));
             break;
         case 10:
             // control x
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.controlx.push_back(temp_double);
+            sd.controlx.push_back(mm(stringToDouble(m_str)));
             break;
         case 20:
             // control y
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.controly.push_back(temp_double);
+            sd.controly.push_back(mm(stringToDouble(m_str)));
             break;
         case 30:
             // control z
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.controlz.push_back(temp_double);
+            sd.controlz.push_back(mm(stringToDouble(m_str)));
             break;
         case 11:
             // fit x
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.fitx.push_back(temp_double);
+            sd.fitx.push_back(mm(stringToDouble(m_str)));
             break;
         case 21:
             // fit y
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.fity.push_back(temp_double);
+            sd.fity.push_back(mm(stringToDouble(m_str)));
             break;
         case 31:
             // fit z
-            get_line();
-            ss.str(m_str);
-            ss >> temp_double;
-            temp_double = mm(temp_double);
-            if (ss.fail()) {
-                return false;
-            }
-            sd.fitz.push_back(temp_double);
+            sd.fitz.push_back(mm(stringToDouble(m_str)));
             break;
         case 42:
         case 43:
         case 44:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     ResolveColorIndex();
     OnReadSpline(sd);
     return false;
@@ -2527,72 +2291,39 @@ bool CDxfRead::ReadSpline()
 bool CDxfRead::ReadCircle()
 {
     double radius = 0.0;
-    double c[3] = {0,0,0}; // centre
+    DxfCoords c = {}; // centre
     bool hidden = false;
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadCircle()");
-            return false;
-        }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found, so finish with Circle
             ResolveColorIndex();
             OnReadCircle(c, radius, hidden);
-            hidden = false;
             return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadCircle()");
+            return false;
+        }
 
+        get_line();
+        switch (n){
         case 6: // line style name follows
-            get_line();
-            if (m_str[0] == 'h' || m_str[0] == 'H') {
+            if (!m_str.empty() && (m_str[0] == 'h' || m_str[0] == 'H')) {
                 hidden = true;
             }
             break;
-
         case 10:
-            // centre x
-            get_line();
-            ss.str(m_str);
-            ss >> c[0];
-            c[0] = mm(c[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // centre y
-            get_line();
-            ss.str(m_str);
-            ss >> c[1];
-            c[1] = mm(c[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // centre z
-            get_line();
-            ss.str(m_str);
-            ss >> c[2];
-            c[2] = mm(c[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // centre coords
+            HandleCoordCode(n, &c);
             break;
         case 40:
             // radius
-            get_line();
-            ss.str(m_str);
-            ss >> radius;
-            radius = mm(radius);
-            if (ss.fail()) {
-                return false;
-            }
+            radius = mm(stringToDouble(m_str));
             break;
 
         case 100:
@@ -2601,14 +2332,13 @@ bool CDxfRead::ReadCircle()
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     ResolveColorIndex();
     OnReadCircle(c, radius, false);
     return false;
@@ -2616,49 +2346,38 @@ bool CDxfRead::ReadCircle()
 
 void CDxfRead::ReadText()
 {
-    ScopedCLocale _(LC_NUMERIC);
-
     DxfText text;
     while (!m_ifs.eof()) {
         get_line();
         const int n = stringToInt(m_str);
-        switch (n) {
-        case 0:
+        if (n == 0) {
             ResolveColorIndex();
-            {
-                size_t pos = text.str.find("\\P", 0);
-                while (pos != std::string::npos) {
-                    text.str.replace(pos, 2, "\n");
-                    pos = text.str.find("\\P", pos + 1);
-                }
-
-                text.str = this->toUtf8(text.str);
-                OnReadText(text);
+            // Replace \P by \n
+            size_t pos = text.str.find("\\P", 0);
+            while (pos != std::string::npos) {
+                text.str.replace(pos, 2, "\n");
+                pos = text.str.find("\\P", pos + 1);
             }
+
+            text.str = this->toUtf8(text.str);
+            OnReadText(text);
             return;
+        }
+
+        get_line();
+        switch (n) {
         case 10:
-            // centre x
-            get_line();
-            text.point[0] = mm(stringToDouble(m_str));
-            break;
         case 20:
-            // centre y
-            get_line();
-            text.point[1] = mm(stringToDouble(m_str));
-            break;
         case 30:
-            // centre z
-            get_line();
-            text.point[2] = mm(stringToDouble(m_str));
+            // centre coords
+            HandleCoordCode(n, &text.point);
             break;
         case 40:
             // text height
-            get_line();
             text.height = mm(stringToDouble(m_str)) * 25.4 / 72.0;
             break;
         case 50:
             // text rotation
-            get_line();
             text.rotation = stringToDouble(m_str);
             break;
         case 3:
@@ -2666,18 +2385,15 @@ void CDxfRead::ReadText()
             // Note that if breaking the text into type-3 records splits a UFT-8 encoding we do
             // the decoding after splicing the lines together. I'm not sure if this actually
             // occurs, but handling the text this way will treat this condition properly.
-            get_line();
             text.str.append(m_str);
             break;
         case 1:
             // final text
-            get_line();
             text.str.append(m_str);
             break;
 
         case 71: {
             // attachment point
-            get_line();
             const int ap = stringToInt(m_str);
             if (ap >= 1 && ap <= 9) {
                 text.attachPoint = static_cast<AttachmentPoint>(ap);
@@ -2691,7 +2407,6 @@ void CDxfRead::ReadText()
         case 220:
         case 230:
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
@@ -2701,128 +2416,64 @@ void CDxfRead::ReadText()
 
 bool CDxfRead::ReadEllipse()
 {
-    double c[3] = {0,0,0}; // centre
-    double m[3] = {0,0,0}; //major axis point
-    double ratio=0; //ratio of major to minor axis
-    double start=0; //start of arc
-    double end=0;  // end of arc
+    DxfCoords c = {}; // centre
+    DxfCoords m = {}; //major axis point
+    double ratio = 0; //ratio of major to minor axis
+    double start = 0; //start of arc
+    double end = 0;  // end of arc
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadEllipse()");
-            return false;
-        }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found, so finish with Ellipse
             ResolveColorIndex();
             OnReadEllipse(c, m, ratio, start, end);
             return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadEllipse()");
+            return false;
+        }
 
+        get_line();
+        switch (n) {
         case 10:
-            // centre x
-            get_line();
-            ss.str(m_str);
-            ss >> c[0];
-            c[0] = mm(c[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // centre y
-            get_line();
-            ss.str(m_str);
-            ss >> c[1];
-            c[1] = mm(c[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // centre z
-            get_line();
-            ss.str(m_str);
-            ss >> c[2];
-            c[2] = mm(c[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // centre coords
+            HandleCoordCode(n, &c);
             break;
         case 11:
-            // major x
-            get_line();
-            ss.str(m_str);
-            ss >> m[0];
-            m[0] = mm(m[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 21:
-            // major y
-            get_line();
-            ss.str(m_str);
-            ss >> m[1];
-            m[1] = mm(m[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 31:
-            // major z
-            get_line();
-            ss.str(m_str);
-            ss >> m[2];
-            m[2] = mm(m[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // major coords
+            HandleCoordCode<11, 21, 31>(n, &m);
             break;
         case 40:
             // ratio
-            get_line();
-            ss.str(m_str);
-            ss >> ratio;
-            if (ss.fail()) {
-                return false;
-            }
+            ratio = stringToDouble(m_str);
             break;
         case 41:
             // start
-            get_line();
-            ss.str(m_str);
-            ss >> start;
-            if (ss.fail()) {
-                return false;
-            }
+            start = stringToDouble(m_str);
             break;
         case 42:
             // end
-            get_line();
-            ss.str(m_str);
-            ss >> end;
-            if (ss.fail()) {
-                return false;
-            }
+            end = stringToDouble(m_str);
             break;
         case 100:
         case 210:
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     ResolveColorIndex();
     OnReadEllipse(c, m, ratio, start, end);
     return false;
@@ -2852,16 +2503,16 @@ AddPolyLinePoint(CDxfRead* dxf_read, double x, double y, double z, bool bulge_fo
                 double cot = 0.5 * ((1.0 / poly_prev_bulge) - poly_prev_bulge);
                 double cx = ((poly_prev_x + x) - ((y - poly_prev_y) * cot)) / 2.0;
                 double cy = ((poly_prev_y + y) + ((x - poly_prev_x) * cot)) / 2.0;
-                double ps[3] = {poly_prev_x, poly_prev_y, poly_prev_z};
-                double pe[3] = {x, y, z};
-                double pc[3] = {cx, cy, (poly_prev_z + z)/2.0};
+                const DxfCoords ps = {poly_prev_x, poly_prev_y, poly_prev_z};
+                const DxfCoords pe = {x, y, z};
+                const DxfCoords pc = {cx, cy, (poly_prev_z + z)/2.0};
                 dxf_read->OnReadArc(ps, pe, pc, poly_prev_bulge >= 0, false);
                 arc_done = true;
             }
 
             if (!arc_done) {
-                double s[3] = {poly_prev_x, poly_prev_y, poly_prev_z};
-                double e[3] = {x, y, z};
+                const DxfCoords s = {poly_prev_x, poly_prev_y, poly_prev_z};
+                const DxfCoords e = {x, y, z};
                 dxf_read->OnReadLine(s, e, false);
             }
         }
@@ -2911,11 +2562,12 @@ bool CDxfRead::ReadLwPolyLine()
 
     while (!m_ifs.eof() && !next_item_found) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str);
+        if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadLwPolyLine()");
             return false;
         }
+
         std::istringstream ss;
         ss.imbue(std::locale::classic());
         switch (n){
@@ -2983,9 +2635,7 @@ bool CDxfRead::ReadLwPolyLine()
         case 70:
             // flags
             get_line();
-            if (sscanf(m_str, "%d", &flags) != 1) {
-                return false;
-            }
+            flags = stringToInt(m_str);
             closed = ((flags & 1) != 0);
             break;
         default:
@@ -3013,39 +2663,29 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
     bool y_found = false;
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if(sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            ResolveColorIndex();
+            put_line(m_str);    // read one line too many.  put it back.
+            return x_found && y_found;
+        }
+        else if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadVertex()");
             return false;
         }
 
+        get_line();
         switch (n){
-        case 0:
-            ResolveColorIndex();
-            put_line(m_str);    // read one line too many.  put it back.
-            return (x_found && y_found);
-            break;
         case 10:
-            // x
-            get_line();
-            vertex->point[0] = mm(stringToDouble(m_str));
-            x_found = true;
-            break;
         case 20:
-            // y
-            get_line();
-            vertex->point[1] = mm(stringToDouble(m_str));
-            y_found = true;
-            break;
         case 30:
-            // z
-            get_line();
-            vertex->point[2] = mm(stringToDouble(m_str));
+            // coords
+            x_found = x_found || n == 10;
+            y_found = y_found || n == 20;
+            HandleCoordCode(n, &vertex->point);
             break;
-
         case 42: {
             // bulge
-            get_line();
             const int bulge = stringToInt(m_str);
             if (bulge == 0)
                 vertex->bulge = DxfVertex::Bulge::StraightSegment;
@@ -3053,15 +2693,11 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
                 vertex->bulge = DxfVertex::Bulge::SemiCircle;
         }
             break;
-
         case 70:
             // flags
-            get_line();
             vertex->flags = stringToUnsigned(m_str);
             break;
-
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
@@ -3073,28 +2709,27 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
 
 bool CDxfRead::ReadPolyLine()
 {
-    ScopedCLocale _(LC_NUMERIC);
     DxfPolyline polyline;
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadPolyLine()");
             return false;
         }
 
+        get_line();
         switch (n) {
         case 0:
             // next item found
             ResolveColorIndex();
-            get_line();
-            if (!strcmp(m_str, "VERTEX")) {
+            if (m_str == "VERTEX") {
                 DxfVertex vertex;
                 if (ReadVertex(&vertex))
-                    polyline.vertices.push_back(vertex);
+                    polyline.vertices.push_back(std::move(vertex));
             }
 
-            if (!strcmp(m_str, "SEQEND")) {
+            if (m_str == "SEQEND") {
                 OnReadPolyline(polyline);
                 return true;
             }
@@ -3102,11 +2737,9 @@ bool CDxfRead::ReadPolyLine()
             break;
         case 70:
             // flags
-            get_line();
             polyline.flags = stringToUnsigned(m_str);
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
@@ -3118,162 +2751,117 @@ bool CDxfRead::ReadPolyLine()
 void CDxfRead::OnReadArc(double start_angle,
                          double end_angle,
                          double radius,
-                         const double* c,
+                         const DxfCoords& c,
                          double z_extrusion_dir,
                          bool hidden)
 {
-    double s[3] = {0, 0, 0}, e[3] = {0, 0, 0}, temp[3] = {0, 0, 0};
+    DxfCoords s = {};
+    DxfCoords e = {};
+    DxfCoords temp = {};
     if (z_extrusion_dir == 1.0) {
-        temp[0] = c[0];
-        temp[1] = c[1];
-        temp[2] = c[2];
-        s[0] = c[0] + radius * cos(start_angle * M_PI / 180);
-        s[1] = c[1] + radius * sin(start_angle * M_PI / 180);
-        s[2] = c[2];
-        e[0] = c[0] + radius * cos(end_angle * M_PI / 180);
-        e[1] = c[1] + radius * sin(end_angle * M_PI / 180);
-        e[2] = c[2];
+        temp.x = c.x;
+        temp.y = c.y;
+        temp.z = c.z;
+        s.x = c.x + radius * cos(start_angle * M_PI / 180);
+        s.y = c.y + radius * sin(start_angle * M_PI / 180);
+        s.z = c.z;
+        e.x = c.x + radius * cos(end_angle * M_PI / 180);
+        e.y = c.y + radius * sin(end_angle * M_PI / 180);
+        e.z = c.z;
     }
     else {
-        temp[0] =-c[0];
-        temp[1] =c[1];
-        temp[2] =c[2];
+        temp.x = -c.x;
+        temp.y = c.y;
+        temp.z = c.z;
 
-        e[0] = -(c[0] + radius * cos(start_angle * M_PI/180));
-        e[1] = (c[1] + radius * sin(start_angle * M_PI/180));
-        e[2] = c[2];
-        s[0] = -(c[0] + radius * cos(end_angle * M_PI/180));
-        s[1] = (c[1] + radius * sin(end_angle * M_PI/180));
-        s[2] = c[2];
+        e.x = -(c.x + radius * cos(start_angle * M_PI/180));
+        e.y = (c.y + radius * sin(start_angle * M_PI/180));
+        e.z = c.z;
+        s.x = -(c.x + radius * cos(end_angle * M_PI/180));
+        s.y = (c.y + radius * sin(end_angle * M_PI/180));
+        s.z = c.z;
     }
+
     OnReadArc(s, e, temp, true, hidden);
 }
 
-void CDxfRead::OnReadCircle(const double* c, double radius, bool hidden)
+void CDxfRead::OnReadCircle(const DxfCoords& c, double radius, bool hidden)
 {
-    double s[3];
-    double start_angle = 0;
-    s[0] = c[0] + radius * cos(start_angle * M_PI / 180);
-    s[1] = c[1] + radius * sin(start_angle * M_PI / 180);
-    s[2] = c[2];
+    constexpr double start_angle = 0;
+    const DxfCoords s = {
+        c.x + radius * cos(start_angle * M_PI / 180),
+        c.y + radius * sin(start_angle * M_PI / 180),
+        c.z
+    };
 
-    OnReadCircle(s,
-                 c,
-                 false,
-                 hidden);  // false to change direction because otherwise the arc length is zero
+    const bool dir = false; // 'false' to change direction because otherwise the arc length is zero
+    OnReadCircle(s, c, dir, hidden);
 }
 
-void CDxfRead::OnReadEllipse(const double* c,
-                             const double* m,
+void CDxfRead::OnReadEllipse(const DxfCoords& c,
+                             const DxfCoords& m,
                              double ratio,
                              double start_angle,
                              double end_angle)
 {
-    double major_radius = sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]);
-    double minor_radius = major_radius * ratio;
+    const double major_radius = sqrt(m.x * m.x + m.y * m.y + m.z * m.z);
+    const double minor_radius = major_radius * ratio;
 
     // Since we only support 2d stuff, we can calculate the rotation from the major axis x and y
     // value only, since z is zero, major_radius is the vector length
 
-    double rotation = atan2(m[1] / major_radius, m[0] / major_radius);
-
-
+    const double rotation = atan2(m.y / major_radius, m.x / major_radius);
     OnReadEllipse(c, major_radius, minor_radius, rotation, start_angle, end_angle, true);
 }
 
-
 bool CDxfRead::ReadInsert()
 {
-    double c[3] = {0,0,0}; // coordinate
-    double s[3] = {1,1,1}; // scale
+    DxfCoords c = {}; // coordinate
+    DxfScale s = {1., 1., 1.}; // scale
     double rot = 0.0; // rotation
-    char name[1024] = {0};
+    std::string name;
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadInsert()");
-            return false;
-        }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found
             ResolveColorIndex();
             OnReadInsert(c, s, name, rot * M_PI/180);
-            return(true);
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadInsert()");
+            return false;
+        }
+
+        get_line();
+        switch (n){
         case 10:
-            // coord x
-            get_line();
-            ss.str(m_str);
-            ss >> c[0];
-            c[0] = mm(c[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // coord y
-            get_line();
-            ss.str(m_str);
-            ss >> c[1];
-            c[1] = mm(c[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // coord z
-            get_line();
-            ss.str(m_str);
-            ss >> c[2];
-            c[2] = mm(c[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // 3d coords
+            HandleCoordCode(n, &c);
             break;
         case 41:
             // scale x
-            get_line();
-            ss.str(m_str);
-            ss >> s[0];
-            if (ss.fail()) {
-                return false;
-            }
+            s.x = stringToDouble(m_str);
             break;
         case 42:
             // scale y
-            get_line();
-            ss.str(m_str);
-            ss >> s[1];
-            if (ss.fail()) {
-                return false;
-            }
+            s.y = stringToDouble(m_str);
             break;
         case 43:
             // scale z
-            get_line();
-            ss.str(m_str);
-            ss >> s[2];
-            if (ss.fail()) {
-                return false;
-            }
+            s.z = stringToDouble(m_str);
             break;
         case 50:
             // rotation
-            get_line();
-            ss.str(m_str);
-            ss >> rot;
-            if (ss.fail()) {
-                return false;
-            }
+            rot = stringToDouble(m_str);
             break;
         case 2:
             // block name
-            get_line();
-            strcpy(name, m_str);
+            name = m_str;
             break;
         case 100:
         case 39:
@@ -3281,138 +2869,60 @@ bool CDxfRead::ReadInsert()
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     return false;
 }
 
-
 bool CDxfRead::ReadDimension()
 {
-    double s[3] = {0,0,0}; // startpoint
-    double e[3] = {0,0,0}; // endpoint
-    double p[3] = {0,0,0}; // dimpoint
+    DxfCoords s = {}; // startpoint
+    DxfCoords e = {}; // endpoint
+    DxfCoords p = {}; // dimpoint
     double rot = -1.0; // rotation
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadDimension()");
-            return false;
-        }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n){
-        case 0:
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             // next item found
             ResolveColorIndex();
             OnReadDimension(s, e, p, rot * M_PI/180);
-            return(true);
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadDimension()");
+            return false;
+        }
+
+        get_line();
+        switch (n){
         case 13:
-            // start x
-            get_line();
-            ss.str(m_str);
-            ss >> s[0];
-            s[0] = mm(s[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 23:
-            // start y
-            get_line();
-            ss.str(m_str);
-            ss >> s[1];
-            s[1] = mm(s[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 33:
-            // start z
-            get_line();
-            ss.str(m_str);
-            ss >> s[2];
-            s[2] = mm(s[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // start coords
+            HandleCoordCode<13, 23, 33>(n, &s);
             break;
         case 14:
-            // end x
-            get_line();
-            ss.str(m_str);
-            ss >> e[0];
-            e[0] = mm(e[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 24:
-            // end y
-            get_line();
-            ss.str(m_str);
-            ss >> e[1];
-            e[1] = mm(e[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 34:
-            // end z
-            get_line();
-            ss.str(m_str);
-            ss >> e[2];
-            e[2] = mm(e[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // end coords
+            HandleCoordCode<14, 24, 34>(n, &e);
             break;
         case 10:
-            // dimline x
-            get_line();
-            ss.str(m_str);
-            ss >> p[0];
-            p[0] = mm(p[0]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 20:
-            // dimline y
-            get_line();
-            ss.str(m_str);
-            ss >> p[1];
-            p[1] = mm(p[1]);
-            if (ss.fail()) {
-                return false;
-            }
-            break;
         case 30:
-            // dimline z
-            get_line();
-            ss.str(m_str);
-            ss >> p[2];
-            p[2] = mm(p[2]);
-            if (ss.fail()) {
-                return false;
-            }
+            // dimline coords
+            HandleCoordCode<10, 20, 30>(n, &p);
             break;
         case 50:
             // rotation
-            get_line();
-            ss.str(m_str);
-            ss >> rot;
-            if (ss.fail()) {
-                return false;
-            }
+            rot = stringToDouble(m_str);
             break;
         case 100:
         case 39:
@@ -3420,14 +2930,13 @@ bool CDxfRead::ReadDimension()
         case 220:
         case 230:
             // skip the next line
-            get_line();
             break;
         default:
-            get_line();
             HandleCommonGroupCode(n);
             break;
         }
     }
+
     return false;
 }
 
@@ -3436,94 +2945,74 @@ bool CDxfRead::ReadBlockInfo()
 {
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-        if (sscanf(m_str, "%d", &n) != 1) {
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (isStringToErrorValue(n)) {
             this->ReportError_readInteger("DXF::ReadBlockInfo()");
             return false;
         }
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
+
+        get_line();
         switch (n){
         case 2:
             // block name
-            get_line();
-            safe_strcpy(m_block_name, m_str);
+            m_block_name = m_str;
             return true;
         case 3:
             // block name too???
-            get_line();
-            safe_strcpy(m_block_name, m_str);
+            m_block_name = m_str;
             return true;
         default:
             // skip the next line
-            get_line();
             break;
         }
     }
+
     return false;
 }
 
-
 void CDxfRead::get_line()
 {
-    if (m_unused_line[0] != '\0') {
-        safe_strcpy(m_str, m_unused_line);
-        memset(m_unused_line, '\0', sizeof(m_unused_line));
+    if (!m_unused_line.empty()) {
+        m_str = m_unused_line;
+        m_unused_line.clear();
         return;
     }
 
-    m_ifs.getline(m_str, 1024);
-
-    char str[1024];
-    size_t len = strlen(m_str);
-    int j = 0;
-    bool non_white_found = false;
-    for (size_t i = 0; i < len; i++) {
-        if (non_white_found || (m_str[i] != ' ' && m_str[i] != '\t')) {
-            if (m_str[i] != '\r') {
-                str[j] = m_str[i];
-                j++;
-            }
-            non_white_found = true;
-        }
-    }
-    str[j] = 0;
-    safe_strcpy(m_str, str);
+    std::getline(m_ifs, m_str);
+    m_gcount = m_str.size();
     ++m_line_nb;
-}
 
-void dxf_strncpy(char* dst, const char* src, size_t size)
-{
-    size_t ret = strlen(src);
+    // Erase leading whitespace characters
+    auto itNonSpace = m_str.begin();
+    while (itNonSpace != m_str.end()) {
+        if (!std::isspace(*itNonSpace))
+            break;
 
-    if (size) {
-        size_t len = (ret >= size) ? size - 1 : ret;
-        memcpy(dst, src, len);
-        dst[len] = '\0';
+        ++itNonSpace;
     }
+
+    m_str.erase(m_str.begin(), itNonSpace);
 }
 
-void CDxfRead::put_line(const char *value)
+void CDxfRead::put_line(const std::string& value)
 {
-    dxf_strncpy( m_unused_line, value, sizeof(m_unused_line) );
+    m_unused_line = value;
 }
-
 
 bool CDxfRead::ReadUnits()
 {
     get_line(); // Skip to next line.
     get_line(); // Skip to next line.
-    int n = 0;
-    if (sscanf(m_str, "%d", &n) == 1) {
-        m_eUnits = eDxfUnits_t( n );
-        return(true);
-    } // End if - then
+    const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+    if (!isStringToErrorValue(n)) {
+        m_eUnits = static_cast<eDxfUnits_t>(n);
+        return true;
+    }
     else {
         this->ReportError_readInteger("DXF::ReadUnits()");
-        return(false);
+        return false;
     }
 }
-
 
 bool CDxfRead::ReadLayer()
 {
@@ -3532,37 +3021,30 @@ bool CDxfRead::ReadLayer()
 
     while (!m_ifs.eof()) {
         get_line();
-        int n;
-
-        if (sscanf(m_str, "%d", &n) != 1) {
-            this->ReportError_readInteger("DXF::ReadLayer()");
-            return false;
-        }
-
-        std::istringstream ss;
-        ss.imbue(std::locale::classic());
-        switch (n) {
-        case 0: // next item found, so finish with line
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
             if (layername.empty()) {
                 this->ReportError_readInteger("DXF::ReadLayer() - no layer name");
                 return false;
             }
+
             m_layer_ColorIndex_map[layername] = colorIndex;
             return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadLayer()");
+            return false;
+        }
 
+        get_line();
+        switch (n) {
         case 2: // Layer name follows
-            get_line();
             layername = m_str;
             break;
-
         case 62:
             // layer color ; if negative, layer is off
-            get_line();
-            if (sscanf(m_str, "%d", &colorIndex) != 1) {
-                return false;
-            }
+            colorIndex = stringToInt(m_str);
             break;
-
         case 6: // linetype name
         case 70: // layer flags
         case 100:
@@ -3570,11 +3052,9 @@ bool CDxfRead::ReadLayer()
         case 370:
         case 390:
             // skip the next line
-            get_line();
             break;
         default:
             // skip the next line
-            get_line();
             break;
         }
     }
@@ -3584,17 +3064,18 @@ bool CDxfRead::ReadLayer()
 bool CDxfRead::ReadVersion()
 {
     static const std::vector<std::string> VersionNames = {
-                                                          // This table is indexed by eDXFVersion_t - (ROlder+1)
-                                                          "AC1006",
-                                                          "AC1009",
-                                                          "AC1012",
-                                                          "AC1014",
-                                                          "AC1015",
-                                                          "AC1018",
-                                                          "AC1021",
-                                                          "AC1024",
-                                                          "AC1027",
-                                                          "AC1032"};
+        // This table is indexed by eDXFVersion_t - (ROlder+1)
+        "AC1006",
+        "AC1009",
+        "AC1012",
+        "AC1014",
+        "AC1015",
+        "AC1018",
+        "AC1021",
+        "AC1024",
+        "AC1027",
+        "AC1032"
+    };
 
     assert(VersionNames.size() == RNewer - ROlder - 1);
     get_line();
@@ -3662,72 +3143,72 @@ void CDxfRead::HandleCommonGroupCode(int n)
     }
 }
 
-void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
+void CDxfRead::DoRead(bool ignore_errors)
 {
     m_ignore_errors = ignore_errors;
+    m_gcount = 0;
     if (m_fail) {
         return;
     }
 
     get_line();
 
+    ScopedCLocale _(LC_NUMERIC);
     while (!m_ifs.eof()) {
         m_ColorIndex = ColorBylayer; // Default
 
-        if (!strcmp(m_str, "$INSUNITS" )) {
+        if (m_str == "$INSUNITS") {
             if (!ReadUnits()) {
                 return;
             }
             continue;
         } // End if - then
 
-        if (!strcmp(m_str, "$MEASUREMENT" )) {
+        if (m_str == "$MEASUREMENT") {
             get_line();
             get_line();
-            int n = 1;
-            if (sscanf(m_str, "%d", &n) == 1) {
-                if (n == 0) {
-                    m_measurement_inch = true;
-                }
-            }
+            const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+            if (n == 0)
+                m_measurement_inch = true;
+
             continue;
         } // End if - then
         
-        if (!strcmp(m_str, "$ACADVER")) {
+        if (m_str == "$ACADVER") {
             if (!ReadVersion()) {
                 return;
             }
             continue;
         }  // End if - then
 
-        if (!strcmp(m_str, "$DWGCODEPAGE")) {
+        if (m_str == "$DWGCODEPAGE") {
             if (!ReadDWGCodePage()) {
                 return;
             }
             continue;
         }  // End if - then
 
-        if (!strcmp(m_str, "0")) {
+        if (m_str == "0") {
             get_line();
-            if (!strcmp(m_str, "0"))
+            if (m_str == "0")
                 get_line(); // Skip again
 
-            if (!strcmp( m_str, "SECTION" )) {
-                safe_strcpy(m_section_name, "");
+            if (m_str == "SECTION") {
+                m_section_name.clear();
                 get_line();
                 get_line();
-                if (strcmp( m_str, "ENTITIES" )) {
-                    safe_strcpy(m_section_name, m_str);
+                if (m_str != "ENTITIES") {
+                    m_section_name = m_str;
                 }
-                safe_strcpy(m_block_name, "");
+                m_block_name.clear();
 
             } // End if - then
-            else if (!strcmp( m_str, "TABLE" )) {
+            else if (m_str == "TABLE") {
                 get_line();
                 get_line();
             }
 
-            else if (!strcmp( m_str, "LAYER" )) {
+            else if (m_str == "LAYER" ) {
                 //get_line();
                 //get_line();
                 if (!ReadLayer()) {
@@ -3737,40 +3218,40 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
                 continue;
             }
 
-            else if (!strcmp( m_str, "BLOCK" )) {
+            else if (m_str == "BLOCK" ) {
                 if (!ReadBlockInfo()) {
-                    this->ReportError("DXF::DoRead() - Failed to read block info");
+                    this->ReportError("DXF::DoRead()f - Failed to read block info");
                     return;
                 }
                 continue;
             } // End if - then
 
-            else if (!strcmp( m_str, "ENDSEC" )) {
-                safe_strcpy(m_section_name, "");
-                safe_strcpy(m_block_name, "");
+            else if (m_str == "ENDSEC" ) {
+                m_section_name.clear();
+                m_block_name.clear();
             } // End if - then
-            else if (!strcmp(m_str, "LINE")) {
+            else if (m_str == "LINE") {
                 if (!ReadLine()) {
                     this->ReportError("DXF::DoRead() - Failed to read line");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "ARC")) {
+            else if (m_str == "ARC") {
                 if (!ReadArc()) {
                     this->ReportError("DXF::DoRead() - Failed to read arc");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "CIRCLE")) {
+            else if (m_str == "CIRCLE") {
                 if (!ReadCircle()) {
                     this->ReportError("DXF::DoRead() - Failed to read circle");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "MTEXT") || !strcmp(m_str, "TEXT")) {
+            else if (m_str == "MTEXT" || m_str == "TEXT") {
                 try {
                     ReadText();
                 } catch (const std::runtime_error& err) {
@@ -3779,49 +3260,49 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "ELLIPSE")) {
+            else if (m_str == "ELLIPSE") {
                 if (!ReadEllipse()) {
                     this->ReportError("DXF::DoRead() - Failed to read ellipse");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "SPLINE")) {
+            else if (m_str == "SPLINE") {
                 if (!ReadSpline()) {
                     this->ReportError("DXF::DoRead() - Failed to read spline");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "LWPOLYLINE")) {
+            else if (m_str == "LWPOLYLINE") {
                 if (!ReadLwPolyLine()) {
                     this->ReportError("DXF::DoRead() - Failed to read LW Polyline");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "POLYLINE")) {
+            else if (m_str == "POLYLINE") {
                 if (!ReadPolyLine()) {
                     this->ReportError("DXF::DoRead() - Failed to read Polyline");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "POINT")) {
+            else if (m_str == "POINT") {
                 if (!ReadPoint()) {
                     this->ReportError("DXF::DoRead() - Failed to read Point");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "INSERT")) {
+            else if (m_str == "INSERT") {
                 if (!ReadInsert()) {
                     this->ReportError("DXF::DoRead() - Failed to read Insert");
                     return;
                 }
                 continue;
             }
-            else if (!strcmp(m_str, "DIMENSION")) {
+            else if (m_str == "DIMENSION") {
                 if (!ReadDimension()) {
                     this->ReportError("DXF::DoRead() - Failed to read Dimension");
                     return;
@@ -3832,17 +3313,15 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */ )
 
         get_line();
     }
+
     AddGraphics();
 }
 
 
 void  CDxfRead::ResolveColorIndex()
 {
-
     if (m_ColorIndex == ColorBylayer)  // if color = layer color, replace by color from layer
-    {
         m_ColorIndex = m_layer_ColorIndex_map[m_layer_name];
-    }
 }
 
 void CDxfRead::ReportError_readInteger(const char* context)
@@ -3861,19 +3340,21 @@ void CDxfRead::ReportError_readInteger(const char* context)
 
 std::streamsize CDxfRead::gcount() const
 {
-    return m_ifs.gcount();
+    // std::getline() doesn't affect std::istream::gcount
+    //return m_ifs.gcount();
+    return m_gcount;
 }
 
 std::string CDxfRead::LayerName() const
 {
     std::string result;
 
-    if (strlen(m_section_name) > 0) {
+    if (!m_section_name.empty()) {
         result.append(m_section_name);
         result.append(" ");
     }
 
-    if (strlen(m_block_name) > 0) {
+    if (!m_block_name.empty()) {
         result.append(m_block_name);
         result.append(" ");
     }
@@ -3882,5 +3363,5 @@ std::string CDxfRead::LayerName() const
         result.append(m_layer_name);
     }
 
-    return(result);
+    return result;
 }
