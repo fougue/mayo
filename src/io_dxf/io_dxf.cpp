@@ -397,10 +397,14 @@ void DxfReader::Internal::OnReadLine(const DxfCoords& s, const DxfCoords& e, boo
 void DxfReader::Internal::OnReadPolyline(const DxfPolyline& polyline)
 {
     const auto& vertices = polyline.vertices;
-    const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size());
+    const bool isPolylineClosed = polyline.flags & DxfPolyline::Flag::Closed;
+    const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
     MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
         polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
+
+    if (isPolylineClosed)
+        polygonBuilder.setNode(nodeCount, this->toPnt(vertices.at(0).point));
 
     polygonBuilder.finalize();
     this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
