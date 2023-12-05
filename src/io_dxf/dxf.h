@@ -15,10 +15,11 @@
 #include <iosfwd>
 #include <list>
 #include <optional>
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "freecad.h"
@@ -50,12 +51,6 @@ typedef enum
     eParsecs
 } eDxfUnits_t;
 
-enum class AttachmentPoint {
-    TopLeft = 1, TopCenter,    TopRight,
-    MiddleLeft,  MiddleCenter, MiddleRight,
-    BottomLeft,  BottomCenter, BottomRight
-};
-
 struct DxfCoords {
     double x;
     double y;
@@ -68,15 +63,127 @@ struct DxfScale {
     double z;
 };
 
-struct DxfText {
-    DxfCoords point = {};
-    double height = 0.03082;
-    std::string str;
-    double rotation = 0.; // radians
-    AttachmentPoint attachPoint = AttachmentPoint::TopLeft;
+struct Dxf_STYLE {
+    // Code: 2
+    std::string name;
+    // Code: 40
+    double fixedTextHeight = 0;
+    // Code: 41
+    double widthFactor = 1.;
+    // Code: 50
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double obliqueAngle = 0.;
+    // Code: 3
+    std::string primaryFontFileName;
+    // Code: 4
+    std::string bigFontFileName;
+
+    // TODO Code 70(standard flag values)
+    // TODO Code 71(text generation flags)
+    // TODO Code 42(last height used)
 };
 
-struct DxfVertex {
+struct Dxf_TEXT {
+    // Code: 39
+    double thickness = 0.;
+    // Code: 10, 20, 30
+    DxfCoords firstAlignmentPoint = {};
+    // Code: 40
+    double height = 0.;
+    // Code: 1
+    std::string str;
+    // Code: 50
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double rotationAngle = 0.;
+    // Code: 41
+    // "This value is also adjusted when fit-type text is used"
+    double relativeXScaleFactorWidth = 1.;
+    // Code: 51
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double obliqueAngle = 0.;
+    // Code: 7
+    std::string styleName;
+
+    // TODO Code 71(text generation flags)
+
+    enum class HorizontalJustification {
+        Left = 0, Center = 1, Right = 2, Aligned = 3, Middle = 4, Fit = 5
+    };
+    // Code: 72
+    HorizontalJustification horizontalJustification = HorizontalJustification::Left;
+    // Code: 11, 21, 31
+    DxfCoords secondAlignmentPoint = {};
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = {0., 0., 1.};
+
+    enum class VerticalJustification {
+        Baseline = 0, Bottom = 1, Middle = 2, Top = 3
+    };
+    // Code: 73
+    VerticalJustification verticalJustification = VerticalJustification::Baseline;
+};
+
+struct Dxf_MTEXT {
+    enum class AttachmentPoint {
+        TopLeft = 1, TopCenter,    TopRight,
+        MiddleLeft,  MiddleCenter, MiddleRight,
+        BottomLeft,  BottomCenter, BottomRight
+    };
+
+    // Code: 10, 20, 30
+    DxfCoords insertionPoint = {};
+    // Code: 40
+    double height = 0.;
+    // Code: 41
+    double referenceRectangleWidth = 0;
+    // Code 71
+    AttachmentPoint attachmentPoint = AttachmentPoint::TopLeft;
+
+    // TODO Code 72(drawing direction)
+
+    // Code: 1, 3
+    std::string str;
+
+    // TODO Code 7(text sytle name)
+
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = {0., 0., 1.};
+
+    // Code: 11, 21, 31
+    DxfCoords xAxisDirectionVector; // WCS
+
+    // NOTE AutoCad documentation states that codes 42, 43 are "read-only, ignored if supplied"
+
+    double rotationAngle = 0.; // radians(AutoCad documentation)
+
+    // TODO Code 73(line spacing style)
+    // TODO Code 44(line spacing factor)
+    // TODO Code 90(background fill setting)
+    // TODO Code 420-429(background color, if RGB)
+    // TODO Code 430-439(background color, if name)
+    // TODO Code 45(fill box scale)
+    // TODO Code 63(background fill color)
+    // TODO Code 441(transparency of background fill color)
+    // TODO Codes for columns: 75, 76, 78, 79, 48, 49, 50
+
+    enum class ColumnType { None = 0, Static, Dynamic };
+    bool acadHasColumnInfo = false;
+    ColumnType acadColumnInfo_Type = ColumnType::None;
+    bool acadColumnInfo_AutoHeight = false;
+    int acadColumnInfo_Count = 0;
+    bool acadColumnInfo_FlowReversed = false;
+    double acadColumnInfo_Width = 0.;
+    double acadColumnInfo_GutterWidth = 0.;
+
+    bool acadHasDefinedHeight = false;
+    double acadDefinedHeight = 0.;
+
+};
+
+struct Dxf_VERTEX {
     enum class Bulge { StraightSegment = 0, SemiCircle = 1 };
     enum Flag {
         None = 0,
@@ -96,7 +203,7 @@ struct DxfVertex {
     Flags flags = Flag::None;
 };
 
-struct DxfPolyline {
+struct Dxf_POLYLINE {
     enum Flag {
         None = 0,
         Closed = 1,
@@ -127,7 +234,44 @@ struct DxfPolyline {
     double smoothSurfaceMDensity = 0.;
     double smoothSurfaceNDensity = 0.;
     double extrusionDir[3] = { 0., 0., 1. };
-    std::vector<DxfVertex> vertices;
+    std::vector<Dxf_VERTEX> vertices;
+};
+
+struct Dxf_INSERT {
+    // Code: 2
+    std::string blockName;
+    // Code: 10, 20, 30
+    DxfCoords insertPoint = {}; // OCS
+    // Code: 41, 42, 43
+    DxfScale scaleFactor = { 1., 1., 1. };
+    // Code: 50
+    double rotationAngle = 0.;
+    // Code: 70
+    int columnCount = 1;
+    // Code: 71
+    int rowCount = 1;
+    // Code: 44
+    double columnSpacing = 0.;
+    // Code: 45
+    double rowSpacing = 0.;
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = { 0., 0., 1. };
+};
+
+struct Dxf_SOLID {
+    // Code: 10, 20, 30
+    DxfCoords corner1;
+    // Code: 11, 21, 31
+    DxfCoords corner2;
+    // Code: 12, 22, 32
+    DxfCoords corner3;
+    // Code: 13, 23, 33
+    DxfCoords corner4;
+    bool hasCorner4 = false;
+    // Code: 39
+    double thickness = 0.;
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = { 0., 0., 1. };
 };
 
 //spline data for reading
@@ -422,14 +566,17 @@ private:
     std::streamsize m_gcount = 0;
     int m_line_nb = 0;
 
-
     // Mapping from layer name -> layer color index
-    std::map<std::string, ColorIndex_t> m_layer_ColorIndex_map;
+    std::unordered_map<std::string, ColorIndex_t> m_layer_ColorIndex_map;
     const ColorIndex_t ColorBylayer = 256;
+
+    std::unordered_map<std::string, Dxf_STYLE> m_mapStyle;
 
     bool ReadUnits();
     bool ReadLayer();
+    bool ReadStyle();
     bool ReadLine();
+    void ReadMText();
     void ReadText();
     bool ReadArc();
     bool ReadCircle();
@@ -438,7 +585,8 @@ private:
     bool ReadSpline();
     bool ReadLwPolyLine();
     bool ReadPolyLine();
-    bool ReadVertex(DxfVertex* vertex);
+    bool ReadVertex(Dxf_VERTEX* vertex);
+    bool ReadSolid();
 
     void OnReadArc(
         double start_angle,
@@ -509,15 +657,19 @@ public:
 
     double mm(double value) const;
 
+    const Dxf_STYLE* findStyle(const std::string& name) const;
+
     void DoRead(bool ignore_errors = false); // this reads the file and calls the following functions
 
     virtual void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) = 0;
 
-    virtual void OnReadPolyline(const DxfPolyline&) = 0;
+    virtual void OnReadPolyline(const Dxf_POLYLINE&) = 0;
 
     virtual void OnReadPoint(const DxfCoords& s) = 0;
 
-    virtual void OnReadText(const DxfText&) = 0;
+    virtual void OnReadText(const Dxf_TEXT&) = 0;
+
+    virtual void OnReadMText(const Dxf_MTEXT&) = 0;
 
     virtual void OnReadArc(
         const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden
@@ -537,12 +689,9 @@ public:
 
     virtual void OnReadSpline(struct SplineData& sd) = 0;
 
-    virtual void OnReadInsert(
-        const DxfCoords& point,
-        const DxfScale& scale,
-        const std::string& name,
-        double rotation
-    ) = 0;
+    virtual void OnReadInsert(const Dxf_INSERT& ins) = 0;
+
+    virtual void OnReadSolid(const Dxf_SOLID& solid) = 0;
 
     virtual void OnReadDimension(
         const DxfCoords& s,

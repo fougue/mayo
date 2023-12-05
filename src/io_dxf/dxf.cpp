@@ -1971,6 +1971,14 @@ double CDxfRead::mm(double value) const
     } // End switch
 } // End mm() method
 
+const Dxf_STYLE* CDxfRead::findStyle(const std::string& name) const
+{
+    if (name.empty())
+        return nullptr;
+
+    auto itFound = m_mapStyle.find(name);
+    return itFound != m_mapStyle.cend() ? &itFound->second : nullptr;
+}
 
 bool CDxfRead::ReadLine()
 {
@@ -1999,15 +2007,11 @@ bool CDxfRead::ReadLine()
                 hidden = true;
             }
             break;
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // start coords
             HandleCoordCode(n, &s);
             break;
-        case 11:
-        case 21:
-        case 31:
+        case 11: case 21: case 31:
             // end coords
             HandleCoordCode<11, 21, 31>(n, &e);
             break;
@@ -2315,9 +2319,7 @@ bool CDxfRead::ReadCircle()
                 hidden = true;
             }
             break;
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // centre coords
             HandleCoordCode(n, &c);
             break;
@@ -2344,12 +2346,16 @@ bool CDxfRead::ReadCircle()
     return false;
 }
 
-void CDxfRead::ReadText()
+void CDxfRead::ReadMText()
 {
-    DxfText text;
+    Dxf_MTEXT text;
+    bool withinAcadColumnInfo = false;
+    bool withinAcadColumns = false;
+    bool withinAcadDefinedHeight = false;
+
     while (!m_ifs.eof()) {
         get_line();
-        const int n = stringToInt(m_str);
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
         if (n == 0) {
             ResolveColorIndex();
             // Replace \P by \n
@@ -2360,25 +2366,105 @@ void CDxfRead::ReadText()
             }
 
             text.str = this->toUtf8(text.str);
-            OnReadText(text);
+            OnReadMText(text);
             return;
         }
 
         get_line();
+
+        auto fnMatchExtensionBegin = [=](std::string_view extName, bool& tag) {
+            if (!tag && m_str == extName) {
+                tag = true;
+                return true;
+            }
+            return false;
+        };
+
+        auto fnMatchExtensionEnd = [=](std::string_view extName, bool& tag) {
+            if (tag && m_str == extName) {
+                tag = false;
+                return true;
+            }
+            return false;
+        };
+
+        if (fnMatchExtensionBegin("ACAD_MTEXT_COLUMN_INFO_BEGIN", withinAcadColumnInfo)) {
+            text.acadHasColumnInfo = true;
+            continue; // Skip
+        }
+
+        if (fnMatchExtensionEnd("ACAD_MTEXT_COLUMN_INFO_END", withinAcadColumnInfo))
+            continue; // Skip
+
+        if (fnMatchExtensionBegin("ACAD_MTEXT_COLUMNS_BEGIN", withinAcadColumns))
+            continue; // Skip
+
+        if (fnMatchExtensionEnd("ACAD_MTEXT_COLUMNS_END", withinAcadColumns))
+            continue; // Skip
+
+        if (fnMatchExtensionBegin("ACAD_MTEXT_DEFINED_HEIGHT_BEGIN", withinAcadDefinedHeight)) {
+            text.acadHasDefinedHeight = true;
+            continue; // Skip
+        }
+
+        if (fnMatchExtensionEnd("ACAD_MTEXT_DEFINED_HEIGHT_END", withinAcadDefinedHeight))
+            continue; // Skip
+
+        if (withinAcadColumnInfo) {
+            // 1040/1070 extended data code was found at beginning of current iteration
+            const int xn = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+            get_line(); // Skip 1040/1070 line
+            get_line(); // Get value line of extended data code
+            switch (xn) {
+            case 75: { // 1070
+                const int t = stringToInt(m_str);
+                if (0 <= t && t <= 2)
+                    text.acadColumnInfo_Type = static_cast<Dxf_MTEXT::ColumnType>(t);
+            }
+                break;
+            case 76: // 1070
+                text.acadColumnInfo_Count = stringToInt(m_str);
+                break;
+            case 78: // 1070
+                text.acadColumnInfo_FlowReversed = stringToInt(m_str) != 0;
+                break;
+            case 79: // 1070
+                text.acadColumnInfo_AutoHeight = stringToInt(m_str) != 0;
+                break;
+            case 48: // 1040
+                text.acadColumnInfo_Width = mm(stringToDouble(m_str));
+                break;
+            case 49: // 1040
+                text.acadColumnInfo_GutterWidth = mm(stringToDouble(m_str));
+                break;
+            } // endswitch
+
+            continue; // Skip
+        }
+
+        if (withinAcadDefinedHeight) {
+            // 1040/1070 extended data code was found at beginning of current iteration
+            const int xn = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+            get_line(); // Skip 1040/1070 line
+            get_line(); // Get value line of extended data code
+            if (xn == 46)
+                text.acadDefinedHeight = mm(stringToDouble(m_str));
+
+            continue; // Skip
+        }
+
         switch (n) {
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // centre coords
-            HandleCoordCode(n, &text.point);
+            HandleCoordCode(n, &text.insertionPoint);
             break;
         case 40:
             // text height
-            text.height = mm(stringToDouble(m_str)) * 25.4 / 72.0;
+            text.height = mm(stringToDouble(m_str));
             break;
         case 50:
             // text rotation
-            text.rotation = stringToDouble(m_str);
+            text.rotationAngle = stringToDouble(m_str);
             break;
         case 3:
             // Additional text that goes before the type 1 text
@@ -2395,17 +2481,21 @@ void CDxfRead::ReadText()
         case 71: {
             // attachment point
             const int ap = stringToInt(m_str);
-            if (ap >= 1 && ap <= 9) {
-                text.attachPoint = static_cast<AttachmentPoint>(ap);
-            }
+            if (ap >= 1 && ap <= 9)
+                text.attachmentPoint = static_cast<Dxf_MTEXT::AttachmentPoint>(ap);
         }
             break;
 
-        case 100:
-        case 39:
-        case 210:
-        case 220:
-        case 230:
+        case 11: case 21: case 31:
+            // X-axis direction vector
+            HandleCoordCode<11, 21, 31>(n, &text.xAxisDirectionVector);
+            break;
+
+        case 210: case 220: case 230:
+            // extrusion direction
+            HandleCoordCode<210, 220, 230>(n, &text.extrusionDirection);
+            break;
+
         default:
             HandleCommonGroupCode(n);
             break;
@@ -2413,6 +2503,67 @@ void CDxfRead::ReadText()
     }
 }
 
+void CDxfRead::ReadText()
+{
+    Dxf_TEXT text;
+
+    while (!m_ifs.eof()) {
+        get_line();
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            ResolveColorIndex();
+            OnReadText(text);
+            return;
+        }
+
+        get_line();
+
+        switch (n) {
+        case 10: case 20: case 30:
+            HandleCoordCode(n, &text.firstAlignmentPoint);
+            break;
+        case 40:
+            text.height = mm(stringToDouble(m_str));
+            break;
+        case 1:
+            text.str = this->toUtf8(m_str);
+            break;
+        case 50:
+            text.rotationAngle = stringToDouble(m_str);
+            break;
+        case 41:
+            text.relativeXScaleFactorWidth = stringToDouble(m_str);
+            break;
+        case 51:
+            text.obliqueAngle = stringToDouble(m_str);
+            break;
+        case 7:
+            text.styleName = m_str;
+            break;
+        case 72: {
+            const int hjust = stringToInt(m_str);
+            if (hjust >= 0 && hjust <= 5)
+                text.horizontalJustification = static_cast<Dxf_TEXT::HorizontalJustification>(hjust);
+        }
+            break;
+        case 11: case 21: case 31:
+            HandleCoordCode<11, 21, 31>(n, &text.secondAlignmentPoint);
+            break;
+        case 210: case 220: case 230:
+            HandleCoordCode<210, 220, 230>(n, &text.extrusionDirection);
+            break;
+        case 73: {
+            const int vjust = stringToInt(m_str);
+            if (vjust >= 0 && vjust <= 3)
+                text.verticalJustification = static_cast<Dxf_TEXT::VerticalJustification>(vjust);
+        }
+            break;
+        default:
+            HandleCommonGroupCode(n);
+            break;
+        }
+    }
+}
 
 bool CDxfRead::ReadEllipse()
 {
@@ -2438,15 +2589,11 @@ bool CDxfRead::ReadEllipse()
 
         get_line();
         switch (n) {
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // centre coords
             HandleCoordCode(n, &c);
             break;
-        case 11:
-        case 21:
-        case 31:
+        case 11: case 21: case 31:
             // major coords
             HandleCoordCode<11, 21, 31>(n, &m);
             break;
@@ -2657,7 +2804,7 @@ bool CDxfRead::ReadLwPolyLine()
     return false;
 }
 
-bool CDxfRead::ReadVertex(DxfVertex* vertex)
+bool CDxfRead::ReadVertex(Dxf_VERTEX* vertex)
 {
     bool x_found = false;
     bool y_found = false;
@@ -2676,9 +2823,7 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
 
         get_line();
         switch (n){
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // coords
             x_found = x_found || n == 10;
             y_found = y_found || n == 20;
@@ -2688,9 +2833,9 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
             // bulge
             const int bulge = stringToInt(m_str);
             if (bulge == 0)
-                vertex->bulge = DxfVertex::Bulge::StraightSegment;
+                vertex->bulge = Dxf_VERTEX::Bulge::StraightSegment;
             else
-                vertex->bulge = DxfVertex::Bulge::SemiCircle;
+                vertex->bulge = Dxf_VERTEX::Bulge::SemiCircle;
         }
             break;
         case 70:
@@ -2706,10 +2851,56 @@ bool CDxfRead::ReadVertex(DxfVertex* vertex)
     return false;
 }
 
+bool CDxfRead::ReadSolid()
+{
+    Dxf_SOLID solid;
+
+    while (!m_ifs.eof()) {
+        get_line();
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            ResolveColorIndex();
+            OnReadSolid(solid);
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadSolid()");
+            return false;
+        }
+
+        get_line();
+        switch (n) {
+        case 10: case 20: case 30:
+            HandleCoordCode<10, 20, 30>(n, &solid.corner1);
+            break;
+        case 11: case 21: case 31:
+            HandleCoordCode<11, 21, 31>(n, &solid.corner2);
+            break;
+        case 12: case 22: case 32:
+            HandleCoordCode<12, 22, 32>(n, &solid.corner3);
+            break;
+        case 13: case 23: case 33:
+            HandleCoordCode<13, 23, 33>(n, &solid.corner4);
+            solid.hasCorner4 = true;
+            break;
+        case 39:
+            solid.thickness = stringToDouble(m_str);
+            break;
+        case 210: case 220: case 230:
+            HandleCoordCode<210, 220, 230>(n, &solid.extrusionDirection);
+            break;
+        default:
+            HandleCommonGroupCode(n);
+            break;
+        }
+    }
+
+    return false;
+}
 
 bool CDxfRead::ReadPolyLine()
 {
-    DxfPolyline polyline;
+    Dxf_POLYLINE polyline;
     while (!m_ifs.eof()) {
         get_line();
         const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
@@ -2724,7 +2915,7 @@ bool CDxfRead::ReadPolyLine()
             // next item found
             ResolveColorIndex();
             if (m_str == "VERTEX") {
-                DxfVertex vertex;
+                Dxf_VERTEX vertex;
                 if (ReadVertex(&vertex))
                     polyline.vertices.push_back(std::move(vertex));
             }
@@ -2816,10 +3007,7 @@ void CDxfRead::OnReadEllipse(const DxfCoords& c,
 
 bool CDxfRead::ReadInsert()
 {
-    DxfCoords c = {}; // coordinate
-    DxfScale s = {1., 1., 1.}; // scale
-    double rot = 0.0; // rotation
-    std::string name;
+    Dxf_INSERT insert;
 
     while (!m_ifs.eof()) {
         get_line();
@@ -2827,7 +3015,7 @@ bool CDxfRead::ReadInsert()
         if (n == 0) {
             // next item found
             ResolveColorIndex();
-            OnReadInsert(c, s, name, rot * M_PI/180);
+            OnReadInsert(insert);
             return true;
         }
         else if (isStringToErrorValue(n)) {
@@ -2837,38 +3025,38 @@ bool CDxfRead::ReadInsert()
 
         get_line();
         switch (n){
-        case 10:
-        case 20:
-        case 30:
-            // 3d coords
-            HandleCoordCode(n, &c);
+        case 2:
+            insert.blockName = m_str;
+            break;
+        case 10: case 20: case 30:
+            HandleCoordCode(n, &insert.insertPoint);
             break;
         case 41:
-            // scale x
-            s.x = stringToDouble(m_str);
+            insert.scaleFactor.x = stringToDouble(m_str);
             break;
         case 42:
-            // scale y
-            s.y = stringToDouble(m_str);
+            insert.scaleFactor.y = stringToDouble(m_str);
             break;
         case 43:
-            // scale z
-            s.z = stringToDouble(m_str);
+            insert.scaleFactor.z = stringToDouble(m_str);
             break;
         case 50:
-            // rotation
-            rot = stringToDouble(m_str);
+            insert.rotationAngle = stringToDouble(m_str);
             break;
-        case 2:
-            // block name
-            name = m_str;
+        case 70:
+            insert.columnCount = stringToInt(m_str);
             break;
-        case 100:
-        case 39:
-        case 210:
-        case 220:
-        case 230:
-            // skip the next line
+        case 71:
+            insert.rowCount = stringToInt(m_str);
+            break;
+        case 44:
+            insert.columnSpacing = mm(stringToDouble(m_str));
+            break;
+        case 45:
+            insert.rowSpacing = mm(stringToDouble(m_str));
+            break;
+        case 210: case 220: case 230:
+            HandleCoordCode<210, 220, 230>(n, &insert.extrusionDirection);
             break;
         default:
             HandleCommonGroupCode(n);
@@ -2902,21 +3090,15 @@ bool CDxfRead::ReadDimension()
 
         get_line();
         switch (n){
-        case 13:
-        case 23:
-        case 33:
+        case 13: case 23: case 33:
             // start coords
             HandleCoordCode<13, 23, 33>(n, &s);
             break;
-        case 14:
-        case 24:
-        case 34:
+        case 14: case 24: case 34:
             // end coords
             HandleCoordCode<14, 24, 34>(n, &e);
             break;
-        case 10:
-        case 20:
-        case 30:
+        case 10: case 20: case 30:
             // dimline coords
             HandleCoordCode<10, 20, 30>(n, &p);
             break;
@@ -3058,6 +3240,56 @@ bool CDxfRead::ReadLayer()
             break;
         }
     }
+
+    return false;
+}
+
+bool CDxfRead::ReadStyle()
+{
+    Dxf_STYLE style;
+
+    while (!m_ifs.eof()) {
+        get_line();
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            if (style.name.empty()) {
+                this->ReportError_readInteger("DXF::ReadStyle() - no style name");
+                return false;
+            }
+
+            m_mapStyle.insert({ style.name, style });
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::ReadStyle()");
+            return false;
+        }
+
+        get_line();
+        switch (n) {
+        case 2:
+            style.name = m_str;
+            break;
+        case 40:
+            style.fixedTextHeight = mm(stringToDouble(m_str));
+            break;
+        case 41:
+            style.widthFactor = stringToDouble(m_str);
+            break;
+        case 50:
+            style.obliqueAngle = stringToDouble(m_str);
+            break;
+        case 3:
+            style.primaryFontFileName = m_str;
+            break;
+        case 4:
+            style.bigFontFileName = m_str;
+            break;
+        default:
+            break; // skip the next line
+        }
+    }
+
     return false;
 }
 
@@ -3080,9 +3312,9 @@ bool CDxfRead::ReadVersion()
     assert(VersionNames.size() == RNewer - ROlder - 1);
     get_line();
     get_line();
-    std::vector<std::string>::const_iterator first = VersionNames.cbegin();
-    std::vector<std::string>::const_iterator last = VersionNames.cend();
-    std::vector<std::string>::const_iterator found = std::lower_bound(first, last, m_str);
+    auto first = VersionNames.cbegin();
+    auto last = VersionNames.cend();
+    auto found = std::lower_bound(first, last, m_str);
     if (found == last) {
         m_version = RNewer;
     }
@@ -3209,12 +3441,15 @@ void CDxfRead::DoRead(bool ignore_errors)
             }
 
             else if (m_str == "LAYER" ) {
-                //get_line();
-                //get_line();
                 if (!ReadLayer()) {
                     this->ReportError("DXF::DoRead() - Failed to read layer");
                     //return; Some objects or tables can have "LAYER" as name...
                 }
+                continue;
+            }
+
+            else if (m_str == "STYLE" ) {
+                ReadStyle();
                 continue;
             }
 
@@ -3251,11 +3486,20 @@ void CDxfRead::DoRead(bool ignore_errors)
                 }
                 continue;
             }
-            else if (m_str == "MTEXT" || m_str == "TEXT") {
+            else if (m_str == "MTEXT") {
+                try {
+                    ReadMText();
+                } catch (const std::runtime_error& err) {
+                    this->ReportError("DXF::DoRead() - Failed to read MTEXT\nError: " + std::string(err.what()));
+                    return;
+                }
+                continue;
+            }
+            else if (m_str == "TEXT") {
                 try {
                     ReadText();
                 } catch (const std::runtime_error& err) {
-                    this->ReportError("DXF::DoRead() - Failed to read text\nError: " + std::string(err.what()));
+                    this->ReportError("DXF::DoRead() - Failed to read TEXT\nError: " + std::string(err.what()));
                     return;
                 }
                 continue;
@@ -3305,6 +3549,13 @@ void CDxfRead::DoRead(bool ignore_errors)
             else if (m_str == "DIMENSION") {
                 if (!ReadDimension()) {
                     this->ReportError("DXF::DoRead() - Failed to read Dimension");
+                    return;
+                }
+                continue;
+            }
+            else if (m_str == "SOLID") {
+                if (!ReadSolid()) {
+                    this->ReportError("DXF::DoRead() - Failed to read Solid");
                     return;
                 }
                 continue;

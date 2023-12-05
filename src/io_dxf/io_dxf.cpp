@@ -27,7 +27,9 @@
 #include <gp_Trsf.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <Graphic3d_HorizontalTextAlignment.hxx>
 #include <Graphic3d_VerticalTextAlignment.hxx>
@@ -99,15 +101,17 @@ public:
 
     // CDxfRead's virtual functions
     void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) override;
-    void OnReadPolyline(const DxfPolyline& polyline) override;
+    void OnReadPolyline(const Dxf_POLYLINE& polyline) override;
     void OnReadPoint(const DxfCoords& s) override;
-    void OnReadText(const DxfText& text) override;
+    void OnReadText(const Dxf_TEXT& text) override;
+    void OnReadMText(const Dxf_MTEXT& text) override;
     void OnReadArc(const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadEllipse(const DxfCoords& c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
     void OnReadSpline(struct SplineData& sd) override;
-    void OnReadInsert(const DxfCoords& point, const DxfScale& scale, const std::string& name, double rotation) override;
+    void OnReadInsert(const Dxf_INSERT& ins) override;
     void OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation) override;
+    void OnReadSolid(const Dxf_SOLID& solid) override;
 
     void ReportError(const std::string& msg) override;
     void AddGraphics() const override;
@@ -394,10 +398,10 @@ void DxfReader::Internal::OnReadLine(const DxfCoords& s, const DxfCoords& e, boo
     this->addShape(edge);
 }
 
-void DxfReader::Internal::OnReadPolyline(const DxfPolyline& polyline)
+void DxfReader::Internal::OnReadPolyline(const Dxf_POLYLINE& polyline)
 {
     const auto& vertices = polyline.vertices;
-    const bool isPolylineClosed = polyline.flags & DxfPolyline::Flag::Closed;
+    const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
     const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
     MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
@@ -416,46 +420,124 @@ void DxfReader::Internal::OnReadPoint(const DxfCoords& s)
     this->addShape(vertex);
 }
 
-void DxfReader::Internal::OnReadText(const DxfText& text)
+void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
 {
     if (!m_params.importAnnotations)
         return;
 
-    const gp_Pnt pt = this->toPnt(text.point);
+    const gp_Pnt pt = this->toPnt(text.firstAlignmentPoint);
     const std::string layerName = this->LayerName();
-    if (!startsWith(layerName, "BLOCKS")) {
-        const std::string& fontName = m_params.fontNameForTextObjects;
-        const double fontHeight = 4 * text.height * m_params.scaling;
-        Font_BRepFont brepFont;
-        if (brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight)) {
-            gp_Trsf rotTrsf;
-            if (!MathUtils::fuzzyIsNull(text.rotation))
-                rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotation);
+    if (startsWith(layerName, "BLOCKS"))
+        return;
 
-            const int ap = static_cast<int>(text.attachPoint);
-            Graphic3d_HorizontalTextAlignment hAttachPnt = Graphic3d_HTA_LEFT;
-            if (ap == 2 || ap == 5 || ap == 8)
-                hAttachPnt = Graphic3d_HTA_CENTER;
-            else if (ap == 3 || ap == 6 || ap == 9)
-                hAttachPnt = Graphic3d_HTA_RIGHT;
+    const Dxf_STYLE* ptrStyle = this->findStyle(text.styleName);
+    std::string fontName = ptrStyle ? ptrStyle->name : m_params.fontNameForTextObjects;
+    auto fnToLower = [](const std::string& str) {
+        std::string lstr = str;
+        for (char& c : lstr)
+            c = std::tolower(c, std::locale::classic());
+        return lstr;
+    };
 
-            Graphic3d_VerticalTextAlignment vAttachPnt = Graphic3d_VTA_TOP;
-            if (ap == 4 || ap == 5 || ap == 6)
-                vAttachPnt = Graphic3d_VTA_CENTER;
-            else if (ap == 7 || ap == 8 || ap == 9)
-                vAttachPnt = Graphic3d_VTA_BOTTOM;
+    if (fnToLower(fontName) == "arial_narrow")
+        fontName.replace(5, 1, " ");
 
-            const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
-            Font_BRepTextBuilder brepTextBuilder;
-            const TopoDS_Shape shapeText = brepTextBuilder.Perform(
-                brepFont, string_conv<NCollection_String>(text.str), locText, hAttachPnt, vAttachPnt
-            );
-            this->addShape(shapeText);
-        }
-        else {
-            m_messenger->emitWarning(fmt::format("Font_BRepFont is null for '{}'", fontName));
-        }
+    const double fontHeight = 1.4 * text.height * m_params.scaling;
+    Font_BRepFont brepFont;
+    brepFont.SetWidthScaling(static_cast<float>(text.relativeXScaleFactorWidth));
+    if (!brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight/*, Font_StrictLevel_Aliases*/)) {
+        m_messenger->emitWarning(fmt::format("Font_BRepFont is null for '{}'", fontName));
+        return;
     }
+
+    gp_Trsf rotTrsf;
+    if (!MathUtils::fuzzyIsNull(text.rotationAngle))
+        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), UnitSystem::radians(text.rotationAngle * Quantity_Degree));
+
+#if 0
+    const Dxf_TEXT::HorizontalJustification hjust = text.horizontalJustification;
+    Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
+    switch (hjust) {
+    case Dxf_TEXT::HorizontalJustification::Center:
+    case Dxf_TEXT::HorizontalJustification::Middle:
+        hAlign = Graphic3d_HTA_CENTER;
+        break;
+    case Dxf_TEXT::HorizontalJustification::Right:
+        hAlign = Graphic3d_HTA_RIGHT;
+        break;
+    }
+
+    const Dxf_TEXT::VerticalJustification vjust = text.verticalJustification;
+    Graphic3d_VerticalTextAlignment vAlign = Graphic3d_VTA_TOP;
+    switch (vjust) {
+    case Dxf_TEXT::VerticalJustification::Bottom:
+        vAlign = Graphic3d_VTA_BOTTOM;
+        break;
+    case Dxf_TEXT::VerticalJustification::Middle:
+        vAlign = Graphic3d_VTA_CENTER;
+        break;
+    }
+#endif
+
+    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
+    Font_BRepTextBuilder brepTextBuilder;
+    const auto textStr = string_conv<NCollection_String>(text.str);
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textStr, locText/*, hAlign, vAlign*/);
+    this->addShape(shapeText);
+}
+
+void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
+{
+    if (!m_params.importAnnotations)
+        return;
+
+    const gp_Pnt pt = this->toPnt(text.insertionPoint);
+    const std::string layerName = this->LayerName();
+    if (startsWith(layerName, "BLOCKS"))
+        return;
+
+    const std::string& fontName = m_params.fontNameForTextObjects;
+    const double fontHeight = 1.4 * text.height * m_params.scaling;
+    Font_BRepFont brepFont;
+    if (!brepFont.Init(fontName.c_str(), Font_FA_Regular, fontHeight)) {
+        m_messenger->emitWarning(fmt::format("Font_BRepFont is null for '{}'", fontName));
+        return;
+    }
+
+    gp_Trsf rotTrsf;
+    if (!MathUtils::fuzzyIsNull(text.rotationAngle))
+        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotationAngle);
+
+    const int ap = static_cast<int>(text.attachmentPoint);
+    Graphic3d_HorizontalTextAlignment hAttachPnt = Graphic3d_HTA_LEFT;
+    if (ap == 2 || ap == 5 || ap == 8)
+        hAttachPnt = Graphic3d_HTA_CENTER;
+    else if (ap == 3 || ap == 6 || ap == 9)
+        hAttachPnt = Graphic3d_HTA_RIGHT;
+
+    Graphic3d_VerticalTextAlignment vAttachPnt = Graphic3d_VTA_TOP;
+    if (ap == 4 || ap == 5 || ap == 6)
+        vAttachPnt = Graphic3d_VTA_CENTER;
+    else if (ap == 7 || ap == 8 || ap == 9)
+        vAttachPnt = Graphic3d_VTA_BOTTOM;
+
+    OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;
+    textFormat->SetupAlignment(hAttachPnt, vAttachPnt);
+    textFormat->Append(string_conv<NCollection_String>(text.str), *brepFont.FTFont());
+#if 0
+    // Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
+    if (text.acadHasColumnInfo && text.acadColumnInfo_Width > 0.) {
+        textFormat->SetWordWrapping(true);
+        textFormat->SetWrapping(text.acadColumnInfo_Width);
+    }
+#endif
+
+    textFormat->Format();
+
+    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
+    Font_BRepTextBuilder brepTextBuilder;
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textFormat, locText);
+    this->addShape(shapeText);
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
@@ -542,11 +624,9 @@ void DxfReader::Internal::OnReadSpline(SplineData& sd)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadInsert(
-    const DxfCoords& point, const DxfScale& scale, const std::string& name, double rotation
-    )
+void DxfReader::Internal::OnReadInsert(const Dxf_INSERT& ins)
 {
-    const std::string prefix = std::string("BLOCKS ") + name + " ";
+    const std::string prefix = "BLOCKS " + ins.blockName + " ";
     for (const auto& [k, vecEntity] : m_layers) {
         if (!startsWith(k, prefix))
             continue; // Skip
@@ -560,16 +640,19 @@ void DxfReader::Internal::OnReadInsert(
         if (comp.IsNull())
             continue; // Skip
 
-        if (!MathUtils::fuzzyEqual(scale.x, scale.y) || !MathUtils::fuzzyEqual(scale.x, scale.y)) {
+        if (!MathUtils::fuzzyEqual(ins.scaleFactor.x, ins.scaleFactor.y)
+            || !MathUtils::fuzzyEqual(ins.scaleFactor.x, ins.scaleFactor.y)
+           )
+        {
             m_messenger->emitWarning(
                 fmt::format("OnReadInsert('{}') - non-uniform scales aren't supported({}, {}, {})",
-                            name, scale.x, scale.y, scale.z
+                            ins.blockName, ins.scaleFactor.x, ins.scaleFactor.y, ins.scaleFactor.z
                 )
             );
         }
 
         auto fnNonNull = [](double v) { return !MathUtils::fuzzyIsNull(v) ? v : 1.; };
-        const double avgScale = std::abs(fnNonNull((scale.x + scale.y + scale.z) / 3.));
+        const double avgScale = std::abs(fnNonNull((ins.scaleFactor.x + ins.scaleFactor.y + ins.scaleFactor.z) / 3.));
         if (!MathUtils::fuzzyEqual(avgScale, 1.)) {
             gp_Trsf trsf;
             trsf.SetScaleFactor(avgScale);
@@ -579,17 +662,19 @@ void DxfReader::Internal::OnReadInsert(
             }
             else {
                 m_messenger->emitWarning(
-                    fmt::format("OnReadInsert('{}') - scaling failed({}, {}, {})", name, scale.x, scale.y, scale.z)
+                    fmt::format("OnReadInsert('{}') - scaling failed({}, {}, {})",
+                                ins.blockName, ins.scaleFactor.x, ins.scaleFactor.y, ins.scaleFactor.z
+                    )
                 );
             }
         }
 
         gp_Trsf trsfRotZ;
-        if (!MathUtils::fuzzyIsNull(rotation))
-            trsfRotZ.SetRotation(gp::OZ(), rotation);
+        if (!MathUtils::fuzzyIsNull(ins.rotationAngle))
+            trsfRotZ.SetRotation(gp::OZ(), ins.rotationAngle);
 
         gp_Trsf trsfMove;
-        trsfMove.SetTranslation(this->toPnt(point).XYZ());
+        trsfMove.SetTranslation(this->toPnt(ins.insertPoint).XYZ());
 
         comp.Location(trsfRotZ * trsfMove);
         this->addShape(comp);
@@ -608,6 +693,36 @@ void DxfReader::Internal::OnReadDimension(const DxfCoords& s, const DxfCoords& e
              << "    rotation: " << rotation << std::endl;
         m_messenger->emitWarning(sstr.str());
     }
+}
+
+void DxfReader::Internal::OnReadSolid(const Dxf_SOLID& solid)
+{
+    const gp_Pnt p1 = this->toPnt(solid.corner1);
+    const gp_Pnt p2 = this->toPnt(solid.corner2);
+    const gp_Pnt p3 = this->toPnt(solid.corner3);
+    const gp_Pnt p4 = this->toPnt(solid.corner4);
+
+    TopoDS_Face face;
+    try {
+        BRepBuilderAPI_MakeWire makeWire;
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
+        if (solid.hasCorner4 && !p3.IsEqual(p4, Precision::Confusion())) {
+            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p4));
+            makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p3));
+        }
+        else {
+            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
+        }
+
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p1));
+        if (makeWire.IsDone())
+            face = BRepBuilderAPI_MakeFace(makeWire.Wire(), true/*onlyPlane*/);
+    } catch (...) {
+        m_messenger->emitError("OnReadSolid() failed");
+    }
+
+    if (!face.IsNull())
+        this->addShape(face);
 }
 
 void DxfReader::Internal::ReportError(const std::string& msg)
