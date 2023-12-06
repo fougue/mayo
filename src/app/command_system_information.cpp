@@ -147,7 +147,7 @@ QString toUnicodeHexa(const QChar& ch)
 }
 
 // Helper function returning unicode representation of a QString object in the form "U+NNNNU+PPPP..."
-QString toUnicodeHexa(const QString& str)
+[[maybe_unused]] QString toUnicodeHexa(const QString& str)
 {
     QString strHexa;
     QTextStream ostr(&strHexa);

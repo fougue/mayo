@@ -352,7 +352,7 @@ static std::string_view qtTranslate(const TextId& text, int n)
 }
 
 // Helper to query the OpenGL version string
-static std::string queryGlVersionString()
+[[maybe_unused]] static std::string queryGlVersionString()
 {
     QOpenGLContext glContext;
     if (!glContext.create())
@@ -372,7 +372,7 @@ static std::string queryGlVersionString()
 
 // Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
 // Note: only major and minor versions are detected
-static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
+[[maybe_unused]] static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
 {
     if (strVersion.empty())
         return {};

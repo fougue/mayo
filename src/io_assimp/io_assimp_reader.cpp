@@ -78,7 +78,7 @@ bool hasScaleFactor(const aiVector3D& scaling)
            );
 }
 
-bool hasScaleFactor(const aiMatrix4x4& trsf)
+[[maybe_unused]] bool hasScaleFactor(const aiMatrix4x4& trsf)
 {
     const aiVector3D scaling = aiMatrixScaling(trsf);
     return hasScaleFactor(scaling);

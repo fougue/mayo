@@ -16,10 +16,11 @@ namespace MeshUtils {
 
 namespace {
 
-TColStd_Array1OfReal createArray1OfReal(int count)
+// Helper function to create TColStd_Array1OfReal
+[[maybe_unused]] TColStd_Array1OfReal createArray1OfReal(int count)
 {
     if (count > 0)
-        return TColStd_Array1OfReal(1 , count);
+        return TColStd_Array1OfReal(1, count);
     else
         return TColStd_Array1OfReal();
 }
