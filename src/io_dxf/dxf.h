@@ -570,14 +570,19 @@ private:
     std::unordered_map<std::string, ColorIndex_t> m_layer_ColorIndex_map;
     const ColorIndex_t ColorBylayer = 256;
 
+    // Map styleName to Style object
     std::unordered_map<std::string, Dxf_STYLE> m_mapStyle;
 
-    bool ReadUnits();
+    bool ReadInsUnits();
+    bool ReadMeasurement();
+    bool ReadAcadVer();
+    bool ReadDwgCodePage();
+
     bool ReadLayer();
     bool ReadStyle();
     bool ReadLine();
-    void ReadMText();
-    void ReadText();
+    bool ReadMText();
+    bool ReadText();
     bool ReadArc();
     bool ReadCircle();
     bool ReadEllipse();
@@ -587,6 +592,9 @@ private:
     bool ReadPolyLine();
     bool ReadVertex(Dxf_VERTEX* vertex);
     bool ReadSolid();
+    bool ReadSection();
+    bool ReadTable();
+    bool ReadEndSec();
 
     void OnReadArc(
         double start_angle,
@@ -607,8 +615,7 @@ private:
     bool ReadInsert();
     bool ReadDimension();
     bool ReadBlockInfo();
-    bool ReadVersion();
-    bool ReadDWGCodePage();
+
     bool ResolveEncoding();
 
     template<unsigned XCode = 10, unsigned YCode = 20, unsigned ZCode = 30>

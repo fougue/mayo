@@ -17,6 +17,7 @@
 #  include <charconv>
 #endif
 
+#include <functional>
 #include <iomanip>
 #include <stdexcept>
 
@@ -2346,7 +2347,7 @@ bool CDxfRead::ReadCircle()
     return false;
 }
 
-void CDxfRead::ReadMText()
+bool CDxfRead::ReadMText()
 {
     Dxf_MTEXT text;
     bool withinAcadColumnInfo = false;
@@ -2367,7 +2368,7 @@ void CDxfRead::ReadMText()
 
             text.str = this->toUtf8(text.str);
             OnReadMText(text);
-            return;
+            return true;
         }
 
         get_line();
@@ -2501,9 +2502,11 @@ void CDxfRead::ReadMText()
             break;
         }
     }
+
+    return false;
 }
 
-void CDxfRead::ReadText()
+bool CDxfRead::ReadText()
 {
     Dxf_TEXT text;
 
@@ -2513,7 +2516,7 @@ void CDxfRead::ReadText()
         if (n == 0) {
             ResolveColorIndex();
             OnReadText(text);
-            return;
+            return true;
         }
 
         get_line();
@@ -2563,6 +2566,8 @@ void CDxfRead::ReadText()
             break;
         }
     }
+
+    return false;
 }
 
 bool CDxfRead::ReadEllipse()
@@ -2898,6 +2903,32 @@ bool CDxfRead::ReadSolid()
     return false;
 }
 
+bool CDxfRead::ReadSection()
+{
+    m_section_name.clear();
+    get_line();
+    get_line();
+    if (m_str != "ENTITIES")
+        m_section_name = m_str;
+
+    m_block_name.clear();
+    return true;
+}
+
+bool CDxfRead::ReadTable()
+{
+    get_line();
+    get_line();
+    return true;
+}
+
+bool CDxfRead::ReadEndSec()
+{
+    m_section_name.clear();
+    m_block_name.clear();
+    return true;
+}
+
 bool CDxfRead::ReadPolyLine()
 {
     Dxf_POLYLINE polyline;
@@ -3181,7 +3212,7 @@ void CDxfRead::put_line(const std::string& value)
     m_unused_line = value;
 }
 
-bool CDxfRead::ReadUnits()
+bool CDxfRead::ReadInsUnits()
 {
     get_line(); // Skip to next line.
     get_line(); // Skip to next line.
@@ -3194,6 +3225,17 @@ bool CDxfRead::ReadUnits()
         this->ReportError_readInteger("DXF::ReadUnits()");
         return false;
     }
+}
+
+bool CDxfRead::ReadMeasurement()
+{
+    get_line();
+    get_line();
+    const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+    if (n == 0)
+        m_measurement_inch = true;
+
+    return true;
 }
 
 bool CDxfRead::ReadLayer()
@@ -3293,7 +3335,7 @@ bool CDxfRead::ReadStyle()
     return false;
 }
 
-bool CDxfRead::ReadVersion()
+bool CDxfRead::ReadAcadVer()
 {
     static const std::vector<std::string> VersionNames = {
         // This table is indexed by eDXFVersion_t - (ROlder+1)
@@ -3331,7 +3373,7 @@ bool CDxfRead::ReadVersion()
     return ResolveEncoding();
 }
 
-bool CDxfRead::ReadDWGCodePage()
+bool CDxfRead::ReadDwgCodePage()
 {
     get_line();
     get_line();
@@ -3379,9 +3421,35 @@ void CDxfRead::DoRead(bool ignore_errors)
 {
     m_ignore_errors = ignore_errors;
     m_gcount = 0;
-    if (m_fail) {
+    if (m_fail)
         return;
-    }
+
+    std::unordered_map<std::string, std::function<bool()>> mapHeaderVarHandler;
+    mapHeaderVarHandler.insert({ "$INSUNITS", [=]{ return ReadInsUnits(); } });
+    mapHeaderVarHandler.insert({ "$MEASUREMENT", [=]{ return ReadMeasurement(); } });
+    mapHeaderVarHandler.insert({ "$ACADVER", [=]{ return ReadAcadVer(); } });
+    mapHeaderVarHandler.insert({ "$DWGCODEPAGE", [=]{ return ReadDwgCodePage(); } });
+
+    std::unordered_map<std::string, std::function<bool()>> mapEntityHandler;
+    mapEntityHandler.insert({ "ARC", [=]{ return ReadArc(); } });
+    mapEntityHandler.insert({ "BLOCK", [=]{ return ReadBlockInfo(); } });
+    mapEntityHandler.insert({ "CIRCLE", [=]{ return ReadCircle(); } });
+    mapEntityHandler.insert({ "DIMENSION", [=]{ return ReadDimension(); } });
+    mapEntityHandler.insert({ "ELLIPSE", [=]{ return ReadEllipse(); } });
+    mapEntityHandler.insert({ "INSERT", [=]{ return ReadInsert(); } });
+    mapEntityHandler.insert({ "LAYER", [=]{ return ReadLayer(); } });
+    mapEntityHandler.insert({ "LINE", [=]{ return ReadLine(); } });
+    mapEntityHandler.insert({ "LWPOLYLINE", [=]{ return ReadLwPolyLine(); } });
+    mapEntityHandler.insert({ "MTEXT", [=]{ return ReadMText(); } });
+    mapEntityHandler.insert({ "POINT", [=]{ return ReadPoint(); } });
+    mapEntityHandler.insert({ "POLYLINE", [=]{ return ReadPolyLine(); } });
+    mapEntityHandler.insert({ "SECTION", [=]{ return ReadSection(); } });
+    mapEntityHandler.insert({ "SOLID", [=]{ return ReadSolid(); } });
+    mapEntityHandler.insert({ "SPLINE", [=]{ return ReadSpline(); } });
+    mapEntityHandler.insert({ "STYLE", [=]{ return ReadStyle(); } });
+    mapEntityHandler.insert({ "TEXT", [=]{ return ReadText(); } });
+    mapEntityHandler.insert({ "TABLE", [=]{ return ReadTable(); } });
+    mapEntityHandler.insert({ "ENDSEC", [=]{ return ReadEndSec(); } });
 
     get_line();
 
@@ -3389,176 +3457,47 @@ void CDxfRead::DoRead(bool ignore_errors)
     while (!m_ifs.eof()) {
         m_ColorIndex = ColorBylayer; // Default
 
-        if (m_str == "$INSUNITS") {
-            if (!ReadUnits()) {
-                return;
+        {   // Handle header variable
+            auto itHandler = mapHeaderVarHandler.find(m_str);
+            if (itHandler != mapHeaderVarHandler.cend()) {
+                const auto& fn = itHandler->second;
+                if (fn())
+                    continue;
+                else
+                    return;
             }
-            continue;
-        } // End if - then
-
-        if (m_str == "$MEASUREMENT") {
-            get_line();
-            get_line();
-            const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
-            if (n == 0)
-                m_measurement_inch = true;
-
-            continue;
-        } // End if - then
-        
-        if (m_str == "$ACADVER") {
-            if (!ReadVersion()) {
-                return;
-            }
-            continue;
-        }  // End if - then
-
-        if (m_str == "$DWGCODEPAGE") {
-            if (!ReadDWGCodePage()) {
-                return;
-            }
-            continue;
-        }  // End if - then
+        }
 
         if (m_str == "0") {
             get_line();
             if (m_str == "0")
                 get_line(); // Skip again
 
-            if (m_str == "SECTION") {
-                m_section_name.clear();
-                get_line();
-                get_line();
-                if (m_str != "ENTITIES") {
-                    m_section_name = m_str;
-                }
-                m_block_name.clear();
-
-            } // End if - then
-            else if (m_str == "TABLE") {
-                get_line();
-                get_line();
-            }
-
-            else if (m_str == "LAYER" ) {
-                if (!ReadLayer()) {
-                    this->ReportError("DXF::DoRead() - Failed to read layer");
-                    //return; Some objects or tables can have "LAYER" as name...
-                }
-                continue;
-            }
-
-            else if (m_str == "STYLE" ) {
-                ReadStyle();
-                continue;
-            }
-
-            else if (m_str == "BLOCK" ) {
-                if (!ReadBlockInfo()) {
-                    this->ReportError("DXF::DoRead()f - Failed to read block info");
-                    return;
-                }
-                continue;
-            } // End if - then
-
-            else if (m_str == "ENDSEC" ) {
-                m_section_name.clear();
-                m_block_name.clear();
-            } // End if - then
-            else if (m_str == "LINE") {
-                if (!ReadLine()) {
-                    this->ReportError("DXF::DoRead() - Failed to read line");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "ARC") {
-                if (!ReadArc()) {
-                    this->ReportError("DXF::DoRead() - Failed to read arc");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "CIRCLE") {
-                if (!ReadCircle()) {
-                    this->ReportError("DXF::DoRead() - Failed to read circle");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "MTEXT") {
+            auto itHandler = mapEntityHandler.find(m_str);
+            if (itHandler != mapEntityHandler.cend()) {
+                const auto& fn = itHandler->second;
+                bool okRead = false;
+                std::string exceptionMsg;
                 try {
-                    ReadMText();
+                    okRead = fn();
                 } catch (const std::runtime_error& err) {
-                    this->ReportError("DXF::DoRead() - Failed to read MTEXT\nError: " + std::string(err.what()));
-                    return;
+                    exceptionMsg = err.what();
                 }
-                continue;
-            }
-            else if (m_str == "TEXT") {
-                try {
-                    ReadText();
-                } catch (const std::runtime_error& err) {
-                    this->ReportError("DXF::DoRead() - Failed to read TEXT\nError: " + std::string(err.what()));
-                    return;
+
+                if (okRead) {
+                    continue;
                 }
-                continue;
-            }
-            else if (m_str == "ELLIPSE") {
-                if (!ReadEllipse()) {
-                    this->ReportError("DXF::DoRead() - Failed to read ellipse");
-                    return;
+                else {
+                    std::string errMsg = "DXF::DoRead() - Failed to read " + m_str;
+                    if (!exceptionMsg.empty())
+                        errMsg += "\nError: " + exceptionMsg;
+
+                    this->ReportError(errMsg);
+                    if (m_str == "LAYER") // Some objects or tables can have "LAYER" as name...
+                        continue;
+                    else
+                        return;
                 }
-                continue;
-            }
-            else if (m_str == "SPLINE") {
-                if (!ReadSpline()) {
-                    this->ReportError("DXF::DoRead() - Failed to read spline");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "LWPOLYLINE") {
-                if (!ReadLwPolyLine()) {
-                    this->ReportError("DXF::DoRead() - Failed to read LW Polyline");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "POLYLINE") {
-                if (!ReadPolyLine()) {
-                    this->ReportError("DXF::DoRead() - Failed to read Polyline");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "POINT") {
-                if (!ReadPoint()) {
-                    this->ReportError("DXF::DoRead() - Failed to read Point");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "INSERT") {
-                if (!ReadInsert()) {
-                    this->ReportError("DXF::DoRead() - Failed to read Insert");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "DIMENSION") {
-                if (!ReadDimension()) {
-                    this->ReportError("DXF::DoRead() - Failed to read Dimension");
-                    return;
-                }
-                continue;
-            }
-            else if (m_str == "SOLID") {
-                if (!ReadSolid()) {
-                    this->ReportError("DXF::DoRead() - Failed to read Solid");
-                    return;
-                }
-                continue;
             }
         }
 
