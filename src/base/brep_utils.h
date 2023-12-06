@@ -8,7 +8,9 @@
 
 #include "occ_brep_mesh_parameters.h"
 
+#include <Poly_Polygon3D.hxx>
 #include <Poly_Triangulation.hxx>
+#include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -25,6 +27,9 @@ struct BRepUtils {
 
     // Adds 'shape' in target shape 'ptrTargetShape'
     static void addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape);
+
+    // Creates a non-geometric TopoDS_Edge wrapping 'polygon'
+    static TopoDS_Edge makeEdge(const Handle(Poly_Polygon3D)& polygon);
 
     // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
     static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);

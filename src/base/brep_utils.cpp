@@ -36,6 +36,15 @@ void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape
     builder.Add(*ptrTargetShape, shape);
 }
 
+TopoDS_Edge BRepUtils::makeEdge(const Handle(Poly_Polygon3D)& polygon)
+{
+    TopoDS_Edge edge;
+    BRep_Builder builder;
+    builder.MakeEdge(edge);
+    builder.UpdateEdge(edge, polygon);
+    return edge;
+}
+
 TopoDS_Face BRepUtils::makeFace(const Handle(Poly_Triangulation)& mesh)
 {
     TopoDS_Face face;
