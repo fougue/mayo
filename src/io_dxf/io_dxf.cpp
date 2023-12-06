@@ -60,6 +60,15 @@ bool startsWith(std::string_view str, std::string_view prefix)
     return str.substr(0, prefix.size()) == prefix;
 }
 
+std::string toLowerCase_C(const std::string& str)
+{
+    std::string lstr = str;
+    for (char& c : lstr)
+        c = std::tolower(c, std::locale::classic());
+
+    return lstr;
+}
+
 const Enumeration& systemFontNames()
 {
     static Enumeration fontNames;
@@ -432,14 +441,8 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
 
     const Dxf_STYLE* ptrStyle = this->findStyle(text.styleName);
     std::string fontName = ptrStyle ? ptrStyle->name : m_params.fontNameForTextObjects;
-    auto fnToLower = [](const std::string& str) {
-        std::string lstr = str;
-        for (char& c : lstr)
-            c = std::tolower(c, std::locale::classic());
-        return lstr;
-    };
-
-    if (fnToLower(fontName) == "arial_narrow")
+    // "ARIAL_NARROW" -> "ARIAL NARROW"
+    if (toLowerCase_C(fontName) == "arial_narrow")
         fontName.replace(5, 1, " ");
 
     const double fontHeight = 1.4 * text.height * m_params.scaling;
@@ -455,6 +458,8 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
         rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), UnitSystem::radians(text.rotationAngle * Quantity_Degree));
 
 #if 0
+    // TEXT justification is subtle(eg baseline and fit modes)
+    // See doc https://ezdxf.readthedocs.io/en/stable/tutorials/text.html
     const Dxf_TEXT::HorizontalJustification hjust = text.horizontalJustification;
     Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
     switch (hjust) {
@@ -482,7 +487,7 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
     const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
     Font_BRepTextBuilder brepTextBuilder;
     const auto textStr = string_conv<NCollection_String>(text.str);
-    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textStr, locText/*, hAlign, vAlign*/);
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textStr, locText);
     this->addShape(shapeText);
 }
 
@@ -509,34 +514,37 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
         rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotationAngle);
 
     const int ap = static_cast<int>(text.attachmentPoint);
-    Graphic3d_HorizontalTextAlignment hAttachPnt = Graphic3d_HTA_LEFT;
+    Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
     if (ap == 2 || ap == 5 || ap == 8)
-        hAttachPnt = Graphic3d_HTA_CENTER;
+        hAlign = Graphic3d_HTA_CENTER;
     else if (ap == 3 || ap == 6 || ap == 9)
-        hAttachPnt = Graphic3d_HTA_RIGHT;
+        hAlign = Graphic3d_HTA_RIGHT;
 
-    Graphic3d_VerticalTextAlignment vAttachPnt = Graphic3d_VTA_TOP;
+    Graphic3d_VerticalTextAlignment vAlign = Graphic3d_VTA_TOP;
     if (ap == 4 || ap == 5 || ap == 6)
-        vAttachPnt = Graphic3d_VTA_CENTER;
+        vAlign = Graphic3d_VTA_CENTER;
     else if (ap == 7 || ap == 8 || ap == 9)
-        vAttachPnt = Graphic3d_VTA_BOTTOM;
+        vAlign = Graphic3d_VTA_BOTTOM;
 
+    const auto occTextStr = string_conv<NCollection_String>(text.str);
+    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
+    Font_BRepTextBuilder brepTextBuilder;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;
-    textFormat->SetupAlignment(hAttachPnt, vAttachPnt);
-    textFormat->Append(string_conv<NCollection_String>(text.str), *brepFont.FTFont());
-#if 0
-    // Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
+    textFormat->SetupAlignment(hAlign, vAlign);
+    textFormat->Append(occTextStr, *brepFont.FTFont());
+    /* Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
     if (text.acadHasColumnInfo && text.acadColumnInfo_Width > 0.) {
         textFormat->SetWordWrapping(true);
         textFormat->SetWrapping(text.acadColumnInfo_Width);
     }
+    */
+    textFormat->Format();
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textFormat, locText);
+#else
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, occTextStr, locText, hAlign, vAlign);
 #endif
 
-    textFormat->Format();
-
-    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
-    Font_BRepTextBuilder brepTextBuilder;
-    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textFormat, locText);
     this->addShape(shapeText);
 }
 
