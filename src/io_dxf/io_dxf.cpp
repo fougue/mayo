@@ -84,6 +84,11 @@ const Enumeration& systemFontNames()
     return fontNames;
 }
 
+gp_Vec toOccVec(const DxfCoords& coords)
+{
+    return { coords.x, coords.y, coords.z };
+}
+
 } // namespace
 
 class DxfReader::Internal : public CDxfRead {
@@ -434,7 +439,6 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
     if (!m_params.importAnnotations)
         return;
 
-    const gp_Pnt pt = this->toPnt(text.firstAlignmentPoint);
     const std::string layerName = this->LayerName();
     if (startsWith(layerName, "BLOCKS"))
         return;
@@ -453,41 +457,76 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
         return;
     }
 
-    gp_Trsf rotTrsf;
-    if (!MathUtils::fuzzyIsNull(text.rotationAngle))
-        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), UnitSystem::radians(text.rotationAngle * Quantity_Degree));
-
-#if 0
+    using DxfHJustification = Dxf_TEXT::HorizontalJustification;
+    using DxfVJustification = Dxf_TEXT::VerticalJustification;
     // TEXT justification is subtle(eg baseline and fit modes)
     // See doc https://ezdxf.readthedocs.io/en/stable/tutorials/text.html
-    const Dxf_TEXT::HorizontalJustification hjust = text.horizontalJustification;
+    const DxfHJustification hjust = text.horizontalJustification;
     Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
     switch (hjust) {
-    case Dxf_TEXT::HorizontalJustification::Center:
-    case Dxf_TEXT::HorizontalJustification::Middle:
+    case DxfHJustification::Center:
+    case DxfHJustification::Middle:
         hAlign = Graphic3d_HTA_CENTER;
         break;
-    case Dxf_TEXT::HorizontalJustification::Right:
+    case DxfHJustification::Right:
         hAlign = Graphic3d_HTA_RIGHT;
         break;
     }
 
-    const Dxf_TEXT::VerticalJustification vjust = text.verticalJustification;
+    const DxfVJustification vjust = text.verticalJustification;
     Graphic3d_VerticalTextAlignment vAlign = Graphic3d_VTA_TOP;
     switch (vjust) {
-    case Dxf_TEXT::VerticalJustification::Bottom:
+    case DxfVJustification::Baseline:
+        vAlign = Graphic3d_VTA_TOPFIRSTLINE;
+        break;
+    case DxfVJustification::Bottom:
         vAlign = Graphic3d_VTA_BOTTOM;
         break;
-    case Dxf_TEXT::VerticalJustification::Middle:
+    case DxfVJustification::Middle:
         vAlign = Graphic3d_VTA_CENTER;
         break;
     }
-#endif
 
-    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
+    // Ensure non-null extrusion direction
+    gp_Vec extDir = toOccVec(text.extrusionDirection);
+    if (extDir.Magnitude() < gp::Resolution())
+        extDir = gp::DZ();
+
+    // Alignment point
+    const bool applyFirstAlignPnt =
+        hjust == DxfHJustification::Left
+        || vjust == DxfVJustification::Baseline
+        ;
+
+    const DxfCoords& alignPnt = applyFirstAlignPnt ? text.firstAlignmentPoint : text.secondAlignmentPoint;
+    const gp_Pnt pt = this->toPnt(alignPnt);
+
+    gp_Vec xAxisDir = gp::DX();
+    if (hjust == DxfHJustification::Aligned || hjust == DxfHJustification::Fit) {
+        const gp_Pnt p1 = this->toPnt(text.firstAlignmentPoint);
+        const gp_Pnt p2 = this->toPnt(text.secondAlignmentPoint);
+        xAxisDir = gp_Vec{p1, p2};
+
+        // Ensure non-null x-axis direction
+        if (xAxisDir.Magnitude() < gp::Resolution())
+            xAxisDir = gp::DX();
+    }
+
+    // If rotation angle is non-null and x-axis direction defaults to standard Ox then set x-axis
+    // so it matches rotation angle
+    xAxisDir.Normalize();
+    if (!MathUtils::fuzzyIsNull(text.rotationAngle)
+        && xAxisDir.IsEqual(gp::DX(), Precision::Confusion(), Precision::Angular()))
+    {
+        gp_Trsf rotTrsf;
+        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotationAngle);
+        xAxisDir = gp::DX().Transformed(rotTrsf);
+    }
+
+    const gp_Ax3 locText(pt, extDir, xAxisDir);
     Font_BRepTextBuilder brepTextBuilder;
-    const auto textStr = string_conv<NCollection_String>(text.str);
-    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, textStr, locText);
+    const auto occTextStr = string_conv<NCollection_String>(text.str);
+    const TopoDS_Shape shapeText = brepTextBuilder.Perform(brepFont, occTextStr, locText, hAlign, vAlign);
     this->addShape(shapeText);
 }
 
@@ -509,10 +548,6 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
         return;
     }
 
-    gp_Trsf rotTrsf;
-    if (!MathUtils::fuzzyIsNull(text.rotationAngle))
-        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotationAngle);
-
     const int ap = static_cast<int>(text.attachmentPoint);
     Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
     if (ap == 2 || ap == 5 || ap == 8)
@@ -526,8 +561,29 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
     else if (ap == 7 || ap == 8 || ap == 9)
         vAlign = Graphic3d_VTA_BOTTOM;
 
+    // Ensure non-null extrusion direction
+    gp_Vec extDir = toOccVec(text.extrusionDirection);
+    if (extDir.Magnitude() < gp::Resolution())
+        extDir = gp::DZ();
+
+    // Ensure non-null x-axis direction
+    gp_Vec xAxisDir = toOccVec(text.xAxisDirection);
+    if (xAxisDir.Magnitude() < gp::Resolution())
+        xAxisDir = gp::DX();
+
+    // If rotation angle is non-null and x-axis direction defaults to standard Ox then set x-axis
+    // so it matches rotation angle
+    xAxisDir.Normalize();
+    if (!MathUtils::fuzzyIsNull(text.rotationAngle)
+        && xAxisDir.IsEqual(gp::DX(), Precision::Confusion(), Precision::Angular()))
+    {
+        gp_Trsf rotTrsf;
+        rotTrsf.SetRotation(gp_Ax1(pt, gp::DZ()), text.rotationAngle);
+        xAxisDir = gp::DX().Transformed(rotTrsf);
+    }
+
     const auto occTextStr = string_conv<NCollection_String>(text.str);
-    const gp_Ax3 locText(pt, gp::DZ(), gp::DX().Transformed(rotTrsf));
+    const gp_Ax3 locText(pt, extDir, xAxisDir);
     Font_BRepTextBuilder brepTextBuilder;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;

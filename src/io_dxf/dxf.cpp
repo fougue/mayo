@@ -2489,7 +2489,7 @@ bool CDxfRead::ReadMText()
 
         case 11: case 21: case 31:
             // X-axis direction vector
-            HandleCoordCode<11, 21, 31>(n, &text.xAxisDirectionVector);
+            HandleCoordCode<11, 21, 31>(n, &text.xAxisDirection);
             break;
 
         case 210: case 220: case 230:
@@ -2520,7 +2520,6 @@ bool CDxfRead::ReadText()
         }
 
         get_line();
-
         switch (n) {
         case 10: case 20: case 30:
             HandleCoordCode(n, &text.firstAlignmentPoint);

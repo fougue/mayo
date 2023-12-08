@@ -153,7 +153,7 @@ struct Dxf_MTEXT {
     DxfCoords extrusionDirection = {0., 0., 1.};
 
     // Code: 11, 21, 31
-    DxfCoords xAxisDirectionVector; // WCS
+    DxfCoords xAxisDirection = {1., 0., 0.}; // WCS
 
     // NOTE AutoCad documentation states that codes 42, 43 are "read-only, ignored if supplied"
 
