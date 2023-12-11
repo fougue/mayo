@@ -9,6 +9,7 @@
 #include "app_module.h"
 #include "qstring_conv.h"
 #include "qtwidgets_utils.h"
+#include "version.h"
 #include "../base/meta_enum.h"
 #include "../base/filepath.h"
 #include "../base/io_system.h"
@@ -217,6 +218,14 @@ QString CommandSystemInformation::data()
 {
     QString strSysInfo;
     QTextStream ostr(&strSysInfo);
+
+    // Mayo version
+    ostr << '\n'
+         << "Mayo: v" << strVersion
+         << "  commit:" << strVersionCommitId
+         << "  revnum:" << versionRevisionNumber
+         << "  " << QT_POINTER_SIZE * 8 << "bit"
+         << '\n';
 
     // OS version
     ostr << '\n' << "OS: " << QSysInfo::prettyProductName()

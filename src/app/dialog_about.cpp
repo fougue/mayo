@@ -22,7 +22,10 @@ DialogAbout::DialogAbout(QWidget* parent)
                 tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
     );
 
-    m_ui->label_Version->setText(m_ui->label_Version->text().arg(strVersion).arg(QT_POINTER_SIZE * 8));
+    const QString strVersionFull =
+        QString("%1 commit:%2 revnum:%3")
+        .arg(strVersion).arg(strVersionCommitId).arg(versionRevisionNumber);
+    m_ui->label_Version->setText(m_ui->label_Version->text().arg(strVersionFull).arg(QT_POINTER_SIZE * 8));
     m_ui->label_BuildDateTime->setText(m_ui->label_BuildDateTime->text().arg(__DATE__, __TIME__));
     m_ui->label_Qt->setText(m_ui->label_Qt->text().arg(QT_VERSION_STR));
     m_ui->label_Occ->setText(m_ui->label_Occ->text().arg(OCC_VERSION_COMPLETE));
