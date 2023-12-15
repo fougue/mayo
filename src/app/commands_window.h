@@ -26,6 +26,7 @@ private:
 class CommandLeftSidebarWidgetToggle : public Command {
 public:
     CommandLeftSidebarWidgetToggle(IAppContext* context);
+
     void execute() override;
     bool getEnabledStatus() const override;
 

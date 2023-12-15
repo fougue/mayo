@@ -117,6 +117,8 @@ public:
     // The command name is implicit and found by assuming the presence of CmdType::Name class member
     template<typename CmdType, typename... Args> CmdType* addNamedCommand(Args... p);
 
+    void clear();
+
 private:
     void addCommand_impl(std::string_view name, Command* cmd);
 

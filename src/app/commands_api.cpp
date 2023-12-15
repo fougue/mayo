@@ -76,6 +76,15 @@ QAction* CommandContainer::findCommandAction(std::string_view name) const
     return cmd ? cmd->action() : nullptr;
 }
 
+void CommandContainer::clear()
+{
+    for (auto [name, cmd] : m_mapCommand) {
+        delete cmd;
+    }
+
+    m_mapCommand.clear();
+}
+
 void CommandContainer::addCommand_impl(std::string_view name, Command* cmd)
 {
     assert(m_appContext != nullptr);

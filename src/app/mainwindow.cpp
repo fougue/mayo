@@ -66,6 +66,8 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+    // Force deletion of Command objects as some of them are event filters of MainWindow widgets
+    m_cmdContainer.clear();
     delete m_ui;
 }
 
@@ -284,18 +286,20 @@ void MainWindow::updateCurrentPage()
         m_appContext->setCurrentPage(newPage);
 }
 
+IWidgetMainPage* MainWindow::widgetMainPage(IAppContext::Page page) const
+{
+    auto it = m_mapWidgetPage.find(page);
+    return it != m_mapWidgetPage.cend() ? it->second : nullptr;
+}
+
 WidgetMainHome* MainWindow::widgetPageHome() const
 {
-    auto it = m_mapWidgetPage.find(IAppContext::Page::Home);
-    assert(it != m_mapWidgetPage.cend());
-    return dynamic_cast<WidgetMainHome*>(it->second);
+    return dynamic_cast<WidgetMainHome*>(this->widgetMainPage(IAppContext::Page::Home));
 }
 
 WidgetMainControl* MainWindow::widgetPageDocuments() const
 {
-    auto it = m_mapWidgetPage.find(IAppContext::Page::Documents);
-    assert(it != m_mapWidgetPage.cend());
-    return dynamic_cast<WidgetMainControl*>(it->second);
+    return dynamic_cast<WidgetMainControl*>(this->widgetMainPage(IAppContext::Page::Documents));
 }
 
 } // namespace Mayo

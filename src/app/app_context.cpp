@@ -26,7 +26,7 @@ AppContext::AppContext(MainWindow* wnd)
     QObject::connect(
                 m_wnd->widgetPageDocuments(), &WidgetMainControl::currentDocumentIndexChanged,
                 this, &AppContext::onCurrentDocumentIndexChanged
-    );
+        );
 }
 
 GuiApplication* AppContext::guiApp() const
@@ -41,7 +41,8 @@ TaskManager* AppContext::taskMgr() const
 
 QWidget* AppContext::pageDocuments_widgetLeftSideBar() const
 {
-    return m_wnd->widgetPageDocuments()->widgetLeftSideBar();
+    const WidgetMainControl* pageDocs = m_wnd->widgetPageDocuments();
+    return pageDocs ? pageDocs->widgetLeftSideBar() : nullptr;
 }
 
 QWidget* AppContext::widgetMain() const

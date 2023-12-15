@@ -54,6 +54,7 @@ private:
     void updateControlsActivation();
     void updateCurrentPage();
 
+    IWidgetMainPage* widgetMainPage(IAppContext::Page page) const;
     WidgetMainHome* widgetPageHome() const;
     WidgetMainControl* widgetPageDocuments() const;
 
