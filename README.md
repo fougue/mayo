@@ -62,9 +62,14 @@ OBJ       | :white_check_mark: | :white_check_mark: |
 glTF      | :white_check_mark: | :white_check_mark: | 1.0, 2.0 and GLB
 VRML      | :white_check_mark: | :white_check_mark: | v2.0 UTF8
 STL       | :white_check_mark: | :white_check_mark: | ASCII/binary
-AMF       | :x:                | :white_check_mark: | v1.2 Text/ZIP
+AMF       | :white_check_mark: | :white_check_mark: | v1.2 Text/ZIP(export)
 PLY       | :white_check_mark: | :white_check_mark: | ASCII/binary
 OFF       | :white_check_mark: | :white_check_mark: |
+3MF       | :white_check_mark: | :x:                |
+3DS       | :white_check_mark: | :x:                |
+FBX       | :white_check_mark: | :x:                | 
+Collada   | :white_check_mark: | :x:                |
+X3D       | :white_check_mark: | :x:                |
 Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
