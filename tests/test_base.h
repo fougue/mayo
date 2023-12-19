@@ -45,6 +45,7 @@ private slots:
     void IO_bugGitHub166_test_data();
 
     void DoubleToString_test();
+    void StringConv_test();
 
     void BRepUtils_test();
 

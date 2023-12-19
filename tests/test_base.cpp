@@ -45,6 +45,7 @@
 #include <GCPnts_TangentialDeflection.hxx>
 #include <Interface_ParamType.hxx>
 #include <Interface_Static.hxx>
+#include <NCollection_String.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 
 #include <QtCore/QtDebug>
@@ -628,6 +629,16 @@ void TestBase::DoubleToString_test()
     QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).removeTrailingZeroes(false).get(), "0.557800");
     QCOMPARE(to_stdString(0.0).locale(cLocale).decimalCount(6).get(), "0");
     QCOMPARE(to_stdString(-45.6789).locale(cLocale).decimalCount(6).get(), "-45.6789");
+}
+
+void TestBase::StringConv_test()
+{
+    std::optional<std::locale> frLocale = findFrLocale();
+    if (frLocale) {
+        const std::string stdStr = to_stdString(14758.5).locale(frLocale.value());
+        const auto occExtStr = to_OccExtString(stdStr);
+        QCOMPARE(stdStr, to_stdString(occExtStr));
+    }
 }
 
 void TestBase::BRepUtils_test()
