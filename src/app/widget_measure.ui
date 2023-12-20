@@ -126,6 +126,11 @@
      </item>
      <item>
       <property name="text">
+       <string>Center-to-center Distance</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Angle</string>
       </property>
      </item>

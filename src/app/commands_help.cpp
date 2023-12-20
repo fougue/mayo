@@ -8,10 +8,12 @@
 
 #include "dialog_about.h"
 #include "qtwidgets_utils.h"
+#include "qstring_conv.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtGui/QDesktopServices>
-#include <QtWidgets/QApplication>
+#include <QtCore/QCoreApplication>
 
 namespace Mayo {
 
@@ -32,13 +34,16 @@ CommandAbout::CommandAbout(IAppContext* context)
     : Command(context)
 {
     auto action = new QAction(this);
-    action->setText(Command::tr("About %1").arg(QApplication::applicationName()));
+    action->setText(Command::tr("About %1").arg(QCoreApplication::applicationName()));
     this->setAction(action);
 }
 
 void CommandAbout::execute()
 {
     auto dlg = new DialogAbout(this->widgetMain());
+    for (const auto& libInfo : CommandSystemInformation::libraryInfos())
+        dlg->addLibraryInfo(libInfo.name, libInfo.version);
+
     QtWidgetsUtils::asyncDialogExec(dlg);
 }
 

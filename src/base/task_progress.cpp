@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "task_progress.h"
-#include "task.h"
 #include "task_manager.h"
 
 #include <algorithm>
@@ -14,13 +13,10 @@
 
 namespace Mayo {
 
-TaskProgress::TaskProgress()
-{
-}
-
 TaskProgress::TaskProgress(TaskProgress* parent, double portionSize, std::string_view step)
     : m_parent(parent),
-      m_task(parent ? parent->m_task : nullptr),
+      m_taskMgr(parent ? parent->m_taskMgr : nullptr),
+      m_taskId(parent ? parent->m_taskId : TaskId_null),
       m_portionSize(std::clamp(portionSize, 0., 100.))
 {
     if (!step.empty())
@@ -41,22 +37,12 @@ TaskProgress& TaskProgress::null()
 
 bool TaskProgress::isNull() const
 {
-    return m_task == nullptr;
-}
-
-TaskId TaskProgress::taskId() const
-{
-    return m_task ? m_task->id() : std::numeric_limits<TaskId>::max();
-}
-
-TaskManager* TaskProgress::taskManager() const
-{
-    return m_task ? m_task->manager() : nullptr;
+    return m_taskId == TaskId_null;
 }
 
 void TaskProgress::setValue(int pct)
 {
-    if (this->isNull())
+    if (m_taskId == TaskId_null)
         return;
 
     if (m_isAbortRequested)
@@ -68,25 +54,25 @@ void TaskProgress::setValue(int pct)
         return;
 
     if (m_parent) {
-        const int valueDeltaInParent = std::ceil((m_value - valueOnEntry) * (m_portionSize / 100.));
+        const auto valueDeltaInParent = std::round((m_value - valueOnEntry) * (m_portionSize / 100.));
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
-        m_task->manager()->signalProgressChanged.send(m_task->id(), m_value);
+        m_taskMgr->signalProgressChanged.send(m_taskId, m_value);
     }
+}
+
+void TaskProgress::setValue(double pct)
+{
+    this->setValue(static_cast<int>(std::lround(pct)));
 }
 
 void TaskProgress::setStep(std::string_view title)
 {
-    if (!this->isNull()) {
+    if (m_taskMgr && m_taskId != TaskId_null) {
         m_step = title;
-        m_task->manager()->signalProgressStep.send(m_task->id(), m_step);
+        m_taskMgr->signalProgressStep.send(m_taskId, m_step);
     }
-}
-
-void TaskProgress::setTask(const Task* task)
-{
-    m_task = task;
 }
 
 bool TaskProgress::isAbortRequested(const TaskProgress* progress)
@@ -96,7 +82,7 @@ bool TaskProgress::isAbortRequested(const TaskProgress* progress)
 
 void TaskProgress::requestAbort()
 {
-    if (!this->isNull())
+    if (m_taskId != TaskId_null)
         m_isAbortRequested = true;
 }
 

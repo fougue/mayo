@@ -48,32 +48,29 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
     action->setShortcut(Qt::ALT + Qt::Key_0);
     action->setCheckable(true);
-    action->setChecked(context->widgetLeftSidebar()->isVisible());
+    action->setChecked(context->pageDocuments_widgetLeftSideBar()->isVisible());
     this->setAction(action);
     this->updateAction();
-    context->widgetLeftSidebar()->installEventFilter(this);
+    context->pageDocuments_widgetLeftSideBar()->installEventFilter(this);
 }
 
 void CommandLeftSidebarWidgetToggle::execute()
 {
-    const bool isVisible = this->context()->widgetLeftSidebar()->isVisible();
-    this->context()->widgetLeftSidebar()->setVisible(!isVisible);
+    QWidget* widget = this->context()->pageDocuments_widgetLeftSideBar();
+    widget->setVisible(!widget->isVisible());
 }
 
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 {
-    return this->context()->modeWidgetMain() != IAppContext::ModeWidgetMain::Home;
+    return this->context()->currentPage() != IAppContext::Page::Home;
 }
 
 bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == this->context()->widgetLeftSidebar()) {
-        if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
+    if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
+        if (watched == this->context()->pageDocuments_widgetLeftSideBar()) {
             this->updateAction();
             return true;
-        }
-        else {
-            return false;
         }
     }
 
@@ -82,7 +79,7 @@ bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event
 
 void CommandLeftSidebarWidgetToggle::updateAction()
 {
-    if (this->context()->widgetLeftSidebar()->isVisible()) {
+    if (this->context()->pageDocuments_widgetLeftSideBar()->isVisible()) {
         this->action()->setText(Command::tr("Hide Left Sidebar"));
         this->action()->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
     }
@@ -92,6 +89,69 @@ void CommandLeftSidebarWidgetToggle::updateAction()
     }
 
     this->action()->setToolTip(this->action()->text());
+}
+
+CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setToolTip(Command::tr("Go To Home Page"));
+    action->setShortcut(Qt::CTRL + Qt::Key_0);
+    this->setAction(action);
+    this->updateAction();
+    context->widgetPage(IAppContext::Page::Home)->installEventFilter(this);
+    context->widgetPage(IAppContext::Page::Documents)->installEventFilter(this);
+}
+
+void CommandSwitchMainWidgetMode::execute()
+{
+    auto newPage = IAppContext::Page::Unknown;
+    switch (this->context()->currentPage()) {
+    case IAppContext::Page::Home:
+        newPage = IAppContext::Page::Documents;
+        break;
+    case IAppContext::Page::Documents:
+        newPage = IAppContext::Page::Home;
+        break;
+    case IAppContext::Page::Unknown:
+        break;
+    }
+
+    this->context()->setCurrentPage(newPage);
+    this->context()->updateControlsEnabledStatus();
+}
+
+bool CommandSwitchMainWidgetMode::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0;
+}
+
+bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::Show) {
+        if (watched == this->context()->widgetPage(IAppContext::Page::Home)
+                || watched == this->context()->widgetPage(IAppContext::Page::Documents))
+        {
+            this->updateAction();
+            return true;
+        }
+    }
+
+    return Command::eventFilter(watched, event);
+}
+
+void CommandSwitchMainWidgetMode::updateAction()
+{
+    switch (this->context()->currentPage()) {
+    case IAppContext::Page::Home:
+        this->action()->setText(Command::tr("Go To Documents"));
+        break;
+    case IAppContext::Page::Documents:
+        this->action()->setText(Command::tr("Go To Home Page"));
+        break;
+    case IAppContext::Page::Unknown:
+        break;
+    }
 }
 
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
@@ -113,7 +173,9 @@ void CommandPreviousDocument::execute()
 
 bool CommandPreviousDocument::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0 && this->currentDocumentIndex() > 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents
+            && this->currentDocumentIndex() > 0;
 }
 
 CommandNextDocument::CommandNextDocument(IAppContext* context)
@@ -136,7 +198,9 @@ void CommandNextDocument::execute()
 bool CommandNextDocument::getEnabledStatus() const
 {
     const int appDocumentCount = this->app()->documentCount();
-    return appDocumentCount != 0 && this->currentDocumentIndex() < appDocumentCount - 1;
+    return appDocumentCount != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents
+            && this->currentDocumentIndex() < appDocumentCount - 1;
 }
 
 } // namespace Mayo

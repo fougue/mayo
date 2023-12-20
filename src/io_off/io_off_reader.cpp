@@ -319,7 +319,7 @@ TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
     std::vector<Quantity_Color> vecVertexColor;
     vecVertexColor.reserve(m_vecVertex.size());
     for (const Vertex& vertex : m_vecVertex) {
-        const auto ivertex = &vertex - &m_vecVertex.front();
+        const auto ivertex = Span_itemIndex(m_vecVertex, vertex);
         MeshUtils::setNode(mesh, ivertex + 1, vertex.coords);
         const std::uint32_t c = vertex.color;
         if (vertex.hasColor) {

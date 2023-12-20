@@ -1,10 +1,10 @@
 <div align="center">
   
-[![CI](https://github.com/fougue/mayo/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci.yml)
-[![Build status](https://ci.appveyor.com/api/projects/status/6d1w0d6gw28npxpf/branch/develop?svg=true)](https://ci.appveyor.com/project/HuguesDelorme/mayo)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d51f8ca6fea34886b8308ff0246172ce)](https://www.codacy.com/gh/fougue/mayo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fougue/mayo&amp;utm_campaign=Badge_Grade)
+[![Windows CI](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml)
+[![Linux CI](https://github.com/fougue/mayo/actions/workflows/ci_linux.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_linux.yml)
+[![macOS CI](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d51f8ca6fea34886b8308ff0246172ce)](https://app.codacy.com/gh/fougue/mayo/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
-[![License](https://img.shields.io/badge/license-BSD%202--clause-blue.svg)](https://github.com/fougue/mayo/blob/develop/LICENSE.txt)
 [![Version](https://img.shields.io/badge/version-v0.7.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
   
 </div>
@@ -62,9 +62,14 @@ OBJ       | :white_check_mark: | :white_check_mark: |
 glTF      | :white_check_mark: | :white_check_mark: | 1.0, 2.0 and GLB
 VRML      | :white_check_mark: | :white_check_mark: | v2.0 UTF8
 STL       | :white_check_mark: | :white_check_mark: | ASCII/binary
-AMF       | :x:                | :white_check_mark: | v1.2 Text/ZIP
+AMF       | :white_check_mark: | :white_check_mark: | v1.2 Text/ZIP(export)
 PLY       | :white_check_mark: | :white_check_mark: | ASCII/binary
 OFF       | :white_check_mark: | :white_check_mark: |
+3MF       | :white_check_mark: | :x:                |
+3DS       | :white_check_mark: | :x:                |
+FBX       | :white_check_mark: | :x:                | 
+Collada   | :white_check_mark: | :x:                |
+X3D       | :white_check_mark: | :x:                |
 Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details

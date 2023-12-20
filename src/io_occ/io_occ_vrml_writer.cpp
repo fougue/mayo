@@ -9,6 +9,7 @@
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
 #include "../base/document.h"
+#include "../base/io_system.h"
 #include "../base/math_utils.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -46,12 +47,17 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
 {
     m_scene.reset(new VrmlData_Scene);
     VrmlData_ShapeConvert converter(*m_scene);
-    for (const ApplicationItem& appItem : spanAppItem) {
+
+    int count = 0;
+    System::visitUniqueItems(spanAppItem, [&](const ApplicationItem&) { ++count; });
+
+    int iCount = 0;
+    System::visitUniqueItems(spanAppItem, [&](const ApplicationItem& appItem) {
         if (appItem.isDocument()) {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
             converter.ConvertDocument(appItem.document());
 #else
-            // TODO Call VrmlData_ShapeConvert::AddShape() on each child entity of "shape" type
+    // TODO Call VrmlData_ShapeConvert::AddShape() on each child entity of "shape" type
 #endif
         }
         else if (appItem.isDocumentTreeNode()) {
@@ -60,9 +66,8 @@ bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgre
                 converter.AddShape(XCaf::shape(label));
         }
 
-        const auto index = &appItem - &spanAppItem.front();
-        progress->setValue(MathUtils::toPercent(index, 0, spanAppItem.size() - 1));
-    }
+        progress->setValue(MathUtils::toPercent(++iCount, 0, count));
+    });
 
     const auto rep = m_shapeRepresentation;
     converter.Convert(

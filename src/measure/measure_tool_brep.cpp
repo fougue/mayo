@@ -6,8 +6,10 @@
 
 #include "measure_tool_brep.h"
 
+#include "../base/brep_utils.h"
 #include "../base/geom_utils.h"
 #include "../base/math_utils.h"
+#include "../base/mesh_utils.h"
 #include "../base/text_id.h"
 #include "../graphics/graphics_shape_object_driver.h"
 
@@ -15,6 +17,7 @@
 #include <AIS_Shape.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
@@ -48,7 +51,9 @@ enum class ErrorCode {
     NotCircularEdge,
     NotBRepShape,
     NotGeometricOrPolygonEdge,
+    NotGeometricOrTriangulationFace,
     MinDistanceFailure,
+    CenterFailure,
     NotAllEdges,
     NotLinearEdge,
     NotAllFaces,
@@ -70,8 +75,12 @@ public:
             return textIdTr("Entity must be a shape(BREP)");
         case ErrorCode::NotGeometricOrPolygonEdge:
             return textIdTr("Entity must be a geometric or polygon edge");
+        case ErrorCode::NotGeometricOrTriangulationFace:
+            return textIdTr("Entity must be a geometric or triangulation face");
         case ErrorCode::MinDistanceFailure:
             return textIdTr("Computation of minimum distance failed");
+        case ErrorCode::CenterFailure:
+            return textIdTr("Unable to find center of the shape");
         case ErrorCode::NotAllEdges:
             return textIdTr("All entities must be edges");
         case ErrorCode::NotLinearEdge:
@@ -96,9 +105,53 @@ const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
 {
     static const TopoDS_Shape nullShape;
     auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
-    return brepOwner ? brepOwner->Shape().Moved(owner->Location()) : nullShape;
+    TopLoc_Location ownerLoc = owner->Location();
+#if OCC_VERSION_HEX >= 0x070600
+    // Force scale factor to 1
+    // If scale factor <> 1 then it will cause a crash(exception) in TopoDS_Shape::Move() starting
+    // from OpenCascade >= 7.6
+    const double absScale = std::abs(ownerLoc.Transformation().ScaleFactor());
+    const double scalePrec = TopLoc_Location::ScalePrec();
+    if (absScale < (1. - scalePrec) || absScale > (1. + scalePrec)) {
+        gp_Trsf trsf = ownerLoc.Transformation();
+        trsf.SetScaleFactor(1.);
+        ownerLoc = trsf;
+    }
+#endif
+    return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : nullShape;
 }
 
+gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
+{
+    const TopAbs_ShapeEnum shapeType = shape.ShapeType();
+
+    if (shapeType == TopAbs_VERTEX)
+        return BRep_Tool::Pnt(TopoDS::Vertex(shape));
+
+    GProp_GProps shapeProps;
+    if (shapeType == TopAbs_FACE) {
+        // TODO Consider case where the face is cylindrical
+        BRepGProp::SurfaceProperties(shape, shapeProps);
+    }
+    else if (shapeType == TopAbs_WIRE) {
+        BRepGProp::LinearProperties(shape, shapeProps);
+    }
+    else if (shapeType == TopAbs_EDGE) {
+        try {
+            const MeasureCircle circle = MeasureToolBRep::brepCircle(shape);
+            return circle.value.Location();
+        }
+        catch (const BRepMeasureError<ErrorCode::NotCircularEdge>&) {
+            BRepGProp::LinearProperties(shape, shapeProps);
+        }
+    }
+    else {
+        throw BRepMeasureError<ErrorCode::CenterFailure>();
+    }
+
+    throwErrorIf<ErrorCode::CenterFailure>(shapeProps.Mass() < Precision::Confusion());
+    return shapeProps.CentreOfMass();
+}
 } // namespace
 
 Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
@@ -115,7 +168,8 @@ Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureT
         static const GraphicsObjectSelectionMode modes[] = { AIS_Shape::SelectionMode(TopAbs_EDGE) };
         return modes;
     }
-    case MeasureType::MinDistance: {
+    case MeasureType::MinDistance:
+    case MeasureType::CenterDistance: {
         static const GraphicsObjectSelectionMode modes[] = {
             AIS_Shape::SelectionMode(TopAbs_VERTEX),
             AIS_Shape::SelectionMode(TopAbs_EDGE),
@@ -154,9 +208,14 @@ MeasureCircle MeasureToolBRep::circle(const GraphicsOwnerPtr& owner) const
     return brepCircle(getShape(owner));
 }
 
-MeasureMinDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+MeasureDistance MeasureToolBRep::minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
 {
     return brepMinDistance(getShape(owner1), getShape(owner2));
+}
+
+MeasureDistance MeasureToolBRep::centerDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
+{
+    return brepCenterDistance(getShape(owner1), getShape(owner2));
 }
 
 MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const
@@ -164,19 +223,14 @@ MeasureAngle MeasureToolBRep::angle(const GraphicsOwnerPtr& owner1, const Graphi
     return brepAngle(getShape(owner1), getShape(owner2));
 }
 
-QuantityLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
+MeasureLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
 {
     return brepLength(getShape(owner));
 }
 
-QuantityArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
+MeasureArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
 {
-    const TopoDS_Shape shape = getShape(owner);
-    throwErrorIf<ErrorCode::NotAllFaces>(shape.IsNull() || shape.ShapeType() != TopAbs_FACE);
-    GProp_GProps gprops;
-    BRepGProp::SurfaceProperties(TopoDS::Face(shape), gprops);
-    const double area = gprops.Mass();
-    return area * Quantity_SquareMillimeter;
+    return brepArea(getShape(owner));
 }
 
 gp_Pnt MeasureToolBRep::brepVertexPosition(const TopoDS_Shape& shape)
@@ -265,13 +319,13 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
 {
     throwErrorIf<ErrorCode::NotCircularEdge>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
     const TopoDS_Edge& edge = TopoDS::Edge(shape);
-    if (BRep_Tool::IsGeometric(edge))
+    if (BRepUtils::isGeometric(edge))
         return MeasureToolBRep::brepCircleFromGeometricEdge(edge);
     else
         return MeasureToolBRep::brepCircleFromPolygonEdge(edge);
 }
 
-MeasureMinDistance MeasureToolBRep::brepMinDistance(
+MeasureDistance MeasureToolBRep::brepMinDistance(
         const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
 {
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
@@ -280,10 +334,28 @@ MeasureMinDistance MeasureToolBRep::brepMinDistance(
     const BRepExtrema_DistShapeShape dist(shape1, shape2);
     throwErrorIf<ErrorCode::MinDistanceFailure>(!dist.IsDone());
 
-    MeasureMinDistance distResult;
+    MeasureDistance distResult;
     distResult.pnt1 = dist.PointOnShape1(1);
     distResult.pnt2 = dist.PointOnShape2(1);
     distResult.value = dist.Value() * Quantity_Millimeter;
+    distResult.type = DistanceType::Mininmum;
+    return distResult;
+}
+
+MeasureDistance MeasureToolBRep::brepCenterDistance(
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+{
+    throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
+    throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
+    
+    const gp_Pnt centerOfMass1 = computeShapeCenter(shape1);
+    const gp_Pnt centerOfMass2 = computeShapeCenter(shape2);
+
+    MeasureDistance distResult;
+    distResult.pnt1 = centerOfMass1;
+    distResult.pnt2 = centerOfMass2;
+    distResult.value = centerOfMass1.Distance(centerOfMass2) * Quantity_Millimeter;
+    distResult.type = DistanceType::CenterToCenter;
     return distResult;
 }
 
@@ -296,6 +368,7 @@ MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS
 
     TopoDS_Edge edge1 = TopoDS::Edge(shape1);
     TopoDS_Edge edge2 = TopoDS::Edge(shape2);
+    // TODO What if edge1 and edge2 are not geometric?
     const BRepAdaptor_Curve curve1(edge1);
     const BRepAdaptor_Curve curve2(edge2);
 
@@ -351,28 +424,89 @@ MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS
     return angleResult;
 }
 
-QuantityLength MeasureToolBRep::brepLength(const TopoDS_Shape& shape)
+MeasureLength MeasureToolBRep::brepLength(const TopoDS_Shape& shape)
 {
+    MeasureLength lenResult;
+
     throwErrorIf<ErrorCode::NotAllEdges>(shape.IsNull() || shape.ShapeType() != TopAbs_EDGE);
     const TopoDS_Edge& edge = TopoDS::Edge(shape);
-    if (BRep_Tool::IsGeometric(edge)) {
-        const BRepAdaptor_Curve curve(TopoDS::Edge(shape));
+    if (BRepUtils::isGeometric(edge)) {
+        const BRepAdaptor_Curve curve(edge);
         const double len = GCPnts_AbscissaPoint::Length(curve, 1e-6);
-        return len * Quantity_Millimeter;
+        lenResult.value = len * Quantity_Millimeter;
+        const GCPnts_QuasiUniformAbscissa pnts(curve, 3);
+        if (pnts.IsDone() && pnts.NbPoints() == 3) {
+            lenResult.middlePnt = GeomUtils::d0(curve, pnts.Parameter(2));
+        }
+        else {
+            const double midParam = (curve.FirstParameter() + curve.LastParameter()) / 2.;
+            lenResult.middlePnt = GeomUtils::d0(curve, midParam);
+        }
     }
     else {
         TopLoc_Location loc;
         const Handle(Poly_Polygon3D)& polyline = BRep_Tool::Polygon3D(edge, loc);
         throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull());
         double len = 0.;
+        // Compute length of the polygon
         for (int i = 2; i <= polyline->NbNodes(); ++i) {
             const gp_Pnt& pnt1 = polyline->Nodes().Value(i - 1);
             const gp_Pnt& pnt2 = polyline->Nodes().Value(i);
             len += pnt1.Distance(pnt2);
         }
 
-        return len * Quantity_Millimeter;
+        lenResult.value = len * Quantity_Millimeter;
+
+        // Compute middle point of the polygon
+        double accumLen = 0.;
+        for (int i = 2; i <= polyline->NbNodes() && accumLen < (len / 2.); ++i) {
+            const gp_Pnt& pnt1 = polyline->Nodes().Value(i - 1);
+            const gp_Pnt& pnt2 = polyline->Nodes().Value(i);
+            accumLen += pnt1.Distance(pnt2);
+            if (accumLen > (len / 2.)) {
+                const gp_Pnt pntLoc1 = pnt1.Transformed(loc);
+                const gp_Pnt pntLoc2 = pnt2.Transformed(loc);
+                lenResult.middlePnt = pntLoc1.Translated(gp_Vec{pntLoc1, pntLoc2} / 2.);
+            }
+        }
     }
+
+    return lenResult;
+}
+
+MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
+{
+    MeasureArea areaResult;
+    throwErrorIf<ErrorCode::NotAllFaces>(shape.IsNull() || shape.ShapeType() != TopAbs_FACE);
+    const TopoDS_Face& face = TopoDS::Face(shape);
+
+    if (BRepUtils::isGeometric(face)) {
+        GProp_GProps gprops;
+        BRepGProp::SurfaceProperties(face, gprops);
+        const double area = gprops.Mass();
+        areaResult.value = area * Quantity_SquareMillimeter;
+
+        const BRepAdaptor_Surface surface(face);
+        areaResult.middlePnt = surface.Value(
+                    (surface.FirstUParameter() + surface.LastUParameter()) / 2.,
+                    (surface.FirstVParameter() + surface.LastVParameter()) / 2.
+        );
+    }
+    else {
+        TopLoc_Location loc;
+        const Handle_Poly_Triangulation& triangulation = BRep_Tool::Triangulation(face, loc);
+        throwErrorIf<ErrorCode::NotGeometricOrTriangulationFace>(triangulation.IsNull());
+        areaResult.value = MeshUtils::triangulationArea(triangulation) * Quantity_SquareMillimeter;
+
+        for (int i = 1; i <= triangulation->NbNodes(); ++i) {
+            const gp_Pnt node = triangulation->Node(i).Transformed(loc);
+            areaResult.middlePnt.Translate(node.XYZ());
+        }
+
+        areaResult.middlePnt.ChangeCoord().Divide(triangulation->NbNodes());
+    }
+
+    return areaResult;
 }
 
 } // namespace Mayo

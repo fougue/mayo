@@ -45,6 +45,7 @@
 #include <GCPnts_TangentialDeflection.hxx>
 #include <Interface_ParamType.hxx>
 #include <Interface_Static.hxx>
+#include <NCollection_String.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 
 #include <QtCore/QtDebug>
@@ -77,6 +78,35 @@ Q_DECLARE_METATYPE(std::string)
 Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 
 namespace Mayo {
+
+static std::optional<std::locale> findFrLocale()
+{
+    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
+        try {
+            return std::locale(name);
+        } catch (...) {
+            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
+        }
+
+        return {};
+    };
+
+    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
+    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
+#ifndef MAYO_OS_WINDOWS
+    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
+    frLocaleNames.push_back("fr_FR.utf8");
+#endif
+    frLocaleNames.push_back("fr_FR");
+
+    std::optional<std::locale> frLocale;
+    for (const char* localeName : frLocaleNames) {
+        if (!frLocale)
+            frLocale = fnGetLocale(localeName);
+    }
+
+    return frLocale;
+}
 
 // For the sake of QCOMPARE()
 static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
@@ -256,6 +286,36 @@ void TestBase::FilePath_test()
     }
 }
 
+void TestBase::PropertyValueConversionVariant_doubleToInt_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QFETCH(double, doubleValue);
+    QFETCH(bool, ok);
+
+    const Variant dvar(doubleValue);
+    bool okActual = false;
+    const int asIntValue = dvar.toInt(&okActual);
+    if (ok) {
+        QCOMPARE(asIntValue, std::floor(doubleValue));
+    } else {
+        QCOMPARE(asIntValue, 0);
+    }
+
+    QCOMPARE(okActual, ok);
+}
+
+void TestBase::PropertyValueConversionVariant_doubleToInt_test_data()
+{
+    QTest::addColumn<double>("doubleValue");
+    QTest::addColumn<bool>("ok");
+    QTest::newRow("50.25") << 50.25 << true;
+    QTest::newRow("-50.25") << -50.25 << true;
+    QTest::newRow("INT_MAX+1") << (double(INT_MAX) + 1.) << false;
+    QTest::newRow("INT_MIN-1") << (double(INT_MIN) - 1.) << false;
+    QTest::newRow("INT_MAX") << double(INT_MAX) << true;
+    QTest::newRow("INT_MIN") << double(INT_MIN) << true;
+}
+
 void TestBase::PropertyValueConversion_test()
 {
     QFETCH(QString, strPropertyName);
@@ -281,6 +341,9 @@ void TestBase::PropertyValueConversion_test()
         enum class MayoTest_Color { Bleu, Blanc, Rouge };
         prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
     }
+    else if (strPropertyName == PropertyFilePath::TypeName) {
+        prop.reset(new PropertyFilePath(nullptr, {}));
+    }
 
     QVERIFY(prop);
 
@@ -305,6 +368,18 @@ void TestBase::PropertyValueConversion_test_data()
     QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << Variant("#FFFFFF");
     QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << Variant("#BB0000");
     QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
+}
+
+void TestBase::PropertyValueConversion_bugGitHub219_test()
+{
+    const std::string strPath = "c:\\é_à_À_œ_ç";
+    PropertyValueConversion conv;
+    PropertyFilePath propFilePath(nullptr, {});
+    const bool ok = conv.fromVariant(&propFilePath, strPath);
+    QVERIFY(ok);
+    //qDebug() << "strPath:" << QByteArray::fromStdString(strPath);
+    //qDebug() << "propFilePath:" << QByteArray::fromStdString(propFilePath.value().u8string());
+    QCOMPARE(propFilePath.value().u8string(), strPath);
 }
 
 void TestBase::PropertyQuantityValueConversion_test()
@@ -524,30 +599,7 @@ void TestBase::IO_bugGitHub166_test_data()
 
 void TestBase::DoubleToString_test()
 {
-    auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
-        try {
-            return std::locale(name);
-        } catch (...) {
-            qWarning().noquote() << QString("Locale '%1' not available").arg(name);
-        }
-
-        return {};
-    };
-
-    // Tests with "fr_FR" locale which is likely to be Windows-1252 or ISO8859-1 on Unix
-    std::vector<const char*> frLocaleNames = { "fr_FR.ISO8859-15", "fr_FR.ISO-8859-15" };
-#ifndef MAYO_OS_WINDOWS
-    // No native utf8 support on Windows(or requires Windows 10 november 2019 update)
-    frLocaleNames.push_back("fr_FR.utf8");
-#endif
-    frLocaleNames.push_back("fr_FR");
-
-    std::optional<std::locale> frLocale;
-    for (const char* localeName : frLocaleNames) {
-        if (!frLocale)
-            frLocale = fnGetLocale(localeName);
-    }
-
+    std::optional<std::locale> frLocale = findFrLocale();
     if (frLocale) {
         qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
         // 1258.
@@ -577,6 +629,16 @@ void TestBase::DoubleToString_test()
     QCOMPARE(to_stdString(0.5578).locale(cLocale).decimalCount(6).removeTrailingZeroes(false).get(), "0.557800");
     QCOMPARE(to_stdString(0.0).locale(cLocale).decimalCount(6).get(), "0");
     QCOMPARE(to_stdString(-45.6789).locale(cLocale).decimalCount(6).get(), "-45.6789");
+}
+
+void TestBase::StringConv_test()
+{
+    std::optional<std::locale> frLocale = findFrLocale();
+    if (frLocale) {
+        const std::string stdStr = to_stdString(14758.5).locale(frLocale.value());
+        const auto occExtStr = to_OccExtString(stdStr);
+        QCOMPARE(stdStr, to_stdString(occExtStr));
+    }
 }
 
 void TestBase::BRepUtils_test()
@@ -687,7 +749,7 @@ void TestBase::Enumeration_test()
     Enumeration baseEnum = Enumeration::fromType<TestEnumType>();
     QVERIFY(!baseEnum.empty());
     QCOMPARE(baseEnum.size(), MetaEnum::count<TestEnumType>());
-    QCOMPARE(baseEnum.items().size(), baseEnum.size());
+    QCOMPARE(baseEnum.items().size(), static_cast<unsigned>(baseEnum.size()));
     for (const auto& enumEntry : MetaEnum::entries<TestEnumType>()) {
         QVERIFY(baseEnum.contains(enumEntry.second));
         QCOMPARE(baseEnum.findValueByName(enumEntry.second), int(enumEntry.first));
@@ -767,8 +829,11 @@ void TestBase::MeshUtils_test()
                 for (int i = 1; i <= polyTri->NbTriangles(); ++i) {
                     int n1, n2, n3;
                     polyTri->Triangle(i).Get(n1, n2, n3);
-                    polyTriBox->ChangeTriangle(idTriangleOffset + i).Set(
-                                idNodeOffset + n1, idNodeOffset + n2, idNodeOffset + n3);
+                    MeshUtils::setTriangle(
+                        polyTriBox,
+                        idTriangleOffset + i,
+                        { idNodeOffset + n1, idNodeOffset + n2, idNodeOffset + n3 }
+                    );
                 }
 
                 idNodeOffset += polyTri->NbNodes();
@@ -899,9 +964,9 @@ void TestBase::UnitSystem_test_data()
     QTest::newRow("time(5s)")
             << UnitSystem::milliseconds(5 * Quantity_Second)
             << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
-    QTest::newRow("time(5s)")
-            << UnitSystem::milliseconds(5 * Quantity_Second)
-            << UnitSystem::TranslateResult{ 5000., "ms", Quantity_Millisecond.value() };
+    QTest::newRow("time(2min)")
+            << UnitSystem::milliseconds(2 * Quantity_Minute)
+            << UnitSystem::TranslateResult{ 2 * 60 * 1000., "ms", Quantity_Millisecond.value() };
 }
 
 void TestBase::LibTask_test()
@@ -1002,6 +1067,21 @@ void TestBase::LibTree_test()
         std::sort(vecTreeNodeIdVisited.begin(), vecTreeNodeIdVisited.end());
         QCOMPARE(vecTreeNodeIdVisited, vecTreeNodeId);
     }
+}
+
+void TestBase::Span_test()
+{
+    const std::vector<std::string> vecString = { "first", "second", "third", "fourth", "fifth" };
+    const std::string& item0 = vecString.at(0);
+    const std::string& item1 = vecString.at(1);
+    const std::string& item2 = vecString.at(2);
+    const std::string& item3 = vecString.at(3);
+    const std::string& item4 = vecString.at(4);
+    QCOMPARE(Span_itemIndex(vecString, item0), 0);
+    QCOMPARE(Span_itemIndex(vecString, item1), 1);
+    QCOMPARE(Span_itemIndex(vecString, item2), 2);
+    QCOMPARE(Span_itemIndex(vecString, item3), 3);
+    QCOMPARE(Span_itemIndex(vecString, item4), 4);
 }
 
 void TestBase::initTestCase()

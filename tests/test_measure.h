@@ -6,6 +6,9 @@
 
 #pragma once
 
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#  define _USE_MATH_DEFINES // Fix M_E, M_PI, ... macro redefinitions with qmath.h
+#endif
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 
@@ -28,6 +31,8 @@ private slots:
     void BRepAngle_TwoLinesParallelError_test();
 
     void BRepLength_PolygonEdge_test();
+
+    void BRepArea_TriangulationFace();
 };
 
 } // namespace Mayo

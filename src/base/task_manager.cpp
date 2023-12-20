@@ -6,18 +6,58 @@
 
 #include "task_manager.h"
 
-#include "application.h"
 #include "cpp_utils.h"
 #include "math_utils.h"
 
+#include <atomic>
 #include <cassert>
+#include <cmath>
+#include <future>
+#include <memory>
+#include <unordered_map>
 
 namespace Mayo {
+
+// Helper struct providing all required data to manage a Task object
+struct TaskManager::Entity {
+    TaskId taskId;
+    TaskJob taskJob;
+    TaskProgress taskProgress;
+    std::string title;
+    std::future<void> control;
+    std::atomic<bool> isFinished = false;
+    TaskAutoDestroy autoDestroy = TaskAutoDestroy::On;
+};
+
+// Pimpl struct providing private(hidden) interface of TaskManager class
+struct TaskManager::Private {
+    // Ctor
+    Private(TaskManager* mgr) : taskMgr(mgr) {}
+
+    // Const/mutable functions to find an Entity from a task identifier. Returns null if not found
+    TaskManager::Entity* findEntity(TaskId id);
+    const TaskManager::Entity* findEntity(TaskId id) const;
+
+    // Execute(synchronous) task entity, sending started/ended signals accordingly
+    void execEntity(TaskManager::Entity* entity);
+
+    // Destroy finished task entities whose policy was set to TaskAutoDestroy::On
+    void cleanGarbage();
+
+    TaskManager* taskMgr = nullptr;
+    std::atomic<TaskId> taskIdSeq = {};
+    std::unordered_map<TaskId, std::unique_ptr<TaskManager::Entity>> mapEntity;
+};
+
+TaskManager::TaskManager()
+    : d(new Private(this))
+{
+}
 
 TaskManager::~TaskManager()
 {
     // Make sure all tasks are really finished
-    for (const auto& mapPair : m_mapEntity) {
+    for (const auto& mapPair : d->mapEntity) {
         const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
         if (ptrEntity->control.valid())
             ptrEntity->control.wait();
@@ -25,49 +65,51 @@ TaskManager::~TaskManager()
 
     // Erase the task from its container before destruction, this will allow TaskProgress destructor
     // to behave correctly(it calls TaskProgress::setValue())
-    for (auto it = m_mapEntity.begin(); it != m_mapEntity.end(); )
-        it = m_mapEntity.erase(it);
+    for (auto it = d->mapEntity.begin(); it != d->mapEntity.end(); )
+        it = d->mapEntity.erase(it);
+
+    delete d;
 }
 
 TaskId TaskManager::newTask(TaskJob fn)
 {
-    const TaskId taskId = m_taskIdSeq.fetch_add(1);
+    const TaskId taskId = d->taskIdSeq.fetch_add(1);
     std::unique_ptr<Entity> ptrEntity(new Entity);
-    ptrEntity->task.m_id = taskId;
-    ptrEntity->task.m_fn = std::move(fn);
-    ptrEntity->task.m_manager = this;
-    ptrEntity->taskProgress.setTask(&ptrEntity->task);
-    m_mapEntity.insert({ taskId, std::move(ptrEntity) });
+    ptrEntity->taskId = taskId;
+    ptrEntity->taskJob = std::move(fn);
+    ptrEntity->taskProgress.setTaskId(taskId);
+    ptrEntity->taskProgress.setTaskManager(this);
+    d->mapEntity.insert({ taskId, std::move(ptrEntity) });
     return taskId;
 }
 
 void TaskManager::run(TaskId id, TaskAutoDestroy policy)
 {
-    this->cleanGarbage();
-    Entity* entity = this->findEntity(id);
+    d->cleanGarbage();
+    Entity* entity = d->findEntity(id);
     if (!entity)
         return;
 
     entity->isFinished = false;
     entity->autoDestroy = policy;
-    entity->control = std::async([=]{ this->execEntity(entity); });
+    entity->control = std::async([=]{ d->execEntity(entity); });
 }
 
 void TaskManager::exec(TaskId id, TaskAutoDestroy policy)
 {
-    this->cleanGarbage();
-    Entity* entity = this->findEntity(id);
+    d->cleanGarbage();
+    Entity* entity = d->findEntity(id);
     if (!entity)
         return;
 
     entity->isFinished = false;
     entity->autoDestroy = policy;
-    this->execEntity(entity);
+    d->execEntity(entity);
 }
 
 bool TaskManager::waitForDone(TaskId id, int msecs)
 {
-    Entity* entity = this->findEntity(id);
+    Entity* entity = d->findEntity(id);
     if (!entity)
         return true;
 
@@ -84,82 +126,88 @@ bool TaskManager::waitForDone(TaskId id, int msecs)
 
 void TaskManager::requestAbort(TaskId id)
 {
-    Entity* entity = this->findEntity(id);
+    Entity* entity = d->findEntity(id);
     if (entity) {
         this->signalAbortRequested.send(id);
         entity->taskProgress.requestAbort();
     }
 }
 
+void TaskManager::foreachTask(const std::function<void(TaskId)>& fn)
+{
+    for (const auto& mapPair : d->mapEntity)
+        fn(mapPair.first);
+}
+
 int TaskManager::progress(TaskId id) const
 {
-    const Entity* entity = this->findEntity(id);
+    const Entity* entity = d->findEntity(id);
     return entity ? entity->taskProgress.value() : 0;
 }
 
 int TaskManager::globalProgress() const
 {
     int taskAccumPct = 0;
-    for (const auto& mapPair : m_mapEntity) {
+    for (const auto& mapPair : d->mapEntity) {
         const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
         if (ptrEntity->taskProgress.value() > 0)
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    return MathUtils::toPercent(taskAccumPct, 0, m_mapEntity.size() * 100);
-    //qDebug() << "taskCount=" << taskCount << " taskAccumPct=" << taskAccumPct << " newGlobalPct=" << newGlobalPct;
+    const auto pct = MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
+    return std::lround(pct);
 }
 
 const std::string& TaskManager::title(TaskId id) const
 {
-    const Entity* entity = this->findEntity(id);
+    const Entity* entity = d->findEntity(id);
     return entity ? entity->title : CppUtils::nullString();
 }
 
 void TaskManager::setTitle(TaskId id, std::string_view title)
 {
-    Entity* entity = this->findEntity(id);
+    Entity* entity = d->findEntity(id);
     if (entity)
         entity->title = title;
 }
 
-TaskManager::Entity* TaskManager::findEntity(TaskId id)
+TaskManager::Entity* TaskManager::Private::findEntity(TaskId id)
 {
-    auto it = m_mapEntity.find(id);
-    return it != m_mapEntity.end() ? it->second.get() : nullptr;
+    auto it = this->mapEntity.find(id);
+    return it != this->mapEntity.end() ? it->second.get() : nullptr;
 }
 
-const TaskManager::Entity* TaskManager::findEntity(TaskId id) const
+const TaskManager::Entity* TaskManager::Private::findEntity(TaskId id) const
 {
-    auto it = m_mapEntity.find(id);
-    return it != m_mapEntity.cend() ? it->second.get() : nullptr;
+    auto it = this->mapEntity.find(id);
+    return it != this->mapEntity.cend() ? it->second.get() : nullptr;
 }
 
-void TaskManager::execEntity(Entity* entity)
+void TaskManager::Private::execEntity(Entity* entity)
 {
     if (!entity)
         return;
 
-    this->signalStarted.send(entity->task.id());
-    const TaskJob& fn = entity->task.job();
+    this->taskMgr->signalStarted.send(entity->taskId);
+    const TaskJob& fn = entity->taskJob;
     fn(&entity->taskProgress);
     if (!entity->taskProgress.isAbortRequested())
         entity->taskProgress.setValue(100);
 
-    this->signalEnded.send(entity->task.id());
+    this->taskMgr->signalEnded.send(entity->taskId);
     entity->isFinished = true;
 }
 
-void TaskManager::cleanGarbage()
+void TaskManager::Private::cleanGarbage()
 {
-    auto it = m_mapEntity.begin();
-    while (it != m_mapEntity.end()) {
+    auto it = this->mapEntity.begin();
+    while (it != this->mapEntity.end()) {
         Entity* entity = it->second.get();
         if (entity->isFinished && entity->autoDestroy == TaskAutoDestroy::On) {
             if (entity->control.valid())
                 entity->control.wait();
 
-            it = m_mapEntity.erase(it);
+            it = this->mapEntity.erase(it);
         }
         else {
             ++it;

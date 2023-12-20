@@ -1,6 +1,5 @@
 build-*
 *.user
 *.user.*
-installer/setupvars.iss
-installer/Output
 custom.pri
+env.pri

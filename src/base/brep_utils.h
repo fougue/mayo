@@ -8,7 +8,9 @@
 
 #include "occ_brep_mesh_parameters.h"
 
+#include <Poly_Polygon3D.hxx>
 #include <Poly_Triangulation.hxx>
+#include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -22,6 +24,12 @@ class TaskProgress;
 struct BRepUtils {
     // Creates a valid and empty TopoDS_Compound shape
     static TopoDS_Compound makeEmptyCompound();
+
+    // Adds 'shape' in target shape 'ptrTargetShape'
+    static void addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape);
+
+    // Creates a non-geometric TopoDS_Edge wrapping 'polygon'
+    static TopoDS_Edge makeEdge(const Handle(Poly_Polygon3D)& polygon);
 
     // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
     static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);
@@ -52,6 +60,9 @@ struct BRepUtils {
 
     // Deserializes string 'str' obtained from 'shapeToToString()' into a shape object
     static TopoDS_Shape shapeFromString(const std::string& str);
+
+    // Does 'edge' rely on 3D curve of curve on surface?
+    static bool isGeometric(const TopoDS_Edge& edge);
 
     // Does 'face' rely on a geometric surface?
     static bool isGeometric(const TopoDS_Face& face);

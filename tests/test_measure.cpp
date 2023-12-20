@@ -6,8 +6,11 @@
 
 #include "test_measure.h"
 
+#include "../src/base/application.h"
 #include "../src/base/geom_utils.h"
+#include "../src/base/task_progress.h"
 #include "../src/base/unit_system.h"
+#include "../src/io_occ/io_occ_stl.h"
 #include "../src/measure/measure_tool_brep.h"
 
 #include <BRep_Builder.hxx>
@@ -123,7 +126,7 @@ void TestMeasure::BRepMinDistance_TwoPoints_test()
     const gp_Pnt pnt2{ -57.4, 4487.56, 1.8 };
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeVertex(pnt1);
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeVertex(pnt2);
-    const MeasureMinDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
+    const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
     QVERIFY(minDist.pnt1.IsEqual(pnt1, Precision::Confusion()));
     QVERIFY(minDist.pnt2.IsEqual(pnt2, Precision::Confusion()));
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, pnt1.Distance(pnt2));
@@ -137,7 +140,7 @@ void TestMeasure::BRepMinDistance_TwoBoxes_test()
     const gp_Pnt box2_max{ 55, 7, 7 };
     const TopoDS_Shape shape1 = BRepPrimAPI_MakeBox(box1_min, box1_max);
     const TopoDS_Shape shape2 = BRepPrimAPI_MakeBox(box2_min, box2_max);
-    const MeasureMinDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
+    const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, std::abs(box1_max.X() - box2_min.X()));
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, minDist.pnt1.Distance(minDist.pnt2));
 }
@@ -167,8 +170,23 @@ void TestMeasure::BRepLength_PolygonEdge_test()
     points.ChangeValue(4) = gp_Pnt{7, 10, 5};
     points.ChangeValue(5) = gp_Pnt{7, 12, 5};
     const TopoDS_Edge edge = makePolygonEdge(points);
-    const QuantityLength len = MeasureToolBRep::brepLength(edge);
-    QCOMPARE(UnitSystem::millimeters(len).value, 24.);
+    const MeasureLength len = MeasureToolBRep::brepLength(edge);
+    QCOMPARE(UnitSystem::millimeters(len.value).value, 24.);
+}
+
+void TestMeasure::BRepArea_TriangulationFace()
+{
+    auto progress = &TaskProgress::null();
+    IO::OccStlReader reader;
+    const bool okRead = reader.readFile("tests/inputs/face_trsf_scale_almost_1.stl", progress);
+    QVERIFY(okRead);
+
+    auto doc = Application::instance()->newDocument();
+    const TDF_LabelSequence seqLabel = reader.transfer(doc, progress);
+    QCOMPARE(seqLabel.Size(), 1);
+    const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
+    const MeasureArea area = MeasureToolBRep::brepArea(shape);
+    QVERIFY(std::abs(double(UnitSystem::squareMillimeters(area.value)) - 597.6224) < 0.0001);
 }
 
 } // namespace Mayo

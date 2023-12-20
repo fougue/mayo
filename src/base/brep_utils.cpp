@@ -24,10 +24,25 @@ namespace Mayo {
 
 TopoDS_Compound BRepUtils::makeEmptyCompound()
 {
-    BRep_Builder builder;
+    TopoDS_Builder builder;
     TopoDS_Compound comp;
     builder.MakeCompound(comp);
     return comp;
+}
+
+void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape)
+{
+    TopoDS_Builder builder;
+    builder.Add(*ptrTargetShape, shape);
+}
+
+TopoDS_Edge BRepUtils::makeEdge(const Handle(Poly_Polygon3D)& polygon)
+{
+    TopoDS_Edge edge;
+    BRep_Builder builder;
+    builder.MakeEdge(edge);
+    builder.UpdateEdge(edge, polygon);
+    return edge;
 }
 
 TopoDS_Face BRepUtils::makeFace(const Handle(Poly_Triangulation)& mesh)
@@ -63,6 +78,11 @@ TopoDS_Shape BRepUtils::shapeFromString(const std::string& str)
     std::istringstream iss(str, std::ios_base::in);
     BRepTools::Read(shape, iss, brepBuilder);
     return shape;
+}
+
+bool Mayo::BRepUtils::isGeometric(const TopoDS_Edge &edge)
+{
+    return BRep_Tool::IsGeometric(edge);
 }
 
 bool BRepUtils::isGeometric(const TopoDS_Face& face)

@@ -37,6 +37,8 @@ MeasureValue IMeasureTool_computeValue(
     switch (type) {
     case MeasureType::MinDistance:
         return tool.minDistance(owner1, owner2);
+    case MeasureType::CenterDistance:
+        return tool.centerDistance(owner1, owner2);
     case MeasureType::Angle:
         return tool.angle(owner1, owner2);
     default:

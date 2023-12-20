@@ -25,6 +25,7 @@ class Message_ProgressIndicator;
 
 namespace Mayo {
 
+// Provides helper functions for OpenCascade TKernel library
 class TKernelUtils {
 public:
     template<typename TransientType>

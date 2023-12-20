@@ -7,6 +7,7 @@
 #include "property_value_conversion.h"
 
 #include "cpp_utils.h"
+#include "filepath_conv.h"
 #include "math_utils.h"
 #include "property_builtins.h"
 #include "property_enumeration.h"
@@ -32,18 +33,18 @@ namespace {
 static std::string toString(double value, int prec = 6)
 {
 #if __cpp_lib_to_chars
-        char buff[64] = {};
-        auto toCharsFormat = std::chars_format::general;
-        auto resToChars = std::to_chars(std::begin(buff), std::end(buff), value, toCharsFormat, prec);
-        if (resToChars.ec != std::errc())
-            throw std::runtime_error("value_too_large");
+    char buff[64] = {};
+    auto toCharsFormat = std::chars_format::general;
+    auto resToChars = std::to_chars(std::begin(buff), std::end(buff), value, toCharsFormat, prec);
+    if (resToChars.ec != std::errc())
+        throw std::runtime_error("value_too_large");
 
-        return std::string(buff, resToChars.ptr - buff);
+    return std::string(buff, resToChars.ptr - buff);
 #else
-        std::stringstream sstr;
-        sstr.precision(prec);
-        sstr << value;
-        return sstr.str();
+    std::stringstream sstr;
+    sstr.precision(prec);
+    sstr << value;
+    return sstr.str();
 #endif
 }
 
@@ -205,8 +206,11 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
         return fnError("Variant not convertible to string");
     }
     else if (isType<PropertyFilePath>(prop)) {
+        // Note: explicit conversion from utf8 std::string to std::filesystem::path
+        //       If character type of the source string is "char" then FilePath constructor assumes
+        //       native narrow encoding(which might cause encoding issues)
         if (variant.isConvertibleToConstRefString())
-            return ptr<PropertyFilePath>(prop)->setValue(variant.toConstRefString());
+            return ptr<PropertyFilePath>(prop)->setValue(filepathFrom(variant.toConstRefString()));
         else
             return fnError("Variant expected to hold string");
     }
@@ -300,12 +304,17 @@ bool PropertyValueConversion::Variant::toBool(bool* ok) const
 int PropertyValueConversion::Variant::toInt(bool* ok) const
 {
     assignBoolPtr(ok, true);
-    if (std::holds_alternative<int>(*this))
+    if (std::holds_alternative<int>(*this)) {
         return std::get<int>(*this);
-    else if (std::holds_alternative<double>(*this))
-        return std::get<double>(*this);
-    else if (std::holds_alternative<std::string>(*this))
+    }
+    else if (std::holds_alternative<double>(*this)) {
+        auto dval = std::floor(std::get<double>(*this));
+        if (std::isgreaterequal(dval, INT_MIN) && std::islessequal(dval, INT_MAX))
+            return static_cast<int>(dval);
+    }
+    else if (std::holds_alternative<std::string>(*this)) {
         return std::stoi(std::get<std::string>(*this));
+    }
 
     assignBoolPtr(ok, false);
     return 0;

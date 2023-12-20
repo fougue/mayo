@@ -3,30 +3,28 @@
 // This program is released under the BSD license. See the file COPYING for details.
 // modified 2018 wandererfan
 
-// MAYO: file initially taken from FreeCad/src/Mod/Import/App/dxf.h -- commit #47d5707
+// MAYO: file taken from FreeCad/src/Mod/Import/App/dxf.h -- commit #55292e9
 
 #pragma once
 
 #include <algorithm>
-#include <list>
-#include <vector>
-#include <map>
-#include <set>
-#include <fstream>
-#include <sstream>
-#include <iosfwd>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <cmath>
+#include <fstream>
+#include <iosfwd>
+#include <list>
+#include <optional>
+#include <unordered_map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "freecad.h"
 
-//Following is required to be defined on Ubuntu with OCC 6.3.1
-#ifndef HAVE_IOSTREAM
-#define HAVE_IOSTREAM
-#endif
-
-typedef int Aci_t; // AutoCAD color index
+typedef int ColorIndex_t;  // DXF color index
 
 typedef enum
 {
@@ -53,11 +51,233 @@ typedef enum
     eParsecs
 } eDxfUnits_t;
 
+struct DxfCoords {
+    double x;
+    double y;
+    double z;
+};
+
+struct DxfScale {
+    double x;
+    double y;
+    double z;
+};
+
+struct Dxf_STYLE {
+    // Code: 2
+    std::string name;
+    // Code: 40
+    double fixedTextHeight = 0;
+    // Code: 41
+    double widthFactor = 1.;
+    // Code: 50
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double obliqueAngle = 0.;
+    // Code: 3
+    std::string primaryFontFileName;
+    // Code: 4
+    std::string bigFontFileName;
+
+    // TODO Code 70(standard flag values)
+    // TODO Code 71(text generation flags)
+    // TODO Code 42(last height used)
+};
+
+struct Dxf_TEXT {
+    // Code: 39
+    double thickness = 0.;
+    // Code: 10, 20, 30
+    DxfCoords firstAlignmentPoint = {};
+    // Code: 40
+    double height = 0.;
+    // Code: 1
+    std::string str;
+    // Code: 50
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double rotationAngle = 0.;
+    // Code: 41
+    // "This value is also adjusted when fit-type text is used"
+    double relativeXScaleFactorWidth = 1.;
+    // Code: 51
+    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
+    // states that codes 50-58 are in degrees
+    double obliqueAngle = 0.;
+    // Code: 7
+    std::string styleName;
+
+    // TODO Code 71(text generation flags)
+
+    enum class HorizontalJustification {
+        Left = 0, Center = 1, Right = 2, Aligned = 3, Middle = 4, Fit = 5
+    };
+    // Code: 72
+    HorizontalJustification horizontalJustification = HorizontalJustification::Left;
+    // Code: 11, 21, 31
+    DxfCoords secondAlignmentPoint = {};
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = {0., 0., 1.};
+
+    enum class VerticalJustification {
+        Baseline = 0, Bottom = 1, Middle = 2, Top = 3
+    };
+    // Code: 73
+    VerticalJustification verticalJustification = VerticalJustification::Baseline;
+};
+
+struct Dxf_MTEXT {
+    enum class AttachmentPoint {
+        TopLeft = 1, TopCenter,    TopRight,
+        MiddleLeft,  MiddleCenter, MiddleRight,
+        BottomLeft,  BottomCenter, BottomRight
+    };
+
+    // Code: 10, 20, 30
+    DxfCoords insertionPoint = {};
+    // Code: 40
+    double height = 0.;
+    // Code: 41
+    double referenceRectangleWidth = 0;
+    // Code 71
+    AttachmentPoint attachmentPoint = AttachmentPoint::TopLeft;
+
+    // TODO Code 72(drawing direction)
+
+    // Code: 1, 3
+    std::string str;
+
+    // TODO Code 7(text sytle name)
+
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = {0., 0., 1.};
+
+    // Code: 11, 21, 31
+    DxfCoords xAxisDirection = {1., 0., 0.}; // WCS
+
+    // NOTE AutoCad documentation states that codes 42, 43 are "read-only, ignored if supplied"
+
+    double rotationAngle = 0.; // radians(AutoCad documentation)
+
+    // TODO Code 73(line spacing style)
+    // TODO Code 44(line spacing factor)
+    // TODO Code 90(background fill setting)
+    // TODO Code 420-429(background color, if RGB)
+    // TODO Code 430-439(background color, if name)
+    // TODO Code 45(fill box scale)
+    // TODO Code 63(background fill color)
+    // TODO Code 441(transparency of background fill color)
+    // TODO Codes for columns: 75, 76, 78, 79, 48, 49, 50
+
+    enum class ColumnType { None = 0, Static, Dynamic };
+    bool acadHasColumnInfo = false;
+    ColumnType acadColumnInfo_Type = ColumnType::None;
+    bool acadColumnInfo_AutoHeight = false;
+    int acadColumnInfo_Count = 0;
+    bool acadColumnInfo_FlowReversed = false;
+    double acadColumnInfo_Width = 0.;
+    double acadColumnInfo_GutterWidth = 0.;
+
+    bool acadHasDefinedHeight = false;
+    double acadDefinedHeight = 0.;
+
+};
+
+struct Dxf_VERTEX {
+    enum class Bulge { StraightSegment = 0, SemiCircle = 1 };
+    enum Flag {
+        None = 0,
+        ExtraVertex = 1,
+        CurveFitTangent = 2,
+        NotUsed = 4,
+        SplineVertex = 8,
+        SplineFrameControlPoint = 16,
+        Polyline3dVertex = 32,
+        Polygon3dVertex = 64,
+        PolyfaceMesgVertex = 128
+    };
+    using Flags = unsigned;
+
+    DxfCoords point = {};
+    Bulge bulge = Bulge::StraightSegment;
+    Flags flags = Flag::None;
+};
+
+struct Dxf_POLYLINE {
+    enum Flag {
+        None = 0,
+        Closed = 1,
+        CurveFit = 2,
+        SplineFit = 4,
+        Polyline3d = 8,
+        PolygonMesh3d = 16,
+        PolygonMeshClosedNDir = 32,
+        PolyfaceMesh = 64,
+        ContinuousLinetypePattern = 128
+    };
+    using Flags = unsigned;
+
+    enum Type {
+        NoSmoothSurfaceFitted = 0,
+        QuadraticBSplineSurface = 5,
+        CubicBSplineSurface = 6,
+        BezierSurface = 8
+    };
+
+    double elevation = 0.;
+    double thickness = 0.;
+    Flags flags = Flag::None;
+    double defaultStartWidth = 0.;
+    double defaultEndWidth = 0.;
+    int polygonMeshMVertexCount = 0;
+    int polygonMeshNVertexCount = 0;
+    double smoothSurfaceMDensity = 0.;
+    double smoothSurfaceNDensity = 0.;
+    double extrusionDir[3] = { 0., 0., 1. };
+    std::vector<Dxf_VERTEX> vertices;
+};
+
+struct Dxf_INSERT {
+    // Code: 2
+    std::string blockName;
+    // Code: 10, 20, 30
+    DxfCoords insertPoint = {}; // OCS
+    // Code: 41, 42, 43
+    DxfScale scaleFactor = { 1., 1., 1. };
+    // Code: 50
+    double rotationAngle = 0.;
+    // Code: 70
+    int columnCount = 1;
+    // Code: 71
+    int rowCount = 1;
+    // Code: 44
+    double columnSpacing = 0.;
+    // Code: 45
+    double rowSpacing = 0.;
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = { 0., 0., 1. };
+};
+
+struct Dxf_SOLID {
+    // Code: 10, 20, 30
+    DxfCoords corner1;
+    // Code: 11, 21, 31
+    DxfCoords corner2;
+    // Code: 12, 22, 32
+    DxfCoords corner3;
+    // Code: 13, 23, 33
+    DxfCoords corner4;
+    bool hasCorner4 = false;
+    // Code: 39
+    double thickness = 0.;
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = { 0., 0., 1. };
+};
 
 //spline data for reading
 struct SplineData
 {
-    double norm[3];
+    DxfCoords norm;
     int degree;
     int knots;
     int control_points;
@@ -118,9 +338,26 @@ struct LWPolyDataOut
     std::vector<double> Bulge;
     point3D Extr;
 };
+typedef enum
+{
+    RUnknown,
+    ROlder,
+    R10,
+    R11_12,
+    R13,
+    R14,
+    R2000,
+    R2004,
+    R2007,
+    R2010,
+    R2013,
+    R2018,
+    RNewer,
+} eDXFVersion_t;
 //********************
 
-class CDxfWrite{
+class CDxfWrite
+{
 private:
     std::ofstream m_ofs;
     bool m_fail;
@@ -130,29 +367,45 @@ private:
     std::ostringstream m_ssLayer;
 
 protected:
-    void putLine(const Base::Vector3d& s, const Base::Vector3d& e,
-                 std::ostringstream& outStream, const std::string& handle,
+    void putLine(const Base::Vector3d& s,
+                 const Base::Vector3d& e,
+                 std::ostringstream& outStream,
+                 const std::string& handle,
                  const std::string& ownerHandle);
-    void putText(const char* text, const Base::Vector3d& location1, const Base::Vector3d& location2,
-                 const double height, const int horizJust,
-                 std::ostringstream& outStream, const std::string& handle,
+    void putText(const char* text,
+                 const Base::Vector3d& location1,
+                 const Base::Vector3d& location2,
+                 const double height,
+                 const int horizJust,
+                 std::ostringstream& outStream,
+                 const std::string& handle,
                  const std::string& ownerHandle);
-    void putArrow(const Base::Vector3d& arrowPos, const Base::Vector3d& barb1Pos, const Base::Vector3d& barb2Pos,
-                  std::ostringstream& outStream, const std::string& handle,
+    void putArrow(const Base::Vector3d& arrowPos,
+                  const Base::Vector3d& barb1Pos,
+                  const Base::Vector3d& barb2Pos,
+                  std::ostringstream& outStream,
+                  const std::string& handle,
                   const std::string& ownerHandle);
 
     //! copy boiler plate file
     std::string getPlateFile(const std::string& fileSpec);
-    void setDataDir(const std::string& s) { m_dataDir = s; }
-    std::string getHandle(void);
-    std::string getEntityHandle(void);
-    std::string getLayerHandle(void);
-    std::string getBlockHandle(void);
-    std::string getBlkRecordHandle(void);
+    void setDataDir(const std::string& s)
+    {
+        m_dataDir = s;
+    }
+    std::string getHandle();
+    std::string getEntityHandle();
+    std::string getLayerHandle();
+    std::string getBlockHandle();
+    std::string getBlkRecordHandle();
 
     std::string m_optionSource;
     int m_version;
     int m_handle;
+    int m_entityHandle;
+    int m_layerHandle;
+    int m_blockHandle;
+    int m_blkRecordHandle;
     bool m_polyOverride;
     
     std::string m_saveModelSpaceHandle;
@@ -170,94 +423,165 @@ public:
     CDxfWrite(const char* filepath);
     ~CDxfWrite();
     
-    void init(void);
-    void endRun(void);
+    void init();
+    void endRun();
 
-    bool Failed(){return m_fail;}
+    bool Failed()
+    {
+        return m_fail;
+    }
 //    void setOptions(void);
 //    bool isVersionValid(int vers);
-    std::string getLayerName() { return m_layerName; }
+    std::string getLayerName()
+    {
+        return m_layerName;
+    }
     void setLayerName(std::string s);
-    void setVersion(int v) { m_version = v;}
-    void setPolyOverride(bool b) { m_polyOverride = b; }
+    void setVersion(int v)
+    {
+        m_version = v;
+    }
+    void setPolyOverride(bool b)
+    {
+        m_polyOverride = b;
+    }
     void addBlockName(std::string s, std::string blkRecordHandle);
 
     void writeLine(const double* s, const double* e);
     void writePoint(const double*);
     void writeArc(const double* s, const double* e, const double* c, bool dir);
-    void writeEllipse(const double* c, double major_radius, double minor_radius, 
-                      double rotation, double start_angle, double end_angle, bool endIsCW);
+    void writeEllipse(const double* c,
+                      double major_radius,
+                      double minor_radius,
+                      double rotation,
+                      double start_angle,
+                      double end_angle,
+                      bool endIsCW);
     void writeCircle(const double* c, double radius );
-    void writeSpline(const SplineDataOut &sd);
-    void writeLWPolyLine(const LWPolyDataOut &pd);
-    void writePolyline(const LWPolyDataOut &pd);
+    void writeSpline(const SplineDataOut& sd);
+    void writeLWPolyLine(const LWPolyDataOut& pd);
+    void writePolyline(const LWPolyDataOut& pd);
     void writeVertex(double x, double y, double z);
-    void writeText(const char* text, const double* location1, const double* location2,
-                   const double height, const int horizJust);
-    void writeLinearDim(const double* textMidPoint, const double* lineDefPoint,
-                  const double* extLine1, const double* extLine2,
-                  const char* dimText, int type);
-    void writeLinearDimBlock(const double* textMidPoint, const double* lineDefPoint,
-                  const double* extLine1, const double* extLine2,
-                  const char* dimText, int type);
-    void writeAngularDim(const double* textMidPoint, const double* lineDefPoint,
-                  const double* startExt1, const double* endExt1,
-                  const double* startExt2, const double* endExt2,
-                  const char* dimText);
-    void writeAngularDimBlock(const double* textMidPoint, const double* lineDefPoint,
-                         const double* startExt1, const double* endExt1,
-                         const double* startExt2, const double* endExt2,
+    void writeText(const char* text,
+                   const double* location1,
+                   const double* location2,
+                   const double height,
+                   const int horizJust);
+    void writeLinearDim(const double* textMidPoint,
+                        const double* lineDefPoint,
+                        const double* extLine1,
+                        const double* extLine2,
+                        const char* dimText,
+                        int type);
+    void writeLinearDimBlock(const double* textMidPoint,
+                             const double* lineDefPoint,
+                             const double* extLine1,
+                             const double* extLine2,
+                             const char* dimText,
+                             int type);
+    void writeAngularDim(const double* textMidPoint,
+                         const double* lineDefPoint,
+                         const double* startExt1,
+                         const double* endExt1,
+                         const double* startExt2,
+                         const double* endExt2,
                          const char* dimText);
-   void writeRadialDim(const double* centerPoint, const double* textMidPoint, 
-                         const double* arcPoint,
-                         const char* dimText);
-    void writeRadialDimBlock(const double* centerPoint, const double* textMidPoint, 
-                         const double* arcPoint, const char* dimText);
-    void writeDiametricDim(const double* textMidPoint, 
-                         const double* arcPoint1, const double* arcPoint2,
-                         const char* dimText);
-    void writeDiametricDimBlock(const double* textMidPoint, 
-                         const double* arcPoint1, const double* arcPoint2,
-                         const char* dimText);
+    void writeAngularDimBlock(const double* textMidPoint,
+                              const double* lineDefPoint,
+                              const double* startExt1,
+                              const double* endExt1,
+                              const double* startExt2,
+                              const double* endExt2,
+                              const char* dimText);
+   void writeRadialDim(const double* centerPoint,
+                       const double* textMidPoint,
+                       const double* arcPoint,
+                       const char* dimText);
+    void writeRadialDimBlock(const double* centerPoint,
+                            const double* textMidPoint,
+                            const double* arcPoint,
+                            const char* dimText);
+    void writeDiametricDim(const double* textMidPoint,
+                           const double* arcPoint1,
+                           const double* arcPoint2,
+                           const char* dimText);
+    void writeDiametricDimBlock(const double* textMidPoint,
+                                const double* arcPoint1,
+                                const double* arcPoint2,
+                                const char* dimText);
 
     void writeDimBlockPreamble();
-    void writeBlockTrailer(void);
+    void writeBlockTrailer();
 
-    void writeHeaderSection(void);
-    void writeTablesSection(void);
-    void writeBlocksSection(void);
-    void writeEntitiesSection(void);
-    void writeObjectsSection(void);
-    void writeClassesSection(void);
+    void writeHeaderSection();
+    void writeTablesSection();
+    void writeBlocksSection();
+    void writeEntitiesSection();
+    void writeObjectsSection();
+    void writeClassesSection();
 
-    void makeLayerTable(void);
-    void makeBlockRecordTableHead(void);
-    void makeBlockRecordTableBody(void);
-    void makeBlockSectionHead(void);
+    void makeLayerTable();
+    void makeBlockRecordTableHead();
+    void makeBlockRecordTableBody();
+    void makeBlockSectionHead();
 };
 
+namespace DxfPrivate {
+
+enum class StringToErrorMode { Throw = 0x1, ReturnErrorValue = 0x2 };
+
+double stringToDouble(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+int stringToInt(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+unsigned stringToUnsigned(
+    const std::string& line,
+    StringToErrorMode errorMode = StringToErrorMode::Throw
+);
+
+} // namespace DxfPrivate
+
 // derive a class from this and implement it's virtual functions
-class CDxfRead{
+class CDxfRead
+{
 private:
     std::ifstream m_ifs;
 
     bool m_fail;
-    char m_str[1024];
-    char m_unused_line[1024];
+    std::string m_str;
+    std::string m_unused_line;
     eDxfUnits_t m_eUnits;
     bool m_measurement_inch;
-    char m_layer_name[1024];
-    char m_section_name[1024];
-    char m_block_name[1024];
+    std::string m_layer_name;
+    std::string m_section_name;
+    std::string m_block_name;
     bool m_ignore_errors;
 
+    std::streamsize m_gcount = 0;
+    int m_line_nb = 0;
 
-    typedef std::map< std::string,Aci_t > LayerAciMap_t;
-    LayerAciMap_t m_layer_aci;  // layer names -> layer color aci map
+    // Mapping from layer name -> layer color index
+    std::unordered_map<std::string, ColorIndex_t> m_layer_ColorIndex_map;
+    const ColorIndex_t ColorBylayer = 256;
 
-    bool ReadUnits();
+    // Map styleName to Style object
+    std::unordered_map<std::string, Dxf_STYLE> m_mapStyle;
+
+    bool ReadInsUnits();
+    bool ReadMeasurement();
+    bool ReadAcadVer();
+    bool ReadDwgCodePage();
+
     bool ReadLayer();
+    bool ReadStyle();
     bool ReadLine();
+    bool ReadMText();
     bool ReadText();
     bool ReadArc();
     bool ReadCircle();
@@ -266,49 +590,124 @@ private:
     bool ReadSpline();
     bool ReadLwPolyLine();
     bool ReadPolyLine();
-    bool ReadVertex(double *pVertex, bool *bulge_found, double *bulge);
-    void OnReadArc(double start_angle, double end_angle, double radius, const double* c, double z_extrusion_dir, bool hidden);
-    void OnReadCircle(const double* c, double radius, bool hidden);
-    void OnReadEllipse(const double* c, const double* m, double ratio, double start_angle, double end_angle);
+    bool ReadVertex(Dxf_VERTEX* vertex);
+    bool ReadSolid();
+    bool ReadSection();
+    bool ReadTable();
+    bool ReadEndSec();
+
+    void OnReadArc(
+        double start_angle,
+        double end_angle,
+        double radius,
+        const DxfCoords& c,
+        double z_extrusion_dir,
+        bool hidden
+    );
+    void OnReadCircle(const DxfCoords& c, double radius, bool hidden);
+    void OnReadEllipse(
+        const DxfCoords& c,
+        const DxfCoords& m,
+        double ratio,
+        double start_angle,
+        double end_angle
+    );
     bool ReadInsert();
     bool ReadDimension();
     bool ReadBlockInfo();
 
-    void put_line(const char *value);
-    void DerefACI();
+    bool ResolveEncoding();
+
+    template<unsigned XCode = 10, unsigned YCode = 20, unsigned ZCode = 30>
+    void HandleCoordCode(int n, DxfCoords* coords)
+    {
+        switch (n) {
+        case XCode:
+            coords->x = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        case YCode:
+            coords->y = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        case ZCode:
+            coords->z = mm(DxfPrivate::stringToDouble(m_str));
+            break;
+        }
+    }
+
+    void HandleCommonGroupCode(int n);
+
+    void put_line(const std::string& value);
+    void ResolveColorIndex();
 
     void ReportError_readInteger(const char* context);
 
 protected:
-    Aci_t m_aci; // manifest color name or 256 for layer color
-    int m_lineNum = 0;
+    ColorIndex_t m_ColorIndex;
+    eDXFVersion_t m_version;  // Version from $ACADVER variable in DXF
 
     std::streamsize gcount() const;
     virtual void get_line();
-    virtual void ReportError(const char* /*msg*/) {}
+    virtual void ReportError(const std::string& /*msg*/) {}
+
+    virtual bool setSourceEncoding(const std::string& /*codepage*/) { return true; }
+    virtual std::string toUtf8(const std::string& strSource) { return strSource; }
+
+private:
+    std::string m_CodePage;  // Code Page name from $DWGCODEPAGE or null if none/not read yet
 
 public:
     CDxfRead(const char* filepath); // this opens the file
     virtual ~CDxfRead(); // this closes the file
 
-    bool Failed(){return m_fail;}
-    void DoRead(const bool ignore_errors = false); // this reads the file and calls the following functions
+    bool IgnoreErrors() const { return m_ignore_errors; }
+    bool Failed() const { return m_fail; }
 
-    double mm( double value ) const;
+    double mm(double value) const;
 
-    bool IgnoreErrors() const { return(m_ignore_errors); }
+    const Dxf_STYLE* findStyle(const std::string& name) const;
 
-    virtual void OnReadLine(const double* /*s*/, const double* /*e*/, bool /*hidden*/){}
-    virtual void OnReadPoint(const double* /*s*/){}
-    virtual void OnReadText(const double* /*point*/, const double /*height*/, double /*rotation*/, const char* /*text*/){}
-    virtual void OnReadArc(const double* /*s*/, const double* /*e*/, const double* /*c*/, bool /*dir*/, bool /*hidden*/){}
-    virtual void OnReadCircle(const double* /*s*/, const double* /*c*/, bool /*dir*/, bool /*hidden*/){}
-    virtual void OnReadEllipse(const double* /*c*/, double /*major_radius*/, double /*minor_radius*/, double /*rotation*/, double /*start_angle*/, double /*end_angle*/, bool /*dir*/){}
-    virtual void OnReadSpline(struct SplineData& /*sd*/){}
-    virtual void OnReadInsert(const double* /*point*/, const double* /*scale*/, const char* /*name*/, double /*rotation*/){}
-    virtual void OnReadDimension(const double* /*s*/, const double* /*e*/, const double* /*point*/, double /*rotation*/){}
-    virtual void AddGraphics() const { }
+    void DoRead(bool ignore_errors = false); // this reads the file and calls the following functions
+
+    virtual void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) = 0;
+
+    virtual void OnReadPolyline(const Dxf_POLYLINE&) = 0;
+
+    virtual void OnReadPoint(const DxfCoords& s) = 0;
+
+    virtual void OnReadText(const Dxf_TEXT&) = 0;
+
+    virtual void OnReadMText(const Dxf_MTEXT&) = 0;
+
+    virtual void OnReadArc(
+        const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden
+    ) = 0;
+
+    virtual void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) = 0;
+
+    virtual void OnReadEllipse(
+        const DxfCoords& c,
+        double major_radius,
+        double minor_radius,
+        double rotation,
+        double start_angle,
+        double end_angle,
+        bool dir
+    ) = 0;
+
+    virtual void OnReadSpline(struct SplineData& sd) = 0;
+
+    virtual void OnReadInsert(const Dxf_INSERT& ins) = 0;
+
+    virtual void OnReadSolid(const Dxf_SOLID& solid) = 0;
+
+    virtual void OnReadDimension(
+        const DxfCoords& s,
+        const DxfCoords& e,
+        const DxfCoords& point,
+        double rotation
+    ) = 0;
+
+    virtual void AddGraphics() const = 0;
 
     std::string LayerName() const;
-
 };

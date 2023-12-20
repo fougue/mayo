@@ -81,7 +81,8 @@ void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_Renderin
         return;
     }
 
-    fnCallback(glCtx->RenderingContext());
+    if (fnCallback)
+        fnCallback(glCtx->RenderingContext());
 }
 
 Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriver()

@@ -20,6 +20,7 @@ class QDoubleSpinBox;
 
 namespace Mayo {
 
+// Widget panel dedicated to clip planes in 3D view
 class WidgetClipPlanes : public QWidget {
     Q_OBJECT
 public:

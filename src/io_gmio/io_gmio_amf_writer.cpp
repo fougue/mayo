@@ -157,7 +157,8 @@ public:
                                 this->createZipArchive.label()));
     }
 
-    void restoreDefaults() override {
+    void restoreDefaults() override
+    {
         const GmioAmfWriter::Parameters params;
         this->float64Format.setValue(params.float64Format);
         this->float64Precision.setValue(params.float64Precision);
@@ -351,7 +352,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
             return mat.color == color;
         });
         if (itColor != m_vecMaterial.cend()) {
-            materialId = itColor - m_vecMaterial.cbegin();
+            materialId = CppUtils::safeStaticCast<int>(itColor - m_vecMaterial.cbegin());
         }
         else {
             materialId = CppUtils::safeStaticCast<int>(m_vecMaterial.size());

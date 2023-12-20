@@ -7,11 +7,9 @@
 #include "dialog_about.h"
 
 #include "ui_dialog_about.h"
+#include "qstring_conv.h"
 #include "version.h"
 #include <Standard_Version.hxx>
-#ifdef HAVE_GMIO
-#  include <gmio_core/version.h>
-#endif
 
 namespace Mayo {
 
@@ -24,20 +22,25 @@ DialogAbout::DialogAbout(QWidget* parent)
                 tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
     );
 
-    m_ui->label_Version->setText(m_ui->label_Version->text().arg(strVersion).arg(QT_POINTER_SIZE * 8));
+    const QString strVersionFull =
+        QString("%1 commit:%2 revnum:%3")
+        .arg(strVersion).arg(strVersionCommitId).arg(versionRevisionNumber);
+    m_ui->label_Version->setText(m_ui->label_Version->text().arg(strVersionFull).arg(QT_POINTER_SIZE * 8));
     m_ui->label_BuildDateTime->setText(m_ui->label_BuildDateTime->text().arg(__DATE__, __TIME__));
     m_ui->label_Qt->setText(m_ui->label_Qt->text().arg(QT_VERSION_STR));
     m_ui->label_Occ->setText(m_ui->label_Occ->text().arg(OCC_VERSION_COMPLETE));
-#ifdef HAVE_GMIO
-    m_ui->label_Gmio->setText(m_ui->label_Gmio->text().arg(GMIO_VERSION_STR));
-#else
-    m_ui->label_Gmio->hide();
-#endif
 }
 
 DialogAbout::~DialogAbout()
 {
     delete m_ui;
+}
+
+void DialogAbout::addLibraryInfo(std::string_view libName, std::string_view libVersion)
+{
+    auto label = new QLabel(this);
+    label->setText(tr("%1 %2").arg(to_QString(libName), to_QString(libVersion)));
+    m_ui->layout_Infos->addWidget(label);;
 }
 
 } // namespace Mayo

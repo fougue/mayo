@@ -11,7 +11,6 @@
 
 #include <gp_Pnt.hxx>
 #include <vector>
-
 #include <type_traits>
 
 namespace Mayo {

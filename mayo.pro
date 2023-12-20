@@ -14,6 +14,9 @@ CONFIG(debug, debug|release) {
 }
 
 message(Qt version $$QT_VERSION)
+!versionAtLeast(QT_VERSION, 5.14) {
+    error(Qt >= 5.14 is required but detected version is $$QT_VERSION)
+}
 
 QT += core gui widgets
 greaterThan(QT_MAJOR_VERSION, 5) {
@@ -33,7 +36,7 @@ DEFINES += \
     QT_IMPLICIT_QFILEINFO_CONSTRUCTION \
 
 release_with_debuginfo:msvc {
-    # https://docs.microsoft.com/en-us/cpp/build/reference/how-to-debug-a-release-build
+    # https://learn.microsoft.com/en-us/cpp/build/how-to-debug-a-release-build?view=msvc-170
     QMAKE_CXXFLAGS_RELEASE += /Zi
     QMAKE_LFLAGS_RELEASE += /DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF
 }
@@ -61,6 +64,7 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
     LIBS += -liconv
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
+    ICON = images/appicon.icns
 }
 win32 {
     LIBS += -lOpengl32 -lUser32
@@ -109,10 +113,24 @@ RC_ICONS = images/appicon.ico
 
 OTHER_FILES += \
     README.md \
-    appveyor.yml \
-    .github/workflows/ci.yml \
+    .github/workflows/ci_linux.yml \
+    .github/workflows/ci_macos.yml \
+    .github/workflows/ci_windows.yml \
     images/credits.txt \
     scripts/bump-version.rb \
+
+# Embed qtbase_*.qm files as a resource
+qtBaseQmRes.files = \
+    $$[QT_INSTALL_TRANSLATIONS]/qtbase_en.qm \
+    $$[QT_INSTALL_TRANSLATIONS]/qtbase_fr.qm
+qtBaseQmRes.base = $$[QT_INSTALL_TRANSLATIONS]
+qtBaseQmRes.prefix = "/i18n"
+RESOURCES += qtBaseQmRes
+
+# Optional developer-specific QMake pri file for environment related settings
+exists($$PWD/env.pri) {
+    include($$PWD/env.pri)
+}
 
 # OpenCascade
 include(opencascade.pri)
@@ -155,7 +173,7 @@ LIBS += \
     -lTKXmlXCAF \
     -lTKXSBase \
 
-minOpenCascadeVersion(7, 7, 0) {
+versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     LIBS += -lTKXDE
 }
 
@@ -166,26 +184,62 @@ LIBS += -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKXDESTEP
 # -- STL support
 LIBS += -lTKSTL
 # -- OBJ/glTF support
-minOpenCascadeVersion(7, 4, 0) {
+versionAtLeast(OCC_VERSION_STR, 7.4.0) {
     LIBS += -lTKRWMesh
 } else {
     SOURCES -= \
         src/io_occ/io_occ_base_mesh.cpp \
         src/io_occ/io_occ_gltf_reader.cpp \
         src/io_occ/io_occ_obj_reader.cpp
+
+    message(glTF reader disabled because OpenCascade < v7.4)
+    message(OBJ reader disabled because OpenCascade < v7.4)
 }
 
-!minOpenCascadeVersion(7, 5, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.5.0) {
     SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
+    message(glTF writer disabled because OpenCascade < v7.5)
 }
 
-!minOpenCascadeVersion(7, 6, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.6.0) {
     SOURCES -= src/io_occ/io_occ_obj_writer.cpp
+    message(OBJ writer disabled because OpenCascade < v7.6)
 }
 # -- VRML support
 LIBS += -lTKVRML
-!minOpenCascadeVersion(7, 7, 0) {
+!versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
+    message(VRML reader disabled because OpenCascade < v7.7)
+}
+
+# assimp
+isEmpty(ASSIMP_INC_DIR) | isEmpty(ASSIMP_LIB_DIR) {
+    message(assimp OFF)
+} else {
+    !versionAtLeast(OCC_VERSION_STR, 7.5.0) {
+        message(assimp reader disabled because OpenCascade < v7.5)
+    }
+    else {
+        message(assimp ON)
+        ASSIMP_IS_ON = 1
+    }
+}
+
+defined(ASSIMP_IS_ON, var) {
+    HEADERS += $$files(src/io_assimp/*.h)
+    SOURCES += $$files(src/io_assimp/*.cpp)
+
+    ASSIMP_VERSION_FILE_CONTENTS = $$cat($$ASSIMP_INC_DIR/version.h, lines)
+    ASSIMP_aiGetVersionPatch = $$find(ASSIMP_VERSION_FILE_CONTENTS, aiGetVersionPatch)
+    !isEmpty(ASSIMP_aiGetVersionPatch) {
+    } else {
+        DEFINES += NO_ASSIMP_aiGetVersionPatch
+        message(Assimp function aiGetVersionPatch() not available)
+    }
+
+    INCLUDEPATH += $$ASSIMP_INC_DIR/..
+    LIBS += -L$$ASSIMP_LIB_DIR -lassimp$$ASSIMP_LIBNAME_SUFFIX
+    DEFINES += HAVE_ASSIMP
 }
 
 # gmio
@@ -205,10 +259,7 @@ isEmpty(GMIO_ROOT) {
 
     INCLUDEPATH += $$GMIO_ROOT/include
     LIBS += -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
-    SOURCES += \
-#        $$GMIO_ROOT/src/gmio_support/stl_occ_brep.cpp \
-#        $$GMIO_ROOT/src/gmio_support/stl_occ_polytri.cpp \
-        $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
+    SOURCES += $$GMIO_ROOT/src/gmio_support/stream_qt.cpp
     DEFINES += HAVE_GMIO
 }
 
@@ -218,7 +269,7 @@ CONFIG(withtests) {
     DEFINES += MAYO_WITH_TESTS
 }
 
-# Developer custom processing
+# Optional developer-specific QMake pri file for custom processing
 exists($$PWD/custom.pri) {
     include($$PWD/custom.pri)
 }

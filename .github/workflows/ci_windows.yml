@@ -1,0 +1,99 @@
+name: Windows
+
+on: [push]
+
+jobs:
+    build-windows-msvc:
+        strategy:
+            matrix:
+                occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0]
+
+        runs-on: windows-latest
+
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Install Qt
+          uses: jurplel/install-qt-action@v3
+          with:
+              cache: true
+              cache-key-prefix: QtCache
+
+        - name: Cache OpenCascade archive
+          id: cache-occ
+          uses: actions/cache@v3
+          with:
+              path: OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
+              key: occ-${{matrix.occ_version}}
+
+        - name: Download OpenCascade
+          if: steps.cache-occ.outputs.cache-hit != 'true'
+          uses: carlosperate/download-file-action@v2
+          with:
+              file-url: 'https://www.fougue.pro/share/bin/OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip'
+
+        - name: Extract OpenCascade
+          shell: pwsh
+          run: |
+              Expand-Archive -Path OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip -DestinationPath .
+
+        - name: Cache Assimp archive
+          id: cache-assimp
+          uses: actions/cache@v3
+          with:
+              path: assimp-5.3.1.zip
+              key: assimp-5.3.1
+
+        - name: Download Assimp
+          if: steps.cache-assimp.outputs.cache-hit != 'true'
+          uses: carlosperate/download-file-action@v2
+          with:
+              file-url: 'https://www.fougue.pro/share/bin/assimp-5.3.1.zip'
+
+        - name: Extract Assimp
+          shell: pwsh
+          run: |
+              Expand-Archive -Path assimp-5.3.1.zip -DestinationPath .
+
+        - name: Download jom.exe
+          uses: carlosperate/download-file-action@v2
+          with:
+              file-url: 'https://www.fougue.pro/share/bin/jom.exe'
+
+        - name: Get count of CPU cores
+          uses: SimenB/github-actions-cpu-cores@v1
+          id: cpu-cores
+
+        - name: Create Build folder
+          run: mkdir ${{github.workspace}}/build
+
+        - name: Configure Compiler
+          uses: ilammy/msvc-dev-cmd@v1
+
+        - name: QMake
+          working-directory: ${{github.workspace}}/build
+          shell: cmd
+          run: |
+              call ..\OpenCASCADE-${{matrix.occ_version}}-vc14-64\opencascade-${{matrix.occ_version}}\env.bat
+              echo CSF_OCCTIncludePath=%CSF_OCCTIncludePath%
+              echo CSF_OCCTLibPath=%CSF_OCCTLibPath%
+              qmake --version
+              qmake ..\mayo.pro CONFIG+=release CONFIG+=withtests ^
+                    ASSIMP_INC_DIR=${{github.workspace}}/assimp-5.3.1/include/assimp ^
+                    ASSIMP_LIB_DIR=${{github.workspace}}/assimp-5.3.1/lib ^
+                    ASSIMP_LIBNAME_SUFFIX=-vc143-mt
+
+        - name: Build
+          working-directory: ${{github.workspace}}/build
+          run: |
+              ..\jom.exe -j${{steps.cpu-cores.outputs.count}}
+
+        - name: Execute Unit Tests
+          working-directory: ${{github.workspace}}/build
+          shell: cmd
+          run: |
+              call ..\OpenCASCADE-${{matrix.occ_version}}-vc14-64\opencascade-${{matrix.occ_version}}\env.bat
+              set PATH=${{github.workspace}}\assimp-5.3.1\bin;%PATH%
+              release\mayo.exe --runtests -o utests-output.txt
+              more utests-output.txt

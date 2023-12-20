@@ -29,6 +29,10 @@ class GuiDocument;
 namespace Mayo {
 namespace IO {
 
+// Provides a writer for image creation
+// Formats are those supported by OpenCascade with Image_AlienPixMap, see:
+//     https://dev.opencascade.org/doc/refman/html/class_image___alien_pix_map.html#details
+// The image format is specified with the extension for the target file path(eg .png, .jpeg, ...)
 class ImageWriter : public Writer {
 public:
     ImageWriter(GuiApplication* guiApp);

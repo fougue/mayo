@@ -26,8 +26,13 @@ private slots:
 
     void FilePath_test();
 
+    void PropertyValueConversionVariant_doubleToInt_test();
+    void PropertyValueConversionVariant_doubleToInt_test_data();
+
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
+    void PropertyValueConversion_bugGitHub219_test();
+
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
@@ -40,6 +45,7 @@ private slots:
     void IO_bugGitHub166_test_data();
 
     void DoubleToString_test();
+    void StringConv_test();
 
     void BRepUtils_test();
 
@@ -65,6 +71,8 @@ private slots:
 
     void LibTask_test();
     void LibTree_test();
+
+    void Span_test();
 
     void initTestCase();
     void cleanupTestCase();

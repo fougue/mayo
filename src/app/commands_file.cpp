@@ -15,6 +15,7 @@
 #include "recent_files.h"
 #include "theme.h"
 
+#include <cassert>
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
 #include <QtCore/QElapsedTimer>
@@ -167,6 +168,7 @@ void FileCommandTools::closeDocument(IAppContext* context, Document::Identifier 
 
 void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)
 {
+    assert(context != nullptr);
     auto app = context->guiApp()->application();
     auto appModule = AppModule::get();
     for (const FilePath& fp : listFilePath) {
@@ -312,7 +314,7 @@ void CommandRecentFiles::recreateEntries()
     menu->clear();
     int idFile = 0;
     auto appModule = AppModule::get();
-    const RecentFiles& recentFiles = appModule->properties()->recentFiles.value();
+    const RecentFiles& recentFiles = appModule->properties()->recentFiles;
     for (const RecentFile& recentFile : recentFiles) {
         const QString strFilePath = filepathTo<QString>(recentFile.filepath);
         const QString strEntryRecentFile = Command::tr("%1 | %2").arg(++idFile).arg(strFilePath);
@@ -384,7 +386,8 @@ void CommandImportInCurrentDocument::execute()
 
 bool CommandImportInCurrentDocument::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAppContext* context)
@@ -416,7 +419,8 @@ void CommandExportSelectedApplicationItems::execute()
                 Command::tr("Select Output File"),
                 filepathTo<QString>(lastSettings.openDir),
                 listWriterFileFilter.join(QLatin1String(";;")),
-                &lastSettings.selectedFilter);
+                &lastSettings.selectedFilter
+            );
     if (strFilepath.isEmpty())
         return;
 
@@ -444,7 +448,8 @@ void CommandExportSelectedApplicationItems::execute()
 
 bool CommandExportSelectedApplicationItems::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0;
+    return this->app()->documentCount() != 0
+            && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)
@@ -485,7 +490,7 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                Command::tr("Close \"%1\"").arg(strFilepathQuoted(docName)) :
+                Command::tr("Close %1").arg(strFilepathQuoted(docName)) :
                 Command::tr("Close");
     this->action()->setText(textActionClose);
     this->action()->setToolTip(textActionClose);
@@ -556,7 +561,7 @@ void CommandCloseAllDocumentsExceptCurrent::updateActionText(Document::Identifie
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
             docPtr ?
-                Command::tr("Close all except \"%1\"").arg(strFilepathQuoted(docName)) :
+                Command::tr("Close all except %1").arg(strFilepathQuoted(docName)) :
                 Command::tr("Close all except current");
     this->action()->setText(textActionClose);
 }

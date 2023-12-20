@@ -38,6 +38,7 @@ public:
     static TranslateResult degrees(QuantityAngle angle);
     static TranslateResult meters(QuantityLength length);
     static TranslateResult millimeters(QuantityLength length);
+    static TranslateResult squareMillimeters(QuantityArea area);
     static TranslateResult cubicMillimeters(QuantityVolume volume);
     static TranslateResult millimetersPerSecond(QuantityVelocity speed);
     static TranslateResult milliseconds(QuantityTime duration);

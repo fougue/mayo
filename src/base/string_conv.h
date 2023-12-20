@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <NCollection_UtfString.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TCollection_HAsciiString.hxx>
@@ -47,6 +48,12 @@ std::string_view to_stdStringView(const StringType& str) {
 template<typename StringType>
 TCollection_AsciiString to_OccAsciiString(const StringType& str) {
     return string_conv<TCollection_AsciiString>(str);
+}
+
+// X -> Handle(TCollection_HAsciiString)
+template<typename StringType>
+Handle(TCollection_HAsciiString) to_OccHandleHAsciiString(const StringType& str) {
+    return string_conv<Handle(TCollection_HAsciiString)>(str);
 }
 
 // X -> TCollection_ExtendedString
@@ -122,6 +129,21 @@ template<> struct StringConv<std::string_view, TCollection_AsciiString> {
     }
 };
 
+// std::string_view -> Handle(TCollection_HAsciiString)
+template<> struct StringConv<std::string_view, Handle(TCollection_HAsciiString)> {
+    static auto to(std::string_view str) {
+        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(to_OccAsciiString(str));
+        return hnd;
+    }
+};
+
+// std::string_view -> NCollection_Utf8String
+template<> struct StringConv<std::string_view, NCollection_Utf8String> {
+    static auto to(std::string_view str) {
+        return NCollection_Utf8String(str.data(), static_cast<int>(str.size()));
+    }
+};
+
 // --
 // -- Handle(TCollection_HAsciiString) -> X
 // --
@@ -163,6 +185,13 @@ template<> struct StringConv<std::string, Handle(TCollection_HAsciiString)> {
 template<> struct StringConv<std::string, TCollection_ExtendedString> {
     static auto to(const std::string& str) {
         return TCollection_ExtendedString(str.c_str(), true/*multi-byte*/);
+    }
+};
+
+// std::string -> NCollection_Utf8String
+template<> struct StringConv<std::string, NCollection_Utf8String> {
+    static auto to(const std::string& str) {
+        return NCollection_Utf8String(str.c_str(), static_cast<int>(str.size()));
     }
 };
 

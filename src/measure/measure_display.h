@@ -24,6 +24,7 @@
 
 namespace Mayo {
 
+// Provides parameters to configure IMeasureDisplay objects
 struct MeasureDisplayConfig {
     LengthUnit lengthUnit = LengthUnit::Millimeter;
     AngleUnit angleUnit = AngleUnit::Degree;
@@ -155,15 +156,15 @@ private:
 // -- MinDistance
 // --
 
-class MeasureDisplayMinDistance : public BaseMeasureDisplay {
+class MeasureDisplayDistance : public BaseMeasureDisplay {
 public:
-    MeasureDisplayMinDistance(const MeasureMinDistance& dist);
+    MeasureDisplayDistance(const MeasureDistance& dist);
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
 private:
-    MeasureMinDistance m_dist;
+    MeasureDistance m_dist;
     Handle_AIS_Line m_gfxLength;
     Handle_AIS_TextLabel m_gfxDistText;
     Handle_AIS_Point m_gfxPnt1;
@@ -195,16 +196,17 @@ private:
 
 class MeasureDisplayLength : public BaseMeasureDisplay {
 public:
-    MeasureDisplayLength(QuantityLength length);
+    MeasureDisplayLength(const MeasureLength& length);
     void update(const MeasureDisplayConfig& config) override;
-    int graphicsObjectsCount() const override { return 0; }
-    GraphicsObjectPtr graphicsObjectAt(int /*i*/) const override { return {}; }
+    int graphicsObjectsCount() const override { return 1; }
+    GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
     bool isSumSupported() const override { return true; }
     void sumAdd(const IMeasureDisplay& other) override;
 
 private:
-    QuantityLength m_length;
+    MeasureLength m_length;
+    Handle_AIS_TextLabel m_gfxLenText;
 };
 
 // --
@@ -213,16 +215,17 @@ private:
 
 class MeasureDisplayArea : public BaseMeasureDisplay {
 public:
-    MeasureDisplayArea(QuantityArea area);
+    MeasureDisplayArea(const MeasureArea& area);
     void update(const MeasureDisplayConfig& config) override;
-    int graphicsObjectsCount() const override { return 0; }
-    GraphicsObjectPtr graphicsObjectAt(int /*i*/) const override { return {}; }
+    int graphicsObjectsCount() const override { return 1; }
+    GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
     bool isSumSupported() const override { return true; }
     void sumAdd(const IMeasureDisplay& other) override;
 
 private:
-    QuantityArea m_area;
+    MeasureArea m_area;
+    Handle_AIS_TextLabel m_gfxAreaText;
 };
 
 } // namespace Mayo

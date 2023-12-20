@@ -6,17 +6,33 @@
 
 #include "mesh_utils.h"
 #include "math_utils.h"
-#include <Standard_Version.hxx>
+
+#include <cassert>
 #include <cmath>
+#include <stdexcept>
 
 namespace Mayo {
+namespace MeshUtils {
 
-double MeshUtils::triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
+namespace {
+
+// Helper function to create TColStd_Array1OfReal
+[[maybe_unused]] TColStd_Array1OfReal createArray1OfReal(int count)
+{
+    if (count > 0)
+        return TColStd_Array1OfReal(1, count);
+    else
+        return TColStd_Array1OfReal();
+}
+
+} // namespace
+
+double triangleSignedVolume(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     return p1.Dot(p2.Crossed(p3)) / 6.0f;
 }
 
-double MeshUtils::triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
+double triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ& p3)
 {
     const double ax = p2.X() - p1.X();
     const double ay = p2.Y() - p1.Y();
@@ -30,7 +46,7 @@ double MeshUtils::triangleArea(const gp_XYZ& p1, const gp_XYZ& p2, const gp_XYZ&
     return 0.5 * std::sqrt(cx*cx + cy*cy + cz*cz);
 }
 
-double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangulation)
+double triangulationVolume(const Handle_Poly_Triangulation& triangulation)
 {
     if (!triangulation)
         return 0;
@@ -49,7 +65,7 @@ double MeshUtils::triangulationVolume(const Handle_Poly_Triangulation& triangula
     return std::abs(volume);
 }
 
-double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulation)
+double triangulationArea(const Handle_Poly_Triangulation& triangulation)
 {
     if (!triangulation)
         return 0;
@@ -68,7 +84,7 @@ double MeshUtils::triangulationArea(const Handle_Poly_Triangulation& triangulati
     return area;
 }
 
-void MeshUtils::setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt)
+void setNode(const Handle_Poly_Triangulation& triangulation, int index, const gp_Pnt& pnt)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetNode(index, pnt);
@@ -77,7 +93,7 @@ void MeshUtils::setNode(const Handle_Poly_Triangulation& triangulation, int inde
 #endif
 }
 
-void MeshUtils::setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle)
+void setTriangle(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangle& triangle)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetTriangle(index, triangle);
@@ -86,19 +102,28 @@ void MeshUtils::setTriangle(const Handle_Poly_Triangulation& triangulation, int 
 #endif
 }
 
-void MeshUtils::setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n)
+void setNormal(const Handle_Poly_Triangulation& triangulation, int index, const Poly_Triangulation_NormalType& n)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->SetNormal(index, n);
 #else
     TShort_Array1OfShortReal& normals = triangulation->ChangeNormals();
-    normals.ChangeValue(index * 3 - 2) = n.X();
-    normals.ChangeValue(index * 3 - 1) = n.Y();
-    normals.ChangeValue(index * 3)     = n.Z();
+    normals.ChangeValue(index * 3 - 2) = static_cast<float>(n.X());
+    normals.ChangeValue(index * 3 - 1) = static_cast<float>(n.Y());
+    normals.ChangeValue(index * 3)     = static_cast<float>(n.Z());
 #endif
 }
 
-void MeshUtils::allocateNormals(const Handle_Poly_Triangulation& triangulation)
+void setUvNode(const Handle_Poly_Triangulation& triangulation, int index, double u, double v)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->SetUVNode(index, gp_Pnt2d{u, v});
+#else
+    triangulation->ChangeUVNode(index) = gp_Pnt2d{u, v};
+#endif
+}
+
+void allocateNormals(const Handle_Poly_Triangulation& triangulation)
 {
 #if OCC_VERSION_HEX >= 0x070600
     triangulation->AddNormals();
@@ -108,8 +133,18 @@ void MeshUtils::allocateNormals(const Handle_Poly_Triangulation& triangulation)
 #endif
 }
 
+const Poly_Array1OfTriangle& triangles(const Handle_Poly_Triangulation& triangulation)
+{
+#if OCC_VERSION_HEX < 0x070600
+    return triangulation->Triangles();
+#else
+    // Note: Poly_Triangulation::Triangles() was deprecated starting from OpenCascade v7.6.0
+    return triangulation->InternalTriangles();
+#endif
+}
+
 // Adapted from http://cs.smith.edu/~jorourke/Code/polyorient.C
-MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
+MeshUtils::Orientation orientation(const AdaptorPolyline2d& polyline)
 {
     const int pntCount = polyline.pointCount();
     if (pntCount < 2)
@@ -163,7 +198,7 @@ MeshUtils::Orientation MeshUtils::orientation(const AdaptorPolyline2d& polyline)
     }
 }
 
-gp_Vec MeshUtils::directionAt(const AdaptorPolyline3d& polyline, int i)
+gp_Vec directionAt(const AdaptorPolyline3d& polyline, int i)
 {
     const int pntCount = polyline.pointCount();
     if (pntCount > 1) {
@@ -182,4 +217,63 @@ gp_Vec MeshUtils::directionAt(const AdaptorPolyline3d& polyline, int i)
     return gp_Vec();
 }
 
+Polygon3dBuilder::Polygon3dBuilder(int nodeCount, ParametersOption option)
+#if OCC_VERSION_HEX >= 0x070500
+    : m_polygon(new Poly_Polygon3D(nodeCount, option == ParametersOption::With)),
+      m_ptrNodes(&m_polygon->ChangeNodes()),
+      m_ptrParams(option == ParametersOption::With ? &m_polygon->ChangeParameters() : nullptr)
+#else
+    : m_nodes(1, nodeCount),
+      m_params(std::move(createArray1OfReal(option == ParametersOption::With ? nodeCount : 0))),
+      m_ptrNodes(&m_nodes),
+      m_ptrParams(option == ParametersOption::With ? &m_params : nullptr)
+#endif
+{
+    assert(m_ptrNodes);
+    assert(
+        (option == ParametersOption::None && !m_ptrParams)
+        || (option == ParametersOption::With && m_ptrParams)
+    );
+}
+
+void Polygon3dBuilder::setNode(int i, const gp_Pnt &pnt)
+{
+    if (m_isFinalized)
+        throw std::runtime_error("Can't call setNode() on finalized Polygon3dBuilder object");
+
+    m_ptrNodes->ChangeValue(i) = pnt;
+}
+
+void Polygon3dBuilder::setParameter(int i, double u)
+{
+    if (m_isFinalized)
+        throw std::runtime_error("Can't call setParameter() on finalized Polygon3dBuilder object");
+
+    if (m_ptrParams)
+        m_ptrParams->ChangeValue(i) = u;
+}
+
+void Polygon3dBuilder::finalize()
+{
+    if (m_isFinalized)
+        return;
+
+#if OCC_VERSION_HEX < 0x070500
+    if (m_ptrParams)
+        m_polygon = new Poly_Polygon3D(m_nodes, m_params);
+    else
+        m_polygon = new Poly_Polygon3D(m_nodes);
+#endif
+    m_isFinalized = true;
+}
+
+OccHandle<Poly_Polygon3D> Polygon3dBuilder::get() const
+{
+    if (!m_isFinalized)
+        throw std::runtime_error("Can't call get() on non finalized Polygon3dBuilder object");
+
+    return m_polygon;
+}
+
+} // namespace MeshUtils
 } // namespace Mayo

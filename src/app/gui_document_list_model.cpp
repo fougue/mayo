@@ -6,6 +6,8 @@
 
 #include "gui_document_list_model.h"
 
+#include "filepath_conv.h"
+#include "qstring_conv.h"
 #include "../base/application.h"
 #include "../base/document.h"
 #include "../gui/gui_application.h"
@@ -28,18 +30,18 @@ GuiDocumentListModel::GuiDocumentListModel(const GuiApplication* guiApp, QObject
 QVariant GuiDocumentListModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid() || index.row() >= this->rowCount())
-        return QVariant();
+        return {};
 
     const DocumentPtr& doc = m_vecGuiDocument.at(index.row())->document();
     switch (role) {
     case Qt::ToolTipRole:
-        return QString::fromStdString(doc->filePath().u8string());
+        return filepathTo<QString>(filepathCanonical(doc->filePath()));
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return QString::fromStdString(doc->name());
+        return to_QString(doc->name());
     }
 
-    return QVariant();
+    return {};
 }
 
 int GuiDocumentListModel::rowCount(const QModelIndex& /*parent*/) const
@@ -49,7 +51,9 @@ int GuiDocumentListModel::rowCount(const QModelIndex& /*parent*/) const
 
 void GuiDocumentListModel::appendGuiDocument(const GuiDocument* guiDoc)
 {
-    const int row = this->rowCount();
+    // NOTE: don't use rowCount() as it's virtual and appendGuiDocument() is called in constructor
+    //       of this class(virtual dispatch would be bypassed)
+    const auto row = int(m_vecGuiDocument.size());
     this->beginInsertRows(QModelIndex(), row, row);
     m_vecGuiDocument.emplace_back(guiDoc);
     this->endInsertRows();
@@ -71,7 +75,8 @@ void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const s
     auto itFound = std::find_if(
                 m_vecGuiDocument.cbegin(),
                 m_vecGuiDocument.cend(),
-                [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; });
+                [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
+    );
     if (itFound != m_vecGuiDocument.cend()) {
         const int row = itFound - m_vecGuiDocument.begin();
         const QModelIndex itemIndex = this->index(row);

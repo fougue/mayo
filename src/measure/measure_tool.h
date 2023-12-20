@@ -21,17 +21,25 @@
 
 namespace Mayo {
 
+enum class DistanceType {
+    None,
+    Mininmum,
+    CenterToCenter
+};
+
 // Void measure value
 struct MeasureNone {};
 
-// Measure of minimum distance between two entities
-struct MeasureMinDistance {
-    // Point on 1st entity where minimum distance is located
+// Measure of a distance between two entities
+struct MeasureDistance {
+    // Point on 1st entity from which the distance is measured
     gp_Pnt pnt1;
-    // Point on 2nd entity where minimum distance is located
+    // Point on 2nd entity from which the distance is measured
     gp_Pnt pnt2;
-    // Length of the minimum distance
+    // Length of the distance
     QuantityLength value;
+    // Distance type
+    DistanceType type = DistanceType::None;
 };
 
 // Measure of a circle entity
@@ -56,6 +64,24 @@ struct MeasureAngle {
     QuantityAngle value;
 };
 
+// Measure of the length of an entity
+struct MeasureLength {
+    // Point being at the middle of the entity
+    gp_Pnt middlePnt;
+    // Value of the length
+    QuantityLength value;
+};
+
+// Measure of the area of an entity
+struct MeasureArea {
+    // Point being at the middle of the entity
+    gp_Pnt middlePnt;
+    // Value of the area
+    QuantityArea value;
+};
+
+
+
 // Provides an interface to various measurement services
 // Input data of a measure service is one or many graphics entities pointed to by GraphicsOwner objects
 class IMeasureTool {
@@ -68,10 +94,11 @@ public:
 
     virtual gp_Pnt vertexPosition(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureCircle circle(const GraphicsOwnerPtr& owner) const = 0;
-    virtual MeasureMinDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
+    virtual MeasureDistance minDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
+    virtual MeasureDistance centerDistance(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
-    virtual QuantityLength length(const GraphicsOwnerPtr& owner) const = 0;
-    virtual QuantityArea area(const GraphicsOwnerPtr& owner) const = 0;
+    virtual MeasureLength length(const GraphicsOwnerPtr& owner) const = 0;
+    virtual MeasureArea area(const GraphicsOwnerPtr& owner) const = 0;
 };
 
 // Base interface for errors reported by measurement services of IMeasureTool
@@ -85,10 +112,10 @@ using MeasureValue = std::variant<
             MeasureNone, // WARNING: ensure this is the first value type in the variant
             gp_Pnt,
             MeasureCircle,
-            MeasureMinDistance,
+            MeasureDistance,
             MeasureAngle,
-            QuantityLength,
-            QuantityArea
+            MeasureLength,
+            MeasureArea
       >;
 
 bool MeasureValue_isValid(const MeasureValue& res);

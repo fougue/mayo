@@ -33,10 +33,3 @@ version_pri.sub!(/(MAYO_VERSION_MIN\s*=\s*)\d+/, "\\1#{minor}")
 version_pri.sub!(/(MAYO_VERSION_PAT\s*=\s*)\d+/, "\\1#{patch}")
 File.open(path_version_pri, "w").write(version_pri)
 puts "Bumped #{path_version_pri}"
-
-# ../appveyor.yml
-path_appveyor_yml = "#{script_dir_name}/../appveyor.yml"
-appveyor_yml = File.open(path_appveyor_yml, "r").read
-appveyor_yml.sub!(/(version\s*:\s*)\d+\.\d+/, "\\1#{major}.#{minor}")
-File.open(path_appveyor_yml, "w").write(appveyor_yml)
-puts "Bumped #{path_appveyor_yml}"

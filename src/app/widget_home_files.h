@@ -20,7 +20,7 @@ public:
 signals:
     void newDocumentRequested();
     void openDocumentsRequested();
-    void recentFileOpenRequested(const FilePath& fp);
+    void recentFileOpenRequested(const Mayo::FilePath& fp);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;

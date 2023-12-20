@@ -28,9 +28,9 @@ static void AisContext_setObjectVisible(
 {
     if (ptrContext && object) {
         if (on)
-            ptrContext->Display(object, false);
+            ptrContext->Display(object, false/*dontUpdateViewer*/);
         else
-            ptrContext->Erase(object, false);
+            ptrContext->Erase(object, false/*dontUpdateViewer*/);
     }
 }
 
@@ -39,7 +39,7 @@ static void AisContext_setObjectVisible(
 void GraphicsUtils::V3dView_fitAll(const Handle_V3d_View& view)
 {
     view->ZFitAll();
-    view->FitAll(0.01, false);
+    view->FitAll(0.01, false/*dontUpdateView*/);
 }
 
 bool GraphicsUtils::V3dView_hasClipPlane(
@@ -72,12 +72,47 @@ gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x
 
     const gp_Pln planeView(pntAt, dirEye);
     double px, py, pz;
-    const int ix = static_cast<int>(std::round(x));
-    const int iy = static_cast<int>(std::round(y));
+    const int ix = std::lround(x);
+    const int iy = std::lround(y);
     view->Convert(ix, iy, px, py, pz);
     const gp_Pnt pntConverted(px, py, pz);
     const gp_Pnt2d pntConvertedOnPlane = ProjLib::Project(planeView, pntConverted);
     return ElSLib::Value(pntConvertedOnPlane.X(), pntConvertedOnPlane.Y(), planeView);
+}
+
+bool GraphicsUtils::V3dViewer_isGridActive(const Handle_V3d_Viewer& viewer)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    return viewer->IsGridActive();
+#else
+    return viewer->IsActive();
+#endif
+}
+
+Handle_Aspect_Grid GraphicsUtils::V3dViewer_grid(const Handle_V3d_Viewer& viewer)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+    return viewer->Grid(false/*dontCreate*/);
+#else
+    return viewer->Grid();
+#endif
+}
+
+GraphicsUtils::AspectGridColors GraphicsUtils::V3dViewer_gridColors(const Handle_V3d_Viewer& viewer)
+{
+    AspectGridColors colors;
+    Handle_Aspect_Grid gridAspect = V3dViewer_grid(viewer);
+    if (gridAspect)
+        gridAspect->Colors(colors.base, colors.tenth);
+
+    return colors;
+}
+
+void GraphicsUtils::V3dViewer_setGridColors(const Handle_V3d_Viewer &viewer, const AspectGridColors &colors)
+{
+    Handle_Aspect_Grid gridAspect = V3dViewer_grid(viewer);
+    if (gridAspect)
+        gridAspect->SetColors(colors.base, colors.tenth);
 }
 
 void GraphicsUtils::AisContext_eraseObject(
@@ -85,9 +120,9 @@ void GraphicsUtils::AisContext_eraseObject(
         const Handle_AIS_InteractiveObject& object)
 {
     if (!object.IsNull() && !context.IsNull()) {
-        context->Erase(object, false);
-        context->Remove(object, false);
-        context->ClearPrs(object, 0, false);
+        context->Erase(object, false/*dontUpdateViewer*/);
+        context->Remove(object, false/*dontUpdateViewer*/);
+        context->ClearPrs(object, 0, false/*dontUpdateViewer*/);
         context->SelectionManager()->Remove(object);
     }
 }

@@ -216,7 +216,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (taskData.fileFormat == Format_Unknown)
             return fnReadFileError(taskData.filepath, textIdTr("Unknown format"));
 
-        int portionSize = 40;
+        double portionSize = 40;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
@@ -228,7 +228,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         taskData.reader->setMessenger(messenger);
         if (args.parametersProvider) {
             taskData.reader->applyProperties(
-                        args.parametersProvider->findReaderParameters(taskData.fileFormat));
+                        args.parametersProvider->findReaderParameters(taskData.fileFormat)
+                );
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
@@ -237,7 +238,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         return true;
     };
     auto fnTransfer = [&](TaskData& taskData) {
-        int portionSize = 60;
+        double portionSize = 60;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
             portionSize *= (100 - args.entityPostProcessProgressSize) / 100.;
 
@@ -257,7 +258,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskProgress progress(
                     taskData.progress,
                     args.entityPostProcessProgressSize,
-                    args.entityPostProcessProgressStep);
+                    args.entityPostProcessProgressStep
+            );
         const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
             TaskProgress subProgress(&progress, subPortionSize);
@@ -419,11 +421,12 @@ System::Operation_ExportApplicationItems System::exportApplicationItems()
 
 void System::visitUniqueItems(
         Span<const ApplicationItem> spanItem,
-        std::function<void (const ApplicationItem&)> fnCallback)
+        std::function<void (const ApplicationItem&)> fnCallback
+    )
 {
     std::unordered_set<DocumentPtr> setDoc;
     for (const ApplicationItem& item : spanItem) {
-        if (item.isDocument()) {
+        if (item.isDocument() && item.document()->entityCount() > 0) {
             auto [it, ok] = setDoc.insert(item.document());
             if (ok)
                 fnCallback(item);
@@ -446,7 +449,8 @@ void System::visitUniqueItems(
 void System::traverseUniqueItems(
         Span<const ApplicationItem> spanItem,
         std::function<void(const DocumentTreeNode&)> fnCallback,
-        TreeTraversal mode)
+        TreeTraversal mode
+    )
 {
     System::visitUniqueItems(spanItem, [=](const ApplicationItem& item) {
         const DocumentPtr doc = item.document();
@@ -568,7 +572,8 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
                     bytes[offset]
                     | (bytes[offset+1] << 8)
                     | (bytes[offset+2] << 16)
-                    | (bytes[offset+3] << 24);
+                    | (bytes[offset+3] << 24)
+                ;
             constexpr unsigned facetSize = (sizeof(float) * 12) + sizeof(uint16_t);
             if ((facetSize * facetsCount + binaryStlHeaderSize) == input.hintFullSize)
                 return Format_STL;

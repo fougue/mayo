@@ -16,17 +16,23 @@ namespace IO {
 enum Format {
     Format_Unknown,
     Format_Image,
-    Format_STEP,
-    Format_IGES,
-    Format_OCCBREP,
-    Format_STL,
-    Format_OBJ,
-    Format_GLTF,
-    Format_VRML,
+    Format_3DS,
+    Format_3MF,
     Format_AMF,
+    Format_COLLADA,
     Format_DXF,
+    Format_FBX,
+    Format_GLTF,
+    Format_IGES,
+    Format_OBJ,
+    Format_OCCBREP,
+    Format_OFF,
     Format_PLY,
-    Format_OFF
+    Format_STEP,
+    Format_STL,
+    Format_VRML,
+    Format_X3D,
+    Format_Blender
 };
 
 // Returns identifier(unique short name) corresponding to 'format'

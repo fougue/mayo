@@ -12,6 +12,8 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
+#include "../base/global.h"
+#include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_enumeration.h"
@@ -38,11 +40,9 @@ static TopoDS_Shape asShape(const DocumentPtr& doc)
         shape = XCaf::shape(doc->entityLabel(0));
     }
     else if (doc->entityCount() > 1) {
-        TopoDS_Compound cmpd;
-        BRep_Builder builder;
-        builder.MakeCompound(cmpd);
+        TopoDS_Compound cmpd = BRepUtils::makeEmptyCompound();
         for (int i = 0; i < doc->entityCount(); ++i)
-            builder.Add(cmpd, XCaf::shape(doc->entityLabel(i)));
+            BRepUtils::addShape(&cmpd, XCaf::shape(doc->entityLabel(i)));
 
         shape = cmpd;
     }
@@ -93,21 +93,17 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
 
 bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
-//    if (appItems.size() > 1)
-//        return Result::error(tr("OpenCascade RWStl does not support multi-solids"));
-
-    m_shape = {};
-    if (!appItems.empty()) {
-        const ApplicationItem& item = appItems.front();
-        if (item.isDocument()) {
-            m_shape = asShape(item.document());
+    m_shape = BRepUtils::makeEmptyCompound();
+    System::visitUniqueItems(appItems, [=](const ApplicationItem& appItem) {
+        if (appItem.isDocument()) {
+            BRepUtils::addShape(&m_shape, asShape(appItem.document()));
         }
-        else if (item.isDocumentTreeNode()) {
-            const TDF_Label label = item.documentTreeNode().label();
+        else if (appItem.isDocumentTreeNode()) {
+            const TDF_Label label = appItem.documentTreeNode().label();
             if (XCaf::isShape(label))
-                m_shape = XCaf::shape(label);
+                BRepUtils::addShape(&m_shape, XCaf::shape(label));
         }
-    }
+    });
 
     return !m_shape.IsNull();
 }
@@ -138,6 +134,7 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
         return writer.Write(m_shape, strFilepath.c_str(), TKernelUtils::start(indicator));
 #else
+        MAYO_UNUSED(progress);
         return writer.Write(m_shape, strFilepath.c_str());
 #endif
     }

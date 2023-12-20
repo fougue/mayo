@@ -9,7 +9,7 @@
 namespace Mayo {
 
 enum class MeasureType {
-    None, VertexPosition, CircleCenter, CircleDiameter, MinDistance, Angle, Length, Area
+    None, VertexPosition, CircleCenter, CircleDiameter, MinDistance, CenterDistance, Angle, Length, Area
 };
 
 } // namespace Mayo

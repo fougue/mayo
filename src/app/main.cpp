@@ -8,6 +8,7 @@
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../io_assimp/io_assimp.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
 #include "../io_image/io_image.h"
@@ -22,6 +23,7 @@
 #include "../gui/gui_application.h"
 #include "app_module.h"
 #include "cli_export.h"
+#include "commands_help.h"
 #include "console.h"
 #include "document_tree_node_properties_providers.h"
 #include "filepath_conv.h"
@@ -82,6 +84,7 @@ struct CommandLineArguments {
     std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
     bool cliProgressReport = true;
+    bool showSystemInformation = false;
 };
 
 // Provides customization of Qt message handler
@@ -228,6 +231,12 @@ static CommandLineArguments processCommandLine()
     );
     cmdParser.addOption(cmdCliNoProgress);
 
+    const QCommandLineOption cmdSysInfo(
+                QStringList{ "system-info" },
+                Main::tr("Show detailed system information and quit")
+    );
+    cmdParser.addOption(cmdSysInfo);
+
     cmdParser.addPositionalArgument(
                 Main::tr("files"),
                 Main::tr("Files to open at startup, optionally"),
@@ -268,6 +277,7 @@ static CommandLineArguments processCommandLine()
     args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
 #endif
     args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
+    args.showSystemInformation = cmdParser.isSet(cmdSysInfo);
 
     return args;
 }
@@ -342,7 +352,7 @@ static std::string_view qtTranslate(const TextId& text, int n)
 }
 
 // Helper to query the OpenGL version string
-static std::string queryGlVersionString()
+[[maybe_unused]] static std::string queryGlVersionString()
 {
     QOpenGLContext glContext;
     if (!glContext.create())
@@ -362,7 +372,7 @@ static std::string queryGlVersionString()
 
 // Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
 // Note: only major and minor versions are detected
-static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
+[[maybe_unused]] static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
 {
     if (strVersion.empty())
         return {};
@@ -396,7 +406,6 @@ static void initGui(GuiApplication* guiApp)
     if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
         const std::string strGlVersion = queryGlVersionString();
         const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
-        qInfo() << fmt::format("OpenGL v{}.{}", glVersion.majorVersion(), glVersion.minorVersion()).c_str();
         if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
             setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
             IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
@@ -452,12 +461,16 @@ static int runApp(QCoreApplication* qtApp)
     appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
     {
         // Load translation files
-        const QString qmFilePath = QString(":/i18n/mayo_%1.qm").arg(appModule->languageCode());
-        auto translator = new QTranslator(qtApp);
-        if (translator->load(qmFilePath))
-            qtApp->installTranslator(translator);
-        else
-            qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        auto fnLoadQmFile = [=](const QString& qmFilePath) {
+            auto translator = new QTranslator(qtApp);
+            if (translator->load(qmFilePath))
+                qtApp->installTranslator(translator);
+            else
+                qWarning() << Main::tr("Failed to load translation file [path=%1]").arg(qmFilePath);
+        };
+        const QString appLangCode = appModule->languageCode();
+        fnLoadQmFile(QString(":/i18n/mayo_%1.qm").arg(appLangCode));
+        fnLoadQmFile(QString(":/i18n/qtbase_%1.qm").arg(appLangCode));
     }
 
     // Initialize Base application
@@ -480,6 +493,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
     ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    ioSystem->addFactoryReader(IO::AssimpFactoryReader::create());
     ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
@@ -489,7 +503,21 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
 
+    // Register library infos
+    CommandSystemInformation::addLibraryInfo(
+        IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
+    );
+    CommandSystemInformation::addLibraryInfo(
+        IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
+    );
+
     // Process CLI
+    if (args.showSystemInformation) {
+        CommandSystemInformation cmdSysInfo(nullptr);
+        cmdSysInfo.execute();
+        return qtApp->exec();
+    }
+
     if (!args.listFilepathToExport.empty()) {
         if (args.listFilepathToOpen.empty())
             fnCriticalExit(Main::tr("No input files -> nothing to export"));
@@ -553,16 +581,10 @@ int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
 
-    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
-    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
-    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
-    // As a workaround the Qt platform is forced to xcb
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
-    qputenv("QT_QPA_PLATFORM", "xcb");
-#endif
-
     // Helper function to check if application arguments contain any option listed in 'listOption'
-    auto fnArgsContainAnyOf = [=](std::initializer_list<const char*> listOption) {
+    // IMPORTANT: capture by reference, because QApplication constructor may alter argc(due to
+    //            parsing of arguments)
+    auto fnArgsContainAnyOf = [&](std::initializer_list<const char*> listOption) {
         for (int i = 1; i < argc; ++i) {
             for (const char* option : listOption) {
                 if (std::strcmp(argv[i], option) == 0)
@@ -571,6 +593,24 @@ int main(int argc, char* argv[])
         }
         return false;
     };
+
+    // If the arguments(argv) contain any of the following option, then Mayo has to run in CLI mode
+    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
+
+    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
+    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
+    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
+    // As a workaround the Qt platform is forced to xcb
+#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
+    if (
+        !isAppCliMode
+        && !qEnvironmentVariableIsSet("QT_QPA_PLATFORM")
+        && !fnArgsContainAnyOf({ "-platform" })
+       )
+    {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
+#endif
 
     // Configure and create Qt application object
 #if defined(Q_OS_WIN)
@@ -581,7 +621,6 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-    const bool isAppCliMode = fnArgsContainAnyOf({ "-e", "--export", "-h", "--help", "-v", "--version" });
     std::unique_ptr<QCoreApplication> ptrApp(
             isAppCliMode ? new QCoreApplication(argc, argv) : new QApplication(argc, argv)
     );

@@ -40,7 +40,8 @@ void CommandSaveViewImage::execute()
 
 bool CommandSaveViewImage::getEnabledStatus() const
 {
-    return this->app()->documentCount() != 0;
+    return this->app()->documentCount() != 0
+           && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandInspectXde::CommandInspectXde(IAppContext* context)
@@ -77,7 +78,8 @@ bool CommandInspectXde::getEnabledStatus() const
             !spanSelectedAppItem.empty() ? spanSelectedAppItem.front() : ApplicationItem();
     return spanSelectedAppItem.size() == 1
             && firstAppItem.isValid()
-            && firstAppItem.document()->isXCafDocument();
+            && firstAppItem.document()->isXCafDocument()
+            && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandEditOptions::CommandEditOptions(IAppContext* context)

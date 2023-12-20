@@ -56,7 +56,8 @@ QColor lerp(const QColor& a, const QColor& b, double t)
                 MathUtils::lerp(a.red(), b.red(), t),
                 MathUtils::lerp(a.green(), b.green(), t),
                 MathUtils::lerp(a.blue(), b.blue(), t),
-                MathUtils::lerp(a.alpha(), b.alpha(), t));
+                MathUtils::lerp(a.alpha(), b.alpha(), t)
+    );
 }
 
 QColor linearColorAt(const QGradient& gradient, double t)
@@ -130,14 +131,14 @@ int screenPixelWidth(double screenRatio, const QScreen* screen)
 {
     screen = !screen ? QGuiApplication::primaryScreen() : screen;
     const int screenWidth = screen ? screen->geometry().width() : 800;
-    return std::round(screenWidth * screenRatio);
+    return qRound(screenWidth * screenRatio);
 }
 
 int screenPixelHeight(double screenRatio, const QScreen* screen)
 {
     screen = !screen ? QGuiApplication::primaryScreen() : screen;
     const int screenHeight = screen ? screen->geometry().height() : 600;
-    return std::round(screenHeight * screenRatio);
+    return qRound(screenHeight * screenRatio);
 }
 
 QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen)
