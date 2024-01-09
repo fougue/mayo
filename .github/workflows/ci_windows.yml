@@ -6,7 +6,17 @@ jobs:
     build-windows-msvc:
         strategy:
             matrix:
-                occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0]
+                include:
+                    - occ_version: 7.3.0
+                      occ_zip_sha256: '2503e69d595bb4c4e760b629aba3d8cee5e6b8d0da43b0d790a7949c67fd15d0'
+                    - occ_version: 7.4.0
+                      occ_zip_sha256: '6664b9a4213036ff0960edd2426258cf66844386c1a2338fa62e008f40c476bb'
+                    - occ_version: 7.5.0
+                      occ_zip_sha256: '8000f261ecbf6689e48439aa5895304069d00a14efe28eb7f1d108450cb7a74f'
+                    - occ_version: 7.6.0
+                      occ_zip_sha256: '137788c7693f74fb98797adfd06c1b00f66dac59beca5c3073c1f62c98b7a80f'
+                    - occ_version: 7.7.0
+                      occ_zip_sha256: '82afb7bd5fd7097189ee4e98bf3bc02b4030cae7a82967db68d5f2b556801779'
 
         runs-on: windows-latest
 
@@ -32,11 +42,10 @@ jobs:
           uses: carlosperate/download-file-action@v2
           with:
               file-url: 'https://www.fougue.pro/share/bin/OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip'
+              sha256: ${{matrix.occ_zip_sha256}}
 
         - name: Extract OpenCascade
-          shell: pwsh
-          run: |
-              Expand-Archive -Path OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip -DestinationPath .
+          run: 7z x OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
 
         - name: Cache Assimp archive
           id: cache-assimp
@@ -50,16 +59,16 @@ jobs:
           uses: carlosperate/download-file-action@v2
           with:
               file-url: 'https://www.fougue.pro/share/bin/assimp-5.3.1.zip'
+              sha256: 'b6097488fa5b7a0cc610e8258e74aaa9552b48a13bc8680eedd66512d788e64f'
 
         - name: Extract Assimp
-          shell: pwsh
-          run: |
-              Expand-Archive -Path assimp-5.3.1.zip -DestinationPath .
+          run: 7z x assimp-5.3.1.zip
 
         - name: Download jom.exe
           uses: carlosperate/download-file-action@v2
           with:
               file-url: 'https://www.fougue.pro/share/bin/jom.exe'
+              sha256: '700943516856c15675212bbcecc4e3d7580514456f8b6f09d634e98e25296ad4'
 
         - name: Get count of CPU cores
           uses: SimenB/github-actions-cpu-cores@v1
@@ -86,8 +95,7 @@ jobs:
 
         - name: Build
           working-directory: ${{github.workspace}}/build
-          run: |
-              ..\jom.exe -j${{steps.cpu-cores.outputs.count}}
+          run: ..\jom.exe -j${{steps.cpu-cores.outputs.count}}
 
         - name: Execute Unit Tests
           working-directory: ${{github.workspace}}/build

@@ -2170,13 +2170,10 @@ bool CDxfRead::ReadArc()
 
 bool CDxfRead::ReadSpline()
 {
-    struct SplineData sd;
-    sd.norm = {0., 0., 1.};
-    sd.degree = 0;
-    sd.knots = 0;
-    sd.flag = 0;
-    sd.control_points = 0;
-    sd.fit_points = 0;
+    Dxf_SPLINE spline;
+    int knotCount = 0;
+    int controlPointCount = 0;
+    int fitPointCount = 0;
 
     while (!m_ifs.eof()) {
         get_line();
@@ -2184,7 +2181,7 @@ bool CDxfRead::ReadSpline()
         if (n == 0) {
             // next item found, so finish with Spline
             ResolveColorIndex();
-            OnReadSpline(sd);
+            OnReadSpline(spline);
             return true;
         }
         else if (isStringToErrorValue(n)) {
@@ -2194,92 +2191,53 @@ bool CDxfRead::ReadSpline()
 
         get_line();
         switch (n) {
-        case 210:
-        case 220:
-        case 230:
-            // normal coords
-            HandleCoordCode<210, 220, 230>(n, &sd.norm);
+        case 210: case 220: case 230:
+            HandleCoordCode<210, 220, 230>(n, &spline.normalVector);
             break;
         case 70:
-            // flag
-            sd.flag = stringToInt(m_str);
+            spline.flags = stringToUnsigned(m_str);
             break;
         case 71:
-            // degree
-            sd.degree = stringToInt(m_str);
+            spline.degree = stringToInt(m_str);
             break;
         case 72:
-            // knots
-            sd.knots = stringToInt(m_str);
+            knotCount = stringToInt(m_str);
+            spline.knots.reserve(knotCount);
             break;
         case 73:
-            // control points
-            sd.control_points = stringToInt(m_str);
+            controlPointCount = stringToInt(m_str);
+            spline.controlPoints.reserve(controlPointCount);
             break;
         case 74:
-            // fit points
-            sd.fit_points = stringToInt(m_str);
+            fitPointCount = stringToInt(m_str);
+            spline.fitPoints.reserve(fitPointCount);
             break;
-        case 12:
-            // starttan x
-            sd.starttanx.push_back(mm(stringToDouble(m_str)));
+        case 12: case 22: case 32:
+            HandleVectorCoordCode<12, 22, 32>(n, &spline.startTangents);
             break;
-        case 22:
-            // starttan y
-            sd.starttany.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 32:
-            // starttan z
-            sd.starttanz.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 13:
-            // endtan x
-            sd.endtanx.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 23:
-            // endtan y
-            sd.endtany.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 33:
-            // endtan z
-            sd.endtanz.push_back(mm(stringToDouble(m_str)));
+        case 13: case 23: case 33:
+            HandleVectorCoordCode<13, 23, 33>(n, &spline.endTangents);
             break;
         case 40:
-            // knot
-            sd.knot.push_back(mm(stringToDouble(m_str)));
+            spline.knots.push_back(mm(stringToDouble(m_str)));
             break;
         case 41:
-            // weight
-            sd.weight.push_back(mm(stringToDouble(m_str)));
+            spline.weights.push_back(mm(stringToDouble(m_str)));
             break;
-        case 10:
-            // control x
-            sd.controlx.push_back(mm(stringToDouble(m_str)));
+        case 10: case 20: case 30:
+            HandleVectorCoordCode<10, 20, 30>(n, &spline.controlPoints);
             break;
-        case 20:
-            // control y
-            sd.controly.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 30:
-            // control z
-            sd.controlz.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 11:
-            // fit x
-            sd.fitx.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 21:
-            // fit y
-            sd.fity.push_back(mm(stringToDouble(m_str)));
-            break;
-        case 31:
-            // fit z
-            sd.fitz.push_back(mm(stringToDouble(m_str)));
+        case 11: case 21: case 31:
+            HandleVectorCoordCode<11, 21, 31>(n, &spline.fitPoints);
             break;
         case 42:
+            spline.knotTolerance = stringToDouble(m_str);
+            break;
         case 43:
+            spline.controlPointTolerance = stringToDouble(m_str);
+            break;
         case 44:
-            // skip the next line
+            spline.fitTolerance = stringToDouble(m_str);
             break;
         default:
             HandleCommonGroupCode(n);
@@ -2288,7 +2246,7 @@ bool CDxfRead::ReadSpline()
     }
 
     ResolveColorIndex();
-    OnReadSpline(sd);
+    OnReadSpline(spline);
     return false;
 }
 
