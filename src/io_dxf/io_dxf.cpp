@@ -31,6 +31,7 @@
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BSplCLib.hxx>
 #include <Graphic3d_HorizontalTextAlignment.hxx>
 #include <Graphic3d_VerticalTextAlignment.hxx>
 #include <Font_BRepTextBuilder.hxx>
@@ -44,11 +45,14 @@
 #include <XCAFDoc_ShapeTool.hxx>
 
 #include <fmt/format.h>
+#include <algorithm>
+#include <functional>
+#include <iostream>
 #include <optional>
 #include <sstream>
 #include <string_view>
 
-#include <iostream>
+#define MAYO_IO_DXF_DEBUG_TRACE 1
 
 namespace Mayo {
 namespace IO {
@@ -122,7 +126,7 @@ public:
     void OnReadArc(const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadEllipse(const DxfCoords& c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
-    void OnReadSpline(struct SplineData& sd) override;
+    void OnReadSpline(const Dxf_SPLINE& spline) override;
     void OnReadInsert(const Dxf_INSERT& ins) override;
     void OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation) override;
     void OnReadSolid(const Dxf_SOLID& solid) override;
@@ -130,8 +134,8 @@ public:
     void ReportError(const std::string& msg) override;
     void AddGraphics() const override;
 
-    static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(struct SplineData& sd);
-    static Handle_Geom_BSplineCurve createInterpolationSpline(struct SplineData& sd);
+    static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
+    static Handle_Geom_BSplineCurve createInterpolationSpline(const Dxf_SPLINE& spline);
 
     gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape);
@@ -663,27 +667,29 @@ void DxfReader::Internal::OnReadEllipse(
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadSpline(SplineData& sd)
+void DxfReader::Internal::OnReadSpline(const Dxf_SPLINE& spline)
 {
     // https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ff18cb41610ec0a2e719-79e1.htm
-    // Flags:
-    // 1: Closed, 2: Periodic, 4: Rational, 8: Planar, 16: Linear
-
     try {
         Handle_Geom_BSplineCurve geom;
-        if (sd.control_points > 0)
-            geom = createSplineFromPolesAndKnots(sd);
-        else if (sd.fit_points > 0)
-            geom = createInterpolationSpline(sd);
+        if (!spline.controlPoints.empty())
+            geom = createSplineFromPolesAndKnots(spline);
+        else if (!spline.fitPoints.empty())
+            geom = createInterpolationSpline(spline);
 
         if (geom.IsNull())
-            throw Standard_Failure();
+            throw Standard_Failure("Geom_BSplineCurve object is null");
 
         const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(geom);
         this->addShape(edge);
     }
-    catch (const Standard_Failure&) {
-        m_messenger->emitWarning("DxfReader - Failed to create bspline");
+    catch (const Standard_Failure& err) {
+#ifdef MAYO_IO_DXF_DEBUG_TRACE
+        std::cout << "ERROR DxfReader::OnReadSpline() -- " << err.GetMessageString() << std::endl;
+#endif
+        m_messenger->emitWarning(
+            fmt::format("DxfReader - Failed to create bspline({})", err.GetMessageString())
+        );
     }
 }
 
@@ -829,86 +835,83 @@ void DxfReader::Internal::addShape(const TopoDS_Shape& shape)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(struct SplineData& sd)
+Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
 {
-    const size_t numPoles = sd.control_points;
-    if (sd.controlx.size() > numPoles
-            || sd.controly.size() > numPoles
-            || sd.controlz.size() > numPoles
-            || sd.weight.size() > numPoles)
-    {
+    if (spline.weights.size() > spline.controlPoints.size())
         return {};
+
+    const bool isPeriodic = (spline.flags & Dxf_SPLINE::Periodic) != 0;
+
+    // Handle poles
+    const auto iNumPoles = CppUtils::safeStaticCast<int>(spline.controlPoints.size());
+    TColgp_Array1OfPnt occPoles(1, iNumPoles);
+    for (const DxfCoords& pnt : spline.controlPoints) {
+        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.controlPoints.front());
+        occPoles.ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
     }
 
-    // handle the poles
-    TColgp_Array1OfPnt occpoles(1, sd.control_points);
-    int index = 1;
-    for (auto x : sd.controlx)
-        occpoles(index++).SetX(x);
+    // Handle knots and mults
+    const auto iNumKnots = CppUtils::safeStaticCast<int>(spline.knots.size());
+    TColStd_Array1OfReal occKnots(1, iNumKnots);
+    std::copy(spline.knots.cbegin(), spline.knots.cend(), occKnots.begin());
 
-    index = 1;
-    for (auto y : sd.controly)
-        occpoles(index++).SetY(y);
+    const auto iNumUniqueKnots = BSplCLib::KnotsLength(occKnots, isPeriodic);
+    TColStd_Array1OfReal occUniqueKnots(1, iNumUniqueKnots);
+    TColStd_Array1OfInteger occMults(1, iNumUniqueKnots);
+    BSplCLib::Knots(occKnots, std::ref(occUniqueKnots), std::ref(occMults), isPeriodic);
 
-    index = 1;
-    for (auto z : sd.controlz)
-        occpoles(index++).SetZ(z);
+    // Handle weights
+    TColStd_Array1OfReal occWeights(1, iNumPoles);
+    if (spline.weights.size() == spline.controlPoints.size())
+        std::copy(spline.weights.cbegin(), spline.weights.cend(), occWeights.begin());
+    else
+        std::fill(occWeights.begin(), occWeights.end(), 1.); // Non-rational
 
-    // handle knots and mults
-    std::set<double> unique;
-    unique.insert(sd.knot.begin(), sd.knot.end());
+#ifdef MAYO_IO_DXF_DEBUG_TRACE
+    // Debug traces
+    std::cout << std::endl << "createSplineFromPolesAndKnots()";
+    std::cout << "\n    degree: " << spline.degree;
+    std::cout << "\n    flags: " << spline.flags;
+    std::cout << "\n    isPeriodic: " << isPeriodic;
+    std::cout << "\n    numPoles: " << iNumPoles;
 
-    const int numKnots = int(unique.size());
-    TColStd_Array1OfInteger occmults(1, numKnots);
-    TColStd_Array1OfReal occknots(1, numKnots);
-    index = 1;
-    for (auto k : unique) {
-        const auto m = CppUtils::safeStaticCast<int>(std::count(sd.knot.begin(), sd.knot.end(), k));
-        occknots(index) = k;
-        occmults(index) = m;
-        index++;
-    }
+    std::cout << "\n    numKnots: " << iNumKnots;
+    std::cout << "\n    occKnots: ";
+    for (double uknot : occKnots)
+        std::cout << uknot << ", ";
 
-    // handle weights
-    TColStd_Array1OfReal occweights(1, sd.control_points);
-    if (sd.weight.size() == size_t(sd.control_points)) {
-        index = 1;
-        for (auto w : sd.weight)
-            occweights(index++) = w;
-    }
-    else {
-        // non-rational
-        for (int i = occweights.Lower(); i <= occweights.Upper(); i++)
-            occweights(i) = 1.0;
-    }
+    std::cout << "\n    numUniqueKnots: " << iNumUniqueKnots;
+    std::cout << "\n    occUniqueKnots: ";
+    for (double uknot : occUniqueKnots)
+        std::cout << uknot << ", ";
 
-    const bool periodic = sd.flag == 2;
-    return new Geom_BSplineCurve(occpoles, occweights, occknots, occmults, sd.degree, periodic);
+    std::cout << "\n    occMults: ";
+    for (int mult : occMults)
+        std::cout << mult << ", ";
+
+    std::cout << "\n    numStartTangents: " << spline.startTangents.size();
+    std::cout << "\n    numEndTangents: " << spline.endTangents.size();
+    std::cout << "\n    BSplCLib::NbPoles(): " << BSplCLib::NbPoles(spline.degree, isPeriodic, occMults);
+    std::cout << std::endl;
+#endif
+
+    return new Geom_BSplineCurve(occPoles, occWeights, occUniqueKnots, occMults, spline.degree, isPeriodic);
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(struct SplineData& sd)
+Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
 {
-    const size_t numPoints = sd.fit_points;
-    if (sd.fitx.size() > numPoints || sd.fity.size() > numPoints || sd.fitz.size() > numPoints)
-        return {};
+    const auto iNumPoints = CppUtils::safeStaticCast<int>(spline.fitPoints.size());
 
-    // handle the poles
-    Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, sd.fit_points);
-    int index = 1;
-    for (auto x : sd.fitx)
-        fitpoints->ChangeValue(index++).SetX(x);
+    // Handle poles
+    Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, iNumPoints);
+    for (const DxfCoords& pnt : spline.fitPoints) {
+        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.fitPoints.front());
+        fitpoints->ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
+    }
 
-    index = 1;
-    for (auto y : sd.fity)
-        fitpoints->ChangeValue(index++).SetY(y);
-
-    index = 1;
-    for (auto z : sd.fitz)
-        fitpoints->ChangeValue(index++).SetZ(z);
-
-    const bool periodic = sd.flag == 2;
-    GeomAPI_Interpolate interp(fitpoints, periodic, Precision::Confusion());
+    const bool isPeriodic = (spline.flags & Dxf_SPLINE::Periodic) != 0;
+    GeomAPI_Interpolate interp(fitpoints, isPeriodic, Precision::Confusion());
     interp.Perform();
     return interp.Curve();
 }
