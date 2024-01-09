@@ -231,7 +231,7 @@ struct Dxf_POLYLINE {
     int polygonMeshNVertexCount = 0;
     double smoothSurfaceMDensity = 0.;
     double smoothSurfaceNDensity = 0.;
-    double extrusionDir[3] = { 0., 0., 1. };
+    DxfCoords extrusionDirection = { 0., 0., 1. };
     std::vector<Dxf_VERTEX> vertices;
 };
 
