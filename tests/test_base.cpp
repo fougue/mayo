@@ -653,9 +653,10 @@ void TestBase::BRepUtils_test()
         const TopoDS_Shape shapeNull;
         const TopoDS_Shape shapeBase = BRepPrimAPI_MakeBox(25, 25, 25);
         const TopoDS_Shape shapeCopy = shapeBase;
-        QCOMPARE(BRepUtils::hashCode(shapeNull), -1);
-        QVERIFY(BRepUtils::hashCode(shapeBase) >= 0);
+        const TopoDS_Shape shapeOther = BRepPrimAPI_MakeBox(40, 40, 40);
+        QCOMPARE(BRepUtils::hashCode(shapeNull), BRepUtils::hashCode(TopoDS_Shape{}));
         QCOMPARE(BRepUtils::hashCode(shapeBase), BRepUtils::hashCode(shapeCopy));
+        QVERIFY(BRepUtils::hashCode(shapeBase) != BRepUtils::hashCode(shapeOther));
     }
 }
 

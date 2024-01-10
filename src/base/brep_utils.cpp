@@ -59,9 +59,13 @@ bool BRepUtils::moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs)
     return lhs < rhs;
 }
 
-int BRepUtils::hashCode(const TopoDS_Shape& shape)
+size_t BRepUtils::hashCode(const TopoDS_Shape& shape)
 {
-    return !shape.IsNull() ? shape.HashCode(INT_MAX) : -1;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 8, 0)
+    return std::hash<TopoDS_Shape>{}(shape);
+#else
+    return shape.HashCode(INT_MAX);
+#endif
 }
 
 std::string BRepUtils::shapeToString(const TopoDS_Shape& shape)

@@ -173,19 +173,36 @@ LIBS += \
     -lTKXmlXCAF \
     -lTKXSBase \
 
-versionAtLeast(OCC_VERSION_STR, 7.7.0) {
-    LIBS += -lTKXDE
+versionAtLeast(OCC_VERSION_STR, 7.8.0) {
+    # -- IGES support
+    LIBS += -lTKDEIGES
+    # -- STEP support
+    LIBS += -lTKDESTEP
+    # -- STL support
+    LIBS += -lTKDESTL
+    # -- VRML support
+    LIBS += -lTKDEVRML
+} else {
+    # -- IGES support
+    LIBS += -lTKIGES -lTKXDEIGES
+    # -- STEP support
+    LIBS += -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKXDESTEP
+    # -- STL support
+    LIBS += -lTKSTL
+    # -- VRML support
+    LIBS += -lTKVRML
+
+    versionAtLeast(OCC_VERSION_STR, 7.7.0) {
+        LIBS += -lTKXDE
+    }
 }
 
-# -- IGES support
-LIBS += -lTKIGES -lTKXDEIGES
-# -- STEP support
-LIBS += -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKXDESTEP
-# -- STL support
-LIBS += -lTKSTL
 # -- OBJ/glTF support
 versionAtLeast(OCC_VERSION_STR, 7.4.0) {
     LIBS += -lTKRWMesh
+    versionAtLeast(OCC_VERSION_STR, 7.8.0) {
+        LIBS += -lTKDEOBJ -lTKDEGLTF
+    }
 } else {
     SOURCES -= \
         src/io_occ/io_occ_base_mesh.cpp \
@@ -205,8 +222,7 @@ versionAtLeast(OCC_VERSION_STR, 7.4.0) {
     SOURCES -= src/io_occ/io_occ_obj_writer.cpp
     message(OBJ writer disabled because OpenCascade < v7.6)
 }
-# -- VRML support
-LIBS += -lTKVRML
+
 !versionAtLeast(OCC_VERSION_STR, 7.7.0) {
     SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
     message(VRML reader disabled because OpenCascade < v7.7)

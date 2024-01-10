@@ -55,6 +55,7 @@ public:
 
 } // namespace Mayo
 
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 8, 0)
 namespace std {
 
 // Specialization of C++11 std::hash<> functor for opencascade::handle<> objects
@@ -65,3 +66,4 @@ template<typename T> struct hash<opencascade::handle<T>> {
 };
 
 } // namespace std
+#endif

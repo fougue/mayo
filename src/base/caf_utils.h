@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Standard_Version.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TDF_Label.hxx>
@@ -43,7 +44,7 @@ struct CafUtils {
 
 } // namespace Mayo
 
-
+#if OCC_VERSION_HEX < 0x070800
 #include <TDF_LabelMapHasher.hxx>
 namespace std {
 
@@ -55,6 +56,7 @@ template<> struct hash<TDF_Label> {
 };
 
 } // namespace std
+#endif
 
 // --
 // -- Implementation
