@@ -17,6 +17,8 @@ jobs:
                       occ_zip_sha256: '137788c7693f74fb98797adfd06c1b00f66dac59beca5c3073c1f62c98b7a80f'
                     - occ_version: 7.7.0
                       occ_zip_sha256: '82afb7bd5fd7097189ee4e98bf3bc02b4030cae7a82967db68d5f2b556801779'
+                    - occ_version: 7.8.0
+                      occ_zip_sha256: 'beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee'
 
         runs-on: windows-latest
 

@@ -312,7 +312,6 @@ QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
 
 WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
 {
-    assert(idx == -1 || (0 <= idx && idx < m_ui->stack_GuiDocuments->count()));
     return qobject_cast<WidgetGuiDocument*>(m_ui->stack_GuiDocuments->widget(idx));
 }
 
