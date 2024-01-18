@@ -192,13 +192,32 @@ struct Dxf_VERTEX {
         SplineFrameControlPoint = 16,
         Polyline3dVertex = 32,
         Polygon3dVertex = 64,
-        PolyfaceMesgVertex = 128
+        PolyfaceMeshVertex = 128
     };
     using Flags = unsigned;
 
+    // Code: 10, 20, 30
     DxfCoords point = {};
+    // Code: 40
+    double startingWidth = 0.;
+    // Code: 41
+    double endingWidth = 0.;
+    // Code: 42
     Bulge bulge = Bulge::StraightSegment;
+    // Code: 70
     Flags flags = Flag::None;
+    // Code: 50
+    double curveFitTangentDirection = 0.;
+    // Code: 71
+    int polyfaceMeshVertex1 = 0;
+    // Code: 72
+    int polyfaceMeshVertex2 = 0;
+    // Code: 73
+    int polyfaceMeshVertex3 = 0;
+    // Code: 74
+    int polyfaceMeshVertex4 = 0;
+    // Code: 91
+    // int identifier = 0;
 };
 
 struct Dxf_POLYLINE {
@@ -222,16 +241,27 @@ struct Dxf_POLYLINE {
         BezierSurface = 8
     };
 
-    double elevation = 0.;
+    // Code: 39
     double thickness = 0.;
+    // Code: 70
     Flags flags = Flag::None;
+    // Code: 40
     double defaultStartWidth = 0.;
+    // Code: 41
     double defaultEndWidth = 0.;
+    // Code: 71(number of vertices in the mesh)
     int polygonMeshMVertexCount = 0;
+    // Code: 72(number of faces in the mesh)
     int polygonMeshNVertexCount = 0;
+    // Code: 73
     double smoothSurfaceMDensity = 0.;
+    // Code: 74
     double smoothSurfaceNDensity = 0.;
+    // Code: 75
+    Type type = Type::NoSmoothSurfaceFitted;
+    // Code: 210, 220, 230
     DxfCoords extrusionDirection = { 0., 0., 1. };
+
     std::vector<Dxf_VERTEX> vertices;
 };
 
@@ -256,7 +286,7 @@ struct Dxf_INSERT {
     DxfCoords extrusionDirection = { 0., 0., 1. };
 };
 
-struct Dxf_SOLID {
+struct Dxf_QuadBase {
     // Code: 10, 20, 30
     DxfCoords corner1;
     // Code: 11, 21, 31
@@ -266,6 +296,23 @@ struct Dxf_SOLID {
     // Code: 13, 23, 33
     DxfCoords corner4;
     bool hasCorner4 = false;
+};
+
+struct Dxf_3DFACE : public Dxf_QuadBase {
+    enum Flag {
+        None = 0,
+        InvisibleEdge1 = 1,
+        InvisibleEdge2 = 2,
+        InvisibleEdge3 = 4,
+        InvisibleEdge4 = 8
+    };
+    using Flags = unsigned;
+
+    // Code: 70
+    Flags flags = Flag::None;
+};
+
+struct Dxf_SOLID : public Dxf_QuadBase {
     // Code: 39
     double thickness = 0.;
     // Code: 210, 220, 230
@@ -603,6 +650,7 @@ private:
     bool ReadLwPolyLine();
     bool ReadPolyLine();
     bool ReadVertex(Dxf_VERTEX* vertex);
+    bool Read3dFace();
     bool ReadSolid();
     bool ReadSection();
     bool ReadTable();
@@ -692,6 +740,8 @@ public:
     virtual void OnReadLine(const DxfCoords& s, const DxfCoords& e, bool hidden) = 0;
 
     virtual void OnReadPolyline(const Dxf_POLYLINE&) = 0;
+
+    virtual void OnRead3dFace(const Dxf_3DFACE&) = 0;
 
     virtual void OnReadPoint(const DxfCoords& s) = 0;
 

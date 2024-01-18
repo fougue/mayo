@@ -2791,8 +2791,13 @@ bool CDxfRead::ReadVertex(Dxf_VERTEX* vertex)
             y_found = y_found || n == 20;
             HandleCoordCode(n, &vertex->point);
             break;
+        case 40:
+            vertex->startingWidth = stringToDouble(m_str);
+            break;
+        case 41:
+            vertex->endingWidth = stringToDouble(m_str);
+            break;
         case 42: {
-            // bulge
             const int bulge = stringToInt(m_str);
             if (bulge == 0)
                 vertex->bulge = Dxf_VERTEX::Bulge::StraightSegment;
@@ -2801,8 +2806,62 @@ bool CDxfRead::ReadVertex(Dxf_VERTEX* vertex)
         }
             break;
         case 70:
-            // flags
             vertex->flags = stringToUnsigned(m_str);
+            break;
+        case 71:
+            vertex->polyfaceMeshVertex1 = stringToInt(m_str);
+            break;
+        case 72:
+            vertex->polyfaceMeshVertex2 = stringToInt(m_str);
+            break;
+        case 73:
+            vertex->polyfaceMeshVertex3 = stringToInt(m_str);
+            break;
+        case 74:
+            vertex->polyfaceMeshVertex4 = stringToInt(m_str);
+            break;
+        default:
+            HandleCommonGroupCode(n);
+            break;
+        }
+    }
+
+    return false;
+}
+
+bool CDxfRead::Read3dFace()
+{
+    Dxf_3DFACE face;
+    while (!m_ifs.eof()) {
+        get_line();
+        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
+        if (n == 0) {
+            ResolveColorIndex();
+            OnRead3dFace(face);
+            return true;
+        }
+        else if (isStringToErrorValue(n)) {
+            this->ReportError_readInteger("DXF::Read3dFace()");
+            return false;
+        }
+
+        get_line();
+        switch (n) {
+        case 10: case 20: case 30:
+            HandleCoordCode<10, 20, 30>(n, &face.corner1);
+            break;
+        case 11: case 21: case 31:
+            HandleCoordCode<11, 21, 31>(n, &face.corner2);
+            break;
+        case 12: case 22: case 32:
+            HandleCoordCode<12, 22, 32>(n, &face.corner3);
+            break;
+        case 13: case 23: case 33:
+            HandleCoordCode<13, 23, 33>(n, &face.corner4);
+            face.hasCorner4 = true;
+            break;
+        case 70:
+            face.flags = stringToUnsigned(m_str);
             break;
         default:
             HandleCommonGroupCode(n);
@@ -2914,9 +2973,35 @@ bool CDxfRead::ReadPolyLine()
             }
 
             break;
+        case 39:
+            polyline.thickness = stringToDouble(m_str);
+            break;
         case 70:
-            // flags
             polyline.flags = stringToUnsigned(m_str);
+            break;
+        case 40:
+            polyline.defaultStartWidth = stringToDouble(m_str);
+            break;
+        case 41:
+            polyline.defaultEndWidth = stringToDouble(m_str);
+            break;
+        case 71:
+            polyline.polygonMeshMVertexCount = stringToInt(m_str);
+            break;
+        case 72:
+            polyline.polygonMeshNVertexCount = stringToInt(m_str);
+            break;
+        case 73:
+            polyline.smoothSurfaceMDensity = stringToDouble(m_str);
+            break;
+        case 74:
+            polyline.smoothSurfaceNDensity = stringToDouble(m_str);
+            break;
+        case 75:
+            polyline.type = static_cast<Dxf_POLYLINE::Type>(stringToUnsigned(m_str));
+            break;
+        case 210: case 220: case 230:
+            HandleCoordCode<210, 220, 230>(n, &polyline.extrusionDirection);
             break;
         default:
             HandleCommonGroupCode(n);
@@ -3402,6 +3487,7 @@ void CDxfRead::DoRead(bool ignore_errors)
     mapEntityHandler.insert({ "POLYLINE", [=]{ return ReadPolyLine(); } });
     mapEntityHandler.insert({ "SECTION", [=]{ return ReadSection(); } });
     mapEntityHandler.insert({ "SOLID", [=]{ return ReadSolid(); } });
+    mapEntityHandler.insert({ "3DFACE", [=]{ return Read3dFace(); } });
     mapEntityHandler.insert({ "SPLINE", [=]{ return ReadSpline(); } });
     mapEntityHandler.insert({ "STYLE", [=]{ return ReadStyle(); } });
     mapEntityHandler.insert({ "TEXT", [=]{ return ReadText(); } });
