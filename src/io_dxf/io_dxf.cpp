@@ -13,6 +13,7 @@
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
+#include "../base/occ_handle.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
@@ -22,27 +23,28 @@
 #include "aci_table.h"
 #include "dxf.h"
 
-#include <gp_Circ.hxx>
-#include <gp_Elips.hxx>
-#include <gp_Trsf.hxx>
-#include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRep_Builder.hxx>
 #include <BSplCLib.hxx>
-#include <Graphic3d_HorizontalTextAlignment.hxx>
-#include <Graphic3d_VerticalTextAlignment.hxx>
 #include <Font_BRepTextBuilder.hxx>
 #include <Font_FontMgr.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <Geom_BSplineCurve.hxx>
+#include <Graphic3d_HorizontalTextAlignment.hxx>
+#include <Graphic3d_VerticalTextAlignment.hxx>
+#include <Poly_Triangulation.hxx>
 #include <Precision.hxx>
 #include <Resource_Unicode.hxx>
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <gp_Circ.hxx>
+#include <gp_Elips.hxx>
+#include <gp_Trsf.hxx>
 
 #include <fmt/format.h>
 #include <algorithm>
@@ -130,6 +132,7 @@ public:
     void OnReadInsert(const Dxf_INSERT& ins) override;
     void OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation) override;
     void OnReadSolid(const Dxf_SOLID& solid) override;
+    void OnRead3dFace(const Dxf_3DFACE& face) override;
 
     void ReportError(const std::string& msg) override;
     void AddGraphics() const override;
@@ -139,6 +142,8 @@ public:
 
     gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape);
+
+    TopoDS_Face makeFace(const Dxf_QuadBase& quad) const;
 };
 
 class DxfReader::Properties : public PropertyGroup {
@@ -419,17 +424,45 @@ void DxfReader::Internal::OnReadLine(const DxfCoords& s, const DxfCoords& e, boo
 void DxfReader::Internal::OnReadPolyline(const Dxf_POLYLINE& polyline)
 {
     const auto& vertices = polyline.vertices;
-    const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
-    const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
-    MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
-    for (unsigned i = 0; i < vertices.size(); ++i)
-        polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
+    if (polyline.flags & Dxf_POLYLINE::Flag::PolyfaceMesh) {
+        const int meshVertexCount = polyline.polygonMeshMVertexCount;
+        TColgp_Array1OfPnt nodes(1, meshVertexCount);
+        for (int i = 0; i < meshVertexCount; ++i)
+            nodes.ChangeValue(i + 1) = this->toPnt(vertices.at(i).point);
 
-    if (isPolylineClosed)
-        polygonBuilder.setNode(nodeCount, this->toPnt(vertices.at(0).point));
+        const int meshFaceCount = polyline.polygonMeshNVertexCount;
+        std::vector<Poly_Triangle> vecTriangle;
+        vecTriangle.reserve(meshFaceCount);
+        for (int i = 0; i < meshFaceCount; ++i) {
+            const Dxf_VERTEX& face = vertices.at(meshVertexCount + i);
+            const auto meshVertex1 = std::abs(face.polyfaceMeshVertex1);
+            const auto meshVertex2 = std::abs(face.polyfaceMeshVertex2);
+            const auto meshVertex3 = std::abs(face.polyfaceMeshVertex3);
+            const auto meshVertex4 = std::abs(face.polyfaceMeshVertex4);
+            vecTriangle.emplace_back(meshVertex1, meshVertex2, meshVertex3);
+            if (meshVertex4 != 0 && meshVertex3 != meshVertex4)
+                vecTriangle.emplace_back(meshVertex1, meshVertex3, meshVertex4);
+        }
 
-    polygonBuilder.finalize();
-    this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
+        Poly_Array1OfTriangle triangles(1, static_cast<int>(vecTriangle.size()));
+        for (unsigned i = 0; i < vecTriangle.size(); ++i)
+            triangles.ChangeValue(i + 1) = vecTriangle.at(i);
+
+        this->addShape(BRepUtils::makeFace(new Poly_Triangulation(nodes, triangles)));
+    }
+    else {
+        const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
+        const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
+        MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
+        for (unsigned i = 0; i < vertices.size(); ++i)
+            polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
+
+        if (isPolylineClosed)
+            polygonBuilder.setNode(nodeCount, this->toPnt(vertices.at(0).point));
+
+        polygonBuilder.finalize();
+        this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
+    }
 }
 
 void DxfReader::Internal::OnReadPoint(const DxfCoords& s)
@@ -767,32 +800,32 @@ void DxfReader::Internal::OnReadDimension(const DxfCoords& s, const DxfCoords& e
 
 void DxfReader::Internal::OnReadSolid(const Dxf_SOLID& solid)
 {
-    const gp_Pnt p1 = this->toPnt(solid.corner1);
-    const gp_Pnt p2 = this->toPnt(solid.corner2);
-    const gp_Pnt p3 = this->toPnt(solid.corner3);
-    const gp_Pnt p4 = this->toPnt(solid.corner4);
-
-    TopoDS_Face face;
-    try {
-        BRepBuilderAPI_MakeWire makeWire;
-        makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
-        if (solid.hasCorner4 && !p3.IsEqual(p4, Precision::Confusion())) {
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p4));
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p3));
-        }
-        else {
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
-        }
-
-        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p1));
-        if (makeWire.IsDone())
-            face = BRepBuilderAPI_MakeFace(makeWire.Wire(), true/*onlyPlane*/);
-    } catch (...) {
-        m_messenger->emitError("OnReadSolid() failed");
+    Dxf_QuadBase quad = solid;
+    if (solid.hasCorner4) {
+        // See https://ezdxf.readthedocs.io/en/stable/dxfentities/solid.html
+        std::swap(quad.corner3, quad.corner4);
     }
 
-    if (!face.IsNull())
-        this->addShape(face);
+    try {
+        const TopoDS_Face face = makeFace(quad);
+        if (!face.IsNull())
+            this->addShape(face);
+    }
+    catch (...) {
+        m_messenger->emitError("OnReadSolid() failed");
+    }
+}
+
+void DxfReader::Internal::OnRead3dFace(const Dxf_3DFACE& face)
+{
+    try {
+        const TopoDS_Face brepFace = makeFace(face);
+        if (!brepFace.IsNull())
+            this->addShape(brepFace);
+    }
+    catch (...) {
+        m_messenger->emitError("OnReadFace() failed");
+    }
 }
 
 void DxfReader::Internal::ReportError(const std::string& msg)
@@ -832,6 +865,35 @@ void DxfReader::Internal::addShape(const TopoDS_Shape& shape)
         decltype(m_layers)::value_type pair(std::move(layerName), { newEntity });
         m_layers.insert(std::move(pair));
     }
+}
+
+TopoDS_Face DxfReader::Internal::makeFace(const Dxf_QuadBase& quad) const
+{
+    const gp_Pnt p1 = this->toPnt(quad.corner1);
+    const gp_Pnt p2 = this->toPnt(quad.corner2);
+    const gp_Pnt p3 = this->toPnt(quad.corner3);
+    const gp_Pnt p4 = this->toPnt(quad.corner4);
+
+    const double pntTolerance = Precision::Confusion();
+    if (p1.IsEqual(p2, pntTolerance) || p1.IsEqual(p3, pntTolerance) || p2.IsEqual(p3, pntTolerance))
+        return {};
+
+    TopoDS_Face face;
+    BRepBuilderAPI_MakeWire makeWire;
+    makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
+    makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
+    if (quad.hasCorner4 && !p3.IsEqual(p4, pntTolerance) && !p1.IsEqual(p4, pntTolerance)) {
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p4));
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p1));
+    }
+    else {
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p1));
+    }
+
+    if (makeWire.IsDone())
+        face = BRepBuilderAPI_MakeFace(makeWire.Wire(), true/*onlyPlane*/);
+
+    return face;
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
