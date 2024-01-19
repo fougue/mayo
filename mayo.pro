@@ -13,9 +13,19 @@ CONFIG(debug, debug|release) {
     message(Mayo version $$MAYO_VERSION release)
 }
 
+# Check Qt version
 message(Qt version $$QT_VERSION)
 !versionAtLeast(QT_VERSION, 5.14) {
     error(Qt >= 5.14 is required but detected version is $$QT_VERSION)
+}
+
+# Check architecture
+equals(QT_ARCH, x86_64) {
+    # NOP
+} else:equals(QT_ARCH, i386) {
+    # NOP
+} else {
+    warning(Platform architecture may be not supported(QT_ARCH = $$QT_ARCH))
 }
 
 QT += core gui widgets
