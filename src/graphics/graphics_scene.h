@@ -37,7 +37,13 @@ public:
     const opencascade::handle<Prs3d_Drawer>& drawerDefault() const;
     const opencascade::handle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
 
-    void addObject(const GraphicsObjectPtr& object);
+    enum AddObjectFlag {
+        AddObjectDefault = 0,
+        AddObjectDisableSelectionMode = 1
+    };
+    using AddObjectFlags = unsigned;
+
+    void addObject(const GraphicsObjectPtr& object, AddObjectFlags flags = AddObjectDefault);
     void eraseObject(const GraphicsObjectPtr& object);
 
     void redraw();

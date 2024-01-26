@@ -365,7 +365,8 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     const QColor bkgndColor =
             m_qtOccView->supportsWidgetOpacity() ?
                 Qt::transparent :
-                mayoTheme()->color(Theme::Color::ButtonView3d_Background);
+                mayoTheme()->color(Theme::Color::ButtonView3d_Background)
+            ;
 
     auto btn = new ButtonFlat(parent);
     btn->setBackgroundBrush(bkgndColor);
@@ -476,8 +477,10 @@ void WidgetGuiDocument::layoutViewControls()
             case Aspect_TOTP_LEFT_LOWER:
                 return { ctrlXOffset, this->height() - viewCubeBndSize - margin - ctrlHeight };
             case Aspect_TOTP_RIGHT_LOWER:
-                return { this->width() - viewCubeBndSize + ctrlXOffset,
-                         this->height() - viewCubeBndSize - margin - ctrlHeight };
+                return {
+                         this->width() - viewCubeBndSize + ctrlXOffset,
+                         this->height() - viewCubeBndSize - margin - ctrlHeight
+                       };
             default:
                 return { margin, margin };
             } // endswitch

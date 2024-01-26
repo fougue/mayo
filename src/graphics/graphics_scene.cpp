@@ -73,6 +73,15 @@ public:
     {}
 
     constexpr const GraphicsOwnerPtr& member_myLastPicked() const { return myLastPicked; }
+
+    int defaultDisplayMode(const GraphicsObjectPtr& object) const
+    {
+        int displayMode;
+        int hilightMode;
+        int selMode;
+        this->GetDefModes(object, displayMode, hilightMode, selMode);
+        return displayMode;
+    }
 };
 
 DEFINE_STANDARD_HANDLE(InteractiveContext, AIS_InteractiveContext)
@@ -133,10 +142,20 @@ const opencascade::handle<Prs3d_Drawer>& GraphicsScene::drawerHighlight(Prs3d_Ty
     return d->m_aisContext->HighlightStyle(style);
 }
 
-void GraphicsScene::addObject(const GraphicsObjectPtr& object)
+void GraphicsScene::addObject(const GraphicsObjectPtr& object, AddObjectFlags flags)
 {
-    if (object)
-        d->m_aisContext->Display(object, false);
+    if (object) {
+        if ((flags & AddObjectDisableSelectionMode) != 0) {
+            const bool onEntry_AutoActivateSelection = d->m_aisContext->GetAutoActivateSelection();
+            const int defaultDisplayMode = d->m_aisContext->defaultDisplayMode(object);
+            d->m_aisContext->SetAutoActivateSelection(false);
+            d->m_aisContext->Display(object, defaultDisplayMode, -1, false);
+            d->m_aisContext->SetAutoActivateSelection(onEntry_AutoActivateSelection);
+        }
+        else {
+            d->m_aisContext->Display(object, false);
+        }
+    }
 }
 
 void GraphicsScene::eraseObject(const GraphicsObjectPtr& object)

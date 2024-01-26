@@ -80,7 +80,21 @@ struct MeasureArea {
     QuantityArea value;
 };
 
-
+// Measure of the bounding box of an entity
+struct MeasureBoundingBox {
+    // Lower corner of the bounding box
+    gp_Pnt cornerMin;
+    // Upper corner of the bounding box
+    gp_Pnt cornerMax;
+    // Length of the bounding box along the X-axis
+    QuantityLength xLength;
+    // Length of the bounding box along the Y-axis
+    QuantityLength yLength;
+    // Length of the bounding box along the Z-axis
+    QuantityLength zLength;
+    // Volume of the bounding box
+    QuantityVolume volume;
+};
 
 // Provides an interface to various measurement services
 // Input data of a measure service is one or many graphics entities pointed to by GraphicsOwner objects
@@ -99,6 +113,7 @@ public:
     virtual MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const = 0;
     virtual MeasureLength length(const GraphicsOwnerPtr& owner) const = 0;
     virtual MeasureArea area(const GraphicsOwnerPtr& owner) const = 0;
+    virtual MeasureBoundingBox boundingBox(const GraphicsOwnerPtr& owner) const = 0;
 };
 
 // Base interface for errors reported by measurement services of IMeasureTool
@@ -115,7 +130,8 @@ using MeasureValue = std::variant<
             MeasureDistance,
             MeasureAngle,
             MeasureLength,
-            MeasureArea
+            MeasureArea,
+            MeasureBoundingBox
       >;
 
 bool MeasureValue_isValid(const MeasureValue& res);

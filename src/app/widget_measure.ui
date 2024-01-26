@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>229</width>
-    <height>156</height>
+    <width>246</width>
+    <height>158</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,6 +33,40 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="combo_AreaUnit">
+     <item>
+      <property name="text">
+       <string>Square Millimeter(mm²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Centimeter(cm²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Meter(m²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Inch(in²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Foot(ft²)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Square Yard(yd²)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_LengthUnit">
      <property name="text">
@@ -44,13 +78,6 @@
     <widget class="QLabel" name="label_MeasureType">
      <property name="text">
       <string>Measure</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_AngleUnit">
-     <property name="text">
-      <string>Angle Unit</string>
      </property>
     </widget>
    </item>
@@ -102,6 +129,41 @@
      </item>
     </widget>
    </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_AngleUnit">
+     <property name="text">
+      <string>Angle Unit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QWidget" name="widget_Message" native="true">
+     <layout class="QVBoxLayout" name="layout_Message">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="widget_Void" native="true"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_VolumeUnit">
+     <property name="text">
+      <string>Volume Unit</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="1">
     <widget class="QComboBox" name="combo_MeasureType">
      <item>
@@ -144,61 +206,55 @@
        <string>Surface Area</string>
       </property>
      </item>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QComboBox" name="combo_AreaUnit">
      <item>
       <property name="text">
-       <string>Square Millimeter(mm²)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Square Centimeter(cm²)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Square Meter(m²)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Square Inch(in²)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Square Foot(ft²)</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Square Yard(yd²)</string>
+       <string>Bounding Box</string>
       </property>
      </item>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QWidget" name="widget_Message" native="true">
-     <layout class="QVBoxLayout" name="layout_Message">
-      <property name="leftMargin">
-       <number>0</number>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="combo_VolumeUnit">
+     <item>
+      <property name="text">
+       <string>Cubic Millimeter(mm³)</string>
       </property>
-      <property name="topMargin">
-       <number>0</number>
+     </item>
+     <item>
+      <property name="text">
+       <string>Cubic Centimeter(cm³)</string>
       </property>
-      <property name="rightMargin">
-       <number>0</number>
+     </item>
+     <item>
+      <property name="text">
+       <string>Cubic Meter(m³)</string>
       </property>
-      <property name="bottomMargin">
-       <number>0</number>
+     </item>
+     <item>
+      <property name="text">
+       <string>Cubic Inch(in³)</string>
       </property>
-      <item>
-       <widget class="QWidget" name="widget_Void" native="true"/>
-      </item>
-     </layout>
+     </item>
+     <item>
+      <property name="text">
+       <string>Cubic Foot(ft³)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Liter(L)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Imperial Gallon(GBgal)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>US Gallon(USgal)</string>
+      </property>
+     </item>
     </widget>
    </item>
   </layout>

@@ -29,6 +29,7 @@ struct MeasureDisplayConfig {
     LengthUnit lengthUnit = LengthUnit::Millimeter;
     AngleUnit angleUnit = AngleUnit::Degree;
     AreaUnit areaUnit = AreaUnit::SquareMillimeter;
+    VolumeUnit volumeUnit = VolumeUnit::CubicMillimeter;
     DoubleToStringOptions doubleToStringOptions;
     double devicePixelRatio = 1.;
 };
@@ -226,6 +227,27 @@ public:
 private:
     MeasureArea m_area;
     Handle_AIS_TextLabel m_gfxAreaText;
+};
+
+// --
+// -- Bounding Box
+// --
+
+class MeasureDisplayBoundingBox : public BaseMeasureDisplay {
+public:
+    MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+    void update(const MeasureDisplayConfig& config) override;
+    int graphicsObjectsCount() const override { return 6; }
+    GraphicsObjectPtr graphicsObjectAt(int i) const override;
+
+private:
+    MeasureBoundingBox m_bnd;
+    Handle_AIS_Point m_gfxMinPoint;
+    Handle_AIS_Point m_gfxMaxPoint;
+    Handle_AIS_InteractiveObject m_gfxBox;
+    Handle_AIS_TextLabel m_gfxXLengthText;
+    Handle_AIS_TextLabel m_gfxYLengthText;
+    Handle_AIS_TextLabel m_gfxZLengthText;
 };
 
 } // namespace Mayo

@@ -15,9 +15,11 @@
 
 #include <gp_Elips.hxx>
 #include <AIS_Shape.hxx>
+#include <Bnd_OBB.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
@@ -57,7 +59,8 @@ enum class ErrorCode {
     NotAllEdges,
     NotLinearEdge,
     NotAllFaces,
-    ParallelEdges
+    ParallelEdges,
+    BoundingBoxIsVoid
 };
 
 template<ErrorCode Err>
@@ -89,6 +92,8 @@ public:
             return textIdTr("All entities must be faces");
         case ErrorCode::ParallelEdges:
             return textIdTr("Entities must not be parallel");
+        case ErrorCode::BoundingBoxIsVoid:
+            return textIdTr("Bounding box computed is void");
         default:
             return textIdTr("Unknown error");
         }
@@ -181,6 +186,14 @@ Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureT
         static const GraphicsObjectSelectionMode modes[] = { AIS_Shape::SelectionMode(TopAbs_FACE) };
         return modes;
     }
+    case MeasureType::BoundingBox: {
+        static const GraphicsObjectSelectionMode modes[] = {
+            //AIS_Shape::SelectionMode(TopAbs_FACE),
+            //AIS_Shape::SelectionMode(TopAbs_SOLID)
+            AIS_Shape::SelectionMode(TopAbs_COMPOUND)
+        };
+        return modes;
+    }
     default: {
         return {};
     }
@@ -231,6 +244,11 @@ MeasureLength MeasureToolBRep::length(const GraphicsOwnerPtr& owner) const
 MeasureArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
 {
     return brepArea(getShape(owner));
+}
+
+MeasureBoundingBox MeasureToolBRep::boundingBox(const GraphicsOwnerPtr& owner) const
+{
+    return brepBoundingBox(getShape(owner));
 }
 
 gp_Pnt MeasureToolBRep::brepVertexPosition(const TopoDS_Shape& shape)
@@ -507,6 +525,33 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
     }
 
     return areaResult;
+}
+
+MeasureBoundingBox MeasureToolBRep::brepBoundingBox(const TopoDS_Shape& shape)
+{
+    MeasureBoundingBox measure;
+#if 0
+    Bnd_OBB bnd;
+    BRepBndLib::AddOBB(shape, bnd);
+    //BRepBndLib::AddOBB(shape, bnd, false/*!useTriangulation*/, true/*optimal*/, false/*!useShapeTolerance*/);
+
+    gp_Pnt points[8] = {};
+    bnd.GetVertex(points);
+    measure.cornerMin = points[0];
+    measure.cornerMax = points[7];
+    //measure.isAxisAligned = bnd.IsAABox();
+#else
+    Bnd_Box bnd;
+    BRepBndLib::AddOptimal(shape, bnd);
+    throwErrorIf<ErrorCode::BoundingBoxIsVoid>(bnd.IsVoid());
+    measure.cornerMin = bnd.CornerMin();
+    measure.cornerMax = bnd.CornerMax();
+    measure.xLength = std::abs(measure.cornerMax.X() - measure.cornerMin.X()) * Quantity_Millimeter;
+    measure.yLength = std::abs(measure.cornerMax.Y() - measure.cornerMin.Y()) * Quantity_Millimeter;
+    measure.zLength = std::abs(measure.cornerMax.Z() - measure.cornerMin.Z()) * Quantity_Millimeter;
+    measure.volume = measure.xLength * measure.yLength * measure.zLength;
+#endif
+    return measure;
 }
 
 } // namespace Mayo
