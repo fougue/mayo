@@ -91,6 +91,10 @@ WidgetMeasure::WidgetMeasure(GuiDocument* guiDoc, QWidget* parent)
                 m_ui->combo_AreaUnit, qOverload<int>(&QComboBox::currentIndexChanged),
                 this, &WidgetMeasure::onMeasureUnitsChanged
     );
+    QObject::connect(
+                m_ui->combo_VolumeUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+                this, &WidgetMeasure::onMeasureUnitsChanged
+    );
 
     this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
     this->updateMessagePanel();
@@ -137,6 +141,7 @@ MeasureType WidgetMeasure::toMeasureType(int comboBoxId)
     case 5: return MeasureType::Angle;
     case 6: return MeasureType::Length;
     case 7: return MeasureType::Area;
+    case 8: return MeasureType::BoundingBox;
     }
     return MeasureType::None;
 }
@@ -176,6 +181,21 @@ AreaUnit WidgetMeasure::toMeasureAreaUnit(int comboBoxId)
     return {};
 }
 
+VolumeUnit WidgetMeasure::toMeasureVolumeUnit(int comboBoxId)
+{
+    switch (comboBoxId) {
+    case 0: return VolumeUnit::CubicMillimeter;
+    case 1: return VolumeUnit::CubicCentimeter;
+    case 2: return VolumeUnit::CubicMeter;
+    case 3: return VolumeUnit::CubicInch;
+    case 4: return VolumeUnit::CubicFoot;
+    case 5: return VolumeUnit::Liter;
+    case 6: return VolumeUnit::ImperialGallon;
+    case 7: return VolumeUnit::USGallon;
+    }
+    return {};
+}
+
 void WidgetMeasure::onMeasureTypeChanged(int id)
 {
     // Update widgets visibility
@@ -183,12 +203,15 @@ void WidgetMeasure::onMeasureTypeChanged(int id)
     const bool measureIsLengthBased = measureType != MeasureType::Angle;
     const bool measureIsAngle = measureType == MeasureType::Angle;
     const bool measureIsArea = measureType == MeasureType::Area;
+    const bool measureIsVolume = measureType == MeasureType::BoundingBox;
     m_ui->label_LengthUnit->setVisible(measureIsLengthBased && !measureIsArea);
-    m_ui->combo_LengthUnit->setVisible(measureIsLengthBased && !measureIsArea);
+    m_ui->combo_LengthUnit->setVisible(m_ui->label_LengthUnit->isVisible());
     m_ui->label_AngleUnit->setVisible(measureIsAngle);
-    m_ui->combo_AngleUnit->setVisible(measureIsAngle);
+    m_ui->combo_AngleUnit->setVisible(m_ui->label_AngleUnit->isVisible());
     m_ui->label_AreaUnit->setVisible(measureIsArea);
-    m_ui->combo_AreaUnit->setVisible(measureIsArea);
+    m_ui->combo_AreaUnit->setVisible(m_ui->label_AreaUnit->isVisible());
+    m_ui->label_VolumeUnit->setVisible(measureIsVolume);
+    m_ui->combo_VolumeUnit->setVisible(m_ui->label_VolumeUnit->isVisible());
 
     auto gfxScene = m_guiDoc->graphicsScene();
 
@@ -239,6 +262,7 @@ MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
     cfg.lengthUnit = WidgetMeasure::toMeasureLengthUnit(m_ui->combo_LengthUnit->currentIndex());
     cfg.angleUnit = WidgetMeasure::toMeasureAngleUnit(m_ui->combo_AngleUnit->currentIndex());
     cfg.areaUnit = WidgetMeasure::toMeasureAreaUnit(m_ui->combo_AreaUnit->currentIndex());
+    cfg.volumeUnit = WidgetMeasure::toMeasureVolumeUnit(m_ui->combo_VolumeUnit->currentIndex());
     cfg.doubleToStringOptions.locale = AppModule::get()->stdLocale();
     cfg.doubleToStringOptions.decimalCount = AppModule::get()->defaultTextOptions().unitDecimals;
     cfg.devicePixelRatio = this->devicePixelRatioF();
@@ -335,8 +359,7 @@ void WidgetMeasure::onGraphicsSelectionChanged()
         measure->update(measureDisplayConfig);
         measure->adaptGraphics(gfxScene->v3dViewer()->Driver());
         foreachGraphicsObject(measure, [=](const GraphicsObjectPtr& gfxObject) {
-            gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
-            gfxScene->addObject(gfxObject);
+            gfxScene->addObject(gfxObject, GraphicsScene::AddObjectDisableSelectionMode);
         });
 
         m_vecMeasureDisplay.push_back(std::move(measure));

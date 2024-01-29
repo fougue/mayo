@@ -32,7 +32,10 @@ private slots:
 
     void BRepLength_PolygonEdge_test();
 
-    void BRepArea_TriangulationFace();
+    void BRepArea_TriangulationFace_test();
+
+    void BRepBoundingBox_Sphere_test();
+    void BRepBoundingBox_NullShape_test();
 };
 
 } // namespace Mayo

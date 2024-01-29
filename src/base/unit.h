@@ -49,6 +49,15 @@ enum AreaUnit {
     SquareInch, SquareFoot, SquareYard, SquareMile
 };
 
+enum VolumeUnit {
+    // SI
+    CubicMillimeter, CubicCentimeter, CubicMeter,
+    // Imperial UK
+    CubicInch, CubicFoot,
+    // Others
+    Liter, ImperialGallon, USGallon
+};
+
 #if 0
 enum class BaseUnit {
     Length = 0, // Meter(m)

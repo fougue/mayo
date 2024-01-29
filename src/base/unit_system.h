@@ -32,6 +32,7 @@ public:
 
     static TranslateResult translateLength(QuantityLength length, LengthUnit unit);
     static TranslateResult translateArea(QuantityArea area, AreaUnit unit);
+    static TranslateResult translateVolume(QuantityVolume volume, VolumeUnit unit);
     static TranslateResult translateAngle(QuantityAngle angle, AngleUnit unit);
 
     static TranslateResult radians(QuantityAngle angle);

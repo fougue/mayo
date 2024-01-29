@@ -18,6 +18,7 @@
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <GeomConvert_ApproxCurve.hxx>
 #include <GC_MakeCircle.hxx>
@@ -174,7 +175,7 @@ void TestMeasure::BRepLength_PolygonEdge_test()
     QCOMPARE(UnitSystem::millimeters(len.value).value, 24.);
 }
 
-void TestMeasure::BRepArea_TriangulationFace()
+void TestMeasure::BRepArea_TriangulationFace_test()
 {
     auto progress = &TaskProgress::null();
     IO::OccStlReader reader;
@@ -187,6 +188,25 @@ void TestMeasure::BRepArea_TriangulationFace()
     const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
     const MeasureArea area = MeasureToolBRep::brepArea(shape);
     QVERIFY(std::abs(double(UnitSystem::squareMillimeters(area.value)) - 597.6224) < 0.0001);
+}
+
+void TestMeasure::BRepBoundingBox_Sphere_test()
+{
+    const double sphereRadius = 50.;
+    const TopoDS_Shape sphereShape = BRepPrimAPI_MakeSphere(50.);
+    const MeasureBoundingBox bndBox = MeasureToolBRep::brepBoundingBox(sphereShape);
+    QVERIFY(bndBox.cornerMin.IsEqual(gp_Pnt{-sphereRadius, -sphereRadius, -sphereRadius}, Precision::Confusion()));
+    QVERIFY(bndBox.cornerMax.IsEqual(gp_Pnt{sphereRadius, sphereRadius, sphereRadius}, Precision::Confusion()));
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.xLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.yLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.zLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::cubicMillimeters(bndBox.volume)), 8 * sphereRadius * sphereRadius * sphereRadius);
+}
+
+void TestMeasure::BRepBoundingBox_NullShape_test()
+{
+    const TopoDS_Shape nullShape;
+    QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepBoundingBox(nullShape), IMeasureError);
 }
 
 } // namespace Mayo
