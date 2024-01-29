@@ -39,7 +39,7 @@ There's also a complete [video](https://www.youtube.com/watch?v=qg6IamnlfxE&ab_c
 
 - **3D exploding of the model tree** allowing better exploration of complex designs
 
-- **3D measure tools** for circles, angles, lengths, areas, ...
+- **3D measure tools** for circles, angles, lengths, areas, bounding box, ...
 
 - **3D view cube** providing intuitive camera manipulation
 
