@@ -409,6 +409,7 @@ static void initGui(GuiApplication* guiApp)
         if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
             setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
             IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
+            QOpenGLWidgetOccView::staticInitialization();
         }
         else {
             qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
@@ -613,10 +614,6 @@ int main(int argc, char* argv[])
 #endif
 
     // Configure and create Qt application object
-#if defined(Q_OS_WIN)
-    // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
-    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-#endif
     QCoreApplication::setOrganizationName("Fougue Ltd");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");

@@ -13,6 +13,8 @@
 #  include <Aspect_NeutralWindow.hxx>
 #  include <OpenGl_Context.hxx>
 #  include <OpenGl_FrameBuffer.hxx>
+#  include <OpenGl_View.hxx>
+#  include <OpenGl_Window.hxx>
 #endif
 
 #include <functional>
@@ -66,11 +68,17 @@ public:
     }
 };
 
+Handle_OpenGl_Context QOpenGLWidgetOccView_getOpenGlContext(const Handle_Graphic3d_CView& view)
+{
+    Handle_OpenGl_View glView = Handle_OpenGl_View::DownCast(view);
+    return glView->GlWindow()->GetGlContext();
+}
+
 } // namespace
 
 bool QOpenGLWidgetOccView_isCoreProfile()
 {
-    return false;
+    return true;
 }
 
 void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback)
@@ -94,33 +102,20 @@ Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriv
     gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
-#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning(
-                "Warning! Qt 5.10+ is required for sRGB setup.\n"
-                "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n"
-    );
-    gfxDriver->ChangeOptions().sRGBDisable = true;
-#endif
-
     return gfxDriver;
 }
 
-bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver& gfxDriver)
+bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_CView& view)
 {
     // Wrap FBO created by QOpenGLWidget
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(gfxDriver);
-    if (!driver)
-        return false;
-
-    const Handle_OpenGl_Context& glCtx = driver->GetSharedContext();
-    Handle_OpenGl_FrameBuffer defaultFbo = glCtx->DefaultFrameBuffer();
+    Handle_OpenGl_Context glContext = QOpenGLWidgetOccView_getOpenGlContext(view);
+    Handle_OpenGl_FrameBuffer defaultFbo = glContext->DefaultFrameBuffer();
     if (!defaultFbo) {
-        //defaultFbo = new OpenGl_FrameBuffer;
         defaultFbo = new QtOccFrameBuffer;
-        glCtx->SetDefaultFrameBuffer(defaultFbo);
+        glContext->SetDefaultFrameBuffer(defaultFbo);
     }
 
-    if (!defaultFbo->InitWrapper(glCtx)) {
+    if (!defaultFbo->InitWrapper(glContext)) {
         defaultFbo.Nullify();
         Message::SendFail() << "Default FBO wrapper creation failed";
         return false;
@@ -129,10 +124,10 @@ bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver& 
     return true;
 }
 
-Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Handle_Graphic3d_GraphicDriver& gfxDriver)
+Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Handle_Graphic3d_CView& view)
 {
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(gfxDriver);
-    return driver->GetSharedContext()->DefaultFrameBuffer()->GetVPSize();
+    Handle_OpenGl_Context glContext = QOpenGLWidgetOccView_getOpenGlContext(view);
+    return glContext->DefaultFrameBuffer()->GetVPSize();
 }
 
 #endif // OCC_VERSION_HEX >= 0x070600

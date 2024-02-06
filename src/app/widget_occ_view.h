@@ -23,6 +23,8 @@ namespace Mayo {
 // IWidgetOccView does not handle input devices interaction like keyboard and mouse
 class IWidgetOccView {
 public:
+    virtual ~IWidgetOccView() = default;
+
     const Handle_V3d_View& v3dView() const { return m_view; }
 
     virtual void redraw() = 0;
@@ -54,6 +56,7 @@ public:
 
     static QOpenGLWidgetOccView* create(const Handle_V3d_View& view, QWidget* parent);
     static Handle_Graphic3d_GraphicDriver createCompatibleGraphicsDriver();
+    static void staticInitialization();
 
 protected:
     // -- QOpenGLWidget
