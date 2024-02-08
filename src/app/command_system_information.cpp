@@ -7,6 +7,7 @@
 #include "commands_help.h"
 
 #include "app_module.h"
+#include "command_system_information_occopengl.h"
 #include "qstring_conv.h"
 #include "qtwidgets_utils.h"
 #include "version.h"
@@ -34,20 +35,12 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStyleFactory>
 
-// NOTICE for Linux/X11
-//     Because of #define conflicts, OpenGL_Context.hxx must be included *before* QtGui/QOpenGLContext
-//     It also has to be included *after* QtCore/QTextStream
-//     Beware of these limitations when adding/removing inclusion of headers here
-#include <OpenGl_Context.hxx>
 #include <Standard_Version.hxx>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QWindow>
 
-#ifdef HAVE_GMIO
-#  include <gmio_core/version.h>
-#endif
-
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -175,43 +168,18 @@ static void dumpOpenGlInfo(QTextStream& str)
     window.create();
     qtContext.makeCurrent(&window);
 
-    OpenGl_Context occContext;
-    if (!occContext.Init()) {
-        str << "Unable to initialize OpenGl_Context object" << '\n';
+    try {
+        auto infos = Internal::getOccOpenGlInfos();
+        for (const auto& [key, value] : infos) {
+            str << indent << key << ": ";
+            std::visit([&](const auto& arg) { str << arg; }, value);
+            str << '\n';
+        }
+    }
+    catch (const std::exception& error) {
+        str << error.what() << '\n';
         return;
     }
-
-    TColStd_IndexedDataMapOfStringString dict;
-    occContext.DiagnosticInformation(dict, Graphic3d_DiagnosticInfo_Basic);
-    for (TColStd_IndexedDataMapOfStringString::Iterator it(dict); it.More(); it.Next())
-        str << indent << to_QString(it.Key()) << ": " << to_QString(it.Value()) << '\n';
-
-    str << indent << "MaxDegreeOfAnisotropy: " << occContext.MaxDegreeOfAnisotropy() << '\n'
-        << indent << "MaxDrawBuffers: " << occContext.MaxDrawBuffers() << '\n'
-        << indent << "MaxClipPlanes: " << occContext.MaxClipPlanes() << '\n'
-        << indent << "HasRayTracing: " << occContext.HasRayTracing() << '\n'
-        << indent << "HasRayTracingTextures: " << occContext.HasRayTracingTextures() << '\n'
-        << indent << "HasRayTracingAdaptiveSampling: " << occContext.HasRayTracingAdaptiveSampling() << '\n'
-        << indent << "UseVBO: " << occContext.ToUseVbo() << '\n';
-
-#if OCC_VERSION_HEX >= 0x070400
-    str << indent << "MaxDumpSizeX: " << occContext.MaxDumpSizeX() << '\n'
-        << indent << "MaxDumpSizeY: " << occContext.MaxDumpSizeY() << '\n'
-        << indent << "HasRayTracingAdaptiveSamplingAtomic: " << occContext.HasRayTracingAdaptiveSamplingAtomic() << '\n';
-#endif
-
-#if OCC_VERSION_HEX >= 0x070500
-    str << indent << "HasTextureBaseLevel: " << occContext.HasTextureBaseLevel() << '\n'
-        << indent << "HasSRGB: " << occContext.HasSRGB() << '\n'
-        << indent << "RenderSRGB: " << occContext.ToRenderSRGB() << '\n'
-        << indent << "IsWindowSRGB: " << occContext.IsWindowSRGB() << '\n'
-        << indent << "HasPBR: " << occContext.HasPBR() << '\n';
-#endif
-
-#if OCC_VERSION_HEX >= 0x070700
-    str << indent << "GraphicsLibrary: " << MetaEnum::name(occContext.GraphicsLibrary()) << '\n'
-        << indent << "HasTextureMultisampling: " << occContext.HasTextureMultisampling() << '\n';
-#endif
 }
 
 QString CommandSystemInformation::data()

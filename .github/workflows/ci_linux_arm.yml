@@ -1,0 +1,81 @@
+name: Linux ARM
+
+on: [push]
+
+jobs:
+    build-linux-arm:
+        strategy:
+            matrix:
+                arch: [armv7, aarch64]
+
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Get current branch name
+          uses: nelonoel/branch-name@v1.0.1
+
+        - name: Run Build
+          uses: uraimo/run-on-arch-action@v2
+          with:
+              arch: ${{matrix.arch}}
+              distro: ubuntu22.04
+              githubToken: ${{github.token}}  # Not required, but speeds up builds
+              install: |
+                  apt-get -y update
+                  apt-get -y install xvfb  # Needed to run unit tests
+                  apt-get -y install git
+                  apt-get -y install g++
+                  apt-get -y install qtbase5-dev libqt5svg5-dev
+                  apt-get -y install libxcb-cursor0  # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
+                  apt-get -y install libocct-data-exchange-dev libocct-draw-dev
+                  apt-get -y install libassimp-dev
+
+              env: |
+                  DISPLAY: :0
+                  GIT_BRANCH_NAME: ${{env.BRANCH_NAME}}
+                  RUN_ARCH_NAME: ${{matrix.arch}}
+
+              run: |
+                  GH_CASCADE_INC_DIR=`dpkg -L libocct-foundation-dev | grep -i "Standard_Version.hxx" | sed "s/\/Standard_Version.hxx//i"`
+                  GH_CASCADE_LIB_DIR=`dpkg -L libocct-foundation-dev | grep -i "libTKernel.so" | sed "s/\/libTKernel.so//i"`
+                  GH_ASSIMP_INC_DIR=`dpkg -L libassimp-dev | grep -i "version.h" | sed "s/\/version.h//i"`
+                  GH_ASSIMP_LIB_DIR=`dpkg -L libassimp-dev | grep -i "libassimp.so" | sed "s/\/libassimp.so//i"`
+                  git clone https://github.com/fougue/mayo.git
+                  cd mayo
+                  echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
+                  git checkout $GIT_BRANCH_NAME
+                  cd ..
+                  mkdir build-mayo
+                  cd build-mayo
+                  echo GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR
+                  echo GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
+                  echo GH_ASSIMP_INC_DIR=$GH_ASSIMP_INC_DIR
+                  echo GH_ASSIMP_LIB_DIR=$GH_ASSIMP_LIB_DIR
+                  [ ! -d $GH_CASCADE_INC_DIR ] && echo "ERROR: OpenCascade include dir doesn't exist"
+                  [ ! -d $GH_CASCADE_LIB_DIR ] && echo "ERROR: OpenCascade lib dir doesn't exist"
+                  [ ! -d $GH_ASSIMP_INC_DIR ]  && echo "ERROR: assimp include dir doesn't exist"
+                  [ ! -d $GH_ASSIMP_LIB_DIR ]  && echo "ERROR: assimp lib dir doesn't exist"
+                  qmake ../mayo \
+                           CONFIG+=debug \
+                           CONFIG+=withtests \
+                           CASCADE_INC_DIR=$GH_CASCADE_INC_DIR \
+                           CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR \
+                           ASSIMP_INC_DIR=$GH_ASSIMP_INC_DIR \
+                           ASSIMP_LIB_DIR=$GH_ASSIMP_LIB_DIR
+                  make -j`nproc`
+                  #
+                  # Execute Unit Tests
+                  # Note: for some unknown reason unit tests are crashing for armv7(on very first test)
+                  #       so just execute them for aarch64
+                  #
+                  if [ $RUN_ARCH_NAME = 'aarch64' ]; then
+                      # Start X11 display server
+                      Xvfb $DISPLAY -screen 0 1280x1024x24 &
+                      sleep 5s
+                      ./mayo --runtests
+                  else
+                      echo "NOTE: unit tests skipped, they need to be fixed for this architecture"
+                  fi

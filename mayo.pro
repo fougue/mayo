@@ -19,14 +19,8 @@ message(Qt version $$QT_VERSION)
     error(Qt >= 5.14 is required but detected version is $$QT_VERSION)
 }
 
-# Check architecture
-equals(QT_ARCH, x86_64) {
-    # NOP
-} else:equals(QT_ARCH, i386) {
-    # NOP
-} else {
-    warning(Platform architecture may be not supported(QT_ARCH = $$QT_ARCH))
-}
+# If variable 'CHECK_ARCH_64' is empty then host is not 64bit
+CHECK_ARCH_64 = $$find(QT_ARCH, 64)
 
 QT += core gui widgets
 greaterThan(QT_MAJOR_VERSION, 5) {
@@ -60,15 +54,33 @@ msvc {
         DEFINES += _USE_MATH_DEFINES
     }
 }
+
 gcc|clang {
     QMAKE_CXXFLAGS += -std=c++17
 }
+
 clang {
     # Silent Clang warnings about instantiation of variable 'Mayo::GenericProperty<T>::TypeName'
     QMAKE_CXXFLAGS += -Wno-undefined-var-template
     # See https://libcxx.llvm.org/docs/UsingLibcxx.html
     # LIBS += -lstdc++fs
 }
+
+unix:isEmpty(CHECK_ARCH_64) {
+    macx {
+        DEFINES += _DARWIN_USE_64_BIT_INODE
+    } else {
+        DEFINES += _FILE_OFFSET_BITS=64  _LARGEFILE64_SOURCE=1
+    }
+
+    gcc|clang:contains(QT_ARCH, arm) {
+        # See:
+        #     https://stackoverflow.com/questions/48149323/what-does-the-gcc-warning-project-parameter-passing-for-x-changed-in-gcc-7-1-m
+        #     https://stackoverflow.com/questions/52020305/what-exactly-does-gccs-wpsabi-option-do-what-are-the-implications-of-supressi
+        QMAKE_CXXFLAGS += -Wno-psabi
+    }
+}
+
 macx {
     DEFINES += GL_SILENCE_DEPRECATION
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
@@ -76,6 +88,7 @@ macx {
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
     ICON = images/appicon.icns
 }
+
 win32 {
     LIBS += -lOpengl32 -lUser32
 }
@@ -124,6 +137,7 @@ RC_ICONS = images/appicon.ico
 OTHER_FILES += \
     README.md \
     .github/workflows/ci_linux.yml \
+    .github/workflows/ci_linux_arm.yml \
     .github/workflows/ci_macos.yml \
     .github/workflows/ci_windows.yml \
     images/credits.txt \
