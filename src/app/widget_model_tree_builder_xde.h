@@ -28,7 +28,8 @@ private:
     using ThisType = WidgetModelTreeBuilder_Xde;
 
     static QTreeWidgetItem* guiCreateXdeTreeNode(
-            QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node);
+            QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node
+    );
 
     QTreeWidgetItem* buildXdeTree(QTreeWidgetItem* treeItem, const DocumentTreeNode& node);
     void refreshXdeAssemblyNodeItemText(QTreeWidgetItem* item);
