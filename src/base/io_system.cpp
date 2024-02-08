@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
-#include <future>
 #include <locale>
 #include <mutex>
 #include <regex>
@@ -77,7 +76,7 @@ Format System::probeFormat(const FilePath& filepath) const
     auto fnMatchFileSuffix = [=](Format format) {
         for (std::string_view candidate : formatFileSuffixes(format)) {
             if (candidate.size() == fileSuffix.size()
-                    && std::equal(candidate.cbegin(), candidate.cend(), fileSuffix.cbegin(), fnCharIEqual))
+                && std::equal(candidate.cbegin(), candidate.cend(), fileSuffix.cbegin(), fnCharIEqual))
             {
                 return true;
             }
@@ -229,7 +228,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (args.parametersProvider) {
             taskData.reader->applyProperties(
                         args.parametersProvider->findReaderParameters(taskData.fileFormat)
-                );
+            );
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
@@ -259,7 +258,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     taskData.progress,
                     args.entityPostProcessProgressSize,
                     args.entityPostProcessProgressStep
-            );
+        );
         const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
             TaskProgress subProgress(&progress, subPortionSize);
@@ -267,8 +266,11 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         }
     };
     auto fnAddModelTreeEntities = [&](const TaskData& taskData) {
-        for (const TDF_Label& labelEntity : taskData.seqTransferredEntity)
-            doc->addEntityTreeNode(labelEntity);
+        // Need to call Document::addEntityTreeNodeSequence() instead of addEntityTreeNode() in
+        // for() loop. The former function doesn't interleave update of the model tree and emission
+        // of "entity added" signal for each entity. This prevents data race to happen on the
+        // Document's model tree within slots connected to signal(and living in other threads)
+        doc->addEntityTreeNodeSequence(taskData.seqTransferredEntity);
     };
 
     if (listFilepath.size() == 1) { // Single file case
