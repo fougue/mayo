@@ -26,11 +26,13 @@ jobs:
               install: |
                   apt-get -y update
                   apt-get -y install xvfb  # Needed to run unit tests
+                  apt-get -y install cmake
                   apt-get -y install git
                   apt-get -y install g++
                   apt-get -y install qtbase5-dev libqt5svg5-dev
                   apt-get -y install libxcb-cursor0  # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
-                  apt-get -y install libocct-data-exchange-dev libocct-draw-dev
+                  apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
+                  apt-get -y install libtbb2-dev libxi-dev  # Dependencies for OpenCascade v7.5
                   apt-get -y install libassimp-dev
 
               env: |
@@ -39,33 +41,24 @@ jobs:
                   RUN_ARCH_NAME: ${{matrix.arch}}
 
               run: |
-                  GH_CASCADE_INC_DIR=`dpkg -L libocct-foundation-dev | grep -i "Standard_Version.hxx" | sed "s/\/Standard_Version.hxx//i"`
-                  GH_CASCADE_LIB_DIR=`dpkg -L libocct-foundation-dev | grep -i "libTKernel.so" | sed "s/\/libTKernel.so//i"`
-                  GH_ASSIMP_INC_DIR=`dpkg -L libassimp-dev | grep -i "version.h" | sed "s/\/version.h//i"`
-                  GH_ASSIMP_LIB_DIR=`dpkg -L libassimp-dev | grep -i "libassimp.so" | sed "s/\/libassimp.so//i"`
                   git clone https://github.com/fougue/mayo.git
                   cd mayo
                   echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
+                  # Fixes "fatal: detected dubious ownership in repository at '/home/runner/work/mayo/mayo'"
+                  git config --global --add safe.directory `pwd`
+
                   git checkout $GIT_BRANCH_NAME
                   cd ..
                   mkdir build-mayo
                   cd build-mayo
-                  echo GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR
-                  echo GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR
-                  echo GH_ASSIMP_INC_DIR=$GH_ASSIMP_INC_DIR
-                  echo GH_ASSIMP_LIB_DIR=$GH_ASSIMP_LIB_DIR
-                  [ ! -d $GH_CASCADE_INC_DIR ] && echo "ERROR: OpenCascade include dir doesn't exist"
-                  [ ! -d $GH_CASCADE_LIB_DIR ] && echo "ERROR: OpenCascade lib dir doesn't exist"
-                  [ ! -d $GH_ASSIMP_INC_DIR ]  && echo "ERROR: assimp include dir doesn't exist"
-                  [ ! -d $GH_ASSIMP_LIB_DIR ]  && echo "ERROR: assimp lib dir doesn't exist"
-                  qmake ../mayo \
-                           CONFIG+=debug \
-                           CONFIG+=withtests \
-                           CASCADE_INC_DIR=$GH_CASCADE_INC_DIR \
-                           CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR \
-                           ASSIMP_INC_DIR=$GH_ASSIMP_INC_DIR \
-                           ASSIMP_LIB_DIR=$GH_ASSIMP_LIB_DIR
-                  make -j`nproc`
+                  cmake --version
+                  cmake .. \
+                        -DMayo_BuildTests=ON \
+                        -DMayo_BuildPluginAssimp=ON
+                  cmake --build . \
+                        --config Release \
+                        --parallel `nproc`
+
                   #
                   # Execute Unit Tests
                   # Note: for some unknown reason unit tests are crashing for armv7(on very first test)

@@ -54,9 +54,9 @@ math(EXPR Mayo_TargetArchBitSize "8 * ${CMAKE_SIZEOF_VOID_P}")
 # Options
 ##########
 
-option(Mayo_OptionBuildTests "Build Mayo testing suite" OFF)
-option(Mayo_PluginAssimp "Build plugin to import/export mesh files supported by Assimp" OFF)
-option(Mayo_PluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
+option(Mayo_BuildTests "Build Mayo testing suite" OFF)
+option(Mayo_BuildPluginAssimp "Build plugin to import/export mesh files supported by Assimp" OFF)
+option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
 ##########
 # Qt
@@ -226,7 +226,7 @@ file(
 # Unit tests
 ##########
 
-if(Mayo_OptionBuildTests)
+if(Mayo_BuildTests)
     list(
         APPEND Mayo_HeaderFiles
         ${PROJECT_SOURCE_DIR}/tests/test_app.h
@@ -333,6 +333,16 @@ if(WIN32)
     endif()
 else()
     find_package(OpenCASCADE REQUIRED)
+    if(OpenCASCADE_FOUND)
+        # It seems that OpenCascade cmake package files specify INTERFACE_INCLUDE_DIRECTORIES
+        # starting from 7.7.0 version only
+        # Older versions require to explicitly add OpenCascade include dir
+        get_target_property(OpenCASCADE_TKernel_INCLUDE_DIR TKernel INTERFACE_INCLUDE_DIRECTORIES)
+        list(FIND OpenCASCADE_TKernel_INCLUDE_DIR ${OpenCASCADE_INCLUDE_DIR} OpenCASCADE_TKernel_INCLUDE_DIR_IsSet)
+        if(OpenCASCADE_TKernel_INCLUDE_DIR_IsSet EQUAL -1)
+            list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
+        endif()
+    endif()
 endif()
 
 list(APPEND Mayo_CompileDefinitions OCCT_HANDLE_NOCAST)
@@ -394,24 +404,24 @@ if(OpenCASCADE_FOUND)
             ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
             ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_reader.cpp
         )
-        message(WARNING "glTF reader disabled because OpenCascade < v7.4")
-        message(WARNING "OBJ reader disabled because OpenCascade < v7.4")
+        message(STATUS "glTF reader disabled because OpenCascade < v7.4")
+        message(STATUS "OBJ reader disabled because OpenCascade < v7.4")
     endif()
 
     if(OpenCASCADE_VERSION VERSION_LESS 7.5.0)
         list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_writer.cpp)
-        message(WARNING "glTF writer disabled because OpenCascade < v7.5")
+        message(STATUS "glTF writer disabled because OpenCascade < v7.5")
     endif()
 
     if(OpenCASCADE_VERSION VERSION_LESS 7.6.0)
         list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_writer.cpp)
-        message(WARNING "OBJ writer disabled because OpenCascade < v7.6")
+        message(STATUS "OBJ writer disabled because OpenCascade < v7.6")
     endif()
 
     # VRML support
     if(OpenCASCADE_VERSION VERSION_LESS 7.7.0)
         list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_vrml_reader.cpp)
-        message(WARNING "VRML reader disabled because OpenCascade < v7.7")
+        message(STATUS "VRML reader disabled because OpenCascade < v7.7")
     endif()
 endif()
 
@@ -419,14 +429,14 @@ endif()
 # Assimp plugin
 ##########
 
-if(Mayo_PluginAssimp)
+if(Mayo_BuildPluginAssimp)
     if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.5.0)
         find_package(assimp)
         if(NOT assimp_FOUND)
             message(WARNING "Assimp library not found")
         endif()
     else()
-        message(WARNING "Assimp reader disabled because OpenCascade < v7.5")
+        message(STATUS "Assimp reader disabled because OpenCascade < v7.5")
     endif()
 endif()
 
@@ -449,7 +459,7 @@ if(assimp_FOUND)
     file(READ "${assimp_IncludeDir}/assimp/version.h" assimp_FileVersionH)
     if(NOT assimp_FileVersionH MATCHES "aiGetVersionPatch")
         list(APPEND Mayo_CompileDefinitions NO_ASSIMP_aiGetVersionPatch)
-        message(WARNING "Assimp function aiGetVersionPatch() not available")
+        message(STATUS "Assimp function aiGetVersionPatch() not available")
     endif()
 endif()
 
