@@ -8,6 +8,7 @@
 #include "ui_widget_main_home.h"
 
 #include "commands_file.h"
+#include "filepath_conv.h"
 
 namespace Mayo {
 
@@ -29,16 +30,16 @@ void WidgetMainHome::initialize(const CommandContainer* cmdContainer)
     IAppContext* appContext = cmdContainer->appContext();
 
     QObject::connect(
-                m_ui->widget_HomeFiles, &WidgetHomeFiles::newDocumentRequested,
-                cmdContainer->findCommand(CommandNewDocument::Name), &Command::execute
+        m_ui->widget_HomeFiles, &WidgetHomeFiles::newDocumentRequested,
+        cmdContainer->findCommand(CommandNewDocument::Name), &Command::execute
     );
     QObject::connect(
-                m_ui->widget_HomeFiles, &WidgetHomeFiles::openDocumentsRequested,
-                cmdContainer->findCommand(CommandOpenDocuments::Name), &Command::execute
+        m_ui->widget_HomeFiles, &WidgetHomeFiles::openDocumentsRequested,
+        cmdContainer->findCommand(CommandOpenDocuments::Name), &Command::execute
     );
     QObject::connect(
-                m_ui->widget_HomeFiles, &WidgetHomeFiles::recentFileOpenRequested,
-                this, [=](const FilePath& fp) { FileCommandTools::openDocument(appContext, fp); }
+        m_ui->widget_HomeFiles, &WidgetHomeFiles::recentFileOpenRequested,
+        this, [=](const QFileInfo& fp) { FileCommandTools::openDocument(appContext, filepathFrom(fp)); }
     );
 }
 

@@ -16,7 +16,7 @@ class FileCommandTools {
 public:
     static void closeDocument(IAppContext* context, Document::Identifier docId);
     static void openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath);
-    static void openDocument(IAppContext* context, FilePath fp);
+    static void openDocument(IAppContext* context, const FilePath& fp);
 };
 
 class CommandNewDocument : public Command {

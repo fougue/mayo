@@ -211,7 +211,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
     } // endfor()
 }
 
-void FileCommandTools::openDocument(IAppContext* context, FilePath fp)
+void FileCommandTools::openDocument(IAppContext* context, const FilePath& fp)
 {
     FileCommandTools::openDocumentsFromList(context, Span<const FilePath>(&fp, 1));
 }

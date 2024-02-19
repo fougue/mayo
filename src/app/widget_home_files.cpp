@@ -193,7 +193,7 @@ protected:
         else if (fileItem->type == HomeFileItem::Type::Open)
             emit m_widget->openDocumentsRequested();
         else if (fileItem->type == HomeFileItem::Type::RecentFile)
-            emit m_widget->recentFileOpenRequested(fileItem->filepath);
+            emit m_widget->recentFileOpenRequested(filepathTo<QFileInfo>(fileItem->filepath));
     }
 
 private:
