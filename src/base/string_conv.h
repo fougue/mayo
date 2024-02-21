@@ -69,6 +69,7 @@ struct DoubleToStringOptions {
     int decimalCount = 6;
     bool removeTrailingZeroes = true;
     bool roundToZero = true;
+    bool toUtf8 = true;
     // double zeroPrecision = 0.000000000001;
 };
 
@@ -79,6 +80,7 @@ public:
     DoubleToStringOperation& decimalCount(int c);
     DoubleToStringOperation& removeTrailingZeroes(bool on);
     DoubleToStringOperation& roundToZero(bool on);
+    DoubleToStringOperation& toUtf8(bool on);
     operator std::string();
     std::string get() const;
 

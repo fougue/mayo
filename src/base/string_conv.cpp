@@ -67,7 +67,7 @@ LCID getLocaleIdFromName(const char* localeName)
 }
 #endif
 
-// Convert string 'str' encoded with locale 'strLocale' to UTF8
+// Convert to UTF8 the string 'str' encoded with 'locale'
 std::string toUtf8String(std::string_view str, const std::locale& locale)
 {
     if (str.empty())
@@ -135,7 +135,7 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     // Couldn't find locale charset...
     if (charset.empty())
         return std::string{str};
-    
+
     // If locale charset is already utf8 encoded then directly return input string
     if (fnStringIEqual_c(charset, "UTF-8") || fnStringIEqual_c(charset, "UTF8"))
         return std::string{str};
@@ -190,7 +190,7 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
     std::ostringstream sstr;
     sstr.imbue(opts.locale);
     sstr << std::setprecision(opts.decimalCount) << std::fixed << value;
-    std::string str = toUtf8String(sstr.str(), opts.locale);
+    std::string str = sstr.str();
     if (opts.removeTrailingZeroes) {
         const char chDecPnt = std::use_facet<std::numpunct<char>>(opts.locale).decimal_point();
         if (str.find(chDecPnt) != std::string::npos) { // Remove useless trailing zeroes
@@ -202,7 +202,7 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
         }
     }
 
-    return str;
+    return opts.toUtf8 ? toUtf8String(str, opts.locale) : str;
 }
 
 DoubleToStringOperation::DoubleToStringOperation(double value)
@@ -231,6 +231,12 @@ DoubleToStringOperation& DoubleToStringOperation::removeTrailingZeroes(bool on)
 DoubleToStringOperation& DoubleToStringOperation::roundToZero(bool on)
 {
     m_opts.roundToZero = on;
+    return *this;
+}
+
+DoubleToStringOperation& DoubleToStringOperation::toUtf8(bool on)
+{
+    m_opts.toUtf8 = on;
     return *this;
 }
 

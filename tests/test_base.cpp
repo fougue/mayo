@@ -54,6 +54,7 @@
 
 #include <gsl/util>
 #include <algorithm>
+#include <cassert>
 #include <clocale>
 #include <cmath>
 #include <climits>
@@ -67,19 +68,34 @@
 #include <variant>
 #include <vector>
 
+// Needed for Q_FECTH()
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
-// For Application_test()
 Q_DECLARE_METATYPE(Mayo::IO::Format)
-// For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
-// For PropertyValueConversion_test()
 Q_DECLARE_METATYPE(std::string)
 Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 
 namespace Mayo {
 
-static std::optional<std::locale> findFrLocale()
+// For the sake of QCOMPARE()
+bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
+{
+    return std::abs(lhs.value - rhs.value) < 1e-6
+           && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
+           && std::abs(lhs.factor - rhs.factor) < 1e-6
+        ;
+}
+
+namespace {
+
+struct frlike_numpunct : public std::numpunct<char> {
+    char do_thousands_sep() const override { return ' '; }
+    char do_decimal_point() const override { return ','; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+std::locale getFrLocale()
 {
     auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
         try {
@@ -105,15 +121,17 @@ static std::optional<std::locale> findFrLocale()
             frLocale = fnGetLocale(localeName);
     }
 
-    return frLocale;
-}
+    if (!frLocale) {
+        frLocale = std::locale(std::cout.getloc(), new frlike_numpunct);
+    }
+    else {
+        const auto& facet = std::use_facet<std::numpunct<char>>(frLocale.value());
+        if (facet.decimal_point() != ',' || !std::isspace(facet.thousands_sep(), frLocale.value()))
+            frLocale = std::locale(frLocale.value(), new frlike_numpunct);
+    }
 
-// For the sake of QCOMPARE()
-static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
-{
-    return std::abs(lhs.value - rhs.value) < 1e-6
-            && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
-            && std::abs(lhs.factor - rhs.factor) < 1e-6;
+    assert(frLocale.has_value());
+    return frLocale.value();
 }
 
 // Equivalent of QSignalSpy for KDBindings signals
@@ -160,6 +178,8 @@ struct SignalEmitSpy {
     std::vector<SignalArguments> vecSignals;
     SignalConnectionHandle sigConnection;
 };
+
+} // namespace
 
 void TestBase::Application_test()
 {
@@ -599,27 +619,19 @@ void TestBase::IO_bugGitHub166_test_data()
 
 void TestBase::DoubleToString_test()
 {
-    std::optional<std::locale> frLocale = findFrLocale();
-    if (frLocale) {
-        qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
-        // 1258.
-        {
-            //QCOMPARE(QString::fromStdString(to_stdString(1258.).locale(locale)), QLocale("fr_FR").toString(1258.));
-            // Note: on Windows the QLocale unicode thousand separator is different from what's returned
-            //       by internal toUtf8String()
-            //           to_stdString():      U+00A0(NO-BREAK SPACE)
-            //           QLocale::toString(): U+202F(NARROW NO-BREAK SPACE)
-            //       Caused by usage of ICU in Qt?
-            const QString str = QString::fromStdString(to_stdString(1258.).locale(frLocale.value()));
-            QCOMPARE(str.at(0), '1');
-            QVERIFY(str.at(1).isSpace());
-            QCOMPARE(str.right(3), "258");
-        }
+    const std::locale frLocale = getFrLocale();
+    qInfo() << "frLocale:" << frLocale.name().c_str();
+    // 1258.
+    {
+        const std::string str = to_stdString(1258.).locale(frLocale).toUtf8(false);
+        QCOMPARE(str.at(0), '1');
+        QCOMPARE(str.at(1), std::use_facet<std::numpunct<char>>(frLocale).thousands_sep());
+        QCOMPARE(str.substr(2, 3), "258");
+    }
 
-        // 57.89
-        {
-            QCOMPARE(to_stdString(57.89).locale(frLocale.value()).get(), "57,89");
-        }
+    // 57.89
+    {
+        QCOMPARE(to_stdString(57.89).locale(frLocale).get(), "57,89");
     }
 
     // Tests with "C" locale
@@ -633,12 +645,9 @@ void TestBase::DoubleToString_test()
 
 void TestBase::StringConv_test()
 {
-    std::optional<std::locale> frLocale = findFrLocale();
-    if (frLocale) {
-        const std::string stdStr = to_stdString(14758.5).locale(frLocale.value());
-        const auto occExtStr = to_OccExtString(stdStr);
-        QCOMPARE(stdStr, to_stdString(occExtStr));
-    }
+    const std::string stdStr = to_stdString(14758.5).locale(getFrLocale());
+    const auto occExtStr = to_OccExtString(stdStr);
+    QCOMPARE(stdStr, to_stdString(occExtStr));
 }
 
 void TestBase::BRepUtils_test()
