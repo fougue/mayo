@@ -6,7 +6,8 @@ jobs:
     build-linux-arm:
         strategy:
             matrix:
-                arch: [armv7, aarch64]
+                #arch: [armv7, aarch64]
+                arch: [aarch64]
 
         runs-on: ubuntu-latest
 
@@ -45,12 +46,13 @@ jobs:
                   cd mayo
                   echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
                   # Fixes "fatal: detected dubious ownership in repository at '/home/runner/work/mayo/mayo'"
-                  git config --global --add safe.directory `pwd`
+                  #git config --global --add safe.directory `pwd`
+                  git config --global --add safe.directory /home/runner/work/mayo/mayo
 
                   git checkout $GIT_BRANCH_NAME
                   cd ..
-                  mkdir build-mayo
-                  cd build-mayo
+                  mkdir build
+                  cd build
                   cmake --version
                   cmake .. \
                         -DMayo_BuildTests=ON \

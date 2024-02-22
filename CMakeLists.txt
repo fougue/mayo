@@ -28,6 +28,7 @@ set(Mayo_VersionRevNum 0)
 find_package(Git)
 if(Git_FOUND)
     # Maybe use preferrably add_custom_command() with PRE_BUILD event?
+    message(STATUS "GIT_EXECUTABLE=${GIT_EXECUTABLE}")
     execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -41,6 +42,15 @@ if(Git_FOUND)
     # Fix newline character at the end of Mayo_VersionCommit and Mayo_VersionRevNum variables
     string(REGEX REPLACE "\n$" "" Mayo_VersionCommit "${Mayo_VersionCommit}")
     string(REGEX REPLACE "\n$" "" Mayo_VersionRevNum "${Mayo_VersionRevNum}")
+    # execute_process() may have failed, so make sure Mayo_Version[Commit/RevNum] are not empty strings
+    # Note: execute_process() could fail in the typical case where Mayo source code was extracted
+    #       from ZIP archive file(ie not via "git clone")
+    if(Mayo_VersionCommit STREQUAL "")
+        set(Mayo_VersionCommit 0)
+    endif()
+    if(Mayo_VersionRevNum STREQUAL "")
+        set(Mayo_VersionRevNum 0)
+    endif()
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/src/app/version.h.cmake app/version.h @ONLY)
@@ -228,33 +238,16 @@ file(
 ##########
 
 if(Mayo_BuildTests)
-    list(
-        APPEND Mayo_HeaderFiles
-        ${PROJECT_SOURCE_DIR}/tests/test_app.h
-        ${PROJECT_SOURCE_DIR}/tests/test_base.h
-        ${PROJECT_SOURCE_DIR}/tests/test_measure.h
-    )
-
-    list(
-        APPEND Mayo_SourceFiles
-        ${PROJECT_SOURCE_DIR}/tests/runtests.cpp
-        ${PROJECT_SOURCE_DIR}/tests/test_app.cpp
-        ${PROJECT_SOURCE_DIR}/tests/test_base.cpp
-        ${PROJECT_SOURCE_DIR}/tests/test_measure.cpp
-    )
+    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
+    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
+    list(APPEND Mayo_HeaderFiles ${MayoTests_HeaderFiles})
+    list(APPEND Mayo_SourceFiles ${MayoTests_SourceFiles})
 
     list(APPEND Mayo_CompileDefinitions MAYO_WITH_TESTS)
     list(APPEND Mayo_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
 
-    file(
-        GLOB Mayo_InputTestFiles
-        ${PROJECT_SOURCE_DIR}/tests/inputs/*.*
-    )
-    file(
-        COPY ${Mayo_InputTestFiles}
-        DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs
-    )
-
+    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
+    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
 endif()
 
@@ -322,7 +315,7 @@ if(WIN32)
         # Add OpenCASCADE library directories
         # Note: QtCreator option Run->Add_build_library_search_to_PATH will add to PATH env variable
         #       the contents of Mayo_LinkDirectories variable. For convenience, let's add also the
-        #       directories containing the DLLs
+        #       directories containing DLLs
         list(
             APPEND Mayo_LinkDirectories
             ${OpenCASCADE_BINARY_DIR}
@@ -443,16 +436,12 @@ endif()
 
 if(assimp_FOUND)
     message(STATUS "assimp version ${assimp_VERSION}")
-    list(
-        APPEND Mayo_HeaderFiles
-        ${PROJECT_SOURCE_DIR}/src/io_assimp/io_assimp.h
-        ${PROJECT_SOURCE_DIR}/src/io_assimp/io_assimp_reader.h
-    )
-    list(
-        APPEND Mayo_SourceFiles
-        ${PROJECT_SOURCE_DIR}/src/io_assimp/io_assimp.cpp
-        ${PROJECT_SOURCE_DIR}/src/io_assimp/io_assimp_reader.cpp
-    )
+
+    file(GLOB MayoPluginAssimp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.h)
+    file(GLOB MayoPluginAssimp_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.cpp)
+    list(APPEND Mayo_HeaderFiles ${MayoPluginAssimp_HeaderFiles})
+    list(APPEND Mayo_SourceFiles ${MayoPluginAssimp_SourceFiles})
+
     list(APPEND Mayo_LinkLibraries ${ASSIMP_LIBRARIES})
     list(APPEND Mayo_CompileDefinitions HAVE_ASSIMP)
 
