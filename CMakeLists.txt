@@ -26,7 +26,7 @@ set(Mayo_VersionCommit 0)
 set(Mayo_VersionRevNum 0)
 
 find_package(Git)
-if (Git_FOUND)
+if(Git_FOUND)
     # Maybe use preferrably add_custom_command() with PRE_BUILD event?
     execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
@@ -56,7 +56,8 @@ math(EXPR Mayo_TargetArchBitSize "8 * ${CMAKE_SIZEOF_VOID_P}")
 
 option(Mayo_BuildTests "Build Mayo testing suite" OFF)
 option(Mayo_BuildPluginAssimp "Build plugin to import/export mesh files supported by Assimp" OFF)
-option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
+# TODO
+# option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
 ##########
 # Qt
@@ -106,7 +107,7 @@ elseif(APPLE)
     list(APPEND Mayo_CompileDefinitions GL_SILENCE_DEPRECATION)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     list(
         APPEND Mayo_CompileOptions
         -Wno-undefined-var-template
@@ -115,14 +116,14 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
 endif()
 
-if (Mayo_TargetArchBitSize STREQUAL "32")
+if(Mayo_TargetArchBitSize STREQUAL "32")
     if(APPLE)
         list(APPEND Mayo_CompileDefinitions _DARWIN_USE_64_BIT_INODE)
     elseif(UNIX)
         list(APPEND Mayo_CompileDefinitions _FILE_OFFSET_BITS=64  _LARGEFILE64_SOURCE=1)
     endif()
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
         # See:
         #     https://stackoverflow.com/questions/48149323/what-does-the-gcc-warning-project-parameter-passing-for-x-changed-in-gcc-7-1-m
         #     https://stackoverflow.com/questions/52020305/what-exactly-does-gccs-wpsabi-option-do-what-are-the-implications-of-supressi
@@ -182,12 +183,12 @@ file(
     ${PROJECT_SOURCE_DIR}/src/3rdparty/fmt/src/format.cc
 )
 
-if(WIN32 AND ${QT_VERSION_MAJOR} EQUAL 5)
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
     list(APPEND Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.cpp)
 endif()
 
 if(MSVC)
-    set(Mayo_RcIconsWin ${PROJECT_SOURCE_DIR}/images/appicon.ico)
+    set(Mayo_RcIconsWin ${PROJECT_SOURCE_DIR}/images/appicon.rc)
 endif()
 
 ##########
@@ -209,7 +210,7 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_measure/*.h
 )
 
-if(WIN32 AND ${QT_VERSION_MAJOR} EQUAL 5)
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
     list(APPEND Mayo_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.h)
 endif()
 
@@ -484,9 +485,7 @@ add_executable(
     ${Mayo_SourceFiles}
     ${Mayo_HeaderFiles}
     ${Mayo_QtUiFiles}
-    ${Mayo_QtI18nFiles}
-    ${Mayo_QtQmFiles}
-    mayo.qrc
+    mayo.qrc i18n/qt${QT_VERSION_MAJOR}base.qrc
     ${Mayo_RcIconsWin}
     ${Mayo_AppIconMacOS}
 )
