@@ -21,6 +21,7 @@ jobs:
                       occ_zip_sha256: 'beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee'
 
         runs-on: windows-latest
+        name: build-win-msvc-occt${{matrix.occ_version}}
 
         steps:
         - name: Checkout
