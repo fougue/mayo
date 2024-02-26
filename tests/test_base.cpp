@@ -249,6 +249,7 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+
 }
 
 void TestBase::DocumentRefCount_test()
