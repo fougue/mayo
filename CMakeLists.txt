@@ -260,12 +260,23 @@ if(WIN32)
     # See https://dev.opencascade.org/content/3rdparty-hard-coded-paths-when-building-against-opencascade
 
     set(OpenCASCADE_DIR CACHE PATH "Path where is located OpenCASCADE env.bat file")
+
+    # OpenCASCADE_DIR may actually points to opencascade/cmake
+    if(NOT EXISTS ${OpenCASCADE_DIR}/env.bat)
+        cmake_path(GET OpenCASCADE_DIR PARENT_PATH OpenCASCADE_DIR_PARENT_PATH)
+        if(EXISTS ${OpenCASCADE_DIR_PARENT_PATH}/env.bat)
+            set(OpenCASCADE_DIR ${OpenCASCADE_DIR_PARENT_PATH})
+        endif()
+    endif()
+
+    # Generate file "Mayo_OpenCascadeEnv.cmake"
     execute_process(
         COMMAND cmd /c ${PROJECT_SOURCE_DIR}/scripts/gen-cmake-opencascade-vars.bat "${OpenCASCADE_DIR}"
         OUTPUT_FILE Mayo_OpenCascadeEnv.cmake
     )
-
     include(${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake)
+
+    # Set OpenCASCADE variables
     if(OpenCASCADE_FOUND)
         # Set variables for OpenCASCADE version
         file(READ ${OpenCASCADE_INCLUDE_DIR}/Standard_Version.hxx OpenCascade_FileVersionHxx)
@@ -280,12 +291,26 @@ if(WIN32)
         # Add OpenCASCADE include directory
         list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
 
-        # Set OpenCASACADE_3RDPARTY_BINARY_DIRS variable that will contain the OpenCASCADE
+        # Add OpenCASCADE "HAVE_RAPIDJSON" compile flags
+        if(OpenCASCADE_HAVE_RAPIDJSON STREQUAL "true")
+            list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
+        elseif(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
+            file(GLOB OpenCASCADE_CompileDefsCMakeFiles ${OpenCASCADE_DIR}/cmake/OpenCASCADECompileDefinitions*.cmake)
+            foreach(CMakeFile ${OpenCASCADE_CompileDefsCMakeFiles})
+                file(READ "${CMakeFile}" CMakeFileContents)
+                if(CMakeFileContents MATCHES ":HAVE_RAPIDJSON>")
+                    list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
+                    break()
+                endif()
+            endforeach()
+        endif()
+
+        # Set OpenCASCADE_3RDPARTY_BINARY_DIRS variable that will contain the OpenCASCADE
         # 3rd-party binary directories(ie containing DLL files)
-        set(OpenCASACADE_3RDPARTY_BINARY_DIRS)
+        set(OpenCASCADE_3RDPARTY_BINARY_DIRS)
         if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
             list(
-                APPEND OpenCASACADE_3RDPARTY_BINARY_DIRS
+                APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS
                 ${TCL_DIR}
                 ${TK_DIR}
                 ${FREETYPE_DIR}
@@ -297,19 +322,19 @@ if(WIN32)
             )
         else()
             if(Mayo_TargetArchBitSize STREQUAL "32")
-                list(APPEND OpenCASACADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN32})
+                list(APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN32})
             else()
-                list(APPEND OpenCASACADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN64})
+                list(APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN64})
             endif()
 
             # Remove Qt binary path probably added in CSF_OPT_BIN(32/64) variable
             set(OpenCASCADE_QT_BINDIR)
-            foreach(BINDIR ${OpenCASACADE_3RDPARTY_BINARY_DIRS})
+            foreach(BINDIR ${OpenCASCADE_3RDPARTY_BINARY_DIRS})
                 if(BINDIR MATCHES "qt5")
                     set(OpenCASCADE_QT_BINDIR ${BINDIR})
                 endif()
             endforeach()
-            list(REMOVE_ITEM OpenCASACADE_3RDPARTY_BINARY_DIRS ${OpenCASCADE_QT_BINDIR})
+            list(REMOVE_ITEM OpenCASCADE_3RDPARTY_BINARY_DIRS ${OpenCASCADE_QT_BINDIR})
         endif()
 
         # Add OpenCASCADE library directories
@@ -320,7 +345,7 @@ if(WIN32)
             APPEND Mayo_LinkDirectories
             ${OpenCASCADE_BINARY_DIR}
             ${OpenCASCADE_LIBRARY_DIR}
-            ${OpenCASACADE_3RDPARTY_BINARY_DIRS}
+            ${OpenCASCADE_3RDPARTY_BINARY_DIRS}
         )
     else()
         message(WARNING "OpenCASCADE not found from this location OpenCASCADE_DIR='${OpenCASCADE_DIR}' ")

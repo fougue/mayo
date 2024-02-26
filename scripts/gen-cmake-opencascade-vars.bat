@@ -9,6 +9,10 @@ set CSF_OCCTIncludePath=
 set CSF_OCCTBinPath=
 set CSF_OCCTLibPath=
 set CSF_OCCTResourcePath=
+set CSF_OPT_BIN32=
+set CSF_OPT_BIN32D=
+set CSF_OPT_BIN64=
+set CSF_OPT_BIN64D=
 set TCL_DIR=
 set TK_DIR=
 set FREETYPE_DIR=
@@ -17,6 +21,7 @@ set FFMPEG_DIR=
 set TBB_DIR=
 set OPENVR_DIR=
 set JEMALLOC_DIR=
+set HAVE_RAPIDJSON=
 
 
 call "%_OPENCASCADE_ROOTDIR_%\env.bat"
@@ -40,5 +45,6 @@ echo set(CSF_OPT_BIN32 "%CSF_OPT_BIN32:\=/%")
 echo set(CSF_OPT_BIN32D "%CSF_OPT_BIN32D:\=/%")
 echo set(CSF_OPT_BIN64 "%CSF_OPT_BIN64:\=/%")
 echo set(CSF_OPT_BIN64D "%CSF_OPT_BIN64D:\=/%")
+echo set(OpenCASCADE_HAVE_RAPIDJSON "%HAVE_RAPIDJSON%")
 
 REM TODO What about variables CSF_SHMessage, CSF_MDTVTexturesDirectory, ...
