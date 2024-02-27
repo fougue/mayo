@@ -21,6 +21,8 @@ project(
 set(Mayo_Copyright "Copyright @ 2016-present, Fougue Ltd., All Rights Reserved")
 mark_as_advanced(FORCE Mayo_Copyright)
 
+set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
+
 # Find git commit hash and revision number
 set(Mayo_VersionCommit 0)
 set(Mayo_VersionRevNum 0)
@@ -73,19 +75,20 @@ option(Mayo_BuildPluginAssimp "Build plugin to import/export mesh files supporte
 # Qt
 ##########
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
-if(QT_VERSION_MAJOR EQUAL 5)
-    find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Test)
-    if(WIN32)
+find_package(QT NAMES Qt6 Qt5 REQUIRED)
+if(QT_FOUND)
+    set("Qt${QT_VERSION_MAJOR}_DIR" "${QT_DIR}")
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Test)
+    if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
         find_package(Qt5 REQUIRED COMPONENTS WinExtras)
+    elseif(QT_VERSION_MAJOR EQUAL 6)
+        find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
     endif()
-elseif(QT_VERSION_MAJOR EQUAL 6)
-    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test OpenGLWidgets)
-endif()
 
-message(STATUS "Qt version ${QT_VERSION}")
-if(QT_VERSION VERSION_LESS 5.14)
-    message(FATAL_ERROR "Qt >= 5.14 is required but detected version is ${QT_VERSION}")
+    message(STATUS "Qt version ${QT_VERSION}")
+    if(QT_VERSION VERSION_LESS 5.14)
+        message(FATAL_ERROR "Qt >= 5.14 is required but detected version is ${QT_VERSION}")
+    endif()
 endif()
 
 #qt_standard_project_setup()
@@ -270,11 +273,13 @@ if(WIN32)
     endif()
 
     # Generate file "Mayo_OpenCascadeEnv.cmake"
-    execute_process(
-        COMMAND cmd /c ${PROJECT_SOURCE_DIR}/scripts/gen-cmake-opencascade-vars.bat "${OpenCASCADE_DIR}"
-        OUTPUT_FILE Mayo_OpenCascadeEnv.cmake
-    )
-    include(${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake)
+    if(EXISTS "${OpenCASCADE_DIR}/env.bat")
+        execute_process(
+            COMMAND cmd /c ${PROJECT_SOURCE_DIR}/scripts/gen-cmake-opencascade-vars.bat "${OpenCASCADE_DIR}"
+            OUTPUT_FILE ${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake
+        )
+        include(${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake)
+    endif()
 
     # Set OpenCASCADE variables
     if(OpenCASCADE_FOUND)
@@ -338,7 +343,7 @@ if(WIN32)
         endif()
 
         # Add OpenCASCADE library directories
-        # Note: QtCreator option Run->Add_build_library_search_to_PATH will add to PATH env variable
+        # Note: QtCreator option "Run->Add build library search to PATH" will add to PATH env variable
         #       the contents of Mayo_LinkDirectories variable. For convenience, let's add also the
         #       directories containing DLLs
         list(
