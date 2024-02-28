@@ -68,6 +68,24 @@ math(EXPR Mayo_TargetArchBitSize "8 * ${CMAKE_SIZEOF_VOID_P}")
 
 option(Mayo_BuildTests "Build Mayo testing suite" OFF)
 option(Mayo_BuildPluginAssimp "Build plugin to import/export mesh files supported by Assimp" OFF)
+if(WIN32)
+    set(Mayo_PostBuildCopyRuntimeDLLs_DefaultValue OFF)
+    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+        set(Mayo_PostBuildCopyRuntimeDLLs_DefaultValue ON)
+    endif()
+
+    message(STATUS "Mayo_PostBuildCopyRuntimeDLLs_DefaultValue=${Mayo_PostBuildCopyRuntimeDLLs_DefaultValue}")
+    option(
+        Mayo_PostBuildCopyRuntimeDLLs
+        "\
+Add post build step to copy all runtime DLLs alongside Mayo executable.\n\
+This simplifies running Mayo from eg Visual Studio IDE\
+"
+        ${Mayo_PostBuildCopyRuntimeDLLs_DefaultValue}
+    )
+
+endif()
+
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
@@ -83,6 +101,10 @@ if(QT_FOUND)
         find_package(Qt5 REQUIRED COMPONENTS WinExtras)
     elseif(QT_VERSION_MAJOR EQUAL 6)
         find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
+    endif()
+
+    if(Mayo_PostBuildCopyRuntimeDLLs)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
     endif()
 
     message(STATUS "Qt version ${QT_VERSION}")
@@ -151,13 +173,21 @@ endif()
 set(Mayo_LinkLibraries)
 set(Mayo_LinkDirectories)
 
-if(QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND Mayo_LinkLibraries Qt5::Core Qt5::Gui Qt5::Widgets)
-    if(WIN32)
-        list(APPEND Mayo_LinkLibraries Qt5::WinExtras)
-    endif()
+list(
+    APPEND Mayo_LinkLibraries
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Widgets
+)
+
+if(Mayo_PostBuildCopyRuntimeDLLs)
+    list(APPEND Mayo_LinkLibraries Qt${QT_VERSION_MAJOR}::Svg)
+endif()
+
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
+    list(APPEND Mayo_LinkLibraries Qt5::WinExtras)
 elseif(QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND Mayo_LinkLibraries Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets)
+    list(APPEND Mayo_LinkLibraries Qt6::OpenGLWidgets)
 endif()
 
 if(MSVC)
@@ -261,86 +291,10 @@ endif()
 if(WIN32)
     # Can't use find_package(OpenCASCADE) as OpenCASCADEConfig.cmake is broken for Windows platform
     # See https://dev.opencascade.org/content/3rdparty-hard-coded-paths-when-building-against-opencascade
-
-    set(OpenCASCADE_DIR CACHE PATH "Path where is located OpenCASCADE env.bat file")
-
-    # OpenCASCADE_DIR may actually points to opencascade/cmake
-    if(NOT EXISTS ${OpenCASCADE_DIR}/env.bat)
-        cmake_path(GET OpenCASCADE_DIR PARENT_PATH OpenCASCADE_DIR_PARENT_PATH)
-        if(EXISTS ${OpenCASCADE_DIR_PARENT_PATH}/env.bat)
-            set(OpenCASCADE_DIR ${OpenCASCADE_DIR_PARENT_PATH})
-        endif()
-    endif()
-
-    # Generate file "Mayo_OpenCascadeEnv.cmake"
-    if(EXISTS "${OpenCASCADE_DIR}/env.bat")
-        execute_process(
-            COMMAND cmd /c ${PROJECT_SOURCE_DIR}/scripts/gen-cmake-opencascade-vars.bat "${OpenCASCADE_DIR}"
-            OUTPUT_FILE ${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake
-        )
-        include(${CMAKE_BINARY_DIR}/Mayo_OpenCascadeEnv.cmake)
-    endif()
-
-    # Set OpenCASCADE variables
-    if(OpenCASCADE_FOUND)
-        # Set variables for OpenCASCADE version
-        file(READ ${OpenCASCADE_INCLUDE_DIR}/Standard_Version.hxx OpenCascade_FileVersionHxx)
-        string(REGEX MATCH "define[ \t]+OCC_VERSION_MAJOR[ \t]+([0-9]+)" OpenCASCADE_MAJOR_VERSION "${OpenCascade_FileVersionHxx}")
-        set(OpenCASCADE_MAJOR_VERSION ${CMAKE_MATCH_1})
-        string(REGEX MATCH "define[ \t]+OCC_VERSION_MINOR[ \t]+([0-9]+)" OpenCASCADE_MINOR_VERSION "${OpenCascade_FileVersionHxx}")
-        set(OpenCASCADE_MINOR_VERSION ${CMAKE_MATCH_1})
-        string(REGEX MATCH "define[ \t]+OCC_VERSION_MAINTENANCE[ \t]+([0-9]+)" OpenCASCADE_MAINTENANCE_VERSION "${OpenCascade_FileVersionHxx}")
-        set(OpenCASCADE_MAINTENANCE_VERSION ${CMAKE_MATCH_1})
-        set(OpenCASCADE_VERSION "${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION}.${OpenCASCADE_MAINTENANCE_VERSION}")
-
+    include(${PROJECT_SOURCE_DIR}/cmake/OpenCascadeWin.cmake)
+    if (OpenCASCADE_FOUND)
         # Add OpenCASCADE include directory
         list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
-
-        # Add OpenCASCADE "HAVE_RAPIDJSON" compile flags
-        if(OpenCASCADE_HAVE_RAPIDJSON STREQUAL "true")
-            list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
-        elseif(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-            file(GLOB OpenCASCADE_CompileDefsCMakeFiles ${OpenCASCADE_DIR}/cmake/OpenCASCADECompileDefinitions*.cmake)
-            foreach(CMakeFile ${OpenCASCADE_CompileDefsCMakeFiles})
-                file(READ "${CMakeFile}" CMakeFileContents)
-                if(CMakeFileContents MATCHES ":HAVE_RAPIDJSON>")
-                    list(APPEND Mayo_CompileDefinitions HAVE_RAPIDJSON)
-                    break()
-                endif()
-            endforeach()
-        endif()
-
-        # Set OpenCASCADE_3RDPARTY_BINARY_DIRS variable that will contain the OpenCASCADE
-        # 3rd-party binary directories(ie containing DLL files)
-        set(OpenCASCADE_3RDPARTY_BINARY_DIRS)
-        if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-            list(
-                APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS
-                ${TCL_DIR}
-                ${TK_DIR}
-                ${FREETYPE_DIR}
-                ${FREEIMAGE_DIR}
-                ${FFMPEG_DIR}
-                ${TBB_DIR}
-                ${OPENVR_DIR}
-                ${JEMALLOC_DIR}
-            )
-        else()
-            if(Mayo_TargetArchBitSize STREQUAL "32")
-                list(APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN32})
-            else()
-                list(APPEND OpenCASCADE_3RDPARTY_BINARY_DIRS ${CSF_OPT_BIN64})
-            endif()
-
-            # Remove Qt binary path probably added in CSF_OPT_BIN(32/64) variable
-            set(OpenCASCADE_QT_BINDIR)
-            foreach(BINDIR ${OpenCASCADE_3RDPARTY_BINARY_DIRS})
-                if(BINDIR MATCHES "qt5")
-                    set(OpenCASCADE_QT_BINDIR ${BINDIR})
-                endif()
-            endforeach()
-            list(REMOVE_ITEM OpenCASCADE_3RDPARTY_BINARY_DIRS ${OpenCASCADE_QT_BINDIR})
-        endif()
 
         # Add OpenCASCADE library directories
         # Note: QtCreator option "Run->Add build library search to PATH" will add to PATH env variable
@@ -352,9 +306,7 @@ if(WIN32)
             ${OpenCASCADE_LIBRARY_DIR}
             ${OpenCASCADE_3RDPARTY_BINARY_DIRS}
         )
-    else()
-        message(WARNING "OpenCASCADE not found from this location OpenCASCADE_DIR='${OpenCASCADE_DIR}' ")
-    endif()
+     endif()
 else()
     find_package(OpenCASCADE REQUIRED)
     if(OpenCASCADE_FOUND)
@@ -401,6 +353,7 @@ if(OpenCASCADE_FOUND)
     )
 
     if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
+        list(APPEND Mayo_LinkLibraries TKDE)
         list(APPEND Mayo_LinkLibraries TKDEIGES)
         list(APPEND Mayo_LinkLibraries TKDESTEP)
         list(APPEND Mayo_LinkLibraries TKDESTL)
@@ -553,3 +506,41 @@ set_target_properties(
         WIN32_EXECUTABLE TRUE
         MACOSX_BUNDLE TRUE
 )
+
+if(Mayo_PostBuildCopyRuntimeDLLs)
+    # Copy required Qt plugins
+    set(QtPluginsDir "${QT_DIR}/../../../plugins")
+    file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
+    file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
+    file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
+    set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
+    foreach(QtPluginDLL ${QtPluginsDLLs})
+        cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
+        cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
+        add_custom_command(
+            TARGET mayo POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+        )
+        add_custom_command(
+            TARGET mayo POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+        )
+    endforeach()
+
+    # Copy OpenCascade 3rd-party DLLs
+    foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
+        add_custom_command(
+            TARGET mayo POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" $<TARGET_FILE_DIR:mayo>
+        )
+    endforeach()
+
+    # Copy runtime DLLs specified with library IMPORTED_LOCATION property
+    add_custom_command(
+        TARGET mayo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_RUNTIME_DLLS:mayo> $<TARGET_FILE_DIR:mayo>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
