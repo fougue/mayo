@@ -19,7 +19,6 @@
 #include "math_utils.h"
 #include <gsl/util>
 #include <algorithm>
-#include <codecvt>
 #include <sstream>
 #include <vector>
 
@@ -42,18 +41,33 @@ UINT getAnsiCodePageForLocale(LCID lcid)
     return acp;
 }
 
+bool toUtf16String(std::string_view str, UINT localeAcp, std::vector<wchar_t>& utf16)
+{
+    // Compute length of utf16 string for memory allocation
+    const int lenStr = CppUtils::safeStaticCast<int>(str.size());
+    const int lenUtf16 = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, nullptr, 0);
+    if (lenUtf16 == 0)
+        return {};
+
+    // Encode to utf16 string
+    utf16.resize(lenUtf16 + 1);
+    const int convCount = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, utf16.data(), lenUtf16);
+    if (convCount == 0)
+        utf16.resize(1);
+
+    utf16.back() = L'\0';
+    return convCount != 0;
+}
+
 LCID getLocaleIdFromName(const char* localeName)
 {
-    auto fnToUtf16 = [](const char* strUtf8) -> std::wstring {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-        return conv.from_bytes(strUtf8);
-    };
-    const std::wstring wlocaleName = fnToUtf16(localeName);
-    return LocaleNameToLCID(wlocaleName.c_str(), 0/*LOCALE_ALLOW_NEUTRAL_NAMES*/);
+    std::vector<wchar_t> wchars;
+    toUtf16String(localeName, CP_UTF8, wchars);
+    return LocaleNameToLCID(wchars.data(), 0/*LOCALE_ALLOW_NEUTRAL_NAMES*/);
 }
 #endif
 
-// Convert string 'str' encoded with locale 'strLocale' to UTF8
+// Convert to UTF8 the string 'str' encoded with 'locale'
 std::string toUtf8String(std::string_view str, const std::locale& locale)
 {
     if (str.empty())
@@ -69,22 +83,13 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     if (localeAcp == CP_UTF8)
         return std::string{str}; // Target locale is already utf8
 
-    // Compute length of intermediate utf16 string for memory allocation
-    const int lenStr = CppUtils::safeStaticCast<int>(str.size());
-    const int lenUtf16 = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, nullptr, 0);
-    if (lenUtf16 == 0)
-        return {};
-
     // Encode to intermediate utf16 string
     thread_local std::vector<wchar_t> utf16;
-    utf16.resize(lenUtf16 + 1);
-    const int convCount = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, utf16.data(), lenUtf16);
-    if (convCount == 0)
+    if (!toUtf16String(str, localeAcp, utf16))
         return {};
 
-    utf16.back() = L'\0';
-
     // Encode intermediate utf16 string to utf8
+    const int lenUtf16 = utf16.size() - 1;
     const int lenUtf8 = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), lenUtf16, nullptr, 0, nullptr, nullptr);
     thread_local std::vector<char> utf8;
     utf8.resize(lenUtf8 + 1);
@@ -130,7 +135,7 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     // Couldn't find locale charset...
     if (charset.empty())
         return std::string{str};
-    
+
     // If locale charset is already utf8 encoded then directly return input string
     if (fnStringIEqual_c(charset, "UTF-8") || fnStringIEqual_c(charset, "UTF8"))
         return std::string{str};
@@ -185,7 +190,7 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
     std::ostringstream sstr;
     sstr.imbue(opts.locale);
     sstr << std::setprecision(opts.decimalCount) << std::fixed << value;
-    std::string str = toUtf8String(sstr.str(), opts.locale);
+    std::string str = sstr.str();
     if (opts.removeTrailingZeroes) {
         const char chDecPnt = std::use_facet<std::numpunct<char>>(opts.locale).decimal_point();
         if (str.find(chDecPnt) != std::string::npos) { // Remove useless trailing zeroes
@@ -197,7 +202,7 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
         }
     }
 
-    return str;
+    return opts.toUtf8 ? toUtf8String(str, opts.locale) : str;
 }
 
 DoubleToStringOperation::DoubleToStringOperation(double value)
@@ -226,6 +231,12 @@ DoubleToStringOperation& DoubleToStringOperation::removeTrailingZeroes(bool on)
 DoubleToStringOperation& DoubleToStringOperation::roundToZero(bool on)
 {
     m_opts.roundToZero = on;
+    return *this;
+}
+
+DoubleToStringOperation& DoubleToStringOperation::toUtf8(bool on)
+{
+    m_opts.toUtf8 = on;
     return *this;
 }
 

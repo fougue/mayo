@@ -26,7 +26,7 @@ QMAKE_TARGET_PRODUCT = Mayo
 QMAKE_TARGET_COMPANY = Fougue
 
 # Generate version file
-QMAKE_SUBSTITUTES += $$PWD/src/app/version.h.in
+QMAKE_SUBSTITUTES += $$PWD/version.h.in
 
-INCLUDEPATH += $$OUT_PWD/src/app  # To allow inclusion as "version.h" from source code
-OTHER_FILES += $$PWD/src/app/version.h.in
+INCLUDEPATH += $$OUT_PWD  # To allow inclusion as "version.h" from source code
+OTHER_FILES += $$PWD/version.h.in

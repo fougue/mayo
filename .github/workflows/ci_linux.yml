@@ -28,42 +28,25 @@ jobs:
 
         - name: Install OpenCascade
           run: |
-              sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev
-              GH_CASCADE_INC_DIR=`dpkg -L libocct-foundation-dev | grep -i "Standard_Version.hxx" | sed "s/\/Standard_Version.hxx//i"`
-              GH_CASCADE_LIB_DIR=`dpkg -L libocct-foundation-dev | grep -i "libTKernel.so" | sed "s/\/libTKernel.so//i"`
-              echo "GH_CASCADE_INC_DIR=$GH_CASCADE_INC_DIR" >> $GITHUB_ENV
-              echo "GH_CASCADE_LIB_DIR=$GH_CASCADE_LIB_DIR" >> $GITHUB_ENV
+              sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
+              sudo apt-get -y install libtbb2-dev
+              sudo apt-get -y install libxi-dev
 
         - name: Install Assimp
           run: |
               sudo apt-get -y install libassimp-dev
-              GH_ASSIMP_INC_DIR=`dpkg -L libassimp-dev | grep -i "version.h" | sed "s/\/version.h//i"`
-              GH_ASSIMP_LIB_DIR=`dpkg -L libassimp-dev | grep -i "libassimp.so" | sed "s/\/libassimp.so//i"`
-              echo "GH_ASSIMP_INC_DIR=$GH_ASSIMP_INC_DIR" >> $GITHUB_ENV
-              echo "GH_ASSIMP_LIB_DIR=$GH_ASSIMP_LIB_DIR" >> $GITHUB_ENV
-
-        - name: Get count of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v1
-          id: cpu-cores
 
         - name: Build
           run: |
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
-              echo CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}}
-              echo CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}}
-              echo ASSIMP_INC_DIR=${{env.GH_ASSIMP_INC_DIR}}
-              echo ASSIMP_LIB_DIR=${{env.GH_ASSIMP_LIB_DIR}}
-              [ ! -d $CASCADE_INC_DIR ] && echo "ERROR: OpenCascade include dir doesn't exist"
-              [ ! -d $CASCADE_LIB_DIR ] && echo "ERROR: OpenCascade lib dir doesn't exist"
-              [ ! -d $ASSIMP_INC_DIR ] && echo "ERROR: assimp include dir doesn't exist"
-              [ ! -d $ASSIMP_LIB_DIR ] && echo "ERROR: assimp lib dir doesn't exist"
-              qmake .. CONFIG+=withtests \
-                       CASCADE_INC_DIR=${{env.GH_CASCADE_INC_DIR}} \
-                       CASCADE_LIB_DIR=${{env.GH_CASCADE_LIB_DIR}} \
-                       ASSIMP_INC_DIR=${{env.GH_ASSIMP_INC_DIR}} \
-                       ASSIMP_LIB_DIR=${{env.GH_ASSIMP_LIB_DIR}}
-              make -j${{steps.cpu-cores.outputs.count}}
+              cmake --version
+              cmake .. \
+                    -DMayo_BuildTests=ON \
+                    -DMayo_BuildPluginAssimp=ON
+              cmake --build . \
+                    --config Release \
+                    --parallel `nproc`
 
         - name: Execute Unit Tests
           working-directory: ${{github.workspace}}/build
@@ -71,7 +54,7 @@ jobs:
               DISPLAY: :0
           run: |
               # Install french locale for testing case
-              echo "fr_FR ISO-8859-1" | sudo tee -a /etc/locale.gen
+              echo "fr_FR ISO-8859-15" | sudo tee -a /etc/locale.gen
               sudo locale-gen
               localectl list-locales
               # Start X11 display server

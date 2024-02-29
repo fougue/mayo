@@ -13,6 +13,8 @@ CONFIG(debug, debug|release) {
     message(Mayo version $$MAYO_VERSION release)
 }
 
+MAYO_DIR = $$PWD/../..
+
 # Check Qt version
 message(Qt version $$QT_VERSION)
 !versionAtLeast(QT_VERSION, 5.14) {
@@ -86,7 +88,7 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
     LIBS += -liconv
 #   QMAKE_CXXFLAGS += -mmacosx-version-min=10.15
-    ICON = images/appicon.icns
+    ICON = $$MAYO_DIR/images/appicon.icns
 }
 
 win32 {
@@ -94,54 +96,54 @@ win32 {
 }
 
 INCLUDEPATH += \
-    src/app \
-    src/3rdparty
+    $$MAYO_DIR/src/app \
+    $$MAYO_DIR/src/3rdparty
 
 HEADERS += \
-    $$files(src/base/*.h) \
-    $$files(src/io_dxf/*.h) \
-    $$files(src/io_image/*.h) \
-    $$files(src/io_occ/*.h) \
-    $$files(src/io_off/*.h) \
-    $$files(src/io_ply/*.h) \
-    $$files(src/graphics/*.h) \
-    $$files(src/gui/*.h) \
-    $$files(src/measure/*.h) \
-    $$files(src/app/*.h) \
+    $$files($$MAYO_DIR/src/base/*.h) \
+    $$files($$MAYO_DIR/src/io_dxf/*.h) \
+    $$files($$MAYO_DIR/src/io_image/*.h) \
+    $$files($$MAYO_DIR/src/io_occ/*.h) \
+    $$files($$MAYO_DIR/src/io_off/*.h) \
+    $$files($$MAYO_DIR/src/io_ply/*.h) \
+    $$files($$MAYO_DIR/src/graphics/*.h) \
+    $$files($$MAYO_DIR/src/gui/*.h) \
+    $$files($$MAYO_DIR/src/measure/*.h) \
+    $$files($$MAYO_DIR/src/app/*.h) \
 
 SOURCES += \
-    $$files(src/base/*.cpp) \
-    $$files(src/io_dxf/*.cpp) \
-    $$files(src/io_image/*.cpp) \
-    $$files(src/io_occ/*.cpp) \
-    $$files(src/io_off/*.cpp) \
-    $$files(src/io_ply/*.cpp) \
-    $$files(src/graphics/*.cpp) \
-    $$files(src/gui/*.cpp) \
-    $$files(src/measure/*.cpp) \
-    $$files(src/app/*.cpp) \
+    $$files($$MAYO_DIR/src/base/*.cpp) \
+    $$files($$MAYO_DIR/src/io_dxf/*.cpp) \
+    $$files($$MAYO_DIR/src/io_image/*.cpp) \
+    $$files($$MAYO_DIR/src/io_occ/*.cpp) \
+    $$files($$MAYO_DIR/src/io_off/*.cpp) \
+    $$files($$MAYO_DIR/src/io_ply/*.cpp) \
+    $$files($$MAYO_DIR/src/graphics/*.cpp) \
+    $$files($$MAYO_DIR/src/gui/*.cpp) \
+    $$files($$MAYO_DIR/src/measure/*.cpp) \
+    $$files($$MAYO_DIR/src/app/*.cpp) \
     \
-    src/3rdparty/fmt/src/format.cc \
+    $$MAYO_DIR/src/3rdparty/fmt/src/format.cc \
 
 win32:lessThan(QT_MAJOR_VERSION, 6) {
     QT += winextras
-    HEADERS += $$files(src/app/windows/*.h)
-    SOURCES += $$files(src/app/windows/*.cpp)
+    HEADERS += $$files($$MAYO_DIR/src/app/windows/*.h)
+    SOURCES += $$files($$MAYO_DIR/src/app/windows/*.cpp)
 }
 
-FORMS += $$files(src/app/*.ui)
+FORMS += $$files($$MAYO_DIR/src/app/*.ui)
 
-RESOURCES += mayo.qrc
-RC_ICONS = images/appicon.ico
+RESOURCES += $$MAYO_DIR/mayo.qrc
+RC_ICONS = $$MAYO_DIR/images/appicon.ico
 
 OTHER_FILES += \
-    README.md \
-    .github/workflows/ci_linux.yml \
-    .github/workflows/ci_linux_arm.yml \
-    .github/workflows/ci_macos.yml \
-    .github/workflows/ci_windows.yml \
-    images/credits.txt \
-    scripts/bump-version.rb \
+    $$MAYO_DIR/README.md \
+    $$MAYO_DIR/.github/workflows/ci_linux.yml \
+    $$MAYO_DIR/.github/workflows/ci_linux_arm.yml \
+    $$MAYO_DIR/.github/workflows/ci_macos.yml \
+    $$MAYO_DIR/.github/workflows/ci_windows.yml \
+    $$MAYO_DIR/images/credits.txt \
+    $$MAYO_DIR/scripts/bump-version.rb \
 
 # Embed qtbase_*.qm files as a resource
 qtBaseQmRes.files = \
@@ -229,26 +231,26 @@ versionAtLeast(OCC_VERSION_STR, 7.4.0) {
     }
 } else {
     SOURCES -= \
-        src/io_occ/io_occ_base_mesh.cpp \
-        src/io_occ/io_occ_gltf_reader.cpp \
-        src/io_occ/io_occ_obj_reader.cpp
+        $$MAYO_DIR/src/io_occ/io_occ_base_mesh.cpp \
+        $$MAYO_DIR/src/io_occ/io_occ_gltf_reader.cpp \
+        $$MAYO_DIR/src/io_occ/io_occ_obj_reader.cpp
 
     message(glTF reader disabled because OpenCascade < v7.4)
     message(OBJ reader disabled because OpenCascade < v7.4)
 }
 
 !versionAtLeast(OCC_VERSION_STR, 7.5.0) {
-    SOURCES -= src/io_occ/io_occ_gltf_writer.cpp
+    SOURCES -= $$MAYO_DIR/src/io_occ/io_occ_gltf_writer.cpp
     message(glTF writer disabled because OpenCascade < v7.5)
 }
 
 !versionAtLeast(OCC_VERSION_STR, 7.6.0) {
-    SOURCES -= src/io_occ/io_occ_obj_writer.cpp
+    SOURCES -= $$MAYO_DIR/src/io_occ/io_occ_obj_writer.cpp
     message(OBJ writer disabled because OpenCascade < v7.6)
 }
 
 !versionAtLeast(OCC_VERSION_STR, 7.7.0) {
-    SOURCES -= src/io_occ/io_occ_vrml_reader.cpp
+    SOURCES -= $$MAYO_DIR/src/io_occ/io_occ_vrml_reader.cpp
     message(VRML reader disabled because OpenCascade < v7.7)
 }
 
@@ -266,8 +268,8 @@ isEmpty(ASSIMP_INC_DIR) | isEmpty(ASSIMP_LIB_DIR) {
 }
 
 defined(ASSIMP_IS_ON, var) {
-    HEADERS += $$files(src/io_assimp/*.h)
-    SOURCES += $$files(src/io_assimp/*.cpp)
+    HEADERS += $$files($$MAYO_DIR/src/io_assimp/*.h)
+    SOURCES += $$files($$MAYO_DIR/src/io_assimp/*.cpp)
 
     ASSIMP_VERSION_FILE_CONTENTS = $$cat($$ASSIMP_INC_DIR/version.h, lines)
     ASSIMP_aiGetVersionPatch = $$find(ASSIMP_VERSION_FILE_CONTENTS, aiGetVersionPatch)
@@ -294,8 +296,8 @@ isEmpty(GMIO_ROOT) {
         GMIO_BIN_SUFFIX =
     }
 
-    HEADERS += $$files(src/io_gmio/*.h)
-    SOURCES += $$files(src/io_gmio/*.cpp)
+    HEADERS += $$files($$MAYO_DIR/src/io_gmio/*.h)
+    SOURCES += $$files($$MAYO_DIR/src/io_gmio/*.cpp)
 
     INCLUDEPATH += $$GMIO_ROOT/include
     LIBS += -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
@@ -305,7 +307,7 @@ isEmpty(GMIO_ROOT) {
 
 # Unit tests
 CONFIG(withtests) {
-    include(tests/tests.pri)
+    include($$MAYO_DIR/tests/tests.pri)
     DEFINES += MAYO_WITH_TESTS
 }
 

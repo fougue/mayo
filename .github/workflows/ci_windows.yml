@@ -21,6 +21,7 @@ jobs:
                       occ_zip_sha256: 'beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee'
 
         runs-on: windows-latest
+        name: build-win-msvc-occt${{matrix.occ_version}}
 
         steps:
         - name: Checkout
@@ -66,38 +67,27 @@ jobs:
         - name: Extract Assimp
           run: 7z x assimp-5.3.1.zip
 
-        - name: Download jom.exe
-          uses: carlosperate/download-file-action@v2
-          with:
-              file-url: 'https://www.fougue.pro/share/bin/jom.exe'
-              sha256: '700943516856c15675212bbcecc4e3d7580514456f8b6f09d634e98e25296ad4'
-
         - name: Get count of CPU cores
           uses: SimenB/github-actions-cpu-cores@v1
           id: cpu-cores
 
-        - name: Create Build folder
-          run: mkdir ${{github.workspace}}/build
-
         - name: Configure Compiler
           uses: ilammy/msvc-dev-cmd@v1
 
-        - name: QMake
-          working-directory: ${{github.workspace}}/build
+        - name: Build
           shell: cmd
           run: |
-              call ..\OpenCASCADE-${{matrix.occ_version}}-vc14-64\opencascade-${{matrix.occ_version}}\env.bat
-              echo CSF_OCCTIncludePath=%CSF_OCCTIncludePath%
-              echo CSF_OCCTLibPath=%CSF_OCCTLibPath%
-              qmake --version
-              qmake ..\mayo.pro CONFIG+=release CONFIG+=withtests ^
-                    ASSIMP_INC_DIR=${{github.workspace}}/assimp-5.3.1/include/assimp ^
-                    ASSIMP_LIB_DIR=${{github.workspace}}/assimp-5.3.1/lib ^
-                    ASSIMP_LIBNAME_SUFFIX=-vc143-mt
-
-        - name: Build
-          working-directory: ${{github.workspace}}/build
-          run: ..\jom.exe -j${{steps.cpu-cores.outputs.count}}
+              mkdir ${{github.workspace}}\build
+              cd ${{github.workspace}}\build
+              cmake --version
+              cmake .. ^
+                    -DMayo_BuildTests=ON ^
+                    -DMayo_BuildPluginAssimp=ON ^
+                    -DOpenCASCADE_DIR=../OpenCASCADE-${{matrix.occ_version}}-vc14-64/opencascade-${{matrix.occ_version}} ^
+                    -Dassimp_DIR=${{github.workspace}}/assimp-5.3.1/lib/cmake/assimp-5.3
+              cmake --build . ^
+                    --config Release ^
+                    --parallel ${{steps.cpu-cores.outputs.count}}
 
         - name: Execute Unit Tests
           working-directory: ${{github.workspace}}/build
