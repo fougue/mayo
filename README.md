@@ -90,8 +90,8 @@ Select Objects | SHIFT + mouseLeft clicks
 Mayo supports also multiple 3D viewer navigation styles to mimic common CAD applications(CATIA, SOLIDWORKS, ...)
 
 ## :hammer: How to build Mayo
-[Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
-[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)  
+[Instructions for Windows](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows)  
+[Instructions for Linux](https://github.com/fougue/mayo/wiki/Build-instructions-for-Linux)  
 [Instructions for macOS](https://github.com/fougue/mayo/wiki/Build-instructions-for-macOS)
 
 ## :clapper: Gallery
