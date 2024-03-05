@@ -200,16 +200,25 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     int vertexCount = 0;
     int facetCount = 0;
     {
-        if (!ifs.good())
-            return fnError(OffReaderI18N::textIdTr("Unexpected end of file"));
+        // Normally vertex/face/edge counts are specified on a dedicated line coming after OFF
+        // But for some files they are wrongly specified on the line containing OFF token, eg "OFF 24 12 0"
+        const auto arrayStrFirstLine = getWords<3>(strLine);
+        if (!arrayStrFirstLine[1].empty() && !arrayStrFirstLine[2].empty()) {
+            vertexCount = strToNum<int>(arrayStrFirstLine[1]);
+            facetCount = strToNum<int>(arrayStrFirstLine[2]);
+        }
+        else {
+            if (!ifs.good())
+                return fnError(OffReaderI18N::textIdTr("Unexpected end of file"));
 
-        getNonCommentLine(ifs, strLine);
-        const auto arrayStrCount = getWords<2>(strLine);
-        if (hasEmptyString(arrayStrCount))
-            return fnError(OffReaderI18N::textIdTr("No vertex or face count"));
+            getNonCommentLine(ifs, strLine);
+            const auto arrayStrCount = getWords<2>(strLine);
+            if (hasEmptyString(arrayStrCount))
+                return fnError(OffReaderI18N::textIdTr("No vertex or face count"));
 
-        vertexCount = strToNum<int>(arrayStrCount[0]);
-        facetCount = strToNum<int>(arrayStrCount[1]);
+            vertexCount = strToNum<int>(arrayStrCount[0]);
+            facetCount = strToNum<int>(arrayStrCount[1]);
+        }
     }
 
     // Helper function for progress report

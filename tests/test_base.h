@@ -43,6 +43,7 @@ private slots:
     void IO_OccStaticVariablesRollback_test_data();
     void IO_bugGitHub166_test();
     void IO_bugGitHub166_test_data();
+    void IO_bugGitHub258_test();
 
     void DoubleToString_test();
     void StringConv_test();

@@ -35,6 +35,8 @@
 #include "../src/base/unit_system.h"
 #include "../src/io_dxf/io_dxf.h"
 #include "../src/io_occ/io_occ.h"
+#include "../src/io_off/io_off_reader.h"
+#include "../src/io_off/io_off_writer.h"
 #include "../src/io_ply/io_ply_reader.h"
 #include "../src/io_ply/io_ply_writer.h"
 
@@ -622,6 +624,28 @@ void TestBase::IO_bugGitHub166_test_data()
 #endif
 }
 
+void TestBase::IO_bugGitHub258_test()
+{
+    auto app = Application::instance();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument()
+                              .targetDocument(doc)
+                              .withFilepath("tests/inputs/#258_cube.off")
+                              .execute();
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() == 1);
+
+    const TopoDS_Shape shape = doc->xcaf().shape(doc->entityLabel(0));
+    const TopoDS_Face& face = TopoDS::Face(shape);
+    TopLoc_Location locFace;
+    auto triangulation = BRep_Tool::Triangulation(face, locFace);
+    QVERIFY(!triangulation.IsNull());
+    QCOMPARE(triangulation->NbNodes(), 24);
+    QCOMPARE(triangulation->NbTriangles(), 12);
+
+    app->closeDocument(doc);
+}
+
 void TestBase::DoubleToString_test()
 {
     const std::locale frLocale = getFrLocale();
@@ -1102,11 +1126,16 @@ void TestBase::Span_test()
 void TestBase::initTestCase()
 {
     m_ioSystem = new IO::System;
+
     m_ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
-    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+
     m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
+
     IO::addPredefinedFormatProbes(m_ioSystem);
 }
 
