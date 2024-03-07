@@ -1,3 +1,9 @@
+/****************************************************************************
+** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
 #pragma once
 
 namespace Mayo {

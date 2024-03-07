@@ -32,11 +32,11 @@
 #include "qstring_conv.h"
 #include "qtgui_utils.h"
 #include "theme.h"
-#include "version.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_mesh.h"
 #include "widget_model_tree_builder_xde.h"
 #include "widget_occ_view.h"
+#include <common/mayo_version.h>
 
 #include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>

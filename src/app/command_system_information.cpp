@@ -10,10 +10,10 @@
 #include "command_system_information_occopengl.h"
 #include "qstring_conv.h"
 #include "qtwidgets_utils.h"
-#include "version.h"
 #include "../base/meta_enum.h"
 #include "../base/filepath.h"
 #include "../base/io_system.h"
+#include <common/mayo_version.h>
 
 #include <QtCore/QDir>
 #include <QtCore/QFileSelector>

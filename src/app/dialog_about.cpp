@@ -8,7 +8,8 @@
 
 #include "ui_dialog_about.h"
 #include "qstring_conv.h"
-#include "version.h"
+#include <common/mayo_version.h>
+
 #include <Standard_Version.hxx>
 
 namespace Mayo {
