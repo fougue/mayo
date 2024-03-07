@@ -243,7 +243,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/graphics/*.h
     ${PROJECT_SOURCE_DIR}/src/gui/*.h
     ${PROJECT_SOURCE_DIR}/src/io_dxf/*.h
-    ${PROJECT_SOURCE_DIR}/src/io_gmio/*.h
     ${PROJECT_SOURCE_DIR}/src/io_image/*.h
     ${PROJECT_SOURCE_DIR}/src/io_occ/*.h
     ${PROJECT_SOURCE_DIR}/src/io_off/*.h
@@ -417,6 +416,7 @@ endif()
 
 if(assimp_FOUND)
     message(STATUS "assimp version ${assimp_VERSION}")
+    set(MAYO_HAVE_ASSIMP 1)
 
     file(GLOB MayoPluginAssimp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.h)
     file(GLOB MayoPluginAssimp_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.cpp)
@@ -424,7 +424,6 @@ if(assimp_FOUND)
     list(APPEND Mayo_SourceFiles ${MayoPluginAssimp_SourceFiles})
 
     list(APPEND Mayo_LinkLibraries ${ASSIMP_LIBRARIES})
-    set(MAYO_HAVE_ASSIMP 1)
 
     list(GET ASSIMP_INCLUDE_DIRS 0 assimp_IncludeDir)
     file(READ "${assimp_IncludeDir}/assimp/version.h" assimp_FileVersionH)
@@ -439,8 +438,19 @@ endif()
 # gmio
 ##########
 
-# TODO
+# TODO Finalize
+if(gmio_FOUND)
+    message(STATUS "gmio version ${gmio_VERSION}")
+    set(MAYO_HAVE_GMIO 1)
 
+    file(GLOB MayoPluginGmio_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.h)
+    file(GLOB MayoPluginGmio_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.cpp)
+    list(APPEND Mayo_HeaderFiles ${MayoPluginGmio_HeaderFiles})
+    list(APPEND Mayo_SourceFiles ${MayoPluginGmio_SourceFiles})
+
+    # Needs -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
+    list(APPEND Mayo_LinkLibraries ${GMIO_LIBRARIES})
+endif()
 
 ##########
 # Configure files
