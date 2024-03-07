@@ -55,8 +55,6 @@ if(Git_FOUND)
     endif()
 endif()
 
-configure_file(${PROJECT_SOURCE_DIR}/src/app/version.h.cmake app/version.h @ONLY)
-
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 # Find bit size of the target machine
@@ -204,7 +202,7 @@ set(
     Mayo_IncludeDirectories
     src/app
     src/3rdparty
-    ${CMAKE_BINARY_DIR}/app
+    ${CMAKE_BINARY_DIR}
 )
 
 ##########
@@ -276,7 +274,7 @@ if(Mayo_BuildTests)
     list(APPEND Mayo_HeaderFiles ${MayoTests_HeaderFiles})
     list(APPEND Mayo_SourceFiles ${MayoTests_SourceFiles})
 
-    list(APPEND Mayo_CompileDefinitions MAYO_WITH_TESTS)
+    set(MAYO_WITH_TESTS 1)
     list(APPEND Mayo_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
 
     file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
@@ -426,12 +424,13 @@ if(assimp_FOUND)
     list(APPEND Mayo_SourceFiles ${MayoPluginAssimp_SourceFiles})
 
     list(APPEND Mayo_LinkLibraries ${ASSIMP_LIBRARIES})
-    list(APPEND Mayo_CompileDefinitions HAVE_ASSIMP)
+    set(MAYO_HAVE_ASSIMP 1)
 
     list(GET ASSIMP_INCLUDE_DIRS 0 assimp_IncludeDir)
     file(READ "${assimp_IncludeDir}/assimp/version.h" assimp_FileVersionH)
-    if(NOT assimp_FileVersionH MATCHES "aiGetVersionPatch")
-        list(APPEND Mayo_CompileDefinitions NO_ASSIMP_aiGetVersionPatch)
+    if(assimp_FileVersionH MATCHES "aiGetVersionPatch")
+        set(MAYO_HAVE_ASSIMP_aiGetVersionPatch 1)
+    else()
         message(STATUS "Assimp function aiGetVersionPatch() not available")
     endif()
 endif()
@@ -442,6 +441,13 @@ endif()
 
 # TODO
 
+
+##########
+# Configure files
+##########
+
+configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config.h  @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
 
 ##########
 # Targets
@@ -491,7 +497,8 @@ add_custom_target(
     images/credits.txt
     scripts/bump-version.rb
     scripts/gen-cmake-opencascade-vars.bat
-    src/app/version.h.cmake
+    src/mayo_config.h.cmake
+    src/mayo_version.h.cmake
     README.md
 )
 

@@ -39,6 +39,7 @@
 #include "../src/io_off/io_off_writer.h"
 #include "../src/io_ply/io_ply_reader.h"
 #include "../src/io_ply/io_ply_writer.h"
+#include <common/mayo_config.h>
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -608,7 +609,7 @@ void TestBase::IO_bugGitHub166_test_data()
 #if OCC_VERSION_HEX >= 0x070400
     QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
-#  ifdef HAVE_RAPIDJSON
+#  ifdef OPENCASCADE_HAVE_RAPIDJSON
     QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
 #  endif
@@ -617,7 +618,7 @@ void TestBase::IO_bugGitHub166_test_data()
 #if OCC_VERSION_HEX >= 0x070600
     QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply" << "tests/outputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla" << "tests/outputs/cube.obj" << IO::Format_OBJ;
-#  ifdef HAVE_RAPIDJSON
+#  ifdef OPENCASCADE_HAVE_RAPIDJSON
     QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf" << "tests/outputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj" << "tests/outputs/cube.glTF" << IO::Format_GLTF;
 #  endif

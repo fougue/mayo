@@ -7,9 +7,7 @@
 #include "io_assimp.h"
 #include "io_assimp_reader.h"
 
-#ifdef HAVE_ASSIMP
-#  include <assimp/version.h>
-#endif
+#include <assimp/version.h>
 
 namespace Mayo {
 namespace IO {
@@ -47,7 +45,7 @@ std::string_view AssimpLib::strVersion()
     if (str.empty()) {
         str += std::to_string(aiGetVersionMajor())
                + "." + std::to_string(aiGetVersionMinor())
-#ifndef NO_ASSIMP_aiGetVersionPatch
+#ifdef MAYO_HAVE_ASSIMP_aiGetVersionPatch
                + "." + std::to_string(aiGetVersionPatch())
 #else
                + ".?"
