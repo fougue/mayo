@@ -89,7 +89,21 @@ Select Objects | SHIFT + mouseLeft clicks
 
 Mayo supports also multiple 3D viewer navigation styles to mimic common CAD applications(CATIA, SOLIDWORKS, ...)
 
-## :hammer: How to build Mayo
+## :package: Install
+Release packages are available for Windows and Linux on the [Releases](https://github.com/fougue/mayo/releases) page.  
+
+Alternatives for Windows:
+- [Winget](https://winstall.app/apps/Fougue.Mayo)
+````
+winget install --id Fougue.Mayo
+````  
+- [Scoop](https://scoop.sh/#/apps?s=0&d=1&o=true&q=mayo)
+````
+scoop bucket add extras
+scoop install extras/mayo
+````
+
+## :hammer: How to build
 [Instructions for Windows](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows)  
 [Instructions for Linux](https://github.com/fougue/mayo/wiki/Build-instructions-for-Linux)  
 [Instructions for macOS](https://github.com/fougue/mayo/wiki/Build-instructions-for-macOS)
