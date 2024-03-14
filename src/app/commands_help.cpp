@@ -8,7 +8,7 @@
 
 #include "dialog_about.h"
 #include "qtwidgets_utils.h"
-#include "qstring_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>

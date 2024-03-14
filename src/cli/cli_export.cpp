@@ -6,13 +6,13 @@
 
 #include "cli_export.h"
 
-#include "app_module.h"
 #include "console.h"
-#include "qstring_conv.h"
+#include "../app/app_module.h"
 #include "../base/application.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/task_manager.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <Message.hxx>
 

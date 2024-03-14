@@ -1,13 +1,18 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
+** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#include "../app/app_module.h"
 #include "../base/application.h"
-#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../graphics/graphics_mesh_object_driver.h"
+#include "../graphics/graphics_point_cloud_object_driver.h"
+#include "../graphics/graphics_shape_object_driver.h"
+#include "../graphics/graphics_utils.h"
+#include "../gui/gui_application.h"
 #include "../io_assimp/io_assimp.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
@@ -17,28 +22,14 @@
 #include "../io_off/io_off_writer.h"
 #include "../io_ply/io_ply_reader.h"
 #include "../io_ply/io_ply_writer.h"
-#include "../graphics/graphics_mesh_object_driver.h"
-#include "../graphics/graphics_point_cloud_object_driver.h"
-#include "../graphics/graphics_shape_object_driver.h"
-#include "../graphics/graphics_utils.h"
-#include "../gui/gui_application.h"
+#include "../qtbackend/qsettings_storage.h"
 #include "../qtbackend/qt_app_translator.h"
 #include "../qtbackend/qt_signal_thread_helper.h"
-#include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
 #include "../qtcommon/qstring_conv.h"
-#include "app_module.h"
-#include "commands_help.h"
-#include "document_tree_node_properties_providers.h"
-#include "mainwindow.h"
-#include "qtgui_utils.h"
-#include "theme.h"
-#include "widget_model_tree.h"
-#include "widget_model_tree_builder_mesh.h"
-#include "widget_model_tree_builder_xde.h"
-#include "widget_occ_view.h"
-#include <common/mayo_config.h>
+#include "cli_export.h"
+#include "console.h"
 #include <common/mayo_version.h>
 
 #include <QtCore/QtDebug>
@@ -47,19 +38,14 @@
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
-#include <QtCore/QVersionNumber>
-#include <QtGui/QOffscreenSurface>
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFunctions>
-#include <QtGui/QPixmap>
-#include <QtWidgets/QApplication>
+
+#include <OpenGl_GraphicDriver.hxx>
 
 #include <fmt/format.h>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <unordered_map>
 
 namespace Mayo {
 
@@ -76,11 +62,12 @@ namespace {
 
 // Stores arguments(options) passed at command line
 struct CommandLineArguments {
-    QString themeName;
     FilePath filepathSettings;
     FilePath filepathLog;
     bool includeDebugLogs = true;
+    std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
+    bool cliProgressReport = true;
     bool showSystemInformation = false;
 };
 
@@ -99,19 +86,20 @@ static CommandLineArguments processCommandLine()
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
-    const QCommandLineOption cmdOptionTheme(
-                QStringList{ "t", "theme" },
-                Main::tr("Theme for the UI(classic|dark)"),
-                Main::tr("name")
-     );
-    cmdParser.addOption(cmdOptionTheme);
-
     const QCommandLineOption cmdFileSettings(
                 QStringList{ "s", "settings" },
                 Main::tr("Settings file(INI format) to load at startup"),
                 Main::tr("filepath")
     );
     cmdParser.addOption(cmdFileSettings);
+
+    const QCommandLineOption cmdFileToExport(
+                QStringList{ "e", "export" },
+                Main::tr("Export opened files into an output file, can be repeated for different "
+                         "formats(eg. -e file.stp -e file.igs...)"),
+                Main::tr("filepath")
+    );
+    cmdParser.addOption(cmdFileToExport);
 
     const QCommandLineOption cmdFileLog(
                 QStringList{ "log-file" },
@@ -126,6 +114,12 @@ static CommandLineArguments processCommandLine()
     );
     cmdParser.addOption(cmdDebugLogs);
 
+    const QCommandLineOption cmdCliNoProgress(
+                QStringList{ "no-progress" },
+                Main::tr("Disable progress reporting in console output(CLI-mode only)")
+    );
+    cmdParser.addOption(cmdCliNoProgress);
+
     const QCommandLineOption cmdSysInfo(
                 QStringList{ "system-info" },
                 Main::tr("Show detailed system information and quit")
@@ -138,26 +132,19 @@ static CommandLineArguments processCommandLine()
                 Main::tr("[files...]")
     );
 
-#ifdef MAYO_WITH_TESTS
-    const QCommandLineOption cmdRunTests(
-                QStringList{ "runtests" },
-                Main::tr("Execute unit tests and exit application")
-    );
-    cmdParser.addOption(cmdRunTests);
-#endif
-
     cmdParser.process(QCoreApplication::arguments());
 
     // Retrieve arguments
-    args.themeName = "dark";
-    if (cmdParser.isSet(cmdOptionTheme))
-        args.themeName = cmdParser.value(cmdOptionTheme);
-
     if (cmdParser.isSet(cmdFileSettings))
         args.filepathSettings = filepathFrom(cmdParser.value(cmdFileSettings));
 
     if (cmdParser.isSet(cmdFileLog))
         args.filepathLog = filepathFrom(cmdParser.value(cmdFileLog));
+
+    if (cmdParser.isSet(cmdFileToExport)) {
+        for (const QString& strFilepath : cmdParser.values(cmdFileToExport))
+            args.listFilepathToExport.push_back(filepathFrom(strFilepath));
+    }
 
     for (const QString& posArg : cmdParser.positionalArguments())
         args.listFilepathToOpen.push_back(filepathFrom(posArg));
@@ -166,17 +153,10 @@ static CommandLineArguments processCommandLine()
     // By default this will exclude debug logs in release build
     args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
 #endif
+    args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
     args.showSystemInformation = cmdParser.isSet(cmdSysInfo);
 
     return args;
-}
-
-static std::unique_ptr<Theme> globalTheme;
-
-// Declared in theme.h
-Theme* mayoTheme()
-{
-    return globalTheme.get();
 }
 
 // Set OpenCascade environment variables defined in a settings file(INI format)
@@ -221,97 +201,24 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     }
 }
 
-// Helper to query the OpenGL version string
-[[maybe_unused]] static std::string queryGlVersionString()
-{
-    QOpenGLContext glContext;
-    if (!glContext.create())
-        return {};
-
-    QOffscreenSurface surface;
-    surface.create();
-    if (!glContext.makeCurrent(&surface))
-        return {};
-
-    auto glVersion = glContext.functions()->glGetString(GL_VERSION);
-    if (!glVersion)
-        return {};
-
-    return reinterpret_cast<const char*>(glVersion);
-}
-
-// Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
-// Note: only major and minor versions are detected
-[[maybe_unused]] static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
-{
-    if (strVersion.empty())
-        return {};
-
-    const char* ptrVersionStart = strVersion.data();
-    const char* ptrVersionEnd = ptrVersionStart + strVersion.size();
-    const int versionMajor = std::atoi(ptrVersionStart);
-    int versionMinor = 0;
-    auto ptrDot = std::find(ptrVersionStart, ptrVersionEnd, '.');
-    if (ptrDot != ptrVersionEnd)
-        versionMinor = std::atoi(ptrDot + 1);
-
-    return QVersionNumber(versionMajor, versionMinor);
-}
-
-Thumbnail createGuiDocumentThumbnail(GuiDocument* guiDoc, QSize size)
-{
-    Thumbnail thumbnail;
-
-    IO::ImageWriter::Parameters params;
-    params.width = size.width();
-    params.height = size.height();
-    params.backgroundColor = QtGuiUtils::toPreferredColorSpace(mayoTheme()->color(Theme::Color::Palette_Window));
-    Handle_Image_AlienPixMap pixmap = IO::ImageWriter::createImage(guiDoc, params);
-    if (!pixmap) {
-        qDebug() << "Empty pixmap returned by IO::ImageWriter::createImage()";
-        return thumbnail;
-    }
-
-    GraphicsUtils::ImagePixmap_flipY(*pixmap);
-    Image_PixMap::SwapRgbaBgra(*pixmap);
-    const QPixmap qPixmap = QtGuiUtils::toQPixmap(*pixmap);
-    thumbnail.imageData = QtGuiUtils::toQByteArray(qPixmap);
-    thumbnail.imageCacheKey = qPixmap.cacheKey();
-    return thumbnail;
-}
-
 // Initializes "GUI" objects
 static void initGui(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
 
-    // Fallback for OpenGL
-    setFunctionCreateGraphicsDriver(&QWidgetOccView::createCompatibleGraphicsDriver);
-    IWidgetOccView::setCreator(&QWidgetOccView::create);
-
-    // Use QOpenGLWidget if possible
-#if OCC_VERSION_HEX >= 0x070600
-    const auto& propForceOpenGlFallbackWidget = AppModule::get()->properties()->forceOpenGlFallbackWidget;
-    AppModule::get()->settings()->loadProperty(&propForceOpenGlFallbackWidget);
-    const bool hasQGuiApplication = qobject_cast<QGuiApplication*>(QCoreApplication::instance());
-    if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
-        const std::string strGlVersion = queryGlVersionString();
-        const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
-        if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
-            setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
-            IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);
-        }
-        else {
-            qWarning() << "Can't use QOpenGLWidget because OpenGL version is too old";
-        }
-    }
-#endif
-
-    // Register Graphics entity drivers
+    setFunctionCreateGraphicsDriver([]() -> Handle_Graphic3d_GraphicDriver {
+        return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
+    });
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
+}
+
+bool cliExcludingSettingPredicate(const Property& prop)
+{
+    return AppModule::excludeSettingPredicate(prop)
+           || prop.dynTypeName() == PropertyRecentFiles::TypeName;
 }
 
 // Initializes and runs Mayo application
@@ -337,7 +244,7 @@ static int runApp(QCoreApplication* qtApp)
                 fnCriticalExit(Main::tr("Failed to load application settings file [path=%1]").arg(strFilepathSettings));
 
             QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
-            appSettings->loadFrom(fileSettings, &AppModule::excludeSettingPredicate);
+            appSettings->loadFrom(fileSettings, &cliExcludingSettingPredicate);
         }
     };
 
@@ -351,7 +258,6 @@ static int runApp(QCoreApplication* qtApp)
     // Initialize AppModule
     auto appModule = AppModule::get();
     appModule->settings()->setStorage(std::make_unique<QSettingsStorage>());
-    appModule->setRecentFileThumbnailRecorder(&createGuiDocumentThumbnail);
     {
         // Load translation files
         auto fnLoadQmFile = [=](const QString& qmFilePath) {
@@ -375,11 +281,6 @@ static int runApp(QCoreApplication* qtApp)
     auto guiApp = new GuiApplication(app);
     initGui(guiApp);
 
-    // Register providers to query document tree node properties
-    appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
-    appModule->addPropertiesProvider(std::make_unique<Mesh_DocumentTreeNodePropertiesProvider>());
-    appModule->addPropertiesProvider(std::make_unique<PointCloud_DocumentTreeNodePropertiesProvider>());
-
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
     ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
@@ -396,6 +297,7 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
 
+#if 0
     // Register library infos
     CommandSystemInformation::addLibraryInfo(
         IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
@@ -410,46 +312,27 @@ static int runApp(QCoreApplication* qtApp)
         cmdSysInfo.execute();
         return qtApp->exec();
     }
+#endif
 
-    // Record recent files when documents are closed
-    guiApp->signalGuiDocumentErased.connectSlot(&AppModule::recordRecentFileThumbnail, AppModule::get());
+    if (!args.listFilepathToExport.empty()) {
+        if (args.listFilepathToOpen.empty())
+            fnCriticalExit(Main::tr("No input files -> nothing to export"));
 
-    // Register WidgetModelTreeBuilter prototypes
-    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
-    WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
-
-    // Create theme
-    globalTheme.reset(createTheme(args.themeName));
-    if (!globalTheme)
-        fnCriticalExit(Main::tr("Failed to load theme '%1'").arg(args.themeName));
-
-    mayoTheme()->setup();
-    const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
-    const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
-    GuiDocument::setDefaultGradientBackground({
-                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
-                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
-                Aspect_GFM_VER
-    });
-
-    // Create MainWindow
-    MainWindow mainWindow(guiApp);
-    mainWindow.setWindowTitle(QCoreApplication::applicationName());
-    mainWindow.show();
-    if (!args.listFilepathToOpen.empty()) {
-        QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
+        guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
+        appModule->settings()->resetAll();
+        fnLoadAppSettings(appModule->settings());
+        QTimer::singleShot(0, qtApp, [=]{
+            CliExportArgs cliArgs;
+            cliArgs.progressReport = args.cliProgressReport;
+            cliArgs.filesToOpen = args.listFilepathToOpen;
+            cliArgs.filesToExport = args.listFilepathToExport;
+            cli_asyncExportDocuments(app, cliArgs, [=](int retcode) { qtApp->exit(retcode); });
+        });
+        return qtApp->exec();
     }
 
-    appModule->settings()->resetAll();
-    fnLoadAppSettings(appModule->settings());
-    const int code = qtApp->exec();
-    appModule->recordRecentFileThumbnails(guiApp);
-    appModule->settings()->save();
-    return code;
+    return 0;
 }
-
-// Defined in tests/runtests.cpp
-int runTests(int argc, char* argv[]);
 
 } // namespace Mayo
 
@@ -457,45 +340,12 @@ int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
 
-    // Helper function to check if application arguments contain any option listed in 'listOption'
-    // IMPORTANT: capture by reference, because QApplication constructor may alter argc(due to
-    //            parsing of arguments)
-    auto fnArgsContainAnyOf = [&](std::initializer_list<const char*> listOption) {
-        for (int i = 1; i < argc; ++i) {
-            for (const char* option : listOption) {
-                if (std::strcmp(argv[i], option) == 0)
-                    return true;
-            }
-        }
-        return false;
-    };
-
-    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
-    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
-    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
-    // As a workaround the Qt platform is forced to xcb
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
-    if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") && !fnArgsContainAnyOf({ "-platform" }))
-        qputenv("QT_QPA_PLATFORM", "xcb");
-#endif
-
     // Configure and create Qt application object
-#if defined(Q_OS_WIN)
-    // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
-    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-#endif
     QCoreApplication::setOrganizationName("Fougue Ltd");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
-    QCoreApplication::setApplicationName("Mayo");
+    QCoreApplication::setApplicationName("MayoConv");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
-    QApplication app(argc, argv);
-
-    // Handle unit tests
-#ifdef MAYO_WITH_TESTS
-    if (fnArgsContainAnyOf({ "--runtests" }))
-        return Mayo::runTests(argc, argv);
-#endif
-
-    // Run Mayo application GUI
+    QCoreApplication app(argc, argv);
+    // TODO Read settings from Mayo application
     return Mayo::runApp(&app);
 }

@@ -9,6 +9,7 @@
 
 #include <Standard_Version.hxx>
 
+#include <QtCore/QBuffer>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
 #include <QtGui/QScreen>
@@ -23,12 +24,14 @@ namespace QtGuiUtils {
 
 namespace {
 
-constexpr bool isLessOrEqual(double lhs, double rhs) {
+constexpr bool isLessOrEqual(double lhs, double rhs)
+{
     return lhs < rhs || qFuzzyCompare(lhs, rhs);
 }
 
 // Is 'v' inside ['start', 'end'] ?
-constexpr bool isInRange(double v, double start, double end) {
+constexpr bool isInRange(double v, double start, double end)
+{
     return isLessOrEqual(start, v) && isLessOrEqual(v, end);
 }
 
@@ -53,10 +56,10 @@ QColor lerp(const QColor& a, const QColor& b, double t)
 {
     Expects(isInRange(t, 0, 1));
     return QColor(
-                MathUtils::lerp(a.red(), b.red(), t),
-                MathUtils::lerp(a.green(), b.green(), t),
-                MathUtils::lerp(a.blue(), b.blue(), t),
-                MathUtils::lerp(a.alpha(), b.alpha(), t)
+        MathUtils::lerp(a.red(), b.red(), t),
+        MathUtils::lerp(a.green(), b.green(), t),
+        MathUtils::lerp(a.blue(), b.blue(), t),
+        MathUtils::lerp(a.alpha(), b.alpha(), t)
     );
 }
 
@@ -77,8 +80,9 @@ QColor linearColorAt(const QGradient& gradient, double t)
     );
     if (itLower != stops.cbegin() && itLower != stops.cend()) {
         const int i = (itLower - stops.cbegin()) - 1;
-        const double tMapped =
-                MathUtils::mappedValue(t, stops.at(i).first, stops.at(i + 1).first, 0, 1);
+        const double tMapped = MathUtils::mappedValue(
+            t, stops.at(i).first, stops.at(i + 1).first, 0, 1
+        );
         return lerp(stops.at(i).second, stops.at(i + 1).second, tMapped);
     }
 
@@ -143,20 +147,24 @@ int screenPixelHeight(double screenRatio, const QScreen* screen)
 
 QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen)
 {
-    return QSize(QtGuiUtils::screenPixelWidth(widthRatio, screen),
-                 QtGuiUtils::screenPixelHeight(heightRatio, screen));
+    return QSize(
+        QtGuiUtils::screenPixelWidth(widthRatio, screen),
+        QtGuiUtils::screenPixelHeight(heightRatio, screen)
+    );
 }
 
 FontChange::FontChange(const QFont& font)
     : m_font(font)
 {}
 
-FontChange& FontChange::size(int size) {
+FontChange& FontChange::size(int size)
+{
     m_font.setPixelSize(size);
     return *this;
 }
 
-FontChange& FontChange::adjustSize(int offset) {
+FontChange& FontChange::adjustSize(int offset)
+{
     const int pixelSize = m_font.pixelSize() > 0 ? m_font.pixelSize() : 12;
     m_font.setPixelSize(pixelSize + offset);
     return *this;
@@ -168,12 +176,14 @@ FontChange& FontChange::scalePointSizeF(double f) {
     return *this;
 }
 
-FontChange& FontChange::bold(bool on) {
+FontChange& FontChange::bold(bool on)
+{
     m_font.setBold(on);
     return *this;
 }
 
-FontChange& FontChange::fixedPitch(bool on) {
+FontChange& FontChange::fixedPitch(bool on)
+{
     m_font.setFixedPitch(on);
     return *this;
 }
@@ -200,15 +210,33 @@ QPixmap toQPixmap(const Image_PixMap& pixmap)
         default: return QImage::Format_Invalid;
         }
     };
-    const QImage img(pixmap.Data(),
-                     int(pixmap.Width()),
-                     int(pixmap.Height()),
-                     int(pixmap.SizeRowBytes()),
-                     fnToQImageFormat(pixmap.Format()));
+    const QImage img(
+        pixmap.Data(),
+        int(pixmap.Width()),
+        int(pixmap.Height()),
+        int(pixmap.SizeRowBytes()),
+        fnToQImageFormat(pixmap.Format())
+    );
     if (img.isNull())
         return {};
 
     return QPixmap::fromImage(img);
+}
+
+QPixmap toQPixmap(const QByteArray& bytes, Qt::ImageConversionFlags flags)
+{
+    QPixmap pixmap;
+    pixmap.loadFromData(bytes, nullptr, flags);
+    return pixmap;
+}
+
+QByteArray toQByteArray(const QPixmap& pixmap, const char* format)
+{
+    QByteArray bytes;
+    QBuffer buffer(&bytes);
+    buffer.open(QIODevice::WriteOnly);
+    pixmap.save(&buffer, format);
+    return bytes;
 }
 
 } // namespace QtGuiUtils

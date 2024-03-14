@@ -8,9 +8,9 @@
 #include "../base/xcaf.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
+#include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
-#include "qtcore_utils.h"
-#include "qstring_conv.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 

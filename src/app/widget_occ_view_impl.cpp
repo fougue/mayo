@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include <QtCore/QtGlobal>
+#include "../graphics/graphics_utils.h"
 
 #include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
@@ -18,19 +18,6 @@
 #include <functional>
 
 namespace Mayo {
-
-namespace {
-
-Handle_Aspect_DisplayConnection createDisplayConnection()
-{
-#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#else
-    return new Aspect_DisplayConnection;
-#endif
-}
-
-} // namespace
 
 #if OCC_VERSION_HEX >= 0x070600
 namespace {
@@ -87,20 +74,13 @@ void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_Renderin
 
 Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
 {
-    auto gfxDriver = new OpenGl_GraphicDriver(createDisplayConnection(), false/*dontInit*/);
+    auto gfxDriver = new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/);
     // Let QOpenGLWidget manage buffer swap
     gfxDriver->ChangeOptions().buffersNoSwap = true;
     // Don't write into alpha channel
     gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
-#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning(
-                "Warning! Qt 5.10+ is required for sRGB setup.\n"
-                "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n"
-    );
-    gfxDriver->ChangeOptions().sRGBDisable = true;
-#endif
 
     return gfxDriver;
 }
@@ -139,7 +119,7 @@ Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Han
 
 Handle_Graphic3d_GraphicDriver QWidgetOccView_createCompatibleGraphicsDriver()
 {
-    return new OpenGl_GraphicDriver(createDisplayConnection());
+    return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
 }
 
 } // namespace Mayo

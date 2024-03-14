@@ -12,8 +12,8 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_controller.h"
+#include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
-#include "qstring_conv.h"
 #include "theme.h"
 
 #include <V3d_View.hxx>

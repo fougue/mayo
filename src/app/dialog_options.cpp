@@ -10,10 +10,10 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../qtbackend/qsettings_storage.h"
+#include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
-#include "qsettings_storage.h"
-#include "qstring_conv.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 #include "theme.h"
@@ -372,7 +372,8 @@ void DialogOptions::saveAs()
 {
     const QString startDirPath = QString();
     const QString filepath = QFileDialog::getSaveFileName(
-                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)"));
+                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)")
+    );
     if (filepath.isEmpty())
         return;
 

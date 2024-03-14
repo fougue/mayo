@@ -102,7 +102,7 @@ WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     : QObject(occView->widget()),
       V3dViewController(occView->v3dView()),
       m_occView(occView),
-      m_navigStyle(NavigationStyle::Catia),
+      m_navigStyle(View3dNavigationStyle::Catia),
       m_actionMatcher(createActionMatcher(m_navigStyle, &m_inputSequence))
 {
     m_occView->widget()->installEventFilter(this);
@@ -130,7 +130,7 @@ bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
     return false;
 }
 
-void WidgetOccViewController::setNavigationStyle(NavigationStyle style)
+void WidgetOccViewController::setNavigationStyle(View3dNavigationStyle style)
 {
     m_navigStyle = style;
     m_inputSequence.clear();
@@ -448,14 +448,14 @@ public:
 };
 
 std::unique_ptr<WidgetOccViewController::ActionMatcher>
-WidgetOccViewController::createActionMatcher(NavigationStyle style, const InputSequence* seq)
+WidgetOccViewController::createActionMatcher(View3dNavigationStyle style, const InputSequence* seq)
 {
     switch(style) {
-    case NavigationStyle::Mayo: return std::make_unique<Mayo_ActionMatcher>(seq);
-    case NavigationStyle::Catia: return std::make_unique<Catia_ActionMatcher>(seq);
-    case NavigationStyle::SolidWorks: return std::make_unique<SolidWorks_ActionMatcher>(seq);
-    case NavigationStyle::Unigraphics: return std::make_unique<Unigraphics_ActionMatcher>(seq);
-    case NavigationStyle::ProEngineer: return std::make_unique<ProEngineer_ActionMatcher>(seq);
+    case View3dNavigationStyle::Mayo: return std::make_unique<Mayo_ActionMatcher>(seq);
+    case View3dNavigationStyle::Catia: return std::make_unique<Catia_ActionMatcher>(seq);
+    case View3dNavigationStyle::SolidWorks: return std::make_unique<SolidWorks_ActionMatcher>(seq);
+    case View3dNavigationStyle::Unigraphics: return std::make_unique<Unigraphics_ActionMatcher>(seq);
+    case View3dNavigationStyle::ProEngineer: return std::make_unique<ProEngineer_ActionMatcher>(seq);
     }
     return {};
 }

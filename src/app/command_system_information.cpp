@@ -8,11 +8,11 @@
 
 #include "app_module.h"
 #include "command_system_information_occopengl.h"
-#include "qstring_conv.h"
 #include "qtwidgets_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/filepath.h"
 #include "../base/io_system.h"
+#include "../qtcommon/qstring_conv.h"
 #include <common/mayo_version.h>
 
 #include <QtCore/QDir>

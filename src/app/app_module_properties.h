@@ -15,7 +15,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "widget_occ_view_controller.h"
+#include "view3d_navigation_style.h"
 
 #include <memory>
 #include <unordered_map>
@@ -60,7 +60,7 @@ public:
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
-    PropertyEnum<WidgetOccViewController::NavigationStyle> navigationStyle{ this, textId("navigationStyle") };
+    PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
     PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };

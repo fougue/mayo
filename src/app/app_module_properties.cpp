@@ -91,7 +91,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
 #endif
     });
     settings->addResetFunction(groupId_graphics, [=]{
-        this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
+        this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);

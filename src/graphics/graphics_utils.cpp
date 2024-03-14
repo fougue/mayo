@@ -6,6 +6,7 @@
 
 #include "graphics_utils.h"
 #include "../base/bnd_utils.h"
+#include "../base/global.h"
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 
@@ -18,6 +19,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cstdlib>
 
 namespace Mayo {
 
@@ -202,6 +204,15 @@ int GraphicsUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
     int w, h;
     wnd->Size(w, h);
     return h;
+}
+
+Handle_Aspect_DisplayConnection GraphicsUtils::AspectDisplayConnection_create()
+{
+#if (!defined(MAYO_OS_WINDOWS) && (!defined(MAYO_OS_MAC) || defined(MACOSX_USE_GLX)))
+    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
+#else
+    return new Aspect_DisplayConnection;
+#endif
 }
 
 void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(

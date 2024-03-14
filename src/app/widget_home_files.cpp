@@ -10,9 +10,10 @@
 #include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "../qtcommon/filepath_conv.h"
 #include "app_module.h"
-#include "filepath_conv.h"
 #include "qstring_utils.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QtDebug>
@@ -46,7 +47,8 @@ public:
             HomeFileItem item;
             item.name = WidgetHomeFiles::tr("New Document");
             item.description = WidgetHomeFiles::tr(
-                        "\n\nCreate and add an empty document where you can import files");
+                        "\n\nCreate and add an empty document where you can import files"
+            );
             item.imageUrl = ImageId_NewDocument;
             item.type = HomeFileItem::Type::New;
             item.textWrapMode = QTextOption::WordWrap;
@@ -57,7 +59,8 @@ public:
             HomeFileItem item;
             item.name = WidgetHomeFiles::tr("Open Document(s)");
             item.description = WidgetHomeFiles::tr(
-                        "\n\nSelect files to load and open as distinct documents");
+                        "\n\nSelect files to load and open as distinct documents"
+            );
             item.imageUrl = ImageId_OpenDocuments;
             item.type = HomeFileItem::Type::Open;
             item.textWrapMode = QTextOption::WordWrap;
@@ -85,11 +88,14 @@ public:
         }
         else {
             const RecentFile* recentFile = AppModule::get()->findRecentFile(filepathFrom(url));
-            pixmap = recentFile ? recentFile->thumbnail : QPixmap();
+            if (recentFile)
+                pixmap = QtGuiUtils::toQPixmap(recentFile->thumbnail.imageData);
+
             if (pixmap.isNull()) {
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
                 pixmap = fnPixmap(icon, 64, 64);
                 cachePixmap = false;
+
             }
         }
 
