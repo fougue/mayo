@@ -4,8 +4,6 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#pragma once
-
 #include "qt_app_translator.h"
 
 #include <QtCore/QCoreApplication>

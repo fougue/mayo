@@ -471,11 +471,10 @@ add_library(MayoIO STATIC ${MayoIO_HeaderFiles} ${MayoIO_SourceFiles})
 target_include_directories(MayoIO PRIVATE ${Mayo_IncludeDirectories})
 target_compile_definitions(MayoIO PRIVATE ${Mayo_CompileDefinitions})
 target_compile_options(MayoIO PRIVATE ${Mayo_CompileOptions})
-target_link_libraries(MayoIO PRIVATE ${MayoIO_LinkLibraries})
+target_link_libraries(MayoIO PRIVATE MayoCore ${MayoIO_LinkLibraries})
 
 add_library(MayoIOLib INTERFACE)
-target_link_libraries(MayoIOLib INTERFACE MayoIO ${MayoIO_LinkLibraries})
-target_include_directories(MayoIOLib INTERFACE ${Mayo_IncludeDirectories})
+target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibraries})
 
 ##########
 # Target: MayoApp
@@ -555,6 +554,8 @@ if(Mayo_BuildApp)
     target_compile_definitions(mayo PRIVATE ${Mayo_CompileDefinitions})
     target_compile_options(mayo PRIVATE ${Mayo_CompileOptions})
     target_link_libraries(mayo PRIVATE ${MayoApp_LinkLibraries})
+    # Required by generated Qt UI files
+    target_include_directories(mayo PRIVATE ${PROJECT_SOURCE_DIR}/src/app)
 
     set_target_properties(
         mayo

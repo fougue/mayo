@@ -6,15 +6,19 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include "graphics_object_ptr.h"
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
-#include <Aspect_DisplayConnection.hxx>
 #include <Aspect_Grid.hxx>
 #include <Aspect_Window.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 class Image_PixMap;
+// Note: can't include Aspect_DisplayConnection.hxx as this is causing name conflicts 
+// with XLib in other files(with GraphicsObjectDriver::Support::None)
+// This seems to happen only for OpenCascade <= v7.5
+class Aspect_DisplayConnection;
 
 namespace Mayo {
 
@@ -51,7 +55,7 @@ struct GraphicsUtils {
 
     static int AspectWindow_width(const Handle_Aspect_Window& wnd);
     static int AspectWindow_height(const Handle_Aspect_Window& wnd);
-    static Handle_Aspect_DisplayConnection AspectDisplayConnection_create();
+    static OccHandle<Aspect_DisplayConnection> AspectDisplayConnection_create();
 
     static void Gfx3dClipPlane_setCappingHatch(
             const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch

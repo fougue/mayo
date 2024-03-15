@@ -10,6 +10,7 @@
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 
+#include <Aspect_DisplayConnection.hxx>
 #include <Bnd_Box.hxx>
 #include <ElSLib.hxx>
 #include <Image_PixMap.hxx>
@@ -206,7 +207,7 @@ int GraphicsUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
     return h;
 }
 
-Handle_Aspect_DisplayConnection GraphicsUtils::AspectDisplayConnection_create()
+OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_create()
 {
 #if (!defined(MAYO_OS_WINDOWS) && (!defined(MAYO_OS_MAC) || defined(MACOSX_USE_GLX)))
     return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
