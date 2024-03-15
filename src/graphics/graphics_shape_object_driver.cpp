@@ -14,7 +14,11 @@
 #include "graphics_utils.h"
 
 #include <AIS_ConnectedInteractive.hxx>
+#include <AIS_InteractiveContext.hxx>
 #include <AIS_DisplayMode.hxx>
+#include <Prs3d_LineAspect.hxx>
+#include <V3d_View.hxx>
+#include <V3d_Viewer.hxx>
 #include <XCAFPrs_AISObject.hxx>
 
 namespace Mayo {

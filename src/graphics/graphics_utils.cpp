@@ -10,13 +10,20 @@
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
 
+#include <AIS_InteractiveContext.hxx>
+#include <AIS_InteractiveObject.hxx>
 #include <Aspect_DisplayConnection.hxx>
+#include <Aspect_Grid.hxx>
+#include <Aspect_Window.hxx>
 #include <Bnd_Box.hxx>
 #include <ElSLib.hxx>
+#include <Graphic3d_ClipPlane.hxx>
 #include <Image_PixMap.hxx>
 #include <ProjLib.hxx>
 #include <SelectMgr_SelectionManager.hxx>
 #include <Standard_Version.hxx>
+#include <V3d_View.hxx>
+#include <V3d_Viewer.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -27,7 +34,8 @@ namespace Mayo {
 namespace Internal {
 
 static void AisContext_setObjectVisible(
-        AIS_InteractiveContext* ptrContext, const Handle_AIS_InteractiveObject& object, bool on)
+        AIS_InteractiveContext* ptrContext, const OccHandle<AIS_InteractiveObject>& object, bool on
+    )
 {
     if (ptrContext && object) {
         if (on)
@@ -39,21 +47,22 @@ static void AisContext_setObjectVisible(
 
 } // namespace Internal
 
-void GraphicsUtils::V3dView_fitAll(const Handle_V3d_View& view)
+void GraphicsUtils::V3dView_fitAll(const OccHandle<V3d_View>& view)
 {
     view->ZFitAll();
     view->FitAll(0.01, false/*dontUpdateView*/);
 }
 
 bool GraphicsUtils::V3dView_hasClipPlane(
-        const Handle_V3d_View& view, const Handle_Graphic3d_ClipPlane& plane)
+        const OccHandle<V3d_View>& view, const OccHandle<Graphic3d_ClipPlane>& plane
+    )
 {
-    const Handle_Graphic3d_SequenceOfHClipPlane& seqClipPlane = view->ClipPlanes();
+    const OccHandle<Graphic3d_SequenceOfHClipPlane>& seqClipPlane = view->ClipPlanes();
     if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
         return false;
 
     for (Graphic3d_SequenceOfHClipPlane::Iterator it(*seqClipPlane); it.More(); it.Next()) {
-        const Handle_Graphic3d_ClipPlane& candidate = it.Value();
+        const OccHandle<Graphic3d_ClipPlane>& candidate = it.Value();
         if (candidate.get() == plane.get())
             return true;
     }
@@ -61,7 +70,7 @@ bool GraphicsUtils::V3dView_hasClipPlane(
     return false;
 }
 
-gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x, double y)
+gp_Pnt GraphicsUtils::V3dView_to3dPosition(const OccHandle<V3d_View>& view, double x, double y)
 {
     double xEye, yEye, zEye, xAt, yAt, zAt;
     view->Eye(xEye, yEye, zEye);
@@ -83,7 +92,7 @@ gp_Pnt GraphicsUtils::V3dView_to3dPosition(const Handle_V3d_View& view, double x
     return ElSLib::Value(pntConvertedOnPlane.X(), pntConvertedOnPlane.Y(), planeView);
 }
 
-bool GraphicsUtils::V3dViewer_isGridActive(const Handle_V3d_Viewer& viewer)
+bool GraphicsUtils::V3dViewer_isGridActive(const OccHandle<V3d_Viewer>& viewer)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
     return viewer->IsGridActive();
@@ -92,7 +101,7 @@ bool GraphicsUtils::V3dViewer_isGridActive(const Handle_V3d_Viewer& viewer)
 #endif
 }
 
-Handle_Aspect_Grid GraphicsUtils::V3dViewer_grid(const Handle_V3d_Viewer& viewer)
+OccHandle<Aspect_Grid> GraphicsUtils::V3dViewer_grid(const OccHandle<V3d_Viewer>& viewer)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
     return viewer->Grid(false/*dontCreate*/);
@@ -101,26 +110,29 @@ Handle_Aspect_Grid GraphicsUtils::V3dViewer_grid(const Handle_V3d_Viewer& viewer
 #endif
 }
 
-GraphicsUtils::AspectGridColors GraphicsUtils::V3dViewer_gridColors(const Handle_V3d_Viewer& viewer)
+GraphicsUtils::AspectGridColors GraphicsUtils::V3dViewer_gridColors(const OccHandle<V3d_Viewer>& viewer)
 {
     AspectGridColors colors;
-    Handle_Aspect_Grid gridAspect = V3dViewer_grid(viewer);
+    OccHandle<Aspect_Grid> gridAspect = V3dViewer_grid(viewer);
     if (gridAspect)
         gridAspect->Colors(colors.base, colors.tenth);
 
     return colors;
 }
 
-void GraphicsUtils::V3dViewer_setGridColors(const Handle_V3d_Viewer &viewer, const AspectGridColors &colors)
+void GraphicsUtils::V3dViewer_setGridColors(
+        const OccHandle<V3d_Viewer>& viewer, const AspectGridColors& colors
+    )
 {
-    Handle_Aspect_Grid gridAspect = V3dViewer_grid(viewer);
+    OccHandle<Aspect_Grid> gridAspect = V3dViewer_grid(viewer);
     if (gridAspect)
         gridAspect->SetColors(colors.base, colors.tenth);
 }
 
 void GraphicsUtils::AisContext_eraseObject(
-        const Handle_AIS_InteractiveContext& context,
-        const Handle_AIS_InteractiveObject& object)
+        const OccHandle<AIS_InteractiveContext>& context,
+        const OccHandle<AIS_InteractiveObject>& object
+    )
 {
     if (!object.IsNull() && !context.IsNull()) {
         context->Erase(object, false/*dontUpdateViewer*/);
@@ -131,14 +143,15 @@ void GraphicsUtils::AisContext_eraseObject(
 }
 
 void GraphicsUtils::AisContext_setObjectVisible(
-        const Handle_AIS_InteractiveContext& context,
-        const Handle_AIS_InteractiveObject& object,
-        bool on)
+        const OccHandle<AIS_InteractiveContext>& context,
+        const OccHandle<AIS_InteractiveObject>& object,
+        bool on
+    )
 {
     Internal::AisContext_setObjectVisible(context.get(), object, on);
 }
 
-AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const GraphicsObjectPtr& object)
+AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const OccHandle<AIS_InteractiveObject>& object)
 {
     if (!object)
         return nullptr;
@@ -150,18 +163,18 @@ AIS_InteractiveContext* GraphicsUtils::AisObject_contextPtr(const GraphicsObject
 #endif
 }
 
-bool GraphicsUtils::AisObject_isVisible(const GraphicsObjectPtr& object)
+bool GraphicsUtils::AisObject_isVisible(const OccHandle<AIS_InteractiveObject>& object)
 {
     const AIS_InteractiveContext* ptrContext = AisObject_contextPtr(object);
     return ptrContext ? ptrContext->IsDisplayed(object) : false;
 }
 
-void GraphicsUtils::AisObject_setVisible(const GraphicsObjectPtr& object, bool on)
+void GraphicsUtils::AisObject_setVisible(const OccHandle<AIS_InteractiveObject>& object, bool on)
 {
     Internal::AisContext_setObjectVisible(AisObject_contextPtr(object), object, on);
 }
 
-Bnd_Box GraphicsUtils::AisObject_boundingBox(const GraphicsObjectPtr& object)
+Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObject>& object)
 {
     Bnd_Box box;
     if (object.IsNull())
@@ -169,7 +182,7 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const GraphicsObjectPtr& object)
 
     // Ensure bounding box is calculated
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    for (Handle_PrsMgr_Presentation prs : object->Presentations()) {
+    for (OccHandle<PrsMgr_Presentation> prs : object->Presentations()) {
         if (prs->Mode() == object->DisplayMode() && !prs->CStructure()->BoundingBox().IsValid())
             prs->CalculateBoundBox();
     }
@@ -187,7 +200,7 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const GraphicsObjectPtr& object)
     return box;
 }
 
-int GraphicsUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
+int GraphicsUtils::AspectWindow_width(const OccHandle<Aspect_Window>& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -197,7 +210,7 @@ int GraphicsUtils::AspectWindow_width(const Handle_Aspect_Window& wnd)
     return w;
 }
 
-int GraphicsUtils::AspectWindow_height(const Handle_Aspect_Window& wnd)
+int GraphicsUtils::AspectWindow_height(const OccHandle<Aspect_Window>& wnd)
 {
     if (wnd.IsNull())
         return 0;
@@ -217,7 +230,7 @@ OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_creat
 }
 
 void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(
-        const Handle_Graphic3d_ClipPlane& plane, Aspect_HatchStyle hatch)
+        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch)
 {
     if (hatch == Aspect_HS_SOLID)
         plane->SetCappingHatchOff();
@@ -227,14 +240,14 @@ void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(
     plane->SetCappingHatch(hatch);
 }
 
-void GraphicsUtils::Gfx3dClipPlane_setNormal(const Handle_Graphic3d_ClipPlane& plane, const gp_Dir& n)
+void GraphicsUtils::Gfx3dClipPlane_setNormal(const OccHandle<Graphic3d_ClipPlane>& plane, const gp_Dir& n)
 {
     const double planePos = MathUtils::planePosition(plane->ToPlane());
     const gp_Vec placement(planePos * gp_Vec(n));
     plane->SetEquation(gp_Pln(placement.XYZ(), n));
 }
 
-void GraphicsUtils::Gfx3dClipPlane_setPosition(const Handle_Graphic3d_ClipPlane& plane, double pos)
+void GraphicsUtils::Gfx3dClipPlane_setPosition(const OccHandle<Graphic3d_ClipPlane>& plane, double pos)
 {
     const gp_Dir& n = plane->ToPlane().Axis().Direction();
     if (MathUtils::isReversedStandardDir(n))

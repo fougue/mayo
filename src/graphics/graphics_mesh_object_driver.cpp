@@ -16,6 +16,7 @@
 #include "graphics_mesh_data_source.h"
 #include "graphics_utils.h"
 
+#include <AIS_InteractiveContext.hxx>
 #include <BRep_TFace.hxx>
 #include <MeshVS_DisplayModeFlags.hxx>
 #include <MeshVS_DrawerAttribute.hxx>

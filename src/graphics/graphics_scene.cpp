@@ -14,6 +14,8 @@
 #include <V3d_AmbientLight.hxx>
 #include <V3d_DirectionalLight.hxx>
 
+#include <unordered_set>
+
 namespace Mayo {
 
 // Defined in graphics_create_driver.cpp
@@ -217,12 +219,12 @@ void GraphicsScene::deactivateObjectSelection(const GraphicsObjectPtr &object)
     d->m_aisContext->Deactivate(object);
 }
 
-void GraphicsScene::addSelectionFilter(const Handle_SelectMgr_Filter& filter)
+void GraphicsScene::addSelectionFilter(const OccHandle<SelectMgr_Filter>& filter)
 {
     d->m_aisContext->AddFilter(filter);
 }
 
-void GraphicsScene::removeSelectionFilter(const Handle_SelectMgr_Filter& filter)
+void GraphicsScene::removeSelectionFilter(const OccHandle<SelectMgr_Filter>& filter)
 {
     d->m_aisContext->RemoveFilter(filter);
 }
@@ -308,7 +310,7 @@ void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
         d->m_aisContext->AddOrRemoveSelected(gfxOwner, false);
 }
 
-void GraphicsScene::highlightAt(int xPos, int yPos, const Handle_V3d_View& view)
+void GraphicsScene::highlightAt(int xPos, int yPos, const OccHandle<V3d_View>& view)
 {
     d->m_aisContext->MoveTo(xPos, yPos, view, false);
 }
