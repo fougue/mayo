@@ -622,6 +622,7 @@ list(
     APPEND MayoConv_HeaderFiles
     ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.h
     ${PROJECT_SOURCE_DIR}/src/app/app_module.h
+    ${PROJECT_SOURCE_DIR}/src/app/library_info.h
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.h
 )
 
@@ -635,6 +636,7 @@ list(
     APPEND MayoConv_SourceFiles
     ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
     ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/library_info.cpp
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
 
@@ -643,6 +645,7 @@ if(Mayo_BuildConvCli)
         mayo-conv
         ${MayoConv_HeaderFiles}
         ${MayoConv_SourceFiles}
+        i18n/mayo.qrc
         i18n/qt${QT_VERSION_MAJOR}base.qrc
         ${Mayo_RcIconsWin}
         ${Mayo_AppIconMacOS}

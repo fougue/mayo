@@ -13,7 +13,7 @@ namespace Mayo {
 class CommandContainer;
 
 // Provides an interface for main pages within the Mayo application
-// As its core, Mayo UI is basically a stack of widgets
+// At its core, Mayo UI is basically a stack of widgets
 // Such widgets are called "main pages" or just "pages" and only a single one is active at a time
 class IWidgetMainPage : public QWidget {
     Q_OBJECT

@@ -54,12 +54,14 @@ public:
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     // Meshing
+    const Settings::GroupIndex groupId_meshing;
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
     PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
+    const Settings::GroupIndex groupId_graphics;
     PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };

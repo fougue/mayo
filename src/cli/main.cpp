@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "../app/app_module.h"
+#include "../app/library_info.h"
 #include "../base/application.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
@@ -35,6 +36,7 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QDir>
+#include <QtCore/QLibraryInfo>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
@@ -46,6 +48,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <unordered_set>
 
 namespace Mayo {
 
@@ -62,14 +65,108 @@ namespace {
 
 // Stores arguments(options) passed at command line
 struct CommandLineArguments {
-    FilePath filepathSettings;
+    FilePath filepathUseSettings;
+    FilePath filepathWriteSettings;
     FilePath filepathLog;
-    bool includeDebugLogs = true;
     std::vector<FilePath> listFilepathToExport;
     std::vector<FilePath> listFilepathToOpen;
-    bool cliProgressReport = true;
+    bool cacheUseSettings = false;
+    bool includeDebugLogs = true;
+    bool progressReport = true;
     bool showSystemInformation = false;
 };
+
+// Helper to filter out AppModule settings that are not useful for MayoConv application
+class ExludeSettingPredicate {
+public:
+    ExludeSettingPredicate()
+    {
+        auto settings = AppModule::get()->settings();
+        auto properties = AppModule::get()->properties();
+        const int groupCount = settings->groupCount();
+        for (int igroup = 0; igroup < groupCount; ++igroup) {
+            const Settings::GroupIndex groupId{igroup};
+            if (
+                groupId != properties->groupId_system
+                && groupId != properties->groupId_application
+                && groupId != properties->groupId_graphics
+               )
+            {
+                continue; // Skip
+            }
+
+            for (int isection = 0; isection < settings->sectionCount(groupId); ++isection) {
+                const Settings::SectionIndex sectionId{groupId, isection};
+                for (int isetting = 0; isetting < settings->settingCount(sectionId); ++isetting) {
+                    const Settings::SettingIndex settingId{sectionId, isetting};
+                    m_setExcludedProperty.insert(settings->property(settingId));
+                }
+            }
+        }
+    }
+
+    bool fn(const Property& prop) const
+    {
+        return AppModule::excludeSettingPredicate(prop)
+               || m_setExcludedProperty.find(&prop) != m_setExcludedProperty.cend();
+    }
+
+private:
+    std::unordered_set<const Property*> m_setExcludedProperty;
+};
+
+std::ostream& operator<<(std::ostream& ostr, const QString& str)
+{
+    ostr << to_stdString(str);
+    return ostr;
+}
+
+void showSystemInformation(std::ostream& ostr)
+{
+    const char indent[] = "    ";
+
+    // Mayo version
+    ostr << '\n'
+         << "Mayo: v" << strVersion
+         << "  commit:" << strVersionCommitId
+         << "  revnum:" << versionRevisionNumber
+         << "  " << QT_POINTER_SIZE * 8 << "bit"
+         << '\n';
+
+    // OS version
+    ostr << '\n' << "OS: " << QSysInfo::prettyProductName()
+         << " [" << QSysInfo::kernelType() << " version " << QSysInfo::kernelVersion() << "]" << '\n'
+         << "Current CPU Architecture: " << QSysInfo::currentCpuArchitecture() << '\n';
+
+    // Qt version
+    ostr << '\n' << QLibraryInfo::build() << '\n';
+
+    // OpenCascade version
+    ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
+
+    // Other registered libraries
+    for (const LibraryInfo& libInfo : LibraryInfoArray::get()) {
+        ostr << '\n' << libInfo.name << ": " << libInfo.version
+             << " " << libInfo.versionDetails
+             << '\n';
+    }
+
+    // I/O supported formats
+    {
+        ostr << '\n' << "Import(read) formats:" << '\n' << indent;
+        const IO::System* ioSystem = AppModule::get()->ioSystem();
+        for (IO::Format format : ioSystem->readerFormats())
+            ostr << IO::formatIdentifier(format) << " ";
+
+        ostr << '\n' << "Export(write) formats:" << '\n' << indent;
+        for (IO::Format format : ioSystem->writerFormats())
+            ostr << IO::formatIdentifier(format) << " ";
+
+        ostr << '\n';
+    }
+
+    ostr.flush();
+}
 
 } // namespace
 
@@ -81,17 +178,41 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo the opensource 3D CAD viewer and converter")
+                Main::tr("mayo-conv the opensource CAD converter")
     );
-    cmdParser.addHelpOption();
-    cmdParser.addVersionOption();
 
-    const QCommandLineOption cmdFileSettings(
-                QStringList{ "s", "settings" },
-                Main::tr("Settings file(INI format) to load at startup"),
-                Main::tr("filepath")
+    const QCommandLineOption cmdShowHelp(
+        QStringList{ "?", "h", "help" },
+        Main::tr("Display help on commandline options")
     );
-    cmdParser.addOption(cmdFileSettings);
+    cmdParser.addOption(cmdShowHelp);
+
+    const QCommandLineOption cmdShowVersion(
+        QStringList{ "v", "version" },
+        Main::tr("Display version information")
+    );
+    cmdParser.addOption(cmdShowVersion);
+
+    const QCommandLineOption cmdUseSettings(
+        QStringList{ "u", "use-settings" },
+        Main::tr("Use settings file(INI format) for the conversion. When this option isn't specified "
+                 "then cached settings are used"),
+        Main::tr("filepath")
+    );
+    cmdParser.addOption(cmdUseSettings);
+
+    const QCommandLineOption cmdCacheSettings(
+        QStringList{ "c", "cache-settings" },
+        Main::tr("Cache settings file provided with --use-settings for further use")
+    );
+    cmdParser.addOption(cmdCacheSettings);
+
+    const QCommandLineOption cmdWriteSettingsCache(
+        QStringList{ "w", "write-settings-cache" },
+        Main::tr("Write settings cache to an output file(INI format)"),
+        Main::tr("filepath")
+    );
+    cmdParser.addOption(cmdWriteSettingsCache);
 
     const QCommandLineOption cmdFileToExport(
                 QStringList{ "e", "export" },
@@ -101,12 +222,12 @@ static CommandLineArguments processCommandLine()
     );
     cmdParser.addOption(cmdFileToExport);
 
-    const QCommandLineOption cmdFileLog(
+    const QCommandLineOption cmdLogFile(
                 QStringList{ "log-file" },
                 Main::tr("Writes log messages into output file"),
                 Main::tr("filepath")
     );
-    cmdParser.addOption(cmdFileLog);
+    cmdParser.addOption(cmdLogFile);
 
     const QCommandLineOption cmdDebugLogs(
                 QStringList{ "debug-logs" },
@@ -114,11 +235,11 @@ static CommandLineArguments processCommandLine()
     );
     cmdParser.addOption(cmdDebugLogs);
 
-    const QCommandLineOption cmdCliNoProgress(
+    const QCommandLineOption cmdNoProgress(
                 QStringList{ "no-progress" },
-                Main::tr("Disable progress reporting in console output(CLI-mode only)")
+                Main::tr("Disable progress reporting in console output")
     );
-    cmdParser.addOption(cmdCliNoProgress);
+    cmdParser.addOption(cmdNoProgress);
 
     const QCommandLineOption cmdSysInfo(
                 QStringList{ "system-info" },
@@ -128,18 +249,29 @@ static CommandLineArguments processCommandLine()
 
     cmdParser.addPositionalArgument(
                 Main::tr("files"),
-                Main::tr("Files to open at startup, optionally"),
+                Main::tr("Files to open(import)"),
                 Main::tr("[files...]")
     );
 
     cmdParser.process(QCoreApplication::arguments());
 
     // Retrieve arguments
-    if (cmdParser.isSet(cmdFileSettings))
-        args.filepathSettings = filepathFrom(cmdParser.value(cmdFileSettings));
+    if (cmdParser.isSet(cmdShowHelp))
+        cmdParser.showHelp();
 
-    if (cmdParser.isSet(cmdFileLog))
-        args.filepathLog = filepathFrom(cmdParser.value(cmdFileLog));
+    if (cmdParser.isSet(cmdShowVersion))
+        cmdParser.showVersion();
+
+    if (cmdParser.isSet(cmdUseSettings))
+        args.filepathUseSettings = filepathFrom(cmdParser.value(cmdUseSettings));
+
+    if (cmdParser.isSet(cmdWriteSettingsCache))
+        args.filepathWriteSettings = filepathFrom(cmdParser.value(cmdWriteSettingsCache));
+
+    args.cacheUseSettings = cmdParser.isSet(cmdCacheSettings);
+
+    if (cmdParser.isSet(cmdLogFile))
+        args.filepathLog = filepathFrom(cmdParser.value(cmdLogFile));
 
     if (cmdParser.isSet(cmdFileToExport)) {
         for (const QString& strFilepath : cmdParser.values(cmdFileToExport))
@@ -153,7 +285,7 @@ static CommandLineArguments processCommandLine()
     // By default this will exclude debug logs in release build
     args.includeDebugLogs = cmdParser.isSet(cmdDebugLogs);
 #endif
-    args.cliProgressReport = !cmdParser.isSet(cmdCliNoProgress);
+    args.progressReport = !cmdParser.isSet(cmdNoProgress);
     args.showSystemInformation = cmdParser.isSet(cmdSysInfo);
 
     return args;
@@ -207,6 +339,7 @@ static void initGui(GuiApplication* guiApp)
     if (!guiApp)
         return;
 
+    guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
     setFunctionCreateGraphicsDriver([]() -> Handle_Graphic3d_GraphicDriver {
         return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
     });
@@ -215,16 +348,15 @@ static void initGui(GuiApplication* guiApp)
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
 }
 
-bool cliExcludingSettingPredicate(const Property& prop)
-{
-    return AppModule::excludeSettingPredicate(prop)
-           || prop.dynTypeName() == PropertyRecentFiles::TypeName;
-}
-
 // Initializes and runs Mayo application
 static int runApp(QCoreApplication* qtApp)
 {
     const CommandLineArguments args = processCommandLine();
+
+    const ExludeSettingPredicate excludeSettingPredicate;
+    auto fnExcludeSettingPredicate = [&](const Property& prop) {
+        return excludeSettingPredicate.fn(prop);
+    };
 
     // Helper function: print critical message and exit application with code failure
     auto fnCriticalExit = [](const QString& msg) {
@@ -235,16 +367,16 @@ static int runApp(QCoreApplication* qtApp)
     // Helper function: load application settings from INI file(if provided) otherwise use the
     // application regular storage(eg registry on Windows)
     auto fnLoadAppSettings = [&](Settings* appSettings) {
-        if (args.filepathSettings.empty()) {
+        if (args.filepathUseSettings.empty()) {
             appSettings->load();
         }
         else {
-            const QString strFilepathSettings = filepathTo<QString>(args.filepathSettings);
-            if (!filepathIsRegularFile(args.filepathSettings))
+            const QString strFilepathSettings = filepathTo<QString>(args.filepathUseSettings);
+            if (!filepathIsRegularFile(args.filepathUseSettings))
                 fnCriticalExit(Main::tr("Failed to load application settings file [path=%1]").arg(strFilepathSettings));
 
             QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
-            appSettings->loadFrom(fileSettings, &cliExcludingSettingPredicate);
+            appSettings->loadFrom(fileSettings, fnExcludeSettingPredicate);
         }
     };
 
@@ -275,7 +407,9 @@ static int runApp(QCoreApplication* qtApp)
     // Initialize Base application
     auto app = Application::instance().get();
     app->addTranslator(&qtAppTranslate); // Set Qt i18n backend
+#ifdef MAYO_OS_WINDOWS
     initOpenCascadeEnvironment("opencascade.conf");
+#endif
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
@@ -297,41 +431,66 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
 
-#if 0
+    // Application settings
+    appModule->settings()->resetAll();
+    fnLoadAppSettings(appModule->settings());
+
+    // Write cached settings to ouput file if asked by user
+    if (!args.filepathWriteSettings.empty()) {
+        const QString strFilepathSettings = filepathTo<QString>(args.filepathWriteSettings);
+        QSettingsStorage fileSettings(strFilepathSettings, QSettings::IniFormat);
+        appModule->settings()->saveAs(&fileSettings, fnExcludeSettingPredicate);
+        fileSettings.sync();
+        if (fileSettings.get().status() != QSettings::NoError)
+            fnCriticalExit(Main::tr("Error when writing to '%1'").arg(strFilepathSettings));
+
+        qInfo().noquote() << Main::tr("Settings cache written to %1").arg(strFilepathSettings);
+        return 0;
+    }
+
     // Register library infos
-    CommandSystemInformation::addLibraryInfo(
+    LibraryInfoArray::add(
         IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
     );
-    CommandSystemInformation::addLibraryInfo(
+    LibraryInfoArray::add(
         IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
     );
 
     // Process CLI
-    if (args.showSystemInformation) {
-        CommandSystemInformation cmdSysInfo(nullptr);
-        cmdSysInfo.execute();
-        return qtApp->exec();
+     if (args.showSystemInformation) {
+        showSystemInformation(std::cout);
+        return EXIT_SUCCESS;
     }
-#endif
 
-    if (!args.listFilepathToExport.empty()) {
-        if (args.listFilepathToOpen.empty())
-            fnCriticalExit(Main::tr("No input files -> nothing to export"));
-
-        guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-        appModule->settings()->resetAll();
-        fnLoadAppSettings(appModule->settings());
+    int exitCode = EXIT_SUCCESS;
+    if (args.listFilepathToOpen.empty()) {
+        if (!args.listFilepathToExport.empty()) {
+            qCritical() << Main::tr("No input files -> nothing to export");
+            exitCode = EXIT_FAILURE;
+        }
+    }
+    else {
         QTimer::singleShot(0, qtApp, [=]{
             CliExportArgs cliArgs;
-            cliArgs.progressReport = args.cliProgressReport;
+            cliArgs.progressReport = args.progressReport;
             cliArgs.filesToOpen = args.listFilepathToOpen;
             cliArgs.filesToExport = args.listFilepathToExport;
             cli_asyncExportDocuments(app, cliArgs, [=](int retcode) { qtApp->exit(retcode); });
         });
-        return qtApp->exec();
+        exitCode = qtApp->exec();
     }
 
-    return 0;
+    if (args.cacheUseSettings) {
+        if (!args.filepathUseSettings.empty()) {
+            appModule->settings()->save();
+            qInfo().noquote() << Main::tr("Settings '%1' cached").arg(filepathTo<QString>(args.filepathUseSettings));
+        }
+        else {
+            qWarning().noquote() << Main::tr("No supplied settings to cache");
+        }
+    }
+
+    return exitCode;
 }
 
 } // namespace Mayo
@@ -346,6 +505,5 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("MayoConv");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
     QCoreApplication app(argc, argv);
-    // TODO Read settings from Mayo application
     return Mayo::runApp(&app);
 }
