@@ -8,6 +8,7 @@
 
 #include "app_module.h"
 #include "command_system_information_occopengl.h"
+#include "library_info.h"
 #include "qtwidgets_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/filepath.h"
@@ -123,12 +124,6 @@ QTextStream& operator<<(QTextStream& str, std::string_view sv)
 const char indent[] = "    ";
 const char indentx2[] = "        ";
 
-std::vector<CommandSystemInformation::LibraryInfo>& getLibraryInfos()
-{
-    static std::vector<CommandSystemInformation::LibraryInfo> vec;
-    return vec;
-}
-
 // Helper function returning unicode representation of a QChar object in the form "U+NNNN"
 QString toUnicodeHexa(const QChar& ch)
 {
@@ -210,9 +205,9 @@ QString CommandSystemInformation::data()
     ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
 
     // Other registered libraries
-    for (const LibraryInfo& libInfo : getLibraryInfos()) {
-        ostr << '\n' << to_QString(libInfo.name) << ": " << to_QString(libInfo.version)
-             << " " << to_QString(libInfo.versionDetails)
+    for (const auto& libInfo : LibraryInfoArray::get()) {
+        ostr << '\n' << libInfo.name << ": " << libInfo.version
+             << " " << libInfo.versionDetails
              << '\n';
     }
 
@@ -412,27 +407,6 @@ QString CommandSystemInformation::data()
 
     ostr.flush();
     return strSysInfo;
-}
-
-void CommandSystemInformation::addLibraryInfo(
-        std::string_view libName,
-        std::string_view version,
-        std::string_view versionDetails
-    )
-{
-    if (!libName.empty() && !version.empty()) {
-        const LibraryInfo libInfo{
-                std::string(libName),
-                std::string(version),
-                std::string(versionDetails)
-        };
-        getLibraryInfos().push_back(std::move(libInfo));
-    }
-}
-
-Span<const CommandSystemInformation::LibraryInfo> CommandSystemInformation::libraryInfos()
-{
-    return getLibraryInfos();
 }
 
 } // namespace Mayo

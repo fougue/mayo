@@ -381,7 +381,7 @@ void DialogOptions::saveAs()
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
     if (fileSettings.get().status() != QSettings::NoError)
-        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to '%1'").arg(filepath));
 }
 
 void DialogOptions::cancelChanges()

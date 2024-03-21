@@ -31,6 +31,7 @@
 #include "app_module.h"
 #include "commands_help.h"
 #include "document_tree_node_properties_providers.h"
+#include "library_info.h"
 #include "mainwindow.h"
 #include "qtgui_utils.h"
 #include "theme.h"
@@ -397,10 +398,10 @@ static int runApp(QCoreApplication* qtApp)
     appModule->properties()->retranslate();
 
     // Register library infos
-    CommandSystemInformation::addLibraryInfo(
+    LibraryInfoArray::add(
         IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
     );
-    CommandSystemInformation::addLibraryInfo(
+    LibraryInfoArray::add(
         IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
     );
 
