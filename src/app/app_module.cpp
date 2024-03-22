@@ -242,7 +242,7 @@ const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
 }
 
-void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
+void AppModule::recordRecentFile(GuiDocument* guiDoc)
 {
     if (!guiDoc)
         return;
@@ -263,7 +263,7 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
         return;
 
     RecentFile newRecentFile = *recentFile;
-    const bool okRecord = this->impl_recordRecentFileThumbnail(&newRecentFile, guiDoc);
+    const bool okRecord = this->impl_recordRecentFile(&newRecentFile, guiDoc);
     if (!okRecord)
         return;
 
@@ -274,7 +274,7 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
     m_props.recentFiles.setValue(newListRecentFile);
 }
 
-void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
+void AppModule::recordRecentFiles(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
@@ -287,7 +287,7 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
             continue; // Skip
 
         RecentFile newRecentFile = *recentFile;
-        if (this->impl_recordRecentFileThumbnail(&newRecentFile, guiDoc)) {
+        if (this->impl_recordRecentFile(&newRecentFile, guiDoc)) {
             auto indexRecentFile = std::distance(&listRecentFile.front(), recentFile);
             newListRecentFile.at(indexRecentFile) = newRecentFile;
         }
@@ -309,7 +309,7 @@ void AppModule::readRecentFiles(QDataStream& stream, RecentFiles* recentFiles)
             qDebug() << fmt::format(
                             "QDataStream error\n    Function: {}\n    Status: {}",
                             Q_FUNC_INFO, MetaEnum::name(status)
-                            ).c_str();
+                        ).c_str();
             return false;
         }
 
@@ -419,7 +419,7 @@ AppModule::~AppModule()
     m_settings = nullptr;
 }
 
-bool AppModule::impl_recordRecentFileThumbnail(RecentFile* recentFile, GuiDocument* guiDoc)
+bool AppModule::impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc)
 {
     if (!recentFile)
         return false;

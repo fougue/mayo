@@ -83,8 +83,8 @@ public:
     // Recent files
     void prependRecentFile(const FilePath& fp);
     const RecentFile* findRecentFile(const FilePath& fp) const;
-    void recordRecentFileThumbnail(GuiDocument* guiDoc);
-    void recordRecentFileThumbnails(GuiApplication* guiApp);
+    void recordRecentFile(GuiDocument* guiDoc);
+    void recordRecentFiles(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
     void setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocument*, QSize)> fn);
     static void readRecentFiles(QDataStream& stream, RecentFiles* recentFiles);
@@ -119,7 +119,7 @@ private:
     AppModule(const AppModule&) = delete; // Not copyable
     AppModule& operator=(const AppModule&) = delete; // Not copyable
 
-    bool impl_recordRecentFileThumbnail(RecentFile* recentFile, GuiDocument* guiDoc);
+    bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
 
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;

@@ -413,7 +413,7 @@ static int runApp(QCoreApplication* qtApp)
     }
 
     // Record recent files when documents are closed
-    guiApp->signalGuiDocumentErased.connectSlot(&AppModule::recordRecentFileThumbnail, AppModule::get());
+    guiApp->signalGuiDocumentErased.connectSlot(&AppModule::recordRecentFile, AppModule::get());
 
     // Register WidgetModelTreeBuilter prototypes
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
@@ -444,7 +444,7 @@ static int runApp(QCoreApplication* qtApp)
     appModule->settings()->resetAll();
     fnLoadAppSettings(appModule->settings());
     const int code = qtApp->exec();
-    appModule->recordRecentFileThumbnails(guiApp);
+    appModule->recordRecentFiles(guiApp);
     appModule->settings()->save();
     return code;
 }
