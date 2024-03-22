@@ -25,6 +25,10 @@ public:
         return m_scalar == other.m_scalar;
     }
 
+    bool operator!=(const TypedScalar<Scalar, Tag>& other) const {
+        return m_scalar != other.m_scalar;
+    }
+
 private:
     Scalar m_scalar;
 };

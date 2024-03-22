@@ -81,8 +81,11 @@ This simplifies running Mayo from eg Visual Studio IDE\
 "
         ${Mayo_PostBuildCopyRuntimeDLLs_DefaultValue}
     )
-
 endif()
+
+# TODO Make option Mayo_BuildTests dependent of Mayo_BuildApp)
+option(Mayo_BuildApp "Build Mayo GUI application" ON)
+option(Mayo_BuildConvCli "Build Mayo CLI converter" ON)
 
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
@@ -93,21 +96,28 @@ endif()
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED)
 if(QT_FOUND)
-    set("Qt${QT_VERSION_MAJOR}_DIR" "${QT_DIR}")
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Test)
-    if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-        find_package(Qt5 REQUIRED COMPONENTS WinExtras)
-    elseif(QT_VERSION_MAJOR EQUAL 6)
-        find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-    endif()
-
-    if(Mayo_PostBuildCopyRuntimeDLLs)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
-    endif()
-
     message(STATUS "Qt version ${QT_VERSION}")
     if(QT_VERSION VERSION_LESS 5.14)
         message(FATAL_ERROR "Qt >= 5.14 is required but detected version is ${QT_VERSION}")
+    endif()
+
+    set("Qt${QT_VERSION_MAJOR}_DIR" "${QT_DIR}")
+
+    if(Mayo_BuildApp OR Mayo_BuildConvCli)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+    endif()
+
+    if(Mayo_BuildApp)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Test)
+        if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
+            find_package(Qt5 REQUIRED COMPONENTS WinExtras)
+        elseif(QT_VERSION_MAJOR EQUAL 6)
+            find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
+        endif()
+
+        if(Mayo_PostBuildCopyRuntimeDLLs)
+            find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
+        endif()
     endif()
 endif()
 
@@ -168,30 +178,14 @@ endif()
 # Linker config
 ##########
 
-set(Mayo_LinkLibraries)
-set(Mayo_LinkDirectories)
-
-list(
-    APPEND Mayo_LinkLibraries
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Gui
-    Qt${QT_VERSION_MAJOR}::Widgets
-)
-
-if(Mayo_PostBuildCopyRuntimeDLLs)
-    list(APPEND Mayo_LinkLibraries Qt${QT_VERSION_MAJOR}::Svg)
-endif()
-
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND Mayo_LinkLibraries Qt5::WinExtras)
-elseif(QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND Mayo_LinkLibraries Qt6::OpenGLWidgets)
-endif()
+set(MayoCore_LinkDirectories)
+set(MayoCore_LinkLibraries)
+set(MayoIO_LinkLibraries)
 
 if(MSVC)
-    list(APPEND Mayo_LinkLibraries Opengl32 User32)
+    list(APPEND MayoCore_LinkLibraries Opengl32 User32)
 elseif(APPLE)
-    list(APPEND Mayo_LinkLibraries iconv)
+    list(APPEND MayoCore_LinkLibraries iconv)
 endif()
 
 ##########
@@ -200,67 +194,49 @@ endif()
 
 set(
     Mayo_IncludeDirectories
-    src/app
     src/3rdparty
     ${CMAKE_BINARY_DIR}
 )
 
 ##########
-# Source files
+# MayoCore+MayoIO source files
 ##########
 
 file(
-    GLOB Mayo_SourceFiles
-    ${PROJECT_SOURCE_DIR}/src/app/*.cpp
+    GLOB MayoCore_SourceFiles
     ${PROJECT_SOURCE_DIR}/src/base/*.cpp
     ${PROJECT_SOURCE_DIR}/src/graphics/*.cpp
     ${PROJECT_SOURCE_DIR}/src/gui/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/3rdparty/fmt/src/format.cc
+)
+
+file(
+    GLOB MayoIO_SourceFiles
     ${PROJECT_SOURCE_DIR}/src/io_dxf/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_image/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_off/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/measure/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/3rdparty/fmt/src/format.cc
 )
 
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.cpp)
-endif()
-
-if(MSVC)
-    set(Mayo_RcIconsWin ${PROJECT_SOURCE_DIR}/images/appicon.rc)
-endif()
-
 ##########
-# Header files
+# MayoCore+MayoIO header files
 ##########
 
 file(
-    GLOB Mayo_HeaderFiles
-    ${PROJECT_SOURCE_DIR}/src/app/*.h
+    GLOB MayoCore_HeaderFiles
     ${PROJECT_SOURCE_DIR}/src/base/*.h
     ${PROJECT_SOURCE_DIR}/src/graphics/*.h
     ${PROJECT_SOURCE_DIR}/src/gui/*.h
+)
+
+file(
+    GLOB MayoIO_HeaderFiles
     ${PROJECT_SOURCE_DIR}/src/io_dxf/*.h
     ${PROJECT_SOURCE_DIR}/src/io_image/*.h
     ${PROJECT_SOURCE_DIR}/src/io_occ/*.h
     ${PROJECT_SOURCE_DIR}/src/io_off/*.h
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.h
-    ${PROJECT_SOURCE_DIR}/src/io_measure/*.h
-)
-
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND Mayo_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.h)
-endif()
-
-##########
-# UI files
-##########
-
-file(
-    GLOB Mayo_QtUiFiles
-    ${PROJECT_SOURCE_DIR}/src/app/*.ui
 )
 
 ##########
@@ -270,11 +246,9 @@ file(
 if(Mayo_BuildTests)
     file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
     file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-    list(APPEND Mayo_HeaderFiles ${MayoTests_HeaderFiles})
-    list(APPEND Mayo_SourceFiles ${MayoTests_SourceFiles})
 
     set(MAYO_WITH_TESTS 1)
-    list(APPEND Mayo_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
+    list(APPEND MayoTests_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
 
     file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
     file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
@@ -295,14 +269,14 @@ if(WIN32)
 
         # Add OpenCASCADE library directories
         # Note: QtCreator option "Run->Add build library search to PATH" will add to PATH env variable
-        #       the contents of Mayo_LinkDirectories variable. For convenience, let's add also the
+        #       the contents of MayoCore_LinkDirectories variable. For convenience, let's add also the
         #       directories containing DLLs
         list(
-            APPEND Mayo_LinkDirectories
+            APPEND MayoCore_LinkDirectories
             ${OpenCASCADE_BINARY_DIR}
             ${OpenCASCADE_LIBRARY_DIR}
             ${OpenCASCADE_3RDPARTY_BINARY_DIRS}
-        )
+        )    
      endif()
 else()
     find_package(OpenCASCADE REQUIRED)
@@ -334,7 +308,7 @@ if(OpenCASCADE_FOUND)
 
     # Add OpenCASCADE libraries
     list(
-        APPEND Mayo_LinkLibraries
+        APPEND MayoCore_LinkLibraries
         # FoundationClasses
         TKernel TKMath
         # ModelingData
@@ -350,30 +324,30 @@ if(OpenCASCADE_FOUND)
     )
 
     if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-        list(APPEND Mayo_LinkLibraries TKDE)
-        list(APPEND Mayo_LinkLibraries TKDEIGES)
-        list(APPEND Mayo_LinkLibraries TKDESTEP)
-        list(APPEND Mayo_LinkLibraries TKDESTL)
-        list(APPEND Mayo_LinkLibraries TKDEVRML)
+        list(APPEND MayoIO_LinkLibraries TKDE)
+        list(APPEND MayoIO_LinkLibraries TKDEIGES)
+        list(APPEND MayoIO_LinkLibraries TKDESTEP)
+        list(APPEND MayoIO_LinkLibraries TKDESTL)
+        list(APPEND MayoIO_LinkLibraries TKDEVRML)
     else()
-        list(APPEND Mayo_LinkLibraries TKIGES TKXDEIGES)
-        list(APPEND Mayo_LinkLibraries TKSTEP TKSTEP209 TKSTEPAttr TKSTEPBase TKXDESTEP)
-        list(APPEND Mayo_LinkLibraries TKSTL)
-        list(APPEND Mayo_LinkLibraries TKVRML)
+        list(APPEND MayoIO_LinkLibraries TKIGES TKXDEIGES)
+        list(APPEND MayoIO_LinkLibraries TKSTEP TKSTEP209 TKSTEPAttr TKSTEPBase TKXDESTEP)
+        list(APPEND MayoIO_LinkLibraries TKSTL)
+        list(APPEND MayoIO_LinkLibraries TKVRML)
         if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.7.0)
-            list(APPEND Mayo_LinkLibraries TKXDE)
+            list(APPEND MayoIO_LinkLibraries TKXDE)
         endif()
     endif()
 
     # OBJ/glTF support
     if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.4.0)
-        list(APPEND Mayo_LinkLibraries TKRWMesh)
+        list(APPEND MayoIO_LinkLibraries TKRWMesh)
         if(OpenCASCADE_VERSION VERSION_GREATER_EQUAL 7.8.0)
-            list(APPEND Mayo_LinkLibraries TKDEOBJ TKDEGLTF)
+            list(APPEND MayoIO_LinkLibraries TKDEOBJ TKDEGLTF)
         endif()
     else()
         list(
-            REMOVE_ITEM Mayo_SourceFiles
+            REMOVE_ITEM MayoIO_SourceFiles
             ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_base_mesh.cpp
             ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_reader.cpp
             ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_reader.cpp
@@ -383,18 +357,18 @@ if(OpenCASCADE_FOUND)
     endif()
 
     if(OpenCASCADE_VERSION VERSION_LESS 7.5.0)
-        list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_writer.cpp)
+        list(REMOVE_ITEM MayoIO_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_gltf_writer.cpp)
         message(STATUS "glTF writer disabled because OpenCascade < v7.5")
     endif()
 
     if(OpenCASCADE_VERSION VERSION_LESS 7.6.0)
-        list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_writer.cpp)
+        list(REMOVE_ITEM MayoIO_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_obj_writer.cpp)
         message(STATUS "OBJ writer disabled because OpenCascade < v7.6")
     endif()
 
     # VRML support
     if(OpenCASCADE_VERSION VERSION_LESS 7.7.0)
-        list(REMOVE_ITEM Mayo_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_vrml_reader.cpp)
+        list(REMOVE_ITEM MayoIO_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_occ/io_occ_vrml_reader.cpp)
         message(STATUS "VRML reader disabled because OpenCascade < v7.7")
     endif()
 endif()
@@ -420,10 +394,10 @@ if(assimp_FOUND)
 
     file(GLOB MayoPluginAssimp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.h)
     file(GLOB MayoPluginAssimp_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_assimp/*.cpp)
-    list(APPEND Mayo_HeaderFiles ${MayoPluginAssimp_HeaderFiles})
-    list(APPEND Mayo_SourceFiles ${MayoPluginAssimp_SourceFiles})
+    list(APPEND MayoIO_HeaderFiles ${MayoPluginAssimp_HeaderFiles})
+    list(APPEND MayoIO_SourceFiles ${MayoPluginAssimp_SourceFiles})
 
-    list(APPEND Mayo_LinkLibraries ${ASSIMP_LIBRARIES})
+    list(APPEND MayoIO_LinkLibraries ${ASSIMP_LIBRARIES})
 
     list(GET ASSIMP_INCLUDE_DIRS 0 assimp_IncludeDir)
     file(READ "${assimp_IncludeDir}/assimp/version.h" assimp_FileVersionH)
@@ -445,11 +419,11 @@ if(gmio_FOUND)
 
     file(GLOB MayoPluginGmio_HeaderFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.h)
     file(GLOB MayoPluginGmio_SourceFiles ${PROJECT_SOURCE_DIR}/src/io_gmio/*.cpp)
-    list(APPEND Mayo_HeaderFiles ${MayoPluginGmio_HeaderFiles})
-    list(APPEND Mayo_SourceFiles ${MayoPluginGmio_SourceFiles})
+    list(APPEND MayoIO_HeaderFiles ${MayoPluginGmio_HeaderFiles})
+    list(APPEND MayoIO_SourceFiles ${MayoPluginGmio_SourceFiles})
 
     # Needs -L$$GMIO_ROOT/lib -lgmio_static -lzlibstatic
-    list(APPEND Mayo_LinkLibraries ${GMIO_LIBRARIES})
+    list(APPEND MayoIO_LinkLibraries ${GMIO_LIBRARIES})
 endif()
 
 ##########
@@ -460,43 +434,237 @@ configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config
 configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
 
 ##########
-# Targets
+# Icons for Mayo exe targets
 ##########
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(Mayo_AppIconMacOS images/appicon.icns)
-    set_source_files_properties(images/appicon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")        
+    set_source_files_properties(images/appicon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 endif()
 
-add_executable(
-    mayo
-    ${Mayo_SourceFiles}
-    ${Mayo_HeaderFiles}
-    ${Mayo_QtUiFiles}
-    mayo.qrc i18n/qt${QT_VERSION_MAJOR}base.qrc
-    ${Mayo_RcIconsWin}
-    ${Mayo_AppIconMacOS}
+if(MSVC)
+    set(Mayo_RcIconsWin ${PROJECT_SOURCE_DIR}/images/appicon.rc)
+endif()
+
+##########
+# Target: MayoCore(static lib)
+##########
+
+add_library(MayoCore STATIC ${MayoCore_HeaderFiles} ${MayoCore_SourceFiles})
+
+target_include_directories(MayoCore PRIVATE ${Mayo_IncludeDirectories})
+target_compile_definitions(MayoCore PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(MayoCore PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(MayoCore PRIVATE ${MayoCore_LinkLibraries})
+
+add_library(MayoCoreLib INTERFACE)
+target_link_libraries(MayoCoreLib INTERFACE MayoCore ${MayoCore_LinkLibraries})
+target_link_directories(MayoCoreLib INTERFACE ${MayoCore_LinkDirectories})
+target_include_directories(MayoCoreLib INTERFACE ${Mayo_IncludeDirectories})
+
+##########
+# Target: MayoIO(static lib)
+##########
+
+add_library(MayoIO STATIC ${MayoIO_HeaderFiles} ${MayoIO_SourceFiles})
+
+target_include_directories(MayoIO PRIVATE ${Mayo_IncludeDirectories})
+target_compile_definitions(MayoIO PRIVATE ${Mayo_CompileDefinitions})
+target_compile_options(MayoIO PRIVATE ${Mayo_CompileOptions})
+target_link_libraries(MayoIO PRIVATE MayoCore ${MayoIO_LinkLibraries})
+
+add_library(MayoIOLib INTERFACE)
+target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibraries})
+
+##########
+# Target: MayoApp
+##########
+
+set(MayoApp_HeaderFiles)
+set(MayoApp_SourceFiles)
+set(MayoApp_LinkLibraries)
+
+# MayoApp headers
+file(
+    GLOB MayoApp_HeaderFiles
+    ${PROJECT_SOURCE_DIR}/src/app/*.h
+    ${PROJECT_SOURCE_DIR}/src/measure/*.h
+    ${PROJECT_SOURCE_DIR}/src/qtbackend/*.h
+    ${PROJECT_SOURCE_DIR}/src/qtcommon/*.h
 )
 
-target_include_directories(
-    mayo PRIVATE ${Mayo_IncludeDirectories}
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
+    list(APPEND MayoApp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.h)
+endif()
+
+# MayoApp sources
+file(
+    GLOB MayoApp_SourceFiles
+    ${PROJECT_SOURCE_DIR}/src/app/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/measure/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/qtbackend/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/qtcommon/*.cpp
 )
 
-target_compile_definitions(
-    mayo PRIVATE ${Mayo_CompileDefinitions}
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
+    list(APPEND MayoApp_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.cpp)
+endif()
+
+# MayoApp UI files
+file(GLOB MayoApp_QtUiFiles ${PROJECT_SOURCE_DIR}/src/app/*.ui)
+
+# MayoApp unit tests
+if(Mayo_BuildTests)
+    list(APPEND MayoApp_HeaderFiles ${MayoTests_HeaderFiles})
+    list(APPEND MayoApp_SourceFiles ${MayoTests_SourceFiles})
+    list(APPEND MayoApp_LinkLibraries ${MayoTests_LinkLibraries})
+endif()
+
+# MayoApp libs
+list(
+    APPEND MayoApp_LinkLibraries
+    MayoCoreLib
+    MayoIOLib
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-target_compile_options(
-    mayo PRIVATE ${Mayo_CompileOptions}
+if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
+    list(APPEND MayoApp_LinkLibraries Qt5::WinExtras)
+elseif(QT_VERSION_MAJOR EQUAL 6)
+    list(APPEND MayoApp_LinkLibraries Qt6::OpenGLWidgets)
+endif()
+
+if(Mayo_PostBuildCopyRuntimeDLLs)
+    list(APPEND MayoApp_LinkLibraries Qt${QT_VERSION_MAJOR}::Svg)
+endif()
+
+if(Mayo_BuildApp)
+    add_executable(
+        mayo
+        ${MayoApp_SourceFiles}
+        ${MayoApp_HeaderFiles}
+        ${MayoApp_QtUiFiles}
+        mayo.qrc i18n/qt${QT_VERSION_MAJOR}base.qrc
+        ${Mayo_RcIconsWin}
+        ${Mayo_AppIconMacOS}
+    )
+
+    target_compile_definitions(mayo PRIVATE ${Mayo_CompileDefinitions})
+    target_compile_options(mayo PRIVATE ${Mayo_CompileOptions})
+    target_link_libraries(mayo PRIVATE ${MayoApp_LinkLibraries})
+    # Required by generated Qt UI files
+    target_include_directories(mayo PRIVATE ${PROJECT_SOURCE_DIR}/src/app)
+
+    set_target_properties(
+        mayo
+        PROPERTIES
+            MACOSX_BUNDLE_BUNDLE_NAME "mayo"
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+            MACOSX_BUNDLE_COPYRIGHT ${Mayo_Copyright}
+            MACOSX_BUNDLE_ICON_FILE appicon.icns
+            WIN32_EXECUTABLE TRUE
+            MACOSX_BUNDLE TRUE
+    )
+
+    if(Mayo_PostBuildCopyRuntimeDLLs)
+        # Copy required Qt plugins
+        set(QtPluginsDir "${QT_DIR}/../../../plugins")
+        file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
+        file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
+        file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
+        set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
+        foreach(QtPluginDLL ${QtPluginsDLLs})
+            cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
+            cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
+            add_custom_command(
+                TARGET mayo POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+            )
+            add_custom_command(
+                TARGET mayo POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
+            )
+        endforeach()
+
+        # Copy OpenCascade 3rd-party DLLs
+        foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
+            add_custom_command(
+                TARGET mayo POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" $<TARGET_FILE_DIR:mayo>
+            )
+        endforeach()
+
+        # Copy runtime DLLs specified with library IMPORTED_LOCATION property
+        add_custom_command(
+            TARGET mayo POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_RUNTIME_DLLS:mayo> $<TARGET_FILE_DIR:mayo>
+            COMMAND_EXPAND_LISTS
+        )
+    endif() # Mayo_PostBuildCopyRuntimeDLLs
+endif() # Mayo_BuildApp
+
+##########
+# Target: mayo-conv
+##########
+
+file(
+    GLOB MayoConv_HeaderFiles
+    ${PROJECT_SOURCE_DIR}/src/cli/*.h
+    ${PROJECT_SOURCE_DIR}/src/qtbackend/*.h
+    ${PROJECT_SOURCE_DIR}/src/qtcommon/*.h
+)
+list(
+    APPEND MayoConv_HeaderFiles
+    ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.h
+    ${PROJECT_SOURCE_DIR}/src/app/app_module.h
+    ${PROJECT_SOURCE_DIR}/src/app/library_info.h
+    ${PROJECT_SOURCE_DIR}/src/app/recent_files.h
 )
 
-target_link_directories(
-    mayo PRIVATE ${Mayo_LinkDirectories}
+file(
+    GLOB MayoConv_SourceFiles
+    ${PROJECT_SOURCE_DIR}/src/cli/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/qtbackend/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/qtcommon/*.cpp
+)
+list(
+    APPEND MayoConv_SourceFiles
+    ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/library_info.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
 
-target_link_libraries(
-    mayo PRIVATE ${Mayo_LinkLibraries}
-)
+if(Mayo_BuildConvCli)
+    add_executable(
+        mayo-conv
+        ${MayoConv_HeaderFiles}
+        ${MayoConv_SourceFiles}
+        i18n/mayo.qrc
+        i18n/qt${QT_VERSION_MAJOR}base.qrc
+        ${Mayo_RcIconsWin}
+        ${Mayo_AppIconMacOS}
+    )
+
+    target_compile_definitions(mayo-conv PRIVATE ${Mayo_CompileDefinitions})
+    target_compile_options(mayo-conv PRIVATE ${Mayo_CompileOptions})
+
+    target_link_libraries(
+        mayo-conv PRIVATE
+        MayoCoreLib
+        MayoIOLib
+        Qt${QT_VERSION_MAJOR}::Core
+    )
+endif() # Mayo_BuildConvCli
+
+##########
+# Target: OtherFiles
+##########
 
 add_custom_target(
     OtherFiles SOURCES
@@ -511,53 +679,3 @@ add_custom_target(
     src/mayo_version.h.cmake
     README.md
 )
-
-set_target_properties(
-    mayo
-    PROPERTIES
-        MACOSX_BUNDLE_BUNDLE_NAME "mayo"
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE_COPYRIGHT ${Mayo_Copyright}
-        MACOSX_BUNDLE_ICON_FILE appicon.icns
-        WIN32_EXECUTABLE TRUE
-        MACOSX_BUNDLE TRUE
-)
-
-if(Mayo_PostBuildCopyRuntimeDLLs)
-    # Copy required Qt plugins
-    set(QtPluginsDir "${QT_DIR}/../../../plugins")
-    file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
-    file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
-    file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
-    set(QtPluginsDLLs ${QtPluginIconEnginesDLLs} ${QtPluginImageFormatsDLLs} ${QtPluginPlatformsDLLs})
-    foreach(QtPluginDLL ${QtPluginsDLLs})
-        cmake_path(GET QtPluginDLL PARENT_PATH QtPluginDLL_Path)
-        cmake_path(GET QtPluginDLL_Path FILENAME QtPluginDLL_PathName)
-        add_custom_command(
-            TARGET mayo POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-        )
-        add_custom_command(
-            TARGET mayo POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${QtPluginDLL}" "$<TARGET_FILE_DIR:mayo>/plugins/${QtPluginDLL_PathName}"
-        )
-    endforeach()
-
-    # Copy OpenCascade 3rd-party DLLs
-    foreach(Occ3rdDLL ${OpenCASCADE_3RDPARTY_DLLS})
-        add_custom_command(
-            TARGET mayo POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${Occ3rdDLL}" $<TARGET_FILE_DIR:mayo>
-        )
-    endforeach()
-
-    # Copy runtime DLLs specified with library IMPORTED_LOCATION property
-    add_custom_command(
-        TARGET mayo POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_RUNTIME_DLLS:mayo> $<TARGET_FILE_DIR:mayo>
-        COMMAND_EXPAND_LISTS
-    )
-endif()

@@ -19,7 +19,7 @@
 #include "../graphics/graphics_mesh_object_driver.h"
 #include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
-#include "qstring_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <Bnd_Box.hxx>
 #include <TDataStd_Name.hxx>

@@ -9,9 +9,9 @@
 #include "../base/application.h"
 #include "../base/task_manager.h"
 #include "../gui/gui_application.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
-#include "filepath_conv.h"
-#include "qstring_conv.h"
 #include "recent_files.h"
 #include "theme.h"
 

@@ -11,6 +11,7 @@
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_camera_animation.h"
+#include "../qtbackend/qt_animation_backend.h"
 #include "button_flat.h"
 #include "theme.h"
 #include "widget_clip_planes.h"
@@ -22,8 +23,6 @@
 #include "qtwidgets_utils.h"
 
 #include <QtCore/QtDebug>
-#include <QtCore/QAbstractAnimation>
-#include <QtCore/QEasingCurve>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -35,58 +34,6 @@
 namespace Mayo {
 
 namespace {
-
-// Provides implementation of IAnimationBackend based on QAbstractAnimation
-class QtAnimationBackend : public IAnimationBackend {
-public:
-    QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear)
-        : m_easingCurve(easingType)
-    {
-    }
-
-    void setDuration(QuantityTime t) override {
-        m_impl.m_duration_ms = UnitSystem::milliseconds(t);
-    }
-
-    bool isRunning() const override {
-        return m_impl.state() == QAbstractAnimation::Running;
-    }
-
-    void start() override {
-        m_impl.start(QAbstractAnimation::KeepWhenStopped);
-    }
-
-    void stop() override {
-        m_impl.stop();
-    }
-
-    double valueForProgress(double p) const override {
-        return m_easingCurve.valueForProgress(p);
-    }
-
-    void setTimerCallback(std::function<void(QuantityTime)> fn) override {
-        m_impl.m_callback = std::move(fn);
-    }
-
-private:
-    class AnimationImpl : public QAbstractAnimation {
-    public:
-        double m_duration_ms = 1000.;
-        std::function<void(QuantityTime)> m_callback;
-
-        int duration() const override {
-            return static_cast<int>(m_duration_ms);
-        }
-
-    protected:
-        void updateCurrentTime(int currentTime) override {
-            m_callback(currentTime * Quantity_Millisecond);
-        }
-    };
-
-    AnimationImpl m_impl;
-    QEasingCurve m_easingCurve;
-};
 
 // Provides an overlay widget to be used within 3D view
 class PanelView3d : public QWidget {

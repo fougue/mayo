@@ -18,9 +18,12 @@
 #include "../base/settings.h"
 #include "../base/unit_system.h"
 
+#include <QtCore/QSize>
+
 #include <locale>
 #include <mutex>
 
+class QDataStream;
 class TDF_Label;
 class TopoDS_Shape;
 
@@ -80,9 +83,12 @@ public:
     // Recent files
     void prependRecentFile(const FilePath& fp);
     const RecentFile* findRecentFile(const FilePath& fp) const;
-    void recordRecentFileThumbnail(GuiDocument* guiDoc);
-    void recordRecentFileThumbnails(GuiApplication* guiApp);
+    void recordRecentFile(GuiDocument* guiDoc);
+    void recordRecentFiles(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
+    void setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocument*, QSize)> fn);
+    static void readRecentFiles(QDataStream& stream, RecentFiles* recentFiles);
+    static void writeRecentFiles(QDataStream& stream, const RecentFiles& recentFiles);
 
     // Meshing of BRep shapes
     OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;
@@ -113,6 +119,8 @@ private:
     AppModule(const AppModule&) = delete; // Not copyable
     AppModule& operator=(const AppModule&) = delete; // Not copyable
 
+    bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
+
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;
     AppModuleProperties m_props;
@@ -121,6 +129,7 @@ private:
     std::locale m_stdLocale;
     QLocale m_qtLocale;
     std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
+    std::function<Thumbnail(GuiDocument*, QSize)> m_fnRecentFileThumbnailRecorder;
 };
 
 } // namespace Mayo

@@ -19,6 +19,10 @@ QString to_QString(const StringType& str) {
     return string_conv<QString>(str);
 }
 
+// Returns 'str' converted to a "guaranteed" printable string
+std::string consoleToPrintable(const QString& str);
+std::string consoleToPrintable(std::string_view str/*utf8*/);
+
 // --
 // -- X -> QString
 // --

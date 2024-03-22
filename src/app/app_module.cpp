@@ -15,20 +15,71 @@
 #include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
-#include "qtcore_utils.h"
-#include "filepath_conv.h"
-#include "qstring_conv.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 
 #include <BRepBndLib.hxx>
 
+#include <QtCore/QDataStream>
 #include <QtCore/QDir>
 #include <QtCore/QtDebug>
-#include <QtGui/QGuiApplication>
 
 #include <fmt/format.h>
 #include <iterator>
 
 namespace Mayo {
+
+namespace {
+
+void readRecentFile(QDataStream& stream, RecentFile* recentFile)
+{
+    QString strFilepath;
+    stream >> strFilepath;
+    if (stream.status() != QDataStream::Ok)
+        return;
+
+    recentFile->filepath = filepathFrom(strFilepath);
+    stream >> recentFile->thumbnail.imageData;
+    if (stream.status() != QDataStream::Ok)
+        return;
+
+    recentFile->thumbnail.imageCacheKey = -1;
+    // Read thumbnail timestamp
+    // Warning: qint64 and int64_t may not be the exact same type(eg __int64 and longlong with Windows/MSVC)
+    qint64 timestamp;
+    stream >> timestamp;
+    if (stream.status() != QDataStream::Ok)
+        return;
+
+    recentFile->thumbnailTimestamp = timestamp;
+}
+
+QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
+{
+    // Excerpted from Prs3d::GetDeflection(...)
+    constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
+
+    Bnd_Box bndBox;
+    constexpr bool useTriangulation = true;
+    BRepBndLib::Add(shape, bndBox, !useTriangulation);
+    if (bndBox.IsVoid())
+        return baseDeviation;
+
+    if (BndUtils::isOpen(bndBox)) {
+        if (!BndUtils::hasFinitePart(bndBox))
+            return baseDeviation;
+
+        bndBox = BndUtils::finitePart(bndBox);
+    }
+
+    const auto coords = BndBoxCoords::get(bndBox);
+    const gp_XYZ diag = coords.maxVertex().XYZ() - coords.minVertex().XYZ();
+    const double diagMaxComp = std::max({ diag.X(), diag.Y(), diag.Z() });
+    return 4 * diagMaxComp * baseDeviation;
+}
+
+} // namespace
 
 AppModule::AppModule()
     : m_settings(new Settings),
@@ -111,7 +162,7 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
         const auto& filesProp = constRef<PropertyRecentFiles>(prop);
         QByteArray blob;
         QDataStream stream(&blob, QIODevice::WriteOnly);
-        stream << filesProp.value();
+        AppModule::writeRecentFiles(stream, filesProp.value());
         Variant varBlob(blob.toStdString());
         varBlob.setByteArray(true);
         return varBlob;
@@ -124,13 +175,10 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
 bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
-        if (qobject_cast<QGuiApplication*>(QCoreApplication::instance()) == nullptr)
-            return true;
-
         const QByteArray blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
         QDataStream stream(blob);
         RecentFiles recentFiles;
-        stream >> recentFiles;
+        AppModule::readRecentFiles(stream, &recentFiles);
         ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
         return stream.status() == QDataStream::Ok;
     }
@@ -194,19 +242,20 @@ const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
 }
 
-void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
+void AppModule::recordRecentFile(GuiDocument* guiDoc)
 {
     if (!guiDoc)
         return;
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
     if (!recentFile) {
-        qDebug() << fmt::format("RecentFile object is null\n"
-                                "    Function: {}\n    Document: {}\n    RecentFilesCount: {}",
-                                Q_FUNC_INFO,
-                                guiDoc->document()->filePath().u8string(),
-                                m_props.recentFiles.value().size())
-                    .c_str();
+        qDebug() << fmt::format(
+                        "RecentFile object is null\n"
+                        "    Function: {}\n    Document: {}\n    RecentFilesCount: {}",
+                        Q_FUNC_INFO,
+                        guiDoc->document()->filePath().u8string(),
+                        m_props.recentFiles.value().size()
+                    ).c_str();
         return;
     }
 
@@ -214,7 +263,7 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
         return;
 
     RecentFile newRecentFile = *recentFile;
-    const bool okRecord = newRecentFile.recordThumbnail(guiDoc, this->recentFileThumbnailSize());
+    const bool okRecord = this->impl_recordRecentFile(&newRecentFile, guiDoc);
     if (!okRecord)
         return;
 
@@ -225,7 +274,7 @@ void AppModule::recordRecentFileThumbnail(GuiDocument* guiDoc)
     m_props.recentFiles.setValue(newListRecentFile);
 }
 
-void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
+void AppModule::recordRecentFiles(GuiApplication* guiApp)
 {
     if (!guiApp)
         return;
@@ -238,7 +287,7 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
             continue; // Skip
 
         RecentFile newRecentFile = *recentFile;
-        if (newRecentFile.recordThumbnail(guiDoc, this->recentFileThumbnailSize())) {
+        if (this->impl_recordRecentFile(&newRecentFile, guiDoc)) {
             auto indexRecentFile = std::distance(&listRecentFile.front(), recentFile);
             newListRecentFile.at(indexRecentFile) = newRecentFile;
         }
@@ -247,28 +296,51 @@ void AppModule::recordRecentFileThumbnails(GuiApplication* guiApp)
     m_props.recentFiles.setValue(newListRecentFile);
 }
 
-static QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
+void AppModule::setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocument*, QSize)> fn)
 {
-    // Excerpted from Prs3d::GetDeflection(...)
-    constexpr QuantityLength baseDeviation = 1 * Quantity_Millimeter;
+    m_fnRecentFileThumbnailRecorder = std::move(fn);
+}
 
-    Bnd_Box bndBox;
-    constexpr bool useTriangulation = true;
-    BRepBndLib::Add(shape, bndBox, !useTriangulation);
-    if (bndBox.IsVoid())
-        return baseDeviation;
 
-    if (BndUtils::isOpen(bndBox)) {
-        if (!BndUtils::hasFinitePart(bndBox))
-            return baseDeviation;
+void AppModule::readRecentFiles(QDataStream& stream, RecentFiles* recentFiles)
+{
+    auto fnCheckStreamStatus = [](QDataStream::Status status) {
+        if (status != QDataStream::Ok) {
+            qDebug() << fmt::format(
+                            "QDataStream error\n    Function: {}\n    Status: {}",
+                            Q_FUNC_INFO, MetaEnum::name(status)
+                        ).c_str();
+            return false;
+        }
 
-        bndBox = BndUtils::finitePart(bndBox);
+        return true;
+    };
+
+    uint32_t count = 0;
+    stream >> count;
+    if (!fnCheckStreamStatus(stream.status()))
+        return; // Stream extraction error, abort
+
+    recentFiles->clear();
+    for (uint32_t i = 0; i < count; ++i) {
+        RecentFile recent;
+        readRecentFile(stream, &recent);
+        if (!fnCheckStreamStatus(stream.status()))
+            return; // Stream extraction error, abort
+
+        if (!recent.filepath.empty() && recent.thumbnailTimestamp != 0)
+            recentFiles->push_back(std::move(recent));
     }
+}
 
-    const auto coords = BndBoxCoords::get(bndBox);
-    const gp_XYZ diag = coords.maxVertex().XYZ() - coords.minVertex().XYZ();
-    const double diagMaxComp = std::max({ diag.X(), diag.Y(), diag.Z() });
-    return 4 * diagMaxComp * baseDeviation;
+void AppModule::writeRecentFiles(QDataStream& stream, const RecentFiles& recentFiles)
+{
+    stream << uint32_t(recentFiles.size());
+    for (const RecentFile& rf : recentFiles) {
+        stream << filepathTo<QString>(rf.filepath);
+        stream << rf.thumbnail.imageData;
+        stream << qint64(rf.thumbnailTimestamp);
+    }
 }
 
 OccBRepMeshParameters AppModule::brepMeshParameters(const TopoDS_Shape& shape) const
@@ -345,6 +417,36 @@ AppModule::~AppModule()
 {
     delete m_settings;
     m_settings = nullptr;
+}
+
+bool AppModule::impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc)
+{
+    if (!recentFile)
+        return false;
+
+    if (!guiDoc)
+        return false;
+
+    if (!m_fnRecentFileThumbnailRecorder)
+        return false;
+
+    if (!filepathEquivalent(recentFile->filepath, guiDoc->document()->filePath())) {
+        qDebug() << fmt::format(
+                        "Filepath mismatch with GUI document\n"
+                        "    Function: {}\n    Filepath: {}\n    Document: {}",
+                        Q_FUNC_INFO,
+                        recentFile->filepath.u8string(),
+                        guiDoc->document()->filePath().u8string()
+                    ).c_str();
+        return false;
+    }
+
+    if (recentFile->thumbnailTimestamp == RecentFile::timestampLastModified(recentFile->filepath))
+        return true;
+
+    recentFile->thumbnail = m_fnRecentFileThumbnailRecorder(guiDoc, this->recentFileThumbnailSize());
+    recentFile->thumbnailTimestamp = RecentFile::timestampLastModified(recentFile->filepath);
+    return true;
 }
 
 } // namespace Mayo

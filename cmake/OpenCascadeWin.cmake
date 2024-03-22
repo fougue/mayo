@@ -120,17 +120,6 @@ if(OpenCASCADE_FOUND)
         )
     endforeach()
 
-    # Add OpenCASCADE library directories
-    # Note: QtCreator option "Run->Add build library search to PATH" will add to PATH env variable
-    #       the contents of Mayo_LinkDirectories variable. For convenience, let's add also the
-    #       directories containing DLLs
-    list(
-        APPEND Mayo_LinkDirectories
-        ${OpenCASCADE_BINARY_DIR}
-        ${OpenCASCADE_LIBRARY_DIR}
-        ${OpenCASCADE_3RDPARTY_BINARY_DIRS}
-    )
-
     # List all 3rd-party DLLs required by OpenCASCADE
     set(OpenCASCADE_3RDPARTY_DLLS)
     foreach(OccBINDIR ${OpenCASCADE_3RDPARTY_BINARY_DIRS})

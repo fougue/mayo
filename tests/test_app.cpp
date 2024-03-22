@@ -11,15 +11,17 @@
 
 #include "test_app.h"
 
-#include "../src/app/filepath_conv.h"
-#include "../src/app/qstring_conv.h"
+#include "../src/app/app_module.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/app/theme.h"
 #include "../src/io_occ/io_occ.h"
+#include "../src/qtcommon/filepath_conv.h"
+#include "../src/qtcommon/qstring_conv.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QDataStream>
 #include <QtCore/QFile>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QVariant>
@@ -28,6 +30,37 @@
 #include <QtTest/QSignalSpy>
 
 namespace Mayo {
+
+namespace {
+
+QPixmap createColorPixmap(const QColor& color, const QSize& size = QSize(64, 64))
+{
+    QPixmap pix(size);
+    QPainter painter(&pix);
+    painter.fillRect(0, 0, size.width(), size.height(), color);
+    return pix;
+}
+
+FilePath temporaryFilePath()
+{
+    QTemporaryFile file;
+    file.open();
+    return filepathFrom(QFileInfo(file));
+}
+
+RecentFile createRecentFile(const QPixmap& thumbnail)
+{
+    QTemporaryFile file;
+    file.open();
+    RecentFile rf;
+    rf.filepath = filepathFrom(QFileInfo(file));
+    rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+    rf.thumbnail.imageData = QtGuiUtils::toQByteArray(thumbnail);
+    rf.thumbnail.imageCacheKey = thumbnail.cacheKey();
+    return rf;
+}
+
+} // namespace
 
 void TestApp::FilePathConv_test()
 {
@@ -121,35 +154,18 @@ void TestApp::QStringUtils_text_test_data()
 
 void TestApp::RecentFiles_test()
 {
-    auto fnColorPixmap = [](const QColor& color) {
-        QPixmap pix(64, 64);
-        QPainter painter(&pix);
-        painter.fillRect(0, 0, 64, 64, color);
-        return pix;
-    };
-
-    auto fnCreateRecentFile = [](const QPixmap& thumbnail) {
-        QTemporaryFile file;
-        file.open();
-        RecentFile rf;
-        rf.filepath = filepathFrom(QFileInfo(file));
-        rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
-        rf.thumbnail = thumbnail;
-        return rf;
-    };
-
     RecentFiles recentFiles;
-    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::blue)));
-    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::white)));
-    recentFiles.push_back(fnCreateRecentFile(fnColorPixmap(Qt::red)));
+    recentFiles.push_back(createRecentFile(createColorPixmap(Qt::blue)));
+    recentFiles.push_back(createRecentFile(createColorPixmap(Qt::white)));
+    recentFiles.push_back(createRecentFile(createColorPixmap(Qt::red)));
 
     RecentFiles recentFiles_read;
     {
         QByteArray data;
         QDataStream wstream(&data, QIODevice::WriteOnly);
-        wstream << recentFiles;
+        AppModule::writeRecentFiles(wstream, recentFiles);
         QDataStream rstream(&data, QIODevice::ReadOnly);
-        rstream >> recentFiles_read;
+        AppModule::readRecentFiles(rstream, &recentFiles_read);
     }
 
     QCOMPARE(recentFiles.size(), recentFiles_read.size());
@@ -159,14 +175,35 @@ void TestApp::RecentFiles_test()
         QCOMPARE(lhs.filepath, rhs.filepath);
         QVERIFY(lhs.thumbnailTimestamp != -1);
         QCOMPARE(lhs.thumbnailTimestamp, rhs.thumbnailTimestamp);
-        QCOMPARE(lhs.thumbnail.size(), rhs.thumbnail.size());
-        const QImage lhsImg = lhs.thumbnail.toImage();
-        const QImage rhsImg = rhs.thumbnail.toImage();
-        for (int i = 0; i < lhs.thumbnail.width(); ++i) {
-            for (int j = 0; j < lhs.thumbnail.height(); ++j) {
+        QCOMPARE(lhs.thumbnail.imageData.size(), rhs.thumbnail.imageData.size());
+        const QPixmap lhsPix = QtGuiUtils::toQPixmap(lhs.thumbnail.imageData);
+        const QPixmap rhsPix = QtGuiUtils::toQPixmap(rhs.thumbnail.imageData);
+        const QImage lhsImg = lhsPix.toImage();
+        const QImage rhsImg = rhsPix.toImage();
+        for (int i = 0; i < lhsPix.width(); ++i) {
+            for (int j = 0; j < lhsPix.height(); ++j) {
                 QCOMPARE(lhsImg.pixel(i, j), rhsImg.pixel(i, j));
             }
         } // endfor
+    }
+}
+
+void TestApp::RecentFiles_QPixmap_test()
+{
+    QByteArray bytes;
+    {
+        QDataStream stream(&bytes, QIODevice::WriteOnly);
+        stream << uint32_t(1);
+        stream << filepathTo<QString>(temporaryFilePath());
+        stream << QPixmap();//createColorPixmap(Qt::blue);
+        stream << qint64(1);
+    }
+
+    {
+        RecentFiles recentFiles;
+        QDataStream stream(bytes);
+        // Should not crash
+        AppModule::readRecentFiles(stream, &recentFiles);
     }
 }
 

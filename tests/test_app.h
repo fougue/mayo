@@ -22,6 +22,7 @@ private slots:
     void QStringUtils_text_test_data();
 
     void RecentFiles_test();
+    void RecentFiles_QPixmap_test();
 
     void StringConv_test();
 
