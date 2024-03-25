@@ -144,6 +144,7 @@ Base::Vector3d toVector3d(const double* a)
     return result;
 }
 
+#if 0
 CDxfWrite::CDxfWrite(const char* filepath)
     : m_ofs(filepath, std::ios::out),
     //TODO: these should probably be parameters in config file
@@ -1889,20 +1890,11 @@ void CDxfWrite::writeObjectsSection()
     std::string fileSpec = m_dataDir + ss.str();
     m_ofs << getPlateFile(fileSpec);
 }
+#endif
 
 CDxfRead::CDxfRead(const char* filepath)
     : m_ifs(filepath)
 {
-    // start the file
-    m_fail = false;
-    m_ColorIndex = 0;
-    m_eUnits = eMillimeters;
-    m_measurement_inch = false;
-    m_layer_name = "0";  // Default layer name
-    m_ignore_errors = true;
-
-    m_version = RUnknown;
-
     if (!m_ifs)
         m_fail = true;
     else
@@ -3568,7 +3560,7 @@ void CDxfRead::ReportError_readInteger(const char* context)
     msg += "Failed to read integer from '";
     msg += m_str;
     msg += "'";
-    this->ReportError(msg.c_str());
+    this->ReportError(msg);
 }
 
 std::streamsize CDxfRead::gcount() const

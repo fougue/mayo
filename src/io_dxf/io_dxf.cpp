@@ -313,7 +313,7 @@ void DxfReader::applyProperties(const PropertyGroup* group)
         m_params.scaling = ptr->scaling;
         m_params.importAnnotations = ptr->importAnnotations;
         m_params.groupLayers = ptr->groupLayers;
-        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name();
+        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.valueName();
     }
 }
 

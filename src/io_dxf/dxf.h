@@ -358,6 +358,24 @@ struct Dxf_SPLINE {
     std::vector<DxfCoords> fitPoints;
 };
 
+typedef enum
+{
+    RUnknown,
+    ROlder,
+    R10,
+    R11_12,
+    R13,
+    R14,
+    R2000,
+    R2004,
+    R2007,
+    R2010,
+    R2013,
+    R2018,
+    RNewer,
+} eDXFVersion_t;
+
+#if 0
 //***************************
 //data structures for writing
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
@@ -397,22 +415,6 @@ struct LWPolyDataOut
     std::vector<double> Bulge;
     point3D Extr;
 };
-typedef enum
-{
-    RUnknown,
-    ROlder,
-    R10,
-    R11_12,
-    R13,
-    R14,
-    R2000,
-    R2004,
-    R2007,
-    R2010,
-    R2013,
-    R2018,
-    RNewer,
-} eDXFVersion_t;
 //********************
 
 class CDxfWrite
@@ -584,6 +586,7 @@ public:
     void makeBlockRecordTableBody();
     void makeBlockSectionHead();
 };
+#endif
 
 namespace DxfPrivate {
 
@@ -612,15 +615,15 @@ class CDxfRead
 private:
     std::ifstream m_ifs;
 
-    bool m_fail;
+    bool m_fail = false;
     std::string m_str;
     std::string m_unused_line;
-    eDxfUnits_t m_eUnits;
-    bool m_measurement_inch;
-    std::string m_layer_name;
+    eDxfUnits_t m_eUnits = eMillimeters;
+    bool m_measurement_inch = false;
+    std::string m_layer_name{"0"}; // Default layer name
     std::string m_section_name;
     std::string m_block_name;
-    bool m_ignore_errors;
+    bool m_ignore_errors = true;
 
     std::streamsize m_gcount = 0;
     int m_line_nb = 0;
@@ -711,8 +714,8 @@ private:
     void ReportError_readInteger(const char* context);
 
 protected:
-    ColorIndex_t m_ColorIndex;
-    eDXFVersion_t m_version;  // Version from $ACADVER variable in DXF
+    ColorIndex_t m_ColorIndex = 0;
+    eDXFVersion_t m_version = RUnknown;  // Version from $ACADVER variable in DXF
 
     std::streamsize gcount() const;
     virtual void get_line();

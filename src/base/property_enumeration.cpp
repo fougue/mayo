@@ -55,7 +55,7 @@ void PropertyEnumeration::clearDescriptions()
     m_vecDescription.clear();
 }
 
-std::string_view PropertyEnumeration::name() const
+std::string_view PropertyEnumeration::valueName() const
 {
     return m_enumeration ? m_enumeration->findNameByValue(m_value) : std::string_view{};
 }

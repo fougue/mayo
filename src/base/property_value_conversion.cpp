@@ -138,7 +138,7 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
         return TKernelUtils::colorToHex(constRef<PropertyOccColor>(prop));
     }
     else if (isType<PropertyEnumeration>(prop)) {
-        return std::string(constRef<PropertyEnumeration>(prop).name());
+        return std::string(constRef<PropertyEnumeration>(prop).valueName());
     }
     else if (isType<BasePropertyQuantity>(prop)) {
         const auto& qtyProp = constRef<BasePropertyQuantity>(prop);

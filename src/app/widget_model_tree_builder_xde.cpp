@@ -214,7 +214,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
 QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return QtCoreUtils::QByteArray_frowRawData(Module::get()->instanceNameFormat.name());
+    return QtCoreUtils::QByteArray_frowRawData(Module::get()->instanceNameFormat.valueName());
 }
 
 void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)

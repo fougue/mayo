@@ -462,12 +462,12 @@ void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)
 
 MeasureDisplayBoundingBox::MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd)
     : m_bnd(bnd),
+      m_gfxMinPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMin))),
+      m_gfxMaxPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMax))),
       m_gfxXLengthText(new AIS_TextLabel),
       m_gfxYLengthText(new AIS_TextLabel),
       m_gfxZLengthText(new AIS_TextLabel)
 {
-    m_gfxMinPoint = new AIS_Point(new Geom_CartesianPoint(bnd.cornerMin));
-    m_gfxMaxPoint = new AIS_Point(new Geom_CartesianPoint(bnd.cornerMax));
 
     const TopoDS_Shape shapeBox = BRepPrimAPI_MakeBox(bnd.cornerMin, bnd.cornerMax);
     auto aisShapeBox = new AIS_Shape(shapeBox);

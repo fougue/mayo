@@ -34,7 +34,7 @@ public:
     std::string_view findDescription(Enumeration::Value value) const;
     void clearDescriptions();
 
-    std::string_view name() const;
+    std::string_view valueName() const;
     Enumeration::Value value() const;
     bool setValue(Enumeration::Value value);
     bool setValueByName(std::string_view name);
