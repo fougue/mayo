@@ -100,7 +100,8 @@ struct OpenFileNames {
 
     static OpenFileNames get(
             QWidget* parentWidget,
-            OpenFileNames::GetOption option = OpenFileNames::GetMany)
+            OpenFileNames::GetOption option = OpenFileNames::GetMany
+        )
     {
         OpenFileNames result;
         result.selectedFormat = IO::Format_Unknown;
@@ -118,14 +119,16 @@ struct OpenFileNames {
         if (option == OpenFileNames::GetOne) {
             const QString strFilepath =
                     QFileDialog::getOpenFileName(
-                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
+                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
+                    );
             result.listFilepath.clear();
             result.listFilepath.push_back(filepathFrom(strFilepath));
         }
         else {
             const QStringList listStrFilePath =
                     QFileDialog::getOpenFileNames(
-                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter);
+                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
+                    );
             result.listFilepath.clear();
             for (const QString& strFilePath : listStrFilePath)
                 result.listFilepath.push_back(filepathFrom(strFilePath));
@@ -211,9 +214,52 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
     } // endfor()
 }
 
-void FileCommandTools::openDocument(IAppContext* context, const FilePath& fp)
+void FileCommandTools::openDocument(IAppContext* context, const FilePath& filePath)
 {
-    FileCommandTools::openDocumentsFromList(context, Span<const FilePath>(&fp, 1));
+    FileCommandTools::openDocumentsFromList(context, Span<const FilePath>(&filePath, 1));
+}
+
+void FileCommandTools::importInDocument(
+        IAppContext* context, const DocumentPtr& targetDoc, Span<const FilePath> listFilePaths
+    )
+{
+    auto appModule = AppModule::get();
+    const Document::Identifier targetDocId = targetDoc->identifier();
+    const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
+        QElapsedTimer chrono;
+        chrono.start();
+
+        auto doc = Application::instance()->findDocumentByIdentifier(targetDocId);
+        const bool okImport = appModule->ioSystem()->importInDocument()
+                                  .targetDocument(doc)
+                                  .withFilepaths(listFilePaths)
+                                  .withParametersProvider(appModule)
+                                  .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                                      appModule->computeBRepMesh(labelEntity, progress);
+                                  })
+                                  .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+                                  .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
+                                  .withMessenger(appModule)
+                                  .withTaskProgress(progress)
+                                  .execute();
+        if (okImport)
+            appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
+    });
+    const QString taskTitle =
+        listFilePaths.size() > 1 ?
+            Command::tr("Import") :
+            filepathTo<QString>(listFilePaths.front().stem());
+    context->taskMgr()->setTitle(taskId, to_stdString(taskTitle));
+    context->taskMgr()->run(taskId);
+}
+
+void FileCommandTools::importInDocument(
+        IAppContext* context,
+        const DocumentPtr& targetDoc,
+        const FilePath& filePath
+    )
+{
+    FileCommandTools::importInDocument(context, targetDoc, Span<const FilePath>(&filePath, 1));
 }
 
 CommandNewDocument::CommandNewDocument(IAppContext* context)
@@ -354,40 +400,15 @@ void CommandImportInCurrentDocument::execute()
     if (resFileNames.listFilepath.empty())
         return;
 
-    auto appModule = AppModule::get();
-    const TaskId taskId = this->taskMgr()->newTask([=](TaskProgress* progress) {
-        QElapsedTimer chrono;
-        chrono.start();
-
-        const bool okImport = appModule->ioSystem()->importInDocument()
-                .targetDocument(guiDoc->document())
-                .withFilepaths(resFileNames.listFilepath)
-                .withParametersProvider(appModule)
-                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                        appModule->computeBRepMesh(labelEntity, progress);
-                })
-                .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
-                .withMessenger(appModule)
-                .withTaskProgress(progress)
-                .execute();
-        if (okImport)
-            appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
-    });
-    const QString taskTitle =
-            resFileNames.listFilepath.size() > 1 ?
-                Command::tr("Import") :
-                filepathTo<QString>(resFileNames.listFilepath.front().stem());
-    this->taskMgr()->setTitle(taskId, to_stdString(taskTitle));
-    this->taskMgr()->run(taskId);
+    FileCommandTools::importInDocument(this->context(), guiDoc->document(), resFileNames.listFilepath);
     for (const FilePath& fp : resFileNames.listFilepath)
-        appModule->prependRecentFile(fp);
+        AppModule::get()->prependRecentFile(fp);
 }
 
 bool CommandImportInCurrentDocument::getEnabledStatus() const
 {
     return this->app()->documentCount() != 0
-            && this->context()->currentPage() == IAppContext::Page::Documents;
+           && this->context()->currentPage() == IAppContext::Page::Documents;
 }
 
 CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAppContext* context)

@@ -51,6 +51,7 @@ public:
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
+    PropertyBool reloadDocumentOnFileChange{ this, textId("reloadDocumentOnFileChange") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     // Meshing

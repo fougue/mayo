@@ -17,9 +17,11 @@
 #include "commands_api.h"
 #include "commands_file.h"
 #include "commands_window.h"
+#include "document_files_watcher.h"
 #include "document_property_group.h"
 #include "gui_document_list_model.h"
 #include "item_view_buttons.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
@@ -27,8 +29,10 @@
 #include "widget_occ_view.h"
 #include "widget_properties_editor.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
 #include <cassert>
 
 namespace Mayo {
@@ -36,7 +40,8 @@ namespace Mayo {
 WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     : IWidgetMainPage(parent),
       m_ui(new Ui_WidgetMainControl),
-      m_guiApp(guiApp)
+      m_guiApp(guiApp),
+      m_docFilesWatcher(new DocumentFilesWatcher(guiApp->application(), this))
 {
     assert(m_guiApp != nullptr);
 
@@ -84,6 +89,18 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     });
     guiApp->selectionModel()->signalChanged.connectSlot(&WidgetMainControl::onApplicationItemSelectionChanged, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&WidgetMainControl::onGuiDocumentAdded, this);
+
+    // Document files monitoring
+    auto appModule = AppModule::get();
+    const auto& propReloadDocOnFileChange = appModule->properties()->reloadDocumentOnFileChange;
+    m_docFilesWatcher->enable(propReloadDocOnFileChange);
+    appModule->settings()->signalChanged.connectSlot([&](const Property* property) {
+        if (property == &propReloadDocOnFileChange) {
+            m_docFilesWatcher->enable(propReloadDocOnFileChange);
+            m_pendingDocsToReload.clear();
+        }
+    });
+    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(&WidgetMainControl::onDocumentFileChanged, this);
 
     // Creation of annex objects
     m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
@@ -310,6 +327,30 @@ QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
     return placeHolder;
 }
 
+void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
+{
+    const QString strQuestion =
+        tr("Document file `%1` has been changed since it was opened\n\n"
+           "Do you want to reload that document?\n\n"
+           "File: `%2`")
+        .arg(to_QString(doc->name()))
+        .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
+    ;
+    const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
+    auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
+    msgBox->setTextFormat(Qt::MarkdownText);
+    QtWidgetsUtils::asyncDialogExec(msgBox);
+    QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
+        m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
+        if (btn == msgBox->button(QMessageBox::Yes)) {
+            while (doc->entityCount() > 0)
+                doc->destroyEntity(doc->entityTreeNodeId(0));
+
+            FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
+        }
+    });
+}
+
 WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
 {
     return qobject_cast<WidgetGuiDocument*>(m_ui->stack_GuiDocuments->widget(idx));
@@ -412,7 +453,33 @@ void WidgetMainControl::onCurrentDocumentIndexChanged(int idx)
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(docFilePath));
 
+    if (m_docFilesWatcher->isEnabled()) {
+        auto itDoc = m_pendingDocsToReload.find(docPtr);
+        if (itDoc != m_pendingDocsToReload.end()) {
+            m_pendingDocsToReload.erase(itDoc);
+            this->reloadDocumentAfterChange(docPtr);
+        }
+    }
+
     emit this->currentDocumentIndexChanged(idx);
+}
+
+void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
+{
+    WidgetGuiDocument* widgetDoc = nullptr;
+    for (int i = 0; i < this->widgetGuiDocumentCount() && !widgetDoc; ++i) {
+        const DocumentPtr& candidateDoc = this->widgetGuiDocument(i)->guiDocument()->document();
+        if (candidateDoc->identifier() == doc->identifier())
+            widgetDoc = this->widgetGuiDocument(i);
+    }
+
+    if (!widgetDoc)
+        return;
+
+    if (widgetDoc == this->currentWidgetGuiDocument())
+        this->reloadDocumentAfterChange(doc);
+    else
+        m_pendingDocsToReload.insert(doc);
 }
 
 } // namespace Mayo
