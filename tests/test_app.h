@@ -14,6 +14,8 @@ namespace Mayo {
 class TestApp : public QObject {
     Q_OBJECT
 private slots:
+    void DocumentFilesWatcher_test();
+
     void FilePathConv_test();
 
     void QStringUtils_append_test();
