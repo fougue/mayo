@@ -12,11 +12,13 @@
 #include "test_app.h"
 
 #include "../src/app/app_module.h"
+#include "../src/app/document_files_watcher.h"
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
 #include "../src/app/theme.h"
-#include "../src/io_occ/io_occ.h"
+#include "../src/base/application.h"
+#include "../src/base/document.h"
 #include "../src/qtcommon/filepath_conv.h"
 #include "../src/qtcommon/qstring_conv.h"
 
@@ -61,6 +63,54 @@ RecentFile createRecentFile(const QPixmap& thumbnail)
 }
 
 } // namespace
+
+void TestApp::DocumentFilesWatcher_test()
+{
+    auto app = Application::instance();
+
+    DocumentFilesWatcher docFilesWatcher(app);
+    docFilesWatcher.enable(true);
+    Document::Identifier changedDocId = -1;
+    docFilesWatcher.signalDocumentFileChanged.connectSlot([&](DocumentPtr changedDoc) {
+        changedDocId = changedDoc->identifier();
+    });
+
+    const FilePath cadFilePath = "tests/outputs/temp-cube.ply";
+    auto fnCopyCadFile = [=]{
+        std_filesystem::copy_file(
+            "tests/inputs/cube.ply",
+            cadFilePath,
+            std_filesystem::copy_options::overwrite_existing
+        );
+    };
+
+    fnCopyCadFile();
+    DocumentPtr doc = app->newDocument();
+    doc->setFilePath(cadFilePath);
+    auto _ = gsl::finally([=]{
+        if (app->findIndexOfDocument(doc) != -1)
+            app->closeDocument(doc);
+    });
+
+    // Check file change on document is caught
+    fnCopyCadFile();
+    const bool okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
+    QVERIFY(okWait);
+    QCOMPARE(changedDocId, doc->identifier());
+
+    // Check further file changes are not monitored until last one is acknowledged
+    changedDocId = -1;
+    fnCopyCadFile();
+    QTest::qWait(125/*ms*/);
+    QCOMPARE(changedDocId, -1);
+
+    // Check closing document unmonitors file in DocumentFilesWatcher
+    docFilesWatcher.acknowledgeDocumentFileChange(doc);
+    app->closeDocument(doc);
+    fnCopyCadFile();
+    QTest::qWait(125/*ms*/);
+    QCOMPARE(changedDocId, -1);
+}
 
 void TestApp::FilePathConv_test()
 {

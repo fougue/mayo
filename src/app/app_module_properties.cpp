@@ -44,6 +44,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->recentFiles, groupId_application);
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
+    settings->addSetting(&this->reloadDocumentOnFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
     this->recentFiles.setUserVisible(false);
@@ -82,6 +83,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
+        this->reloadDocumentOnFileChange.setValue(true);
         this->linkWithDocumentSelector.setValue(true);
 #ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
@@ -159,10 +161,16 @@ void AppModuleProperties::retranslate()
 
     // Application
     this->language.setDescription(
-                textIdTr("Language used for the application. Change will take effect after application restart"));
+                textIdTr("Language used for the application. Change will take effect after application restart")
+    );
+    this->reloadDocumentOnFileChange.setDescription(
+        textIdTr("Monitors the file system for changes to documents opened in the application\n\n"
+                 "When such a file change is detected then the application proposes to reload(open again) the document")
+    );
     this->linkWithDocumentSelector.setDescription(
                 textIdTr("In case where multiple documents are opened, make sure the document displayed in "
-                         "the 3D view corresponds to what is selected in the model tree"));
+                         "the 3D view corresponds to what is selected in the model tree")
+    );
     this->forceOpenGlFallbackWidget.setDescription(
                 textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
                          "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
@@ -178,33 +186,42 @@ void AppModuleProperties::retranslate()
 
     // Meshing
     this->meshingQuality.setDescription(
-                textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
+                textIdTr("Controls precision of the mesh to be computed from the BRep shape")
+    );
     this->meshingChordalDeflection.setDescription(
                 textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
-                         "a curve and its tessellation"));
+                         "a curve and its tessellation")
+    );
     this->meshingAngularDeflection.setDescription(
                 textIdTr("For the tessellation of faces the angular deflection limits the angle between "
-                         "subsequent segments in a polyline"));
+                         "subsequent segments in a polyline")
+    );
     this->meshingRelative.setDescription(
                 textIdTr("Relative computation of edge tolerance\n\n"
                          "If activated, deflection used for the polygonalisation of each edge will be "
                          "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                         "the maximum deflection of their edges."));
+                         "the maximum deflection of their edges.")
+    );
 
     // Graphics
     this->navigationStyle.setDescription(
-                textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications"));
+                textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications")
+    );
     this->turnViewAngleIncrement.setDescription(
-                textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)"));
+                textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
+    );
 
     // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
                 textIdTr("Show or hide by default the trihedron centered at world origin. "
-                         "This doesn't affect 3D view of currently opened documents"));
+                         "This doesn't affect 3D view of currently opened documents")
+    );
     this->clipPlanesCappingOn.setDescription(
-                textIdTr("Enable capping of currently clipped graphics"));
+                textIdTr("Enable capping of currently clipped graphics")
+    );
     this->clipPlanesCappingHatchOn.setDescription(
-                textIdTr("Enable capping hatch texture of currently clipped graphics"));
+                textIdTr("Enable capping hatch texture of currently clipped graphics")
+    );
 }
 
 void AppModuleProperties::onPropertyChanged(Property* prop)
