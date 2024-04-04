@@ -205,22 +205,22 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     }
 
     // Enable/disable editor widget when the corresponding setting status is changed
-    settings->signalEnabled.connectSlot([=](const Property* setting, bool on) {
+    m_connSettingsEnabled = settings->signalEnabled.connectSlot([=](const Property* setting, bool on) {
         QWidget* editor = CppUtils::findValue(setting, m_mapSettingEditor);
         if (editor)
             editor->setEnabled(on);
     });
 
     // Backup initial value of changed settings, so they can be restored on dialog cancellation
-    m_connSettingsAboutToChange = m_settings->signalAboutToChange.connectSlot([=](Property* property) {
+    m_connSettingsAboutToChange = settings->signalAboutToChange.connectSlot([=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
-            const Settings::Variant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
+            const Settings::Variant propertyValue = settings->propertyValueConversion().toVariant(*property);
             m_mapSettingInitialValue.insert({ property, propertyValue});
         }
     });
 
     // Synchronize editor widget when value of the corresponding property is changed
-    m_connSettingsChanged = m_settings->signalChanged.connectSlot([=](const Property* property) {
+    m_connSettingsChanged = settings->signalChanged.connectSlot([=](const Property* property) {
         auto itFound = m_mapSettingEditor.find(property);
         if (itFound != m_mapSettingEditor.cend())
             this->syncEditor(itFound->second);
@@ -262,7 +262,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
     // Action for "Restore defaults" button
     auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, [=]{ m_settings->resetAll(); });
+    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, [=]{ settings->resetAll(); });
 
     // Actions for "Exchange" button
     auto btnExchange = m_ui->buttonBox->addButton(tr("Exchange"), QDialogButtonBox::ActionRole);
@@ -278,6 +278,7 @@ DialogOptions::~DialogOptions()
 {
     m_connSettingsAboutToChange.disconnect();
     m_connSettingsChanged.disconnect();
+    m_connSettingsEnabled.disconnect();
     delete m_ui;
 }
 

@@ -42,6 +42,7 @@ private:
     Settings* m_settings = nullptr;
     SignalConnectionHandle m_connSettingsAboutToChange;
     SignalConnectionHandle m_connSettingsChanged;
+    SignalConnectionHandle m_connSettingsEnabled;
 };
 
 } // namespace Mayo
