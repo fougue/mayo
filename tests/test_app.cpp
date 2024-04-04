@@ -19,9 +19,6 @@
 #include "../src/app/theme.h"
 #include "../src/base/application.h"
 #include "../src/base/document.h"
-#include "../src/base/io_system.h"
-#include "../src/io_occ/io_occ.h"
-#include "../src/io_ply/io_ply_reader.h"
 #include "../src/qtcommon/filepath_conv.h"
 #include "../src/qtcommon/qstring_conv.h"
 
@@ -69,9 +66,6 @@ RecentFile createRecentFile(const QPixmap& thumbnail)
 
 void TestApp::DocumentFilesWatcher_test()
 {
-    IO::System ioSystem;
-    ioSystem.addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
-
     auto app = Application::instance();
 
     DocumentFilesWatcher docFilesWatcher(app);
@@ -90,15 +84,13 @@ void TestApp::DocumentFilesWatcher_test()
         );
     };
 
+    fnCopyCadFile();
     DocumentPtr doc = app->newDocument();
     doc->setFilePath(cadFilePath);
-    fnCopyCadFile();
-    auto _ = gsl::finally([=]{ app->closeDocument(doc); });
-    const bool okImport = ioSystem.importInDocument()
-        .targetDocument(doc)
-        .withFilepath(cadFilePath)
-        .execute();
-    QVERIFY(okImport);
+    auto _ = gsl::finally([=]{
+        if (app->findIndexOfDocument(doc) != -1)
+            app->closeDocument(doc);
+    });
 
     // Check file change on document is caught
     fnCopyCadFile();
