@@ -17,6 +17,8 @@ class gp_Pnt;
 class gp_Dir;
 class gp_Trsf;
 
+class QDateTime;
+
 namespace Mayo {
 
 class QStringUtils {
@@ -34,6 +36,8 @@ public:
     static QString text(const gp_Dir& pos, const TextOptions& opt);
     static QString text(const gp_Trsf& trsf, const TextOptions& opt);
     static QString text(const Quantity_Color& color, const QString& format = "RGB(%1, %2 %3)");
+
+    static QString dateTimeText(const QDateTime& dateTime, const QLocale& locale = QLocale());
 
     static QString bytesText(uint64_t sizeBytes, const QLocale& locale = QLocale());
 

@@ -45,6 +45,7 @@ public:
     Span<GuiDocument*> guiDocuments();
     Span<GuiDocument* const> guiDocuments() const;
     GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
+    GuiDocument* findGuiDocument(Document::Identifier docId) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
 

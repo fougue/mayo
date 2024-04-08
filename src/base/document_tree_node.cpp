@@ -27,7 +27,7 @@ const DocumentTreeNode& DocumentTreeNode::null()
 TDF_Label DocumentTreeNode::label() const
 {
     if (this->isValid())
-        return m_document->modelTree().nodeData(m_id);
+        return DocumentTreeNode::label(m_document, m_id);
     else
         return TDF_Label();
 }
@@ -51,7 +51,13 @@ bool DocumentTreeNode::operator==(const DocumentTreeNode& other) const
         return false;
 
     return m_document->identifier() == other.document()->identifier()
-            && m_id == other.id();
+           && m_id == other.id();
+}
+
+const TDF_Label& DocumentTreeNode::label(const DocumentPtr &doc, TreeNodeId treeNodeId)
+{
+    static const TDF_Label nullLabel;
+    return doc ? doc->modelTree().nodeData(treeNodeId) : nullLabel;
 }
 
 } // namespace Mayo

@@ -121,27 +121,7 @@ private:
 
         m_storage->m_items.erase(m_storage->m_items.begin() + 2, m_storage->m_items.end());
         auto fnToString = [=](const QDateTime& dateTime) {
-            const QString strTime = dateTime.time().toString("HH:mm");
-            const QDate date = dateTime.date();
-            const QDate currentDate = QDate::currentDate();
-            const int diffDays = date.daysTo(currentDate);
-            if (diffDays == 0) {
-                return WidgetHomeFiles::tr("today %1").arg(strTime);
-            }
-            else if (diffDays == 1) {
-                return WidgetHomeFiles::tr("yersterday %1").arg(strTime);
-            }
-            else if (date.year() == currentDate.year() && date.weekNumber() == currentDate.weekNumber()) {
-                const QString strDayName = date.toString("dddd");
-                return WidgetHomeFiles::tr("%1 %2").arg(strDayName, strTime);
-            }
-            else if (diffDays < 5) {
-                return WidgetHomeFiles::tr("%1 days ago %2").arg(diffDays).arg(strTime);
-            }
-            else {
-                const QString strDate = appModule->qtLocale().toString(date, QLocale::ShortFormat);
-                return WidgetHomeFiles::tr("%1 %2").arg(strDate, strTime);
-            }
+            return QStringUtils::dateTimeText(dateTime, appModule->qtLocale());
         };
 
         for (const RecentFile& recentFile : listRecentFile) {
@@ -155,13 +135,14 @@ private:
                         "Size: %2\n\n"
                         "Created: %3\n"
                         "Modified: %4\n"
-                        "Read: %5\n")
+                        "Read: %5\n"
+                    )
                     .arg(QDir::toNativeSeparators(fi.absolutePath()))
                     .arg(QStringUtils::bytesText(fi.size(), appModule->qtLocale()))
                     .arg(fnToString(fi.birthTime()))
                     .arg(fnToString(fi.lastModified()))
                     .arg(fnToString(fi.lastRead()))
-                    ;
+                ;
             item.textWrapMode = QTextOption::WrapAtWordBoundaryOrAnywhere;
             item.imageUrl = filepathTo<QString>(recentFile.filepath);
             item.filepath = recentFile.filepath;

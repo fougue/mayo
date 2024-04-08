@@ -226,9 +226,9 @@ void TestApp::RecentFiles_test()
     {
         QByteArray data;
         QDataStream wstream(&data, QIODevice::WriteOnly);
-        AppModule::writeRecentFiles(wstream, recentFiles);
+        AppModule::write(wstream, recentFiles);
         QDataStream rstream(&data, QIODevice::ReadOnly);
-        AppModule::readRecentFiles(rstream, &recentFiles_read);
+        AppModule::read(rstream, &recentFiles_read);
     }
 
     QCOMPARE(recentFiles.size(), recentFiles_read.size());
@@ -266,7 +266,7 @@ void TestApp::RecentFiles_QPixmap_test()
         RecentFiles recentFiles;
         QDataStream stream(bytes);
         // Should not crash
-        AppModule::readRecentFiles(stream, &recentFiles);
+        AppModule::read(stream, &recentFiles);
     }
 }
 

@@ -85,14 +85,20 @@ public:
     Signal<> signalMessageLogCleared;
 
     // Recent files
-    void prependRecentFile(const FilePath& fp);
+    void prependRecentFile(const FilePath& fp, GuiDocument* guiDoc = nullptr);
     const RecentFile* findRecentFile(const FilePath& fp) const;
     void recordRecentFile(GuiDocument* guiDoc);
     void recordRecentFiles(GuiApplication* guiApp);
     QSize recentFileThumbnailSize() const { return { 190, 150 }; }
     void setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocument*, QSize)> fn);
-    static void readRecentFiles(QDataStream& stream, RecentFiles* recentFiles);
-    static void writeRecentFiles(QDataStream& stream, const RecentFiles& recentFiles);
+    static void read(QDataStream& stream, RecentFiles* recentFiles);
+    static void write(QDataStream& stream, const RecentFiles& recentFiles);
+
+    // Recent scripts
+    void prependRecentScript(const FilePath& fp);
+    const RecentScript* findRecentScript(const FilePath& fp) const;
+    static void read(QDataStream& stream, RecentScripts* recentScripts);
+    static void write(QDataStream& stream, const RecentScripts& recentScripts);
 
     // Meshing of BRep shapes
     OccBRepMeshParameters brepMeshParameters(const TopoDS_Shape& shape) const;

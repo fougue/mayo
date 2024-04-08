@@ -8,6 +8,7 @@
 
 #include "app_ui_state.h"
 #include "recent_files.h"
+#include "recent_scripts.h"
 
 #include "../base/io_format.h"
 #include "../base/occt_enums.h"
@@ -60,6 +61,7 @@ public:
     const Settings::GroupIndex groupId_application;
     PropertyEnumeration language;
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
+    PropertyRecentScripts recentScripts{ this, textId("recentScripts") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
     PropertyEnum<ActionOnDocumentFileChange> actionOnDocumentFileChange{ this, textId("actionOnDocumentFileChange") };

@@ -61,6 +61,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     this->actionOnDocumentFileChange.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
     settings->addSetting(&this->language, groupId_application);
     settings->addSetting(&this->recentFiles, groupId_application);
+    settings->addSetting(&this->recentScripts, groupId_application);
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
     settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
@@ -68,6 +69,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
     settings->addSetting(&this->appUiState, groupId_application);
     this->recentFiles.setUserVisible(false);
+    this->recentScripts.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
     this->appUiState.setUserVisible(false);
@@ -103,6 +105,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addResetFunction(groupId_application, [&]{
         this->language.setValue(AppModule::languages().findValueByName("en"));
         this->recentFiles.setValue({});
+        this->recentScripts.setValue({});
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
         this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);

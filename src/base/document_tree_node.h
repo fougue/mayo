@@ -29,6 +29,8 @@ public:
 
     bool operator==(const DocumentTreeNode& other) const;
 
+    static const TDF_Label& label(const DocumentPtr& doc, TreeNodeId treeNodeId);
+
 private:
     DocumentPtr m_document; // TODO Document* or Document::identifier instead ?
     TreeNodeId m_id = 0;
