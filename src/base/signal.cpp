@@ -20,4 +20,24 @@ ISignalThreadHelper* getGlobalSignalThreadHelper()
     return globalHelper.get();
 }
 
+ScopedSignalConnection::ScopedSignalConnection(const SignalConnectionHandle& hnd)
+    : m_hnd(hnd)
+{}
+
+ScopedSignalConnection::~ScopedSignalConnection()
+{
+    m_hnd.disconnect();
+}
+
+void ScopedSignalConnection::set(const SignalConnectionHandle& hnd)
+{
+    m_hnd = hnd;
+}
+
+ScopedSignalConnection& ScopedSignalConnection::operator=(const SignalConnectionHandle& hnd)
+{
+    this->set(hnd);
+    return *this;
+}
+
 } // namespace Mayo
