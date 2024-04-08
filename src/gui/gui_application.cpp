@@ -83,8 +83,13 @@ Span<GuiDocument* const> GuiApplication::guiDocuments() const
 
 GuiDocument* GuiApplication::findGuiDocument(const DocumentPtr& doc) const
 {
+    return this->findGuiDocument(doc ? doc->identifier() : -1);
+}
+
+GuiDocument* GuiApplication::findGuiDocument(Document::Identifier docId) const
+{
     for (GuiDocument* guiDoc : d->m_vecGuiDocument) {
-        if (guiDoc->document() == doc)
+        if (guiDoc->document()->identifier() == docId)
             return guiDoc;
     }
 

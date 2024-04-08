@@ -6,6 +6,7 @@
 
 #include "qstring_utils.h"
 
+#include <QtCore/QDateTime>
 #include <gp_Trsf.hxx>
 #include <Precision.hxx>
 #include <Quantity_Color.hxx>
@@ -92,6 +93,31 @@ QString QStringUtils::text(const Quantity_Color& color, const QString& format)
     const int green = color.Green() * 255;
     const int blue = color.Blue() * 255;
     return format.arg(red).arg(green).arg(blue);
+}
+
+QString QStringUtils::dateTimeText(const QDateTime& dateTime, const QLocale& locale)
+{
+    const QString strTime = dateTime.time().toString("HH:mm");
+    const QDate date = dateTime.date();
+    const QDate currentDate = QDate::currentDate();
+    const int diffDays = date.daysTo(currentDate);
+    if (diffDays == 0) {
+        return tr("today %1").arg(strTime);
+    }
+    else if (diffDays == 1) {
+        return tr("yersterday %1").arg(strTime);
+    }
+    else if (date.year() == currentDate.year() && date.weekNumber() == currentDate.weekNumber()) {
+        const QString strDayName = date.toString("dddd");
+        return tr("%1 %2").arg(strDayName, strTime);
+    }
+    else if (diffDays < 5) {
+        return tr("%1 days ago %2").arg(diffDays).arg(strTime);
+    }
+    else {
+        const QString strDate = locale.toString(date, QLocale::ShortFormat);
+        return tr("%1 %2").arg(strDate, strTime);
+    }
 }
 
 QString QStringUtils::bytesText(uint64_t sizeBytes, const QLocale& locale)

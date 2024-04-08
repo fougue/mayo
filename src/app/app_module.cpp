@@ -26,33 +26,163 @@
 #include <QtCore/QtDebug>
 
 #include <fmt/format.h>
+#include <ios>
 #include <iterator>
+#include <type_traits>
 
 namespace Mayo {
 
 namespace {
 
-void readRecentFile(QDataStream& stream, RecentFile* recentFile)
+template<typename T>
+struct Serializer {
+    static auto fnType()
+    {
+        if constexpr(std::is_same_v<T, int>)
+            return qint32{};
+        else if constexpr(std::is_same_v<T, unsigned>)
+            return quint32{};
+        else if constexpr(std::is_same_v<T, std::int64_t>)
+            return qint64{};
+        else if constexpr(std::is_same_v<T, std::uint64_t>)
+            return quint64{};
+        else if constexpr(std::is_same_v<T, std::time_t>)
+            return qint64{};
+        else if constexpr(std::is_same_v<T, FilePath>)
+            return QString{};
+        else
+            return T{};
+    }
+
+    using StreamType = decltype(Serializer<T>::fnType());
+
+    static void read(QDataStream& stream, T& v)
+    {
+        if constexpr(std::is_same_v<T, FilePath>) {
+            QString strFilePath;
+            stream >> strFilePath;
+            v = filepathFrom(strFilePath);
+        }
+        else {
+            StreamType qv;
+            stream >> qv;
+            v = static_cast<T>(qv);
+        }
+    }
+
+    static void write(QDataStream& stream, const T& v)
+    {
+        if constexpr(std::is_same_v<T, FilePath>) {
+            stream << filepathTo<QString>(v);
+        }
+        else {
+            stream << static_cast<StreamType>(v);
+        }
+    }
+};
+
+bool checkDataStreamStatus(QDataStream::Status status)
 {
-    QString strFilepath;
-    stream >> strFilepath;
-    if (stream.status() != QDataStream::Ok)
-        return;
+    if (status != QDataStream::Ok) {
+        qDebug() << fmt::format(
+                        "QDataStream error\n    Function: {}\n    Status: {}",
+                        Q_FUNC_INFO, MetaEnum::name(status)
+                    ).c_str();
+        return false;
+    }
 
-    recentFile->filepath = filepathFrom(strFilepath);
-    stream >> recentFile->thumbnail.imageData;
-    if (stream.status() != QDataStream::Ok)
-        return;
+    return true;
+}
 
-    recentFile->thumbnail.imageCacheKey = -1;
-    // Read thumbnail timestamp
-    // Warning: qint64 and int64_t may not be the exact same type(eg __int64 and longlong with Windows/MSVC)
-    qint64 timestamp;
-    stream >> timestamp;
-    if (stream.status() != QDataStream::Ok)
-        return;
+template<typename T>
+void dataStreamRead(QDataStream& stream, T& v)
+{
+    Serializer<T>::read(stream, v);
+    if (!checkDataStreamStatus(stream.status()))
+        throw std::ios_base::failure("serialize() error with QDataStream");
+}
 
-    recentFile->thumbnailTimestamp = timestamp;
+template<typename T>
+void dataStreamWrite(QDataStream& stream, T v)
+{
+    Serializer<T>::write(stream, v);
+}
+
+template<typename T> void check_has_filepath_attribute() {
+    static_assert(
+        std::is_same_v<decltype(T::filepath), FilePath>,
+        "Type 'T' must have 'filepath' member attribute of type 'std::filesystem::path'"
+    );
+}
+
+template<typename RecentItem>
+const RecentItem* findRecentItem(const FilePath& fp, const std::vector<RecentItem>& listRecentItem)
+{
+    check_has_filepath_attribute<RecentItem>();
+    auto itFound =
+        std::find_if(
+            listRecentItem.cbegin(),
+            listRecentItem.cend(),
+            [=](const RecentItem& recentItem) { return filepathEquivalent(fp, recentItem.filepath); }
+        );
+    return itFound != listRecentItem.cend() ? &(*itFound) : nullptr;
+}
+
+template<typename RecentItem>
+void prependRecentItem(
+        const FilePath& fp,
+        GenericProperty<std::vector<RecentItem>>& propRecentItems,
+        std::function<void(RecentItem&)> fnUpdateRecentItem = nullptr
+    )
+{
+    using RecentItems = std::vector<RecentItem>;
+    const RecentItem* ptrRecentItem = findRecentItem(fp, propRecentItems.value());
+    RecentItems newRecentItems = propRecentItems.value();
+    if (ptrRecentItem) {
+        RecentItem& firstRecentItem = newRecentItems.front();
+        RecentItem& recentItem = newRecentItems.at(ptrRecentItem - &propRecentItems.value().front());
+        if (fnUpdateRecentItem)
+            fnUpdateRecentItem(recentItem);
+
+        std::swap(firstRecentItem, recentItem);
+    }
+    else {
+        RecentItem recentItem;
+        recentItem.filepath = fp;
+        if (fnUpdateRecentItem)
+            fnUpdateRecentItem(recentItem);
+
+        newRecentItems.insert(newRecentItems.begin(), std::move(recentItem));
+        constexpr unsigned sizeLimit = 15;
+        while (newRecentItems.size() > sizeLimit)
+            newRecentItems.pop_back();
+    }
+
+    propRecentItems.setValue(newRecentItems);
+}
+
+template<typename RecentItem>
+Settings::Variant recentItemsToVariant(const std::vector<RecentItem>& recentItems)
+{
+    QByteArray blob;
+    QDataStream stream(&blob, QIODevice::WriteOnly);
+    AppModule::write(stream, recentItems);
+    Settings::Variant varBlob(blob.toStdString());
+    varBlob.setByteArray(true);
+    return varBlob;
+}
+
+template<typename RecentItem>
+std::vector<RecentItem> recentItemsFromVariant(const Settings::Variant& variant, bool* ok = nullptr)
+{
+    const QByteArray blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
+    QDataStream stream(blob);
+    std::vector<RecentItem> recentItems;
+    AppModule::read(stream, &recentItems);
+    if (ok)
+        *ok = stream.status() == QDataStream::Ok;
+
+    return recentItems;
 }
 
 QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
@@ -162,12 +292,11 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
 {
     if (isType<PropertyRecentFiles>(prop)) {
         const auto& filesProp = constRef<PropertyRecentFiles>(prop);
-        QByteArray blob;
-        QDataStream stream(&blob, QIODevice::WriteOnly);
-        AppModule::writeRecentFiles(stream, filesProp.value());
-        Variant varBlob(blob.toStdString());
-        varBlob.setByteArray(true);
-        return varBlob;
+        return recentItemsToVariant(filesProp.value());
+    }
+    else if (isType<PropertyRecentScripts>(prop)) {
+        const auto& scriptsProp = constRef<PropertyRecentScripts>(prop);
+        return recentItemsToVariant(scriptsProp.value());
     }
     else {
         return PropertyValueConversion::toVariant(prop);
@@ -176,17 +305,20 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
 
 bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) const
 {
+    bool ok = false;
     if (isType<PropertyRecentFiles>(prop)) {
-        const QByteArray blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
-        QDataStream stream(blob);
-        RecentFiles recentFiles;
-        AppModule::readRecentFiles(stream, &recentFiles);
+        auto recentFiles = recentItemsFromVariant<RecentFile>(variant, &ok);
         ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
-        return stream.status() == QDataStream::Ok;
+    }
+    else if (isType<PropertyRecentScripts>(prop)) {
+        auto recentScripts = recentItemsFromVariant<RecentScript>(variant, &ok);
+        ptr<PropertyRecentScripts>(prop)->setValue(recentScripts);
     }
     else {
-        return PropertyValueConversion::fromVariant(prop, variant);
+        ok = PropertyValueConversion::fromVariant(prop, variant);
     }
+
+    return ok;
 }
 
 void AppModule::emitMessage(MessageType msgType, std::string_view text)
@@ -210,38 +342,17 @@ void AppModule::clearMessageLog()
     this->signalMessageLogCleared.send();
 }
 
-void AppModule::prependRecentFile(const FilePath& fp)
+void AppModule::prependRecentFile(const FilePath& fp, GuiDocument* guiDoc)
 {
-    const RecentFile* ptrRecentFile = this->findRecentFile(fp);
-    RecentFiles newRecentFiles = m_props.recentFiles.value();
-    if (ptrRecentFile) {
-        RecentFile& firstRecentFile = newRecentFiles.front();
-        RecentFile& recentFile = newRecentFiles.at(ptrRecentFile - &m_props.recentFiles.value().front());
-        std::swap(firstRecentFile, recentFile);
-    }
-    else {
-        RecentFile recentFile;
-        recentFile.filepath = fp;
-        newRecentFiles.insert(newRecentFiles.begin(), std::move(recentFile));
-        constexpr int sizeLimit = 15;
-        while (newRecentFiles.size() > sizeLimit)
-            newRecentFiles.pop_back();
-    }
-
-    m_props.recentFiles.setValue(newRecentFiles);
+    auto fnUpdate = [=](RecentFile& recent) {
+        this->impl_recordRecentFile(&recent, guiDoc);
+    };
+    prependRecentItem<RecentFile>(fp, m_props.recentFiles, fnUpdate);
 }
 
 const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
 {
-    const RecentFiles& listRecentFile = m_props.recentFiles.value();
-    auto itFound =
-            std::find_if(
-                listRecentFile.cbegin(),
-                listRecentFile.cend(),
-                [=](const RecentFile& recentFile) {
-        return filepathEquivalent(fp, recentFile.filepath);
-    });
-    return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
+    return findRecentItem(fp, m_props.recentFiles.value());
 }
 
 void AppModule::recordRecentFile(GuiDocument* guiDoc)
@@ -303,45 +414,80 @@ void AppModule::setRecentFileThumbnailRecorder(std::function<Thumbnail(GuiDocume
     m_fnRecentFileThumbnailRecorder = std::move(fn);
 }
 
-
-void AppModule::readRecentFiles(QDataStream& stream, RecentFiles* recentFiles)
+void AppModule::read(QDataStream& stream, RecentFiles* recentFiles)
 {
-    auto fnCheckStreamStatus = [](QDataStream::Status status) {
-        if (status != QDataStream::Ok) {
-            qDebug() << fmt::format(
-                            "QDataStream error\n    Function: {}\n    Status: {}",
-                            Q_FUNC_INFO, MetaEnum::name(status)
-                        ).c_str();
-            return false;
+    try {
+        unsigned count = 0;
+        dataStreamRead(stream, count);
+        recentFiles->clear();
+        for (unsigned i = 0; i < count; ++i) {
+            RecentFile recent;
+            dataStreamRead(stream, recent.filepath);
+            dataStreamRead(stream, recent.thumbnail.imageData);
+            recent.thumbnail.imageCacheKey = -1;
+            // Read thumbnail timestamp
+            // Warning: qint64 and int64_t may not be the exact same type(eg __int64 and longlong with Windows/MSVC)
+            dataStreamRead(stream, recent.thumbnailTimestamp);
+            if (!recent.filepath.empty() && recent.thumbnailTimestamp != 0)
+                recentFiles->push_back(std::move(recent));
         }
-
-        return true;
-    };
-
-    uint32_t count = 0;
-    stream >> count;
-    if (!fnCheckStreamStatus(stream.status()))
-        return; // Stream extraction error, abort
-
-    recentFiles->clear();
-    for (uint32_t i = 0; i < count; ++i) {
-        RecentFile recent;
-        readRecentFile(stream, &recent);
-        if (!fnCheckStreamStatus(stream.status()))
-            return; // Stream extraction error, abort
-
-        if (!recent.filepath.empty() && recent.thumbnailTimestamp != 0)
-            recentFiles->push_back(std::move(recent));
+    }
+    catch (const std::exception&) {
     }
 }
 
-void AppModule::writeRecentFiles(QDataStream& stream, const RecentFiles& recentFiles)
+void AppModule::write(QDataStream& stream, const RecentFiles& recentFiles)
 {
-    stream << uint32_t(recentFiles.size());
+    dataStreamWrite(stream, unsigned(recentFiles.size()));
     for (const RecentFile& rf : recentFiles) {
-        stream << filepathTo<QString>(rf.filepath);
-        stream << rf.thumbnail.imageData;
-        stream << qint64(rf.thumbnailTimestamp);
+        dataStreamWrite(stream, rf.filepath);
+        dataStreamWrite(stream, rf.thumbnail.imageData);
+        dataStreamWrite(stream, rf.thumbnailTimestamp);
+    }
+}
+
+void AppModule::prependRecentScript(const FilePath& fp)
+{
+    auto fnUpdate = [](RecentScript& recent) {
+        ++recent.executionCount;
+        std::timespec ts;
+        std::timespec_get(&ts, TIME_UTC);
+        recent.lastExecutionDateTime = ts.tv_sec;
+    };
+    prependRecentItem<RecentScript>(fp, m_props.recentScripts, fnUpdate);
+}
+
+const RecentScript* AppModule::findRecentScript(const FilePath& fp) const
+{
+    return findRecentItem(fp, m_props.recentScripts.value());
+}
+
+void AppModule::read(QDataStream& stream, RecentScripts* recentScripts)
+{
+    try {
+        unsigned count = 0;
+        dataStreamRead(stream, count);
+        recentScripts->clear();
+        for (unsigned i = 0; i < count; ++i) {
+            RecentScript recent;
+            dataStreamRead(stream, recent.filepath);
+            dataStreamRead(stream, recent.executionCount);
+            dataStreamRead(stream, recent.lastExecutionDateTime);
+            if (!recent.filepath.empty())
+                recentScripts->push_back(std::move(recent));
+        }
+    }
+    catch (const std::exception&) {
+    }
+}
+
+void AppModule::write(QDataStream& stream, const RecentScripts& recentScripts)
+{
+    dataStreamWrite(stream, unsigned(recentScripts.size()));
+    for (const RecentScript& rs : recentScripts) {
+        dataStreamWrite(stream, rs.filepath);
+        dataStreamWrite(stream, rs.executionCount);
+        dataStreamWrite(stream, rs.lastExecutionDateTime);
     }
 }
 

@@ -20,6 +20,7 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QMimeData>
+#include <QtCore/QTimer>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
 #include <QtWidgets/QApplication>
@@ -200,12 +201,15 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
                         .withMessenger(appModule)
                         .withTaskProgress(progress)
                         .execute();
-                if (okImport)
+                if (okImport) {
                     appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
+                    QTimer::singleShot(0, context, [=]{
+                        appModule->prependRecentFile(fp, context->guiApp()->findGuiDocument(newDocId));
+                    });
+                }
             });
             context->taskMgr()->setTitle(taskId, fp.stem().u8string());
             context->taskMgr()->run(taskId);
-            appModule->prependRecentFile(fp);
         }
         else {
             if (listFilePath.size() == 1)
@@ -341,10 +345,7 @@ CommandRecentFiles::CommandRecentFiles(IAppContext* context)
 CommandRecentFiles::CommandRecentFiles(IAppContext* context, QMenu* containerMenu)
     : CommandRecentFiles(context)
 {
-    QObject::connect(
-                containerMenu, &QMenu::aboutToShow,
-                this, &CommandRecentFiles::recreateEntries
-    );
+    QObject::connect(containerMenu, &QMenu::aboutToShow, this, &CommandRecentFiles::recreateEntries);
 }
 
 void CommandRecentFiles::execute()
@@ -484,13 +485,15 @@ CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)
     this->setAction(action);
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandCloseCurrentDocument::updateActionText
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandCloseCurrentDocument::updateActionText
     );
-    this->app()->signalDocumentNameChanged.connectSlot([=](const DocumentPtr& doc) {
-        if (this->currentDocument() == doc->identifier())
-            this->updateActionText(this->currentDocument());
-    });
+    m_connDocumentNameChanged = this->app()->signalDocumentNameChanged.connectSlot(
+        [=](const DocumentPtr& doc) {
+            if (this->currentDocument() == doc->identifier())
+                this->updateActionText(this->currentDocument());
+        }
+    );
 
     this->updateActionText(-1);
 }
@@ -550,10 +553,12 @@ CommandCloseAllDocumentsExceptCurrent::CommandCloseAllDocumentsExceptCurrent(IAp
         context, &IAppContext::currentDocumentChanged,
         this, &CommandCloseAllDocumentsExceptCurrent::updateActionText
     );
-    this->app()->signalDocumentNameChanged.connectSlot([=](const DocumentPtr& doc) {
-        if (this->currentDocument() == doc->identifier())
-            this->updateActionText(this->currentDocument());
-    });
+    m_connDocumentNameChanged = this->app()->signalDocumentNameChanged.connectSlot(
+        [=](const DocumentPtr& doc) {
+            if (this->currentDocument() == doc->identifier())
+                this->updateActionText(this->currentDocument());
+        }
+    );
 
     this->updateActionText(-1);
 }

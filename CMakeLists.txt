@@ -108,7 +108,7 @@ if(QT_FOUND)
     endif()
 
     if(Mayo_BuildApp)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Test)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Qml Test)
         if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
             find_package(Qt5 REQUIRED COMPONENTS WinExtras)
         elseif(QT_VERSION_MAJOR EQUAL 6)
@@ -499,6 +499,7 @@ file(
     ${PROJECT_SOURCE_DIR}/src/measure/*.h
     ${PROJECT_SOURCE_DIR}/src/qtbackend/*.h
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.h
+    ${PROJECT_SOURCE_DIR}/src/qtscripting/*.h
 )
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
@@ -512,6 +513,7 @@ file(
     ${PROJECT_SOURCE_DIR}/src/measure/*.cpp
     ${PROJECT_SOURCE_DIR}/src/qtbackend/*.cpp
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/qtscripting/*.cpp
 )
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
@@ -536,6 +538,7 @@ list(
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Qml
 )
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
@@ -634,6 +637,7 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_module.h
     ${PROJECT_SOURCE_DIR}/src/app/library_info.h
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.h
+    ${PROJECT_SOURCE_DIR}/src/app/recent_scripts.h
 )
 
 file(
@@ -648,6 +652,7 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
     ${PROJECT_SOURCE_DIR}/src/app/library_info.cpp
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
+    ${PROJECT_SOURCE_DIR}/src/app/recent_scripts.cpp
 )
 
 if(Mayo_BuildConvCli)

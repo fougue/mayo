@@ -77,6 +77,7 @@ public:
 class CommandCloseCurrentDocument : public Command {
 public:
     CommandCloseCurrentDocument(IAppContext* context);
+
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -84,6 +85,7 @@ public:
 
 private:
     void updateActionText(Document::Identifier docId);
+    ScopedSignalConnection m_connDocumentNameChanged;
 };
 
 class CommandCloseAllDocuments : public Command {
@@ -98,6 +100,7 @@ public:
 class CommandCloseAllDocumentsExceptCurrent : public Command {
 public:
     CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
+
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -105,6 +108,7 @@ public:
 
 private:
     void updateActionText(Document::Identifier docId);
+    ScopedSignalConnection m_connDocumentNameChanged;
 };
 
 class CommandQuitApplication : public Command {
