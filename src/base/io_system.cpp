@@ -536,7 +536,14 @@ System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
 
 namespace {
 
-bool matchRegExp(std::string_view str, const std::regex& rx)
+bool matchRegExp_atStart(std::string_view str, const std::regex& rx)
+{
+    std::match_results<std::string_view::const_iterator> mres;
+    const bool match = std::regex_search(str.cbegin(), str.cend(), mres, rx);
+    return match ? mres.position() == 0 : false;
+}
+
+bool matchRegExp_anyWhere(std::string_view str, const std::regex& rx)
 {
     return std::regex_search(str.cbegin(), str.cend(), rx);
 }
@@ -546,19 +553,19 @@ bool matchRegExp(std::string_view str, const std::regex& rx)
 Format probeFormat_STEP(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"(^\s*ISO-10303-21\s*;\s*HEADER)" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_STEP : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_STEP : Format_Unknown;
 }
 
 Format probeFormat_IGES(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"(^.{72}S\s*[0-9]+\s*[\n\r\f])" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_IGES : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_IGES : Format_Unknown;
 }
 
 Format probeFormat_OCCBREP(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"(^\s*DBRep_DrawableShape)" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_OCCBREP : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_OCCBREP : Format_Unknown;
 }
 
 Format probeFormat_STL(const System::FormatProbeInput& input)
@@ -584,8 +591,8 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 
     // ASCII STL ?
     {
-        const std::regex rx{ R"(^\s*solid)" };
-        if (matchRegExp(input.contentsBegin, rx))
+        const std::regex rx{ R"(^\s*solid\s+)" };
+        if (matchRegExp_atStart(input.contentsBegin, rx))
             return Format_STL;
     }
 
@@ -595,19 +602,19 @@ Format probeFormat_STL(const System::FormatProbeInput& input)
 Format probeFormat_OBJ(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"([^\n]\s*(v|vt|vn|vp|surf)\s+[-\+]?[0-9\.]+\s)" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
+    return matchRegExp_anyWhere(input.contentsBegin, rx) ? Format_OBJ : Format_Unknown;
 }
 
 Format probeFormat_PLY(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"(^\s*ply\s+format\s+(ascii|binary_little_endian|binary_big_endian)\s+)" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_PLY : Format_Unknown;
 }
 
 Format probeFormat_OFF(const System::FormatProbeInput& input)
 {
     const std::regex rx{ R"(^\s*[CN4]?OFF\s+)" };
-    return matchRegExp(input.contentsBegin, rx) ? Format_OFF : Format_Unknown;
+    return matchRegExp_atStart(input.contentsBegin, rx) ? Format_OFF : Format_Unknown;
 }
 
 void addPredefinedFormatProbes(System* system)

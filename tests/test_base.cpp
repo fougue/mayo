@@ -462,6 +462,7 @@ void TestBase::IO_probeFormat_test_data()
     QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("cube.off") << "tests/inputs/cube.off" << IO::Format_OFF;
+    QTest::newRow("cube.wrl") << "tests/inputs/cube.wrl" << IO::Format_VRML;
 }
 
 void TestBase::IO_probeFormatDirect_test()
