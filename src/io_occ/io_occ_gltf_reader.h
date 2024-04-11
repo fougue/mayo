@@ -36,7 +36,7 @@ protected:
 private:
     class Properties;
     Parameters m_params;
-    mutable RWGltf_CafReader m_reader;
+    RWGltf_CafReader m_reader;
 };
 
 } // namespace IO
