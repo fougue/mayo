@@ -204,14 +204,16 @@ void WidgetMeasure::onMeasureTypeChanged(int id)
     const bool measureIsAngle = measureType == MeasureType::Angle;
     const bool measureIsArea = measureType == MeasureType::Area;
     const bool measureIsVolume = measureType == MeasureType::BoundingBox;
+    // Note: don't call "ui->comboUnit->setVisible(labelUnit->isVisible())" because at this point
+    //       QWidget::isVisible() might not be effective(probably needs to process eventloop)
     m_ui->label_LengthUnit->setVisible(measureIsLengthBased && !measureIsArea);
-    m_ui->combo_LengthUnit->setVisible(m_ui->label_LengthUnit->isVisible());
+    m_ui->combo_LengthUnit->setVisible(measureIsLengthBased && !measureIsArea);
     m_ui->label_AngleUnit->setVisible(measureIsAngle);
-    m_ui->combo_AngleUnit->setVisible(m_ui->label_AngleUnit->isVisible());
+    m_ui->combo_AngleUnit->setVisible(measureIsAngle);
     m_ui->label_AreaUnit->setVisible(measureIsArea);
-    m_ui->combo_AreaUnit->setVisible(m_ui->label_AreaUnit->isVisible());
+    m_ui->combo_AreaUnit->setVisible(measureIsArea);
     m_ui->label_VolumeUnit->setVisible(measureIsVolume);
-    m_ui->combo_VolumeUnit->setVisible(m_ui->label_VolumeUnit->isVisible());
+    m_ui->combo_VolumeUnit->setVisible(measureIsVolume);
 
     auto gfxScene = m_guiDoc->graphicsScene();
 
