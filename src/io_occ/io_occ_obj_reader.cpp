@@ -17,10 +17,12 @@ public:
         : OccBaseMeshReaderProperties(parentGroup)
     {
         this->singlePrecisionVertexCoords.setDescription(
-                    textId("Single precision flag for reading vertex data(coordinates)").tr());
+            textId("Single precision flag for reading vertex data(coordinates)").tr()
+        );
     }
 
-    void restoreDefaults() override {
+    void restoreDefaults() override
+    {
         OccBaseMeshReaderProperties::restoreDefaults();
         this->singlePrecisionVertexCoords.setValue(false);
     }
