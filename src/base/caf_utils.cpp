@@ -13,7 +13,9 @@ namespace Mayo {
 
 const TCollection_AsciiString& CafUtils::labelTag(const TDF_Label& label)
 {
-    static thread_local TCollection_AsciiString entry;
+    // Note: thread_local implies "static"
+    //       See https://en.cppreference.com/w/cpp/language/storage_duration
+    thread_local TCollection_AsciiString entry;
     TDF_Tool::Entry(label, entry);
     return entry;
 }
