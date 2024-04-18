@@ -32,6 +32,7 @@ enum Format {
     Format_STL,
     Format_VRML,
     Format_X3D,
+    Format_DirectX,
     Format_Blender
 };
 

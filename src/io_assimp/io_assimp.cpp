@@ -15,7 +15,14 @@ namespace IO {
 Span<const Format> AssimpFactoryReader::formats() const
 {
     static const Format array[] = {
-        Format_AMF, Format_3DS, Format_3MF, Format_COLLADA, Format_FBX, Format_X3D, Format_Blender
+        Format_AMF,
+        Format_3DS,
+        Format_3MF,
+        Format_COLLADA,
+        Format_FBX,
+        Format_X3D,
+        Format_Blender,
+        Format_DirectX
     };
     return array;
 }
