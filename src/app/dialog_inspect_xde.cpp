@@ -21,6 +21,7 @@
 #include "qtwidgets_utils.h"
 #include "ui_dialog_inspect_xde.h"
 
+#include <Image_AlienPixMap.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
 #include <TDF_LabelSequence.hxx>
@@ -295,6 +296,42 @@ static void loadLabelMaterialProperties(
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
 
+// Load pixmap from file
+static QPixmap loadPixmap(const FilePath& filePath)
+{
+    QPixmap pixmap;
+    bool okLoad = pixmap.load(filepathTo<QString>(filePath));
+    if (!okLoad || pixmap.isNull()) {
+        // QPixmap::load() failed, try with OpenCascade Image_AlienPixMap::Load()
+        Image_AlienPixMap occPixmap;
+        okLoad = occPixmap.Load(filepathTo<TCollection_AsciiString>(filePath));
+        if (okLoad)
+            pixmap = QtGuiUtils::toQPixmap(occPixmap);
+    }
+
+    return pixmap;
+}
+
+// Load pixmap from data buffer
+static QPixmap loadPixmap(const QByteArray& fileData)
+{
+    QPixmap pixmap;
+    bool okLoad = pixmap.loadFromData(fileData);
+    if (!okLoad || pixmap.isNull()) {
+        // QPixmap::loadFromData() failed, try with OpenCascade Image_AlienPixMap::Load()
+        Image_AlienPixMap occPixmap;
+        okLoad = occPixmap.Load(
+            reinterpret_cast<const Standard_Byte*>(fileData.constData()),
+            fileData.size(),
+            TCollection_AsciiString{}
+        );
+        if (okLoad)
+            pixmap = QtGuiUtils::toQPixmap(occPixmap);
+    }
+
+    return pixmap;
+}
+
 // Provides a QTreeWidgetItem specialized to display an image file with a tooltip
 // QTreeWidgetItem::setToolTip() could be used but it forces all image files to be loaded on
 // tree item construction
@@ -324,18 +361,9 @@ public:
             return {};
 
         if (ptrItem->strToolTip.isEmpty()) {
-            QPixmap pixmap;
-            uintmax_t imageSize = 0;
-
-            if (!ptrItem->filePath.empty()) {
-                pixmap.load(filepathTo<QString>(ptrItem->filePath));
-                imageSize = filepathFileSize(ptrItem->filePath);
-            }
-            else {
-                pixmap.loadFromData(ptrItem->fileData);
-                imageSize = ptrItem->fileData.size();
-            }
-
+            const bool isFilePathDefined = !ptrItem->filePath.empty();
+            const QPixmap pixmap = isFilePathDefined ? loadPixmap(ptrItem->filePath) : loadPixmap(ptrItem->fileData);
+            const uintmax_t imageSize = isFilePathDefined ? filepathFileSize(ptrItem->filePath) : ptrItem->fileData.size();
             if (!pixmap.isNull()) {
                 QBuffer bufferPixmap;
                 const int pixmapWidth = std::min(pixmap.width(), int(400 * qGuiApp->devicePixelRatio()));
