@@ -524,8 +524,10 @@ Handle(XCAFDoc_VisMaterial) AssimpReader::createOccVisMaterial(
             this->messenger()->trace() << "AI_MATKEY_SPECULAR_FACTOR: " << factor;
 #endif
 
+#if 0 // Emmissive color disabled as it's making models in Mayo to be rendered nearly with white color
         if (fnGetColor4D(AI_MATKEY_COLOR_EMISSIVE, &color, &matCommon.IsDefined))
             matCommon.EmissiveColor = toOccColor(color);
+#endif
     }
 
     {
