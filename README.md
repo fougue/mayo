@@ -70,6 +70,7 @@ OFF       | :white_check_mark: | :white_check_mark: |
 FBX       | :white_check_mark: | :x:                | 
 Collada   | :white_check_mark: | :x:                |
 X3D       | :white_check_mark: | :x:                |
+X(DirectX)| :white_check_mark: | :x:                |
 Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
