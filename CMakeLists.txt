@@ -546,7 +546,9 @@ if(Mayo_BuildApp)
         ${MayoApp_SourceFiles}
         ${MayoApp_HeaderFiles}
         ${MayoApp_QtUiFiles}
-        mayo.qrc i18n/qt${QT_VERSION_MAJOR}base.qrc
+        i18n/mayo.qrc
+        i18n/qt${QT_VERSION_MAJOR}base.qrc
+        images/mayo.qrc
         ${Mayo_RcIconsWin}
         ${Mayo_AppIconMacOS}
     )
