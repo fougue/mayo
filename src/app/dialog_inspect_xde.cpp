@@ -132,7 +132,8 @@ static void loadLabelAttributes(const TDF_Label& label, QTreeWidgetItem* treeIte
                              QStringUtils::text(shape.Location(), appDefaultTextOptions())
                              : QString("id")
                         )
-                    .arg(MetaEnum::name(namedShape.Evolution()).data());
+                    .arg(MetaEnum::name(namedShape.Evolution()).data())
+                ;
         }
         else {
             std::stringstream sstream;
@@ -186,7 +187,8 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, int value)
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(
-        const QString& text, double value, const QStringUtils::TextOptions& options = appDefaultTextOptions())
+        const QString& text, double value, const QStringUtils::TextOptions& options = appDefaultTextOptions()
+    )
 {
     auto itemProperty = createPropertyTreeItem(text);
     itemProperty->setText(1, QStringUtils::text(value, options));
@@ -238,9 +240,10 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const gp_Ax2
 {
     auto itemPnt = createPropertyTreeItem(text);
     const QString textAx2 =
-            QString("Location %1 - Direction %2")
+        QString("Location %1 - Direction %2")
             .arg(QStringUtils::text(ax2.Location(), appDefaultTextOptions()))
-            .arg(QStringUtils::text(ax2.Direction(), appDefaultTextOptions()));
+            .arg(QStringUtils::text(ax2.Direction(), appDefaultTextOptions()))
+        ;
     itemPnt->setText(1, textAx2);
     return itemPnt;
 }
@@ -256,18 +259,19 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS
     BRepUtils::forEachSubShape(shape, TopAbs_EDGE, [&](const TopoDS_Shape&) { ++edgeCount; });
     BRepUtils::forEachSubShape(shape, TopAbs_FACE, [&](const TopoDS_Shape&) { ++faceCount; });
     const QString textShape =
-            QString("%1%2%3")
-            .arg(vertexCount ? QString("%1 vertices ").arg(vertexCount) : QString())
-            .arg(edgeCount ? QString("%1 edges ").arg(edgeCount) : QString())
-            .arg(faceCount ? QString("%1 faces").arg(faceCount) : QString())
-            ;
+        QString("%1%2%3")
+        .arg(vertexCount ? QString("%1 vertices ").arg(vertexCount) : QString())
+        .arg(edgeCount ? QString("%1 edges ").arg(edgeCount) : QString())
+        .arg(faceCount ? QString("%1 faces").arg(faceCount) : QString())
+        ;
     itemShape->setText(1, textShape);
 
     return itemShape;
 }
 
 static void loadLabelMaterialProperties(
-        const TDF_Label& label, const OccHandle<XCAFDoc_MaterialTool>& materialTool, QTreeWidgetItem* treeItem)
+        const TDF_Label& label, const OccHandle<XCAFDoc_MaterialTool>& materialTool, QTreeWidgetItem* treeItem
+    )
 {
     QList<QTreeWidgetItem*> listItemProp;
     auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
@@ -374,13 +378,14 @@ public:
                 pixmapClamped.save(&bufferPixmap, "PNG");
                 const QString strImageSize = QStringUtils::bytesText(imageSize, appDefaultTextOptions().locale);
                 ptrItem->strToolTip =
-                        QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
+                    QString("<img src=\"data:image/png;base64,%1\" width=\"%2\" height=\"%3\"><p>%4</p>")
                         .arg(QString::fromLatin1(bufferPixmap.data().toBase64()))
                         .arg(pixmapClamped.width())
                         .arg(pixmapClamped.height())
                         .arg(DialogInspectXde::tr("File Size: %1<br>Dimensions: %2x%3 Depth: %4")
-                        .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth()))
-                        ;
+                                 .arg(strImageSize).arg(pixmap.width()).arg(pixmap.height()).arg(pixmap.depth())
+                            )
+                    ;
             }
             else {
                 ptrItem->strToolTip = DialogInspectXde::tr("Error when loading texture file(invalid path?)");
