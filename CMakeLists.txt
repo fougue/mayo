@@ -300,10 +300,16 @@ endif()
 if(OpenCASCADE_FOUND)
     message(STATUS "OpenCascade version ${OpenCASCADE_VERSION}")
 
-    # Silent warnings C4996 and STL4015: the std::iterator class template(used as a base class to
-    # provide typedefs) is deprecated in C++17
-    if(MSVC AND OpenCASCADE_VERSION VERSION_LESS 7.7.0)
-        list(APPEND Mayo_CompileDefinitions _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+    # std::iterator class template(used as a base class to provide typedefs) is deprecated in C++17
+    # OpenCascade < 7.7.0 uses std::iterator for NCollection_StlIterator and this is causing many
+    # deprecation warnings
+    if(OpenCASCADE_VERSION VERSION_LESS 7.7.0)
+        if(MSVC)
+            # Silent warnings C4996 and STL4015
+            list(APPEND Mayo_CompileDefinitions _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+        elseif((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12))
+            list(APPEND Mayo_CompileOptions -Wno-deprecated-declarations)
+        endif()
     endif()
 
     # Add OpenCASCADE libraries
