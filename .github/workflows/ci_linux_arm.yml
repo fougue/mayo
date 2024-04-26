@@ -41,7 +41,7 @@ jobs:
                       apt-get -y install qtbase5-dev libqt5svg5-dev
                       apt-get -y install libxcb-cursor0  # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
                       apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
-                      apt-get -y install libtbb2-dev libxi-dev  # Dependencies for OpenCascade v7.5
+                      apt-get -y install libtbb-dev libxi-dev  # Dependencies for OpenCascade
                       apt-get -y install libassimp-dev
                       ;;
                   fedora*)
