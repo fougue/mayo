@@ -83,6 +83,7 @@ jobs:
               cmake .. ^
                     -DMayo_BuildTests=ON ^
                     -DMayo_BuildPluginAssimp=ON ^
+                    -DMayo_PostBuildCopyRuntimeDLLs=ON ^
                     -DOpenCASCADE_DIR=../OpenCASCADE-${{matrix.occ_version}}-vc14-64/opencascade-${{matrix.occ_version}} ^
                     -Dassimp_DIR=${{github.workspace}}/assimp-5.3.1/lib/cmake/assimp-5.3
               cmake --build . ^
@@ -93,7 +94,5 @@ jobs:
           working-directory: ${{github.workspace}}/build
           shell: cmd
           run: |
-              call ..\OpenCASCADE-${{matrix.occ_version}}-vc14-64\opencascade-${{matrix.occ_version}}\env.bat
-              set PATH=${{github.workspace}}\assimp-5.3.1\bin;%PATH%
               release\mayo.exe --runtests -o utests-output.txt
               more utests-output.txt
