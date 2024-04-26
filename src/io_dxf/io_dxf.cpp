@@ -500,29 +500,19 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
     // See doc https://ezdxf.readthedocs.io/en/stable/tutorials/text.html
     const DxfHJustification hjust = text.horizontalJustification;
     Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
-    switch (hjust) {
-    case DxfHJustification::Center:
-    case DxfHJustification::Middle:
+    if (hjust == DxfHJustification::Center || hjust == DxfHJustification::Middle)
         hAlign = Graphic3d_HTA_CENTER;
-        break;
-    case DxfHJustification::Right:
+    else if (hjust == DxfHJustification::Right)
         hAlign = Graphic3d_HTA_RIGHT;
-        break;
-    }
 
     const DxfVJustification vjust = text.verticalJustification;
     Graphic3d_VerticalTextAlignment vAlign = Graphic3d_VTA_TOP;
-    switch (vjust) {
-    case DxfVJustification::Baseline:
+    if (vjust == DxfVJustification::Baseline)
         vAlign = Graphic3d_VTA_TOPFIRSTLINE;
-        break;
-    case DxfVJustification::Bottom:
+    else if (vjust == DxfVJustification::Bottom)
         vAlign = Graphic3d_VTA_BOTTOM;
-        break;
-    case DxfVJustification::Middle:
+    else if (vjust == DxfVJustification::Middle)
         vAlign = Graphic3d_VTA_CENTER;
-        break;
-    }
 
     // Ensure non-null extrusion direction
     gp_Vec extDir = toOccVec(text.extrusionDirection);
