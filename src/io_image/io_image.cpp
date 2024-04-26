@@ -57,11 +57,13 @@ public:
         this->height.setRange(0, std::numeric_limits<int>::max());
 
         this->cameraOrientation.setDescription(
-                    ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector"));
+            ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector")
+        );
         this->cameraProjection.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
     }
 
-    void restoreDefaults() override {
+    void restoreDefaults() override
+    {
         const Parameters defaults;
         this->width.setValue(defaults.width);
         this->height.setValue(defaults.height);
