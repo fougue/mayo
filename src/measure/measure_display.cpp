@@ -68,16 +68,16 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureT
     }
 }
 
-void BaseMeasureDisplay::adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver)
+void BaseMeasureDisplay::adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver)
 {
-    const auto openGlDriver = Handle_OpenGl_GraphicDriver::DownCast(driver);
+    const auto openGlDriver = OccHandle<OpenGl_GraphicDriver>::DownCast(driver);
     const auto openGlContext = openGlDriver ? openGlDriver->GetSharedContext() : nullptr;
     if (!openGlContext)
         return;
 
     const bool useVbo = openGlContext->ToUseVbo();
     for (int i = 0; i < this->graphicsObjectsCount(); ++i) {
-        auto gfxText = Handle(AIS_TextLabel)::DownCast(this->graphicsObjectAt(i));
+        auto gfxText = OccHandle<AIS_TextLabel>::DownCast(this->graphicsObjectAt(i));
         if (gfxText) {
             // NOTE
             // Usage of Aspect_TODT_SUBTITLE is causing a crash when VBO are not available(eg because
@@ -343,7 +343,7 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
     const gp_Ax2 axCircle(angle.pntCenter, vec1.Crossed(vec2), vec1);
-    OccHandle<Geom_Circle> geomCircle = new Geom_Circle(axCircle, 0.8 * vec1.Magnitude());
+    auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);

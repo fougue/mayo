@@ -35,7 +35,7 @@ bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskPro
 template<typename CafReaderType>
 TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc, TaskProgress* progress)
 {
-    OccHandle<Message_ProgressIndicator> indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
     OccHandle<TDocStd_Document> stdDoc = doc;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
@@ -53,7 +53,7 @@ TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc,
 template<typename CafWriterType>
 bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
 {
-    OccHandle<Message_ProgressIndicator> indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
     Private::cafFinderProcess(writer)->SetProgress(indicator);
     auto _ = gsl::finally([&]{ Private::cafFinderProcess(writer)->SetProgress(nullptr); });

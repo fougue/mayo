@@ -67,7 +67,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
     }
 
     if (polyTri) {
-        OccHandle<MeshVS_Mesh> object = new MeshVS_Mesh;
+        auto  object = makeOccHandle<MeshVS_Mesh>();
         object->SetDataSource(new GraphicsMeshDataSource(polyTri));
         // meshVisu->AddBuilder(..., false); -> No selection
         if (!spanNodeColor.empty()) {

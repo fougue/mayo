@@ -613,7 +613,7 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
     const gp_Ax3 locText(pt, extDir, xAxisDir);
     Font_BRepTextBuilder brepTextBuilder;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;
+    auto textFormat = makeOccHandle<Font_TextFormatter>();
     textFormat->SetupAlignment(hAlign, vAlign);
     textFormat->Append(occTextStr, *brepFont.FTFont());
     /* Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
@@ -956,7 +956,7 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(cons
     const auto iNumPoints = CppUtils::safeStaticCast<int>(spline.fitPoints.size());
 
     // Handle poles
-    Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, iNumPoints);
+    auto fitpoints = makeOccHandle<TColgp_HArray1OfPnt>(1, iNumPoints);
     for (const DxfCoords& pnt : spline.fitPoints) {
         const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.fitPoints.front());
         fitpoints->ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};

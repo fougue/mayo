@@ -23,7 +23,7 @@ using FunctionCreateGraphicsDriver = std::function<OccHandle<Graphic3d_GraphicDr
 static FunctionCreateGraphicsDriver& getFunctionCreateGraphicsDriver()
 {
     static FunctionCreateGraphicsDriver fn = []{
-        return new OpenGl_GraphicDriver(new Aspect_DisplayConnection);
+        return makeOccHandle<OpenGl_GraphicDriver>(new Aspect_DisplayConnection);
     };
     return fn;
 }

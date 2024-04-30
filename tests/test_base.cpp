@@ -893,7 +893,7 @@ void TestBase::MeshUtils_test()
     });
 
     // Merge all face triangulations into one
-    OccHandle<Poly_Triangulation> polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
+    auto polyTriBox = makeOccHandle<Poly_Triangulation>(countNode, countTriangle, false);
     {
         int idNodeOffset = 0;
         int idTriangleOffset = 0;

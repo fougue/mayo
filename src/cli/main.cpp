@@ -340,8 +340,8 @@ static void initGui(GuiApplication* guiApp)
         return;
 
     guiApp->setAutomaticDocumentMapping(false); // GuiDocument objects aren't needed
-    setFunctionCreateGraphicsDriver([]() -> OccHandle<Graphic3d_GraphicDriver> {
-        return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
+    setFunctionCreateGraphicsDriver([]{
+        return makeOccHandle<OpenGl_GraphicDriver>(GraphicsUtils::AspectDisplayConnection_create());
     });
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
     guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());

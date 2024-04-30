@@ -25,7 +25,7 @@ namespace Internal {
 
 static OccHandle<V3d_Viewer> createOccViewer()
 {
-    OccHandle<V3d_Viewer> viewer = new V3d_Viewer(graphicsCreateDriver());
+    auto viewer = makeOccHandle<V3d_Viewer>(graphicsCreateDriver());
     viewer->SetDefaultViewSize(1000.);
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);
@@ -176,7 +176,7 @@ void GraphicsScene::redraw()
         this->signalRedrawRequested.send(itView.Value());
 }
 
-void GraphicsScene::redraw(const Handle_V3d_View& view)
+void GraphicsScene::redraw(const OccHandle<V3d_View>& view)
 {
     if (d->m_isRedrawBlocked)
         return;

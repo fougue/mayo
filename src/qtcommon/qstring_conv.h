@@ -128,8 +128,7 @@ template<> struct StringConv<QString, TCollection_AsciiString> {
 // QString -> Handle(TCollection_HAsciiString)
 template<> struct StringConv<QString, OccHandle<TCollection_HAsciiString>> {
     static auto to(const QString& str) {
-        OccHandle<TCollection_HAsciiString> hnd = new TCollection_HAsciiString(qUtf8Printable(str));
-        return hnd;
+        return makeOccHandle<TCollection_HAsciiString>(qUtf8Printable(str));
     }
 };
 

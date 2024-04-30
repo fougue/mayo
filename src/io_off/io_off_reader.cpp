@@ -315,7 +315,7 @@ TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
         triangleCount += facet.vertexCount - 2;
 
     // Create mesh object
-    OccHandle<Poly_Triangulation> mesh = new Poly_Triangulation(vertexCount, triangleCount, false/*!hasUvNodes*/);
+    auto mesh = makeOccHandle<Poly_Triangulation>(vertexCount, triangleCount, false/*!hasUvNodes*/);
 
     // Helper function for progress report
     auto fnUpdateProgress = [=](int current) {

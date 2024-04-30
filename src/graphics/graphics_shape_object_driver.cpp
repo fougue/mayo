@@ -51,7 +51,7 @@ GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label
         object->SetMaterial(Graphic3d_NOM_PLASTER);
         object->Attributes()->SetFaceBoundaryDraw(true);
         object->Attributes()->SetFaceBoundaryAspect(
-                    new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.)
+            new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.)
         );
         object->Attributes()->SetIsoOnTriangulation(true);
         //object->Attributes()->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr, true/*overrideDefaults*/);

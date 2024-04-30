@@ -63,7 +63,7 @@ bool QOpenGLWidgetOccView_isCoreProfile()
 
 void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback)
 {
-    OccHandle<OpenGl_Context> glCtx = new OpenGl_Context;
+    auto glCtx = makeOccHandle<OpenGl_Context>();
     if (!glCtx->Init(QOpenGLWidgetOccView_isCoreProfile())) {
         Message::SendFail() << "Error: OpenGl_Context is unable to wrap OpenGL context";
         return;

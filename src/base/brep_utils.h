@@ -30,7 +30,7 @@ struct BRepUtils {
     static void addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape);
 
     // Creates a non-geometric TopoDS_Edge wrapping 'polygon'
-    static TopoDS_Edge makeEdge(const Handle(Poly_Polygon3D)& polygon);
+    static TopoDS_Edge makeEdge(const OccHandle<Poly_Polygon3D>& polygon);
 
     // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
     static TopoDS_Face makeFace(const OccHandle<Poly_Triangulation>& mesh);

@@ -117,7 +117,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_widgetBtns = this->createWidgetPanelContainer(widgetBtnsContents);
 
     auto gfxScene = m_guiDoc->graphicsScene();
-    gfxScene->signalRedrawRequested.connectSlot([=](const Handle_V3d_View& view) {
+    gfxScene->signalRedrawRequested.connectSlot([=](const OccHandle<V3d_View>& view) {
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });

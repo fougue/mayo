@@ -55,7 +55,7 @@ public:
     // Adapt 3D graphics objects to what is supported by 'driver'
     // This function must be called before adding the graphical objects to the 3D scene(Mayo::GraphicsScene
     // or AIS_InteractiveContext)
-    virtual void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) = 0;
+    virtual void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) = 0;
 
     // Whether "sum" mode is supported by the measure display
     // This is relevant when multiple measureable 3D objects are selected. The cumulative sum of
@@ -76,7 +76,7 @@ public:
     static std::unique_ptr<IMeasureDisplay> createFrom(MeasureType type, const MeasureValue& value);
     static std::unique_ptr<IMeasureDisplay> createEmptySumFrom(MeasureType type);
 
-    void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) override;
+    void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) override;
 
     bool isSumSupported() const override { return false; }
     void sumAdd(const IMeasureDisplay& other) override;
@@ -207,7 +207,7 @@ public:
 
 private:
     MeasureLength m_length;
-    Handle_AIS_TextLabel m_gfxLenText;
+    OccHandle<AIS_TextLabel> m_gfxLenText;
 };
 
 // --
@@ -226,7 +226,7 @@ public:
 
 private:
     MeasureArea m_area;
-    Handle_AIS_TextLabel m_gfxAreaText;
+    OccHandle<AIS_TextLabel> m_gfxAreaText;
 };
 
 // --
@@ -242,12 +242,12 @@ public:
 
 private:
     MeasureBoundingBox m_bnd;
-    Handle_AIS_Point m_gfxMinPoint;
-    Handle_AIS_Point m_gfxMaxPoint;
-    Handle_AIS_InteractiveObject m_gfxBox;
-    Handle_AIS_TextLabel m_gfxXLengthText;
-    Handle_AIS_TextLabel m_gfxYLengthText;
-    Handle_AIS_TextLabel m_gfxZLengthText;
+    OccHandle<AIS_Point> m_gfxMinPoint;
+    OccHandle<AIS_Point> m_gfxMaxPoint;
+    OccHandle<AIS_InteractiveObject> m_gfxBox;
+    OccHandle<AIS_TextLabel> m_gfxXLengthText;
+    OccHandle<AIS_TextLabel> m_gfxYLengthText;
+    OccHandle<AIS_TextLabel> m_gfxZLengthText;
 };
 
 } // namespace Mayo

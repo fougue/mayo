@@ -513,7 +513,7 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
     }
     else {
         TopLoc_Location loc;
-        const Handle_Poly_Triangulation& triangulation = BRep_Tool::Triangulation(face, loc);
+        const OccHandle<Poly_Triangulation>& triangulation = BRep_Tool::Triangulation(face, loc);
         throwErrorIf<ErrorCode::NotGeometricOrTriangulationFace>(triangulation.IsNull());
         areaResult.value = MeshUtils::triangulationArea(triangulation) * Quantity_SquareMillimeter;
 

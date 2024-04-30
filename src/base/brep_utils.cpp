@@ -100,10 +100,11 @@ bool BRepUtils::isGeometric(const TopoDS_Face& face)
 }
 
 void BRepUtils::computeMesh(
-        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress)
+        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress
+    )
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    OccHandle<Message_ProgressIndicator> indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
 #else
     BRepMesh_IncrementalMesh mesher(shape, params);

@@ -34,8 +34,8 @@ namespace Internal {
 
 static OccHandle<AIS_Trihedron> createOriginTrihedron()
 {
-    OccHandle<Geom_Axis2Placement> axis = new Geom_Axis2Placement(gp::XOY());
-    OccHandle<AIS_Trihedron> aisTrihedron = new AIS_Trihedron(axis);
+    auto axis = makeOccHandle<Geom_Axis2Placement>(gp::XOY());
+    auto aisTrihedron = makeOccHandle<AIS_Trihedron>(axis);
     aisTrihedron->SetDatumDisplayMode(Prs3d_DM_WireFrame);
     aisTrihedron->SetDrawArrows(false);
     aisTrihedron->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetWidth(2.5);
@@ -50,7 +50,7 @@ static OccHandle<AIS_Trihedron> createOriginTrihedron()
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
     aisTrihedron->SetTransformPersistence(
-                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
+        new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
     );
     aisTrihedron->Attributes()->SetZLayer(Graphic3d_ZLayerId_Topmost);
     aisTrihedron->SetInfiniteState(true);
@@ -90,13 +90,13 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
-                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
+        Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
     );
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
-                GuiDocument::defaultGradientBackground().color1,
-                GuiDocument::defaultGradientBackground().color2,
-                GuiDocument::defaultGradientBackground().fillStyle
+        GuiDocument::defaultGradientBackground().color1,
+        GuiDocument::defaultGradientBackground().color2,
+        GuiDocument::defaultGradientBackground().fillStyle
     );
     //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
@@ -419,10 +419,11 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             aisViewCube->SetFontHeight(12);
             aisViewCube->SetAxesLabels("", "", "");
             aisViewCube->SetTransformPersistence(
-                        new Graphic3d_TransformPers(
-                            Graphic3d_TMF_TriedronPers,
-                            m_viewTrihedronCorner,
-                            Graphic3d_Vec2i(85, 85))
+                new Graphic3d_TransformPers(
+                    Graphic3d_TMF_TriedronPers,
+                    m_viewTrihedronCorner,
+                    Graphic3d_Vec2i(85, 85)
+                )
             );
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);

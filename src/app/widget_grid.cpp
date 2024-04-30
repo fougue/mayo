@@ -37,7 +37,7 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
       m_ui(new Ui_WidgetGrid),
       m_viewPtr(viewPtr)
 {
-    const Handle_V3d_Viewer& viewer = viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = viewPtr->Viewer();
 
     // Intial configuration
     m_ui->setupUi(this);
@@ -128,7 +128,7 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
         m_ui->combo_Plane->setCurrentIndex(3);
 
     // Install grid draw mode
-    Handle_Aspect_Grid gridAspect = GraphicsUtils::V3dViewer_grid(viewer);
+    OccHandle<Aspect_Grid> gridAspect = GraphicsUtils::V3dViewer_grid(viewer);
     if (gridAspect) {
         if (gridAspect->DrawMode() == Aspect_GDM_Lines)
             m_ui->combo_DrawMode->setCurrentIndex(0);
@@ -248,7 +248,7 @@ const gp_Ax2& WidgetGrid::toPlaneAxis(int comboBoxItemIndex)
 
 void WidgetGrid::activateGrid(bool on)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     if (on) {
         viewer->ActivateGrid(
                     toGridType(m_ui->combo_Type->currentIndex()),
@@ -269,7 +269,7 @@ void WidgetGrid::applyGridParams()
     auto fnCorrectedGridStep = [](double gridStep) {
         return !qFuzzyIsNull(gridStep) ? gridStep : 0.01;
     };
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridValues(
@@ -295,7 +295,7 @@ void WidgetGrid::applyGridParams()
 
 void WidgetGrid::applyGridGraphicsParams()
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridGraphicValues(
@@ -316,7 +316,7 @@ void WidgetGrid::applyGridGraphicsParams()
 
 void WidgetGrid::chooseGridColor(GridColorType colorType)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
     // Helper function to apply some base/tenth grid color
     auto fnApplyGridColor = [=](const Quantity_Color& color) {
@@ -356,7 +356,7 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
 
 void WidgetGrid::enableGridColorTenth(bool on)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     m_ui->label_ColorTenth->setEnabled(on);
     m_ui->btn_ColorTenth->setEnabled(on);
     auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);

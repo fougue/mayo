@@ -186,7 +186,7 @@ OccHandle<Image_AlienPixMap> ImageWriter::createImage(GuiDocument* guiDoc, const
 
 OccHandle<Image_AlienPixMap> ImageWriter::createImage(OccHandle<V3d_View> view)
 {
-    OccHandle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
+    auto pixmap = makeOccHandle<Image_AlienPixMap>();
     V3d_ImageDumpOptions dumpOptions;
     dumpOptions.BufferType = Graphic3d_BT_RGB;
     view->Window()->Size(dumpOptions.Width, dumpOptions.Height);

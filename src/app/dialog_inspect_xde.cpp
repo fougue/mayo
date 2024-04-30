@@ -429,7 +429,7 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
     else if (imgTexture->DataBuffer() && !imgTexture->DataBuffer()->IsEmpty()) {
         // Texture is provided by some embedded data
         item->setText(1, DialogInspectXde::tr("<data>"));
-        const Handle(NCollection_Buffer)& buff = imgTexture->DataBuffer();
+        const OccHandle<NCollection_Buffer>& buff = imgTexture->DataBuffer();
         item->setImage(1, QByteArray::fromRawData(reinterpret_cast<const char*>(buff->Data()), buff->Size()));
     }
 

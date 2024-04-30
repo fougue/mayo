@@ -184,7 +184,7 @@ QWidgetOccView* QWidgetOccView::create(const OccHandle<V3d_View>& view, QWidget*
 void QWidgetOccView::showEvent(QShowEvent*)
 {
     if (this->v3dView()->Window().IsNull()) {
-        OccHandle<Aspect_Window> hWnd = new OcctWindow(this);
+        auto hWnd = makeOccHandle<OcctWindow>(this);
         this->v3dView()->SetWindow(hWnd);
         if (!hWnd->IsMapped())
             hWnd->Map();
