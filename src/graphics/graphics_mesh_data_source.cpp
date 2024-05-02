@@ -16,7 +16,7 @@
 
 namespace Mayo {
 
-GraphicsMeshDataSource::GraphicsMeshDataSource(const Handle_Poly_Triangulation& mesh)
+GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh)
     : m_mesh(mesh)
 {
     if (!m_mesh.IsNull()) {
@@ -67,7 +67,8 @@ bool GraphicsMeshDataSource::GetGeom(
         const bool IsElement,
         TColStd_Array1OfReal& Coords,
         int& NbNodes,
-        MeshVS_EntityType& Type) const
+        MeshVS_EntityType& Type
+    ) const
 {
     if (m_mesh.IsNull())
         return false;

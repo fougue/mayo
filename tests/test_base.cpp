@@ -23,6 +23,7 @@
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
+#include "../src/base/occ_handle.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/property_builtins.h"
@@ -66,6 +67,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -307,6 +309,41 @@ void TestBase::FilePath_test()
     {
         const TCollection_ExtendedString extStrTestPath(strTestPath, true/*multi-byte*/);
         QCOMPARE(filepathTo<TCollection_ExtendedString>(testPath), extStrTestPath);
+    }
+}
+
+void TestBase::OccHandle_test()
+{
+    {
+        struct OccHandleTestClass_0 : public Standard_Transient {
+            explicit OccHandleTestClass_0() = default;
+        };
+
+        auto hnd = makeOccHandle<OccHandleTestClass_0>();
+        QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_0>));
+        QVERIFY(hnd.get() != nullptr);
+    }
+
+    {
+        struct OccHandleTestClass_1 : public Standard_Transient {
+            explicit OccHandleTestClass_1() = default;
+            explicit OccHandleTestClass_1(const std::string& str) : m_str(str) {}
+            std::string m_str;
+        };
+
+        {
+            auto hnd = makeOccHandle<OccHandleTestClass_1>();
+            QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_1>));
+            QVERIFY(hnd.get() != nullptr);
+            QCOMPARE(hnd->m_str, std::string{});
+        }
+
+        {
+            auto hnd = makeOccHandle<OccHandleTestClass_1>("Test string value");
+            QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_1>));
+            QVERIFY(hnd.get() != nullptr);
+            QCOMPARE(hnd->m_str, "Test string value");
+        }
     }
 }
 
@@ -848,7 +885,7 @@ void TestBase::MeshUtils_test()
     int countTriangle = 0;
     BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
         TopLoc_Location loc;
-        const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+        const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
         if (!polyTri.IsNull()) {
             countNode += polyTri->NbNodes();
             countTriangle += polyTri->NbTriangles();
@@ -856,13 +893,13 @@ void TestBase::MeshUtils_test()
     });
 
     // Merge all face triangulations into one
-    Handle_Poly_Triangulation polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
+    auto polyTriBox = makeOccHandle<Poly_Triangulation>(countNode, countTriangle, false);
     {
         int idNodeOffset = 0;
         int idTriangleOffset = 0;
         BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
             TopLoc_Location loc;
-            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+            const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
             if (!polyTri.IsNull()) {
                 for (int i = 1; i <= polyTri->NbNodes(); ++i)
                     MeshUtils::setNode(polyTriBox, idNodeOffset + i, polyTri->Node(i));

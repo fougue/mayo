@@ -12,7 +12,7 @@ namespace Mayo {
 
 class GraphicsMeshObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsMeshObjectDriver, GraphicsObjectDriver)
-using GraphicsMeshObjectDriverPtr = Handle(GraphicsMeshObjectDriver);
+using GraphicsMeshObjectDriverPtr = OccHandle<GraphicsMeshObjectDriver>;
 
 // Provides creation and configuration of graphics objects for meshes(triangulations)
 class GraphicsMeshObjectDriver : public GraphicsObjectDriver {

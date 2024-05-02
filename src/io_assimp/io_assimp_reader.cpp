@@ -94,7 +94,7 @@ bool deep_aiNodeTransformationHasScaling(const aiNode* node)
         || scaling.x < 0. || scaling.y < 0. || scaling.z < 0.
         )
     {
-        //std::cout << "[TRACE] hasScaling: " << scaling.x << " " << scaling.y << " " <<scaling.z << std::endl;
+        //std::cout << "[TRACE] hasScaling: " << scaling.x << " " << scaling.y << " " << scaling.z << std::endl;
         return true;
     }
 
@@ -121,9 +121,9 @@ gp_Trsf toOccTrsf(const aiMatrix4x4& matrix)
     const aiVector3D scaling = aiMatrixScaling(matrix);
     gp_Trsf trsf;
     trsf.SetValues(
-                matrix.a1 / scaling.x, matrix.a2 / scaling.x, matrix.a3 / scaling.x, matrix.a4,
-                matrix.b1 / scaling.y, matrix.b2 / scaling.y, matrix.b3 / scaling.y, matrix.b4,
-                matrix.c1 / scaling.z, matrix.c2 / scaling.z, matrix.c3 / scaling.z, matrix.c4
+        matrix.a1 / scaling.x, matrix.a2 / scaling.x, matrix.a3 / scaling.x, matrix.a4,
+        matrix.b1 / scaling.y, matrix.b2 / scaling.y, matrix.b3 / scaling.y, matrix.b4,
+        matrix.c1 / scaling.z, matrix.c2 / scaling.z, matrix.c3 / scaling.z, matrix.c4
     );
     return trsf;
 }
@@ -135,12 +135,12 @@ Quantity_Color toOccColor(const aiColor4D& color, Quantity_TypeOfColor colorType
 }
 
 // Create an OpenCascade Image_Texture object from assimp texture
-Handle(Image_Texture) createOccTexture(const aiTexture* texture)
+OccHandle<Image_Texture> createOccTexture(const aiTexture* texture)
 {
     const auto textureWidth = texture->mWidth;
     const auto textureHeight = texture->mHeight;
     const auto textureSize = textureHeight == 0 ? textureWidth : 4 * textureWidth * textureHeight;
-    Handle(NCollection_Buffer) buff = new NCollection_Buffer(
+    auto buff = makeOccHandle<NCollection_Buffer>(
         NCollection_BaseAllocator::CommonBaseAllocator(),
         textureSize
     );
@@ -151,14 +151,14 @@ Handle(Image_Texture) createOccTexture(const aiTexture* texture)
 
 // Create an OpenCascade Poly_Triangulation object from assimp mesh
 // The input 'mesh' is assumed to contain only triangles
-Handle(Poly_Triangulation) createOccTriangulation(const aiMesh* mesh)
+OccHandle<Poly_Triangulation> createOccTriangulation(const aiMesh* mesh)
 {
     assert(mesh != nullptr);
     assert(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE);
 
     const unsigned textureIndex = 0;
     const bool hasUvNodes = mesh->HasTextureCoords(textureIndex) && mesh->mNumUVComponents[textureIndex] == 2;
-    Handle(Poly_Triangulation) triangulation = new Poly_Triangulation(mesh->mNumVertices, mesh->mNumFaces, hasUvNodes);
+    auto triangulation = makeOccHandle<Poly_Triangulation>(mesh->mNumVertices, mesh->mNumFaces, hasUvNodes);
 
     for (unsigned i = 0; i < mesh->mNumVertices; ++i) {
         const aiVector3D& vertex = mesh->mVertices[i];
@@ -340,7 +340,7 @@ TDF_LabelSequence AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress
 
     // Add materials in target document
     auto materialTool = doc->xcaf().visMaterialTool();
-    for (const Handle_XCAFDoc_VisMaterial& material : m_vecMaterial) {
+    for (const OccHandle<XCAFDoc_VisMaterial>& material : m_vecMaterial) {
         const TDF_Label label = materialTool->AddMaterial(material, material->RawName()->String());
         m_mapMaterialLabel.insert({ material, label });
     }
@@ -370,7 +370,7 @@ void AssimpReader::applyProperties(const PropertyGroup* group)
     }
 }
 
-Handle(Image_Texture) AssimpReader::findOccTexture(
+OccHandle<Image_Texture> AssimpReader::findOccTexture(
     const std::string& strFilepath, const FilePath& modelFilepath
     )
 {
@@ -378,14 +378,14 @@ Handle(Image_Texture) AssimpReader::findOccTexture(
     {
         // Note: aiScene::GetEmbeddedTextureAndIndex() isn't available for version < 5.1
         const aiTexture* texture = m_scene->GetEmbeddedTexture(strFilepath.c_str());
-        Handle(Image_Texture) occTexture = Cpp::findValue(texture, m_mapEmbeddedTexture);
+        OccHandle<Image_Texture> occTexture = Cpp::findValue(texture, m_mapEmbeddedTexture);
         if (occTexture)
 	    return occTexture;
     }
 
     // Texture might have already been loaded from file
     {
-        Handle(Image_Texture) texture = CppUtils::findValue(strFilepath, m_mapFileTexture);
+        OccHandle<Image_Texture> texture = CppUtils::findValue(strFilepath, m_mapFileTexture);
         if (texture)
             return texture;
     }
@@ -410,7 +410,7 @@ Handle(Image_Texture) AssimpReader::findOccTexture(
 
     // Could find an existing filepath for the texture
     if (ptrTextureFilepath) {
-        Handle(Image_Texture) texture = new Image_Texture(filepathTo<TCollection_AsciiString>(*ptrTextureFilepath));
+        auto texture = makeOccHandle<Image_Texture>(filepathTo<TCollection_AsciiString>(*ptrTextureFilepath));
         // Cache texture
         m_mapFileTexture.insert({ strFilepath, texture });
         return texture;
@@ -425,11 +425,11 @@ Handle(Image_Texture) AssimpReader::findOccTexture(
     return {};
 }
 
-Handle(XCAFDoc_VisMaterial) AssimpReader::createOccVisMaterial(
+OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
     const aiMaterial* material, const FilePath& modelFilepath
     )
 {
-    Handle(XCAFDoc_VisMaterial) mat = new XCAFDoc_VisMaterial;
+    auto mat = makeOccHandle<XCAFDoc_VisMaterial>();
 
     //mat->SetAlphaMode(Graphic3d_AlphaMode_Opaque);
 
@@ -448,7 +448,7 @@ Handle(XCAFDoc_VisMaterial) AssimpReader::createOccVisMaterial(
         aiString matName;
         material->Get(AI_MATKEY_NAME, matName);
         std::string_view vMatName{ matName.C_Str(), matName.length };
-        mat->SetRawName(string_conv<Handle(TCollection_HAsciiString)>(vMatName));
+        mat->SetRawName(string_conv<OccHandle<TCollection_HAsciiString>>(vMatName));
     }
 
     // Backface culling

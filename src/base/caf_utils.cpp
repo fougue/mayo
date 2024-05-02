@@ -22,7 +22,7 @@ const TCollection_AsciiString& CafUtils::labelTag(const TDF_Label& label)
 
 const TCollection_ExtendedString& CafUtils::labelAttrStdName(const TDF_Label& label)
 {
-    Handle_TDataStd_Name attrName;
+    OccHandle<TDataStd_Name> attrName;
     if (label.FindAttribute(TDataStd_Name::GetID(), attrName)) {
         return attrName->Get();
     }
@@ -45,7 +45,7 @@ bool CafUtils::isNullOrEmpty(const TDF_Label& label)
 
 bool CafUtils::hasAttribute(const TDF_Label& label, const Standard_GUID& attrGuid)
 {
-    Handle_TDF_Attribute attr;
+    OccHandle<TDF_Attribute> attr;
     return label.FindAttribute(attrGuid, attr);
 }
 

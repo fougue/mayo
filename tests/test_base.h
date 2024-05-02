@@ -26,6 +26,8 @@ private slots:
 
     void FilePath_test();
 
+    void OccHandle_test();
+
     void PropertyValueConversionVariant_doubleToInt_test();
     void PropertyValueConversionVariant_doubleToInt_test_data();
 

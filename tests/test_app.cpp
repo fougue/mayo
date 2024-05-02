@@ -261,7 +261,7 @@ void TestApp::StringConv_test()
 {
     const QString text = "test_éç²µ§_测试_Тест";
     QCOMPARE(to_QString(string_conv<TCollection_AsciiString>(text)), text);
-    QCOMPARE(to_QString(string_conv<Handle(TCollection_HAsciiString)>(text)), text);
+    QCOMPARE(to_QString(to_OccHandleHAsciiString(text)), text);
     QCOMPARE(to_QString(to_stdString(text)), text);
     QCOMPARE(to_QString(to_OccExtString(text)), text);
 }

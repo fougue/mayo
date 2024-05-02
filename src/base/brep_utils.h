@@ -7,6 +7,7 @@
 #pragma once
 
 #include "occ_brep_mesh_parameters.h"
+#include "occ_handle.h"
 
 #include <Poly_Polygon3D.hxx>
 #include <Poly_Triangulation.hxx>
@@ -29,10 +30,10 @@ struct BRepUtils {
     static void addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape);
 
     // Creates a non-geometric TopoDS_Edge wrapping 'polygon'
-    static TopoDS_Edge makeEdge(const Handle(Poly_Polygon3D)& polygon);
+    static TopoDS_Edge makeEdge(const OccHandle<Poly_Polygon3D>& polygon);
 
     // Creates a non-geometric TopoDS_Face wrapping triangulation 'mesh'
-    static TopoDS_Face makeFace(const Handle(Poly_Triangulation)& mesh);
+    static TopoDS_Face makeFace(const OccHandle<Poly_Triangulation>& mesh);
 
     // Iterates with 'explorer' and executes 'fn' for each sub-shape
     template<typename Function>

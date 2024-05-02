@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include "../base/quantity.h"
 #include "../base/signal.h"
 #include "gui_vkey_mouse.h"
@@ -33,7 +34,7 @@ public:
         virtual void setVisible(bool on) = 0;
     };
 
-    V3dViewController(const Handle_V3d_View& view);
+    V3dViewController(const OccHandle<V3d_View>& view);
     virtual ~V3dViewController() = default;
 
     DynamicAction currentDynamicAction() const;
@@ -90,11 +91,11 @@ protected:
     virtual void redrawView();
 
 private:
-    Handle_V3d_View m_view;
+    OccHandle<V3d_View> m_view;
     DynamicAction m_dynamicAction = DynamicAction::None;
     std::unique_ptr<IRubberBand> m_rubberBand;
     double m_instantZoomFactor = 5.;
-    Handle_Graphic3d_Camera m_cameraBackup;
+    OccHandle<Graphic3d_Camera> m_cameraBackup;
     Position m_posRubberBandStart = {};
 };
 

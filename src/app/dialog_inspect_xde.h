@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include <QtWidgets/QDialog>
 #include <TDocStd_Document.hxx>
 class QTreeWidgetItem;
@@ -18,13 +19,13 @@ public:
     DialogInspectXde(QWidget* parent = nullptr);
     ~DialogInspectXde();
 
-    void load(const Handle_TDocStd_Document& doc);
+    void load(const OccHandle<TDocStd_Document>& doc);
 
 private:
     void onLabelTreeWidgetItemClicked(QTreeWidgetItem* item, int column);
 
     class Ui_DialogInspectXde* m_ui = nullptr;
-    Handle_TDocStd_Document m_doc;
+    OccHandle<TDocStd_Document> m_doc;
 };
 
 } // namespace Mayo

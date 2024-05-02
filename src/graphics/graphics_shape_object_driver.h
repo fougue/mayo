@@ -12,7 +12,7 @@ namespace Mayo {
 
 class GraphicsShapeObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsShapeObjectDriver, GraphicsObjectDriver)
-using GraphicsShapeObjectDriverPtr = Handle(GraphicsShapeObjectDriver);
+using GraphicsShapeObjectDriverPtr = OccHandle<GraphicsShapeObjectDriver>;
 
 // Provides creation and configuration of graphics objects for BRep shapes
 class GraphicsShapeObjectDriver : public GraphicsObjectDriver {

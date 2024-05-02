@@ -47,7 +47,7 @@ public:
     void eraseObject(const GraphicsObjectPtr& object);
 
     void redraw();
-    void redraw(const Handle_V3d_View& view);
+    void redraw(const OccHandle<V3d_View>& view);
     bool isRedrawBlocked() const;
     void blockRedraw(bool on);
 
@@ -106,7 +106,7 @@ public:
     // Signals
     Signal<> signalSelectionChanged;
     Signal<> signalSelectionModeChanged;
-    Signal<const Handle_V3d_View&> signalRedrawRequested;
+    Signal<const OccHandle<V3d_View>&> signalRedrawRequested;
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;
@@ -158,7 +158,7 @@ void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, 
 template<typename Function>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, Function fn) const
 {
-    opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+    OccHandle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
     this->aisContextPtr()->EntityOwners(mapEntityOwner, object, selectionMode);
     for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
         fn(*it);

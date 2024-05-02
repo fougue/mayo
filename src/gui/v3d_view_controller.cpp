@@ -13,7 +13,7 @@
 
 namespace Mayo {
 
-V3dViewController::V3dViewController(const Handle_V3d_View& view)
+V3dViewController::V3dViewController(const OccHandle<V3d_View>& view)
     : m_view(view)
 {
 }

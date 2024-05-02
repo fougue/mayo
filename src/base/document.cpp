@@ -130,7 +130,7 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
 
 TDF_Label Document::newEntityLabel()
 {
-    Handle_TDF_TagSource tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
+    OccHandle<TDF_TagSource> tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
     Expects(!tagSrc.IsNull());
     if (tagSrc->Get() == 0)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()

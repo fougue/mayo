@@ -144,7 +144,7 @@ bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     if (!m_document)
         return false;
 
-    Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
+    auto occProgress = makeOccHandle<OccProgressIndicator>(progress);
     const bool isBinary = m_params.format == Format::Binary;
     RWGltf_CafWriter writer(filepath.u8string().c_str(), isBinary);
     writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);

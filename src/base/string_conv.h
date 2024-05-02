@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "occ_handle.h"
 #include <NCollection_UtfString.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
@@ -52,8 +53,8 @@ TCollection_AsciiString to_OccAsciiString(const StringType& str) {
 
 // X -> Handle(TCollection_HAsciiString)
 template<typename StringType>
-Handle(TCollection_HAsciiString) to_OccHandleHAsciiString(const StringType& str) {
-    return string_conv<Handle(TCollection_HAsciiString)>(str);
+OccHandle<TCollection_HAsciiString> to_OccHandleHAsciiString(const StringType& str) {
+    return string_conv<OccHandle<TCollection_HAsciiString>>(str);
 }
 
 // X -> TCollection_ExtendedString
@@ -132,10 +133,9 @@ template<> struct StringConv<std::string_view, TCollection_AsciiString> {
 };
 
 // std::string_view -> Handle(TCollection_HAsciiString)
-template<> struct StringConv<std::string_view, Handle(TCollection_HAsciiString)> {
+template<> struct StringConv<std::string_view, OccHandle<TCollection_HAsciiString>> {
     static auto to(std::string_view str) {
-        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(to_OccAsciiString(str));
-        return hnd;
+        return makeOccHandle<TCollection_HAsciiString>(to_OccAsciiString(str));
     }
 };
 
@@ -151,15 +151,15 @@ template<> struct StringConv<std::string_view, NCollection_Utf8String> {
 // --
 
 // Handle(TCollection_HAsciiString) -> std::string
-template<> struct StringConv<Handle(TCollection_HAsciiString), std::string> {
-    static auto to(const Handle(TCollection_HAsciiString)& str) {
+template<> struct StringConv<OccHandle<TCollection_HAsciiString>, std::string> {
+    static auto to(const OccHandle<TCollection_HAsciiString>& str) {
         return string_conv<std::string>(str ? str->String() : TCollection_AsciiString());
     }
 };
 
 // Handle(TCollection_HAsciiString) -> std::string_view
-template<> struct StringConv<Handle(TCollection_HAsciiString), std::string_view> {
-    static auto to(const Handle(TCollection_HAsciiString)& str) {
+template<> struct StringConv<OccHandle<TCollection_HAsciiString>, std::string_view> {
+    static auto to(const OccHandle<TCollection_HAsciiString>& str) {
         return string_conv<std::string_view>(str ? str->String() : TCollection_AsciiString());
     }
 };
@@ -176,10 +176,9 @@ template<> struct StringConv<std::string, TCollection_AsciiString> {
 };
 
 // std::string -> Handle(TCollection_HAsciiString)
-template<> struct StringConv<std::string, Handle(TCollection_HAsciiString)> {
+template<> struct StringConv<std::string, OccHandle<TCollection_HAsciiString>> {
     static auto to(const std::string& str) {
-        Handle(TCollection_HAsciiString) hnd = new TCollection_HAsciiString(str.c_str());
-        return hnd;
+        return makeOccHandle<TCollection_HAsciiString>(str.c_str());
     }
 };
 

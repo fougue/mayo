@@ -17,12 +17,12 @@ namespace Mayo {
 // a "redraw requested" signal
 class GraphicsViewPtr {
 public:
-    GraphicsViewPtr(GraphicsScene* scene, const Handle_V3d_View& view)
+    GraphicsViewPtr(GraphicsScene* scene, const OccHandle<V3d_View>& view)
         : m_scene(scene),
           m_view(view)
     {}
 
-    const Handle_V3d_View& v3dView() const {
+    const OccHandle<V3d_View>& v3dView() const {
         return m_view;
     }
 
@@ -34,11 +34,11 @@ public:
         m_scene->redraw(m_view);
     }
 
-    const Handle_V3d_View& operator->() const { return m_view; }
+    const OccHandle<V3d_View>& operator->() const { return m_view; }
 
 private:
     GraphicsScene* m_scene = nullptr;
-    Handle_V3d_View m_view;
+    OccHandle<V3d_View> m_view;
 };
 
 } // namespace Mayo

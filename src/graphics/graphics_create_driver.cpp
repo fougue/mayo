@@ -10,18 +10,20 @@
 // <X.h> #defines constants like "None" which causes name clash with GuiDocument::ViewTrihedronMode::None
 // --
 
+#include "../base/occ_handle.h"
+
 #include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <functional>
 
 namespace Mayo {
 
-using FunctionCreateGraphicsDriver = std::function<Handle_Graphic3d_GraphicDriver()>;
+using FunctionCreateGraphicsDriver = std::function<OccHandle<Graphic3d_GraphicDriver>()>;
 
 static FunctionCreateGraphicsDriver& getFunctionCreateGraphicsDriver()
 {
     static FunctionCreateGraphicsDriver fn = []{
-        return new OpenGl_GraphicDriver(new Aspect_DisplayConnection);
+        return makeOccHandle<OpenGl_GraphicDriver>(new Aspect_DisplayConnection);
     };
     return fn;
 }
@@ -31,7 +33,7 @@ void setFunctionCreateGraphicsDriver(FunctionCreateGraphicsDriver fn)
     getFunctionCreateGraphicsDriver() = std::move(fn);
 }
 
-Handle_Graphic3d_GraphicDriver graphicsCreateDriver()
+OccHandle<Graphic3d_GraphicDriver> graphicsCreateDriver()
 {
     const auto& fn = getFunctionCreateGraphicsDriver();
     if (fn)

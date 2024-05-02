@@ -319,7 +319,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     // Object meshes
     const int meshCount = int(m_vecMesh.size());
 
-    auto fnAddMesh = [&](const Handle_Poly_Triangulation& polyTri, const TopLoc_Location& loc) {
+    auto fnAddMesh = [&](const OccHandle<Poly_Triangulation>& polyTri, const TopLoc_Location& loc) {
         if (!polyTri.IsNull()) {
             Mesh mesh;
             mesh.id = int(m_vecMesh.size());

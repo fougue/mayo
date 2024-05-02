@@ -8,6 +8,7 @@
 
 #include "../base/document_ptr.h"
 #include "../base/io_reader.h"
+#include "../base/occ_handle.h"
 #include "../base/tkernel_utils.h"
 
 #include <assimp/Importer.hpp>
@@ -42,11 +43,11 @@ private:
     // Create OpenCascade texture object
     // Parameter 'strFilepath' is the filepath to the texture as specified by the assimp material
     // Parameter 'modelFilepath' is the filepath to the 3D model being imported with Reader::readFile()
-    Handle(Image_Texture) findOccTexture(const std::string& strFilepath, const FilePath& modelFilepath);
+    OccHandle<Image_Texture> findOccTexture(const std::string& strFilepath, const FilePath& modelFilepath);
 
     // Create XCAFDoc_VisMaterial from assimp material
     // Parameter 'modelFilepath' is the filepath to the 3D model being imported with Reader::readFile()
-    Handle(XCAFDoc_VisMaterial) createOccVisMaterial(const aiMaterial* material, const FilePath& modelFilepath);
+    OccHandle<XCAFDoc_VisMaterial> createOccVisMaterial(const aiMaterial* material, const FilePath& modelFilepath);
 
     void transferSceneNode(
         const aiNode* node,
@@ -64,12 +65,12 @@ private:
     Assimp::Importer m_importer;
     const aiScene* m_scene = nullptr;
 
-    std::vector<Handle(Poly_Triangulation)> m_vecTriangulation;
-    std::vector<Handle(XCAFDoc_VisMaterial)> m_vecMaterial;
-    std::unordered_map<Handle(XCAFDoc_VisMaterial), TDF_Label> m_mapMaterialLabel;
+    std::vector<OccHandle<Poly_Triangulation>> m_vecTriangulation;
+    std::vector<OccHandle<XCAFDoc_VisMaterial>> m_vecMaterial;
+    std::unordered_map<OccHandle<XCAFDoc_VisMaterial>, TDF_Label> m_mapMaterialLabel;
     std::unordered_map<const aiNode*, aiNodeData> m_mapNodeData;
-    std::unordered_map<const aiTexture*, Handle(Image_Texture)> m_mapEmbeddedTexture;
-    std::unordered_map<std::string, Handle(Image_Texture)> m_mapFileTexture;
+    std::unordered_map<const aiTexture*, OccHandle<Image_Texture>> m_mapEmbeddedTexture;
+    std::unordered_map<std::string, OccHandle<Image_Texture>> m_mapFileTexture;
 };
 
 } // namespace IO

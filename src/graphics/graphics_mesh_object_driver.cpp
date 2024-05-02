@@ -48,13 +48,13 @@ GraphicsMeshObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const 
 
 GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label) const
 {
-    Handle_Poly_Triangulation polyTri;
+    OccHandle<Poly_Triangulation> polyTri;
     Span<const Quantity_Color> spanNodeColor;
     //const TopLoc_Location* ptrLocationPolyTri = nullptr;
     if (XCaf::isShape(label)) {
         const TopoDS_Shape shape = XCaf::shape(label);
         if (shape.ShapeType() == TopAbs_FACE) {
-            auto tface = Handle_BRep_TFace::DownCast(shape.TShape());
+            auto tface = OccHandle<BRep_TFace>::DownCast(shape.TShape());
             if (tface) {
                 polyTri = tface->Triangulation();
                 //ptrLocationPolyTri = &shape.Location();
@@ -67,7 +67,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
     }
 
     if (polyTri) {
-        Handle_MeshVS_Mesh object = new MeshVS_Mesh;
+        auto  object = makeOccHandle<MeshVS_Mesh>();
         object->SetDataSource(new GraphicsMeshDataSource(polyTri));
         // meshVisu->AddBuilder(..., false); -> No selection
         if (!spanNodeColor.empty()) {
@@ -124,7 +124,7 @@ public:
         int countShowEdges = 0;
         int countShowNodes = 0;
         for (const GraphicsObjectPtr& object : spanObject) {
-            auto meshVisu = Handle_MeshVS_Mesh::DownCast(object);
+            auto meshVisu = OccHandle<MeshVS_Mesh>::DownCast(object);
             // Color
             Quantity_Color color;
             meshVisu->GetDrawer()->GetColor(MeshVS_DA_InteriorColor, color);
@@ -167,7 +167,7 @@ public:
 
         if (prop == &m_propertyShowEdges) {
             if (m_propertyShowEdges.value() != CheckState::Partially) {
-                for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                for (const OccHandle<MeshVS_Mesh>& meshVisu : m_vecMeshVisu) {
                     meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_ShowEdges, m_propertyShowEdges.value() == CheckState::On);
                     fnRedisplay(meshVisu);
                 }
@@ -175,20 +175,20 @@ public:
         }
         else if (prop == &m_propertyShowNodes) {
             if (m_propertyShowNodes.value() != CheckState::Partially) {
-                for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+                for (const OccHandle<MeshVS_Mesh>& meshVisu : m_vecMeshVisu) {
                     meshVisu->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, m_propertyShowNodes.value() == CheckState::On);
                     fnRedisplay(meshVisu);
                 }
             }
         }
         else if (prop == &m_propertyColor) {
-            for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+            for (const OccHandle<MeshVS_Mesh>& meshVisu : m_vecMeshVisu) {
                 meshVisu->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, m_propertyColor);
                 fnRedisplay(meshVisu);
             }
         }
         else if (prop == &m_propertyEdgeColor) {
-            for (const Handle_MeshVS_Mesh& meshVisu : m_vecMeshVisu) {
+            for (const OccHandle<MeshVS_Mesh>& meshVisu : m_vecMeshVisu) {
                 meshVisu->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, m_propertyEdgeColor);
                 fnRedisplay(meshVisu);
             }
@@ -197,7 +197,7 @@ public:
         PropertyGroupSignals::onPropertyChanged(prop);
     }
 
-    std::vector<Handle_MeshVS_Mesh> m_vecMeshVisu;
+    std::vector<OccHandle<MeshVS_Mesh>> m_vecMeshVisu;
     PropertyOccColor m_propertyColor{ this, GraphicsMeshObjectDriverI18N::textId("color") };
     PropertyOccColor m_propertyEdgeColor{ this, GraphicsMeshObjectDriverI18N::textId("edgeColor") };
     PropertyCheckState m_propertyShowEdges{ this, GraphicsMeshObjectDriverI18N::textId("showEdges") };

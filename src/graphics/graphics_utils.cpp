@@ -189,7 +189,7 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObje
 #else
     for (PrsMgr_ModedPresentation& pres : object->Presentations()) {
         if (pres.Mode() == object->DisplayMode()) {
-            const Handle_Prs3d_Presentation& pres3d = pres.Presentation()->Presentation();
+            const OccHandle<Prs3d_Presentation>& pres3d = pres.Presentation()->Presentation();
             if (!pres3d->CStructure()->BoundingBox().IsValid())
                 pres3d->CalculateBoundBox();
         }

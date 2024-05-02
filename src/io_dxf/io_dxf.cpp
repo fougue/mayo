@@ -80,10 +80,10 @@ const Enumeration& systemFontNames()
     static Enumeration fontNames;
     static TColStd_SequenceOfHAsciiString seqFontName;
     if (fontNames.empty()) {
-        Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
+        OccHandle<Font_FontMgr> fontMgr = Font_FontMgr::GetInstance();
         fontMgr->GetAvailableFontsNames(seqFontName);
         int i = 0;
-        for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
+        for (const OccHandle<TCollection_HAsciiString>& fontName : seqFontName)
             fontNames.addItem(i++, { {}, to_stdStringView(fontName->String()) });
     }
 
@@ -137,8 +137,8 @@ public:
     void ReportError(const std::string& msg) override;
     void AddGraphics() const override;
 
-    static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
-    static Handle_Geom_BSplineCurve createInterpolationSpline(const Dxf_SPLINE& spline);
+    static OccHandle<Geom_BSplineCurve> createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
+    static OccHandle<Geom_BSplineCurve> createInterpolationSpline(const Dxf_SPLINE& spline);
 
     gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape);
@@ -190,9 +190,9 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     TDF_LabelSequence seqLabel;
-    Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
-    Handle_XCAFDoc_ColorTool colorTool = doc->xcaf().colorTool();
-    Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
+    OccHandle<XCAFDoc_ShapeTool> shapeTool = doc->xcaf().shapeTool();
+    OccHandle<XCAFDoc_ColorTool> colorTool = doc->xcaf().colorTool();
+    OccHandle<XCAFDoc_LayerTool> layerTool = doc->xcaf().layerTool();
     std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
     std::unordered_map<ColorIndex_t, TDF_Label> mapAciColorLabel;
 
@@ -613,7 +613,7 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
     const gp_Ax3 locText(pt, extDir, xAxisDir);
     Font_BRepTextBuilder brepTextBuilder;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;
+    auto textFormat = makeOccHandle<Font_TextFormatter>();
     textFormat->SetupAlignment(hAlign, vAlign);
     textFormat->Append(occTextStr, *brepFont.FTFont());
     /* Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
@@ -694,7 +694,7 @@ void DxfReader::Internal::OnReadSpline(const Dxf_SPLINE& spline)
 {
     // https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ff18cb41610ec0a2e719-79e1.htm
     try {
-        Handle_Geom_BSplineCurve geom;
+        OccHandle<Geom_BSplineCurve> geom;
         if (!spline.controlPoints.empty())
             geom = createSplineFromPolesAndKnots(spline);
         else if (!spline.fitPoints.empty())
@@ -887,7 +887,7 @@ TopoDS_Face DxfReader::Internal::makeFace(const Dxf_QuadBase& quad) const
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
+OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
 {
     if (spline.weights.size() > spline.controlPoints.size())
         return {};
@@ -951,12 +951,12 @@ Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(cons
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
+OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
 {
     const auto iNumPoints = CppUtils::safeStaticCast<int>(spline.fitPoints.size());
 
     // Handle poles
-    Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, iNumPoints);
+    auto fitpoints = makeOccHandle<TColgp_HArray1OfPnt>(1, iNumPoints);
     for (const DxfCoords& pnt : spline.fitPoints) {
         const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.fitPoints.front());
         fitpoints->ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};

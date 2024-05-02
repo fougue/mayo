@@ -43,7 +43,7 @@ public:
 
     GuiApplication* guiApplication() const { return m_guiApp; }
 
-    const Handle_V3d_View& v3dView() const { return m_v3dView; }
+    const OccHandle<V3d_View>& v3dView() const { return m_v3dView; }
     GraphicsScene* graphicsScene() { return &m_gfxScene; }
     GraphicsViewPtr graphicsView() { return GraphicsViewPtr{ &m_gfxScene, m_v3dView }; }
     const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
@@ -152,14 +152,14 @@ private:
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;
     GraphicsScene m_gfxScene;
-    Handle_V3d_View m_v3dView;
-    Handle_AIS_InteractiveObject m_aisOriginTrihedron;
+    OccHandle<V3d_View> m_v3dView;
+    OccHandle<AIS_InteractiveObject> m_aisOriginTrihedron;
     double m_devicePixelRatio = 1.;
 
     V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;
     Aspect_TypeOfTriedronPosition m_viewTrihedronCorner = Aspect_TOTP_LEFT_UPPER;
-    Handle_AIS_InteractiveObject m_aisViewCube;
+    OccHandle<AIS_InteractiveObject> m_aisViewCube;
 
     std::vector<GraphicsEntity> m_vecGraphicsEntity;
     Bnd_Box m_gfxBoundingBox;
