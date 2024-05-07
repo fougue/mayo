@@ -11,6 +11,7 @@
 #include <TDataStd_TreeNode.hxx>
 #include <TDocStd_Document.hxx>
 #include <TDF_AttributeIterator.hxx>
+#include <TDF_ChildIterator.hxx>
 #include <XCAFDoc.hxx>
 #include <XCAFDoc_Area.hxx>
 #include <XCAFDoc_Centroid.hxx>
@@ -167,6 +168,16 @@ bool XCaf::isShapeCompound(const TDF_Label& lbl)
 bool XCaf::isShapeSub(const TDF_Label& lbl)
 {
     return XCAFDoc_ShapeTool::IsSubShape(lbl);
+}
+
+bool XCaf::hasShapeSubs(const TDF_Label& lbl)
+{
+    for (TDF_ChildIterator it(lbl); it.More(); it.Next()) {
+        if (XCaf::isShapeSub(it.Value()))
+            return true;
+    }
+
+    return false;
 }
 
 bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
