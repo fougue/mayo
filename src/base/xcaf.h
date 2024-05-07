@@ -64,6 +64,7 @@ public:
     static bool isShapeComponent(const TDF_Label& lbl);
     static bool isShapeCompound(const TDF_Label& lbl);
     static bool isShapeSub(const TDF_Label& lbl);
+    static bool hasShapeSubs(const TDF_Label& lbl);
 
     // Is 'shape' a subshape of the shape stored in 'lbl' ?
     bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape);
