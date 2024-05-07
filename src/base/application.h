@@ -11,21 +11,18 @@
 #include "occ_handle.h"
 #include "signal.h"
 #include "span.h"
-#include "text_id.h"
 
 #include <CDF_DirectoryIterator.hxx>
 #include <Standard_Version.hxx>
-#include <functional>
+#include <XCAFApp_Application.hxx>
 
 namespace Mayo {
 
 // Provides management of Document objects
-class Application : public TDocStd_Application {
+class Application : public XCAFApp_Application {
 public:
+    Application();
     ~Application();
-
-    // Global instance(singleton)
-    static const ApplicationPtr& instance();
 
     // Iterator over Documents contained in an Application
     struct DocumentIterator : private CDF_DirectoryIterator {
@@ -49,13 +46,7 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
-    // Provides internationalization support for text output
-    //     1st arg: message to be translated(TextId = context+key)
-    //     2nd arg: when != -1 used to choose an appropriate form for the translation(e.g. "%n file found" vs. "%n files found")
-    //     returns: translated message
-    using Translator = std::function<std::string_view (const TextId&, int)>;
-    void addTranslator(Translator fn);
-    std::string_view translate(const TextId& textId, int n = -1) const;
+    static void defineMayoFormat(const ApplicationPtr& app);
 
     static Span<const char*> envOpenCascadeOptions();
     static Span<const char*> envOpenCascadePaths();
@@ -83,12 +74,11 @@ public: // -- from TDocStd_Application
 // -> Can't do because PCDM_RetrievalDriver subclasses create explicitly "new TDocStd_Document(...)"
 //    This would break TDocStd_Application::Open(...)
 
-    DEFINE_STANDARD_RTTI_INLINE(Application, TDocStd_Application)
+    DEFINE_STANDARD_RTTI_INLINE(Application, XCAFApp_Application)
 
 private: // Implementation
     friend class Document;
 
-    Application();
     void notifyDocumentAboutToClose(Document::Identifier docIdent);
     void addDocument(const DocumentPtr& doc);
 

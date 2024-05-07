@@ -405,8 +405,8 @@ static int runApp(QCoreApplication* qtApp)
     }
 
     // Initialize Base application
-    auto app = Application::instance().get();
-    app->addTranslator(&qtAppTranslate); // Set Qt i18n backend
+    auto app = appModule->application();
+    TextId::addTranslatorFunction(&qtAppTranslate); // Set Qt i18n backend
 #ifdef MAYO_OS_WINDOWS
     initOpenCascadeEnvironment("opencascade.conf");
 #endif

@@ -6,14 +6,13 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/filepath.h"
 #include "../base/span.h"
 
 #include <functional>
 
 namespace Mayo {
-
-class Application;
 
 // Contains arguments for the cli_asyncExportDocuments() function
 struct CliExportArgs {
@@ -25,7 +24,7 @@ struct CliExportArgs {
 // Asynchronously exports input file(s) listed in 'args'
 // Calls 'fnContinuation' at the end of execution
 void cli_asyncExportDocuments(
-        Application* app,
+        const ApplicationPtr& app,
         const CliExportArgs& args,
         std::function<void(int)> fnContinuation
 );

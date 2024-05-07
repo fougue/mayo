@@ -37,6 +37,15 @@ struct TextId {
 
     // Whether source text(key) is empty or not
     bool isEmpty() const;
+
+    // Provides internationalization support for text output
+    //     1st arg: message to be translated(TextId = context+key)
+    //     2nd arg: when != -1 used to choose an appropriate form for the translation(e.g. "%n file found" vs. "%n files found")
+    //     returns: translated message
+    using TranslatorFunction = std::string_view(const TextId&, int);
+    using TranslatorFunctionPtr = TranslatorFunction*;
+    static void addTranslatorFunction(TranslatorFunctionPtr fn);
+    static std::string_view translate(const TextId& textId, int n = -1);
 };
 
 } // namespace Mayo

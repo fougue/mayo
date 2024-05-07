@@ -9,6 +9,7 @@
 #include "app_module_properties.h"
 #include "qstring_utils.h"
 
+#include "../base/application.h"
 #include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
@@ -52,6 +53,9 @@ public:
     static AppModule* get();
 
     ~AppModule();
+
+    // Application object
+    const ApplicationPtr& application() const { return m_application; }
 
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
@@ -121,6 +125,7 @@ private:
 
     bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
 
+    ApplicationPtr m_application;
     Settings* m_settings = nullptr;
     IO::System m_ioSystem;
     AppModuleProperties m_props;

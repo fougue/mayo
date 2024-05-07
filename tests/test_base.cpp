@@ -188,7 +188,7 @@ struct SignalEmitSpy {
 
 void TestBase::Application_test()
 {
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return m_ioSystem->importInDocument()
                 .targetDocument(doc)
@@ -259,9 +259,10 @@ void TestBase::Application_test()
 
 void TestBase::DocumentRefCount_test()
 {
-    DocumentPtr doc = Application::instance()->newDocument();
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
     QVERIFY(doc->GetRefCount() > 1);
-    Application::instance()->closeDocument(doc);
+    app->closeDocument(doc);
     QCOMPARE(doc->GetRefCount(), 1);
 }
 
@@ -609,7 +610,7 @@ void TestBase::IO_bugGitHub166_test()
     QFETCH(QString, strOutputFilePath);
     QFETCH(IO::Format, outputFormat);
 
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
     const bool okImport = m_ioSystem->importInDocument()
             .targetDocument(doc)
@@ -665,7 +666,7 @@ void TestBase::IO_bugGitHub166_test_data()
 
 void TestBase::IO_bugGitHub258_test()
 {
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
     const bool okImport = m_ioSystem->importInDocument()
                               .targetDocument(doc)
@@ -681,8 +682,6 @@ void TestBase::IO_bugGitHub258_test()
     QVERIFY(!triangulation.IsNull());
     QCOMPARE(triangulation->NbNodes(), 24);
     QCOMPARE(triangulation->NbTriangles(), 12);
-
-    app->closeDocument(doc);
 }
 
 void TestBase::DoubleToString_test()
