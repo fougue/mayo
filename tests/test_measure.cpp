@@ -182,7 +182,8 @@ void TestMeasure::BRepArea_TriangulationFace_test()
     const bool okRead = reader.readFile("tests/inputs/face_trsf_scale_almost_1.stl", progress);
     QVERIFY(okRead);
 
-    auto doc = Application::instance()->newDocument();
+    auto app = makeOccHandle<Application>();
+    auto doc = app->newDocument();
     const TDF_LabelSequence seqLabel = reader.transfer(doc, progress);
     QCOMPARE(seqLabel.Size(), 1);
     const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
@@ -193,7 +194,7 @@ void TestMeasure::BRepArea_TriangulationFace_test()
 void TestMeasure::BRepBoundingBox_Sphere_test()
 {
     const double sphereRadius = 50.;
-    const TopoDS_Shape sphereShape = BRepPrimAPI_MakeSphere(50.);
+    const TopoDS_Shape sphereShape = BRepPrimAPI_MakeSphere(sphereRadius);
     const MeasureBoundingBox bndBox = MeasureToolBRep::brepBoundingBox(sphereShape);
     QVERIFY(bndBox.cornerMin.IsEqual(gp_Pnt{-sphereRadius, -sphereRadius, -sphereRadius}, Precision::Confusion()));
     QVERIFY(bndBox.cornerMax.IsEqual(gp_Pnt{sphereRadius, sphereRadius, sphereRadius}, Precision::Confusion()));

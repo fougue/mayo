@@ -229,7 +229,7 @@ void FileCommandTools::importInDocument(
         QElapsedTimer chrono;
         chrono.start();
 
-        auto doc = Application::instance()->findDocumentByIdentifier(targetDocId);
+        auto doc = appModule->application()->findDocumentByIdentifier(targetDocId);
         const bool okImport = appModule->ioSystem()->importInDocument()
                                   .targetDocument(doc)
                                   .withFilepaths(listFilePaths)

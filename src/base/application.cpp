@@ -12,7 +12,6 @@
 
 #include <BinXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <BinXCAFDrivers_DocumentStorageDriver.hxx>
-#include <XCAFApp_Application.hxx>
 #include <XmlXCAFDrivers_DocumentRetrievalDriver.hxx>
 #include <XmlXCAFDrivers_DocumentStorageDriver.hxx>
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
@@ -20,7 +19,6 @@
 #endif
 
 #include <atomic>
-#include <vector>
 #include <unordered_map>
 
 namespace Mayo {
@@ -52,37 +50,20 @@ private:
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
-    std::vector<Application::Translator> m_vecTranslator;
 };
 
 struct ApplicationI18N {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Application)
 };
 
+Application::Application()
+    : d(new Private)
+{
+}
+
 Application::~Application()
 {
     delete d;
-}
-
-const ApplicationPtr& Application::instance()
-{
-    static ApplicationPtr appPtr;
-    if (!appPtr) {
-        appPtr = new Application;
-        const char strFougueCopyright[] = "Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>";
-        appPtr->DefineFormat(
-                    Document::NameFormatBinary, ApplicationI18N::textIdTr("Binary Mayo Document Format").data(), "myb",
-                    new Document::FormatBinaryRetrievalDriver(appPtr),
-                    new BinXCAFDrivers_DocumentStorageDriver
-        );
-        appPtr->DefineFormat(
-                    Document::NameFormatXml, ApplicationI18N::textIdTr("XML Mayo Document Format").data(), "myx",
-                    new Document::FormatXmlRetrievalDriver(appPtr),
-                    new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright)
-        );
-    }
-
-    return appPtr;
 }
 
 int Application::documentCount() const
@@ -117,7 +98,7 @@ DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatu
 DocumentPtr Application::findDocumentByIndex(int docIndex) const
 {
     OccHandle<TDocStd_Document> doc;
-    TDocStd_Application::GetDocument(docIndex + 1, doc);
+    XCAFApp_Application::GetDocument(docIndex + 1, doc);
     return !doc.IsNull() ? DocumentPtr::DownCast(doc) : DocumentPtr();
 }
 
@@ -150,7 +131,7 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 
 void Application::closeDocument(const DocumentPtr& doc)
 {
-    TDocStd_Application::Close(doc);
+    XCAFApp_Application::Close(doc);
     doc->signalNameChanged.disconnectAll();
     doc->signalFilePathChanged.disconnectAll();
     doc->signalEntityAdded.disconnectAll();
@@ -158,22 +139,19 @@ void Application::closeDocument(const DocumentPtr& doc)
     //doc->Main().ForgetAllAttributes(true/*clearChildren*/);
 }
 
-void Application::addTranslator(Application::Translator fn)
+void Application::defineMayoFormat(const ApplicationPtr& app)
 {
-    if (fn)
-        d->m_vecTranslator.push_back(std::move(fn));
-}
-
-std::string_view Application::translate(const TextId& textId, int n) const
-{
-    for (auto it = d->m_vecTranslator.rbegin(); it != d->m_vecTranslator.rend(); ++it) {
-        const Application::Translator& fn = *it;
-        std::string_view msg = fn(textId, n);
-        if (!msg.empty())
-            return msg;
-    }
-
-    return textId.key;
+    const char strFougueCopyright[] = "Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>";
+    app->DefineFormat(
+        Document::NameFormatBinary, ApplicationI18N::textIdTr("Binary Mayo Document Format").data(), "myb",
+        new Document::FormatBinaryRetrievalDriver(app),
+        new BinXCAFDrivers_DocumentStorageDriver
+    );
+    app->DefineFormat(
+        Document::NameFormatXml, ApplicationI18N::textIdTr("XML Mayo Document Format").data(), "myx",
+        new Document::FormatXmlRetrievalDriver(app),
+        new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright)
+    );
 }
 
 Span<const char*> Application::envOpenCascadeOptions()
@@ -215,7 +193,7 @@ void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<TDocS
 #endif
 {
     // TODO: check format == "mayo" if not throw exception
-    // Extended from TDocStd_Application::NewDocument() implementation, ensure that in future
+    // Extended from XCAFApp_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
     DocumentPtr newDoc = new Document(this);
     CDF_Application::Open(newDoc); // Add the document in the session
@@ -229,13 +207,7 @@ void Application::InitDocument(const OccHandle<CDM_Document>& doc) const
 void Application::InitDocument(const OccHandle<TDocStd_Document>& doc) const
 #endif
 {
-    TDocStd_Application::InitDocument(doc);
-    XCAFApp_Application::GetApplication()->InitDocument(doc);
-}
-
-Application::Application()
-    : d(new Private)
-{
+    XCAFApp_Application::InitDocument(doc);
 }
 
 void Application::notifyDocumentAboutToClose(Document::Identifier docIdent)

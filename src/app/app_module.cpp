@@ -82,7 +82,8 @@ QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
 } // namespace
 
 AppModule::AppModule()
-    : m_settings(new Settings),
+    : m_application(new Application),
+      m_settings(new Settings),
       m_props(m_settings),
       m_stdLocale(std::locale("")),
       m_qtLocale(QLocale::system())
@@ -94,6 +95,7 @@ AppModule::AppModule()
     }
 
     m_settings->setPropertyValueConversion(this);
+    Application::defineMayoFormat(m_application);
 }
 
 QStringUtils::TextOptions AppModule::defaultTextOptions() const

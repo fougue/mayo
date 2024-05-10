@@ -66,7 +66,7 @@ RecentFile createRecentFile(const QPixmap& thumbnail)
 
 void TestApp::DocumentFilesWatcher_test()
 {
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
 
     DocumentFilesWatcher docFilesWatcher(app);
     docFilesWatcher.enable(true);
@@ -87,10 +87,6 @@ void TestApp::DocumentFilesWatcher_test()
     fnCopyCadFile();
     DocumentPtr doc = app->newDocument();
     doc->setFilePath(cadFilePath);
-    auto _ = gsl::finally([=]{
-        if (app->findIndexOfDocument(doc) != -1)
-            app->closeDocument(doc);
-    });
 
     // Check file change on document is caught
     fnCopyCadFile();

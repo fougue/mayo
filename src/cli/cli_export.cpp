@@ -166,7 +166,10 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
 } // namespace
 
 void cli_asyncExportDocuments(
-        Application* app, const CliExportArgs& args, std::function<void(int)> fnContinuation)
+        const ApplicationPtr& app,
+        const CliExportArgs& args,
+        std::function<void(int)> fnContinuation
+    )
 {
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
     auto taskMgr = &helper->taskMgr;
