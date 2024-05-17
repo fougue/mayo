@@ -9,7 +9,6 @@
 #include "occ_handle.h"
 
 #include <Quantity_Color.hxx>
-#include <Standard_Handle.hxx>
 #include <Standard_Version.hxx>
 #include <string>
 #include <string_view>
@@ -21,7 +20,6 @@
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include <Message_ProgressRange.hxx>
 #else
-#  include <Standard_Handle.hxx>
 class Message_ProgressIndicator;
 #endif
 
@@ -56,16 +54,3 @@ public:
 };
 
 } // namespace Mayo
-
-#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 8, 0)
-namespace std {
-
-// Specialization of C++11 std::hash<> functor for opencascade::handle<> objects
-template<typename T> struct hash<opencascade::handle<T>> {
-    inline std::size_t operator()(const opencascade::handle<T>& hnd) const {
-        return hash<T*>{}(hnd.get());
-    }
-};
-
-} // namespace std
-#endif

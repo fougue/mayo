@@ -17,6 +17,7 @@
 #include "../base/property.h"
 #include "../base/string_conv.h"
 #include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 #include "../base/xcaf.h"
 
 #include <assimp/scene.h>
@@ -29,6 +30,7 @@
 #include <cassert>
 #include <iostream>
 
+#include <gp_Quaternion.hxx>
 #include <gp_Trsf.hxx>
 #include <BRep_Builder.hxx>
 #include <Image_Texture.hxx>
@@ -52,21 +54,11 @@ struct AssimpReaderI18N {
 // Retrieve the scaling component in assimp matrix 'trsf'
 aiVector3D aiMatrixScaling(const aiMatrix4x4& trsf)
 {
-    const ai_real scalingX = aiVector3D(trsf.a1, trsf.a2, trsf.a3).Length();
-    const ai_real scalingY = aiVector3D(trsf.b1, trsf.b2, trsf.b3).Length();
-    const ai_real scalingZ = aiVector3D(trsf.c1, trsf.c2, trsf.c3).Length();
-    return aiVector3D(scalingX, scalingY, scalingZ);
-}
-
-bool hasScaleFactor(const gp_Trsf& trsf)
-{
-    const double topLocationScalePrec =
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
-        TopLoc_Location::ScalePrec();
-#else
-        1.e-14;
-#endif
-    return (Abs(Abs(trsf.ScaleFactor()) - 1.) > topLocationScalePrec) || trsf.IsNegative();
+    aiVector3D scaling;
+    aiQuaternion rotation;
+    aiVector3D position;
+    trsf.Decompose(scaling, rotation, position);
+    return scaling;
 }
 
 bool hasScaleFactor(const aiVector3D& scaling)
@@ -78,54 +70,144 @@ bool hasScaleFactor(const aiVector3D& scaling)
            );
 }
 
-[[maybe_unused]] bool hasScaleFactor(const aiMatrix4x4& trsf)
+// Visit each node in Assimp tree and call 'fnCallback'
+void deep_aiNodeVisit(
+        const aiNode* node,
+        const std::function<void(const aiNode*)>& fnPreCallback,
+        const std::function<void(const aiNode*)>& fnPostCallback = nullptr
+    )
 {
-    const aiVector3D scaling = aiMatrixScaling(trsf);
-    return hasScaleFactor(scaling);
+    if (fnPreCallback)
+        fnPreCallback(node);
+
+    for (unsigned ichild = 0; ichild < node->mNumChildren; ++ichild)
+        deep_aiNodeVisit(node->mChildren[ichild], fnPreCallback, fnPostCallback);
+
+    if (fnPostCallback)
+        fnPostCallback(node);
 }
 
 // Check if Assimp tree from 'node' contains a transformation having scale
 bool deep_aiNodeTransformationHasScaling(const aiNode* node)
 {
-    const aiVector3D scaling = aiMatrixScaling(node->mTransformation);
-    if (!MathUtils::fuzzyEqual(scaling.x, 1)
-        || !MathUtils::fuzzyEqual(scaling.y, 1)
-        || !MathUtils::fuzzyEqual(scaling.z, 1)
-        || scaling.x < 0. || scaling.y < 0. || scaling.z < 0.
-        )
-    {
-        //std::cout << "[TRACE] hasScaling: " << scaling.x << " " << scaling.y << " " << scaling.z << std::endl;
-        return true;
-    }
+    bool hasScaling = false;
+    deep_aiNodeVisit(node, [&](const aiNode* node) {
+        if (!hasScaling) {
+            const aiVector3D scaling = aiMatrixScaling(node->mTransformation);
+            hasScaling =
+                !MathUtils::fuzzyEqual(scaling.x, 1)
+                || !MathUtils::fuzzyEqual(scaling.y, 1)
+                || !MathUtils::fuzzyEqual(scaling.z, 1)
+                || scaling.x < 0. || scaling.y < 0. || scaling.z < 0.
+            ;
+        }
+    });
 
-    for (unsigned ichild = 0; ichild < node->mNumChildren; ++ichild) {
-        if (deep_aiNodeTransformationHasScaling(node->mChildren[ichild]))
-            return true;
-    }
-
-    return false;
+    return hasScaling;
 }
 
-// Visit each node in Assimp tree and call 'fnCallback'
-void deep_aiNodeVisit(const aiNode* node, const std::function<void(const aiNode*)>& fnCallback)
+void deep_aiScenePrint(std::ostream& outs, const aiScene* scene)
 {
-    fnCallback(node);
-    for (unsigned ichild = 0; ichild < node->mNumChildren; ++ichild)
-        deep_aiNodeVisit(node->mChildren[ichild], fnCallback);
-}
+    auto fnIndent = [](std::ostream& outs, int depth) -> std::ostream& {
+        for (int i = 0; i < depth * 4; ++i)
+            outs << ' ';
+        return outs;
+    };
 
-// Returns the OpenCascade transformation converted from assimp matrix
-gp_Trsf toOccTrsf(const aiMatrix4x4& matrix)
-{
-    // TODO Check scaling != 0
-    const aiVector3D scaling = aiMatrixScaling(matrix);
-    gp_Trsf trsf;
-    trsf.SetValues(
-        matrix.a1 / scaling.x, matrix.a2 / scaling.x, matrix.a3 / scaling.x, matrix.a4,
-        matrix.b1 / scaling.y, matrix.b2 / scaling.y, matrix.b3 / scaling.y, matrix.b4,
-        matrix.c1 / scaling.z, matrix.c2 / scaling.z, matrix.c3 / scaling.z, matrix.c4
+    outs << "#animation: " << scene->mNumAnimations << std::endl;
+    outs << "#camera: " << scene->mNumCameras<< std::endl;
+    outs << "#light: " << scene->mNumLights<< std::endl;
+    outs << "#mesh: " << scene->mNumMeshes<< std::endl;
+    outs << "#material: " << scene->mNumMaterials<< std::endl;
+    // TODO Skeleton data is available in assimp >= 5.2.5
+    //      Add detection in CMakeLists.txt
+    // outs << "#skeleton: " << scene->mNumSkeletons<< std::endl;
+    outs << "#texture: " << scene->mNumTextures<< std::endl;
+    outs << std::endl;
+
+    for (unsigned ianim = 0; ianim < scene->mNumAnimations; ++ianim) {
+        const aiAnimation* anim = scene->mAnimations[ianim];
+        outs << "Animation" << ianim << std::endl;
+        outs << "    name: '" << anim->mName.C_Str() << "'\n";
+        outs << "    duration: " << anim->mDuration << "\n";
+        outs << "    ticksPerSecond: " << anim->mTicksPerSecond << "\n";
+        outs << "    #channel: " << anim->mNumChannels << "\n";
+        outs << "    #meshChannel: " << anim->mNumMeshChannels << "\n";
+        outs << "    #morphMeshChannel: " << anim->mNumMorphMeshChannels << "\n";
+        for (unsigned ichannel = 0; ichannel < anim->mNumChannels; ++ichannel) {
+            const aiNodeAnim* iNodeAnim = anim->mChannels[ichannel];
+            outs << "    NodeAnim" << ichannel << "\n";
+            outs << "        nodeName: '" << iNodeAnim->mNodeName.C_Str() << "'\n";
+            outs << "        #posKey: " << iNodeAnim->mNumPositionKeys << "\n";
+            outs << "        #rotKey: " << iNodeAnim->mNumRotationKeys << "\n";
+            outs << "        #scaleKey: " << iNodeAnim->mNumScalingKeys << "\n";
+#if 0
+            outs << "        ScalingKeys" << "\n";
+            for (unsigned iKey = 0; iKey < iNodeAnim->mNumScalingKeys; ++iKey) {
+                const aiVector3D& vec = iNodeAnim->mScalingKeys[iKey].mValue;
+                outs << "            " << vec.x << ", " << vec.y << ", " << vec.z << "\n";
+            }
+#endif
+        }
+
+        outs << std::endl;
+    }
+
+    for (unsigned imesh = 0; imesh < scene->mNumMeshes; ++imesh) {
+        const aiMesh* mesh = scene->mMeshes[imesh];
+        outs << "Mesh" << imesh << "\n"
+             << "    name: '" << mesh->mName.C_Str() << "'\n"
+             << "    materialid: " << mesh->mMaterialIndex << "\n"
+             << "    #vert: " << mesh->mNumVertices << "\n"
+             << "    #face: " << mesh->mNumFaces << "\n"
+             << "    #bone: " << mesh->mNumBones << "\n";
+        for (unsigned ibone = 0; ibone < mesh->mNumBones; ++ibone) {
+            const aiBone* bone = mesh->mBones[ibone];
+            outs << "    Bone" << ibone << "\n"
+                 << "        name: '" << bone->mName.C_Str() << "'\n"
+                 << "        #weight: " << bone->mNumWeights
+                 << "\n";
+        }
+    }
+
+    outs << "\nScene graph:\n" ;
+    int nodeDepth = 0;
+    deep_aiNodeVisit(
+        scene->mRootNode,
+        [&](const aiNode* node) {
+            fnIndent(outs, nodeDepth);
+            outs << node->mName.C_Str() << " {";
+            if (node->mNumMeshes)
+                outs << "#mesh:" << node->mNumMeshes << " ";
+
+            if (node->mNumChildren)
+                outs << "#child:" << node->mNumChildren;
+
+            outs << "}\n";
+            if (node->mMetaData) {
+                fnIndent(outs, nodeDepth) << "  ";
+                outs << "->metada " << " #prop:" << node->mMetaData->mNumProperties;
+                for (unsigned ikey = 0; ikey < node->mMetaData->mNumProperties; ++ikey) {
+                    outs << " key:'" << node->mMetaData->mKeys[ikey].C_Str() << "'";
+                }
+
+                outs << "\n";
+            }
+
+            for (unsigned imesh = 0; imesh < node->mNumMeshes; ++imesh) {
+                const aiMesh* mesh = scene->mMeshes[node->mMeshes[imesh]];
+                fnIndent(outs, nodeDepth) << "  ";
+                outs << "->mesh" << imesh << " '" << mesh->mName.C_Str() << "'"
+                     << " meshid:" << node->mMeshes[imesh]
+                     << "\n";
+            }
+
+            ++nodeDepth;
+        },
+        [&](const aiNode*) { --nodeDepth; }
     );
-    return trsf;
+
+    outs << std::endl;
 }
 
 // Returns the Quantity_Color object equivalent to assimp 'color'
@@ -239,7 +321,6 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
             aiProcess_Triangulate
             | aiProcess_JoinIdenticalVertices
             //| aiProcess_SortByPType /* Crashes with assimp-5.3.1 on Windows */
-
             //| aiProcess_OptimizeGraph
             //| aiProcess_TransformUVCoords
             //| aiProcess_FlipUVs
@@ -305,6 +386,9 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
         m_vecMaterial.at(i) = this->createOccVisMaterial(material, filepath);
     }
 
+#ifdef MAYO_ASSIMP_READER_HANDLE_SCALING
+    deep_aiScenePrint(std::cout, m_scene);
+#endif
     return true;
 }
 
@@ -314,6 +398,7 @@ TDF_LabelSequence AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress
         return {};
 
     m_mapNodeData.clear();
+
     // Compute data for each aiNode object in the scene
     deep_aiNodeVisit(m_scene->mRootNode, [=](const aiNode* node) {
         aiNodeData nodeData;
@@ -321,14 +406,12 @@ TDF_LabelSequence AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress
         if (itParentData != m_mapNodeData.cend()) {
             const aiNodeData& parentData = itParentData->second;
             nodeData.aiAbsoluteTrsf = parentData.aiAbsoluteTrsf * node->mTransformation;
-            nodeData.occAbsoluteTrsf = parentData.occAbsoluteTrsf * toOccTrsf(node->mTransformation);
         }
         else {
             nodeData.aiAbsoluteTrsf = node->mTransformation;
-            nodeData.occAbsoluteTrsf = toOccTrsf(node->mTransformation);
         }
 
-        m_mapNodeData.insert({ node, nodeData });
+        m_mapNodeData.insert_or_assign(node, std::move(nodeData));
     });
 
     // Compute count of meshes in the scene
@@ -371,7 +454,7 @@ void AssimpReader::applyProperties(const PropertyGroup* group)
 }
 
 OccHandle<Image_Texture> AssimpReader::findOccTexture(
-    const std::string& strFilepath, const FilePath& modelFilepath
+        const std::string& strFilepath, const FilePath& modelFilepath
     )
 {
     // Texture might be embedded
@@ -426,7 +509,7 @@ OccHandle<Image_Texture> AssimpReader::findOccTexture(
 }
 
 OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
-    const aiMaterial* material, const FilePath& modelFilepath
+        const aiMaterial* material, const FilePath& modelFilepath
     )
 {
     auto mat = makeOccHandle<XCAFDoc_VisMaterial>();
@@ -610,10 +693,10 @@ OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
 }
 
 void AssimpReader::transferSceneNode(
-    const aiNode* node,
-    DocumentPtr targetDoc,
-    const TDF_Label& labelEntity,
-    const std::function<void(const aiMesh*)>& fnCallbackMesh
+        const aiNode* node,
+        DocumentPtr targetDoc,
+        const TDF_Label& labelEntity,
+        const std::function<void(const aiMesh*)>& fnCallbackMesh
     )
 {
     if (!node)
@@ -622,14 +705,14 @@ void AssimpReader::transferSceneNode(
     const std::string nodeName = node->mName.C_Str();
 
     const aiNodeData nodeData = Cpp::findValue(node, m_mapNodeData);
-    gp_Trsf nodeAbsoluteTrsf = nodeData.occAbsoluteTrsf;
-    if (hasScaleFactor(nodeAbsoluteTrsf))
-        nodeAbsoluteTrsf.SetScaleFactor(1.);
+    aiVector3D nodeScale;
+    aiQuaternion nodeRot;
+    aiVector3D nodePos;
+    nodeData.aiAbsoluteTrsf.Decompose(nodeScale, nodeRot, nodePos);
 
-#ifdef MAYO_ASSIMP_READER_HANDLE_SCALING
-    const aiVector3D nodeScaling = aiMatrixScaling(nodeData.aiAbsoluteTrsf);
-    const bool nodeHasScaling = hasScaleFactor(nodeScaling);
-#endif
+    gp_Trsf nodeAbsoluteTrsf;
+    nodeAbsoluteTrsf.SetRotationPart(gp_Quaternion{nodeRot.x, nodeRot.y, nodeRot.z, nodeRot.w});
+    nodeAbsoluteTrsf.SetTranslationPart(gp_Vec{nodePos.x, nodePos.y, nodePos.z});
 
     // Produce shape corresponding to the node
     for (unsigned imesh = 0; imesh < node->mNumMeshes; ++imesh) {
@@ -641,14 +724,13 @@ void AssimpReader::transferSceneNode(
             continue; // Skip
 
 #ifdef MAYO_ASSIMP_READER_HANDLE_SCALING
-        if (nodeHasScaling) {
+        if (hasScaleFactor(nodeScale)) {
             triangulation = triangulation->Copy();
-            for (int i = 1; i < triangulation->NbNodes(); ++i) {
-                gp_Pnt pnt = triangulation->Node(i);
-                pnt.SetX(pnt.X() * nodeScaling.x);
-                pnt.SetY(pnt.Y() * nodeScaling.y);
-                pnt.SetZ(pnt.Z() * nodeScaling.z);
-                MeshUtils::setNode(triangulation, i , pnt);
+            for (int i = 1; i <= triangulation->NbNodes(); ++i) {
+                const gp_Pnt pnt = triangulation->Node(i);
+                MeshUtils::setNode(
+                    triangulation, i, gp_Pnt{ pnt.X() * nodeScale.x, pnt.Y() * nodeScale.y, pnt.Z() * nodeScale.z }
+                );
             }
         }
 #endif
