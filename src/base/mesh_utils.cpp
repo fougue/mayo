@@ -135,6 +135,20 @@ void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation)
 #endif
 }
 
+Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triangulation, int index)
+{
+    Poly_Triangulation_NormalType nvec;
+#if OCC_VERSION_HEX >= 0x070600
+    triangulation->Normal(index, nvec);
+#else
+    const TShort_Array1OfShortReal& normals = triangulation->Normals();
+    nvec.SetX(normals.Value(index * 3 - 2));
+    nvec.SetY(normals.Value(index * 3 - 1));
+    nvec.SetZ(normals.Value(index * 3));
+#endif
+    return nvec;
+}
+
 const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation)
 {
 #if OCC_VERSION_HEX < 0x070600
