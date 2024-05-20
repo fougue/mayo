@@ -4,14 +4,23 @@ on: [push]
 
 jobs:
     build-macos:
+        strategy:
+            matrix:
+                include:
+                    - qt_version_name: 5.15
+                      qt_version_major: 5
+                    - qt_version_name: 6.7
+                      qt_version_major: 6
+
         runs-on: macos-latest
+        name: build-macos-qt${{matrix.qt_version_name}}
 
         steps:
         - name: Checkout
           uses: actions/checkout@v2
 
         - name: Install Qt
-          run: brew install qt@5
+          run: brew install qt@${{matrix.qt_version_major}}
 
         - name: Install OpenCascade
           run: brew install opencascade
@@ -31,7 +40,7 @@ jobs:
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON \
-                    -DQT_DIR=$(brew --prefix qt5)/lib/cmake/Qt5
+                    -DQT_DIR=$(brew --prefix qt@${{matrix.qt_version_major}})/lib/cmake/Qt${{matrix.qt_version_major}}
               cmake --build . \
                     --config Release \
                     --parallel ${{steps.cpu-cores.outputs.count}}
