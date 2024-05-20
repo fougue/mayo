@@ -31,11 +31,13 @@ using Poly_Triangulation_NormalType = gp_Vec;
 #endif
 
 void setNode(const OccHandle<Poly_Triangulation>& triangulation, int index, const gp_Pnt& pnt);
-void setTriangle(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangle& triangle);
 void setNormal(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangulation_NormalType& n);
+void setTriangle(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangle& triangle);
 void setUvNode(const OccHandle<Poly_Triangulation>& triangulation, int index, double u, double v);
+
 void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation);
 
+Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triangulation, int index);
 const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation);
 
 enum class Orientation {

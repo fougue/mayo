@@ -6,10 +6,7 @@
 
 #pragma once
 
-#include "../base/document_ptr.h"
 #include "../base/io_reader.h"
-#include "../base/occ_handle.h"
-#include "../base/tkernel_utils.h"
 
 #include <assimp/Importer.hpp>
 
@@ -57,7 +54,6 @@ private:
     );
 
     struct aiNodeData {
-        gp_Trsf occAbsoluteTrsf;
         aiMatrix4x4 aiAbsoluteTrsf;
     };
 

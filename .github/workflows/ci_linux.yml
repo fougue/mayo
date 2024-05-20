@@ -9,6 +9,7 @@ jobs:
                 qt_version: [5.15.2, 6.5.2]
 
         runs-on: ubuntu-latest
+        name: build-linux-qt${{matrix.qt_version}}
 
         steps:
         - name: Checkout
