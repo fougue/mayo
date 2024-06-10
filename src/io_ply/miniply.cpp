@@ -1126,7 +1126,7 @@ namespace miniply {
       return 0;
     }
     const PLYProperty& prop = element()->properties[propIdx];
-    return prop.listData.size() / kPLYPropertySize[uint32_t(prop.type)];
+    return static_cast<uint32_t>(prop.listData.size() / kPLYPropertySize[uint32_t(prop.type)]);
   }
 
 
