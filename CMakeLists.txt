@@ -143,6 +143,8 @@ if(MSVC)
     list(APPEND Mayo_CompileDefinitions NOMINMAX)
     # Deletion of pointer to incomplete type 'XXXX'; no destructor called
     list(APPEND Mayo_CompileOptions /we4150)
+    # Specify both the source character set and the execution character set as UTF-8
+    list(APPEND Mayo_CompileOptions /utf-8)
     if(QT_VERSION_MAJOR EQUAL 6)
         list(APPEND Mayo_CompileDefinitions _USE_MATH_DEFINES)
     endif()
