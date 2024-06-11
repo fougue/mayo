@@ -106,7 +106,8 @@ public:
     void installDefaultItemDelegate();
     QStyledItemDelegate* createProxyItemDelegate(
             QStyledItemDelegate* sourceDelegate,
-            QObject* parent = nullptr) const;
+            QObject* parent = nullptr
+        ) const;
 
 signals:
     void buttonClicked(int btnId, const QModelIndex& index);

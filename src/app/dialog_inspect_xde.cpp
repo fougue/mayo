@@ -9,6 +9,7 @@
 #include "../base/application.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
+#include "../base/cpp_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/meta_enum.h"
 #include "../base/settings.h"
@@ -258,7 +259,8 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS
             QString("%1%2%3")
             .arg(vertexCount ? QString("%1 vertices ").arg(vertexCount) : QString())
             .arg(edgeCount ? QString("%1 edges ").arg(edgeCount) : QString())
-            .arg(faceCount ? QString("%1 faces").arg(faceCount) : QString());
+            .arg(faceCount ? QString("%1 faces").arg(faceCount) : QString())
+            ;
     itemShape->setText(1, textShape);
 
     return itemShape;
@@ -429,8 +431,9 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
     else if (imgTexture->DataBuffer() && !imgTexture->DataBuffer()->IsEmpty()) {
         // Texture is provided by some embedded data
         item->setText(1, DialogInspectXde::tr("<data>"));
-        const OccHandle<NCollection_Buffer>& buff = imgTexture->DataBuffer();
-        item->setImage(1, QByteArray::fromRawData(reinterpret_cast<const char*>(buff->Data()), buff->Size()));
+        const char* buffData = reinterpret_cast<const char*>(imgTexture->DataBuffer()->Data());
+        const int buffSize = Cpp::safeStaticCast<int>(imgTexture->DataBuffer()->Size());
+        item->setImage(1, QByteArray::fromRawData(buffData, buffSize));
     }
 
     return item;
@@ -441,7 +444,8 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
 static void loadLabelVisMaterialProperties(
         const TDF_Label& label,
         const OccHandle<XCAFDoc_VisMaterialTool>& visMaterialTool,
-        QTreeWidgetItem* treeItem)
+        QTreeWidgetItem* treeItem
+    )
 {
     QList<QTreeWidgetItem*> listItemProp;
     auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
@@ -518,7 +522,8 @@ static void loadLabelVisMaterialProperties(
 static void loadLabelColorProperties(
         const TDF_Label& label,
         const OccHandle<XCAFDoc_ColorTool>& colorTool,
-        QTreeWidgetItem* treeItem)
+        QTreeWidgetItem* treeItem
+    )
 {
     QList<QTreeWidgetItem*> listItemProp;
     auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
@@ -547,7 +552,8 @@ static void loadLabelColorProperties(
 static void loadLabelShapeProperties(
         const TDF_Label& label,
         const OccHandle<XCAFDoc_ShapeTool>& shapeTool,
-        QTreeWidgetItem* treeItem)
+        QTreeWidgetItem* treeItem
+    )
 {
     QList<QTreeWidgetItem*> listItemProp;
     auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
@@ -572,7 +578,8 @@ static void loadLabelShapeProperties(
             const QString textItemRefShape =
                     to_QString(CafUtils::labelTag(labelRef))
                     + " "
-                    + to_QString(CafUtils::labelAttrStdName(labelRef));
+                    + to_QString(CafUtils::labelAttrStdName(labelRef))
+                ;
             fnAddItem(createPropertyTreeItem("ReferredShape", textItemRefShape));
         }
     }
@@ -592,9 +599,11 @@ static void loadLabelDimensionProperties(const TDF_Label& label, QTreeWidgetItem
     OccHandle<XCAFDimTolObjects_DimensionObject> dimObject = dimAttr->GetObject();
     fnAddItem(createPropertyTreeItem("SemanticName", dimObject->GetSemanticName()));
     fnAddItem(createPropertyTreeItem(
-                  "Qualifier", MetaEnum::nameWithoutPrefix(dimObject->GetQualifier(), "XCAFDimTolObjects_")));
+                  "Qualifier", MetaEnum::nameWithoutPrefix(dimObject->GetQualifier(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem(
-                  "Type", MetaEnum::nameWithoutPrefix(dimObject->GetType(), "XCAFDimTolObjects_")));
+                  "Type", MetaEnum::nameWithoutPrefix(dimObject->GetType(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem("Value", dimObject->GetValue()));
 
     fnAddItem(createPropertyTreeItem("IsDimWithRange", dimObject->IsDimWithRange()));
@@ -677,7 +686,8 @@ static void loadLabelDatumProperties(const TDF_Label& label, QTreeWidgetItem* tr
     fnAddItem(createPropertyTreeItem("IsDatumTarget", datumObject->IsDatumTarget()));
     fnAddItem(createPropertyTreeItem(
                   "DatumTargetType",
-                  MetaEnum::nameWithoutPrefix(datumObject->GetDatumTargetType(), "XCAFDimTolObjects_")));
+                  MetaEnum::nameWithoutPrefix(datumObject->GetDatumTargetType(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem("HasDatumTargetParams", datumObject->HasDatumTargetParams()));
     if (datumObject->HasDatumTargetParams()) {
         fnAddChildItem(createPropertyTreeItem("DatumTargetAxis", datumObject->GetDatumTargetAxis()));
@@ -716,16 +726,20 @@ static void loadLabelGeomToleranceProperties(const TDF_Label& label, QTreeWidget
     OccHandle<XCAFDimTolObjects_GeomToleranceObject> tolObject = tolAttr->GetObject();
     fnAddItem(createPropertyTreeItem("SemanticName", tolObject->GetSemanticName()));
     fnAddItem(createPropertyTreeItem(
-                  "Type", MetaEnum::nameWithoutPrefix(tolObject->GetType(), "XCAFDimTolObjects_")));
+                  "Type", MetaEnum::nameWithoutPrefix(tolObject->GetType(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem(
-                  "TypeOfValue", MetaEnum::nameWithoutPrefix(tolObject->GetTypeOfValue(), "XCAFDimTolObjects_")));
+                  "TypeOfValue", MetaEnum::nameWithoutPrefix(tolObject->GetTypeOfValue(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem("Value", tolObject->GetValue()));
     fnAddItem(createPropertyTreeItem(
                   "MaterialRequirementModifier",
-                  MetaEnum::nameWithoutPrefix(tolObject->GetMaterialRequirementModifier(), "XCAFDimTolObjects_")));
+                  MetaEnum::nameWithoutPrefix(tolObject->GetMaterialRequirementModifier(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem(
                   "ZoneModifier",
-                  MetaEnum::nameWithoutPrefix(tolObject->GetZoneModifier(), "XCAFDimTolObjects_")));
+                  MetaEnum::nameWithoutPrefix(tolObject->GetZoneModifier(), "XCAFDimTolObjects_"))
+    );
     fnAddItem(createPropertyTreeItem("ValueOfZoneModifier", tolObject->GetValueOfZoneModifier()));
     fnAddItem(createPropertyTreeItem("MaxValueModifier", tolObject->GetMaxValueModifier()));
     fnAddItem(createPropertyTreeItem("HasAxis", tolObject->HasAxis()));
@@ -750,9 +764,11 @@ static void loadLabelGeomToleranceProperties(const TDF_Label& label, QTreeWidget
     if (tolObject->HasAffectedPlane()) {
         fnAddChildItem(createPropertyTreeItem(
                            "AffectedPlaneType",
-                           MetaEnum::nameWithoutPrefix(tolObject->GetAffectedPlaneType(), "XCAFDimTolObjects_")));
+                           MetaEnum::nameWithoutPrefix(tolObject->GetAffectedPlaneType(), "XCAFDimTolObjects_"))
+        );
         fnAddChildItem(createPropertyTreeItem(
-                           "AffectedPlaneType", tolObject->GetAffectedPlane().Position().Ax2()));
+                           "AffectedPlaneType", tolObject->GetAffectedPlane().Position().Ax2())
+        );
     }
 
     treeItem->addChildren(listItemProp);
@@ -770,7 +786,7 @@ static void loadLabel(const TDF_Label& label, QTreeWidgetItem* treeItem)
 
 static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* treeItem)
 {
-    for (TDF_ChildIterator it(label, Standard_False); it.More(); it.Next()) {
+    for (TDF_ChildIterator it(label, false/*!allLevels*/); it.More(); it.Next()) {
         const TDF_Label childLabel = it.Value();
         auto childTreeItem = new QTreeWidgetItem(treeItem);
         loadLabel(childLabel, childTreeItem);
@@ -788,8 +804,9 @@ DialogInspectXde::DialogInspectXde(QWidget* parent)
     m_ui->splitter->setStretchFactor(0, 1);
     m_ui->splitter->setStretchFactor(1, 4);
     QObject::connect(
-                m_ui->treeWidget_Document, &QTreeWidget::itemClicked,
-                this, &DialogInspectXde::onLabelTreeWidgetItemClicked);
+        m_ui->treeWidget_Document, &QTreeWidget::itemClicked,
+        this, &DialogInspectXde::onLabelTreeWidgetItemClicked
+    );
 }
 
 DialogInspectXde::~DialogInspectXde()
@@ -801,8 +818,7 @@ void DialogInspectXde::load(const OccHandle<TDocStd_Document>& doc)
 {
     m_doc = doc;
     if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc)) {
-        QtWidgetsUtils::asyncMsgBoxCritical(
-                    this, tr("Error"), tr("This document is not suitable for XDE"));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("This document is not suitable for XDE"));
         return;
     }
 

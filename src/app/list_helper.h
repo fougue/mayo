@@ -71,7 +71,8 @@ public:
     void paint(
             QPainter* painter,
             const QStyleOptionViewItem& option,
-            const QModelIndex& index) const override;
+            const QModelIndex& index
+        ) const override;
 
     QSize itemSize() const { return m_itemSize; }
     void setItemSize(QSize size);
@@ -87,7 +88,8 @@ protected:
             QEvent* event,
             QAbstractItemModel* model,
             const QStyleOptionViewItem& option,
-            const QModelIndex& index) override;
+            const QModelIndex& index
+        ) override;
 
     virtual void clickAction(const ModelItem*) const {
     }

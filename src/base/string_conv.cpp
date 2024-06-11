@@ -89,7 +89,7 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
         return {};
 
     // Encode intermediate utf16 string to utf8
-    const int lenUtf16 = utf16.size() - 1;
+    const int lenUtf16 = Cpp::safeStaticCast<int>(utf16.size()) - 1;
     const int lenUtf8 = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), lenUtf16, nullptr, 0, nullptr, nullptr);
     thread_local std::vector<char> utf8;
     utf8.resize(lenUtf8 + 1);

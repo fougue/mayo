@@ -87,12 +87,12 @@ jobs:
                     -DOpenCASCADE_DIR=../OpenCASCADE-${{matrix.occ_version}}-vc14-64/opencascade-${{matrix.occ_version}} ^
                     -Dassimp_DIR=${{github.workspace}}/assimp-5.3.1/lib/cmake/assimp-5.3
               cmake --build . ^
-                    --config Release ^
+                    --config Debug ^
                     --parallel ${{steps.cpu-cores.outputs.count}}
 
         - name: Execute Unit Tests
           working-directory: ${{github.workspace}}/build
           shell: cmd
           run: |
-              release\mayo.exe --runtests -o utests-output.txt
+              debug\mayo.exe --runtests -o utests-output.txt
               more utests-output.txt
