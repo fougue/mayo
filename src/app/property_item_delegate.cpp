@@ -193,10 +193,11 @@ void PropertyItemDelegate::paint(
             painter->save();
 
             QApplication::style()->drawPrimitive(
-                        QStyle::PE_PanelItemViewItem,
-                        &option,
-                        painter,
-                        option.widget);
+                QStyle::PE_PanelItemViewItem,
+                &option,
+                painter,
+                option.widget
+            );
 
             const QColor color = QtGuiUtils::toQColor(propColor->value());
             const QPixmap pixColor = IPropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
@@ -206,12 +207,13 @@ void PropertyItemDelegate::paint(
             QRect labelRect = option.rect;
             labelRect.setX(option.rect.x() + pixColor.width() + 6);
             QApplication::style()->drawItemText(
-                        painter,
-                        labelRect,
-                        Qt::AlignLeft | Qt::AlignVCenter,
-                        option.palette,
-                        option.state.testFlag(QStyle::State_Enabled),
-                        strColor);
+                painter,
+                labelRect,
+                Qt::AlignLeft | Qt::AlignVCenter,
+                option.palette,
+                option.state.testFlag(QStyle::State_Enabled),
+                strColor
+            );
 
             painter->restore();
             cellPainted = true;
@@ -224,16 +226,18 @@ void PropertyItemDelegate::paint(
     if (index.column() == 1 && !index.data().isNull()) {
         const Property* prop = qvariant_cast<Property*>(index.data());
         if (!prop->isUserReadOnly()
-                && option.state.testFlag(QStyle::State_Enabled)
-                && option.state.testFlag(QStyle::State_MouseOver))
+            && option.state.testFlag(QStyle::State_Enabled)
+            && option.state.testFlag(QStyle::State_MouseOver)
+           )
         {
             const QSize itemSize = this->sizeHint(option, index);
             const QSize pixItemSize = option.decorationSize * 0.75;
             const QPixmap pixEdit = mayoTheme()->icon(Theme::Icon::Edit).pixmap(pixItemSize);
             painter->drawPixmap(
-                        option.rect.x() + itemSize.width() + 4,
-                        option.rect.y() + (itemSize.height() - pixItemSize.height()) / 2.,
-                        pixEdit);
+                option.rect.x() + itemSize.width() + 4,
+                option.rect.y() + (itemSize.height() - pixItemSize.height()) / 2.,
+                pixEdit
+            );
         }
     }
 }
@@ -304,8 +308,9 @@ QWidget* PropertyItemDelegate::createEditor(
 
     if (this->editorFactory()) {
         if (property->dynTypeName() == PropertyBool::TypeName
-                || property->dynTypeName() == PropertyCheckState::TypeName
-                || property->dynTypeName() == PropertyOccColor::TypeName)
+            || property->dynTypeName() == PropertyCheckState::TypeName
+            || property->dynTypeName() == PropertyOccColor::TypeName
+           )
         {
             auto panel = PanelEditor::create(parent);
             auto editor = this->editorFactory()->createEditor(property, panel);

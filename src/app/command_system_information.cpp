@@ -188,27 +188,28 @@ QString CommandSystemInformation::data()
          << "  commit:" << strVersionCommitId
          << "  revnum:" << versionRevisionNumber
          << "  " << QT_POINTER_SIZE * 8 << "bit"
-         << '\n';
+         << '\n'
+    ;
 
     // OS version
     ostr << '\n' << "OS: " << QSysInfo::prettyProductName()
          << " [" << QSysInfo::kernelType() << " version " << QSysInfo::kernelVersion() << "]" << '\n'
-         << "Current CPU Architecture: " << QSysInfo::currentCpuArchitecture() << '\n';
+         << "Current CPU Architecture: " << QSysInfo::currentCpuArchitecture() << '\n'
+    ;
 
     // Qt version
     ostr << '\n' << QLibraryInfo::build() << " on \"" << QGuiApplication::platformName() << "\" " << '\n'
          << indent << "QStyle keys: " << QStyleFactory::keys().join("; ") << '\n'
          << indent << "Image formats(read): " << QImageReader::supportedImageFormats().join(' ') << '\n'
-         << indent << "Image formats(write): " << QImageWriter::supportedImageFormats().join(' ') << '\n';
+         << indent << "Image formats(write): " << QImageWriter::supportedImageFormats().join(' ') << '\n'
+    ;
 
     // OpenCascade version
     ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
 
     // Other registered libraries
     for (const auto& libInfo : LibraryInfoArray::get()) {
-        ostr << '\n' << libInfo.name << ": " << libInfo.version
-             << " " << libInfo.versionDetails
-             << '\n';
+        ostr << '\n' << libInfo.name << ": " << libInfo.version << " " << libInfo.versionDetails << '\n';
     }
 
     // I/O supported formats
@@ -242,7 +243,8 @@ QString CommandSystemInformation::data()
              << indentx2 << "numpunct.thousands_sep: " << char1000Sep << " " << toUnicodeHexa(char1000Sep) << '\n'
              << indentx2 << "numpunct.grouping: " << to_QString(strGrouping) << '\n'
              << indentx2 << "numpunct.truename: " << to_QString(numFacet.truename()) << '\n'
-             << indentx2 << "numpunct.falsename: " << to_QString(numFacet.falsename()) << '\n';
+             << indentx2 << "numpunct.falsename: " << to_QString(numFacet.falsename()) << '\n'
+        ;
         const QLocale& qtLoc = AppModule::get()->qtLocale();
         ostr << indent << "QLocale:" << '\n'
              << indentx2 << "name: " << qtLoc.name() << '\n'
@@ -250,7 +252,8 @@ QString CommandSystemInformation::data()
              << indentx2 << "measurementSytem: " << MetaEnum::name(qtLoc.measurementSystem()) << '\n'
              << indentx2 << "textDirection: " << MetaEnum::name(qtLoc.textDirection()) << '\n'
              << indentx2 << "decimalPoint: " << qtLoc.decimalPoint() << " " << toUnicodeHexa(qtLoc.decimalPoint()) << '\n'
-             << indentx2 << "groupSeparator: " << qtLoc.groupSeparator() << " " << toUnicodeHexa(qtLoc.groupSeparator()) << '\n';
+             << indentx2 << "groupSeparator: " << qtLoc.groupSeparator() << " " << toUnicodeHexa(qtLoc.groupSeparator()) << '\n'
+        ;
     }
 
     // C++ StdLib
@@ -258,7 +261,8 @@ QString CommandSystemInformation::data()
     {
         const QChar dirSeparator(FilePath::preferred_separator);
         ostr << indent << "std::thread::hardware_concurrency: " << std::thread::hardware_concurrency() << '\n'
-             << indent << "std::filepath::path::preferred_separator: " << dirSeparator << " " << toUnicodeHexa(dirSeparator) << '\n';
+             << indent << "std::filepath::path::preferred_separator: " << dirSeparator << " " << toUnicodeHexa(dirSeparator) << '\n'
+        ;
     }
 
     // OpenGL
@@ -277,7 +281,8 @@ QString CommandSystemInformation::data()
     ostr << indent << "General font: " << QFontDatabase::systemFont(QFontDatabase::GeneralFont) << '\n'
          << indent << "Fixed font: " << QFontDatabase::systemFont(QFontDatabase::FixedFont) << '\n'
          << indent << "Title font: " << QFontDatabase::systemFont(QFontDatabase::TitleFont) << '\n'
-         << indent << "Smallest font: " << QFontDatabase::systemFont(QFontDatabase::SmallestReadableFont) << '\n';
+         << indent << "Smallest font: " << QFontDatabase::systemFont(QFontDatabase::SmallestReadableFont) << '\n'
+    ;
 
     // Screens
     ostr << '\n' << "Screens:\n";
@@ -312,7 +317,8 @@ QString CommandSystemInformation::data()
                  << indentx2 << "primaryOrientation: " << MetaEnum::name(screen->primaryOrientation()) << '\n'
                  << indentx2 << "orientation: " << MetaEnum::name(screen->orientation()) << '\n'
                  << indentx2 << "nativeOrientation: " << MetaEnum::name(screen->nativeOrientation()) << '\n'
-                 << indentx2 << "refreshRate: " << screen->refreshRate() << "Hz" << '\n';
+                 << indentx2 << "refreshRate: " << screen->refreshRate() << "Hz" << '\n'
+            ;
         }
     }
 
@@ -321,7 +327,8 @@ QString CommandSystemInformation::data()
     ostr << indent << "platformName: " << QGuiApplication::platformName() << '\n'
          << indent << "desktopFileName: " << QGuiApplication::desktopFileName() << '\n'
          << indent << "desktopSettingsAware: " << QGuiApplication::desktopSettingsAware() << '\n'
-         << indent << "layoutDirection: " << MetaEnum::name(QGuiApplication::layoutDirection()) << '\n';
+         << indent << "layoutDirection: " << MetaEnum::name(QGuiApplication::layoutDirection()) << '\n'
+    ;
     const QStyleHints* sh = QGuiApplication::styleHints();
     if (sh) {
         const auto pwdChar = sh->passwordMaskCharacter();
@@ -349,7 +356,7 @@ QString CommandSystemInformation::data()
              << indentx2 << "mouseDoubleClickDistance: " << sh->mouseDoubleClickDistance() << '\n'
              << indentx2 << "touchDoubleTapDistance: " << sh->touchDoubleTapDistance() << '\n'
 #endif
-            ;
+        ;
     }
 
     // Library info

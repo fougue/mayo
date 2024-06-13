@@ -79,7 +79,8 @@ bool CommandInspectXde::getEnabledStatus() const
     return spanSelectedAppItem.size() == 1
             && firstAppItem.isValid()
             && firstAppItem.document()->isXCafDocument()
-            && this->context()->currentPage() == IAppContext::Page::Documents;
+            && this->context()->currentPage() == IAppContext::Page::Documents
+        ;
 }
 
 CommandEditOptions::CommandEditOptions(IAppContext* context)

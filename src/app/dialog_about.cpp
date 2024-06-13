@@ -20,7 +20,7 @@ DialogAbout::DialogAbout(QWidget* parent)
 {
     m_ui->setupUi(this);
     m_ui->label_AppByOrg->setText(
-                tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
+        tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
     );
 
     const QString strVersionFull =

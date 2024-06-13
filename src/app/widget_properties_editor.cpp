@@ -190,11 +190,8 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::findTreeItem(const Property* p
     for (QTreeWidgetItemIterator it(this->ui->treeWidget_Browser); *it; ++it) {
         QTreeWidgetItem* treeItem = *it;
         const QVariant value = treeItem->data(1, Qt::DisplayRole);
-        if (value.canConvert<Property*>()
-                && qvariant_cast<Property*>(value) == property)
-        {
+        if (value.canConvert<Property*>() && qvariant_cast<Property*>(value) == property)
             return treeItem;
-        }
     }
     return nullptr;
 }
@@ -202,8 +199,9 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::findTreeItem(const Property* p
 bool WidgetPropertiesEditor::Private::hasGroup(const Group *group) const
 {
     return group
-            && group->treeItem
-            && group->treeItem->treeWidget() == ui->treeWidget_Browser;
+           && group->treeItem
+           && group->treeItem->treeWidget() == ui->treeWidget_Browser
+        ;
 }
 
 } // namespace Mayo

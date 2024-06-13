@@ -38,8 +38,8 @@ WidgetFileSystem::WidgetFileSystem(QWidget* parent)
     m_treeWidget->setIndentation(0);
 
     QObject::connect(
-                m_treeWidget, &QTreeWidget::itemActivated,
-                this, &WidgetFileSystem::onTreeItemActivated
+        m_treeWidget, &QTreeWidget::itemActivated,
+        this, &WidgetFileSystem::onTreeItemActivated
     );
 }
 
@@ -92,9 +92,10 @@ void WidgetFileSystem::setCurrentFolder(const QDir& dir)
     QList<QTreeWidgetItem*> listItem;
     if (dir.exists()) {
         const QFileInfoList listEntryFileInfo =
-                dir.entryInfoList(
+            dir.entryInfoList(
                     QDir::Files | QDir::AllDirs | QDir::NoDot,
-                    QDir::DirsFirst);
+                    QDir::DirsFirst
+            );
         for (const QFileInfo& fi : listEntryFileInfo) {
             auto item = new QTreeWidgetItem;
             if (fi.fileName() != QLatin1String(".")) {
@@ -104,7 +105,8 @@ void WidgetFileSystem::setCurrentFolder(const QDir& dir)
                         tr("%1\nSize: %2\nLast modified: %3")
                         .arg(QDir::toNativeSeparators(fi.absoluteFilePath()))
                         .arg(QStringUtils::bytesText(fi.size()))
-                        .arg(QLocale::system().toString(fi.lastModified(), QLocale::LongFormat));
+                        .arg(QLocale::system().toString(fi.lastModified(), QLocale::LongFormat))
+                    ;
                 item->setToolTip(0, itemTooltip);
             }
 

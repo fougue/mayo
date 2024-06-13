@@ -154,14 +154,14 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     // Signal/slot connections
     auto sigComboBoxActivated_int = qOverload<int>(&QComboBox::activated);
     QObject::connect(
-                m_ui->check_ShowGrid, &QCheckBox::clicked, this, &WidgetGrid::activateGrid
+        m_ui->check_ShowGrid, &QCheckBox::clicked, this, &WidgetGrid::activateGrid
     );
     QObject::connect(m_ui->combo_Type, sigComboBoxActivated_int, this, [=](int typeIndex) {
         m_ui->stack_Config->setCurrentIndex(typeIndex);
         auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
         viewer->ActivateGrid(
-                    toGridType(m_ui->combo_Type->currentIndex()),
-                    toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
+            toGridType(m_ui->combo_Type->currentIndex()),
+            toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
         );
         GraphicsUtils::V3dViewer_setGridColors(viewer, gridColors);
         m_viewPtr.redraw();
@@ -188,13 +188,13 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
         emit this->sizeAdjustmentRequested();
     });
     QObject::connect(
-                m_ui->btn_Color, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Base); }
+        m_ui->btn_Color, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Base); }
     );
     QObject::connect(
-                m_ui->btn_ColorTenth, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Tenth); }
+        m_ui->btn_ColorTenth, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Tenth); }
     );
     QObject::connect(
-                m_ui->check_ColorTenth, &QAbstractButton::toggled, this, &WidgetGrid::enableGridColorTenth
+        m_ui->check_ColorTenth, &QAbstractButton::toggled, this, &WidgetGrid::enableGridColorTenth
     );
 
     auto sigGridParamChanged_double = qOverload<double>(&QDoubleSpinBox::valueChanged);
@@ -251,8 +251,8 @@ void WidgetGrid::activateGrid(bool on)
     const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     if (on) {
         viewer->ActivateGrid(
-                    toGridType(m_ui->combo_Type->currentIndex()),
-                    toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
+            toGridType(m_ui->combo_Type->currentIndex()),
+            toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
         );
     }
     else {
@@ -273,20 +273,20 @@ void WidgetGrid::applyGridParams()
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridValues(
-                    m_ui->edit_RectOriginX->value(),
-                    m_ui->edit_RectOriginY->value(),
-                    fnCorrectedGridStep(m_ui->edit_RectStepX->value()),
-                    fnCorrectedGridStep(m_ui->edit_RectStepY->value()),
-                    UnitSystem::radians(m_ui->edit_RectRotation->value() * Quantity_Degree)
+            m_ui->edit_RectOriginX->value(),
+            m_ui->edit_RectOriginY->value(),
+            fnCorrectedGridStep(m_ui->edit_RectStepX->value()),
+            fnCorrectedGridStep(m_ui->edit_RectStepY->value()),
+            UnitSystem::radians(m_ui->edit_RectRotation->value() * Quantity_Degree)
         );
     }
     else if (gridType == Aspect_GT_Circular) {
         viewer->SetCircularGridValues(
-                    m_ui->edit_CircOriginX->value(),
-                    m_ui->edit_CircOriginY->value(),
-                    fnCorrectedGridStep(m_ui->edit_CircRadiusStep->value()),
-                    m_ui->edit_CircDivision->value(),
-                    UnitSystem::radians(m_ui->edit_CircRotation->value() * Quantity_Degree)
+            m_ui->edit_CircOriginX->value(),
+            m_ui->edit_CircOriginY->value(),
+            fnCorrectedGridStep(m_ui->edit_CircRadiusStep->value()),
+            m_ui->edit_CircDivision->value(),
+            UnitSystem::radians(m_ui->edit_CircRotation->value() * Quantity_Degree)
         );
     }
 
@@ -299,15 +299,12 @@ void WidgetGrid::applyGridGraphicsParams()
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridGraphicValues(
-                    m_ui->edit_RectSizeX->value(),
-                    m_ui->edit_RectSizeY->value(),
-                    m_ui->edit_RectOffset->value()
+            m_ui->edit_RectSizeX->value(), m_ui->edit_RectSizeY->value(), m_ui->edit_RectOffset->value()
         );
     }
     else if (gridType == Aspect_GT_Circular) {
         viewer->SetCircularGridGraphicValues(
-                    m_ui->edit_CircRadius->value(),
-                    m_ui->edit_RectOffset->value()
+            m_ui->edit_CircRadius->value(), m_ui->edit_RectOffset->value()
         );
     }
 

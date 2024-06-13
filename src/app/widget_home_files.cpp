@@ -95,7 +95,6 @@ public:
                 const QIcon icon = m_fileIconProvider.icon(QFileInfo(url));
                 pixmap = fnPixmap(icon, 64, 64);
                 cachePixmap = false;
-
             }
         }
 

@@ -173,9 +173,8 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     auto funcConnectDirSpin = [=](QDoubleSpinBox* dirSpin) {
         QObject::connect(dirSpin, signalSpinValueChanged, this, [=]{
             const gp_Vec vecNormal(
-                        customXDirSpin->value(),
-                        customYDirSpin->value(),
-                        customZDirSpin->value());
+                customXDirSpin->value(), customYDirSpin->value(), customZDirSpin->value()
+            );
             if (vecNormal.Magnitude() > Precision::Confusion()) {
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
@@ -296,7 +295,8 @@ double WidgetClipPlanes::UiClipPlane::sliderValueToSpinValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
     return MathUtils::mappedValue(
-                val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum());
+                val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum()
+        );
 }
 
 } // namespace Mayo

@@ -29,23 +29,17 @@ public:
     void setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory);
 
     struct UnitTranslation {
-      Unit unit;
-      const char* strUnit; // UTF8
-      double factor;
+        Unit unit;
+        const char* strUnit; // UTF8
+        double factor;
     };
     bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
-    void paint(
-            QPainter* painter,
-            const QStyleOptionViewItem& option,
-            const QModelIndex& index
-      ) const override;
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
     QString displayText(const QVariant& value, const QLocale&) const override;
 
-    QWidget* createEditor(
-            QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index
-      ) const override;
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index) const override;
 
     void setModelData(QWidget*, QAbstractItemModel*, const QModelIndex&) const override;
 

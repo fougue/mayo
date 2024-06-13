@@ -46,15 +46,9 @@ DialogSaveImageView::DialogSaveImageView(const OccHandle<V3d_View>& view, QWidge
     m_ui->buttonBox->addButton(saveBtn, QDialogButtonBox::ActionRole);
     m_ui->buttonBox->addButton(copyBtn, QDialogButtonBox::ActionRole);
     m_ui->buttonBox->addButton(previewBtn, QDialogButtonBox::ActionRole);
-    QObject::connect(
-                saveBtn, &QAbstractButton::clicked,
-                this, &DialogSaveImageView::saveFile);
-    QObject::connect(
-                copyBtn, &QAbstractButton::clicked,
-                this, &DialogSaveImageView::clipboardCopy);
-    QObject::connect(
-                previewBtn, &QAbstractButton::clicked,
-                this, &DialogSaveImageView::preview);
+    QObject::connect(saveBtn, &QAbstractButton::clicked, this, &DialogSaveImageView::saveFile);
+    QObject::connect(copyBtn, &QAbstractButton::clicked, this, &DialogSaveImageView::clipboardCopy);
+    QObject::connect(previewBtn, &QAbstractButton::clicked, this, &DialogSaveImageView::preview);
 
     m_ui->edit_Width->setValue(GraphicsUtils::AspectWindow_width(view->Window()));
     m_ui->edit_Height->setValue(GraphicsUtils::AspectWindow_height(view->Window()));
@@ -71,18 +65,18 @@ void DialogSaveImageView::saveFile()
     QStringList listFormat;
     foreach (const QByteArray& name, QImageWriter::supportedImageFormats()) {
         const QString strName = QString::fromLatin1(name);
-        listFormat.append(tr("%1 files(*.%2)")
-                          .arg(strName.toUpper(), strName.toLower()));
+        listFormat.append(tr("%1 files(*.%2)").arg(strName.toUpper(), strName.toLower()));
         mapFilterFormat.insert(listFormat.back(), name);
     }
 
     QString selectedFormat;
     const QString fileName = QFileDialog::getSaveFileName(
-                this,
-                tr("Select image file"),
-                QString(),
-                listFormat.join(QLatin1String(";;")),
-                &selectedFormat);
+        this,
+        tr("Select image file"),
+        QString(),
+        listFormat.join(QLatin1String(";;")),
+        &selectedFormat
+    );
     if (!fileName.isEmpty()) {
         auto itFound = mapFilterFormat.find(selectedFormat);
         const char* format =
@@ -97,8 +91,7 @@ void DialogSaveImageView::saveFile()
             saveOk = img.save(fileName, format);
         }
         if (!saveOk) {
-            QtWidgetsUtils::asyncMsgBoxCritical(
-                        this, tr("Error"), tr("Failed to save image '%1'").arg(fileName));
+            QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Failed to save image '%1'").arg(fileName));
         }
     }
 }
@@ -120,11 +113,11 @@ void DialogSaveImageView::preview()
         auto label = new QLabel(this, Qt::Dialog);
         label->setPixmap(QPixmap::fromImage(img));
         label->setWindowTitle(
-                    tr("%1x%2 %3")
-                    .arg(img.width())
-                    .arg(img.height())
-                    .arg(m_ui->checkBox_KeepRatio->isChecked() ?
-                             tr("Keep ratio") : tr("Free ratio")));
+            tr("%1x%2 %3")
+                .arg(img.width())
+                .arg(img.height())
+                .arg(m_ui->checkBox_KeepRatio->isChecked() ? tr("Keep ratio") : tr("Free ratio"))
+        );
         label->setAttribute(Qt::WA_DeleteOnClose, true);
         label->show();
     }
@@ -139,7 +132,8 @@ bool DialogSaveImageView::createImageView(Image_PixMap* img) const
                 m_ui->edit_Width->value(),
                 m_ui->edit_Height->value(),
                 Graphic3d_BT_RGBA,
-                m_ui->checkBox_KeepRatio->isChecked());
+                m_ui->checkBox_KeepRatio->isChecked()
+        );
     return ok;
 }
 

@@ -71,7 +71,8 @@ QMessageBox* QtWidgetsUtils::asyncMsgBoxInfo(
         QWidget* parent,
         const QString& title,
         const QString& text,
-        QMessageBox::StandardButtons buttons)
+        QMessageBox::StandardButtons buttons
+    )
 {
     auto msgBox = new QMessageBox(QMessageBox::Information, title, text, buttons, parent);
     QtWidgetsUtils::asyncDialogExec(msgBox);
@@ -82,7 +83,8 @@ QMessageBox* QtWidgetsUtils::asyncMsgBoxWarning(
         QWidget* parent,
         const QString& title,
         const QString& text,
-        QMessageBox::StandardButtons buttons)
+        QMessageBox::StandardButtons buttons
+    )
 {
     auto msgBox = new QMessageBox(QMessageBox::Warning, title, text, buttons, parent);
     QtWidgetsUtils::asyncDialogExec(msgBox);
@@ -93,7 +95,8 @@ QMessageBox* QtWidgetsUtils::asyncMsgBoxCritical(
         QWidget* parent,
         const QString& title,
         const QString& text,
-        QMessageBox::StandardButtons buttons)
+        QMessageBox::StandardButtons buttons
+    )
 {
     auto msgBox = new QMessageBox(QMessageBox::Critical, title, text, buttons, parent);
     QtWidgetsUtils::asyncDialogExec(msgBox);

@@ -112,7 +112,8 @@ public:
             StyleHint hint,
             const QStyleOption* option,
             const QWidget* widget,
-            QStyleHintReturn* returnData) const override
+            QStyleHintReturn* returnData
+        ) const override
     {
         if (hint == QStyle::SH_ComboBox_AllowWheelScrolling)
             return 0;
@@ -238,7 +239,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             m_ui->treeView_GroupSections->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
             QSignalBlocker _(m_ui->treeView_GroupSections);
             m_ui->treeView_GroupSections->selectionModel()->select(
-                        indexList.front(), QItemSelectionModel::SelectCurrent);
+                        indexList.front(), QItemSelectionModel::SelectCurrent
+            );
         }
     });
 

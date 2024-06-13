@@ -35,22 +35,22 @@ public:
     static void asyncMenuExec(QMenu* menu, const QPoint& pos = QCursor::pos());
 
     static QMessageBox* asyncMsgBoxInfo(
-            QWidget* parent,
-            const QString& title,
-            const QString& text,
-            QMessageBox::StandardButtons buttons = QMessageBox::Ok
+        QWidget* parent,
+        const QString& title,
+        const QString& text,
+        QMessageBox::StandardButtons buttons = QMessageBox::Ok
     );
     static QMessageBox* asyncMsgBoxWarning(
-            QWidget* parent,
-            const QString& title,
-            const QString& text,
-            QMessageBox::StandardButtons buttons = QMessageBox::Ok
+        QWidget* parent,
+        const QString& title,
+        const QString& text,
+        QMessageBox::StandardButtons buttons = QMessageBox::Ok
     );
     static QMessageBox* asyncMsgBoxCritical(
-            QWidget* parent,
-            const QString& title,
-            const QString& text,
-            QMessageBox::StandardButtons buttons = QMessageBox::Ok
+        QWidget* parent,
+        const QString& title,
+        const QString& text,
+        QMessageBox::StandardButtons buttons = QMessageBox::Ok
     );
 
     // Move position of 'widget' so it's displayed stuck to the right of 'nextTo'

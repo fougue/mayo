@@ -405,7 +405,8 @@ UnitSystem::TranslateResult IPropertyEditorFactory::unitTranslate(const BaseProp
     return UnitSystem::translate(
                 AppModule::get()->properties()->unitSystemSchema,
                 property->quantityValue(),
-                property->quantityUnit());
+                property->quantityUnit()
+    );
 }
 
 QPixmap IPropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)

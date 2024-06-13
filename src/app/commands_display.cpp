@@ -31,7 +31,8 @@ BaseCommandDisplay::BaseCommandDisplay(IAppContext* context)
 bool BaseCommandDisplay::getEnabledStatus() const
 {
     return this->app()->documentCount() != 0
-           && this->context()->currentPage() == IAppContext::Page::Documents;
+           && this->context()->currentPage() == IAppContext::Page::Documents
+        ;
 }
 
 CommandChangeProjection::CommandChangeProjection(IAppContext* context)
@@ -106,8 +107,8 @@ CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* 
     : CommandChangeDisplayMode(context)
 {
     QObject::connect(
-                containerMenu, &QMenu::aboutToShow,
-                this, &CommandChangeDisplayMode::recreateMenuDisplayMode
+        containerMenu, &QMenu::aboutToShow,
+        this, &CommandChangeDisplayMode::recreateMenuDisplayMode
     );
 }
 
@@ -167,8 +168,8 @@ CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
     this->setAction(action);
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandToggleOriginTrihedron::onCurrentDocumentChanged
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandToggleOriginTrihedron::onCurrentDocumentChanged
     );
 }
 
@@ -205,8 +206,8 @@ CommandTogglePerformanceStats::CommandTogglePerformanceStats(IAppContext* contex
     this->setAction(action);
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandTogglePerformanceStats::onCurrentDocumentChanged
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandTogglePerformanceStats::onCurrentDocumentChanged
     );
 }
 

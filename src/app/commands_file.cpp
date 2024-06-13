@@ -547,8 +547,8 @@ CommandCloseAllDocumentsExceptCurrent::CommandCloseAllDocumentsExceptCurrent(IAp
     this->setAction(action);
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandCloseAllDocumentsExceptCurrent::updateActionText
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandCloseAllDocumentsExceptCurrent::updateActionText
     );
     this->app()->signalDocumentNameChanged.connectSlot([=](const DocumentPtr& doc) {
         if (this->currentDocument() == doc->identifier())
