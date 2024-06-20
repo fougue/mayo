@@ -12,6 +12,7 @@
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 
 #include "app_module.h"
 #include "commands_api.h"
@@ -30,7 +31,6 @@
 #include "widget_properties_editor.h"
 
 #include <QtCore/QDir>
-#include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
 #include <cassert>
@@ -423,7 +423,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     m_ui->stack_GuiDocuments->addWidget(widget);
     const int newDocIndex = m_guiApp->application()->documentCount() - 1;
-    QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+    QtCoreUtils::runJobOnMainThread([=]{ this->setCurrentDocumentIndex(newDocIndex); });
 }
 
 int WidgetMainControl::currentDocumentIndex() const

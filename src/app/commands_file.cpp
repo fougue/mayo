@@ -10,6 +10,7 @@
 #include "../base/task_manager.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
 #include "recent_files.h"
@@ -20,7 +21,6 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QMimeData>
-#include <QtCore/QTimer>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
 #include <QtWidgets/QApplication>
@@ -203,7 +203,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
                         .execute();
                 if (okImport) {
                     appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
-                    QTimer::singleShot(0, context, [=]{
+                    QtCoreUtils::runJobOnMainThread([=]{
                         appModule->prependRecentFile(fp, context->guiApp()->findGuiDocument(newDocId));
                     });
                 }
@@ -234,18 +234,19 @@ void FileCommandTools::importInDocument(
         chrono.start();
 
         auto doc = appModule->application()->findDocumentByIdentifier(targetDocId);
-        const bool okImport = appModule->ioSystem()->importInDocument()
-                                  .targetDocument(doc)
-                                  .withFilepaths(listFilePaths)
-                                  .withParametersProvider(appModule)
-                                  .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                                      appModule->computeBRepMesh(labelEntity, progress);
-                                  })
-                                  .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                                  .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
-                                  .withMessenger(appModule)
-                                  .withTaskProgress(progress)
-                                  .execute();
+        const bool okImport =
+                appModule->ioSystem()->importInDocument()
+                .targetDocument(doc)
+                .withFilepaths(listFilePaths)
+                .withParametersProvider(appModule)
+                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                    appModule->computeBRepMesh(labelEntity, progress);
+                })
+                .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+                .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
+                .withMessenger(appModule)
+                .withTaskProgress(progress)
+                .execute();
         if (okImport)
             appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
     });

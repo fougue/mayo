@@ -8,24 +8,17 @@
 
 #include "../base/global.h"
 #include <QtCore/QByteArray>
+#include <functional>
 #include <string_view>
 
-namespace Mayo {
-
 // Provides a collection of tools for the QtCore module
-namespace QtCoreUtils {
+namespace Mayo::QtCoreUtils {
 
 // Convenience function over QByteArray::fromRawData() taking a QByteArray object
-inline QByteArray QByteArray_frowRawData(const QByteArray& bytes)
-{
-    return QByteArray::fromRawData(bytes.data(), bytes.size());
-}
+QByteArray QByteArray_frowRawData(const QByteArray& bytes);
 
 // Convenience function over QByteArray::fromRawData() taking a std::string_view object
-inline QByteArray QByteArray_frowRawData(std::string_view str)
-{
-    return QByteArray::fromRawData(str.data(), int(str.size()));
-}
+QByteArray QByteArray_frowRawData(std::string_view str);
 
 // Convenience function over QByteArray::fromRawData() taking a C array of characters
 template<size_t N>
@@ -35,28 +28,12 @@ QByteArray QByteArray_frowRawData(const char (&str)[N])
 }
 
 // Converts Mayo::CheckState -> Qt::CheckState
-inline Qt::CheckState toQtCheckState(Mayo::CheckState state)
-{
-    switch (state) {
-    case CheckState::Off: return Qt::Unchecked;
-    case CheckState::Partially: return Qt::PartiallyChecked;
-    case CheckState::On: return Qt::Checked;
-    }
-
-    return Qt::Unchecked;
-}
+Qt::CheckState toQtCheckState(Mayo::CheckState state);
 
 // Converts Qt::CheckState -> Mayo::CheckState
-inline Mayo::CheckState toCheckState(Qt::CheckState state)
-{
-    switch (state) {
-    case Qt::Unchecked: return CheckState::Off;
-    case Qt::PartiallyChecked: return CheckState::Partially;
-    case Qt::Checked: return CheckState::On;
-    }
+Mayo::CheckState toCheckState(Qt::CheckState state);
 
-    return CheckState::Off;
-}
+// Enqueues function 'fn' to be executed on main thread
+void runJobOnMainThread(const std::function<void()>& fn);
 
-} // namespace QtCoreUtils
-} // namespace Mayo
+} // namespace Mayo::QtCoreUtils

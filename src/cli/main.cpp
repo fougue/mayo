@@ -29,6 +29,7 @@
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "cli_export.h"
 #include "console.h"
 #include <common/mayo_version.h>
@@ -38,7 +39,6 @@
 #include <QtCore/QDir>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QSettings>
-#include <QtCore/QTimer>
 #include <QtCore/QTranslator>
 
 #include <OpenGl_GraphicDriver.hxx>
@@ -470,7 +470,7 @@ static int runApp(QCoreApplication* qtApp)
         }
     }
     else {
-        QTimer::singleShot(0, qtApp, [=]{
+        QtCoreUtils::runJobOnMainThread([=]{
             CliExportArgs cliArgs;
             cliArgs.progressReport = args.progressReport;
             cliArgs.filesToOpen = args.listFilepathToOpen;
