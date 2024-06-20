@@ -12,6 +12,7 @@
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 
 #include "app_module.h"
 #include "commands_api.h"
@@ -30,7 +31,6 @@
 #include "widget_properties_editor.h"
 
 #include <QtCore/QDir>
-#include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
 

@@ -8,7 +8,20 @@
 
 #include <algorithm>
 
+#include <QtCore/QCoreApplication>
+#include <QtCore/QTimer>
+
 namespace Mayo::QtCoreUtils {
+
+QByteArray QByteArray_fromRawData(const QByteArray& bytes)
+{
+    return QByteArray::fromRawData(bytes.data(), bytes.size());
+}
+
+QByteArray QByteArray_fromRawData(std::string_view str)
+{
+    return QByteArray::fromRawData(str.data(), int(str.size()));
+}
 
 std::vector<uint8_t> toStdByteArray(const QByteArray& bytes)
 {
@@ -38,6 +51,11 @@ Mayo::CheckState toCheckState(Qt::CheckState state)
     }
 
     return CheckState::Off;
+}
+
+void runJobOnMainThread(const std::function<void()>& fn)
+{
+    QTimer::singleShot(0, QCoreApplication::instance(), fn);
 }
 
 } // namespace Mayo::QtCoreUtils

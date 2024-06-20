@@ -27,6 +27,7 @@
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
 #include "commands_help.h"
 #include "document_tree_node_properties_providers.h"
@@ -44,7 +45,6 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
-#include <QtCore/QTimer>
 #include <QtCore/QTranslator>
 #include <QtCore/QVersionNumber>
 #include <QtGui/QOffscreenSurface>
@@ -433,7 +433,9 @@ static int runApp(QCoreApplication* qtApp)
     appModule->settings()->loadProperty(&appModule->properties()->appUiState);
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
-        QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
+        QtCoreUtils::runJobOnMainThread([&]{
+            mainWindow.openDocumentsFromList(args.listFilepathToOpen);
+        });
     }
 
     appModule->settings()->resetAll();

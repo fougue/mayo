@@ -10,6 +10,7 @@
 #include "../base/span.h"
 
 #include <QtCore/QByteArray>
+#include <functional>
 #include <string_view>
 #include <vector>
 
@@ -17,16 +18,10 @@
 namespace Mayo::QtCoreUtils {
 
 // Convenience function over QByteArray::fromRawData() taking a QByteArray object
-inline QByteArray QByteArray_fromRawData(const QByteArray& bytes)
-{
-    return QByteArray::fromRawData(bytes.data(), bytes.size());
-}
+QByteArray QByteArray_fromRawData(const QByteArray& bytes);
 
 // Convenience function over QByteArray::fromRawData() taking a std::string_view object
-inline QByteArray QByteArray_fromRawData(std::string_view str)
-{
-    return QByteArray::fromRawData(str.data(), int(str.size()));
-}
+QByteArray QByteArray_fromRawData(std::string_view str);
 
 // Convenience function over QByteArray::fromRawData() taking a C array of characters
 template<size_t N>
@@ -61,5 +56,8 @@ Qt::CheckState toQtCheckState(Mayo::CheckState state);
 
 // Converts Qt::CheckState -> Mayo::CheckState
 Mayo::CheckState toCheckState(Qt::CheckState state);
+
+// Enqueues function 'fn' to be executed on main thread
+void runJobOnMainThread(const std::function<void()>& fn);
 
 } // namespace Mayo::QtCoreUtils
