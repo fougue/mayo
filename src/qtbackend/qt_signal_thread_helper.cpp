@@ -18,7 +18,7 @@ std::any QtSignalThreadHelper::getCurrentThreadContext()
     return &obj;
 }
 
-void QtSignalThreadHelper::execInThread(const std::any& context, const std::function<void()>& fn)
+void QtSignalThreadHelper::runOnThread(const std::any& context, const std::function<void()>& fn)
 {
     auto qobject = std::any_cast<QObject*>(context);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)

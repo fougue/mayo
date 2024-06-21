@@ -15,7 +15,7 @@ namespace Mayo {
 class QtSignalThreadHelper : public ISignalThreadHelper {
 public:
     std::any getCurrentThreadContext() override;
-    void execInThread(const std::any& context, const std::function<void()>& fn) override;
+    void runOnThread(const std::any& context, const std::function<void()>& fn) override;
 };
 
 } // namespace Mayo

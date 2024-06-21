@@ -38,12 +38,12 @@ public:
     // Get implementation-specific context object for the current thread
     virtual std::any getCurrentThreadContext() = 0;
 
-    // Executes function 'fn' in target thread referred by 'context'
+    // Posts the function 'fn' to target thread referred by 'context'
     // If current thread is different from target thread then implementation has to ensure 'fn' is
-    // executed in target thread(eg by enqueuing 'fn' in some event loop)
+    // executed on target thread(eg by enqueuing 'fn' in some event loop)
     // 'context' is the implementation-specific thread context object identified in a previous call
     // to getCurrentThreadContext()
-    virtual void execInThread(const std::any& context, const std::function<void()>& fn) = 0;
+    virtual void runOnThread(const std::any& context, const std::function<void()>& fn) = 0;
 };
 
 // Getter/setter functions of the global ISignalThreadHelper object used by Signal::connectSlot()
@@ -89,7 +89,7 @@ public:
                 if (emitThreadId == connectThreadId)
                     fnSlot(args...);
                 else
-                    getGlobalSignalThreadHelper()->execInThread(threadContext, [=]{ fnSlot(args...); });
+                    getGlobalSignalThreadHelper()->runOnThread(threadContext, [=]{ fnSlot(args...); });
             };
             return this->connect(fnWrap);
         }
