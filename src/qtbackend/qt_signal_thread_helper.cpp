@@ -18,7 +18,7 @@ std::any QtSignalThreadHelper::getCurrentThreadContext()
     return &obj;
 }
 
-void QtSignalThreadHelper::execInThread(const std::any& context, const std::function<void()>& fn)
+void QtSignalThreadHelper::runOnThread(const std::any& context, const std::function<void()>& fn)
 {
     QTimer::singleShot(0, std::any_cast<QObject*>(context), fn);
 }
