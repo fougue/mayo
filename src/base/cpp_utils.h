@@ -94,8 +94,8 @@ const std::string& nullString()
 
 template<typename AssociativeContainer>
 MappedType<AssociativeContainer> findValue(
-    const KeyType<AssociativeContainer>& key, const AssociativeContainer& container
-)
+        const KeyType<AssociativeContainer>& key, const AssociativeContainer& container
+    )
 {
     auto it = container.find(key);
     if (it != container.cend()) {

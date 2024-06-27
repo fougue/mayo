@@ -40,26 +40,22 @@ public:
 
 class CommandExecScript : public Command {
 public:
-    CommandExecScript(IAppContext* context, QJSEngine* jsEngine);
+    CommandExecScript(IAppContext* context);
     void execute() override;
 
-    static constexpr std::string_view Name = "exec-script";
+    static void runScript(IAppContext* context, const FilePath& scriptFilePath);
 
-private:
-    QJSEngine* m_jsEngine = nullptr;
+    static constexpr std::string_view Name = "exec-script";
 };
 
 class CommandExecRecentScript : public Command {
 public:
-    CommandExecRecentScript(IAppContext* context, QJSEngine* jsEngine);
-    CommandExecRecentScript(IAppContext* context, QMenu* containerMenu, QJSEngine* jsEngine);
+    CommandExecRecentScript(IAppContext* context);
+    CommandExecRecentScript(IAppContext* context, QMenu* containerMenu);
     void execute() override;
     void recreateEntries();
 
     static constexpr std::string_view Name = "exec-script-recent";
-
-private:
-    QJSEngine* m_jsEngine = nullptr;
 };
 
 } // namespace Mayo

@@ -11,21 +11,19 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
+#include "../qtscripting/script_global.h"
 #include "app_module.h"
+#include "dialog_exec_script.h"
 #include "dialog_inspect_xde.h"
 #include "dialog_options.h"
 #include "dialog_save_image_view.h"
 #include "qtwidgets_utils.h"
 #include "theme.h"
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QMenu>
-
 #include <QtCore/QDateTime>
-#include <QtCore/QFile>
 #include <QtCore/QtDebug>
-#include <QtQml/QJSEngine>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
 
 namespace Mayo {
 
@@ -106,38 +104,11 @@ void CommandEditOptions::execute()
     QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
-namespace {
-
-void evaluateScript(QJSEngine* jsEngine, const FilePath& filepathScript)
-{
-    if (!jsEngine)
-        return;
-
-    auto fnJsEvaluate = [](QJSEngine* jsEngine, const QString& program) {
-        auto jsVal = jsEngine->evaluate(program);
-        if (jsVal.isError()) {
-            qCritical() << "Error at line"
-                        << jsVal.property("lineNumber").toInt()
-                        << ":" << jsVal.toString();
-        }
-
-        return jsVal;
-    };
-
-    QFile jsFile(filepathTo<QString>(filepathScript));
-    if (jsFile.open(QIODevice::ReadOnly))
-        fnJsEvaluate(jsEngine, jsFile.readAll());
-}
-
-} // namespace
-
-CommandExecScript::CommandExecScript(IAppContext* context, QJSEngine* jsEngine)
-    : Command(context),
-      m_jsEngine(jsEngine)
+CommandExecScript::CommandExecScript(IAppContext* context)
+    : Command(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Execute Script..."));
-    //action->setToolTip(Command::tr("Options"));
     this->setAction(action);
 }
 
@@ -146,31 +117,39 @@ void CommandExecScript::execute()
     auto strFilePath = QFileDialog::getOpenFileName(
         this->widgetMain(),
         Command::tr("Choose JavaScript file"),
-        QString(/*dir*/),
+        QString{}/*dir*/,
         Command::tr("Script files(*.js)")
     );
-    if (strFilePath.isEmpty())
-        return;
-
-    evaluateScript(m_jsEngine, filepathFrom(strFilePath));
-    AppModule::get()->prependRecentScript(filepathFrom(strFilePath));
+    if (!strFilePath.isEmpty())
+        CommandExecScript::runScript(this->context(), filepathFrom(strFilePath));
 }
 
-CommandExecRecentScript::CommandExecRecentScript(IAppContext* context, QJSEngine* jsEngine)
-    : Command(context),
-      m_jsEngine(jsEngine)
+void CommandExecScript::runScript(IAppContext* context, const FilePath& scriptFilePath)
+{
+    auto dlg = new DialogExecScript(context->widgetMain());
+    dlg->setScriptEngineCreator([=](QObject* parent) {
+        return createScriptEngine(context->guiApp()->application(), parent);
+    });
+    dlg->setScriptFilePath(scriptFilePath);
+    QtWidgetsUtils::asyncDialogExec(dlg);
+    dlg->startScript();
+    AppModule::get()->prependRecentScript(scriptFilePath);
+}
+
+CommandExecRecentScript::CommandExecRecentScript(IAppContext* context)
+    : Command(context)
 {
     auto action = new QAction(this);
     action->setText(Command::tr("Execute Recent Script"));
     this->setAction(action);
 }
 
-CommandExecRecentScript::CommandExecRecentScript(
-        IAppContext* context, QMenu* containerMenu, QJSEngine* jsEngine
-    )
-    : CommandExecRecentScript(context, jsEngine)
+CommandExecRecentScript::CommandExecRecentScript(IAppContext* context, QMenu* containerMenu)
+    : CommandExecRecentScript(context)
 {
-    QObject::connect(containerMenu, &QMenu::aboutToShow, this, &CommandExecRecentScript::recreateEntries);
+    QObject::connect(
+        containerMenu, &QMenu::aboutToShow, this, &CommandExecRecentScript::recreateEntries
+    );
 }
 
 void CommandExecRecentScript::execute()
@@ -192,8 +171,7 @@ void CommandExecRecentScript::recreateEntries()
         const QString strFileName = filepathTo<QString>(recentScript.filepath.filename());
         const QString strEntryRecentScript = Command::tr("%1 | %2").arg(++idFile).arg(strFileName);
         auto action = menu->addAction(strEntryRecentScript, this, [=]{
-            evaluateScript(m_jsEngine, recentScript.filepath);
-            AppModule::get()->prependRecentScript(recentScript.filepath);
+            CommandExecScript::runScript(this->context(), recentScript.filepath);
         });
         QDateTime dateTimeLastExec;
         dateTimeLastExec.setTimeSpec(Qt::UTC);
