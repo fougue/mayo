@@ -7,6 +7,7 @@
 #include "log_message_handler.h"
 #include "qstring_conv.h"
 
+#include <cstring>
 #include <iostream>
 
 namespace Mayo {
@@ -31,19 +32,41 @@ void LogMessageHandler::setOutputFilePath(const FilePath& fp)
         m_outputFile.close();
 }
 
-std::ostream& LogMessageHandler::outputStream(QtMsgType type)
+std::ostream& LogMessageHandler::outputStream(QtMsgType msgType)
 {
     if (!m_outputFilePath.empty() && m_outputFile.is_open())
         return m_outputFile;
 
-    if (type == QtDebugMsg || type == QtInfoMsg)
+    if (msgType == QtDebugMsg || msgType == QtInfoMsg)
         return std::cout;
 
     return std::cerr;
 }
 
-void LogMessageHandler::qtHandler(QtMsgType type, const QMessageLogContext& /*context*/, const QString& msg)
+const LogMessageHandler::JsConsoleOutputHandler& LogMessageHandler::jsConsoleOutputHandler() const
 {
+    return m_jsConsoleOutputHandler;
+}
+
+void LogMessageHandler::setJsConsoleOutputHandler(JsConsoleOutputHandler fnHandler)
+{
+    m_jsConsoleOutputHandler = std::move(fnHandler);
+}
+
+void LogMessageHandler::qtHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    // Use QMessageLogContext::category and check it's "qml" or "js" to maybe transfer message to
+    // another handler
+    const auto& jsConsoleOutputHandler = LogMessageHandler::instance().jsConsoleOutputHandler();
+    if (
+        jsConsoleOutputHandler
+        && (std::strcmp(context.category, "qml") == 0 || std::strcmp(context.category, "js") == 0)
+        )
+    {
+        jsConsoleOutputHandler(type, context, msg);
+        return;
+    }
+
     const std::string localMsg = consoleToPrintable(msg);
     std::ostream& outs = LogMessageHandler::instance().outputStream(type);
     switch (type) {

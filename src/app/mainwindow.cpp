@@ -131,8 +131,6 @@ void MainWindow::addPage(IAppContext::Page page, IWidgetMainPage* pageWidget)
 
 void MainWindow::createCommands()
 {
-    auto jsEngine = createScriptEngine(m_guiApp->application(), this);
-
     // "File" commands
     this->addCommand<CommandNewDocument>();
     this->addCommand<CommandOpenDocuments>();
@@ -158,8 +156,8 @@ void MainWindow::createCommands()
     this->addCommand<CommandSaveViewImage>();
     this->addCommand<CommandInspectXde>();
     this->addCommand<CommandEditOptions>();
-    this->addCommand<CommandExecScript>(jsEngine);
-    this->addCommand<CommandExecRecentScript>(m_ui->menu_Tools, jsEngine);
+    this->addCommand<CommandExecScript>();
+    this->addCommand<CommandExecRecentScript>(m_ui->menu_Tools);
 
     // "Window" commands
     this->addCommand<CommandLeftSidebarWidgetToggle>();
