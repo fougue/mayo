@@ -212,7 +212,7 @@ QVariant ScriptGeomGeneralSplineSurface::pole(int uIndex, int vIndex) const
     else if (m_bspline)
         return ScriptGeom::toScriptValue(m_bspline->Pole(uIndex, vIndex));
 
-    return QVariant();
+    return {};
 }
 
 double ScriptGeomGeneralSplineSurface::weight(int uIndex, int vIndex) const

@@ -6,9 +6,25 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
+#include <gp_Ax1.hxx>
 #include <gp_Ax3.hxx>
 
 namespace Mayo {
+
+class ScriptGeomAx1 {
+    Q_GADGET
+    Q_PROPERTY(QVariant location READ location)
+    Q_PROPERTY(QVariant direction READ direction)
+public:
+    ScriptGeomAx1() = default;
+    ScriptGeomAx1(const gp_Ax1& ax1);
+
+    QVariant location() const;
+    QVariant direction() const;
+
+private:
+    gp_Ax1 m_ax1;
+};
 
 class ScriptGeomAx3 {
     Q_GADGET
@@ -34,6 +50,7 @@ namespace ScriptGeom {
 QVariant toScriptValue(const gp_Pnt& pnt);
 QVariant toScriptValue(const gp_Vec& vec);
 QVariant toScriptValue(const gp_Dir& dir);
+QVariant toScriptValue(const gp_Ax1& ax1);
 QVariant toScriptValue(const gp_Ax3& ax3);
 
 } // namespace ScriptGeom

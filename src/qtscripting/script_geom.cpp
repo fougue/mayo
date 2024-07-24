@@ -11,6 +11,21 @@
 
 namespace Mayo {
 
+ScriptGeomAx1::ScriptGeomAx1(const gp_Ax1& ax1)
+    : m_ax1(ax1)
+{
+}
+
+QVariant ScriptGeomAx1::location() const
+{
+    return ScriptGeom::toScriptValue(m_ax1.Location());
+}
+
+QVariant ScriptGeomAx1::direction() const
+{
+    return ScriptGeom::toScriptValue(m_ax1.Direction());
+}
+
 ScriptGeomAx3::ScriptGeomAx3(const gp_Ax3& ax3)
     : m_ax3(ax3)
 {
@@ -60,6 +75,11 @@ QVariant toScriptValue(const gp_Vec& vec)
 QVariant toScriptValue(const gp_Dir& dir)
 {
     return xyz_toScriptValue(dir.XYZ());
+}
+
+QVariant toScriptValue(const gp_Ax1& ax1)
+{
+    return QVariant::fromValue(ScriptGeomAx1(ax1));
 }
 
 QVariant toScriptValue(const gp_Ax3& ax3)
