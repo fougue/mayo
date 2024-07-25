@@ -13,88 +13,119 @@
 
 namespace Mayo {
 
+ScriptGeomSurface::ScriptGeomSurface(const OccHandle<Geom_Surface>& surface)
+    : m_geomSurface(surface)
+{
+}
+
 ScriptGeomSurface::ScriptGeomSurface(const TopoDS_Face& face)
-    : m_surface(face)
+    : m_brepSurface(face)
 {
 }
 
 int ScriptGeomSurface::uIntervalCount(unsigned continuity) const
 {
-    return m_surface.NbUIntervals(static_cast<GeomAbs_Shape>(continuity));
+    return this->surface().NbUIntervals(static_cast<GeomAbs_Shape>(continuity));
 }
 
 int ScriptGeomSurface::vIntervalCount(unsigned continuity) const
 {
-    return m_surface.NbVIntervals(static_cast<GeomAbs_Shape>(continuity));
+    return this->surface().NbVIntervals(static_cast<GeomAbs_Shape>(continuity));
 }
 
 QVariant ScriptGeomSurface::point(double u, double v) const
 {
-    return ScriptGeom::toScriptValue(m_surface.Value(u, v));
+    return ScriptGeom::toScriptValue(this->surface().Value(u, v));
 }
 
 QVariant ScriptGeomSurface::dN(double u, double v, int uN, int vN) const
 {
-    return ScriptGeom::toScriptValue(m_surface.DN(u, v, uN, vN));
+    return ScriptGeom::toScriptValue(this->surface().DN(u, v, uN, vN));
 }
 
 QVariant ScriptGeomSurface::cylinder() const
 {
-    return QVariant::fromValue(ScriptGeomCylinder(m_surface.Cylinder()));
+    return QVariant::fromValue(ScriptGeomCylinder(this->surface().Cylinder()));
 }
 
 QVariant ScriptGeomSurface::plane() const
 {
-    return QVariant::fromValue(ScriptGeomPlane(m_surface.Plane()));
+    return QVariant::fromValue(ScriptGeomPlane(this->surface().Plane()));
 }
 
 QVariant ScriptGeomSurface::cone() const
 {
-    return QVariant::fromValue(ScriptGeomCone(m_surface.Cone()));
+    return QVariant::fromValue(ScriptGeomCone(this->surface().Cone()));
 }
 
 QVariant ScriptGeomSurface::sphere() const
 {
-    return QVariant::fromValue(ScriptGeomSphere(m_surface.Sphere()));
+    return QVariant::fromValue(ScriptGeomSphere(this->surface().Sphere()));
 }
 
 QVariant ScriptGeomSurface::torus() const
 {
-    return QVariant::fromValue(ScriptGeomTorus(m_surface.Torus()));
+    return QVariant::fromValue(ScriptGeomTorus(this->surface().Torus()));
 }
 
 QVariant ScriptGeomSurface::bezier() const
 {
-    return QVariant::fromValue(ScriptGeomBezierSurface(m_surface.Bezier()));
+    return QVariant::fromValue(ScriptGeomBezierSurface(this->surface().Bezier()));
 }
 
 QVariant ScriptGeomSurface::bspline() const
 {
-    return QVariant::fromValue(ScriptGeomBSplineSurface(m_surface.BSpline()));
+    return QVariant::fromValue(ScriptGeomBSplineSurface(this->surface().BSpline()));
 }
 
 QVariant ScriptGeomSurface::surfaceOfLinearExtrusion() const
 {
-    if (m_surface.GetType() != GeomAbs_SurfaceOfExtrusion)
-        throw std::runtime_error("Surface is not of type Geom_SurfaceOfLinearExtrusion");
-
-    const OccHandle<Geom_Surface>& geomSurface = m_surface.Surface().Surface();
-    OccHandle<Geom_Geometry> geom = geomSurface->Transformed(m_surface.Trsf());
-    auto surfExtrusion = OccHandle<Geom_SurfaceOfLinearExtrusion>::DownCast(geom);
-    return QVariant::fromValue(ScriptGeomSurfaceOfLinearExtrusion(surfExtrusion));
+    auto surfExtrusion = OccHandle<Geom_SurfaceOfLinearExtrusion>::DownCast(this->geomSurface());
+    return QVariant::fromValue(ScriptGeomSurfaceOfLinearExtrusion(surfExtrusion, this->trsf()));
 }
 
 QVariant ScriptGeomSurface::surfaceOfRevolution() const
 {
-    if (m_surface.GetType() != GeomAbs_SurfaceOfRevolution)
-        throw std::runtime_error("Surface is not of type Geom_SurfaceOfRevolution");
-
-    const OccHandle<Geom_Surface>& geomSurface = m_surface.Surface().Surface();
-    OccHandle<Geom_Geometry> geom = geomSurface->Transformed(m_surface.Trsf());
-    auto surfRevolution = OccHandle<Geom_SurfaceOfRevolution>::DownCast(geom);
-    return QVariant::fromValue(ScriptGeomSurfaceOfRevolution(surfRevolution));
+    auto surfRevolution = OccHandle<Geom_SurfaceOfRevolution>::DownCast(this->geomSurface());
+    return QVariant::fromValue(ScriptGeomSurfaceOfRevolution(surfRevolution, this->trsf()));
 }
 
+QVariant ScriptGeomSurface::offsetSurface() const
+{
+    auto surfOffset = OccHandle<Geom_OffsetSurface>::DownCast(this->geomSurface());
+    return QVariant::fromValue(ScriptGeomOffsetSurface(surfOffset, this->trsf()));
+}
+
+const Adaptor3d_Surface& ScriptGeomSurface::surface() const
+{
+    if (m_geomSurface.Surface())
+        return m_geomSurface;
+
+    if (!m_brepSurface.Face().IsNull())
+        return m_brepSurface;
+
+    throw std::runtime_error("No support surface");
+}
+
+const OccHandle<Geom_Surface>& ScriptGeomSurface::geomSurface() const
+{
+    if (m_geomSurface.Surface())
+        return m_geomSurface.Surface();
+
+    if (!m_brepSurface.Face().IsNull())
+        return m_brepSurface.Surface().Surface();
+
+    throw std::runtime_error("No support surface");
+}
+
+const gp_Trsf& ScriptGeomSurface::trsf() const
+{
+    if (!m_brepSurface.Face().IsNull())
+        return m_brepSurface.Trsf();
+
+    static const gp_Trsf idTrsf;
+    return idTrsf;
+}
 
 ScriptGeomCylinder::ScriptGeomCylinder(const gp_Cylinder& cyl)
     : m_cyl(cyl)
@@ -330,48 +361,67 @@ unsigned int ScriptGeomBSplineSurface::vKnotDistribution() const
 
 
 ScriptGeomSurfaceOfLinearExtrusion::ScriptGeomSurfaceOfLinearExtrusion(
-    const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion
+    const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion, const gp_Trsf& trsf
 )
-    : m_surfExtrusion(surfExtrusion)
+    : m_surface(surfExtrusion, trsf)
 {
 }
 
 QVariant ScriptGeomSurfaceOfLinearExtrusion::basisCurve() const
 {
-    Cpp::throwErrorIf<std::runtime_error>(!m_surfExtrusion, "Geom_SurfaceOfLinearExtrusion pointer is null");
-    return QVariant::fromValue(ScriptGeomCurve(m_surfExtrusion->BasisCurve()));
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfLinearExtrusion pointer is null");
+    return QVariant::fromValue(ScriptGeomCurve(m_surface.trsfSurf()->BasisCurve()));
 }
 
 QVariant ScriptGeomSurfaceOfLinearExtrusion::direction() const
 {
-    Cpp::throwErrorIf<std::runtime_error>(!m_surfExtrusion, "Geom_SurfaceOfLinearExtrusion pointer is null");
-    return ScriptGeom::toScriptValue(m_surfExtrusion->Direction());
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfLinearExtrusion pointer is null");
+    return ScriptGeom::toScriptValue(m_surface.inputSurf()->Direction().Transformed(m_surface.trsf()));
 }
 
 
 ScriptGeomSurfaceOfRevolution::ScriptGeomSurfaceOfRevolution(
-    const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution
+    const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution, const gp_Trsf& trsf
 )
-    : m_surfRevolution(surfRevolution)
+    : m_surface(surfRevolution, trsf)
 {
-}
-
-QVariant ScriptGeomSurfaceOfRevolution::axis() const
-{
-    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
-    return ScriptGeom::toScriptValue(m_surfRevolution->Axis());
 }
 
 QVariant ScriptGeomSurfaceOfRevolution::basisCurve() const
 {
-    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
-    return QVariant::fromValue(ScriptGeomCurve(m_surfRevolution->BasisCurve()));
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
+    return QVariant::fromValue(ScriptGeomCurve(m_surface.trsfSurf()->BasisCurve()));
+}
+
+QVariant ScriptGeomSurfaceOfRevolution::axis() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
+    return ScriptGeom::toScriptValue(m_surface.inputSurf()->Axis().Transformed(m_surface.trsf()));
 }
 
 QVariant ScriptGeomSurfaceOfRevolution::direction() const
 {
-    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
-    return ScriptGeom::toScriptValue(m_surfRevolution->Direction());
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
+    return ScriptGeom::toScriptValue(m_surface.inputSurf()->Direction().Transformed(m_surface.trsf()));
+}
+
+
+ScriptGeomOffsetSurface::ScriptGeomOffsetSurface(
+    const OccHandle<Geom_OffsetSurface>& offset, const gp_Trsf& trsf
+)
+    : m_surface(offset, trsf)
+{
+}
+
+QVariant ScriptGeomOffsetSurface::basisSurface() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_OffsetSurface pointer is null");
+    return QVariant::fromValue(ScriptGeomSurface(m_surface.trsfSurf()->BasisSurface()));
+}
+
+double ScriptGeomOffsetSurface::value() const
+{
+    return m_surface.valid() ? m_surface.inputSurf()->Offset() : 0.;
 }
 
 } // namespace Mayo
