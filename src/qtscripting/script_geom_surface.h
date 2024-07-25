@@ -12,6 +12,7 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <Geom_BSplineSurface.hxx>
 #include <Geom_BezierSurface.hxx>
+#include <Geom_OffsetSurface.hxx>
 #include <Geom_SurfaceOfLinearExtrusion.hxx>
 #include <Geom_SurfaceOfRevolution.hxx>
 #include <gp_Cone.hxx>
@@ -44,30 +45,32 @@ class ScriptGeomSurface {
     Q_PROPERTY(QVariant torus READ torus)
     Q_PROPERTY(QVariant bezier READ bezier)
     Q_PROPERTY(QVariant bspline READ bspline)
+    Q_PROPERTY(QVariant offsetSurface READ offsetSurface)
 public:
     ScriptGeomSurface() = default;
+    ScriptGeomSurface(const OccHandle<Geom_Surface>& surface);
     ScriptGeomSurface(const TopoDS_Face& face);
 
-    unsigned type() const { return m_surface.GetType(); }
+    unsigned type() const { return this->surface().GetType(); }
 
-    double uParamFirst() const { return m_surface.FirstUParameter(); }
-    double uParamLast() const { return m_surface.LastUParameter(); }
-    double vParamFirst() const { return m_surface.FirstVParameter(); }
-    double vParamLast() const { return m_surface.LastVParameter(); }
+    double uParamFirst() const { return this->surface().FirstUParameter(); }
+    double uParamLast() const { return this->surface().LastUParameter(); }
+    double vParamFirst() const { return this->surface().FirstVParameter(); }
+    double vParamLast() const { return this->surface().LastVParameter(); }
 
-    unsigned uContinuity() const { return m_surface.UContinuity(); }
-    unsigned vContinuity() const { return m_surface.VContinuity(); }
+    unsigned uContinuity() const { return this->surface().UContinuity(); }
+    unsigned vContinuity() const { return this->surface().VContinuity(); }
 
     Q_INVOKABLE int uIntervalCount(unsigned continuity) const;
     Q_INVOKABLE int vIntervalCount(unsigned continuity) const;
 
-    bool isUClosed() const { return m_surface.IsUClosed(); }
-    bool isVClosed() const { return m_surface.IsVClosed(); }
+    bool isUClosed() const { return this->surface().IsUClosed(); }
+    bool isVClosed() const { return this->surface().IsVClosed(); }
 
-    bool isUPeriodic() const { return m_surface.IsUPeriodic(); }
-    bool isVPeriodic() const { return m_surface.IsVPeriodic(); }
-    double uPeriod() const { return m_surface.UPeriod(); }
-    double vPeriod() const { return m_surface.VPeriod(); }
+    bool isUPeriodic() const { return this->surface().IsUPeriodic(); }
+    bool isVPeriodic() const { return this->surface().IsVPeriodic(); }
+    double uPeriod() const { return this->surface().UPeriod(); }
+    double vPeriod() const { return this->surface().VPeriod(); }
 
     Q_INVOKABLE QVariant point(double u, double v) const;              // ->{x, y, z}
     Q_INVOKABLE QVariant dN(double u, double v, int uN, int vN) const; // ->{x, y, z}
@@ -81,9 +84,14 @@ public:
     QVariant bspline() const;  // ->ScriptGeomBSplineSurface
     QVariant surfaceOfLinearExtrusion() const; // ->ScriptGeomSurfaceOfLinearExtrusion
     QVariant surfaceOfRevolution() const;      // ->ScriptGeomSurfaceOfRevolution
+    QVariant offsetSurface() const; // ->ScriptGeomOffsetSurface
 
 private:
-    BRepAdaptor_Surface m_surface;
+    const Adaptor3d_Surface& surface() const;
+    const OccHandle<Geom_Surface>& geomSurface() const;
+    const gp_Trsf& trsf() const;
+    GeomAdaptor_Surface m_geomSurface;
+    BRepAdaptor_Surface m_brepSurface;
 };
 
 
@@ -249,37 +257,86 @@ public:
 };
 
 
+template<typename GeomSurfaceType>
+class GeomSurfaceHelper {
+public:
+    GeomSurfaceHelper() = default;
+    GeomSurfaceHelper(const OccHandle<GeomSurfaceType>& surface, const gp_Trsf& trsf)
+        : m_surface(surface), m_trsf(trsf)
+    {}
+
+    const gp_Trsf& trsf() const { return m_trsf; }
+    const OccHandle<GeomSurfaceType>& inputSurf() const { return m_surface; }
+    const OccHandle<GeomSurfaceType>& trsfSurf() const {
+        if (m_trsf.Form() == gp_Identity)
+            return m_surface;
+
+        if (!m_surfaceTransformed) {
+            OccHandle<Geom_Geometry> geom = m_surface->Transformed(m_trsf);
+            m_surfaceTransformed = OccHandle<GeomSurfaceType>::DownCast(geom);
+        }
+
+        return m_surfaceTransformed;
+    }
+
+    bool valid() const { return !m_surface.IsNull(); }
+
+private:
+    OccHandle<GeomSurfaceType> m_surface;
+    mutable OccHandle<GeomSurfaceType> m_surfaceTransformed;
+    gp_Trsf m_trsf;
+};
+
 class ScriptGeomSurfaceOfLinearExtrusion {
     Q_GADGET
     Q_PROPERTY(QVariant basisCurve READ basisCurve)
     Q_PROPERTY(QVariant direction READ direction)
 public:
     ScriptGeomSurfaceOfLinearExtrusion() = default;
-    ScriptGeomSurfaceOfLinearExtrusion(const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion);
+    ScriptGeomSurfaceOfLinearExtrusion(
+        const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion, const gp_Trsf& trsf
+    );
 
     QVariant basisCurve() const; // ->ScriptGeomCurve
     QVariant direction() const;  // ->{x, y, z}
 
 private:
-    OccHandle<Geom_SurfaceOfLinearExtrusion> m_surfExtrusion;
+    GeomSurfaceHelper<Geom_SurfaceOfLinearExtrusion> m_surface;
 };
 
 
 class ScriptGeomSurfaceOfRevolution {
     Q_GADGET
-    Q_PROPERTY(QVariant axis READ axis)
     Q_PROPERTY(QVariant basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant axis READ axis)
     Q_PROPERTY(QVariant direction READ direction)
 public:
     ScriptGeomSurfaceOfRevolution() = default;
-    ScriptGeomSurfaceOfRevolution(const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution);
+    ScriptGeomSurfaceOfRevolution(
+        const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution, const gp_Trsf& trsf
+    );
 
-    QVariant axis() const;       // ->ScriptGeomAx1
     QVariant basisCurve() const; // ->ScriptGeomCurve
+    QVariant axis() const;       // ->ScriptGeomAx1
     QVariant direction() const;  // ->{x, y, z}
 
 private:
-    OccHandle<Geom_SurfaceOfRevolution> m_surfRevolution;
+    GeomSurfaceHelper<Geom_SurfaceOfRevolution> m_surface;
+};
+
+class ScriptGeomOffsetSurface {
+    Q_GADGET
+    Q_PROPERTY(QVariant basisSurface READ basisSurface)
+    Q_PROPERTY(double value READ value)
+public:
+    ScriptGeomOffsetSurface() = default;
+    ScriptGeomOffsetSurface(const OccHandle<Geom_OffsetSurface>& offset, const gp_Trsf& trsf);
+
+    QVariant basisSurface() const; // ->ScriptGeomSurface
+    double value() const;
+
+private:
+    GeomSurfaceHelper<Geom_OffsetSurface> m_surface;
 };
 
 } // namespace Mayo
@@ -295,3 +352,4 @@ Q_DECLARE_METATYPE(Mayo::ScriptGeomBezierSurface)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomBSplineSurface)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomSurfaceOfLinearExtrusion)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomSurfaceOfRevolution)
+Q_DECLARE_METATYPE(Mayo::ScriptGeomOffsetSurface)
