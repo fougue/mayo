@@ -9,7 +9,9 @@
 #include "../qtcommon/qstring_conv.h"
 #include "script_application.h"
 
+#include <QtCore/QMessageLogger>
 #include <QtQml/QJSEngine>
+#include <QtQml/QJSValue>
 #include <GeomAbs_BSplKnotDistribution.hxx>
 #include <GeomAbs_CurveType.hxx>
 #include <GeomAbs_Shape.hxx>
@@ -131,6 +133,18 @@ QJSEngine* createScriptEngine(const ApplicationPtr& app, QObject* parent)
     addScriptEnum<TopAbs_Orientation>(jsEngine);
 
     return jsEngine;
+}
+
+void logScriptError(const QJSValue& jsVal, const char* functionName)
+{
+    if (jsVal.isError()) {
+        const QByteArray name = jsVal.property("name").toString().toUtf8();
+        const QByteArray message = jsVal.property("message").toString().toUtf8();
+        const QByteArray fileName = jsVal.property("fileName").toString().toUtf8();
+        const int lineNumber = jsVal.property("lineNumber").toInt();
+        const QMessageLogger msgLogger(fileName.constData(), lineNumber, functionName, "js");
+        msgLogger.critical("%s: %s", name.constData(), message.constData());
+    }
 }
 
 } // namespace Mayo

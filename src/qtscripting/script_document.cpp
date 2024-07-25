@@ -12,13 +12,14 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../app/qtgui_utils.h"
 #include "script_application.h"
+#include "script_global.h"
 #include "script_shape.h"
 #include "script_tree_node.h"
 
 #include <TDF_Tool.hxx>
 
-#include <QtQml/QJSEngine>
 #include <QtCore/QtDebug>
+#include <QtQml/QJSEngine>
 
 namespace Mayo {
 
@@ -68,7 +69,8 @@ void ScriptDocument::traverseModelTree(QJSValue fn)
                 return; // Skip: tree node is a product(or "referred" shape)
         }
 #endif
-        fn.call({ QJSValue{nodeId} });
+        auto jsVal = fn.call({ QJSValue{nodeId} });
+        logScriptError(jsVal, "traverseModelTree()");
     });
 }
 
@@ -99,7 +101,8 @@ void ScriptDocument::traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJS
     const auto scriptShape = m_jsApp->jsEngine()->fromScriptValue<ScriptShape>(shape);
     BRepUtils::forEachSubShape(scriptShape.shape(), shapeTypeEnum, [&](const TopoDS_Shape& subShape) {
         auto jsSubShape = m_jsApp->jsEngine()->toScriptValue(ScriptShape(subShape));
-        fn.call({ jsSubShape });
+        auto jsVal = fn.call({ jsSubShape });
+        logScriptError(jsVal, "traverseShape()");
     });
 }
 
