@@ -6,6 +6,7 @@
 
 #include "script_geom_curve.h"
 #include "script_geom.h"
+#include "../base/cpp_utils.h"
 
 #include <stdexcept>
 
@@ -284,31 +285,24 @@ unsigned ScriptGeomBSplineCurve::knotDistribution() const
 ScriptGeomOffsetCurve::ScriptGeomOffsetCurve(const OccHandle<Geom_OffsetCurve>& offset)
     : m_offset(offset)
 {
-    this->throwIfNullCurve();
 }
 
 QVariant ScriptGeomOffsetCurve::basisCurve() const
 {
-    this->throwIfNullCurve();
+    Cpp::throwErrorIf<std::runtime_error>(!m_offset, "Geom_OffsetCurve pointer is null");
     return QVariant::fromValue(ScriptGeomCurve(m_offset));
 }
 
 QVariant ScriptGeomOffsetCurve::direction() const
 {
-    this->throwIfNullCurve();
+    Cpp::throwErrorIf<std::runtime_error>(!m_offset, "Geom_OffsetCurve pointer is null");
     return ScriptGeom::toScriptValue(m_offset->Direction());
 }
 
 double ScriptGeomOffsetCurve::value() const
 {
-    this->throwIfNullCurve();
+    Cpp::throwErrorIf<std::runtime_error>(!m_offset, "Geom_OffsetCurve pointer is null");
     return m_offset->Offset();
-}
-
-void ScriptGeomOffsetCurve::throwIfNullCurve() const
-{
-    if (!m_offset)
-        throw std::runtime_error("Geom_OffsetCurve pointer is null");
 }
 
 } // namespace Mayo

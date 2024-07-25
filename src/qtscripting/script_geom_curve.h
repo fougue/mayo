@@ -58,8 +58,8 @@ public:
     bool isPeriodic() const { return this->curve().IsPeriodic(); }
     double period() const { return this->curve().Period(); }
 
-    Q_INVOKABLE QVariant point(double u) const;
-    Q_INVOKABLE QVariant dN(double u, int n) const;
+    Q_INVOKABLE QVariant point(double u) const;     // ->{x, y, z}
+    Q_INVOKABLE QVariant dN(double u, int n) const; // ->{x, y, z}
 
     QVariant line() const;      // ->ScriptGeomLine
     QVariant circle() const;    // ->ScriptGeomCircle
@@ -72,7 +72,6 @@ public:
 
 private:
     const Adaptor3d_Curve& curve() const;
-
     GeomAdaptor_Curve m_geomCurve;
     BRepAdaptor_Curve m_brepCurve;
 };
@@ -122,8 +121,8 @@ public:
     double majorRadius() const { return m_elips.MajorRadius(); }
     double minorRadius() const { return m_elips.MinorRadius(); }
 
-    QVariant focus1() const;
-    QVariant focus2() const;
+    QVariant focus1() const; // ->{x, y, z}
+    QVariant focus2() const; // ->{x, y, z}
     double focalDistance() const { return m_elips.Focal(); }
     double parameter() const { return m_elips.Parameter(); }
 
@@ -148,8 +147,8 @@ public:
     double majorRadius() const { return m_hypr.MajorRadius(); }
     double minorRadius() const { return m_hypr.MinorRadius(); }
 
-    QVariant focus1() const;
-    QVariant focus2() const;
+    QVariant focus1() const; // ->{x, y, z}
+    QVariant focus2() const; // ->{x, y, z}
     double focalDistance() const { return m_hypr.Focal(); }
     double parameter() const { return m_hypr.Parameter(); }
 
@@ -168,7 +167,7 @@ public:
     ScriptGeomParabola(const gp_Parab& parab);
 
     QVariant position() const; // ->ScriptGeomAx3
-    QVariant focus() const;
+    QVariant focus() const;    // ->{x, y, z}
     double focalDistance() const { return m_parab.Focal(); }
     double parameter() const { return m_parab.Parameter(); }
 
@@ -188,7 +187,7 @@ public:
     int poleCount() const;
     bool isRational() const;
 
-    Q_INVOKABLE QVariant pole(int index) const;
+    Q_INVOKABLE QVariant pole(int index) const; // ->{x, y, z}
     Q_INVOKABLE double weight(int index) const;
 
 protected:
@@ -229,7 +228,7 @@ public:
     int knotIndexLast() const;
     int knotCount() const;
 
-    unsigned knotDistribution() const;
+    unsigned knotDistribution() const; // ->GeomBSplineKnotDistribution
 };
 
 class ScriptGeomOffsetCurve {
@@ -242,12 +241,10 @@ public:
     ScriptGeomOffsetCurve(const OccHandle<Geom_OffsetCurve>& offset);
 
     QVariant basisCurve() const; // ->ScriptGeomCurve
-    QVariant direction() const;
+    QVariant direction() const;  // ->{x, y, z}
     double value() const;
 
 private:
-    void throwIfNullCurve() const;
-
     OccHandle<Geom_OffsetCurve> m_offset;
 };
 

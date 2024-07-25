@@ -19,8 +19,8 @@ public:
     ScriptGeomAx1() = default;
     ScriptGeomAx1(const gp_Ax1& ax1);
 
-    QVariant location() const;
-    QVariant direction() const;
+    QVariant location() const;  // ->{x, y, z}
+    QVariant direction() const; // ->{x, y, z}
 
 private:
     gp_Ax1 m_ax1;
@@ -36,10 +36,10 @@ public:
     ScriptGeomAx3() = default;
     ScriptGeomAx3(const gp_Ax3& ax3);
 
-    QVariant location() const;
-    QVariant mainDirection() const;
-    QVariant xDirection() const;
-    QVariant yDirection() const;
+    QVariant location() const;      // ->{x, y, z}
+    QVariant mainDirection() const; // ->{x, y, z}
+    QVariant xDirection() const;    // ->{x, y, z}
+    QVariant yDirection() const;    // ->{x, y, z}
 
 private:
     gp_Ax3 m_ax3;
@@ -47,11 +47,11 @@ private:
 
 namespace ScriptGeom {
 
-QVariant toScriptValue(const gp_Pnt& pnt);
-QVariant toScriptValue(const gp_Vec& vec);
-QVariant toScriptValue(const gp_Dir& dir);
-QVariant toScriptValue(const gp_Ax1& ax1);
-QVariant toScriptValue(const gp_Ax3& ax3);
+QVariant toScriptValue(const gp_Pnt& pnt); // ->{x, y, z}
+QVariant toScriptValue(const gp_Vec& vec); // ->{x, y, z}
+QVariant toScriptValue(const gp_Dir& dir); // ->{x, y, z}
+QVariant toScriptValue(const gp_Ax1& ax1); // ->ScriptGeomAx1
+QVariant toScriptValue(const gp_Ax3& ax3); // ->ScriptGeomAx3
 
 } // namespace ScriptGeom
 } // namespace Mayo
