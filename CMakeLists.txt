@@ -134,8 +134,12 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(
     Mayo_CompileDefinitions
+    # Disable Qt functions deprecated in version 5.15 and earlier
     QT_DISABLE_DEPRECATED_BEFORE=0x050F00
+    # Make QFileInfo constructors implicit instead of explicit
     QT_IMPLICIT_QFILEINFO_CONSTRUCTION
+    # Force Qt to provide information about source code location for qDebug, qInfo(), ...
+    QT_MESSAGELOGCONTEXT
 )
 set(Mayo_CompileOptions)
 

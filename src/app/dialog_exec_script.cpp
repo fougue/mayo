@@ -96,16 +96,7 @@ void DialogExecScript::startScript()
         // Evaluate script program
         this->recreateScriptEngine();
         auto jsVal = m_jsEngine->evaluate(scriptProgram(m_scriptFilePath), m_scriptFilePath);
-        if (jsVal.isError()) {
-            const QString name = jsVal.property("name").toString();
-            const QString message = jsVal.property("message").toString();
-            fnAddConsoleOutput(
-                QtCriticalMsg,
-                tr("%1: %2").arg(name, message),
-                jsVal.property("fileName").toString(),
-                jsVal.property("lineNumber").toInt()
-            );
-        }
+        logScriptError(jsVal);
     });
     m_taskMgr.run(m_scriptExecTaskId);
 }
