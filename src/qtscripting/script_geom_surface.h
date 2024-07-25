@@ -10,13 +10,15 @@
 #include <QtCore/QVariant>
 
 #include <BRepAdaptor_Surface.hxx>
+#include <Geom_BSplineSurface.hxx>
+#include <Geom_BezierSurface.hxx>
+#include <Geom_SurfaceOfLinearExtrusion.hxx>
+#include <Geom_SurfaceOfRevolution.hxx>
+#include <gp_Cone.hxx>
 #include <gp_Cylinder.hxx>
 #include <gp_Pln.hxx>
-#include <gp_Cone.hxx>
 #include <gp_Sphere.hxx>
 #include <gp_Torus.hxx>
-#include <Geom_BezierSurface.hxx>
-#include <Geom_BSplineSurface.hxx>
 
 namespace Mayo {
 
@@ -67,8 +69,8 @@ public:
     double uPeriod() const { return m_surface.UPeriod(); }
     double vPeriod() const { return m_surface.VPeriod(); }
 
-    Q_INVOKABLE QVariant point(double u, double v) const;
-    Q_INVOKABLE QVariant dN(double u, double v, int uN, int vN) const;
+    Q_INVOKABLE QVariant point(double u, double v) const;              // ->{x, y, z}
+    Q_INVOKABLE QVariant dN(double u, double v, int uN, int vN) const; // ->{x, y, z}
 
     QVariant cylinder() const; // ->ScriptGeomCylinder
     QVariant plane() const;    // ->ScriptGeomPlane
@@ -77,6 +79,8 @@ public:
     QVariant torus() const;    // ->ScriptGeomTorus
     QVariant bezier() const;   // ->ScriptGeomBezierSurface
     QVariant bspline() const;  // ->ScriptGeomBSplineSurface
+    QVariant surfaceOfLinearExtrusion() const; // ->ScriptGeomSurfaceOfLinearExtrusion
+    QVariant surfaceOfRevolution() const;      // ->ScriptGeomSurfaceOfRevolution
 
 private:
     BRepAdaptor_Surface m_surface;
@@ -124,7 +128,7 @@ public:
     ScriptGeomCone(const gp_Cone& cone);
 
     QVariant position() const; // ->ScriptGeomAx3
-    QVariant apex() const;
+    QVariant apex() const;     // ->{x, y, z}
     double refRadius() const { return m_cone.RefRadius(); }
     double semiAngle() const { return m_cone.SemiAngle(); }
 
@@ -185,7 +189,7 @@ public:
     bool isURational() const;
     bool isVRational() const;
 
-    Q_INVOKABLE QVariant pole(int uIndex, int vIndex) const;
+    Q_INVOKABLE QVariant pole(int uIndex, int vIndex) const;  // ->{x, y, z}
     Q_INVOKABLE double weight(int uIndex, int vIndex) const;
 
 protected:
@@ -244,6 +248,40 @@ public:
     unsigned vKnotDistribution() const;
 };
 
+
+class ScriptGeomSurfaceOfLinearExtrusion {
+    Q_GADGET
+    Q_PROPERTY(QVariant basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant direction READ direction)
+public:
+    ScriptGeomSurfaceOfLinearExtrusion() = default;
+    ScriptGeomSurfaceOfLinearExtrusion(const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion);
+
+    QVariant basisCurve() const; // ->ScriptGeomCurve
+    QVariant direction() const;  // ->{x, y, z}
+
+private:
+    OccHandle<Geom_SurfaceOfLinearExtrusion> m_surfExtrusion;
+};
+
+
+class ScriptGeomSurfaceOfRevolution {
+    Q_GADGET
+    Q_PROPERTY(QVariant axis READ axis)
+    Q_PROPERTY(QVariant basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant direction READ direction)
+public:
+    ScriptGeomSurfaceOfRevolution() = default;
+    ScriptGeomSurfaceOfRevolution(const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution);
+
+    QVariant axis() const;       // ->ScriptGeomAx1
+    QVariant basisCurve() const; // ->ScriptGeomCurve
+    QVariant direction() const;  // ->{x, y, z}
+
+private:
+    OccHandle<Geom_SurfaceOfRevolution> m_surfRevolution;
+};
+
 } // namespace Mayo
 
 Q_DECLARE_METATYPE(Mayo::ScriptGeomSurface)
@@ -255,3 +293,5 @@ Q_DECLARE_METATYPE(Mayo::ScriptGeomSphere)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomTorus)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomBezierSurface)
 Q_DECLARE_METATYPE(Mayo::ScriptGeomBSplineSurface)
+Q_DECLARE_METATYPE(Mayo::ScriptGeomSurfaceOfLinearExtrusion)
+Q_DECLARE_METATYPE(Mayo::ScriptGeomSurfaceOfRevolution)

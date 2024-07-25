@@ -5,7 +5,9 @@
 ****************************************************************************/
 
 #include "script_geom_surface.h"
+#include "script_geom_curve.h"
 #include "script_geom.h"
+#include "../base/cpp_utils.h"
 
 #include <stdexcept>
 
@@ -69,6 +71,28 @@ QVariant ScriptGeomSurface::bezier() const
 QVariant ScriptGeomSurface::bspline() const
 {
     return QVariant::fromValue(ScriptGeomBSplineSurface(m_surface.BSpline()));
+}
+
+QVariant ScriptGeomSurface::surfaceOfLinearExtrusion() const
+{
+    if (m_surface.GetType() != GeomAbs_SurfaceOfExtrusion)
+        throw std::runtime_error("Surface is not of type Geom_SurfaceOfLinearExtrusion");
+
+    const OccHandle<Geom_Surface>& geomSurface = m_surface.Surface().Surface();
+    OccHandle<Geom_Geometry> geom = geomSurface->Transformed(m_surface.Trsf());
+    auto surfExtrusion = OccHandle<Geom_SurfaceOfLinearExtrusion>::DownCast(geom);
+    return QVariant::fromValue(ScriptGeomSurfaceOfLinearExtrusion(surfExtrusion));
+}
+
+QVariant ScriptGeomSurface::surfaceOfRevolution() const
+{
+    if (m_surface.GetType() != GeomAbs_SurfaceOfRevolution)
+        throw std::runtime_error("Surface is not of type Geom_SurfaceOfRevolution");
+
+    const OccHandle<Geom_Surface>& geomSurface = m_surface.Surface().Surface();
+    OccHandle<Geom_Geometry> geom = geomSurface->Transformed(m_surface.Trsf());
+    auto surfRevolution = OccHandle<Geom_SurfaceOfRevolution>::DownCast(geom);
+    return QVariant::fromValue(ScriptGeomSurfaceOfRevolution(surfRevolution));
 }
 
 
@@ -302,6 +326,52 @@ unsigned int ScriptGeomBSplineSurface::uKnotDistribution() const
 unsigned int ScriptGeomBSplineSurface::vKnotDistribution() const
 {
     return this->bspline()->VKnotDistribution();
+}
+
+
+ScriptGeomSurfaceOfLinearExtrusion::ScriptGeomSurfaceOfLinearExtrusion(
+    const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion
+)
+    : m_surfExtrusion(surfExtrusion)
+{
+}
+
+QVariant ScriptGeomSurfaceOfLinearExtrusion::basisCurve() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surfExtrusion, "Geom_SurfaceOfLinearExtrusion pointer is null");
+    return QVariant::fromValue(ScriptGeomCurve(m_surfExtrusion->BasisCurve()));
+}
+
+QVariant ScriptGeomSurfaceOfLinearExtrusion::direction() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surfExtrusion, "Geom_SurfaceOfLinearExtrusion pointer is null");
+    return ScriptGeom::toScriptValue(m_surfExtrusion->Direction());
+}
+
+
+ScriptGeomSurfaceOfRevolution::ScriptGeomSurfaceOfRevolution(
+    const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution
+)
+    : m_surfRevolution(surfRevolution)
+{
+}
+
+QVariant ScriptGeomSurfaceOfRevolution::axis() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
+    return ScriptGeom::toScriptValue(m_surfRevolution->Axis());
+}
+
+QVariant ScriptGeomSurfaceOfRevolution::basisCurve() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
+    return QVariant::fromValue(ScriptGeomCurve(m_surfRevolution->BasisCurve()));
+}
+
+QVariant ScriptGeomSurfaceOfRevolution::direction() const
+{
+    Cpp::throwErrorIf<std::runtime_error>(!m_surfRevolution, "Geom_SurfaceOfRevolution pointer is null");
+    return ScriptGeom::toScriptValue(m_surfRevolution->Direction());
 }
 
 } // namespace Mayo
