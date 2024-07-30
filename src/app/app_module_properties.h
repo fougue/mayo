@@ -26,6 +26,12 @@ namespace Mayo {
 namespace IO { class System; }
 class Settings;
 
+enum class ActionOnDocumentFileChange {
+    None,
+    ReloadIfUserConfirm,
+    ReloadSilently
+};
+
 // Provides a container of all the application properties(settings)
 // Properties are structured into predefined Settings groups/sections
 class AppModuleProperties : public PropertyGroup {
@@ -51,7 +57,7 @@ public:
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
-    PropertyBool reloadDocumentOnFileChange{ this, textId("reloadDocumentOnFileChange") };
+    PropertyEnum<ActionOnDocumentFileChange> actionOnDocumentFileChange{ this, textId("actionOnDocumentFileChange") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     // Meshing

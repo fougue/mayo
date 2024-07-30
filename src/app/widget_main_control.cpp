@@ -92,11 +92,11 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
 
     // Document files monitoring
     auto appModule = AppModule::get();
-    const auto& propReloadDocOnFileChange = appModule->properties()->reloadDocumentOnFileChange;
-    m_docFilesWatcher->enable(propReloadDocOnFileChange);
+    const auto& propActionOnDocumentFileChange = appModule->properties()->actionOnDocumentFileChange;
+    m_docFilesWatcher->enable(propActionOnDocumentFileChange != ActionOnDocumentFileChange::None);
     appModule->settings()->signalChanged.connectSlot([&](const Property* property) {
-        if (property == &propReloadDocOnFileChange) {
-            m_docFilesWatcher->enable(propReloadDocOnFileChange);
+        if (property == &propActionOnDocumentFileChange) {
+            m_docFilesWatcher->enable(propActionOnDocumentFileChange != ActionOnDocumentFileChange::None);
             m_pendingDocsToReload.clear();
         }
     });
@@ -329,26 +329,41 @@ QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
 
 void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
 {
-    const QString strQuestion =
-        tr("Document file `%1` has been changed since it was opened\n\n"
-           "Do you want to reload that document?\n\n"
-           "File: `%2`")
-        .arg(to_QString(doc->name()))
-        .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
-    ;
-    const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
-    auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
-    msgBox->setTextFormat(Qt::MarkdownText);
-    QtWidgetsUtils::asyncDialogExec(msgBox);
-    QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
-        m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
-        if (btn == msgBox->button(QMessageBox::Yes)) {
-            while (doc->entityCount() > 0)
-                doc->destroyEntity(doc->entityTreeNodeId(0));
+    // Helper function to reload document
+    auto fnReloadDoc = [this](const DocumentPtr& doc) {
+        while (doc->entityCount() > 0)
+            doc->destroyEntity(doc->entityTreeNodeId(0));
+        FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
+    };
 
-            FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
-        }
-    });
+    // Shortcut on "action" property
+    const auto& propActionOnDocumentFileChange = AppModule::get()->properties()->actionOnDocumentFileChange;
+
+    // Option: silent reloading
+    if (propActionOnDocumentFileChange == ActionOnDocumentFileChange::ReloadSilently) {
+        m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
+        fnReloadDoc(doc);
+    }
+
+    // Option: ask user to confirm reloading
+    if (propActionOnDocumentFileChange == ActionOnDocumentFileChange::ReloadIfUserConfirm) {
+        const QString strQuestion =
+            tr("Document file `%1` has been changed since it was opened\n\n"
+               "Do you want to reload that document?\n\n"
+               "File: `%2`")
+                .arg(to_QString(doc->name()))
+                .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
+            ;
+        const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
+        auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
+        msgBox->setTextFormat(Qt::MarkdownText);
+        QtWidgetsUtils::asyncDialogExec(msgBox);
+        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
+            m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
+            if (btn == msgBox->button(QMessageBox::Yes))
+                fnReloadDoc(doc);
+        });
+    }
 }
 
 WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
