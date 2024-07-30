@@ -7,9 +7,14 @@
 #include "document_files_watcher.h"
 
 #include "../base/application.h"
+#include "../base/unit_system.h"
 #include "../qtcommon/filepath_conv.h"
 
 #include <QtCore/QFileSystemWatcher>
+#include <QtCore/QtDebug>
+#include <QtCore/QTimer>
+
+#include <cassert>
 
 namespace Mayo {
 
@@ -38,6 +43,7 @@ void DocumentFilesWatcher::enable(bool on)
     }
     else {
         this->destroyFileSystemWatcher();
+        m_setDocBeingChanged.clear();
         m_vecNonAckDocumentChanged.clear();
     }
 }
@@ -52,6 +58,16 @@ void DocumentFilesWatcher::acknowledgeDocumentFileChange(const DocumentPtr& doc)
     auto it = std::find(m_vecNonAckDocumentChanged.begin(), m_vecNonAckDocumentChanged.end(), doc);
     if (it != m_vecNonAckDocumentChanged.end())
         m_vecNonAckDocumentChanged.erase(it);
+}
+
+QuantityTime DocumentFilesWatcher::signalSendDelay() const
+{
+    return m_signalSendDelay;
+}
+
+void DocumentFilesWatcher::setSignalSendDelay(QuantityTime delay)
+{
+    m_signalSendDelay = delay;
 }
 
 QFileSystemWatcher* DocumentFilesWatcher::fileSystemWatcher()
@@ -78,10 +94,28 @@ void DocumentFilesWatcher::onFileChanged(const QString& strFilePath)
     if (m_isEnabled) {
         const FilePath docFilePath = filepathFrom(strFilePath);
         DocumentPtr doc = m_app->findDocumentByLocation(docFilePath);
-        if (this->isDocumentChangeAcknowledged(doc)) {
-            m_vecNonAckDocumentChanged.push_back(doc);
-            this->signalDocumentFileChanged.send(doc);
+
+        if (!this->isDocumentChangeAcknowledged(doc)) {
+            //qDebug() << "onFileChanged()" << strFilePath << " -- file change !ack: signal rejected";
+            return;
         }
+
+        if (m_setDocBeingChanged.find(doc) != m_setDocBeingChanged.cend()) {
+            //qDebug() << "onFileChanged()" << strFilePath << " -- being modified: signal rejected";
+            return;
+        }
+
+        //qDebug() << "onFileChanged()" << strFilePath << " -- register callback: signal accepted";
+        m_setDocBeingChanged.insert(doc);
+        const int sendSignalDelay_ms = UnitSystem::milliseconds(m_signalSendDelay).value;
+        QTimer::singleShot(sendSignalDelay_ms, this, [=]{
+            if (m_setDocBeingChanged.find(doc) != m_setDocBeingChanged.cend()) {
+                //qDebug() << "onFileChanged()" << strFilePath << " -- timer callback: signal";
+                m_vecNonAckDocumentChanged.push_back(doc);
+                this->signalDocumentFileChanged.send(doc);
+                m_setDocBeingChanged.erase(doc);
+            }
+        });
     }
 }
 
@@ -109,9 +143,10 @@ void DocumentFilesWatcher::onDocumentAdded(const DocumentPtr& doc)
 
 void DocumentFilesWatcher::onDocumentAboutToClose(const DocumentPtr& doc)
 {
-    if (m_isEnabled)
+    if (m_isEnabled) {
         this->fileSystemWatcher()->removePath(filepathTo<QString>(doc->filePath()));
+        m_setDocBeingChanged.erase(doc);
+    }
 }
-
 
 } // namespace Mayo

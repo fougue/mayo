@@ -7,10 +7,12 @@
 #include "../base/application_ptr.h"
 #include "../base/document_ptr.h"
 #include "../base/filepath.h"
+#include "../base/quantity.h"
 #include "../base/signal.h"
 
 #include <QtCore/QObject>
 
+#include <unordered_set>
 #include <vector>
 
 class QFileSystemWatcher;
@@ -33,6 +35,9 @@ public:
 
     void acknowledgeDocumentFileChange(const DocumentPtr& doc);
 
+    QuantityTime signalSendDelay() const;
+    void setSignalSendDelay(QuantityTime delay);
+
 private:
     QFileSystemWatcher* fileSystemWatcher();
     void destroyFileSystemWatcher();
@@ -47,7 +52,9 @@ private:
     ApplicationPtr m_app;
     QFileSystemWatcher* m_fileSystemWatcher = nullptr;
     bool m_isEnabled = false;
+    std::unordered_set<DocumentPtr> m_setDocBeingChanged;
     std::vector<DocumentPtr> m_vecNonAckDocumentChanged;
+    QuantityTime m_signalSendDelay = 1 * Quantity_Second;
 };
 
 } // namespace Mayo

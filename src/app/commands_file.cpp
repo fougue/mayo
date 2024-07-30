@@ -248,15 +248,14 @@ void FileCommandTools::importInDocument(
     const QString taskTitle =
         listFilePaths.size() > 1 ?
             Command::tr("Import") :
-            filepathTo<QString>(listFilePaths.front().stem());
+            filepathTo<QString>(listFilePaths.front().stem())
+        ;
     context->taskMgr()->setTitle(taskId, to_stdString(taskTitle));
     context->taskMgr()->run(taskId);
 }
 
 void FileCommandTools::importInDocument(
-        IAppContext* context,
-        const DocumentPtr& targetDoc,
-        const FilePath& filePath
+        IAppContext* context, const DocumentPtr& targetDoc, const FilePath& filePath
     )
 {
     FileCommandTools::importInDocument(context, targetDoc, Span<const FilePath>(&filePath, 1));
