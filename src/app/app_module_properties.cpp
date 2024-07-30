@@ -14,6 +14,8 @@
 #include "../base/unit_system.h"
 #include "../graphics/graphics_mesh_object_driver.h"
 
+#include <fmt/format.h>
+
 namespace Mayo {
 
 AppModuleProperties::AppModuleProperties(Settings* settings)
@@ -40,11 +42,12 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     this->unitSystemDecimals.setConstraintsEnabled(true);
 
     // Application
+    this->actionOnDocumentFileChange.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
     settings->addSetting(&this->language, groupId_application);
     settings->addSetting(&this->recentFiles, groupId_application);
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
-    settings->addSetting(&this->reloadDocumentOnFileChange, groupId_application);
+    settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
     this->recentFiles.setUserVisible(false);
@@ -83,7 +86,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
-        this->reloadDocumentOnFileChange.setValue(true);
+        this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);
         this->linkWithDocumentSelector.setValue(true);
 #ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
@@ -163,10 +166,16 @@ void AppModuleProperties::retranslate()
     this->language.setDescription(
         textIdTr("Language used for the application. Change will take effect after application restart")
     );
-    this->reloadDocumentOnFileChange.setDescription(
-        textIdTr("Monitors the file system for changes to documents opened in the application\n\n"
-                 "When such a file change is detected then the application proposes to reload(open again) the document")
-    );
+    const auto& enumActionOnDocumentFileChange = this->actionOnDocumentFileChange.enumeration();
+    this->actionOnDocumentFileChange.setDescription(
+        fmt::format(textIdTr("Action to be done after some opened document file is changed(modified) externally\n\n"
+                             "Select options `{0}` or `{1}` so the application monitors changes made to opened files\n\n"
+                             "When such a change is detected then the application proposes to reload(open again) the document\n\n"
+                             "Select `{1}` to automatically reload documents without any user interaction"
+                             ),
+                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadIfUserConfirm)->name.tr(),
+                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadSilently)->name.tr()
+    ));
     this->linkWithDocumentSelector.setDescription(
         textIdTr("In case where multiple documents are opened, make sure the document displayed in "
                  "the 3D view corresponds to what is selected in the model tree")
