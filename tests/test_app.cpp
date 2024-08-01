@@ -69,10 +69,14 @@ void TestApp::DocumentFilesWatcher_test()
     auto app = makeOccHandle<Application>();
 
     DocumentFilesWatcher docFilesWatcher(app);
+    const int signalSendDelay_ms = 250;
+    docFilesWatcher.setSignalSendDelay(signalSendDelay_ms * Quantity_Millisecond);
     docFilesWatcher.enable(true);
     Document::Identifier changedDocId = -1;
+    int signalCallCount = 0;
     docFilesWatcher.signalDocumentFileChanged.connectSlot([&](DocumentPtr changedDoc) {
         changedDocId = changedDoc->identifier();
+        ++signalCallCount;
     });
 
     const FilePath cadFilePath = "tests/outputs/temp-cube.ply";
@@ -92,20 +96,25 @@ void TestApp::DocumentFilesWatcher_test()
     fnCopyCadFile();
     const bool okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
     QVERIFY(okWait);
+    QCOMPARE(signalCallCount, 1);
     QCOMPARE(changedDocId, doc->identifier());
 
     // Check further file changes are not monitored until last one is acknowledged
     changedDocId = -1;
+    signalCallCount = 0;
     fnCopyCadFile();
-    QTest::qWait(125/*ms*/);
+    QTest::qWait(signalSendDelay_ms * 1.5);
     QCOMPARE(changedDocId, -1);
+    QCOMPARE(signalCallCount, 0);
 
     // Check closing document unmonitors file in DocumentFilesWatcher
     docFilesWatcher.acknowledgeDocumentFileChange(doc);
     app->closeDocument(doc);
+    changedDocId = -1;
     fnCopyCadFile();
-    QTest::qWait(125/*ms*/);
+    QTest::qWait(signalSendDelay_ms * 1.5);
     QCOMPARE(changedDocId, -1);
+    QCOMPARE(signalCallCount, 0);
 }
 
 void TestApp::FilePathConv_test()
