@@ -26,6 +26,7 @@ private slots:
 
     void BRepMinDistance_TwoPoints_test();
     void BRepMinDistance_TwoBoxes_test();
+    void BRepMinDistance_TwoConfusedFaces_test();
 
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
