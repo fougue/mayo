@@ -17,6 +17,7 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <Geom_BSplineCurve.hxx>
@@ -144,6 +145,18 @@ void TestMeasure::BRepMinDistance_TwoBoxes_test()
     const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(shape1, shape2);
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, std::abs(box1_max.X() - box2_min.X()));
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, minDist.pnt1.Distance(minDist.pnt2));
+}
+
+void TestMeasure::BRepMinDistance_TwoConfusedFaces_test()
+{
+    const TopoDS_Face face1 = BRepBuilderAPI_MakeFace(gp_Pln(gp::XOY()));
+    const TopoDS_Face face2 = BRepBuilderAPI_MakeFace(gp_Pln(gp::XOY()));
+    try {
+        const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(face1, face2);
+        QCOMPARE(minDist.value.value(), 0.);
+    } catch (const IMeasureError& err) {
+        qDebug() << QString::fromUtf8(err.message().data(), err.message().length());
+    }
 }
 
 void TestMeasure::BRepAngle_TwoLinesIntersect_test()

@@ -147,7 +147,7 @@ gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
             const MeasureCircle circle = MeasureToolBRep::brepCircle(shape);
             return circle.value.Location();
         }
-        catch (const BRepMeasureError<ErrorCode::NotCircularEdge>&) {
+        catch (const IMeasureError&) {
             BRepGProp::LinearProperties(shape, shapeProps);
         }
     }
@@ -276,10 +276,10 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
             const GCPnts_QuasiUniformAbscissa pnts(curve, 4); // More points to avoid confusion
             throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone() || pnts.NbPoints() < 3);
             const GC_MakeCircle makeCirc(
-                        GeomUtils::d0(curve, pnts.Parameter(1)),
-                        GeomUtils::d0(curve, pnts.Parameter(2)),
-                        GeomUtils::d0(curve, pnts.Parameter(3))
-                        );
+                GeomUtils::d0(curve, pnts.Parameter(1)),
+                GeomUtils::d0(curve, pnts.Parameter(2)),
+                GeomUtils::d0(curve, pnts.Parameter(3))
+            );
             throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
             circle = makeCirc.Value()->Circ();
         }
@@ -312,10 +312,10 @@ MeasureCircle MeasureToolBRep::brepCircleFromPolygonEdge(const TopoDS_Edge& edge
     throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull() || polyline->NbNodes() < 7);
     // Try to create a circle from 3 sample points
     const GC_MakeCircle makeCirc(
-                polyline->Nodes().First(),
-                polyline->Nodes().Value(1 + polyline->NbNodes() / 3),
-                polyline->Nodes().Value(1 + 2 * polyline->NbNodes() / 3)
-                );
+        polyline->Nodes().First(),
+        polyline->Nodes().Value(1 + polyline->NbNodes() / 3),
+        polyline->Nodes().Value(1 + 2 * polyline->NbNodes() / 3)
+    );
     throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
     const gp_Circ circle = makeCirc.Value()->Circ();
 
@@ -345,12 +345,21 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
 }
 
 MeasureDistance MeasureToolBRep::brepMinDistance(
-        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2
+    )
 {
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
-    const BRepExtrema_DistShapeShape dist(shape1, shape2);
+    BRepExtrema_DistShapeShape dist;
+    try {
+        dist.LoadS1(shape1);
+        dist.LoadS2(shape2);
+        dist.Perform();
+    } catch (...) {
+        throw BRepMeasureError<ErrorCode::MinDistanceFailure>();
+    }
+
     throwErrorIf<ErrorCode::MinDistanceFailure>(!dist.IsDone());
 
     MeasureDistance distResult;
@@ -362,7 +371,8 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
 }
 
 MeasureDistance MeasureToolBRep::brepCenterDistance(
-        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2
+    )
 {
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
@@ -507,8 +517,8 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
 
         const BRepAdaptor_Surface surface(face);
         areaResult.middlePnt = surface.Value(
-                    (surface.FirstUParameter() + surface.LastUParameter()) / 2.,
-                    (surface.FirstVParameter() + surface.LastVParameter()) / 2.
+            (surface.FirstUParameter() + surface.LastUParameter()) / 2.,
+            (surface.FirstVParameter() + surface.LastVParameter()) / 2.
         );
     }
     else {
