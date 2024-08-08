@@ -17,9 +17,9 @@ namespace Mayo {
 class PropertyValueConversion {
 public:
     // Variant type to be used when (de)serializing values
-    class Variant : public std::variant<bool, int, double, std::string> {
+    class Variant : public std::variant<std::monostate, bool, int, double, std::string> {
     public:
-        using BaseType = std::variant<bool, int, double, std::string>;
+        using BaseType = std::variant<std::monostate, bool, int, double, std::string>;
         Variant() = default;
         Variant(bool v) : BaseType(v) {}
         Variant(int v) : BaseType(v) {}
@@ -28,6 +28,7 @@ public:
         Variant(const char* str) : BaseType(std::string(str)) {}
         Variant(const std::string& str) : BaseType(str) {}
 
+        bool isValid() const;
         bool toBool(bool* ok = nullptr) const;
         int toInt(bool* ok = nullptr) const;
         double toDouble(bool* ok = nullptr) const;

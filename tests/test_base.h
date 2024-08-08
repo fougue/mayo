@@ -69,6 +69,8 @@ private slots:
     void TKernelUtils_colorFromHex_test();
     void TKernelUtils_colorFromHex_test_data();
 
+    void Settings_test();
+
     void UnitSystem_test();
     void UnitSystem_test_data();
 

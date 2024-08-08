@@ -50,9 +50,11 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
+    settings->addSetting(&this->appUiState, groupId_application);
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
+    this->appUiState.setUserVisible(false);
 
     // Meshing
     this->meshingQuality.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
@@ -88,6 +90,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->lastSelectedFormatFilter.setValue({});
         this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);
         this->linkWithDocumentSelector.setValue(true);
+        this->appUiState.setValue({});
 #ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
 #else

@@ -289,6 +289,11 @@ static void assignBoolPtr(bool* value, bool on)
         *value = on;
 }
 
+bool PropertyValueConversion::Variant::isValid() const
+{
+    return this->index() != 0; // not std::monostate
+}
+
 bool PropertyValueConversion::Variant::toBool(bool* ok) const
 {
     assignBoolPtr(ok, true);
