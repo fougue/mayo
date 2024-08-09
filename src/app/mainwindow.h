@@ -35,6 +35,7 @@ public:
 
 protected:
     void showEvent(QShowEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 private:
     void addPage(IAppContext::Page page, IWidgetMainPage* pageWidget);

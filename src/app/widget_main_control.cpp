@@ -66,21 +66,21 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
 
     // "Window" actions and navigation in documents
     QObject::connect(
-                m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMainControl::onCurrentDocumentIndexChanged
+        m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMainControl::onCurrentDocumentIndexChanged
     );
     QObject::connect(
-                m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
-                this, &WidgetMainControl::onWidgetFileSystemLocationActivated
+        m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
+        this, &WidgetMainControl::onWidgetFileSystemLocationActivated
     );
     // ...
     QObject::connect(
-                m_ui->combo_LeftContents, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMainControl::onLeftContentsPageChanged
+        m_ui->combo_LeftContents, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMainControl::onLeftContentsPageChanged
     );
     QObject::connect(
-                m_ui->listView_OpenedDocuments, &QListView::clicked,
-                this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
+        m_ui->listView_OpenedDocuments, &QListView::clicked,
+        this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
     );
 
     guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {

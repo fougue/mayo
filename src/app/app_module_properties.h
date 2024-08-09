@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "app_ui_state.h"
 #include "recent_files.h"
 
 #include "../base/io_format.h"
@@ -60,6 +61,7 @@ public:
     PropertyEnum<ActionOnDocumentFileChange> actionOnDocumentFileChange{ this, textId("actionOnDocumentFileChange") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
+    PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
     const Settings::GroupIndex groupId_meshing;
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };

@@ -26,6 +26,8 @@ private slots:
     void RecentFiles_test();
     void RecentFiles_QPixmap_test();
 
+    void AppUiState_test();
+
     void StringConv_test();
 
     void QtGuiUtils_test();

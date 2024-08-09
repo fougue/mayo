@@ -73,6 +73,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::showEvent(QShowEvent* event)
 {
+    const auto& uiState = AppModule::get()->properties()->appUiState.value();
+    if (!uiState.mainWindowGeometry.isEmpty())
+        this->restoreGeometry(uiState.mainWindowGeometry);
+
+    if (this->widgetPageDocuments())
+        this->widgetPageDocuments()->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
+
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
@@ -84,6 +91,17 @@ void MainWindow::showEvent(QShowEvent* event)
 #endif
 }
 
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    AppUiState uiState = AppModule::get()->properties()->appUiState;
+    uiState.mainWindowGeometry = this->saveGeometry();
+    if (this->widgetPageDocuments())
+        uiState.pageDocuments_isLeftSideBarVisible = this->widgetPageDocuments()->widgetLeftSideBar()->isVisible();
+
+    AppModule::get()->properties()->appUiState.setValue(uiState);
+    QMainWindow::closeEvent(event);
+}
+
 void MainWindow::addPage(IAppContext::Page page, IWidgetMainPage* pageWidget)
 {
     assert(m_mapWidgetPage.find(page) == m_mapWidgetPage.cend());
@@ -91,8 +109,8 @@ void MainWindow::addPage(IAppContext::Page page, IWidgetMainPage* pageWidget)
     m_mapWidgetPage.insert({ page, pageWidget });
     m_ui->stack_Main->addWidget(pageWidget);
     QObject::connect(
-                pageWidget, &IWidgetMainPage::updateGlobalControlsActivationRequired,
-                this, &MainWindow::updateControlsActivation
+        pageWidget, &IWidgetMainPage::updateGlobalControlsActivationRequired,
+        this, &MainWindow::updateControlsActivation
     );
 }
 

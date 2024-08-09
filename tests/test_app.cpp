@@ -29,6 +29,7 @@
 #include <QtCore/QVariant>
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
+#include <QtWidgets/QWidget>
 #include <QtTest/QSignalSpy>
 
 namespace Mayo {
@@ -260,6 +261,21 @@ void TestApp::RecentFiles_QPixmap_test()
         // Should not crash
         AppModule::readRecentFiles(stream, &recentFiles);
     }
+}
+
+void TestApp::AppUiState_test()
+{
+    QWidget widget;
+    AppUiState uiState;
+    uiState.mainWindowGeometry = widget.saveGeometry();
+    uiState.pageDocuments_isLeftSideBarVisible = true;
+    QByteArray blobSave = AppUiState::toBlob(uiState);
+
+    bool ok = false;
+    const AppUiState uiState_read = AppUiState::fromBlob(blobSave, &ok);
+    QVERIFY(ok);
+    QCOMPARE(uiState.mainWindowGeometry, uiState_read.mainWindowGeometry);
+    QCOMPARE(uiState.pageDocuments_isLeftSideBarVisible, uiState_read.pageDocuments_isLeftSideBarVisible);
 }
 
 void TestApp::StringConv_test()

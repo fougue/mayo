@@ -169,6 +169,12 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
         varBlob.setByteArray(true);
         return varBlob;
     }
+    else if (isType<PropertyAppUiState>(prop)) {
+        const QByteArray blob = AppUiState::toBlob(constRef<PropertyAppUiState>(prop));
+        Variant varBlob(blob.toStdString());
+        varBlob.setByteArray(true);
+        return varBlob;
+    }
     else {
         return PropertyValueConversion::toVariant(prop);
     }
@@ -183,6 +189,13 @@ bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) co
         AppModule::readRecentFiles(stream, &recentFiles);
         ptr<PropertyRecentFiles>(prop)->setValue(recentFiles);
         return stream.status() == QDataStream::Ok;
+    }
+    else if (isType<PropertyAppUiState>(prop)) {
+        bool ok = false;
+        auto blob = QtCoreUtils::QByteArray_frowRawData(variant.toConstRefString());
+        auto uiState = AppUiState::fromBlob(blob, &ok);
+        ptr<PropertyAppUiState>(prop)->setValue(uiState);
+        return ok;
     }
     else {
         return PropertyValueConversion::fromVariant(prop, variant);

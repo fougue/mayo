@@ -438,6 +438,7 @@ static int runApp(QCoreApplication* qtApp)
     // Create MainWindow
     MainWindow mainWindow(guiApp);
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
+    appModule->settings()->loadProperty(&appModule->properties()->appUiState);
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
         QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });
