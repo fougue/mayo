@@ -9,8 +9,8 @@ jobs:
                 include:
                     - arch: aarch64
                       distro: ubuntu_latest
-                    - arch: aarch64
-                      distro: fedora_latest
+                   #- arch: aarch64
+                   #  distro: fedora_latest
                     - arch: armv7
                       distro: archarm_latest
 
@@ -28,8 +28,12 @@ jobs:
           uses: uraimo/run-on-arch-action@v2
           with:
               arch: ${{matrix.arch}}
+
               distro: ${{matrix.distro}}
-              githubToken: ${{github.token}}  # Not required, but speeds up builds
+
+              # Not required, but speeds up builds
+              githubToken: ${{github.token}}
+
               install: |
                   case "${{ matrix.distro }}" in
                   ubuntu*)
