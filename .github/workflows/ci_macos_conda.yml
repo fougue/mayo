@@ -1,0 +1,59 @@
+name: macOS-conda
+
+on: [push]
+
+jobs:
+    build-macos:
+        runs-on: macos-latest
+        name: build-macos-qt${{matrix.qt_version_name}}
+
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Set Conda Environment
+          uses: conda-incubator/setup-miniconda@v3
+          with:
+              miniconda-version: "latest"
+              activate-environment: ci_macos_conda
+
+        - name: Set conda classic solver
+          shell: bash -el {0}
+          run: conda install --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive
+
+        - name: Install Qt5
+          shell: bash -el {0}
+          run: conda install conda-forge::qt
+
+        - name: Install OpenCascade
+          shell: bash -el {0}
+          run: conda install conda-forge::occt
+
+        - name: Install Assimp
+          shell: bash -el {0}
+          run: conda install conda-forge::assimp
+
+        - name: Get count of CPU cores
+          uses: SimenB/github-actions-cpu-cores@v1
+          id: cpu-cores
+
+        - name: Build
+          run: |
+              mkdir ${{github.workspace}}/build
+              cd ${{github.workspace}}/build
+              cmake --version
+              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/Qt5;$CMAKE_PREFIX_PATH"
+              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/opencascade;$CMAKE_PREFIX_PATH"
+              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/assimp-5.4;$CMAKE_PREFIX_PATH"
+              cmake .. \
+                    -DMayo_BuildTests=ON \
+                    -DMayo_BuildPluginAssimp=ON \
+                    -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
+              cmake --build . \
+                    --config Release \
+                    --parallel ${{steps.cpu-cores.outputs.count}}
+
+        - name: Execute Unit Tests
+          working-directory: ${{github.workspace}}/build
+          run: |
+              ./mayo.app/Contents/MacOS/mayo --runtests
