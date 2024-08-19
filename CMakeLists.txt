@@ -683,6 +683,7 @@ add_custom_target(
     .github/workflows/ci_linux.yml
     .github/workflows/ci_linux_arm.yml
     .github/workflows/ci_macos.yml
+    .github/workflows/ci_macos_conda.yml
     .github/workflows/ci_windows.yml
     images/credits.txt
     scripts/bump-version.rb
