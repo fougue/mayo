@@ -21,6 +21,63 @@
 
 namespace Mayo::IO {
 
+namespace {
+
+aiMesh* createAssimpMesh(const IMeshAccess& mesh)
+{
+    auto ai_mesh = new aiMesh;
+    ai_mesh->mPrimitiveTypes = aiPrimitiveType_TRIANGLE;
+
+    // Vertices
+    ai_mesh->mNumVertices = mesh.triangulation()->NbNodes();
+    ai_mesh->mVertices = new aiVector3D[ai_mesh->mNumVertices];
+    for (int i = 1; i <= mesh.triangulation()->NbNodes(); ++i) {
+        auto node = mesh.triangulation()->Node(i);
+        auto& ai_node = ai_mesh->mVertices[i - 1];
+        ai_node.Set(ai_real(node.X()), ai_real(node.Y()), ai_real(node.Z()));
+    }
+
+    // Triangles
+    ai_mesh->mNumFaces = mesh.triangulation()->NbTriangles();
+    ai_mesh->mFaces = new aiFace[ai_mesh->mNumFaces];
+    const Poly_Array1OfTriangle& triangles = MeshUtils::triangles(mesh.triangulation());
+    for (int i = 1; i <= triangles.Size(); ++i) {
+        const auto& tri = triangles.Value(i);
+        auto& ai_face = ai_mesh->mFaces[i - 1];
+        ai_face.mNumIndices = 3;
+        ai_face.mIndices = new unsigned int[3];
+        ai_face.mIndices[0] = tri.Value(1);
+        ai_face.mIndices[1] = tri.Value(2);
+        ai_face.mIndices[2] = tri.Value(3);
+    }
+
+    // Normals
+    if (mesh.triangulation()->HasNormals()) {
+        ai_mesh->mNormals = new aiVector3D[ai_mesh->mNumVertices];
+        for (int i = 1; i < mesh.triangulation()->NbNodes(); ++i) {
+            auto n = MeshUtils::normal(mesh.triangulation(), i);
+            auto& ai_n = ai_mesh->mNormals[i - 1];
+            n.Normalize();
+            ai_n.Set(MeshUtils::normalX(n), MeshUtils::normalY(n), MeshUtils::normalZ(n));
+        }
+    }
+
+    // Texture coords
+    if (mesh.triangulation()->HasUVNodes()) {
+        ai_mesh->mTextureCoords[0] = new aiVector3D[ai_mesh->mNumVertices];
+        ai_mesh->mNumUVComponents[0] = 2;
+        for (int i = 1; i < mesh.triangulation()->NbNodes(); ++i) {
+            auto uv = mesh.triangulation()->UVNode(i);
+            auto& ai_tc = ai_mesh->mTextureCoords[0][i - 1];
+            ai_tc.Set(ai_real(uv.X()), ai_real(uv.Y()), 0.);
+        }
+    }
+
+    return ai_mesh;
+}
+
+} // namespace
+
 AssimpWriter::~AssimpWriter()
 {
     delete m_scene;
@@ -30,10 +87,9 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 {
     progress = progress ? progress : &TaskProgress::null();
 
-    // Find unique application items
-    std::vector<ApplicationItem> uniqueAppItems;
-    System::visitUniqueItems(appItems, [&](const ApplicationItem& item) {
-        uniqueAppItems.push_back(item);
+    // Create materials
+    System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& treeNode) {
+
     });
 
     // Find meshes
@@ -50,48 +106,10 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 
         if (!partLabel.IsNull() && setOfPartLabels.find(partLabel) == setOfPartLabels.cend()) {
             setOfPartLabels.insert(partLabel);
+            // TODO Handle sub shapes with XCaf::shapeSubs(partLabel)
             IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& mesh) {
-                auto assimpMesh = new aiMesh;
-                assimpMesh->mPrimitiveTypes = aiPrimitiveType_TRIANGLE;
-                assimpMesh->mNumVertices = mesh.triangulation()->NbNodes();
-                assimpMesh->mVertices = new aiVector3D[assimpMesh->mNumVertices];
-                for (int i = 1; i <= mesh.triangulation()->NbNodes(); ++i) {
-                    const gp_Pnt node = mesh.triangulation()->Node(i);
-                    assimpMesh->mVertices[i - 1].Set(
-                        ai_real(node.X()), ai_real(node.Y()), ai_real(node.Z())
-                    );
-                }
-
-                assimpMesh->mNumFaces = mesh.triangulation()->NbTriangles();
-                assimpMesh->mFaces = new aiFace[assimpMesh->mNumFaces];
-                const Poly_Array1OfTriangle& triangles = MeshUtils::triangles(mesh.triangulation());
-                for (int i = 1; i <= triangles.Size(); ++i) {
-                    const Poly_Triangle& tri = triangles.Value(i);
-                    auto& assimpFace = assimpMesh->mFaces[i - 1];
-                    assimpFace.mNumIndices = 3;
-                    assimpFace.mIndices = new unsigned int[3];
-                    assimpFace.mIndices[0] = tri.Value(1);
-                    assimpFace.mIndices[1] = tri.Value(2);
-                    assimpFace.mIndices[2] = tri.Value(3);
-                }
-
-                if (mesh.triangulation()->HasNormals()) {
-                    assimpMesh->mNormals = new aiVector3D[assimpMesh->mNumVertices];
-                    for (int i = 1; i < mesh.triangulation()->NbNodes(); ++i) {
-                        auto n = MeshUtils::normal(mesh.triangulation(), i);
-                        n.Normalize();
-                        assimpMesh->mNormals[i - 1].Set(
-                            MeshUtils::normalX(n), MeshUtils::normalY(n), MeshUtils::normalZ(n)
-                        );
-                    }
-                }
-
-                if (mesh.triangulation()->HasUVNodes()) {
-                    //assimpMesh->mTextureCoords = new aiVector3D[assimpMesh->mNumVertices];
-                    for (int i = 1; i < mesh.triangulation()->NbNodes(); ++i) {
-                    }
-                }
-
+                auto ai_mesh = createAssimpMesh(mesh);
+                vecMesh.push_back(ai_mesh);
             });
         }
     });
