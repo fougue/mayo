@@ -86,6 +86,33 @@ double triangulationArea(const OccHandle<Poly_Triangulation>& triangulation)
     return area;
 }
 
+Poly_Triangulation_NormalElementType normalX(const Poly_Triangulation_NormalType& n)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    return n.x();
+#else
+    return n.X();
+#endif
+}
+
+Poly_Triangulation_NormalElementType normalY(const Poly_Triangulation_NormalType& n)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    return n.y();
+#else
+    return n.Y();
+#endif
+}
+
+Poly_Triangulation_NormalElementType normalZ(const Poly_Triangulation_NormalType& n)
+{
+#if OCC_VERSION_HEX >= 0x070600
+    return n.z();
+#else
+    return n.Z();
+#endif
+}
+
 void setNode(const OccHandle<Poly_Triangulation>& triangulation, int index, const gp_Pnt& pnt)
 {
 #if OCC_VERSION_HEX >= 0x070600

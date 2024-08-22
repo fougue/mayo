@@ -26,9 +26,16 @@ double triangulationArea(const OccHandle<Poly_Triangulation>& triangulation);
 
 #if OCC_VERSION_HEX >= 0x070600
 using Poly_Triangulation_NormalType = gp_Vec3f;
+using Poly_Triangulation_NormalElementType = Standard_ShortReal;
 #else
 using Poly_Triangulation_NormalType = gp_Vec;
+using Poly_Triangulation_NormalElementType = Standard_Real;
 #endif
+
+Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triangulation, int index);
+Poly_Triangulation_NormalElementType normalX(const Poly_Triangulation_NormalType& n);
+Poly_Triangulation_NormalElementType normalY(const Poly_Triangulation_NormalType& n);
+Poly_Triangulation_NormalElementType normalZ(const Poly_Triangulation_NormalType& n);
 
 void setNode(const OccHandle<Poly_Triangulation>& triangulation, int index, const gp_Pnt& pnt);
 void setNormal(const OccHandle<Poly_Triangulation>& triangulation, int index, const Poly_Triangulation_NormalType& n);
@@ -37,7 +44,6 @@ void setUvNode(const OccHandle<Poly_Triangulation>& triangulation, int index, do
 
 void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation);
 
-Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triangulation, int index);
 const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation);
 
 enum class Orientation {

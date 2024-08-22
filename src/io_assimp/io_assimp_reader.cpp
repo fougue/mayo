@@ -42,8 +42,7 @@
 
 //#define MAYO_ASSIMP_READER_HANDLE_SCALING 1
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -766,5 +765,4 @@ void AssimpReader::transferSceneNode(
         this->transferSceneNode(node->mChildren[ichild], targetDoc, labelEntity, fnCallbackMesh);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

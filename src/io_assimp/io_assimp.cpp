@@ -6,11 +6,11 @@
 
 #include "io_assimp.h"
 #include "io_assimp_reader.h"
+#include "io_assimp_writer.h"
 
 #include <assimp/version.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 Span<const Format> AssimpFactoryReader::formats() const
 {
@@ -44,6 +44,37 @@ std::unique_ptr<PropertyGroup> AssimpFactoryReader::createProperties(Format form
 
     return {};
 }
+
+Span<const Format> AssimpFactoryWriter::formats() const
+{
+    static const Format array[] = {
+        Format_3DS,
+        Format_3MF,
+        Format_COLLADA,
+        Format_FBX,
+        Format_DirectX
+    };
+    return array;
+}
+
+std::unique_ptr<Writer> AssimpFactoryWriter::create(Format format) const
+{
+    auto itFound = std::find(this->formats().begin(), this->formats().end(), format);
+    if (itFound != this->formats().end())
+        return std::make_unique<AssimpWriter>();
+
+    return {};
+}
+
+std::unique_ptr<PropertyGroup> AssimpFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
+{
+    auto itFound = std::find(this->formats().begin(), this->formats().end(), format);
+    if (itFound != this->formats().end())
+        return AssimpWriter::createProperties(parentGroup);
+
+    return {};
+}
+
 
 std::string_view AssimpLib::strVersion()
 {
@@ -98,5 +129,5 @@ std::string_view AssimpLib::strVersionDetails()
 
     return str;
 }
-} // namespace IO
-} // namespace Mayo
+
+} // namespace Mayo::IO

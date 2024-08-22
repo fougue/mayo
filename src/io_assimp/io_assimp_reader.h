@@ -23,8 +23,7 @@ struct aiMesh;
 struct aiNode;
 struct aiTexture;
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Assimp-based reader
 // Requires OpenCascade >= v7.5.0(for XCAFDoc_VisMaterial)
@@ -69,5 +68,4 @@ private:
     std::unordered_map<std::string, OccHandle<Image_Texture>> m_mapFileTexture;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

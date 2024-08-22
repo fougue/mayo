@@ -72,7 +72,7 @@ bool OffWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     int ivertex = 0;
     for (const DocumentTreeNode& treeNode : m_vecTreeNode) {
         IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& mesh) {
-            const gp_Trsf& meshTrsf = mesh.location().Transformation();
+            const gp_Trsf& meshTrsf = mesh.absoluteLocation().Transformation();
             const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
             for (int i = 1; i <= triangulation->NbNodes(); ++i) {
                 const gp_Pnt pnt = triangulation->Node(i).Transformed(meshTrsf);
