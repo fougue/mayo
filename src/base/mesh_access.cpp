@@ -49,7 +49,8 @@ public:
         const TopLoc_Location locShape = XCaf::shapeAbsoluteLocation(doc->modelTree(), treeNode.id());
         TopLoc_Location locFace;
         m_triangulation = BRep_Tool::Triangulation(face, locFace);
-        m_location = locShape * locFace;
+        m_absoluteLocation = locShape * locFace;
+        m_basisLocation = locFace;
     }
 
     std::optional<Quantity_Color> nodeColor(int i) const override
@@ -62,11 +63,18 @@ public:
             return {};
     }
 
-    const TopLoc_Location& location() const override {
-        return m_location;
+    const TopLoc_Location& absoluteLocation() const override
+    {
+        return m_absoluteLocation;
     }
 
-    const OccHandle<Poly_Triangulation>& triangulation() const override {
+    const TopLoc_Location& basisLocation() const override
+    {
+        return m_basisLocation;
+    }
+
+    const OccHandle<Poly_Triangulation>& triangulation() const override
+    {
         return m_triangulation;
     }
 
@@ -88,13 +96,15 @@ private:
 
     std::optional<Quantity_Color> m_faceColor;
     Span<const Quantity_Color> m_nodeColors;
-    TopLoc_Location m_location;
+    TopLoc_Location m_absoluteLocation;
+    TopLoc_Location m_basisLocation;
     OccHandle<Poly_Triangulation> m_triangulation;
 };
 
 void IMeshAccess_visitMeshes(
         const DocumentTreeNode& treeNode,
-        std::function<void(const IMeshAccess&)> fnCallback)
+        std::function<void(const IMeshAccess&)> fnCallback
+    )
 {
     if (!fnCallback || !treeNode.isValid())
         return;

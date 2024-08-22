@@ -271,7 +271,7 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
     }
 
     for (int i = 1; i <= triangulation->NbNodes(); ++i) {
-        const Vertex vertex = PlyWriter::toVertex(triangulation->Node(i).Transformed(mesh.location()));
+        const Vertex vertex = PlyWriter::toVertex(triangulation->Node(i).Transformed(mesh.absoluteLocation()));
         m_vecNode.push_back(std::move(vertex));
     }
 

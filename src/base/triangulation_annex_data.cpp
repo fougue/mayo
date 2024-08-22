@@ -31,17 +31,19 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 }
 
 TriangulationAnnexDataPtr TriangulationAnnexData::Set(
-        const TDF_Label& label, Span<const Quantity_Color> spanNodeColor)
+        const TDF_Label& label, Span<const Quantity_Color> spanNodeColor
+    )
 {
-    TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
+    auto data = TriangulationAnnexData::Set(label);
     data->copyNodeColors(spanNodeColor);
     return data;
 }
 
 TriangulationAnnexDataPtr TriangulationAnnexData::Set(
-        const TDF_Label& label, std::vector<Quantity_Color>&& vecNodeColor)
+        const TDF_Label& label, std::vector<Quantity_Color>&& vecNodeColor
+    )
 {
-    TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
+    auto data = TriangulationAnnexData::Set(label);
     data->m_vecNodeColor = std::move(vecNodeColor);
     return data;
 }
@@ -63,7 +65,9 @@ OccHandle<TDF_Attribute> TriangulationAnnexData::NewEmpty() const
     return new TriangulationAnnexData;
 }
 
-void TriangulationAnnexData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const
+void TriangulationAnnexData::Paste(
+        const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&
+    ) const
 {
     auto data = TriangulationAnnexDataPtr::DownCast(into);
     if (data)

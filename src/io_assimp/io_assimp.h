@@ -5,13 +5,13 @@
 ****************************************************************************/
 
 #include "../base/io_reader.h"
+#include "../base/io_writer.h"
 #include "../base/property.h"
 #include <common/mayo_config.h>
 
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides factory for Assimp-based Reader objects
 class AssimpFactoryReader : public FactoryReader {
@@ -29,6 +29,22 @@ public:
     }
 };
 
+// Provides factory for Assimp-based Writer objects
+class AssimpFactoryWriter : public FactoryWriter {
+public:
+    Span<const Format> formats() const override;
+    std::unique_ptr<Writer> create(Format format) const override;
+    std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
+
+    static std::unique_ptr<FactoryWriter> create() {
+#ifdef MAYO_HAVE_ASSIMP
+        return std::make_unique<AssimpFactoryWriter>();
+#else
+        return {};
+#endif
+    }
+};
+
 struct AssimpLib {
     static std::string_view strName() { return "Assimp"; }
 #ifdef MAYO_HAVE_ASSIMP
@@ -40,5 +56,4 @@ struct AssimpLib {
 #endif
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO
