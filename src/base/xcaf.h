@@ -74,7 +74,7 @@ public:
         FindShapeLabel_Instance = 0x01,
         // findShapeLabel() will try to find the shape find the shape among the components of assemblies
         FindShapeLabel_Component = 0x02,
-        // findShapeLabel() will try tries to find a shape as a subshape of top-level simple shapes
+        // findShapeLabel() will try to find a shape as a subshape of top-level simple shapes
         FindShapeLabel_SubShape = 0x04,
         // Enables all flags
         FindShapeLabel_All = 0xFF
