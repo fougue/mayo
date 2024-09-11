@@ -23,7 +23,9 @@ namespace Mayo::IO {
 
 namespace {
 
-aiMesh* createAssimpMesh(const IMeshAccess& mesh)
+using ai_MeshPtr = aiMesh*;
+
+ai_MeshPtr createAssimpMesh(const IMeshAccess& mesh)
 {
     auto ai_mesh = new aiMesh;
     ai_mesh->mPrimitiveTypes = aiPrimitiveType_TRIANGLE;
@@ -94,7 +96,7 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 
     // Find meshes
     std::unordered_set<TDF_Label> setOfPartLabels;
-    std::vector<aiMesh*> vecMesh;
+    std::vector<ai_MeshPtr> vecMesh;
     System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& treeNode) {
         TDF_Label partLabel;
         if (treeNode.isLeaf()) {
@@ -117,6 +119,12 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 
     delete m_scene;
     m_scene = new aiScene;
+
+    m_scene->mNumMeshes = static_cast<unsigned>(vecMesh.size());
+    m_scene->mMeshes = new ai_MeshPtr[vecMesh.size()];
+    for (unsigned i = 0; i < vecMesh.size(); ++i)
+        m_scene->mMeshes[i] = vecMesh[i];
+
     m_scene->mRootNode = new aiNode("Root Node");
 
     return false;
