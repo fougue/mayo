@@ -105,9 +105,59 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
 
+
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
+}
+
+Bnd_Box GuiDocument::graphicsBoundingBox(GraphicsBoundingBoxFlags flags) const
+{
+    if (flags == GraphicsBoundingBoxFlag::AllGraphics)
+        return m_gfxBoundingBox;
+
+    Bnd_Box bndBox;
+
+    auto fnIsVisibleTreeNode = [=](TreeNodeId nodeId) {
+        return (flags & OnlyVisibleGraphics) == 0 || this->nodeVisibleState(nodeId) == CheckState::On;
+    };
+
+    // Retrieve the application items being selected and visible
+    auto appSelectionModel = this->guiApplication()->selectionModel();
+    std::vector<ApplicationItem> appItems;
+    if (flags & OnlySelectedGraphics) {
+        for (const ApplicationItem& item : appSelectionModel->selectedItems()) {
+            if (item.document() == this->document()
+                && (!item.isDocumentTreeNode() || fnIsVisibleTreeNode(item.documentTreeNode().id())))
+            {
+                appItems.push_back(item);
+            }
+        }
+    }
+
+    // If no application items selected(and visible), then take the whole document
+    if (appItems.empty())
+        appItems = { ApplicationItem{this->document()} };
+
+    // Helper function to extend main bounding box with each visible graphics object inside tree node
+    auto fnAddTreeNodeBndBox = [&](TreeNodeId nodeId) {
+        if (fnIsVisibleTreeNode(nodeId)) {
+            this->foreachGraphicsObject(nodeId, [&](GraphicsObjectPtr gfxObject) {
+                BndUtils::add(&bndBox, GraphicsUtils::AisObject_boundingBox(gfxObject));
+            });
+        }
+    };
+
+    // Iterate over application items to compute main bounding box
+    for (const ApplicationItem& item : appItems) {
+        const Tree<TDF_Label>& modelTree = item.document()->modelTree();
+        if (item.isDocument())
+            traverseTree(modelTree, fnAddTreeNodeBndBox);
+        else
+            traverseTree(item.documentTreeNode().id(), modelTree, fnAddTreeNodeBndBox);
+    }
+
+    return bndBox;
 }
 
 void GuiDocument::setDevicePixelRatio(double ratio)
@@ -374,7 +424,7 @@ void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
 {
     this->runViewCameraAnimation([=](OccHandle<V3d_View> view) {
         view->SetProj(projection);
-        GraphicsUtils::V3dView_fitAll(view);
+        view->FitAll(this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
     });
 }
 
@@ -516,6 +566,7 @@ void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapEntity(entityTreeNodeId);
     BndUtils::add(&m_gfxBoundingBox, m_vecGraphicsEntity.back().bndBox);
+    m_v3dView->FitAll(this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
     this->signalGraphicsBoundingBoxChanged.send(m_gfxBoundingBox);
 }
 
@@ -642,7 +693,6 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
         m_mapTreeNodeCheckState.insert({ id, CheckState::On });
     });
 
-    GraphicsUtils::V3dView_fitAll(m_v3dView);
     m_vecGraphicsEntity.push_back(std::move(gfxEntity));
 }
 
