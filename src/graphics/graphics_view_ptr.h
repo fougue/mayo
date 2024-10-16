@@ -12,7 +12,7 @@
 
 namespace Mayo {
 
-// Helper class providing a V3d view created associated with the owner GraphicsScene object
+// Helper class providing a V3d view associated with the owner GraphicsScene object
 // The redraw() member function actually calls GraphicsScene::redraw() which under the hood sends
 // a "redraw requested" signal
 class GraphicsViewPtr {

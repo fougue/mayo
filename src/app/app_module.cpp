@@ -13,6 +13,7 @@
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../base/tkernel_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
