@@ -127,22 +127,10 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
             view->FitAll(this->guiDocument()->graphicsBoundingBox(bndBoxFlags));
         });
     });
-    QObject::connect(
-                m_btnGrid, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetGrid
-    );
-    QObject::connect(
-                m_btnEditClipping, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetClipPlanes
-    );
-    QObject::connect(
-                m_btnExplode, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetExplode
-    );
-    QObject::connect(
-                m_btnMeasure, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetMeasure
-    );
+    QObject::connect(m_btnGrid, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetGrid);
+    QObject::connect(m_btnEditClipping, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetClipPlanes);
+    QObject::connect(m_btnExplode, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetExplode);
+    QObject::connect(m_btnMeasure, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetMeasure);
     m_controller->signalDynamicActionStarted.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
     m_controller->signalViewScaled.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
     m_controller->signalMouseButtonClicked.connectSlot([=](Aspect_VKeyMouse btn) {
@@ -218,9 +206,9 @@ void WidgetGuiDocument::toggleWidgetGrid(bool on)
         m_widgetGrid = new WidgetGrid(m_guiDoc->graphicsView());
         auto container = this->createWidgetPanelContainer(m_widgetGrid);
         QObject::connect(
-                    m_widgetGrid, &WidgetGrid::sizeAdjustmentRequested,
-                    container, [=]{ adjustWidgetSize(m_widgetGrid); },
-                    Qt::QueuedConnection
+            m_widgetGrid, &WidgetGrid::sizeAdjustmentRequested,
+            container, [=]{ adjustWidgetSize(m_widgetGrid); },
+            Qt::QueuedConnection
         );
     }
 
@@ -229,10 +217,7 @@ void WidgetGuiDocument::toggleWidgetGrid(bool on)
 
 void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
 {
-    if (m_widgetClipPlanes) {
-        m_widgetClipPlanes->setClippingOn(on);
-    }
-    else if (on) {
+    if (!m_widgetClipPlanes && on) {
         m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->graphicsView());
         this->createWidgetPanelContainer(m_widgetClipPlanes);
         m_guiDoc->signalGraphicsBoundingBoxChanged.connectSlot(&WidgetClipPlanes::setRanges, m_widgetClipPlanes);
@@ -258,9 +243,9 @@ void WidgetGuiDocument::toggleWidgetMeasure(bool on)
         m_widgetMeasure = new WidgetMeasure(m_guiDoc);
         auto container = this->createWidgetPanelContainer(m_widgetMeasure);
         QObject::connect(
-                    m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
-                    container, [=]{ adjustWidgetSize(m_widgetMeasure); },
-                    Qt::QueuedConnection
+            m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
+            container, [=]{ adjustWidgetSize(m_widgetMeasure); },
+            Qt::QueuedConnection
         );
     }
 
@@ -313,10 +298,10 @@ void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const
 {
     const QColor bkgndColor =
-            m_qtOccView->supportsWidgetOpacity() ?
-                Qt::transparent :
-                mayoTheme()->color(Theme::Color::ButtonView3d_Background)
-            ;
+        m_qtOccView->supportsWidgetOpacity() ?
+            Qt::transparent :
+            mayoTheme()->color(Theme::Color::ButtonView3d_Background)
+    ;
 
     auto btn = new ButtonFlat(parent);
     btn->setBackgroundBrush(bkgndColor);
