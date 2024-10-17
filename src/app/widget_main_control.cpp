@@ -33,6 +33,8 @@
 #include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
+
+#include <algorithm>
 #include <cassert>
 
 namespace Mayo {
@@ -50,8 +52,6 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     m_ui->widget_ModelTree->registerGuiApplication(guiApp);
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
-    m_ui->splitter_Main->setStretchFactor(0, 1);
-    m_ui->splitter_Main->setStretchFactor(1, 3);
 
     m_ui->splitter_ModelTree->setStretchFactor(0, 1);
     m_ui->splitter_ModelTree->setStretchFactor(1, 2);
@@ -81,6 +81,10 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     QObject::connect(
         m_ui->listView_OpenedDocuments, &QListView::clicked,
         this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
+    );
+    QObject::connect(
+        m_ui->splitter_Main, &QSplitter::splitterMoved,
+        this, &WidgetMainControl::onSplitterMainMoved
     );
 
     guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {
@@ -118,6 +122,7 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     m_ui->widget_MouseCoords->hide();
+    this->setWidgetLeftSideBarWidthFactor(0.25);
 
     this->onCurrentDocumentIndexChanged(-1);
 }
@@ -155,8 +160,8 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
         if (btnId == 1) {
             assert(this->widgetGuiDocument(index.row()) != nullptr);
             FileCommandTools::closeDocument(
-                        cmdContainer->appContext(),
-                        this->widgetGuiDocument(index.row())->documentIdentifier()
+                cmdContainer->appContext(),
+                this->widgetGuiDocument(index.row())->documentIdentifier()
             );
         }
     });
@@ -172,6 +177,19 @@ void WidgetMainControl::updatePageControlsActivation()
 QWidget* WidgetMainControl::widgetLeftSideBar() const
 {
     return m_ui->widget_Left;
+}
+
+double WidgetMainControl::widgetLeftSideBarWidthFactor() const
+{
+    return m_widgetLeftSideBarWidthFactor;
+}
+
+void WidgetMainControl::setWidgetLeftSideBarWidthFactor(double factor)
+{
+    const int mainWidth = this->geometry().width();
+    const double leftFactor = std::max(0., std::min(1., factor)); // Clamp in [0, 1]
+    m_ui->splitter_Main->setSizes({int(leftFactor * mainWidth), int((1. - leftFactor) * mainWidth)});
+    m_widgetLeftSideBarWidthFactor = leftFactor;
 }
 
 bool WidgetMainControl::eventFilter(QObject* watched, QEvent* event)
@@ -495,6 +513,15 @@ void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
         this->reloadDocumentAfterChange(doc);
     else
         m_pendingDocsToReload.insert(doc);
+}
+
+void WidgetMainControl::onSplitterMainMoved(int pos, int /*index*/)
+{
+    const int mainWidth = this->geometry().width();
+    if (mainWidth != 0)
+        m_widgetLeftSideBarWidthFactor = pos / double(mainWidth);
+    else
+        m_widgetLeftSideBarWidthFactor = 0.25;
 }
 
 } // namespace Mayo

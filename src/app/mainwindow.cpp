@@ -77,8 +77,11 @@ void MainWindow::showEvent(QShowEvent* event)
     if (!uiState.mainWindowGeometry.isEmpty())
         this->restoreGeometry(uiState.mainWindowGeometry);
 
-    if (this->widgetPageDocuments())
-        this->widgetPageDocuments()->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
+    WidgetMainControl* pageDocs = this->widgetPageDocuments();
+    if (pageDocs) {
+        pageDocs->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
+        pageDocs->setWidgetLeftSideBarWidthFactor(uiState.pageDocuments_widgetLeftSideBarWidthFactor);
+    }
 
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -95,8 +98,11 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
     AppUiState uiState = AppModule::get()->properties()->appUiState;
     uiState.mainWindowGeometry = this->saveGeometry();
-    if (this->widgetPageDocuments())
-        uiState.pageDocuments_isLeftSideBarVisible = this->widgetPageDocuments()->widgetLeftSideBar()->isVisible();
+    WidgetMainControl* pageDocs = this->widgetPageDocuments();
+    if (pageDocs) {
+        uiState.pageDocuments_isLeftSideBarVisible = pageDocs->widgetLeftSideBar()->isVisible();
+        uiState.pageDocuments_widgetLeftSideBarWidthFactor = pageDocs->widgetLeftSideBarWidthFactor();
+    }
 
     AppModule::get()->properties()->appUiState.setValue(uiState);
     QMainWindow::closeEvent(event);

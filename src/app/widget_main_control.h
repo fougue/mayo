@@ -42,6 +42,10 @@ public:
     // Widget at the left side of the app providing access to the model tree, file system, ...
     QWidget* widgetLeftSideBar() const;
 
+    // Factor value must be in [0, 1]
+    double widgetLeftSideBarWidthFactor() const;
+    void setWidgetLeftSideBarWidthFactor(double factor);
+
     int widgetGuiDocumentCount() const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     WidgetGuiDocument* currentWidgetGuiDocument() const;
@@ -65,6 +69,7 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onCurrentDocumentIndexChanged(int idx);
     void onDocumentFileChanged(const DocumentPtr& doc);
+    void onSplitterMainMoved(int pos, int index);
 
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
@@ -79,6 +84,7 @@ private:
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
+    double m_widgetLeftSideBarWidthFactor = 0.25;
 };
 
 } // namespace Mayo
