@@ -15,6 +15,7 @@ namespace Mayo {
 struct AppUiState {
     QByteArray mainWindowGeometry; // Provided by QWidget::saveGeometry()
     bool pageDocuments_isLeftSideBarVisible = true;
+    double pageDocuments_widgetLeftSideBarWidthFactor = 0.25;
 
     // Serialization functions
     static QByteArray toBlob(const AppUiState& state);

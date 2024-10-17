@@ -13,10 +13,11 @@ QByteArray AppUiState::toBlob(const AppUiState& state)
     QByteArray blob;
     QDataStream stream(&blob, QIODevice::WriteOnly);
     stream << QtCoreUtils::QByteArray_frowRawData(std::string_view{PropertyAppUiState::TypeName});
-    constexpr uint32_t version = 1;
+    constexpr uint32_t version = 2;
     stream << version;
     stream << state.mainWindowGeometry;
     stream << state.pageDocuments_isLeftSideBarVisible;
+    stream << state.pageDocuments_widgetLeftSideBarWidthFactor;
     return blob;
 
 }
@@ -36,9 +37,14 @@ AppUiState AppUiState::fromBlob(const QByteArray& blob, bool* ok)
     if (identifier == PropertyAppUiState::TypeName) {
         uint32_t version = 0;
         stream >> version;
-        if (version == 1) {
+        if (version >= 1) {
             stream >> state.mainWindowGeometry;
             stream >> state.pageDocuments_isLeftSideBarVisible;
+            fnSetOk(true);
+        }
+
+        if (version >= 2) {
+            stream >> state.pageDocuments_widgetLeftSideBarWidthFactor;
             fnSetOk(true);
         }
     }
