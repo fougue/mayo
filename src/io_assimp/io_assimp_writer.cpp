@@ -6,16 +6,21 @@
 
 #include "io_assimp_writer.h"
 #include "../base/caf_utils.h"
+#include "../base/filepath_conv.h"
 #include "../base/io_system.h"
 #include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
+#include "../base/string_conv.h"
 #include "../base/task_progress.h"
+#include "../base/tkernel_utils.h"
 
 #include <assimp/mesh.h>
 #include <assimp/scene.h>
 
 #include <Poly_Triangulation.hxx>
+#include <XCAFDoc_VisMaterial.hxx>
 
+#include <fstream>
 #include <unordered_set>
 #include <vector>
 
@@ -23,7 +28,35 @@ namespace Mayo::IO {
 
 namespace {
 
+using ai_MaterialPtr = aiMaterial*;
 using ai_MeshPtr = aiMesh*;
+using ai_TexturePtr = aiTexture*;
+
+bool isTextureFilePortion(const OccHandle<Image_Texture>& tex)
+{
+    return !tex->FilePath().IsEmpty() && tex->FileOffset() != -1;
+}
+
+bool isTextureDataBuffer(const OccHandle<Image_Texture>& tex)
+{
+    return tex->DataBuffer() && !tex->DataBuffer()->IsEmpty();
+}
+
+aiColor4D toAssimpColor(const Quantity_Color& color)
+{
+    aiColor4D ai_color = {};
+    ai_color.r = static_cast<ai_real>(color.Red());
+    ai_color.g = static_cast<ai_real>(color.Green());
+    ai_color.b = static_cast<ai_real>(color.Blue());
+    return ai_color;
+}
+
+aiColor4D toAssimpColor(const Quantity_ColorRGBA& color)
+{
+    aiColor4D ai_color = toAssimpColor(color.GetRGB());
+    ai_color.a = color.Alpha();
+    return ai_color;
+}
 
 ai_MeshPtr createAssimpMesh(const IMeshAccess& mesh)
 {
@@ -89,7 +122,8 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 {
     progress = progress ? progress : &TaskProgress::null();
 
-    // Create materials
+    // Find materials
+    std::unordered_set<OccHandle<XCAFDoc_VisMaterial>> setVisMaterial;
     System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& treeNode) {
 
     });
@@ -116,6 +150,7 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
         }
     });
 
+    m_mapEmbeddedTexture.clear();
 
     delete m_scene;
     m_scene = new aiScene;
@@ -125,6 +160,59 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     for (unsigned i = 0; i < vecMesh.size(); ++i)
         m_scene->mMeshes[i] = vecMesh[i];
 
+    // Create Assimp embedded textures
+    std::vector<OccHandle<Image_Texture>> vecTextureToEmbed;
+    auto fnMaybeEmbedTexture = [&](const OccHandle<Image_Texture>& tex) {
+        if (isTextureFilePortion(tex) || isTextureDataBuffer(tex))
+            vecTextureToEmbed.push_back(tex);
+    };
+    for (const OccHandle<XCAFDoc_VisMaterial>& visMat : setVisMaterial) {
+        const XCAFDoc_VisMaterialPBR& pbr = visMat->PbrMaterial();
+        fnMaybeEmbedTexture(pbr.BaseColorTexture);
+        fnMaybeEmbedTexture(pbr.MetallicRoughnessTexture);
+        fnMaybeEmbedTexture(pbr.EmissiveTexture);
+        fnMaybeEmbedTexture(pbr.OcclusionTexture);
+        fnMaybeEmbedTexture(pbr.NormalTexture);
+    }
+
+    m_scene->mNumTextures = unsigned(vecTextureToEmbed.size());
+    m_scene->mTextures = new ai_TexturePtr[vecTextureToEmbed.size()];
+    for (unsigned i = 0; i < vecTextureToEmbed.size(); ++i) {
+        auto aiTex = new aiTexture;
+        const auto& occTex = vecTextureToEmbed.at(i);
+        if (isTextureFilePortion(occTex)) {
+            std::ifstream file(filepathFrom(occTex->FilePath()));
+            if (file.is_open()) {
+                file.seekg(occTex->FileOffset());
+                auto texData = new char[occTex->FileLength()];
+                file.read(texData, occTex->FileLength());
+                aiTex->mWidth = unsigned(file.gcount());
+                aiTex->pcData = reinterpret_cast<aiTexel*>(texData);
+            }
+            else {
+                // TODO Report error when texture file failed to open
+            }
+        }
+        else if (isTextureDataBuffer(occTex)) {
+            aiTex->mWidth = unsigned(occTex->DataBuffer()->Size());
+            aiTex->pcData = reinterpret_cast<aiTexel*>(occTex->DataBuffer()->ChangeData());
+        }
+
+        aiTex->mFilename.Set("*" + std::to_string(i));
+        m_scene->mTextures[i] = aiTex;
+        m_mapEmbeddedTexture.insert({ occTex, aiTex });
+    }
+
+    // Create Assimp materials
+    m_scene->mNumMaterials = unsigned(setVisMaterial.size());
+    m_scene->mMaterials = new ai_MaterialPtr[setVisMaterial.size()];
+    unsigned iMaterial = 0;
+    for (const OccHandle<XCAFDoc_VisMaterial>& visMat : setVisMaterial) {
+        m_scene->mMaterials[iMaterial] = this->createAssimpMaterial(visMat);
+        ++iMaterial;
+    }
+
+    // Create Assimp node graph
     m_scene->mRootNode = new aiNode("Root Node");
 
     return false;
@@ -141,9 +229,138 @@ std::unique_ptr<PropertyGroup> AssimpWriter::createProperties(PropertyGroup* par
     return {};
 }
 
-void AssimpWriter::applyProperties(const PropertyGroup* group)
+void AssimpWriter::applyProperties(const PropertyGroup* /*group*/)
 {
+}
 
+ai_MaterialPtr AssimpWriter::createAssimpMaterial(const OccHandle<XCAFDoc_VisMaterial>& material) const
+{
+    auto ai_material = new aiMaterial;
+
+    // Helper function to add OpenCascade texture 'tex' as a property into assimp material 'mat'
+    auto fnAddTextureProperty = [=](aiMaterial* mat, const OccHandle<Image_Texture>& tex, aiTextureType texType) {
+        const aiString texName{ this->findAssimpTextureName(tex) };
+        if (texName.length != 0)
+            mat->AddProperty(&texName, AI_MATKEY_TEXTURE(texType, 0));
+        // TODO Report error if `texName`is empty
+    };
+
+    // Name
+    {
+        const aiString name{ to_stdString(material->RawName()) };
+        ai_material->AddProperty(&name, AI_MATKEY_NAME);
+    }
+
+    // Backface culling
+    {
+        int flag = 0;
+        //if (material->Get(AI_MATKEY_TWOSIDED, flag) == aiReturn_SUCCESS) {
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        flag = material->FaceCulling() == Graphic3d_TypeOfBackfacingModel_DoubleSided;
+#else
+        flag = material->IsDoubleSided() ? 1 : 0;
+#endif
+        ai_material->AddProperty(&flag, 1, AI_MATKEY_TWOSIDED);
+    }
+
+    // Common
+    if (material->CommonMaterial().IsDefined) {
+        const XCAFDoc_VisMaterialCommon& common = material->CommonMaterial();
+        {
+            aiColor4D color = toAssimpColor(common.AmbientColor);
+            ai_material->AddProperty(&color, 1, AI_MATKEY_COLOR_AMBIENT);
+
+            color = toAssimpColor(common.DiffuseColor);
+            ai_material->AddProperty(&color, 1, AI_MATKEY_COLOR_DIFFUSE);
+
+            color = toAssimpColor(common.SpecularColor);
+            ai_material->AddProperty(&color, 1, AI_MATKEY_COLOR_DIFFUSE);
+        }
+
+        {
+            ai_real value = 1 - common.Transparency;
+            ai_material->AddProperty(&value, 1, AI_MATKEY_OPACITY);
+
+            constexpr ai_real shininessMax = 1.;
+            value = shininessMax * common.Shininess;
+            ai_material->AddProperty(&value, 1, AI_MATKEY_SHININESS);
+        }
+
+        fnAddTextureProperty(ai_material, common.DiffuseTexture, aiTextureType_DIFFUSE);
+    }
+
+    // PBR
+    if (material->PbrMaterial().IsDefined) {
+        const XCAFDoc_VisMaterialPBR& pbr = material->PbrMaterial();
+
+        aiString texName;
+        ai_material->AddProperty(&texName, AI_MATKEY_BASE_COLOR_TEXTURE);
+
+        fnAddTextureProperty(ai_material, pbr.BaseColorTexture, aiTextureType_BASE_COLOR);
+        fnAddTextureProperty(ai_material, pbr.MetallicRoughnessTexture, aiTextureType_METALNESS);
+        fnAddTextureProperty(ai_material, pbr.EmissiveTexture, aiTextureType_EMISSION_COLOR);
+        fnAddTextureProperty(ai_material, pbr.OcclusionTexture, aiTextureType_AMBIENT_OCCLUSION);
+        fnAddTextureProperty(ai_material, pbr.NormalTexture, aiTextureType_NORMALS);
+
+        aiColor4D color = {};
+        ai_real value = 0.;
+
+#ifdef AI_MATKEY_BASE_COLOR
+        {
+            color = toAssimpColor(pbr.BaseColor);
+            ai_material->AddProperty(&color, 1, AI_MATKEY_BASE_COLOR);
+        }
+#endif
+
+#ifdef AI_MATKEY_METALLIC_FACTOR
+        {
+            value = pbr.Metallic;
+            ai_material->AddProperty(&value, 1, AI_MATKEY_METALLIC_FACTOR);
+        }
+#endif
+
+#ifdef AI_MATKEY_ROUGHNESS_FACTOR
+        {
+            value = pbr.Roughness;
+            ai_material->AddProperty(&value, 1, AI_MATKEY_ROUGHNESS_FACTOR);
+        }
+#endif
+
+        {
+            value = pbr.RefractionIndex;
+            ai_material->AddProperty(&value, 1, AI_MATKEY_REFRACTI);
+        }
+    }
+
+    return ai_material;
+}
+
+int AssimpWriter::indexOfEmbeddedTexture(const aiTexture* tex) const
+{
+    if (!tex || !m_scene)
+        return -1;
+
+    auto texBegin = m_scene->mTextures;
+    auto texEnd = m_scene->mTextures + m_scene->mNumTextures;
+    auto it = std::find(m_scene->mTextures, m_scene->mTextures + m_scene->mNumTextures, tex);
+    return it != texEnd ? int(texEnd - texBegin) : -1;
+}
+
+std::string AssimpWriter::findAssimpTextureName(const OccHandle<Image_Texture>& tex) const
+{
+    std::string texName;
+    if (isTextureFilePortion(tex) || isTextureDataBuffer(tex)) {
+        auto itAssimpTex = m_mapEmbeddedTexture.find(tex);
+        const aiTexture* aiTex = itAssimpTex != m_mapEmbeddedTexture.cend() ? itAssimpTex->second : nullptr;
+        const int idTex = this->indexOfEmbeddedTexture(aiTex);
+        if (idTex != -1)
+            texName = "*" + std::to_string(idTex);
+    }
+    else if (!tex->FilePath().IsEmpty()) {
+        texName = to_stdString(tex->FilePath());
+    }
+
+    return texName;
 }
 
 } // namespace Mayo::IO

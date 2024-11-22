@@ -7,7 +7,16 @@
 #pragma once
 
 #include "../base/io_writer.h"
+#include "../base/occ_handle.h"
+
+#include <Image_Texture.hxx>
+#include <unordered_map>
+
+class XCAFDoc_VisMaterial;
+
+struct aiMaterial;
 struct aiScene;
+struct aiTexture;
 
 namespace Mayo::IO {
 
@@ -24,7 +33,12 @@ public:
     void applyProperties(const PropertyGroup* group) override;
 
 private:
+    aiMaterial* createAssimpMaterial(const OccHandle<XCAFDoc_VisMaterial>& material) const;
+    int indexOfEmbeddedTexture(const aiTexture*) const;
+    std::string findAssimpTextureName(const OccHandle<Image_Texture>& tex) const;
+
     aiScene* m_scene = nullptr;
+    std::unordered_map<OccHandle<Image_Texture>, aiTexture*> m_mapEmbeddedTexture;
 };
 
 } // namespace Mayo::IO
