@@ -5,22 +5,32 @@
 ****************************************************************************/
 
 #include "io_assimp_writer.h"
+
+#include "io_assimp_i18n.h"
+#include "io_assimp_task_progress.h"
+
 #include "../base/caf_utils.h"
 #include "../base/filepath_conv.h"
 #include "../base/io_system.h"
 #include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
+#include "../base/messenger.h"
+#include "../base/meta_enum.h"
 #include "../base/string_conv.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
+#include <assimp/Exporter.hpp>
 #include <assimp/mesh.h>
 #include <assimp/scene.h>
 
 #include <Poly_Triangulation.hxx>
 #include <XCAFDoc_VisMaterial.hxx>
 
+#include <fmt/format.h>
+#include <algorithm>
 #include <fstream>
+#include <locale>
 #include <unordered_set>
 #include <vector>
 
@@ -111,6 +121,65 @@ ai_MeshPtr createAssimpMesh(const IMeshAccess& mesh)
     return ai_mesh;
 }
 
+// Helper function to return `str` converted to lower case characters
+// The input string `str` is assumed to be encoded with the classic "C" locale
+std::string stringToLowerCase_c(std::string_view str)
+{
+    auto charToLowerCase_c = [](char c) {
+        return std::tolower(c, std::locale::classic());
+    };
+    std::string strLc;
+    std::transform(str.cbegin(), str.cend(), strLc.begin(), charToLowerCase_c);
+    return strLc;
+}
+
+// Helper function to return suffix string(utf8) from filepath `fp`
+// Note: any starting '.' character is removed from the result string
+std::string filepathSuffix(const FilePath& fp)
+{
+    std::string suffix = stringToLowerCase_c(fp.extension().u8string());
+    if (!suffix.empty() && suffix.front() == '.')
+        suffix.erase(suffix.begin());
+
+    return suffix;
+}
+
+// Helper function to retrieve the Format corresponding to `suffix`
+// Assumes that `suffix` is lowercase and does not start with '.'
+Format findFormatFromFileSuffix(std::string_view suffix)
+{
+    for (auto format : MetaEnum::values<Format>()) {
+        auto formatSuffixes = formatFileSuffixes(format);
+        auto itSuffix = std::find(formatSuffixes.begin(), formatSuffixes.end(), suffix);
+        if (itSuffix != formatSuffixes.end())
+            return format;
+    }
+
+    return Format_Unknown;
+}
+
+// Helper function to find the identifier of the Assimp export format corresponding to `format`
+std::string findAssimpExportFormatId(const Assimp::Exporter& exporter, Format format)
+{
+    const size_t formatCount = exporter.GetExportFormatCount();
+    for (size_t i = 0; i < formatCount; ++i) {
+        const aiExportFormatDesc* exportFormat = exporter.GetExportFormatDescription(i);
+        if (exportFormat == nullptr)
+            continue; //Skip
+
+        if (exportFormat->id && findFormatFromFileSuffix(exportFormat->id) == format)
+            return exportFormat->id;
+
+        if (exportFormat->fileExtension) {
+            const std::string exportFormatSuffix = stringToLowerCase_c(exportFormat->fileExtension);
+            if (findFormatFromFileSuffix(exportFormatSuffix) == format)
+                return exportFormat->id;
+        }
+    }
+
+    return {};
+}
+
 } // namespace
 
 AssimpWriter::~AssimpWriter()
@@ -125,7 +194,10 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     // Find materials
     std::unordered_set<OccHandle<XCAFDoc_VisMaterial>> setVisMaterial;
     System::traverseUniqueItems(appItems, [&](const DocumentTreeNode& treeNode) {
-
+        auto visMatTool = treeNode.document()->xcaf().visMaterialTool();
+        auto visMat = visMatTool->GetShapeMaterial(treeNode.label());
+        if (visMat)
+            setVisMaterial.insert(visMat);
     });
 
     // Find meshes
@@ -221,7 +293,26 @@ bool AssimpWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
 bool AssimpWriter::writeFile(const FilePath& fp, TaskProgress* progress)
 {
     progress = progress ? progress : &TaskProgress::null();
-    return false;
+    Assimp::Exporter exporter;
+    exporter.SetProgressHandler(new AssimpTaskProgress(progress));
+
+    const std::string fileSuffix = filepathSuffix(fp);
+    const Format format = findFormatFromFileSuffix(fileSuffix);
+    const std::string aiFormatId = findAssimpExportFormatId(exporter, format);
+    if (aiFormatId.empty()) {
+        this->messenger()->emitError(
+            fmt::format(AssimpI18N::textIdTr("No Assimp export format corresponding to file suffix '{}'"), fileSuffix)
+        );
+        return false;
+    }
+
+    const aiReturn errExport = exporter.Export(m_scene, aiFormatId, fp.u8string());
+    if (errExport != aiReturn_SUCCESS) {
+        this->messenger()->emitError(exporter.GetErrorString());
+        return false;
+    }
+
+    return true;
 }
 
 std::unique_ptr<PropertyGroup> AssimpWriter::createProperties(PropertyGroup* parentGroup)

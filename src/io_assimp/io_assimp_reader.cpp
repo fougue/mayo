@@ -5,6 +5,10 @@
 ****************************************************************************/
 
 #include "io_assimp_reader.h"
+
+#include "io_assimp_i18n.h"
+#include "io_assimp_task_progress.h"
+
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
@@ -25,11 +29,6 @@
 #include <assimp/ProgressHandler.hpp>
 #include <assimp/postprocess.h>
 
-#include <fmt/format.h>
-
-#include <cassert>
-#include <iostream>
-
 #include <gp_Quaternion.hxx>
 #include <gp_Trsf.hxx>
 #include <BRep_Builder.hxx>
@@ -40,15 +39,16 @@
 #include <XCAFDoc_VisMaterialCommon.hxx>
 #include <XCAFDoc_VisMaterialPBR.hxx>
 
+#include <fmt/format.h>
+
+#include <cassert>
+#include <iostream>
+
 //#define MAYO_ASSIMP_READER_HANDLE_SCALING 1
 
 namespace Mayo::IO {
 
 namespace {
-
-struct AssimpReaderI18N {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::AssimpReaderI18N)
-};
 
 // Retrieve the scaling component in assimp matrix 'trsf'
 aiVector3D aiMatrixScaling(const aiMatrix4x4& trsf)
@@ -271,28 +271,6 @@ OccHandle<Poly_Triangulation> createOccTriangulation(const aiMesh* mesh)
     return triangulation;
 }
 
-// Provides assimp progress handler for TaskProgress
-class AssimpProgressHandler : public Assimp::ProgressHandler {
-public:
-    AssimpProgressHandler(TaskProgress* progress)
-        : m_progress(progress)
-    {}
-
-    bool Update(float percent = -1.f) override
-    {
-        if (TaskProgress::isAbortRequested(m_progress))
-            return false;
-
-        if (percent > 0)
-            m_progress->setValue(percent * 100);
-
-        return true;
-    }
-
-private:
-    TaskProgress* m_progress = nullptr;
-};
-
 } // namespace
 
 // --
@@ -336,7 +314,7 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
     //const unsigned flags = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
     //m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
     m_importer.SetPropertyBool(AI_CONFIG_PP_PTV_KEEP_HIERARCHY, true);
-    m_importer.SetProgressHandler(new AssimpProgressHandler(progress));
+    m_importer.SetProgressHandler(new AssimpTaskProgress(progress));
     m_scene = m_importer.ReadFile(filepath.u8string(), flags);
     if (!m_scene || (m_scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !m_scene->mRootNode) {
         this->messenger()->emitError(m_importer.GetErrorString());
@@ -366,10 +344,10 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
         }
         else if (mesh->mPrimitiveTypes & aiPrimitiveType_LINE) {
             // TODO Create and add a Poly_Polygon3D object
-            this->messenger()->emitWarning(AssimpReaderI18N::textIdTr("LINE primitives not supported yet"));
+            this->messenger()->emitWarning(AssimpI18N::textIdTr("LINE primitives not supported yet"));
         }
         else {
-            this->messenger()->emitWarning(AssimpReaderI18N::textIdTr("Some primitive not supported"));
+            this->messenger()->emitWarning(AssimpI18N::textIdTr("Some primitive not supported"));
         }
     }
 
@@ -500,7 +478,7 @@ OccHandle<Image_Texture> AssimpReader::findOccTexture(
 
     // Report warning "texture not found"
     MessageStream msgWarning = this->messenger()->warning();
-    msgWarning << fmt::format(AssimpReaderI18N::textIdTr("Texture not found: {}\nTried:"), strFilepath);
+    msgWarning << fmt::format(AssimpI18N::textIdTr("Texture not found: {}\nTried:"), strFilepath);
     for (const FilePath& fp : textureFilepathCandidates)
         msgWarning << "\n    " << filepathCanonical(fp).make_preferred().u8string();
 
