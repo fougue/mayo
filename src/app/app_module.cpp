@@ -168,7 +168,7 @@ Settings::Variant recentItemsToVariant(const std::vector<RecentItem>& recentItem
     QByteArray blob;
     QDataStream stream(&blob, QIODevice::WriteOnly);
     AppModule::write(stream, recentItems);
-    return Variant(QtCoreUtils::toStdByteArray(blob));
+    return Settings::Variant(QtCoreUtils::toStdByteArray(blob));
 }
 
 template<typename RecentItem>
