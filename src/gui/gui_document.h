@@ -9,7 +9,6 @@
 #include "../base/document.h"
 #include "../base/global.h"
 #include "../base/signal.h"
-#include "../base/tkernel_utils.h"
 #include "../graphics/graphics_object_driver.h"
 #include "../graphics/graphics_scene.h"
 #include "../graphics/graphics_view_ptr.h"
@@ -19,7 +18,6 @@
 #include <Bnd_Box.hxx>
 #include <V3d_View.hxx>
 #include <functional>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -29,24 +27,40 @@ class ApplicationItem;
 class GuiApplication;
 class V3dViewCameraAnimation;
 
-// Provides the link between Base::Document and graphical representations
+// Provides the link between Base::Document and graphical representations(called "graphics objects")
 class GuiDocument {
 public:
+    // Applicable flags for function graphicsBoundingBox()
+    enum GraphicsBoundingBoxFlag {
+        AllGraphics = 0xFF,
+        OnlyVisibleGraphics = 0x01,
+        OnlySelectedGraphics = 0x02
+    };
+    using GraphicsBoundingBoxFlags = unsigned;
+
+    // Constructor & destructor
     GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp);
     ~GuiDocument();
 
-    // Not copyable
+    // GuiDocument objects are not copyable
     GuiDocument(const GuiDocument&) = delete;
     GuiDocument& operator=(const GuiDocument&) = delete;
 
+    // Gets the base document linked to
     const DocumentPtr& document() const { return m_document; }
 
+    // Gets the owning GuiApplication object
     GuiApplication* guiApplication() const { return m_guiApp; }
 
-    const Handle_V3d_View& v3dView() const { return m_v3dView; }
-    GraphicsScene* graphicsScene() { return &m_gfxScene; }
+    // Gets the main 3D graphics view
+    const OccHandle<V3d_View>& v3dView() const { return m_v3dView; }
     GraphicsViewPtr graphicsView() { return GraphicsViewPtr{ &m_gfxScene, m_v3dView }; }
-    const Bnd_Box& graphicsBoundingBox() const { return m_gfxBoundingBox; }
+
+    // Gets the graphics scene, container of all document's graphics objects
+    GraphicsScene* graphicsScene() { return &m_gfxScene; }
+
+    // Returns the bounding box of all graphics objects satisfying `flags`
+    Bnd_Box graphicsBoundingBox(GraphicsBoundingBoxFlags flags = AllGraphics) const;
 
     // Gets/sets the ratio between physical pixels and device-independent pixels for the target window.
     // This value is dependent on the screen the window is on, and may have to be updated when the
@@ -152,14 +166,14 @@ private:
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;
     GraphicsScene m_gfxScene;
-    Handle_V3d_View m_v3dView;
-    Handle_AIS_InteractiveObject m_aisOriginTrihedron;
+    OccHandle<V3d_View> m_v3dView;
+    OccHandle<AIS_InteractiveObject> m_aisOriginTrihedron;
     double m_devicePixelRatio = 1.;
 
     V3dViewCameraAnimation* m_cameraAnimation = nullptr;
     ViewTrihedronMode m_viewTrihedronMode = ViewTrihedronMode::None;
     Aspect_TypeOfTriedronPosition m_viewTrihedronCorner = Aspect_TOTP_LEFT_UPPER;
-    Handle_AIS_InteractiveObject m_aisViewCube;
+    OccHandle<AIS_InteractiveObject> m_aisViewCube;
 
     std::vector<GraphicsEntity> m_vecGraphicsEntity;
     Bnd_Box m_gfxBoundingBox;

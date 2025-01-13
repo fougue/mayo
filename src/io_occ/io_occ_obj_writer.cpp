@@ -68,7 +68,7 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     if (!m_document)
         return false;
 
-    Handle_Message_ProgressIndicator occProgress = new OccProgressIndicator(progress);
+    auto occProgress = makeOccHandle<OccProgressIndicator>(progress);
     RWObj_CafWriter writer(filepath.u8string().c_str());
     writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);
     writer.ChangeCoordinateSystemConverter().SetOutputCoordinateSystem(m_params.outputCoordinateSystem);

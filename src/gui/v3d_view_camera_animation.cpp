@@ -25,7 +25,7 @@ void V3dViewCameraAnimation::setBackend(std::unique_ptr<IAnimationBackend> anim)
     }
 }
 
-void V3dViewCameraAnimation::setView(const Handle_V3d_View& view)
+void V3dViewCameraAnimation::setView(const OccHandle<V3d_View>& view)
 {
     if (this->isRunning())
         this->stop();
@@ -57,12 +57,12 @@ void V3dViewCameraAnimation::stop()
         m_backend->stop();
 }
 
-void V3dViewCameraAnimation::setCameraStart(const Handle_Graphic3d_Camera& camera)
+void V3dViewCameraAnimation::setCameraStart(const OccHandle<Graphic3d_Camera>& camera)
 {
     m_cameraStart->Copy(camera);
 }
 
-void V3dViewCameraAnimation::setCameraEnd(const Handle_Graphic3d_Camera& camera)
+void V3dViewCameraAnimation::setCameraEnd(const OccHandle<Graphic3d_Camera>& camera)
 {
     m_cameraEnd->Copy(camera);
 }
@@ -96,7 +96,7 @@ void V3dViewCameraAnimation::updateCurrentTime(QuantityTime currTime)
     const double t = m_backend ? m_backend->valueForProgress(currTime / m_duration) : 0.;
     const bool prevImmediateUpdate = m_view->SetImmediateUpdate(false);
     const Graphic3d_CameraLerp cameraLerp(m_cameraStart, m_cameraEnd);
-    Handle_Graphic3d_Camera camera = m_view->Camera();
+    OccHandle<Graphic3d_Camera> camera = m_view->Camera();
     cameraLerp.Interpolate(t, camera);
     m_view->SetCamera(camera);
     m_view->ZFitAll();

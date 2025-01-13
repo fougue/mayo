@@ -8,6 +8,7 @@
 
 #include "../base/io_writer.h"
 #include "../base/property.h"
+#include <common/mayo_config.h>
 
 #include <memory>
 
@@ -22,7 +23,7 @@ public:
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 
     static std::unique_ptr<FactoryWriter> create() {
-#ifdef HAVE_GMIO
+#ifdef MAYO_HAVE_GMIO
         return std::make_unique<GmioFactoryWriter>();
 #else
         return {};
@@ -32,7 +33,7 @@ public:
 
 struct GmioLib {
     static std::string_view strName() { return "gmio"; }
-#ifdef HAVE_GMIO
+#ifdef MAYO_HAVE_GMIO
     static std::string_view strVersion();
     static std::string_view strVersionDetails() { return "(build)"; }
 #else

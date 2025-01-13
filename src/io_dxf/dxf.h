@@ -13,7 +13,6 @@
 #include <cstring>
 #include <fstream>
 #include <iosfwd>
-#include <list>
 #include <optional>
 #include <unordered_map>
 #include <set>
@@ -180,7 +179,6 @@ struct Dxf_MTEXT {
 
     bool acadHasDefinedHeight = false;
     double acadDefinedHeight = 0.;
-
 };
 
 struct Dxf_VERTEX {
@@ -194,13 +192,32 @@ struct Dxf_VERTEX {
         SplineFrameControlPoint = 16,
         Polyline3dVertex = 32,
         Polygon3dVertex = 64,
-        PolyfaceMesgVertex = 128
+        PolyfaceMeshVertex = 128
     };
     using Flags = unsigned;
 
+    // Code: 10, 20, 30
     DxfCoords point = {};
+    // Code: 40
+    double startingWidth = 0.;
+    // Code: 41
+    double endingWidth = 0.;
+    // Code: 42
     Bulge bulge = Bulge::StraightSegment;
+    // Code: 70
     Flags flags = Flag::None;
+    // Code: 50
+    double curveFitTangentDirection = 0.;
+    // Code: 71
+    int polyfaceMeshVertex1 = 0;
+    // Code: 72
+    int polyfaceMeshVertex2 = 0;
+    // Code: 73
+    int polyfaceMeshVertex3 = 0;
+    // Code: 74
+    int polyfaceMeshVertex4 = 0;
+    // Code: 91
+    // int identifier = 0;
 };
 
 struct Dxf_POLYLINE {
@@ -224,16 +241,27 @@ struct Dxf_POLYLINE {
         BezierSurface = 8
     };
 
-    double elevation = 0.;
+    // Code: 39
     double thickness = 0.;
+    // Code: 70
     Flags flags = Flag::None;
+    // Code: 40
     double defaultStartWidth = 0.;
+    // Code: 41
     double defaultEndWidth = 0.;
+    // Code: 71(number of vertices in the mesh)
     int polygonMeshMVertexCount = 0;
+    // Code: 72(number of faces in the mesh)
     int polygonMeshNVertexCount = 0;
+    // Code: 73
     double smoothSurfaceMDensity = 0.;
+    // Code: 74
     double smoothSurfaceNDensity = 0.;
-    double extrusionDir[3] = { 0., 0., 1. };
+    // Code: 75
+    Type type = Type::NoSmoothSurfaceFitted;
+    // Code: 210, 220, 230
+    DxfCoords extrusionDirection = { 0., 0., 1. };
+
     std::vector<Dxf_VERTEX> vertices;
 };
 
@@ -258,7 +286,7 @@ struct Dxf_INSERT {
     DxfCoords extrusionDirection = { 0., 0., 1. };
 };
 
-struct Dxf_SOLID {
+struct Dxf_QuadBase {
     // Code: 10, 20, 30
     DxfCoords corner1;
     // Code: 11, 21, 31
@@ -268,37 +296,86 @@ struct Dxf_SOLID {
     // Code: 13, 23, 33
     DxfCoords corner4;
     bool hasCorner4 = false;
+};
+
+struct Dxf_3DFACE : public Dxf_QuadBase {
+    enum Flag {
+        None = 0,
+        InvisibleEdge1 = 1,
+        InvisibleEdge2 = 2,
+        InvisibleEdge3 = 4,
+        InvisibleEdge4 = 8
+    };
+    using Flags = unsigned;
+
+    // Code: 70
+    Flags flags = Flag::None;
+};
+
+struct Dxf_SOLID : public Dxf_QuadBase {
     // Code: 39
     double thickness = 0.;
     // Code: 210, 220, 230
     DxfCoords extrusionDirection = { 0., 0., 1. };
 };
 
-//spline data for reading
-struct SplineData
-{
-    DxfCoords norm;
-    int degree;
-    int knots;
-    int control_points;
-    int fit_points;
-    int flag;
-    std::list<double> starttanx;
-    std::list<double> starttany;
-    std::list<double> starttanz;
-    std::list<double> endtanx;
-    std::list<double> endtany;
-    std::list<double> endtanz;
-    std::list<double> knot;
-    std::list<double> weight;
-    std::list<double> controlx;
-    std::list<double> controly;
-    std::list<double> controlz;
-    std::list<double> fitx;
-    std::list<double> fity;
-    std::list<double> fitz;
+struct Dxf_SPLINE {
+    enum Flag {
+        None = 0,
+        Closed = 1,
+        Periodic = 2,
+        Rational = 4,
+        Planar = 8,
+        Linear = 16 // Planar bit is also set
+    };
+    using Flags = unsigned;
+
+    // Code: 210, 220, 230
+    DxfCoords normalVector = { 0., 0., 1. };
+    // Code: 70
+    Flags flags = Flag::None;
+    // Code: 71
+    int degree = 0;
+
+    // Code: 42
+    double knotTolerance = 0.0000001;
+    // Code: 43
+    double controlPointTolerance = 0.0000001;
+    // Code: 44
+    double fitTolerance = 0.0000000001;
+
+    // Code: 12, 22, 32
+    std::vector<DxfCoords> startTangents;
+    // Code: 13, 23, 33
+    std::vector<DxfCoords> endTangents;
+    // Code: 40
+    std::vector<double> knots;
+    // Code: 41
+    std::vector<double> weights;
+    // Code: 10, 20, 30
+    std::vector<DxfCoords> controlPoints;
+    // Code: 11, 21, 31
+    std::vector<DxfCoords> fitPoints;
 };
 
+typedef enum
+{
+    RUnknown,
+    ROlder,
+    R10,
+    R11_12,
+    R13,
+    R14,
+    R2000,
+    R2004,
+    R2007,
+    R2010,
+    R2013,
+    R2018,
+    RNewer,
+} eDXFVersion_t;
+
+#if 0
 //***************************
 //data structures for writing
 //added by Wandererfan 2018 (wandererfan@gmail.com) for FreeCAD project
@@ -338,22 +415,6 @@ struct LWPolyDataOut
     std::vector<double> Bulge;
     point3D Extr;
 };
-typedef enum
-{
-    RUnknown,
-    ROlder,
-    R10,
-    R11_12,
-    R13,
-    R14,
-    R2000,
-    R2004,
-    R2007,
-    R2010,
-    R2013,
-    R2018,
-    RNewer,
-} eDXFVersion_t;
 //********************
 
 class CDxfWrite
@@ -525,6 +586,7 @@ public:
     void makeBlockRecordTableBody();
     void makeBlockSectionHead();
 };
+#endif
 
 namespace DxfPrivate {
 
@@ -553,15 +615,15 @@ class CDxfRead
 private:
     std::ifstream m_ifs;
 
-    bool m_fail;
+    bool m_fail = false;
     std::string m_str;
     std::string m_unused_line;
-    eDxfUnits_t m_eUnits;
-    bool m_measurement_inch;
-    std::string m_layer_name;
+    eDxfUnits_t m_eUnits = eMillimeters;
+    bool m_measurement_inch = false;
+    std::string m_layer_name{"0"}; // Default layer name
     std::string m_section_name;
     std::string m_block_name;
-    bool m_ignore_errors;
+    bool m_ignore_errors = true;
 
     std::streamsize m_gcount = 0;
     int m_line_nb = 0;
@@ -591,6 +653,7 @@ private:
     bool ReadLwPolyLine();
     bool ReadPolyLine();
     bool ReadVertex(Dxf_VERTEX* vertex);
+    bool Read3dFace();
     bool ReadSolid();
     bool ReadSection();
     bool ReadTable();
@@ -634,6 +697,15 @@ private:
         }
     }
 
+    template<unsigned XCode, unsigned YCode, unsigned ZCode>
+    void HandleVectorCoordCode(int n, std::vector<DxfCoords>* ptrVecCoords)
+    {
+        if (n == XCode || ptrVecCoords->empty())
+            ptrVecCoords->push_back({});
+
+        HandleCoordCode<XCode, YCode, ZCode>(n, &ptrVecCoords->back());
+    }
+
     void HandleCommonGroupCode(int n);
 
     void put_line(const std::string& value);
@@ -642,8 +714,8 @@ private:
     void ReportError_readInteger(const char* context);
 
 protected:
-    ColorIndex_t m_ColorIndex;
-    eDXFVersion_t m_version;  // Version from $ACADVER variable in DXF
+    ColorIndex_t m_ColorIndex = 0;
+    eDXFVersion_t m_version = RUnknown;  // Version from $ACADVER variable in DXF
 
     std::streamsize gcount() const;
     virtual void get_line();
@@ -672,6 +744,8 @@ public:
 
     virtual void OnReadPolyline(const Dxf_POLYLINE&) = 0;
 
+    virtual void OnRead3dFace(const Dxf_3DFACE&) = 0;
+
     virtual void OnReadPoint(const DxfCoords& s) = 0;
 
     virtual void OnReadText(const Dxf_TEXT&) = 0;
@@ -694,7 +768,7 @@ public:
         bool dir
     ) = 0;
 
-    virtual void OnReadSpline(struct SplineData& sd) = 0;
+    virtual void OnReadSpline(const Dxf_SPLINE& spline) = 0;
 
     virtual void OnReadInsert(const Dxf_INSERT& ins) = 0;
 

@@ -32,10 +32,10 @@ namespace Mayo {
 
 namespace Internal {
 
-static Handle_AIS_Trihedron createOriginTrihedron()
+static OccHandle<AIS_Trihedron> createOriginTrihedron()
 {
-    Handle_Geom_Axis2Placement axis = new Geom_Axis2Placement(gp::XOY());
-    Handle_AIS_Trihedron aisTrihedron = new AIS_Trihedron(axis);
+    auto axis = makeOccHandle<Geom_Axis2Placement>(gp::XOY());
+    auto aisTrihedron = makeOccHandle<AIS_Trihedron>(axis);
     aisTrihedron->SetDatumDisplayMode(Prs3d_DM_WireFrame);
     aisTrihedron->SetDrawArrows(false);
     aisTrihedron->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetWidth(2.5);
@@ -50,7 +50,7 @@ static Handle_AIS_Trihedron createOriginTrihedron()
     //aisTrihedron->SetTextColor(Quantity_NOC_GRAY40);
     aisTrihedron->SetSize(60);
     aisTrihedron->SetTransformPersistence(
-                new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
+        new Graphic3d_TransformPers(Graphic3d_TMF_ZoomPers, axis->Ax2().Location())
     );
     aisTrihedron->Attributes()->SetZLayer(Graphic3d_ZLayerId_Topmost);
     aisTrihedron->SetInfiniteState(true);
@@ -90,13 +90,13 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
-                Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
+        Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
     );
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
-                GuiDocument::defaultGradientBackground().color1,
-                GuiDocument::defaultGradientBackground().color2,
-                GuiDocument::defaultGradientBackground().fillStyle
+        GuiDocument::defaultGradientBackground().color1,
+        GuiDocument::defaultGradientBackground().color2,
+        GuiDocument::defaultGradientBackground().fillStyle
     );
     //m_v3dView->SetShadingModel(Graphic3d_TOSM_PBR);
 
@@ -105,9 +105,59 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
 
+
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
+}
+
+Bnd_Box GuiDocument::graphicsBoundingBox(GraphicsBoundingBoxFlags flags) const
+{
+    if (flags == GraphicsBoundingBoxFlag::AllGraphics)
+        return m_gfxBoundingBox;
+
+    Bnd_Box bndBox;
+
+    auto fnIsVisibleTreeNode = [=](TreeNodeId nodeId) {
+        return (flags & OnlyVisibleGraphics) == 0 || this->nodeVisibleState(nodeId) == CheckState::On;
+    };
+
+    // Retrieve the application items being selected and visible
+    auto appSelectionModel = this->guiApplication()->selectionModel();
+    std::vector<ApplicationItem> appItems;
+    if (flags & OnlySelectedGraphics) {
+        for (const ApplicationItem& item : appSelectionModel->selectedItems()) {
+            if (item.document() == this->document()
+                && (!item.isDocumentTreeNode() || fnIsVisibleTreeNode(item.documentTreeNode().id())))
+            {
+                appItems.push_back(item);
+            }
+        }
+    }
+
+    // If no application items selected(and visible), then take the whole document
+    if (appItems.empty())
+        appItems = { ApplicationItem{this->document()} };
+
+    // Helper function to extend main bounding box with each visible graphics object inside tree node
+    auto fnAddTreeNodeBndBox = [&](TreeNodeId nodeId) {
+        if (fnIsVisibleTreeNode(nodeId)) {
+            this->foreachGraphicsObject(nodeId, [&](GraphicsObjectPtr gfxObject) {
+                BndUtils::add(&bndBox, GraphicsUtils::AisObject_boundingBox(gfxObject));
+            });
+        }
+    };
+
+    // Iterate over application items to compute main bounding box
+    for (const ApplicationItem& item : appItems) {
+        const Tree<TDF_Label>& modelTree = item.document()->modelTree();
+        if (item.isDocument())
+            traverseTree(modelTree, fnAddTreeNodeBndBox);
+        else
+            traverseTree(item.documentTreeNode().id(), modelTree, fnAddTreeNodeBndBox);
+    }
+
+    return bndBox;
 }
 
 void GuiDocument::setDevicePixelRatio(double ratio)
@@ -126,7 +176,7 @@ void GuiDocument::setDevicePixelRatio(double ratio)
     }
     case ViewTrihedronMode::AisViewCube: {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        auto viewCube = Handle(AIS_ViewCube)::DownCast(m_aisViewCube);
+        auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
         if (viewCube) {
             viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
             viewCube->SetFontHeight(12 * m_devicePixelRatio);
@@ -360,7 +410,7 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
         return false;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    auto viewCubeOwner = Handle(AIS_ViewCubeOwner)::DownCast(gfxOwner);
+    auto viewCubeOwner = OccHandle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
     if (viewCubeOwner) {
         this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
         return true;
@@ -372,9 +422,9 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
 
 void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
 {
-    this->runViewCameraAnimation([=](Handle_V3d_View view) {
+    this->runViewCameraAnimation([=](OccHandle<V3d_View> view) {
         view->SetProj(projection);
-        GraphicsUtils::V3dView_fitAll(view);
+        GraphicsUtils::V3dView_fitAll(view, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
     });
 }
 
@@ -419,14 +469,15 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             aisViewCube->SetFontHeight(12);
             aisViewCube->SetAxesLabels("", "", "");
             aisViewCube->SetTransformPersistence(
-                        new Graphic3d_TransformPers(
-                            Graphic3d_TMF_TriedronPers,
-                            m_viewTrihedronCorner,
-                            Graphic3d_Vec2i(85, 85))
+                new Graphic3d_TransformPers(
+                    Graphic3d_TMF_TriedronPers,
+                    m_viewTrihedronCorner,
+                    Graphic3d_Vec2i(85, 85)
+                )
             );
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
-            const Handle_Prs3d_DatumAspect& datumAspect = aisViewCube->Attributes()->DatumAspect();
+            const OccHandle<Prs3d_DatumAspect>& datumAspect = aisViewCube->Attributes()->DatumAspect();
             datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
             datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
@@ -475,7 +526,7 @@ int GuiDocument::aisViewCubeBoundingSize() const
         return 0;
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    auto hnd = opencascade::handle<AIS_ViewCube>::DownCast(m_aisViewCube);
+    auto hnd = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
     auto size =
         2 * (hnd->Size()
              + hnd->BoxFacetExtension()
@@ -495,7 +546,7 @@ int GuiDocument::aisViewCubeBoundingSize() const
 bool GuiDocument::isAisViewCubeObject([[maybe_unused]] const GraphicsObjectPtr& gfxObject)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-    return !opencascade::handle<AIS_ViewCube>::DownCast(gfxObject).IsNull();
+    return !OccHandle<AIS_ViewCube>::DownCast(gfxObject).IsNull();
 #else
     return false;
 #endif
@@ -515,6 +566,7 @@ void GuiDocument::onDocumentEntityAdded(TreeNodeId entityTreeNodeId)
 {
     this->mapEntity(entityTreeNodeId);
     BndUtils::add(&m_gfxBoundingBox, m_vecGraphicsEntity.back().bndBox);
+    GraphicsUtils::V3dView_fitAll(m_v3dView, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
     this->signalGraphicsBoundingBoxChanged.send(m_gfxBoundingBox);
 }
 
@@ -543,7 +595,7 @@ void GuiDocument::onGraphicsSelectionChanged()
     std::vector<ApplicationItem> vecSelected;
     m_gfxScene.foreachSelectedOwner([&](const GraphicsOwnerPtr& gfxOwner) {
         auto gfxObject = GraphicsObjectPtr::DownCast(
-                    gfxOwner ? gfxOwner->Selectable() : Handle_SelectMgr_SelectableObject()
+            gfxOwner ? gfxOwner->Selectable() : OccHandle<SelectMgr_SelectableObject>()
         );
         const TreeNodeId nodeId = this->nodeFromGraphicsObject(gfxObject);
         if (nodeId != 0) {
@@ -641,7 +693,6 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
         m_mapTreeNodeCheckState.insert({ id, CheckState::On });
     });
 
-    GraphicsUtils::V3dView_fitAll(m_v3dView);
     m_vecGraphicsEntity.push_back(std::move(gfxEntity));
 }
 

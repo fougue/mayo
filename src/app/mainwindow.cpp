@@ -11,6 +11,7 @@
 #include "../base/global.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_context.h"
 #include "app_module.h"
 #include "commands_file.h"
@@ -73,6 +74,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::showEvent(QShowEvent* event)
 {
+    const auto& uiState = AppModule::get()->properties()->appUiState.value();
+    if (!uiState.mainWindowGeometry.empty())
+        this->restoreGeometry(QtCoreUtils::QByteArray_fromRawData<uint8_t>(uiState.mainWindowGeometry));
+
+    WidgetMainControl* pageDocs = this->widgetPageDocuments();
+    if (pageDocs) {
+        pageDocs->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
+        pageDocs->setWidgetLeftSideBarWidthFactor(uiState.pageDocuments_widgetLeftSideBarWidthFactor);
+    }
+
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
@@ -84,6 +95,20 @@ void MainWindow::showEvent(QShowEvent* event)
 #endif
 }
 
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    AppUiState uiState = AppModule::get()->properties()->appUiState;
+    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(this->saveGeometry());
+    WidgetMainControl* pageDocs = this->widgetPageDocuments();
+    if (pageDocs) {
+        uiState.pageDocuments_isLeftSideBarVisible = pageDocs->widgetLeftSideBar()->isVisible();
+        uiState.pageDocuments_widgetLeftSideBarWidthFactor = pageDocs->widgetLeftSideBarWidthFactor();
+    }
+
+    AppModule::get()->properties()->appUiState.setValue(uiState);
+    QMainWindow::closeEvent(event);
+}
+
 void MainWindow::addPage(IAppContext::Page page, IWidgetMainPage* pageWidget)
 {
     assert(m_mapWidgetPage.find(page) == m_mapWidgetPage.cend());
@@ -91,8 +116,8 @@ void MainWindow::addPage(IAppContext::Page page, IWidgetMainPage* pageWidget)
     m_mapWidgetPage.insert({ page, pageWidget });
     m_ui->stack_Main->addWidget(pageWidget);
     QObject::connect(
-                pageWidget, &IWidgetMainPage::updateGlobalControlsActivationRequired,
-                this, &MainWindow::updateControlsActivation
+        pageWidget, &IWidgetMainPage::updateGlobalControlsActivationRequired,
+        this, &MainWindow::updateControlsActivation
     );
 }
 

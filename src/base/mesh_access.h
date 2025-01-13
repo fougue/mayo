@@ -7,6 +7,7 @@
 #pragma once
 
 // Base
+#include "occ_handle.h"
 class DocumentTreeNode;
 
 // OpenCascade
@@ -26,7 +27,7 @@ class IMeshAccess {
 public:
     virtual std::optional<Quantity_Color> nodeColor(int i) const = 0;
     virtual const TopLoc_Location& location() const = 0;
-    virtual const Handle(Poly_Triangulation)& triangulation() const = 0;
+    virtual const OccHandle<Poly_Triangulation>& triangulation() const = 0;
 };
 
 // Iterates over meshes from `treeNode` and call `fnCallback` for each item.

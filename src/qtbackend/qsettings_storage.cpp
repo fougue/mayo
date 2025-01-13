@@ -6,8 +6,8 @@
 
 #include "qsettings_storage.h"
 
-#include "qstring_conv.h"
-#include "qtcore_utils.h"
+#include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 
 namespace Mayo {
 
@@ -25,8 +25,10 @@ Settings::Variant QSettingsStorage::value(std::string_view key) const
 {
     const QVariant value = m_storage.value(to_QString(key));
     switch (value.type()) {
-    case QVariant::ByteArray:
-        return value.toByteArray().toStdString();
+    case QVariant::ByteArray: {
+        auto bytes = QtCoreUtils::toStdByteArray(value.toByteArray());
+        return Settings::Variant(bytes);
+    }
     case QVariant::String: {
         const QString strval = value.toString();
         if (strval == "true")
@@ -80,11 +82,10 @@ void QSettingsStorage::setValue(std::string_view key, const Settings::Variant& v
         qvalue = std::get<double>(value);
     }
     else if (std::holds_alternative<std::string>(value)) {
-        const std::string& str = value.toConstRefString();
-        if (value.isByteArray())
-            qvalue = QByteArray::fromStdString(str); // Don't use QtCoreUtils::QByteArray_frowRawData(str)
-        else
-            qvalue = to_QString(str);
+        qvalue = to_QString(value.toConstRefString());
+    }
+    else if (std::holds_alternative<std::vector<uint8_t>>(value)) {
+        qvalue = QtCoreUtils::toQByteArray(value.toConstRefByteArray());
     }
 
     if (!qvalue.isNull())

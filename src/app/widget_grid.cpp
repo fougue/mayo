@@ -37,7 +37,7 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
       m_ui(new Ui_WidgetGrid),
       m_viewPtr(viewPtr)
 {
-    const Handle_V3d_Viewer& viewer = viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = viewPtr->Viewer();
 
     // Intial configuration
     m_ui->setupUi(this);
@@ -128,7 +128,7 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
         m_ui->combo_Plane->setCurrentIndex(3);
 
     // Install grid draw mode
-    Handle_Aspect_Grid gridAspect = GraphicsUtils::V3dViewer_grid(viewer);
+    OccHandle<Aspect_Grid> gridAspect = GraphicsUtils::V3dViewer_grid(viewer);
     if (gridAspect) {
         if (gridAspect->DrawMode() == Aspect_GDM_Lines)
             m_ui->combo_DrawMode->setCurrentIndex(0);
@@ -154,14 +154,14 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
     // Signal/slot connections
     auto sigComboBoxActivated_int = qOverload<int>(&QComboBox::activated);
     QObject::connect(
-                m_ui->check_ShowGrid, &QCheckBox::clicked, this, &WidgetGrid::activateGrid
+        m_ui->check_ShowGrid, &QCheckBox::clicked, this, &WidgetGrid::activateGrid
     );
     QObject::connect(m_ui->combo_Type, sigComboBoxActivated_int, this, [=](int typeIndex) {
         m_ui->stack_Config->setCurrentIndex(typeIndex);
         auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
         viewer->ActivateGrid(
-                    toGridType(m_ui->combo_Type->currentIndex()),
-                    toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
+            toGridType(m_ui->combo_Type->currentIndex()),
+            toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
         );
         GraphicsUtils::V3dViewer_setGridColors(viewer, gridColors);
         m_viewPtr.redraw();
@@ -188,13 +188,13 @@ WidgetGrid::WidgetGrid(GraphicsViewPtr viewPtr, QWidget* parent)
         emit this->sizeAdjustmentRequested();
     });
     QObject::connect(
-                m_ui->btn_Color, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Base); }
+        m_ui->btn_Color, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Base); }
     );
     QObject::connect(
-                m_ui->btn_ColorTenth, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Tenth); }
+        m_ui->btn_ColorTenth, &QToolButton::clicked, this, [=]{ this->chooseGridColor(GridColorType::Tenth); }
     );
     QObject::connect(
-                m_ui->check_ColorTenth, &QAbstractButton::toggled, this, &WidgetGrid::enableGridColorTenth
+        m_ui->check_ColorTenth, &QAbstractButton::toggled, this, &WidgetGrid::enableGridColorTenth
     );
 
     auto sigGridParamChanged_double = qOverload<double>(&QDoubleSpinBox::valueChanged);
@@ -248,11 +248,11 @@ const gp_Ax2& WidgetGrid::toPlaneAxis(int comboBoxItemIndex)
 
 void WidgetGrid::activateGrid(bool on)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     if (on) {
         viewer->ActivateGrid(
-                    toGridType(m_ui->combo_Type->currentIndex()),
-                    toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
+            toGridType(m_ui->combo_Type->currentIndex()),
+            toGridDrawMode(m_ui->combo_DrawMode->currentIndex())
         );
     }
     else {
@@ -269,24 +269,24 @@ void WidgetGrid::applyGridParams()
     auto fnCorrectedGridStep = [](double gridStep) {
         return !qFuzzyIsNull(gridStep) ? gridStep : 0.01;
     };
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridValues(
-                    m_ui->edit_RectOriginX->value(),
-                    m_ui->edit_RectOriginY->value(),
-                    fnCorrectedGridStep(m_ui->edit_RectStepX->value()),
-                    fnCorrectedGridStep(m_ui->edit_RectStepY->value()),
-                    UnitSystem::radians(m_ui->edit_RectRotation->value() * Quantity_Degree)
+            m_ui->edit_RectOriginX->value(),
+            m_ui->edit_RectOriginY->value(),
+            fnCorrectedGridStep(m_ui->edit_RectStepX->value()),
+            fnCorrectedGridStep(m_ui->edit_RectStepY->value()),
+            UnitSystem::radians(m_ui->edit_RectRotation->value() * Quantity_Degree)
         );
     }
     else if (gridType == Aspect_GT_Circular) {
         viewer->SetCircularGridValues(
-                    m_ui->edit_CircOriginX->value(),
-                    m_ui->edit_CircOriginY->value(),
-                    fnCorrectedGridStep(m_ui->edit_CircRadiusStep->value()),
-                    m_ui->edit_CircDivision->value(),
-                    UnitSystem::radians(m_ui->edit_CircRotation->value() * Quantity_Degree)
+            m_ui->edit_CircOriginX->value(),
+            m_ui->edit_CircOriginY->value(),
+            fnCorrectedGridStep(m_ui->edit_CircRadiusStep->value()),
+            m_ui->edit_CircDivision->value(),
+            UnitSystem::radians(m_ui->edit_CircRotation->value() * Quantity_Degree)
         );
     }
 
@@ -295,19 +295,16 @@ void WidgetGrid::applyGridParams()
 
 void WidgetGrid::applyGridGraphicsParams()
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridType = toGridType(m_ui->combo_Type->currentIndex());
     if (gridType == Aspect_GT_Rectangular) {
         viewer->SetRectangularGridGraphicValues(
-                    m_ui->edit_RectSizeX->value(),
-                    m_ui->edit_RectSizeY->value(),
-                    m_ui->edit_RectOffset->value()
+            m_ui->edit_RectSizeX->value(), m_ui->edit_RectSizeY->value(), m_ui->edit_RectOffset->value()
         );
     }
     else if (gridType == Aspect_GT_Circular) {
         viewer->SetCircularGridGraphicValues(
-                    m_ui->edit_CircRadius->value(),
-                    m_ui->edit_RectOffset->value()
+            m_ui->edit_CircRadius->value(), m_ui->edit_RectOffset->value()
         );
     }
 
@@ -316,7 +313,7 @@ void WidgetGrid::applyGridGraphicsParams()
 
 void WidgetGrid::chooseGridColor(GridColorType colorType)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);
     // Helper function to apply some base/tenth grid color
     auto fnApplyGridColor = [=](const Quantity_Color& color) {
@@ -356,7 +353,7 @@ void WidgetGrid::chooseGridColor(GridColorType colorType)
 
 void WidgetGrid::enableGridColorTenth(bool on)
 {
-    const Handle_V3d_Viewer& viewer = m_viewPtr->Viewer();
+    const OccHandle<V3d_Viewer>& viewer = m_viewPtr->Viewer();
     m_ui->label_ColorTenth->setEnabled(on);
     m_ui->btn_ColorTenth->setEnabled(on);
     auto gridColors = GraphicsUtils::V3dViewer_gridColors(viewer);

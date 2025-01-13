@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "app_ui_state.h"
 #include "recent_files.h"
 
 #include "../base/io_format.h"
@@ -15,7 +16,7 @@
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/unit_system.h"
-#include "widget_occ_view_controller.h"
+#include "view3d_navigation_style.h"
 
 #include <memory>
 #include <unordered_map>
@@ -25,6 +26,12 @@ namespace Mayo {
 
 namespace IO { class System; }
 class Settings;
+
+enum class ActionOnDocumentFileChange {
+    None,
+    ReloadIfUserConfirm,
+    ReloadSilently
+};
 
 // Provides a container of all the application properties(settings)
 // Properties are structured into predefined Settings groups/sections
@@ -51,16 +58,20 @@ public:
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
     PropertyString lastSelectedFormatFilter{ this, textId("lastSelectedFormatFilter") };
+    PropertyEnum<ActionOnDocumentFileChange> actionOnDocumentFileChange{ this, textId("actionOnDocumentFileChange") };
     PropertyBool linkWithDocumentSelector{ this, textId("linkWithDocumentSelector") };
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
+    PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
+    const Settings::GroupIndex groupId_meshing;
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
     PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
-    PropertyEnum<WidgetOccViewController::NavigationStyle> navigationStyle{ this, textId("navigationStyle") };
+    const Settings::GroupIndex groupId_graphics;
+    PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
     PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };

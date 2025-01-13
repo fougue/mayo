@@ -1,0 +1,118 @@
+name: Linux ARM
+
+on: [push]
+
+jobs:
+    build-linux-arm:
+        strategy:
+            matrix:
+                include:
+                    - arch: aarch64
+                      distro: ubuntu_latest
+                   #- arch: aarch64
+                   #  distro: fedora_latest
+                    - arch: armv7
+                      distro: archarm_latest
+
+
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Get current branch name
+          uses: nelonoel/branch-name@v1.0.1
+
+        - name: Run Build
+          uses: uraimo/run-on-arch-action@v2
+          with:
+              arch: ${{matrix.arch}}
+
+              distro: ${{matrix.distro}}
+
+              # Not required, but speeds up builds
+              githubToken: ${{github.token}}
+
+              install: |
+                  case "${{ matrix.distro }}" in
+                  ubuntu*)
+                      apt-get -y update
+                      apt-get -y install xvfb  # Needed to run unit tests
+                      apt-get -y install cmake
+                      apt-get -y install git
+                      apt-get -y install g++
+                      apt-get -y install qtbase5-dev libqt5svg5-dev
+                      apt-get -y install libxcb-cursor0  # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
+                      apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
+                      apt-get -y install libtbb-dev libxi-dev  # Dependencies for OpenCascade
+                      apt-get -y install libassimp-dev
+                      ;;
+                  fedora*)
+                      dnf -y update
+                      dnf -y install xorg-x11-server-Xvfb
+                      dnf -y install make cmake
+                      dnf -y install git
+                      dnf -y install gcc-c++
+                      dnf -y install qt5-qtbase qt5-qtsvg
+                      dnf -y install xcb-util-cursor
+                      dnf -y install opencascade-devel
+                      dnf -y install assimp assimp-devel
+                      ;;
+                  archarm*)
+                      # See https://github.com/moby/buildkit/issues/1267#issuecomment-769880570
+                      sed -i -e 's~#IgnorePkg.*~IgnorePkg = filesystem~g' '/etc/pacman.conf'
+                      pacman -Syu --noconfirm
+                      pacman -Sy --noconfirm xorg-server-xvfb
+                      pacman -Sy --noconfirm make cmake
+                      pacman -Sy --noconfirm git
+                      pacman -Sy --noconfirm gcc
+                      pacman -Sy --noconfirm qt5-base qt5-svg
+                      pacman -Sy --noconfirm xcb-util-cursor
+                      pacman -Sy --noconfirm opencascade
+                      pacman -Sy --noconfirm libxi
+                      pacman -Sy --noconfirm assimp
+                      ;;
+                  esac
+
+              env: |
+                  DISPLAY: :0
+                  GIT_BRANCH_NAME: ${{env.BRANCH_NAME}}
+                  RUN_ARCH_NAME: ${{matrix.arch}}
+
+              run: |
+                  git clone --quiet https://github.com/fougue/mayo.git
+                  cd mayo
+
+                  # Fixes "fatal: detected dubious ownership in repository at '/home/runner/work/mayo/mayo'"
+                  git config --global --add safe.directory `realpath $PWD/..`
+
+                  echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
+                  git checkout $GIT_BRANCH_NAME
+                  cd ..
+                  mkdir build
+                  cd build
+
+                  cmake --version
+                  cmake .. \
+                        -DMayo_BuildTests=ON \
+                        -DMayo_BuildPluginAssimp=ON
+                  cmake --build . \
+                        --config Release \
+                        --parallel `nproc`
+
+                  #
+                  # Execute Unit Tests
+                  # Note: for some unknown reason unit tests are crashing for armv7(on very first test)
+                  #       so just execute them for aarch64
+                  #
+                  if [ $RUN_ARCH_NAME = 'aarch64' ]; then
+
+                  # Start X11 display server
+                  Xvfb $DISPLAY -screen 0 1280x1024x24 &
+                  sleep 5s
+                  ./mayo --runtests
+
+                  else
+                      echo "NOTE: unit tests skipped, they need to be fixed for this architecture"
+                  fi

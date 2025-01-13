@@ -9,9 +9,9 @@
 #include "../base/application.h"
 #include "../base/settings.h"
 #include "../base/task_manager.h"
+#include "../qtcommon/qstring_conv.h"
 #include "ui_dialog_task_manager.h"
 #include "app_module.h"
-#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "theme.h"
 
@@ -135,8 +135,9 @@ void DialogTaskManager::onTaskStarted(TaskId taskId)
     auto widget = new TaskWidget(m_ui->scrollAreaContents);
     widget->m_interruptBtn->setProperty(TaskWidget::TaskIdProp, quint64(taskId));
     QObject::connect(
-                widget->m_interruptBtn, &QToolButton::clicked,
-                this, &DialogTaskManager::interruptTask);
+        widget->m_interruptBtn, &QToolButton::clicked,
+        this, &DialogTaskManager::interruptTask
+    );
     m_ui->contentsLayout->insertWidget(0, widget);
     m_taskIdToWidget.insert({ taskId, widget });
     ++m_taskCount;

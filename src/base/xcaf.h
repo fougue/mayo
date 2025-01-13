@@ -7,7 +7,9 @@
 #pragma once
 
 #include "libtree.h"
+#include "occ_handle.h"
 #include "quantity.h"
+
 #include <Quantity_Color.hxx>
 #include <Standard_Version.hxx>
 #include <XCAFDoc_ColorTool.hxx>
@@ -35,12 +37,12 @@ public:
 
     bool isNull() const;
 
-    Handle_XCAFDoc_ShapeTool shapeTool() const;
-    Handle_XCAFDoc_LayerTool layerTool() const;
-    Handle_XCAFDoc_ColorTool colorTool() const;
-    Handle_XCAFDoc_MaterialTool materialTool() const;
+    OccHandle<XCAFDoc_ShapeTool> shapeTool() const;
+    OccHandle<XCAFDoc_LayerTool> layerTool() const;
+    OccHandle<XCAFDoc_ColorTool> colorTool() const;
+    OccHandle<XCAFDoc_MaterialTool> materialTool() const;
 #if OCC_VERSION_HEX >= 0x070500
-    Handle_XCAFDoc_VisMaterialTool visMaterialTool() const;
+    OccHandle<XCAFDoc_VisMaterialTool> visMaterialTool() const;
 #endif
 
     // --
@@ -102,8 +104,8 @@ public:
     // --
 
     static QuantityDensity shapeMaterialDensity(const TDF_Label& lbl);
-    static QuantityDensity shapeMaterialDensity(const Handle_XCAFDoc_Material& material);
-    static Handle_XCAFDoc_Material shapeMaterial(const TDF_Label& lbl);
+    static QuantityDensity shapeMaterialDensity(const OccHandle<XCAFDoc_Material>& material);
+    static OccHandle<XCAFDoc_Material> shapeMaterial(const TDF_Label& lbl);
 
     // --
     // -- XCAFDoc_LayerTool helpers

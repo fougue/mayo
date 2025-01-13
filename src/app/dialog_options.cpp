@@ -10,10 +10,10 @@
 #include "../base/settings.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
+#include "../qtbackend/qsettings_storage.h"
+#include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
 #include "item_view_buttons.h"
-#include "qsettings_storage.h"
-#include "qstring_conv.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 #include "theme.h"
@@ -112,7 +112,8 @@ public:
             StyleHint hint,
             const QStyleOption* option,
             const QWidget* widget,
-            QStyleHintReturn* returnData) const override
+            QStyleHintReturn* returnData
+        ) const override
     {
         if (hint == QStyle::SH_ComboBox_AllowWheelScrolling)
             return 0;
@@ -205,22 +206,22 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     }
 
     // Enable/disable editor widget when the corresponding setting status is changed
-    settings->signalEnabled.connectSlot([=](const Property* setting, bool on) {
+    m_connSettingsEnabled = settings->signalEnabled.connectSlot([=](const Property* setting, bool on) {
         QWidget* editor = CppUtils::findValue(setting, m_mapSettingEditor);
         if (editor)
             editor->setEnabled(on);
     });
 
     // Backup initial value of changed settings, so they can be restored on dialog cancellation
-    m_connSettingsAboutToChange = m_settings->signalAboutToChange.connectSlot([=](Property* property) {
+    m_connSettingsAboutToChange = settings->signalAboutToChange.connectSlot([=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
-            const Settings::Variant propertyValue = m_settings->propertyValueConversion().toVariant(*property);
+            const Settings::Variant propertyValue = settings->propertyValueConversion().toVariant(*property);
             m_mapSettingInitialValue.insert({ property, propertyValue});
         }
     });
 
     // Synchronize editor widget when value of the corresponding property is changed
-    m_connSettingsChanged = m_settings->signalChanged.connectSlot([=](const Property* property) {
+    m_connSettingsChanged = settings->signalChanged.connectSlot([=](const Property* property) {
         auto itFound = m_mapSettingEditor.find(property);
         if (itFound != m_mapSettingEditor.cend())
             this->syncEditor(itFound->second);
@@ -238,7 +239,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
             m_ui->treeView_GroupSections->scrollTo(indexList.front(), QAbstractItemView::PositionAtTop);
             QSignalBlocker _(m_ui->treeView_GroupSections);
             m_ui->treeView_GroupSections->selectionModel()->select(
-                        indexList.front(), QItemSelectionModel::SelectCurrent);
+                        indexList.front(), QItemSelectionModel::SelectCurrent
+            );
         }
     });
 
@@ -262,7 +264,7 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
 
     // Action for "Restore defaults" button
     auto btnRestoreDefaults = m_ui->buttonBox->button(QDialogButtonBox::RestoreDefaults);
-    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, [=]{ m_settings->resetAll(); });
+    QObject::connect(btnRestoreDefaults, &QPushButton::clicked, this, [=]{ settings->resetAll(); });
 
     // Actions for "Exchange" button
     auto btnExchange = m_ui->buttonBox->addButton(tr("Exchange"), QDialogButtonBox::ActionRole);
@@ -278,6 +280,7 @@ DialogOptions::~DialogOptions()
 {
     m_connSettingsAboutToChange.disconnect();
     m_connSettingsChanged.disconnect();
+    m_connSettingsEnabled.disconnect();
     delete m_ui;
 }
 
@@ -372,7 +375,8 @@ void DialogOptions::saveAs()
 {
     const QString startDirPath = QString();
     const QString filepath = QFileDialog::getSaveFileName(
-                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)"));
+                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)")
+    );
     if (filepath.isEmpty())
         return;
 
@@ -380,7 +384,7 @@ void DialogOptions::saveAs()
     m_settings->saveAs(&fileSettings, &AppModule::excludeSettingPredicate);
     fileSettings.sync();
     if (fileSettings.get().status() != QSettings::NoError)
-        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to'%1'").arg(filepath));
+        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), tr("Error when writing to '%1'").arg(filepath));
 }
 
 void DialogOptions::cancelChanges()

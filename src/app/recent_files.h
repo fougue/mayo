@@ -9,20 +9,24 @@
 #include "../base/filepath.h"
 #include "../base/property_builtins.h"
 
-#include <QtGui/QPixmap>
+#include <QtCore/QByteArray>
+
 #include <vector>
-class QDataStream;
 
 namespace Mayo {
 
 class GuiDocument;
 
+struct Thumbnail {
+    QByteArray imageData; // PNG
+    int64_t imageCacheKey = -1;
+};
+
 // Provides information about a "recently" opened file
 struct RecentFile {
     FilePath filepath;
-    QPixmap thumbnail;
+    Thumbnail thumbnail;
     int64_t thumbnailTimestamp = 0;
-    bool recordThumbnail(GuiDocument* guiDoc, QSize size);
     bool isThumbnailOutOfSync() const;
     static int64_t timestampLastModified(const FilePath& fp);
 };
@@ -35,17 +39,5 @@ using RecentFiles = std::vector<RecentFile>;
 using PropertyRecentFiles = GenericProperty<RecentFiles>;
 
 bool operator==(const RecentFile& lhs, const RecentFile& rhs);
-
-// Writes a RecentFile object to QDataStream
-QDataStream& operator<<(QDataStream& stream, const RecentFile& recentFile);
-
-// Writes array of RecentFile objects to QDataStream
-QDataStream& operator<<(QDataStream& stream, const RecentFiles& recentFiles);
-
-// Extracts a RecentFile object from QDataStream
-QDataStream& operator>>(QDataStream& stream, RecentFile& recentFile);
-
-// Extracts array of RecentFile objects from QDataStream
-QDataStream& operator>>(QDataStream& stream, RecentFiles& recentFiles);
 
 } // namespace Mayo

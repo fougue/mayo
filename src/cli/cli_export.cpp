@@ -6,13 +6,13 @@
 
 #include "cli_export.h"
 
-#include "app_module.h"
 #include "console.h"
-#include "qstring_conv.h"
+#include "../app/app_module.h"
 #include "../base/application.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/task_manager.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <Message.hxx>
 
@@ -166,7 +166,10 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
 } // namespace
 
 void cli_asyncExportDocuments(
-        Application* app, const CliExportArgs& args, std::function<void(int)> fnContinuation)
+        const ApplicationPtr& app,
+        const CliExportArgs& args,
+        std::function<void(int)> fnContinuation
+    )
 {
     auto helper = new Helper; // Allocated on heap because current function is asynchronous
     auto taskMgr = &helper->taskMgr;

@@ -6,10 +6,14 @@
 
 #pragma once
 
+#include "../base/document_ptr.h"
+#include "../base/filepath.h"
 #include "../base/property.h"
+#include "../base/tkernel_utils.h"
 #include "iwidget_main_page.h"
 
 #include <memory>
+#include <unordered_set>
 
 class QFileInfo;
 class QMenu;
@@ -18,6 +22,7 @@ namespace Mayo {
 
 class IAppContext;
 class CommandContainer;
+class DocumentFilesWatcher;
 class GuiApplication;
 class GuiDocument;
 class ItemViewButtons;
@@ -36,6 +41,10 @@ public:
 
     // Widget at the left side of the app providing access to the model tree, file system, ...
     QWidget* widgetLeftSideBar() const;
+
+    // Factor value must be in [0, 1]
+    double widgetLeftSideBarWidthFactor() const;
+    void setWidgetLeftSideBarWidthFactor(double factor);
 
     int widgetGuiDocumentCount() const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
@@ -57,13 +66,15 @@ private:
     void onApplicationItemSelectionChanged();
     void onLeftContentsPageChanged(int pageId);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
+    void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onCurrentDocumentIndexChanged(int idx);
+    void onDocumentFileChanged(const DocumentPtr& doc);
+    void onSplitterMainMoved(int pos, int index);
 
     QWidget* findLeftHeaderPlaceHolder() const;
     QWidget* recreateLeftHeaderPlaceHolder();
 
-    void onGuiDocumentAdded(GuiDocument* guiDoc);
-
-    void onCurrentDocumentIndexChanged(int idx);
+    void reloadDocumentAfterChange(const DocumentPtr& doc);
 
     class Ui_WidgetMainControl* m_ui = nullptr;
     GuiApplication* m_guiApp = nullptr;
@@ -71,6 +82,9 @@ private:
     ItemViewButtons* m_listViewBtns = nullptr;
     std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
     std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
+    DocumentFilesWatcher* m_docFilesWatcher = nullptr;
+    std::unordered_set<DocumentPtr> m_pendingDocsToReload;
+    double m_widgetLeftSideBarWidthFactor = 0.25;
 };
 
 } // namespace Mayo

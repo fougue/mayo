@@ -62,17 +62,21 @@ private:
     void onDocumentEntityAboutToBeDestroyed(const DocumentPtr& doc, TreeNodeId entityId);
 
     void onTreeWidgetDocumentSelectionChanged(
-            const QItemSelection& selected, const QItemSelection& deselected);
+        const QItemSelection& selected, const QItemSelection& deselected
+    );
     void onApplicationItemSelectionModelChanged(
-            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected);
+        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected
+    );
 
     void connectTreeModelDataChanged(bool on);
     void connectTreeWidgetDocumentSelectionChanged(bool on);
 
     void onTreeModelDataChanged(
-            const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
+    );
     void onNodesVisibilityChanged(
-            const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId);
+        const GuiDocument* guiDoc, const std::unordered_map<TreeNodeId, CheckState>& mapNodeId
+    );
 
     QTreeWidgetItem* loadDocumentEntity(const DocumentTreeNode& entityNode);
 

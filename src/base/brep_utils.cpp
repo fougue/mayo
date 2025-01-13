@@ -36,7 +36,7 @@ void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape
     builder.Add(*ptrTargetShape, shape);
 }
 
-TopoDS_Edge BRepUtils::makeEdge(const Handle(Poly_Polygon3D)& polygon)
+TopoDS_Edge BRepUtils::makeEdge(const OccHandle<Poly_Polygon3D>& polygon)
 {
     TopoDS_Edge edge;
     BRep_Builder builder;
@@ -45,7 +45,7 @@ TopoDS_Edge BRepUtils::makeEdge(const Handle(Poly_Polygon3D)& polygon)
     return edge;
 }
 
-TopoDS_Face BRepUtils::makeFace(const Handle(Poly_Triangulation)& mesh)
+TopoDS_Face BRepUtils::makeFace(const OccHandle<Poly_Triangulation>& mesh)
 {
     TopoDS_Face face;
     BRep_Builder builder;
@@ -59,9 +59,13 @@ bool BRepUtils::moreComplex(TopAbs_ShapeEnum lhs, TopAbs_ShapeEnum rhs)
     return lhs < rhs;
 }
 
-int BRepUtils::hashCode(const TopoDS_Shape& shape)
+size_t BRepUtils::hashCode(const TopoDS_Shape& shape)
 {
-    return !shape.IsNull() ? shape.HashCode(INT_MAX) : -1;
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 8, 0)
+    return std::hash<TopoDS_Shape>{}(shape);
+#else
+    return shape.HashCode(INT_MAX);
+#endif
 }
 
 std::string BRepUtils::shapeToString(const TopoDS_Shape& shape)
@@ -96,10 +100,11 @@ bool BRepUtils::isGeometric(const TopoDS_Face& face)
 }
 
 void BRepUtils::computeMesh(
-        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress)
+        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress
+    )
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
 #else
     BRepMesh_IncrementalMesh mesher(shape, params);

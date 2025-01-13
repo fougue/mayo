@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "occ_handle.h"
+
 #include <Graphic3d_ArrayOfPoints.hxx>
 #include <TDF_Attribute.hxx>
 
@@ -14,28 +16,28 @@ namespace Mayo {
 // Pre-declarations
 class PointCloudData;
 DEFINE_STANDARD_HANDLE(PointCloudData, TDF_Attribute)
-using PointCloudDataPtr = Handle(PointCloudData);
+using PointCloudDataPtr = OccHandle<PointCloudData>;
 
 // Provides a label attribute to store point cloud data
 class PointCloudData : public TDF_Attribute {
 public:
     static const Standard_GUID& GetID();
     static PointCloudDataPtr Set(const TDF_Label& label);
-    static PointCloudDataPtr Set(const TDF_Label& label, const Handle(Graphic3d_ArrayOfPoints)& points);
+    static PointCloudDataPtr Set(const TDF_Label& label, const OccHandle<Graphic3d_ArrayOfPoints>& points);
 
-    const Handle(Graphic3d_ArrayOfPoints)& points() const { return m_points; }
+    const OccHandle<Graphic3d_ArrayOfPoints>& points() const { return m_points; }
 
     // -- from TDF_Attribute
     const Standard_GUID& ID() const override;
-    void Restore(const Handle(TDF_Attribute)& attribute) override;
-    Handle(TDF_Attribute) NewEmpty() const override;
-    void Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)& table) const override;
+    void Restore(const OccHandle<TDF_Attribute>& attribute) override;
+    OccHandle<TDF_Attribute> NewEmpty() const override;
+    void Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>& table) const override;
     Standard_OStream& Dump(Standard_OStream& ostr) const override;
 
     DEFINE_STANDARD_RTTI_INLINE(PointCloudData, TDF_Attribute)
 
 private:
-    Handle(Graphic3d_ArrayOfPoints) m_points;
+    OccHandle<Graphic3d_ArrayOfPoints> m_points;
 };
 
 } // namespace Mayo

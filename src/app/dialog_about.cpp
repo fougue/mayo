@@ -7,8 +7,9 @@
 #include "dialog_about.h"
 
 #include "ui_dialog_about.h"
-#include "qstring_conv.h"
-#include "version.h"
+#include "../qtcommon/qstring_conv.h"
+#include <common/mayo_version.h>
+
 #include <Standard_Version.hxx>
 
 namespace Mayo {
@@ -19,7 +20,7 @@ DialogAbout::DialogAbout(QWidget* parent)
 {
     m_ui->setupUi(this);
     m_ui->label_AppByOrg->setText(
-                tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
+        tr("%1 By %2").arg(QApplication::applicationName(), QApplication::organizationName())
     );
 
     const QString strVersionFull =

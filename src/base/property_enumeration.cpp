@@ -6,15 +6,17 @@
 
 #include "property_enumeration.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace Mayo {
 
 PropertyEnumeration::PropertyEnumeration(
-        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration)
+        PropertyGroup* grp, const TextId& name, const Enumeration* enumeration
+    )
     : Property(grp, name),
       m_enumeration(enumeration),
-      m_value(enumeration && enumeration->empty() ? enumeration->itemAt(0).value : -1)
+      m_value(enumeration && !enumeration->empty() ? enumeration->itemAt(0).value : -1)
 {
 }
 
@@ -55,7 +57,7 @@ void PropertyEnumeration::clearDescriptions()
     m_vecDescription.clear();
 }
 
-std::string_view PropertyEnumeration::name() const
+std::string_view PropertyEnumeration::valueName() const
 {
     return m_enumeration ? m_enumeration->findNameByValue(m_value) : std::string_view{};
 }

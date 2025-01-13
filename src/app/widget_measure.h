@@ -42,6 +42,7 @@ private:
     static LengthUnit toMeasureLengthUnit(int comboBoxId);
     static AngleUnit toMeasureAngleUnit(int comboBoxId);
     static AreaUnit toMeasureAreaUnit(int comboBoxId);
+    static VolumeUnit toMeasureVolumeUnit(int comboBoxId);
 
     MeasureType currentMeasureType() const;
     MeasureDisplayConfig currentMeasureDisplayConfig() const;

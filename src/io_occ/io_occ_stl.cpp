@@ -73,7 +73,7 @@ public:
 
 bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
-    Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     m_baseFilename = filepath.stem();
     m_mesh = RWStl::ReadFile(filepath.u8string().c_str(), TKernelUtils::start(indicator));
     return !m_mesh.IsNull();
@@ -131,7 +131,7 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         writer.ASCIIMode() = m_params.format == Format::Ascii;
         const std::string strFilepath = filepath.u8string();
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-        Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+        auto indicator = makeOccHandle<OccProgressIndicator>(progress);
         return writer.Write(m_shape, strFilepath.c_str(), TKernelUtils::start(indicator));
 #else
         MAYO_UNUSED(progress);

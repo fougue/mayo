@@ -130,7 +130,7 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
 
 TDF_Label Document::newEntityLabel()
 {
-    Handle_TDF_TagSource tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
+    OccHandle<TDF_TagSource> tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
     Expects(!tagSrc.IsNull());
     if (tagSrc->Get() == 0)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
@@ -143,27 +143,43 @@ TDF_Label Document::newEntityShapeLabel()
     return m_xcaf.shapeTool()->NewShape();
 }
 
-void Document::addEntityTreeNode(const TDF_Label& label)
+TreeNodeId Document::findEntity(const TDF_Label& label) const
 {
-    // Check if 'label' belongs to current document
-    if (Document::findFrom(label).get() != this)
-        return;
-
-    // Check if 'label' is not already there inside model tree
     for (int i = 0; i < this->entityCount(); ++i) {
         if (this->entityLabel(i) == label)
-            return;
+            return this->entityTreeNodeId(i);
     }
 
-    // TODO Allow custom population of the model tree for the new entity
-    const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
-    this->signalEntityAdded.send(nodeId);
+    return 0;
+}
 
-#if 0
-    // Remove 'label'
-    label.ForgetAllAttributes();
-    label.Nullify();
-#endif
+bool Document::containsLabel(const TDF_Label &label) const
+{
+    return Document::findFrom(label).get() == this;
+}
+
+void Document::addEntityTreeNode(const TDF_Label& label)
+{
+    // TODO Allow custom population of the model tree for the new entity
+    if (this->containsLabel(label) && this->findEntity(label) == 0) {
+        const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
+        this->signalEntityAdded.send(nodeId);
+    }
+}
+
+void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
+{
+    std::vector<TreeNodeId> vecTreeNodeId;
+    vecTreeNodeId.reserve(seqLabel.Size());
+    for (const TDF_Label& label : seqLabel) {
+        if (this->containsLabel(label) && this->findEntity(label) == 0) {
+            const TreeNodeId treeNodeId = m_xcaf.deepBuildAssemblyTree(0, label);
+            vecTreeNodeId.push_back(treeNodeId);
+        }
+    }
+
+    for (TreeNodeId treeNodeId : vecTreeNodeId)
+        this->signalEntityAdded.send(treeNodeId);
 }
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)

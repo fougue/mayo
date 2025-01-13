@@ -23,6 +23,10 @@ static void messages() {
     Mayo::AppModuleProperties::textId("VeryPrecise");
     Mayo::AppModuleProperties::textId("UserDefined");
 
+    Mayo::AppModuleProperties::textId("None");
+    Mayo::AppModuleProperties::textId("ReloadIfUserConfirm");
+    Mayo::AppModuleProperties::textId("ReloadSilently");
+
     Mayo::WidgetModelTreeBuilder_Xde::textId("Instance");
     Mayo::WidgetModelTreeBuilder_Xde::textId("Product");
     Mayo::WidgetModelTreeBuilder_Xde::textId("Both");

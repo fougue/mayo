@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/i18n">
+<file alias="qtbase_en.qm">qt6base_en.qm</file>
+<file alias="qtbase_fr.qm">qt6base_fr.qm</file>
+</qresource>
+</RCC>

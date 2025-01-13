@@ -29,6 +29,7 @@ struct MeasureDisplayConfig {
     LengthUnit lengthUnit = LengthUnit::Millimeter;
     AngleUnit angleUnit = AngleUnit::Degree;
     AreaUnit areaUnit = AreaUnit::SquareMillimeter;
+    VolumeUnit volumeUnit = VolumeUnit::CubicMillimeter;
     DoubleToStringOptions doubleToStringOptions;
     double devicePixelRatio = 1.;
 };
@@ -54,7 +55,7 @@ public:
     // Adapt 3D graphics objects to what is supported by 'driver'
     // This function must be called before adding the graphical objects to the 3D scene(Mayo::GraphicsScene
     // or AIS_InteractiveContext)
-    virtual void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) = 0;
+    virtual void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) = 0;
 
     // Whether "sum" mode is supported by the measure display
     // This is relevant when multiple measureable 3D objects are selected. The cumulative sum of
@@ -75,7 +76,7 @@ public:
     static std::unique_ptr<IMeasureDisplay> createFrom(MeasureType type, const MeasureValue& value);
     static std::unique_ptr<IMeasureDisplay> createEmptySumFrom(MeasureType type);
 
-    void adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver) override;
+    void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) override;
 
     bool isSumSupported() const override { return false; }
     void sumAdd(const IMeasureDisplay& other) override;
@@ -89,7 +90,7 @@ protected:
     static std::string text(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static std::string text(double value, const MeasureDisplayConfig& config);
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
-    static void adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config);
+    static void adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config);
 
     static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 
@@ -111,7 +112,7 @@ public:
 
 private:
     gp_Pnt m_pnt;
-    Handle_AIS_TextLabel m_gfxText;
+    OccHandle<AIS_TextLabel> m_gfxText;
 };
 
 // --
@@ -127,9 +128,9 @@ public:
 
 private:
     gp_Circ m_circle;
-    Handle_AIS_Point m_gfxPoint;
-    Handle_AIS_TextLabel m_gfxText;
-    Handle_AIS_Circle m_gfxCircle;
+    OccHandle<AIS_Point> m_gfxPoint;
+    OccHandle<AIS_TextLabel> m_gfxText;
+    OccHandle<AIS_Circle> m_gfxCircle;
 };
 
 // --
@@ -147,9 +148,9 @@ private:
     static gp_Pnt diameterOpposedPnt(const gp_Pnt& pntOnCircle, const gp_Circ& circ);
 
     gp_Circ m_circle;
-    Handle_AIS_Circle m_gfxCircle;
-    Handle_AIS_Line m_gfxDiameter;
-    Handle_AIS_TextLabel m_gfxDiameterText;
+    OccHandle<AIS_Circle> m_gfxCircle;
+    OccHandle<AIS_Line> m_gfxDiameter;
+    OccHandle<AIS_TextLabel> m_gfxDiameterText;
 };
 
 // --
@@ -165,10 +166,10 @@ public:
 
 private:
     MeasureDistance m_dist;
-    Handle_AIS_Line m_gfxLength;
-    Handle_AIS_TextLabel m_gfxDistText;
-    Handle_AIS_Point m_gfxPnt1;
-    Handle_AIS_Point m_gfxPnt2;
+    OccHandle<AIS_Line> m_gfxLength;
+    OccHandle<AIS_TextLabel> m_gfxDistText;
+    OccHandle<AIS_Point> m_gfxPnt1;
+    OccHandle<AIS_Point> m_gfxPnt2;
 };
 
 // --
@@ -184,10 +185,10 @@ public:
 
 private:
     MeasureAngle m_angle;
-    Handle_AIS_Line m_gfxEntity1;
-    Handle_AIS_Line m_gfxEntity2;
-    Handle_AIS_Circle m_gfxAngle;
-    Handle_AIS_TextLabel m_gfxAngleText;
+    OccHandle<AIS_Line> m_gfxEntity1;
+    OccHandle<AIS_Line> m_gfxEntity2;
+    OccHandle<AIS_Circle> m_gfxAngle;
+    OccHandle<AIS_TextLabel> m_gfxAngleText;
 };
 
 // --
@@ -206,7 +207,7 @@ public:
 
 private:
     MeasureLength m_length;
-    Handle_AIS_TextLabel m_gfxLenText;
+    OccHandle<AIS_TextLabel> m_gfxLenText;
 };
 
 // --
@@ -225,7 +226,28 @@ public:
 
 private:
     MeasureArea m_area;
-    Handle_AIS_TextLabel m_gfxAreaText;
+    OccHandle<AIS_TextLabel> m_gfxAreaText;
+};
+
+// --
+// -- Bounding Box
+// --
+
+class MeasureDisplayBoundingBox : public BaseMeasureDisplay {
+public:
+    MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+    void update(const MeasureDisplayConfig& config) override;
+    int graphicsObjectsCount() const override { return 6; }
+    GraphicsObjectPtr graphicsObjectAt(int i) const override;
+
+private:
+    MeasureBoundingBox m_bnd;
+    OccHandle<AIS_Point> m_gfxMinPoint;
+    OccHandle<AIS_Point> m_gfxMaxPoint;
+    OccHandle<AIS_InteractiveObject> m_gfxBox;
+    OccHandle<AIS_TextLabel> m_gfxXLengthText;
+    OccHandle<AIS_TextLabel> m_gfxYLengthText;
+    OccHandle<AIS_TextLabel> m_gfxZLengthText;
 };
 
 } // namespace Mayo

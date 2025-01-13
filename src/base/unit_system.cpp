@@ -341,6 +341,27 @@ UnitSystem::TranslateResult UnitSystem::translateArea(QuantityArea area, AreaUni
     return {};
 }
 
+UnitSystem::TranslateResult UnitSystem::translateVolume(QuantityVolume volume, VolumeUnit unit)
+{
+    auto fnTrResult = [=](QuantityVolume qtyFactor, const char* strUnit) {
+        return Internal::translateHelper(volume, qtyFactor, strUnit);
+    };
+    switch (unit) {
+        // SI
+    case VolumeUnit::CubicMillimeter:  return fnTrResult(Quantity_CubicMillimeter, "mm³");
+    case VolumeUnit::CubicCentimeter: return fnTrResult(Quantity_CubicCentimeter, "cm³");
+    case VolumeUnit::CubicMeter: return fnTrResult(Quantity_CubicMeter, "m³");
+        // Imperial UK
+    case VolumeUnit::CubicInch: return fnTrResult(Quantity_CubicInch, "in³");
+    case VolumeUnit::CubicFoot: return fnTrResult(Quantity_CubicFoot, "ft³");
+        // Others
+    case VolumeUnit::Liter: return fnTrResult(Quantity_Liter, "L");
+    case VolumeUnit::ImperialGallon: return fnTrResult(Quantity_ImperialGallon, "GBgal");
+    case VolumeUnit::USGallon: return fnTrResult(Quantity_USGallon, "USgal");
+    }
+    return {};
+}
+
 UnitSystem::TranslateResult UnitSystem::translateAngle(QuantityAngle angle, AngleUnit unit)
 {
     switch (unit) {

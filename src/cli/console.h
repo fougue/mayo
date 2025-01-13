@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include <QtCore/QString>
-#include <string>
-#include <string_view>
 #include <utility>
 
 namespace Mayo {
@@ -35,9 +32,5 @@ int consoleWidth();
 // Sends "Enter" to the console
 //     Useful to release the command prompt on the parent console when using AttachConsole()
 void consoleSendEnterKey();
-
-// Returns 'str' converted to a "guaranteed" printable string
-std::string consoleToPrintable(const QString& str);
-std::string consoleToPrintable(std::string_view str/*utf8*/);
 
 } // namespace Mayo

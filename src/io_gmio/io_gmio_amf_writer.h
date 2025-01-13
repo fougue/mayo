@@ -112,7 +112,7 @@ private:
 
     struct Mesh {
         int id = -1;
-        Handle_Poly_Triangulation triangulation;
+        OccHandle<Poly_Triangulation> triangulation;
         TopLoc_Location location;
         int materialId = -1;
     };

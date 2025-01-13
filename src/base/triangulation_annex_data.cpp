@@ -51,19 +51,19 @@ const Standard_GUID& TriangulationAnnexData::ID() const
     return TriangulationAnnexData::GetID();
 }
 
-void TriangulationAnnexData::Restore(const Handle(TDF_Attribute)& attribute)
+void TriangulationAnnexData::Restore(const OccHandle<TDF_Attribute>& attribute)
 {
     auto data = TriangulationAnnexDataPtr::DownCast(attribute);
     if (data)
         this->copyNodeColors(data->m_vecNodeColor);
 }
 
-Handle(TDF_Attribute) TriangulationAnnexData::NewEmpty() const
+OccHandle<TDF_Attribute> TriangulationAnnexData::NewEmpty() const
 {
     return new TriangulationAnnexData;
 }
 
-void TriangulationAnnexData::Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)&) const
+void TriangulationAnnexData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const
 {
     auto data = TriangulationAnnexDataPtr::DownCast(into);
     if (data)

@@ -13,6 +13,7 @@
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
+#include "../base/occ_handle.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
@@ -22,33 +23,38 @@
 #include "aci_table.h"
 #include "dxf.h"
 
-#include <gp_Circ.hxx>
-#include <gp_Elips.hxx>
-#include <gp_Trsf.hxx>
-#include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
-#include <Graphic3d_HorizontalTextAlignment.hxx>
-#include <Graphic3d_VerticalTextAlignment.hxx>
+#include <BRep_Builder.hxx>
+#include <BSplCLib.hxx>
 #include <Font_BRepTextBuilder.hxx>
 #include <Font_FontMgr.hxx>
 #include <GeomAPI_Interpolate.hxx>
 #include <Geom_BSplineCurve.hxx>
+#include <Graphic3d_HorizontalTextAlignment.hxx>
+#include <Graphic3d_VerticalTextAlignment.hxx>
+#include <Poly_Triangulation.hxx>
 #include <Precision.hxx>
 #include <Resource_Unicode.hxx>
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <gp_Circ.hxx>
+#include <gp_Elips.hxx>
+#include <gp_Trsf.hxx>
 
 #include <fmt/format.h>
+#include <algorithm>
+#include <functional>
+#include <iostream>
 #include <optional>
 #include <sstream>
 #include <string_view>
 
-#include <iostream>
+#define MAYO_IO_DXF_DEBUG_TRACE 1
 
 namespace Mayo {
 namespace IO {
@@ -74,10 +80,10 @@ const Enumeration& systemFontNames()
     static Enumeration fontNames;
     static TColStd_SequenceOfHAsciiString seqFontName;
     if (fontNames.empty()) {
-        Handle_Font_FontMgr fontMgr = Font_FontMgr::GetInstance();
+        OccHandle<Font_FontMgr> fontMgr = Font_FontMgr::GetInstance();
         fontMgr->GetAvailableFontsNames(seqFontName);
         int i = 0;
-        for (const Handle_TCollection_HAsciiString& fontName : seqFontName)
+        for (const OccHandle<TCollection_HAsciiString>& fontName : seqFontName)
             fontNames.addItem(i++, { {}, to_stdStringView(fontName->String()) });
     }
 
@@ -122,19 +128,22 @@ public:
     void OnReadArc(const DxfCoords& s, const DxfCoords& e, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadCircle(const DxfCoords& s, const DxfCoords& c, bool dir, bool hidden) override;
     void OnReadEllipse(const DxfCoords& c, double major_radius, double minor_radius, double rotation, double start_angle, double end_angle, bool dir) override;
-    void OnReadSpline(struct SplineData& sd) override;
+    void OnReadSpline(const Dxf_SPLINE& spline) override;
     void OnReadInsert(const Dxf_INSERT& ins) override;
     void OnReadDimension(const DxfCoords& s, const DxfCoords& e, const DxfCoords& point, double rotation) override;
     void OnReadSolid(const Dxf_SOLID& solid) override;
+    void OnRead3dFace(const Dxf_3DFACE& face) override;
 
     void ReportError(const std::string& msg) override;
     void AddGraphics() const override;
 
-    static Handle_Geom_BSplineCurve createSplineFromPolesAndKnots(struct SplineData& sd);
-    static Handle_Geom_BSplineCurve createInterpolationSpline(struct SplineData& sd);
+    static OccHandle<Geom_BSplineCurve> createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
+    static OccHandle<Geom_BSplineCurve> createInterpolationSpline(const Dxf_SPLINE& spline);
 
     gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape);
+
+    TopoDS_Face makeFace(const Dxf_QuadBase& quad) const;
 };
 
 class DxfReader::Properties : public PropertyGroup {
@@ -181,9 +190,9 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     TDF_LabelSequence seqLabel;
-    Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
-    Handle_XCAFDoc_ColorTool colorTool = doc->xcaf().colorTool();
-    Handle_XCAFDoc_LayerTool layerTool = doc->xcaf().layerTool();
+    OccHandle<XCAFDoc_ShapeTool> shapeTool = doc->xcaf().shapeTool();
+    OccHandle<XCAFDoc_ColorTool> colorTool = doc->xcaf().colorTool();
+    OccHandle<XCAFDoc_LayerTool> layerTool = doc->xcaf().layerTool();
     std::unordered_map<std::string, TDF_Label> mapLayerNameLabel;
     std::unordered_map<ColorIndex_t, TDF_Label> mapAciColorLabel;
 
@@ -304,7 +313,7 @@ void DxfReader::applyProperties(const PropertyGroup* group)
         m_params.scaling = ptr->scaling;
         m_params.importAnnotations = ptr->importAnnotations;
         m_params.groupLayers = ptr->groupLayers;
-        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.name();
+        m_params.fontNameForTextObjects = ptr->fontNameForTextObjects.valueName();
     }
 }
 
@@ -415,17 +424,45 @@ void DxfReader::Internal::OnReadLine(const DxfCoords& s, const DxfCoords& e, boo
 void DxfReader::Internal::OnReadPolyline(const Dxf_POLYLINE& polyline)
 {
     const auto& vertices = polyline.vertices;
-    const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
-    const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
-    MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
-    for (unsigned i = 0; i < vertices.size(); ++i)
-        polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
+    if (polyline.flags & Dxf_POLYLINE::Flag::PolyfaceMesh) {
+        const int meshVertexCount = polyline.polygonMeshMVertexCount;
+        TColgp_Array1OfPnt nodes(1, meshVertexCount);
+        for (int i = 0; i < meshVertexCount; ++i)
+            nodes.ChangeValue(i + 1) = this->toPnt(vertices.at(i).point);
 
-    if (isPolylineClosed)
-        polygonBuilder.setNode(nodeCount, this->toPnt(vertices.at(0).point));
+        const int meshFaceCount = polyline.polygonMeshNVertexCount;
+        std::vector<Poly_Triangle> vecTriangle;
+        vecTriangle.reserve(meshFaceCount);
+        for (int i = 0; i < meshFaceCount; ++i) {
+            const Dxf_VERTEX& face = vertices.at(meshVertexCount + i);
+            const auto meshVertex1 = std::abs(face.polyfaceMeshVertex1);
+            const auto meshVertex2 = std::abs(face.polyfaceMeshVertex2);
+            const auto meshVertex3 = std::abs(face.polyfaceMeshVertex3);
+            const auto meshVertex4 = std::abs(face.polyfaceMeshVertex4);
+            vecTriangle.emplace_back(meshVertex1, meshVertex2, meshVertex3);
+            if (meshVertex4 != 0 && meshVertex3 != meshVertex4)
+                vecTriangle.emplace_back(meshVertex1, meshVertex3, meshVertex4);
+        }
 
-    polygonBuilder.finalize();
-    this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
+        Poly_Array1OfTriangle triangles(1, static_cast<int>(vecTriangle.size()));
+        for (unsigned i = 0; i < vecTriangle.size(); ++i)
+            triangles.ChangeValue(i + 1) = vecTriangle.at(i);
+
+        this->addShape(BRepUtils::makeFace(new Poly_Triangulation(nodes, triangles)));
+    }
+    else {
+        const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
+        const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
+        MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
+        for (unsigned i = 0; i < vertices.size(); ++i)
+            polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
+
+        if (isPolylineClosed)
+            polygonBuilder.setNode(nodeCount, this->toPnt(vertices.at(0).point));
+
+        polygonBuilder.finalize();
+        this->addShape(BRepUtils::makeEdge(polygonBuilder.get()));
+    }
 }
 
 void DxfReader::Internal::OnReadPoint(const DxfCoords& s)
@@ -463,29 +500,19 @@ void DxfReader::Internal::OnReadText(const Dxf_TEXT& text)
     // See doc https://ezdxf.readthedocs.io/en/stable/tutorials/text.html
     const DxfHJustification hjust = text.horizontalJustification;
     Graphic3d_HorizontalTextAlignment hAlign = Graphic3d_HTA_LEFT;
-    switch (hjust) {
-    case DxfHJustification::Center:
-    case DxfHJustification::Middle:
+    if (hjust == DxfHJustification::Center || hjust == DxfHJustification::Middle)
         hAlign = Graphic3d_HTA_CENTER;
-        break;
-    case DxfHJustification::Right:
+    else if (hjust == DxfHJustification::Right)
         hAlign = Graphic3d_HTA_RIGHT;
-        break;
-    }
 
     const DxfVJustification vjust = text.verticalJustification;
     Graphic3d_VerticalTextAlignment vAlign = Graphic3d_VTA_TOP;
-    switch (vjust) {
-    case DxfVJustification::Baseline:
+    if (vjust == DxfVJustification::Baseline)
         vAlign = Graphic3d_VTA_TOPFIRSTLINE;
-        break;
-    case DxfVJustification::Bottom:
+    else if (vjust == DxfVJustification::Bottom)
         vAlign = Graphic3d_VTA_BOTTOM;
-        break;
-    case DxfVJustification::Middle:
+    else if (vjust == DxfVJustification::Middle)
         vAlign = Graphic3d_VTA_CENTER;
-        break;
-    }
 
     // Ensure non-null extrusion direction
     gp_Vec extDir = toOccVec(text.extrusionDirection);
@@ -586,7 +613,7 @@ void DxfReader::Internal::OnReadMText(const Dxf_MTEXT& text)
     const gp_Ax3 locText(pt, extDir, xAxisDir);
     Font_BRepTextBuilder brepTextBuilder;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    OccHandle<Font_TextFormatter> textFormat = new Font_TextFormatter;
+    auto textFormat = makeOccHandle<Font_TextFormatter>();
     textFormat->SetupAlignment(hAlign, vAlign);
     textFormat->Append(occTextStr, *brepFont.FTFont());
     /* Font_TextFormatter computes weird ResultWidth() so wrapping is currently broken
@@ -663,27 +690,29 @@ void DxfReader::Internal::OnReadEllipse(
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-void DxfReader::Internal::OnReadSpline(SplineData& sd)
+void DxfReader::Internal::OnReadSpline(const Dxf_SPLINE& spline)
 {
     // https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ff18cb41610ec0a2e719-79e1.htm
-    // Flags:
-    // 1: Closed, 2: Periodic, 4: Rational, 8: Planar, 16: Linear
-
     try {
-        Handle_Geom_BSplineCurve geom;
-        if (sd.control_points > 0)
-            geom = createSplineFromPolesAndKnots(sd);
-        else if (sd.fit_points > 0)
-            geom = createInterpolationSpline(sd);
+        OccHandle<Geom_BSplineCurve> geom;
+        if (!spline.controlPoints.empty())
+            geom = createSplineFromPolesAndKnots(spline);
+        else if (!spline.fitPoints.empty())
+            geom = createInterpolationSpline(spline);
 
         if (geom.IsNull())
-            throw Standard_Failure();
+            throw Standard_Failure("Geom_BSplineCurve object is null");
 
         const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(geom);
         this->addShape(edge);
     }
-    catch (const Standard_Failure&) {
-        m_messenger->emitWarning("DxfReader - Failed to create bspline");
+    catch (const Standard_Failure& err) {
+#ifdef MAYO_IO_DXF_DEBUG_TRACE
+        std::cout << "ERROR DxfReader::OnReadSpline() -- " << err.GetMessageString() << std::endl;
+#endif
+        m_messenger->emitWarning(
+            fmt::format("DxfReader - Failed to create bspline({})", err.GetMessageString())
+        );
     }
 }
 
@@ -761,32 +790,32 @@ void DxfReader::Internal::OnReadDimension(const DxfCoords& s, const DxfCoords& e
 
 void DxfReader::Internal::OnReadSolid(const Dxf_SOLID& solid)
 {
-    const gp_Pnt p1 = this->toPnt(solid.corner1);
-    const gp_Pnt p2 = this->toPnt(solid.corner2);
-    const gp_Pnt p3 = this->toPnt(solid.corner3);
-    const gp_Pnt p4 = this->toPnt(solid.corner4);
-
-    TopoDS_Face face;
-    try {
-        BRepBuilderAPI_MakeWire makeWire;
-        makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
-        if (solid.hasCorner4 && !p3.IsEqual(p4, Precision::Confusion())) {
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p4));
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p3));
-        }
-        else {
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
-        }
-
-        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p1));
-        if (makeWire.IsDone())
-            face = BRepBuilderAPI_MakeFace(makeWire.Wire(), true/*onlyPlane*/);
-    } catch (...) {
-        m_messenger->emitError("OnReadSolid() failed");
+    Dxf_QuadBase quad = solid;
+    if (solid.hasCorner4) {
+        // See https://ezdxf.readthedocs.io/en/stable/dxfentities/solid.html
+        std::swap(quad.corner3, quad.corner4);
     }
 
-    if (!face.IsNull())
-        this->addShape(face);
+    try {
+        const TopoDS_Face face = makeFace(quad);
+        if (!face.IsNull())
+            this->addShape(face);
+    }
+    catch (...) {
+        m_messenger->emitError("OnReadSolid() failed");
+    }
+}
+
+void DxfReader::Internal::OnRead3dFace(const Dxf_3DFACE& face)
+{
+    try {
+        const TopoDS_Face brepFace = makeFace(face);
+        if (!brepFace.IsNull())
+            this->addShape(brepFace);
+    }
+    catch (...) {
+        m_messenger->emitError("OnReadFace() failed");
+    }
 }
 
 void DxfReader::Internal::ReportError(const std::string& msg)
@@ -828,87 +857,113 @@ void DxfReader::Internal::addShape(const TopoDS_Shape& shape)
     }
 }
 
-// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createSplineFromPolesAndKnots(struct SplineData& sd)
+TopoDS_Face DxfReader::Internal::makeFace(const Dxf_QuadBase& quad) const
 {
-    const size_t numPoles = sd.control_points;
-    if (sd.controlx.size() > numPoles
-            || sd.controly.size() > numPoles
-            || sd.controlz.size() > numPoles
-            || sd.weight.size() > numPoles)
-    {
+    const gp_Pnt p1 = this->toPnt(quad.corner1);
+    const gp_Pnt p2 = this->toPnt(quad.corner2);
+    const gp_Pnt p3 = this->toPnt(quad.corner3);
+    const gp_Pnt p4 = this->toPnt(quad.corner4);
+
+    const double pntTolerance = Precision::Confusion();
+    if (p1.IsEqual(p2, pntTolerance) || p1.IsEqual(p3, pntTolerance) || p2.IsEqual(p3, pntTolerance))
         return {};
-    }
 
-    // handle the poles
-    TColgp_Array1OfPnt occpoles(1, sd.control_points);
-    int index = 1;
-    for (auto x : sd.controlx)
-        occpoles(index++).SetX(x);
-
-    index = 1;
-    for (auto y : sd.controly)
-        occpoles(index++).SetY(y);
-
-    index = 1;
-    for (auto z : sd.controlz)
-        occpoles(index++).SetZ(z);
-
-    // handle knots and mults
-    std::set<double> unique;
-    unique.insert(sd.knot.begin(), sd.knot.end());
-
-    const int numKnots = int(unique.size());
-    TColStd_Array1OfInteger occmults(1, numKnots);
-    TColStd_Array1OfReal occknots(1, numKnots);
-    index = 1;
-    for (auto k : unique) {
-        const auto m = CppUtils::safeStaticCast<int>(std::count(sd.knot.begin(), sd.knot.end(), k));
-        occknots(index) = k;
-        occmults(index) = m;
-        index++;
-    }
-
-    // handle weights
-    TColStd_Array1OfReal occweights(1, sd.control_points);
-    if (sd.weight.size() == size_t(sd.control_points)) {
-        index = 1;
-        for (auto w : sd.weight)
-            occweights(index++) = w;
+    TopoDS_Face face;
+    BRepBuilderAPI_MakeWire makeWire;
+    makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
+    makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
+    if (quad.hasCorner4 && !p3.IsEqual(p4, pntTolerance) && !p1.IsEqual(p4, pntTolerance)) {
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p4));
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p1));
     }
     else {
-        // non-rational
-        for (int i = occweights.Lower(); i <= occweights.Upper(); i++)
-            occweights(i) = 1.0;
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p1));
     }
 
-    const bool periodic = sd.flag == 2;
-    return new Geom_BSplineCurve(occpoles, occweights, occknots, occmults, sd.degree, periodic);
+    if (makeWire.IsDone())
+        face = BRepBuilderAPI_MakeFace(makeWire.Wire(), true/*onlyPlane*/);
+
+    return face;
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-Handle_Geom_BSplineCurve DxfReader::Internal::createInterpolationSpline(struct SplineData& sd)
+OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
 {
-    const size_t numPoints = sd.fit_points;
-    if (sd.fitx.size() > numPoints || sd.fity.size() > numPoints || sd.fitz.size() > numPoints)
+    if (spline.weights.size() > spline.controlPoints.size())
         return {};
 
-    // handle the poles
-    Handle_TColgp_HArray1OfPnt fitpoints = new TColgp_HArray1OfPnt(1, sd.fit_points);
-    int index = 1;
-    for (auto x : sd.fitx)
-        fitpoints->ChangeValue(index++).SetX(x);
+    const bool isPeriodic = (spline.flags & Dxf_SPLINE::Periodic) != 0;
 
-    index = 1;
-    for (auto y : sd.fity)
-        fitpoints->ChangeValue(index++).SetY(y);
+    // Handle poles
+    const auto iNumPoles = CppUtils::safeStaticCast<int>(spline.controlPoints.size());
+    TColgp_Array1OfPnt occPoles(1, iNumPoles);
+    for (const DxfCoords& pnt : spline.controlPoints) {
+        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.controlPoints.front());
+        occPoles.ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
+    }
 
-    index = 1;
-    for (auto z : sd.fitz)
-        fitpoints->ChangeValue(index++).SetZ(z);
+    // Handle knots and mults
+    const auto iNumKnots = CppUtils::safeStaticCast<int>(spline.knots.size());
+    TColStd_Array1OfReal occKnots(1, iNumKnots);
+    std::copy(spline.knots.cbegin(), spline.knots.cend(), occKnots.begin());
 
-    const bool periodic = sd.flag == 2;
-    GeomAPI_Interpolate interp(fitpoints, periodic, Precision::Confusion());
+    const auto iNumUniqueKnots = BSplCLib::KnotsLength(occKnots, isPeriodic);
+    TColStd_Array1OfReal occUniqueKnots(1, iNumUniqueKnots);
+    TColStd_Array1OfInteger occMults(1, iNumUniqueKnots);
+    BSplCLib::Knots(occKnots, std::ref(occUniqueKnots), std::ref(occMults), isPeriodic);
+
+    // Handle weights
+    TColStd_Array1OfReal occWeights(1, iNumPoles);
+    if (spline.weights.size() == spline.controlPoints.size())
+        std::copy(spline.weights.cbegin(), spline.weights.cend(), occWeights.begin());
+    else
+        std::fill(occWeights.begin(), occWeights.end(), 1.); // Non-rational
+
+#ifdef MAYO_IO_DXF_DEBUG_TRACE
+    // Debug traces
+    std::cout << std::endl << "createSplineFromPolesAndKnots()";
+    std::cout << "\n    degree: " << spline.degree;
+    std::cout << "\n    flags: " << spline.flags;
+    std::cout << "\n    isPeriodic: " << isPeriodic;
+    std::cout << "\n    numPoles: " << iNumPoles;
+
+    std::cout << "\n    numKnots: " << iNumKnots;
+    std::cout << "\n    occKnots: ";
+    for (double uknot : occKnots)
+        std::cout << uknot << ", ";
+
+    std::cout << "\n    numUniqueKnots: " << iNumUniqueKnots;
+    std::cout << "\n    occUniqueKnots: ";
+    for (double uknot : occUniqueKnots)
+        std::cout << uknot << ", ";
+
+    std::cout << "\n    occMults: ";
+    for (int mult : occMults)
+        std::cout << mult << ", ";
+
+    std::cout << "\n    numStartTangents: " << spline.startTangents.size();
+    std::cout << "\n    numEndTangents: " << spline.endTangents.size();
+    std::cout << "\n    BSplCLib::NbPoles(): " << BSplCLib::NbPoles(spline.degree, isPeriodic, occMults);
+    std::cout << std::endl;
+#endif
+
+    return new Geom_BSplineCurve(occPoles, occWeights, occUniqueKnots, occMults, spline.degree, isPeriodic);
+}
+
+// Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
+OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
+{
+    const auto iNumPoints = CppUtils::safeStaticCast<int>(spline.fitPoints.size());
+
+    // Handle poles
+    auto fitpoints = makeOccHandle<TColgp_HArray1OfPnt>(1, iNumPoints);
+    for (const DxfCoords& pnt : spline.fitPoints) {
+        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.fitPoints.front());
+        fitpoints->ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
+    }
+
+    const bool isPeriodic = (spline.flags & Dxf_SPLINE::Periodic) != 0;
+    GeomAPI_Interpolate interp(fitpoints, isPeriodic, Precision::Confusion());
     interp.Perform();
     return interp.Curve();
 }

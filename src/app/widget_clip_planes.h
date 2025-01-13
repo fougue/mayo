@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include "../graphics/graphics_view_ptr.h"
 
 #include <QtWidgets/QWidget>
@@ -47,7 +48,7 @@ private:
     };
 
     struct ClipPlaneData {
-        Handle_Graphic3d_ClipPlane graphics;
+        OccHandle<Graphic3d_ClipPlane> graphics;
         UiClipPlane ui;
     };
 
@@ -55,7 +56,7 @@ private:
 
     void connectUi(ClipPlaneData* data);
 
-    void setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on);
+    void setPlaneOn(const OccHandle<Graphic3d_ClipPlane>& plane, bool on);
     void setPlaneRange(ClipPlaneData* data, const Range& range);
 
     void createPlaneCappingTexture();
@@ -64,7 +65,7 @@ private:
     GraphicsViewPtr m_view;
     std::vector<ClipPlaneData> m_vecClipPlaneData;
     Bnd_Box m_bndBox;
-    Handle_Graphic3d_TextureMap m_textureCapping;
+    OccHandle<Graphic3d_TextureMap> m_textureCapping;
 };
 
 } // namespace Mayo

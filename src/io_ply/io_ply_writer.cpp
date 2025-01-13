@@ -260,7 +260,7 @@ void PlyWriter::applyProperties(const PropertyGroup* params)
 
 void PlyWriter::addMesh(const IMeshAccess& mesh)
 {
-    const Handle(Poly_Triangulation)& triangulation = mesh.triangulation();
+    const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
     for (int i = 1; i <= triangulation->NbTriangles(); ++i) {
         const Poly_Triangle& triangle = triangulation->Triangle(i);
         const int32_t offset = CppUtils::safeStaticCast<int32_t>(m_vecNode.size());
@@ -286,7 +286,7 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
 
 void PlyWriter::addPointCloud(const PointCloudDataPtr& pntCloud)
 {
-    const Handle(Graphic3d_ArrayOfPoints)& points = pntCloud->points();
+    const OccHandle<Graphic3d_ArrayOfPoints>& points = pntCloud->points();
     const int pntCount = points->VertexNumber();
     for (int i = 1; i <= pntCount; ++i) {
         const Vertex vertex = PlyWriter::toVertex(points->Vertice(i));

@@ -22,7 +22,7 @@ namespace Mayo {
 
 bool XCaf::isNull() const
 {
-    Handle_TDocStd_Document doc = TDocStd_Document::Get(m_labelMain);
+    OccHandle<TDocStd_Document> doc = TDocStd_Document::Get(m_labelMain);
     if (!doc.IsNull()) {
         if (XCAFDoc_DocumentTool::IsXCAFDocument(doc))
             return false;
@@ -31,28 +31,28 @@ bool XCaf::isNull() const
     return true;
 }
 
-Handle_XCAFDoc_ShapeTool XCaf::shapeTool() const
+OccHandle<XCAFDoc_ShapeTool> XCaf::shapeTool() const
 {
     return XCAFDoc_DocumentTool::ShapeTool(m_labelMain);
 }
 
-Handle_XCAFDoc_LayerTool XCaf::layerTool() const
+OccHandle<XCAFDoc_LayerTool> XCaf::layerTool() const
 {
     return XCAFDoc_DocumentTool::LayerTool(m_labelMain);
 }
 
-Handle_XCAFDoc_ColorTool XCaf::colorTool() const
+OccHandle<XCAFDoc_ColorTool> XCaf::colorTool() const
 {
     return XCAFDoc_DocumentTool::ColorTool(m_labelMain);
 }
 
-Handle_XCAFDoc_MaterialTool XCaf::materialTool() const
+OccHandle<XCAFDoc_MaterialTool> XCaf::materialTool() const
 {
     return XCAFDoc_DocumentTool::MaterialTool(m_labelMain);
 }
 
 #if OCC_VERSION_HEX >= 0x070500
-Handle_XCAFDoc_VisMaterialTool XCaf::visMaterialTool() const
+OccHandle<XCAFDoc_VisMaterialTool> XCaf::visMaterialTool() const
 {
     return XCAFDoc_DocumentTool::VisMaterialTool(m_labelMain);
 }
@@ -61,7 +61,7 @@ Handle_XCAFDoc_VisMaterialTool XCaf::visMaterialTool() const
 TDF_LabelSequence XCaf::topLevelFreeShapes() const
 {
     TDF_LabelSequence seq;
-    Handle_XCAFDoc_ShapeTool tool = this->shapeTool();
+    OccHandle<XCAFDoc_ShapeTool> tool = this->shapeTool();
     if (tool)
         tool->GetFreeShapes(seq);
 
@@ -176,7 +176,7 @@ bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
 
 bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 {
-    Handle_XCAFDoc_ColorTool tool = this->colorTool();
+    OccHandle<XCAFDoc_ColorTool> tool = this->colorTool();
     if (!tool)
         return false;
 
@@ -187,7 +187,7 @@ bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 
 Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
 {
-    Handle_XCAFDoc_ColorTool tool = this->colorTool();
+    OccHandle<XCAFDoc_ColorTool> tool = this->colorTool();
     Quantity_Color color = {};
     if (!tool)
         return color;
@@ -271,15 +271,15 @@ QuantityDensity XCaf::shapeMaterialDensity(const TDF_Label& lbl)
     return XCaf::shapeMaterialDensity(XCaf::shapeMaterial(lbl));
 }
 
-QuantityDensity XCaf::shapeMaterialDensity(const Handle_XCAFDoc_Material& material)
+QuantityDensity XCaf::shapeMaterialDensity(const OccHandle<XCAFDoc_Material>& material)
 {
     const double density = material ? material->GetDensity() : 0.;
     return density * Quantity_GramPerCubicCentimeter;
 }
 
-Handle_XCAFDoc_Material XCaf::shapeMaterial(const TDF_Label& lbl)
+OccHandle<XCAFDoc_Material> XCaf::shapeMaterial(const TDF_Label& lbl)
 {
-    Handle_TDataStd_TreeNode node;
+    OccHandle<TDataStd_TreeNode> node;
     if (!lbl.FindAttribute(XCAFDoc::MaterialRefGUID(), node) || !node->HasFather())
         return {};
 
@@ -291,7 +291,7 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
 {
     ValidationProperties props = {};
     for (TDF_AttributeIterator it(lbl); it.More(); it.Next()) {
-        const Handle_TDF_Attribute ptrAttr = it.Value();
+        const OccHandle<TDF_Attribute> ptrAttr = it.Value();
         const Standard_GUID& attrId = ptrAttr->ID();
         if (&attrId == &XCAFDoc_Centroid::GetID()) {
             const auto& centroid = static_cast<const XCAFDoc_Centroid&>(*ptrAttr);

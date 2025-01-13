@@ -28,12 +28,13 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_shape.Nullify();
     m_baseFilename = filepath.stem();
     BRep_Builder brepBuilder;
-    Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     return BRepTools::Read(
-                m_shape,
-                filepath.u8string().c_str(),
-                brepBuilder,
-                TKernelUtils::start(indicator));
+        m_shape,
+        filepath.u8string().c_str(),
+        brepBuilder,
+        TKernelUtils::start(indicator)
+    );
 }
 
 TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
@@ -41,7 +42,7 @@ TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progr
     if (m_shape.IsNull())
         return {};
 
-    const Handle_XCAFDoc_ShapeTool shapeTool = doc->xcaf().shapeTool();
+    const OccHandle<XCAFDoc_ShapeTool> shapeTool = doc->xcaf().shapeTool();
     const TDF_Label labelShape = shapeTool->NewShape();
     shapeTool->SetShape(labelShape, m_shape);
     TDataStd_Name::Set(labelShape, filepathTo<TCollection_ExtendedString>(m_baseFilename));
@@ -79,7 +80,7 @@ bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress*
 
 bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
-    Handle_Message_ProgressIndicator indicator = new OccProgressIndicator(progress);
+    auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
 }
 

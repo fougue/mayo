@@ -10,10 +10,10 @@
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/unit_system.h"
+#include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
-#include "qstring_conv.h"
 #include "qstring_utils.h"
-#include "qtcore_utils.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 
@@ -405,7 +405,8 @@ UnitSystem::TranslateResult IPropertyEditorFactory::unitTranslate(const BaseProp
     return UnitSystem::translate(
                 AppModule::get()->properties()->unitSystemSchema,
                 property->quantityValue(),
-                property->quantityUnit());
+                property->quantityUnit()
+    );
 }
 
 QPixmap IPropertyEditorFactory::colorSquarePixmap(const QColor& c, int sideLen)

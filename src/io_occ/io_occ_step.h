@@ -71,14 +71,14 @@ public:
         CP_1257, // Baltic
         CP_1258, // Vietnamese
         // ISO8859 8-bit code pages
-        ISO_8859_1, //Western European
-        ISO_8859_2, //Central European
-        ISO_8859_3, //Turkish
-        ISO_8859_4, //Northern European
-        ISO_8859_5, //Cyrillic
-        ISO_8859_6, //Arabic
-        ISO_8859_7, //Greek
-        ISO_8859_8, //Hebrew
+        ISO_8859_1, // Western European
+        ISO_8859_2, // Central European
+        ISO_8859_3, // Turkish
+        ISO_8859_4, // Northern European
+        ISO_8859_5, // Cyrillic
+        ISO_8859_6, // Arabic
+        ISO_8859_7, // Greek
+        ISO_8859_8, // Hebrew
         ISO_8859_9, // Turkish
 #endif
     };

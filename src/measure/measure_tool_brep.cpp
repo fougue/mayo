@@ -10,14 +10,17 @@
 #include "../base/geom_utils.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
+#include "../base/occ_handle.h"
 #include "../base/text_id.h"
 #include "../graphics/graphics_shape_object_driver.h"
 
 #include <gp_Elips.hxx>
 #include <AIS_Shape.hxx>
+#include <Bnd_OBB.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
@@ -57,7 +60,8 @@ enum class ErrorCode {
     NotAllEdges,
     NotLinearEdge,
     NotAllFaces,
-    ParallelEdges
+    ParallelEdges,
+    BoundingBoxIsVoid
 };
 
 template<ErrorCode Err>
@@ -89,6 +93,8 @@ public:
             return textIdTr("All entities must be faces");
         case ErrorCode::ParallelEdges:
             return textIdTr("Entities must not be parallel");
+        case ErrorCode::BoundingBoxIsVoid:
+            return textIdTr("Bounding box computed is void");
         default:
             return textIdTr("Unknown error");
         }
@@ -104,7 +110,7 @@ template<ErrorCode Err> void throwErrorIf(bool cond)
 const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
 {
     static const TopoDS_Shape nullShape;
-    auto brepOwner = Handle_StdSelect_BRepOwner::DownCast(owner);
+    auto brepOwner = OccHandle<StdSelect_BRepOwner>::DownCast(owner);
     TopLoc_Location ownerLoc = owner->Location();
 #if OCC_VERSION_HEX >= 0x070600
     // Force scale factor to 1
@@ -141,7 +147,7 @@ gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
             const MeasureCircle circle = MeasureToolBRep::brepCircle(shape);
             return circle.value.Location();
         }
-        catch (const BRepMeasureError<ErrorCode::NotCircularEdge>&) {
+        catch (const IMeasureError&) {
             BRepGProp::LinearProperties(shape, shapeProps);
         }
     }
@@ -179,6 +185,14 @@ Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureT
     }
     case MeasureType::Area: {
         static const GraphicsObjectSelectionMode modes[] = { AIS_Shape::SelectionMode(TopAbs_FACE) };
+        return modes;
+    }
+    case MeasureType::BoundingBox: {
+        static const GraphicsObjectSelectionMode modes[] = {
+            //AIS_Shape::SelectionMode(TopAbs_FACE),
+            //AIS_Shape::SelectionMode(TopAbs_SOLID)
+            AIS_Shape::SelectionMode(TopAbs_COMPOUND)
+        };
         return modes;
     }
     default: {
@@ -233,6 +247,11 @@ MeasureArea MeasureToolBRep::area(const GraphicsOwnerPtr& owner) const
     return brepArea(getShape(owner));
 }
 
+MeasureBoundingBox MeasureToolBRep::boundingBox(const GraphicsOwnerPtr& owner) const
+{
+    return brepBoundingBox(getShape(owner));
+}
+
 gp_Pnt MeasureToolBRep::brepVertexPosition(const TopoDS_Shape& shape)
 {
     throwErrorIf<ErrorCode::NotVertex>(shape.IsNull() || shape.ShapeType() != TopAbs_VERTEX);
@@ -257,10 +276,10 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
             const GCPnts_QuasiUniformAbscissa pnts(curve, 4); // More points to avoid confusion
             throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone() || pnts.NbPoints() < 3);
             const GC_MakeCircle makeCirc(
-                        GeomUtils::d0(curve, pnts.Parameter(1)),
-                        GeomUtils::d0(curve, pnts.Parameter(2)),
-                        GeomUtils::d0(curve, pnts.Parameter(3))
-                        );
+                GeomUtils::d0(curve, pnts.Parameter(1)),
+                GeomUtils::d0(curve, pnts.Parameter(2)),
+                GeomUtils::d0(curve, pnts.Parameter(3))
+            );
             throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
             circle = makeCirc.Value()->Circ();
         }
@@ -289,14 +308,14 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
 MeasureCircle MeasureToolBRep::brepCircleFromPolygonEdge(const TopoDS_Edge& edge)
 {
     TopLoc_Location loc;
-    const Handle(Poly_Polygon3D)& polyline = BRep_Tool::Polygon3D(edge, loc);
+    const OccHandle<Poly_Polygon3D>& polyline = BRep_Tool::Polygon3D(edge, loc);
     throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull() || polyline->NbNodes() < 7);
     // Try to create a circle from 3 sample points
     const GC_MakeCircle makeCirc(
-                polyline->Nodes().First(),
-                polyline->Nodes().Value(1 + polyline->NbNodes() / 3),
-                polyline->Nodes().Value(1 + 2 * polyline->NbNodes() / 3)
-                );
+        polyline->Nodes().First(),
+        polyline->Nodes().Value(1 + polyline->NbNodes() / 3),
+        polyline->Nodes().Value(1 + 2 * polyline->NbNodes() / 3)
+    );
     throwErrorIf<ErrorCode::NotCircularEdge>(!makeCirc.IsDone());
     const gp_Circ circle = makeCirc.Value()->Circ();
 
@@ -326,12 +345,21 @@ MeasureCircle MeasureToolBRep::brepCircle(const TopoDS_Shape& shape)
 }
 
 MeasureDistance MeasureToolBRep::brepMinDistance(
-        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2
+    )
 {
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
-    const BRepExtrema_DistShapeShape dist(shape1, shape2);
+    BRepExtrema_DistShapeShape dist;
+    try {
+        dist.LoadS1(shape1);
+        dist.LoadS2(shape2);
+        dist.Perform();
+    } catch (...) {
+        throw BRepMeasureError<ErrorCode::MinDistanceFailure>();
+    }
+
     throwErrorIf<ErrorCode::MinDistanceFailure>(!dist.IsDone());
 
     MeasureDistance distResult;
@@ -343,7 +371,8 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
 }
 
 MeasureDistance MeasureToolBRep::brepCenterDistance(
-        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+        const TopoDS_Shape& shape1, const TopoDS_Shape& shape2
+    )
 {
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
@@ -445,7 +474,7 @@ MeasureLength MeasureToolBRep::brepLength(const TopoDS_Shape& shape)
     }
     else {
         TopLoc_Location loc;
-        const Handle(Poly_Polygon3D)& polyline = BRep_Tool::Polygon3D(edge, loc);
+        const OccHandle<Poly_Polygon3D>& polyline = BRep_Tool::Polygon3D(edge, loc);
         throwErrorIf<ErrorCode::NotGeometricOrPolygonEdge>(polyline.IsNull());
         double len = 0.;
         // Compute length of the polygon
@@ -488,13 +517,13 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
 
         const BRepAdaptor_Surface surface(face);
         areaResult.middlePnt = surface.Value(
-                    (surface.FirstUParameter() + surface.LastUParameter()) / 2.,
-                    (surface.FirstVParameter() + surface.LastVParameter()) / 2.
+            (surface.FirstUParameter() + surface.LastUParameter()) / 2.,
+            (surface.FirstVParameter() + surface.LastVParameter()) / 2.
         );
     }
     else {
         TopLoc_Location loc;
-        const Handle_Poly_Triangulation& triangulation = BRep_Tool::Triangulation(face, loc);
+        const OccHandle<Poly_Triangulation>& triangulation = BRep_Tool::Triangulation(face, loc);
         throwErrorIf<ErrorCode::NotGeometricOrTriangulationFace>(triangulation.IsNull());
         areaResult.value = MeshUtils::triangulationArea(triangulation) * Quantity_SquareMillimeter;
 
@@ -507,6 +536,33 @@ MeasureArea MeasureToolBRep::brepArea(const TopoDS_Shape& shape)
     }
 
     return areaResult;
+}
+
+MeasureBoundingBox MeasureToolBRep::brepBoundingBox(const TopoDS_Shape& shape)
+{
+    MeasureBoundingBox measure;
+#if 0
+    Bnd_OBB bnd;
+    BRepBndLib::AddOBB(shape, bnd);
+    //BRepBndLib::AddOBB(shape, bnd, false/*!useTriangulation*/, true/*optimal*/, false/*!useShapeTolerance*/);
+
+    gp_Pnt points[8] = {};
+    bnd.GetVertex(points);
+    measure.cornerMin = points[0];
+    measure.cornerMax = points[7];
+    //measure.isAxisAligned = bnd.IsAABox();
+#else
+    Bnd_Box bnd;
+    BRepBndLib::AddOptimal(shape, bnd);
+    throwErrorIf<ErrorCode::BoundingBoxIsVoid>(bnd.IsVoid());
+    measure.cornerMin = bnd.CornerMin();
+    measure.cornerMax = bnd.CornerMax();
+    measure.xLength = std::abs(measure.cornerMax.X() - measure.cornerMin.X()) * Quantity_Millimeter;
+    measure.yLength = std::abs(measure.cornerMax.Y() - measure.cornerMin.Y()) * Quantity_Millimeter;
+    measure.zLength = std::abs(measure.cornerMax.Z() - measure.cornerMin.Z()) * Quantity_Millimeter;
+    measure.volume = measure.xLength * measure.yLength * measure.zLength;
+#endif
+    return measure;
 }
 
 } // namespace Mayo

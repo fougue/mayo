@@ -66,7 +66,7 @@ public:
         return m_location;
     }
 
-    const Handle(Poly_Triangulation)& triangulation() const override {
+    const OccHandle<Poly_Triangulation>& triangulation() const override {
         return m_triangulation;
     }
 
@@ -77,8 +77,8 @@ private:
             return doc->xcaf().shapeColor(labelShape);
 
 #if OCC_VERSION_HEX >= 0x070500
-        Handle_XCAFDoc_VisMaterialTool visMaterialTool = doc->xcaf().visMaterialTool();
-        Handle_XCAFDoc_VisMaterial visMaterial = visMaterialTool->GetShapeMaterial(labelShape);
+        OccHandle<XCAFDoc_VisMaterialTool> visMaterialTool = doc->xcaf().visMaterialTool();
+        OccHandle<XCAFDoc_VisMaterial> visMaterial = visMaterialTool->GetShapeMaterial(labelShape);
         if (visMaterial)
             return visMaterial->BaseColor().GetRGB();
 #endif
@@ -89,7 +89,7 @@ private:
     std::optional<Quantity_Color> m_faceColor;
     Span<const Quantity_Color> m_nodeColors;
     TopLoc_Location m_location;
-    Handle(Poly_Triangulation) m_triangulation;
+    OccHandle<Poly_Triangulation> m_triangulation;
 };
 
 void IMeshAccess_visitMeshes(

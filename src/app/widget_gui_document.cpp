@@ -11,6 +11,7 @@
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_camera_animation.h"
+#include "../qtbackend/qt_animation_backend.h"
 #include "button_flat.h"
 #include "theme.h"
 #include "widget_clip_planes.h"
@@ -22,8 +23,6 @@
 #include "qtwidgets_utils.h"
 
 #include <QtCore/QtDebug>
-#include <QtCore/QAbstractAnimation>
-#include <QtCore/QEasingCurve>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -35,58 +34,6 @@
 namespace Mayo {
 
 namespace {
-
-// Provides implementation of IAnimationBackend based on QAbstractAnimation
-class QtAnimationBackend : public IAnimationBackend {
-public:
-    QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear)
-        : m_easingCurve(easingType)
-    {
-    }
-
-    void setDuration(QuantityTime t) override {
-        m_impl.m_duration_ms = UnitSystem::milliseconds(t);
-    }
-
-    bool isRunning() const override {
-        return m_impl.state() == QAbstractAnimation::Running;
-    }
-
-    void start() override {
-        m_impl.start(QAbstractAnimation::KeepWhenStopped);
-    }
-
-    void stop() override {
-        m_impl.stop();
-    }
-
-    double valueForProgress(double p) const override {
-        return m_easingCurve.valueForProgress(p);
-    }
-
-    void setTimerCallback(std::function<void(QuantityTime)> fn) override {
-        m_impl.m_callback = std::move(fn);
-    }
-
-private:
-    class AnimationImpl : public QAbstractAnimation {
-    public:
-        double m_duration_ms = 1000.;
-        std::function<void(QuantityTime)> m_callback;
-
-        int duration() const override {
-            return static_cast<int>(m_duration_ms);
-        }
-
-    protected:
-        void updateCurrentTime(int currentTime) override {
-            m_callback(currentTime * Quantity_Millisecond);
-        }
-    };
-
-    AnimationImpl m_impl;
-    QEasingCurve m_easingCurve;
-};
 
 // Provides an overlay widget to be used within 3D view
 class PanelView3d : public QWidget {
@@ -170,29 +117,20 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_widgetBtns = this->createWidgetPanelContainer(widgetBtnsContents);
 
     auto gfxScene = m_guiDoc->graphicsScene();
-    gfxScene->signalRedrawRequested.connectSlot([=](const Handle_V3d_View& view) {
+    gfxScene->signalRedrawRequested.connectSlot([=](const OccHandle<V3d_View>& view) {
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
     QObject::connect(m_btnFitAll, &ButtonFlat::clicked, this, [=]{
-        m_guiDoc->runViewCameraAnimation(&GraphicsUtils::V3dView_fitAll);
+        m_guiDoc->runViewCameraAnimation([=](OccHandle<V3d_View> view) {
+            auto bndBoxFlags = GuiDocument::OnlySelectedGraphics | GuiDocument::OnlyVisibleGraphics;
+            GraphicsUtils::V3dView_fitAll(view, this->guiDocument()->graphicsBoundingBox(bndBoxFlags));
+        });
     });
-    QObject::connect(
-                m_btnGrid, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetGrid
-    );
-    QObject::connect(
-                m_btnEditClipping, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetClipPlanes
-    );
-    QObject::connect(
-                m_btnExplode, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetExplode
-    );
-    QObject::connect(
-                m_btnMeasure, &ButtonFlat::checked,
-                this, &WidgetGuiDocument::toggleWidgetMeasure
-    );
+    QObject::connect(m_btnGrid, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetGrid);
+    QObject::connect(m_btnEditClipping, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetClipPlanes);
+    QObject::connect(m_btnExplode, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetExplode);
+    QObject::connect(m_btnMeasure, &ButtonFlat::checked, this, &WidgetGuiDocument::toggleWidgetMeasure);
     m_controller->signalDynamicActionStarted.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
     m_controller->signalViewScaled.connectSlot([=]{ m_guiDoc->stopViewCameraAnimation(); });
     m_controller->signalMouseButtonClicked.connectSlot([=](Aspect_VKeyMouse btn) {
@@ -207,7 +145,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     });
 
     m_guiDoc->viewCameraAnimation()->setBackend(std::make_unique<QtAnimationBackend>(QEasingCurve::OutExpo));
-    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const Handle_V3d_View& view){
+    m_guiDoc->viewCameraAnimation()->setRenderFunction([=](const OccHandle<V3d_View>& view){
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
@@ -268,9 +206,9 @@ void WidgetGuiDocument::toggleWidgetGrid(bool on)
         m_widgetGrid = new WidgetGrid(m_guiDoc->graphicsView());
         auto container = this->createWidgetPanelContainer(m_widgetGrid);
         QObject::connect(
-                    m_widgetGrid, &WidgetGrid::sizeAdjustmentRequested,
-                    container, [=]{ adjustWidgetSize(m_widgetGrid); },
-                    Qt::QueuedConnection
+            m_widgetGrid, &WidgetGrid::sizeAdjustmentRequested,
+            container, [=]{ adjustWidgetSize(m_widgetGrid); },
+            Qt::QueuedConnection
         );
     }
 
@@ -279,10 +217,7 @@ void WidgetGuiDocument::toggleWidgetGrid(bool on)
 
 void WidgetGuiDocument::toggleWidgetClipPlanes(bool on)
 {
-    if (m_widgetClipPlanes) {
-        m_widgetClipPlanes->setClippingOn(on);
-    }
-    else if (on) {
+    if (!m_widgetClipPlanes && on) {
         m_widgetClipPlanes = new WidgetClipPlanes(m_guiDoc->graphicsView());
         this->createWidgetPanelContainer(m_widgetClipPlanes);
         m_guiDoc->signalGraphicsBoundingBoxChanged.connectSlot(&WidgetClipPlanes::setRanges, m_widgetClipPlanes);
@@ -308,9 +243,9 @@ void WidgetGuiDocument::toggleWidgetMeasure(bool on)
         m_widgetMeasure = new WidgetMeasure(m_guiDoc);
         auto container = this->createWidgetPanelContainer(m_widgetMeasure);
         QObject::connect(
-                    m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
-                    container, [=]{ adjustWidgetSize(m_widgetMeasure); },
-                    Qt::QueuedConnection
+            m_widgetMeasure, &WidgetMeasure::sizeAdjustmentRequested,
+            container, [=]{ adjustWidgetSize(m_widgetMeasure); },
+            Qt::QueuedConnection
         );
     }
 
@@ -363,9 +298,10 @@ void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const
 {
     const QColor bkgndColor =
-            m_qtOccView->supportsWidgetOpacity() ?
-                Qt::transparent :
-                mayoTheme()->color(Theme::Color::ButtonView3d_Background);
+        m_qtOccView->supportsWidgetOpacity() ?
+            Qt::transparent :
+            mayoTheme()->color(Theme::Color::ButtonView3d_Background)
+    ;
 
     auto btn = new ButtonFlat(parent);
     btn->setBackgroundBrush(bkgndColor);
@@ -476,8 +412,10 @@ void WidgetGuiDocument::layoutViewControls()
             case Aspect_TOTP_LEFT_LOWER:
                 return { ctrlXOffset, this->height() - viewCubeBndSize - margin - ctrlHeight };
             case Aspect_TOTP_RIGHT_LOWER:
-                return { this->width() - viewCubeBndSize + ctrlXOffset,
-                         this->height() - viewCubeBndSize - margin - ctrlHeight };
+                return {
+                         this->width() - viewCubeBndSize + ctrlXOffset,
+                         this->height() - viewCubeBndSize - margin - ctrlHeight
+                       };
             default:
                 return { margin, margin };
             } // endswitch

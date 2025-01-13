@@ -65,6 +65,7 @@ public:
     TDF_Label newEntityShapeLabel();
 
     void addEntityTreeNode(const TDF_Label& label);
+    void addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
     // Signals
@@ -89,6 +90,8 @@ private:
 
     void initXCaf();
     void setIdentifier(Identifier ident) { m_identifier = ident; }
+    TreeNodeId findEntity(const TDF_Label& label) const;
+    bool containsLabel(const TDF_Label& label) const;
 
     ApplicationPtr m_app;
     Identifier m_identifier = -1;

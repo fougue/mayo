@@ -31,8 +31,8 @@ public:
     AIS_Text() = default;
     AIS_Text(const TCollection_ExtendedString& text, const gp_Pnt& pos);
 
-    Handle_Prs3d_TextAspect presentationTextAspect(unsigned i = 0) const;
-    Handle_Graphic3d_AspectText3d graphicTextAspect(unsigned i = 0) const;
+    OccHandle<Prs3d_TextAspect> presentationTextAspect(unsigned i = 0) const;
+    OccHandle<Graphic3d_AspectText3d> graphicTextAspect(unsigned i = 0) const;
 
     void setDefaultColor(const Quantity_Color& c);
     void setDefaultFont(const char* fontName);
@@ -54,16 +54,16 @@ public:
     unsigned textCount() const;
     void addText(const TCollection_ExtendedString& text, const gp_Pnt& pos);
 
-    void ComputeSelection(const Handle(SelectMgr_Selection)& sel, const int mode) override;
+    void ComputeSelection(const OccHandle<SelectMgr_Selection>& sel, const int mode) override;
 
 protected:
     void Compute(
-            const Handle(PrsMgr_PresentationManager)& pm,
-            const Handle(Prs3d_Presentation)& pres,
+            const OccHandle<PrsMgr_PresentationManager>& pm,
+            const OccHandle<Prs3d_Presentation>& pres,
             const int mode) override;
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
-    void Compute(const Handle(Prs3d_Projector)&, const Handle(Prs3d_Presentation)&) override {}
+    void Compute(const OccHandle<Prs3d_Projector>&, const OccHandle<Prs3d_Presentation>&) override {}
 #endif
 
 private:
@@ -73,7 +73,7 @@ private:
         const char* m_font = nullptr;
         gp_Pnt m_position;
         TCollection_ExtendedString m_text;
-        Handle_Prs3d_TextAspect m_aspect;
+        OccHandle<Prs3d_TextAspect> m_aspect;
     };
 
     const char* m_defaultFont = "Courrier";

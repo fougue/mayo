@@ -7,6 +7,8 @@
 #include "property.h"
 
 #include "property_enumeration.h"
+
+#include <algorithm>
 #include <cassert>
 
 namespace Mayo {

@@ -64,13 +64,13 @@ gmio_task_iface gmio_createTask(TaskProgress* progress)
     return task;
 }
 
-//#ifdef HAVE_GMIO
+//#ifdef MAYO_HAVE_GMIO
 #if 0
 Format System::probeFormat(const QString& filepath) const
 {
     QFile file(filepath);
     if (file.open(QIODevice::ReadOnly)) {
-//#ifdef HAVE_GMIO
+//#ifdef MAYO_HAVE_GMIO
         gmio_stream qtstream = gmio_stream_qiodevice(&file);
        const gmio_stl_format stlFormat = gmio_stl_format_probe(&qtstream);
         if (stlFormat != GMIO_STL_FORMAT_UNKNOWN)
@@ -119,7 +119,7 @@ IO::Result IO::exportStl_gmio(ExportData data)
 
     return Result::error(file.errorString());
 }
-#endif // HAVE_GMIO
+#endif // MAYO_HAVE_GMIO
 
 } // namespace
 
@@ -319,7 +319,7 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
     // Object meshes
     const int meshCount = int(m_vecMesh.size());
 
-    auto fnAddMesh = [&](const Handle_Poly_Triangulation& polyTri, const TopLoc_Location& loc) {
+    auto fnAddMesh = [&](const OccHandle<Poly_Triangulation>& polyTri, const TopLoc_Location& loc) {
         if (!polyTri.IsNull()) {
             Mesh mesh;
             mesh.id = int(m_vecMesh.size());

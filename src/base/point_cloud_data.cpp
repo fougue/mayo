@@ -28,7 +28,7 @@ PointCloudDataPtr PointCloudData::Set(const TDF_Label& label)
     return data;
 }
 
-PointCloudDataPtr PointCloudData::Set(const TDF_Label& label, const Handle(Graphic3d_ArrayOfPoints)& points)
+PointCloudDataPtr PointCloudData::Set(const TDF_Label& label, const OccHandle<Graphic3d_ArrayOfPoints>& points)
 {
     PointCloudDataPtr data = PointCloudData::Set(label);
     data->m_points = points;
@@ -40,19 +40,19 @@ const Standard_GUID& PointCloudData::ID() const
     return PointCloudData::GetID();
 }
 
-void PointCloudData::Restore(const Handle(TDF_Attribute)& attribute)
+void PointCloudData::Restore(const OccHandle<TDF_Attribute>& attribute)
 {
     auto data = PointCloudDataPtr::DownCast(attribute);
     if (data)
         m_points = data->m_points;
 }
 
-Handle(TDF_Attribute) PointCloudData::NewEmpty() const
+OccHandle<TDF_Attribute> PointCloudData::NewEmpty() const
 {
     return new PointCloudData;
 }
 
-void PointCloudData::Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)&) const
+void PointCloudData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const
 {
     auto data = PointCloudDataPtr::DownCast(into);
     if (data)

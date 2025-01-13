@@ -7,10 +7,10 @@
 #include "document_property_group.h"
 
 #include "app_module.h"
-#include "filepath_conv.h"
-#include "qstring_conv.h"
 #include "qstring_utils.h"
 #include "../base/application.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QFileInfo>

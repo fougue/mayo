@@ -27,6 +27,7 @@ public:
     MeasureAngle angle(const GraphicsOwnerPtr& owner1, const GraphicsOwnerPtr& owner2) const override;
     MeasureLength length(const GraphicsOwnerPtr& owner) const override;
     MeasureArea area(const GraphicsOwnerPtr& owner) const override;
+    MeasureBoundingBox boundingBox(const GraphicsOwnerPtr& owner) const override;
 
     static gp_Pnt brepVertexPosition(const TopoDS_Shape& shape);
     static MeasureCircle brepCircle(const TopoDS_Shape& shape);
@@ -35,6 +36,7 @@ public:
     static MeasureAngle brepAngle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
     static MeasureLength brepLength(const TopoDS_Shape& shape);
     static MeasureArea brepArea(const TopoDS_Shape& shape);
+    static MeasureBoundingBox brepBoundingBox(const TopoDS_Shape& shape);
 
 private:
     static MeasureCircle brepCircleFromGeometricEdge(const TopoDS_Edge& edge);

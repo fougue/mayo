@@ -73,7 +73,7 @@ bool OffWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     for (const DocumentTreeNode& treeNode : m_vecTreeNode) {
         IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& mesh) {
             const gp_Trsf& meshTrsf = mesh.location().Transformation();
-            const Handle(Poly_Triangulation)& triangulation = mesh.triangulation();
+            const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
             for (int i = 1; i <= triangulation->NbNodes(); ++i) {
                 const gp_Pnt pnt = triangulation->Node(i).Transformed(meshTrsf);
                 const std::optional<Quantity_Color> color = mesh.nodeColor(i - 1);
@@ -96,7 +96,7 @@ bool OffWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     int ifacet = 0;
     for (const DocumentTreeNode& treeNode : m_vecTreeNode) {
         IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& mesh) {
-            const Handle(Poly_Triangulation)& triangulation = mesh.triangulation();
+            const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
             for (int i = 1; i <= triangulation->NbTriangles(); ++i) {
                 const Poly_Triangle& tri = triangulation->Triangle(i);
                 fstr << "3 "

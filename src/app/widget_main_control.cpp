@@ -10,16 +10,18 @@
 #include "../base/application.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include "app_module.h"
 #include "commands_api.h"
 #include "commands_file.h"
 #include "commands_window.h"
+#include "document_files_watcher.h"
 #include "document_property_group.h"
-#include "filepath_conv.h"
 #include "gui_document_list_model.h"
 #include "item_view_buttons.h"
-#include "qstring_conv.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 #include "widget_file_system.h"
 #include "widget_gui_document.h"
@@ -27,8 +29,12 @@
 #include "widget_occ_view.h"
 #include "widget_properties_editor.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
+
+#include <algorithm>
 #include <cassert>
 
 namespace Mayo {
@@ -36,7 +42,8 @@ namespace Mayo {
 WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     : IWidgetMainPage(parent),
       m_ui(new Ui_WidgetMainControl),
-      m_guiApp(guiApp)
+      m_guiApp(guiApp),
+      m_docFilesWatcher(new DocumentFilesWatcher(guiApp->application(), this))
 {
     assert(m_guiApp != nullptr);
 
@@ -45,8 +52,6 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     m_ui->widget_ModelTree->registerGuiApplication(guiApp);
 
     m_ui->splitter_Main->setChildrenCollapsible(false);
-    m_ui->splitter_Main->setStretchFactor(0, 1);
-    m_ui->splitter_Main->setStretchFactor(1, 3);
 
     m_ui->splitter_ModelTree->setStretchFactor(0, 1);
     m_ui->splitter_ModelTree->setStretchFactor(1, 2);
@@ -61,21 +66,25 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
 
     // "Window" actions and navigation in documents
     QObject::connect(
-                m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMainControl::onCurrentDocumentIndexChanged
+        m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMainControl::onCurrentDocumentIndexChanged
     );
     QObject::connect(
-                m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
-                this, &WidgetMainControl::onWidgetFileSystemLocationActivated
+        m_ui->widget_FileSystem, &WidgetFileSystem::locationActivated,
+        this, &WidgetMainControl::onWidgetFileSystemLocationActivated
     );
     // ...
     QObject::connect(
-                m_ui->combo_LeftContents, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMainControl::onLeftContentsPageChanged
+        m_ui->combo_LeftContents, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMainControl::onLeftContentsPageChanged
     );
     QObject::connect(
-                m_ui->listView_OpenedDocuments, &QListView::clicked,
-                this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
+        m_ui->listView_OpenedDocuments, &QListView::clicked,
+        this, [=](const QModelIndex& index) { this->setCurrentDocumentIndex(index.row()); }
+    );
+    QObject::connect(
+        m_ui->splitter_Main, &QSplitter::splitterMoved,
+        this, &WidgetMainControl::onSplitterMainMoved
     );
 
     guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {
@@ -84,6 +93,18 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     });
     guiApp->selectionModel()->signalChanged.connectSlot(&WidgetMainControl::onApplicationItemSelectionChanged, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&WidgetMainControl::onGuiDocumentAdded, this);
+
+    // Document files monitoring
+    auto appModule = AppModule::get();
+    const auto& propActionOnDocumentFileChange = appModule->properties()->actionOnDocumentFileChange;
+    m_docFilesWatcher->enable(propActionOnDocumentFileChange != ActionOnDocumentFileChange::None);
+    appModule->settings()->signalChanged.connectSlot([&](const Property* property) {
+        if (property == &propActionOnDocumentFileChange) {
+            m_docFilesWatcher->enable(propActionOnDocumentFileChange != ActionOnDocumentFileChange::None);
+            m_pendingDocsToReload.clear();
+        }
+    });
+    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(&WidgetMainControl::onDocumentFileChanged, this);
 
     // Creation of annex objects
     m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
@@ -101,6 +122,7 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     m_ui->stack_GuiDocuments->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     m_ui->widget_MouseCoords->hide();
+    this->setWidgetLeftSideBarWidthFactor(0.25);
 
     this->onCurrentDocumentIndexChanged(-1);
 }
@@ -138,8 +160,8 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
         if (btnId == 1) {
             assert(this->widgetGuiDocument(index.row()) != nullptr);
             FileCommandTools::closeDocument(
-                        cmdContainer->appContext(),
-                        this->widgetGuiDocument(index.row())->documentIdentifier()
+                cmdContainer->appContext(),
+                this->widgetGuiDocument(index.row())->documentIdentifier()
             );
         }
     });
@@ -155,6 +177,19 @@ void WidgetMainControl::updatePageControlsActivation()
 QWidget* WidgetMainControl::widgetLeftSideBar() const
 {
     return m_ui->widget_Left;
+}
+
+double WidgetMainControl::widgetLeftSideBarWidthFactor() const
+{
+    return m_widgetLeftSideBarWidthFactor;
+}
+
+void WidgetMainControl::setWidgetLeftSideBarWidthFactor(double factor)
+{
+    const int mainWidth = this->geometry().width();
+    const double leftFactor = std::max(0., std::min(1., factor)); // Clamp in [0, 1]
+    m_ui->splitter_Main->setSizes({int(leftFactor * mainWidth), int((1. - leftFactor) * mainWidth)});
+    m_widgetLeftSideBarWidthFactor = leftFactor;
 }
 
 bool WidgetMainControl::eventFilter(QObject* watched, QEvent* event)
@@ -310,9 +345,51 @@ QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
     return placeHolder;
 }
 
+void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
+{
+    // Helper function to reload document
+    auto fnReloadDoc = [this](const DocumentPtr& doc) {
+        while (doc->entityCount() > 0)
+            doc->destroyEntity(doc->entityTreeNodeId(0));
+        FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
+    };
+
+    // Shortcut on "action" property
+    const auto& propActionOnDocumentFileChange = AppModule::get()->properties()->actionOnDocumentFileChange;
+
+    // Option: silent reloading
+    if (propActionOnDocumentFileChange == ActionOnDocumentFileChange::ReloadSilently) {
+        m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
+        fnReloadDoc(doc);
+    }
+
+    // Option: ask user to confirm reloading
+    if (propActionOnDocumentFileChange == ActionOnDocumentFileChange::ReloadIfUserConfirm) {
+        const QString strQuestion =
+            tr("Document file `%1` has been changed since it was opened\n\n"
+               "Do you want to reload that document?\n\n"
+               "File: `%2`")
+                .arg(to_QString(doc->name()))
+                .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
+            ;
+        const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
+        auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        msgBox->setTextFormat(Qt::MarkdownText);
+#else
+        msgBox->setTextFormat(Qt::AutoText);
+#endif
+        QtWidgetsUtils::asyncDialogExec(msgBox);
+        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
+            m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
+            if (btn == msgBox->button(QMessageBox::Yes))
+                fnReloadDoc(doc);
+        });
+    }
+}
+
 WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
 {
-    assert(idx == -1 || (0 <= idx && idx < m_ui->stack_GuiDocuments->count()));
     return qobject_cast<WidgetGuiDocument*>(m_ui->stack_GuiDocuments->widget(idx));
 }
 
@@ -413,7 +490,42 @@ void WidgetMainControl::onCurrentDocumentIndexChanged(int idx)
     const FilePath docFilePath = docPtr ? docPtr->filePath() : FilePath();
     m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(docFilePath));
 
+    if (m_docFilesWatcher->isEnabled()) {
+        auto itDoc = m_pendingDocsToReload.find(docPtr);
+        if (itDoc != m_pendingDocsToReload.end()) {
+            m_pendingDocsToReload.erase(itDoc);
+            this->reloadDocumentAfterChange(docPtr);
+        }
+    }
+
     emit this->currentDocumentIndexChanged(idx);
+}
+
+void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
+{
+    WidgetGuiDocument* widgetDoc = nullptr;
+    for (int i = 0; i < this->widgetGuiDocumentCount() && !widgetDoc; ++i) {
+        const DocumentPtr& candidateDoc = this->widgetGuiDocument(i)->guiDocument()->document();
+        if (candidateDoc->identifier() == doc->identifier())
+            widgetDoc = this->widgetGuiDocument(i);
+    }
+
+    if (!widgetDoc)
+        return;
+
+    if (widgetDoc == this->currentWidgetGuiDocument())
+        this->reloadDocumentAfterChange(doc);
+    else
+        m_pendingDocsToReload.insert(doc);
+}
+
+void WidgetMainControl::onSplitterMainMoved(int pos, int /*index*/)
+{
+    const int mainWidth = this->geometry().width();
+    if (mainWidth != 0)
+        m_widgetLeftSideBarWidthFactor = pos / double(mainWidth);
+    else
+        m_widgetLeftSideBarWidthFactor = 0.25;
 }
 
 } // namespace Mayo

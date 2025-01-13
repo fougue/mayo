@@ -77,13 +77,13 @@ QString QStringUtils::text(const gp_Trsf& trsf, const TextOptions& opt)
     gp_XYZ axisRotation;
     double angleRotation;
     trsf.GetRotation(axisRotation, angleRotation);
-    const UnitSystem::TranslateResult trAngleRotation =
-            UnitSystem::degrees(angleRotation * Quantity_Radian);
+    const auto trAngleRotation = UnitSystem::degrees(angleRotation * Quantity_Radian);
     return tr("[%1; %2%3; %4]").arg(
                 coordsText(axisRotation, opt),
                 valueText(trAngleRotation.value, opt),
                 QString::fromUtf8(trAngleRotation.strUnit),
-                QStringUtils::text(gp_Pnt(trsf.TranslationPart()), opt));
+                QStringUtils::text(gp_Pnt(trsf.TranslationPart()), opt)
+           );
 }
 
 QString QStringUtils::text(const Quantity_Color& color, const QString& format)

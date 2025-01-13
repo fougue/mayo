@@ -6,12 +6,12 @@
 
 #include "gui_document_list_model.h"
 
-#include "filepath_conv.h"
-#include "qstring_conv.h"
 #include "../base/application.h"
 #include "../base/document.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 namespace Mayo {
 

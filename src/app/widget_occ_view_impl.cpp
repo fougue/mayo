@@ -4,7 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include <QtCore/QtGlobal>
+#include "../base/occ_handle.h"
+#include "../graphics/graphics_utils.h"
 
 #include <Aspect_DisplayConnection.hxx>
 #include <OpenGl_GraphicDriver.hxx>
@@ -18,19 +19,6 @@
 #include <functional>
 
 namespace Mayo {
-
-namespace {
-
-Handle_Aspect_DisplayConnection createDisplayConnection()
-{
-#if (!defined(Q_OS_WIN) && (!defined(Q_OS_MAC) || defined(MACOSX_USE_GLX)))
-    return new Aspect_DisplayConnection(std::getenv("DISPLAY"));
-#else
-    return new Aspect_DisplayConnection;
-#endif
-}
-
-} // namespace
 
 #if OCC_VERSION_HEX >= 0x070600
 namespace {
@@ -47,20 +35,20 @@ class QtOccFrameBuffer : public OpenGl_FrameBuffer {
 public:
     QtOccFrameBuffer() {}
 
-    void BindBuffer(const Handle(OpenGl_Context)& ctx) override
+    void BindBuffer(const OccHandle<OpenGl_Context>& ctx) override
     {
         OpenGl_FrameBuffer::BindBuffer(ctx);
         ctx->SetFrameBufferSRGB(true, false);
         // NOTE: commenting the line just above makes the FBO to work on some configs(eg VM Ubuntu 18.04)
     }
 
-    void BindDrawBuffer(const Handle(OpenGl_Context)& ctx) override
+    void BindDrawBuffer(const OccHandle<OpenGl_Context>& ctx) override
     {
         OpenGl_FrameBuffer::BindDrawBuffer(ctx);
         ctx->SetFrameBufferSRGB(true, false);
     }
 
-    void BindReadBuffer(const Handle(OpenGl_Context)& ctx) override
+    void BindReadBuffer(const OccHandle<OpenGl_Context>& ctx) override
     {
         OpenGl_FrameBuffer::BindReadBuffer(ctx);
     }
@@ -75,7 +63,7 @@ bool QOpenGLWidgetOccView_isCoreProfile()
 
 void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback)
 {
-    Handle_OpenGl_Context glCtx = new OpenGl_Context;
+    auto glCtx = makeOccHandle<OpenGl_Context>();
     if (!glCtx->Init(QOpenGLWidgetOccView_isCoreProfile())) {
         Message::SendFail() << "Error: OpenGl_Context is unable to wrap OpenGL context";
         return;
@@ -85,35 +73,28 @@ void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_Renderin
         fnCallback(glCtx->RenderingContext());
 }
 
-Handle_Graphic3d_GraphicDriver QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
+OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
 {
-    auto gfxDriver = new OpenGl_GraphicDriver(createDisplayConnection(), false/*dontInit*/);
+    auto gfxDriver = new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/);
     // Let QOpenGLWidget manage buffer swap
     gfxDriver->ChangeOptions().buffersNoSwap = true;
     // Don't write into alpha channel
     gfxDriver->ChangeOptions().buffersOpaqueAlpha = true;
     // Offscreen FBOs should be always used
     gfxDriver->ChangeOptions().useSystemBuffer = false;
-#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    Message::SendWarning(
-                "Warning! Qt 5.10+ is required for sRGB setup.\n"
-                "Colors in 3D Viewer might look incorrect (Qt " QT_VERSION_STR " is used).\n"
-    );
-    gfxDriver->ChangeOptions().sRGBDisable = true;
-#endif
 
     return gfxDriver;
 }
 
-bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver& gfxDriver)
+bool QOpenGLWidgetOccView_wrapFrameBuffer(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver)
 {
     // Wrap FBO created by QOpenGLWidget
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(gfxDriver);
+    auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(gfxDriver);
     if (!driver)
         return false;
 
-    const Handle_OpenGl_Context& glCtx = driver->GetSharedContext();
-    Handle_OpenGl_FrameBuffer defaultFbo = glCtx->DefaultFrameBuffer();
+    const OccHandle<OpenGl_Context>& glCtx = driver->GetSharedContext();
+    OccHandle<OpenGl_FrameBuffer> defaultFbo = glCtx->DefaultFrameBuffer();
     if (!defaultFbo) {
         //defaultFbo = new OpenGl_FrameBuffer;
         defaultFbo = new QtOccFrameBuffer;
@@ -129,17 +110,17 @@ bool QOpenGLWidgetOccView_wrapFrameBuffer(const Handle_Graphic3d_GraphicDriver& 
     return true;
 }
 
-Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const Handle_Graphic3d_GraphicDriver& gfxDriver)
+Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver)
 {
-    auto driver = Handle_OpenGl_GraphicDriver::DownCast(gfxDriver);
+    auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(gfxDriver);
     return driver->GetSharedContext()->DefaultFrameBuffer()->GetVPSize();
 }
 
 #endif // OCC_VERSION_HEX >= 0x070600
 
-Handle_Graphic3d_GraphicDriver QWidgetOccView_createCompatibleGraphicsDriver()
+OccHandle<Graphic3d_GraphicDriver> QWidgetOccView_createCompatibleGraphicsDriver()
 {
-    return new OpenGl_GraphicDriver(createDisplayConnection());
+    return new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create());
 }
 
 } // namespace Mayo

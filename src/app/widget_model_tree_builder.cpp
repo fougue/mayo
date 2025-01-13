@@ -8,9 +8,8 @@
 
 #include "../base/document.h"
 #include "../base/caf_utils.h"
-#include "../base/filepath.h"
-#include "filepath_conv.h"
-#include "qstring_conv.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/qstring_conv.h"
 #include "widget_model_tree.h"
 #include "theme.h"
 

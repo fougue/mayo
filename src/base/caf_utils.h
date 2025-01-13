@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "occ_handle.h"
+#include <Standard_Version.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TDF_Label.hxx>
@@ -28,7 +30,7 @@ struct CafUtils {
 
     // Returns attribute of type 'AttributeType'(result may be null)?
     template<typename AttributeType>
-    static opencascade::handle<AttributeType> findAttribute(const TDF_Label& label);
+    static OccHandle<AttributeType> findAttribute(const TDF_Label& label);
 
     // Is there an attribute of identifier 'attrGuid' attached to 'label'?
     static bool hasAttribute(const TDF_Label& label, const Standard_GUID& attrGuid);
@@ -43,7 +45,7 @@ struct CafUtils {
 
 } // namespace Mayo
 
-
+#if OCC_VERSION_HEX < 0x070800
 #include <TDF_LabelMapHasher.hxx>
 namespace std {
 
@@ -55,6 +57,7 @@ template<> struct hash<TDF_Label> {
 };
 
 } // namespace std
+#endif
 
 // --
 // -- Implementation
@@ -63,9 +66,9 @@ template<> struct hash<TDF_Label> {
 namespace Mayo {
 
 template<typename AttributeType>
-opencascade::handle<AttributeType> CafUtils::findAttribute(const TDF_Label& label)
+OccHandle<AttributeType> CafUtils::findAttribute(const TDF_Label& label)
 {
-    opencascade::handle<AttributeType> attr;
+    OccHandle<AttributeType> attr;
     label.FindAttribute(AttributeType::GetID(), attr);
     return attr;
 }

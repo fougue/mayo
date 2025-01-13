@@ -20,7 +20,7 @@ namespace Mayo {
 
 class GraphicsObjectDriver;
 DEFINE_STANDARD_HANDLE(GraphicsObjectDriver, Standard_Transient)
-using GraphicsObjectDriverPtr = Handle(GraphicsObjectDriver);
+using GraphicsObjectDriverPtr = OccHandle<GraphicsObjectDriver>;
 
 // Provides creation and configuration of graphics objects of a specific type
 // Each graphics object "knows" the driver which created it: use function GraphicsObjectDriver::get()

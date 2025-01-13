@@ -8,9 +8,9 @@
 #include "../base/xcaf.h"
 #include "../graphics/graphics_shape_object_driver.h"
 #include "../gui/gui_application.h"
+#include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
-#include "qtcore_utils.h"
-#include "qstring_conv.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 
@@ -41,9 +41,9 @@ public:
         // UTF8 rightwards arrow : \xe2\x86\x92
         static const char templateBoth[] = "%instance \xe2\x86\x92 %product";
         switch (format) {
-        case NameFormat::Instance: return QtCoreUtils::QByteArray_frowRawData(templateInstance);
-        case NameFormat::Product: return QtCoreUtils::QByteArray_frowRawData(templateProduct);
-        case NameFormat::Both: return QtCoreUtils::QByteArray_frowRawData(templateBoth);
+        case NameFormat::Instance: return QtCoreUtils::QByteArray_fromRawData(templateInstance);
+        case NameFormat::Product: return QtCoreUtils::QByteArray_fromRawData(templateProduct);
+        case NameFormat::Both: return QtCoreUtils::QByteArray_fromRawData(templateBoth);
         }
         return QByteArray();
     }
@@ -96,7 +96,8 @@ void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(
         XCAFDoc_ShapeTool::GetUsers(
                     XCaf::shapeReferred(labelNode),
                     seqLabelRefresh,
-                    false /* don't get sub children */);
+                    false /* don't get sub children */
+        );
     }
     else {
         seqLabelRefresh.Append(labelNode);
@@ -144,7 +145,8 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
-        QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node)
+        QTreeWidgetItem* guiParentNode, const DocumentTreeNode& node
+    )
 {
     auto guiNode = new QTreeWidgetItem(guiParentNode);
     const QString stdName = to_QString(CafUtils::labelAttrStdName(node.label()));
@@ -158,7 +160,8 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::guiCreateXdeTreeNode(
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
-        QTreeWidgetItem* treeItem, const DocumentTreeNode& node)
+        QTreeWidgetItem* treeItem, const DocumentTreeNode& node
+    )
 {
     Expects(node.isEntity());
 
@@ -211,7 +214,7 @@ QTreeWidgetItem* WidgetModelTreeBuilder_Xde::buildXdeTree(
 
 QByteArray WidgetModelTreeBuilder_Xde::instanceNameFormat() const
 {
-    return QtCoreUtils::QByteArray_frowRawData(Module::get()->instanceNameFormat.name());
+    return QtCoreUtils::QByteArray_fromRawData(Module::get()->instanceNameFormat.valueName());
 }
 
 void WidgetModelTreeBuilder_Xde::setInstanceNameFormat(const QByteArray& format)
@@ -249,7 +252,8 @@ void WidgetModelTreeBuilder_Xde::refreshXdeAssemblyNodeItemText(QTreeWidgetItem*
 }
 
 QString WidgetModelTreeBuilder_Xde::referenceItemText(
-        const TDF_Label& instanceLabel, const TDF_Label& productLabel) const
+        const TDF_Label& instanceLabel, const TDF_Label& productLabel
+    ) const
 {
     const QString instanceName = to_QString(CafUtils::labelAttrStdName(instanceLabel)).trimmed();
     const QString productName = to_QString(CafUtils::labelAttrStdName(productLabel)).trimmed();
@@ -261,7 +265,8 @@ QString WidgetModelTreeBuilder_Xde::referenceItemText(
 }
 
 QTreeWidgetItem* WidgetModelTreeBuilder_Xde::findTreeItem(
-        QTreeWidgetItem* parentTreeItem, const TDF_Label& label) const
+        QTreeWidgetItem* parentTreeItem, const TDF_Label& label
+    ) const
 {
     if (!parentTreeItem)
         return nullptr;

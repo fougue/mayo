@@ -12,7 +12,7 @@
 namespace Mayo {
 
 TKernelUtils::ReturnType_StartProgressIndicator
-TKernelUtils::start(const opencascade::handle<Message_ProgressIndicator>& progress)
+TKernelUtils::start(const OccHandle<Message_ProgressIndicator>& progress)
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     return Message_ProgressIndicator::Start(progress);

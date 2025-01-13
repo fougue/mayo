@@ -6,6 +6,8 @@
 
 #include "../base/io_reader.h"
 #include "../base/property.h"
+#include <common/mayo_config.h>
+
 #include <memory>
 
 namespace Mayo {
@@ -19,7 +21,7 @@ public:
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 
     static std::unique_ptr<FactoryReader> create() {
-#ifdef HAVE_ASSIMP
+#ifdef MAYO_HAVE_ASSIMP
         return std::make_unique<AssimpFactoryReader>();
 #else
         return {};
@@ -29,7 +31,7 @@ public:
 
 struct AssimpLib {
     static std::string_view strName() { return "Assimp"; }
-#ifdef HAVE_ASSIMP
+#ifdef MAYO_HAVE_ASSIMP
     static std::string_view strVersion();
     static std::string_view strVersionDetails();
 #else

@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "../gui/v3d_view_controller.h"
 #include "../base/span.h"
+#include "../gui/v3d_view_controller.h"
+#include "view3d_navigation_style.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
@@ -31,10 +32,7 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-    enum class NavigationStyle {
-        Mayo, Catia, SolidWorks, Unigraphics, ProEngineer
-    };
-    void setNavigationStyle(NavigationStyle style);
+    void setNavigationStyle(View3dNavigationStyle style);
 
 protected:
     void redrawView() override;
@@ -110,7 +108,7 @@ private:
     };
 
     // Fabrication to create corresponding ActionMatcher from navigation style
-    static std::unique_ptr<ActionMatcher> createActionMatcher(NavigationStyle style, const InputSequence* seq);
+    static std::unique_ptr<ActionMatcher> createActionMatcher(View3dNavigationStyle style, const InputSequence* seq);
     class Mayo_ActionMatcher;
     class Catia_ActionMatcher;
     class SolidWorks_ActionMatcher;
@@ -121,7 +119,7 @@ private:
 
     IWidgetOccView* m_occView = nullptr;
     Position m_prevPos;
-    NavigationStyle m_navigStyle = NavigationStyle::Mayo;
+    View3dNavigationStyle m_navigStyle = View3dNavigationStyle::Mayo;
     InputSequence m_inputSequence;
     std::unique_ptr<ActionMatcher> m_actionMatcher;
 };

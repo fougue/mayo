@@ -33,7 +33,8 @@ void ProxyStyledItemDelegate::setSourceDelegate(QStyledItemDelegate* srcDelegate
 void ProxyStyledItemDelegate::paint(
         QPainter* painter,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     if (m_sourceDelegate)
         m_sourceDelegate->paint(painter, option, index);
@@ -41,8 +42,7 @@ void ProxyStyledItemDelegate::paint(
         QStyledItemDelegate::paint(painter, option, index);
 }
 
-QSize ProxyStyledItemDelegate::sizeHint(
-        const QStyleOptionViewItem& option, const QModelIndex& index) const
+QSize ProxyStyledItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     if (m_sourceDelegate)
         return m_sourceDelegate->sizeHint(option, index);
@@ -61,7 +61,8 @@ QString ProxyStyledItemDelegate::displayText(const QVariant& value, const QLocal
 QWidget* ProxyStyledItemDelegate::createEditor(
         QWidget* parent,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     if (m_sourceDelegate)
         return m_sourceDelegate->createEditor(parent, option, index);
@@ -80,7 +81,8 @@ void ProxyStyledItemDelegate::setEditorData(QWidget* editor, const QModelIndex& 
 void ProxyStyledItemDelegate::setModelData(
         QWidget* editor,
         QAbstractItemModel* model,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     if (m_sourceDelegate)
         m_sourceDelegate->setModelData(editor, model, index);
@@ -91,7 +93,8 @@ void ProxyStyledItemDelegate::setModelData(
 void ProxyStyledItemDelegate::updateEditorGeometry(
         QWidget* editor,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     if (m_sourceDelegate)
         m_sourceDelegate->updateEditorGeometry(editor, option, index);

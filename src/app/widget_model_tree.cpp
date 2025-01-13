@@ -11,8 +11,8 @@
 #include "../base/document.h"
 #include "../base/settings.h"
 #include "../gui/gui_application.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "item_view_buttons.h"
-#include "qtcore_utils.h"
 #include "theme.h"
 #include "widget_model_tree_builder.h"
 

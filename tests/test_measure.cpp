@@ -12,12 +12,15 @@
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ_stl.h"
 #include "../src/measure/measure_tool_brep.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <BRep_Builder.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <GeomConvert_ApproxCurve.hxx>
 #include <GC_MakeCircle.hxx>
@@ -145,6 +148,18 @@ void TestMeasure::BRepMinDistance_TwoBoxes_test()
     QCOMPARE(UnitSystem::millimeters(minDist.value).value, minDist.pnt1.Distance(minDist.pnt2));
 }
 
+void TestMeasure::BRepMinDistance_TwoConfusedFaces_test()
+{
+    const TopoDS_Face face1 = BRepBuilderAPI_MakeFace(gp_Pln(gp::XOY()));
+    const TopoDS_Face face2 = BRepBuilderAPI_MakeFace(gp_Pln(gp::XOY()));
+    try {
+        const MeasureDistance minDist = MeasureToolBRep::brepMinDistance(face1, face2);
+        QCOMPARE(minDist.value.value(), 0.);
+    } catch (const IMeasureError& err) {
+        qDebug() << to_QString(err.message());
+    }
+}
+
 void TestMeasure::BRepAngle_TwoLinesIntersect_test()
 {
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeEdge(gp_Lin(gp::Origin(), gp::DX()));
@@ -174,19 +189,39 @@ void TestMeasure::BRepLength_PolygonEdge_test()
     QCOMPARE(UnitSystem::millimeters(len.value).value, 24.);
 }
 
-void TestMeasure::BRepArea_TriangulationFace()
+void TestMeasure::BRepArea_TriangulationFace_test()
 {
     auto progress = &TaskProgress::null();
     IO::OccStlReader reader;
     const bool okRead = reader.readFile("tests/inputs/face_trsf_scale_almost_1.stl", progress);
     QVERIFY(okRead);
 
-    auto doc = Application::instance()->newDocument();
+    auto app = makeOccHandle<Application>();
+    auto doc = app->newDocument();
     const TDF_LabelSequence seqLabel = reader.transfer(doc, progress);
     QCOMPARE(seqLabel.Size(), 1);
     const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
     const MeasureArea area = MeasureToolBRep::brepArea(shape);
     QVERIFY(std::abs(double(UnitSystem::squareMillimeters(area.value)) - 597.6224) < 0.0001);
+}
+
+void TestMeasure::BRepBoundingBox_Sphere_test()
+{
+    const double sphereRadius = 50.;
+    const TopoDS_Shape sphereShape = BRepPrimAPI_MakeSphere(sphereRadius);
+    const MeasureBoundingBox bndBox = MeasureToolBRep::brepBoundingBox(sphereShape);
+    QVERIFY(bndBox.cornerMin.IsEqual(gp_Pnt{-sphereRadius, -sphereRadius, -sphereRadius}, Precision::Confusion()));
+    QVERIFY(bndBox.cornerMax.IsEqual(gp_Pnt{sphereRadius, sphereRadius, sphereRadius}, Precision::Confusion()));
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.xLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.yLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::millimeters(bndBox.zLength)), 2 * sphereRadius);
+    QCOMPARE(double(UnitSystem::cubicMillimeters(bndBox.volume)), 8 * sphereRadius * sphereRadius * sphereRadius);
+}
+
+void TestMeasure::BRepBoundingBox_NullShape_test()
+{
+    const TopoDS_Shape nullShape;
+    QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepBoundingBox(nullShape), IMeasureError);
 }
 
 } // namespace Mayo

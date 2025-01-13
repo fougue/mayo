@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include "../base/signal.h"
 #include "graphics_object_ptr.h"
 #include "graphics_owner_ptr.h"
@@ -13,7 +14,6 @@
 #include <AIS_InteractiveContext.hxx>
 #include <V3d_Viewer.hxx>
 #include <V3d_View.hxx>
-#include <unordered_set>
 
 namespace Mayo {
 
@@ -28,20 +28,26 @@ public:
     GraphicsScene(const GraphicsScene&) = delete;
     GraphicsScene& operator=(const GraphicsScene&) = delete;
 
-    opencascade::handle<V3d_View> createV3dView();
+    OccHandle<V3d_View> createV3dView();
 
-    const opencascade::handle<V3d_Viewer>& v3dViewer() const;
-    const opencascade::handle<StdSelect_ViewerSelector3d>& mainSelector() const;
+    const OccHandle<V3d_Viewer>& v3dViewer() const;
+    const OccHandle<StdSelect_ViewerSelector3d>& mainSelector() const;
     bool hiddenLineDrawingOn() const;
 
-    const opencascade::handle<Prs3d_Drawer>& drawerDefault() const;
-    const opencascade::handle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
+    const OccHandle<Prs3d_Drawer>& drawerDefault() const;
+    const OccHandle<Prs3d_Drawer>& drawerHighlight(Prs3d_TypeOfHighlight style) const;
 
-    void addObject(const GraphicsObjectPtr& object);
+    enum AddObjectFlag {
+        AddObjectDefault = 0,
+        AddObjectDisableSelectionMode = 1
+    };
+    using AddObjectFlags = unsigned;
+
+    void addObject(const GraphicsObjectPtr& object, AddObjectFlags flags = AddObjectDefault);
     void eraseObject(const GraphicsObjectPtr& object);
 
     void redraw();
-    void redraw(const Handle_V3d_View& view);
+    void redraw(const OccHandle<V3d_View>& view);
     bool isRedrawBlocked() const;
     void blockRedraw(bool on);
 
@@ -51,8 +57,8 @@ public:
     void deactivateObjectSelection(const GraphicsObjectPtr& object, int mode);
     void deactivateObjectSelection(const GraphicsObjectPtr& object);
 
-    void addSelectionFilter(const Handle_SelectMgr_Filter& filter);
-    void removeSelectionFilter(const Handle_SelectMgr_Filter& filter);
+    void addSelectionFilter(const OccHandle<SelectMgr_Filter>& filter);
+    void removeSelectionFilter(const OccHandle<SelectMgr_Filter>& filter);
     void clearSelectionFilters();
 
     void setObjectDisplayMode(const GraphicsObjectPtr& object, int displayMode);
@@ -73,7 +79,7 @@ public:
     void setSelectionMode(SelectionMode mode);
 
     const GraphicsOwnerPtr& currentHighlightedOwner() const;
-    void highlightAt(int xPos, int yPos, const Handle_V3d_View& view);
+    void highlightAt(int xPos, int yPos, const OccHandle<V3d_View>& view);
     void select();
 
     int selectedCount() const;
@@ -100,7 +106,7 @@ public:
     // Signals
     Signal<> signalSelectionChanged;
     Signal<> signalSelectionModeChanged;
-    Signal<const Handle_V3d_View&> signalRedrawRequested;
+    Signal<const OccHandle<V3d_View>&> signalRedrawRequested;
 
 private:
     AIS_InteractiveContext* aisContextPtr() const;
@@ -152,7 +158,7 @@ void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, 
 template<typename Function>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, Function fn) const
 {
-    opencascade::handle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+    OccHandle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
     this->aisContextPtr()->EntityOwners(mapEntityOwner, object, selectionMode);
     for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
         fn(*it);

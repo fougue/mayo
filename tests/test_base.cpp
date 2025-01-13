@@ -23,11 +23,13 @@
 #include "../src/base/io_system.h"
 #include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
+#include "../src/base/occ_handle.h"
 #include "../src/base/mesh_utils.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/property_builtins.h"
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
+#include "../src/base/settings.h"
 #include "../src/base/string_conv.h"
 #include "../src/base/task_manager.h"
 #include "../src/base/tkernel_utils.h"
@@ -35,8 +37,11 @@
 #include "../src/base/unit_system.h"
 #include "../src/io_dxf/io_dxf.h"
 #include "../src/io_occ/io_occ.h"
+#include "../src/io_off/io_off_reader.h"
+#include "../src/io_off/io_off_writer.h"
 #include "../src/io_ply/io_ply_reader.h"
 #include "../src/io_ply/io_ply_writer.h"
+#include <common/mayo_config.h>
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
@@ -54,6 +59,7 @@
 
 #include <gsl/util>
 #include <algorithm>
+#include <cassert>
 #include <clocale>
 #include <cmath>
 #include <climits>
@@ -62,24 +68,41 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
+#include <unordered_map>
 
+// Needed for Q_FECTH()
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
-// For Application_test()
 Q_DECLARE_METATYPE(Mayo::IO::Format)
-// For MeshUtils_orientation_test()
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
-// For PropertyValueConversion_test()
 Q_DECLARE_METATYPE(std::string)
 Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
 
 namespace Mayo {
 
-static std::optional<std::locale> findFrLocale()
+// For the sake of QCOMPARE()
+bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
+{
+    return std::abs(lhs.value - rhs.value) < 1e-6
+           && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
+           && std::abs(lhs.factor - rhs.factor) < 1e-6
+        ;
+}
+
+namespace {
+
+struct frlike_numpunct : public std::numpunct<char> {
+    char do_thousands_sep() const override { return ' '; }
+    char do_decimal_point() const override { return ','; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+std::locale getFrLocale()
 {
     auto fnGetLocale = [](const char* name) -> std::optional<std::locale> {
         try {
@@ -105,15 +128,17 @@ static std::optional<std::locale> findFrLocale()
             frLocale = fnGetLocale(localeName);
     }
 
-    return frLocale;
-}
+    if (!frLocale) {
+        frLocale = std::locale(std::cout.getloc(), new frlike_numpunct);
+    }
+    else {
+        const auto& facet = std::use_facet<std::numpunct<char>>(frLocale.value());
+        if (facet.decimal_point() != ',' || !std::isspace(facet.thousands_sep(), frLocale.value()))
+            frLocale = std::locale(frLocale.value(), new frlike_numpunct);
+    }
 
-// For the sake of QCOMPARE()
-static bool operator==(const UnitSystem::TranslateResult& lhs, const UnitSystem::TranslateResult& rhs)
-{
-    return std::abs(lhs.value - rhs.value) < 1e-6
-            && std::strcmp(lhs.strUnit, rhs.strUnit) == 0
-            && std::abs(lhs.factor - rhs.factor) < 1e-6;
+    assert(frLocale.has_value());
+    return frLocale.value();
 }
 
 // Equivalent of QSignalSpy for KDBindings signals
@@ -161,9 +186,11 @@ struct SignalEmitSpy {
     SignalConnectionHandle sigConnection;
 };
 
+} // namespace
+
 void TestBase::Application_test()
 {
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
     auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
         return m_ioSystem->importInDocument()
                 .targetDocument(doc)
@@ -229,13 +256,15 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+
 }
 
 void TestBase::DocumentRefCount_test()
 {
-    DocumentPtr doc = Application::instance()->newDocument();
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
     QVERIFY(doc->GetRefCount() > 1);
-    Application::instance()->closeDocument(doc);
+    app->closeDocument(doc);
     QCOMPARE(doc->GetRefCount(), 1);
 }
 
@@ -286,34 +315,108 @@ void TestBase::FilePath_test()
     }
 }
 
-void TestBase::PropertyValueConversionVariant_doubleToInt_test()
+void TestBase::OccHandle_test()
 {
-    using Variant = PropertyValueConversion::Variant;
-    QFETCH(double, doubleValue);
-    QFETCH(bool, ok);
+    {
+        struct OccHandleTestClass_0 : public Standard_Transient {
+            explicit OccHandleTestClass_0() = default;
+        };
 
-    const Variant dvar(doubleValue);
-    bool okActual = false;
-    const int asIntValue = dvar.toInt(&okActual);
-    if (ok) {
-        QCOMPARE(asIntValue, std::floor(doubleValue));
-    } else {
-        QCOMPARE(asIntValue, 0);
+        auto hnd = makeOccHandle<OccHandleTestClass_0>();
+        QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_0>));
+        QVERIFY(hnd.get() != nullptr);
     }
 
+    {
+        struct OccHandleTestClass_1 : public Standard_Transient {
+            explicit OccHandleTestClass_1() = default;
+            explicit OccHandleTestClass_1(const std::string& str) : m_str(str) {}
+            std::string m_str;
+        };
+
+        {
+            auto hnd = makeOccHandle<OccHandleTestClass_1>();
+            QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_1>));
+            QVERIFY(hnd.get() != nullptr);
+            QCOMPARE(hnd->m_str, std::string{});
+        }
+
+        {
+            auto hnd = makeOccHandle<OccHandleTestClass_1>("Test string value");
+            QCOMPARE(typeid(hnd), typeid(OccHandle<OccHandleTestClass_1>));
+            QVERIFY(hnd.get() != nullptr);
+            QCOMPARE(hnd->m_str, "Test string value");
+        }
+    }
+}
+
+void TestBase::PropertyValueConversionVariant_toInt_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QFETCH(Variant, variant);
+    QFETCH(int, toInt);
+    QFETCH(bool, ok);
+
+    bool okActual = false;
+    QCOMPARE(variant.toInt(&okActual), toInt);
     QCOMPARE(okActual, ok);
 }
 
-void TestBase::PropertyValueConversionVariant_doubleToInt_test_data()
+void TestBase::PropertyValueConversionVariant_toInt_test_data()
 {
-    QTest::addColumn<double>("doubleValue");
+    using Variant = PropertyValueConversion::Variant;
+    QTest::addColumn<Variant>("variant");
+    QTest::addColumn<int>("toInt");
     QTest::addColumn<bool>("ok");
-    QTest::newRow("50.25") << 50.25 << true;
-    QTest::newRow("-50.25") << -50.25 << true;
-    QTest::newRow("INT_MAX+1") << (double(INT_MAX) + 1.) << false;
-    QTest::newRow("INT_MIN-1") << (double(INT_MIN) - 1.) << false;
-    QTest::newRow("INT_MAX") << double(INT_MAX) << true;
-    QTest::newRow("INT_MIN") << double(INT_MIN) << true;
+
+    QTest::newRow("false") << Variant{false} << 0 << false;
+    QTest::newRow("true") << Variant{true} << 0 << false;
+    QTest::newRow("50.25") << Variant{50.25} << int(std::floor(50.25)) << true;
+    QTest::newRow("-50.25") << Variant{-50.25} << int(std::floor(-50.25)) << true;
+    QTest::newRow("INT_MAX+1") << Variant{double(INT_MAX) + 1.} << 0 << false;
+    QTest::newRow("INT_MIN-1") << Variant{double(INT_MIN) - 1.} << 0 << false;
+    QTest::newRow("INT_MAX") << Variant{double(INT_MAX)} << INT_MAX << true;
+    QTest::newRow("INT_MIN") << Variant{double(INT_MIN)} << INT_MIN << true;
+    QTest::newRow("'58'") << Variant{"58"} << 58 << true;
+    QTest::newRow("'4.57'") << Variant{"4.57"} << int(std::floor(4.57)) << true;
+    QTest::newRow("'non_int_str'") << Variant{"non_int_str"} << 0 << false;
+
+    const uint8_t bytes[] = { 52, 55 }; // ascii: {'4', '7'}
+    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << 47 << true;
+}
+
+void TestBase::PropertyValueConversionVariant_toString_test()
+{
+    QFETCH(PropertyValueConversion::Variant, variant);
+    QFETCH(std::string, toString);
+
+    bool ok = false;
+    if (std::holds_alternative<double>(variant)) {
+        const std::string str = variant.toString(&ok);
+        QCOMPARE(std::stod(str), std::stod(toString));
+    }
+    else {
+        QCOMPARE(variant.toString(&ok), toString);
+    }
+
+    QVERIFY(ok);
+}
+
+void TestBase::PropertyValueConversionVariant_toString_test_data()
+{
+    using Variant = PropertyValueConversion::Variant;
+    QTest::addColumn<Variant>("variant");
+    QTest::addColumn<std::string>("toString");
+
+    QTest::newRow("false") << Variant{false} << std::string{"false"};
+    QTest::newRow("true") << Variant{true} << std::string{"true"};
+    QTest::newRow("57") << Variant{57} << std::string{"57"};
+    QTest::newRow("4.57f") << Variant{4.57f} << std::string{"4.57"};
+    QTest::newRow("1.25") << Variant{1.25} << std::string{"1.25"};
+    QTest::newRow("'some string'") << Variant{"some string"} << std::string{"some string"};
+
+    const uint8_t bytes[] = { 48, 65 }; // ascii: {'0', 'A'}
+    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << std::string{"0A"};
 }
 
 void TestBase::PropertyValueConversion_test()
@@ -438,6 +541,7 @@ void TestBase::IO_probeFormat_test_data()
     QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("cube.off") << "tests/inputs/cube.off" << IO::Format_OFF;
+    QTest::newRow("cube.wrl") << "tests/inputs/cube.wrl" << IO::Format_VRML;
 }
 
 void TestBase::IO_probeFormatDirect_test()
@@ -547,7 +651,7 @@ void TestBase::IO_bugGitHub166_test()
     QFETCH(QString, strOutputFilePath);
     QFETCH(IO::Format, outputFormat);
 
-    auto app = Application::instance();
+    auto app = makeOccHandle<Application>();
     DocumentPtr doc = app->newDocument();
     const bool okImport = m_ioSystem->importInDocument()
             .targetDocument(doc)
@@ -585,41 +689,57 @@ void TestBase::IO_bugGitHub166_test_data()
 #if OCC_VERSION_HEX >= 0x070400
     QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
+#  ifdef OPENCASCADE_HAVE_RAPIDJSON
     QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
     QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
+#  endif
 #endif
 
 #if OCC_VERSION_HEX >= 0x070600
     QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply" << "tests/outputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla" << "tests/outputs/cube.obj" << IO::Format_OBJ;
+#  ifdef OPENCASCADE_HAVE_RAPIDJSON
     QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf" << "tests/outputs/cube.obj" << IO::Format_OBJ;
     QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj" << "tests/outputs/cube.glTF" << IO::Format_GLTF;
+#  endif
 #endif
+}
+
+void TestBase::IO_bugGitHub258_test()
+{
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+    const bool okImport = m_ioSystem->importInDocument()
+                              .targetDocument(doc)
+                              .withFilepath("tests/inputs/#258_cube.off")
+                              .execute();
+    QVERIFY(okImport);
+    QVERIFY(doc->entityCount() == 1);
+
+    const TopoDS_Shape shape = doc->xcaf().shape(doc->entityLabel(0));
+    const TopoDS_Face& face = TopoDS::Face(shape);
+    TopLoc_Location locFace;
+    auto triangulation = BRep_Tool::Triangulation(face, locFace);
+    QVERIFY(!triangulation.IsNull());
+    QCOMPARE(triangulation->NbNodes(), 24);
+    QCOMPARE(triangulation->NbTriangles(), 12);
 }
 
 void TestBase::DoubleToString_test()
 {
-    std::optional<std::locale> frLocale = findFrLocale();
-    if (frLocale) {
-        qInfo() << "frLocale:" << QString::fromStdString(frLocale->name());
-        // 1258.
-        {
-            //QCOMPARE(QString::fromStdString(to_stdString(1258.).locale(locale)), QLocale("fr_FR").toString(1258.));
-            // Note: on Windows the QLocale unicode thousand separator is different from what's returned
-            //       by internal toUtf8String()
-            //           to_stdString():      U+00A0(NO-BREAK SPACE)
-            //           QLocale::toString(): U+202F(NARROW NO-BREAK SPACE)
-            //       Caused by usage of ICU in Qt?
-            const QString str = QString::fromStdString(to_stdString(1258.).locale(frLocale.value()));
-            QCOMPARE(str.at(0), '1');
-            QVERIFY(str.at(1).isSpace());
-            QCOMPARE(str.right(3), "258");
-        }
+    const std::locale frLocale = getFrLocale();
+    qInfo() << "frLocale:" << frLocale.name().c_str();
+    // 1258.
+    {
+        const std::string str = to_stdString(1258.).locale(frLocale).toUtf8(false);
+        QCOMPARE(str.at(0), '1');
+        QCOMPARE(str.at(1), std::use_facet<std::numpunct<char>>(frLocale).thousands_sep());
+        QCOMPARE(str.substr(2, 3), "258");
+    }
 
-        // 57.89
-        {
-            QCOMPARE(to_stdString(57.89).locale(frLocale.value()).get(), "57,89");
-        }
+    // 57.89
+    {
+        QCOMPARE(to_stdString(57.89).locale(frLocale).get(), "57,89");
     }
 
     // Tests with "C" locale
@@ -633,12 +753,9 @@ void TestBase::DoubleToString_test()
 
 void TestBase::StringConv_test()
 {
-    std::optional<std::locale> frLocale = findFrLocale();
-    if (frLocale) {
-        const std::string stdStr = to_stdString(14758.5).locale(frLocale.value());
-        const auto occExtStr = to_OccExtString(stdStr);
-        QCOMPARE(stdStr, to_stdString(occExtStr));
-    }
+    const std::string stdStr = to_stdString(14758.5).locale(getFrLocale());
+    const auto occExtStr = to_OccExtString(stdStr);
+    QCOMPARE(stdStr, to_stdString(occExtStr));
 }
 
 void TestBase::BRepUtils_test()
@@ -653,9 +770,10 @@ void TestBase::BRepUtils_test()
         const TopoDS_Shape shapeNull;
         const TopoDS_Shape shapeBase = BRepPrimAPI_MakeBox(25, 25, 25);
         const TopoDS_Shape shapeCopy = shapeBase;
-        QCOMPARE(BRepUtils::hashCode(shapeNull), -1);
-        QVERIFY(BRepUtils::hashCode(shapeBase) >= 0);
+        const TopoDS_Shape shapeOther = BRepPrimAPI_MakeBox(40, 40, 40);
+        QCOMPARE(BRepUtils::hashCode(shapeNull), BRepUtils::hashCode(TopoDS_Shape{}));
         QCOMPARE(BRepUtils::hashCode(shapeBase), BRepUtils::hashCode(shapeCopy));
+        QVERIFY(BRepUtils::hashCode(shapeBase) != BRepUtils::hashCode(shapeOther));
     }
 }
 
@@ -807,7 +925,7 @@ void TestBase::MeshUtils_test()
     int countTriangle = 0;
     BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
         TopLoc_Location loc;
-        const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+        const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
         if (!polyTri.IsNull()) {
             countNode += polyTri->NbNodes();
             countTriangle += polyTri->NbTriangles();
@@ -815,13 +933,13 @@ void TestBase::MeshUtils_test()
     });
 
     // Merge all face triangulations into one
-    Handle_Poly_Triangulation polyTriBox = new Poly_Triangulation(countNode, countTriangle, false);
+    auto polyTriBox = makeOccHandle<Poly_Triangulation>(countNode, countTriangle, false);
     {
         int idNodeOffset = 0;
         int idTriangleOffset = 0;
         BRepUtils::forEachSubFace(shapeBox, [&](const TopoDS_Face& face) {
             TopLoc_Location loc;
-            const Handle_Poly_Triangulation& polyTri = BRep_Tool::Triangulation(face, loc);
+            const OccHandle<Poly_Triangulation>& polyTri = BRep_Tool::Triangulation(face, loc);
             if (!polyTri.IsNull()) {
                 for (int i = 1; i <= polyTri->NbNodes(); ++i)
                     MeshUtils::setNode(polyTriBox, idNodeOffset + i, polyTri->Node(i));
@@ -919,6 +1037,77 @@ void TestBase::TKernelUtils_colorFromHex_test_data()
     QTest::newRow("RGB(  5,  5,  5)") << 5 << 5 << 5 << "#050505";
     QTest::newRow("RGB(155,208, 67)") << 155 << 208 << 67 << "#9BD043";
     QTest::newRow("RGB(100,150,200)") << 100 << 150 << 200 << "#6496C8";
+}
+
+namespace {
+
+class TestProperties : public PropertyGroup {
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::TestProperties)
+public:
+    TestProperties(Settings* settings)
+        : PropertyGroup(settings),
+          groupId_main(settings->addGroup(textId("main")))
+    {
+        settings->addSetting(&this->someInt, groupId_main);
+        settings->addResetFunction(groupId_main, [&]{
+            this->someInt.setValue(-1);
+        });
+    }
+
+    const Settings::GroupIndex groupId_main;
+    PropertyInt someInt{ this, textId("someInt") };
+};
+
+class TestSettingsStorage : public Settings::Storage {
+public:
+    bool contains(std::string_view key) const override
+    {
+        return m_mapValue.find(key) != m_mapValue.cend();
+    }
+
+    Settings::Variant value(std::string_view key) const override
+    {
+        auto it = m_mapValue.find(key);
+        return it != m_mapValue.cend() ? it->second : Settings::Variant{};
+    }
+
+    void setValue(std::string_view key, const Settings::Variant& value) override
+    {
+        m_mapValue.insert_or_assign(key, value);
+    }
+
+    void sync() override
+    {
+    }
+
+private:
+    std::unordered_map<std::string_view, Settings::Variant> m_mapValue;
+};
+
+} // namespace
+
+void TestBase::Settings_test()
+{
+    Settings settings;
+    {
+        auto settingsStorage = std::make_unique<TestSettingsStorage>();
+        settingsStorage->setValue("main/someInt", Settings::Variant{5});
+
+        const uint8_t bytes[] = { 97, 98, 99, 100, 101, 95, 49, 50, 51, 52, 53 };
+        const Settings::Variant bytesVar(Span<const uint8_t>(bytes, std::size(bytes)));
+        QVERIFY(std::holds_alternative<std::vector<uint8_t>>(bytesVar));
+        settingsStorage->setValue("main/someTestData", bytesVar);
+
+        settings.setStorage(std::move(settingsStorage));
+    }
+
+    TestProperties props(&settings);
+
+    settings.resetAll();
+    QCOMPARE(props.someInt.value(), -1);
+
+    settings.load();
+    QCOMPARE(props.someInt.value(), 5);
 }
 
 void TestBase::UnitSystem_test()
@@ -1087,11 +1276,16 @@ void TestBase::Span_test()
 void TestBase::initTestCase()
 {
     m_ioSystem = new IO::System;
+
     m_ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
-    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
+    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+
     m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
+    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
+
     IO::addPredefinedFormatProbes(m_ioSystem);
 }
 

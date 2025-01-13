@@ -24,9 +24,9 @@ AppContext::AppContext(MainWindow* wnd)
     assert(m_wnd->widgetPageDocuments() != nullptr);
 
     QObject::connect(
-                m_wnd->widgetPageDocuments(), &WidgetMainControl::currentDocumentIndexChanged,
-                this, &AppContext::onCurrentDocumentIndexChanged
-        );
+        m_wnd->widgetPageDocuments(), &WidgetMainControl::currentDocumentIndexChanged,
+        this, &AppContext::onCurrentDocumentIndexChanged
+    );
 }
 
 GuiApplication* AppContext::guiApp() const

@@ -108,6 +108,8 @@ constexpr QuantityVolume Quantity_CubicFoot(Quantity_Foot.value() * Quantity_Squ
 constexpr QuantityVelocity Quantity_MillimeterPerSecond(1.);
 
 constexpr QuantityVolume Quantity_Liter(1e6);
+constexpr QuantityVolume Quantity_ImperialGallon(1e6 * 4.54609);
+constexpr QuantityVolume Quantity_USGallon(1e6 * 3.785411784);
 
 constexpr QuantityMass Quantity_Microgram(1e-9);
 constexpr QuantityMass Quantity_Milligram(1e-6);

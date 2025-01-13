@@ -6,10 +6,14 @@
 
 #include "measure_display.h"
 
+#include "../base/occ_handle.h"
 #include "../base/text_id.h"
 #include "../base/unit_system.h"
 #include "measure_tool.h"
 
+#include <AIS_DisplayMode.hxx>
+#include <AIS_Shape.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <ElCLib.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Geom_Circle.hxx>
@@ -19,6 +23,7 @@
 #include <Prs3d_TextAspect.hxx>
 
 #include <fmt/format.h>
+#include <cmath>
 
 namespace Mayo {
 
@@ -44,6 +49,8 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
         return std::make_unique<MeasureDisplayAngle>(std::get<MeasureAngle>(value));
     case MeasureType::Area:
         return std::make_unique<MeasureDisplayArea>(std::get<MeasureArea>(value));
+    case MeasureType::BoundingBox:
+        return std::make_unique<MeasureDisplayBoundingBox>(std::get<MeasureBoundingBox>(value));
     default:
         return {};
     }
@@ -61,16 +68,16 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureT
     }
 }
 
-void BaseMeasureDisplay::adaptGraphics(const Handle_Graphic3d_GraphicDriver& driver)
+void BaseMeasureDisplay::adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver)
 {
-    const auto openGlDriver = Handle_OpenGl_GraphicDriver::DownCast(driver);
+    const auto openGlDriver = OccHandle<OpenGl_GraphicDriver>::DownCast(driver);
     const auto openGlContext = openGlDriver ? openGlDriver->GetSharedContext() : nullptr;
     if (!openGlContext)
         return;
 
     const bool useVbo = openGlContext->ToUseVbo();
     for (int i = 0; i < this->graphicsObjectsCount(); ++i) {
-        auto gfxText = Handle(AIS_TextLabel)::DownCast(this->graphicsObjectAt(i));
+        auto gfxText = OccHandle<AIS_TextLabel>::DownCast(this->graphicsObjectAt(i));
         if (gfxText) {
             // NOTE
             // Usage of Aspect_TODT_SUBTITLE is causing a crash when VBO are not available(eg because
@@ -123,7 +130,7 @@ std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDis
     return BaseMeasureDisplay;
 }
 
-void BaseMeasureDisplay::adaptScale(const Handle_AIS_TextLabel& gfxText, const MeasureDisplayConfig& config)
+void BaseMeasureDisplay::adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config)
 {
     static const Prs3d_TextAspect defaultTextAspect;
     gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);
@@ -133,7 +140,8 @@ void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 {
     for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i) {
         auto gfxObject = measureDisplay->graphicsObjectAt(i);
-        auto gfxText = Handle(AIS_TextLabel)::DownCast(gfxObject);
+        gfxObject->SetZLayer(Graphic3d_ZLayerId_Topmost);
+        auto gfxText = OccHandle<AIS_TextLabel>::DownCast(gfxObject);
         if (gfxText) {
             gfxText->SetDisplayType(Aspect_TODT_SUBTITLE);
             gfxText->SetColorSubTitle(Quantity_NOC_BLACK);
@@ -335,7 +343,7 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
     const gp_Ax2 axCircle(angle.pntCenter, vec1.Crossed(vec2), vec1);
-    Handle_Geom_Circle geomCircle = new Geom_Circle(axCircle, 0.8 * vec1.Magnitude());
+    auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);
@@ -446,6 +454,83 @@ void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)
     const auto& otherArea = dynamic_cast<const MeasureDisplayArea&>(other);
     m_area.value += otherArea.m_area.value;
     BaseMeasureDisplay::sumAdd(other);
+}
+
+// --
+// -- Bounding Box
+// --
+
+MeasureDisplayBoundingBox::MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd)
+    : m_bnd(bnd),
+      m_gfxMinPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMin))),
+      m_gfxMaxPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMax))),
+      m_gfxXLengthText(new AIS_TextLabel),
+      m_gfxYLengthText(new AIS_TextLabel),
+      m_gfxZLengthText(new AIS_TextLabel)
+{
+
+    const TopoDS_Shape shapeBox = BRepPrimAPI_MakeBox(bnd.cornerMin, bnd.cornerMax);
+    auto aisShapeBox = new AIS_Shape(shapeBox);
+    m_gfxBox = aisShapeBox;
+    m_gfxBox->SetDisplayMode(AIS_Shaded);
+    m_gfxBox->SetTransparency(0.85);
+    m_gfxBox->Attributes()->SetFaceBoundaryDraw(true);
+    m_gfxBox->Attributes()->SetFaceBoundaryAspect(new Prs3d_LineAspect({}, Aspect_TOL_DOT, 1.));
+
+    const double diffX = bnd.cornerMax.X() - bnd.cornerMin.X();
+    const double diffY = bnd.cornerMax.Y() - bnd.cornerMin.Y();
+    const double diffZ = bnd.cornerMax.Z() - bnd.cornerMin.Z();
+    m_gfxXLengthText->SetPosition(bnd.cornerMin.Translated((diffX / 2.) * gp_Vec{1, 0, 0}));
+    m_gfxYLengthText->SetPosition(bnd.cornerMin.Translated((diffY / 2.) * gp_Vec{0, 1, 0}));
+    m_gfxZLengthText->SetPosition(bnd.cornerMin.Translated((diffZ / 2.) * gp_Vec{0, 0, 1}));
+
+    BaseMeasureDisplay::applyGraphicsDefaults(this);
+    m_gfxBox->SetColor(Quantity_NOC_BEIGE);
+    m_gfxBox->SetZLayer(Graphic3d_ZLayerId_Default);
+}
+
+void MeasureDisplayBoundingBox::update(const MeasureDisplayConfig& config)
+{
+    const auto trXLength = UnitSystem::translateLength(m_bnd.xLength, config.lengthUnit);
+    const auto trYLength = UnitSystem::translateLength(m_bnd.yLength, config.lengthUnit);
+    const auto trZLength = UnitSystem::translateLength(m_bnd.zLength, config.lengthUnit);
+    const auto trVolume = UnitSystem::translateVolume(m_bnd.volume, config.volumeUnit);
+    this->setText(fmt::format(
+        MeasureDisplayI18N::textIdTr(
+            "Min point: {0}<br>Max point: {1}<br>"
+            "Size: {2} x {3} x {4}{5}<br>"
+            "Volume: {6}{7}"
+        ),
+        BaseMeasureDisplay::text(m_bnd.cornerMin, config),
+        BaseMeasureDisplay::text(m_bnd.cornerMax, config),
+        BaseMeasureDisplay::text(trXLength, config),
+        BaseMeasureDisplay::text(trYLength, config),
+        BaseMeasureDisplay::text(trZLength, config),
+        trXLength.strUnit,
+        BaseMeasureDisplay::text(trVolume, config),
+        trVolume.strUnit
+    ));
+
+    m_gfxXLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trXLength, config)));
+    m_gfxYLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trYLength, config)));
+    m_gfxZLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trZLength, config)));
+    BaseMeasureDisplay::adaptScale(m_gfxXLengthText, config);
+    BaseMeasureDisplay::adaptScale(m_gfxYLengthText, config);
+    BaseMeasureDisplay::adaptScale(m_gfxZLengthText, config);
+}
+
+GraphicsObjectPtr MeasureDisplayBoundingBox::graphicsObjectAt(int i) const
+{
+    switch (i) {
+    case 0: return m_gfxMinPoint;
+    case 1: return m_gfxMaxPoint;
+    case 2: return m_gfxBox;
+    case 3: return m_gfxXLengthText;
+    case 4: return m_gfxYLengthText;
+    case 5: return m_gfxZLengthText;
+    }
+
+    return {};
 }
 
 } // namespace Mayo

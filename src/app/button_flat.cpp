@@ -138,10 +138,10 @@ void ButtonFlat::paintEvent(QPaintEvent*)
         painter.fillRect(surface, this->backgroundBrush());
 
     const QRect iconRect(
-                (surface.width() - m_iconSize.width()) / 2,
-                (surface.height() - m_iconSize.height()) / 2,
-                m_iconSize.width(),
-                m_iconSize.height()
+        (surface.width() - m_iconSize.width()) / 2,
+        (surface.height() - m_iconSize.height()) / 2,
+        m_iconSize.width(),
+        m_iconSize.height()
     );
     const QIcon::Mode iconMode = isEnabled ? QIcon::Normal : QIcon::Disabled;
     m_icon.paint(&painter, iconRect, Qt::AlignCenter, iconMode);

@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include "occ_handle.h"
+
 #include <Quantity_Color.hxx>
-#include <Standard_Handle.hxx>
 #include <Standard_Version.hxx>
 #include <string>
 #include <string_view>
@@ -19,7 +20,6 @@
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include <Message_ProgressRange.hxx>
 #else
-#  include <Standard_Handle.hxx>
 class Message_ProgressIndicator;
 #endif
 
@@ -29,15 +29,15 @@ namespace Mayo {
 class TKernelUtils {
 public:
     template<typename TransientType>
-    static opencascade::handle<TransientType> makeHandle(const TransientType* ptr) { return ptr; }
+    static OccHandle<TransientType> makeHandle(const TransientType* ptr) { return ptr; }
 
     using ReturnType_StartProgressIndicator =
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
                 Message_ProgressRange;
 #else
-                const opencascade::handle<Message_ProgressIndicator>&;
+                const OccHandle<Message_ProgressIndicator>&;
 #endif
-    static ReturnType_StartProgressIndicator start(const opencascade::handle<Message_ProgressIndicator>& progress);
+    static ReturnType_StartProgressIndicator start(const OccHandle<Message_ProgressIndicator>& progress);
 
     // Encodes 'color' into hexadecimal representation with #RRGGBB format
     static std::string colorToHex(const Quantity_Color& color);
@@ -54,14 +54,3 @@ public:
 };
 
 } // namespace Mayo
-
-namespace std {
-
-// Specialization of C++11 std::hash<> functor for opencascade::handle<> objects
-template<typename T> struct hash<opencascade::handle<T>> {
-    inline std::size_t operator()(const opencascade::handle<T>& hnd) const {
-        return hash<T*>{}(hnd.get());
-    }
-};
-
-} // namespace std

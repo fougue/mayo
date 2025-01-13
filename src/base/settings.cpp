@@ -89,7 +89,7 @@ public:
         const std::string settingPath = std::string(sectionPath).append("/").append(propertyKey);
         if (source.contains(settingPath)) {
             const Settings::Variant value = source.value(settingPath);
-            const bool ok = m_propValueConverter->fromVariant(property, value);
+            const bool ok = m_propValueConverter->fromVariant(property, value);               
             if (!ok) {
                 // TODO Use other output stream(dedicated Messenger object?)
                 std::cerr << fmt::format("Failed to load setting [path={}]", settingPath) << std::endl;

@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <TDocStd_Application.hxx>
+#include "occ_handle.h"
+#include <XCAFApp_Application.hxx>
 
 namespace Mayo {
 
 class Application;
-DEFINE_STANDARD_HANDLE(Application, TDocStd_Application)
-using ApplicationPtr = opencascade::handle<Application>;
+DEFINE_STANDARD_HANDLE(Application, XCAFApp_Application)
+using ApplicationPtr = OccHandle<Application>;
 
 } // namespace Mayo

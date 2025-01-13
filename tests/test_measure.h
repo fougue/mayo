@@ -26,13 +26,17 @@ private slots:
 
     void BRepMinDistance_TwoPoints_test();
     void BRepMinDistance_TwoBoxes_test();
+    void BRepMinDistance_TwoConfusedFaces_test();
 
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
 
     void BRepLength_PolygonEdge_test();
 
-    void BRepArea_TriangulationFace();
+    void BRepArea_TriangulationFace_test();
+
+    void BRepBoundingBox_Sphere_test();
+    void BRepBoundingBox_NullShape_test();
 };
 
 } // namespace Mayo

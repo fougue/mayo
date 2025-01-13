@@ -6,8 +6,9 @@
 
 #include "console.h"
 
-#include <QtCore/QtGlobal>
-#ifdef Q_OS_WIN
+#include "../base/global.h"
+
+#ifdef MAYO_OS_WINDOWS
 #  include <io.h>
 #  include <windows.h>
 #else
@@ -16,15 +17,12 @@
 #  include <iostream>
 #endif
 
-#include "../base/global.h"
-#include "qstring_conv.h"
-
 namespace Mayo {
 
 void consoleSetTextColor(ConsoleColor color)
 {
     constexpr bool isBrightText = true;
-#ifdef Q_OS_WIN
+#ifdef MAYO_OS_WINDOWS
     auto fnColorFlags = [](ConsoleColor color) {
         switch (color) {
         case ConsoleColor::Black:   return 0;
@@ -48,7 +46,7 @@ void consoleSetTextColor(ConsoleColor color)
         const WORD flags = fnColorFlags(color) | brightFlag;
         SetConsoleTextAttribute(hStdout, flags);
     }
-#elif defined(__EMSCRIPTEN__)
+#elif defined(MAYO_OS_WASM)
     // Terminal capabilities are undefined on this platform.
     // std::cout could be redirected to HTML page, into terminal or somewhere else.
     MAYO_UNUSED(color);
@@ -77,7 +75,7 @@ void consoleCursorMoveUp(int lines)
     if (lines == 0)
         return;
 
-#ifdef Q_OS_WIN
+#ifdef MAYO_OS_WINDOWS
     auto hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout) {
         CONSOLE_SCREEN_BUFFER_INFO buffInfo;
@@ -94,7 +92,7 @@ void consoleCursorMoveUp(int lines)
 
 void consoleCursorShow(bool on)
 {
-#ifdef Q_OS_WIN
+#ifdef MAYO_OS_WINDOWS
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout) {
         CONSOLE_CURSOR_INFO cursorInfo;
@@ -109,7 +107,7 @@ void consoleCursorShow(bool on)
 
 std::pair<int, int> consoleSize()
 {
-#ifdef Q_OS_WIN
+#ifdef MAYO_OS_WINDOWS
     CONSOLE_SCREEN_BUFFER_INFO buffInfo;
     int cols, rows;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &buffInfo);
@@ -129,35 +127,10 @@ int consoleWidth() {
 
 void consoleSendEnterKey()
 {
-#ifdef Q_OS_WIN
+#ifdef MAYO_OS_WINDOWS
     HWND consoleWnd = GetConsoleWindow();
     if (IsWindow(consoleWnd))
         PostMessage(consoleWnd, WM_KEYUP, VK_RETURN, 0);
-#endif
-}
-
-std::string consoleToPrintable(const QString& str)
-{
-#ifdef Q_OS_WIN
-    const auto codepage = GetConsoleOutputCP();
-    const wchar_t* source = reinterpret_cast<const wchar_t*>(str.utf16());
-    const int dstSize = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
-    std::string dst;
-    dst.resize(dstSize + 1);
-    WideCharToMultiByte(codepage, 0, source, -1, dst.data(), dstSize, nullptr, nullptr);
-    dst.back() = '\0';
-    return dst;
-#else
-    return str.toStdString(); // utf8
-#endif
-}
-
-std::string consoleToPrintable(std::string_view str)
-{
-#ifdef Q_OS_WIN
-    return consoleToPrintable(to_QString(str));
-#else
-    return std::string(str); // utf8
 #endif
 }
 

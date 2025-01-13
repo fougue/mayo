@@ -26,8 +26,13 @@ private slots:
 
     void FilePath_test();
 
-    void PropertyValueConversionVariant_doubleToInt_test();
-    void PropertyValueConversionVariant_doubleToInt_test_data();
+    void OccHandle_test();
+
+    void PropertyValueConversionVariant_toInt_test();
+    void PropertyValueConversionVariant_toInt_test_data();
+
+    void PropertyValueConversionVariant_toString_test();
+    void PropertyValueConversionVariant_toString_test_data();
 
     void PropertyValueConversion_test();
     void PropertyValueConversion_test_data();
@@ -43,6 +48,7 @@ private slots:
     void IO_OccStaticVariablesRollback_test_data();
     void IO_bugGitHub166_test();
     void IO_bugGitHub166_test_data();
+    void IO_bugGitHub258_test();
 
     void DoubleToString_test();
     void StringConv_test();
@@ -65,6 +71,8 @@ private slots:
     void TKernelUtils_colorToHex_test_data();
     void TKernelUtils_colorFromHex_test();
     void TKernelUtils_colorFromHex_test_data();
+
+    void Settings_test();
 
     void UnitSystem_test();
     void UnitSystem_test_data();

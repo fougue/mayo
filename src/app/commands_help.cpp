@@ -7,8 +7,9 @@
 #include "commands_help.h"
 
 #include "dialog_about.h"
+#include "library_info.h"
 #include "qtwidgets_utils.h"
-#include "qstring_conv.h"
+#include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
@@ -41,7 +42,7 @@ CommandAbout::CommandAbout(IAppContext* context)
 void CommandAbout::execute()
 {
     auto dlg = new DialogAbout(this->widgetMain());
-    for (const auto& libInfo : CommandSystemInformation::libraryInfos())
+    for (const auto& libInfo : LibraryInfoArray::get())
         dlg->addLibraryInfo(libInfo.name, libInfo.version);
 
     QtWidgetsUtils::asyncDialogExec(dlg);

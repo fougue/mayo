@@ -70,7 +70,7 @@ WidgetClipPlanes::WidgetClipPlanes(GraphicsViewPtr view, QWidget* parent)
             m_view.redraw();
         }
         else if (property == &appModule->properties()->clipPlanesCappingHatchOn) {
-            Handle_Graphic3d_TextureMap hatchTexture;
+            OccHandle<Graphic3d_TextureMap> hatchTexture;
             if (m_textureCapping && appModule->properties()->clipPlanesCappingHatchOn)
                 hatchTexture = m_textureCapping;
 
@@ -116,7 +116,7 @@ void WidgetClipPlanes::setClippingOn(bool on)
 void WidgetClipPlanes::connectUi(ClipPlaneData* data)
 {
     UiClipPlane& ui = data->ui;
-    const Handle_Graphic3d_ClipPlane& gfx = data->graphics;
+    const OccHandle<Graphic3d_ClipPlane>& gfx = data->graphics;
     QAbstractSlider* posSlider = ui.posSlider();
     QDoubleSpinBox* posSpin = ui.posSpin();
     auto signalSpinValueChanged = qOverload<double>(&QDoubleSpinBox::valueChanged);
@@ -173,9 +173,8 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     auto funcConnectDirSpin = [=](QDoubleSpinBox* dirSpin) {
         QObject::connect(dirSpin, signalSpinValueChanged, this, [=]{
             const gp_Vec vecNormal(
-                        customXDirSpin->value(),
-                        customYDirSpin->value(),
-                        customZDirSpin->value());
+                customXDirSpin->value(), customYDirSpin->value(), customZDirSpin->value()
+            );
             if (vecNormal.Magnitude() > Precision::Confusion()) {
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
@@ -201,7 +200,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     }
 }
 
-void WidgetClipPlanes::setPlaneOn(const Handle_Graphic3d_ClipPlane& plane, bool on)
+void WidgetClipPlanes::setPlaneOn(const OccHandle<Graphic3d_ClipPlane>& plane, bool on)
 {
     plane->SetOn(on);
     if (!GraphicsUtils::V3dView_hasClipPlane(m_view.v3dView(), plane))
@@ -242,7 +241,7 @@ void WidgetClipPlanes::createPlaneCappingTexture()
         const QByteArray fileContents = file.readAll();
         const QByteArray filenameUtf8 = file.fileName().toUtf8();
         auto fileContentsData = reinterpret_cast<const Standard_Byte*>(fileContents.constData());
-        Handle_Image_AlienPixMap imageCapping = new Image_AlienPixMap;
+        auto imageCapping = makeOccHandle<Image_AlienPixMap>();
         imageCapping->Load(fileContentsData, fileContents.size(), filenameUtf8.constData());
         m_textureCapping = new GraphicsTexture2D(imageCapping);
         m_textureCapping->EnableModulate();
@@ -296,7 +295,8 @@ double WidgetClipPlanes::UiClipPlane::sliderValueToSpinValue(double val) const {
     QDoubleSpinBox* spin = this->posSpin();
     QAbstractSlider* slider = this->posSlider();
     return MathUtils::mappedValue(
-                val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum());
+                val, slider->minimum(), slider->maximum(), spin->minimum(), spin->maximum()
+        );
 }
 
 } // namespace Mayo

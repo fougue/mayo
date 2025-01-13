@@ -14,19 +14,20 @@
 #include "../base/unit_system.h"
 #include "../graphics/graphics_mesh_object_driver.h"
 
+#include <fmt/format.h>
+
 namespace Mayo {
 
 AppModuleProperties::AppModuleProperties(Settings* settings)
     : PropertyGroup(settings),
       groupId_system(settings->addGroup(textId("system"))),
       groupId_application(settings->addGroup(textId("application"))),
+      groupId_meshing(settings->addGroup(textId("meshing"))),
+      groupId_graphics(settings->addGroup(textId("graphics"))),
       language(this, textId("language"), &AppModule::languages()),
       m_settings(settings)
 {
-    const auto groupId_meshing = settings->addGroup(textId("meshing"));
-    const auto groupId_graphics = settings->addGroup(textId("graphics"));
-
-    const auto sectionId_systemUnits = settings->addSection(this->groupId_system, textId("units"));
+    const auto sectionId_systemUnits = settings->addSection(groupId_system, textId("units"));
     const auto sectionId_graphicsClipPlanes = settings->addSection(groupId_graphics, textId("clipPlanes"));
     const auto sectionId_graphicsMeshDefaults = settings->addSection(groupId_graphics, textId("meshDefaults"));
 
@@ -41,15 +42,19 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     this->unitSystemDecimals.setConstraintsEnabled(true);
 
     // Application
+    this->actionOnDocumentFileChange.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
     settings->addSetting(&this->language, groupId_application);
     settings->addSetting(&this->recentFiles, groupId_application);
     settings->addSetting(&this->lastOpenDir, groupId_application);
     settings->addSetting(&this->lastSelectedFormatFilter, groupId_application);
+    settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
+    settings->addSetting(&this->appUiState, groupId_application);
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
+    this->appUiState.setUserVisible(false);
 
     // Meshing
     this->meshingQuality.mutableEnumeration().changeTrContext(AppModuleProperties::textIdContext());
@@ -83,7 +88,9 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
         this->lastSelectedFormatFilter.setValue({});
+        this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);
         this->linkWithDocumentSelector.setValue(true);
+        this->appUiState.setValue({});
 #ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
 #else
@@ -91,7 +98,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
 #endif
     });
     settings->addResetFunction(groupId_graphics, [=]{
-        this->navigationStyle.setValue(WidgetOccViewController::NavigationStyle::Mayo);
+        this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
@@ -160,61 +167,83 @@ void AppModuleProperties::retranslate()
 
     // Application
     this->language.setDescription(
-                textIdTr("Language used for the application. Change will take effect after application restart"));
+        textIdTr("Language used for the application. Change will take effect after application restart")
+    );
+    const auto& enumActionOnDocumentFileChange = this->actionOnDocumentFileChange.enumeration();
+    this->actionOnDocumentFileChange.setDescription(
+        fmt::format(textIdTr("Action to be done after some opened document file is changed(modified) externally\n\n"
+                             "Select options `{0}` or `{1}` so the application monitors changes made to opened files\n\n"
+                             "When such a change is detected then the application proposes to reload(open again) the document\n\n"
+                             "Select `{1}` to automatically reload documents without any user interaction"
+                             ),
+                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadIfUserConfirm)->name.tr(),
+                    enumActionOnDocumentFileChange.findItemByValue(ActionOnDocumentFileChange::ReloadSilently)->name.tr()
+    ));
     this->linkWithDocumentSelector.setDescription(
-                textIdTr("In case where multiple documents are opened, make sure the document displayed in "
-                         "the 3D view corresponds to what is selected in the model tree"));
+        textIdTr("In case where multiple documents are opened, make sure the document displayed in "
+                 "the 3D view corresponds to what is selected in the model tree")
+    );
     this->forceOpenGlFallbackWidget.setDescription(
-                textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
-                         "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
-                         "this allows to display overlay widgets(eg measure tools panel) with translucid "
-                         "background. "
-                         "However using OpenGL framebuffer might cause troubles for some users(eg empty "
-                         "3D window) especially on macOS.\n\n"
-                         "When `ON` the application will use a regular Qt widget for rendering which "
-                         "proved to be more supported.\n\n"
-                         "This option is applicable when OpenCascade ≥ 7.6 version. "
-                         "Change will take effect after application restart")
+        textIdTr("Force usage of the fallback Qt widget to display OpenGL graphics.\n\n"
+                 "When `OFF` the application will try to use OpenGL framebuffer for rendering, "
+                 "this allows to display overlay widgets(eg measure tools panel) with translucid "
+                 "background. "
+                 "However using OpenGL framebuffer might cause troubles for some users(eg empty "
+                 "3D window) especially on macOS.\n\n"
+                 "When `ON` the application will use a regular Qt widget for rendering which "
+                 "proved to be more supported.\n\n"
+                 "This option is applicable when OpenCascade ≥ 7.6 version. "
+                 "Change will take effect after application restart")
     );
 
     // Meshing
     this->meshingQuality.setDescription(
-                textIdTr("Controls precision of the mesh to be computed from the BRep shape"));
+        textIdTr("Controls precision of the mesh to be computed from the BRep shape")
+    );
     this->meshingChordalDeflection.setDescription(
-                textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
-                         "a curve and its tessellation"));
+        textIdTr("For the tessellation of faces the chordal deflection limits the distance between "
+                 "a curve and its tessellation")
+    );
     this->meshingAngularDeflection.setDescription(
-                textIdTr("For the tessellation of faces the angular deflection limits the angle between "
-                         "subsequent segments in a polyline"));
+        textIdTr("For the tessellation of faces the angular deflection limits the angle between "
+                 "subsequent segments in a polyline")
+    );
     this->meshingRelative.setDescription(
-                textIdTr("Relative computation of edge tolerance\n\n"
-                         "If activated, deflection used for the polygonalisation of each edge will be "
-                         "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
-                         "the maximum deflection of their edges."));
+        textIdTr("Relative computation of edge tolerance\n\n"
+                 "If activated, deflection used for the polygonalisation of each edge will be "
+                 "`ChordalDeflection` &#215; `SizeOfEdge`. The deflection used for the faces will be "
+                 "the maximum deflection of their edges.")
+    );
 
     // Graphics
     this->navigationStyle.setDescription(
-                textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications"));
+        textIdTr("3D view manipulation shortcuts configuration to mimic other common CAD applications")
+    );
     this->turnViewAngleIncrement.setDescription(
-                textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)"));
+        textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
+    );
 
     // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
-                textIdTr("Show or hide by default the trihedron centered at world origin. "
-                         "This doesn't affect 3D view of currently opened documents"));
+        textIdTr("Show or hide by default the trihedron centered at world origin. "
+                 "This doesn't affect 3D view of currently opened documents")
+    );
     this->clipPlanesCappingOn.setDescription(
-                textIdTr("Enable capping of currently clipped graphics"));
+        textIdTr("Enable capping of currently clipped graphics")
+    );
     this->clipPlanesCappingHatchOn.setDescription(
-                textIdTr("Enable capping hatch texture of currently clipped graphics"));
+        textIdTr("Enable capping hatch texture of currently clipped graphics")
+    );
 }
 
 void AppModuleProperties::onPropertyChanged(Property* prop)
 {
     if (prop == &this->meshDefaultsColor
-            || prop == &this->meshDefaultsEdgeColor
-            || prop == &this->meshDefaultsMaterial
-            || prop == &this->meshDefaultsShowEdges
-            || prop == &this->meshDefaultsShowNodes)
+        || prop == &this->meshDefaultsEdgeColor
+        || prop == &this->meshDefaultsMaterial
+        || prop == &this->meshDefaultsShowEdges
+        || prop == &this->meshDefaultsShowNodes
+       )
     {
         auto values = GraphicsMeshObjectDriver::defaultValues();
         values.color = this->meshDefaultsColor.value();

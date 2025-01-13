@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "occ_handle.h"
 #include "span.h"
 
 #include <Quantity_Color.hxx>
@@ -16,7 +17,7 @@ namespace Mayo {
 
 class TriangulationAnnexData;
 DEFINE_STANDARD_HANDLE(TriangulationAnnexData, TDF_Attribute)
-using TriangulationAnnexDataPtr = Handle(TriangulationAnnexData);
+using TriangulationAnnexDataPtr = OccHandle<TriangulationAnnexData>;
 
 class TriangulationAnnexData : public TDF_Attribute {
 public:
@@ -29,9 +30,9 @@ public:
 
     // -- from TDF_Attribute
     const Standard_GUID& ID() const override;
-    void Restore(const Handle(TDF_Attribute)& attribute) override;
-    Handle(TDF_Attribute) NewEmpty() const override;
-    void Paste(const Handle(TDF_Attribute)& into, const Handle(TDF_RelocationTable)& table) const override;
+    void Restore(const OccHandle<TDF_Attribute>& attribute) override;
+    OccHandle<TDF_Attribute> NewEmpty() const override;
+    void Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>& table) const override;
     Standard_OStream& Dump(Standard_OStream& ostr) const override;
 
     DEFINE_STANDARD_RTTI_INLINE(TriangulationAnnexData, TDF_Attribute)

@@ -39,7 +39,7 @@ There's also a complete [video](https://www.youtube.com/watch?v=qg6IamnlfxE&ab_c
 
 - **3D exploding of the model tree** allowing better exploration of complex designs
 
-- **3D measure tools** for circles, angles, lengths, areas, ...
+- **3D measure tools** for circles, angles, lengths, areas, bounding box, ...
 
 - **3D view cube** providing intuitive camera manipulation
 
@@ -70,6 +70,7 @@ OFF       | :white_check_mark: | :white_check_mark: |
 FBX       | :white_check_mark: | :x:                | 
 Collada   | :white_check_mark: | :x:                |
 X3D       | :white_check_mark: | :x:                |
+X(DirectX)| :white_check_mark: | :x:                |
 Image     | :x:                | :white_check_mark: | PNG, JPEG, ...
 
 See also this dedicated [wikipage](https://github.com/fougue/mayo/wiki/Supported-formats) for more details
@@ -89,9 +90,23 @@ Select Objects | SHIFT + mouseLeft clicks
 
 Mayo supports also multiple 3D viewer navigation styles to mimic common CAD applications(CATIA, SOLIDWORKS, ...)
 
-## :hammer: How to build Mayo
-[Instructions for Windows MSVC](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows-MSVC)  
-[Instructions for Debian](https://github.com/fougue/mayo/wiki/Build-instructions-for-Debian)  
+## :package: Install
+Release packages are available for Windows and Linux on the [Releases](https://github.com/fougue/mayo/releases) page.  
+
+Alternatives for Windows:
+- [Winget](https://winstall.app/apps/Fougue.Mayo)
+````
+winget install --id Fougue.Mayo
+````  
+- [Scoop](https://scoop.sh/#/apps?s=0&d=1&o=true&q=mayo)
+````
+scoop bucket add extras
+scoop install extras/mayo
+````
+
+## :hammer: How to build
+[Instructions for Windows](https://github.com/fougue/mayo/wiki/Build-instructions-for-Windows)  
+[Instructions for Linux](https://github.com/fougue/mayo/wiki/Build-instructions-for-Linux)  
 [Instructions for macOS](https://github.com/fougue/mayo/wiki/Build-instructions-for-macOS)
 
 ## :clapper: Gallery

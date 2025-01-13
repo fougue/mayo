@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "../base/filepath.h"
 #include "grid_helper.h"
 #include "list_helper.h"
+#include <QtCore/QFileInfo>
 
 namespace Mayo {
 
@@ -20,7 +20,7 @@ public:
 signals:
     void newDocumentRequested();
     void openDocumentsRequested();
-    void recentFileOpenRequested(const Mayo::FilePath& fp);
+    void recentFileOpenRequested(const QFileInfo& fp);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;

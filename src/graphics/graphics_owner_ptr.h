@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include "../base/occ_handle.h"
 #include <SelectMgr_EntityOwner.hxx>
 
 namespace Mayo {
 
-using GraphicsOwnerPtr = Handle(SelectMgr_EntityOwner);
+using GraphicsOwnerPtr = OccHandle<SelectMgr_EntityOwner>;
 
 } // namespace Mayo

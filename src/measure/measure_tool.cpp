@@ -9,7 +9,8 @@
 namespace Mayo {
 
 MeasureValue IMeasureTool_computeValue(
-        const IMeasureTool& tool, MeasureType type, const GraphicsOwnerPtr& owner)
+        const IMeasureTool& tool, MeasureType type, const GraphicsOwnerPtr& owner
+    )
 {
     MeasureValue value;
     switch (type) {
@@ -22,6 +23,8 @@ MeasureValue IMeasureTool_computeValue(
         return tool.length(owner);
     case MeasureType::Area:
         return tool.area(owner);
+    case MeasureType::BoundingBox:
+        return tool.boundingBox(owner);
     default:
         return value;
     } // endswitch
@@ -31,7 +34,8 @@ MeasureValue IMeasureTool_computeValue(
         const IMeasureTool& tool,
         MeasureType type,
         const GraphicsOwnerPtr& owner1,
-        const GraphicsOwnerPtr& owner2)
+        const GraphicsOwnerPtr& owner2
+    )
 {
     MeasureValue value;
     switch (type) {
