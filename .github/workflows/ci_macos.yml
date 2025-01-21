@@ -7,20 +7,22 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - qt_version_name: 5.15
-                      qt_version_major: 5
-                    - qt_version_name: 6.7
-                      qt_version_major: 6
+                    - qt_version: 5.15
+                    - qt_version: 6.7
 
         runs-on: macos-latest
-        name: build-macos-qt${{matrix.qt_version_name}}
+        name: build-macos-qt${{matrix.qt_version}}
 
         steps:
+        - name: Set environment variables
+          run: |
+              echo QT_VERSION_MAJOR=$(echo ${{matrix.qt_version}} | cut -d. -f1) >> $GITHUB_ENV
+
         - name: Checkout
           uses: actions/checkout@v2
 
         - name: Install Qt
-          run: brew install qt@${{matrix.qt_version_major}}
+          run: brew install qt@$QT_VERSION_MAJOR
 
         - name: Install OpenCascade
           run: brew install opencascade
@@ -34,13 +36,14 @@ jobs:
 
         - name: Build
           run: |
+              echo QT_VERSION_MAJOR=$QT_VERSION_MAJOR
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
               cmake --version
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON \
-                    -DQT_DIR=$(brew --prefix qt@${{matrix.qt_version_major}})/lib/cmake/Qt${{matrix.qt_version_major}}
+                    -DQT_DIR=$(brew --prefix qt@$QT_VERSION_MAJOR)/lib/cmake/Qt$QT_VERSION_MAJOR
               cmake --build . \
                     --config Release \
                     --parallel ${{steps.cpu-cores.outputs.count}}
@@ -49,3 +52,18 @@ jobs:
           working-directory: ${{github.workspace}}/build
           run: |
               ./mayo.app/Contents/MacOS/mayo --runtests
+
+        - name: Create dmg file
+          working-directory: ${{github.workspace}}/build
+          run: |
+              $(brew --prefix qt@$QT_VERSION_MAJOR)/bin/macdeployqt mayo.app -dmg
+              mv mayo.dmg Mayo-0.9.0-macOS-arm64.dmg
+
+        - name: Upload dmg file
+          uses: actions/upload-artifact@v4
+          with:
+              name: Mayo-0.9.0-macOS-arm64-dmg
+              path: |
+                  ${{github.workspace}}/build/Mayo-0.9.0-macOS-arm64.dmg
+                  #${{github.workspace}}/build/MayoConv-0.9.0-macOS-arm64.dmg
+

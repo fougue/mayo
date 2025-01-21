@@ -108,15 +108,11 @@ if(QT_FOUND)
     endif()
 
     if(Mayo_BuildApp)
-        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Test)
+        find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets Svg Test)
         if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
             find_package(Qt5 REQUIRED COMPONENTS WinExtras)
         elseif(QT_VERSION_MAJOR EQUAL 6)
             find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-        endif()
-
-        if(Mayo_PostBuildCopyRuntimeDLLs)
-            find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg)
         endif()
     endif()
 endif()
@@ -536,16 +532,13 @@ list(
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Svg
 )
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
     list(APPEND MayoApp_LinkLibraries Qt5::WinExtras)
 elseif(QT_VERSION_MAJOR EQUAL 6)
     list(APPEND MayoApp_LinkLibraries Qt6::OpenGLWidgets)
-endif()
-
-if(Mayo_PostBuildCopyRuntimeDLLs)
-    list(APPEND MayoApp_LinkLibraries Qt${QT_VERSION_MAJOR}::Svg)
 endif()
 
 if(Mayo_BuildApp)
