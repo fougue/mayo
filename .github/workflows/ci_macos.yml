@@ -6,23 +6,30 @@ jobs:
     build-macos:
         strategy:
             matrix:
-                include:
-                    - qt_version: 5.15
-                    - qt_version: 6.7
+                qt_version: [5.15, 6.7]
+                os: [macos-latest-large, macos-latest-xlarge]
 
-        runs-on: macos-latest
+        runs-on: ${{matrix.os}}
         name: build-macos-qt${{matrix.qt_version}}
 
         steps:
-        - name: Set environment variables
+        - name: Set globals
+          id: globals
           run: |
-              echo QT_VERSION_MAJOR=$(echo ${{matrix.qt_version}} | cut -d. -f1) >> $GITHUB_ENV
+              QT_VERSION_MAJOR=$(echo ${{matrix.qt_version}} | cut -d. -f1)
+              echo qt_version_major=$QT_VERSION_MAJOR >> ${GITHUB_OUTPUT}
+              echo qt_path=$(brew --prefix qt@$QT_VERSION_MAJOR) >> ${GITHUB_OUTPUT}
+              if [[ ${{matrix.os}} =~ "-large" ]]; then
+                  echo arch=x64 >> ${GITHUB_OUTPUT}
+              elif [[ ${{matrix.os}} =~ "-xlarge" ]]; then
+                  echo arch=arm64 >> ${GITHUB_OUTPUT}
+              fi
 
         - name: Checkout
           uses: actions/checkout@v2
 
         - name: Install Qt
-          run: brew install qt@$QT_VERSION_MAJOR
+          run: brew install qt@${{steps.globals.outputs.qt_version_major}}
 
         - name: Install OpenCascade
           run: brew install opencascade
@@ -36,14 +43,13 @@ jobs:
 
         - name: Build
           run: |
-              echo QT_VERSION_MAJOR=$QT_VERSION_MAJOR
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
               cmake --version
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON \
-                    -DQT_DIR=$(brew --prefix qt@$QT_VERSION_MAJOR)/lib/cmake/Qt$QT_VERSION_MAJOR
+                    -DQT_DIR=${{steps.globals.outputs.qt_path}}/lib/cmake/Qt${{steps.globals.outputs.qt_version_major}}
               cmake --build . \
                     --config Release \
                     --parallel ${{steps.cpu-cores.outputs.count}}
@@ -54,16 +60,18 @@ jobs:
               ./mayo.app/Contents/MacOS/mayo --runtests
 
         - name: Create dmg file
+          if: ${{steps.globals.outputs.qt_version_major}} == '6'
           working-directory: ${{github.workspace}}/build
           run: |
-              $(brew --prefix qt@$QT_VERSION_MAJOR)/bin/macdeployqt mayo.app -dmg
-              mv mayo.dmg Mayo-0.9.0-macOS-arm64.dmg
+              ${{steps.globals.outputs.qt_path}}/bin/macdeployqt mayo.app -dmg
+              mv mayo.dmg Mayo-0.9.0-macOS-${{steps.globals.outputs.arch}}.dmg
 
         - name: Upload dmg file
+          if: ${{steps.globals.outputs.qt_version_major}} == '6'
           uses: actions/upload-artifact@v4
           with:
-              name: Mayo-0.9.0-macOS-arm64-dmg
+              name: Mayo-0.9.0-macOS-${{steps.globals.outputs.arch}}-dmg
               path: |
-                  ${{github.workspace}}/build/Mayo-0.9.0-macOS-arm64.dmg
-                  #${{github.workspace}}/build/MayoConv-0.9.0-macOS-arm64.dmg
+                  ${{github.workspace}}/build/Mayo-0.9.0-macOS-${{steps.globals.outputs.arch}}.dmg
+                  #${{github.workspace}}/build/MayoConv-0.9.0-macOS-${{steps.globals.outputs.arch}}.dmg
 
