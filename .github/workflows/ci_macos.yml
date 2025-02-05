@@ -40,7 +40,6 @@ jobs:
           run: |
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
-              cmake --version
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON \
