@@ -6,19 +6,9 @@ jobs:
     build-windows:
         strategy:
             matrix:
+                occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0]
+                assimp_version: [5.4.3]
                 include:
-                    - occ_version: 7.3.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.4.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.5.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.6.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.7.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.8.0
-                      assimp_version: 5.4.3
                     - occ_version: 7.8.0
                       assimp_version: 5.3.1
 
@@ -104,14 +94,14 @@ jobs:
           run: |
               mkdir ${{github.workspace}}\build
               cd ${{github.workspace}}\build
+              set occ_version=${{matrix.occ_version}}
               set assimp_version=${{matrix.assimp_version}}
-              cmake --version
               cmake .. ^
                     -DMayo_BuildTests=ON ^
                     -DMayo_BuildPluginAssimp=ON ^
                     -DMayo_PostBuildCopyRuntimeDLLs=ON ^
-                    -DOpenCASCADE_DIR=../OpenCASCADE-${{matrix.occ_version}}-vc14-64/opencascade-${{matrix.occ_version}} ^
-                    -Dassimp_DIR=${{github.workspace}}/assimp-${{matrix.assimp_version}}/lib/cmake/assimp-%assimp_version:~0,3%
+                    -DOpenCASCADE_DIR=${{github.workspace}}/OpenCASCADE-%occ_version%-vc14-64/opencascade-%occ_version% ^
+                    -Dassimp_DIR=${{github.workspace}}/assimp-%assimp_version%/lib/cmake/assimp-%assimp_version:~0,3%
               cmake --build . ^
                     --config Debug ^
                     --parallel ${{steps.cpu-cores.outputs.count}}

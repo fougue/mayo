@@ -17,8 +17,7 @@ jobs:
           uses: actions/checkout@v2
 
         - name: Update all package informations
-          run: |
-              sudo apt-get -y update
+          run: sudo apt-get -y update
 
         - name: Install Qt${{matrix.qt_version_major}}
           run: |
@@ -35,14 +34,12 @@ jobs:
               sudo apt-get -y install libxi-dev
 
         - name: Install Assimp
-          run: |
-              sudo apt-get -y install libassimp-dev
+          run: sudo apt-get -y install libassimp-dev
 
         - name: Build
           run: |
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
-              cmake --version
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON

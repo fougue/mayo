@@ -1,0 +1,7 @@
+
+   OS    |  Status
+---------|---------------------------------------------------
+ Linux   | [![Linux Arch x64](https://github.com/fougue/mayo/actions/workflows/ci_linux_arch.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_linux_arch.yml)<br>[![Linux Fedora x64](https://github.com/fougue/mayo/actions/workflows/ci_linux_fedora.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_linux_fedora.yml)<br>[![Linux Ubuntu armv7](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu_armv7.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu_armv7.yml)<br>[![Linux Ubuntu x64/arm64](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu.yml)	 
+ macOS   | [![macOS arm64](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml)<br>[![macOS-conda arm64](https://github.com/fougue/mayo/actions/workflows/ci_macos_conda.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_macos_conda.yml)
+ Windows | [![Windows x64](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml/badge.svg)](https://github.com/fougue/mayo/actions/workflows/ci_windows.yml)
+ 
