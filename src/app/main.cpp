@@ -482,6 +482,9 @@ int main(int argc, char* argv[])
 #if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
     if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") && !fnArgsContainAnyOf({ "-platform" }))
         qputenv("QT_QPA_PLATFORM", "xcb");
+#elif defined(Q_OS_HAIKU)
+    if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") && !fnArgsContainAnyOf({ "-platform" }))
+        qputenv("QT_QPA_PLATFORM", "haiku");
 #endif
 
     // Configure and create Qt application object
