@@ -12,8 +12,7 @@
 #include <RWMesh_CoordinateSystemConverter.hxx>
 #include <TDF_LabelSequence.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based writer for OBJ format
 // Requires OpenCascade >= v7.6.0
@@ -41,6 +40,5 @@ private:
     TDF_LabelSequence m_seqRootLabel;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO
 

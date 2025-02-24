@@ -9,8 +9,7 @@
 #include "io_occ_base_mesh.h"
 #include <VrmlAPI_CafReader.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based reader for VRML file format
 // Requires OpenCascade >= v7.7.0
@@ -28,5 +27,4 @@ private:
     OccBaseMeshReader::Parameters m_params;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

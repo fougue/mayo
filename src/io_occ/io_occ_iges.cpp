@@ -15,8 +15,7 @@
 #include <IGESControl_Controller.hxx>
 #include <Interface_Static.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccIgesReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader::Properties)
@@ -234,5 +233,4 @@ void OccIgesWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
     rollback->change("write.iges.unit", OccCommon::toCafString(m_params.lengthUnit));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

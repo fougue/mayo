@@ -7,8 +7,7 @@
 #include "io_occ_gltf_reader.h"
 #include "../base/property_builtins.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader::Properties)
@@ -62,5 +61,4 @@ void OccGltfReader::applyParameters()
     m_reader.SetMeshNameAsFallback(m_params.useMeshNameAsFallback);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

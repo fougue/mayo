@@ -20,8 +20,7 @@
 #include <BRepTools.hxx>
 #include <TDataStd_Name.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
@@ -84,5 +83,4 @@ bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

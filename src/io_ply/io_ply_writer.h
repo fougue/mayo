@@ -16,8 +16,7 @@
 
 namespace Mayo { class IMeshAccess; }
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Writer for PLY file format
 class PlyWriter : public Writer {
@@ -63,5 +62,4 @@ private:
 // Provides factory to create PlyWriter objects
 class PlyFactoryWriter : public SingleFormatFactoryWriter<Format_PLY, PlyWriter> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

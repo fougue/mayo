@@ -9,8 +9,7 @@
 
 #include <assimp/version.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 Span<const Format> AssimpFactoryReader::formats() const
 {
@@ -98,5 +97,5 @@ std::string_view AssimpLib::strVersionDetails()
 
     return str;
 }
-} // namespace IO
-} // namespace Mayo
+
+} // namespace Mayo::IO

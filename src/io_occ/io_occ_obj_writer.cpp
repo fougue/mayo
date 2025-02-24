@@ -18,8 +18,7 @@
 
 #include <RWObj_CafWriter.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OccObjWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriterI18N) };
 
@@ -106,5 +105,4 @@ void OccObjWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

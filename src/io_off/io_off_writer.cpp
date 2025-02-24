@@ -22,8 +22,7 @@
 #include <locale>
 #include <string>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OffWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OffWriterI18N) };
 
@@ -117,5 +116,4 @@ void OffWriter::applyProperties(const PropertyGroup*)
 {
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

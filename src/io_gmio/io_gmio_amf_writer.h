@@ -17,8 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // gmio-based writer for AMF format
 // Requires gmio >= v0.4.0
@@ -125,6 +124,4 @@ private:
     std::vector<Instance> m_vecInstance;
 };
 
-} // namespace IO
-} // namespace Mayo
-
+} // namespace Mayo::IO

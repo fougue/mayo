@@ -8,8 +8,7 @@
 
 #include <utility>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct RGB_Color {
     int r;
@@ -277,5 +276,4 @@ const std::pair<int, RGB_Color> aciTable[] = {
     { 255, RGB_Color{ 255, 255, 255 } },
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

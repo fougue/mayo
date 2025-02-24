@@ -19,8 +19,7 @@
 #include <STEPCAFControl_Writer.hxx>
 #include <gsl/util>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO::Private {
 
 namespace {
 
@@ -83,8 +82,6 @@ bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> 
 
 } // namespace
 
-namespace Private {
-
 std::mutex& cafGlobalMutex()
 {
     static std::mutex mutex;
@@ -131,6 +128,4 @@ bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appI
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-} // namespace Private
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO::Private

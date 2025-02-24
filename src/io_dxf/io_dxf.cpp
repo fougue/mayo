@@ -56,8 +56,7 @@
 
 #define MAYO_IO_DXF_DEBUG_TRACE 1
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -968,5 +967,4 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(cons
     return interp.Curve();
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

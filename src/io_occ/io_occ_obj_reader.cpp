@@ -7,8 +7,7 @@
 #include "io_occ_obj_reader.h"
 #include "../base/property_builtins.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccObjReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
@@ -55,5 +54,4 @@ void OccObjReader::applyParameters()
     m_reader.SetSinglePrecision(m_params.singlePrecisionVertexCoords);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

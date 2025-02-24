@@ -10,8 +10,7 @@
 
 #include <gmio_core/version.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 Span<const Format> GmioFactoryWriter::formats() const
 {
@@ -41,5 +40,4 @@ std::string_view GmioLib::strVersion()
     return GMIO_VERSION_STR;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

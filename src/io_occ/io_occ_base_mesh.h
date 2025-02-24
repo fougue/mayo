@@ -14,8 +14,7 @@
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Base class around OpenCascade RWMesh_CafReader
 class OccBaseMeshReader : public Reader {
@@ -60,5 +59,4 @@ public:
     PropertyEnum<LengthUnit> systemLengthUnit;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

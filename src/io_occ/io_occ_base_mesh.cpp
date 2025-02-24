@@ -21,8 +21,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 OccBaseMeshReaderProperties::OccBaseMeshReaderProperties(PropertyGroup* parentGroup)
     : PropertyGroup(parentGroup),
@@ -145,5 +144,4 @@ void OccBaseMeshReader::applyParameters()
     m_reader.SetSystemCoordinateSystem(this->constParameters().systemCoordinatesConverter);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

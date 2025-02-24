@@ -6,8 +6,6 @@
 
 #include "io_writer.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

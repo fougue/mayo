@@ -14,8 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for DXF file format based on FreeCad's CDxfRead
 class DxfReader : public Reader {
@@ -50,5 +49,4 @@ private:
 // Provides factory to create DxfReader objects
 class DxfFactoryReader : public SingleFormatFactoryReader<Format_DXF, DxfReader> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

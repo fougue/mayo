@@ -9,8 +9,7 @@
 #include "io_occ_base_mesh.h"
 #include <RWGltf_CafReader.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based reader for glTF format
 // Requires OpenCascade >= v7.4.0
@@ -39,5 +38,4 @@ private:
     RWGltf_CafReader m_reader;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

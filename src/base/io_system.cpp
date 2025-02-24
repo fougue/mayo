@@ -29,8 +29,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -665,5 +664,4 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OFF);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

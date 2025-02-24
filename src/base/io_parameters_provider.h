@@ -10,8 +10,7 @@
 
 namespace Mayo { class PropertyGroup; }
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
@@ -20,5 +19,4 @@ public:
     virtual const PropertyGroup* findWriterParameters(Format format) const = 0;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

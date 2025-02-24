@@ -12,8 +12,7 @@
 
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Writer for OFF file format
 class OffWriter : public Writer {
@@ -31,5 +30,4 @@ private:
 // Provides factory to create OffWriter objects
 class OffFactoryWriter : public SingleFormatFactoryWriter<Format_OFF, OffWriter> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO {

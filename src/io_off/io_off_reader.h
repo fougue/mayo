@@ -13,8 +13,7 @@
 #include <vector>
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for OFF file format
 class OffReader : public Reader {
@@ -49,5 +48,4 @@ private:
 // Provides factory to create OffReader objects
 class OffFactoryReader : public SingleFormatFactoryReader<Format_OFF, OffReader> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -8,8 +8,7 @@
 
 #include <algorithm>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 std::string_view formatIdentifier(Format format)
 {
@@ -133,5 +132,4 @@ bool formatProvidesMesh(Format format)
         ;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

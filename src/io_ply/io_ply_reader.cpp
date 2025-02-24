@@ -23,8 +23,7 @@
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
 {
@@ -239,5 +238,4 @@ TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progres
     return entityLabel;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO
