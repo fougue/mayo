@@ -294,6 +294,7 @@ QDialog* runMessageBox(
     QStyle::StandardPixmap dlgIcon;
     QString title;
     switch (icon) {
+    case QMessageBox::NoIcon:
     case QMessageBox::Information:
         dlgIcon = QStyle::SP_MessageBoxInformation;
         title = MainWindow::tr("Information");
