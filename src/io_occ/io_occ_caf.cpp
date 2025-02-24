@@ -24,6 +24,10 @@ namespace IO {
 
 namespace {
 
+// NOTE
+// Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
+// But concurrent calls to Transfer() to the same target Document must be serialized
+
 template<typename CafReaderType>
 bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskProgress* /*progress*/)
 {
