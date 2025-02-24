@@ -6,8 +6,13 @@
 
 #include "geom_utils.h"
 #include "math_utils.h"
+
 #include <Adaptor3d_Curve.hxx>
+#include <gp_Trsf.hxx>
+#include <TopLoc_Location.hxx>
+
 #include <algorithm>
+#include <cmath>
 
 namespace Mayo {
 
@@ -42,4 +47,11 @@ std::pair<gp_Pnt, gp_Vec> GeomUtils::d0d1(const Adaptor3d_Curve& curve, double u
     return { pnt, vec };
 }
 
-} // namespace Mayo
+bool GeomUtils::hasScaling(const gp_Trsf& trsf)
+{
+    // This test comes from implementation of TopoDS_Shape::Location() function
+    return std::abs(std::abs(trsf.ScaleFactor()) - 1.) > TopLoc_Location::ScalePrec()
+           || trsf.IsNegative();
+}
+
+} // namespace Mayo::GeomUtils
