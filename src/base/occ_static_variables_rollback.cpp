@@ -11,8 +11,7 @@
 #include <iostream>
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OccStaticVariablesRollback::Private {
     template<typename T>
@@ -103,5 +102,4 @@ OccStaticVariablesRollback::~OccStaticVariablesRollback()
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -24,8 +24,7 @@
 #include <fmt/format.h>
 #include <stdexcept>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccStepReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader::Properties)
@@ -381,5 +380,4 @@ void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
     rollback->change("write.stepcaf.subshapes.name", int(m_params.writeSubShapesNames ? 1 : 0));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

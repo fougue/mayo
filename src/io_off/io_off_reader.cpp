@@ -35,8 +35,7 @@
 #include <string>
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OffReaderI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OffReaderI18N) };
 
@@ -381,5 +380,4 @@ TDF_Label OffReader::transferPointCloud(DocumentPtr /*doc*/, TaskProgress* /*pro
     return {};
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

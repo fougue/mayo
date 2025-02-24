@@ -34,8 +34,7 @@
 #include <cmath>
 #include <unordered_map>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -503,5 +502,4 @@ void GmioAmfWriter::amf_getConstellationInstance(
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

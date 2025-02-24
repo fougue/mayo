@@ -11,8 +11,7 @@
 
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for PLY file format based on miniply library
 class PlyReader : public Reader {
@@ -38,5 +37,4 @@ private:
 // Provides factory to create PlyReader objects
 class PlyFactoryReader : public SingleFormatFactoryReader<Format_PLY, PlyReader> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

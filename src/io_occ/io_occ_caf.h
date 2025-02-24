@@ -24,12 +24,9 @@ class STEPCAFControl_Reader;
 class IGESCAFControl_Writer;
 class STEPCAFControl_Writer;
 
-namespace Mayo {
+namespace Mayo { class TaskProgress; }
 
-class TaskProgress;
-
-namespace IO {
-namespace Private {
+namespace Mayo::IO::Private {
 
 std::mutex& cafGlobalMutex();
 
@@ -51,6 +48,4 @@ TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, Ta
 bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
 bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
 
-} // namespace Private
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO::Private

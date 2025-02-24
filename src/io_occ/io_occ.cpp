@@ -31,8 +31,7 @@
 #  include "io_occ_vrml_reader.h"
 #endif
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace { using PtrPropertyGroup = std::unique_ptr<PropertyGroup>; }
 
@@ -162,5 +161,4 @@ PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup
     return {};
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

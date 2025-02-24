@@ -6,8 +6,7 @@
 
 #include "io_occ_vrml_reader.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 OccVrmlReader::OccVrmlReader()
     : OccBaseMeshReader(m_reader)
@@ -27,5 +26,4 @@ std::unique_ptr<PropertyGroup> OccVrmlReader::createProperties(PropertyGroup* pa
     return std::make_unique<OccBaseMeshReaderProperties>(parentGroup);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

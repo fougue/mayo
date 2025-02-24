@@ -12,8 +12,7 @@
 #include <IGESCAFControl_Reader.hxx>
 #include <IGESCAFControl_Writer.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccStaticVariablesRollback;
 
@@ -111,5 +110,4 @@ private:
     Parameters m_params;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

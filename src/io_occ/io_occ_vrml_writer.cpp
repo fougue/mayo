@@ -20,8 +20,7 @@
 #include <VrmlData_ShapeConvert.hxx>
 #include <fstream>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccVrmlWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter::Properties)
@@ -106,5 +105,4 @@ void OccVrmlWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

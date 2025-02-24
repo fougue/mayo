@@ -11,8 +11,7 @@
 #include <variant>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Resets an OpenCascade static variable(see Interface_Static) to its previous value on destruction
 // It can be used to revert state when an exception is thrown without needing to write
@@ -52,5 +51,4 @@ private:
     std::vector<StaticVariableRecord> m_vecRecord;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

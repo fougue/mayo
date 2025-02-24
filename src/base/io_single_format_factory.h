@@ -9,8 +9,7 @@
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 template<Format Fmt, typename FormatReader>
 class SingleFormatFactoryReader : public FactoryReader {
@@ -84,5 +83,4 @@ SingleFormatFactoryWriter<Fmt, FormatWriter>::createProperties(Format format, Pr
         return {};
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

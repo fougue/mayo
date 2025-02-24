@@ -9,8 +9,7 @@
 #include "span.h"
 #include <string_view>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Predefined I/O formats
 enum Format {
@@ -51,5 +50,4 @@ bool formatProvidesBRep(Format format);
 // Does 'format' provide mesh model ?
 bool formatProvidesMesh(Format format);
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

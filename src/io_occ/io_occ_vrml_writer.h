@@ -11,8 +11,7 @@
 #include <VrmlData_Scene.hxx>
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Opencascade-based writer for VRML(v2.0 UTF8) file format
 class OccVrmlWriter : public Writer {
@@ -38,5 +37,4 @@ private:
     VrmlAPI_RepresentationOfShape m_shapeRepresentation = VrmlAPI_BothRepresentation;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

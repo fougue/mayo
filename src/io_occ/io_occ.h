@@ -10,8 +10,7 @@
 #include "../base/io_writer.h"
 #include "../base/property.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides factory for OpenCascade-based Reader objects
 class OccFactoryReader : public FactoryReader {
@@ -29,5 +28,4 @@ public:
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

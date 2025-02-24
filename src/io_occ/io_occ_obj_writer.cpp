@@ -7,27 +7,32 @@
 #include "io_occ_obj_writer.h"
 
 #include "../base/application_item.h"
+#include "../base/enumeration_fromenum.h"
 #include "../base/io_system.h"
+#include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
-#include "../base/enumeration_fromenum.h"
 #include "../base/text_id.h"
 #include "io_occ_common.h"
 
 #include <RWObj_CafWriter.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
+
+struct OccObjWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriterI18N) };
 
 class OccObjWriter::Properties : public PropertyGroup {
-    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriter::Properties)
 public:
     Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
-        this->inputCoordinateSystem.setDescription(textIdTr("Source coordinate system transformation"));
-        this->outputCoordinateSystem.setDescription(textIdTr("Target coordinate system transformation"));
+        this->inputCoordinateSystem.setDescription(
+            OccObjWriterI18N::textIdTr("Source coordinate system transformation")
+        );
+        this->outputCoordinateSystem.setDescription(
+            OccObjWriterI18N::textIdTr("Target coordinate system transformation")
+        );
     }
 
     void restoreDefaults() override {
@@ -36,8 +41,8 @@ public:
         this->outputCoordinateSystem.setValue(defaults.outputCoordinateSystem);
     }
 
-    PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, textId("inputCoordinateSystem") };
-    PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, textId("outputCoordinateSystem") };
+    PropertyEnum<RWMesh_CoordinateSystem> inputCoordinateSystem{ this, OccObjWriterI18N::textId("inputCoordinateSystem") };
+    PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, OccObjWriterI18N::textId("outputCoordinateSystem") };
 };
 
 bool OccObjWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
@@ -73,10 +78,17 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);
     writer.ChangeCoordinateSystemConverter().SetOutputCoordinateSystem(m_params.outputCoordinateSystem);
     const TColStd_IndexedDataMapOfStringString fileInfo;
-    if (m_seqRootLabel.IsEmpty())
-        return writer.Perform(m_document, fileInfo, occProgress->Start());
-    else
-        return writer.Perform(m_document, m_seqRootLabel, nullptr, fileInfo, occProgress->Start());
+    try {
+        if (m_seqRootLabel.IsEmpty())
+            return writer.Perform(m_document, fileInfo, occProgress->Start());
+        else
+            return writer.Perform(m_document, m_seqRootLabel, nullptr, fileInfo, occProgress->Start());
+    }
+    catch (const Standard_Failure& err) {
+        this->messenger()->error() << err.GetMessageString();
+    }
+
+    return false;
 }
 
 std::unique_ptr<PropertyGroup> OccObjWriter::createProperties(PropertyGroup* parentGroup)
@@ -93,5 +105,4 @@ void OccObjWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

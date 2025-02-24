@@ -19,8 +19,7 @@
 #include <fmt/format.h>
 #include <RWGltf_CafWriter.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccGltfWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfWriter::Properties)
@@ -219,5 +218,4 @@ void OccGltfWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

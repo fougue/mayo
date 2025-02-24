@@ -9,8 +9,7 @@
 #include "io_occ_base_mesh.h"
 #include <RWObj_CafReader.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based reader for Wavefront OBJ format
 // Requires OpenCascade >= v7.4.0
@@ -38,5 +37,4 @@ private:
     RWObj_CafReader m_reader;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

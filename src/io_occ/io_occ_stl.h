@@ -12,8 +12,7 @@
 #include <Poly_Triangulation.hxx>
 #include <TopoDS_Shape.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Opencascade-based reader for STL file format
 class OccStlReader : public Reader {
@@ -51,5 +50,4 @@ private:
     TopoDS_Shape m_shape;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

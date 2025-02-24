@@ -16,8 +16,7 @@
 
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccStaticVariablesRollback;
 
@@ -164,5 +163,4 @@ private:
     Schema m_schemaLastTransfer = Schema::AP214_IS;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

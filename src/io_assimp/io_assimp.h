@@ -10,8 +10,7 @@
 
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides factory for Assimp-based Reader objects
 class AssimpFactoryReader : public FactoryReader {
@@ -40,5 +39,4 @@ struct AssimpLib {
 #endif
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

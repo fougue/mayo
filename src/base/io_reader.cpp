@@ -6,8 +6,6 @@
 
 #include "io_reader.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

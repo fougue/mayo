@@ -26,8 +26,7 @@ class GuiApplication;
 class GuiDocument;
 } // namespace Mayo
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides a writer for image creation
 // Formats are those supported by OpenCascade with Image_AlienPixMap, see:
@@ -81,5 +80,4 @@ private:
     GuiApplication* m_guiApp = nullptr;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

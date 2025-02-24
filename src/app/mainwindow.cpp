@@ -33,6 +33,12 @@
 #endif
 
 #include <QtDebug>
+#include <QtGui/QFontMetrics>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QStyle>
 
 namespace Mayo {
 
@@ -273,9 +279,76 @@ void MainWindow::onGuiDocumentErased(GuiDocument* /*guiDoc*/)
     this->updateControlsActivation();
 }
 
+// Async execution of a resizable message box dialog
+// Text is also selectable and displayed within a scroll area
+QDialog* runMessageBox(
+        QMessageBox::Icon icon,
+        QWidget* parentWidget,
+        const QString& text,
+        QDialogButtonBox::StandardButtons btns = QDialogButtonBox::StandardButton::Ok
+    )
+{
+    auto dlg = new QDialog(parentWidget);
+    dlg->setModal(true);
+
+    QStyle::StandardPixmap dlgIcon;
+    QString title;
+    switch (icon) {
+    case QMessageBox::NoIcon:
+    case QMessageBox::Information:
+        dlgIcon = QStyle::SP_MessageBoxInformation;
+        title = MainWindow::tr("Information");
+        break;
+    case QMessageBox::Warning:
+        dlgIcon = QStyle::SP_MessageBoxWarning;
+        title = MainWindow::tr("Warning");
+        break;
+    case QMessageBox::Critical:
+        dlgIcon = QStyle::SP_MessageBoxCritical;
+        title = MainWindow::tr("Error");
+        break;
+    case QMessageBox::Question:
+        dlgIcon = QStyle::SP_MessageBoxQuestion;
+        title = MainWindow::tr("Question");
+        break;
+    }
+
+    dlg->setWindowTitle(title);
+
+    auto dlgMsgLayout = new QHBoxLayout;
+    auto label = new QLabel(dlg);
+    const int iconSize = QApplication::style()->pixelMetric(QStyle::PM_MessageBoxIconSize, nullptr, dlg);
+    label->setPixmap(QApplication::style()->standardIcon(dlgIcon).pixmap(iconSize, iconSize));
+    dlgMsgLayout->addWidget(label, 0, Qt::AlignHCenter | Qt::AlignTop);
+
+    auto textLabel = new QLabel;
+    textLabel->setText(text);
+    textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+    auto scrollArea = new QScrollArea(dlg);
+    scrollArea->setWidget(textLabel);
+    scrollArea->setWidgetResizable(true);
+    textLabel->setAlignment(Qt::AlignTop);
+    dlgMsgLayout->addWidget(scrollArea, 5);
+
+    auto dlgLayout = new QVBoxLayout(dlg);
+    auto btnBox = new QDialogButtonBox(btns, dlg);
+    if (btns.testFlag(QDialogButtonBox::StandardButton::Ok)) {
+        btnBox->button(QDialogButtonBox::StandardButton::Ok)->setDefault(true);
+        btnBox->button(QDialogButtonBox::StandardButton::Ok)->setFocus();
+    }
+
+    dlgLayout->addLayout(dlgMsgLayout);
+    dlgLayout->addWidget(btnBox);
+
+    QObject::connect(btnBox, &QDialogButtonBox::accepted, dlg, &QDialog::accept);
+    QtWidgetsUtils::asyncDialogExec(dlg);
+    return dlg;
+}
+
 void MainWindow::onMessage(const Messenger::Message& msg)
 {
     const auto qtext = to_QString(msg.text);
+
     switch (msg.type) {
     case MessageType::Trace:
         qDebug() << qtext;
@@ -284,10 +357,10 @@ void MainWindow::onMessage(const Messenger::Message& msg)
         WidgetMessageIndicator::showInfo(qtext, this);
         break;
     case MessageType::Warning:
-        QtWidgetsUtils::asyncMsgBoxWarning(this, tr("Warning"), qtext);
+        runMessageBox(QMessageBox::Warning, this, qtext);
         break;
     case MessageType::Error:
-        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), qtext);
+        runMessageBox(QMessageBox::Critical, this, qtext);
         break;
     }
 }

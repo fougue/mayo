@@ -29,8 +29,7 @@
 #include <locale>
 #include <string>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -313,5 +312,4 @@ PlyWriter::Color PlyWriter::toColor(const Quantity_Color& c)
     return { uint8_t(cc.Red() * 255), uint8_t(cc.Green() * 255), uint8_t(cc.Blue() * 255) };
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -11,8 +11,7 @@
 #include <fmt/format.h>
 #include <stdexcept>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
 {
@@ -30,5 +29,4 @@ const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
     throw std::invalid_argument(fmt::format("{} isn't supported", MetaEnum::name(unit)));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

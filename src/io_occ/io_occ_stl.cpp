@@ -27,8 +27,7 @@
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Compound.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -154,5 +153,4 @@ void OccStlWriter::applyProperties(const PropertyGroup* params)
         m_params.format = ptr->targetFormat;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

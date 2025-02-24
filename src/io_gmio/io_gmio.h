@@ -12,8 +12,7 @@
 
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides factory for gmio-based Writer objects
 class GmioFactoryWriter : public FactoryWriter {
@@ -42,5 +41,4 @@ struct GmioLib {
 #endif
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -19,10 +19,13 @@
 #include <STEPCAFControl_Writer.hxx>
 #include <gsl/util>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO::Private {
 
 namespace {
+
+// NOTE
+// Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
+// But concurrent calls to Transfer() to the same target Document must be serialized
 
 template<typename CafReaderType>
 bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskProgress* /*progress*/)
@@ -79,8 +82,6 @@ bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> 
 
 } // namespace
 
-namespace Private {
-
 std::mutex& cafGlobalMutex()
 {
     static std::mutex mutex;
@@ -127,6 +128,4 @@ bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appI
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-} // namespace Private
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO::Private

@@ -62,7 +62,7 @@ struct BRepUtils {
     // Deserializes string 'str' obtained from 'shapeToToString()' into a shape object
     static TopoDS_Shape shapeFromString(const std::string& str);
 
-    // Does 'edge' rely on 3D curve of curve on surface?
+    // Does 'edge' rely on 3D curve or curve on surface?
     static bool isGeometric(const TopoDS_Edge& edge);
 
     // Does 'face' rely on a geometric surface?

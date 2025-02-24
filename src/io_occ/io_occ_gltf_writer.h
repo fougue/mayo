@@ -13,8 +13,7 @@
 #include <RWMesh_CoordinateSystemConverter.hxx>
 #include <TDF_LabelSequence.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based writer for glTF format
 // Requires OpenCascade >= v7.5.0
@@ -60,6 +59,4 @@ private:
     TDF_LabelSequence m_seqRootLabel;
 };
 
-} // namespace IO
-} // namespace Mayo
-
+} // namespace Mayo::IO

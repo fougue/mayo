@@ -18,6 +18,8 @@
 #include "tkernel_utils.h"
 
 #include <fmt/format.h>
+#include <gsl/util>
+
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -27,8 +29,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -36,6 +37,20 @@ bool containsFormat(Span<const Format> spanFormat, Format format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
     return itFormat != spanFormat.end();
+}
+
+void dispatchErrors(std::string_view headerMsg, const MessageCollecter& msgCollect, Messenger* target)
+{
+    const std::string strErrors = msgCollect.asString("\n    ", MessageType::Error);
+    if (!strErrors.empty())
+        target->error() << fmt::format("{}\n    {}", headerMsg, strErrors);
+}
+
+void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCollect, Messenger* target)
+{
+    const std::string strWarnings = msgCollect.asString("\n    ", MessageType::Warning);
+    if (!strWarnings.empty())
+        target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
 }
 
 } // namespace
@@ -173,10 +188,6 @@ std::unique_ptr<Writer> System::createWriter(Format format) const
 
 bool System::importInDocument(const Args_ImportInDocument& args)
 {
-    // NOTE
-    // Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
-    // But concurrent calls to Transfer() to the same target Document must be serialized
-
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
@@ -194,6 +205,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TDF_LabelSequence seqTransferredEntity;
         bool readSuccess = false;
         bool transferred = false;
+        MessageCollecter messenger;
     };
 
     auto fnEntityPostProcessRequired = [&](Format format) {
@@ -202,18 +214,20 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         else
             return false;
     };
-    auto fnAddError = [&](const FilePath& fp, std::string_view errorMsg) {
+    auto fnAddError = [&](TaskData& taskData, std::string_view errorMsg) {
         ok = false;
-        messenger->emitError(fmt::format(textIdTr("Error during import of '{}'\n{}"), fp.u8string(), errorMsg));
+        taskData.messenger.error() << fmt::format(
+            textIdTr("Error during import of '{}'\n{}"), taskData.filepath.u8string(), errorMsg
+        );
     };
-    auto fnReadFileError = [&](const FilePath& fp, std::string_view errorMsg) {
-        fnAddError(fp, errorMsg);
+    auto fnReadFileError = [&](TaskData& taskData, std::string_view errorMsg) {
+        fnAddError(taskData, errorMsg);
         return false;
     };
     auto fnReadFile = [&](TaskData& taskData) {
         taskData.fileFormat = this->probeFormat(taskData.filepath);
         if (taskData.fileFormat == Format_Unknown)
-            return fnReadFileError(taskData.filepath, textIdTr("Unknown format"));
+            return fnReadFileError(taskData, textIdTr("Unknown format"));
 
         double portionSize = 40;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
@@ -222,17 +236,17 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskProgress progress(taskData.progress, portionSize, textIdTr("Reading file"));
         taskData.reader = this->createReader(taskData.fileFormat);
         if (!taskData.reader)
-            return fnReadFileError(taskData.filepath, textIdTr("No supporting reader"));
+            return fnReadFileError(taskData, textIdTr("No supporting reader"));
 
-        taskData.reader->setMessenger(messenger);
+        taskData.reader->setMessenger(&taskData.messenger);
         if (args.parametersProvider) {
             taskData.reader->applyProperties(
-                        args.parametersProvider->findReaderParameters(taskData.fileFormat)
+                args.parametersProvider->findReaderParameters(taskData.fileFormat)
             );
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
-            return fnReadFileError(taskData.filepath, textIdTr("File read problem"));
+            return fnReadFileError(taskData, textIdTr("File read problem"));
 
         return true;
     };
@@ -245,7 +259,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
             taskData.seqTransferredEntity = taskData.reader->transfer(doc, &progress);
             if (taskData.seqTransferredEntity.IsEmpty())
-                fnAddError(taskData.filepath, textIdTr("File transfer problem"));
+                fnAddError(taskData, textIdTr("File transfer problem"));
         }
 
         taskData.transferred = true;
@@ -255,9 +269,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             return;
 
         TaskProgress progress(
-                    taskData.progress,
-                    args.entityPostProcessProgressSize,
-                    args.entityPostProcessProgressStep
+            taskData.progress, args.entityPostProcessProgressSize, args.entityPostProcessProgressStep
         );
         const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
@@ -272,6 +284,18 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         // Document's model tree within slots connected to signal(and living in other threads)
         doc->addEntityTreeNodeSequence(taskData.seqTransferredEntity);
     };
+    auto fnDispatchMessages = [=](TaskData& taskData) {
+        const auto strFilepath = taskData.filepath.make_preferred().u8string();
+        dispatchWarnings(
+            fmt::format("Warning(s) during import from '{}'", strFilepath),
+            taskData.messenger, messenger
+        );
+        dispatchErrors(
+            fmt::format("Errors(s) during import from '{}'", strFilepath),
+            taskData.messenger, messenger
+        );
+        taskData.messenger.clear();
+    };
 
     if (listFilepath.size() == 1) { // Single file case
         TaskData taskData;
@@ -283,6 +307,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             fnPostProcess(taskData);
             fnAddModelTreeEntities(taskData);
         }
+
+        fnDispatchMessages(taskData);
     }
     else { // Many files case
         std::vector<TaskData> vecTaskData;
@@ -319,6 +345,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     fnAddModelTreeEntities(*it);
                 }
 
+                fnDispatchMessages(*it);
                 --taskDataCount;
             }
         } // endwhile
@@ -334,18 +361,24 @@ System::Operation_ImportInDocument System::importInDocument() {
 bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 {
     TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
-    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
-    auto fnError = [=](std::string_view errorMsg) {
-        const std::string strFilepath = args.targetFilepath.u8string();
-        messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));
+    MessageCollecter msgCollect;
+    auto fnError = [&](std::string_view errorMsg) {
+        msgCollect.error() << errorMsg;
         return false;
     };
+
+    auto _ = gsl::finally([&]{
+        Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
+        const std::string strFilepath = args.targetFilepath.u8string();
+        dispatchWarnings(fmt::format("Warning(s) during export to '{}'", strFilepath), msgCollect, messenger);
+        dispatchErrors(fmt::format("Errors(s) during export to '{}'", strFilepath), msgCollect, messenger);
+    });
 
     std::unique_ptr<Writer> writer = this->createWriter(args.targetFormat);
     if (!writer)
         return fnError(textIdTr("No supporting writer"));
 
-    writer->setMessenger(args.messenger);
+    writer->setMessenger(&msgCollect);
     writer->applyProperties(args.parameters);
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
@@ -631,5 +664,4 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OFF);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -13,8 +13,7 @@
 #  include <RWMesh_CoordinateSystem.hxx>
 #endif
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccCommon {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccCommon)
@@ -34,7 +33,10 @@ public:
     static const char* toCafString(LengthUnit unit);
 };
 
-} // namespace IO
+} // namespace Mayo::IO
+
+
+namespace Mayo {
 
 template<> struct EnumNames<IO::OccCommon::LengthUnit> {
     inline static std::string_view trContext = IO::OccCommon::textIdContext();

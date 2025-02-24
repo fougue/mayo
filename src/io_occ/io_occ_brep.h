@@ -10,8 +10,7 @@
 #include "../base/io_writer.h"
 #include <TopoDS_Shape.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for OpenCascade BRep file format
 class OccBRepReader : public Reader {
@@ -36,5 +35,4 @@ private:
     TopoDS_Shape m_shape;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO
