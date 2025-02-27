@@ -95,6 +95,11 @@ public:
 OccIgesReader::OccIgesReader()
 {
     MayoIO_CafGlobalScopedLock(cafLock);
+    // NOTE: parameter "read.iges.resource.name" is important to support names/colors in some IGES files
+    //       See comment https://dev.opencascade.org/content/issue-reading-colors-compared-cad-assistant-0#comment-26218
+    //       This can be used to reset the parameter and seems to fix name/color issues, but it seems
+    //       better to correctly set CSF_IGESDefaults to point on "XSTEPResource" folder:
+    //           Interface_Static::Init("XSTEP", "read.iges.resource.name", 't', "");
     m_reader = new(&m_readerStorage) IGESCAFControl_Reader();
     IGESControl_Controller::Init();
     m_reader->SetColorMode(true);

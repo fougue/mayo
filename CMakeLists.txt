@@ -438,8 +438,9 @@ endif()
 # Configure files
 ##########
 
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config.h  @ONLY)
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/opencascade.conf.in  opencascade.conf  @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.in  common/mayo_config.h  @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.in common/mayo_version.h @ONLY)
 
 ##########
 # Icons for Mayo exe targets
@@ -686,11 +687,12 @@ add_custom_target(
     .github/workflows/ci_macos.yml
     .github/workflows/ci_macos_conda.yml
     .github/workflows/ci_windows.yml
+    cmake/opencascade.conf.in
     images/credits.txt
     scripts/bump-version.rb
     scripts/gen-cmake-opencascade-vars.bat
-    src/mayo_config.h.cmake
-    src/mayo_version.h.cmake
+    src/mayo_config.h.in
+    src/mayo_version.h.in
     README.md
 )
 

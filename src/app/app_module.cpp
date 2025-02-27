@@ -22,8 +22,10 @@
 
 #include <BRepBndLib.hxx>
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QDataStream>
 #include <QtCore/QDir>
+#include <QtCore/QSettings>
 #include <QtCore/QtDebug>
 
 #include <fmt/format.h>
@@ -97,6 +99,49 @@ AppModule::AppModule()
 
     m_settings->setPropertyValueConversion(this);
     Application::defineMayoFormat(m_application);
+}
+
+void AppModule::initOpenCascadeEnvironment(const FilePath& settingsFilepath)
+{
+    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
+    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
+        qWarning().noquote()
+            << fmt::format(textIdTr("OpenCascade settings file doesn't exist or is not readable [path={}]"),
+                           settingsFilepath.u8string()).c_str();
+        return;
+    }
+
+    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
+    if (occSettings.status() != QSettings::NoError) {
+        qWarning().noquote()
+            << fmt::format(textIdTr("OpenCascade settings file could not be loaded with QSettings [path={}]"),
+                           settingsFilepath.u8string()).c_str();
+        return;
+    }
+
+    // Process options
+    for (const char* varName : Application::envOpenCascadeOptions()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            const QString strValue = occSettings.value(qVarName).toString();
+            qputenv(varName, strValue.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
+        }
+    }
+
+    // Process paths
+    for (const char* varName : Application::envOpenCascadePaths()) {
+        const QLatin1String qVarName(varName);
+        if (occSettings.contains(qVarName)) {
+            QString strPath = occSettings.value(qVarName).toString();
+            if (QFileInfo(strPath).isRelative())
+                strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
+
+            strPath = QDir::toNativeSeparators(strPath);
+            qputenv(varName, strPath.toUtf8());
+            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
+        }
+    }
 }
 
 QStringUtils::TextOptions AppModule::defaultTextOptions() const

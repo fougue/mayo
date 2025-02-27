@@ -57,6 +57,9 @@ public:
     AppModuleProperties* properties() { return &m_props; }
     Settings* settings() const { return m_settings; }
 
+    // Set OpenCascade environment variables defined in a settings file(INI format)
+    static void initOpenCascadeEnvironment(const FilePath& settingsFilepath);
+
     // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
 

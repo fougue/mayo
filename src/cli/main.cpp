@@ -291,48 +291,6 @@ static CommandLineArguments processCommandLine()
     return args;
 }
 
-// Set OpenCascade environment variables defined in a settings file(INI format)
-static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
-{
-    const QString strSettingsFilepath = filepathTo<QString>(settingsFilepath);
-    if (!filepathExists(settingsFilepath) /* TODO Check readable */) {
-        qDebug().noquote() << Main::tr("OpenCascade settings file doesn't exist or is not readable [path=%1]")
-                              .arg(strSettingsFilepath);
-        return;
-    }
-
-    const QSettings occSettings(strSettingsFilepath, QSettings::IniFormat);
-    if (occSettings.status() != QSettings::NoError) {
-        qDebug().noquote() << Main::tr("OpenCascade settings file could not be loaded with QSettings [path=%1]")
-                              .arg(strSettingsFilepath);
-        return;
-    }
-
-    // Process options
-    for (const char* varName : Application::envOpenCascadeOptions()) {
-        const QLatin1String qVarName(varName);
-        if (occSettings.contains(qVarName)) {
-            const QString strValue = occSettings.value(qVarName).toString();
-            qputenv(varName, strValue.toUtf8());
-            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strValue);
-        }
-    }
-
-    // Process paths
-    for (const char* varName : Application::envOpenCascadePaths()) {
-        const QLatin1String qVarName(varName);
-        if (occSettings.contains(qVarName)) {
-            QString strPath = occSettings.value(qVarName).toString();
-            if (QFileInfo(strPath).isRelative())
-                strPath = QCoreApplication::applicationDirPath() + QDir::separator() + strPath;
-
-            strPath = QDir::toNativeSeparators(strPath);
-            qputenv(varName, strPath.toUtf8());
-            qDebug().noquote() << QString("%1 = %2").arg(qVarName).arg(strPath);
-        }
-    }
-}
-
 // Initializes "GUI" objects
 static void initGui(GuiApplication* guiApp)
 {
@@ -413,9 +371,7 @@ static int runApp(QCoreApplication* qtApp)
         IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
     );
     TextId::addTranslatorFunction(&qtAppTranslate); // Set Qt i18n backend
-#ifdef MAYO_OS_WINDOWS
-    initOpenCascadeEnvironment("opencascade.conf");
-#endif
+    AppModule::initOpenCascadeEnvironment("opencascade.conf");
 
     // Initialize Gui application
     auto guiApp = new GuiApplication(app);
