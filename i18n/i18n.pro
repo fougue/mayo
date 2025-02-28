@@ -36,4 +36,5 @@ FORMS += $$files(../src/app/*.ui)
 
 TRANSLATIONS += \
     mayo_en.ts \
-    mayo_fr.ts
+    mayo_fr.ts \
+    mayo_zh.ts \

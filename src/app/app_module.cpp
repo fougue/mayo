@@ -122,7 +122,8 @@ const Enumeration& AppModule::languages()
 {
     static const Enumeration langs = {
         { 0, AppModule::textId("en") },
-        { 1, AppModule::textId("fr") }
+        { 1, AppModule::textId("fr") },
+        { 2, AppModule::textId("zh") },
     };
     return langs;
 }

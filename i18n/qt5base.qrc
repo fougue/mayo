@@ -2,5 +2,6 @@
 <qresource prefix="/i18n">
 <file alias="qtbase_en.qm">qt5base_en.qm</file>
 <file alias="qtbase_fr.qm">qt5base_fr.qm</file>
+<file alias="qtbase_zh.qm">qt5base_zh.qm</file>
 </qresource>
 </RCC>
