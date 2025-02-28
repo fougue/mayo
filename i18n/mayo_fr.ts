@@ -68,6 +68,11 @@
         <translation>Français</translation>
     </message>
     <message>
+        <location filename="../src/app/app_module.cpp" line="126"/>
+        <source>zh</source>
+        <translation>Chinois</translation>
+    </message>
+    <message>
         <source>system</source>
         <translation type="vanished">Système</translation>
     </message>
@@ -694,27 +699,27 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::CliExport</name>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="131"/>
+        <location filename="../src/cli/cli_export.cpp" line="115"/>
         <source>Mesh BRep shapes</source>
         <translation>Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="135"/>
+        <location filename="../src/cli/cli_export.cpp" line="119"/>
         <source>Imported</source>
         <translation>Importé</translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="158"/>
+        <location filename="../src/cli/cli_export.cpp" line="143"/>
         <source>Exported {}</source>
         <translation>Export de {} terminé</translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="238"/>
+        <location filename="../src/cli/cli_export.cpp" line="223"/>
         <source>Importing...</source>
         <translation>Import en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="250"/>
+        <location filename="../src/cli/cli_export.cpp" line="235"/>
         <source>Exporting {}...</source>
         <translation>Export de {} en cours ...</translation>
     </message>
@@ -798,101 +803,101 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Selectionner fichier pièce</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="199"/>
-        <location filename="../src/app/commands_file.cpp" line="241"/>
+        <location filename="../src/app/commands_file.cpp" line="200"/>
+        <location filename="../src/app/commands_file.cpp" line="243"/>
         <source>Mesh BRep shapes</source>
         <translation>Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="204"/>
-        <location filename="../src/app/commands_file.cpp" line="246"/>
+        <location filename="../src/app/commands_file.cpp" line="205"/>
+        <location filename="../src/app/commands_file.cpp" line="248"/>
         <source>Import time: {}ms</source>
         <translation>Durée import: {}ms</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="268"/>
+        <location filename="../src/app/commands_file.cpp" line="270"/>
         <source>New</source>
         <translation>Nouveau</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="269"/>
+        <location filename="../src/app/commands_file.cpp" line="271"/>
         <source>New Document</source>
         <translation>Nouveau Document</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="278"/>
+        <location filename="../src/app/commands_file.cpp" line="280"/>
         <source>Anonymous%1</source>
         <translation>Anonyme%1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="285"/>
+        <location filename="../src/app/commands_file.cpp" line="287"/>
         <source>Open</source>
         <translation>Ouvrir</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="286"/>
+        <location filename="../src/app/commands_file.cpp" line="288"/>
         <source>Open Documents</source>
         <translation>Ouvrir des documents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="336"/>
+        <location filename="../src/app/commands_file.cpp" line="338"/>
         <source>Recent files</source>
         <translation>Fichiers récents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="365"/>
+        <location filename="../src/app/commands_file.cpp" line="364"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="373"/>
+        <location filename="../src/app/commands_file.cpp" line="372"/>
         <source>Clear menu</source>
         <translation>Vider le menu</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="250"/>
-        <location filename="../src/app/commands_file.cpp" line="386"/>
+        <location filename="../src/app/commands_file.cpp" line="252"/>
+        <location filename="../src/app/commands_file.cpp" line="385"/>
         <source>Import</source>
         <translation>Importer</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="387"/>
+        <location filename="../src/app/commands_file.cpp" line="386"/>
         <source>Import in current document</source>
         <translation>Importer dans le document courant</translation>
     </message>
     <message>
+        <location filename="../src/app/commands_file.cpp" line="416"/>
         <location filename="../src/app/commands_file.cpp" line="417"/>
-        <location filename="../src/app/commands_file.cpp" line="418"/>
         <source>Export selected items</source>
         <translation>Exporter les éléments sélectionnées</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="427"/>
+        <location filename="../src/app/commands_file.cpp" line="426"/>
         <source>No item selected for export</source>
         <translation>Aucun élément sélectionné pour l&apos;export</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="439"/>
+        <location filename="../src/app/commands_file.cpp" line="438"/>
         <source>Select Output File</source>
         <translation>Sélection fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="462"/>
+        <location filename="../src/app/commands_file.cpp" line="461"/>
         <source>Export time: {}ms</source>
         <translation>Durée export: {}ms</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="479"/>
+        <location filename="../src/app/commands_file.cpp" line="478"/>
         <source>Close &quot;%1&quot;</source>
         <translation>Fermer &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="513"/>
+        <location filename="../src/app/commands_file.cpp" line="512"/>
         <source>Close %1</source>
         <translation>Fermer %1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="514"/>
+        <location filename="../src/app/commands_file.cpp" line="513"/>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
@@ -927,17 +932,17 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation type="vanished">Tout fermer sauf &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="593"/>
+        <location filename="../src/app/commands_file.cpp" line="594"/>
         <source>Quit</source>
         <translation>Quitter</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_help.cpp" line="25"/>
+        <location filename="../src/app/commands_help.cpp" line="26"/>
         <source>Report Bug</source>
         <translation>Signaler un bug</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_help.cpp" line="38"/>
+        <location filename="../src/app/commands_help.cpp" line="39"/>
         <source>About %1</source>
         <translation>À propos de %1</translation>
     </message>
@@ -1486,17 +1491,17 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::IO::AssimpReaderI18N</name>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="370"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="369"/>
         <source>LINE primitives not supported yet</source>
         <translation>Les primitives LINE ne sont actuellement pas prises en charge</translation>
     </message>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="373"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="372"/>
         <source>Some primitive not supported</source>
         <translation>Certaines primitive ne sont pas prises en charge</translation>
     </message>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="504"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="503"/>
         <source>Texture not found: {}
 Tried:</source>
         <translation>Texture introuvable : {}
@@ -1506,12 +1511,12 @@ Essai :</translation>
 <context>
     <name>Mayo::IO::DxfReader::Properties</name>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="156"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="155"/>
         <source>Scale entities according some factor</source>
         <translation>Redimensionner les entités selon un facteur d&apos;échelle</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="158"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="157"/>
         <source>Import text/dimension objects</source>
         <translation>Importer les entités texte et dimension</translation>
     </message>
@@ -1520,32 +1525,32 @@ Essai :</translation>
         <translation type="vanished">Grouper toutes les entités d&apos;une même couche dans une forme compound BREP</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="160"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="159"/>
         <source>Group all objects within a layer into a single compound shape</source>
         <translation>Grouper toutes les entités d&apos;une même couche dans une forme compound BREP</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="162"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="161"/>
         <source>Name of the font to be used when creating shape for text objects</source>
         <translation>Nom de la police de caractères à utiliser lors de la création des formes correspondantes aux entités TEXT</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="173"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="172"/>
         <source>scaling</source>
         <translation>Mise à l&apos;échelle</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="174"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="173"/>
         <source>importAnnotations</source>
         <translation>Import des annotations</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="175"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="174"/>
         <source>groupLayers</source>
         <translation>Grouper les entitiés par couche</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="176"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="175"/>
         <source>fontNameForTextObjects</source>
         <translation>Police de caractères pour le texte</translation>
     </message>
@@ -1557,17 +1562,17 @@ Essai :</translation>
         <translation type="vanished">Format à utiliser lors de l&apos;écriture des valeurs de type `double`en chaînes de caractères</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="136"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="135"/>
         <source>Decimal floating point(ex: 392.65)</source>
         <translation>Décimal à virgule flottante (ex: 392,65)</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="137"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="136"/>
         <source>Scientific notation(ex: 3.9265E+2)</source>
         <translation>Notation scientifique (ex: 3,9265E+2)</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="138"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="137"/>
         <source>Use the shortest representation: decimal or scientific</source>
         <translation>Utiliser la notation la plus compacte : décimale ou scientifique</translation>
     </message>
@@ -1576,19 +1581,19 @@ Essai :</translation>
         <translation type="vanished">Nombre maximal de chiffres significatifs lors de l&apos;écriture de valeurs de type `double`</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="147"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="146"/>
         <source>Write AMF document in ZIP archive containing one file entry</source>
         <translation>Écrire le document AMF dans une archive ZIP contenant une entrée de fichier</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="150"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="149"/>
         <source>Filename of the single AMF entry within the ZIP archive.
 Only applicable if option `{}` is on</source>
         <translation>Nom de l&apos;entrée du fichier AMF dans l&apos;archive ZIP.
 Seulement applicable si l&apos;option `{}` est activée</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="155"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="154"/>
         <source>Use the ZIP64 format extensions.
 Only applicable if option `{}` is on</source>
         <translation>Utiliser les extensions de format ZIP64.
@@ -1607,37 +1612,37 @@ Only applicable if option `%1` is on</source>
 Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="134"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="133"/>
         <source>Format used when writing `double` values as strings</source>
         <translation>Format à utiliser lors de l&apos;écriture des valeurs de type `double`en chaînes de caractères</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="144"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="143"/>
         <source>Maximum number of significant digits when writing `double` values</source>
         <translation>Nombre maximal de chiffres significatifs lors de l&apos;écriture de valeurs de type `double`</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="183"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="182"/>
         <source>float64Format</source>
         <translation>Format nombres flottants 64bit</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="184"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="183"/>
         <source>float64Precision</source>
         <translation>Précision nombres flottants 64bit</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="185"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="184"/>
         <source>createZipArchive</source>
         <translation>Créer une archive ZIP</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="186"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="185"/>
         <source>zipEntryFilename</source>
         <translation>Nom du fichier de l&apos;entrée ZIP</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="187"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="186"/>
         <source>useZip64</source>
         <translation>Utiliser les extensions ZIP64</translation>
     </message>
@@ -1758,27 +1763,27 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
 <context>
     <name>Mayo::IO::OccBaseMeshReaderProperties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="22"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="28"/>
         <source>rootPrefix</source>
         <translation>Préfixe racine</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="23"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="29"/>
         <source>systemCoordinatesConverter</source>
         <translation>Conversion coordonnées système</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="24"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="30"/>
         <source>systemLengthUnit</source>
         <translation>Unité longueur du système</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="26"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="32"/>
         <source>Prefix for generating root labels name</source>
         <translation>Préfixe pour la génération des noms de labels racine</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="27"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="33"/>
         <source>System length units to convert into while reading files</source>
         <translation>Système d&apos;unité de longueur cible lors de la lecture fichier</translation>
     </message>
@@ -1845,17 +1850,17 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
 <context>
     <name>Mayo::IO::OccGltfReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="34"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="33"/>
         <source>skipEmptyNodes</source>
         <translation>Éviter les nœuds vides</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="35"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="34"/>
         <source>useMeshNameAsFallback</source>
         <translation>Utiliser nom du maillage comme secours</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="20"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="19"/>
         <source>Ignore nodes without geometry(`Yes` by default)</source>
         <translation variants="yes">
             <lengthvariant>Ignorer les nœuds sans géométrie (`Oui` par défaut)</lengthvariant>
@@ -1864,7 +1869,7 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         </translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="23"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="22"/>
         <source>Use mesh name in case if node name is empty(`Yes` by default)</source>
         <translation>Utiliser le nom du maillage si celui du nœud est vide (`Oui` par défaut)</translation>
     </message>
@@ -1876,17 +1881,17 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <translation type="vanished">Convertisseur de coordonnées</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="109"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="108"/>
         <source>transformationFormat</source>
         <translation>Format de transformation</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="110"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="109"/>
         <source>format</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="111"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="110"/>
         <source>forceExportUV</source>
         <translation>Forcer l&apos;export UV</translation>
     </message>
@@ -1895,52 +1900,52 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <translation type="vanished">Transformation des coordonnées d&apos;OpenCascade vers glTF</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="32"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="31"/>
         <source>Source coordinate system transformation</source>
         <translation>Transformation du système de coordonnées source</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="34"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="33"/>
         <source>Target coordinate system transformation</source>
         <translation>Transformation du système de coordonnées cible</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="36"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="35"/>
         <source>Preferred transformation format for writing into glTF file</source>
         <translation>Transformation préférée pour l&apos;écriture des fichiers glTF</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="38"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="37"/>
         <source>Export UV coordinates even if there is no mapped texture</source>
         <translation>Exporter les coordonnées UV même si aucune texture mappée</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="42"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="41"/>
         <source>Automatically choose most compact representation between Mat4 and TRS</source>
         <translation>Choisir automatiquement la représentation la plus compacte entre Mat4 et TRS</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="44"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="43"/>
         <source>4x4 transformation matrix</source>
         <translation>Mactrice de transformation 4x4</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="45"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="44"/>
         <source>Transformation decomposed into Translation vector, Rotation quaternion and Scale factor(T * R * S)</source>
         <translation>Transformation décomposée en vecteur de translation, quaternion de rotation et facteur d&apos;échelle (T x R x S)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="51"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="50"/>
         <source>Name format for exporting nodes</source>
         <translation>Format du nom utilisé pour exporter la hiérarchie de nœuds</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="52"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="51"/>
         <source>Name format for exporting meshes</source>
         <translation>Format du nom utilisé pour exporter la hiérarchie de maillages</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="54"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="53"/>
         <source>Write image textures into target file.
 
 If set to `false` then texture images will be written as separate files.
@@ -1965,7 +1970,7 @@ If set to `false` then texture images will be written as separate files.
 Applicable only if option `{}` is set to `{}`</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="62"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="61"/>
         <source>Merge faces within a single part.
 
 May reduce JSON size thanks to smaller number of primitive arrays</source>
@@ -1974,7 +1979,7 @@ May reduce JSON size thanks to smaller number of primitive arrays</source>
 Peut réduire la taille JSON grâce à une quantité réduite de tableaux de primitives</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="66"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="65"/>
         <source>Prefer keeping 16-bit indexes while merging face.
 
 May reduce binary data size thanks to smaller triangle indexes.
@@ -1987,42 +1992,42 @@ Peut réduite la taille des données grâce à une quantité réduite d&apos;ind
 Applicable seulement si l&apos;option `{}` est cochée</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="107"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="106"/>
         <source>inputCoordinateSystem</source>
         <translation>Système de coordonnées d&apos;entrée</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="108"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="107"/>
         <source>outputCoordinateSystem</source>
         <translation>Système de coordonnées de sortie</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="112"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="111"/>
         <source>nodeNameFormat</source>
         <translation>Format du nom pour les nœuds</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="113"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="112"/>
         <source>meshNameFormat</source>
         <translation>Format du nom pour les maillages</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="114"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="113"/>
         <source>embedTextures</source>
         <translation>Incorporer les textures dans le même fichier cible</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="115"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="114"/>
         <source>mergeFaces</source>
         <translation>Fusionner les faces</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="116"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="115"/>
         <source>keepIndices16b</source>
         <translation>Utiliser des indices 16bit</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="172"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="171"/>
         <source>Option supported from OpenCascade ≥ v7.6 [option={}, actual version={}]</source>
         <translation>Option prise en charge à partir de OpenCascade ≥ v7.6 [option={}, version actuelle={}]</translation>
     </message>
@@ -2040,32 +2045,32 @@ Applicable seulement si l&apos;option `{}` est cochée</translation>
 <context>
     <name>Mayo::IO::OccIgesReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="90"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="89"/>
         <source>bsplineContinuity</source>
         <translation>Continuité BSpline</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="91"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="90"/>
         <source>surfaceCurveMode</source>
         <translation>Mode des courbes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="92"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="91"/>
         <source>readFaultyEntities</source>
         <translation>Lire les entités en erreur</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="93"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="92"/>
         <source>readOnlyVisibleEntities</source>
         <translation>Lire seulement les entités visibles</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="28"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="27"/>
         <source>Manages the continuity of BSpline curves (IGES entities 106, 112 and 126) after translation to Open CASCADE (it requires that the curves in a model be at least C1 continuous; no such requirement is made by IGES).This parameter does not change the continuity of curves that are used in the construction of IGES BRep entities. In this case, the parameter does not influence the continuity of the resulting Open CASCADE curves (it is ignored).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="39"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="38"/>
         <source>Preference for the computation of curves in case of 2D/3D inconsistency in an entity which has both 2D and 3D representations.
 
 Concerned entity types are 141 (Boundary), 142 (CurveOnSurface) and 508 (Loop). These are entities representing a contour lying on a surface, which is translated to a TopoDS_Wire, formed by TopoDS_Edges. Each TopoDS_Edge must have a 3D curve and a 2D curve that reference the surface.
@@ -2076,47 +2081,47 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="58"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="57"/>
         <source>Read failed entities</source>
         <translation>Lecture des entités en erreur</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="61"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="60"/>
         <source>Curves are taken as they are in the IGES file. C0 entities of Open CASCADE may be produced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="64"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="63"/>
         <source>If an IGES BSpline, Spline or CopiousData curve is C0 continuous, it is broken down into pieces of C1 continuous Geom_BSplineCurve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="67"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="66"/>
         <source>IGES Spline curves are broken down into pieces of C2 continuity. If C2 cannot be ensured, the Spline curves will be broken down into pieces of C1 continuity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="74"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="73"/>
         <source>Use the preference flag value in the entity&apos;s `Parameter Data` section</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="75"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="74"/>
         <source>The 2D is used to rebuild the 3D in case of their inconsistency</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="76"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="75"/>
         <source>The 2D is always used to rebuild the 3D (even if 3D is present in the file)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="77"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="76"/>
         <source>The 3D is used to rebuild the 2D in case of their inconsistency</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="78"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="77"/>
         <source>The 3D is always used to rebuild the 2D (even if 2D is present in the file)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2124,32 +2129,32 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
 <context>
     <name>Mayo::IO::OccIgesWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="177"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="176"/>
         <source>brepMode</source>
         <translation>Mode BRep</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="178"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="177"/>
         <source>planeMode</source>
         <translation>Mode des plans</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="179"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="178"/>
         <source>lengthUnit</source>
         <translation>Unité de longueur</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="158"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="157"/>
         <source>Indicates if planes should be saved as Bsplines or Planes (type 108). Writing p-curves on planes is disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="161"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="160"/>
         <source>OpenCascade TopoDS_Faces will be translated into IGES 144 (Trimmed Surface) entities, no BRep entities will be written to the IGES file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="164"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="163"/>
         <source>OpenCascade TopoDS_Faces will be translated into IGES 510 (Face) entities, the IGES file will contain BRep entities</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2157,12 +2162,12 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
 <context>
     <name>Mayo::IO::OccObjReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="30"/>
+        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="29"/>
         <source>singlePrecisionVertexCoords</source>
         <translation>Coordonnées sommet en précision simple</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="20"/>
+        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="19"/>
         <source>Single precision flag for reading vertex data(coordinates)</source>
         <translation></translation>
     </message>
@@ -2174,60 +2179,79 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
         <translation type="vanished">Convertisseur de coordonnées</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="29"/>
         <source>Source coordinate system transformation</source>
-        <translation>Transformation du système de coordonnées source</translation>
+        <translation type="vanished">Transformation du système de coordonnées source</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="30"/>
         <source>Target coordinate system transformation</source>
-        <translation>Transformation du système de coordonnées cible</translation>
+        <translation type="vanished">Transformation du système de coordonnées cible</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="39"/>
         <source>inputCoordinateSystem</source>
-        <translation>Système de coordonnées d&apos;entrée</translation>
+        <translation type="vanished">Système de coordonnées d&apos;entrée</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="40"/>
         <source>outputCoordinateSystem</source>
-        <translation>Système de coordonnées de sortie</translation>
+        <translation type="vanished">Système de coordonnées de sortie</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccObjWriterI18N</name>
+    <message>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="31"/>
+        <source>Source coordinate system transformation</source>
+        <translation type="unfinished">Transformation du système de coordonnées source</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="34"/>
+        <source>Target coordinate system transformation</source>
+        <translation type="unfinished">Transformation du système de coordonnées cible</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="44"/>
+        <source>inputCoordinateSystem</source>
+        <translation type="unfinished">Système de coordonnées d&apos;entrée</translation>
+    </message>
+    <message>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="45"/>
+        <source>outputCoordinateSystem</source>
+        <translation type="unfinished">Système de coordonnées de sortie</translation>
     </message>
 </context>
 <context>
     <name>Mayo::IO::OccStepReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="114"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="119"/>
         <source>productContext</source>
         <translation>Context du produit</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="115"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="120"/>
         <source>assemblyLevel</source>
         <translation>Niveau assemblage</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="116"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="121"/>
         <source>preferredShapeRepresentation</source>
         <translation>Représentation des formes préférée</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="117"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="122"/>
         <source>readShapeAspect</source>
         <translation>Lire l&apos;aspect des formes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="118"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="123"/>
         <source>readSubShapesNames</source>
         <translation>Lire le nom des sous-formes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="119"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="124"/>
         <source>encoding</source>
         <translation>Encodage</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="37"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="36"/>
         <source>When reading AP 209 STEP files, allows selecting either only `design` or `analysis`, or both types of products for translation
 Note that in AP 203 and AP214 files all products should be marked as `design`, so if this mode is set to `analysis`, nothing will be read</source>
         <translation type="unfinished"></translation>
@@ -2238,73 +2262,73 @@ Note that in AP 203 and AP214 files all products should be marked as `design`, s
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="46"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="47"/>
         <source>Specifies preferred type of representation of the shape of the product, in case if a STEP file contains more than one representation (i.e. multiple `PRODUCT_DEFINITION_SHAPE` entities) for a single product</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="51"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="53"/>
         <source>Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity of the product via `SHAPE_ASPECT` should be translated.
 This kind of association was used for the representation of hybrid models (i.e. models whose shape is composed of different types of representations) in AP 203 files before 1998, but it is also used to associate auxiliary information with the sub-shapes of the part. Though STEP translator tries to recognize such cases correctly, this parameter may be useful to avoid unconditionally translation of shapes associated via `SHAPE_ASPECT` entities.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="61"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="64"/>
         <source>Indicates whether to read sub-shape names from &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="65"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="69"/>
         <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="68"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="72"/>
         <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="71"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="75"/>
         <source>Translates all products</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="75"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="79"/>
         <source>Translate the assembly structure and shapes associated with parts only(not with sub-assemblies)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="78"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="82"/>
         <source>Translate only the assembly structure without shapes(a structure of empty compounds). This mode can be useful as an intermediate step in applications requiring specialized processing of assembly parts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="82"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="86"/>
         <source>Translate only shapes associated with the product, ignoring the assembly structure (if any). This can be useful to translate only a shape associated with specific product, as a complement to assembly mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="86"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="90"/>
         <source>Translate both the assembly structure and all associated shapes. If both shape and sub-assemblies are associated with the same product, all of them are read and put in a single compound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="94"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="98"/>
         <source>Translate all representations(if more than one, put in compound)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="97"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="102"/>
         <source>Shift Japanese Industrial Standards</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="98"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="103"/>
         <source>EUC(Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, and simplified Chinese</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="100"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="105"/>
         <source>GB(Guobiao) encoding for Simplified Chinese</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2312,108 +2336,108 @@ This kind of association was used for the representation of hybrid models (i.e. 
 <context>
     <name>Mayo::IO::OccStepWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="285"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="290"/>
         <source>schema</source>
         <translation>Schéma</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="286"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="291"/>
         <source>lengthUnit</source>
         <translation>Unité de longueur</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="287"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="292"/>
         <source>assemblyMode</source>
         <translation>Mode de l&apos;assemblage</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="288"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="293"/>
         <source>freeVertexMode</source>
         <translation>Mode des sommets libres</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="289"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="294"/>
         <source>writeParametericCurves</source>
         <translation>Écrire les courbes paramétriques</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="290"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="295"/>
         <source>writeSubShapesNames</source>
         <translation>Écrire le nom des sous-formes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="291"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="296"/>
         <source>headerAuthor</source>
         <translation>Auteur (en-tête)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="292"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="297"/>
         <source>headerOrganization</source>
         <translation>Organisation (en-tête)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="293"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="298"/>
         <source>headerOriginatingSystem</source>
         <translation>Système source (en-tête)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="294"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="299"/>
         <source>headerDescription</source>
         <translation>Description (en-tête)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="231"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="236"/>
         <source>Version of schema used for the output STEP file</source>
         <translation>Version du schéma à utiliser pour le fichier STEP de sortie</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="234"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="239"/>
         <source>Defines a unit in which the STEP file should be written. If set to unit other than millimeter, the model is converted to these units during the translation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="240"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="245"/>
         <source>Parameter to write all free vertices in one SDR (name and style of vertex are lost) or each vertex in its own SDR (name and style of vertex are exported)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="245"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="250"/>
         <source>All free vertices are united into one compound and exported in one shape definition representation (vertex name and style are lost)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="248"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="253"/>
         <source>Each vertex is exported in its own `SHAPE DEFINITION REPRESENTATION`(vertex name and style are not lost, but the STEP file size increases)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="254"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="259"/>
         <source>Indicates whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
 It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="260"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="265"/>
         <source>Indicates whether to write sub-shape names to &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="264"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="269"/>
         <source>Author attribute in STEP header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="265"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="270"/>
         <source>Organization(of author) attribute in STEP header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="266"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="271"/>
         <source>Originating system attribute in STEP header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="267"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="272"/>
         <source>Description attribute in STEP header</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2436,13 +2460,13 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::OccStlWriterI18N</name>
     <message>
-        <location filename="../src/io_occ/io_occ_stl.cpp" line="71"/>
+        <location filename="../src/io_occ/io_occ_stl.cpp" line="70"/>
         <source>targetFormat</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_stl.cpp" line="123"/>
-        <location filename="../src/io_occ/io_occ_stl.cpp" line="126"/>
+        <location filename="../src/io_occ/io_occ_stl.cpp" line="122"/>
+        <location filename="../src/io_occ/io_occ_stl.cpp" line="125"/>
         <source>Not all BRep faces are meshed</source>
         <translation>Les faces BRep ne sont pas toutes maillées</translation>
     </message>
@@ -2460,7 +2484,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::OccVrmlWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_vrml_writer.cpp" line="43"/>
+        <location filename="../src/io_occ/io_occ_vrml_writer.cpp" line="42"/>
         <source>shapeRepresentation</source>
         <translation>Représentation des formes</translation>
     </message>
@@ -2468,33 +2492,33 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::OffReaderI18N</name>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="184"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="183"/>
         <source>Can&apos;t open input file</source>
         <translation>Impossible d&apos;ouvrir le fichier d&apos;entrée</translation>
     </message>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="192"/>
-        <location filename="../src/io_off/io_off_reader.cpp" line="212"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="191"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="211"/>
         <source>Unexpected end of file</source>
         <translation>Fin de fichier inattendu</translation>
     </message>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="196"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="195"/>
         <source>Wrong header keyword(should be [C][N][4]OFF</source>
         <translation>Mot-clé d&apos;entête incorrect (attendu [C][N][4]OFF)</translation>
     </message>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="217"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="216"/>
         <source>No vertex or face count</source>
         <translation>Aucun nombre de sommets ou de facets</translation>
     </message>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="238"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="237"/>
         <source>No vertex coordinates at current line</source>
         <translation>Aucunes coordonnées de sommet à la ligne actuelle</translation>
     </message>
     <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="263"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="262"/>
         <source>Inconsistent vertex count of face</source>
         <translation>Le nombre de sommets dans la facette est incohérent</translation>
     </message>
@@ -2502,7 +2526,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::OffWriterI18N</name>
     <message>
-        <location filename="../src/io_off/io_off_writer.cpp" line="46"/>
+        <location filename="../src/io_off/io_off_writer.cpp" line="45"/>
         <source>Failed to open file</source>
         <translation>Impossible d&apos;ouvrir le fichier</translation>
     </message>
@@ -2510,37 +2534,37 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::PlyWriterI18N</name>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="68"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="67"/>
         <source>Line that will appear in header</source>
         <translation>Texte qui apparaîtra dans l&apos;en-tête</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="78"/>
         <source>targetFormat</source>
         <translation>Format cible</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="80"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
         <source>writeColors</source>
         <translation>Écrire la couleur des sommets</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="81"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="80"/>
         <source>defaultColor</source>
         <translation>Couleur par défaut</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="82"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="81"/>
         <source>comment</source>
         <translation>Commentaire</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="140"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="139"/>
         <source>Failed to open file</source>
         <translation>Impossible d&apos;ouvrir le fichier</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="153"/>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="152"/>
         <source>Unknown host endianness</source>
         <translation>Boutisme du CPU inconnu</translation>
     </message>
@@ -2573,48 +2597,47 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 %2</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="222"/>
+        <location filename="../src/base/io_system.cpp" line="236"/>
         <source>Reading file</source>
         <translation>Lecture fichier</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="216"/>
+        <location filename="../src/base/io_system.cpp" line="230"/>
         <source>Unknown format</source>
         <translation>Format inconnu</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="207"/>
+        <location filename="../src/base/io_system.cpp" line="220"/>
         <source>Error during import of &apos;{}&apos;
 {}</source>
         <translation>Erreur pendant l&apos;import de &apos;{}&apos;
 {}</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="225"/>
+        <location filename="../src/base/io_system.cpp" line="239"/>
         <source>No supporting reader</source>
         <translation>Aucun lecteur compatible</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="235"/>
+        <location filename="../src/base/io_system.cpp" line="249"/>
         <source>File read problem</source>
         <translation>Problème de lecture fichier</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="244"/>
+        <location filename="../src/base/io_system.cpp" line="258"/>
         <source>Transferring file</source>
         <translation>Transfert du fichier</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="248"/>
-        <location filename="../src/base/io_system.cpp" line="354"/>
+        <location filename="../src/base/io_system.cpp" line="262"/>
+        <location filename="../src/base/io_system.cpp" line="387"/>
         <source>File transfer problem</source>
         <translation>Problème de transfert fichier</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="340"/>
         <source>Error during export to &apos;{}&apos;
 {}</source>
-        <translation>Erreur pendant l&apos;export de &apos;{}&apos;
+        <translation type="vanished">Erreur pendant l&apos;export de &apos;{}&apos;
 {}</translation>
     </message>
     <message>
@@ -2624,22 +2647,22 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 %2</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="346"/>
+        <location filename="../src/base/io_system.cpp" line="379"/>
         <source>No supporting writer</source>
         <translation>Aucun writer compatible</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="351"/>
+        <location filename="../src/base/io_system.cpp" line="384"/>
         <source>Transfer</source>
         <translation>Transfert</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="358"/>
+        <location filename="../src/base/io_system.cpp" line="391"/>
         <source>Write</source>
         <translation>Écriture</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="361"/>
+        <location filename="../src/base/io_system.cpp" line="394"/>
         <source>File write problem</source>
         <translation>Problème d&apos;écriture fichier</translation>
     </message>
@@ -2651,23 +2674,23 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Mayo, une visionneuse 3D en code libre basée surQt5/OpenCascade</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="105"/>
+        <location filename="../src/app/main.cpp" line="106"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation>Thème de l&apos;IHM (classic|dark)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="106"/>
+        <location filename="../src/app/main.cpp" line="107"/>
         <source>name</source>
         <translation>nom</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="119"/>
+        <location filename="../src/app/main.cpp" line="120"/>
         <location filename="../src/cli/main.cpp" line="227"/>
         <source>Writes log messages into output file</source>
         <translation>Écrit les messages de log dans un fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="126"/>
+        <location filename="../src/app/main.cpp" line="127"/>
         <location filename="../src/cli/main.cpp" line="234"/>
         <source>Don&apos;t filter out debug log messages in release build</source>
         <translation>Ne pas filtrer les messages de debug dans la version &quot;release&quot;</translation>
@@ -2677,47 +2700,47 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Désactiver l&apos;indicateur de progression dans la sortie console (mode CLI seulement)</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="132"/>
+        <location filename="../src/app/main.cpp" line="133"/>
         <location filename="../src/cli/main.cpp" line="246"/>
         <source>Show detailed system information and quit</source>
         <translation>Montrer les informations détaillées du système puis quitter</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="137"/>
+        <location filename="../src/app/main.cpp" line="138"/>
         <location filename="../src/cli/main.cpp" line="251"/>
         <source>files</source>
         <translation>files</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="138"/>
+        <location filename="../src/app/main.cpp" line="139"/>
         <source>Files to open at startup, optionally</source>
         <translation>Fichiers à ouvrir au démarrage, optionnel</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="139"/>
+        <location filename="../src/app/main.cpp" line="140"/>
         <location filename="../src/cli/main.cpp" line="253"/>
         <source>[files...]</source>
         <translation>[fichiers ...]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="145"/>
+        <location filename="../src/app/main.cpp" line="146"/>
         <source>Execute unit tests and exit application</source>
         <translation>Exécuter les tests unitaires et quitter l&apos;application</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="188"/>
+        <location filename="../src/app/main.cpp" line="189"/>
         <location filename="../src/cli/main.cpp" line="299"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation>Le fichier de configuration OpenCascade n&apos;existe pas ou non lisible [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="195"/>
+        <location filename="../src/app/main.cpp" line="196"/>
         <location filename="../src/cli/main.cpp" line="306"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation>Le fichier de configuration OpenCascade n&apos;a pu être chargé par QSettings [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="363"/>
+        <location filename="../src/app/main.cpp" line="371"/>
         <location filename="../src/cli/main.cpp" line="400"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>Échec chargement du fichier de traductions [chemin=%1]</translation>
@@ -2731,7 +2754,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de {} en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="338"/>
+        <location filename="../src/app/main.cpp" line="339"/>
         <location filename="../src/cli/main.cpp" line="376"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation variants="yes">
@@ -2743,18 +2766,18 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         </translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="112"/>
+        <location filename="../src/app/main.cpp" line="113"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation>Fichier de configuration (format INI) à charger au démarrage</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="98"/>
+        <location filename="../src/app/main.cpp" line="99"/>
         <source>Mayo the opensource 3D CAD viewer and converter</source>
         <translation>Mayo le visualiseur et convertisseur 3D pour la CAO</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="113"/>
-        <location filename="../src/app/main.cpp" line="120"/>
+        <location filename="../src/app/main.cpp" line="114"/>
+        <location filename="../src/app/main.cpp" line="121"/>
         <location filename="../src/cli/main.cpp" line="200"/>
         <location filename="../src/cli/main.cpp" line="213"/>
         <location filename="../src/cli/main.cpp" line="221"/>
@@ -2808,22 +2831,22 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Fichiers à ouvrir (import)</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="445"/>
+        <location filename="../src/cli/main.cpp" line="451"/>
         <source>Error when writing to &apos;%1&apos;</source>
         <translation>Erreur lors de l&apos;écriture vers &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="447"/>
+        <location filename="../src/cli/main.cpp" line="453"/>
         <source>Settings cache written to %1</source>
         <translation>Les paramètres sauvegardés ont été écrits dans %1</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="486"/>
+        <location filename="../src/cli/main.cpp" line="484"/>
         <source>Settings &apos;%1&apos; cached</source>
         <translation>Les paramètres dans &apos;%1&apos; sont sauvegardés</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="489"/>
+        <location filename="../src/cli/main.cpp" line="487"/>
         <source>No supplied settings to cache</source>
         <translation>Aucun paramètre à sauvegarder</translation>
     </message>
@@ -2848,12 +2871,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de %1 en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="468"/>
+        <location filename="../src/cli/main.cpp" line="466"/>
         <source>No input files -&gt; nothing to export</source>
         <translation>Auncun fichier en entrée -&gt; aucun export</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="427"/>
+        <location filename="../src/app/main.cpp" line="428"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>Impossible de charger le thème &apos;%1&apos;</translation>
     </message>
@@ -3044,13 +3067,23 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Selectionner fichier pièce</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="285"/>
+        <location filename="../src/app/mainwindow.cpp" line="300"/>
+        <source>Information</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/mainwindow.cpp" line="304"/>
         <source>Warning</source>
         <translation>Avertissement</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="235"/>
-        <location filename="../src/app/mainwindow.cpp" line="288"/>
+        <location filename="../src/app/mainwindow.cpp" line="312"/>
+        <source>Question</source>
+        <translation>Question</translation>
+    </message>
+    <message>
+        <location filename="../src/app/mainwindow.cpp" line="242"/>
+        <location filename="../src/app/mainwindow.cpp" line="308"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
