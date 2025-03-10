@@ -188,6 +188,8 @@ if(MSVC)
     list(APPEND MayoCore_LinkLibraries Opengl32 User32)
 elseif(APPLE)
     list(APPEND MayoCore_LinkLibraries iconv)
+elseif(HAIKU)
+    list(APPEND MayoCore_LinkLibraries iconv)
 endif()
 
 ##########
