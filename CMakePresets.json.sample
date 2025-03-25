@@ -1,0 +1,191 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 26,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "win_msvc_native",
+            "displayName": "MsvcNative",
+            "description": "windows msvc 2022",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_CXX_FLAGS": "/MP",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_POLICY_DEFAULT_CMP0167": "OLD"
+            },
+            "environment": {
+                "RUST_ROOT": "/home/<user-name>/.cargo"
+            },
+            "vendor": {
+                "jetbrains.com/clion": {
+                    "toolchain": "Visual Studio"
+                },
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ],
+                    "intelliSenseMode": "windows-msvc-x64"
+                }
+            },
+            "cmakeExecutable": "/usr/bin/cmake"
+        },
+        {
+            "name": "win_msvc_release",
+            "displayName": "WinMsvcRel",
+            "description": "windows msvc 2022",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_PREFIX_PATH": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_C_COMPILER_LAUNCHER": "",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_POLICY_DEFAULT_CMP0167": "OLD"
+            },
+            "environment": {
+                "NINJA_STATUS": "[%f/%t %es] ",
+                "SCCACHE_SERVER_PORT": "",
+                "RUST_ROOT": "/home/<user-name>/.cargo"
+            },
+            "vendor": {
+                "jetbrains.com/clion": {
+                    "toolchain": "Visual Studio"
+                },
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ],
+                    "intelliSenseMode": "windows-msvc-x64"
+                }
+            },
+            "cmakeExecutable": "/usr/bin/cmake"
+        },
+        {
+            "name": "linux_gcc_debug",
+            "displayName": "linux gcc dbg",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_PREFIX_PATH": "/home/linuxbrew/.linuxbrew;/home/<user-name>/Qt/6.8.2/gcc_64",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_POLICY_DEFAULT_CMP0167": "OLD"
+            },
+            "environment": {
+                "NINJA_STATUS": "[%f/%t %es] ",
+                "RUST_ROOT": "/home/<user-name>/.cargo"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ],
+                    "intelliSenseMode": "linux-gcc-x64"
+                }
+            },
+            "cmakeExecutable": "/usr/bin/cmake"
+        },
+        {
+            "name": "mac_xcode",
+            "displayName": "Mac XCode",
+            "generator": "Xcode",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
+            "environment": {
+                "CC": "/usr/bin/clang",
+                "CXX": "/usr/bin/clang++",
+                "RUST_ROOT": "/home/<user-name>/.cargo"
+            },
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_POLICY_DEFAULT_CMP0167": "OLD"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "macOS"
+                    ],
+                    "intelliSenseMode": "ios-clang-arm64"
+                }
+            },
+            "cmakeExecutable": "/usr/bin/cmake"
+        },
+        {
+            "name": "mac_clang_debug",
+            "displayName": "Mac Clang Dbg",
+            "description": "MacOS",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_PREFIX_PATH": "",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_POLICY_DEFAULT_CMP0167": "OLD"
+            },
+            "environment": {
+                "NINJA_STATUS": "[%f/%t %es] ",
+                "RUST_ROOT": "/home/<user-name>/.cargo"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "macOS"
+                    ],
+                    "intelliSenseMode": "ios-clang-arm64"
+                }
+            },
+            "cmakeExecutable": "/usr/bin/cmake"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "msvc_native_debug",
+            "configurePreset": "win_msvc_native",
+            "displayName": "Debug",
+            "configuration": "Debug",
+            "jobs": 16
+        },
+        {
+            "name": "msvc_native_relWithDebInfo",
+            "configurePreset": "win_msvc_native",
+            "configuration": "RelWithDebInfo",
+            "displayName": "RelWithDebInfo",
+            "jobs": 16
+        },
+        {
+            "name": "gcc_debug",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "linux_gcc_debug"
+        }
+    ]
+}

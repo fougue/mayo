@@ -1,0 +1,19 @@
+CompileFlags:
+    Add:
+    [  "-std=c++20",
+       "-Wall",
+       "-Wextra",
+       "-Wno-c++98-compat",
+       "-Wno-old-style-cast",
+       "-Wno-c++98-compat-pedantic",
+       "-Wno-documentation-unknown-command",
+       "-Wno-switch-default",
+       "-Wno-pre-c++20-compat-pedantic",
+       "-Wno-exit-time-destructors",
+       "-Wno-global-constructors",
+       "-Wno-unused-template",
+       "-Wno-unused-const-variable",
+       "-Wno-extra-semi",
+       "-Wno-unsafe-buffer-usage-in-container"
+    ]
+    CompilationDatabase: mayo/build/linux_gcc_release
