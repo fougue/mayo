@@ -161,6 +161,8 @@ private:
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
+    void applyExplodingFactor(const GraphicsEntity& entity, double t);
+
     void v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner);
 
     GuiApplication* m_guiApp = nullptr;
