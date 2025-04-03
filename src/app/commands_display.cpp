@@ -239,7 +239,7 @@ CommandZoomInCurrentDocument::CommandZoomInCurrentDocument(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom In"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
-    action->setShortcut(Qt::CTRL + Qt::Key_Plus);
+    action->setShortcut(Qt::CTRL | Qt::Key_Plus);
     this->setAction(action);
 }
 
@@ -256,7 +256,7 @@ CommandZoomOutCurrentDocument::CommandZoomOutCurrentDocument(IAppContext* contex
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom Out"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
-    action->setShortcut(Qt::CTRL + Qt::Key_Minus);
+    action->setShortcut(Qt::CTRL | Qt::Key_Minus);
     this->setAction(action);
 }
 
@@ -273,7 +273,7 @@ CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* co
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Counter Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
-    action->setShortcut(Qt::CTRL + Qt::Key_Left);
+    action->setShortcut(Qt::CTRL | Qt::Key_Left);
     this->setAction(action);
 }
 
@@ -291,7 +291,7 @@ CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("Turn Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
-    action->setShortcut(Qt::CTRL + Qt::Key_Right);
+    action->setShortcut(Qt::CTRL | Qt::Key_Right);
     this->setAction(action);
 }
 

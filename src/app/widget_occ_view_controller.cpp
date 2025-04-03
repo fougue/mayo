@@ -6,6 +6,7 @@
 
 #include "widget_occ_view_controller.h"
 #include "widget_occ_view.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
 #include <QtCore/QDebug>
@@ -250,13 +251,13 @@ void WidgetOccViewController::handleKeyRelease(const QKeyEvent* event)
 void WidgetOccViewController::handleMouseButtonPress(const QMouseEvent* event)
 {
     m_inputSequence.push(event->button());
-    const QPoint currPos = m_occView->widget()->mapFromGlobal(event->globalPos());
+    const QPoint currPos = m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event));
     m_prevPos = toPosition(currPos);
 }
 
 void WidgetOccViewController::handleMouseMove(const QMouseEvent* event)
 {
-    const Position currPos = toPosition(m_occView->widget()->mapFromGlobal(event->globalPos()));
+    const Position currPos = toPosition(m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event)));
     const Position prevPos = m_prevPos;
     m_prevPos = currPos;
     if (m_actionMatcher->matchRotation())
@@ -286,7 +287,7 @@ void WidgetOccViewController::handleMouseButtonRelease(const QMouseEvent* event)
     m_inputSequence.release(event->button());
     const bool hadDynamicAction = this->hasCurrentDynamicAction();
     if (this->isWindowZoomingStarted())
-        this->windowZoom(toPosition(m_occView->widget()->mapFromGlobal(event->globalPos())));
+        this->windowZoom(toPosition(m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event))));
 
     this->stopDynamicAction();
     if (!hadDynamicAction)

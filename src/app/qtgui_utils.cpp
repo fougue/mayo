@@ -12,6 +12,7 @@
 #include <QtCore/QBuffer>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
+#include <QtGui/QMouseEvent>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
 
@@ -151,6 +152,15 @@ QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* scre
         QtGuiUtils::screenPixelWidth(widthRatio, screen),
         QtGuiUtils::screenPixelHeight(heightRatio, screen)
     );
+}
+
+QPoint globalPosition(const QMouseEvent* event)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    return event->globalPos();
+#else
+    return event->globalPosition().toPoint();
+#endif
 }
 
 FontChange::FontChange(const QFont& font)

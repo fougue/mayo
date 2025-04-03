@@ -46,7 +46,7 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
 {
     auto action = new QAction(this);
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
-    action->setShortcut(Qt::ALT + Qt::Key_0);
+    action->setShortcut(Qt::ALT | Qt::Key_0);
     action->setCheckable(true);
     action->setChecked(context->pageDocuments_widgetLeftSideBar()->isVisible());
     this->setAction(action);
@@ -96,7 +96,7 @@ CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
 {
     auto action = new QAction(this);
     action->setToolTip(Command::tr("Go To Home Page"));
-    action->setShortcut(Qt::CTRL + Qt::Key_0);
+    action->setShortcut(Qt::CTRL | Qt::Key_0);
     this->setAction(action);
     this->updateAction();
     context->widgetPage(IAppContext::Page::Home)->installEventFilter(this);
@@ -161,7 +161,7 @@ CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
     action->setText(Command::tr("Previous Document"));
     action->setToolTip(Command::tr("Previous Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Back));
-    action->setShortcut(Qt::ALT + Qt::Key_Left);
+    action->setShortcut(Qt::ALT | Qt::Key_Left);
     this->setAction(action);
 }
 
@@ -186,7 +186,7 @@ CommandNextDocument::CommandNextDocument(IAppContext* context)
     action->setText(Command::tr("Next Document"));
     action->setToolTip(Command::tr("Next Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Next));
-    action->setShortcut(Qt::ALT + Qt::Key_Right);
+    action->setShortcut(Qt::ALT | Qt::Key_Right);
     this->setAction(action);
 }
 
