@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../base/signal.h"
+#include "../base/libtree.h"
 #include "../measure/measure_display.h"
 #include "../measure/measure_tool.h"
 
@@ -48,6 +49,7 @@ private:
     MeasureDisplayConfig currentMeasureDisplayConfig() const;
 
     void onGraphicsSelectionChanged();
+    void onDocumentEntityAdded(TreeNodeId entityNodeId);
 
     void updateMessagePanel();
 
@@ -72,6 +74,7 @@ private:
     IMeasureTool* m_tool = nullptr;
     QString m_errorMessage;
     SignalConnectionHandle m_connGraphicsSelectionChanged;
+    SignalConnectionHandle m_connDocumentEntityAdded;
 };
 
 } // namespace Mayo

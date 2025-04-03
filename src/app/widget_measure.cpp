@@ -76,24 +76,24 @@ WidgetMeasure::WidgetMeasure(GuiDocument* guiDoc, QWidget* parent)
 
     m_ui->setupUi(this);
     QObject::connect(
-                m_ui->combo_MeasureType, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureTypeChanged
+        m_ui->combo_MeasureType, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureTypeChanged
     );
     QObject::connect(
-                m_ui->combo_LengthUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_LengthUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_AngleUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_AngleUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_AreaUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_AreaUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_VolumeUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_VolumeUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
 
     this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
@@ -102,6 +102,8 @@ WidgetMeasure::WidgetMeasure(GuiDocument* guiDoc, QWidget* parent)
 
 WidgetMeasure::~WidgetMeasure()
 {
+    m_connGraphicsSelectionChanged.disconnect();
+    m_connDocumentEntityAdded.disconnect();
     delete m_ui;
 }
 
@@ -111,8 +113,12 @@ void WidgetMeasure::setMeasureOn(bool on)
     auto gfxScene = m_guiDoc->graphicsScene();
     if (on) {
         this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
-        m_connGraphicsSelectionChanged =
-                gfxScene->signalSelectionChanged.connectSlot(&WidgetMeasure::onGraphicsSelectionChanged, this);
+        m_connGraphicsSelectionChanged = gfxScene->signalSelectionChanged.connectSlot(
+            &WidgetMeasure::onGraphicsSelectionChanged, this
+        );
+        m_connDocumentEntityAdded = m_guiDoc->document()->signalEntityAdded.connectSlot(
+            &WidgetMeasure::onDocumentEntityAdded, this
+        );
     }
     else {
         gfxScene->foreachDisplayedObject([=](const GraphicsObjectPtr& gfxObject) {
@@ -121,6 +127,7 @@ void WidgetMeasure::setMeasureOn(bool on)
         });
         gfxScene->clearSelection();
         m_connGraphicsSelectionChanged.disconnect();
+        m_connDocumentEntityAdded.disconnect();
     }
 }
 
@@ -368,6 +375,21 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     }
 
     this->updateMessagePanel();
+}
+
+void WidgetMeasure::onDocumentEntityAdded(TreeNodeId entityNodeId)
+{
+    if (!m_tool)
+        return;
+
+    auto measureType = this->currentMeasureType();
+    if (measureType == MeasureType::None)
+        return;
+
+    m_guiDoc->foreachGraphicsObject(entityNodeId, [=](const GraphicsObjectPtr& gfxObject) {
+        for (GraphicsObjectSelectionMode mode : m_tool->selectionModes(measureType))
+            m_guiDoc->graphicsScene()->activateObjectSelection(gfxObject, mode);
+    });
 }
 
 void WidgetMeasure::updateMessagePanel()
