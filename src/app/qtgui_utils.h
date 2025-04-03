@@ -15,6 +15,7 @@
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
 #include <QtGui/QPixmap>
+class QMouseEvent;
 class QScreen;
 
 #include <type_traits>
@@ -64,6 +65,11 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2);
 int screenPixelWidth(double screenRatio, const QScreen* screen = nullptr);
 int screenPixelHeight(double screenRatio, const QScreen* screen = nullptr);
 QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen = nullptr);
+
+// Returns the global position of the mouse cursor at the time of the event
+// This is a helper function to facilitates Qt5/Qt6 portability as Qt5 QMouseEvent::globalPos() has
+// been deprecated in Qt6
+QPoint globalPosition(const QMouseEvent* event);
 
 // Fluent-like helper to change font properties
 class FontChange {

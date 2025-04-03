@@ -6,6 +6,7 @@
 
 #include "test_measure.h"
 
+#include "qttest_utils.h"
 #include "../src/base/application.h"
 #include "../src/base/geom_utils.h"
 #include "../src/base/task_progress.h"
@@ -173,7 +174,7 @@ void TestMeasure::BRepAngle_TwoLinesParallelError_test()
 {
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeEdge(gp_Lin(gp::Origin(), gp::DX()));
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeEdge(gp_Lin({ 0, 5, 5 }, gp::DX()));
-    QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepAngle(shape1, shape2), IMeasureError);
+    MAYO_QVERIFY_THROWS_EXCEPTION(IMeasureError, MeasureToolBRep::brepAngle(shape1, shape2));
 }
 
 void TestMeasure::BRepLength_PolygonEdge_test()
@@ -221,7 +222,7 @@ void TestMeasure::BRepBoundingBox_Sphere_test()
 void TestMeasure::BRepBoundingBox_NullShape_test()
 {
     const TopoDS_Shape nullShape;
-    QVERIFY_EXCEPTION_THROWN(MeasureToolBRep::brepBoundingBox(nullShape), IMeasureError);
+    MAYO_QVERIFY_THROWS_EXCEPTION(IMeasureError, MeasureToolBRep::brepBoundingBox(nullShape));
 }
 
 } // namespace Mayo
