@@ -9,9 +9,12 @@
 #include "application.h"
 #include "caf_utils.h"
 #include "cpp_utils.h"
+
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
+
+#include <unordered_set>
 
 namespace Mayo {
 
@@ -191,6 +194,25 @@ void Document::destroyEntity(TreeNodeId entityTreeNodeId)
         return;
 
     this->signalEntityAboutToBeDestroyed.send(entityTreeNodeId);
+
+    std::unordered_set<TDF_Label> setSimpleShapeLabel;
+    traverseTree_postOrder(entityTreeNodeId, m_modelTree, [&](TreeNodeId nodeId) {
+        TDF_Label nodeLabel = m_modelTree.nodeData(nodeId);
+        if (XCaf::isShapeSimple(nodeLabel))
+            setSimpleShapeLabel.insert(nodeLabel);
+        else if (XCaf::isShapeComponent(nodeLabel))
+            m_xcaf.shapeTool()->RemoveComponent(nodeLabel);
+        else if (XCaf::isShapeReference(nodeLabel))
+            m_xcaf.shapeTool()->RemoveShape(nodeLabel, false/*!removeCompletely*/);
+        else
+            nodeLabel.ForgetAllAttributes();
+    });
+
+    for (const TDF_Label& label : setSimpleShapeLabel) {
+        if (!XCaf::hasShapeUsers(label))
+            m_xcaf.shapeTool()->RemoveShape(label, true/*removeCompletely*/);
+    }
+
     entityLabel.ForgetAllAttributes();
     entityLabel.Nullify();
     m_modelTree.removeRoot(entityTreeNodeId);

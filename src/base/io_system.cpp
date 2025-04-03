@@ -354,7 +354,8 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     return ok;
 }
 
-System::Operation_ImportInDocument System::importInDocument() {
+System::Operation_ImportInDocument System::importInDocument()
+{
     return Operation_ImportInDocument(*this);
 }
 
@@ -398,49 +399,57 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath) {
+System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath)
+{
     m_args.targetFilepath = filepath;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFormat(Format format) {
+System::Operation_ExportApplicationItems::targetFormat(Format format)
+{
     m_args.targetFormat = format;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem) {
+System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem)
+{
     m_args.applicationItems = { &appItem, 1 };
     return *this;
 }
 
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems) {
+System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems)
+{
     m_args.applicationItems = appItems;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters) {
+System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters)
+{
     m_args.parameters = parameters;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger) {
+System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger)
+{
     m_args.messenger = messenger;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress) {
+System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress)
+{
     m_args.progress = progress;
     return *this;
 }
 
-bool System::Operation_ExportApplicationItems::execute() {
+bool System::Operation_ExportApplicationItems::execute()
+{
     return m_system.exportApplicationItems(m_args);
 }
 
@@ -501,31 +510,36 @@ void System::traverseUniqueItems(
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document) {
+System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document)
+{
     m_args.targetDocument = document;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(Span<const FilePath> filepaths) {
+System::Operation_ImportInDocument::withFilepaths(Span<const FilePath> filepaths)
+{
     m_args.filepaths = filepaths;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider) {
+System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider)
+{
     m_args.parametersProvider = provider;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withMessenger(Messenger* messenger) {
+System::Operation_ImportInDocument::withMessenger(Messenger* messenger)
+{
     m_args.messenger = messenger;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
+System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress)
+{
     m_args.progress = progress;
     return *this;
 }
@@ -558,7 +572,8 @@ System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progre
     return *this;
 }
 
-bool System::Operation_ImportInDocument::execute() {
+bool System::Operation_ImportInDocument::execute()
+{
     return m_system.importInDocument(m_args);
 }
 

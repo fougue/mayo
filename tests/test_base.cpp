@@ -258,7 +258,6 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
-
 }
 
 void TestBase::DocumentRefCount_test()
@@ -268,6 +267,50 @@ void TestBase::DocumentRefCount_test()
     QVERIFY(doc->GetRefCount() > 1);
     app->closeDocument(doc);
     QCOMPARE(doc->GetRefCount(), 1);
+}
+
+void TestBase::DocumentReload_bugGitHub332_test()
+{
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    // Import file in document
+    const FilePath docFilePath = "tests/inputs/#332_file.stp";
+    {
+        const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
+        QVERIFY(okImport);
+        QCOMPARE(doc->entityCount(), 1);
+        const TDF_Label entityLabel = doc->entityLabel(0);
+        QCOMPARE(to_stdString(CafUtils::labelAttrStdName(entityLabel)), std::string{"Root"});
+        QVERIFY(XCaf::isShapeAssembly(entityLabel));
+        QCOMPARE(XCaf::shapeComponents(entityLabel).Size(), 3);
+        for (const TDF_Label& componentLabel : XCaf::shapeComponents(entityLabel)) {
+            QVERIFY(XCaf::isShapeComponent(componentLabel));
+            QVERIFY(XCaf::isShapeReference(componentLabel));
+        }
+
+        QCOMPARE(doc->xcaf().topLevelFreeShapes().Size(), 1);
+        QCOMPARE(doc->xcaf().topLevelFreeShapes().First(), entityLabel);
+    }
+
+    // Clear document: destroy all entities
+    while (doc->entityCount() > 0)
+        doc->destroyEntity(doc->entityTreeNodeId(0));
+
+    QCOMPARE(doc->entityCount(), 0);
+    QCOMPARE(doc->xcaf().topLevelFreeShapes().Size(), 0);
+
+    // Import file again in document
+    {
+        const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
+        QVERIFY(okImport);
+        QCOMPARE(doc->entityCount(), 1);
+        const TDF_Label entityLabel = doc->entityLabel(0);
+        QVERIFY(XCaf::isShapeAssembly(entityLabel));
+        QCOMPARE(XCaf::shapeComponents(entityLabel).Size(), 3);
+        QCOMPARE(doc->xcaf().topLevelFreeShapes().Size(), 1);
+        QCOMPARE(doc->xcaf().topLevelFreeShapes().First(), entityLabel);
+    }
 }
 
 void TestBase::CppUtils_toggle_test()
