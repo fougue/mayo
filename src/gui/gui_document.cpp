@@ -380,15 +380,8 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 void GuiDocument::setExplodingFactor(double t)
 {
     m_explodingFactor = t;
-    for (const GraphicsEntity& entity : m_vecGraphicsEntity) {
-        const gp_Pnt entityCenter = BndBoxCoords::get(entity.bndBox).center();
-        for (const GraphicsEntity::Object& object : entity.vecObject) {
-            const gp_Vec vecDirection(entityCenter, BndBoxCoords::get(object.bndBox).center());
-            gp_Trsf trsfMove;
-            trsfMove.SetTranslation(2 * t * vecDirection);
-            m_gfxScene.setObjectTransformation(object.ptr, trsfMove * object.trsfOriginal);
-        }
-    }
+    for (const GraphicsEntity& entity : m_vecGraphicsEntity)
+        applyExplodingFactor(entity, t);
 
     m_gfxScene.redraw();
 }
@@ -687,6 +680,9 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
         BndUtils::add(&gfxEntity.bndBox, object.bndBox);
     }
 
+    if (!MathUtils::fuzzyIsNull(m_explodingFactor))
+        this->applyExplodingFactor(gfxEntity, m_explodingFactor);
+
     m_gfxScene.redraw();
 
     traverseTree(entityTreeNodeId, docModelTree, [=](TreeNodeId id) {
@@ -724,6 +720,17 @@ const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId en
                 [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
     );
     return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
+}
+
+void GuiDocument::applyExplodingFactor(const GraphicsEntity& entity, double t)
+{
+    const gp_Pnt entityCenter = BndBoxCoords::get(entity.bndBox).center();
+    for (const GraphicsEntity::Object& object : entity.vecObject) {
+        const gp_Vec vecDirection(entityCenter, BndBoxCoords::get(object.bndBox).center());
+        gp_Trsf trsfMove;
+        trsfMove.SetTranslation(2 * t * vecDirection);
+        m_gfxScene.setObjectTransformation(object.ptr, trsfMove * object.trsfOriginal);
+    }
 }
 
 void GuiDocument::v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner)

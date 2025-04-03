@@ -68,6 +68,10 @@ public:
     // Is 'shape' a subshape of the shape stored in 'lbl' ?
     bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape);
 
+    // Does shape stored at 'lbl' have at least one user?
+    // Returns 'false' is shape is free
+    static bool hasShapeUsers(const TDF_Label& lbl);
+
     // Various flags for findShapeLabel()
     enum FindShapeLabelFlag {
         // findShapeLabel() will first try to find the shape among the top-level shapes

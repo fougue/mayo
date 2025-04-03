@@ -174,6 +174,15 @@ bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
     return this->shapeTool()->IsSubShape(lbl, shape);
 }
 
+bool XCaf::hasShapeUsers(const TDF_Label& lbl)
+{
+    OccHandle<TDataStd_TreeNode> treeNode;
+    if (!lbl.FindAttribute(XCAFDoc::ShapeRefGUID(), treeNode))
+        return true;
+
+    return treeNode && !treeNode->First().IsNull();
+}
+
 bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 {
     OccHandle<XCAFDoc_ColorTool> tool = this->colorTool();
