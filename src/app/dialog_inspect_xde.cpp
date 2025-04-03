@@ -572,6 +572,10 @@ static void loadLabelShapeProperties(
     fnAddItem(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
     fnAddItem(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
 
+    TDF_LabelSequence seqLabelUser;
+    shapeTool->GetUsers(label, seqLabelUser);
+    fnAddItem(createPropertyTreeItem("UserCount", seqLabelUser.Size()));
+
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
         if (XCAFDoc_ShapeTool::GetReferredShape(label, labelRef)) {
@@ -788,9 +792,11 @@ static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* tree
 {
     for (TDF_ChildIterator it(label, false/*!allLevels*/); it.More(); it.Next()) {
         const TDF_Label childLabel = it.Value();
-        auto childTreeItem = new QTreeWidgetItem(treeItem);
-        loadLabel(childLabel, childTreeItem);
-        deepLoadChildrenLabels(childLabel, childTreeItem);
+        if (!CafUtils::isNullOrEmpty(childLabel)) {
+            auto childTreeItem = new QTreeWidgetItem(treeItem);
+            loadLabel(childLabel, childTreeItem);
+            deepLoadChildrenLabels(childLabel, childTreeItem);
+        }
     }
 }
 
