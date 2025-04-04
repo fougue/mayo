@@ -85,6 +85,7 @@ private slots:
 
     void LibTask_test();
     void LibTree_test();
+    void LibTree_removeRoot_test();
 
     void Span_test();
 

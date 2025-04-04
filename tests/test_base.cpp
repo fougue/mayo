@@ -1353,6 +1353,28 @@ void TestBase::LibTree_test()
     }
 }
 
+void TestBase::LibTree_removeRoot_test()
+{
+    Tree<std::string> tree;
+    QCOMPARE(tree.nodeCount(), 0);
+
+    const TreeNodeId root1 = tree.appendChild(0, "root1");
+    const TreeNodeId root2 = tree.appendChild(0, "root2");
+    QCOMPARE(tree.nodeCount(), 2);
+    tree.appendChild(root1, "1-child1");
+    tree.appendChild(root1, "1-child2");
+    tree.appendChild(root2, "2-child1");
+    tree.appendChild(root2, "2-child2");
+    tree.appendChild(root2, "2-child3");
+    QCOMPARE(tree.nodeCount(), 7);
+
+    tree.removeRoot(root2);
+    QVERIFY(tree.nodeCount() > 0);
+    tree.removeRoot(root1);
+    // All root nodes removed: the count of nodes must be 0
+    QCOMPARE(tree.nodeCount(), 0);
+}
+
 void TestBase::Span_test()
 {
     const std::vector<std::string> vecString = { "first", "second", "third", "fourth", "fifth" };

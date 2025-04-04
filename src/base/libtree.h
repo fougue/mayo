@@ -75,6 +75,10 @@ public:
     // Remove root node identified by 'id'
     void removeRoot(TreeNodeId id);
 
+    // Total count of nodes in the tree, this includes also nodes marked as "deleted" but not yet
+    // destroyed from the tree
+    size_t nodeCount() const;
+
 private:
     struct TreeNode {
         TreeNodeId siblingPrevious;
@@ -143,50 +147,59 @@ void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback)
 
 template<typename T> Tree<T>::Tree() {}
 
-template<typename T> TreeNodeId Tree<T>::nodeSiblingPrevious(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeSiblingPrevious(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->siblingPrevious : 0;
 }
 
-template<typename T> TreeNodeId Tree<T>::nodeSiblingNext(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeSiblingNext(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->siblingNext : 0;
 }
 
-template<typename T> TreeNodeId Tree<T>::nodeChildFirst(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeChildFirst(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->childFirst : 0;
 }
 
-template<typename T> TreeNodeId Tree<T>::nodeChildLast(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeChildLast(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->childLast : 0;
 }
 
-template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->parent : 0;
 }
 
-template<typename T> TreeNodeId Tree<T>::nodeRoot(TreeNodeId id) const {
+template<typename T> TreeNodeId Tree<T>::nodeRoot(TreeNodeId id) const
+{
     while (!this->nodeIsRoot(id))
         id = this->nodeParent(id);
 
     return id;
 }
 
-template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const {
+template<typename T> const T& Tree<T>::nodeData(TreeNodeId id) const
+{
     static const T nullObject = {};
     const TreeNode* node = this->ptrNode(id);
     return node ? node->data : nullObject;
 }
 
-template<typename T> bool Tree<T>::nodeIsRoot(TreeNodeId id) const {
+template<typename T> bool Tree<T>::nodeIsRoot(TreeNodeId id) const
+{
     const TreeNode* node = this->ptrNode(id);
     return node ? node->parent == 0 : false;
 }
 
-template<typename T> bool Tree<T>::nodeIsLeaf(TreeNodeId id) const {
+template<typename T> bool Tree<T>::nodeIsLeaf(TreeNodeId id) const
+{
     return this->nodeChildFirst(id) == 0;
 }
 
@@ -247,36 +260,51 @@ template<typename T> void Tree<T>::removeRoot(TreeNodeId id)
 {
     Expects(this->nodeIsRoot(id));
 
-    // TODO Mark all deep children nodes as 'deleted'
+    traverseTree_postOrder(id, *this, [=](TreeNodeId visitId) {
+        TreeNode* visitNode = this->ptrNode(visitId);
+        if (visitNode)
+            visitNode->isDeleted = true;
+    });
+    Expects(this->isNodeDeleted(id));
+
     auto it = std::find(m_vecRoot.begin(), m_vecRoot.end(), id);
-    if (it != m_vecRoot.end()) {
-        TreeNode* node = this->ptrNode(id);
-        Expects(node != nullptr);
-        node->isDeleted = true;
+    if (it != m_vecRoot.end())
         m_vecRoot.erase(it);
-    }
+
+    if (m_vecRoot.empty())
+        this->clear();
 }
 
-template<typename T> Span<const TreeNodeId> Tree<T>::roots() const {
+template<typename T> size_t Tree<T>::nodeCount() const
+{
+    return m_vecNode.size();
+}
+
+template<typename T> Span<const TreeNodeId> Tree<T>::roots() const
+{
     return m_vecRoot;
 }
 
-template<typename T> TreeNodeId Tree<T>::lastNodeId() const {
+template<typename T> TreeNodeId Tree<T>::lastNodeId() const
+{
     return static_cast<TreeNodeId>(m_vecNode.size());
 }
 
 template<typename T>
-typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) {
+typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id)
+{
     return id != 0 && id <= m_vecNode.size() ? &m_vecNode.at(id - 1) : nullptr;
 }
 
 template<typename T>
-const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const {
+const typename Tree<T>::TreeNode* Tree<T>::ptrNode(TreeNodeId id) const
+{
     return id != 0 && id <= m_vecNode.size() ? &m_vecNode.at(id - 1) : nullptr;
 }
 
 template<typename T, typename FN>
-void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode)
+{
     switch (mode) {
     case TreeTraversal::Unorder:
         return traverseTree_unorder(tree, callback);
@@ -288,7 +316,8 @@ void traverseTree(const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
 }
 
 template<typename T, typename FN>
-void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode) {
+void traverseTree(TreeNodeId id, const Tree<T>& tree, const FN& callback, TreeTraversal mode)
+{
     switch (mode) {
     case TreeTraversal::Unorder:
     case TreeTraversal::PreOrder:
@@ -309,7 +338,8 @@ void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 }
 
 template<typename T, typename FN>
-void traverseTree_preOrder(const Tree<T>& tree, const FN& callback) {
+void traverseTree_preOrder(const Tree<T>& tree, const FN& callback)
+{
     for (TreeNodeId id : tree.roots())
         traverseTree_preOrder(id, tree, callback);
 }
@@ -325,7 +355,8 @@ void traverseTree_preOrder(TreeNodeId id, const Tree<T>& tree, const FN& callbac
 }
 
 template<typename T, typename FN>
-void traverseTree_postOrder(const Tree<T>& tree, const FN& callback) {
+void traverseTree_postOrder(const Tree<T>& tree, const FN& callback)
+{
     for (TreeNodeId id : tree.roots())
         traverseTree_postOrder(id, tree, callback);
 }
