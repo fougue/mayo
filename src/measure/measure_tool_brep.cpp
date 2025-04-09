@@ -366,7 +366,7 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
     distResult.pnt1 = dist.PointOnShape1(1);
     distResult.pnt2 = dist.PointOnShape2(1);
     distResult.value = dist.Value() * Quantity_Millimeter;
-    distResult.type = DistanceType::Mininmum;
+    distResult.type = MeasureDistance::Type::Mininmum;
     return distResult;
 }
 
@@ -384,7 +384,7 @@ MeasureDistance MeasureToolBRep::brepCenterDistance(
     distResult.pnt1 = centerOfMass1;
     distResult.pnt2 = centerOfMass2;
     distResult.value = centerOfMass1.Distance(centerOfMass2) * Quantity_Millimeter;
-    distResult.type = DistanceType::CenterToCenter;
+    distResult.type = MeasureDistance::Type::CenterToCenter;
     return distResult;
 }
 

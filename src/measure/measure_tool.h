@@ -21,17 +21,15 @@
 
 namespace Mayo {
 
-enum class DistanceType {
-    None,
-    Mininmum,
-    CenterToCenter
-};
-
 // Void measure value
 struct MeasureNone {};
 
 // Measure of a distance between two entities
 struct MeasureDistance {
+    enum class Type {
+        None, Mininmum, CenterToCenter
+    };
+
     // Point on 1st entity from which the distance is measured
     gp_Pnt pnt1;
     // Point on 2nd entity from which the distance is measured
@@ -39,7 +37,7 @@ struct MeasureDistance {
     // Length of the distance
     QuantityLength value;
     // Distance type
-    DistanceType type = DistanceType::None;
+    Type type = Type::None;
 };
 
 // Measure of a circle entity
