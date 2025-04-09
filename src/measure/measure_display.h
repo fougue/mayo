@@ -74,7 +74,7 @@ public:
 
     // Factory method to create an IMeasureDisplay object suited to input measure value
     static std::unique_ptr<IMeasureDisplay> createFrom(MeasureType type, const MeasureValue& value);
-    static std::unique_ptr<IMeasureDisplay> createEmptySumFrom(MeasureType type);
+    static std::unique_ptr<IMeasureDisplay> createEmptySum(MeasureType type);
 
     void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) override;
 
@@ -154,7 +154,7 @@ private:
 };
 
 // --
-// -- MinDistance
+// -- Distance
 // --
 
 class MeasureDisplayDistance : public BaseMeasureDisplay {
@@ -163,6 +163,9 @@ public:
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
+
+    bool isSumSupported() const override { return true; }
+    void sumAdd(const IMeasureDisplay& other) override;
 
 private:
     MeasureDistance m_dist;
@@ -182,6 +185,9 @@ public:
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
+
+    bool isSumSupported() const override { return true; }
+    void sumAdd(const IMeasureDisplay& other) override;
 
 private:
     MeasureAngle m_angle;

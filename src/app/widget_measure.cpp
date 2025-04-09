@@ -281,6 +281,7 @@ MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
 void WidgetMeasure::onGraphicsSelectionChanged()
 {
     auto gfxScene = m_guiDoc->graphicsScene();
+    const std::vector<GraphicsOwnerPtr> vecSelectedOwner_onEntry = m_vecSelectedOwner;
     std::vector<GraphicsOwnerPtr> vecNewSelected;
     std::vector<GraphicsOwnerPtr> vecDeselected;
     {
@@ -350,15 +351,21 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     }
 
     // Create MeasureDisplay objects needing currently two selected graphics objects
-    if (m_vecSelectedOwner.size() == 2) {
-        const GraphicsOwnerPtr& owner1 = m_vecSelectedOwner.front();
-        const GraphicsOwnerPtr& owner2 = m_vecSelectedOwner.back();
-        try {
-            const MeasureValue value = IMeasureTool_computeValue(*m_tool, measureType, owner1, owner2);
-            if (MeasureValue_isValid(value))
-                fnAddMeasureDisplay(BaseMeasureDisplay::createFrom(measureType, value), { owner1, owner2 });
-        } catch (const IMeasureError& err) {
-            m_errorMessage = to_QString(err.message());
+    if (vecSelectedOwner_onEntry.size() >= 1) {
+        for (const GraphicsOwnerPtr& owner : vecNewSelected) {
+            const int indexOwner = Span_itemIndex(vecNewSelected, owner);
+            const GraphicsOwnerPtr& prevOwner =
+                indexOwner == 0 ?
+                    vecSelectedOwner_onEntry.back() :
+                    vecNewSelected.at(indexOwner - 1)
+                ;
+            try {
+                const MeasureValue value = IMeasureTool_computeValue(*m_tool, measureType, prevOwner, owner);
+                if (MeasureValue_isValid(value))
+                    fnAddMeasureDisplay(BaseMeasureDisplay::createFrom(measureType, value), { prevOwner, owner });
+            } catch (const IMeasureError& err) {
+                m_errorMessage = to_QString(err.message());
+            }
         }
     }
 
@@ -438,7 +445,7 @@ void WidgetMeasure::updateMessagePanel()
 
         // Handle the case where there are many measures and sum is a supported operation
         if (m_vecMeasureDisplay.size() > 1) {
-            auto sumMeasure = BaseMeasureDisplay::createEmptySumFrom(this->currentMeasureType());
+            auto sumMeasure = BaseMeasureDisplay::createEmptySum(this->currentMeasureType());
             if (sumMeasure && sumMeasure->isSumSupported()) {
                 for (const IMeasureDisplayPtr& measure : m_vecMeasureDisplay)
                     sumMeasure->sumAdd(*measure);
@@ -473,8 +480,9 @@ void WidgetMeasure::eraseMeasureDisplay(const IMeasureDisplay* measure)
 
 void WidgetMeasure::addLink(const GraphicsOwnerPtr& owner, const IMeasureDisplayPtr& measure)
 {
-    if (owner && measure)
+    if (owner && measure) {
         m_vecLinkGfxOwnerMeasure.push_back({ owner, measure.get() });
+    }
 }
 
 void WidgetMeasure::eraseLink(const GraphicsOwner_MeasureDisplay* link)
@@ -488,9 +496,9 @@ void WidgetMeasure::eraseLink(const GraphicsOwner_MeasureDisplay* link)
 const WidgetMeasure::GraphicsOwner_MeasureDisplay* WidgetMeasure::findLink(const GraphicsOwnerPtr& owner) const
 {
     auto itFound = std::find_if(
-                m_vecLinkGfxOwnerMeasure.begin(),
-                m_vecLinkGfxOwnerMeasure.end(),
-                [=](const GraphicsOwner_MeasureDisplay& link) { return link.gfxOwner == owner; }
+        m_vecLinkGfxOwnerMeasure.begin(),
+        m_vecLinkGfxOwnerMeasure.end(),
+        [=](const GraphicsOwner_MeasureDisplay& link) { return link.gfxOwner == owner; }
     );
     return itFound != m_vecLinkGfxOwnerMeasure.end() ? &(*itFound) : nullptr;
 }

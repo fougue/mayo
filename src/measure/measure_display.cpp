@@ -56,9 +56,14 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
     }
 }
 
-std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureType type)
+std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySum(MeasureType type)
 {
     switch (type) {
+    case MeasureType::MinDistance:
+    case MeasureType::CenterDistance:
+        return std::make_unique<MeasureDisplayDistance>(Mayo::MeasureDistance{});
+    case MeasureType::Angle:
+        return std::make_unique<MeasureDisplayAngle>(Mayo::MeasureAngle{});
     case MeasureType::Length:
         return std::make_unique<MeasureDisplayLength>(Mayo::MeasureLength{});
     case MeasureType::Area:
@@ -105,11 +110,11 @@ std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureDisplayConf
     auto trPntY = UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit);
     auto trPntZ = UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit);
     const std::string str = fmt::format(
-                MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">X</font>{0} "
-                                             "<font color=\"#55FF00\">Y</font>{1} "
-                                             "<font color=\"#0077FF\">Z</font>{2}){3}"),
-                text(trPntX, config), text(trPntY, config), text(trPntZ, config),
-                trPntX.strUnit
+        MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">X</font>{0} "
+                                     "<font color=\"#55FF00\">Y</font>{1} "
+                                     "<font color=\"#0077FF\">Z</font>{2}){3}"),
+        text(trPntX, config), text(trPntY, config), text(trPntZ, config),
+        trPntX.strUnit
     );
     return str;
 }
@@ -122,10 +127,10 @@ std::string BaseMeasureDisplay::text(double value, const MeasureDisplayConfig& c
 std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config)
 {
     const std::string BaseMeasureDisplay = fmt::format(
-                MeasureDisplayI18N::textIdTr(" X{0} Y{1} Z{2}"),
-                text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit), config),
-                text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit), config),
-                text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit), config)
+        MeasureDisplayI18N::textIdTr(" X{0} Y{1} Z{2}"),
+        text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit), config),
+        text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit), config),
+        text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit), config)
     );
     return BaseMeasureDisplay;
 }
@@ -246,7 +251,7 @@ void MeasureDisplayCircleDiameter::update(const MeasureDisplayConfig& config)
     const auto trDiameter = UnitSystem::translateLength(diameter, config.lengthUnit);
     const auto strDiameter = BaseMeasureDisplay::text(trDiameter, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
+        MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
     ));
 
     m_gfxDiameterText->SetText(to_OccExtString(fmt::format(MeasureDisplayI18N::textIdTr(" Ø{0}"), strDiameter)));
@@ -270,7 +275,7 @@ gp_Pnt MeasureDisplayCircleDiameter::diameterOpposedPnt(const gp_Pnt& pntOnCircl
 }
 
 // --
-// -- MinDistance
+// -- Distance
 // --
 
 MeasureDisplayDistance::MeasureDisplayDistance(const MeasureDistance& dist)
@@ -290,30 +295,34 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
 {
     const auto trLength = UnitSystem::translateLength(m_dist.value, config.lengthUnit);
     const auto strLength = BaseMeasureDisplay::text(trLength, config);
-    
-    std::string distStr;
-    switch(m_dist.type)
-    {
-        case DistanceType::Mininmum:
-            distStr = "Min Distance";
-            break;
-        case DistanceType::CenterToCenter:
-            distStr = "Distance";
-            break;
+    auto fnStrDistanceType = [](MeasureDistance::Type distType) -> std::string_view {
+        switch(distType) {
+        case MeasureDistance::Type::Mininmum:
+            return "Min Distance";
+        case MeasureDistance::Type::CenterToCenter:
+            return "Distance";
         default:
-            distStr = "Distance";
-            break;
+            return "Distance";
+        }
+    };
+
+    if (this->sumCount() > 1) {
+        this->setText(fmt::format(
+            MeasureDisplayI18N::textIdTr("{0}: {1}{2}"), this->sumTextOr(""), strLength, trLength.strUnit
+        ));
     }
-    
-    distStr += ": {0}{1}<br>Point1: {2}<br>Point2: {3}";
-    
-    this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr(distStr.c_str()),
-                      strLength,
-                      trLength.strUnit,
-                      BaseMeasureDisplay::text(m_dist.pnt1, config),
-                      BaseMeasureDisplay::text(m_dist.pnt2, config)
-    ));
+    else {
+        ;
+        this->setText(fmt::format(
+            MeasureDisplayI18N::textIdTr("{0}: {1}{2}<br>Point1: {3}<br>Point2: {4}"),
+            fnStrDistanceType(m_dist.type),
+            strLength,
+            trLength.strUnit,
+            BaseMeasureDisplay::text(m_dist.pnt1, config),
+            BaseMeasureDisplay::text(m_dist.pnt2, config)
+        ));
+    }
+
     m_gfxDistText->SetText(to_OccExtString(" " + strLength));
     BaseMeasureDisplay::adaptScale(m_gfxDistText, config);
 }
@@ -330,6 +339,13 @@ GraphicsObjectPtr MeasureDisplayDistance::graphicsObjectAt(int i) const
     return {};
 }
 
+void MeasureDisplayDistance::sumAdd(const IMeasureDisplay& other)
+{
+    const auto& otherDist = dynamic_cast<const MeasureDisplayDistance&>(other);
+    m_dist.value += otherDist.m_dist.value;
+    BaseMeasureDisplay::sumAdd(other);
+}
+
 // --
 // -- Angle
 // --
@@ -340,9 +356,14 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
       m_gfxEntity2(new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt2))),
       m_gfxAngleText(new AIS_TextLabel)
 {
+    auto fnVecIsNull = [](const gp_Vec& v) {
+        return v.SquareMagnitude() < Precision::SquareConfusion();
+    };
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
-    const gp_Ax2 axCircle(angle.pntCenter, vec1.Crossed(vec2), vec1);
+    const gp_Dir nCircle = fnVecIsNull(vec1) || fnVecIsNull(vec2) ? gp::DZ() : gp_Dir{vec1.Crossed(vec2)};
+    const gp_Dir xCircle = fnVecIsNull(vec1) ? gp::DX() : gp_Dir{vec1};
+    const gp_Ax2 axCircle(angle.pntCenter, nCircle, xCircle);
     auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
     const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
@@ -358,7 +379,12 @@ void MeasureDisplayAngle::update(const MeasureDisplayConfig& config)
 {
     const auto trAngle = UnitSystem::translateAngle(m_angle.value, config.angleUnit);
     const auto strAngle = BaseMeasureDisplay::text(trAngle, config);
-    this->setText(fmt::format(MeasureDisplayI18N::textIdTr("Angle: {0}{1}"), strAngle, trAngle.strUnit));
+    this->setText(fmt::format(
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Angle")),
+        strAngle,
+        trAngle.strUnit
+    ));
     m_gfxAngleText->SetText(to_OccExtString(" " + strAngle));
     BaseMeasureDisplay::adaptScale(m_gfxAngleText, config);
 }
@@ -380,6 +406,14 @@ GraphicsObjectPtr MeasureDisplayAngle::graphicsObjectAt(int i) const
     return {};
 }
 
+void MeasureDisplayAngle::sumAdd(const IMeasureDisplay& other)
+{
+    const auto& otherAngle = dynamic_cast<const MeasureDisplayAngle&>(other);
+    m_angle.value += otherAngle.m_angle.value;
+    BaseMeasureDisplay::sumAdd(other);
+}
+
+
 // --
 // -- Length
 // --
@@ -397,10 +431,10 @@ void MeasureDisplayLength::update(const MeasureDisplayConfig& config)
     const auto trLength = UnitSystem::translateLength(m_length.value, config.lengthUnit);
     const auto strLength = BaseMeasureDisplay::text(trLength, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
-                      BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
-                      strLength,
-                      trLength.strUnit
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
+        strLength,
+        trLength.strUnit
     ));
     m_gfxLenText->SetText(to_OccExtString(" " + strLength));
     BaseMeasureDisplay::adaptScale(m_gfxLenText, config);
@@ -435,10 +469,10 @@ void MeasureDisplayArea::update(const MeasureDisplayConfig& config)
     const auto trArea = UnitSystem::translateArea(m_area.value, config.areaUnit);
     const auto strArea = BaseMeasureDisplay::text(trArea, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
-                      BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
-                      strArea,
-                      trArea.strUnit
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
+        strArea,
+        trArea.strUnit
     ));
     m_gfxAreaText->SetText(to_OccExtString(" " + strArea));
     BaseMeasureDisplay::adaptScale(m_gfxAreaText, config);
