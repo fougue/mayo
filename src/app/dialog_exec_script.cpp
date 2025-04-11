@@ -55,13 +55,11 @@ DialogExecScript::DialogExecScript(QWidget* parent)
 DialogExecScript::~DialogExecScript()
 {
     delete m_ui;
-    if (m_jsEngine)
-        m_jsEngine->deleteLater();
 }
 
-void DialogExecScript::setScriptEngineCreator(ScriptEngineCreator fn)
+void DialogExecScript::setScriptEngineInitializer(ScriptEngineInitializer fn)
 {
-    m_fnScriptEngineCreator = std::move(fn);
+    m_fnScriptEngineInit = std::move(fn);
 }
 
 void DialogExecScript::setScriptFilePath(const FilePath& scriptFilePath)
@@ -94,7 +92,8 @@ void DialogExecScript::startScript()
         );
 
         // Evaluate script program
-        this->recreateScriptEngine();
+        m_jsEngine = new QJSEngine;
+        m_fnScriptEngineInit(m_jsEngine);
         auto jsVal = m_jsEngine->evaluate(scriptProgram(m_scriptFilePath), m_scriptFilePath);
         logScriptError(jsVal);
     });
@@ -130,6 +129,8 @@ void DialogExecScript::onTaskEnded(TaskId taskId)
     m_ui->progressBar_Execution->setRange(0, 100);
     m_ui->progressBar_Execution->setValue(!m_wasScriptExecInterrupted ? 100 : 0);
     m_jsEngine->setInterrupted(false);
+    delete m_jsEngine;
+    m_jsEngine = nullptr;
 
     for (int col = 0; col < m_ui->treeWidget_Output->columnCount(); ++col)
         m_ui->treeWidget_Output->resizeColumnToContents(col);
@@ -137,8 +138,10 @@ void DialogExecScript::onTaskEnded(TaskId taskId)
 
 void DialogExecScript::interruptScriptExec()
 {
-    m_wasScriptExecInterrupted = true;
-    m_jsEngine->setInterrupted(true);
+    if (m_jsEngine) {
+        m_wasScriptExecInterrupted = true;
+        m_jsEngine->setInterrupted(true);
+    }
 }
 
 void DialogExecScript::restartOrStopScriptExec()
@@ -147,12 +150,6 @@ void DialogExecScript::restartOrStopScriptExec()
         this->interruptScriptExec();
     else
         this->startScript();
-}
-
-void DialogExecScript::recreateScriptEngine()
-{
-    delete m_jsEngine;
-    m_jsEngine = m_fnScriptEngineCreator(nullptr);
 }
 
 void DialogExecScript::addConsoleOutput(const Message& msg)

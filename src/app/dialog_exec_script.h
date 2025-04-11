@@ -22,9 +22,9 @@ public:
     DialogExecScript(QWidget* parent = nullptr);
     ~DialogExecScript();
 
-    // Set the function used to create a JS engine to evaluate scripts
-    using ScriptEngineCreator = std::function<QJSEngine*(QObject*)>;
-    void setScriptEngineCreator(ScriptEngineCreator fn);
+    // Set the function used to initialize a JS engine
+    using ScriptEngineInitializer = std::function<void(QJSEngine*)>;
+    void setScriptEngineInitializer(ScriptEngineInitializer fn);
 
     // Path to the script file to be executed
     void setScriptFilePath(const FilePath& scriptFilePath);
@@ -39,7 +39,6 @@ private:
 
     void interruptScriptExec();
     void restartOrStopScriptExec();
-    void recreateScriptEngine();
 
     struct Message {
         QtMsgType type = QtDebugMsg;
@@ -53,7 +52,7 @@ private:
     void tryCloseDialog();
 
     class Ui_DialogExecScript* m_ui = nullptr;
-    ScriptEngineCreator m_fnScriptEngineCreator;
+    ScriptEngineInitializer m_fnScriptEngineInit;
     QJSEngine* m_jsEngine = nullptr;
     QString m_scriptFilePath;
     TaskManager m_taskMgr;

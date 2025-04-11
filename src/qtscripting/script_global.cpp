@@ -116,9 +116,11 @@ void addScriptEnum(QJSEngine* jsEngine)
 
 } // namespace
 
-QJSEngine* createScriptEngine(const ApplicationPtr& app, QObject* parent)
+void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app)
 {
-    auto jsEngine = new QJSEngine(parent);
+    if (!jsEngine)
+        return;
+
     jsEngine->installExtensions(QJSEngine::ConsoleExtension);
 
     auto scriptApp = new ScriptApplication(app, jsEngine);
@@ -131,8 +133,6 @@ QJSEngine* createScriptEngine(const ApplicationPtr& app, QObject* parent)
     addScriptEnum<GeomAbs_SurfaceType>(jsEngine);
     addScriptEnum<TopAbs_ShapeEnum>(jsEngine);
     addScriptEnum<TopAbs_Orientation>(jsEngine);
-
-    return jsEngine;
 }
 
 void logScriptError(const QJSValue& jsVal, const char* functionName)

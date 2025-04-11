@@ -14,7 +14,7 @@ namespace Mayo {
 
 class Application;
 
-QJSEngine* createScriptEngine(const ApplicationPtr& app, QObject* parent = nullptr);
+void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app);
 void logScriptError(const QJSValue& jsVal, const char* functionName = nullptr);
 
 } // namespace Mayo

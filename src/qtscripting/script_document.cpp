@@ -116,7 +116,7 @@ ScriptDocument::ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp)
         << doc->signalFilePathChanged.connectSlot([=](const FilePath&) { emit this->filePathChanged(); })
         << doc->signalEntityAdded.connectSlot([=](TreeNodeId) { emit this->entityCountChanged(); })
         << doc->signalEntityAboutToBeDestroyed.connectSlot([=](TreeNodeId) { emit this->entityCountChanged(); })
-        ;
+    ;
 }
 
 } // namespace Mayo

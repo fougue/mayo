@@ -127,8 +127,8 @@ void CommandExecScript::execute()
 void CommandExecScript::runScript(IAppContext* context, const FilePath& scriptFilePath)
 {
     auto dlg = new DialogExecScript(context->widgetMain());
-    dlg->setScriptEngineCreator([=](QObject* parent) {
-        return createScriptEngine(context->guiApp()->application(), parent);
+    dlg->setScriptEngineInitializer([=](QJSEngine* jsEngine) {
+        initScriptEngine(jsEngine, context->guiApp()->application());
     });
     dlg->setScriptFilePath(scriptFilePath);
     QtWidgetsUtils::asyncDialogExec(dlg);
