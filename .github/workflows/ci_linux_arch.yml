@@ -25,7 +25,7 @@ jobs:
                   echo 'FROM archlinux:latest'
                   echo 'RUN pacman -Syu --noconfirm'
                   echo 'RUN pacman -Sy --noconfirm make cmake git gcc'
-                  echo 'RUN pacman -Sy --noconfirm qt5-base qt5-svg xcb-util-cursor'
+                  echo 'RUN pacman -Sy --noconfirm qt5-base qt5-svg qt5-declarative xcb-util-cursor'
                   echo 'RUN pacman -Sy --noconfirm opencascade libxi'
                   echo 'RUN pacman -Sy --noconfirm assimp'
                   echo 'COPY mayo mayo'

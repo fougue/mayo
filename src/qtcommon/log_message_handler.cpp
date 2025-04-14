@@ -61,7 +61,7 @@ void LogMessageHandler::qtHandler(QtMsgType type, const QMessageLogContext& cont
     if (
         jsConsoleOutputHandler
         && (std::strcmp(context.category, "qml") == 0 || std::strcmp(context.category, "js") == 0)
-        )
+       )
     {
         jsConsoleOutputHandler(type, context, msg);
         return;

@@ -37,7 +37,7 @@ jobs:
                   apt-get -y install xvfb
 
                   # Install Qt5
-                  apt-get -y install qtbase5-dev libqt5svg5-dev
+                  apt-get -y install qtbase5-dev libqt5svg5-dev qtdeclarative5-dev
 
                   # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
                   apt-get -y install libxcb-cursor0

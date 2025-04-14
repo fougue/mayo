@@ -26,7 +26,7 @@ jobs:
                   echo 'RUN dnf -y update'
                   echo 'RUN dnf -y install xorg-x11-server-Xvfb'
                   echo 'RUN dnf -y install make cmake git gcc-c++'
-                  echo 'RUN dnf -y install qt5-qtbase qt5-qtsvg xcb-util-cursor'
+                  echo 'RUN dnf -y install qt5-qtbase qt5-qtsvg qt5-qtdeclarative xcb-util-cursor'
                   echo 'RUN dnf -y install opencascade-devel'
                   echo 'RUN dnf -y install assimp assimp-devel'
                   echo 'RUN dnf clean all'

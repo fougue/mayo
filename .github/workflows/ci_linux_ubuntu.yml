@@ -22,9 +22,10 @@ jobs:
         - name: Install Qt${{matrix.qt_version_major}}
           run: |
               if [[ ${{matrix.qt_version_major}} == "5" ]]; then
-                  sudo apt-get -y install qtbase5-dev libqt5svg5-dev
+                  sudo apt-get -y install qtbase5-dev libqt5svg5-dev qtdeclarative5-dev
               elif [[ ${{matrix.qt_version_major}} == "6" ]]; then
-                  sudo apt-get -y install qt6-base-dev qt6-svg-dev libxcb-cursor0
+                  sudo apt-get -y install qt6-base-dev qt6-svg-dev qt6-declarative-dev
+                  sudo apt-get -y install libxcb-cursor0
               fi
 
         - name: Install OpenCascade
