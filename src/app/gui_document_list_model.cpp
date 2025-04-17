@@ -73,9 +73,9 @@ void GuiDocumentListModel::removeGuiDocument(const GuiDocument* guiDoc)
 void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const std::string& /*name*/)
 {
     auto itFound = std::find_if(
-                m_vecGuiDocument.cbegin(),
-                m_vecGuiDocument.cend(),
-                [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
+        m_vecGuiDocument.cbegin(),
+        m_vecGuiDocument.cend(),
+        [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
     );
     if (itFound != m_vecGuiDocument.cend()) {
         const int row = itFound - m_vecGuiDocument.begin();

@@ -90,8 +90,8 @@ int AppContext::findDocumentIndex(Document::Identifier docId) const
 {
     int index = -1;
     auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* candidate) {
-            ++index;
-            return candidate->documentIdentifier() == docId;
+        ++index;
+        return candidate->documentIdentifier() == docId;
     });
     return widgetDoc ? index : -1;
 }
@@ -126,7 +126,7 @@ void AppContext::updateControlsEnabledStatus()
 void AppContext::deleteDocumentWidget(const DocumentPtr& doc)
 {
     auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
-            return widgetDoc->documentIdentifier() == doc->identifier();
+        return widgetDoc->documentIdentifier() == doc->identifier();
     });
     m_wnd->widgetPageDocuments()->removeWidgetGuiDocument(widgetDoc);
 }

@@ -38,7 +38,8 @@ constexpr bool isInRange(double v, double start, double end)
 
 } // namespace
 
-QColor toQColor(const Quantity_Color& c) {
+QColor toQColor(const Quantity_Color& c)
+{
     return QColor(c.Red() * 255., c.Green() * 255., c.Blue() * 255.);
 }
 
@@ -49,7 +50,8 @@ QColor toQColor(const Quantity_ColorRGBA& c)
     return qc;
 }
 
-QColor toQColor(const Quantity_NameOfColor c) {
+QColor toQColor(const Quantity_NameOfColor c)
+{
     return toQColor(Quantity_Color(c));
 }
 

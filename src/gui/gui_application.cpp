@@ -150,9 +150,9 @@ void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
 {
     auto itFound = std::find_if(
-                d->m_vecGuiDocument.begin(),
-                d->m_vecGuiDocument.end(),
-                [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
+        d->m_vecGuiDocument.begin(),
+        d->m_vecGuiDocument.end(),
+        [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
     );
     if (itFound != d->m_vecGuiDocument.end()) {
         GuiDocument* guiDoc = *itFound;

@@ -61,17 +61,17 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
         GuiDocument* guiDoc = this->currentGuiDocument();
         if (guiDoc) {
             guiDoc->v3dView()->Camera()->SetProjectionType(
-                        action == m_actionOrtho ?
-                            Graphic3d_Camera::Projection_Orthographic :
-                            Graphic3d_Camera::Projection_Perspective
+                action == m_actionOrtho ?
+                    Graphic3d_Camera::Projection_Orthographic :
+                    Graphic3d_Camera::Projection_Perspective
             );
             guiDoc->graphicsView().redraw();
         }
     });
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandChangeProjection::onCurrentDocumentChanged
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandChangeProjection::onCurrentDocumentChanged
     );
 }
 

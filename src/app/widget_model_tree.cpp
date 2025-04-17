@@ -81,8 +81,9 @@ static TreeItemType treeItemType(const QTreeWidgetItem* treeItem)
 {
     const QVariant varType = treeItem->data(0, TreeItemTypeRole);
     return varType.isValid() ?
-                static_cast<Internal::TreeItemType>(varType.toInt()) :
-                Internal::TreeItemType_Unknown;
+               static_cast<Internal::TreeItemType>(varType.toInt()) :
+               Internal::TreeItemType_Unknown
+    ;
 }
 
 static DocumentPtr treeItemDocument(const QTreeWidgetItem* treeItem)
@@ -141,15 +142,11 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     auto modelTreeBtns = new ItemViewButtons(m_ui->treeWidget_Model, this);
     constexpr int idBtnRemove = 1;
     modelTreeBtns->addButton(
-                idBtnRemove,
-                mayoTheme()->icon(Theme::Icon::Cross),
-                tr("Remove from document")
-        );
+        idBtnRemove, mayoTheme()->icon(Theme::Icon::Cross), tr("Remove from document")
+    );
     modelTreeBtns->setButtonDetection(
-                idBtnRemove,
-                Internal::TreeItemTypeRole,
-                QVariant(Internal::TreeItemType_DocumentEntity)
-        );
+        idBtnRemove, Internal::TreeItemTypeRole, QVariant{Internal::TreeItemType_DocumentEntity}
+    );
     modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
     modelTreeBtns->setButtonDisplayModes(idBtnRemove, ItemViewButtons::DisplayOnDetection);
     modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
@@ -318,10 +315,10 @@ QTreeWidgetItem* WidgetModelTree::findTreeItem(const DocumentTreeNode& node) con
 WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentPtr& doc) const
 {
     auto it = std::find_if(
-                std::next(m_vecBuilder.cbegin()),
-                m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); }
-        );
+        std::next(m_vecBuilder.cbegin()),
+        m_vecBuilder.cend(),
+        [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); }
+    );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -329,10 +326,10 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNo
 {
     Expects(node.isValid());
     auto it = std::find_if(
-                std::next(m_vecBuilder.cbegin()),
-                m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); }
-        );
+        std::next(m_vecBuilder.cbegin()),
+        m_vecBuilder.cend(),
+        [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); }
+    );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -412,9 +409,9 @@ void WidgetModelTree::connectTreeModelDataChanged(bool on)
 {
     if (on) {
         m_connTreeModelDataChanged = QObject::connect(
-                    m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
-                    this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection
-            );
+            m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
+            this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection
+        );
     }
     else {
         QObject::disconnect(m_connTreeModelDataChanged);
@@ -425,10 +422,10 @@ void WidgetModelTree::connectTreeWidgetDocumentSelectionChanged(bool on)
 {
     if (on) {
         m_connTreeWidgetDocumentSelectionChanged = QObject::connect(
-                    m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
-                    this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
-                    Qt::UniqueConnection
-            );
+            m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
+            this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
+            Qt::UniqueConnection
+        );
     }
     else {
         QObject::disconnect(m_connTreeWidgetDocumentSelectionChanged);
