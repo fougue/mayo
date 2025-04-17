@@ -69,6 +69,7 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onCurrentDocumentIndexChanged(int idx);
     void onDocumentFileChanged(const DocumentPtr& doc);
+    void onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp);
     void onSplitterMainMoved(int pos, int index);
 
     QWidget* findLeftHeaderPlaceHolder() const;

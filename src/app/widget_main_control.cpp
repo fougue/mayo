@@ -64,6 +64,18 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
 
+    m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+    m_listViewBtns->installDefaultItemDelegate();
+
+    // IMPORTANT:
+    // GuiDocumentListModel object must be created *BEFORE* signal/slot connection between
+    // GuiApplication::signalGuiDocumentAdded and WidgetMainControl::onGuiDocumentAdded()
+    // onGuiDocumentAdded() is changing the currentIndex of combo_GuiDocuments but the GuiModel
+    // must have been updated before
+    auto guiDocModel = new GuiDocumentListModel(guiApp, this);
+    m_ui->combo_GuiDocuments->setModel(guiDocModel);
+    m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+
     // "Window" actions and navigation in documents
     QObject::connect(
         m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
@@ -87,12 +99,15 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
         this, &WidgetMainControl::onSplitterMainMoved
     );
 
-    guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {
-        if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
-            m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
-    });
-    guiApp->selectionModel()->signalChanged.connectSlot(&WidgetMainControl::onApplicationItemSelectionChanged, this);
-    guiApp->signalGuiDocumentAdded.connectSlot(&WidgetMainControl::onGuiDocumentAdded, this);
+    guiApp->application()->signalDocumentFilePathChanged.connectSlot(
+        &WidgetMainControl::onDocumentFilePathChanged, this
+    );
+    guiApp->selectionModel()->signalChanged.connectSlot(
+        &WidgetMainControl::onApplicationItemSelectionChanged, this
+    );
+    guiApp->signalGuiDocumentAdded.connectSlot(
+        &WidgetMainControl::onGuiDocumentAdded, this
+    );
 
     // Document files monitoring
     auto appModule = AppModule::get();
@@ -104,17 +119,9 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
             m_pendingDocsToReload.clear();
         }
     });
-    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(&WidgetMainControl::onDocumentFileChanged, this);
-
-    // Creation of annex objects
-    m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
-    m_listViewBtns->installDefaultItemDelegate();
-
-    // BEWARE MainWindow::onGuiDocumentAdded() must be called before
-    // MainWindow::onCurrentDocumentIndexChanged()
-    auto guiDocModel = new GuiDocumentListModel(guiApp, this);
-    m_ui->combo_GuiDocuments->setModel(guiDocModel);
-    m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(
+        &WidgetMainControl::onDocumentFileChanged, this
+    );
 
     // Finalize setup
     m_ui->widget_LeftHeader->installEventFilter(this);
@@ -150,7 +157,7 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
     // Opened documents GUI
     auto actionCloseDoc = fnFindAction(CommandCloseCurrentDocument::Name);
     m_listViewBtns->addButton(1, actionCloseDoc->icon(), actionCloseDoc->toolTip());
-    m_listViewBtns->setButtonDetection(1, -1, QVariant());
+    m_listViewBtns->setButtonDetection(1, -1, QVariant{});
     m_listViewBtns->setButtonDisplayColumn(1, 0);
     m_listViewBtns->setButtonDisplayModes(1, ItemViewButtons::DisplayOnDetection);
     m_listViewBtns->setButtonItemSide(1, ItemViewButtons::ItemRightSide);
@@ -327,9 +334,7 @@ void WidgetMainControl::onLeftContentsPageChanged(int pageId)
 
 QWidget* WidgetMainControl::findLeftHeaderPlaceHolder() const
 {
-    return m_ui->widget_LeftHeader->findChild<QWidget*>(
-                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly
-    );
+    return m_ui->widget_LeftHeader->findChild<QWidget*>("LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
 }
 
 QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
@@ -369,9 +374,9 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
             tr("Document file `%1` has been changed since it was opened\n\n"
                "Do you want to reload that document?\n\n"
                "File: `%2`")
-                .arg(to_QString(doc->name()))
-                .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
-            ;
+            .arg(to_QString(doc->name()))
+            .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
+        ;
         const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
         auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -395,7 +400,8 @@ WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
 
 WidgetGuiDocument* WidgetMainControl::currentWidgetGuiDocument() const
 {
-    return this->widgetGuiDocument(this->currentDocumentIndex());
+    const int currDocIndex = this->currentDocumentIndex();
+    return this->widgetGuiDocument(currDocIndex);
 }
 
 int WidgetMainControl::indexOfWidgetGuiDocument(WidgetGuiDocument* widgetDoc) const
@@ -450,9 +456,10 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
         auto selector = gfxScene->mainSelector();
         selector->Pick(xPos, yPos, guiDoc->v3dView());
         const gp_Pnt pos3d =
-                selector->NbPicked() > 0 ?
-                    selector->PickedPoint(1) :
-                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), xPos, yPos);
+            selector->NbPicked() > 0 ?
+                selector->PickedPoint(1) :
+                GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), xPos, yPos)
+        ;
         m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
@@ -460,7 +467,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     m_ui->stack_GuiDocuments->addWidget(widget);
     const int newDocIndex = m_guiApp->application()->documentCount() - 1;
-    QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+    this->setCurrentDocumentIndex(newDocIndex);
 }
 
 int WidgetMainControl::currentDocumentIndex() const
@@ -517,6 +524,12 @@ void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
         this->reloadDocumentAfterChange(doc);
     else
         m_pendingDocsToReload.insert(doc);
+}
+
+void WidgetMainControl::onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp)
+{
+    if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
+        m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
 }
 
 void WidgetMainControl::onSplitterMainMoved(int pos, int /*index*/)
