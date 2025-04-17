@@ -8,8 +8,6 @@
 
 #include "commands_api.h"
 
-class QJSEngine;
-
 namespace Mayo {
 
 class CommandSaveViewImage : public Command {
