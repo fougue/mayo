@@ -114,6 +114,12 @@ scoop install extras/mayo
 
 _Easy to use command-line utility for batch conversion of CAD files_
 <img src="doc/screencast_cli.gif"/> 
+> [!NOTE]  
+> If you want to use the Mayo converter utility on a headless Linux machine (for example via SSH), use xvbf-run like so:
+````
+sudo apt install xauth xvfb
+xvfb-run --auto-servernum ./MayoConv-0.9.0-x86_64.AppImage <options>
+````
 
 _Import of glTF file with textures_
 <img src="doc/screenshot_2.png"/>
