@@ -144,6 +144,12 @@ public:
         }
     }
 
+    void block(bool on)
+    {
+        for (unsigned i = 0; i < m_addedCount; ++i)
+            m_arrayHandle[i].block(on);
+    }
+
     ScopedSignalConnections& operator<<(const SignalConnectionHandle& hnd)
     {
         this->add(hnd);

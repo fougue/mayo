@@ -39,11 +39,16 @@ public:
 signals:
     void documentAdded(QObject* doc);
     void documentAboutToClose(QObject* doc);
+    void documentClosed(QObject* doc);
     void documentCountChanged();
 
 private:
+    ScriptDocument* mapDocument(const DocumentPtr& doc);
+    void unmapDocument(const DocumentPtr& doc);
+
     void onDocumentAdded(const DocumentPtr& doc);
     void onDocumentAboutToClose(const DocumentPtr& doc);
+    void onDocumentClosed(const DocumentPtr& doc);
 
     ApplicationPtr m_app;
     QJSEngine* m_jsEngine = nullptr;

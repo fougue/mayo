@@ -11,9 +11,12 @@
 #include "../base/cpp_utils.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include <common/mayo_version.h>
 
 #include <QtQml/QJSEngine>
+
+#include <future>
 
 namespace Mayo {
 
@@ -26,6 +29,7 @@ ScriptApplication::ScriptApplication(const ApplicationPtr& app, QJSEngine* jsEng
         m_sigConns
             << app->signalDocumentAdded.connectSlot(&ScriptApplication::onDocumentAdded, this)
             << app->signalDocumentAboutToClose.connectSlot(&ScriptApplication::onDocumentAboutToClose, this)
+            << app->signalDocumentClosed.connectSlot(&ScriptApplication::onDocumentClosed, this)
         ;
         for (Application::DocumentIterator itDoc(app); itDoc.hasNext(); itDoc.next())
             this->onDocumentAdded(itDoc.current());
@@ -47,13 +51,17 @@ QObject* ScriptApplication::newDocument()
     if (!m_app)
         return nullptr;
 
-    auto doc = m_app->newDocument();
-    auto jsDoc = new ScriptDocument(doc, this);
-    m_vecJsDoc.push_back(jsDoc);
-    m_mapIdToScriptDocument.insert({ doc->identifier(), jsDoc });
-    emit this->documentAdded(jsDoc);
-    emit this->documentCountChanged();
-    return jsDoc;
+    // Make sure to call Application::newDocument() in the main thread
+    std::promise<DocumentPtr> docPromise;
+    std::future<DocumentPtr> docFuture = docPromise.get_future();
+    QtCoreUtils::runJobOnMainThread([&]{
+        m_sigConns.block(true);
+        auto doc = m_app->newDocument();
+        m_sigConns.block(false);
+        docPromise.set_value(doc);
+    });
+    auto doc = docFuture.get();
+    return this->mapDocument(doc);
 }
 
 QObject* ScriptApplication::documentAt(int docIndex) const
@@ -85,27 +93,58 @@ int ScriptApplication::findIndexOfDocument(QObject* doc) const
 void ScriptApplication::closeDocument(QObject* doc)
 {
     auto jsDoc = qobject_cast<ScriptDocument*>(doc);
-    if (m_app && jsDoc)
-        m_app->closeDocument(jsDoc->baseDocument());
+    if (m_app && jsDoc) {
+        // Make sure to call Application::closeDocument() in the main thread
+        std::promise<int> closePromise;
+        std::future<int> closeFuture = closePromise.get_future();
+        QtCoreUtils::runJobOnMainThread([&]{
+            m_sigConns.block(true);
+            m_app->closeDocument(jsDoc->baseDocument());
+            m_sigConns.block(false);
+            closePromise.set_value(0);
+        });
+        closeFuture.wait();
+        this->unmapDocument(jsDoc->baseDocument());
+    }
 }
 
-void ScriptApplication::onDocumentAdded(const DocumentPtr& doc)
+ScriptDocument* ScriptApplication::mapDocument(const DocumentPtr& doc)
 {
     auto jsDoc = new ScriptDocument(doc, this);
     m_vecJsDoc.push_back(jsDoc);
     m_mapIdToScriptDocument.insert({ doc->identifier(), jsDoc });
+    emit this->documentAdded(jsDoc);
+    emit this->documentCountChanged();
+    return jsDoc;
 }
 
-void ScriptApplication::onDocumentAboutToClose(const DocumentPtr& doc)
+void ScriptApplication::unmapDocument(const DocumentPtr& doc)
 {
     auto jsDoc = CppUtils::findValue(doc ? doc->identifier() : -1, m_mapIdToScriptDocument);
     if (jsDoc) {
-        emit this->documentAboutToClose(jsDoc);
+        emit this->documentClosed(jsDoc);
         m_mapIdToScriptDocument.erase(doc->identifier());
         m_vecJsDoc.erase(std::find(m_vecJsDoc.begin(), m_vecJsDoc.end(), jsDoc));
         jsDoc->deleteLater();
         emit this->documentCountChanged();
     }
+}
+
+void ScriptApplication::onDocumentAdded(const DocumentPtr& doc)
+{
+    this->mapDocument(doc);
+}
+
+void ScriptApplication::onDocumentAboutToClose(const DocumentPtr& doc)
+{
+    auto jsDoc = CppUtils::findValue(doc ? doc->identifier() : -1, m_mapIdToScriptDocument);
+    if (jsDoc)
+        emit this->documentAboutToClose(jsDoc);
+}
+
+void ScriptApplication::onDocumentClosed(const DocumentPtr& doc)
+{
+    this->unmapDocument(doc);
 }
 
 } // namespace Mayo
