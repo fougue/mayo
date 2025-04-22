@@ -54,6 +54,7 @@ public:
     // Signals
     Signal<const DocumentPtr&> signalDocumentAdded;
     Signal<const DocumentPtr&> signalDocumentAboutToClose;
+    Signal<const DocumentPtr&> signalDocumentClosed;
     Signal<const DocumentPtr&, const std::string&> signalDocumentNameChanged;
     Signal<const DocumentPtr&, const FilePath&> signalDocumentFilePathChanged;
     Signal<const DocumentPtr&, TreeNodeId> signalDocumentEntityAdded;

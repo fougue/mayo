@@ -7,6 +7,7 @@
 #include "commands_window.h"
 
 #include "../base/application.h"
+#include "../gui/gui_application.h"
 #include "theme.h"
 
 #include <QtGui/QShowEvent>
@@ -168,7 +169,8 @@ CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
 void CommandPreviousDocument::execute()
 {
     const int prevDocIndex = this->currentDocumentIndex() - 1;
-    this->context()->setCurrentDocument(this->context()->findDocumentFromIndex(prevDocIndex));
+    auto prevDocId = this->context()->findDocumentFromIndex(prevDocIndex);
+    this->context()->setCurrentDocument(prevDocId);
 }
 
 bool CommandPreviousDocument::getEnabledStatus() const
@@ -199,9 +201,11 @@ void CommandNextDocument::execute()
 bool CommandNextDocument::getEnabledStatus() const
 {
     const int appDocumentCount = this->app()->documentCount();
+    const int currDocumentIndex = this->currentDocumentIndex();
     return appDocumentCount != 0
             && this->context()->currentPage() == IAppContext::Page::Documents
-            && this->currentDocumentIndex() < appDocumentCount - 1
+            && currDocumentIndex >= 0
+            && currDocumentIndex < (appDocumentCount - 1)
         ;
 }
 

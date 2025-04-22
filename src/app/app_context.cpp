@@ -123,14 +123,6 @@ void AppContext::updateControlsEnabledStatus()
     m_wnd->updateControlsActivation();
 }
 
-void AppContext::deleteDocumentWidget(const DocumentPtr& doc)
-{
-    auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
-        return widgetDoc->documentIdentifier() == doc->identifier();
-    });
-    m_wnd->widgetPageDocuments()->removeWidgetGuiDocument(widgetDoc);
-}
-
 WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
 {
     return m_wnd->widgetPageDocuments()->widgetGuiDocument(idx);

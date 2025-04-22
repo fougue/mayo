@@ -105,7 +105,6 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     for (int i = 0; i < doc->entityCount(); ++i)
         this->mapEntity(doc->entityTreeNodeId(i));
 
-
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
     m_gfxScene.signalSelectionChanged.connectSlot(&GuiDocument::onGraphicsSelectionChanged, this);
@@ -182,11 +181,11 @@ void GuiDocument::setDevicePixelRatio(double ratio)
             viewCube->SetFontHeight(12 * m_devicePixelRatio);
             const int xyOffset = std::lround(85 * m_devicePixelRatio);
             viewCube->SetTransformPersistence(
-                        new Graphic3d_TransformPers(
-                                Graphic3d_TMF_TriedronPers,
-                                m_viewTrihedronCorner,
-                                Graphic3d_Vec2i(xyOffset, xyOffset)
-                            )
+                new Graphic3d_TransformPers(
+                        Graphic3d_TMF_TriedronPers,
+                        m_viewTrihedronCorner,
+                        Graphic3d_Vec2i(xyOffset, xyOffset)
+                    )
             );
             viewCube->Redisplay(true/*allModes*/);
         }
@@ -203,7 +202,8 @@ GuiDocument::~GuiDocument()
 }
 
 void GuiDocument::foreachGraphicsObject(
-        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn) const
+        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn
+    ) const
 {
     if (!fn)
         return;
@@ -463,10 +463,8 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
             aisViewCube->SetAxesLabels("", "", "");
             aisViewCube->SetTransformPersistence(
                 new Graphic3d_TransformPers(
-                    Graphic3d_TMF_TriedronPers,
-                    m_viewTrihedronCorner,
-                    Graphic3d_Vec2i(85, 85)
-                )
+                        Graphic3d_TMF_TriedronPers, m_viewTrihedronCorner, Graphic3d_Vec2i(85, 85)
+                    )
             );
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
@@ -527,9 +525,10 @@ int GuiDocument::aisViewCubeBoundingSize() const
              + hnd->BoxEdgeMinSize()
              + hnd->BoxCornerMinSize()
              + hnd->RoundRadius()
-             )
+            )
         + hnd->AxesPadding()
-        + hnd->FontHeight();
+        + hnd->FontHeight()
+    ;
     return std::lround(size);
 #else
     return 0;
@@ -715,9 +714,9 @@ void GuiDocument::unmapEntity(TreeNodeId entityTreeNodeId)
 const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const
 {
     auto itFound = std::find_if(
-                m_vecGraphicsEntity.cbegin(),
-                m_vecGraphicsEntity.cend(),
-                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
+        m_vecGraphicsEntity.cbegin(),
+        m_vecGraphicsEntity.cend(),
+        [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
     );
     return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
 }

@@ -165,9 +165,7 @@ void FileCommandTools::closeDocument(IAppContext* context, Document::Identifier 
 {
     auto app = context->guiApp()->application();
     DocumentPtr doc = app->findDocumentByIdentifier(docId);
-    context->deleteDocumentWidget(doc);
     app->closeDocument(doc);
-    context->updateControlsEnabledStatus();
 }
 
 void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)

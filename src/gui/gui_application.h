@@ -63,7 +63,7 @@ public:
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);
-    void onDocumentAboutToClose(const DocumentPtr& doc);
+    void onDocumentClosed(const DocumentPtr& doc);
 
 private:
     friend class GuiDocument;

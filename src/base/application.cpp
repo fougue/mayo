@@ -131,11 +131,15 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 
 void Application::closeDocument(const DocumentPtr& doc)
 {
+    if (!doc)
+        return;
+
     XCAFApp_Application::Close(doc);
     doc->signalNameChanged.disconnectAll();
     doc->signalFilePathChanged.disconnectAll();
     doc->signalEntityAdded.disconnectAll();
     doc->signalEntityAboutToBeDestroyed.disconnectAll();
+    this->signalDocumentClosed.send(doc);
     //doc->Main().ForgetAllAttributes(true/*clearChildren*/);
 }
 

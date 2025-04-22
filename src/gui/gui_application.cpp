@@ -54,7 +54,7 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     d->m_app = app;
 
     app->signalDocumentAdded.connectSlot(&GuiApplication::onDocumentAdded, this);
-    app->signalDocumentAboutToClose.connectSlot(&GuiApplication::onDocumentAboutToClose, this);
+    app->signalDocumentClosed.connectSlot(&GuiApplication::onDocumentClosed, this);
     this->connectApplicationItemSelectionChanged(true);
 }
 
@@ -147,7 +147,7 @@ void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
     }
 }
 
-void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
+void GuiApplication::onDocumentClosed(const DocumentPtr& doc)
 {
     auto itFound = std::find_if(
         d->m_vecGuiDocument.begin(),

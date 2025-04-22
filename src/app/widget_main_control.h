@@ -66,7 +66,10 @@ private:
     void onApplicationItemSelectionChanged();
     void onLeftContentsPageChanged(int pageId);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
+
     void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onGuiDocumentErased(GuiDocument* guiDoc);
+
     void onCurrentDocumentIndexChanged(int idx);
     void onDocumentFileChanged(const DocumentPtr& doc);
     void onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp);

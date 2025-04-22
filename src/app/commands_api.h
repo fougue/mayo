@@ -50,7 +50,6 @@ public:
     virtual Document::Identifier findDocumentFromIndex(int index) const = 0;
 
     virtual void updateControlsEnabledStatus() = 0;
-    virtual void deleteDocumentWidget(const DocumentPtr& doc) = 0;
 
 signals:
     void currentDocumentChanged(Mayo::Document::Identifier docId);

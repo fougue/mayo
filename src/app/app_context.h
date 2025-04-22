@@ -35,7 +35,6 @@ public:
     void setCurrentDocument(Document::Identifier docId) override;
 
     void updateControlsEnabledStatus() override;
-    void deleteDocumentWidget(const DocumentPtr& doc) override;
 
 private:
     WidgetGuiDocument* widgetGuiDocument(int idx) const;

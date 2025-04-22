@@ -108,6 +108,9 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     guiApp->signalGuiDocumentAdded.connectSlot(
         &WidgetMainControl::onGuiDocumentAdded, this
     );
+    guiApp->signalGuiDocumentErased.connectSlot(
+        &WidgetMainControl::onGuiDocumentErased, this
+    );
 
     // Document files monitoring
     auto appModule = AppModule::get();
@@ -468,6 +471,21 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     m_ui->stack_GuiDocuments->addWidget(widget);
     const int newDocIndex = m_guiApp->application()->documentCount() - 1;
     this->setCurrentDocumentIndex(newDocIndex);
+}
+
+void WidgetMainControl::onGuiDocumentErased(GuiDocument* guiDoc)
+{
+    const Document::Identifier docId = guiDoc->document()->identifier();
+    const int widgetCount = this->widgetGuiDocumentCount();
+    for (int i = 0; i < widgetCount; ++i) {
+        WidgetGuiDocument* widget = this->widgetGuiDocument(i);
+        if (widget->documentIdentifier() == docId) {
+            this->removeWidgetGuiDocument(widget);
+            break;
+        }
+    }
+
+    emit this->updateGlobalControlsActivationRequired();
 }
 
 int WidgetMainControl::currentDocumentIndex() const
