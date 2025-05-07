@@ -96,7 +96,7 @@ public:
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
-    bool importInDocument(const Args_ImportInDocument& args);
+    bool importInDocument(const Args_ImportInDocument& args) const;
 
     //
     // Export service
@@ -122,7 +122,7 @@ public:
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
-    bool exportApplicationItems(const Args_ExportApplicationItems& args);
+    bool exportApplicationItems(const Args_ExportApplicationItems& args) const;
 
     //
     // Fluent API: import service
@@ -147,11 +147,11 @@ public:
 
     private:
         friend class System;
-        Operation_ImportInDocument(System& system);
-        System& m_system;
+        Operation_ImportInDocument(const System& system);
+        const System& m_system;
         Args_ImportInDocument m_args;
     };
-    Operation_ImportInDocument importInDocument();
+    Operation_ImportInDocument importInDocument() const;
 
     //
     // Fluent API: export service
@@ -172,11 +172,11 @@ public:
 
     private:
         friend class System;
-        Operation_ExportApplicationItems(System& system);
-        System& m_system;
+        Operation_ExportApplicationItems(const System& system);
+        const System& m_system;
         Args_ExportApplicationItems m_args;
     };
-    Operation_ExportApplicationItems exportApplicationItems();
+    Operation_ExportApplicationItems exportApplicationItems() const;
 
     // Helpers
 

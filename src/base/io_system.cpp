@@ -186,7 +186,7 @@ std::unique_ptr<Writer> System::createWriter(Format format) const
     return {};
 }
 
-bool System::importInDocument(const Args_ImportInDocument& args)
+bool System::importInDocument(const Args_ImportInDocument& args) const
 {
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
@@ -354,12 +354,12 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     return ok;
 }
 
-System::Operation_ImportInDocument System::importInDocument()
+System::Operation_ImportInDocument System::importInDocument() const
 {
     return Operation_ImportInDocument(*this);
 }
 
-bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
+bool System::exportApplicationItems(const Args_ExportApplicationItems& args) const
 {
     TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
     MessageCollecter msgCollect;
@@ -453,12 +453,12 @@ bool System::Operation_ExportApplicationItems::execute()
     return m_system.exportApplicationItems(m_args);
 }
 
-System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(System& system)
+System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(const System& system)
     : m_system(system)
 {
 }
 
-System::Operation_ExportApplicationItems System::exportApplicationItems()
+System::Operation_ExportApplicationItems System::exportApplicationItems() const
 {
     return Operation_ExportApplicationItems(*this);
 }
@@ -577,7 +577,7 @@ bool System::Operation_ImportInDocument::execute()
     return m_system.importInDocument(m_args);
 }
 
-System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
+System::Operation_ImportInDocument::Operation_ImportInDocument(const System& system)
     : m_system(system)
 {
 }
