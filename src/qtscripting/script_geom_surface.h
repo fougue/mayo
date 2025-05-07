@@ -4,6 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include "../base/occ_handle.h"
 
 #include <QtCore/QObject>

@@ -12,6 +12,7 @@
 
 namespace Mayo {
 
+
 ScriptGeomCurve::ScriptGeomCurve(const OccHandle<Geom_Curve>& curve)
     : m_geomCurve(curve)
 {
@@ -22,22 +23,27 @@ ScriptGeomCurve::ScriptGeomCurve(const TopoDS_Edge& edge)
 {
 }
 
-int ScriptGeomCurve::intervalCount(unsigned continuity) const
+//! Returns the number of intervals for continuity `c`
+int ScriptGeomCurve::intervalCount(ScriptGeomCurveType c) const
 {
-    return this->curve().NbIntervals(static_cast<GeomAbs_Shape>(continuity));
+    return this->curve().NbIntervals(static_cast<GeomAbs_Shape>(c));
 }
 
-QVariant ScriptGeomCurve::point(double u) const
+//! Returns the computed point of parameter `u` on the curve
+QVariant_Coords3D ScriptGeomCurve::point(double u) const
 {
     return ScriptGeom::toScriptValue(this->curve().Value(u));
 }
 
-QVariant ScriptGeomCurve::dN(double u, int n) const
+//! Returns the vector being the value of the derivative for the order of derivation `n`
+//! \pre `n` ≥ 1
+//! \pre Continuity of the interval to which parameter `u` belongs must be at least `Cn`
+QVariant_Coords3D ScriptGeomCurve::dN(double u, int n) const
 {
     return ScriptGeom::toScriptValue(this->curve().DN(u, n));
 }
 
-QVariant ScriptGeomCurve::line() const
+QVariant_ScriptGeomLine ScriptGeomCurve::line() const
 {
     return QVariant::fromValue(ScriptGeomLine(this->curve().Line()));
 }
@@ -94,7 +100,7 @@ ScriptGeomLine::ScriptGeomLine(const gp_Lin& lin)
 {
 }
 
-QVariant ScriptGeomLine::position() const
+QVariant_ScriptGeomAx1 ScriptGeomLine::position() const
 {
     return ScriptGeom::toScriptValue(m_lin.Position());
 }
@@ -105,10 +111,11 @@ ScriptGeomCircle::ScriptGeomCircle(const gp_Circ& circ)
 {
 }
 
-QVariant ScriptGeomCircle::position() const
+QVariant_ScriptGeomAx3 ScriptGeomCircle::position() const
 {
     return ScriptGeom::toScriptValue(m_circ.Position());
 }
+
 
 
 ScriptGeomEllipse::ScriptGeomEllipse(const gp_Elips& elips)
@@ -116,17 +123,17 @@ ScriptGeomEllipse::ScriptGeomEllipse(const gp_Elips& elips)
 {
 }
 
-QVariant ScriptGeomEllipse::position() const
+QVariant_ScriptGeomAx3 ScriptGeomEllipse::position() const
 {
     return ScriptGeom::toScriptValue(m_elips.Position());
 }
 
-QVariant ScriptGeomEllipse::focus1() const
+QVariant_Coords3D ScriptGeomEllipse::focus1() const
 {
     return ScriptGeom::toScriptValue(m_elips.Focus1());
 }
 
-QVariant ScriptGeomEllipse::focus2() const
+QVariant_Coords3D ScriptGeomEllipse::focus2() const
 {
     return ScriptGeom::toScriptValue(m_elips.Focus2());
 }
@@ -137,17 +144,17 @@ ScriptGeomHyperbola::ScriptGeomHyperbola(const gp_Hypr& hypr)
 {
 }
 
-QVariant ScriptGeomHyperbola::position() const
+QVariant_ScriptGeomAx3 ScriptGeomHyperbola::position() const
 {
     return ScriptGeom::toScriptValue(m_hypr.Position());
 }
 
-QVariant ScriptGeomHyperbola::focus1() const
+QVariant_Coords3D ScriptGeomHyperbola::focus1() const
 {
     return ScriptGeom::toScriptValue(m_hypr.Focus1());
 }
 
-QVariant ScriptGeomHyperbola::focus2() const
+QVariant_Coords3D ScriptGeomHyperbola::focus2() const
 {
     return ScriptGeom::toScriptValue(m_hypr.Focus2());
 }
@@ -158,12 +165,12 @@ ScriptGeomParabola::ScriptGeomParabola(const gp_Parab& parab)
 {
 }
 
-QVariant ScriptGeomParabola::position() const
+QVariant_ScriptGeomAx3 ScriptGeomParabola::position() const
 {
     return ScriptGeom::toScriptValue(m_parab.Position());
 }
 
-QVariant ScriptGeomParabola::focus() const
+QVariant_Coords3D ScriptGeomParabola::focus() const
 {
     return ScriptGeom::toScriptValue(m_parab.Focus());
 }
@@ -211,7 +218,7 @@ bool ScriptGeomGeneralSplineCurve::isRational() const
     return false;
 }
 
-QVariant ScriptGeomGeneralSplineCurve::pole(int index) const
+QVariant_Coords3D ScriptGeomGeneralSplineCurve::pole(int index) const
 {
     this->throwIfNullSupportCurve();
     if (m_bezier)
@@ -276,7 +283,7 @@ int ScriptGeomBSplineCurve::knotCount() const
     return this->bspline()->NbKnots();
 }
 
-unsigned ScriptGeomBSplineCurve::knotDistribution() const
+ScriptGeomBSplineKnotDistribution ScriptGeomBSplineCurve::knotDistribution() const
 {
     return this->bspline()->KnotDistribution();
 }
@@ -287,13 +294,13 @@ ScriptGeomOffsetCurve::ScriptGeomOffsetCurve(const OccHandle<Geom_OffsetCurve>& 
 {
 }
 
-QVariant ScriptGeomOffsetCurve::basisCurve() const
+QVariant_ScriptGeomCurve ScriptGeomOffsetCurve::basisCurve() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_offset, "Geom_OffsetCurve pointer is null");
     return QVariant::fromValue(ScriptGeomCurve(m_offset));
 }
 
-QVariant ScriptGeomOffsetCurve::direction() const
+QVariant_Coords3D ScriptGeomOffsetCurve::direction() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_offset, "Geom_OffsetCurve pointer is null");
     return ScriptGeom::toScriptValue(m_offset->Direction());

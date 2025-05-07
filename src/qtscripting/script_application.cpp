@@ -20,8 +20,11 @@
 
 namespace Mayo {
 
-ScriptApplication::ScriptApplication(const ApplicationPtr& app, QJSEngine* jsEngine)
+ScriptApplication::ScriptApplication(
+        const ApplicationPtr& app, const IO::System* ioSystem, QJSEngine* jsEngine
+    )
     : QObject(jsEngine),
+      m_ioSystem(ioSystem),
       m_jsEngine(jsEngine),
       m_app(app)
 {
@@ -46,7 +49,9 @@ int ScriptApplication::documentCount() const
     return m_app ? m_app->documentCount() : 0;
 }
 
-QObject* ScriptApplication::newDocument()
+//! \brief Creates and adds new ScriptDocument object to this application
+//! \details Throws signal documentAdded() when finished
+QObjectPtr_ScriptDocument ScriptApplication::newDocument()
 {
     if (!m_app)
         return nullptr;
@@ -64,7 +69,10 @@ QObject* ScriptApplication::newDocument()
     return this->mapDocument(doc);
 }
 
-QObject* ScriptApplication::documentAt(int docIndex) const
+//! \brief Returns the ScriptDocument object at index `docIndex`
+//! \pre `0 ≤ docIndex < documentCount`
+//! \return `null` if `docIndex` is invalid
+QObjectPtr_ScriptDocument ScriptApplication::documentAt(int docIndex) const
 {
     if (0 <= docIndex && docIndex < m_vecJsDoc.size())
         return m_vecJsDoc.at(docIndex);
@@ -72,7 +80,9 @@ QObject* ScriptApplication::documentAt(int docIndex) const
         return nullptr;
 }
 
-QObject* ScriptApplication::findDocumentByLocation(const QString& location) const
+//! \brief Returns the ScriptDocument object which was opened from filepath `location`
+//! \return `null` if no document was found at input filepath
+QObjectPtr_ScriptDocument ScriptApplication::findDocumentByLocation(QString location) const
 {
     if (!m_app)
         return nullptr;
@@ -81,7 +91,9 @@ QObject* ScriptApplication::findDocumentByLocation(const QString& location) cons
     return CppUtils::findValue(doc ? doc->identifier() : -1, m_mapIdToScriptDocument);
 }
 
-int ScriptApplication::findIndexOfDocument(QObject* doc) const
+//! \brief Returns the index of ScriptDocument object contained in this application
+//! \return `-1` if document was not found
+int ScriptApplication::findIndexOfDocument(QObjectPtr_ScriptDocument doc) const
 {
     auto jsDoc = qobject_cast<ScriptDocument*>(doc);
     if (!m_app || !jsDoc)
@@ -90,7 +102,9 @@ int ScriptApplication::findIndexOfDocument(QObject* doc) const
     return m_app->findIndexOfDocument(jsDoc->baseDocument());
 }
 
-void ScriptApplication::closeDocument(QObject* doc)
+//! \brief Closes, destroys the ScriptDocument object `doc`
+//! \details Throws documentAboutToClose() and documentClosed() signals
+void ScriptApplication::closeDocument(QObjectPtr_ScriptDocument doc)
 {
     auto jsDoc = qobject_cast<ScriptDocument*>(doc);
     if (m_app && jsDoc) {

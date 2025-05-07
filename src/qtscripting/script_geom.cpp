@@ -16,44 +16,46 @@ ScriptGeomAx1::ScriptGeomAx1(const gp_Ax1& ax1)
 {
 }
 
-QVariant ScriptGeomAx1::location() const
+QVariant_Coords3D ScriptGeomAx1::location() const
 {
     return ScriptGeom::toScriptValue(m_ax1.Location());
 }
 
-QVariant ScriptGeomAx1::direction() const
+QVariant_Coords3D ScriptGeomAx1::direction() const
 {
     return ScriptGeom::toScriptValue(m_ax1.Direction());
 }
+
 
 ScriptGeomAx3::ScriptGeomAx3(const gp_Ax3& ax3)
     : m_ax3(ax3)
 {
 }
 
-QVariant ScriptGeomAx3::location() const
+QVariant_Coords3D ScriptGeomAx3::location() const
 {
     return ScriptGeom::toScriptValue(m_ax3.Location());
 }
 
-QVariant ScriptGeomAx3::mainDirection() const
+QVariant_Coords3D ScriptGeomAx3::mainDirection() const
 {
     return ScriptGeom::toScriptValue(m_ax3.Direction());
 }
 
-QVariant ScriptGeomAx3::xDirection() const
+QVariant_Coords3D ScriptGeomAx3::xDirection() const
 {
     return ScriptGeom::toScriptValue(m_ax3.XDirection());
 }
 
-QVariant ScriptGeomAx3::yDirection() const
+QVariant_Coords3D ScriptGeomAx3::yDirection() const
 {
     return ScriptGeom::toScriptValue(m_ax3.YDirection());
 }
 
+
 namespace ScriptGeom {
 
-static QVariant xyz_toScriptValue(const gp_XYZ& coords)
+static QVariant_Coords3D xyz_toScriptValue(const gp_XYZ& coords)
 {
     QVariantMap value;
     value.insert("x", coords.X());
@@ -62,27 +64,27 @@ static QVariant xyz_toScriptValue(const gp_XYZ& coords)
     return value;
 }
 
-QVariant toScriptValue(const gp_Pnt& pnt)
+QVariant_Coords3D toScriptValue(const gp_Pnt& pnt)
 {
     return xyz_toScriptValue(pnt.XYZ());
 }
 
-QVariant toScriptValue(const gp_Vec& vec)
+QVariant_Coords3D toScriptValue(const gp_Vec& vec)
 {
     return xyz_toScriptValue(vec.XYZ());
 }
 
-QVariant toScriptValue(const gp_Dir& dir)
+QVariant_Coords3D toScriptValue(const gp_Dir& dir)
 {
     return xyz_toScriptValue(dir.XYZ());
 }
 
-QVariant toScriptValue(const gp_Ax1& ax1)
+QVariant_ScriptGeomAx1 toScriptValue(const gp_Ax1& ax1)
 {
     return QVariant::fromValue(ScriptGeomAx1(ax1));
 }
 
-QVariant toScriptValue(const gp_Ax3& ax3)
+QVariant_ScriptGeomAx3 toScriptValue(const gp_Ax3& ax3)
 {
     return QVariant::fromValue(ScriptGeomAx3(ax3));
 }

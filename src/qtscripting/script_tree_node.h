@@ -4,6 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include "../base/document_ptr.h"
 #include "../base/libtree.h"
 

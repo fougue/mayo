@@ -4,7 +4,11 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include "../base/occ_handle.h"
+
+#include "script_geom.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
@@ -22,53 +26,72 @@
 
 namespace Mayo {
 
+#ifndef _MAYO_DOCGEN_
+using QVariant_ScriptGeomCurve = QVariant;
+using QVariant_ScriptGeomLine = QVariant;
+using QVariant_ScriptGeomCircle = QVariant;
+using QVariant_ScriptGeomEllipse = QVariant;
+using QVariant_ScriptGeomHyperbola = QVariant;
+using QVariant_ScriptGeomParabola = QVariant;
+using QVariant_ScriptGeomBezierCurve = QVariant;
+using QVariant_ScriptGeomBSplineCurve = QVariant;
+using QVariant_ScriptGeomOffsetCurve = QVariant;
+
+using ScriptGeomCurveType = unsigned;  // ->GeomAbs_CurveType
+using ScriptGeomContinuity = unsigned; // ->GeomAbs_Shape
+using ScriptGeomBSplineKnotDistribution = unsigned; // ->GeomAbs_BSplKnotDistribution
+#endif
+
+//! \brief Base geometric parameterized(U) curve in 3D space
 class ScriptGeomCurve {
     Q_GADGET
-    Q_PROPERTY(unsigned type READ type)
+
+    Q_PROPERTY(ScriptGeomCurveType type READ type)
     Q_PROPERTY(double paramFirst READ paramFirst)
     Q_PROPERTY(double paramLast READ paramLast)
-    Q_PROPERTY(unsigned continuity READ continuity)
+    Q_PROPERTY(ScriptGeomContinuity continuity READ continuity)
     Q_PROPERTY(bool isClosed READ isClosed)
     Q_PROPERTY(bool isPeriodic READ isPeriodic)
     Q_PROPERTY(double period READ period)
-    Q_PROPERTY(QVariant line READ line)
-    Q_PROPERTY(QVariant circle READ circle)
-    Q_PROPERTY(QVariant ellipse READ ellipse)
-    Q_PROPERTY(QVariant hyperbola READ hyperbola)
-    Q_PROPERTY(QVariant parabola READ parabola)
-    Q_PROPERTY(QVariant bezier READ bezier)
-    Q_PROPERTY(QVariant bspline READ bspline)
-    Q_PROPERTY(QVariant offsetCurve READ offsetCurve)
+
+    Q_PROPERTY(QVariant_ScriptGeomLine line READ line)
+    Q_PROPERTY(QVariant_ScriptGeomCircle circle READ circle)
+    Q_PROPERTY(QVariant_ScriptGeomEllipse ellipse READ ellipse)
+    Q_PROPERTY(QVariant_ScriptGeomHyperbola hyperbola READ hyperbola)
+    Q_PROPERTY(QVariant_ScriptGeomParabola parabola READ parabola)
+    Q_PROPERTY(QVariant_ScriptGeomBezierCurve bezier READ bezier)
+    Q_PROPERTY(QVariant_ScriptGeomBSplineCurve bspline READ bspline)
+    Q_PROPERTY(QVariant_ScriptGeomOffsetCurve offsetCurve READ offsetCurve)
+
 public:
     ScriptGeomCurve() = default;
     ScriptGeomCurve(const OccHandle<Geom_Curve>& curve);
     ScriptGeomCurve(const TopoDS_Edge& edge);
 
-    unsigned type() const { return this->curve().GetType(); }
+    ScriptGeomCurveType type() const { return this->curve().GetType(); }
 
     double paramFirst() const { return this->curve().FirstParameter(); }
     double paramLast() const { return this->curve().LastParameter(); }
 
-    unsigned continuity() const { return this->curve().Continuity(); }
-
-    Q_INVOKABLE int intervalCount(unsigned continuity) const;
+    ScriptGeomContinuity continuity() const { return this->curve().Continuity(); }
 
     bool isClosed() const { return this->curve().IsClosed(); }
 
     bool isPeriodic() const { return this->curve().IsPeriodic(); }
     double period() const { return this->curve().Period(); }
 
-    Q_INVOKABLE QVariant point(double u) const;     // ->{x, y, z}
-    Q_INVOKABLE QVariant dN(double u, int n) const; // ->{x, y, z}
+    Q_INVOKABLE int intervalCount(ScriptGeomContinuity c) const;
+    Q_INVOKABLE QVariant_Coords3D point(double u) const;
+    Q_INVOKABLE QVariant_Coords3D dN(double u, int n) const;
 
-    QVariant line() const;      // ->ScriptGeomLine
-    QVariant circle() const;    // ->ScriptGeomCircle
-    QVariant ellipse() const;   // ->ScriptGeomEllipse
-    QVariant hyperbola() const; // ->ScriptGeomHyperbola
-    QVariant parabola() const;  // ->ScriptGeomParabola
-    QVariant bezier() const;    // ->ScriptGeomBezierCurve
-    QVariant bspline() const;   // ->ScriptGeomBSplineCurve
-    QVariant offsetCurve() const; // ->ScriptGeomOffsetCurve
+    QVariant_ScriptGeomLine line() const;
+    QVariant_ScriptGeomCircle circle() const;
+    QVariant_ScriptGeomEllipse ellipse() const;
+    QVariant_ScriptGeomHyperbola hyperbola() const;
+    QVariant_ScriptGeomParabola parabola() const;
+    QVariant_ScriptGeomBezierCurve bezier() const;
+    QVariant_ScriptGeomBSplineCurve bspline() const;
+    QVariant_ScriptGeomOffsetCurve offsetCurve() const;
 
 private:
     const Adaptor3d_Curve& curve() const;
@@ -78,12 +101,12 @@ private:
 
 class ScriptGeomLine {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx1 position READ position)
 public:
     ScriptGeomLine() = default;
     ScriptGeomLine(const gp_Lin& lin);
 
-    QVariant position() const; // ->ScriptGeomAx1
+    QVariant_ScriptGeomAx1 position() const;
 
 private:
     gp_Lin m_lin;
@@ -91,13 +114,13 @@ private:
 
 class ScriptGeomCircle {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double radius READ radius)
 public:
     ScriptGeomCircle() = default;
     ScriptGeomCircle(const gp_Circ& circ);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double radius() const { return m_circ.Radius(); }
 
 private:
@@ -106,23 +129,23 @@ private:
 
 class ScriptGeomEllipse {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double majorRadius READ majorRadius)
     Q_PROPERTY(double minorRadius READ minorRadius)
-    Q_PROPERTY(QVariant focus1 READ focus1)
-    Q_PROPERTY(QVariant focus2 READ focus2)
+    Q_PROPERTY(QVariant_Coords3D focus1 READ focus1)
+    Q_PROPERTY(QVariant_Coords3D focus2 READ focus2)
     Q_PROPERTY(double focalDistance READ focalDistance)
     Q_PROPERTY(double parameter READ parameter)
 public:
     ScriptGeomEllipse() = default;
     ScriptGeomEllipse(const gp_Elips& elips);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double majorRadius() const { return m_elips.MajorRadius(); }
     double minorRadius() const { return m_elips.MinorRadius(); }
 
-    QVariant focus1() const; // ->{x, y, z}
-    QVariant focus2() const; // ->{x, y, z}
+    QVariant_Coords3D focus1() const;
+    QVariant_Coords3D focus2() const;
     double focalDistance() const { return m_elips.Focal(); }
     double parameter() const { return m_elips.Parameter(); }
 
@@ -132,23 +155,23 @@ private:
 
 class ScriptGeomHyperbola {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double majorRadius READ majorRadius)
     Q_PROPERTY(double minorRadius READ minorRadius)
-    Q_PROPERTY(QVariant focus1 READ focus1)
-    Q_PROPERTY(QVariant focus2 READ focus2)
+    Q_PROPERTY(QVariant_Coords3D focus1 READ focus1)
+    Q_PROPERTY(QVariant_Coords3D focus2 READ focus2)
     Q_PROPERTY(double focalDistance READ focalDistance)
     Q_PROPERTY(double parameter READ parameter)
 public:
     ScriptGeomHyperbola() = default;
     ScriptGeomHyperbola(const gp_Hypr& hypr);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double majorRadius() const { return m_hypr.MajorRadius(); }
     double minorRadius() const { return m_hypr.MinorRadius(); }
 
-    QVariant focus1() const; // ->{x, y, z}
-    QVariant focus2() const; // ->{x, y, z}
+    QVariant_Coords3D focus1() const;
+    QVariant_Coords3D focus2() const;
     double focalDistance() const { return m_hypr.Focal(); }
     double parameter() const { return m_hypr.Parameter(); }
 
@@ -158,16 +181,16 @@ private:
 
 class ScriptGeomParabola {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
-    Q_PROPERTY(QVariant focus READ focus)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
+    Q_PROPERTY(QVariant_Coords3D focus READ focus)
     Q_PROPERTY(double focalDistance READ focalDistance)
     Q_PROPERTY(double parameter READ parameter)
 public:
     ScriptGeomParabola() = default;
     ScriptGeomParabola(const gp_Parab& parab);
 
-    QVariant position() const; // ->ScriptGeomAx3
-    QVariant focus() const;    // ->{x, y, z}
+    QVariant_ScriptGeomAx3 position() const;
+    QVariant_Coords3D focus() const;
     double focalDistance() const { return m_parab.Focal(); }
     double parameter() const { return m_parab.Parameter(); }
 
@@ -187,7 +210,7 @@ public:
     int poleCount() const;
     bool isRational() const;
 
-    Q_INVOKABLE QVariant pole(int index) const; // ->{x, y, z}
+    Q_INVOKABLE QVariant_Coords3D pole(int index) const;
     Q_INVOKABLE double weight(int index) const;
 
 protected:
@@ -216,7 +239,7 @@ class ScriptGeomBSplineCurve : public ScriptGeomGeneralSplineCurve {
     Q_PROPERTY(int knotIndexFirst READ knotIndexFirst)
     Q_PROPERTY(int knotIndexLast READ knotIndexLast)
     Q_PROPERTY(int knotCount READ knotCount)
-    Q_PROPERTY(unsigned knotDistribution READ knotDistribution)
+    Q_PROPERTY(ScriptGeomBSplineKnotDistribution knotDistribution READ knotDistribution)
 public:
     ScriptGeomBSplineCurve() = default;
     ScriptGeomBSplineCurve(const OccHandle<Geom_BSplineCurve>& bspline);
@@ -228,20 +251,20 @@ public:
     int knotIndexLast() const;
     int knotCount() const;
 
-    unsigned knotDistribution() const; // ->GeomBSplineKnotDistribution
+    ScriptGeomBSplineKnotDistribution knotDistribution() const;
 };
 
 class ScriptGeomOffsetCurve {
     Q_GADGET
-    Q_PROPERTY(QVariant basisCurve READ basisCurve)
-    Q_PROPERTY(QVariant direction READ direction)
+    Q_PROPERTY(QVariant_ScriptGeomCurve basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant_Coords3D direction READ direction)
     Q_PROPERTY(double value READ value)
 public:
     ScriptGeomOffsetCurve() = default;
     ScriptGeomOffsetCurve(const OccHandle<Geom_OffsetCurve>& offset);
 
-    QVariant basisCurve() const; // ->ScriptGeomCurve
-    QVariant direction() const;  // ->{x, y, z}
+    QVariant_ScriptGeomCurve basisCurve() const;
+    QVariant_Coords3D direction() const;
     double value() const;
 
 private:

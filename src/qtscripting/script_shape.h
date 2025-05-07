@@ -4,6 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include <QtCore/QObject>
 #include <TopoDS_Shape.hxx>
 

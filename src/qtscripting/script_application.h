@@ -4,6 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include "../base/application_ptr.h"
 #include "../base/document.h"
 
@@ -16,30 +18,40 @@ class QJSEngine;
 namespace Mayo {
 
 class ScriptDocument;
+namespace IO { class System; }
 
+#ifndef _MAYO_DOCGEN_
+using QObjectPtr_ScriptDocument = QObject*;
+#endif
+
+//! \brief Container of ScriptDocument objects
 class ScriptApplication : public QObject {
     Q_OBJECT
     Q_PROPERTY(int documentCount READ documentCount NOTIFY documentCountChanged)
     Q_PROPERTY(QString versionString READ versionString CONSTANT)
 public:
-    ScriptApplication(const ApplicationPtr& app, QJSEngine* jsEngine = nullptr);
+    ScriptApplication(
+        const ApplicationPtr& app,
+        const IO::System* ioSystem,
+        QJSEngine* jsEngine = nullptr
+    );
 
     QString versionString() const;
 
     int documentCount() const;
-    Q_INVOKABLE QObject* newDocument();
-    Q_INVOKABLE QObject* documentAt(int docIndex) const;
-    Q_INVOKABLE QObject* findDocumentByLocation(const QString& location) const;
-    Q_INVOKABLE int findIndexOfDocument(QObject* doc) const;
+    Q_INVOKABLE QObjectPtr_ScriptDocument newDocument();
+    Q_INVOKABLE QObjectPtr_ScriptDocument documentAt(int docIndex) const;
+    Q_INVOKABLE QObjectPtr_ScriptDocument findDocumentByLocation(QString location) const;
+    Q_INVOKABLE int findIndexOfDocument(QObjectPtr_ScriptDocument doc) const;
+    Q_INVOKABLE void closeDocument(QObjectPtr_ScriptDocument doc);
 
-    Q_INVOKABLE void closeDocument(QObject* doc);
-
+    const IO::System* ioSystem() const { return m_ioSystem; }
     QJSEngine* jsEngine() const { return m_jsEngine; }
 
 signals:
-    void documentAdded(QObject* doc);
-    void documentAboutToClose(QObject* doc);
-    void documentClosed(QObject* doc);
+    void documentAdded(QObjectPtr_ScriptDocument doc);
+    void documentAboutToClose(QObjectPtr_ScriptDocument doc);
+    void documentClosed(QObjectPtr_ScriptDocument doc);
     void documentCountChanged();
 
 private:
@@ -51,6 +63,7 @@ private:
     void onDocumentClosed(const DocumentPtr& doc);
 
     ApplicationPtr m_app;
+    const IO::System* m_ioSystem = nullptr;
     QJSEngine* m_jsEngine = nullptr;
     std::vector<ScriptDocument*> m_vecJsDoc;
     std::unordered_map<Document::Identifier, ScriptDocument*> m_mapIdToScriptDocument;

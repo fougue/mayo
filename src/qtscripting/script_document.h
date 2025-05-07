@@ -4,6 +4,8 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
+#pragma once
+
 #include "../base/document_ptr.h"
 #include "../base/signal.h"
 
@@ -60,10 +62,14 @@ public:
 
     Q_INVOKABLE void traverseModelTree(QJSValue fn);
     Q_INVOKABLE QVariant treeNode(unsigned treeNodeId) const; // ->ScriptTreeNode
-    // Q_INVOKABLE bool tagHasShapeColor(const QString& tag) const;
+#if 0
+    Q_INVOKABLE bool tagHasShapeColor(const QString& tag) const;
     Q_INVOKABLE QColor tagShapeColor(const QString& tag) const;
+#endif
 
     Q_INVOKABLE void traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJSValue fn);
+
+    Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnProgressCallback);
 
 signals:
     void nameChanged();

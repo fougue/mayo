@@ -116,14 +116,14 @@ void addScriptEnum(QJSEngine* jsEngine)
 
 } // namespace
 
-void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app)
+void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const IO::System* ioSystem)
 {
     if (!jsEngine)
         return;
 
     jsEngine->installExtensions(QJSEngine::ConsoleExtension);
 
-    auto scriptApp = new ScriptApplication(app, jsEngine);
+    auto scriptApp = new ScriptApplication(app, ioSystem, jsEngine);
     QJSValue jsApp = jsEngine->newQObject(scriptApp);
     jsEngine->globalObject().setProperty("application", jsApp);
 

@@ -8,9 +8,13 @@
 
 #include "../base/brep_utils.h"
 #include "../base/document.h"
+#include "../base/io_system.h"
+#include "../base/task_manager.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
-#include "../app/qtgui_utils.h"
+#if 0
+#  include "../app/qtgui_utils.h"
+#endif
 #include "script_application.h"
 #include "script_global.h"
 #include "script_shape.h"
@@ -74,6 +78,7 @@ void ScriptDocument::traverseModelTree(QJSValue fn)
     });
 }
 
+#if 0
 QColor ScriptDocument::tagShapeColor(const QString& tag) const
 {
     if (!m_doc)
@@ -86,6 +91,7 @@ QColor ScriptDocument::tagShapeColor(const QString& tag) const
 
     return QtGuiUtils::toQColor(m_doc->xcaf().shapeColor(label));
 }
+#endif
 
 QVariant ScriptDocument::treeNode(unsigned int treeNodeId) const
 {
@@ -104,6 +110,40 @@ void ScriptDocument::traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJS
         auto jsVal = fn.call({ jsSubShape });
         logScriptError(jsVal, "traverseShape()");
     });
+}
+
+bool ScriptDocument::importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnProgressCallback)
+{
+    const IO::System* ioSystem = m_jsApp->ioSystem();
+    if (!ioSystem)
+        return false;
+
+    bool okImport = false;
+    TaskManager taskMgr;
+    auto taskId = taskMgr.newTask([&](TaskProgress* progress) {
+        okImport =
+            ioSystem->importInDocument()
+                .targetDocument(this->baseDocument())
+                .withFilepath(filepathFrom(strFilepath))
+                .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+                .withEntityPostProcessInfoProgress(20, "Mesh BRep shapes")
+                .withTaskProgress(progress)
+                .execute()
+            ;
+    });
+
+    QString taskStep;
+    int taskPct = 0;
+    taskMgr.signalProgressStep.connect([&](TaskId, const std::string& step) {
+        taskStep = to_QString(step);
+        fnProgressCallback.call({ taskStep, taskPct });
+    });
+    taskMgr.signalProgressChanged.connect([&](TaskId, int pct) {
+        taskPct = pct;
+        fnProgressCallback.call({ taskStep, taskPct });
+    });
+    taskMgr.exec(taskId);
+    return okImport;
 }
 
 ScriptDocument::ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp)
