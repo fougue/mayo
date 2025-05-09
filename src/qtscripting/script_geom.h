@@ -36,6 +36,7 @@ private:
 
 class ScriptGeomAx3 {
     Q_GADGET
+    Q_PROPERTY(QVariant_ScriptGeomAx1 axis READ axis)
     Q_PROPERTY(QVariant_Coords3D location READ location)
     Q_PROPERTY(QVariant_Coords3D mainDirection READ mainDirection)
     Q_PROPERTY(QVariant_Coords3D xDirection READ xDirection)
@@ -44,6 +45,7 @@ public:
     ScriptGeomAx3() = default;
     ScriptGeomAx3(const gp_Ax3& ax3);
 
+    QVariant_ScriptGeomAx1 axis() const;
     QVariant_Coords3D location() const;
     QVariant_Coords3D mainDirection() const;
     QVariant_Coords3D xDirection() const;

@@ -32,6 +32,11 @@ ScriptGeomAx3::ScriptGeomAx3(const gp_Ax3& ax3)
 {
 }
 
+QVariant_ScriptGeomAx1 ScriptGeomAx3::axis() const
+{
+    return ScriptGeom::toScriptValue(m_ax3.Axis());
+}
+
 QVariant_Coords3D ScriptGeomAx3::location() const
 {
     return ScriptGeom::toScriptValue(m_ax3.Location());
