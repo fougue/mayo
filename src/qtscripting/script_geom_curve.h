@@ -158,6 +158,11 @@ class ScriptGeomHyperbola {
     Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double majorRadius READ majorRadius)
     Q_PROPERTY(double minorRadius READ minorRadius)
+    Q_PROPERTY(QVariant_ScriptGeomAx1 asymptote1 READ asymptote1)
+    Q_PROPERTY(QVariant_ScriptGeomAx1 asymptote2 READ asymptote2)
+    Q_PROPERTY(QVariant_ScriptGeomHyperbola conjugateBranch1 READ conjugateBranch1)
+    Q_PROPERTY(QVariant_ScriptGeomHyperbola conjugateBranch2 READ conjugateBranch2)
+    Q_PROPERTY(QVariant_ScriptGeomHyperbola otherBranch READ otherBranch)
     Q_PROPERTY(QVariant_Coords3D focus1 READ focus1)
     Q_PROPERTY(QVariant_Coords3D focus2 READ focus2)
     Q_PROPERTY(double focalDistance READ focalDistance)
@@ -169,6 +174,12 @@ public:
     QVariant_ScriptGeomAx3 position() const;
     double majorRadius() const { return m_hypr.MajorRadius(); }
     double minorRadius() const { return m_hypr.MinorRadius(); }
+
+    QVariant_ScriptGeomAx1 asymptote1() const;
+    QVariant_ScriptGeomAx1 asymptote2() const;
+    QVariant_ScriptGeomHyperbola conjugateBranch1() const;
+    QVariant_ScriptGeomHyperbola conjugateBranch2() const;
+    QVariant_ScriptGeomHyperbola otherBranch() const;
 
     QVariant_Coords3D focus1() const;
     QVariant_Coords3D focus2() const;
@@ -198,44 +209,31 @@ private:
     gp_Parab m_parab;
 };
 
-class ScriptGeomGeneralSplineCurve {
+class ScriptGeomBezierCurve {
     Q_GADGET
     Q_PROPERTY(int degree READ degree)
     Q_PROPERTY(int poleCount READ poleCount)
     Q_PROPERTY(bool isRational READ isRational)
 public:
-    ScriptGeomGeneralSplineCurve() = default;
+    ScriptGeomBezierCurve() = default;
+    ScriptGeomBezierCurve(const OccHandle<Geom_BezierCurve>& bezier);
 
-    int degree() const;
-    int poleCount() const;
-    bool isRational() const;
+    int degree() const { return m_bezier->Degree(); }
+    int poleCount() const { return m_bezier->NbPoles(); }
+    bool isRational() const { return m_bezier->IsRational(); }
 
     Q_INVOKABLE QVariant_Coords3D pole(int index) const;
-    Q_INVOKABLE double weight(int index) const;
-
-protected:
-    ScriptGeomGeneralSplineCurve(const OccHandle<Geom_BezierCurve>& bezier);
-    ScriptGeomGeneralSplineCurve(const OccHandle<Geom_BSplineCurve>& bspline);
-
-    const OccHandle<Geom_BezierCurve>& bezier() const { return m_bezier; }
-    const OccHandle<Geom_BSplineCurve>& bspline() const { return m_bspline; }
-
-    void throwIfNullSupportCurve() const;
+    Q_INVOKABLE double weight(int index) const { return m_bezier->Weight(index); }
 
 private:
     OccHandle<Geom_BezierCurve> m_bezier;
-    OccHandle<Geom_BSplineCurve> m_bspline;
 };
 
-class ScriptGeomBezierCurve : public ScriptGeomGeneralSplineCurve {
+class ScriptGeomBSplineCurve {
     Q_GADGET
-public:
-    ScriptGeomBezierCurve() = default;
-    ScriptGeomBezierCurve(const OccHandle<Geom_BezierCurve>& bezier);
-};
-
-class ScriptGeomBSplineCurve : public ScriptGeomGeneralSplineCurve {
-    Q_GADGET
+    Q_PROPERTY(int degree READ degree)
+    Q_PROPERTY(int poleCount READ poleCount)
+    Q_PROPERTY(bool isRational READ isRational)
     Q_PROPERTY(int knotIndexFirst READ knotIndexFirst)
     Q_PROPERTY(int knotIndexLast READ knotIndexLast)
     Q_PROPERTY(int knotCount READ knotCount)
@@ -244,14 +242,23 @@ public:
     ScriptGeomBSplineCurve() = default;
     ScriptGeomBSplineCurve(const OccHandle<Geom_BSplineCurve>& bspline);
 
-    Q_INVOKABLE double knot(int index) const;
-    Q_INVOKABLE int multiplicity(int index) const;
+    int degree() const { return m_bspline->Degree(); }
+    int poleCount() const { return m_bspline->NbPoles(); }
+    bool isRational() const { return m_bspline->IsRational(); }
 
-    int knotIndexFirst() const;
-    int knotIndexLast() const;
-    int knotCount() const;
+    Q_INVOKABLE QVariant_Coords3D pole(int index) const;
+    Q_INVOKABLE double weight(int index) const { return m_bspline->Weight(index); }
+    Q_INVOKABLE double knot(int index) const { return m_bspline->Knot(index); }
+    Q_INVOKABLE int multiplicity(int index) const { return m_bspline->Multiplicity(index); }
 
-    ScriptGeomBSplineKnotDistribution knotDistribution() const;
+    int knotIndexFirst() const { return m_bspline->FirstUKnotIndex(); }
+    int knotIndexLast() const { return m_bspline->LastUKnotIndex(); }
+    int knotCount() const { return m_bspline->NbKnots(); }
+
+    ScriptGeomBSplineKnotDistribution knotDistribution() const { return m_bspline->KnotDistribution(); }
+
+private:
+    OccHandle<Geom_BSplineCurve> m_bspline;
 };
 
 class ScriptGeomOffsetCurve {

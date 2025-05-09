@@ -95,6 +95,8 @@ const Adaptor3d_Curve& ScriptGeomCurve::curve() const
 }
 
 
+
+
 ScriptGeomLine::ScriptGeomLine(const gp_Lin& lin)
     : m_lin(lin)
 {
@@ -106,6 +108,8 @@ QVariant_ScriptGeomAx1 ScriptGeomLine::position() const
 }
 
 
+
+
 ScriptGeomCircle::ScriptGeomCircle(const gp_Circ& circ)
     : m_circ(circ)
 {
@@ -115,6 +119,7 @@ QVariant_ScriptGeomAx3 ScriptGeomCircle::position() const
 {
     return ScriptGeom::toScriptValue(m_circ.Position());
 }
+
 
 
 
@@ -139,6 +144,8 @@ QVariant_Coords3D ScriptGeomEllipse::focus2() const
 }
 
 
+
+
 ScriptGeomHyperbola::ScriptGeomHyperbola(const gp_Hypr& hypr)
     : m_hypr(hypr)
 {
@@ -147,6 +154,31 @@ ScriptGeomHyperbola::ScriptGeomHyperbola(const gp_Hypr& hypr)
 QVariant_ScriptGeomAx3 ScriptGeomHyperbola::position() const
 {
     return ScriptGeom::toScriptValue(m_hypr.Position());
+}
+
+QVariant_ScriptGeomAx1 ScriptGeomHyperbola::asymptote1() const
+{
+    return ScriptGeom::toScriptValue(m_hypr.Asymptote1());
+}
+
+QVariant_ScriptGeomAx1 ScriptGeomHyperbola::asymptote2() const
+{
+    return ScriptGeom::toScriptValue(m_hypr.Asymptote2());
+}
+
+QVariant_ScriptGeomHyperbola ScriptGeomHyperbola::conjugateBranch1() const
+{
+    return QVariant::fromValue(ScriptGeomHyperbola(m_hypr.ConjugateBranch1()));
+}
+
+QVariant_ScriptGeomHyperbola ScriptGeomHyperbola::conjugateBranch2() const
+{
+    return QVariant::fromValue(ScriptGeomHyperbola(m_hypr.ConjugateBranch2()));
+}
+
+QVariant_ScriptGeomHyperbola ScriptGeomHyperbola::otherBranch() const
+{
+    return QVariant::fromValue(ScriptGeomHyperbola(m_hypr.OtherBranch()));
 }
 
 QVariant_Coords3D ScriptGeomHyperbola::focus1() const
@@ -158,6 +190,8 @@ QVariant_Coords3D ScriptGeomHyperbola::focus2() const
 {
     return ScriptGeom::toScriptValue(m_hypr.Focus2());
 }
+
+
 
 
 ScriptGeomParabola::ScriptGeomParabola(const gp_Parab& parab)
@@ -176,117 +210,32 @@ QVariant_Coords3D ScriptGeomParabola::focus() const
 }
 
 
-ScriptGeomGeneralSplineCurve::ScriptGeomGeneralSplineCurve(const OccHandle<Geom_BezierCurve>& bezier)
-    : m_bezier(bezier)
-{
-    this->throwIfNullSupportCurve();
-}
-
-ScriptGeomGeneralSplineCurve::ScriptGeomGeneralSplineCurve(const OccHandle<Geom_BSplineCurve>& bspline)
-    : m_bspline(bspline)
-{
-    this->throwIfNullSupportCurve();
-}
-
-int ScriptGeomGeneralSplineCurve::degree() const
-{
-    if (m_bezier)
-        return m_bezier->Degree();
-    else if (m_bspline)
-        return m_bspline->Degree();
-
-    return 0;
-}
-
-int ScriptGeomGeneralSplineCurve::poleCount() const
-{
-    if (m_bezier)
-        return m_bezier->NbPoles();
-    else if (m_bspline)
-        return m_bspline->NbPoles();
-
-    return 0;
-}
-
-bool ScriptGeomGeneralSplineCurve::isRational() const
-{
-    if (m_bezier)
-        return m_bezier->IsRational();
-    else if (m_bspline)
-        return m_bspline->IsRational();
-
-    return false;
-}
-
-QVariant_Coords3D ScriptGeomGeneralSplineCurve::pole(int index) const
-{
-    this->throwIfNullSupportCurve();
-    if (m_bezier)
-        return ScriptGeom::toScriptValue(m_bezier->Pole(index));
-    else if (m_bspline)
-        return ScriptGeom::toScriptValue(m_bspline->Pole(index));
-
-    return {};
-}
-
-double ScriptGeomGeneralSplineCurve::weight(int index) const
-{
-    this->throwIfNullSupportCurve();
-    if (m_bezier)
-        return m_bezier->Weight(index);
-    else if (m_bspline)
-        return m_bspline->Weight(index);
-
-    return 0.;
-}
-
-void ScriptGeomGeneralSplineCurve::throwIfNullSupportCurve() const
-{
-    if (!m_bezier && !m_bspline)
-        throw std::runtime_error("Geom_BezierCurve and Geom_BSplineCurve pointers are null");
-}
 
 
 ScriptGeomBezierCurve::ScriptGeomBezierCurve(const OccHandle<Geom_BezierCurve>& bezier)
-    : ScriptGeomGeneralSplineCurve(bezier)
+    : m_bezier(bezier)
 {
 }
+
+QVariant_Coords3D ScriptGeomBezierCurve::pole(int index) const
+{
+    return ScriptGeom::toScriptValue(m_bezier->Pole(index));
+}
+
+
 
 
 ScriptGeomBSplineCurve::ScriptGeomBSplineCurve(const OccHandle<Geom_BSplineCurve>& bspline)
-    : ScriptGeomGeneralSplineCurve(bspline)
+    : m_bspline(bspline)
 {
 }
 
-double ScriptGeomBSplineCurve::knot(int index) const
+QVariant_Coords3D ScriptGeomBSplineCurve::pole(int index) const
 {
-    return this->bspline()->Knot(index);
+    return ScriptGeom::toScriptValue(m_bspline->Pole(index));
 }
 
-int ScriptGeomBSplineCurve::multiplicity(int index) const
-{
-    return this->bspline()->Multiplicity(index);
-}
 
-int ScriptGeomBSplineCurve::knotIndexFirst() const
-{
-    return this->bspline()->FirstUKnotIndex();
-}
-
-int ScriptGeomBSplineCurve::knotIndexLast() const
-{
-    return this->bspline()->LastUKnotIndex();
-}
-
-int ScriptGeomBSplineCurve::knotCount() const
-{
-    return this->bspline()->NbKnots();
-}
-
-ScriptGeomBSplineKnotDistribution ScriptGeomBSplineCurve::knotDistribution() const
-{
-    return this->bspline()->KnotDistribution();
-}
 
 
 ScriptGeomOffsetCurve::ScriptGeomOffsetCurve(const OccHandle<Geom_OffsetCurve>& offset)
