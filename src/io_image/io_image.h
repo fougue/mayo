@@ -47,11 +47,22 @@ public:
         Perspective, Orthographic
     };
 
+    enum class GradientFill {
+        None,
+        Horizontal,
+        Vertical,
+        DiagonalTopLeftBottomRight,
+        DiagonalTopRightBottomLeft,
+        Radial
+    };
+
     struct Parameters {
         int width = 128;
         int height = 128;
-        Quantity_Color backgroundColor = Quantity_NOC_BLACK;
-        gp_Vec cameraOrientation = gp_Vec(1, -1, 1); // X+ Y- Z+
+        Quantity_Color backgroundColorStart = Quantity_NOC_BLACK;
+        Quantity_Color backgroundColorEnd = Quantity_NOC_BLACK;
+        GradientFill backgroundGradientFill = GradientFill::None;
+        gp_Vec cameraOrientation = gp_Vec{1, -1, 1}; // X+ Y- Z+
         CameraProjection cameraProjection = CameraProjection::Orthographic;
     };
     Parameters& parameters() { return m_params; }
