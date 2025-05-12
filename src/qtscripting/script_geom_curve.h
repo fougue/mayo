@@ -223,7 +223,7 @@ public:
     bool isRational() const { return m_bezier->IsRational(); }
 
     Q_INVOKABLE QVariant_Coords3D pole(int index) const;
-    Q_INVOKABLE double weight(int index) const { return m_bezier->Weight(index); }
+    Q_INVOKABLE double weight(int index) const;
 
 private:
     OccHandle<Geom_BezierCurve> m_bezier;
@@ -247,9 +247,9 @@ public:
     bool isRational() const { return m_bspline->IsRational(); }
 
     Q_INVOKABLE QVariant_Coords3D pole(int index) const;
-    Q_INVOKABLE double weight(int index) const { return m_bspline->Weight(index); }
-    Q_INVOKABLE double knot(int index) const { return m_bspline->Knot(index); }
-    Q_INVOKABLE int multiplicity(int index) const { return m_bspline->Multiplicity(index); }
+    Q_INVOKABLE double weight(int index) const;
+    Q_INVOKABLE double knot(int index) const;
+    Q_INVOKABLE int multiplicity(int index) const;
 
     int knotIndexFirst() const { return m_bspline->FirstUKnotIndex(); }
     int knotIndexLast() const { return m_bspline->LastUKnotIndex(); }

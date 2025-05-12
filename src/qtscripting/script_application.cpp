@@ -49,7 +49,7 @@ int ScriptApplication::documentCount() const
     return m_app ? m_app->documentCount() : 0;
 }
 
-//! \brief Creates and adds new ScriptDocument object to this application
+//! \brief Creates and adds new document to this application
 //! \details Throws signal documentAdded() when finished
 QObjectPtr_ScriptDocument ScriptApplication::newDocument()
 {
@@ -69,7 +69,7 @@ QObjectPtr_ScriptDocument ScriptApplication::newDocument()
     return this->mapDocument(doc);
 }
 
-//! \brief Returns the ScriptDocument object at index `docIndex`
+//! \brief Returns the document at index `docIndex`
 //! \pre `0 ≤ docIndex < documentCount`
 //! \return `null` if `docIndex` is invalid
 QObjectPtr_ScriptDocument ScriptApplication::documentAt(int docIndex) const
@@ -80,7 +80,7 @@ QObjectPtr_ScriptDocument ScriptApplication::documentAt(int docIndex) const
         return nullptr;
 }
 
-//! \brief Returns the ScriptDocument object which was opened from filepath `location`
+//! \brief Returns the document which was opened from filepath `location`
 //! \return `null` if no document was found at input filepath
 QObjectPtr_ScriptDocument ScriptApplication::findDocumentByLocation(QString location) const
 {
@@ -91,7 +91,7 @@ QObjectPtr_ScriptDocument ScriptApplication::findDocumentByLocation(QString loca
     return CppUtils::findValue(doc ? doc->identifier() : -1, m_mapIdToScriptDocument);
 }
 
-//! \brief Returns the index of ScriptDocument object contained in this application
+//! \brief Returns the index of the document contained in this application
 //! \return `-1` if document was not found
 int ScriptApplication::findIndexOfDocument(QObjectPtr_ScriptDocument doc) const
 {
@@ -102,7 +102,7 @@ int ScriptApplication::findIndexOfDocument(QObjectPtr_ScriptDocument doc) const
     return m_app->findIndexOfDocument(jsDoc->baseDocument());
 }
 
-//! \brief Closes, destroys the ScriptDocument object `doc`
+//! \brief Closes, destroys the document `doc`
 //! \details Throws documentAboutToClose() and documentClosed() signals
 void ScriptApplication::closeDocument(QObjectPtr_ScriptDocument doc)
 {

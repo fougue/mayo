@@ -36,7 +36,7 @@ QVariant_Coords3D ScriptGeomCurve::point(double u) const
 }
 
 //! Returns the vector being the value of the derivative for the order of derivation `n`
-//! \pre `n` ≥ 1
+//! \pre `n ≥ 1`
 //! \pre Continuity of the interval to which parameter `u` belongs must be at least `Cn`
 QVariant_Coords3D ScriptGeomCurve::dN(double u, int n) const
 {
@@ -217,9 +217,18 @@ ScriptGeomBezierCurve::ScriptGeomBezierCurve(const OccHandle<Geom_BezierCurve>& 
 {
 }
 
+//! Returns the pole of range `index`
+//! \pre `0 < index ≤ poleCount`
 QVariant_Coords3D ScriptGeomBezierCurve::pole(int index) const
 {
     return ScriptGeom::toScriptValue(m_bezier->Pole(index));
+}
+
+//! Returns the weight of range `index`
+//! \pre `0 < index ≤ poleCount`
+double ScriptGeomBezierCurve::weight(int index) const
+{
+    return m_bezier->Weight(index);
 }
 
 
@@ -230,9 +239,34 @@ ScriptGeomBSplineCurve::ScriptGeomBSplineCurve(const OccHandle<Geom_BSplineCurve
 {
 }
 
+//! Returns the pole of range `index`
+//! \pre 0 < index ≤ poleCount`
 QVariant_Coords3D ScriptGeomBSplineCurve::pole(int index) const
 {
     return ScriptGeom::toScriptValue(m_bspline->Pole(index));
+}
+
+//! Returns the pole of range `index`
+//! \pre 0 < index ≤ poleCount`
+double ScriptGeomBSplineCurve::weight(int index) const
+{
+    return m_bspline->Weight(index);
+}
+
+//! Returns the pole of range `index`
+//! \details When there is a knot with a multiplicity greater than 1 the knot is not repeated.
+//! Call multiplicity() to get the multiplicity of the knot
+//! \pre 0 < index ≤ knotCount`
+double ScriptGeomBSplineCurve::knot(int index) const
+{
+    return m_bspline->Knot(index);
+}
+
+//! Returns the multiplicity of range `index`
+//! \pre 0 < index ≤ knotCount`
+int ScriptGeomBSplineCurve::multiplicity(int index) const
+{
+    return m_bspline->Multiplicity(index);
 }
 
 

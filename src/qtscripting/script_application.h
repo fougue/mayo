@@ -24,7 +24,7 @@ namespace IO { class System; }
 using QObjectPtr_ScriptDocument = QObject*;
 #endif
 
-//! \brief Container of ScriptDocument objects
+//! \brief Container of document objects
 class ScriptApplication : public QObject {
     Q_OBJECT
     Q_PROPERTY(int documentCount READ documentCount NOTIFY documentCountChanged)
