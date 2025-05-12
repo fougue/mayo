@@ -61,4 +61,11 @@ static void messages() {
 
     Mayo::IO::ImageWriterI18N::textId("Perspective");
     Mayo::IO::ImageWriterI18N::textId("Orthographic");
+
+    Mayo::IO::ImageWriterI18N::textId("None");
+    Mayo::IO::ImageWriterI18N::textId("Horizontal");
+    Mayo::IO::ImageWriterI18N::textId("Vertical");
+    Mayo::IO::ImageWriterI18N::textId("DiagonalTopLeftBottomRight");
+    Mayo::IO::ImageWriterI18N::textId("DiagonalTopRightBottomLeft");
+    Mayo::IO::ImageWriterI18N::textId("Radial");
 }

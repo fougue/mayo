@@ -56,6 +56,25 @@ public:
         this->height.setConstraintsEnabled(true);
         this->height.setRange(0, std::numeric_limits<int>::max());
 
+        this->backgroundColorStart.setDescription(
+            ImageWriterI18N::textIdTr("Start color of the image background gradient")
+        );
+        this->backgroundColorEnd.setDescription(
+            ImageWriterI18N::textIdTr("End color of the image background gradient")
+        );
+        this->backgroundGradientFill.setDescription(
+            ImageWriterI18N::textIdTr("Type of gradient fill for the image background")
+        );
+        this->backgroundGradientFill.setDescriptions({
+            { GradientFill::None, ImageWriterI18N::textIdTr("No gadient fill, single color background") },
+            { GradientFill::Horizontal, ImageWriterI18N::textIdTr("Gradient directed from left to right") },
+            { GradientFill::Vertical, ImageWriterI18N::textIdTr("Gradient directed from top to bottom") },
+            { GradientFill::DiagonalTopLeftBottomRight, ImageWriterI18N::textIdTr("Gradient directed from top left corner to bottom right") },
+            { GradientFill::DiagonalTopRightBottomLeft, ImageWriterI18N::textIdTr("Gradient directed from top right corner to bottom left") },
+            { GradientFill::Radial, ImageWriterI18N::textIdTr("Gradient directed from center in alldirections forming circular shape") },
+        });
+        this->backgroundGradientFill.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
+
         this->cameraOrientation.setDescription(
             ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector")
         );
@@ -67,14 +86,18 @@ public:
         const Parameters defaults;
         this->width.setValue(defaults.width);
         this->height.setValue(defaults.height);
-        this->backgroundColor.setValue(defaults.backgroundColor);
+        this->backgroundColorStart.setValue(defaults.backgroundColorStart);
+        this->backgroundColorEnd.setValue(defaults.backgroundColorEnd);
+        this->backgroundGradientFill.setValue(defaults.backgroundGradientFill);
         this->cameraOrientation.setValue(defaults.cameraOrientation);
         this->cameraProjection.setValue(defaults.cameraProjection);
     }
 
     PropertyInt width{ this, ImageWriterI18N::textId("width") };
     PropertyInt height{ this, ImageWriterI18N::textId("height") };
-    PropertyOccColor backgroundColor{ this, ImageWriterI18N::textId("backgroundColor") };
+    PropertyOccColor backgroundColorStart{ this, ImageWriterI18N::textId("backgroundColorStart") };
+    PropertyOccColor backgroundColorEnd{ this, ImageWriterI18N::textId("backgroundColorEnd") };
+    PropertyEnum<GradientFill> backgroundGradientFill{ this, ImageWriterI18N::textId("backgroundGradientFill") };
     PropertyOccVec cameraOrientation{ this, ImageWriterI18N::textId("cameraOrientation") };
     PropertyEnum<CameraProjection> cameraProjection{ this, ImageWriterI18N::textId("cameraProjection") };
 };
@@ -84,6 +107,30 @@ namespace {
 bool isVectorNull(const gp_Vec& vec)
 {
     return vec.IsEqual({}, Precision::Confusion(), Precision::Angular());
+}
+
+Aspect_GradientFillMethod toOccGradientFill(ImageWriter::GradientFill fill)
+{
+    switch (fill) {
+    case ImageWriter::GradientFill::None:
+        return Aspect_GFM_NONE;
+    case ImageWriter::GradientFill::Horizontal:
+        return Aspect_GFM_HOR;
+    case ImageWriter::GradientFill::Vertical:
+        return Aspect_GFM_VER;
+    case ImageWriter::GradientFill::DiagonalTopLeftBottomRight:
+        return Aspect_GFM_DIAG1;
+    case ImageWriter::GradientFill::DiagonalTopRightBottomLeft:
+        return Aspect_GFM_DIAG2;
+    case ImageWriter::GradientFill::Radial:
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
+        return Aspect_GradientFillMethod_Elliptical;
+#else
+        return Aspect_GFM_NONE;
+#endif
+    } // endswitch()
+
+    return Aspect_GFM_NONE;
 }
 
 } // namespace
@@ -107,6 +154,15 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
 {
     if (isVectorNull(m_params.cameraOrientation))
         this->messenger()->emitError(ImageWriterI18N::textIdTr("Camera orientation vector must not be null"));
+
+#if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
+    if (m_params.backgroundGradientFill == GradientFill::Radial) {
+        this->messenger()->emitWarning(ImageWriterI18N::textIdTr(
+            "Background radial gradient fill is available since OpenCascade 7.6.\n"
+            "Default to background single color"
+        ));
+    }
+#endif
 
     // Create 3D view
     GraphicsScene gfxScene;
@@ -153,7 +209,9 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
     if (ptr) {
         m_params.width = ptr->width;
         m_params.height = ptr->height;
-        m_params.backgroundColor = ptr->backgroundColor;
+        m_params.backgroundColorStart = ptr->backgroundColorStart;
+        m_params.backgroundColorEnd = ptr->backgroundColorEnd;
+        m_params.backgroundGradientFill = ptr->backgroundGradientFill;
         m_params.cameraOrientation = ptr->cameraOrientation;
         m_params.cameraProjection = ptr->cameraProjection;
     }
@@ -212,7 +270,18 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     OccHandle<V3d_View> view = gfxScene->createV3dView();
     view->ChangeRenderingParams().IsAntialiasingEnabled = true;
     view->ChangeRenderingParams().NbMsaaSamples = 4;
-    view->SetBackgroundColor(params.backgroundColor);
+    if (params.backgroundGradientFill == GradientFill::None) {
+        view->SetBackgroundColor(params.backgroundColorStart);
+    }
+    else {
+        view->SetBgGradientColors(
+            params.backgroundColorStart,
+            params.backgroundColorEnd,
+            toOccGradientFill(params.backgroundGradientFill),
+            false/*!ToUpdate*/
+        );
+    }
+
     view->Camera()->SetProjectionType(fnToGfxCamProjection(params.cameraProjection));
     if (!isVectorNull(params.cameraOrientation))
         view->SetProj(params.cameraOrientation.X(), params.cameraOrientation.Y(), params.cameraOrientation.Z());
