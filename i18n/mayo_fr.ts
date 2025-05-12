@@ -614,12 +614,12 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::Application</name>
     <message>
-        <location filename="../src/base/application.cpp" line="146"/>
+        <location filename="../src/base/application.cpp" line="150"/>
         <source>Binary Mayo Document Format</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/application.cpp" line="151"/>
+        <location filename="../src/base/application.cpp" line="155"/>
         <source>XML Mayo Document Format</source>
         <translation></translation>
     </message>
@@ -803,127 +803,127 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Selectionner fichier pièce</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="200"/>
-        <location filename="../src/app/commands_file.cpp" line="243"/>
+        <location filename="../src/app/commands_file.cpp" line="198"/>
+        <location filename="../src/app/commands_file.cpp" line="241"/>
         <source>Mesh BRep shapes</source>
         <translation>Maillage des formes BRep</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="205"/>
-        <location filename="../src/app/commands_file.cpp" line="248"/>
+        <location filename="../src/app/commands_file.cpp" line="203"/>
+        <location filename="../src/app/commands_file.cpp" line="246"/>
         <source>Import time: {}ms</source>
         <translation>Durée import: {}ms</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="270"/>
+        <location filename="../src/app/commands_file.cpp" line="268"/>
         <source>New</source>
         <translation>Nouveau</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="271"/>
+        <location filename="../src/app/commands_file.cpp" line="269"/>
         <source>New Document</source>
         <translation>Nouveau Document</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="280"/>
+        <location filename="../src/app/commands_file.cpp" line="278"/>
         <source>Anonymous%1</source>
         <translation>Anonyme%1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="287"/>
+        <location filename="../src/app/commands_file.cpp" line="285"/>
         <source>Open</source>
         <translation>Ouvrir</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="288"/>
+        <location filename="../src/app/commands_file.cpp" line="286"/>
         <source>Open Documents</source>
         <translation>Ouvrir des documents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="338"/>
+        <location filename="../src/app/commands_file.cpp" line="336"/>
         <source>Recent files</source>
         <translation>Fichiers récents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="364"/>
+        <location filename="../src/app/commands_file.cpp" line="362"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="372"/>
+        <location filename="../src/app/commands_file.cpp" line="370"/>
         <source>Clear menu</source>
         <translation>Vider le menu</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="252"/>
-        <location filename="../src/app/commands_file.cpp" line="385"/>
+        <location filename="../src/app/commands_file.cpp" line="250"/>
+        <location filename="../src/app/commands_file.cpp" line="383"/>
         <source>Import</source>
         <translation>Importer</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="386"/>
+        <location filename="../src/app/commands_file.cpp" line="384"/>
         <source>Import in current document</source>
         <translation>Importer dans le document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="416"/>
-        <location filename="../src/app/commands_file.cpp" line="417"/>
+        <location filename="../src/app/commands_file.cpp" line="414"/>
+        <location filename="../src/app/commands_file.cpp" line="415"/>
         <source>Export selected items</source>
         <translation>Exporter les éléments sélectionnées</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="426"/>
+        <location filename="../src/app/commands_file.cpp" line="424"/>
         <source>No item selected for export</source>
         <translation>Aucun élément sélectionné pour l&apos;export</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="438"/>
+        <location filename="../src/app/commands_file.cpp" line="436"/>
         <source>Select Output File</source>
         <translation>Sélection fichier de sortie</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="461"/>
+        <location filename="../src/app/commands_file.cpp" line="459"/>
         <source>Export time: {}ms</source>
         <translation>Durée export: {}ms</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="478"/>
+        <location filename="../src/app/commands_file.cpp" line="476"/>
         <source>Close &quot;%1&quot;</source>
         <translation>Fermer &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="512"/>
+        <location filename="../src/app/commands_file.cpp" line="510"/>
         <source>Close %1</source>
         <translation>Fermer %1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="513"/>
+        <location filename="../src/app/commands_file.cpp" line="511"/>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="523"/>
+        <location filename="../src/app/commands_file.cpp" line="521"/>
         <source>Close all</source>
         <translation>Tout fermer</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="524"/>
+        <location filename="../src/app/commands_file.cpp" line="522"/>
         <source>Close all documents</source>
         <translation>Fermer tous les documents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="544"/>
-        <location filename="../src/app/commands_file.cpp" line="585"/>
+        <location filename="../src/app/commands_file.cpp" line="542"/>
+        <location filename="../src/app/commands_file.cpp" line="583"/>
         <source>Close all except current</source>
         <translation>Tout fermer sauf document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="545"/>
+        <location filename="../src/app/commands_file.cpp" line="543"/>
         <source>Close all except current document</source>
         <translation>Tout fermer sauf document courant</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="584"/>
+        <location filename="../src/app/commands_file.cpp" line="582"/>
         <source>Close all except %1</source>
         <translation>Tout fermer sauf %1</translation>
     </message>
@@ -932,7 +932,7 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation type="vanished">Tout fermer sauf &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="594"/>
+        <location filename="../src/app/commands_file.cpp" line="592"/>
         <source>Quit</source>
         <translation>Quitter</translation>
     </message>
@@ -965,50 +965,50 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Options</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="21"/>
+        <location filename="../src/app/commands_window.cpp" line="22"/>
         <source>Fullscreen</source>
         <translation>Plein-écran</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="22"/>
+        <location filename="../src/app/commands_window.cpp" line="23"/>
         <source>Switch Fullscreen/Normal</source>
         <translation>Basculer plein-écran/normal</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="83"/>
+        <location filename="../src/app/commands_window.cpp" line="84"/>
         <source>Hide Left Sidebar</source>
         <translation>Cacher le bandeau vertical fixé à gauche</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="87"/>
+        <location filename="../src/app/commands_window.cpp" line="88"/>
         <source>Show Left Sidebar</source>
         <translation>Montrer le bandeau vertical fixé à gauche</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="48"/>
+        <location filename="../src/app/commands_window.cpp" line="49"/>
         <source>Show/Hide Left Sidebar</source>
         <translation>Montrer/cacher le bandeau vertical fixé à gauche</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="98"/>
-        <location filename="../src/app/commands_window.cpp" line="150"/>
+        <location filename="../src/app/commands_window.cpp" line="99"/>
+        <location filename="../src/app/commands_window.cpp" line="151"/>
         <source>Go To Home Page</source>
         <translation>Aller à la page d&apos;accueil</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="147"/>
+        <location filename="../src/app/commands_window.cpp" line="148"/>
         <source>Go To Documents</source>
         <translation>Aller à la page des documents</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="161"/>
         <location filename="../src/app/commands_window.cpp" line="162"/>
+        <location filename="../src/app/commands_window.cpp" line="163"/>
         <source>Previous Document</source>
         <translation>Document précédent</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="186"/>
-        <location filename="../src/app/commands_window.cpp" line="187"/>
+        <location filename="../src/app/commands_window.cpp" line="188"/>
+        <location filename="../src/app/commands_window.cpp" line="189"/>
         <source>Next Document</source>
         <translation>Document suivant</translation>
     </message>
@@ -1115,42 +1115,42 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>&lt;données&gt;</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="857"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="863"/>
         <source>Shape</source>
         <translation>Forme</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="861"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="867"/>
         <source>Color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="865"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="871"/>
         <source>Material</source>
         <translation>Material</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="870"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="876"/>
         <source>VisMaterial</source>
         <translation>VisMatériau</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="875"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="881"/>
         <source>Dimension</source>
         <translation>Dimension</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="878"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="884"/>
         <source>Datum</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="881"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="887"/>
         <source>GeomTolerance</source>
         <translation>GeomTolerance</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="827"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
@@ -1160,12 +1160,12 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="827"/>
         <source>This document is not suitable for XDE</source>
         <translation>Ce document n&apos;est pas XDE-compatible</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="843"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="849"/>
         <source>Attributes</source>
         <translation>Attributs</translation>
     </message>
@@ -1711,41 +1711,106 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
     <message>
         <location filename="../src/io_image/io_image.cpp" line="60"/>
+        <source>Start color of the image background gradient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="63"/>
+        <source>End color of the image background gradient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="66"/>
+        <source>Type of gradient fill for the image background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="69"/>
+        <source>No gadient fill, single color background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="70"/>
+        <source>Gradient directed from left to right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="71"/>
+        <source>Gradient directed from top to bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="72"/>
+        <source>Gradient directed from top left corner to bottom right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="73"/>
+        <source>Gradient directed from top right corner to bottom left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="74"/>
+        <source>Gradient directed from center in alldirections forming circular shape</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="78"/>
         <source>Camera orientation expressed in Z-up convention as a unit vector</source>
         <translation>Orientation de la caméra selon la convention Z-up exprimée en tant que vecteur unitaire</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="75"/>
+        <location filename="../src/io_image/io_image.cpp" line="95"/>
         <source>width</source>
         <translation>Largeur</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="76"/>
+        <location filename="../src/io_image/io_image.cpp" line="96"/>
         <source>height</source>
         <translation>Hauteur</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="77"/>
-        <source>backgroundColor</source>
-        <translation>Couleur de l&apos;arrière plan</translation>
+        <location filename="../src/io_image/io_image.cpp" line="97"/>
+        <source>backgroundColorStart</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="78"/>
+        <location filename="../src/io_image/io_image.cpp" line="98"/>
+        <source>backgroundColorEnd</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="99"/>
+        <source>backgroundGradientFill</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="160"/>
+        <source>Background radial gradient fill is available since OpenCascade 7.6.
+Default to background single color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>backgroundColor</source>
+        <translation type="vanished">Couleur de l&apos;arrière plan</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="100"/>
         <source>cameraOrientation</source>
         <translation>Orientation de la caméra</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="79"/>
+        <location filename="../src/io_image/io_image.cpp" line="101"/>
         <source>cameraProjection</source>
         <translation>Projection de la caméra</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="101"/>
+        <location filename="../src/io_image/io_image.cpp" line="148"/>
         <source>No transferred application items</source>
         <translation>Aucun élément transféré</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="109"/>
+        <location filename="../src/io_image/io_image.cpp" line="156"/>
         <source>Camera orientation vector must not be null</source>
         <translation>Le vecteur d&apos;orienation de la caméra ne doit pas être nul</translation>
     </message>
@@ -1758,6 +1823,36 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <location filename="messages.cpp" line="63"/>
         <source>Orthographic</source>
         <translation>Orthographique</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="65"/>
+        <source>None</source>
+        <translation type="unfinished">Aucune</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="66"/>
+        <source>Horizontal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="67"/>
+        <source>Vertical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="68"/>
+        <source>DiagonalTopLeftBottomRight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="69"/>
+        <source>DiagonalTopRightBottomLeft</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="70"/>
+        <source>Radial</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2630,7 +2725,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
     <message>
         <location filename="../src/base/io_system.cpp" line="262"/>
-        <location filename="../src/base/io_system.cpp" line="387"/>
+        <location filename="../src/base/io_system.cpp" line="388"/>
         <source>File transfer problem</source>
         <translation>Problème de transfert fichier</translation>
     </message>
@@ -2647,22 +2742,22 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 %2</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="379"/>
+        <location filename="../src/base/io_system.cpp" line="380"/>
         <source>No supporting writer</source>
         <translation>Aucun writer compatible</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="384"/>
+        <location filename="../src/base/io_system.cpp" line="385"/>
         <source>Transfer</source>
         <translation>Transfert</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="391"/>
+        <location filename="../src/base/io_system.cpp" line="392"/>
         <source>Write</source>
         <translation>Écriture</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="394"/>
+        <location filename="../src/base/io_system.cpp" line="395"/>
         <source>File write problem</source>
         <translation>Problème d&apos;écriture fichier</translation>
     </message>
@@ -2740,7 +2835,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Le fichier de configuration OpenCascade n&apos;a pu être chargé par QSettings [chemin=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="371"/>
+        <location filename="../src/app/main.cpp" line="372"/>
         <location filename="../src/cli/main.cpp" line="400"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>Échec chargement du fichier de traductions [chemin=%1]</translation>
@@ -2754,7 +2849,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Export de {} en cours ...</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="339"/>
+        <location filename="../src/app/main.cpp" line="340"/>
         <location filename="../src/cli/main.cpp" line="376"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation variants="yes">
@@ -2876,7 +2971,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Auncun fichier en entrée -&gt; aucun export</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="428"/>
+        <location filename="../src/app/main.cpp" line="429"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>Impossible de charger le thème &apos;%1&apos;</translation>
     </message>
@@ -3151,43 +3246,50 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::MeasureDisplayI18N</name>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="99"/>
+        <location filename="../src/measure/measure_display.cpp" line="104"/>
         <source>Sum</source>
         <translation>Total</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="108"/>
+        <location filename="../src/measure/measure_display.cpp" line="113"/>
         <source>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="125"/>
+        <location filename="../src/measure/measure_display.cpp" line="130"/>
         <source> X{0} Y{1} Z{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="249"/>
+        <location filename="../src/measure/measure_display.cpp" line="254"/>
         <source>Diameter: {0}{1}</source>
         <translation>Diamètre: {0}{1}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="252"/>
+        <location filename="../src/measure/measure_display.cpp" line="257"/>
         <source> Ø{0}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="361"/>
-        <source>Angle: {0}{1}</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/measure/measure_display.cpp" line="400"/>
-        <location filename="../src/measure/measure_display.cpp" line="438"/>
+        <location filename="../src/measure/measure_display.cpp" line="311"/>
+        <location filename="../src/measure/measure_display.cpp" line="383"/>
+        <location filename="../src/measure/measure_display.cpp" line="434"/>
+        <location filename="../src/measure/measure_display.cpp" line="472"/>
         <source>{0}: {1}{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="499"/>
+        <location filename="../src/measure/measure_display.cpp" line="317"/>
+        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="384"/>
+        <source>Angle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="533"/>
         <source>Min point: {0}&lt;br&gt;Max point: {1}&lt;br&gt;Size: {2} x {3} x {4}{5}&lt;br&gt;Volume: {6}{7}</source>
         <translation>Min point : {0}&lt;br&gt;Max point : {1}&lt;br&gt;Dimensions : {2} x {3} x {4}{5}&lt;br&gt;Volume : {6}{7}</translation>
     </message>
@@ -3196,12 +3298,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Distance Min: {0}{1}&lt;br&gt;Point1: {2}&lt;br&gt;Point2: {3}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="401"/>
+        <location filename="../src/measure/measure_display.cpp" line="435"/>
         <source>Length</source>
         <translation>Longueur</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="439"/>
+        <location filename="../src/measure/measure_display.cpp" line="473"/>
         <source>Area</source>
         <translation>Aire</translation>
     </message>
@@ -3813,23 +3915,23 @@ Lu: %5
         <translation>Z=</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="264"/>
-        <location filename="../src/app/widget_main_control.cpp" line="271"/>
+        <location filename="../src/app/widget_main_control.cpp" line="274"/>
+        <location filename="../src/app/widget_main_control.cpp" line="281"/>
         <source>Data</source>
         <translation>Données</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="285"/>
+        <location filename="../src/app/widget_main_control.cpp" line="295"/>
         <source>Graphics</source>
         <translation>Graphismes</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="318"/>
+        <location filename="../src/app/widget_main_control.cpp" line="328"/>
         <source>Options</source>
         <translation>Options</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="369"/>
+        <location filename="../src/app/widget_main_control.cpp" line="377"/>
         <source>Document file `%1` has been changed since it was opened
 
 Do you want to reload that document?
@@ -3842,7 +3944,7 @@ Voulez-vous recharger ce document ?
 Fichier : `%2`</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="376"/>
+        <location filename="../src/app/widget_main_control.cpp" line="384"/>
         <source>Question</source>
         <translation>Question</translation>
     </message>
@@ -4063,7 +4165,7 @@ Fichier : `%2`</translation>
         <translation>Unité angle</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.cpp" line="400"/>
+        <location filename="../src/app/widget_measure.cpp" line="429"/>
         <source>Select entities to measure</source>
         <translation>Sélectionner les entités à mesurer</translation>
     </message>
@@ -4076,7 +4178,7 @@ Fichier : `%2`</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree.cpp" line="146"/>
+        <location filename="../src/app/widget_model_tree.cpp" line="145"/>
         <source>Remove from document</source>
         <translation>Retirer du document</translation>
     </message>

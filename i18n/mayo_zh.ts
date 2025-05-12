@@ -344,12 +344,12 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::Application</name>
     <message>
-        <location filename="../src/base/application.cpp" line="146"/>
+        <location filename="../src/base/application.cpp" line="150"/>
         <source>Binary Mayo Document Format</source>
         <translation>Mayo二进制文档格式</translation>
     </message>
     <message>
-        <location filename="../src/base/application.cpp" line="151"/>
+        <location filename="../src/base/application.cpp" line="155"/>
         <source>XML Mayo Document Format</source>
         <translation>Mayo XML文档格式</translation>
     </message>
@@ -539,132 +539,132 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation>选择零件文件</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="200"/>
-        <location filename="../src/app/commands_file.cpp" line="243"/>
+        <location filename="../src/app/commands_file.cpp" line="198"/>
+        <location filename="../src/app/commands_file.cpp" line="241"/>
         <source>Mesh BRep shapes</source>
         <translation>网格化BREP形状</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="205"/>
-        <location filename="../src/app/commands_file.cpp" line="248"/>
+        <location filename="../src/app/commands_file.cpp" line="203"/>
+        <location filename="../src/app/commands_file.cpp" line="246"/>
         <source>Import time: {}ms</source>
         <translation>导入耗时：{}毫秒</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="252"/>
-        <location filename="../src/app/commands_file.cpp" line="385"/>
+        <location filename="../src/app/commands_file.cpp" line="250"/>
+        <location filename="../src/app/commands_file.cpp" line="383"/>
         <source>Import</source>
         <translation>导入</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="270"/>
+        <location filename="../src/app/commands_file.cpp" line="268"/>
         <source>New</source>
         <translation>新建</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="271"/>
+        <location filename="../src/app/commands_file.cpp" line="269"/>
         <source>New Document</source>
         <translation>新建文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="280"/>
+        <location filename="../src/app/commands_file.cpp" line="278"/>
         <source>Anonymous%1</source>
         <translation>未命名%1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="287"/>
+        <location filename="../src/app/commands_file.cpp" line="285"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="288"/>
+        <location filename="../src/app/commands_file.cpp" line="286"/>
         <source>Open Documents</source>
         <translation>打开文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="338"/>
+        <location filename="../src/app/commands_file.cpp" line="336"/>
         <source>Recent files</source>
         <translation>最近文件</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="364"/>
+        <location filename="../src/app/commands_file.cpp" line="362"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="372"/>
+        <location filename="../src/app/commands_file.cpp" line="370"/>
         <source>Clear menu</source>
         <translation>清空菜单</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="386"/>
+        <location filename="../src/app/commands_file.cpp" line="384"/>
         <source>Import in current document</source>
         <translation>导入到当前文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="416"/>
-        <location filename="../src/app/commands_file.cpp" line="417"/>
+        <location filename="../src/app/commands_file.cpp" line="414"/>
+        <location filename="../src/app/commands_file.cpp" line="415"/>
         <source>Export selected items</source>
         <translation>导出选中项</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="426"/>
+        <location filename="../src/app/commands_file.cpp" line="424"/>
         <source>No item selected for export</source>
         <translation>没有选要导出的物体</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="438"/>
+        <location filename="../src/app/commands_file.cpp" line="436"/>
         <source>Select Output File</source>
         <translation>选择输出文件</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="461"/>
+        <location filename="../src/app/commands_file.cpp" line="459"/>
         <source>Export time: {}ms</source>
         <translation>导出耗时：{}毫秒</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="478"/>
+        <location filename="../src/app/commands_file.cpp" line="476"/>
         <source>Close &quot;%1&quot;</source>
         <translation>关闭&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="512"/>
+        <location filename="../src/app/commands_file.cpp" line="510"/>
         <source>Close %1</source>
         <translation>关闭%1</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="513"/>
+        <location filename="../src/app/commands_file.cpp" line="511"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="523"/>
+        <location filename="../src/app/commands_file.cpp" line="521"/>
         <source>Close all</source>
         <translation>全部关闭</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="524"/>
+        <location filename="../src/app/commands_file.cpp" line="522"/>
         <source>Close all documents</source>
         <translation>关闭所有文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="544"/>
-        <location filename="../src/app/commands_file.cpp" line="585"/>
+        <location filename="../src/app/commands_file.cpp" line="542"/>
+        <location filename="../src/app/commands_file.cpp" line="583"/>
         <source>Close all except current</source>
         <translation>关闭除当前外的所有</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="545"/>
+        <location filename="../src/app/commands_file.cpp" line="543"/>
         <source>Close all except current document</source>
         <translation>关闭除当前文档外的所有</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="584"/>
+        <location filename="../src/app/commands_file.cpp" line="582"/>
         <source>Close all except %1</source>
         <translation>关闭除%1外的所有</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="594"/>
+        <location filename="../src/app/commands_file.cpp" line="592"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
@@ -697,50 +697,50 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="21"/>
+        <location filename="../src/app/commands_window.cpp" line="22"/>
         <source>Fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="22"/>
+        <location filename="../src/app/commands_window.cpp" line="23"/>
         <source>Switch Fullscreen/Normal</source>
         <translation>切换全屏/普通模式</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="48"/>
+        <location filename="../src/app/commands_window.cpp" line="49"/>
         <source>Show/Hide Left Sidebar</source>
         <translation>显示/隐藏左侧边栏</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="83"/>
+        <location filename="../src/app/commands_window.cpp" line="84"/>
         <source>Hide Left Sidebar</source>
         <translation>隐藏左侧边栏</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="87"/>
+        <location filename="../src/app/commands_window.cpp" line="88"/>
         <source>Show Left Sidebar</source>
         <translation>显示左侧边栏</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="98"/>
-        <location filename="../src/app/commands_window.cpp" line="150"/>
+        <location filename="../src/app/commands_window.cpp" line="99"/>
+        <location filename="../src/app/commands_window.cpp" line="151"/>
         <source>Go To Home Page</source>
         <translation>前往主页</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="147"/>
+        <location filename="../src/app/commands_window.cpp" line="148"/>
         <source>Go To Documents</source>
         <translation>前往说明文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="161"/>
         <location filename="../src/app/commands_window.cpp" line="162"/>
+        <location filename="../src/app/commands_window.cpp" line="163"/>
         <source>Previous Document</source>
         <translation>上一个文档</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="186"/>
-        <location filename="../src/app/commands_window.cpp" line="187"/>
+        <location filename="../src/app/commands_window.cpp" line="188"/>
+        <location filename="../src/app/commands_window.cpp" line="189"/>
         <source>Next Document</source>
         <translation>下一个文档</translation>
     </message>
@@ -831,52 +831,52 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="827"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="827"/>
         <source>This document is not suitable for XDE</source>
         <translation>当前文档不适用于XDE检查</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="843"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="849"/>
         <source>Attributes</source>
         <translation>属性</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="857"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="863"/>
         <source>Shape</source>
         <translation>形状</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="861"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="867"/>
         <source>Color</source>
         <translation>颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="865"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="871"/>
         <source>Material</source>
         <translation>材质</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="870"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="876"/>
         <source>VisMaterial</source>
         <translation>可视化材质</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="875"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="881"/>
         <source>Dimension</source>
         <translation>尺寸</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="878"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="884"/>
         <source>Datum</source>
         <translation>基准</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="881"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="887"/>
         <source>GeomTolerance</source>
         <translation>几何公差</translation>
     </message>
@@ -1308,41 +1308,106 @@ Only applicable if option `{}` is on</source>
     </message>
     <message>
         <location filename="../src/io_image/io_image.cpp" line="60"/>
+        <source>Start color of the image background gradient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="63"/>
+        <source>End color of the image background gradient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="66"/>
+        <source>Type of gradient fill for the image background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="69"/>
+        <source>No gadient fill, single color background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="70"/>
+        <source>Gradient directed from left to right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="71"/>
+        <source>Gradient directed from top to bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="72"/>
+        <source>Gradient directed from top left corner to bottom right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="73"/>
+        <source>Gradient directed from top right corner to bottom left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="74"/>
+        <source>Gradient directed from center in alldirections forming circular shape</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="78"/>
         <source>Camera orientation expressed in Z-up convention as a unit vector</source>
         <translation>以Z轴向上的约定表示的单位向量相机方向</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="75"/>
+        <location filename="../src/io_image/io_image.cpp" line="95"/>
         <source>width</source>
         <translation>宽度</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="76"/>
+        <location filename="../src/io_image/io_image.cpp" line="96"/>
         <source>height</source>
         <translation>高度</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="77"/>
-        <source>backgroundColor</source>
-        <translation>背景颜色</translation>
+        <location filename="../src/io_image/io_image.cpp" line="97"/>
+        <source>backgroundColorStart</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="78"/>
+        <location filename="../src/io_image/io_image.cpp" line="98"/>
+        <source>backgroundColorEnd</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="99"/>
+        <source>backgroundGradientFill</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="160"/>
+        <source>Background radial gradient fill is available since OpenCascade 7.6.
+Default to background single color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>backgroundColor</source>
+        <translation type="vanished">背景颜色</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="100"/>
         <source>cameraOrientation</source>
         <translation>相机方向</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="79"/>
+        <location filename="../src/io_image/io_image.cpp" line="101"/>
         <source>cameraProjection</source>
         <translation>相机投影方式</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="101"/>
+        <location filename="../src/io_image/io_image.cpp" line="148"/>
         <source>No transferred application items</source>
         <translation>没有传输的应用项目</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="109"/>
+        <location filename="../src/io_image/io_image.cpp" line="156"/>
         <source>Camera orientation vector must not be null</source>
         <translation>相机方向向量不可为空</translation>
     </message>
@@ -1355,6 +1420,36 @@ Only applicable if option `{}` is on</source>
         <location filename="messages.cpp" line="63"/>
         <source>Orthographic</source>
         <translation>正交</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="65"/>
+        <source>None</source>
+        <translation type="unfinished">无</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="66"/>
+        <source>Horizontal</source>
+        <translation type="unfinished">水平线</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="67"/>
+        <source>Vertical</source>
+        <translation type="unfinished">垂直线</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="68"/>
+        <source>DiagonalTopLeftBottomRight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="69"/>
+        <source>DiagonalTopRightBottomLeft</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="70"/>
+        <source>Radial</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2158,27 +2253,27 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
     <message>
         <location filename="../src/base/io_system.cpp" line="262"/>
-        <location filename="../src/base/io_system.cpp" line="387"/>
+        <location filename="../src/base/io_system.cpp" line="388"/>
         <source>File transfer problem</source>
         <translation>文件传输问题</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="379"/>
+        <location filename="../src/base/io_system.cpp" line="380"/>
         <source>No supporting writer</source>
         <translation>无支持的写入器</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="384"/>
+        <location filename="../src/base/io_system.cpp" line="385"/>
         <source>Transfer</source>
         <translation>传输</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="391"/>
+        <location filename="../src/base/io_system.cpp" line="392"/>
         <source>Write</source>
         <translation>写入</translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="394"/>
+        <location filename="../src/base/io_system.cpp" line="395"/>
         <source>File write problem</source>
         <translation>文件写入问题</translation>
     </message>
@@ -2268,19 +2363,19 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>无法通过QSettings加载OpenCascade设置文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="339"/>
+        <location filename="../src/app/main.cpp" line="340"/>
         <location filename="../src/cli/main.cpp" line="376"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation>无法加载应用程序设置文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="371"/>
+        <location filename="../src/app/main.cpp" line="372"/>
         <location filename="../src/cli/main.cpp" line="400"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>无法加载翻译文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="428"/>
+        <location filename="../src/app/main.cpp" line="429"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>无法加载主题&apos;%1&apos;</translation>
     </message>
@@ -2412,53 +2507,64 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::MeasureDisplayI18N</name>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="99"/>
+        <location filename="../src/measure/measure_display.cpp" line="104"/>
         <source>Sum</source>
         <translation>总和</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="108"/>
+        <location filename="../src/measure/measure_display.cpp" line="113"/>
         <source>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</source>
         <translation>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="125"/>
+        <location filename="../src/measure/measure_display.cpp" line="130"/>
         <source> X{0} Y{1} Z{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="249"/>
+        <location filename="../src/measure/measure_display.cpp" line="254"/>
         <source>Diameter: {0}{1}</source>
         <translation>直径：{0}{1}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="252"/>
+        <location filename="../src/measure/measure_display.cpp" line="257"/>
         <source> Ø{0}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="361"/>
         <source>Angle: {0}{1}</source>
-        <translation>角度：{0}{1}</translation>
+        <translation type="vanished">角度：{0}{1}</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="400"/>
-        <location filename="../src/measure/measure_display.cpp" line="438"/>
+        <location filename="../src/measure/measure_display.cpp" line="311"/>
+        <location filename="../src/measure/measure_display.cpp" line="383"/>
+        <location filename="../src/measure/measure_display.cpp" line="434"/>
+        <location filename="../src/measure/measure_display.cpp" line="472"/>
         <source>{0}: {1}{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="401"/>
+        <location filename="../src/measure/measure_display.cpp" line="317"/>
+        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="384"/>
+        <source>Angle</source>
+        <translation type="unfinished">角度</translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="435"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="439"/>
+        <location filename="../src/measure/measure_display.cpp" line="473"/>
         <source>Area</source>
         <translation>面积</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="499"/>
+        <location filename="../src/measure/measure_display.cpp" line="533"/>
         <source>Min point: {0}&lt;br&gt;Max point: {1}&lt;br&gt;Size: {2} x {3} x {4}{5}&lt;br&gt;Volume: {6}{7}</source>
         <translation>最小点：{0}&lt;br&gt;最大点：{1}&lt;br&gt;尺寸：{2}×{3}×{4}{5}&lt;br&gt;体积：{6}{7}</translation>
     </message>
@@ -3037,23 +3143,23 @@ Read: %5
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="264"/>
-        <location filename="../src/app/widget_main_control.cpp" line="271"/>
+        <location filename="../src/app/widget_main_control.cpp" line="274"/>
+        <location filename="../src/app/widget_main_control.cpp" line="281"/>
         <source>Data</source>
         <translation>数据</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="285"/>
+        <location filename="../src/app/widget_main_control.cpp" line="295"/>
         <source>Graphics</source>
         <translation>图形</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="318"/>
+        <location filename="../src/app/widget_main_control.cpp" line="328"/>
         <source>Options</source>
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="369"/>
+        <location filename="../src/app/widget_main_control.cpp" line="377"/>
         <source>Document file `%1` has been changed since it was opened
 
 Do you want to reload that document?
@@ -3066,7 +3172,7 @@ File: `%2`</source>
         文件：`%2`</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="376"/>
+        <location filename="../src/app/widget_main_control.cpp" line="384"/>
         <source>Question</source>
         <translation>问题</translation>
     </message>
@@ -3267,7 +3373,7 @@ File: `%2`</source>
         <translation>美制加仑(USgal)</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.cpp" line="400"/>
+        <location filename="../src/app/widget_measure.cpp" line="429"/>
         <source>Select entities to measure</source>
         <translation>选择要测量的实体</translation>
     </message>
@@ -3280,7 +3386,7 @@ File: `%2`</source>
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree.cpp" line="146"/>
+        <location filename="../src/app/widget_model_tree.cpp" line="145"/>
         <source>Remove from document</source>
         <translation>从文档中移除</translation>
     </message>
