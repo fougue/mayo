@@ -23,12 +23,13 @@ namespace Internal {
 
 static QImage qtImageTemp(const Image_PixMap& occImg)
 {
-    const QImage img(occImg.Data(),
-                     int(occImg.Width()),
-                     int(occImg.Height()),
-                     int(occImg.SizeRowBytes()),
-                     QImage::Format_RGBA8888);
-    return img;
+    return QImage{
+        occImg.Data(),
+        int(occImg.Width()),
+        int(occImg.Height()),
+        int(occImg.SizeRowBytes()),
+        QImage::Format_RGBA8888
+    };
 }
 
 } // namespace Internal
@@ -73,7 +74,7 @@ void DialogSaveImageView::saveFile()
     const QString fileName = QFileDialog::getSaveFileName(
         this,
         tr("Select image file"),
-        QString(),
+        QString{},
         listFormat.join(QLatin1String(";;")),
         &selectedFormat
     );
