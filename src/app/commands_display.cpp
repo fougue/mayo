@@ -138,10 +138,18 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
         if (driver != spanDrivers.front())
             menu->addSeparator();
 
+        const std::string driverTypeName = driver->DynamicType()->Name();
+        const std::string trDriverTypeName{GraphicsObjectDriverI18N::textIdTr(driverTypeName)};
+
         auto group = new QActionGroup(menu);
         group->setExclusive(true);
         for (const Enumeration::Item& displayMode : driver->displayModes().items()) {
-            auto action = new QAction(to_QString(displayMode.name.tr()), menu);
+            const QString actionText =
+                Command::tr("[%1] %2")
+                    .arg(to_QString(trDriverTypeName))
+                    .arg(to_QString(displayMode.name.tr()))
+                ;
+            auto action = new QAction(actionText, menu);
             action->setCheckable(true);
             action->setData(displayMode.value);
             menu->addAction(action);

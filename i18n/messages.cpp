@@ -2,6 +2,7 @@ namespace {
 double dummy = 0;
 }
 
+#include "src/graphics/graphics_object_driver.h"
 #include "src/io_gmio/io_gmio_amf_writer.cpp"
 #include "src/io_image/io_image.cpp"
 #include "src/io_occ/io_occ_common.h"
@@ -30,6 +31,11 @@ static void messages() {
     Mayo::WidgetModelTreeBuilder_Xde::textId("Instance");
     Mayo::WidgetModelTreeBuilder_Xde::textId("Product");
     Mayo::WidgetModelTreeBuilder_Xde::textId("Both");
+
+    // Graphics
+    Mayo::GraphicsObjectDriverI18N::textId("GraphicsShapeObjectDriver");
+    Mayo::GraphicsObjectDriverI18N::textId("GraphicsMeshObjectDriver");
+    Mayo::GraphicsObjectDriverI18N::textId("GraphicsPointCloudObjectDriver");
 
     // I/O
     Mayo::IO::GmioAmfWriter::Properties::textId("Decimal");
@@ -68,4 +74,6 @@ static void messages() {
     Mayo::IO::ImageWriterI18N::textId("DiagonalTopLeftBottomRight");
     Mayo::IO::ImageWriterI18N::textId("DiagonalTopRightBottomLeft");
     Mayo::IO::ImageWriterI18N::textId("Radial");
+    Mayo::IO::ImageWriterI18N::textId("GraphicsShapeObjectDriver_displayMode");
+    Mayo::IO::ImageWriterI18N::textId("GraphicsMeshObjectDriver_displayMode");
 }

@@ -30,10 +30,10 @@ struct GraphicsShapeObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Grap
 GraphicsShapeObjectDriver::GraphicsShapeObjectDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, GraphicsShapeObjectDriverI18N::textId("Shape_Wireframe") },
-        { DisplayMode_HiddenLineRemoval, GraphicsShapeObjectDriverI18N::textId("Shape_HiddenLineRemoval") },
-        { DisplayMode_Shaded, GraphicsShapeObjectDriverI18N::textId("Shape_Shaded") },
-        { DisplayMode_ShadedWithFaceBoundary, GraphicsShapeObjectDriverI18N::textId("Shape_ShadedWithFaceBoundary") }
+        { DisplayMode_Wireframe, GraphicsShapeObjectDriverI18N::textId("Wireframe") },
+        { DisplayMode_HiddenLineRemoval, GraphicsShapeObjectDriverI18N::textId("HiddenLineRemoval") },
+        { DisplayMode_Shaded, GraphicsShapeObjectDriverI18N::textId("Shaded") },
+        { DisplayMode_ShadedWithFaceBoundary, GraphicsShapeObjectDriverI18N::textId("ShadedWithFaceBoundary") }
     });
     this->setDefaultDisplayMode(DisplayMode_ShadedWithFaceBoundary);
 }

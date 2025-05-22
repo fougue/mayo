@@ -312,9 +312,9 @@ static void initGui(GuiApplication* guiApp)
 #endif
 
     // Register Graphics entity drivers
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsShapeObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsPointCloudObjectDriver>());
 }
 
 // Initializes and runs Mayo application
