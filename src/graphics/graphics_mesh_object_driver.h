@@ -8,6 +8,8 @@
 
 #include "graphics_object_driver.h"
 
+#include <MeshVS_DisplayModeFlags.hxx>
+
 namespace Mayo {
 
 class GraphicsMeshObjectDriver;
@@ -36,6 +38,12 @@ public:
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);
+
+    enum DisplayMode {
+        DisplayMode_Wireframe = MeshVS_DMF_WireFrame,
+        DisplayMode_Shaded = MeshVS_DMF_Shading,
+        DisplayMode_Shrink = MeshVS_DMF_Shrink
+    };
 
     DEFINE_STANDARD_RTTI_INLINE(GraphicsMeshObjectDriver, GraphicsObjectDriver)
 

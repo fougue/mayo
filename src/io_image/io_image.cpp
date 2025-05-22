@@ -28,9 +28,9 @@
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
 
+#include <fmt/format.h>
 #include <gsl/util>
 #include <limits>
-#include <unordered_set>
 
 namespace Mayo {
 
@@ -45,7 +45,7 @@ struct ImageWriterI18N {
 
 class ImageWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    Properties(PropertyGroup* parentGroup, const GuiApplication* guiApp)
         : PropertyGroup(parentGroup)
     {
         this->width.setDescription(ImageWriterI18N::textIdTr("Image width in pixels"));
@@ -56,29 +56,56 @@ public:
         this->height.setConstraintsEnabled(true);
         this->height.setRange(0, std::numeric_limits<int>::max());
 
-        this->backgroundColorStart.setDescription(
-            ImageWriterI18N::textIdTr("Start color of the image background gradient")
-        );
-        this->backgroundColorEnd.setDescription(
-            ImageWriterI18N::textIdTr("End color of the image background gradient")
-        );
-        this->backgroundGradientFill.setDescription(
-            ImageWriterI18N::textIdTr("Type of gradient fill for the image background")
-        );
+        this->backgroundColorStart.setDescription(ImageWriterI18N::textIdTr(
+            "Start color of the image background gradient"
+        ));
+        this->backgroundColorEnd.setDescription(ImageWriterI18N::textIdTr(
+            "End color of the image background gradient"
+        ));
+        this->backgroundGradientFill.setDescription(ImageWriterI18N::textIdTr(
+            "Type of gradient fill for the image background"
+        ));
         this->backgroundGradientFill.setDescriptions({
             { GradientFill::None, ImageWriterI18N::textIdTr("No gadient fill, single color background") },
             { GradientFill::Horizontal, ImageWriterI18N::textIdTr("Gradient directed from left to right") },
             { GradientFill::Vertical, ImageWriterI18N::textIdTr("Gradient directed from top to bottom") },
             { GradientFill::DiagonalTopLeftBottomRight, ImageWriterI18N::textIdTr("Gradient directed from top left corner to bottom right") },
             { GradientFill::DiagonalTopRightBottomLeft, ImageWriterI18N::textIdTr("Gradient directed from top right corner to bottom left") },
-            { GradientFill::Radial, ImageWriterI18N::textIdTr("Gradient directed from center in alldirections forming circular shape") },
+            { GradientFill::Radial, ImageWriterI18N::textIdTr("Gradient directed from center in all directions forming concentric circles") },
         });
         this->backgroundGradientFill.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
 
-        this->cameraOrientation.setDescription(
-            ImageWriterI18N::textIdTr("Camera orientation expressed in Z-up convention as a unit vector")
-        );
+        this->cameraOrientation.setDescription(ImageWriterI18N::textIdTr(
+            "Camera orientation expressed in Z-up convention as a unit vector"
+        ));
+        this->cameraProjection.setDescription(ImageWriterI18N::textIdTr(
+            "Camera projection type, specifies how the 3D scene is projected onto a 2D image for display"
+        ));
         this->cameraProjection.mutableEnumeration().changeTrContext(ImageWriterI18N::textIdContext());
+
+        if (guiApp) {
+            // Create a PropertyEnumeration object for each graphics driver registered in the given
+            // GuiApplication object
+            // This PropertyEnumeration is mapped to the display modes specific to the driver
+            for (const GraphicsObjectDriverPtr& driver : guiApp->graphicsObjectDrivers()) {
+                if (driver->displayModes().empty())
+                    continue; // Skip
+
+                const std::string driverTypeName = driver->DynamicType()->Name();
+                const std::string trDriverTypeName{GraphicsObjectDriverI18N::textIdTr(driverTypeName)};
+                m_textIdStringStorage.push_back(fmt::format("{}_displayMode", driver->DynamicType()->Name()));
+                auto propDisplayMode = std::make_unique<PropertyEnumeration>(
+                    this, ImageWriterI18N::textId(m_textIdStringStorage.back()), &driver->displayModes()
+                );
+                auto msgDescription = ImageWriterI18N::textIdTr("Graphics display mode for the objects of type `{}`");
+                propDisplayMode->setDescription(fmt::format(msgDescription, trDriverTypeName));
+                this->mapDriverDisplayMode.insert({ driver, std::move(propDisplayMode) });
+            }
+        }
+    }
+
+    ~Properties()
+    {
     }
 
     void restoreDefaults() override
@@ -91,6 +118,10 @@ public:
         this->backgroundGradientFill.setValue(defaults.backgroundGradientFill);
         this->cameraOrientation.setValue(defaults.cameraOrientation);
         this->cameraProjection.setValue(defaults.cameraProjection);
+        for (const auto& [driver, propDisplayMode] : this->mapDriverDisplayMode) {
+            if (!driver->displayModes().empty())
+                propDisplayMode->setValue(driver->defaultDisplayMode());
+        }
     }
 
     PropertyInt width{ this, ImageWriterI18N::textId("width") };
@@ -100,6 +131,10 @@ public:
     PropertyEnum<GradientFill> backgroundGradientFill{ this, ImageWriterI18N::textId("backgroundGradientFill") };
     PropertyOccVec cameraOrientation{ this, ImageWriterI18N::textId("cameraOrientation") };
     PropertyEnum<CameraProjection> cameraProjection{ this, ImageWriterI18N::textId("cameraProjection") };
+    std::map<GraphicsObjectDriverPtr, std::unique_ptr<PropertyEnumeration>> mapDriverDisplayMode;
+
+private:
+    std::vector<std::string> m_textIdStringStorage;
 };
 
 namespace {
@@ -138,6 +173,10 @@ Aspect_GradientFillMethod toOccGradientFill(ImageWriter::GradientFill fill)
 ImageWriter::ImageWriter(GuiApplication* guiApp)
     : m_guiApp(guiApp)
 {
+    for (const GraphicsObjectDriverPtr& driver : guiApp->graphicsObjectDrivers()) {
+        if (!driver->displayModes().empty())
+            m_params.m_driverDisplayModes.insert({ driver, driver->defaultDisplayMode() });
+    }
 }
 
 bool ImageWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
@@ -168,6 +207,17 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     GraphicsScene gfxScene;
     OccHandle<V3d_View> view = ImageWriter::createV3dView(&gfxScene, m_params);
 
+    auto fnMapGraphicsObject = [&](const TDF_Label& labelEntity) {
+        auto driver = m_guiApp->findCompatibleGraphicsObjectDriver(labelEntity);
+        if (driver) {
+            auto gfxObject = driver->createObject(labelEntity);
+            gfxScene.addObject(gfxObject);
+            auto itDisplayMode = m_params.m_driverDisplayModes.find(driver);
+            if (itDisplayMode != m_params.m_driverDisplayModes.cend())
+                driver->applyDisplayMode(gfxObject, itDisplayMode->second);
+        }
+    };
+
     const int itemCount = CppUtils::safeStaticCast<int>(m_vecAppItem.size());
     // Render application items
     for (const ApplicationItem& appItem : m_vecAppItem) {
@@ -176,15 +226,15 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
             const DocumentPtr doc = appItem.document();
             for (int i = 0; i < doc->entityCount(); ++i) {
                 const TDF_Label labelEntity = doc->entityLabel(i);
-                gfxScene.addObject(m_guiApp->createGraphicsObject(labelEntity));
+                fnMapGraphicsObject(labelEntity);
             }
         }
         else if (appItem.isDocumentTreeNode()) {
             const TDF_Label labelNode = appItem.documentTreeNode().label();
-            gfxScene.addObject(m_guiApp->createGraphicsObject(labelNode));
+            fnMapGraphicsObject(labelNode);
         }
 
-        const auto itemProgress = &appItem - &m_vecAppItem.front();
+        const auto itemProgress = Span_itemIndex(m_vecAppItem, appItem);
         progress->setValue(MathUtils::toPercent(itemProgress, 0, itemCount));
     }
 
@@ -198,9 +248,11 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return okSave;
 }
 
-std::unique_ptr<PropertyGroup> ImageWriter::createProperties(PropertyGroup* parentGroup)
+std::unique_ptr<PropertyGroup> ImageWriter::createProperties(
+        PropertyGroup* parentGroup, const GuiApplication* guiApp
+    )
 {
-    return std::make_unique<Properties>(parentGroup);
+    return std::make_unique<Properties>(parentGroup, guiApp);
 }
 
 void ImageWriter::applyProperties(const PropertyGroup* params)
@@ -214,6 +266,10 @@ void ImageWriter::applyProperties(const PropertyGroup* params)
         m_params.backgroundGradientFill = ptr->backgroundGradientFill;
         m_params.cameraOrientation = ptr->cameraOrientation;
         m_params.cameraProjection = ptr->cameraProjection;
+
+        m_params.m_driverDisplayModes.clear();
+        for (const auto& [driver, propDisplayMode] : ptr->mapDriverDisplayMode)
+            m_params.m_driverDisplayModes.insert({ driver, propDisplayMode->value()});
     }
 }
 
@@ -295,6 +351,24 @@ OccHandle<V3d_View> ImageWriter::createV3dView(GraphicsScene* gfxScene, const Pa
     return view;
 }
 
+std::optional<Enumeration::Value>
+ImageWriter::Parameters::displayMode(const GraphicsObjectDriverPtr& driver) const
+{
+    auto it = m_driverDisplayModes.find(driver);
+    if (it != m_driverDisplayModes.cend())
+        return it->second;
+
+    return std::nullopt;
+}
+
+void ImageWriter::Parameters::setDisplayMode(const GraphicsObjectDriverPtr& driver, Enumeration::Value enumValue)
+{
+    auto it = m_driverDisplayModes.find(driver);
+    if (it != m_driverDisplayModes.end())
+        it->second = enumValue;
+}
+
+
 ImageFactoryWriter::ImageFactoryWriter(GuiApplication* guiApp)
     : m_guiApp(guiApp)
 {
@@ -317,7 +391,7 @@ std::unique_ptr<Writer> ImageFactoryWriter::create(Format format) const
 std::unique_ptr<PropertyGroup> ImageFactoryWriter::createProperties(Format format, PropertyGroup* parentGroup) const
 {
     if (format == Format_Image)
-        return ImageWriter::createProperties(parentGroup);
+        return ImageWriter::createProperties(parentGroup, m_guiApp);
 
     return {};
 }

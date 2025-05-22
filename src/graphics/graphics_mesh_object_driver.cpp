@@ -34,11 +34,11 @@ struct GraphicsMeshObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Graph
 GraphicsMeshObjectDriver::GraphicsMeshObjectDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, GraphicsMeshObjectDriverI18N::textId("Mesh_Wireframe") },
-        { MeshVS_DMF_Shading, GraphicsMeshObjectDriverI18N::textId("Mesh_Shaded") },
-        { MeshVS_DMF_Shrink, GraphicsMeshObjectDriverI18N::textId("Mesh_Shrink") } // MeshVS_DA_ShrinkCoeff
+        { DisplayMode_Wireframe, GraphicsMeshObjectDriverI18N::textId("Wireframe") },
+        { DisplayMode_Shaded, GraphicsMeshObjectDriverI18N::textId("Shaded") },
+        { DisplayMode_Shrink, GraphicsMeshObjectDriverI18N::textId("Shrink") } // MeshVS_DA_ShrinkCoeff
     });
-    this->setDefaultDisplayMode(MeshVS_DMF_Shading);
+    this->setDefaultDisplayMode(DisplayMode_Shaded);
 }
 
 GraphicsMeshObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const TDF_Label& label) const
@@ -86,7 +86,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         object->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
         object->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         object->GetDrawer()->SetMaterial(
-                    MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material)
+            MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material)
         );
         object->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, defaultValues().edgeColor);
         object->GetDrawer()->SetBoolean(MeshVS_DA_ColorReflection, true);
@@ -234,11 +234,13 @@ GraphicsMeshObjectDriver::DefaultValues& graphicsMeshDefaultValues()
 
 } // namespace Internal
 
-const GraphicsMeshObjectDriver::DefaultValues& GraphicsMeshObjectDriver::defaultValues() {
+const GraphicsMeshObjectDriver::DefaultValues& GraphicsMeshObjectDriver::defaultValues()
+{
     return Internal::graphicsMeshDefaultValues();
 }
 
-void GraphicsMeshObjectDriver::setDefaultValues(const DefaultValues& values) {
+void GraphicsMeshObjectDriver::setDefaultValues(const DefaultValues& values)
+{
     Internal::graphicsMeshDefaultValues() = values;
 }
 

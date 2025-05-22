@@ -8,8 +8,6 @@
 
 namespace Mayo {
 
-namespace { struct GraphicsObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectDriver) }; }
-
 GraphicsObjectDriverPtr GraphicsObjectDriver::get(const GraphicsObjectPtr& object)
 {
     if (object)

@@ -52,6 +52,7 @@ public:
     void addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDriver> ptr);
     Span<const GraphicsObjectDriverPtr> graphicsObjectDrivers() const;
     GraphicsObjectPtr createGraphicsObject(const TDF_Label& label) const;
+    GraphicsObjectDriverPtr findCompatibleGraphicsObjectDriver(const TDF_Label& label) const;
 
     // Whether a GuiDocument object is automatically created once a Document is added in Application
     bool automaticDocumentMapping() const;

@@ -11,6 +11,7 @@
 #include "../base/label_data.h"
 #include "../base/property.h"
 #include "../base/span.h"
+#include "../base/text_id.h"
 
 #include <Standard_Transient.hxx>
 #include <TDF_Label.hxx>
@@ -54,5 +55,7 @@ private:
     Enumeration m_enumDisplayModes;
     Enumeration::Value m_defaultDisplayMode = -1;
 };
+
+struct GraphicsObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectDriverI18N) };
 
 } // namespace Mayo

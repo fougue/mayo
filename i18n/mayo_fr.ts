@@ -555,57 +555,57 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Afficher les nœuds</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="16"/>
+        <location filename="messages.cpp" line="17"/>
         <source>SI</source>
         <translation>SI</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="17"/>
+        <location filename="messages.cpp" line="18"/>
         <source>ImperialUK</source>
         <translation>Système impérial</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="19"/>
+        <location filename="messages.cpp" line="20"/>
         <source>VeryCoarse</source>
         <translation>Très grossière</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="20"/>
+        <location filename="messages.cpp" line="21"/>
         <source>Coarse</source>
         <translation>Grossière</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="21"/>
+        <location filename="messages.cpp" line="22"/>
         <source>Normal</source>
         <translation>Normale</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="22"/>
+        <location filename="messages.cpp" line="23"/>
         <source>Precise</source>
         <translation>Précise</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="23"/>
+        <location filename="messages.cpp" line="24"/>
         <source>VeryPrecise</source>
         <translation>Très précise</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="24"/>
+        <location filename="messages.cpp" line="25"/>
         <source>UserDefined</source>
         <translation>Custom</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="26"/>
+        <location filename="messages.cpp" line="27"/>
         <source>None</source>
         <translation>Aucune</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="27"/>
+        <location filename="messages.cpp" line="28"/>
         <source>ReloadIfUserConfirm</source>
         <translation>Recharger si confirmation utilisateur</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="28"/>
+        <location filename="messages.cpp" line="29"/>
         <source>ReloadSilently</source>
         <oldsource>SilentReload</oldsource>
         <translation>Recharger silencieusement</translation>
@@ -747,42 +747,47 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <translation>Mode</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="164"/>
+        <location filename="../src/app/commands_display.cpp" line="148"/>
+        <source>[%1] %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/commands_display.cpp" line="172"/>
         <source>Show Origin Trihedron</source>
         <translation>Montrer le trihèdre Origine</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="165"/>
+        <location filename="../src/app/commands_display.cpp" line="173"/>
         <source>Show/Hide Origin Trihedron</source>
         <translation>Montrer/cacher le trihèdre Origine</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="202"/>
+        <location filename="../src/app/commands_display.cpp" line="210"/>
         <source>Show Performance Stats</source>
         <translation>Montrer les statistiques de rendu</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="203"/>
+        <location filename="../src/app/commands_display.cpp" line="211"/>
         <source>Show/Hide rendering performance statistics</source>
         <translation>Montrer/cacher les statistiques de rendu</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="240"/>
+        <location filename="../src/app/commands_display.cpp" line="248"/>
         <source>Zoom In</source>
         <translation>Zoom avant</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="257"/>
+        <location filename="../src/app/commands_display.cpp" line="265"/>
         <source>Zoom Out</source>
         <translation>Zoom arrière</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="274"/>
+        <location filename="../src/app/commands_display.cpp" line="282"/>
         <source>Turn Counter Clockwise</source>
         <translation>Tourner dans le sens anti-horaire</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="292"/>
+        <location filename="../src/app/commands_display.cpp" line="300"/>
         <source>Turn Clockwise</source>
         <translation>Tourner dans le sens horaire</translation>
     </message>
@@ -1281,52 +1286,52 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
     </message>
     <message>
         <location filename="../src/app/dialog_save_image_view.ui" line="69"/>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="119"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="120"/>
         <source>Keep ratio</source>
         <translation>Conserver ratio</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="43"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="44"/>
         <source>Save</source>
         <translation>Sauvegarder</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="44"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="45"/>
         <source>Copy</source>
         <translation>Copier</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="45"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="46"/>
         <source>Preview</source>
         <translation>Prévisualiser</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="68"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="69"/>
         <source>%1 files(*.%2)</source>
         <translation>%1 fichiers (*.%2)</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="75"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="76"/>
         <source>Select image file</source>
         <translation>Sélectionner le fichier image</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="94"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="95"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="94"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="95"/>
         <source>Failed to save image &apos;%1&apos;</source>
         <translation>Erreur lors de la sauvegarde de l&apos;image &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="116"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="117"/>
         <source>%1x%2 %3</source>
         <translation>%1x%2 %3</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_save_image_view.cpp" line="119"/>
+        <location filename="../src/app/dialog_save_image_view.cpp" line="120"/>
         <source>Free ratio</source>
         <translation>Ratio libre</translation>
     </message>
@@ -1380,19 +1385,31 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
 <context>
     <name>Mayo::GraphicsMeshObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="37"/>
         <source>Mesh_Wireframe</source>
-        <translation>[Maillage] Filaire</translation>
+        <translation type="vanished">[Maillage] Filaire</translation>
+    </message>
+    <message>
+        <source>Mesh_Shaded</source>
+        <translation type="vanished">[Maillage] Ombré</translation>
+    </message>
+    <message>
+        <source>Mesh_Shrink</source>
+        <translation type="vanished">[Maillage] Rétréci</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="37"/>
+        <source>Wireframe</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="38"/>
-        <source>Mesh_Shaded</source>
-        <translation>[Maillage] Ombré</translation>
+        <source>Shaded</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="39"/>
-        <source>Mesh_Shrink</source>
-        <translation>[Maillage] Rétréci</translation>
+        <source>Shrink</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="201"/>
@@ -1413,6 +1430,37 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
         <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="204"/>
         <source>showNodes</source>
         <translation>Montrer les nœuds</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::GraphicsMeshObjectDriverI18N</name>
+    <message>
+        <source>Mesh_Wireframe</source>
+        <translation type="obsolete">[Maillage] Filaire</translation>
+    </message>
+    <message>
+        <source>Mesh_Shaded</source>
+        <translation type="obsolete">[Maillage] Ombré</translation>
+    </message>
+    <message>
+        <source>Mesh_Shrink</source>
+        <translation type="obsolete">[Maillage] Rétréci</translation>
+    </message>
+    <message>
+        <source>color</source>
+        <translation type="obsolete">Couleur</translation>
+    </message>
+    <message>
+        <source>edgeColor</source>
+        <translation type="obsolete">Couleur des arêtes</translation>
+    </message>
+    <message>
+        <source>showEdges</source>
+        <translation type="obsolete">Montrer les arêtes</translation>
+    </message>
+    <message>
+        <source>showNodes</source>
+        <translation type="obsolete">Montrer les nœuds</translation>
     </message>
 </context>
 <context>
@@ -1466,26 +1514,60 @@ Si actif, la déflection utilisée pour la polygonisation de chaque arête sera 
     </message>
 </context>
 <context>
+    <name>Mayo::GraphicsObjectDriverI18N</name>
+    <message>
+        <location filename="messages.cpp" line="36"/>
+        <source>GraphicsShapeObjectDriver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="37"/>
+        <source>GraphicsMeshObjectDriver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="38"/>
+        <source>GraphicsPointCloudObjectDriver</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Mayo::GraphicsShapeObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="33"/>
         <source>Shape_Wireframe</source>
-        <translation>[Forme] Filaire</translation>
+        <translation type="vanished">[Forme] Filaire</translation>
+    </message>
+    <message>
+        <source>Shape_HiddenLineRemoval</source>
+        <translation type="vanished">[Forme] Suppression des arêtes cachées</translation>
+    </message>
+    <message>
+        <source>Shape_Shaded</source>
+        <translation type="vanished">[Forme] Ombré</translation>
+    </message>
+    <message>
+        <source>Shape_ShadedWithFaceBoundary</source>
+        <translation type="vanished">[Forme] Ombré avec arêtes</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="33"/>
+        <source>Wireframe</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="34"/>
-        <source>Shape_HiddenLineRemoval</source>
-        <translation>[Forme] Suppression des arêtes cachées</translation>
+        <source>HiddenLineRemoval</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="35"/>
-        <source>Shape_Shaded</source>
-        <translation>[Forme] Ombré</translation>
+        <source>Shaded</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="36"/>
-        <source>Shape_ShadedWithFaceBoundary</source>
-        <translation>[Forme] Ombré avec arêtes</translation>
+        <source>ShadedWithFaceBoundary</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1647,17 +1729,17 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <translation>Utiliser les extensions ZIP64</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="35"/>
+        <location filename="messages.cpp" line="41"/>
         <source>Decimal</source>
         <translation>Décimal</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="36"/>
+        <location filename="messages.cpp" line="42"/>
         <source>Scientific</source>
         <translation>Scientifique</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="37"/>
+        <location filename="messages.cpp" line="43"/>
         <source>Shortest</source>
         <translation>Le plus bref</translation>
     </message>
@@ -1710,17 +1792,17 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <translation>Hauteur de l&apos;image en pixels</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="60"/>
+        <location filename="../src/io_image/io_image.cpp" line="59"/>
         <source>Start color of the image background gradient</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="63"/>
+        <location filename="../src/io_image/io_image.cpp" line="62"/>
         <source>End color of the image background gradient</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="66"/>
+        <location filename="../src/io_image/io_image.cpp" line="65"/>
         <source>Type of gradient fill for the image background</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1751,7 +1833,7 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
     </message>
     <message>
         <location filename="../src/io_image/io_image.cpp" line="74"/>
-        <source>Gradient directed from center in alldirections forming circular shape</source>
+        <source>Gradient directed from center in all directions forming concentric circles</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1760,32 +1842,42 @@ Seulement applicable si l&apos;option `%1` est activée</translation>
         <translation>Orientation de la caméra selon la convention Z-up exprimée en tant que vecteur unitaire</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="95"/>
+        <location filename="../src/io_image/io_image.cpp" line="81"/>
+        <source>Camera projection type, specifies how the 3D scene is projected onto a 2D image for display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="100"/>
+        <source>Graphics display mode for the objects of type `{}`</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="127"/>
         <source>width</source>
         <translation>Largeur</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="96"/>
+        <location filename="../src/io_image/io_image.cpp" line="128"/>
         <source>height</source>
         <translation>Hauteur</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="97"/>
+        <location filename="../src/io_image/io_image.cpp" line="129"/>
         <source>backgroundColorStart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="98"/>
+        <location filename="../src/io_image/io_image.cpp" line="130"/>
         <source>backgroundColorEnd</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="99"/>
+        <location filename="../src/io_image/io_image.cpp" line="131"/>
         <source>backgroundGradientFill</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="160"/>
+        <location filename="../src/io_image/io_image.cpp" line="199"/>
         <source>Background radial gradient fill is available since OpenCascade 7.6.
 Default to background single color</source>
         <translation type="unfinished"></translation>
@@ -1795,63 +1887,73 @@ Default to background single color</source>
         <translation type="vanished">Couleur de l&apos;arrière plan</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="100"/>
+        <location filename="../src/io_image/io_image.cpp" line="132"/>
         <source>cameraOrientation</source>
         <translation>Orientation de la caméra</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="101"/>
+        <location filename="../src/io_image/io_image.cpp" line="133"/>
         <source>cameraProjection</source>
         <translation>Projection de la caméra</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="148"/>
+        <location filename="../src/io_image/io_image.cpp" line="187"/>
         <source>No transferred application items</source>
         <translation>Aucun élément transféré</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="156"/>
+        <location filename="../src/io_image/io_image.cpp" line="195"/>
         <source>Camera orientation vector must not be null</source>
         <translation>Le vecteur d&apos;orienation de la caméra ne doit pas être nul</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="62"/>
+        <location filename="messages.cpp" line="68"/>
         <source>Perspective</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="63"/>
+        <location filename="messages.cpp" line="69"/>
         <source>Orthographic</source>
         <translation>Orthographique</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="65"/>
+        <location filename="messages.cpp" line="71"/>
         <source>None</source>
         <translation type="unfinished">Aucune</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="66"/>
+        <location filename="messages.cpp" line="72"/>
         <source>Horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="67"/>
+        <location filename="messages.cpp" line="73"/>
         <source>Vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="68"/>
+        <location filename="messages.cpp" line="74"/>
         <source>DiagonalTopLeftBottomRight</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="69"/>
+        <location filename="messages.cpp" line="75"/>
         <source>DiagonalTopRightBottomLeft</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="70"/>
+        <location filename="messages.cpp" line="76"/>
         <source>Radial</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="77"/>
+        <source>GraphicsShapeObjectDriver_displayMode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="78"/>
+        <source>GraphicsMeshObjectDriver_displayMode</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1886,58 +1988,58 @@ Default to background single color</source>
 <context>
     <name>Mayo::IO::OccCommon</name>
     <message>
-        <location filename="messages.cpp" line="39"/>
-        <location filename="messages.cpp" line="43"/>
+        <location filename="messages.cpp" line="45"/>
+        <location filename="messages.cpp" line="49"/>
         <source>Undefined</source>
         <translation>Indéfini</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="40"/>
+        <location filename="messages.cpp" line="46"/>
         <source>posYfwd_posZup</source>
         <translation>+Zup</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="41"/>
+        <location filename="messages.cpp" line="47"/>
         <source>negZfwd_posYup</source>
         <translation>+Yup</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="44"/>
+        <location filename="messages.cpp" line="50"/>
         <source>Micrometer</source>
         <translation>Micromètre</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="45"/>
+        <location filename="messages.cpp" line="51"/>
         <source>Millimeter</source>
         <translation>Millimètre</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="46"/>
+        <location filename="messages.cpp" line="52"/>
         <source>Centimeter</source>
         <translation>Centimètre</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="47"/>
+        <location filename="messages.cpp" line="53"/>
         <source>Meter</source>
         <translation>Mètre</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="48"/>
+        <location filename="messages.cpp" line="54"/>
         <source>Kilometer</source>
         <translation>Kilomètre</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="49"/>
+        <location filename="messages.cpp" line="55"/>
         <source>Inch</source>
         <translation>Pouce</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="50"/>
+        <location filename="messages.cpp" line="56"/>
         <source>Foot</source>
         <translation>Pied</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="51"/>
+        <location filename="messages.cpp" line="57"/>
         <source>Mile</source>
         <translation>Mile</translation>
     </message>
@@ -2127,12 +2229,12 @@ Applicable seulement si l&apos;option `{}` est cochée</translation>
         <translation>Option prise en charge à partir de OpenCascade ≥ v7.6 [option={}, version actuelle={}]</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="56"/>
+        <location filename="messages.cpp" line="62"/>
         <source>Json</source>
         <translation>JSON</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="57"/>
+        <location filename="messages.cpp" line="63"/>
         <source>Binary</source>
         <translation>Binaire</translation>
     </message>
@@ -2566,12 +2668,12 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>Les faces BRep ne sont pas toutes maillées</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="53"/>
+        <location filename="messages.cpp" line="59"/>
         <source>Ascii</source>
         <translation>Texte</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="54"/>
+        <location filename="messages.cpp" line="60"/>
         <source>Binary</source>
         <translation>Binaire</translation>
     </message>
@@ -2629,51 +2731,44 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::PlyWriterI18N</name>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="67"/>
         <source>Line that will appear in header</source>
-        <translation>Texte qui apparaîtra dans l&apos;en-tête</translation>
+        <translation type="vanished">Texte qui apparaîtra dans l&apos;en-tête</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="78"/>
         <source>targetFormat</source>
-        <translation>Format cible</translation>
+        <translation type="vanished">Format cible</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
         <source>writeColors</source>
-        <translation>Écrire la couleur des sommets</translation>
+        <translation type="vanished">Écrire la couleur des sommets</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="80"/>
         <source>defaultColor</source>
-        <translation>Couleur par défaut</translation>
+        <translation type="vanished">Couleur par défaut</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="81"/>
         <source>comment</source>
-        <translation>Commentaire</translation>
+        <translation type="vanished">Commentaire</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="139"/>
         <source>Failed to open file</source>
-        <translation>Impossible d&apos;ouvrir le fichier</translation>
+        <translation type="vanished">Impossible d&apos;ouvrir le fichier</translation>
     </message>
     <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="152"/>
         <source>Unknown host endianness</source>
-        <translation>Boutisme du CPU inconnu</translation>
+        <translation type="vanished">Boutisme du CPU inconnu</translation>
     </message>
     <message>
         <source>Json</source>
         <translation type="vanished">JSON</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="59"/>
+        <location filename="messages.cpp" line="65"/>
         <source>Ascii</source>
         <translation>Texte</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="60"/>
+        <location filename="messages.cpp" line="66"/>
         <source>Binary</source>
         <translation>Binaire</translation>
     </message>
@@ -4205,17 +4300,17 @@ Fichier : `%2`</translation>
         <translation type="vanished">Montrer %1</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="30"/>
+        <location filename="messages.cpp" line="31"/>
         <source>Instance</source>
         <translation>Instance</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="31"/>
+        <location filename="messages.cpp" line="32"/>
         <source>Product</source>
         <translation>Produit</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="32"/>
+        <location filename="messages.cpp" line="33"/>
         <source>Both</source>
         <translation>Les Deux</translation>
     </message>
