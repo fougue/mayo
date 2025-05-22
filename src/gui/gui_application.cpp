@@ -113,20 +113,29 @@ Span<const GraphicsObjectDriverPtr> GuiApplication::graphicsObjectDrivers() cons
 
 GraphicsObjectPtr GuiApplication::createGraphicsObject(const TDF_Label& label) const
 {
+    auto driver = this->findCompatibleGraphicsObjectDriver(label);
+    if (driver)
+        return driver->createObject(label);
+
+    return {};
+}
+
+GraphicsObjectDriverPtr GuiApplication::findCompatibleGraphicsObjectDriver(const TDF_Label& label) const
+{
     GraphicsObjectDriver* driverPartialSupport = nullptr;
     for (const GraphicsObjectDriverPtr& driver : d->m_vecGfxObjectDriver) {
         const GraphicsObjectDriver::Support support = driver->supportStatus(label);
         if (support == GraphicsObjectDriver::Support::Complete)
-            return driver->createObject(label);
+            return driver;
 
         if (support == GraphicsObjectDriver::Support::Partial)
             driverPartialSupport = driver.get();
     }
 
     if (driverPartialSupport)
-        return driverPartialSupport->createObject(label);
-    else
-        return {};
+        return driverPartialSupport;
+
+    return {};
 }
 
 bool GuiApplication::automaticDocumentMapping() const

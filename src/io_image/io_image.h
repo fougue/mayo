@@ -10,6 +10,7 @@
 #include "../base/application_item.h"
 #include "../base/caf_utils.h"
 #include "../base/tkernel_utils.h"
+#include "../graphics/graphics_object_driver.h"
 
 #include <gp_Dir.hxx>
 #include <Image_AlienPixMap.hxx>
@@ -17,6 +18,8 @@
 #include <TDF_Label.hxx>
 #include <V3d_View.hxx>
 
+#include <map>
+#include <optional>
 #include <vector>
 
 // Pre-decls
@@ -39,7 +42,9 @@ public:
     bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
-    static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
+    static std::unique_ptr<PropertyGroup> createProperties(
+        PropertyGroup* parentGroup, const GuiApplication* guiApp = nullptr
+    );
     void applyProperties(const PropertyGroup* params) override;
 
     // Parameters
@@ -48,11 +53,18 @@ public:
     };
 
     enum class GradientFill {
+        // No gadient fill, single color background specified with Parameters::backgroundColorStart
         None,
+        // Gradient directed from left(colorStart) to right(colorEnd)
         Horizontal,
+        // Gradient directed from top(colorStart) to bottom(colorEnd)
         Vertical,
+        // Gradient directed from top-left corner(colorStart) to bottom-right(colorEnd)
         DiagonalTopLeftBottomRight,
+        // Gradient directed from top-right corner(colorStart) to bottom-left(colorEnd)
         DiagonalTopRightBottomLeft,
+        // Gradient directed from center(colorStart) in all directions forming concentric circles
+        // towards colorEnd
         Radial
     };
 
@@ -64,7 +76,15 @@ public:
         GradientFill backgroundGradientFill = GradientFill::None;
         gp_Vec cameraOrientation = gp_Vec{1, -1, 1}; // X+ Y- Z+
         CameraProjection cameraProjection = CameraProjection::Orthographic;
+
+        std::optional<Enumeration::Value> displayMode(const GraphicsObjectDriverPtr& driver) const;
+        void setDisplayMode(const GraphicsObjectDriverPtr& driver, Enumeration::Value enumValue);
+
+    private:
+        std::map<GraphicsObjectDriverPtr, Enumeration::Value> m_driverDisplayModes;
+        friend class ImageWriter;
     };
+
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }
 
