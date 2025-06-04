@@ -5,6 +5,7 @@
 ****************************************************************************/
 
 #include "test_base.h"
+#include "test_io.h"
 #include "test_measure.h"
 #include "test_app.h"
 
@@ -13,8 +14,6 @@
 #include <cstring>
 #include <memory>
 #include <vector>
-
-namespace Mayo {
 
 namespace {
 
@@ -29,12 +28,6 @@ QString getTemporaryFilePath()
     return {};
 }
 
-// Helper function to check equality between two C strings
-bool cstringEqual(const char* lhs, const char* rhs)
-{
-    return std::strcmp(lhs, rhs) == 0;
-}
-
 // Helper struct to hold the output filepath and format specified in command line
 struct OutputFile {
     QString path;
@@ -44,8 +37,8 @@ struct OutputFile {
 // Retrieve the filename and format from string 'optionCmdLine'
 // The 'optionCmdLine' argument should be the option specified in command line just after '-o'
 // For example:
-//     $> mayo --runtests -o filename,format
-//     $> mayo --runtests -o filename
+//     $> test-mayo -o filename,format
+//     $> test-mayo -o filename
 OutputFile parseOutputFile(const QString& optionCmdLine)
 {
     OutputFile result;
@@ -63,18 +56,15 @@ OutputFile parseOutputFile(const QString& optionCmdLine)
 
 } // namespace
 
-int runTests(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     // Preprocess command-line arguments
     QStringList args;
     QString* ptrArgOutputFileName = nullptr;
     for (int i = 0; i < argc; ++i) {
-        // Don't keep "--runtests" argument because QText::qExec() will reject it
-        if (!cstringEqual(argv[i], "--runtests"))
-            args.push_back(QString::fromUtf8(argv[i]));
-
+        args.push_back(QString::fromUtf8(argv[i]));
         // Keep track of the output filename argument(specified after "-o" option)
-        if (i > 0 && cstringEqual(argv[i-1], "-o") && !args.empty() && !args.back().startsWith('-'))
+        if (i > 0 && std::strcmp(argv[i-1], "-o") == 0)
             ptrArgOutputFileName = &args.back();
     }
 
@@ -85,6 +75,7 @@ int runTests(int argc, char* argv[])
     // Declare unit tests to be checked
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);
+    vecTest.emplace_back(new Mayo::TestIO);
     vecTest.emplace_back(new Mayo::TestMeasure);
     vecTest.emplace_back(new Mayo::TestApp);
 
@@ -116,5 +107,3 @@ int runTests(int argc, char* argv[])
 
     return retcode;
 }
-
-} // namespace Mayo

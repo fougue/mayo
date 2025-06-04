@@ -18,7 +18,6 @@ class TestBase : public QObject {
 private slots:
     void Application_test();
     void DocumentRefCount_test();
-    void DocumentReload_bugGitHub332_test();
 
     void CppUtils_toggle_test();
     void CppUtils_safeStaticCast_test();
@@ -46,15 +45,6 @@ private slots:
 
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
-
-    void IO_probeFormat_test();
-    void IO_probeFormat_test_data();
-    void IO_probeFormatDirect_test();
-    void IO_OccStaticVariablesRollback_test();
-    void IO_OccStaticVariablesRollback_test_data();
-    void IO_bugGitHub166_test();
-    void IO_bugGitHub166_test_data();
-    void IO_bugGitHub258_test();
 
     void DoubleToString_test();
     void StringConv_test();
@@ -88,12 +78,6 @@ private slots:
     void LibTree_removeRoot_test();
 
     void Span_test();
-
-    void initTestCase();
-    void cleanupTestCase();
-
-private:
-    IO::System* m_ioSystem = nullptr;
 };
 
 } // namespace Mayo

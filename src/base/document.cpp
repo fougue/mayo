@@ -156,7 +156,7 @@ TreeNodeId Document::findEntity(const TDF_Label& label) const
     return 0;
 }
 
-bool Document::containsLabel(const TDF_Label &label) const
+bool Document::containsLabel(const TDF_Label& label) const
 {
     return Document::findFrom(label).get() == this;
 }

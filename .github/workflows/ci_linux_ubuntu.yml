@@ -60,4 +60,4 @@ jobs:
               Xvfb $DISPLAY -screen 0 1280x1024x24 &
               sleep 5s
               # Run tests
-              ./mayo --runtests
+              ./test-mayo

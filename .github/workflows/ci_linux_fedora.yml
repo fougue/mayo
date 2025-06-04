@@ -38,6 +38,6 @@ jobs:
                   echo 'RUN cmake --build . --parallel --config Release'
                   #echo 'RUN Xvfb $DISPLAY -screen 0 1280x1024x24 &'
                   #echo 'RUN sleep 5s'
-                  #echo 'RUN ./mayo --runtests'
+                  #echo 'RUN ./test-mayo'
               } > podmanfile
               podman build --tag fedora40-ci -f ./podmanfile

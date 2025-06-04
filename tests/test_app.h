@@ -9,6 +9,10 @@
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 
+#include <functional>
+
+class QGuiApplication;
+
 namespace Mayo {
 
 class TestApp : public QObject {
@@ -31,6 +35,14 @@ private slots:
     void StringConv_test();
 
     void QtGuiUtils_test();
+
+    void initTestCase();
+    void cleanupTestCase();
+
+private:
+    void runWithinEventLoop(const std::function<void()>& fn, int delayMSec = 100);
+
+    QGuiApplication* m_app = nullptr;
 };
 
 } // namespace Mayo
