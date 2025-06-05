@@ -1,1 +1,4 @@
-6c97156f6de7a40119a2f1a4913a457e69d34b12
+50a80a7
+tag v8.0.2
+
+single-header version of the library
