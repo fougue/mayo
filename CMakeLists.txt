@@ -83,7 +83,6 @@ This simplifies running Mayo from eg Visual Studio IDE\
     )
 endif()
 
-# TODO Make option Mayo_BuildTests dependent of Mayo_BuildApp)
 option(Mayo_BuildApp "Build Mayo GUI application" ON)
 option(Mayo_BuildConvCli "Build Mayo CLI converter" ON)
 
@@ -243,21 +242,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.h
 )
 
-##########
-# Unit tests
-##########
-
-if(Mayo_BuildTests)
-    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
-    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-
-    set(MAYO_WITH_TESTS 1)
-    list(APPEND MayoTests_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
-
-    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
-    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
-endif()
 
 ##########
 # OpenCascade
@@ -523,13 +507,6 @@ endif()
 # MayoApp UI files
 file(GLOB MayoApp_QtUiFiles ${PROJECT_SOURCE_DIR}/src/app/*.ui)
 
-# MayoApp unit tests
-if(Mayo_BuildTests)
-    list(APPEND MayoApp_HeaderFiles ${MayoTests_HeaderFiles})
-    list(APPEND MayoApp_SourceFiles ${MayoTests_SourceFiles})
-    list(APPEND MayoApp_LinkLibraries ${MayoTests_LinkLibraries})
-endif()
-
 # MayoApp libs
 list(
     APPEND MayoApp_LinkLibraries
@@ -666,14 +643,68 @@ if(Mayo_BuildConvCli)
 
     target_compile_definitions(mayo-conv PRIVATE ${Mayo_CompileDefinitions})
     target_compile_options(mayo-conv PRIVATE ${Mayo_CompileOptions})
-
     target_link_libraries(
         mayo-conv PRIVATE
         MayoCoreLib
         MayoIOLib
         Qt${QT_VERSION_MAJOR}::Core
     )
+
+    set_target_properties(
+        mayo-conv PROPERTIES WIN32_EXECUTABLE FALSE
+    )
 endif() # Mayo_BuildConvCli
+
+##########
+# Target: test-mayo
+##########
+
+if(Mayo_BuildTests)
+    enable_testing()
+
+    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
+    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
+    add_executable(
+        test-mayo
+        ${MayoTests_HeaderFiles}
+        ${MayoTests_SourceFiles}
+        # src/measure
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_display.cpp
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool.cpp
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool_brep.cpp
+        # src/app
+        ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/document_files_watcher.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
+        # src/qtcommon
+        ${PROJECT_SOURCE_DIR}/src/qtcommon/qtcore_utils.cpp
+    )
+
+    target_compile_definitions(test-mayo PRIVATE ${Mayo_CompileDefinitions})
+    target_compile_options(test-mayo PRIVATE ${Mayo_CompileOptions})
+    target_link_libraries(
+        test-mayo PRIVATE
+        MayoCoreLib
+        MayoIOLib
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Test
+    )
+
+    set_target_properties(
+        test-mayo PROPERTIES WIN32_EXECUTABLE FALSE
+    )
+
+    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
+    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
+
+    add_test(NAME test-mayo COMMAND test-mayo)
+endif()
 
 ##########
 # Target: OtherFiles

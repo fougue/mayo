@@ -39,7 +39,6 @@
 #include "widget_model_tree_builder_mesh.h"
 #include "widget_model_tree_builder_xde.h"
 #include "widget_occ_view.h"
-#include <common/mayo_config.h>
 #include <common/mayo_version.h>
 
 #include <QtCore/QtDebug>
@@ -139,14 +138,6 @@ static CommandLineArguments processCommandLine()
                 Main::tr("Files to open at startup, optionally"),
                 Main::tr("[files...]")
     );
-
-#ifdef MAYO_WITH_TESTS
-    const QCommandLineOption cmdRunTests(
-                QStringList{ "runtests" },
-                Main::tr("Execute unit tests and exit application")
-    );
-    cmdParser.addOption(cmdRunTests);
-#endif
 
     cmdParser.process(QCoreApplication::arguments());
 
@@ -454,9 +445,6 @@ static int runApp(QCoreApplication* qtApp)
     return code;
 }
 
-// Defined in tests/runtests.cpp
-int runTests(int argc, char* argv[]);
-
 } // namespace Mayo
 
 int main(int argc, char* argv[])
@@ -498,12 +486,6 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));
     QApplication app(argc, argv);
-
-    // Handle unit tests
-#ifdef MAYO_WITH_TESTS
-    if (fnArgsContainAnyOf({ "--runtests" }))
-        return Mayo::runTests(argc, argv);
-#endif
 
     // Run Mayo application GUI
     return Mayo::runApp(&app);

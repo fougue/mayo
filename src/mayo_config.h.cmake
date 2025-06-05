@@ -6,7 +6,6 @@
 
 #pragma once
 
-#cmakedefine MAYO_WITH_TESTS
 #cmakedefine MAYO_HAVE_ASSIMP
 #cmakedefine MAYO_HAVE_ASSIMP_aiGetVersionPatch
 #cmakedefine MAYO_HAVE_GMIO

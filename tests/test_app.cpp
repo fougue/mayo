@@ -16,7 +16,6 @@
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
-#include "../src/app/theme.h"
 #include "../src/base/application.h"
 #include "../src/base/document.h"
 #include "../src/qtcommon/filepath_conv.h"
@@ -28,9 +27,9 @@
 #include <QtCore/QFile>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QVariant>
+#include <QtGui/QGuiApplication>
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
-#include <QtWidgets/QWidget>
 #include <QtTest/QSignalSpy>
 
 namespace Mayo {
@@ -95,8 +94,11 @@ void TestApp::DocumentFilesWatcher_test()
     doc->setFilePath(cadFilePath);
 
     // Check file change on document is caught
-    fnCopyCadFile();
-    const bool okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
+    bool okWait = false;
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
+    });
     QVERIFY(okWait);
     QCOMPARE(signalCallCount, 1);
     QCOMPARE(changedDocId, doc->identifier());
@@ -104,8 +106,10 @@ void TestApp::DocumentFilesWatcher_test()
     // Check further file changes are not monitored until last one is acknowledged
     changedDocId = -1;
     signalCallCount = 0;
-    fnCopyCadFile();
-    QTest::qWait(signalSendDelay_ms * 1.5);
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        QTest::qWait(signalSendDelay_ms * 1.5);
+    });
     QCOMPARE(changedDocId, -1);
     QCOMPARE(signalCallCount, 0);
 
@@ -113,8 +117,10 @@ void TestApp::DocumentFilesWatcher_test()
     docFilesWatcher.acknowledgeDocumentFileChange(doc);
     app->closeDocument(doc);
     changedDocId = -1;
-    fnCopyCadFile();
-    QTest::qWait(signalSendDelay_ms * 1.5);
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        QTest::qWait(signalSendDelay_ms * 1.5);
+     });
     QCOMPARE(changedDocId, -1);
     QCOMPARE(signalCallCount, 0);
 }
@@ -266,18 +272,29 @@ void TestApp::RecentFiles_QPixmap_test()
 
 void TestApp::AppUiState_test()
 {
-    QWidget widget;
     AppUiState uiState;
-    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(widget.saveGeometry());
+    // NOTE
+    // This is the result of:
+    //     QWidget widget;
+    //     auto data = widget.saveGeometry();
+    const char widgetSaveGeometry_data[] = {
+        '\x01', '\xD9', '\xD0', '\xCB', '\x00', '\x03', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
+        '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x02', '\x7F', '\x00', '\x00', '\x01', '\xDF',
+        '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x02', '\x7F',
+        '\x00', '\x00', '\x01', '\xDF', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
+        '\x07', '\x80', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
+        '\x02', '\x7F', '\x00', '\x00', '\x01', '\xDF'
+    };
+    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(widgetSaveGeometry_data);
     uiState.pageDocuments_isLeftSideBarVisible = true;
-    std::vector<uint8_t> blobSave = AppUiState::toBlob(uiState);
+    const std::vector<uint8_t> blobSave = AppUiState::toBlob(uiState);
 
     bool ok = false;
     const AppUiState uiState_read = AppUiState::fromBlob(blobSave, &ok);
     QVERIFY(ok);
     QCOMPARE(uiState.mainWindowGeometry, uiState_read.mainWindowGeometry);
     QCOMPARE(uiState.pageDocuments_isLeftSideBarVisible, uiState_read.pageDocuments_isLeftSideBarVisible);
-}
+ }
 
 void TestApp::StringConv_test()
 {
@@ -296,6 +313,27 @@ void TestApp::QtGuiUtils_test()
     auto occColorA = QtGuiUtils::toColor<Quantity_ColorRGBA>(qtColorA);
     QCOMPARE(QtGuiUtils::toQColor(occColor), qtColor);
     QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
+}
+
+void TestApp::initTestCase()
+{
+    int argc = 0;
+    m_app = new QGuiApplication(argc, nullptr);
+}
+
+void TestApp::cleanupTestCase()
+{
+    delete m_app;
+    m_app = nullptr;
+}
+
+void TestApp::runWithinEventLoop(const std::function<void()>& fn, int delayMSec)
+{
+    QTimer::singleShot(delayMSec, m_app, [&]{
+        fn();
+        m_app->exit();
+    });
+    m_app->exec();
 }
 
 } // namespace Mayo

@@ -76,4 +76,4 @@ jobs:
                   #     Note: for some unknown reason unit tests are crashing for armv7(on very first test)
                   ## Xvfb $DISPLAY -screen 0 1280x1024x24 &
                   ## sleep 5s
-                  ## ./mayo --runtests
+                  ## ./test-mayo

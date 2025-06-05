@@ -112,5 +112,5 @@ jobs:
           working-directory: ${{github.workspace}}/build
           shell: cmd
           run: |
-              debug\mayo.exe --runtests -o utests-output.txt
+              debug\test-mayo.exe -o utests-output.txt
               more utests-output.txt
