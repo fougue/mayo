@@ -431,14 +431,14 @@ void AppModule::addPropertiesProvider(std::unique_ptr<DocumentTreeNodeProperties
     m_vecDocTreeNodePropsProvider.push_back(std::move(ptr));
 }
 
-std::unique_ptr<PropertyGroupSignals> AppModule::properties(const DocumentTreeNode& treeNode) const
+std::unique_ptr<PropertyGroup> AppModule::properties(const DocumentTreeNode& treeNode) const
 {
     for (const auto& provider : m_vecDocTreeNodePropsProvider) {
         if (provider->supports(treeNode))
             return provider->properties(treeNode);
     }
 
-    return std::unique_ptr<PropertyGroupSignals>();
+    return {};
 }
 
 AppModule* AppModule::get()

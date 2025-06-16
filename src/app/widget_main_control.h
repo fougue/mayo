@@ -85,7 +85,7 @@ private:
     IAppContext* m_appContext = nullptr;
     ItemViewButtons* m_listViewBtns = nullptr;
     std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
+    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeGraphicsProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
     double m_widgetLeftSideBarWidthFactor = 0.25;

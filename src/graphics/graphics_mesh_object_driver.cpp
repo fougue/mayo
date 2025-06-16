@@ -115,7 +115,7 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
     return object->DisplayMode();
 }
 
-class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroupSignals {
+class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroup {
 public:
     ObjectProperties(Span<const GraphicsObjectPtr> spanObject)
     {
@@ -194,7 +194,7 @@ public:
             }
         }
 
-        PropertyGroupSignals::onPropertyChanged(prop);
+        PropertyGroup::onPropertyChanged(prop);
     }
 
     std::vector<OccHandle<MeshVS_Mesh>> m_vecMeshVisu;
@@ -204,7 +204,7 @@ public:
     PropertyCheckState m_propertyShowNodes{ this, GraphicsMeshObjectDriverI18N::textId("showNodes") };
 };
 
-std::unique_ptr<PropertyGroupSignals>
+std::unique_ptr<PropertyGroup>
 GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);

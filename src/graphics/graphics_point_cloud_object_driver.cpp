@@ -49,7 +49,7 @@ Enumeration::Value GraphicsPointCloudObjectDriver::currentDisplayMode(const Grap
     return object->DisplayMode();
 }
 
-std::unique_ptr<PropertyGroupSignals>
+std::unique_ptr<PropertyGroup>
 GraphicsPointCloudObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);

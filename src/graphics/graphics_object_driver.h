@@ -37,7 +37,7 @@ public:
     virtual void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const = 0;
     virtual Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const = 0;
 
-    virtual std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
+    virtual std::unique_ptr<PropertyGroup> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
 
     static GraphicsObjectDriverPtr get(const GraphicsObjectPtr& object);
     static GraphicsObjectDriverPtr getCommon(Span<const GraphicsObjectPtr> spanObject);

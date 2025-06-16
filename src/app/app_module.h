@@ -101,7 +101,7 @@ public:
 
     // Providers to query document tree node properties
     void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const;
 
     // IO::System object
     const IO::System* ioSystem() const { return &m_ioSystem; }

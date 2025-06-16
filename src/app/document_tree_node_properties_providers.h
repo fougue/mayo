@@ -17,7 +17,7 @@ namespace Mayo {
 class XCaf_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
 
 private:
     class Properties;
@@ -27,7 +27,7 @@ private:
 class Mesh_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
 
 private:
     class Properties;
@@ -36,7 +36,7 @@ private:
 class PointCloud_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertiesProvider {
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const override;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
 
 private:
     class Properties;

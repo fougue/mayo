@@ -27,7 +27,7 @@
 
 namespace Mayo {
 
-class XCaf_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
+class XCaf_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::XCaf_DocumentTreeNodeProperties)
 public:
     Properties(const DocumentTreeNode& treeNode)
@@ -175,7 +175,7 @@ public:
         else if (prop == &m_propertyReferredName)
             TDataStd_Name::Set(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
 
-        PropertyGroupSignals::onPropertyChanged(prop);
+        PropertyGroup::onPropertyChanged(prop);
     }
 
     PropertyString m_propertyName{ this, textId("Name") };
@@ -205,7 +205,7 @@ bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return GraphicsShapeObjectDriver::shapeSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
-std::unique_ptr<PropertyGroupSignals>
+std::unique_ptr<PropertyGroup>
 XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
@@ -214,7 +214,7 @@ XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
     return std::make_unique<Properties>(treeNode);
 }
 
-class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
+class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Mesh_DocumentTreeNodeProperties)
 public:
     Properties(const DocumentTreeNode& treeNode)
@@ -243,7 +243,7 @@ bool Mesh_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& t
     return GraphicsMeshObjectDriver::meshSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
-std::unique_ptr<PropertyGroupSignals>
+std::unique_ptr<PropertyGroup>
 Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())
@@ -252,7 +252,7 @@ Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
     return std::make_unique<Properties>(treeNode);
 }
 
-class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroupSignals {
+class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::PointCloud_DocumentTreeNodeProperties)
 public:
     Properties(const DocumentTreeNode& treeNode)
@@ -287,7 +287,7 @@ bool PointCloud_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeN
     return GraphicsPointCloudObjectDriver::pointCloudSupportStatus(treeNode.label()) == GraphicsObjectDriver::Support::Complete;
 }
 
-std::unique_ptr<PropertyGroupSignals>
+std::unique_ptr<PropertyGroup>
 PointCloud_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& treeNode) const
 {
     if (!treeNode.isValid())

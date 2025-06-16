@@ -37,6 +37,10 @@ public:
     // Reinitialize properties to their default values
     virtual void restoreDefaults();
 
+    Signal<Property*> signalPropertyAboutToChange;
+    Signal<Property*> signalPropertyChanged;
+    Signal<Property*, bool> signalPropertyEnabled;
+
 protected:
     // Callback executed when Property value is about to change
     virtual void onPropertyAboutToChange(Property* prop);
@@ -124,16 +128,6 @@ private:
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
     bool m_isEnabled = true;
-};
-
-class PropertyGroupSignals : public PropertyGroup {
-public:
-    Signal<Property*> signalPropertyAboutToChange;
-    Signal<Property*> signalPropertyChanged;
-
-protected:
-    void onPropertyAboutToChange(Property* prop) override;
-    void onPropertyChanged(Property* prop) override;
 };
 
 // --
