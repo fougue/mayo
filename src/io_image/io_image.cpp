@@ -87,6 +87,7 @@ public:
             // Create a PropertyEnumeration object for each graphics driver registered in the given
             // GuiApplication object
             // This PropertyEnumeration is mapped to the display modes specific to the driver
+            m_textIdStringStorage.reserve(guiApp->graphicsObjectDrivers().size());
             for (const GraphicsObjectDriverPtr& driver : guiApp->graphicsObjectDrivers()) {
                 if (driver->displayModes().empty())
                     continue; // Skip
