@@ -266,13 +266,14 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
     WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
 
     uiProps->clear();
+    m_ptrCurrentNodeProperties.clear();
     Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& appItem = spanAppItem.front();
         if (appItem.isDocument()) {
             auto dataProps = new DocumentPropertyGroup(appItem.document());
             uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
-            m_ptrCurrentNodeDataProperties.reset(dataProps);
+            m_ptrCurrentNodeProperties.emplace_back(dataProps);
         }
         else if (appItem.isDocumentTreeNode()) {
             const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
@@ -280,7 +281,7 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
             if (dataProps) {
                 uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
                 dataProps->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(appItem); });
-                m_ptrCurrentNodeDataProperties = std::move(dataProps);
+                m_ptrCurrentNodeProperties.push_back(std::move(dataProps));
             }
 
             GuiDocument* guiDoc = m_guiApp->findGuiDocument(appItem.document());
@@ -294,7 +295,7 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
                 if (gfxProps) {
                     uiProps->editProperties(gfxProps.get(), uiProps->addGroup(tr("Graphics")));
                     gfxProps->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
-                    m_ptrCurrentNodeGraphicsProperties = std::move(gfxProps);
+                    m_ptrCurrentNodeProperties.push_back(std::move(gfxProps));
                 }
             }
         }

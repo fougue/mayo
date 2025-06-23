@@ -15,17 +15,18 @@
 
 namespace Mayo {
 
+// Provides UI edition of properties
 class WidgetPropertiesEditor : public QWidget {
 public:
     WidgetPropertiesEditor(QWidget* parent = nullptr);
     ~WidgetPropertiesEditor();
 
-    struct Group;
-    Group* addGroup(const QString& name);
-    void setGroupName(Group* group, const QString& name);
+    using GroupId = int;
+    GroupId addGroup(const QString& name);
+    void setGroupName(GroupId grpId, const QString& name);
 
-    void editProperties(PropertyGroup* propGroup, Group* grp = nullptr);
-    void editProperty(Property* prop, Group* grp = nullptr);
+    void editProperties(PropertyGroup* propGroup, GroupId grpId = -1);
+    void editProperty(Property* prop, GroupId grpId = -1);
     void clear();
 
     void setPropertyEnabled(const Property* prop, bool on);

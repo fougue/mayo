@@ -13,22 +13,22 @@
 
 namespace Mayo {
 
-struct WidgetPropertiesEditor::Group {
-    QTreeWidgetItem* treeItem;
-};
-
 class WidgetPropertiesEditor::Private {
 public:
+    struct Group {
+        QTreeWidgetItem* treeItem = nullptr;
+    };
+
     void createQtProperty(Property* property, QTreeWidgetItem* parentItem);
     QTreeWidgetItem* addLineWidgetItem(QWidget* widget, int height);
     QTreeWidgetItem* findTreeItem(const Property* property) const;
-    bool hasGroup(const WidgetPropertiesEditor::Group* group) const;
+    bool hasGroup(WidgetPropertiesEditor::GroupId grpId) const;
 
     Ui_WidgetPropertiesEditor* ui = nullptr;
     PropertyItemDelegate* itemDelegate = nullptr;
     std::vector<Property*> vecProperty;
     std::vector<QWidget*> vecLineWidget;
-    std::vector<WidgetPropertiesEditor::Group> vecGroup;
+    std::vector<Private::Group> vecGroup;
 };
 
 WidgetPropertiesEditor::WidgetPropertiesEditor(QWidget *parent)
@@ -50,29 +50,29 @@ WidgetPropertiesEditor::~WidgetPropertiesEditor()
     delete d;
 }
 
-WidgetPropertiesEditor::Group* WidgetPropertiesEditor::addGroup(const QString& name)
+WidgetPropertiesEditor::GroupId WidgetPropertiesEditor::addGroup(const QString& name)
 {
-    Group grp = {};
+    Private::Group grp = {};
     grp.treeItem = new QTreeWidgetItem;
     grp.treeItem->setText(0, name);
     grp.treeItem->setFirstColumnSpanned(true);
     d->ui->treeWidget_Browser->addTopLevelItem(grp.treeItem);
     grp.treeItem->setExpanded(true);
     d->vecGroup.push_back(grp);
-    return &d->vecGroup.back();
+    return int(d->vecGroup.size()) - 1;
 }
 
-void WidgetPropertiesEditor::setGroupName(Group* group, const QString& name)
+void WidgetPropertiesEditor::setGroupName(GroupId grpId, const QString& name)
 {
-    if (d->hasGroup(group))
-        group->treeItem->setText(0, name);
+    if (d->hasGroup(grpId))
+        d->vecGroup.at(grpId).treeItem->setText(0, name);
 }
 
-void WidgetPropertiesEditor::editProperties(PropertyGroup* propGroup, Group* grp)
+void WidgetPropertiesEditor::editProperties(PropertyGroup* propGroup, GroupId grpId)
 {
     if (propGroup) {
         d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
-        QTreeWidgetItem* parentTreeItem = d->hasGroup(grp) ? grp->treeItem : nullptr;
+        QTreeWidgetItem* parentTreeItem = d->hasGroup(grpId) ? d->vecGroup.at(grpId).treeItem : nullptr;
         for (Property* prop : propGroup->properties())
             d->createQtProperty(prop, parentTreeItem);
 
@@ -81,11 +81,11 @@ void WidgetPropertiesEditor::editProperties(PropertyGroup* propGroup, Group* grp
     }
 }
 
-void WidgetPropertiesEditor::editProperty(Property* prop, Group* grp)
+void WidgetPropertiesEditor::editProperty(Property* prop, GroupId grpId)
 {
     if (prop) {
         d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
-        QTreeWidgetItem* parentTreeItem = d->hasGroup(grp) ? grp->treeItem : nullptr;
+        QTreeWidgetItem* parentTreeItem = d->hasGroup(grpId) ? d->vecGroup.at(grpId).treeItem : nullptr;
         d->createQtProperty(prop, parentTreeItem);
         d->ui->treeWidget_Browser->resizeColumnToContents(0);
         d->ui->treeWidget_Browser->resizeColumnToContents(1);
@@ -149,13 +149,15 @@ void WidgetPropertiesEditor::setRowHeightFactor(double v)
 }
 
 bool WidgetPropertiesEditor::overridePropertyUnitTranslation(
-        const BasePropertyQuantity* prop, UnitTranslation unitTr)
+        const BasePropertyQuantity* prop, UnitTranslation unitTr
+    )
 {
     return d->itemDelegate->overridePropertyUnitTranslation(prop, unitTr);
 }
 
 void WidgetPropertiesEditor::Private::createQtProperty(
-        Property* property, QTreeWidgetItem* parentItem)
+        Property* property, QTreeWidgetItem* parentItem
+    )
 {
     this->vecProperty.push_back(property);
     auto itemProp = new QTreeWidgetItem;
@@ -176,8 +178,9 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::addLineWidgetItem(QWidget* wid
     treeItem->setFlags(Qt::ItemIsEnabled);
     treeItem->setFirstColumnSpanned(true);
     if (height > 0) {
-        treeItem->setSizeHint(0, QSize(100, height));
-        treeItem->setSizeHint(1, QSize(100, height));
+        const double pixelRatio = this->ui->treeWidget_Browser->devicePixelRatioF();
+        treeItem->setSizeHint(0, QSize(100 * pixelRatio, height));
+        treeItem->setSizeHint(1, QSize(100 * pixelRatio, height));
     }
 
     this->vecLineWidget.push_back(widget);
@@ -196,11 +199,11 @@ QTreeWidgetItem* WidgetPropertiesEditor::Private::findTreeItem(const Property* p
     return nullptr;
 }
 
-bool WidgetPropertiesEditor::Private::hasGroup(const Group *group) const
+bool WidgetPropertiesEditor::Private::hasGroup(GroupId grpId) const
 {
-    return group
-           && group->treeItem
-           && group->treeItem->treeWidget() == ui->treeWidget_Browser
+    return grpId >= 0
+           && grpId < int(vecGroup.size())
+           && vecGroup.at(grpId).treeItem != nullptr
         ;
 }
 

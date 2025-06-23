@@ -7,11 +7,11 @@
 #pragma once
 
 #include "app_module_properties.h"
+#include "document_tree_node_properties_providers.h"
 #include "library_info.h"
 #include "qstring_utils.h"
 
 #include "../base/application.h"
-#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"

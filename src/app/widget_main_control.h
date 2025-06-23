@@ -13,6 +13,7 @@
 #include "iwidget_main_page.h"
 
 #include <memory>
+#include <vector>
 #include <unordered_set>
 
 class QFileInfo;
@@ -84,8 +85,7 @@ private:
     GuiApplication* m_guiApp = nullptr;
     IAppContext* m_appContext = nullptr;
     ItemViewButtons* m_listViewBtns = nullptr;
-    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeGraphicsProperties;
+    std::vector<std::unique_ptr<PropertyGroup>> m_ptrCurrentNodeProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
     double m_widgetLeftSideBarWidthFactor = 0.25;
