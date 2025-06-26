@@ -15,6 +15,8 @@
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/point_cloud_data.h"
+#include "../base/property_builtins.h"
+#include "../base/string_conv.h"
 #include "../base/xcaf.h"
 #include "../graphics/graphics_mesh_object_driver.h"
 #include "../graphics/graphics_point_cloud_object_driver.h"
@@ -23,7 +25,10 @@
 
 #include <Bnd_Box.hxx>
 #include <TDataStd_Name.hxx>
+
 #include <QtCore/QStringList>
+
+#include <fmt/format.h>
 
 namespace Mayo {
 
@@ -86,13 +91,13 @@ public:
                 this->removeProperty(&m_propertyXdeLayer);
         }
 
-        // Reference location
+        // Instance location
         if (XCaf::isShapeReference(label)) {
             const TopLoc_Location loc = XCaf::shapeReferenceLocation(label);
-            m_propertyReferenceLocation.setValue(loc.Transformation());
+            m_propertyInstanceLocation.setValue(loc.Transformation());
         }
         else {
-            this->removeProperty(&m_propertyReferenceLocation);
+            this->removeProperty(&m_propertyInstanceLocation);
         }
 
         // Color
@@ -131,51 +136,133 @@ public:
                 this->removeProperty(&m_propertyValidationVolume);
         }
 
-        // Referred entity's properties
+        // Product entity's properties
         if (XCaf::isShapeReference(label)) {
-            m_labelReferred = XCaf::shapeReferred(label);
-            m_propertyReferredName.setValue(to_stdString(CafUtils::labelAttrStdName(m_labelReferred)));
-            auto validProps = XCaf::validationProperties(m_labelReferred);
-            m_propertyReferredValidationCentroid.setValue(validProps.centroid);
+            m_labelProduct = XCaf::shapeReferred(label);
+
+            m_propertyProductName.setValue(to_stdString(CafUtils::labelAttrStdName(m_labelProduct)));
+            auto validProps = XCaf::validationProperties(m_labelProduct);
+            m_propertyProductValidationCentroid.setValue(validProps.centroid);
             if (!validProps.hasCentroid)
-                this->removeProperty(&m_propertyReferredValidationCentroid);
+                this->removeProperty(&m_propertyProductValidationCentroid);
 
-            m_propertyReferredValidationArea.setQuantity(validProps.area);
+            m_propertyProductValidationArea.setQuantity(validProps.area);
             if (!validProps.hasArea)
-                this->removeProperty(&m_propertyReferredValidationArea);
+                this->removeProperty(&m_propertyProductValidationArea);
 
-            m_propertyReferredValidationVolume.setQuantity(validProps.volume);
+            m_propertyProductValidationVolume.setQuantity(validProps.volume);
             if (!validProps.hasVolume)
-                this->removeProperty(&m_propertyReferredValidationVolume);
+                this->removeProperty(&m_propertyProductValidationVolume);
 
-            if (xcaf.hasShapeColor(m_labelReferred))
-                m_propertyReferredColor.setValue(xcaf.shapeColor(m_labelReferred));
+            if (xcaf.hasShapeColor(m_labelProduct))
+                m_propertyProductColor.setValue(xcaf.shapeColor(m_labelProduct));
             else
-                this->removeProperty(&m_propertyReferredColor);
+                this->removeProperty(&m_propertyProductColor);
         }
         else {
-            this->removeProperty(&m_propertyReferredName);
-            this->removeProperty(&m_propertyReferredValidationCentroid);
-            this->removeProperty(&m_propertyReferredValidationArea);
-            this->removeProperty(&m_propertyReferredValidationVolume);
-            this->removeProperty(&m_propertyReferredColor);
+            this->removeProperty(&m_propertyProductName);
+            this->removeProperty(&m_propertyProductValidationCentroid);
+            this->removeProperty(&m_propertyProductValidationArea);
+            this->removeProperty(&m_propertyProductValidationVolume);
+            this->removeProperty(&m_propertyProductColor);
         }
+
+        // User-defined attributes
+        OccHandle<TDataStd_NamedData> data = xcaf.shapeUserDefinedAttributes(label);
+        OccHandle<TDataStd_NamedData> productData = xcaf.shapeUserDefinedAttributes(m_labelProduct);
+        m_textIdStringStorage.reserve(
+            CafUtils::namedDataCount(data) + CafUtils::namedDataCount(productData)
+        );
+        addUdas(data, m_vecPropertyUda);
+        addUdas(productData, m_vecPropertyProductUda);
 
         for (Property* prop : this->properties())
             prop->setUserReadOnly(true);
 
         m_propertyName.setUserReadOnly(false);
-        m_propertyReferredName.setUserReadOnly(false);
+        m_propertyProductName.setUserReadOnly(false);
     }
 
     void onPropertyChanged(Property* prop) override
     {
         if (prop == &m_propertyName)
             TDataStd_Name::Set(m_label, to_OccExtString(m_propertyName.value()));
-        else if (prop == &m_propertyReferredName)
-            TDataStd_Name::Set(m_labelReferred, to_OccExtString(m_propertyReferredName.value()));
+        else if (prop == &m_propertyProductName)
+            TDataStd_Name::Set(m_labelProduct, to_OccExtString(m_propertyProductName.value()));
 
         PropertyGroup::onPropertyChanged(prop);
+    }
+
+    void addUdas(
+            const OccHandle<TDataStd_NamedData>& data,
+            std::vector<std::unique_ptr<Property>>& vecProperty
+        )
+    {
+        std::vector<CafUtils::NamedDataKey> dataKeys = CafUtils::getNamedDataKeys(data);
+        std::sort(
+            dataKeys.begin(), dataKeys.end(),
+            [](const auto& lhs, const auto& rhs) { return lhs.label().IsLess(rhs.label()); }
+        );
+        for (const CafUtils::NamedDataKey& key : dataKeys) {
+            assert(m_textIdStringStorage.size() < m_textIdStringStorage.capacity()); // Ensure no reallocation
+            m_textIdStringStorage.push_back(to_stdString(key.label()));
+            vecProperty.push_back(createProperty(key, textId(m_textIdStringStorage.back()), data));
+        }
+    }
+
+    std::unique_ptr<Property> createProperty(
+            const CafUtils::NamedDataKey& key, const TextId& name, const OccHandle<TDataStd_NamedData>& data
+        )
+    {
+        auto fnToString = [](const auto& array) -> std::string {
+            const int arrayTrimSize = std::min(20, array.Size());
+            const bool isTrimArray = arrayTrimSize < array.Size();
+            std::string strArray;
+            for (auto it = array.cbegin(); it != (array.cbegin() + arrayTrimSize); ++it)
+                strArray += std::to_string(*it) + "  ";
+
+            if (arrayTrimSize < 10)
+                return strArray;
+            else if (!isTrimArray)
+                return fmt::format("{} items: {}{}", array.Size(), strArray, isTrimArray ? "..." : "");
+
+            return {};
+        };
+
+        switch (key.type) {
+        case CafUtils::NamedDataType::Int: {
+            auto prop = std::make_unique<PropertyInt>(this, name);
+            prop->setValue(data->GetInteger(key.label()));
+            return prop;
+        }
+        case CafUtils::NamedDataType::Double: {
+            auto prop = std::make_unique<PropertyDouble>(this, name);
+            prop->setValue(data->GetReal(key.label()));
+            return prop;
+        }
+        case CafUtils::NamedDataType::String: {
+            auto prop = std::make_unique<PropertyString>(this, name);
+            prop->setValue(to_stdString(data->GetString(key.label())));
+            return prop;
+        }
+        case CafUtils::NamedDataType::Byte: {
+            auto prop = std::make_unique<PropertyInt>(this, name, 0, 255, 1);
+            prop->setValue(data->GetByte(key.label()));
+            return prop;
+        }
+        case CafUtils::NamedDataType::IntArray: {
+            auto prop = std::make_unique<PropertyString>(this, name);
+            prop->setValue(fnToString(data->GetArrayOfIntegers(key.label())->Array1()));
+            return prop;
+        }
+        case CafUtils::NamedDataType::DoubleArray: {
+            auto prop = std::make_unique<PropertyString>(this, name);
+            prop->setValue(fnToString(data->GetArrayOfReals(key.label())->Array1()));
+            return prop;
+        }
+        } // endswitch()
+
+        return {};
     }
 
     PropertyString m_propertyName{ this, textId("Name") };
@@ -183,21 +270,25 @@ public:
     PropertyString m_propertyXdeShapeKind{ this, textId("XdeShape") };
     PropertyString m_propertyXdeLayer{ this, textId("XdeLayer") };
     PropertyOccColor m_propertyColor{ this, textId("Color") };
-    PropertyOccTrsf m_propertyReferenceLocation{ this, textId("Location") };
+    PropertyOccTrsf m_propertyInstanceLocation{ this, textId("Location") };
     PropertyOccPnt m_propertyValidationCentroid{ this, textId("Centroid") };
     PropertyArea m_propertyValidationArea{ this, textId("Area") };
     PropertyVolume m_propertyValidationVolume{ this, textId("Volume") };
     PropertyDensity m_propertyMaterialDensity{ this, textId("MaterialDensity") };
     PropertyString m_propertyMaterialName{ this, textId("MaterialName") };
 
-    PropertyString m_propertyReferredName{ this, textId("ProductName") };
-    PropertyOccColor m_propertyReferredColor{ this, textId("ProductColor") };
-    PropertyOccPnt m_propertyReferredValidationCentroid{ this, textId("ProductCentroid") };
-    PropertyArea m_propertyReferredValidationArea{ this, textId("ProductArea") };
-    PropertyVolume m_propertyReferredValidationVolume{ this, textId("ProductVolume") };
+    PropertyString m_propertyProductName{ this, textId("ProductName") };
+    PropertyOccColor m_propertyProductColor{ this, textId("ProductColor") };
+    PropertyOccPnt m_propertyProductValidationCentroid{ this, textId("ProductCentroid") };
+    PropertyArea m_propertyProductValidationArea{ this, textId("ProductArea") };
+    PropertyVolume m_propertyProductValidationVolume{ this, textId("ProductVolume") };
+
+    std::vector<std::unique_ptr<Property>> m_vecPropertyUda;
+    std::vector<std::unique_ptr<Property>> m_vecPropertyProductUda;
+    std::vector<std::string> m_textIdStringStorage;
 
     TDF_Label m_label;
-    TDF_Label m_labelReferred;
+    TDF_Label m_labelProduct;
 };
 
 bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
