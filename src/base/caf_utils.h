@@ -8,15 +8,21 @@
 
 #include "occ_handle.h"
 #include <Standard_Version.hxx>
-#include <TCollection_AsciiString.hxx>
-#include <TCollection_ExtendedString.hxx>
 #include <TDF_Label.hxx>
 #include <TDF_LabelSequence.hxx>
+
+#include <vector>
+
+class TCollection_AsciiString;
+class TCollection_ExtendedString;
+class TDataStd_NamedData;
 
 namespace Mayo {
 
 // Provides helper functions for OpenCascade CAF related libraries
 struct CafUtils {
+
+    // -- TDF_Label
 
     // Returns a string representation of tag list path to 'label'
     static const TCollection_AsciiString& labelTag(const TDF_Label& label);
@@ -41,6 +47,24 @@ struct CafUtils {
     // Returns a TDF_LabelSequence object built from initializer list
     static TDF_LabelSequence makeLabelSequence(std::initializer_list<TDF_Label> listLabel);
 
+    // -- TDataStd_NamedData
+
+    // Returns the count of all data contained in TDataStd_NamedData objecy
+    static int namedDataCount(const OccHandle<TDataStd_NamedData>& data);
+
+    // Various data types that can be stored in TDataStd_NamedData
+    enum class NamedDataType {
+        None, Int, Double, String, Byte, IntArray, DoubleArray
+    };
+    // Key definition for the data contained in TDataStd_NamedData
+    // This holds the name(label) and type of the associated data
+    struct NamedDataKey {
+        const TCollection_ExtendedString* ptrLabel = nullptr;
+        NamedDataType type = NamedDataType::None;
+        const TCollection_ExtendedString& label() const { return *this->ptrLabel; }
+    };
+    // Returns all the keys of the data stored in TDataStd_NamedData object
+    static std::vector<NamedDataKey> getNamedDataKeys(const OccHandle<TDataStd_NamedData>& data);
 };
 
 } // namespace Mayo

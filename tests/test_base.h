@@ -51,7 +51,8 @@ private slots:
 
     void BRepUtils_test();
 
-    void CafUtils_test();
+    void CafUtils_labelTag_test();
+    void CafUtils_getNamedDataKeys_test();
 
     void MeshUtils_test();
     void MeshUtils_test_data();
@@ -78,6 +79,8 @@ private slots:
     void LibTree_removeRoot_test();
 
     void Span_test();
+
+    void XCaf_userDefinedAttributes_test();
 };
 
 } // namespace Mayo
