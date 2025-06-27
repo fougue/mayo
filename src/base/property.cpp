@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 
 namespace Mayo {
 
@@ -99,6 +100,25 @@ Property::Property(PropertyGroup* group, const TextId& name)
 {
     if (m_group)
         m_group->addProperty(this);
+}
+
+uint64_t Property::userData() const
+{
+    if (!m_hasUserData)
+        throw std::runtime_error("Property::userData() isn't available");
+
+    return m_userData;
+}
+
+void Property::setUserData(uint64_t d)
+{
+    m_hasUserData = true;
+    m_userData = d;
+}
+
+void Property::clearUserData()
+{
+    m_hasUserData = false;
 }
 
 void Property::notifyAboutToChange()

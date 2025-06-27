@@ -24,6 +24,7 @@ namespace Mayo {
 class IAppContext;
 class CommandContainer;
 class DocumentFilesWatcher;
+class DocumentTreeNode;
 class GuiApplication;
 class GuiDocument;
 class ItemViewButtons;
@@ -63,6 +64,8 @@ signals:
 
 private:
     QMenu* createMenuModelTreeSettings();
+
+    void editDocumentTreeNode(const DocumentTreeNode& docTreeNode);
 
     void onApplicationItemSelectionChanged();
     void onLeftContentsPageChanged(int pageId);

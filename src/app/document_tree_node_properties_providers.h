@@ -22,6 +22,7 @@ public:
     virtual ~DocumentTreeNodePropertiesProvider() = default;
     virtual bool supports(const DocumentTreeNode& treeNode) const = 0;
     virtual std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const = 0;
+    virtual TextId subGroupLabelFromId(uint64_t id) const = 0;
 };
 
 // Provides relevant properties for tree node pointing to XCAF data
@@ -29,6 +30,7 @@ class XCaf_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertie
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
+    TextId subGroupLabelFromId(uint64_t id) const override;
 
 private:
     class Properties;
@@ -39,6 +41,7 @@ class Mesh_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePropertie
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
+    TextId subGroupLabelFromId(uint64_t id) const override;
 
 private:
     class Properties;
@@ -49,6 +52,7 @@ class PointCloud_DocumentTreeNodePropertiesProvider : public DocumentTreeNodePro
 public:
     bool supports(const DocumentTreeNode& treeNode) const override;
     std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const override;
+    TextId subGroupLabelFromId(uint64_t id) const override;
 
 private:
     class Properties;

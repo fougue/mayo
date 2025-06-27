@@ -75,9 +75,6 @@ void WidgetPropertiesEditor::editProperties(PropertyGroup* propGroup, GroupId gr
         QTreeWidgetItem* parentTreeItem = d->hasGroup(grpId) ? d->vecGroup.at(grpId).treeItem : nullptr;
         for (Property* prop : propGroup->properties())
             d->createQtProperty(prop, parentTreeItem);
-
-        d->ui->treeWidget_Browser->resizeColumnToContents(0);
-        d->ui->treeWidget_Browser->resizeColumnToContents(1);
     }
 }
 
@@ -87,8 +84,6 @@ void WidgetPropertiesEditor::editProperty(Property* prop, GroupId grpId)
         d->ui->stack_Browser->setCurrentWidget(d->ui->page_BrowserDetails);
         QTreeWidgetItem* parentTreeItem = d->hasGroup(grpId) ? d->vecGroup.at(grpId).treeItem : nullptr;
         d->createQtProperty(prop, parentTreeItem);
-        d->ui->treeWidget_Browser->resizeColumnToContents(0);
-        d->ui->treeWidget_Browser->resizeColumnToContents(1);
     }
 }
 
@@ -153,6 +148,12 @@ bool WidgetPropertiesEditor::overridePropertyUnitTranslation(
     )
 {
     return d->itemDelegate->overridePropertyUnitTranslation(prop, unitTr);
+}
+
+void WidgetPropertiesEditor::fitToContents()
+{
+    d->ui->treeWidget_Browser->resizeColumnToContents(0);
+    d->ui->treeWidget_Browser->resizeColumnToContents(1);
 }
 
 void WidgetPropertiesEditor::Private::createQtProperty(

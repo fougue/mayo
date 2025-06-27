@@ -7,16 +7,16 @@
 #include "document_tree_node_properties_providers.h"
 
 #include "../base/caf_utils.h"
-#include "../base/label_data.h"
-#include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/document_tree_node.h"
+#include "../base/label_data.h"
 #include "../base/mesh_access.h"
 #include "../base/mesh_utils.h"
 #include "../base/meta_enum.h"
 #include "../base/point_cloud_data.h"
 #include "../base/property_builtins.h"
 #include "../base/string_conv.h"
+#include "../base/triangulation_annex_data.h"
 #include "../base/xcaf.h"
 #include "../graphics/graphics_mesh_object_driver.h"
 #include "../graphics/graphics_point_cloud_object_driver.h"
@@ -32,6 +32,19 @@
 
 namespace Mayo {
 
+namespace {
+
+constexpr uint64_t GeneralCoreSubGroup = 1;
+
+enum XCafSubGroup : uint64_t {
+    Core = GeneralCoreSubGroup,
+    Validation,
+    MetaData,
+    ProductMetaData
+};
+
+} // namespace
+
 class XCaf_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::XCaf_DocumentTreeNodeProperties)
 public:
@@ -40,6 +53,24 @@ public:
     {
         const TDF_Label& label = m_label;
         const XCaf& xcaf = treeNode.document()->xcaf();
+
+        m_propertyName.setUserData(XCafSubGroup::Core);
+        m_propertyShapeType.setUserData(XCafSubGroup::Core);
+        m_propertyXdeShapeKind.setUserData(XCafSubGroup::Core);
+        m_propertyXdeLayer.setUserData(XCafSubGroup::Core);
+        m_propertyColor.setUserData(XCafSubGroup::Core);
+        m_propertyInstanceLocation.setUserData(XCafSubGroup::Core);
+        m_propertyValidationCentroid.setUserData(XCafSubGroup::Validation);
+        m_propertyValidationArea.setUserData(XCafSubGroup::Validation);
+        m_propertyValidationVolume.setUserData(XCafSubGroup::Validation);
+        m_propertyMaterialDensity.setUserData(XCafSubGroup::Core);
+        m_propertyMaterialName.setUserData(XCafSubGroup::Core);
+        m_propertyProductName.setUserData(XCafSubGroup::Core);
+        m_propertyProductColor.setUserData(XCafSubGroup::Core);
+        m_propertyProductValidationCentroid.setUserData(XCafSubGroup::Validation);
+        m_propertyProductValidationArea.setUserData(XCafSubGroup::Validation);
+        m_propertyProductValidationVolume.setUserData(XCafSubGroup::Validation);
+        m_propertyProductName.setUserData(XCafSubGroup::Core);
 
         // Name
         m_propertyName.setValue(to_stdString(CafUtils::labelAttrStdName(label)));
@@ -175,6 +206,11 @@ public:
         );
         addUdas(data, m_vecPropertyUda);
         addUdas(productData, m_vecPropertyProductUda);
+        for (std::unique_ptr<Property>& propUda : m_vecPropertyUda)
+            propUda->setUserData(XCafSubGroup::MetaData);
+
+        for (std::unique_ptr<Property>& propUda : m_vecPropertyProductUda)
+            propUda->setUserData(XCafSubGroup::ProductMetaData);
 
         for (Property* prop : this->properties())
             prop->setUserReadOnly(true);
@@ -214,6 +250,8 @@ public:
             const CafUtils::NamedDataKey& key, const TextId& name, const OccHandle<TDataStd_NamedData>& data
         )
     {
+        // Helper function taking a TColStd_Array1Of[Integer/Real] and returns a string representation
+        // Only the first 20 array items can appear in the string, otherwise it's elided with "..."
         auto fnToString = [](const auto& array) -> std::string {
             const int arrayTrimSize = std::min(20, array.Size());
             const bool isTrimArray = arrayTrimSize < array.Size();
@@ -305,6 +343,19 @@ XCaf_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
     return std::make_unique<Properties>(treeNode);
 }
 
+TextId XCaf_DocumentTreeNodePropertiesProvider::subGroupLabelFromId(uint64_t id) const
+{
+    switch (id) {
+    case XCafSubGroup::Core: return Properties::textId("Data");
+    case XCafSubGroup::Validation: return Properties::textId("Validation");
+    case XCafSubGroup::MetaData: return Properties::textId("MetaData");
+    case XCafSubGroup::ProductMetaData: return Properties::textId("ProductMetaData");
+    }
+    return {};
+}
+
+
+
 class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Mesh_DocumentTreeNodeProperties)
 public:
@@ -319,8 +370,10 @@ public:
         m_propertyTriangleCount.setValue(!mesh.IsNull() ? mesh->NbTriangles() : 0);
         m_propertyArea.setQuantity(MeshUtils::triangulationArea(mesh) * Quantity_SquareMillimeter);
         m_propertyVolume.setQuantity(MeshUtils::triangulationVolume(mesh) * Quantity_CubicMillimeter);
-        for (Property* property : this->properties())
+        for (Property* property : this->properties()) {
             property->setUserReadOnly(true);
+            property->setUserData(GeneralCoreSubGroup);
+        }
     }
 
     PropertyInt m_propertyNodeCount{ this, textId("NodeCount") };
@@ -343,6 +396,13 @@ Mesh_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode& tree
     return std::make_unique<Properties>(treeNode);
 }
 
+TextId Mesh_DocumentTreeNodePropertiesProvider::subGroupLabelFromId(uint64_t id) const
+{
+    return id == GeneralCoreSubGroup ? Properties::textId("Data") : TextId{};
+}
+
+
+
 class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::PointCloud_DocumentTreeNodeProperties)
 public:
@@ -363,8 +423,10 @@ public:
             m_propertyCornerMax.setValue(bndBox.CornerMax());
         }
 
-        for (Property* property : this->properties())
+        for (Property* property : this->properties()) {
             property->setUserReadOnly(true);
+            property->setUserData(GeneralCoreSubGroup);
+        }
     }
 
     PropertyInt m_propertyPointCount{ this, textId("PointCount") };
@@ -385,6 +447,11 @@ PointCloud_DocumentTreeNodePropertiesProvider::properties(const DocumentTreeNode
         return {};
 
     return std::make_unique<Properties>(treeNode);
+}
+
+TextId PointCloud_DocumentTreeNodePropertiesProvider::subGroupLabelFromId(uint64_t id) const
+{
+    return id == GeneralCoreSubGroup ? Properties::textId("Data") : TextId{};
 }
 
 } // namespace Mayo

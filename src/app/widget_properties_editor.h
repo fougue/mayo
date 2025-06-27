@@ -39,6 +39,8 @@ public:
     double rowHeightFactor() const;
     void setRowHeightFactor(double v);
 
+    void fitToContents();
+
     using UnitTranslation = PropertyItemDelegate::UnitTranslation;
     bool overridePropertyUnitTranslation(const BasePropertyQuantity* prop, UnitTranslation unitTr);
 
