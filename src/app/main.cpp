@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "../base/application.h"
-#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
 #include "../io_assimp/io_assimp.h"

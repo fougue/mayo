@@ -6,10 +6,9 @@
 
 #include "property.h"
 
-#include "property_enumeration.h"
-
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 
 namespace Mayo {
 
@@ -29,18 +28,21 @@ void PropertyGroup::restoreDefaults()
 
 void PropertyGroup::onPropertyAboutToChange(Property* prop)
 {
+    this->signalPropertyAboutToChange.send(prop);
     if (m_parentGroup)
         m_parentGroup->onPropertyAboutToChange(prop);
 }
 
 void PropertyGroup::onPropertyChanged(Property* prop)
 {
+    this->signalPropertyChanged.send(prop);
     if (m_parentGroup)
         m_parentGroup->onPropertyChanged(prop);
 }
 
 void PropertyGroup::onPropertyEnabled(Property* prop, bool on)
 {
+    this->signalPropertyEnabled.send(prop, on);
     if (m_parentGroup)
         m_parentGroup->onPropertyEnabled(prop, on);
 }
@@ -100,6 +102,25 @@ Property::Property(PropertyGroup* group, const TextId& name)
         m_group->addProperty(this);
 }
 
+uint64_t Property::userData() const
+{
+    if (!m_hasUserData)
+        throw std::runtime_error("Property::userData() isn't available");
+
+    return m_userData;
+}
+
+void Property::setUserData(uint64_t d)
+{
+    m_hasUserData = true;
+    m_userData = d;
+}
+
+void Property::clearUserData()
+{
+    m_hasUserData = false;
+}
+
 void Property::notifyAboutToChange()
 {
     if (m_group && !m_group->isPropertyChangedBlocked())
@@ -142,18 +163,6 @@ PropertyChangedBlocker::~PropertyChangedBlocker()
 {
     if (m_group)
         m_group->blockPropertyChanged(false);
-}
-
-void PropertyGroupSignals::onPropertyAboutToChange(Property* prop)
-{
-    PropertyGroup::onPropertyAboutToChange(prop);
-    this->signalPropertyAboutToChange.send(prop);
-}
-
-void PropertyGroupSignals::onPropertyChanged(Property* prop)
-{
-    PropertyGroup::onPropertyChanged(prop);
-    this->signalPropertyChanged.send(prop);
 }
 
 } // namespace Mayo

@@ -78,8 +78,9 @@ public:
     using ValueType = T;
     GenericScalarProperty(PropertyGroup* grp, const TextId& name);
     GenericScalarProperty(
-            PropertyGroup* grp, const TextId& name,
-            T minimum, T maximum, T singleStep);
+        PropertyGroup* grp, const TextId& name,
+        T minimum, T maximum, T singleStep
+    );
 };
 
 class BasePropertyQuantity :
@@ -178,8 +179,9 @@ GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const TextId
 
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
-            PropertyGroup* grp, const TextId& name,
-            T minimum, T maximum, T singleStep)
+        PropertyGroup* grp, const TextId& name,
+        T minimum, T maximum, T singleStep
+    )
     : GenericProperty<T>(grp, name),
       PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }

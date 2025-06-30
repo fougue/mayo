@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <unordered_map>
 
 namespace Mayo {
 
@@ -260,43 +261,98 @@ QMenu* WidgetMainControl::createMenuModelTreeSettings()
     return menu;
 }
 
-void WidgetMainControl::onApplicationItemSelectionChanged()
+void WidgetMainControl::editDocumentTreeNode(const DocumentTreeNode& docTreeNode)
 {
     WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
-    WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
+    WidgetPropertiesEditor* uiEditor = m_ui->widget_Properties;
 
-    uiProps->clear();
+    // Edit "Data" properties retrieved with DocumentTreeNodePropertiesProvider
+    {
+        auto provider = AppModule::get()->findPropertiesProvider(docTreeNode);
+        auto propGroup = provider ? provider->properties(docTreeNode) : std::unique_ptr<PropertyGroup>{};
+        if (!propGroup)
+            return;
+
+        // Create UI groups
+        std::unordered_map<uint64_t, WidgetPropertiesEditor::GroupId> mapGroupId;
+        std::unordered_map<WidgetPropertiesEditor::GroupId, int> mapPropertyCount;
+        auto fnFindUiGroupId = [&](const Property* prop) {
+            if (!prop || !prop->hasUserData())
+                return -1;
+
+            auto it = mapGroupId.find(prop->userData());
+            return it != mapGroupId.cend() ? it->second : -1;
+        };
+
+        for (const Property* prop : propGroup->properties()) {
+            int uiGroupId = fnFindUiGroupId(prop);
+            if (prop->hasUserData() && uiGroupId == -1) {
+                const TextId subGroupTextId = provider->subGroupLabelFromId(prop->userData());
+                const QString subGroupText = to_QString(subGroupTextId.tr());
+                uiGroupId = uiEditor->addGroup(subGroupText);
+                mapGroupId.insert({ prop->userData(), uiGroupId });
+            }
+
+            if (uiGroupId != -1) {
+                auto it = mapPropertyCount.find(uiGroupId);
+                if (it != mapPropertyCount.cend())
+                    ++(it->second);
+                else
+                    mapPropertyCount.insert({ uiGroupId, 0 });
+            }
+        }
+
+        // Create UI for properties
+        for (Property* prop : propGroup->properties())
+            uiEditor->editProperty(prop, fnFindUiGroupId(prop));
+
+        // Indicate property count when >= 20 for any concerned group
+        for (const auto [uiGroupId, propCount] : mapPropertyCount) {
+            if (propCount >= 20) {
+                const QString uiGroupName = uiEditor->groupName(uiGroupId);
+                uiEditor->setGroupName(uiGroupId, tr("%1(%2)").arg(uiGroupName).arg(propCount));
+            }
+        }
+
+        propGroup->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(docTreeNode); });
+        m_ptrCurrentNodeProperties.push_back(std::move(propGroup));
+    }
+
+    // Edit "Graphics" properties
+    {
+        GuiDocument* guiDoc = m_guiApp->findGuiDocument(docTreeNode.document());
+        std::vector<GraphicsObjectPtr> vecGfxObject;
+        guiDoc->foreachGraphicsObject(docTreeNode.id(), [&](GraphicsObjectPtr gfxObject) {
+            vecGfxObject.push_back(std::move(gfxObject));
+        });
+        auto gfxDriver = GraphicsObjectDriver::getCommon(vecGfxObject);
+        auto propGroup = gfxDriver ? gfxDriver->properties(vecGfxObject) : std::unique_ptr<PropertyGroup>{};
+        if (propGroup) {
+            uiEditor->editProperties(propGroup.get(), uiEditor->addGroup(tr("Graphics")));
+            propGroup->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
+            m_ptrCurrentNodeProperties.push_back(std::move(propGroup));
+        }
+    }
+
+    uiEditor->fitToContents();
+}
+
+void WidgetMainControl::onApplicationItemSelectionChanged()
+{
+    m_ui->widget_Properties->clear();
+    m_ptrCurrentNodeProperties.clear();
     Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& appItem = spanAppItem.front();
         if (appItem.isDocument()) {
             auto dataProps = new DocumentPropertyGroup(appItem.document());
-            uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
-            m_ptrCurrentNodeDataProperties.reset(dataProps);
+            WidgetPropertiesEditor* uiEditor = m_ui->widget_Properties;
+            uiEditor->editProperties(dataProps, uiEditor->addGroup(tr("Data")));
+            uiEditor->fitToContents();
+            m_ptrCurrentNodeProperties.emplace_back(dataProps);
         }
         else if (appItem.isDocumentTreeNode()) {
-            const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-            auto dataProps = AppModule::get()->properties(docTreeNode);
-            if (dataProps) {
-                uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
-                dataProps->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(appItem); });
-                m_ptrCurrentNodeDataProperties = std::move(dataProps);
-            }
-
-            GuiDocument* guiDoc = m_guiApp->findGuiDocument(appItem.document());
-            std::vector<GraphicsObjectPtr> vecGfxObject;
-            guiDoc->foreachGraphicsObject(docTreeNode.id(), [&](GraphicsObjectPtr gfxObject) {
-                vecGfxObject.push_back(std::move(gfxObject));
-            });
-            auto commonGfxDriver = GraphicsObjectDriver::getCommon(vecGfxObject);
-            if (commonGfxDriver) {
-                auto gfxProps = commonGfxDriver->properties(vecGfxObject);
-                if (gfxProps) {
-                    uiProps->editProperties(gfxProps.get(), uiProps->addGroup(tr("Graphics")));
-                    gfxProps->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
-                    m_ptrCurrentNodeGraphicsProperties = std::move(gfxProps);
-                }
-            }
+            this->editDocumentTreeNode(appItem.documentTreeNode());
         }
 
         auto app = m_guiApp->application();
@@ -305,10 +361,6 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
         }
-    }
-    else {
-        // TODO
-        uiProps->clear();
     }
 
     emit this->updateGlobalControlsActivationRequired();

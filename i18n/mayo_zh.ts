@@ -1444,37 +1444,37 @@ Only applicable if option `{}` is on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="100"/>
+        <location filename="../src/io_image/io_image.cpp" line="101"/>
         <source>Graphics display mode for the objects of type `{}`</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="127"/>
+        <location filename="../src/io_image/io_image.cpp" line="128"/>
         <source>width</source>
         <translation>宽度</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="128"/>
+        <location filename="../src/io_image/io_image.cpp" line="129"/>
         <source>height</source>
         <translation>高度</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="129"/>
+        <location filename="../src/io_image/io_image.cpp" line="130"/>
         <source>backgroundColorStart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="130"/>
+        <location filename="../src/io_image/io_image.cpp" line="131"/>
         <source>backgroundColorEnd</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="131"/>
+        <location filename="../src/io_image/io_image.cpp" line="132"/>
         <source>backgroundGradientFill</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="199"/>
+        <location filename="../src/io_image/io_image.cpp" line="200"/>
         <source>Background radial gradient fill is available since OpenCascade 7.6.
 Default to background single color</source>
         <translation type="unfinished"></translation>
@@ -1484,22 +1484,22 @@ Default to background single color</source>
         <translation type="vanished">背景颜色</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="132"/>
+        <location filename="../src/io_image/io_image.cpp" line="133"/>
         <source>cameraOrientation</source>
         <translation>相机方向</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="133"/>
+        <location filename="../src/io_image/io_image.cpp" line="134"/>
         <source>cameraProjection</source>
         <translation>相机投影方式</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="187"/>
+        <location filename="../src/io_image/io_image.cpp" line="188"/>
         <source>No transferred application items</source>
         <translation>没有传输的应用项目</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="195"/>
+        <location filename="../src/io_image/io_image.cpp" line="196"/>
         <source>Camera orientation vector must not be null</source>
         <translation>相机方向向量不可为空</translation>
     </message>
@@ -2376,28 +2376,28 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="99"/>
+        <location filename="../src/app/main.cpp" line="97"/>
         <source>Mayo the opensource 3D CAD viewer and converter</source>
         <translation>Mayo开源3D CAD查看与转换器</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="106"/>
+        <location filename="../src/app/main.cpp" line="104"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation>界面主题（classic|dark）</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="107"/>
+        <location filename="../src/app/main.cpp" line="105"/>
         <source>name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="113"/>
+        <location filename="../src/app/main.cpp" line="111"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation>启动时加载的设置文件（INI格式）</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="114"/>
-        <location filename="../src/app/main.cpp" line="121"/>
+        <location filename="../src/app/main.cpp" line="112"/>
+        <location filename="../src/app/main.cpp" line="119"/>
         <location filename="../src/cli/main.cpp" line="200"/>
         <location filename="../src/cli/main.cpp" line="213"/>
         <location filename="../src/cli/main.cpp" line="221"/>
@@ -2406,71 +2406,70 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation>文件路径</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="120"/>
+        <location filename="../src/app/main.cpp" line="118"/>
         <location filename="../src/cli/main.cpp" line="227"/>
         <source>Writes log messages into output file</source>
         <translation>将日志信息写入输出文件</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="127"/>
+        <location filename="../src/app/main.cpp" line="125"/>
         <location filename="../src/cli/main.cpp" line="234"/>
         <source>Don&apos;t filter out debug log messages in release build</source>
         <translation>在发布版本中不过滤调试日志</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="133"/>
+        <location filename="../src/app/main.cpp" line="131"/>
         <location filename="../src/cli/main.cpp" line="246"/>
         <source>Show detailed system information and quit</source>
         <translation>显示详细系统信息并退出</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="138"/>
+        <location filename="../src/app/main.cpp" line="136"/>
         <location filename="../src/cli/main.cpp" line="251"/>
         <source>files</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="139"/>
+        <location filename="../src/app/main.cpp" line="137"/>
         <source>Files to open at startup, optionally</source>
         <translation>启动时可选打开的文件</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="140"/>
+        <location filename="../src/app/main.cpp" line="138"/>
         <location filename="../src/cli/main.cpp" line="253"/>
         <source>[files...]</source>
         <translation>[文件...]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="146"/>
         <source>Execute unit tests and exit application</source>
-        <translation>执行单元测试并退出</translation>
+        <translation type="vanished">执行单元测试并退出</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="189"/>
+        <location filename="../src/app/main.cpp" line="179"/>
         <location filename="../src/cli/main.cpp" line="299"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation>OpenCascade设置文件不存在或不可读 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="196"/>
+        <location filename="../src/app/main.cpp" line="186"/>
         <location filename="../src/cli/main.cpp" line="306"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation>无法通过QSettings加载OpenCascade设置文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="340"/>
+        <location filename="../src/app/main.cpp" line="330"/>
         <location filename="../src/cli/main.cpp" line="376"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation>无法加载应用程序设置文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="372"/>
+        <location filename="../src/app/main.cpp" line="362"/>
         <location filename="../src/cli/main.cpp" line="400"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation>无法加载翻译文件 [路径=%1]</translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="429"/>
+        <location filename="../src/app/main.cpp" line="419"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation>无法加载主题&apos;%1&apos;</translation>
     </message>
@@ -2667,47 +2666,57 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Mesh_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="235"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="390"/>
         <source>NodeCount</source>
         <translation>节点数</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="236"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="391"/>
         <source>TriangleCount</source>
         <translation>三角网格数</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="237"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="392"/>
         <source>Area</source>
         <translation>面积</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="238"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="393"/>
         <source>Volume</source>
         <translation>体积</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="412"/>
+        <source>Data</source>
+        <translation type="unfinished">数据</translation>
     </message>
 </context>
 <context>
     <name>Mayo::PointCloud_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="279"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="443"/>
         <source>PointCount</source>
         <translation>点数</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="280"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="444"/>
         <source>HasColors</source>
         <translation>具有颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="281"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="445"/>
         <source>CornerMin</source>
         <translation>最小角点</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="282"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="446"/>
         <source>CornerMax</source>
         <translation>最大角点</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="465"/>
+        <source>Data</source>
+        <translation type="unfinished">数据</translation>
     </message>
 </context>
 <context>
@@ -3238,23 +3247,27 @@ Read: %5
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="274"/>
-        <location filename="../src/app/widget_main_control.cpp" line="281"/>
+        <location filename="../src/app/widget_main_control.cpp" line="350"/>
         <source>Data</source>
         <translation>数据</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="295"/>
+        <location filename="../src/app/widget_main_control.cpp" line="331"/>
         <source>Graphics</source>
         <translation>图形</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="328"/>
+        <location filename="../src/app/widget_main_control.cpp" line="313"/>
+        <source>%1(%2)</source>
+        <translation type="unfinished">%1秒 {1(%2)?}</translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_main_control.cpp" line="380"/>
         <source>Options</source>
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="377"/>
+        <location filename="../src/app/widget_main_control.cpp" line="429"/>
         <source>Document file `%1` has been changed since it was opened
 
 Do you want to reload that document?
@@ -3267,7 +3280,7 @@ File: `%2`</source>
         文件：`%2`</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="384"/>
+        <location filename="../src/app/widget_main_control.cpp" line="436"/>
         <source>Question</source>
         <translation>问题</translation>
     </message>
@@ -3540,84 +3553,134 @@ File: `%2`</source>
 <context>
     <name>Mayo::XCaf_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="181"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="59"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="182"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="60"/>
         <source>Shape</source>
         <translation>形状</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="183"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="61"/>
         <source>XdeShape</source>
         <translation>Xde形状</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="184"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="62"/>
         <source>XdeLayer</source>
         <translation>Xde图层</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="185"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="63"/>
         <source>Color</source>
         <translation>颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="186"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="64"/>
         <source>Location</source>
         <translation>位置</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="187"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="65"/>
         <source>Centroid</source>
         <translation>质心</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="188"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="66"/>
         <source>Area</source>
         <translation>面积</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="189"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="67"/>
         <source>Volume</source>
         <translation>体积</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="190"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="68"/>
         <source>MaterialDensity</source>
         <translation>材料密度</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="191"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="69"/>
         <source>MaterialName</source>
         <translation>材料名称</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="193"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="71"/>
         <source>ProductName</source>
         <translation>产品名称</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="194"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="72"/>
         <source>ProductColor</source>
         <translation>产品颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="195"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="73"/>
         <source>ProductCentroid</source>
         <translation>产品质心</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="196"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="74"/>
         <source>ProductArea</source>
         <translation>产品面积</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="197"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="75"/>
         <source>ProductVolume</source>
         <translation>产品体积</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="120"/>
+        <source>Assembly</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="123"/>
+        <source>Reference</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="126"/>
+        <source>Component</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="129"/>
+        <source>Compound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="132"/>
+        <source>Simple</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="135"/>
+        <source>Sub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="360"/>
+        <source>Data</source>
+        <translation type="unfinished">数据</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="361"/>
+        <source>Validation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="362"/>
+        <source>MetaData</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="363"/>
+        <source>ProductMetaData</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

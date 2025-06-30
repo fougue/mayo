@@ -20,6 +20,9 @@
 #if OCC_VERSION_HEX >= 0x070500
 #  include <XCAFDoc_VisMaterialTool.hxx>
 #endif
+#if OCC_VERSION_HEX < 0x070400
+#  include <TDataStd_NamedData.hxx>
+#endif
 
 namespace Mayo {
 
@@ -95,6 +98,8 @@ public:
 
     // Returns labels of the top-level free shapes that were not found in 'seqOther'
     TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
+
+    OccHandle<TDataStd_NamedData> shapeUserDefinedAttributes(const TDF_Label& lbl) const;
 
     // --
     // -- XCAFDoc_ColorTool helpers

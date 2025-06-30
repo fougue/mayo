@@ -7,11 +7,11 @@
 #pragma once
 
 #include "app_module_properties.h"
+#include "document_tree_node_properties_providers.h"
 #include "library_info.h"
 #include "qstring_utils.h"
 
 #include "../base/application.h"
-#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
@@ -101,7 +101,8 @@ public:
 
     // Providers to query document tree node properties
     void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
+    const DocumentTreeNodePropertiesProvider* findPropertiesProvider(const DocumentTreeNode& treeNode) const;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const;
 
     // IO::System object
     const IO::System* ioSystem() const { return &m_ioSystem; }

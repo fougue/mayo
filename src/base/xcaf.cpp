@@ -190,8 +190,9 @@ bool XCaf::hasShapeColor(const TDF_Label& lbl) const
         return false;
 
     return tool->IsSet(lbl, XCAFDoc_ColorGen)
-            || tool->IsSet(lbl, XCAFDoc_ColorSurf)
-            || tool->IsSet(lbl, XCAFDoc_ColorCurv);
+           || tool->IsSet(lbl, XCAFDoc_ColorSurf)
+           || tool->IsSet(lbl, XCAFDoc_ColorCurv)
+        ;
 }
 
 Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
@@ -344,6 +345,18 @@ TDF_LabelSequence XCaf::diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther
     }
 
     return seqDiff;
+}
+
+OccHandle<TDataStd_NamedData> XCaf::shapeUserDefinedAttributes(const TDF_Label& lbl) const
+{
+    if (lbl.IsNull())
+        return {};
+
+#if OCC_VERSION_HEX >= 0x070400
+    return this->shapeTool()->GetNamedProperties(lbl, false/*!create*/);
+#else
+    return {};
+#endif
 }
 
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)

@@ -13,6 +13,7 @@
 #include "iwidget_main_page.h"
 
 #include <memory>
+#include <vector>
 #include <unordered_set>
 
 class QFileInfo;
@@ -23,6 +24,7 @@ namespace Mayo {
 class IAppContext;
 class CommandContainer;
 class DocumentFilesWatcher;
+class DocumentTreeNode;
 class GuiApplication;
 class GuiDocument;
 class ItemViewButtons;
@@ -63,6 +65,8 @@ signals:
 private:
     QMenu* createMenuModelTreeSettings();
 
+    void editDocumentTreeNode(const DocumentTreeNode& docTreeNode);
+
     void onApplicationItemSelectionChanged();
     void onLeftContentsPageChanged(int pageId);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
@@ -84,8 +88,7 @@ private:
     GuiApplication* m_guiApp = nullptr;
     IAppContext* m_appContext = nullptr;
     ItemViewButtons* m_listViewBtns = nullptr;
-    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
+    std::vector<std::unique_ptr<PropertyGroup>> m_ptrCurrentNodeProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
     double m_widgetLeftSideBarWidthFactor = 0.25;
