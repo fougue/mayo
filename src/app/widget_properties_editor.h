@@ -23,6 +23,7 @@ public:
 
     using GroupId = int;
     GroupId addGroup(const QString& name);
+    QString groupName(GroupId grpId) const;
     void setGroupName(GroupId grpId, const QString& name);
 
     void editProperties(PropertyGroup* propGroup, GroupId grpId = -1);

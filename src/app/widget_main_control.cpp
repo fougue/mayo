@@ -275,6 +275,7 @@ void WidgetMainControl::editDocumentTreeNode(const DocumentTreeNode& docTreeNode
 
         // Create UI groups
         std::unordered_map<uint64_t, WidgetPropertiesEditor::GroupId> mapGroupId;
+        std::unordered_map<WidgetPropertiesEditor::GroupId, int> mapPropertyCount;
         auto fnFindUiGroupId = [&](const Property* prop) {
             if (!prop || !prop->hasUserData())
                 return -1;
@@ -282,17 +283,36 @@ void WidgetMainControl::editDocumentTreeNode(const DocumentTreeNode& docTreeNode
             auto it = mapGroupId.find(prop->userData());
             return it != mapGroupId.cend() ? it->second : -1;
         };
+
         for (const Property* prop : propGroup->properties()) {
-            if (prop->hasUserData() && fnFindUiGroupId(prop) == -1) {
+            int uiGroupId = fnFindUiGroupId(prop);
+            if (prop->hasUserData() && uiGroupId == -1) {
                 const TextId subGroupTextId = provider->subGroupLabelFromId(prop->userData());
                 const QString subGroupText = to_QString(subGroupTextId.tr());
-                mapGroupId.insert({ prop->userData(), uiEditor->addGroup(subGroupText) });
+                uiGroupId = uiEditor->addGroup(subGroupText);
+                mapGroupId.insert({ prop->userData(), uiGroupId });
+            }
+
+            if (uiGroupId != -1) {
+                auto it = mapPropertyCount.find(uiGroupId);
+                if (it != mapPropertyCount.cend())
+                    ++(it->second);
+                else
+                    mapPropertyCount.insert({ uiGroupId, 0 });
             }
         }
 
         // Create UI for properties
         for (Property* prop : propGroup->properties())
             uiEditor->editProperty(prop, fnFindUiGroupId(prop));
+
+        // Indicate property count when >= 20 for any concerned group
+        for (const auto [uiGroupId, propCount] : mapPropertyCount) {
+            if (propCount >= 20) {
+                const QString uiGroupName = uiEditor->groupName(uiGroupId);
+                uiEditor->setGroupName(uiGroupId, tr("%1(%2)").arg(uiGroupName).arg(propCount));
+            }
+        }
 
         propGroup->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(docTreeNode); });
         m_ptrCurrentNodeProperties.push_back(std::move(propGroup));

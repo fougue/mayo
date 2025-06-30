@@ -116,7 +116,8 @@ template<size_t N> struct StringConv<char[N], TCollection_ExtendedString> {
 // std::string_view -> TCollection_ExtendedString
 template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
     static auto to(std::string_view str) {
-        return TCollection_ExtendedString(str.data(), true/*multi-byte*/);
+        const TCollection_AsciiString asciiStr(str.data(), int(str.size()));
+        return TCollection_ExtendedString(asciiStr, true/*multi-byte*/);
     }
 };
 #endif

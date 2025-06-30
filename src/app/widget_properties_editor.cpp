@@ -62,6 +62,14 @@ WidgetPropertiesEditor::GroupId WidgetPropertiesEditor::addGroup(const QString& 
     return int(d->vecGroup.size()) - 1;
 }
 
+QString WidgetPropertiesEditor::groupName(GroupId grpId) const
+{
+    if (d->hasGroup(grpId))
+        return d->vecGroup.at(grpId).treeItem->text(0);
+
+    return {};
+}
+
 void WidgetPropertiesEditor::setGroupName(GroupId grpId, const QString& name)
 {
     if (d->hasGroup(grpId))
