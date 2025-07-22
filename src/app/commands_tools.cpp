@@ -128,7 +128,13 @@ void CommandExecScript::runScript(IAppContext* context, const FilePath& scriptFi
 {
     auto dlg = new DialogExecScript(context->widgetMain());
     dlg->setScriptEngineInitializer([=](QJSEngine* jsEngine) {
-        initScriptEngine(jsEngine, context->guiApp()->application(), AppModule::get()->ioSystem());
+        ScriptEnvironment scriptEnv;
+        scriptEnv.ioSystem = AppModule::get()->ioSystem();
+        scriptEnv.ioParametersProvider = AppModule::get();
+        scriptEnv.ioEntityImportPostProcess = [=](TDF_Label labelEntity, TaskProgress* progress) {
+            AppModule::get()->computeBRepMesh(labelEntity, progress);
+        };
+        initScriptEngine(jsEngine, context->guiApp()->application(), scriptEnv);
     });
     dlg->setScriptFilePath(scriptFilePath);
     QtWidgetsUtils::asyncDialogExec(dlg);

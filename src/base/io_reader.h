@@ -49,11 +49,13 @@ public:
     // Returns supported formats, ie the formats this factory can create readers for
     virtual Span<const Format> formats() const = 0;
 
-    // Creates and returns a Reader object that matches the given format, or nullptr if no matching reader is found
+    // Creates and returns a Reader object that matches the given format, or nullptr if no matching
+    // reader is found
     virtual std::unique_ptr<Reader> create(Format format) const = 0;
 
-    // Creates and returns properties that match the given format. Those properties is a generic
-    // way to change parameter values of a Reader object corresponding to format(see also Reader::applyProperties())
+    // Creates and returns properties that match the given format. Those properties is a generic way
+    // to change the parameter values of a Reader object corresponding to format
+    // See also Reader::applyProperties()
     virtual std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const = 0;
 };
 

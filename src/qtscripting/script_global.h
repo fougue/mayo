@@ -7,23 +7,25 @@
 #pragma once
 
 #include "../base/application_ptr.h"
-
+#include <TDF_Label.hxx>
+#include <functional>
 class QJSEngine;
 class QJSValue;
-class QObject;
 
 namespace Mayo {
 
-class Application;
+class TaskProgress;
 namespace IO { class System; }
+namespace IO { class ParametersProvider; }
 
-// TODO Replace arguments with ScriptEnvironnment class that will provide:
-//         ApplicationPtr
-//         const IO::System*
-//         const IO::ParametersProvider*
-//         EntityPostProcess function(meshing of BRep shapes)
-//         ...
-void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const IO::System* ioSystem);
+// Structure used to pass rich set of parameters to initScriptEngine() function
+struct ScriptEnvironment {
+    const IO::System* ioSystem = nullptr;
+    const IO::ParametersProvider* ioParametersProvider = nullptr;
+    std::function<void(TDF_Label, TaskProgress*)> ioEntityImportPostProcess;
+};
+
+void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const ScriptEnvironment& env);
 void logScriptError(const QJSValue& jsVal, const char* functionName = nullptr);
 
 } // namespace Mayo

@@ -21,10 +21,10 @@
 namespace Mayo {
 
 ScriptApplication::ScriptApplication(
-        const ApplicationPtr& app, const IO::System* ioSystem, QJSEngine* jsEngine
+        const ApplicationPtr& app, const ScriptEnvironment& scriptEnv, QJSEngine* jsEngine
     )
     : QObject(jsEngine),
-      m_ioSystem(ioSystem),
+      m_scriptEnv(scriptEnv),
       m_jsEngine(jsEngine),
       m_app(app)
 {

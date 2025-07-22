@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "script_global.h"
 #include "../base/application_ptr.h"
 #include "../base/document.h"
 
@@ -32,7 +33,7 @@ class ScriptApplication : public QObject {
 public:
     ScriptApplication(
         const ApplicationPtr& app,
-        const IO::System* ioSystem,
+        const ScriptEnvironment& scriptEnv,
         QJSEngine* jsEngine = nullptr
     );
 
@@ -45,7 +46,7 @@ public:
     Q_INVOKABLE int findIndexOfDocument(QObjectPtr_ScriptDocument doc) const;
     Q_INVOKABLE void closeDocument(QObjectPtr_ScriptDocument doc);
 
-    const IO::System* ioSystem() const { return m_ioSystem; }
+    const ScriptEnvironment& environment() const { return m_scriptEnv; }
     QJSEngine* jsEngine() const { return m_jsEngine; }
 
 signals:
@@ -63,7 +64,7 @@ private:
     void onDocumentClosed(const DocumentPtr& doc);
 
     ApplicationPtr m_app;
-    const IO::System* m_ioSystem = nullptr;
+    const ScriptEnvironment m_scriptEnv;
     QJSEngine* m_jsEngine = nullptr;
     std::vector<ScriptDocument*> m_vecJsDoc;
     std::unordered_map<Document::Identifier, ScriptDocument*> m_mapIdToScriptDocument;

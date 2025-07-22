@@ -93,7 +93,7 @@ QColor ScriptDocument::tagShapeColor(const QString& tag) const
 }
 #endif
 
-QVariant ScriptDocument::treeNode(unsigned int treeNodeId) const
+QVariant_ScriptTreeNode ScriptDocument::treeNode(unsigned int treeNodeId) const
 {
     return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId));
 }
@@ -101,6 +101,9 @@ QVariant ScriptDocument::treeNode(unsigned int treeNodeId) const
 void ScriptDocument::traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJSValue fn)
 {
     if (!fn.isCallable())
+        return;
+
+    if (!m_jsApp || m_jsApp->jsEngine())
         return;
 
     const auto shapeTypeEnum = static_cast<TopAbs_ShapeEnum>(shapeTypeFilter);
@@ -114,17 +117,18 @@ void ScriptDocument::traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJS
 
 bool ScriptDocument::importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnProgressCallback)
 {
-    const IO::System* ioSystem = m_jsApp->ioSystem();
-    if (!ioSystem)
+    const ScriptEnvironment& env = m_jsApp->environment();
+    if (!env.ioSystem)
         return false;
 
     bool okImport = false;
     TaskManager taskMgr;
     auto taskId = taskMgr.newTask([&](TaskProgress* progress) {
         okImport =
-            ioSystem->importInDocument()
+            env.ioSystem->importInDocument()
                 .targetDocument(this->baseDocument())
                 .withFilepath(filepathFrom(strFilepath))
+                .withEntityPostProcess(env.ioEntityImportPostProcess)
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                 .withEntityPostProcessInfoProgress(20, "Mesh BRep shapes")
                 .withTaskProgress(progress)
