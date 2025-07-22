@@ -38,8 +38,6 @@ using QVariant_ScriptGeomBSplineCurve = QVariant;
 using QVariant_ScriptGeomOffsetCurve = QVariant;
 
 using ScriptGeomCurveType = unsigned;  // ->GeomAbs_CurveType
-using ScriptGeomContinuity = unsigned; // ->GeomAbs_Shape
-using ScriptGeomBSplineKnotDistribution = unsigned; // ->GeomAbs_BSplKnotDistribution
 #endif
 
 //! \brief Base geometric parameterized(U) curve in 3D space

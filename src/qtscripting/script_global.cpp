@@ -8,6 +8,10 @@
 
 #include "../qtcommon/qstring_conv.h"
 #include "script_application.h"
+#include "script_geom_curve.h"
+#include "script_geom_surface.h"
+#include "script_shape.h"
+#include "script_tree_node.h"
 
 #include <QtCore/QMessageLogger>
 #include <QtQml/QJSEngine>
@@ -133,6 +137,24 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const IO::
     addScriptEnum<GeomAbs_SurfaceType>(jsEngine);
     addScriptEnum<TopAbs_ShapeEnum>(jsEngine);
     addScriptEnum<TopAbs_Orientation>(jsEngine);
+
+    static bool metaTypesRegistered = false;
+    if (!metaTypesRegistered) {
+        // NOTE
+        //     In Qt5 qRegisterMetaType() must be called for all Script enumeration types and Script
+        //     type aliases appearing in functions marked with Q_INVOKABLE
+        //     Call to Q_DECLARE_METATYPE() seems to be not needed
+        qRegisterMetaType<QObjectPtr_ScriptDocument>("QObjectPtr_ScriptDocument");
+        qRegisterMetaType<QVariant_ScriptTreeNode>("QVariant_ScriptTreeNode");
+        qRegisterMetaType<QVariant_Coords3D>("QVariant_Coords3D");
+        qRegisterMetaType<ScriptGeomBSplineKnotDistribution>("ScriptGeomBSplineKnotDistribution");
+        qRegisterMetaType<ScriptGeomContinuity>("ScriptGeomContinuity");
+        qRegisterMetaType<ScriptGeomCurveType>("ScriptGeomCurveType");
+        qRegisterMetaType<ScriptGeomSurfaceType>("ScriptGeomSurfaceType");
+        qRegisterMetaType<ScriptShapeOrientation>("ScriptShapeOrientation");
+        qRegisterMetaType<ScriptShapeType>("ScriptShapeType");
+        metaTypesRegistered = true;
+    }
 }
 
 void logScriptError(const QJSValue& jsVal, const char* functionName)

@@ -23,74 +23,74 @@ ScriptGeomSurface::ScriptGeomSurface(const TopoDS_Face& face)
 {
 }
 
-int ScriptGeomSurface::uIntervalCount(unsigned continuity) const
+int ScriptGeomSurface::uIntervalCount(ScriptGeomContinuity c) const
 {
-    return this->surface().NbUIntervals(static_cast<GeomAbs_Shape>(continuity));
+    return this->surface().NbUIntervals(static_cast<GeomAbs_Shape>(c));
 }
 
-int ScriptGeomSurface::vIntervalCount(unsigned continuity) const
+int ScriptGeomSurface::vIntervalCount(ScriptGeomContinuity c) const
 {
-    return this->surface().NbVIntervals(static_cast<GeomAbs_Shape>(continuity));
+    return this->surface().NbVIntervals(static_cast<GeomAbs_Shape>(c));
 }
 
-QVariant ScriptGeomSurface::point(double u, double v) const
+QVariant_Coords3D ScriptGeomSurface::point(double u, double v) const
 {
     return ScriptGeom::toScriptValue(this->surface().Value(u, v));
 }
 
-QVariant ScriptGeomSurface::dN(double u, double v, int uN, int vN) const
+QVariant_Coords3D ScriptGeomSurface::dN(double u, double v, int uN, int vN) const
 {
     return ScriptGeom::toScriptValue(this->surface().DN(u, v, uN, vN));
 }
 
-QVariant ScriptGeomSurface::cylinder() const
+QVariant_ScriptGeomCylinder ScriptGeomSurface::cylinder() const
 {
     return QVariant::fromValue(ScriptGeomCylinder(this->surface().Cylinder()));
 }
 
-QVariant ScriptGeomSurface::plane() const
+QVariant_ScriptGeomPlane ScriptGeomSurface::plane() const
 {
     return QVariant::fromValue(ScriptGeomPlane(this->surface().Plane()));
 }
 
-QVariant ScriptGeomSurface::cone() const
+QVariant_ScriptGeomCone ScriptGeomSurface::cone() const
 {
     return QVariant::fromValue(ScriptGeomCone(this->surface().Cone()));
 }
 
-QVariant ScriptGeomSurface::sphere() const
+QVariant_ScriptGeomSphere ScriptGeomSurface::sphere() const
 {
     return QVariant::fromValue(ScriptGeomSphere(this->surface().Sphere()));
 }
 
-QVariant ScriptGeomSurface::torus() const
+QVariant_ScriptGeomTorus ScriptGeomSurface::torus() const
 {
     return QVariant::fromValue(ScriptGeomTorus(this->surface().Torus()));
 }
 
-QVariant ScriptGeomSurface::bezier() const
+QVariant_ScriptGeomBezierSurface ScriptGeomSurface::bezier() const
 {
     return QVariant::fromValue(ScriptGeomBezierSurface(this->surface().Bezier()));
 }
 
-QVariant ScriptGeomSurface::bspline() const
+QVariant_ScriptGeomBSplineSurface ScriptGeomSurface::bspline() const
 {
     return QVariant::fromValue(ScriptGeomBSplineSurface(this->surface().BSpline()));
 }
 
-QVariant ScriptGeomSurface::surfaceOfLinearExtrusion() const
+QVariant_ScriptGeomSurfaceOfLinearExtrusion ScriptGeomSurface::surfaceOfLinearExtrusion() const
 {
     auto surfExtrusion = OccHandle<Geom_SurfaceOfLinearExtrusion>::DownCast(this->geomSurface());
     return QVariant::fromValue(ScriptGeomSurfaceOfLinearExtrusion(surfExtrusion, this->trsf()));
 }
 
-QVariant ScriptGeomSurface::surfaceOfRevolution() const
+QVariant_ScriptGeomSurfaceOfRevolution ScriptGeomSurface::surfaceOfRevolution() const
 {
     auto surfRevolution = OccHandle<Geom_SurfaceOfRevolution>::DownCast(this->geomSurface());
     return QVariant::fromValue(ScriptGeomSurfaceOfRevolution(surfRevolution, this->trsf()));
 }
 
-QVariant ScriptGeomSurface::offsetSurface() const
+QVariant_ScriptGeomOffsetSurface ScriptGeomSurface::offsetSurface() const
 {
     auto surfOffset = OccHandle<Geom_OffsetSurface>::DownCast(this->geomSurface());
     return QVariant::fromValue(ScriptGeomOffsetSurface(surfOffset, this->trsf()));
@@ -132,7 +132,7 @@ ScriptGeomCylinder::ScriptGeomCylinder(const gp_Cylinder& cyl)
 {
 }
 
-QVariant ScriptGeomCylinder::position() const
+QVariant_ScriptGeomAx3 ScriptGeomCylinder::position() const
 {
     return ScriptGeom::toScriptValue(m_cyl.Position());
 }
@@ -143,7 +143,7 @@ ScriptGeomPlane::ScriptGeomPlane(const gp_Pln& pln)
 {
 }
 
-QVariant ScriptGeomPlane::position() const
+QVariant_ScriptGeomAx3 ScriptGeomPlane::position() const
 {
     return ScriptGeom::toScriptValue(m_pln.Position());
 }
@@ -154,12 +154,12 @@ ScriptGeomCone::ScriptGeomCone(const gp_Cone& cone)
 {
 }
 
-QVariant ScriptGeomCone::position() const
+QVariant_ScriptGeomAx3 ScriptGeomCone::position() const
 {
     return ScriptGeom::toScriptValue(m_cone.Position());
 }
 
-QVariant ScriptGeomCone::apex() const
+QVariant_Coords3D ScriptGeomCone::apex() const
 {
     return ScriptGeom::toScriptValue(m_cone.Apex());
 }
@@ -170,7 +170,7 @@ ScriptGeomSphere::ScriptGeomSphere(const gp_Sphere& sphere)
 {
 }
 
-QVariant ScriptGeomSphere::position() const
+QVariant_ScriptGeomAx3 ScriptGeomSphere::position() const
 {
     return ScriptGeom::toScriptValue(m_sphere.Position());
 }
@@ -181,7 +181,7 @@ ScriptGeomTorus::ScriptGeomTorus(const gp_Torus& torus)
 {
 }
 
-QVariant ScriptGeomTorus::position() const
+QVariant_ScriptGeomAx3 ScriptGeomTorus::position() const
 {
     return ScriptGeom::toScriptValue(m_torus.Position());
 }
@@ -259,7 +259,7 @@ bool ScriptGeomGeneralSplineSurface::isVRational() const
     return false;
 }
 
-QVariant ScriptGeomGeneralSplineSurface::pole(int uIndex, int vIndex) const
+QVariant_Coords3D ScriptGeomGeneralSplineSurface::pole(int uIndex, int vIndex) const
 {
     this->throwIfNullSupportSurface();
     if (m_bezier)
@@ -349,12 +349,12 @@ int ScriptGeomBSplineSurface::vKnotCount() const
     return this->bspline()->NbVKnots();
 }
 
-unsigned int ScriptGeomBSplineSurface::uKnotDistribution() const
+ScriptGeomBSplineKnotDistribution ScriptGeomBSplineSurface::uKnotDistribution() const
 {
     return this->bspline()->UKnotDistribution();
 }
 
-unsigned int ScriptGeomBSplineSurface::vKnotDistribution() const
+ScriptGeomBSplineKnotDistribution ScriptGeomBSplineSurface::vKnotDistribution() const
 {
     return this->bspline()->VKnotDistribution();
 }
@@ -367,13 +367,13 @@ ScriptGeomSurfaceOfLinearExtrusion::ScriptGeomSurfaceOfLinearExtrusion(
 {
 }
 
-QVariant ScriptGeomSurfaceOfLinearExtrusion::basisCurve() const
+QVariant_ScriptGeomCurve ScriptGeomSurfaceOfLinearExtrusion::basisCurve() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfLinearExtrusion pointer is null");
     return QVariant::fromValue(ScriptGeomCurve(m_surface.trsfSurf()->BasisCurve()));
 }
 
-QVariant ScriptGeomSurfaceOfLinearExtrusion::direction() const
+QVariant_Coords3D ScriptGeomSurfaceOfLinearExtrusion::direction() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfLinearExtrusion pointer is null");
     return ScriptGeom::toScriptValue(m_surface.inputSurf()->Direction().Transformed(m_surface.trsf()));
@@ -387,19 +387,19 @@ ScriptGeomSurfaceOfRevolution::ScriptGeomSurfaceOfRevolution(
 {
 }
 
-QVariant ScriptGeomSurfaceOfRevolution::basisCurve() const
+QVariant_ScriptGeomCurve ScriptGeomSurfaceOfRevolution::basisCurve() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
     return QVariant::fromValue(ScriptGeomCurve(m_surface.trsfSurf()->BasisCurve()));
 }
 
-QVariant ScriptGeomSurfaceOfRevolution::axis() const
+QVariant_ScriptGeomAx1 ScriptGeomSurfaceOfRevolution::axis() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
     return ScriptGeom::toScriptValue(m_surface.inputSurf()->Axis().Transformed(m_surface.trsf()));
 }
 
-QVariant ScriptGeomSurfaceOfRevolution::direction() const
+QVariant_Coords3D ScriptGeomSurfaceOfRevolution::direction() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_SurfaceOfRevolution pointer is null");
     return ScriptGeom::toScriptValue(m_surface.inputSurf()->Direction().Transformed(m_surface.trsf()));
@@ -413,7 +413,7 @@ ScriptGeomOffsetSurface::ScriptGeomOffsetSurface(
 {
 }
 
-QVariant ScriptGeomOffsetSurface::basisSurface() const
+QVariant_ScriptGeomSurface ScriptGeomOffsetSurface::basisSurface() const
 {
     Cpp::throwErrorIf<std::runtime_error>(!m_surface.valid(), "Geom_OffsetSurface pointer is null");
     return QVariant::fromValue(ScriptGeomSurface(m_surface.trsfSurf()->BasisSurface()));

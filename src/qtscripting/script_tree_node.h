@@ -9,6 +9,8 @@
 #include "../base/document_ptr.h"
 #include "../base/libtree.h"
 
+#include "script_shape.h"
+
 #include <QtCore/QObject>
 
 namespace Mayo {
@@ -25,7 +27,7 @@ class ScriptTreeNode {
     Q_PROPERTY(bool isComponent READ isComponent)
     Q_PROPERTY(bool hasSubShapes READ hasSubShapes)
     Q_PROPERTY(QStringList subShapeTags READ subShapeTags)
-    Q_PROPERTY(QVariant shape READ shape)
+    Q_PROPERTY(QVariant_ScriptShape shape READ shape)
 public:
     ScriptTreeNode() = default;
     ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId);
@@ -44,12 +46,16 @@ public:
 
     QStringList subShapeTags() const;
 
-    QVariant shape() const; // ->ScriptShape
+    QVariant_ScriptShape shape() const;
 
 private:
     DocumentPtr m_doc;
     TreeNodeId m_nodeId = 0;
 };
+
+#ifndef _MAYO_DOCGEN_
+using QVariant_ScriptTreeNode = QVariant;
+#endif
 
 } // namespace Mayo
 

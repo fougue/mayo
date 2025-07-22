@@ -9,6 +9,8 @@
 #include "../base/document_ptr.h"
 #include "../base/signal.h"
 
+#include "script_tree_node.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
 #include <QtQml/QJSValue>
@@ -61,13 +63,13 @@ public:
     unsigned entityTreeNodeId(int index) const;
 
     Q_INVOKABLE void traverseModelTree(QJSValue fn);
-    Q_INVOKABLE QVariant treeNode(unsigned treeNodeId) const; // ->ScriptTreeNode
+    Q_INVOKABLE QVariant_ScriptTreeNode treeNode(unsigned treeNodeId) const;
 #if 0
     Q_INVOKABLE bool tagHasShapeColor(const QString& tag) const;
     Q_INVOKABLE QColor tagShapeColor(const QString& tag) const;
 #endif
 
-    Q_INVOKABLE void traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJSValue fn);
+    Q_INVOKABLE void traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilter, QJSValue fn);
 
     Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnProgressCallback);
 

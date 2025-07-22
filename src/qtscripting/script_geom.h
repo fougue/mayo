@@ -17,6 +17,9 @@ namespace Mayo {
 using QVariant_Coords3D = QVariant;
 using QVariant_ScriptGeomAx1 = QVariant;
 using QVariant_ScriptGeomAx3 = QVariant;
+
+using ScriptGeomContinuity = unsigned; // ->GeomAbs_Shape
+using ScriptGeomBSplineKnotDistribution = unsigned; // ->GeomAbs_BSplKnotDistribution
 #endif
 
 class ScriptGeomAx1 {

@@ -8,6 +8,8 @@
 
 #include "../base/occ_handle.h"
 
+#include "script_geom_curve.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
 
@@ -25,46 +27,64 @@
 
 namespace Mayo {
 
+#ifndef _MAYO_DOCGEN_
+using QVariant_ScriptGeomSurface = QVariant;
+using QVariant_ScriptGeomCylinder = QVariant;
+using QVariant_ScriptGeomPlane = QVariant;
+using QVariant_ScriptGeomCone = QVariant;
+using QVariant_ScriptGeomSphere = QVariant;
+using QVariant_ScriptGeomTorus = QVariant;
+using QVariant_ScriptGeomBezierSurface = QVariant;
+using QVariant_ScriptGeomBSplineSurface = QVariant;
+using QVariant_ScriptGeomSurfaceOfLinearExtrusion = QVariant;
+using QVariant_ScriptGeomSurfaceOfRevolution = QVariant;
+using QVariant_ScriptGeomOffsetSurface = QVariant;
+
+using ScriptGeomSurfaceType = unsigned;  // ->GeomAbs_SurfaceType
+#endif
+
 class ScriptGeomSurface {
     Q_GADGET
-    Q_PROPERTY(unsigned type READ type)
+    Q_PROPERTY(ScriptGeomSurfaceType type READ type)
     Q_PROPERTY(double uParamFirst READ uParamFirst)
     Q_PROPERTY(double uParamLast READ uParamLast)
     Q_PROPERTY(double vParamFirst READ vParamFirst)
     Q_PROPERTY(double vParamLast READ vParamLast)
-    Q_PROPERTY(unsigned uContinuity READ uContinuity)
-    Q_PROPERTY(unsigned vContinuity READ vContinuity)
+    Q_PROPERTY(ScriptGeomContinuity uContinuity READ uContinuity)
+    Q_PROPERTY(ScriptGeomContinuity vContinuity READ vContinuity)
     Q_PROPERTY(bool isUClosed READ isUClosed)
     Q_PROPERTY(bool isVClosed READ isVClosed)
     Q_PROPERTY(bool isUPeriodic READ isUPeriodic)
     Q_PROPERTY(bool isVPeriodic READ isVPeriodic)
     Q_PROPERTY(double uPeriod READ uPeriod)
     Q_PROPERTY(double vPeriod READ vPeriod)
-    Q_PROPERTY(QVariant cylinder READ cylinder)
-    Q_PROPERTY(QVariant plane READ plane)
-    Q_PROPERTY(QVariant cone READ cone)
-    Q_PROPERTY(QVariant sphere READ sphere)
-    Q_PROPERTY(QVariant torus READ torus)
-    Q_PROPERTY(QVariant bezier READ bezier)
-    Q_PROPERTY(QVariant bspline READ bspline)
-    Q_PROPERTY(QVariant offsetSurface READ offsetSurface)
+    Q_PROPERTY(QVariant_ScriptGeomCylinder cylinder READ cylinder)
+    Q_PROPERTY(QVariant_ScriptGeomPlane plane READ plane)
+    Q_PROPERTY(QVariant_ScriptGeomCone cone READ cone)
+    Q_PROPERTY(QVariant_ScriptGeomSphere sphere READ sphere)
+    Q_PROPERTY(QVariant_ScriptGeomTorus torus READ torus)
+    Q_PROPERTY(QVariant_ScriptGeomBezierSurface bezier READ bezier)
+    Q_PROPERTY(QVariant_ScriptGeomBSplineSurface bspline READ bspline)
+    Q_PROPERTY(QVariant_ScriptGeomSurfaceOfLinearExtrusion surfaceOfLinearExtrusion READ surfaceOfLinearExtrusion)
+    Q_PROPERTY(QVariant_ScriptGeomSurfaceOfRevolution surfaceOfRevolution READ surfaceOfRevolution)
+    Q_PROPERTY(QVariant_ScriptGeomOffsetSurface offsetSurface READ offsetSurface)
 public:
     ScriptGeomSurface() = default;
     ScriptGeomSurface(const OccHandle<Geom_Surface>& surface);
     ScriptGeomSurface(const TopoDS_Face& face);
 
-    unsigned type() const { return this->surface().GetType(); }
+    ScriptGeomSurfaceType type() const { return this->surface().GetType(); }
 
     double uParamFirst() const { return this->surface().FirstUParameter(); }
     double uParamLast() const { return this->surface().LastUParameter(); }
     double vParamFirst() const { return this->surface().FirstVParameter(); }
     double vParamLast() const { return this->surface().LastVParameter(); }
 
-    unsigned uContinuity() const { return this->surface().UContinuity(); }
-    unsigned vContinuity() const { return this->surface().VContinuity(); }
+    ScriptGeomContinuity uContinuity() const { return this->surface().UContinuity(); }
+    ScriptGeomContinuity vContinuity() const { return this->surface().VContinuity(); }
 
-    Q_INVOKABLE int uIntervalCount(unsigned continuity) const;
-    Q_INVOKABLE int vIntervalCount(unsigned continuity) const;
+    Q_INVOKABLE int uIntervalCount(ScriptGeomContinuity c) const;
+    Q_INVOKABLE int vIntervalCount(ScriptGeomContinuity c) const;
 
     bool isUClosed() const { return this->surface().IsUClosed(); }
     bool isVClosed() const { return this->surface().IsVClosed(); }
@@ -74,19 +94,19 @@ public:
     double uPeriod() const { return this->surface().UPeriod(); }
     double vPeriod() const { return this->surface().VPeriod(); }
 
-    Q_INVOKABLE QVariant point(double u, double v) const;              // ->{x, y, z}
-    Q_INVOKABLE QVariant dN(double u, double v, int uN, int vN) const; // ->{x, y, z}
+    Q_INVOKABLE QVariant_Coords3D point(double u, double v) const;
+    Q_INVOKABLE QVariant_Coords3D dN(double u, double v, int uN, int vN) const;
 
-    QVariant cylinder() const; // ->ScriptGeomCylinder
-    QVariant plane() const;    // ->ScriptGeomPlane
-    QVariant cone() const;     // ->ScriptGeomCone
-    QVariant sphere() const;   // ->ScriptGeomSphere
-    QVariant torus() const;    // ->ScriptGeomTorus
-    QVariant bezier() const;   // ->ScriptGeomBezierSurface
-    QVariant bspline() const;  // ->ScriptGeomBSplineSurface
-    QVariant surfaceOfLinearExtrusion() const; // ->ScriptGeomSurfaceOfLinearExtrusion
-    QVariant surfaceOfRevolution() const;      // ->ScriptGeomSurfaceOfRevolution
-    QVariant offsetSurface() const; // ->ScriptGeomOffsetSurface
+    QVariant_ScriptGeomCylinder cylinder() const;
+    QVariant_ScriptGeomPlane plane() const;
+    QVariant_ScriptGeomCone cone() const;
+    QVariant_ScriptGeomSphere sphere() const;
+    QVariant_ScriptGeomTorus torus() const;
+    QVariant_ScriptGeomBezierSurface bezier() const;
+    QVariant_ScriptGeomBSplineSurface bspline() const;
+    QVariant_ScriptGeomSurfaceOfLinearExtrusion surfaceOfLinearExtrusion() const;
+    QVariant_ScriptGeomSurfaceOfRevolution surfaceOfRevolution() const;
+    QVariant_ScriptGeomOffsetSurface offsetSurface() const;
 
 private:
     const Adaptor3d_Surface& surface() const;
@@ -99,13 +119,13 @@ private:
 
 class ScriptGeomCylinder {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double radius READ radius)
 public:
     ScriptGeomCylinder() = default;
     ScriptGeomCylinder(const gp_Cylinder& cyl);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double radius() const { return m_cyl.Radius(); }
 
 private:
@@ -115,12 +135,12 @@ private:
 
 class ScriptGeomPlane {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
 public:
     ScriptGeomPlane() = default;
     ScriptGeomPlane(const gp_Pln& pln);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
 
 private:
     gp_Pln m_pln;
@@ -129,16 +149,16 @@ private:
 
 class ScriptGeomCone {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
-    Q_PROPERTY(QVariant apex READ apex)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
+    Q_PROPERTY(QVariant_Coords3D apex READ apex)
     Q_PROPERTY(double refRadius READ refRadius)
     Q_PROPERTY(double semiAngle READ semiAngle)
 public:
     ScriptGeomCone() = default;
     ScriptGeomCone(const gp_Cone& cone);
 
-    QVariant position() const; // ->ScriptGeomAx3
-    QVariant apex() const;     // ->{x, y, z}
+    QVariant_ScriptGeomAx3 position() const;
+    QVariant_Coords3D apex() const;
     double refRadius() const { return m_cone.RefRadius(); }
     double semiAngle() const { return m_cone.SemiAngle(); }
 
@@ -149,13 +169,13 @@ private:
 
 class ScriptGeomSphere {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double radius READ radius)
 public:
     ScriptGeomSphere() = default;
     ScriptGeomSphere(const gp_Sphere& sphere);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double radius() const { return m_sphere.Radius(); }
 
 private:
@@ -165,14 +185,14 @@ private:
 
 class ScriptGeomTorus {
     Q_GADGET
-    Q_PROPERTY(QVariant position READ position)
+    Q_PROPERTY(QVariant_ScriptGeomAx3 position READ position)
     Q_PROPERTY(double majorRadius READ majorRadius)
     Q_PROPERTY(double minorRadius READ minorRadius)
 public:
     ScriptGeomTorus() = default;
     ScriptGeomTorus(const gp_Torus& torus);
 
-    QVariant position() const; // ->ScriptGeomAx3
+    QVariant_ScriptGeomAx3 position() const;
     double majorRadius() const { return m_torus.MajorRadius(); }
     double minorRadius() const { return m_torus.MinorRadius(); }
 
@@ -199,7 +219,7 @@ public:
     bool isURational() const;
     bool isVRational() const;
 
-    Q_INVOKABLE QVariant pole(int uIndex, int vIndex) const;  // ->{x, y, z}
+    Q_INVOKABLE QVariant_Coords3D pole(int uIndex, int vIndex) const;
     Q_INVOKABLE double weight(int uIndex, int vIndex) const;
 
 protected:
@@ -233,8 +253,8 @@ class ScriptGeomBSplineSurface : public ScriptGeomGeneralSplineSurface {
     Q_PROPERTY(int vKnotIndexLast READ vKnotIndexLast)
     Q_PROPERTY(int uKnotCount READ uKnotCount)
     Q_PROPERTY(int vKnotCount READ vKnotCount)
-    Q_PROPERTY(unsigned uKnotDistribution READ uKnotDistribution)
-    Q_PROPERTY(unsigned vKnotDistribution READ vKnotDistribution)
+    Q_PROPERTY(ScriptGeomBSplineKnotDistribution uKnotDistribution READ uKnotDistribution)
+    Q_PROPERTY(ScriptGeomBSplineKnotDistribution vKnotDistribution READ vKnotDistribution)
 public:
     ScriptGeomBSplineSurface() = default;
     ScriptGeomBSplineSurface(const OccHandle<Geom_BSplineSurface>& bspline);
@@ -254,8 +274,8 @@ public:
     int uKnotCount() const;
     int vKnotCount() const;
 
-    unsigned uKnotDistribution() const;
-    unsigned vKnotDistribution() const;
+    ScriptGeomBSplineKnotDistribution uKnotDistribution() const;
+    ScriptGeomBSplineKnotDistribution vKnotDistribution() const;
 };
 
 
@@ -291,16 +311,16 @@ private:
 
 class ScriptGeomSurfaceOfLinearExtrusion {
     Q_GADGET
-    Q_PROPERTY(QVariant basisCurve READ basisCurve)
-    Q_PROPERTY(QVariant direction READ direction)
+    Q_PROPERTY(QVariant_ScriptGeomCurve basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant_Coords3D direction READ direction)
 public:
     ScriptGeomSurfaceOfLinearExtrusion() = default;
     ScriptGeomSurfaceOfLinearExtrusion(
         const OccHandle<Geom_SurfaceOfLinearExtrusion>& surfExtrusion, const gp_Trsf& trsf
     );
 
-    QVariant basisCurve() const; // ->ScriptGeomCurve
-    QVariant direction() const;  // ->{x, y, z}
+    QVariant_ScriptGeomCurve basisCurve() const;
+    QVariant_Coords3D direction() const;
 
 private:
     GeomSurfaceHelper<Geom_SurfaceOfLinearExtrusion> m_surface;
@@ -309,18 +329,18 @@ private:
 
 class ScriptGeomSurfaceOfRevolution {
     Q_GADGET
-    Q_PROPERTY(QVariant basisCurve READ basisCurve)
-    Q_PROPERTY(QVariant axis READ axis)
-    Q_PROPERTY(QVariant direction READ direction)
+    Q_PROPERTY(QVariant_ScriptGeomCurve basisCurve READ basisCurve)
+    Q_PROPERTY(QVariant_ScriptGeomAx1 axis READ axis)
+    Q_PROPERTY(QVariant_Coords3D direction READ direction)
 public:
     ScriptGeomSurfaceOfRevolution() = default;
     ScriptGeomSurfaceOfRevolution(
         const OccHandle<Geom_SurfaceOfRevolution>& surfRevolution, const gp_Trsf& trsf
     );
 
-    QVariant basisCurve() const; // ->ScriptGeomCurve
-    QVariant axis() const;       // ->ScriptGeomAx1
-    QVariant direction() const;  // ->{x, y, z}
+    QVariant_ScriptGeomCurve basisCurve() const;
+    QVariant_ScriptGeomAx1 axis() const;
+    QVariant_Coords3D direction() const;
 
 private:
     GeomSurfaceHelper<Geom_SurfaceOfRevolution> m_surface;
@@ -328,13 +348,13 @@ private:
 
 class ScriptGeomOffsetSurface {
     Q_GADGET
-    Q_PROPERTY(QVariant basisSurface READ basisSurface)
+    Q_PROPERTY(QVariant_ScriptGeomSurface basisSurface READ basisSurface)
     Q_PROPERTY(double value READ value)
 public:
     ScriptGeomOffsetSurface() = default;
     ScriptGeomOffsetSurface(const OccHandle<Geom_OffsetSurface>& offset, const gp_Trsf& trsf);
 
-    QVariant basisSurface() const; // ->ScriptGeomSurface
+    QVariant_ScriptGeomSurface basisSurface() const;
     double value() const;
 
 private:

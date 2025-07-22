@@ -48,12 +48,7 @@ QVariant ScriptShape::geometry() const
     }
     else if (m_shape.ShapeType() == TopAbs_VERTEX) {
         const TopoDS_Vertex& vertex = TopoDS::Vertex(m_shape);
-        const gp_Pnt pnt = BRep_Tool::Pnt(vertex);
-        QVariantMap map;
-        map.insert("x", pnt.X());
-        map.insert("y", pnt.Y());
-        map.insert("z", pnt.Z());
-        return map;
+        return ScriptGeom::toScriptValue(BRep_Tool::Pnt(vertex));
     }
 
     return {};

@@ -71,7 +71,7 @@ QStringList ScriptTreeNode::subShapeTags() const
     return listTag;
 }
 
-QVariant ScriptTreeNode::shape() const
+QVariant_ScriptShape ScriptTreeNode::shape() const
 {
     const TopoDS_Shape shape = XCaf::shape(DocumentTreeNode::label(m_doc, m_nodeId));
     return QVariant::fromValue(ScriptShape(shape));
