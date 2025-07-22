@@ -689,6 +689,7 @@ if(Mayo_BuildTests)
         ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
         ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp
         ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/recent_scripts.cpp
         # src/qtcommon
         ${PROJECT_SOURCE_DIR}/src/qtcommon/qtcore_utils.cpp
     )
