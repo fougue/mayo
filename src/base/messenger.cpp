@@ -107,15 +107,9 @@ Messenger& Messenger::null()
     return null;
 }
 
-MessengerByCallback::MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback)
-    : m_fnCallback(std::move(fnCallback))
+void MessengerBySignal::emitMessage(MessageType msgType, std::string_view text)
 {
-}
-
-void MessengerByCallback::emitMessage(MessageType msgType, std::string_view text)
-{
-    if (m_fnCallback)
-        m_fnCallback(msgType, text);
+    signalMessage.send(msgType, std::string{text});
 }
 
 unsigned MessageCollecter::toFlag(MessageType msgType)

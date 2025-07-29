@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include "signal.h"
 #include "span.h"
 
-#include <functional>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -77,15 +77,12 @@ public:
     static Messenger& null();
 };
 
-// Provides facility to construct a Messenger object from a lambda
+// Provides facility to construct a Messenger object based on signal
 // This avoids to subclass Messenger
-class MessengerByCallback : public Messenger {
+class MessengerBySignal : public Messenger {
 public:
-    MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
     void emitMessage(MessageType msgType, std::string_view text) override;
-
-private:
-    std::function<void(MessageType, std::string_view)> m_fnCallback;
+    Signal<MessageType, std::string> signalMessage;
 };
 
 // Collects emitted messages into a array
