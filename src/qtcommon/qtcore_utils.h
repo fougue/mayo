@@ -7,9 +7,11 @@
 #pragma once
 
 #include "../base/global.h"
+#include "../base/property_value_conversion.h"
 #include "../base/span.h"
 
 #include <QtCore/QByteArray>
+#include <QtCore/QVariant>
 #include <functional>
 #include <string_view>
 #include <vector>
@@ -56,6 +58,12 @@ Qt::CheckState toQtCheckState(Mayo::CheckState state);
 
 // Converts Qt::CheckState -> Mayo::CheckState
 Mayo::CheckState toCheckState(Qt::CheckState state);
+
+// Converts QVariant -> PropertyValueConversion::Variant
+PropertyValueConversion::Variant toPropertyValueConversionVariant(const QVariant& value);
+
+// Converts PropertyValueConversion::Variant -> QVariant
+QVariant toQVariant(const PropertyValueConversion::Variant& value);
 
 // Enqueues function 'fn' to be executed on main thread
 void runJobOnMainThread(const std::function<void()>& fn);
