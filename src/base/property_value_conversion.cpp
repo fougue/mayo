@@ -90,32 +90,32 @@ static gp_XYZ xyzFromString(std::string_view str)
 
 } // namespace
 
-PropertyValueConversion::Variant::Variant(bool v)
-    : BaseVariantType(v)
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(bool v)
+    : PropertyValueConversion_BaseVariantType(v)
 {}
 
-PropertyValueConversion::Variant::Variant(int v)
-    : BaseVariantType(v)
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(int v)
+    : PropertyValueConversion_BaseVariantType(v)
 {}
 
-PropertyValueConversion::Variant::Variant(float v)
-    : Variant(static_cast<double>(v))
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(float v)
+    : PropertyValueConversion_Variant(static_cast<double>(v))
 {}
 
-PropertyValueConversion::Variant::Variant(double v)
-    : BaseVariantType(v)
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(double v)
+    : PropertyValueConversion_BaseVariantType(v)
 {}
 
-PropertyValueConversion::Variant::Variant(const char* str)
-    : BaseVariantType(std::string(str))
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(const char* str)
+    : PropertyValueConversion_BaseVariantType(std::string(str))
 {}
 
-PropertyValueConversion::Variant::Variant(const std::string& str)
-    : BaseVariantType(str)
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(const std::string& str)
+    : PropertyValueConversion_BaseVariantType(str)
 {}
 
-PropertyValueConversion::Variant::Variant(Span<const uint8_t> bytes)
-    : BaseVariantType(std::vector<uint8_t>(bytes.begin(), bytes.end()))
+PropertyValueConversion_Variant::PropertyValueConversion_Variant(Span<const uint8_t> bytes)
+    : PropertyValueConversion_BaseVariantType(std::vector<uint8_t>(bytes.begin(), bytes.end()))
 {}
 
 PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Property& prop) const

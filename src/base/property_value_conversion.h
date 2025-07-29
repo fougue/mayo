@@ -15,45 +15,52 @@
 
 namespace Mayo {
 
+// Alias of the std::variant<...> type used by custom PropertyValueConversion::Variant
+using PropertyValueConversion_BaseVariantType = std::variant<
+    std::monostate, bool, int, double, std::string, std::vector<uint8_t>
+>;
+
+// Variant type to be used when (de)serializing values
+class PropertyValueConversion_Variant : public PropertyValueConversion_BaseVariantType {
+public:
+    PropertyValueConversion_Variant() = default;
+    PropertyValueConversion_Variant(bool v);
+    PropertyValueConversion_Variant(int v);
+    PropertyValueConversion_Variant(float v);
+    PropertyValueConversion_Variant(double v);
+    PropertyValueConversion_Variant(const char* str);
+    PropertyValueConversion_Variant(const std::string& str);
+    PropertyValueConversion_Variant(Span<const uint8_t> bytes);
+
+    bool isValid() const;
+    bool toBool(bool* ok = nullptr) const;
+    int toInt(bool* ok = nullptr) const;
+    double toDouble(bool* ok = nullptr) const;
+
+    std::string toString(bool* ok = nullptr) const;
+    const std::string& toConstRefString(bool* ok = nullptr) const;
+
+    std::vector<uint8_t> toByteArray(bool* ok = nullptr) const;
+    Span<const uint8_t> toConstRefByteArray(bool* ok = nullptr) const;
+
+    bool isConvertibleToConstRefString() const;
+    bool isByteArray() const;
+};
+
 // Mechanism to convert value of a Property object to/from a basic variant type
 class PropertyValueConversion {
 public:
-    // Alias of the std::variant<...> type used by custom PropertyValueConversion::Variant
-    using BaseVariantType = std::variant<
-        std::monostate, bool, int, double, std::string, std::vector<uint8_t>
-    >;
-    // Variant type to be used when (de)serializing values
-    class Variant : public BaseVariantType {
-    public:
-        Variant() = default;
-        Variant(bool v);
-        Variant(int v);
-        Variant(float v);
-        Variant(double v);
-        Variant(const char* str);
-        Variant(const std::string& str);
-        Variant(Span<const uint8_t> bytes);
-
-        bool isValid() const;
-        bool toBool(bool* ok = nullptr) const;
-        int toInt(bool* ok = nullptr) const;
-        double toDouble(bool* ok = nullptr) const;
-
-        std::string toString(bool* ok = nullptr) const;
-        const std::string& toConstRefString(bool* ok = nullptr) const;
-
-        std::vector<uint8_t> toByteArray(bool* ok = nullptr) const;
-        Span<const uint8_t> toConstRefByteArray(bool* ok = nullptr) const;
-
-        bool isConvertibleToConstRefString() const;
-        bool isByteArray() const;
-    };
+    using BaseVariantType = PropertyValueConversion_BaseVariantType;
+    using Variant = PropertyValueConversion_Variant;
 
     int doubleToStringPrecision() const { return m_doubleToStringPrecision; }
     void setDoubleToStringPrecision(int prec) { m_doubleToStringPrecision = prec; }
 
+    // Returns value of property `prop` as a value converted to Variant type
     virtual Variant toVariant(const Property& prop) const;
 
+    // Changes value of property `prop` with value from `variant`
+    // Returns true/false in case of success/failure
     // TODO Use maybe std::error_code instead of bool
     virtual bool fromVariant(Property* prop, const Variant& variant) const;
 
