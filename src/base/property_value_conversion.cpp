@@ -312,6 +312,54 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
     return false;
 }
 
+bool PropertyValueConversion::copyValues(
+        PropertyGroup* destPropGroup,
+        const PropertyGroup& srcPropGroup,
+        const PropertyValueConversion& conv
+    )
+{
+    if (!destPropGroup)
+        return false;
+
+    auto srcPropSpan = srcPropGroup.properties();
+    auto destPropSpan = destPropGroup->properties();
+    auto findDestProp = [&](const Property* srcProp) {
+        //const int propIndex = Span_itemIndex(srcPropSpan, srcProp);
+        const int propIndex = &srcProp - &srcPropSpan.front();
+        if (propIndex < destPropSpan.size()
+            && Span_itemAt(destPropSpan, propIndex)->name().key == srcProp->name().key)
+        {
+            return Span_itemAt(destPropSpan, propIndex);
+        }
+        else {
+            auto itDestProp = std::find_if(
+                destPropSpan.begin(), destPropSpan.end(),
+                [=](const Property* destProp) { return destProp->name().key == srcProp->name().key; }
+            );
+            return itDestProp != destPropSpan.end() ? *itDestProp : nullptr;
+        }
+    };
+
+    bool ok = true;
+    for (const Property* srcProp : srcPropSpan) {
+        Property* destProp = findDestProp(srcProp);
+        if (destProp) {
+            const bool okConv = conv.fromVariant(destProp, conv.toVariant(*srcProp));
+            ok = ok && okConv;
+        }
+        else {
+            ok = false;
+            std::cerr << fmt::format(
+                    "PropertyValueConversion::copyValues() {} [ name={}, type={} ]",
+                    "Did not find destination property", srcProp->name().key, srcProp->dynTypeName()
+                )
+                      << std::endl;
+        }
+    }
+
+    return ok;
+}
+
 static void assignBoolPtr(bool* value, bool on)
 {
     if (value)

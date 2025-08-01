@@ -64,6 +64,13 @@ public:
     // TODO Use maybe std::error_code instead of bool
     virtual bool fromVariant(Property* prop, const Variant& variant) const;
 
+    // Utils
+    static bool copyValues(
+        PropertyGroup* destPropGroup,
+        const PropertyGroup& srcPropGroup,
+        const PropertyValueConversion& conv
+    );
+
 protected:
     // Implementation helpers
     template<typename T> static const T& constRef(const Property& prop);
