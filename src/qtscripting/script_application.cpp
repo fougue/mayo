@@ -14,6 +14,10 @@
 #include "../qtcommon/qtcore_utils.h"
 #include <common/mayo_version.h>
 
+#include <QtCore/QEventLoop>
+#include <QtCore/QtDebug>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <QtQml/QJSEngine>
 
 #include <future>
@@ -37,6 +41,32 @@ ScriptApplication::ScriptApplication(
         for (Application::DocumentIterator itDoc(app); itDoc.hasNext(); itDoc.next())
             this->onDocumentAdded(itDoc.current());
     }
+
+    m_taskMgr.signalStarted.connectSlot([&](TaskId taskId) {
+        Task* task = this->findTask(taskId);
+        if (task && task->callbacks.onStarted.isCallable())
+            task->callbacks.onStarted.call({quint32(taskId)});
+    });
+    m_taskMgr.signalProgressStep.connectSlot([=](TaskId taskId, const std::string& step) {
+        Task* task = this->findTask(taskId);
+        if (task && task->callbacks.onProgress.isCallable()) {
+            task->progressStepTitle = to_QString(step);
+            task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, quint32(taskId) });
+        }
+    });
+    m_taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+        Task* task = this->findTask(taskId);
+        if (task && task->callbacks.onProgress.isCallable()) {
+            task->progressPct = pct;
+            task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, quint32(taskId) });
+        }
+    });
+    m_taskMgr.signalEnded.connectSlot([&](TaskId taskId) {
+        Task* task = this->findTask(taskId);
+        if (task && task->callbacks.onEnded.isCallable())
+            task->callbacks.onEnded.call({quint32(taskId)});
+        m_mapTask.erase(taskId);
+    });
 }
 
 QString ScriptApplication::versionString() const
@@ -122,6 +152,77 @@ void ScriptApplication::closeDocument(QObjectPtr_ScriptDocument doc)
     }
 }
 
+void ScriptApplication::registerTask(
+        TaskId taskId, const TaskCallbacks& callbacks, std::unique_ptr<MessengerBySignal> msg
+    )
+{
+    m_mapTask.insert({ taskId, Task{} });
+    Task* task = this->findTask(taskId);
+    task->callbacks = callbacks;
+    task->messenger = std::move(msg);
+    task->messenger->signalMessage.connectSlot([=](MessageType msgType, std::string msg) {
+        switch (msgType) {
+        case MessageType::Info: {
+            if (task->callbacks.onInfo.isCallable())
+                task->callbacks.onInfo.call({ to_QString(msg), quint32(taskId) });
+            break;
+        }
+        case MessageType::Warning: {
+            if (task->callbacks.onWarning.isCallable())
+                task->callbacks.onWarning.call({ to_QString(msg), quint32(taskId) });
+            break;
+        }
+        case MessageType::Error: {
+            if (task->callbacks.onError.isCallable())
+                task->callbacks.onError.call({ to_QString(msg), quint32(taskId) });
+            break;
+        }
+        } // endswitch
+    });
+}
+
+bool ScriptApplication::waitForDone(int msecs)
+{
+    QJSValueList taskIdList;
+    for (const auto& [taskId, task] : m_mapTask)
+        taskIdList.push_back(quint32(taskId));
+
+    return this->waitForDone(taskIdList, msecs);
+}
+
+bool ScriptApplication::waitForDone(quint32 taskId, int msecs)
+{
+    QEventLoop eventLoop;
+    int waitAmount = 0;
+    const int waitIncrement = 250;
+    auto fnTimeout = [&]{ return msecs > 0 ? waitAmount >= msecs : false; };
+    while (!fnTimeout() && !m_taskMgr.waitForDone(taskId, 10/*ms*/)) {
+        QTimer::singleShot(waitIncrement, &eventLoop, &QEventLoop::quit);
+        eventLoop.exec();
+        waitAmount += waitIncrement;
+    }
+
+    return !fnTimeout();
+}
+
+bool ScriptApplication::waitForDone(QJSValueList taskIdList, int msecs)
+{
+    QElapsedTimer chrono;
+    chrono.start();
+    for (const QJSValue& taskId : taskIdList) {
+        if (msecs > 0 && chrono.elapsed() >= msecs)
+            return false;
+
+        if (taskId.isNumber()) {
+            const int maxDuration = msecs > 0 ? msecs - chrono.elapsed() : -1;
+            if (!this->waitForDone(taskId.toUInt(), maxDuration))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 ScriptDocument* ScriptApplication::mapDocument(const DocumentPtr& doc)
 {
     auto jsDoc = new ScriptDocument(doc, this);
@@ -159,6 +260,12 @@ void ScriptApplication::onDocumentAboutToClose(const DocumentPtr& doc)
 void ScriptApplication::onDocumentClosed(const DocumentPtr& doc)
 {
     this->unmapDocument(doc);
+}
+
+ScriptApplication::Task* ScriptApplication::findTask(TaskId taskId)
+{
+    auto it = m_mapTask.find(taskId);
+    return it != m_mapTask.cend() ? &it->second : nullptr;
 }
 
 } // namespace Mayo

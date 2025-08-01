@@ -7,12 +7,14 @@
 #pragma once
 
 #include "../base/document_ptr.h"
+#include "../base/io_format.h"
+#include "../base/property.h"
 #include "../base/signal.h"
 
 #include "script_tree_node.h"
 
 #include <QtCore/QObject>
-#include <QtCore/QVariant>
+#include <QtCore/QJsonValue>
 #include <QtQml/QJSValue>
 
 // Notes
@@ -49,7 +51,7 @@ class ScriptDocument : public QObject {
     Q_OBJECT
     Q_PROPERTY(int id READ id CONSTANT)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
+    Q_PROPERTY(QString filePath READ filePath WRITE setFilePath NOTIFY filePathChanged)
     Q_PROPERTY(int entityCount READ entityCount NOTIFY entityCountChanged)
 public:
     int id() const;
@@ -58,6 +60,7 @@ public:
     void setName(const QString& str);
 
     QString filePath() const;
+    void setFilePath(const QString& str);
 
     int entityCount() const;
     unsigned entityTreeNodeId(int index) const;
@@ -71,7 +74,9 @@ public:
 
     Q_INVOKABLE void traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilter, QJSValue fn);
 
-    Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnProgressCallback);
+    // TODO Provide both sync/async importFile functions?
+    //Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);
+    Q_INVOKABLE quint32 asyncImportFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);
 
 signals:
     void nameChanged();
@@ -82,6 +87,8 @@ private:
     ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp);
 
     const DocumentPtr& baseDocument() const { return m_doc; }
+
+    std::unique_ptr<PropertyGroup> createReaderParametersFromJson(const QJsonValue& jsonOptions, IO::Format format) const;
 
     friend class ScriptApplication;
     ScriptApplication* m_jsApp = nullptr;

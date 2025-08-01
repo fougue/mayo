@@ -6,6 +6,7 @@
 
 #include "script_global.h"
 
+#include "../base/property_value_conversion.h"
 #include "../qtcommon/qstring_conv.h"
 #include "script_application.h"
 #include "script_geom_curve.h"
@@ -119,6 +120,12 @@ void addScriptEnum(QJSEngine* jsEngine)
 }
 
 } // namespace
+
+const PropertyValueConversion& ScriptEnvironment::getPropertyValueConverter(const ScriptEnvironment& env)
+{
+    static const PropertyValueConversion defaultPropValueConverter;
+    return env.propertyValueConverter ? *env.propertyValueConverter : defaultPropValueConverter;
+}
 
 void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const ScriptEnvironment& env)
 {
