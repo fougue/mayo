@@ -5,7 +5,7 @@ on: [push]
 jobs:
     build-fedora:
         runs-on: ubuntu-latest
-        name: build-fedora40-qt5
+        name: build-fedora-qt5
 
         steps:
         - name: Checkout
@@ -17,12 +17,12 @@ jobs:
           run: |
               sudo apt update
               sudo apt-get -y install podman
-              podman pull fedora:40
+              podman pull docker.io/library/fedora:latest
 
         - name: Create container and run build+tests
           run: |
               {
-                  echo 'FROM fedora:40'
+                  echo 'FROM fedora:latest'
                   echo 'RUN dnf -y update'
                   echo 'RUN dnf -y install xorg-x11-server-Xvfb'
                   echo 'RUN dnf -y install make cmake git gcc-c++'
@@ -40,4 +40,4 @@ jobs:
                   #echo 'RUN sleep 5s'
                   #echo 'RUN ./test-mayo'
               } > podmanfile
-              podman build --tag fedora40-ci -f ./podmanfile
+              podman build --tag fedora-ci -f ./podmanfile
