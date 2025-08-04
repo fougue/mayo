@@ -32,10 +32,4 @@ constexpr int Span_itemIndex(const Container& cont, typename Container::const_re
     return Span_itemIndex(Span<const typename Container::value_type>(cont), item);
 }
 
-template<typename T>
-constexpr typename Span<T>::reference Span_itemAt(Span<T> span, int idx)
-{
-    return span[idx];
-}
-
 } // namespace Mayo

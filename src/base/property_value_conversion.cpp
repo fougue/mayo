@@ -323,13 +323,11 @@ bool PropertyValueConversion::copyValues(
 
     auto srcPropSpan = srcPropGroup.properties();
     auto destPropSpan = destPropGroup->properties();
-    auto findDestProp = [&](const Property* srcProp) {
-        //const int propIndex = Span_itemIndex(srcPropSpan, srcProp);
-        const int propIndex = &srcProp - &srcPropSpan.front();
-        if (propIndex < destPropSpan.size()
-            && Span_itemAt(destPropSpan, propIndex)->name().key == srcProp->name().key)
+    auto findDestProp = [&](const Property* srcProp, size_t hintSrcPropIndex) {
+        if (hintSrcPropIndex < destPropSpan.size()
+            && destPropSpan[hintSrcPropIndex]->name().key == srcProp->name().key)
         {
-            return Span_itemAt(destPropSpan, propIndex);
+            return destPropSpan[hintSrcPropIndex];
         }
         else {
             auto itDestProp = std::find_if(
@@ -341,8 +339,9 @@ bool PropertyValueConversion::copyValues(
     };
 
     bool ok = true;
-    for (const Property* srcProp : srcPropSpan) {
-        Property* destProp = findDestProp(srcProp);
+    for (size_t i = 0; i < srcPropSpan.size(); ++i) {
+        const Property* srcProp = srcPropSpan[i];
+        Property* destProp = findDestProp(srcProp, i);
         if (destProp) {
             const bool okConv = conv.fromVariant(destProp, conv.toVariant(*srcProp));
             ok = ok && okConv;

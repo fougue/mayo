@@ -64,7 +64,12 @@ public:
     // TODO Use maybe std::error_code instead of bool
     virtual bool fromVariant(Property* prop, const Variant& variant) const;
 
-    // Utils
+    // Utility function: copy values of source properties of `srcPropGroup` into destination
+    // properties of `destPropGroup`
+    // Each value is copied using the provided `conv` conversion object. Copy of a property value
+    // happens only if the source/destination properties have the same key
+    // The source/destination properties don't need to be in the same order and have the same size
+    // Returns true/false in case of success/error
     static bool copyValues(
         PropertyGroup* destPropGroup,
         const PropertyGroup& srcPropGroup,
