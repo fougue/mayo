@@ -6,6 +6,9 @@
 
 #include "script_global.h"
 
+#include "../base/io_system.h"
+#include "../base/io_parameters_provider.h"
+#include "../base/property_enumeration.h"
 #include "../base/property_value_conversion.h"
 #include "../qtcommon/qstring_conv.h"
 #include "script_application.h"
@@ -119,6 +122,42 @@ void addScriptEnum(QJSEngine* jsEngine)
     jsEngine->globalObject().setProperty(strEnumPropName, scriptEnum);
 }
 
+QJSValue createScriptEnum(const Property* property, QJSEngine* jsEngine)
+{
+    if (!property || property->dynTypeName() != PropertyEnumeration::TypeName)
+        return {};
+
+    const auto propEnum = dynamic_cast<const PropertyEnumeration*>(property);
+
+    // Check if the enumeration can be declared as a JS object
+    bool enumKeysMayContainSpaces = false;
+    for (const Enumeration::Item& enumItem : propEnum->enumeration().items()) {
+        if (enumItem.name.key.find(' ') != std::string::npos) {
+            enumKeysMayContainSpaces = true;
+            break; // Halt
+        }
+    }
+
+    if (enumKeysMayContainSpaces)
+        return {};
+
+    // Create JS object to declare the enumeration values
+    QJSValue objectEnum = jsEngine->newObject();
+    for (const Enumeration::Item& enumItem : propEnum->enumeration().items())
+        objectEnum.setProperty(to_QString(enumItem.name.key), enumItem.value);
+
+    return objectEnum;
+}
+
+std::string_view getEnumerationTypeName(const Property* property)
+{
+    if (!property || property->dynTypeName() != PropertyEnumeration::TypeName)
+        return {};
+
+    const auto propEnum = dynamic_cast<const PropertyEnumeration*>(property);
+    return propEnum->enumeration().name();
+}
+
 } // namespace
 
 const PropertyValueConversion& ScriptEnvironment::getPropertyValueConverter(const ScriptEnvironment& env)
@@ -144,6 +183,40 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
     addScriptEnum<GeomAbs_SurfaceType>(jsEngine);
     addScriptEnum<TopAbs_ShapeEnum>(jsEngine);
     addScriptEnum<TopAbs_Orientation>(jsEngine);
+
+    if (env.ioSystem && env.ioParametersProvider) {
+        std::unordered_map<IO::Format, QJSValue> mapFormatEnumObjects;
+        auto fnAddScriptEnum = [&](IO::Format format, std::string_view enumTypeName, const QJSValue& jsEnum) {
+            if (!jsEnum.isNull()) {
+                if (mapFormatEnumObjects.find(format) == mapFormatEnumObjects.cend())
+                    mapFormatEnumObjects.insert({format, jsEngine->newObject()});
+
+                QJSValue& objectFormatEnum = mapFormatEnumObjects.find(format)->second;
+                objectFormatEnum.setProperty(to_QString(enumTypeName), jsEnum);
+            }
+        };
+
+        for (IO::Format format : env.ioSystem->readerFormats()) {
+            const PropertyGroup* params = env.ioParametersProvider->findReaderParameters(format);
+            if (params) {
+                for (const Property* prop : params->properties())
+                    fnAddScriptEnum(format, getEnumerationTypeName(prop), createScriptEnum(prop, jsEngine));
+            }
+        }
+
+        for (IO::Format format : env.ioSystem->writerFormats()) {
+            const PropertyGroup* params = env.ioParametersProvider->findWriterParameters(format);
+            if (params) {
+                for (const Property* prop : params->properties())
+                    fnAddScriptEnum(format, getEnumerationTypeName(prop), createScriptEnum(prop, jsEngine));
+            }
+        }
+
+        for (const auto& [format, jsValue] : mapFormatEnumObjects) {
+            const QString strFormatName = to_QString(IO::formatIdentifier(format));
+            jsEngine->globalObject().setProperty(strFormatName, jsValue);
+        }
+    }
 
     static bool metaTypesRegistered = false;
     if (!metaTypesRegistered) {

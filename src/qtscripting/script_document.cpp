@@ -104,17 +104,17 @@ QColor ScriptDocument::tagShapeColor(const QString& tag) const
 }
 #endif
 
-QVariant_ScriptTreeNode ScriptDocument::treeNode(unsigned int treeNodeId) const
+QVariant_ScriptTreeNode ScriptDocument::treeNode(unsigned treeNodeId) const
 {
     return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId));
 }
 
-void ScriptDocument::traverseShape(QJSValue shape, unsigned shapeTypeFilter, QJSValue fn)
+void ScriptDocument::traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilter, QJSValue fn)
 {
     if (!fn.isCallable())
         return;
 
-    if (!m_jsApp || m_jsApp->jsEngine())
+    if (!m_jsApp || !m_jsApp->jsEngine())
         return;
 
     const auto shapeTypeEnum = static_cast<TopAbs_ShapeEnum>(shapeTypeFilter);
@@ -145,16 +145,16 @@ static void printJsonValue(const QJsonValue& jsonValue, int indent = 0)
     }
 }
 
-static QJsonValue findJsonValueFromName(const QJsonValue& jsonValue, std::string_view strName)
+static QJsonObject findJsonFormatParameters(const QJsonValue& jsonValue, IO::Format format)
 {
     if (!jsonValue.isObject())
         return {};
 
-    const QString qstrName = to_QString(strName);
+    const QString formatName = to_QString(IO::formatIdentifier(format));
     const QJsonObject jsonObj = jsonValue.toObject();
     for (const QString& key : jsonObj.keys()) {
-        if (key == qstrName)
-            return jsonObj.value(key);
+        if (QString::compare(key, formatName, Qt::CaseInsensitive) == 0)
+            return jsonObj.value(key).toObject();
     }
 
     return {};
@@ -174,7 +174,7 @@ void ioUpdateParametersFromJson(
         auto itPropParam = std::find_if(
             parameters->properties().begin(), parameters->properties().end(),
             [=](const Property* prop) { return prop->name().key == paramName; }
-            );
+        );
         if (itPropParam != parameters->properties().end()) {
             auto value = QtCoreUtils::toPropertyValueConversionVariant(jsonParams.value(key).toVariant());
             const bool ok = propValueConverter.fromVariant(*itPropParam, value);
@@ -313,14 +313,15 @@ ScriptDocument::ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp)
     ;
 }
 
-std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(const QJsonValue& jsonOptions, IO::Format format) const
+std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(
+        const QJsonValue& jsonOptions, IO::Format format
+    ) const
 {
-    const ScriptEnvironment& env = m_jsApp->environment();
-
-    const QJsonValue jsonFormatParams = findJsonValueFromName(jsonOptions, IO::formatIdentifier(format));
-    if (!jsonFormatParams.isObject())
+    const QJsonObject jsonFormatParams = findJsonFormatParameters(jsonOptions, format);
+    if (jsonFormatParams.empty())
         return {};
 
+    const ScriptEnvironment& env = m_jsApp->environment();
     const auto factoryReader = env.ioSystem->findFactoryReader(format);
     if (!factoryReader)
         return {};
@@ -329,7 +330,7 @@ std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(co
     const PropertyGroup* ptrDefaultParams = env.ioParametersProvider->findReaderParameters(format);
     const auto& propValueConverter = ScriptEnvironment::getPropertyValueConverter(env);
     PropertyValueConversion::copyValues(ptrParams.get(), *ptrDefaultParams, propValueConverter);
-    ioUpdateParametersFromJson(jsonFormatParams.toObject(), ptrParams.get(), propValueConverter);
+    ioUpdateParametersFromJson(jsonFormatParams, ptrParams.get(), propValueConverter);
     return ptrParams;
 }
 
