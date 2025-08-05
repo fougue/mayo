@@ -281,16 +281,29 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
         return fnError("Variant expected to hold string");
     }
     else if (isType<PropertyEnumeration>(prop)) {
+        auto propEnum = ptr<PropertyEnumeration>(prop);
         if (variant.isConvertibleToConstRefString()) {
             const std::string& name = variant.toConstRefString();
-            const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItemByName(name);
+            const Enumeration::Item* ptrItem = propEnum->enumeration().findItemByName(name);
             if (ptrItem)
-                return ptr<PropertyEnumeration>(prop)->setValue(ptrItem->value);
+                return propEnum->setValue(ptrItem->value);
 
             return fnError(fmt::format("Found no enumeration item for '{}'", name));
         }
-
-        return fnError("Variant expected to hold string");
+        else {
+            bool ok = false;
+            const int value = variant.toInt(&ok);
+            if (ok) {
+                const Enumeration::Item* ptrItem = propEnum->enumeration().findItemByValue(value);
+                if (ptrItem)
+                    return propEnum->setValue(value);
+                else
+                    return fnError(fmt::format("Found no enumeration item with value '{}'", value));
+            }
+            else {
+                return fnError(fmt::format("Failed to find enumeration value"));
+            }
+        }
     }
     else if (isType<BasePropertyQuantity>(prop)) {
         if (variant.isConvertibleToConstRefString()) {

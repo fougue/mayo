@@ -43,6 +43,8 @@ private slots:
     void PropertyValueConversion_test_data();
     void PropertyValueConversion_bugGitHub219_test();
 
+    void PropertyValueConversion_Enumeration_test();
+
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 

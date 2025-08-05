@@ -9,6 +9,7 @@
 #include "span.h"
 #include "text_id.h"
 #include <initializer_list>
+#include <string>
 #include <vector>
 #include <type_traits>
 
@@ -29,6 +30,10 @@ public:
     // Ctors
     Enumeration() = default;
     Enumeration(std::initializer_list<Item> listItem);
+
+    // Enumeration name
+    const std::string& name() const { return m_name; }
+    void setName(std::string_view name) { m_name = name; }
 
     // Adds an enumerated item
     template<typename ValueType>
@@ -76,6 +81,7 @@ public:
 private:
     int findIndexByValue_untyped(Value value) const;
 
+    std::string m_name;
     std::vector<Item> m_vecItem;
 };
 

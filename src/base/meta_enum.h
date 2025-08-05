@@ -13,16 +13,21 @@
 namespace Mayo {
 
 // Provides meta-data helper functions about enumerated types
-// Currently it wraps magic_enum 3rdparty library
+// Currently wraps magic_enum 3rdparty library
 class MetaEnum {
 public:
     template<typename EnumType>
-    static std::string_view name(EnumType enumValue) {
+    static constexpr std::string_view typeName() {
+        return magic_enum::enum_type_name<EnumType>();
+    }
+
+    template<typename EnumType>
+    static constexpr std::string_view name(EnumType enumValue) {
         return magic_enum::enum_name(enumValue);
     }
 
     template<typename EnumType>
-    static int count() {
+    static constexpr int count() {
         return magic_enum::enum_count<EnumType>();
     }
 
@@ -37,12 +42,12 @@ public:
 
     // Returns std::array with pairs(value, name), sorted by enum value
     template<typename EnumType>
-    static auto entries() {
+    static constexpr auto entries() {
         return magic_enum::enum_entries<EnumType>();
     }
 
     template<typename EnumType>
-    static auto values() {
+    static constexpr auto values() {
         return magic_enum::enum_values<EnumType>();
     }
 };

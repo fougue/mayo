@@ -477,7 +477,7 @@ void TestBase::PropertyValueConversion_test()
         prop.reset(new PropertyOccColor(nullptr, {}));
     }
     else if (strPropertyName == PropertyEnumeration::TypeName) {
-        enum class MayoTest_Color { Bleu, Blanc, Rouge };
+        enum class MayoTest_Color { Bleu = 0, Blanc, Rouge };
         prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
     }
     else if (strPropertyName == PropertyFilePath::TypeName) {
@@ -506,7 +506,7 @@ void TestBase::PropertyValueConversion_test_data()
     QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << Variant("#0000AA");
     QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << Variant("#FFFFFF");
     QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << Variant("#BB0000");
-    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
+    QTest::newRow("Enumeration(Color=Blanc)") << PropertyEnumeration::TypeName << Variant("Blanc");
 }
 
 void TestBase::PropertyValueConversion_bugGitHub219_test()
@@ -519,6 +519,21 @@ void TestBase::PropertyValueConversion_bugGitHub219_test()
     //qDebug() << "strPath:" << QByteArray::fromStdString(strPath);
     //qDebug() << "propFilePath:" << QByteArray::fromStdString(propFilePath.value().u8string());
     QCOMPARE(propFilePath.value().u8string(), strPath);
+}
+
+void TestBase::PropertyValueConversion_Enumeration_test()
+{
+    enum class MayoTest_Color { Bleu = 0, Blanc, Rouge };
+    PropertyEnum<MayoTest_Color> propEnum(nullptr, {});
+
+    using Variant = PropertyValueConversion::Variant;
+    PropertyValueConversion conv;
+
+    QVERIFY(conv.fromVariant(&propEnum, Variant{"Blanc"}));
+    QCOMPARE(propEnum.value(), MayoTest_Color::Blanc);
+
+    QVERIFY(conv.fromVariant(&propEnum, Variant{2}));
+    QCOMPARE(propEnum.value(), MayoTest_Color::Rouge);
 }
 
 void TestBase::PropertyQuantityValueConversion_test()
@@ -749,6 +764,7 @@ void TestBase::Enumeration_test()
     QVERIFY(!baseEnum.empty());
     QCOMPARE(baseEnum.size(), MetaEnum::count<TestEnumType>());
     QCOMPARE(baseEnum.items().size(), static_cast<unsigned>(baseEnum.size()));
+    QCOMPARE(baseEnum.name(), MetaEnum::typeName<TestBase_Enum1>());
     for (const auto& enumEntry : MetaEnum::entries<TestEnumType>()) {
         QVERIFY(baseEnum.contains(enumEntry.second));
         QCOMPARE(baseEnum.findValueByName(enumEntry.second), int(enumEntry.first));
