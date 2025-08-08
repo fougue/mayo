@@ -81,6 +81,8 @@ public:
     FontChange& scalePointSizeF(double f);
     FontChange& bold(bool on = true);
     FontChange& fixedPitch(bool on = true);
+    FontChange& stretch(int factor);
+    FontChange& capitalization(QFont::Capitalization caps);
 
     constexpr operator const QFont&() const { return m_font; }
 

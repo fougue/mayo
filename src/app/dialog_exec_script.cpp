@@ -6,6 +6,7 @@
 
 #include "dialog_exec_script.h"
 
+#include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
@@ -167,6 +168,12 @@ void DialogExecScript::addConsoleOutput(const Message& msg)
 
     auto item = new QTreeWidgetItem;
     item->setText(0, fnStrMsgType(msg.type));
+    item->setFont(0, QtGuiUtils::FontChange(item->font(0)).scalePointSizeF(0.8).capitalization(QFont::AllUppercase));
+    if (msg.type == QtCriticalMsg || msg.type == QtFatalMsg) {
+        item->setBackground(0, QColor(Qt::red));
+        item->setFont(0, QtGuiUtils::FontChange(item->font(0)).bold(true));
+    }
+
     item->setText(1, msg.text);
     item->setText(2, QFileInfo(msg.contextFile).fileName());
     item->setText(3, QString::number(msg.contextLine));

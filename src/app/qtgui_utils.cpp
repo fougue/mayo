@@ -200,6 +200,18 @@ FontChange& FontChange::fixedPitch(bool on)
     return *this;
 }
 
+FontChange& FontChange::stretch(int factor)
+{
+    m_font.setStretch(factor);
+    return *this;
+}
+
+FontChange& FontChange::capitalization(QFont::Capitalization caps)
+{
+    m_font.setCapitalization(caps);
+    return *this;
+}
+
 Quantity_Color toPreferredColorSpace(const QColor& c)
 {
     // See https://dev.opencascade.org/content/occt-3d-viewer-becomes-srgb-aware
