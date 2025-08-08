@@ -30,6 +30,8 @@
 #include <QtQml/QJSEngine>
 #include <QtQml/QJSValueIterator>
 
+#include <fmt/format.h>
+
 namespace Mayo {
 
 int ScriptDocument::id() const
@@ -126,7 +128,9 @@ void ScriptDocument::traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilt
     });
 }
 
-static void printJsonValue(const QJsonValue& jsonValue, int indent = 0)
+namespace {
+
+void printJsonValue(const QJsonValue& jsonValue, int indent = 0)
 {
     if (jsonValue.isObject()) {
         const QJsonObject jsonObj = jsonValue.toObject();
@@ -145,7 +149,7 @@ static void printJsonValue(const QJsonValue& jsonValue, int indent = 0)
     }
 }
 
-static QJsonObject findJsonFormatParameters(const QJsonValue& jsonValue, IO::Format format)
+QJsonObject findJsonFormatParameters(const QJsonValue& jsonValue, IO::Format format)
 {
     if (!jsonValue.isObject())
         return {};
@@ -160,10 +164,25 @@ static QJsonObject findJsonFormatParameters(const QJsonValue& jsonValue, IO::For
     return {};
 }
 
+// Various errors that may be reported in ioUpdateParametersFromJson()
+enum class IOUpdateParametersFromJsonError {
+    ParameterNotFound, ValueConversionFailed
+};
+
+// Type alias for the error callback invoked by ioUpdateParametersFromJson()
+using IOUpdateParametersFromJsonErrorCallback = std::function<void(IOUpdateParametersFromJsonError, std::string_view, std::string_view)>;
+
+// Update the I/O properties in 'parameters' from the JSON object 'jsonParams'
+// The input JSON object is expected to be flat(only simple values, no inner objects), and its keys
+// must match the property names
+// The provided PropertyValueConversion object is used to copy the JSON values to the corresponding
+// I/O parameters
+// In any case of error the function errorCallback is invoked with information about the parameter
 void ioUpdateParametersFromJson(
         const QJsonObject& jsonParams,
         PropertyGroup* parameters,
-        const PropertyValueConversion& propValueConverter
+        const PropertyValueConversion& propValueConverter,
+        const IOUpdateParametersFromJsonErrorCallback& errorCallback = nullptr
     )
 {
     if (!parameters)
@@ -180,18 +199,19 @@ void ioUpdateParametersFromJson(
             const bool ok = propValueConverter.fromVariant(*itPropParam, value);
             if (ok)
                 qDebug() << "ioUpdateParametersFromJson() Override value of param" << to_QString(paramName) << "with" << to_QString(value.toString());
-            else
-                qWarning() << "ioUpdateParametersFromJson() Call to PropertyValueConversion::fromVariant() failed for param" << to_QString(paramName);
+
+            if (!ok && errorCallback)
+                errorCallback(IOUpdateParametersFromJsonError::ValueConversionFailed, paramName, value.toString());
         }
         else {
-            qWarning() << "ioUpdateParametersFromJson() Did not find property for param" << to_QString(paramName);
+            if (errorCallback)
+                errorCallback(IOUpdateParametersFromJsonError::ParameterNotFound, paramName, std::string{});
         }
-
     }
 }
 
-namespace {
-
+// Simple ParametersProvider that stores the I/O parameters for further access
+// TODO Move in Base module?
 class ImplParametersProvider : public IO::ParametersProvider {
 public:
     using PropertyGroupPtr = std::unique_ptr<PropertyGroup>;
@@ -258,7 +278,9 @@ quint32 ScriptDocument::asyncImportFile(QString strFilepath, QJSValue jsOptions,
     TaskManager& taskMgr = m_jsApp->taskManager();
     auto importTaskId = taskMgr.newTask([=](TaskProgress* progress) {
         ImplParametersProvider jsParamsProvider;
-        auto readerParams = this->createReaderParametersFromJson(jsonOptions, format);
+        auto readerParams = this->createReaderParametersFromJson(jsonOptions, format, [=](std::string_view err) {
+            logScriptError(m_jsApp->jsEngine(), err, "Document.asyncImportFile()");
+        });
         jsParamsProvider.addReaderParameters(format, std::move(readerParams));
         env->ioSystem->importInDocument()
             .targetDocument(this->baseDocument())
@@ -314,7 +336,9 @@ ScriptDocument::ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp)
 }
 
 std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(
-        const QJsonValue& jsonOptions, IO::Format format
+        const QJsonValue& jsonOptions,
+        IO::Format format,
+        const std::function<void(std::string_view)>& errorCallback
     ) const
 {
     const QJsonObject jsonFormatParams = findJsonFormatParameters(jsonOptions, format);
@@ -330,7 +354,24 @@ std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(
     const PropertyGroup* ptrDefaultParams = env.ioParametersProvider->findReaderParameters(format);
     const auto& propValueConverter = ScriptEnvironment::getPropertyValueConverter(env);
     PropertyValueConversion::copyValues(ptrParams.get(), *ptrDefaultParams, propValueConverter);
-    ioUpdateParametersFromJson(jsonFormatParams, ptrParams.get(), propValueConverter);
+
+    IOUpdateParametersFromJsonErrorCallback ioUpdateErrorCallback =
+        [&](IOUpdateParametersFromJsonError err, std::string_view paramName, std::string_view paramValue) {
+            auto strFormat = IO::formatIdentifier(format);
+            switch (err) {
+            case IOUpdateParametersFromJsonError::ParameterNotFound:
+                errorCallback(fmt::format(textIdTr("Unknown parameter [name={}.{}]"), strFormat, paramName));
+                break;
+            case IOUpdateParametersFromJsonError::ValueConversionFailed:
+                errorCallback(
+                    fmt::format(textIdTr("Conversion of parameter value failed [name={}.{}, value={}]"),
+                                strFormat, paramName, paramValue)
+                );
+                break;
+            }
+        };
+    ioUpdateErrorCallback = errorCallback ? ioUpdateErrorCallback : nullptr;
+    ioUpdateParametersFromJson(jsonFormatParams, ptrParams.get(), propValueConverter, ioUpdateErrorCallback);
     return ptrParams;
 }
 

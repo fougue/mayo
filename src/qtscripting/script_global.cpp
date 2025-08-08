@@ -240,12 +240,21 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
 void logScriptError(const QJSValue& jsVal, const char* functionName)
 {
     if (jsVal.isError()) {
-        const QByteArray name = jsVal.property("name").toString().toUtf8();
+        //const QByteArray name = jsVal.property("name").toString().toUtf8();
         const QByteArray message = jsVal.property("message").toString().toUtf8();
         const QByteArray fileName = jsVal.property("fileName").toString().toUtf8();
         const int lineNumber = jsVal.property("lineNumber").toInt();
         const QMessageLogger msgLogger(fileName.constData(), lineNumber, functionName, "js");
-        msgLogger.critical("%s: %s", name.constData(), message.constData());
+        //msgLogger.critical("%s: %s", name.constData(), message.constData());
+        msgLogger.critical(message.constData());
+    }
+}
+
+void logScriptError(QJSEngine* jsEngine, std::string_view message, const char* functionName)
+{
+    if (jsEngine) {
+        auto jsError = jsEngine->newErrorObject(QJSValue::GenericError, to_QString(message));
+        logScriptError(jsError, functionName);
     }
 }
 

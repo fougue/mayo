@@ -9,6 +9,7 @@
 #include "../base/application_ptr.h"
 #include <TDF_Label.hxx>
 #include <functional>
+#include <string_view>
 class QJSEngine;
 class QJSValue;
 
@@ -28,7 +29,30 @@ struct ScriptEnvironment {
     static const PropertyValueConversion& getPropertyValueConverter(const ScriptEnvironment& env);
 };
 
+// Configures the JS engine so it can support Mayo Scripting API
+//
+// * Installs the required JS extensions(eg Console)
+//
+// * Registers a global 'application' JS object bound to 'app'. This means the JS scripts can access
+//   the already loaded documents in Mayo
+//
+// * Registers Mayo Scripting enumerations as plain objects for cleaner syntax in JS scripts
+//   Example:
+//       GeomCurveType {
+//           Line: intLiteral,
+//           Circle: intLiteral,
+//           Ellipse: intLiteral,
+//           ...
+//        };
+//   To be used in JS code as GeomCurveType.Circle instead of error-prone int/string literal
+//   This also includes enums declared for any IO reader/writer provided by the IO::System object
+//   of input ScriptEnvironment
 void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const ScriptEnvironment& env);
+
+// Generates a critical message to the logging framework if the JS value owns an error(QJSValue::isError())
 void logScriptError(const QJSValue& jsVal, const char* functionName = nullptr);
+
+// Overload of the above function, but an error is created using the provided JS engine
+void logScriptError(QJSEngine* jsEngine, std::string_view message, const char* functionName = nullptr);
 
 } // namespace Mayo

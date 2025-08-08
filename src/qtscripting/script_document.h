@@ -17,6 +17,8 @@
 #include <QtCore/QJsonValue>
 #include <QtQml/QJSValue>
 
+#include <functional>
+
 // Notes
 //     Pour accéder aux éléments de l'assemblage il faut passer par TDF_Label
 //     * Dans l'environnement JS on peut employer une représentation string obtenue par CafUtils::labelTag()
@@ -53,6 +55,7 @@ class ScriptDocument : public QObject {
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString filePath READ filePath WRITE setFilePath NOTIFY filePathChanged)
     Q_PROPERTY(int entityCount READ entityCount NOTIFY entityCountChanged)
+    MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::ScriptDocument)
 public:
     int id() const;
 
@@ -88,7 +91,11 @@ private:
 
     const DocumentPtr& baseDocument() const { return m_doc; }
 
-    std::unique_ptr<PropertyGroup> createReaderParametersFromJson(const QJsonValue& jsonOptions, IO::Format format) const;
+    std::unique_ptr<PropertyGroup> createReaderParametersFromJson(
+        const QJsonValue& jsonOptions,
+        IO::Format format,
+        const std::function<void(std::string_view)>& errorCallback = nullptr
+    ) const;
 
     friend class ScriptApplication;
     ScriptApplication* m_jsApp = nullptr;
