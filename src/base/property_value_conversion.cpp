@@ -107,7 +107,7 @@ PropertyValueConversion_Variant::PropertyValueConversion_Variant(double v)
 {}
 
 PropertyValueConversion_Variant::PropertyValueConversion_Variant(const char* str)
-    : PropertyValueConversion_BaseVariantType(std::string(str))
+    : PropertyValueConversion_BaseVariantType(std::string(str ? str : ""))
 {}
 
 PropertyValueConversion_Variant::PropertyValueConversion_Variant(const std::string& str)

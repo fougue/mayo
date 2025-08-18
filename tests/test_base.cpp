@@ -386,6 +386,44 @@ void TestBase::OccHandle_test()
     }
 }
 
+void TestBase::PropertyValueConversionVariant_ctor_test()
+{
+    using Variant = PropertyValueConversion::Variant;
+    {
+        const Variant var;
+        QVERIFY(!var.isValid());
+        QCOMPARE(var.index(), 0);
+    }
+
+    {
+        const Variant var(true);
+        QVERIFY(var.isValid());
+        QCOMPARE(var.index(), 1);
+        bool ok = false;
+        QCOMPARE(var.toBool(&ok), true);
+        QVERIFY(ok);
+    }
+
+    {
+        const char* cstr = "test-str";
+        const Variant var(cstr);
+        QVERIFY(var.isValid());
+        QCOMPARE(var.index(), 4);
+        bool ok = false;
+        QCOMPARE(var.toString(&ok), std::string{cstr});
+        QVERIFY(ok);
+    }
+
+    {
+        const Variant var(nullptr);
+        QVERIFY(var.isValid());
+        QCOMPARE(var.index(), 4);
+        bool ok = false;
+        QCOMPARE(var.toString(&ok), std::string{});
+        QVERIFY(ok);
+    }
+}
+
 void TestBase::PropertyValueConversionVariant_toInt_test()
 {
     using Variant = PropertyValueConversion::Variant;

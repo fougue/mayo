@@ -33,6 +33,8 @@ private slots:
 
     void OccHandle_test();
 
+    void PropertyValueConversionVariant_ctor_test();
+
     void PropertyValueConversionVariant_toInt_test();
     void PropertyValueConversionVariant_toInt_test_data();
 
