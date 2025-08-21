@@ -24,6 +24,7 @@ class WidgetExplodeAssembly;
 class WidgetGrid;
 class WidgetMeasure;
 
+// QWidget providing user-interaction with a GuiDocument object
 class WidgetGuiDocument : public QWidget {
     Q_OBJECT
 public:
