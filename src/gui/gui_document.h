@@ -164,6 +164,7 @@ private:
     void applyExplodingFactor(const GraphicsEntity& entity, double t);
 
     void v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner);
+    void configureViewCubeSizes();
 
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;

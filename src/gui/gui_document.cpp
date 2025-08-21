@@ -78,7 +78,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     this->setViewTrihedronMode(ViewTrihedronMode::AisViewCube);
-    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_UPPER);
+    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
 #else
     this->setViewTrihedronMode(ViewTrihedronMode::V3dViewZBuffer);
     this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
@@ -174,23 +174,9 @@ void GuiDocument::setDevicePixelRatio(double ratio)
         break;
     }
     case ViewTrihedronMode::AisViewCube: {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
-        if (viewCube) {
-            viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
-            viewCube->SetFontHeight(12 * m_devicePixelRatio);
-            const int xyOffset = std::lround(85 * m_devicePixelRatio);
-            viewCube->SetTransformPersistence(
-                new Graphic3d_TransformPers(
-                        Graphic3d_TMF_TriedronPers,
-                        m_viewTrihedronCorner,
-                        Graphic3d_Vec2i(xyOffset, xyOffset)
-                    )
-            );
-            viewCube->Redisplay(true/*allModes*/);
-        }
-#endif
-
+        this->configureViewCubeSizes();
+        if (m_aisViewCube)
+            m_gfxScene.recomputeObjectPresentation(m_aisViewCube);
         break;
     }
     } // endswitch
@@ -456,23 +442,17 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
         if (m_aisViewCube.IsNull()) {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
             auto aisViewCube = new AIS_ViewCube;
+            m_aisViewCube = aisViewCube;
             aisViewCube->SetBoxColor(Quantity_NOC_GRAY75);
             //aisViewCube->SetFixedAnimationLoop(false);
-            aisViewCube->SetSize(55);
-            aisViewCube->SetFontHeight(12);
             aisViewCube->SetAxesLabels("", "", "");
-            aisViewCube->SetTransformPersistence(
-                new Graphic3d_TransformPers(
-                        Graphic3d_TMF_TriedronPers, m_viewTrihedronCorner, Graphic3d_Vec2i(85, 85)
-                    )
-            );
+            this->configureViewCubeSizes();
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             const OccHandle<Prs3d_DatumAspect>& datumAspect = aisViewCube->Attributes()->DatumAspect();
             datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
             datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
-            m_aisViewCube = aisViewCube;
 #endif
         }
 
@@ -736,6 +716,29 @@ void GuiDocument::v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner)
 {
     const double scale = 0.075 * m_devicePixelRatio;
     m_v3dView->TriedronDisplay(corner, Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
+}
+
+void GuiDocument::configureViewCubeSizes()
+{
+    const int viewCubePxSize = 64;
+    const int viewCubePxFontHeight = 12;
+    const int viewCubePxOffsetXY = 90;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
+    if (viewCube) {
+        viewCube->SetSize(viewCubePxSize * m_devicePixelRatio, true/*adaptOtherParams*/);
+        viewCube->SetFontHeight(viewCubePxFontHeight * m_devicePixelRatio);
+        const int offsetXY = std::lround(viewCubePxOffsetXY * m_devicePixelRatio);
+        viewCube->SetTransformPersistence(
+            new Graphic3d_TransformPers(
+                Graphic3d_TMF_TriedronPers,
+                m_viewTrihedronCorner,
+                Graphic3d_Vec2i{offsetXY, offsetXY}
+            )
+        );
+    }
+#endif
 }
 
 } // namespace Mayo
