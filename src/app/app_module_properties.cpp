@@ -18,6 +18,21 @@
 
 namespace Mayo {
 
+namespace {
+
+const Enumeration& cornerEnumeration()
+{
+    static const Enumeration corners = {
+        { Aspect_TOTP_LEFT_UPPER, AppModuleProperties::textId("TopLeft") },
+        { Aspect_TOTP_RIGHT_UPPER, AppModuleProperties::textId("TopRight") },
+        { Aspect_TOTP_LEFT_LOWER, AppModuleProperties::textId("BottomLeft") },
+        { Aspect_TOTP_RIGHT_LOWER, AppModuleProperties::textId("BottomRight") }
+    };
+    return corners;
+}
+
+} // namespace
+
 AppModuleProperties::AppModuleProperties(Settings* settings)
     : PropertyGroup(settings),
       groupId_system(settings->addGroup(textId("system"))),
@@ -25,6 +40,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
       groupId_meshing(settings->addGroup(textId("meshing"))),
       groupId_graphics(settings->addGroup(textId("graphics"))),
       language(this, textId("language"), &AppModule::languages()),
+      viewCubeCorner(this, textId("viewCubeCorner"), &cornerEnumeration()),
       m_settings(settings)
 {
     const auto sectionId_systemUnits = settings->addSection(groupId_system, textId("units"));
@@ -65,6 +81,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
 
     // Graphics
     settings->addSetting(&this->navigationStyle, groupId_graphics);
+    settings->addSetting(&this->viewCubeCorner, groupId_graphics);
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
     settings->addSetting(&this->turnViewAngleIncrement, groupId_graphics);
@@ -99,6 +116,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     });
     settings->addResetFunction(groupId_graphics, [=]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
+        this->viewCubeCorner.setValue(Aspect_TOTP_LEFT_LOWER);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
@@ -222,6 +240,7 @@ void AppModuleProperties::retranslate()
     this->turnViewAngleIncrement.setDescription(
         textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
     );
+    this->viewCubeCorner.setDescription(textIdTr("Corner where 3D view cube is located"));
 
     // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
@@ -261,6 +280,11 @@ void AppModuleProperties::onPropertyChanged(Property* prop)
     }
 
     PropertyGroup::onPropertyChanged(prop);
+}
+
+Aspect_TypeOfTriedronPosition AppModuleProperties::graphicsViewCubeCornerValue() const
+{
+    return static_cast<Aspect_TypeOfTriedronPosition>(this->viewCubeCorner.value());
 }
 
 } // namespace Mayo

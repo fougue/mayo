@@ -24,6 +24,7 @@ class WidgetExplodeAssembly;
 class WidgetGrid;
 class WidgetMeasure;
 
+// QWidget providing user-interaction with a GuiDocument object
 class WidgetGuiDocument : public QWidget {
     Q_OBJECT
 public:
@@ -54,6 +55,7 @@ private:
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
+    void layoutWidgetPanels();
 
     ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
 

@@ -77,62 +77,87 @@
         <translation>静默重载</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="23"/>
+        <location filename="../src/app/app_module_properties.cpp" line="26"/>
+        <source>TopLeft</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="27"/>
+        <source>TopRight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="28"/>
+        <source>BottomLeft</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="29"/>
+        <source>BottomRight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="38"/>
         <source>system</source>
         <translation>系统</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="24"/>
+        <location filename="../src/app/app_module_properties.cpp" line="39"/>
         <source>application</source>
         <translation>应用程序</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="25"/>
+        <location filename="../src/app/app_module_properties.cpp" line="40"/>
         <source>meshing</source>
         <translation>网格划分</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="26"/>
+        <location filename="../src/app/app_module_properties.cpp" line="41"/>
         <source>graphics</source>
         <translation>图形</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="27"/>
+        <location filename="../src/app/app_module_properties.cpp" line="42"/>
         <source>language</source>
         <translation>界面语言</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="30"/>
+        <location filename="../src/app/app_module_properties.cpp" line="43"/>
+        <source>viewCubeCorner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="46"/>
         <source>units</source>
         <translation>单位</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="31"/>
+        <location filename="../src/app/app_module_properties.cpp" line="47"/>
         <source>clipPlanes</source>
         <translation>剖面</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="32"/>
+        <location filename="../src/app/app_module_properties.cpp" line="48"/>
         <source>meshDefaults</source>
         <translation>默认网格</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="129"/>
+        <location filename="../src/app/app_module_properties.cpp" line="147"/>
         <source>import</source>
         <translation>导入</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="146"/>
+        <location filename="../src/app/app_module_properties.cpp" line="164"/>
         <source>export</source>
         <translation>导出</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="170"/>
+        <location filename="../src/app/app_module_properties.cpp" line="188"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation>语言修改后需要重启后生效！（如果中文翻译有错误请在B站搜索[CP设计]向我反馈）</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="174"/>
+        <location filename="../src/app/app_module_properties.cpp" line="192"/>
         <source>Action to be done after some opened document file is changed(modified) externally
 
 Select options `{0}` or `{1}` so the application monitors changes made to opened files
@@ -149,12 +174,12 @@ Select `{1}` to automatically reload documents without any user interaction</sou
 选择`{1}`可自动静默重载文档</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="183"/>
+        <location filename="../src/app/app_module_properties.cpp" line="201"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation>同时打开多文档时，确保3D视图显示内容与模型树选择项同步</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="187"/>
+        <location filename="../src/app/app_module_properties.cpp" line="205"/>
         <source>Force usage of the fallback Qt widget to display OpenGL graphics.
 
 When `OFF` the application will try to use OpenGL framebuffer for rendering, this allows to display overlay widgets(eg measure tools panel) with translucid background. However using OpenGL framebuffer might cause troubles for some users(eg empty 3D window) especially on macOS.
@@ -172,22 +197,22 @@ This option is applicable when OpenCascade ≥ 7.6 version. Change will take eff
 适用于OpenCascade ≥7.6版本，重启后生效</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="201"/>
+        <location filename="../src/app/app_module_properties.cpp" line="219"/>
         <source>Controls precision of the mesh to be computed from the BRep shape</source>
         <translation>控制BRep形状生成的网格精度</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="204"/>
+        <location filename="../src/app/app_module_properties.cpp" line="222"/>
         <source>For the tessellation of faces the chordal deflection limits the distance between a curve and its tessellation</source>
         <translation>弦高公差：限制曲线与网格折线间的最大距离</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="208"/>
+        <location filename="../src/app/app_module_properties.cpp" line="226"/>
         <source>For the tessellation of faces the angular deflection limits the angle between subsequent segments in a polyline</source>
         <translation>角度公差：限制折线相邻线段间的最大角度</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="212"/>
+        <location filename="../src/app/app_module_properties.cpp" line="230"/>
         <source>Relative computation of edge tolerance
 
 If activated, deflection used for the polygonalisation of each edge will be `ChordalDeflection` &amp;#215; `SizeOfEdge`. The deflection used for the faces will be the maximum deflection of their edges.</source>
@@ -196,147 +221,152 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 如果激活，每个边缘的多边形化使用的偏差将是 `ChordalDeflection` &amp;#215; `SizeOfEdge`。面使用的偏差将是其边缘的最大偏差。</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="220"/>
+        <location filename="../src/app/app_module_properties.cpp" line="238"/>
         <source>3D view manipulation shortcuts configuration to mimic other common CAD applications</source>
         <translation>配置3D视图操作快捷键以匹配主流CAD软件</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="223"/>
+        <location filename="../src/app/app_module_properties.cpp" line="241"/>
         <source>Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)</source>
         <translation>视图绕Z轴旋转时的角度增量（度）</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="228"/>
+        <location filename="../src/app/app_module_properties.cpp" line="243"/>
+        <source>Corner where 3D view cube is located</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="247"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation>默认显示世界坐标系（不影响已打开文档）</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="232"/>
+        <location filename="../src/app/app_module_properties.cpp" line="251"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation>启用剖面封口显示</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="235"/>
+        <location filename="../src/app/app_module_properties.cpp" line="254"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation>启用剖面线纹理</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="53"/>
+        <location filename="../src/app/app_module_properties.h" line="57"/>
         <source>decimalCount</source>
         <translation>小数位数</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="54"/>
+        <location filename="../src/app/app_module_properties.h" line="58"/>
         <source>schema</source>
         <translation>协议模式</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="58"/>
+        <location filename="../src/app/app_module_properties.h" line="62"/>
         <source>recentFiles</source>
         <translation>最近文件</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="59"/>
+        <location filename="../src/app/app_module_properties.h" line="63"/>
         <source>lastOpenFolder</source>
         <translation>最后打开目录</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="60"/>
+        <location filename="../src/app/app_module_properties.h" line="64"/>
         <source>lastSelectedFormatFilter</source>
         <translation>最后选择的格式过滤器</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="61"/>
+        <location filename="../src/app/app_module_properties.h" line="65"/>
         <source>actionOnDocumentFileChange</source>
         <translation>文档外部修改响应</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="62"/>
+        <location filename="../src/app/app_module_properties.h" line="66"/>
         <source>linkWithDocumentSelector</source>
         <translation>与文档选择器联动</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="63"/>
+        <location filename="../src/app/app_module_properties.h" line="67"/>
         <source>forceOpenGlFallbackWidget</source>
         <translation>强制OpenGL备用控件</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="64"/>
+        <location filename="../src/app/app_module_properties.h" line="68"/>
         <source>appUiState</source>
         <translation>界面状态</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="68"/>
+        <location filename="../src/app/app_module_properties.h" line="72"/>
         <source>meshingQuality</source>
         <translation>网格质量</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="69"/>
+        <location filename="../src/app/app_module_properties.h" line="73"/>
         <source>meshingChordalDeflection</source>
         <translation>网格弦高公差</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="70"/>
+        <location filename="../src/app/app_module_properties.h" line="74"/>
         <source>meshingAngularDeflection</source>
         <translation>网格角度公差</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="71"/>
+        <location filename="../src/app/app_module_properties.h" line="75"/>
         <source>meshingRelative</source>
         <translation>相对网格计算</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="74"/>
+        <location filename="../src/app/app_module_properties.h" line="78"/>
         <source>navigationStyle</source>
         <translation>导航样式</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="75"/>
+        <location filename="../src/app/app_module_properties.h" line="80"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>默认显示原点坐标轴</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="76"/>
+        <location filename="../src/app/app_module_properties.h" line="81"/>
         <source>instantZoomFactor</source>
         <translation>实时缩放系数</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="77"/>
+        <location filename="../src/app/app_module_properties.h" line="82"/>
         <source>turnViewAngleIncrement</source>
         <translation>视图旋转角度增量</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="79"/>
+        <location filename="../src/app/app_module_properties.h" line="84"/>
         <source>cappingOn</source>
         <translation>启用封口</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="80"/>
+        <location filename="../src/app/app_module_properties.h" line="85"/>
         <source>cappingHatchOn</source>
         <translation>启用剖面线封口</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="82"/>
+        <location filename="../src/app/app_module_properties.h" line="87"/>
         <source>color</source>
         <translation>颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="83"/>
+        <location filename="../src/app/app_module_properties.h" line="88"/>
         <source>edgeColor</source>
         <translation>边线颜色</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="84"/>
+        <location filename="../src/app/app_module_properties.h" line="89"/>
         <source>material</source>
         <translation>材质</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="85"/>
+        <location filename="../src/app/app_module_properties.h" line="90"/>
         <source>showEgesOn</source>
         <translation>显示边线</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="86"/>
+        <location filename="../src/app/app_module_properties.h" line="91"/>
         <source>showNodesOn</source>
         <translation>显示节点</translation>
     </message>
@@ -2275,32 +2305,39 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::PlyWriterI18N</name>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="67"/>
         <source>Line that will appear in header</source>
-        <translation type="vanished">文件头注释行</translation>
+        <translation>文件头注释行</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="78"/>
         <source>targetFormat</source>
-        <translation type="vanished">目标格式</translation>
+        <translation>目标格式</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
         <source>writeColors</source>
-        <translation type="vanished">写入颜色</translation>
+        <translation>写入颜色</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="80"/>
         <source>defaultColor</source>
-        <translation type="vanished">默认颜色</translation>
+        <translation>默认颜色</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="81"/>
         <source>comment</source>
-        <translation type="vanished">注释</translation>
+        <translation>注释</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="139"/>
         <source>Failed to open file</source>
-        <translation type="vanished">打开文件失败</translation>
+        <translation>打开文件失败</translation>
     </message>
     <message>
+        <location filename="../src/io_ply/io_ply_writer.cpp" line="152"/>
         <source>Unknown host endianness</source>
-        <translation type="vanished">未知主机字节序</translation>
+        <translation>未知主机字节序</translation>
     </message>
     <message>
         <location filename="messages.cpp" line="65"/>
@@ -3084,42 +3121,42 @@ Last modified: %3</source>
         <translation>测量形状</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="330"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="325"/>
         <source>Isometric</source>
         <translation>等轴测</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="331"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="326"/>
         <source>Back</source>
         <translation>后视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="332"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="327"/>
         <source>Front</source>
         <translation>前视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="333"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="328"/>
         <source>Left</source>
         <translation>左视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="334"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="329"/>
         <source>Right</source>
         <translation>右视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="335"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="330"/>
         <source>Top</source>
         <translation>顶视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="336"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="331"/>
         <source>Bottom</source>
         <translation>底视图</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="346"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="341"/>
         <source>&lt;b&gt;Left-click&lt;/b&gt;: popup menu of pre-defined views
 &lt;b&gt;CTRL+Left-click&lt;/b&gt;: apply &apos;%1&apos; view</source>
         <translation>&lt;b&gt;左键单击&lt;/b&gt;：预定义视图菜单
@@ -3494,7 +3531,7 @@ File: `%2`</source>
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree.cpp" line="145"/>
+        <location filename="../src/app/widget_model_tree.cpp" line="156"/>
         <source>Remove from document</source>
         <translation>从文档中移除</translation>
     </message>

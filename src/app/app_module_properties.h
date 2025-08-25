@@ -18,6 +18,8 @@
 #include "../base/unit_system.h"
 #include "view3d_navigation_style.h"
 
+#include <Aspect_TypeOfTriedronPosition.hxx>
+
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -48,6 +50,8 @@ public:
     // Re-initialize translatable descriptions assigned to properties
     void retranslate();
 
+    Aspect_TypeOfTriedronPosition graphicsViewCubeCornerValue() const;
+
     // System
     const Settings::GroupIndex groupId_system;
     PropertyInt unitSystemDecimals{ this, textId("decimalCount") };
@@ -72,6 +76,7 @@ public:
     // Graphics
     const Settings::GroupIndex groupId_graphics;
     PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
+    PropertyEnumeration viewCubeCorner; // Enum: Aspect_TypeOfTriedronPosition
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
     PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };

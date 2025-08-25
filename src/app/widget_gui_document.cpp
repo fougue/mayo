@@ -91,8 +91,8 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
 
     auto widgetBtnsContents = new QWidget;
     auto layoutBtns = new QHBoxLayout(widgetBtnsContents);
-    layoutBtns->setSpacing(Internal_widgetMargin + 2);
-    layoutBtns->setContentsMargins(2, 2, 2, 2);
+    layoutBtns->setSpacing(0);
+    layoutBtns->setContentsMargins(QMargins{0, 0, 0, 0});
 
     m_btnFitAll = this->createViewBtn(widgetBtnsContents, Theme::Icon::Expand, tr("Fit All"));
 
@@ -149,6 +149,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
+    m_guiDoc->signalViewTrihedronCornerChanged.connectSlot([=](Aspect_TypeOfTriedronPosition) {
+        this->layoutViewControls();
+        this->layoutWidgetPanels();
+        m_guiDoc->graphicsView().redraw();
+    });
 }
 
 Document::Identifier WidgetGuiDocument::documentIdentifier() const
@@ -169,10 +174,7 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     this->layoutViewControls();
-    this->layoutWidgetPanel(m_widgetGrid);
-    this->layoutWidgetPanel(m_widgetClipPlanes);
-    this->layoutWidgetPanel(m_widgetExplodeAsm);
-    this->layoutWidgetPanel(m_widgetMeasure);
+    this->layoutWidgetPanels();
 }
 
 QWidget* WidgetGuiDocument::createWidgetPanelContainer(QWidget* widgetContents)
@@ -270,29 +272,21 @@ void WidgetGuiDocument::exclusiveButtonCheck(ButtonFlat* btnCheck)
 
 void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 {
-    auto fnPanelPos = [=](QWidget* panel) -> QPoint {
-        const QRect ctrlRect = this->viewControlsRect();
-        const int margin = Internal_widgetMargin;
-        if (m_guiDoc->viewTrihedronMode() != GuiDocument::ViewTrihedronMode::AisViewCube)
-            return QPoint(margin, ctrlRect.bottom() + margin);
-
-        switch (m_guiDoc->viewTrihedronCorner()) {
-        case Aspect_TOTP_LEFT_UPPER:
-            return QPoint(ctrlRect.left(), ctrlRect.bottom() + margin);
-        case Aspect_TOTP_RIGHT_UPPER:
-            return QPoint(this->width() - panel->width(), ctrlRect.bottom() + margin);
-        case Aspect_TOTP_LEFT_LOWER:
-            return QPoint(margin, ctrlRect.top() - panel->height() - margin);
-        case Aspect_TOTP_RIGHT_LOWER:
-            return QPoint(this->width() - panel->width(), ctrlRect.top() - panel->height() - margin);
-        default:
-            return QPoint(margin, ctrlRect.bottom() + margin);
-        } // endswitch
-    };
-
     QWidget* widget = panel ? panel->parentWidget() : nullptr;
-    if (widget && widget->isVisible())
-        widget->move(fnPanelPos(widget));
+    if (widget) {
+        const QRect ctrlRect = this->viewControlsRect();
+        const int margin = panel->devicePixelRatio() * Internal_widgetMargin;
+        widget->move(ctrlRect.left(), ctrlRect.bottom() + margin);
+    }
+}
+
+void WidgetGuiDocument::layoutWidgetPanels()
+{
+    QWidget* widgetPanels[] = {
+        m_widgetGrid, m_widgetClipPlanes, m_widgetExplodeAsm, m_widgetMeasure
+    };
+    for (QWidget* panel : widgetPanels)
+        this->layoutWidgetPanel(panel);
 }
 
 ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const
@@ -304,12 +298,13 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     ;
 
     auto btn = new ButtonFlat(parent);
+    const double pxRatio = btn->devicePixelRatio();
     btn->setBackgroundBrush(bkgndColor);
     btn->setCheckedBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Checked));
     btn->setHoverBrush(mayoTheme()->color(Theme::Color::ButtonView3d_Hover));
     btn->setIcon(mayoTheme()->icon(icon));
-    btn->setIconSize(QSize(20, 20));
-    btn->setFixedSize(28, 28);
+    btn->setIconSize(pxRatio * QSize{24, 24});
+    btn->setFixedSize(pxRatio * QSize{40, 40});
     btn->setToolTip(tooltip);
     return btn;
 }
@@ -397,28 +392,12 @@ QRect WidgetGuiDocument::viewControlsRect() const
 
 void WidgetGuiDocument::layoutViewControls()
 {
-    const int margin = Internal_widgetMargin + 2;
+    const int margin = this->devicePixelRatio() * 2 * Internal_widgetMargin;
     auto fnGetViewControlsPos = [=]() -> QPoint {
         if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
-            const int btnSize = m_btnFitAll->width();
             const int viewCubeBndSize = m_guiDoc->aisViewCubeBoundingSize() / m_guiDoc->devicePixelRatio();
-            const int ctrlHeight = btnSize;
-            const int ctrlXOffset = margin;
-            switch (m_guiDoc->viewTrihedronCorner()) {
-            case Aspect_TOTP_LEFT_UPPER:
-                return { ctrlXOffset, viewCubeBndSize + margin };
-            case Aspect_TOTP_RIGHT_UPPER:
-                return { this->width() - viewCubeBndSize + ctrlXOffset, viewCubeBndSize + margin };
-            case Aspect_TOTP_LEFT_LOWER:
-                return { ctrlXOffset, this->height() - viewCubeBndSize - margin - ctrlHeight };
-            case Aspect_TOTP_RIGHT_LOWER:
-                return {
-                         this->width() - viewCubeBndSize + ctrlXOffset,
-                         this->height() - viewCubeBndSize - margin - ctrlHeight
-                       };
-            default:
-                return { margin, margin };
-            } // endswitch
+            if (m_guiDoc->viewTrihedronCorner() == Aspect_TOTP_LEFT_UPPER)
+                return { margin, viewCubeBndSize + margin };
         }
 
         return { margin, margin };
