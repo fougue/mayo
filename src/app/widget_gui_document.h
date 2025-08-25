@@ -55,6 +55,7 @@ private:
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
+    void layoutWidgetPanels();
 
     ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
 

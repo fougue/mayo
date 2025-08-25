@@ -486,6 +486,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto appProps = appModule->properties();
     auto widget = new WidgetGuiDocument(guiDoc);
     guiDoc->setDevicePixelRatio(widget->devicePixelRatioF());
+    guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
@@ -494,12 +495,22 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
         gfxScene->redraw();
     }
 
-    appModule->settings()->signalChanged.connectSlot([=](const Property* setting) {
-        if (setting == &appProps->instantZoomFactor)
-            widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
-        else if (setting == &appProps->navigationStyle)
-            widgetCtrl->setNavigationStyle(appProps->navigationStyle);
-    });
+    auto connSettingsSignalChanged = appModule->settings()->signalChanged.connectSlot(
+        [=](const Property* setting) {
+            if (setting == &appProps->instantZoomFactor)
+                widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
+            else if (setting == &appProps->navigationStyle)
+                widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+            else if (setting == &appProps->viewCubeCorner)
+                guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
+        }
+    );
+    // NOTE
+    // "mutable" lambda needed here because the captured variable needs to be modified
+    // By default, with a lambda, variables captured by value are immutable(const)
+    QObject::connect(
+        widget, &QObject::destroyed, this, [=]() mutable { connSettingsSignalChanged.disconnect(); }
+    );
 
     // React to mouse move in 3D view:
     //   * update highlighting

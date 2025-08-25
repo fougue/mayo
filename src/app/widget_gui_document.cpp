@@ -149,6 +149,11 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         if (view == m_qtOccView->v3dView())
             m_qtOccView->redraw();
     });
+    m_guiDoc->signalViewTrihedronCornerChanged.connectSlot([=](Aspect_TypeOfTriedronPosition) {
+        this->layoutViewControls();
+        this->layoutWidgetPanels();
+        m_guiDoc->graphicsView().redraw();
+    });
 }
 
 Document::Identifier WidgetGuiDocument::documentIdentifier() const
@@ -169,10 +174,7 @@ void WidgetGuiDocument::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     this->layoutViewControls();
-    this->layoutWidgetPanel(m_widgetGrid);
-    this->layoutWidgetPanel(m_widgetClipPlanes);
-    this->layoutWidgetPanel(m_widgetExplodeAsm);
-    this->layoutWidgetPanel(m_widgetMeasure);
+    this->layoutWidgetPanels();
 }
 
 QWidget* WidgetGuiDocument::createWidgetPanelContainer(QWidget* widgetContents)
@@ -271,11 +273,20 @@ void WidgetGuiDocument::exclusiveButtonCheck(ButtonFlat* btnCheck)
 void WidgetGuiDocument::layoutWidgetPanel(QWidget* panel)
 {
     QWidget* widget = panel ? panel->parentWidget() : nullptr;
-    if (widget && widget->isVisible()) {
+    if (widget) {
         const QRect ctrlRect = this->viewControlsRect();
         const int margin = panel->devicePixelRatio() * Internal_widgetMargin;
         widget->move(ctrlRect.left(), ctrlRect.bottom() + margin);
     }
+}
+
+void WidgetGuiDocument::layoutWidgetPanels()
+{
+    QWidget* widgetPanels[] = {
+        m_widgetGrid, m_widgetClipPlanes, m_widgetExplodeAsm, m_widgetMeasure
+    };
+    for (QWidget* panel : widgetPanels)
+        this->layoutWidgetPanel(panel);
 }
 
 ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const
