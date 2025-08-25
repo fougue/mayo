@@ -303,6 +303,9 @@ std::unique_ptr<Property> XCaf_DocumentTreeNodePropertiesProvider::Properties::c
     };
 
     switch (key.type) {
+    case CafUtils::NamedDataType::None: {
+        return {};
+    }
     case CafUtils::NamedDataType::Int: {
         auto prop = std::make_unique<PropertyInt>(this, name);
         prop->setValue(data->GetInteger(key.label()));
