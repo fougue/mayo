@@ -12,7 +12,8 @@
 
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
-#include <vector>
+
+class QMenu;
 
 namespace Mayo {
 
@@ -51,13 +52,16 @@ private:
     void toggleWidgetMeasure(bool on);
     void exclusiveButtonCheck(ButtonFlat* btn);
 
-    void recreateMenuViewProjections(QWidget* container);
+    void createMenuViewProjections(QWidget* container);
+    void createMenuItemVisibility(QWidget* container);
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
     void layoutWidgetPanels();
 
     ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
+    QMenu* createViewMenu(QWidget* parent) const;
+    static void popupViewMenu(QMenu* menu, const ButtonFlat* btnMenu, QWidget* container);
 
     GuiDocument* m_guiDoc = nullptr;
     IWidgetOccView* m_qtOccView = nullptr;
@@ -74,7 +78,6 @@ private:
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
     ButtonFlat* m_btnMeasure = nullptr;
-    std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 
 } // namespace Mayo

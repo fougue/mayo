@@ -45,10 +45,8 @@ public:
         Export,
         Expand,
         Cross,
-        Grid,
         Link,
-        Back,
-        Next,
+        Back, Next,
         Multiple,
         Camera,
         LeftSidebar,
@@ -57,25 +55,15 @@ public:
         Reload,
         Stop,
         Gear,
-        ZoomIn,
-        ZoomOut,
-        ClipPlane,
-        Measure,
-        View3dIso,
-        View3dLeft,
-        View3dRight,
-        View3dTop,
-        View3dBottom,
-        View3dFront,
-        View3dBack,
-        TurnClockwise,
-        TurnCounterClockwise,
+        ZoomIn, ZoomOut,
+        Grid, ClipPlane, Measure,
+        View3dIso, View3dLeft, View3dRight, View3dTop, View3dBottom, View3dFront, View3dBack,
+        VisibilityMenu, VisibilityShowAll, VisibilityShowSelection, VisibilityHideSelection, VisibilityShowSelectionOnly,
+        TurnClockwise, TurnCounterClockwise,
         //
-        ItemMesh,
-        ItemXde,
+        ItemMesh, ItemXde,
         //
-        XdeAssembly,
-        XdeSimpleShape
+        XdeAssembly, XdeSimpleShape
     };
 
     virtual ~Theme() = default;

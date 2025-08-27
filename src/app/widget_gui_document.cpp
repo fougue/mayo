@@ -9,6 +9,7 @@
 #include "../base/cpp_utils.h"
 #include "../base/unit_system.h"
 #include "../graphics/graphics_utils.h"
+#include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_camera_animation.h"
 #include "../qtbackend/qt_animation_backend.h"
@@ -109,7 +110,8 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     m_btnMeasure->setCheckable(true);
 
     layoutBtns->addWidget(m_btnFitAll);
-    this->recreateMenuViewProjections(widgetBtnsContents);
+    this->createMenuViewProjections(widgetBtnsContents);
+    this->createMenuItemVisibility(widgetBtnsContents);
     layoutBtns->addWidget(m_btnGrid);
     layoutBtns->addWidget(m_btnEditClipping);
     layoutBtns->addWidget(m_btnExplode);
@@ -309,13 +311,32 @@ ButtonFlat* WidgetGuiDocument::createViewBtn(QWidget* parent, Theme::Icon icon, 
     return btn;
 }
 
-void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
+QMenu* WidgetGuiDocument::createViewMenu(QWidget* parent) const
 {
-    for (QWidget* widget : m_vecWidgetForViewProj)
-        delete widget;
+    static MenuIconSizeStyle* menuStyle = nullptr;
+    if (!menuStyle) {
+        menuStyle = new MenuIconSizeStyle;
+        menuStyle->setMenuIconSize(m_btnFitAll->iconSize().width());
+    }
 
-    m_vecWidgetForViewProj.clear();
+    auto menu = new QMenu(parent);
+    menu->setStyle(menuStyle);
+    const QString strPanelBkgndColor = this->panelBackgroundColor().name(QColor::HexArgb);
+    menu->setStyleSheet(QString("QMenu { background:%1; border: 0px }").arg(strPanelBkgndColor));
+    menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    if (m_qtOccView->supportsWidgetOpacity())
+        menu->setAttribute(Qt::WA_TranslucentBackground);
 
+    return menu;
+}
+
+void WidgetGuiDocument::popupViewMenu(QMenu* menu, const ButtonFlat* menuBtn, QWidget* container)
+{
+    menu->popup(menuBtn->mapToGlobal(QPoint{0, container->height()}));
+}
+
+void WidgetGuiDocument::createMenuViewProjections(QWidget* container)
+{
     struct ButtonCreationData {
         V3d_TypeOfOrientation proj;
         Theme::Icon icon;
@@ -330,64 +351,123 @@ void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
         { V3d_Zpos, Theme::Icon::View3dTop,    tr("Top") },
         { V3d_Zneg, Theme::Icon::View3dBottom, tr("Bottom") }
     };
-    if (m_guiDoc->viewTrihedronMode() == GuiDocument::ViewTrihedronMode::AisViewCube) {
-        static MenuIconSizeStyle* menuStyle = nullptr;
-        if (!menuStyle) {
-            menuStyle = new MenuIconSizeStyle;
-            menuStyle->setMenuIconSize(m_btnFitAll->iconSize().width());
-        }
 
-        const QString strTemplateTooltip =
-                tr("<b>Left-click</b>: popup menu of pre-defined views\n"
-                   "<b>CTRL+Left-click</b>: apply '%1' view");
-        auto btnViewMenu = this->createViewBtn(container, Theme::Icon::View3dIso, QString());
-        container->layout()->addWidget(btnViewMenu);
-        btnViewMenu->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
-        btnViewMenu->setData(static_cast<int>(btnCreationData[0].proj));
-        auto menuBtnView = new QMenu(btnViewMenu);
-        menuBtnView->setStyle(menuStyle);
-        const QString strPanelBkgndColor = this->panelBackgroundColor().name(QColor::HexArgb);
-        menuBtnView->setStyleSheet(QString("QMenu { background:%1; border: 0px }").arg(strPanelBkgndColor));
-        menuBtnView->setWindowFlags(menuBtnView->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
-        if (m_qtOccView->supportsWidgetOpacity())
-            menuBtnView->setAttribute(Qt::WA_TranslucentBackground);
+    const QString strTemplateTooltip =
+        tr("<b>Left-click</b>: popup menu of pre-defined views\n"
+           "<b>CTRL+Left-click</b>: apply '%1' view");
+    auto menuBtn = this->createViewBtn(container, Theme::Icon::View3dIso, QString{});
+    container->layout()->addWidget(menuBtn);
+    menuBtn->setToolTip(strTemplateTooltip.arg(btnCreationData[0].text));
+    menuBtn->setData(static_cast<int>(btnCreationData[0].proj));
+    auto menu = this->createViewMenu(menuBtn);
 
-        m_vecWidgetForViewProj.push_back(btnViewMenu);
-        for (const ButtonCreationData& btnData : btnCreationData) {
-            auto action = menuBtnView->addAction(mayoTheme()->icon(btnData.icon), btnData.text);
-            QObject::connect(action, &QAction::triggered, this, [=]{
-                m_guiDoc->setViewCameraOrientation(btnData.proj, GuiDocument::ViewOrientationFlag_FitAll);
-                btnViewMenu->setIcon(action->icon());
-                btnViewMenu->setToolTip(strTemplateTooltip.arg(btnData.text));
-                btnViewMenu->setData(int(btnData.proj));
-                btnViewMenu->update();
-            });
-        }
-
-        //QStyle::PE_IndicatorArrowDown
-        QObject::connect(btnViewMenu, &ButtonFlat::clicked, this, [=]{
-            const Qt::KeyboardModifiers keyMods = QGuiApplication::queryKeyboardModifiers();
-            if (!keyMods.testFlag(Qt::ControlModifier)) {
-                menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, container->height() }));
-            }
-            else {
-                m_guiDoc->setViewCameraOrientation(
-                    V3d_TypeOfOrientation(btnViewMenu->data().toInt()),
-                    GuiDocument::ViewOrientationFlag_FitAll
-                );
-            }
+    for (const ButtonCreationData& btnData : btnCreationData) {
+        auto action = menu->addAction(mayoTheme()->icon(btnData.icon), btnData.text);
+        QObject::connect(action, &QAction::triggered, this, [=]{
+            m_guiDoc->setViewCameraOrientation(btnData.proj, GuiDocument::ViewOrientationFlag_FitAll);
+            menuBtn->setIcon(action->icon());
+            menuBtn->setToolTip(strTemplateTooltip.arg(btnData.text));
+            menuBtn->setData(int(btnData.proj));
+            menuBtn->update();
         });
     }
-    else {
-        for (const ButtonCreationData& btnData : btnCreationData) {
-            auto btnViewProj = this->createViewBtn(container, btnData.icon, btnData.text);
-            container->layout()->addWidget(btnViewProj);
-            QObject::connect(btnViewProj, &ButtonFlat::clicked, this, [=]{
-                m_guiDoc->setViewCameraOrientation(btnData.proj, GuiDocument::ViewOrientationFlag_FitAll);
-            });
-            m_vecWidgetForViewProj.push_back(btnViewProj);
+
+    //QStyle::PE_IndicatorArrowDown
+    QObject::connect(menuBtn, &ButtonFlat::clicked, this, [=]{
+        if (!QGuiApplication::queryKeyboardModifiers().testFlag(Qt::ControlModifier)) {
+            WidgetGuiDocument::popupViewMenu(menu, menuBtn, container);
         }
-    }
+        else {
+            auto orientation = V3d_TypeOfOrientation(menuBtn->data().toInt());
+            m_guiDoc->setViewCameraOrientation(orientation, GuiDocument::ViewOrientationFlag_FitAll);
+        }
+    });
+}
+
+void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
+{
+    auto menuBtn = this->createViewBtn(container, Theme::Icon::VisibilityMenu, QString{});
+    container->layout()->addWidget(menuBtn);
+    menuBtn->setToolTip(tr("Show/hide items"));
+    auto menu = this->createViewMenu(menuBtn);
+
+    // Helper function to make addition of QMenu actions more straightforward
+    auto fnAddAction = [=](Theme::Icon icon, const QString& text) {
+        return menu->addAction(mayoTheme()->icon(icon), text);
+    };
+    // Create menu actions
+    auto actionShowAll = fnAddAction(Theme::Icon::VisibilityShowAll, tr("Show all"));
+    auto actionShowSel = fnAddAction(Theme::Icon::VisibilityShowSelection, tr("Show selection"));
+    auto actionHideSel = fnAddAction(Theme::Icon::VisibilityHideSelection, tr("Hide selection"));
+    auto actionShowSelOnly = fnAddAction(Theme::Icon::VisibilityShowSelectionOnly, tr("Show only selection"));
+
+    const DocumentPtr doc = m_guiDoc->document();
+    // Helper function to get the selected tree nodes(ids) in the document
+    auto fnGetDocSelectedNodeIds = [=]() -> std::vector<TreeNodeId> {
+        std::vector<TreeNodeId> nodeIds;
+        const GuiApplication* guiApp = m_guiDoc->guiApplication();
+        for (const ApplicationItem& appItem : guiApp->selectionModel()->selectedItems()) {
+            if (appItem.isDocumentTreeNode() && appItem.document() == m_guiDoc->document())
+                nodeIds.push_back(appItem.documentTreeNode().id());
+        }
+        return nodeIds;
+    };
+
+    // "Show all" action
+    QObject::connect(actionShowAll, &QAction::triggered, this, [=]{
+        for (int i = 0; i < doc->entityCount(); ++i)
+            m_guiDoc->setNodeVisible(doc->entityTreeNodeId(i), true);
+        m_guiDoc->graphicsScene()->redraw();
+    });
+
+    // "Show selection" action
+    QObject::connect(actionShowSel, &QAction::triggered, this, [=]{
+        for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
+            m_guiDoc->setNodeVisible(nodeId, true);
+        m_guiDoc->graphicsScene()->redraw();
+    });
+
+    // "Hide selection" action
+    QObject::connect(actionHideSel, &QAction::triggered, this, [=]{
+        for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
+            m_guiDoc->setNodeVisible(nodeId, false);
+        m_guiDoc->graphicsScene()->redraw();
+    });
+
+    // "Show selection only" action
+    QObject::connect(actionShowSelOnly, &QAction::triggered, this, [=]{
+        // Hide all entities(root nodes)
+        for (int i = 0; i < doc->entityCount(); ++i)
+            m_guiDoc->setNodeVisible(doc->entityTreeNodeId(i), false);
+
+        // Show selected document nodes
+        for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
+            m_guiDoc->setNodeVisible(nodeId, true);
+
+        m_guiDoc->graphicsScene()->redraw();
+    });
+
+    // Popup menu
+    QObject::connect(menuBtn, &ButtonFlat::clicked, this, [=]{
+        bool allEntityVisible = true;
+        for (int i = 0; i < doc->entityCount() && allEntityVisible; ++i)
+            allEntityVisible = m_guiDoc->nodeVisibleState(doc->entityTreeNodeId(i)) == CheckState::On;
+
+        const auto vecSelectedNodeId = fnGetDocSelectedNodeIds();
+        bool allSelectedItemVisible = true;
+        for (size_t i = 0; i < vecSelectedNodeId.size() && allSelectedItemVisible; ++i)
+            allSelectedItemVisible = m_guiDoc->nodeVisibleState(vecSelectedNodeId.at(i)) == CheckState::On;
+
+        bool allSelectedItemHidden = true;
+        for (size_t i = 0; i < vecSelectedNodeId.size() && allSelectedItemHidden; ++i)
+            allSelectedItemHidden = m_guiDoc->nodeVisibleState(vecSelectedNodeId.at(i)) == CheckState::Off;
+
+        actionShowAll->setEnabled(!allEntityVisible);
+        actionShowSel->setEnabled(!allSelectedItemVisible);
+        actionHideSel->setEnabled(!allSelectedItemHidden);
+        actionShowSelOnly->setEnabled(!vecSelectedNodeId.empty());
+        WidgetGuiDocument::popupViewMenu(menu, menuBtn, container);
+    });
 }
 
 QRect WidgetGuiDocument::viewControlsRect() const

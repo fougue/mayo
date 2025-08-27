@@ -82,5 +82,15 @@
         <file>themes/dark/turn-cw.svg</file>
         <file>themes/classic/grid.svg</file>
         <file>themes/dark/grid.svg</file>
+        <file>themes/classic/visibility-menu.svg</file>
+        <file>themes/classic/visibility-show-all.svg</file>
+        <file>themes/classic/visibility-show-selection.svg</file>
+        <file>themes/classic/visibility-hide-selection.svg</file>
+        <file>themes/classic/visibility-show-selection-only.svg</file>
+        <file>themes/dark/visibility-menu.svg</file>
+        <file>themes/dark/visibility-show-all.svg</file>
+        <file>themes/dark/visibility-show-selection.svg</file>
+        <file>themes/dark/visibility-hide-selection.svg</file>
+        <file>themes/dark/visibility-show-selection-only.svg</file>
     </qresource>
 </RCC>
