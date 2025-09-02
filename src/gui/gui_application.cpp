@@ -151,8 +151,26 @@ void GuiApplication::setAutomaticDocumentMapping(bool on)
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
     if (d->m_automaticDocumentMapping) {
-        d->m_vecGuiDocument.push_back(new GuiDocument(doc, this));
-        this->signalGuiDocumentAdded.send(d->m_vecGuiDocument.back());
+        auto guiDoc = new GuiDocument(doc, this);
+        d->m_vecGuiDocument.push_back(guiDoc);
+
+        guiDoc->signalNodesVisibilityChanged.connectSlot([=](const GuiDocument::MapVisibilityByTreeNodeId& map) {
+            this->signalGuiDocumentNodesVisibilityChanged.send(guiDoc, map);
+        });
+        guiDoc->signalGraphicsBoundingBoxChanged.connectSlot([=](const Bnd_Box& box) {
+            this->signalGuiDocumentGraphicsBoundingBoxChanged.send(guiDoc, box);
+        });
+        guiDoc->signalViewTrihedronModeChanged.connectSlot([=](GuiDocument::ViewTrihedronMode mode) {
+            this->signalGuiDocumentViewTrihedronModeChanged.send(guiDoc, mode);
+        });
+        guiDoc->signalViewTrihedronCornerChanged.connectSlot([=](Aspect_TypeOfTriedronPosition pos) {
+            this->signalGuiDocumentViewTrihedronCornerChanged.send(guiDoc, pos);
+        });
+        guiDoc->signalOriginTrihedronVisibilityToggled.connectSlot([=](bool on) {
+            this->signalGuiDocumentOriginTrihedronVisibilityToggled.send(guiDoc, on);
+        });
+
+        this->signalGuiDocumentAdded.send(guiDoc);
     }
 }
 

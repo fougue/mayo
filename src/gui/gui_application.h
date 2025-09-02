@@ -61,6 +61,11 @@ public:
     // Signals
     mutable Signal<GuiDocument*> signalGuiDocumentAdded;
     mutable Signal<GuiDocument*> signalGuiDocumentErased;
+    mutable Signal<GuiDocument*, const GuiDocument::MapVisibilityByTreeNodeId&> signalGuiDocumentNodesVisibilityChanged;
+    mutable Signal<GuiDocument*, const Bnd_Box&> signalGuiDocumentGraphicsBoundingBoxChanged;
+    mutable Signal<GuiDocument*, GuiDocument::ViewTrihedronMode> signalGuiDocumentViewTrihedronModeChanged;
+    mutable Signal<GuiDocument*, Aspect_TypeOfTriedronPosition> signalGuiDocumentViewTrihedronCornerChanged;
+    mutable Signal<GuiDocument*, bool> signalGuiDocumentOriginTrihedronVisibilityToggled;
 
 protected:
     void onDocumentAdded(const DocumentPtr& doc);
