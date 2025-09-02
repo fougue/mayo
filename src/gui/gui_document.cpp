@@ -65,6 +65,33 @@ static GuiDocument::GradientBackground& defaultGradientBackground()
     return defaultGradientBackground;
 }
 
+// Find the Up direction closest to current instead of `upStart`
+// NOTE: excerpt from OpenCascade/src/AIS/AIS_ViewCube.cpp
+static gp_Dir findClosestUpDirection(const OccHandle<Graphic3d_Camera>& camera, const gp_Dir& upStart)
+{
+    constexpr double pi = 3.14159265358979323846;
+    const gp_Dir newDir = camera->Direction();
+    const gp_Ax1 newDirAx1(gp::Origin(), newDir);
+    const gp_Dir upArray[] = {
+        camera->Up(),
+        camera->Up().Rotated(newDirAx1, pi / 2.),
+        camera->Up().Rotated(newDirAx1, pi),
+        camera->Up().Rotated(newDirAx1, pi * 1.5),
+    };
+
+    double bestAngle = Precision::Infinite();
+    gp_Dir upBest;
+    for (const gp_Dir& up : upArray) {
+        const double angle = up.Angle(upStart);
+        if (bestAngle > angle) {
+            bestAngle = angle;
+            upBest = up;
+        }
+    }
+
+    return upBest;
+}
+
 } // namespace Internal
 
 GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
@@ -402,7 +429,7 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto viewCubeOwner = OccHandle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
     if (viewCubeOwner) {
-        this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
+        this->setViewCameraOrientation(viewCubeOwner->MainOrientation(), ViewOrientationFlag_All);
         return true;
     }
 #endif
@@ -410,11 +437,20 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
     return false;
 }
 
-void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
+void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection, ViewOrientationFlags flags)
 {
     this->runViewCameraAnimation([=](OccHandle<V3d_View> view) {
         view->SetProj(projection);
-        GraphicsUtils::V3dView_fitAll(view, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
+        if (flags & ViewOrientationFlag_FindClosestUp) {
+            const gp_Dir& upStart = m_cameraAnimation->cameraStart()->Up();
+            view->Camera()->SetUp(Internal::findClosestUpDirection(view->Camera(), upStart));
+        }
+
+        if (flags & ViewOrientationFlag_FitAll) {
+            GraphicsUtils::V3dView_fitAll(
+                view, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics)
+            );
+        }
     });
 }
 

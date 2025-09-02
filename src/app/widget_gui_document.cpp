@@ -356,7 +356,7 @@ void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
         for (const ButtonCreationData& btnData : btnCreationData) {
             auto action = menuBtnView->addAction(mayoTheme()->icon(btnData.icon), btnData.text);
             QObject::connect(action, &QAction::triggered, this, [=]{
-                m_guiDoc->setViewCameraOrientation(btnData.proj);
+                m_guiDoc->setViewCameraOrientation(btnData.proj, GuiDocument::ViewOrientationFlag_FitAll);
                 btnViewMenu->setIcon(action->icon());
                 btnViewMenu->setToolTip(strTemplateTooltip.arg(btnData.text));
                 btnViewMenu->setData(int(btnData.proj));
@@ -367,10 +367,15 @@ void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
         //QStyle::PE_IndicatorArrowDown
         QObject::connect(btnViewMenu, &ButtonFlat::clicked, this, [=]{
             const Qt::KeyboardModifiers keyMods = QGuiApplication::queryKeyboardModifiers();
-            if (!keyMods.testFlag(Qt::ControlModifier))
+            if (!keyMods.testFlag(Qt::ControlModifier)) {
                 menuBtnView->popup(btnViewMenu->mapToGlobal(QPoint{ 0, container->height() }));
-            else
-                m_guiDoc->setViewCameraOrientation(V3d_TypeOfOrientation(btnViewMenu->data().toInt()));
+            }
+            else {
+                m_guiDoc->setViewCameraOrientation(
+                    V3d_TypeOfOrientation(btnViewMenu->data().toInt()),
+                    GuiDocument::ViewOrientationFlag_FitAll
+                );
+            }
         });
     }
     else {
@@ -378,7 +383,7 @@ void WidgetGuiDocument::recreateMenuViewProjections(QWidget* container)
             auto btnViewProj = this->createViewBtn(container, btnData.icon, btnData.text);
             container->layout()->addWidget(btnViewProj);
             QObject::connect(btnViewProj, &ButtonFlat::clicked, this, [=]{
-                m_guiDoc->setViewCameraOrientation(btnData.proj);
+                m_guiDoc->setViewCameraOrientation(btnData.proj, GuiDocument::ViewOrientationFlag_FitAll);
             });
             m_vecWidgetForViewProj.push_back(btnViewProj);
         }

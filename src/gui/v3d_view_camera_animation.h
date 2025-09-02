@@ -48,8 +48,12 @@ public:
     void start();
     void stop();
 
+    const OccHandle<Graphic3d_Camera>& cameraStart() const { return m_cameraStart; }
     void setCameraStart(const OccHandle<Graphic3d_Camera>& camera);
+
+    const OccHandle<Graphic3d_Camera>& cameraEnd() const { return m_cameraEnd; }
     void setCameraEnd(const OccHandle<Graphic3d_Camera>& camera);
+
     void configureCameraChange(const ViewFunction& fnViewChange);
 
     void setRenderFunction(ViewFunction fnViewRender);
