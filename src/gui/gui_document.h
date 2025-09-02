@@ -101,8 +101,22 @@ public:
     void toggleOriginTrihedronVisibility();
 
     // -- Camera animation
+
+    // Flags relevant to setViewCameraOrientation() function
+    enum ViewOrientationFlag {
+        // No flags
+        ViewOrientationFlag_None = 0x0,
+        // Do view "fit all" after camera orientation change
+        ViewOrientationFlag_FitAll = 0x1,
+        // Find closest UP vector when changing camera orientation
+        ViewOrientationFlag_FindClosestUp = 0x2,
+        // All flags ON
+        ViewOrientationFlag_All = 0xFF
+    };
+    using ViewOrientationFlags = unsigned;
+
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
-    void setViewCameraOrientation(V3d_TypeOfOrientation projection);
+    void setViewCameraOrientation(V3d_TypeOfOrientation projection, ViewOrientationFlags flags = 0);
     void runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange);
     void stopViewCameraAnimation();
 
