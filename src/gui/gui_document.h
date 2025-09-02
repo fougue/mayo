@@ -48,6 +48,8 @@ public:
 
     // Gets the base document linked to
     const DocumentPtr& document() const { return m_document; }
+    Document::Identifier documentIdentifier() const;
+    static Document::Identifier documentIdentifier(const GuiDocument* guiDoc);
 
     // Gets the owning GuiApplication object
     GuiApplication* guiApplication() const { return m_guiApp; }
@@ -134,6 +136,7 @@ public:
     mutable Signal<const Bnd_Box&> signalGraphicsBoundingBoxChanged;
     mutable Signal<ViewTrihedronMode> signalViewTrihedronModeChanged;
     mutable Signal<Aspect_TypeOfTriedronPosition> signalViewTrihedronCornerChanged;
+    mutable Signal<bool> signalOriginTrihedronVisibilityToggled;
 
     // -- Implementation
 private:

@@ -187,6 +187,16 @@ GuiDocument::~GuiDocument()
     delete m_cameraAnimation;
 }
 
+Document::Identifier GuiDocument::documentIdentifier() const
+{
+    return m_document ? m_document->identifier() : -1;
+}
+
+Document::Identifier GuiDocument::documentIdentifier(const GuiDocument* guiDoc)
+{
+    return guiDoc ? guiDoc->documentIdentifier() : -1;
+}
+
 void GuiDocument::foreachGraphicsObject(
         TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn
     ) const
@@ -381,6 +391,7 @@ void GuiDocument::toggleOriginTrihedronVisibility()
 {
     const bool visible = !this->isOriginTrihedronVisible();
     m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
+    this->signalOriginTrihedronVisibilityToggled.send(visible);
 }
 
 bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)

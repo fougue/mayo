@@ -6,6 +6,8 @@
 
 #include "app_context.h"
 
+#include "../gui/gui_application.h"
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "widget_gui_document.h"
@@ -13,6 +15,8 @@
 #include "widget_main_home.h"
 
 #include <cassert>
+
+#include <QtCore/QtDebug>
 
 namespace Mayo {
 
@@ -88,25 +92,24 @@ V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) cons
 
 int AppContext::findDocumentIndex(Document::Identifier docId) const
 {
-    int index = -1;
-    auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* candidate) {
-        ++index;
-        return candidate->documentIdentifier() == docId;
-    });
-    return widgetDoc ? index : -1;
+    const int guiDocumentCount = int(this->guiApp()->guiDocuments().size());
+    for (int i = 0; i < guiDocumentCount; ++i) {
+        if (GuiDocument::documentIdentifier(this->guiDocument(i)) == docId)
+            return i;
+    }
+
+    return -1;
 }
 
 Document::Identifier AppContext::findDocumentFromIndex(int index) const
 {
-    auto widgetDoc = this->widgetGuiDocument(index);
-    return widgetDoc ? widgetDoc->documentIdentifier() : -1;
+    return GuiDocument::documentIdentifier(this->guiDocument(index));
 }
 
 Document::Identifier AppContext::currentDocument() const
 {
     const int index = m_wnd->widgetPageDocuments()->currentDocumentIndex();
-    auto widgetDoc = this->widgetGuiDocument(index);
-    return widgetDoc ? widgetDoc->documentIdentifier() : -1;
+    return GuiDocument::documentIdentifier(this->guiDocument(index));
 }
 
 void AppContext::setCurrentDocument(Document::Identifier docId)
@@ -121,6 +124,15 @@ void AppContext::setCurrentDocument(Document::Identifier docId)
 void AppContext::updateControlsEnabledStatus()
 {
     m_wnd->updateControlsActivation();
+}
+
+GuiDocument* AppContext::guiDocument(int idx) const
+{
+    auto spanGuiDocuments = this->guiApp()->guiDocuments();
+    if (0 <= idx && idx < spanGuiDocuments.size())
+        return spanGuiDocuments[idx];
+
+    return nullptr;
 }
 
 WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
@@ -142,8 +154,8 @@ WidgetGuiDocument* AppContext::findWidgetGuiDocument(std::function<bool(WidgetGu
 
 void AppContext::onCurrentDocumentIndexChanged(int docIndex)
 {
-    auto widgetDoc = this->widgetGuiDocument(docIndex);
-    emit this->currentDocumentChanged(widgetDoc ? widgetDoc->documentIdentifier() : -1);
+    auto guiDoc = this->guiDocument(docIndex);
+    emit this->currentDocumentChanged(GuiDocument::documentIdentifier(guiDoc));
 }
 
 } // namespace Mayo

@@ -37,6 +37,7 @@ public:
     void updateControlsEnabledStatus() override;
 
 private:
+    GuiDocument* guiDocument(int idx) const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     WidgetGuiDocument* findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const;
 
