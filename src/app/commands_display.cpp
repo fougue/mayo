@@ -87,8 +87,9 @@ void CommandChangeProjection::onCurrentDocumentChanged()
 
     // Sync menu with current projection type
     const auto viewProjType = guiDoc->v3dView()->Camera()->ProjectionType();
-    Q_ASSERT(viewProjType == Graphic3d_Camera::Projection_Perspective
-             || viewProjType == Graphic3d_Camera::Projection_Orthographic
+    Q_ASSERT(
+        viewProjType == Graphic3d_Camera::Projection_Perspective
+        || viewProjType == Graphic3d_Camera::Projection_Orthographic
     );
     QAction* actionProj = viewProjType == Graphic3d_Camera::Projection_Perspective ? m_actionPersp : m_actionOrtho;
     [[maybe_unused]] QSignalBlocker sigBlk(this->action());
@@ -178,6 +179,12 @@ CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
         this, &CommandToggleOriginTrihedron::onCurrentDocumentChanged
+    );
+    context->guiApp()->signalGuiDocumentOriginTrihedronVisibilityToggled.connectSlot(
+        [=](GuiDocument* guiDoc, bool on) {
+            if (guiDoc->documentIdentifier() == context->currentDocument())
+                action->setChecked(on);
+        }
     );
 }
 
