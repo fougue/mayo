@@ -24,7 +24,7 @@ struct GuiApplication::Private {
         auto fnToggleItemSelected = [&](const ApplicationItem& item) {
             GuiDocument* guiDoc = m_backPtr->findGuiDocument(item.document());
             if (guiDoc) {
-                guiDoc->toggleItemSelected(item);
+                guiDoc->toggleNodeSelected(item.documentTreeNode().id());
                 setGuiDocDirty.insert(guiDoc);
             }
         };

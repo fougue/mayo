@@ -101,6 +101,11 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::View3dBottom: return "view-bottom.svg";
     case Theme::Icon::View3dFront: return "view-front.svg";
     case Theme::Icon::View3dBack: return "view-back.svg";
+    case Theme::Icon::VisibilityMenu: return "visibility-menu.svg";
+    case Theme::Icon::VisibilityShowAll: return "visibility-show-all.svg";
+    case Theme::Icon::VisibilityShowSelection: return "visibility-show-selection.svg";
+    case Theme::Icon::VisibilityHideSelection: return "visibility-hide-selection.svg";
+    case Theme::Icon::VisibilityShowSelectionOnly: return "visibility-show-selection-only.svg";
     case Theme::Icon::TurnClockwise: return "turn-cw.svg";
     case Theme::Icon::TurnCounterClockwise: return "turn-ccw.svg";
     case Theme::Icon::ItemMesh: return "item-mesh.svg";
