@@ -23,7 +23,6 @@
 
 namespace Mayo {
 
-class ApplicationItem;
 class GuiApplication;
 class V3dViewCameraAnimation;
 
@@ -78,8 +77,11 @@ public:
     // Finds the tree node id associated to graphics object
     TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const;
 
-    // Toggles selected status of an application item(doesn't affect Application's selection model)
-    void toggleItemSelected(const ApplicationItem& appItem);
+    // Toggles selected status of a tree node(doesn't affect Application's selection model)
+    void toggleNodeSelected(TreeNodeId nodeId);
+
+    // Sets selected status of a tree node(doesn't affect Application's selection model)
+    void setNodeSelected(TreeNodeId nodeId, bool on);
 
     // Executes action associated to a 3D sensitive item
     bool processAction(const GraphicsOwnerPtr& gfxOwner);

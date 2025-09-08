@@ -257,25 +257,18 @@ TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObjec
     return 0;
 }
 
-void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
+void GuiDocument::toggleNodeSelected(TreeNodeId nodeId)
 {
-    const DocumentPtr doc = appItem.document();
-    if (doc != this->document())
-        return;
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
+        m_gfxScene.toggleOwnerSelected(gfxObject->GlobalSelOwner());
+    });
+}
 
-    if (appItem.isDocumentTreeNode()) {
-        const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-        const TreeNodeId entityNodeId = doc->modelTree().nodeRoot(docTreeNode.id());
-        const GraphicsEntity* gfxEntity = this->findGraphicsEntity(entityNodeId);
-        if (!gfxEntity)
-            return;
-
-        traverseTree(docTreeNode.id(), doc->modelTree(), [=](TreeNodeId id) {
-            GraphicsObjectPtr gfxObject = CppUtils::findValue(id, gfxEntity->mapTreeNodeGfxObject);
-            if (gfxObject)
-                m_gfxScene.toggleOwnerSelection(gfxObject->GlobalSelOwner());
-        });
-    }
+void GuiDocument::setNodeSelected(TreeNodeId nodeId, bool on)
+{
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
+        m_gfxScene.setOwnerSelected(gfxObject->GlobalSelOwner(), on);
+    });
 }
 
 int GuiDocument::activeDisplayMode(const GraphicsObjectDriverPtr& driver) const
@@ -323,7 +316,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     if (itNode->second == nodeVisibleState)
         return; // Same visible state
 
-    // Helper data/function to keep track of all the nodes whose visibility state are altered
+    // Helper data/function to keep track of all the nodes whose visibility state is altered
     std::unordered_map<TreeNodeId, CheckState> mapNodeIdVisibleState;
     auto fnSetNodeVisibleState = [&](TreeNodeId id, CheckState state) {
         auto it = m_mapTreeNodeCheckState.find(id);
@@ -360,14 +353,15 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     }
 
     if (on && isAppItemSelected)
-        this->toggleItemSelected(appItem);
+        this->setNodeSelected(nodeId, true);
 
     // Keep selection state of input node children
-    traverseTree(nodeId, docModelTree, [=](TreeNodeId id) {
-        if (id != nodeId) {
-            const ApplicationItem childAppItem({ m_document, id });
-            if (on && m_guiApp->selectionModel()->isSelected(childAppItem))
-                this->toggleItemSelected(childAppItem);
+    traverseTree(nodeId, docModelTree, [=](TreeNodeId childNodeId) {
+        if (childNodeId != nodeId) {
+            const ApplicationItem childAppItem({ m_document, childNodeId });
+            const bool isChildNodeSelected = m_guiApp->selectionModel()->isSelected(childAppItem);
+            if (on && isChildNodeSelected)
+                this->setNodeSelected(childNodeId, true);
         }
     });
 

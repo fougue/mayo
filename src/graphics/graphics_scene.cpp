@@ -301,7 +301,21 @@ AIS_InteractiveContext* GraphicsScene::aisContextPtr() const
     return d->m_aisContext.get();
 }
 
-void GraphicsScene::toggleOwnerSelection(const GraphicsOwnerPtr& gfxOwner)
+void GraphicsScene::setOwnerSelected(const GraphicsOwnerPtr& owner, bool on)
+{
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    d->m_aisContext->SetSelectedState(owner, on);
+#else
+    // NOTE
+    // This is not a perfect replacement of AIS_InteractiveContext:SetSelectedState() which first
+    // appeared in OCC 7.4
+    // This might create some bugs with old OCC versions(support of OCC < 7.4 will be dropped soon
+    // so that's acceptable)
+    d->m_aisContext->AddOrRemoveSelected(owner, false);
+#endif
+}
+
+void GraphicsScene::toggleOwnerSelected(const GraphicsOwnerPtr& gfxOwner)
 {
     auto gfxObject = GraphicsObjectPtr::DownCast(
         gfxOwner ? gfxOwner->Selectable() : OccHandle<SelectMgr_SelectableObject>()

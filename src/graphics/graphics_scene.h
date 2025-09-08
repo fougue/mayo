@@ -85,7 +85,8 @@ public:
     int selectedCount() const;
 
     GraphicsOwnerPtr firstSelectedOwner() const;
-    void toggleOwnerSelection(const GraphicsOwnerPtr& owner);
+    void setOwnerSelected(const GraphicsOwnerPtr& owner, bool on);
+    void toggleOwnerSelected(const GraphicsOwnerPtr& owner);
     void clearSelection();
 
     template<typename Function>
