@@ -179,6 +179,9 @@ template<typename T> TreeNodeId Tree<T>::nodeParent(TreeNodeId id) const
 
 template<typename T> TreeNodeId Tree<T>::nodeRoot(TreeNodeId id) const
 {
+    if (id == 0)
+        return 0;
+
     while (!this->nodeIsRoot(id))
         id = this->nodeParent(id);
 

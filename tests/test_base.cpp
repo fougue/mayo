@@ -1139,6 +1139,14 @@ void TestBase::LibTree_test()
     }
 }
 
+void TestBase::LibTree_nodeRoot_test()
+{
+    Tree<int> tree;
+    tree.appendChild(0, -1);
+    tree.appendChild(0, -2);
+    QCOMPARE(tree.nodeRoot(0), 0);
+}
+
 void TestBase::LibTree_removeRoot_test()
 {
     Tree<std::string> tree;
