@@ -33,8 +33,8 @@ struct ScriptEnvironment {
 //
 // * Installs the required JS extensions(eg Console)
 //
-// * Registers a global 'application' JS object bound to 'app'. This means the JS scripts can access
-//   the already loaded documents in Mayo
+// * Registers a global 'application' JS object bound to 'app' parameter. This implies JS scripts
+//   can access the already loaded documents in Mayo
 //
 // * Registers Mayo Scripting enumerations as plain objects for cleaner syntax in JS scripts
 //   Example:

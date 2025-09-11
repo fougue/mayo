@@ -49,6 +49,11 @@ namespace Mayo {
 
 class ScriptApplication;
 
+#ifndef _MAYO_DOCGEN_
+using QJSValue_DocumentTraverseModelTreeCallback = QJSValue;
+#endif
+
+//! Data container organized as a hierarchical tree of nodes
 class ScriptDocument : public QObject {
     Q_OBJECT
     Q_PROPERTY(int id READ id CONSTANT)
@@ -66,16 +71,14 @@ public:
     void setFilePath(const QString& str);
 
     int entityCount() const;
-    unsigned entityTreeNodeId(int index) const;
+    Q_INVOKABLE TreeNodeId entityTreeNodeId(int index) const;
 
-    Q_INVOKABLE void traverseModelTree(QJSValue fn);
-    Q_INVOKABLE QVariant_ScriptTreeNode treeNode(unsigned treeNodeId) const;
+    Q_INVOKABLE void traverseModelTree(QJSValue_DocumentTraverseModelTreeCallback fn);
+    Q_INVOKABLE QVariant_ScriptTreeNode treeNode(TreeNodeId treeNodeId) const;
 #if 0
     Q_INVOKABLE bool tagHasShapeColor(const QString& tag) const;
     Q_INVOKABLE QColor tagShapeColor(const QString& tag) const;
 #endif
-
-    Q_INVOKABLE void traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilter, QJSValue fn);
 
     // TODO Provide both sync/async importFile functions?
     //Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);

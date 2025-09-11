@@ -58,6 +58,7 @@ public:
     QJSEngine* jsEngine() const { return m_jsEngine; }
     TaskManager& taskManager() { return m_taskMgr; }
 
+    //! \internal
     struct TaskCallbacks {
         QJSValue onStarted;
         QJSValue onProgress;

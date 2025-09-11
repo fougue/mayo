@@ -6,7 +6,6 @@
 
 #include "script_document.h"
 
-#include "../base/brep_utils.h"
 #include "../base/document.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
@@ -66,12 +65,25 @@ int ScriptDocument::entityCount() const
     return m_doc ? m_doc->entityCount() : 0;
 }
 
-unsigned ScriptDocument::entityTreeNodeId(int index) const
+//! \brief Returns identifier of the tree node corresponding to entity(root node) at `index`
+//! \pre `0 ≤ index < entityCount`
+//! \returns 0 if `index` is out of bounds
+TreeNodeId ScriptDocument::entityTreeNodeId(int index) const
 {
     return m_doc ? m_doc->entityTreeNodeId(index) : 0;
 }
 
-void ScriptDocument::traverseModelTree(QJSValue fn)
+//! \brief Visits each node in the model tree and executes callback `fn` on the visited node
+//!
+//! `DocumentTraverseModelTreeCallback` is a unary callback function which is passed the TreeNodeId
+//! value of the visited tree node. Any value returned by the callback is ignored
+//! \code{.js}
+//! doc.traverseModelTree(nodeId => {
+//!     var node = doc.treeNode(nodeId);
+//!     console.debug(`treeNodeId: ${nodeId}  name:"${node.name}"`);
+//! });
+//! \endcode
+void ScriptDocument::traverseModelTree(QJSValue_DocumentTraverseModelTreeCallback fn)
 {
     if (!fn.isCallable())
         return;
@@ -106,26 +118,12 @@ QColor ScriptDocument::tagShapeColor(const QString& tag) const
 }
 #endif
 
-QVariant_ScriptTreeNode ScriptDocument::treeNode(unsigned treeNodeId) const
+//! \brief Returns the TreeNode object in the model tree corresponding to identifier `treeNodeId`
+//!
+//! This function is often useful in conjunction with traverseModelTree()
+QVariant_ScriptTreeNode ScriptDocument::treeNode(TreeNodeId treeNodeId) const
 {
-    return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId));
-}
-
-void ScriptDocument::traverseShape(QJSValue shape, ScriptShapeType shapeTypeFilter, QJSValue fn)
-{
-    if (!fn.isCallable())
-        return;
-
-    if (!m_jsApp || !m_jsApp->jsEngine())
-        return;
-
-    const auto shapeTypeEnum = static_cast<TopAbs_ShapeEnum>(shapeTypeFilter);
-    const auto scriptShape = m_jsApp->jsEngine()->fromScriptValue<ScriptShape>(shape);
-    BRepUtils::forEachSubShape(scriptShape.shape(), shapeTypeEnum, [&](const TopoDS_Shape& subShape) {
-        auto jsSubShape = m_jsApp->jsEngine()->toScriptValue(ScriptShape(subShape));
-        auto jsVal = fn.call({ jsSubShape });
-        logScriptError(jsVal, "traverseShape()");
-    });
+    return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId, m_jsApp->jsEngine()));
 }
 
 namespace {

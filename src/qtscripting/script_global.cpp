@@ -12,6 +12,7 @@
 #include "../base/property_value_conversion.h"
 #include "../qtcommon/qstring_conv.h"
 #include "script_application.h"
+#include "script_document.h"
 #include "script_geom_curve.h"
 #include "script_geom_surface.h"
 #include "script_shape.h"
@@ -97,7 +98,8 @@ template<> struct ScriptEnumBinding<TopAbs_ShapeEnum> {
         { "Face", TopAbs_FACE },
         { "Wire", TopAbs_WIRE },
         { "Edge", TopAbs_EDGE },
-        { "Vertex", TopAbs_VERTEX }
+        { "Vertex", TopAbs_VERTEX },
+        { "Shape", TopAbs_SHAPE }
     };
 };
 
@@ -233,6 +235,9 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
         qRegisterMetaType<ScriptGeomSurfaceType>("ScriptGeomSurfaceType");
         qRegisterMetaType<ScriptShapeOrientation>("ScriptShapeOrientation");
         qRegisterMetaType<ScriptShapeType>("ScriptShapeType");
+        qRegisterMetaType<TreeNodeId>("TreeNodeId");
+        qRegisterMetaType<QJSValue_DocumentTraverseModelTreeCallback>("QJSValue_DocumentTraverseModelTreeCallback");
+        qRegisterMetaType<QJSValue_ShapeTraverseCallback>("QJSValue_ShapeTraverseCallback");
         metaTypesRegistered = true;
     }
 }

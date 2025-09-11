@@ -12,13 +12,14 @@
 #include "script_shape.h"
 
 #include <QtCore/QObject>
+class QJSEngine;
 
 namespace Mayo {
 
 class ScriptTreeNode {
     Q_GADGET
-    Q_PROPERTY(unsigned id READ id)
-    Q_PROPERTY(unsigned parentId READ parentId)
+    Q_PROPERTY(TreeNodeId id READ id)
+    Q_PROPERTY(TreeNodeId parentId READ parentId)
     Q_PROPERTY(QString tag READ tag)
     Q_PROPERTY(QString name READ name)
     Q_PROPERTY(bool isAssembly READ isAssembly)
@@ -30,10 +31,10 @@ class ScriptTreeNode {
     Q_PROPERTY(QVariant_ScriptShape shape READ shape)
 public:
     ScriptTreeNode() = default;
-    ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId);
+    ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId, QJSEngine* jsEngine = nullptr);
 
-    unsigned id() const { return m_nodeId; }
-    unsigned parentId() const;
+    TreeNodeId id() const { return m_nodeId; }
+    TreeNodeId parentId() const;
 
     QString tag() const; // TODO Could be TDF_Label wrapped in QVariant
     QString name() const;
@@ -51,6 +52,7 @@ public:
 private:
     DocumentPtr m_doc;
     TreeNodeId m_nodeId = 0;
+    QJSEngine* m_jsEngine = nullptr;
 };
 
 #ifndef _MAYO_DOCGEN_

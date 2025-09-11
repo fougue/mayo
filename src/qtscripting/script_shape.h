@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include <QtCore/QObject>
 #include <TopoDS_Shape.hxx>
+
+#include <QtCore/QObject>
+#include <QtQml/QJSValue>
+class QJSEngine;
 
 namespace Mayo {
 
@@ -15,6 +18,7 @@ namespace Mayo {
 using QVariant_ScriptShape = QVariant;
 using ScriptShapeType = unsigned; // ->TopAbs_ShapeEnum
 using ScriptShapeOrientation = unsigned; // ->TopAbs_Orientation
+using QJSValue_ShapeTraverseCallback = QJSValue;
 #endif
 
 class ScriptShape {
@@ -26,7 +30,7 @@ class ScriptShape {
     Q_PROPERTY(QVariant geometry READ geometry)
 public:
     ScriptShape() = default;
-    ScriptShape(const TopoDS_Shape& shape) : m_shape(shape) {}
+    ScriptShape(const TopoDS_Shape& shape, QJSEngine* jsEngine = nullptr);
 
     ScriptShapeType type() const { return m_shape.ShapeType(); }
     ScriptShapeOrientation orientation() const { return m_shape.Orientation(); }
@@ -38,8 +42,11 @@ public:
 
     const TopoDS_Shape& shape() const { return m_shape; }
 
+    Q_INVOKABLE void traverse(ScriptShapeType filter, QJSValue_ShapeTraverseCallback fn);
+
 private:
     TopoDS_Shape m_shape;
+    QJSEngine* m_jsEngine = nullptr;
 };
 
 } // namespace Mayo
