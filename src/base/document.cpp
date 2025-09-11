@@ -98,7 +98,8 @@ TDF_Label Document::entityLabel(int index) const
 
 TreeNodeId Document::entityTreeNodeId(int index) const
 {
-    return m_modelTree.roots()[index];
+    auto spanRootNodeId = m_modelTree.roots();
+    return 0 <= index && index < spanRootNodeId.size() ? spanRootNodeId[index] : 0;
 }
 
 DocumentTreeNode Document::entityTreeNode(int index) const
