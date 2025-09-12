@@ -278,6 +278,94 @@ void CommandNewDocument::execute()
     docPtr->setName(to_stdString(Command::tr("Anonymous%1").arg(++docSequenceId)));
 }
 
+CommandXCafFileOpen::CommandXCafFileOpen(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setText(Command::tr("Load XCAF file..."));
+    this->setAction(action);
+}
+
+void CommandXCafFileOpen::execute()
+{
+    auto ioSettings = ImportExportSettings::load();
+    const QString strFilepath =
+        QFileDialog::getOpenFileName(
+            this->widgetMain(),
+            Command::tr("Select XCAF file"),
+            filepathTo<QString>(ioSettings.openDir),
+            Command::tr("All Mayo files(*.myx)")
+        );
+
+    if (strFilepath.isEmpty())
+        return;
+
+    auto filepath = filepathFrom(strFilepath);
+    ioSettings.openDir = filepathFrom(strFilepath);
+    ImportExportSettings::save(ioSettings);
+
+    PCDM_ReaderStatus openStatus = PCDM_RS_OK;
+    auto doc = this->app()->openDocument(filepath, &openStatus);
+    if (openStatus == PCDM_RS_OK) {
+        const TDF_LabelSequence seqEntityLabel = doc->xcaf().topLevelFreeShapes();
+        for (const TDF_Label& entityLabel : seqEntityLabel)
+            AppModule::get()->computeBRepMesh(entityLabel);
+
+        doc->addEntityTreeNodeSequence(seqEntityLabel);
+    }
+    else {
+        AppModule::get()->emitError(
+            fmt::format(Command::textIdTr("Application::Open() failed[code={}]"), MetaEnum::name(openStatus))
+        );
+    }
+}
+
+CommandXcafFileSaveAs::CommandXcafFileSaveAs(IAppContext* context)
+    : Command(context)
+{
+    auto action = new QAction(this);
+    action->setText(Command::tr("Save as XCAF file..."));
+    this->setAction(action);
+}
+
+void CommandXcafFileSaveAs::execute()
+{
+    const GuiDocument* guiDoc = this->currentGuiDocument();
+    if (!guiDoc)
+        return;
+
+    auto ioSettings = ImportExportSettings::load();
+    const QString strFilepath =
+        QFileDialog::getSaveFileName(
+            this->widgetMain(),
+            Command::tr("Select XCAF file"),
+            filepathTo<QString>(ioSettings.openDir),
+            Command::tr("All Mayo files(*.myx)")
+        );
+
+    if (strFilepath.isEmpty())
+        return;
+
+    ioSettings.openDir = filepathFrom(strFilepath);
+    ImportExportSettings::save(ioSettings);
+
+    auto doc = guiDoc->document();
+    doc->ChangeStorageFormat(Document::NameFormatXml);
+    const PCDM_StoreStatus saveStatus = this->app()->SaveAs(doc, to_OccExtString(strFilepath));
+    if (saveStatus != PCDM_SS_OK) {
+        AppModule::get()->emitError(
+            fmt::format(Command::textIdTr("Application::SaveAs() failed[code={}]"), MetaEnum::name(saveStatus))
+        );
+    }
+}
+
+bool CommandXcafFileSaveAs::getEnabledStatus() const
+{
+    return this->app()->documentCount() != 0
+           && this->context()->currentPage() == IAppContext::Page::Documents
+        ;
+}
+
 CommandOpenDocuments::CommandOpenDocuments(IAppContext* context)
     : Command(context)
 {

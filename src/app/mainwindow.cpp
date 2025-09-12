@@ -132,6 +132,8 @@ void MainWindow::createCommands()
 {
     // "File" commands
     this->addCommand<CommandNewDocument>();
+    this->addCommand<CommandXCafFileOpen>();
+    this->addCommand<CommandXcafFileSaveAs>();
     this->addCommand<CommandOpenDocuments>();
     this->addCommand<CommandRecentFiles>(m_ui->menu_File);
     this->addCommand<CommandImportInCurrentDocument>();
@@ -183,6 +185,9 @@ void MainWindow::createMenus()
         fnAddAction(menu, CommandNewDocument::Name);
         fnAddAction(menu, CommandOpenDocuments::Name);
         fnAddAction(menu, CommandRecentFiles::Name);
+        menu->addSeparator();
+        fnAddAction(menu, CommandXCafFileOpen::Name);
+        fnAddAction(menu, CommandXcafFileSaveAs::Name);
         menu->addSeparator();
         fnAddAction(menu, CommandImportInCurrentDocument::Name);
         fnAddAction(menu, CommandExportSelectedApplicationItems::Name);

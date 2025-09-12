@@ -37,6 +37,23 @@ public:
     static constexpr std::string_view Name = "new-doc";
 };
 
+class CommandXCafFileOpen : public Command {
+public:
+    CommandXCafFileOpen(IAppContext* context);
+    void execute() override;
+
+    static constexpr std::string_view Name = "open-xcaf-file";
+};
+
+class CommandXcafFileSaveAs : public Command {
+public:
+    CommandXcafFileSaveAs(IAppContext* context);
+    void execute() override;
+    bool getEnabledStatus() const override;
+
+    static constexpr std::string_view Name = "saveas-xcaf-file";
+};
+
 class CommandOpenDocuments : public Command {
 public:
     CommandOpenDocuments(IAppContext* context);

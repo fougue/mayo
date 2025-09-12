@@ -91,7 +91,9 @@ DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatu
         *ptrReadStatus = readStatus;
 
     DocumentPtr doc = DocumentPtr::DownCast(stdDoc);
-    this->addDocument(doc);
+    doc->initXCaf();
+    doc->setName(filepath.filename().u8string());
+    doc->setFilePath(filepath);
     return doc;
 }
 
