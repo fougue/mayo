@@ -10,8 +10,10 @@
 #include "../base/io_format.h"
 #include "../base/property.h"
 #include "../base/signal.h"
+#include "../base/task_common.h"
 
 #include "script_tree_node.h"
+#include "script_typedefs.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QJsonValue>
@@ -49,10 +51,6 @@ namespace Mayo {
 
 class ScriptApplication;
 
-#ifndef _MAYO_DOCGEN_
-using QJSValue_DocumentTraverseModelTreeCallback = QJSValue;
-#endif
-
 //! Data container organized as a hierarchical tree of nodes
 class ScriptDocument : public QObject {
     Q_OBJECT
@@ -73,7 +71,6 @@ public:
     int entityCount() const;
     Q_INVOKABLE TreeNodeId entityTreeNodeId(int index) const;
 
-    Q_INVOKABLE void traverseModelTree(QJSValue_DocumentTraverseModelTreeCallback fn);
     Q_INVOKABLE QVariant_ScriptTreeNode treeNode(TreeNodeId treeNodeId) const;
 #if 0
     Q_INVOKABLE bool tagHasShapeColor(const QString& tag) const;
@@ -82,7 +79,11 @@ public:
 
     // TODO Provide both sync/async importFile functions?
     //Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);
-    Q_INVOKABLE quint32 asyncImportFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);
+    Q_INVOKABLE TaskId asyncImportFile(
+        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+    );
+
+    DocumentPtr document() const { return m_doc; }
 
 signals:
     void nameChanged();

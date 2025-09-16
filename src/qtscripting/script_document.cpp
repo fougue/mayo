@@ -18,6 +18,7 @@
 #endif
 #include "script_application.h"
 #include "script_global.h"
+#include "script_mayo.h"
 #include "script_shape.h"
 #include "script_tree_node.h"
 
@@ -73,36 +74,6 @@ TreeNodeId ScriptDocument::entityTreeNodeId(int index) const
     return m_doc ? m_doc->entityTreeNodeId(index) : 0;
 }
 
-//! \brief Visits each node in the model tree and executes callback `fn` on the visited node
-//!
-//! `DocumentTraverseModelTreeCallback` is a unary callback function which is passed the TreeNodeId
-//! value of the visited tree node. Any value returned by the callback is ignored
-//! \code{.js}
-//! doc.traverseModelTree(nodeId => {
-//!     var node = doc.treeNode(nodeId);
-//!     console.debug(`treeNodeId: ${nodeId}  name:"${node.name}"`);
-//! });
-//! \endcode
-void ScriptDocument::traverseModelTree(QJSValue_DocumentTraverseModelTreeCallback fn)
-{
-    if (!fn.isCallable())
-        return;
-
-    const Tree<TDF_Label>& modelTree = m_doc->modelTree();
-    traverseTree(modelTree, [&](TreeNodeId nodeId) {
-#if 0
-        const TreeNodeId parentNodeId = modelTree.nodeParent(nodeId);
-        if (parentNodeId != 0) {
-            const TDF_Label& parentNodeLabel = modelTree.nodeData(parentNodeId);
-            if (XCaf::isShapeReference(parentNodeLabel))
-                return; // Skip: tree node is a product(or "referred" shape)
-        }
-#endif
-        auto jsVal = fn.call({ QJSValue{nodeId} });
-        logScriptError(jsVal, "traverseModelTree()");
-    });
-}
-
 #if 0
 QColor ScriptDocument::tagShapeColor(const QString& tag) const
 {
@@ -123,7 +94,7 @@ QColor ScriptDocument::tagShapeColor(const QString& tag) const
 //! This function is often useful in conjunction with traverseModelTree()
 QVariant_ScriptTreeNode ScriptDocument::treeNode(TreeNodeId treeNodeId) const
 {
-    return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId, m_jsApp->jsEngine()));
+    return QVariant::fromValue(ScriptTreeNode(m_doc, treeNodeId));
 }
 
 namespace {
@@ -260,10 +231,44 @@ private:
 
 } // namespace
 
-quint32 ScriptDocument::asyncImportFile(QString strFilepath, QJSValue jsOptions, QJSValue fnCallbacks)
+/*!
+  \brief Runs an asynchronous task to import file at location `strFilepath` into the Document object
+
+  The return value is the import task identifier . This identifier can be used with
+  \ref Mayo::waitForDone(TaskId, int) "Mayo.waitForDone(TaskId)" to wait for completion of import
+  task.
+
+  \param strFilepath Location of the file to be imported. Prefer absolute file path
+  \param jsOptions Options for the import operation. This parameter is specified as a JSON object
+  and must use special members.<br>
+  Root members take the name of the supported file formats, eg STEP, IGES, DXF, GLTF, ...<br>
+  Each file format has its own parameters that can be specified, eg:
+  \code{.js}
+  {
+      STEP: {
+          readSubShapesNames: true,
+          productContext: STEP.ProductContext.Both
+      },
+      DXF: {
+          importAnnotations: true,
+          groupLayers: true
+      }
+  }
+  \endcode
+  Although only one set of paremters will be used(the format matching the input file), parameters
+  for multiple file formats can be specified(other formats will just be ignored).<br>
+  This allows to define specific parameters in a single object(eg one JS constant) and pass it to
+  this function.<br>
+  Note that these parameters are optional. By default the parameter values are taken from mayo user
+  settings
+  \param jsCallbacks Callbacks for the import operation. This parameter is specified as a JSON object
+*/
+TaskId ScriptDocument::asyncImportFile(
+        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+    )
 {
     // Make it a pointer so it can be captured by value in lambda functions
-    const ScriptEnvironment* env = &m_jsApp->environment();
+    const ScriptEnvironment* env = &m_jsApp->mayoObject()->environment();
     if (!env->ioSystem)
         return false;
 
@@ -273,11 +278,11 @@ quint32 ScriptDocument::asyncImportFile(QString strFilepath, QJSValue jsOptions,
     const IO::Format format = env->ioSystem->probeFormat(filepathFrom(strFilepath));
     auto messengerPtr = std::make_unique<MessengerBySignal>();
     auto messenger = messengerPtr.get();
-    TaskManager& taskMgr = m_jsApp->taskManager();
+    TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
     auto importTaskId = taskMgr.newTask([=](TaskProgress* progress) {
         ImplParametersProvider jsParamsProvider;
         auto readerParams = this->createReaderParametersFromJson(jsonOptions, format, [=](std::string_view err) {
-            logScriptError(m_jsApp->jsEngine(), err, "Document.asyncImportFile()");
+            logScriptError(m_jsApp->mayoObject()->jsEngine(), err, "Document.asyncImportFile()");
         });
         jsParamsProvider.addReaderParameters(format, std::move(readerParams));
         env->ioSystem->importInDocument()
@@ -295,8 +300,8 @@ quint32 ScriptDocument::asyncImportFile(QString strFilepath, QJSValue jsOptions,
         ;
     });
 
-    ScriptApplication::TaskCallbacks callbacks;
-    for (QJSValueIterator it(fnCallbacks); it.hasNext();) {
+    ScriptMayo::TaskCallbacks callbacks;
+    for (QJSValueIterator it(jsCallbacks); it.hasNext();) {
         it.next();
         if (it.name() == "onStarted") {
             callbacks.onStarted = it.value();
@@ -315,7 +320,7 @@ quint32 ScriptDocument::asyncImportFile(QString strFilepath, QJSValue jsOptions,
         }
     }
 
-    m_jsApp->registerTask(importTaskId, callbacks, std::move(messengerPtr));
+    m_jsApp->mayoObject()->registerTask(importTaskId, callbacks, std::move(messengerPtr));
     taskMgr.run(importTaskId);
     return importTaskId;
 }
@@ -343,7 +348,7 @@ std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(
     if (jsonFormatParams.empty())
         return {};
 
-    const ScriptEnvironment& env = m_jsApp->environment();
+    const ScriptEnvironment& env = m_jsApp->mayoObject()->environment();
     const auto factoryReader = env.ioSystem->findFactoryReader(format);
     if (!factoryReader)
         return {};

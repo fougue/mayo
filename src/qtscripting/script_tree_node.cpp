@@ -15,10 +15,9 @@
 
 namespace Mayo {
 
-ScriptTreeNode::ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId, QJSEngine* jsEngine)
+ScriptTreeNode::ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId)
     : m_doc(doc),
-    m_nodeId(nodeId),
-    m_jsEngine(jsEngine)
+    m_nodeId(nodeId)
 {
 }
 
@@ -75,7 +74,7 @@ QStringList ScriptTreeNode::subShapeTags() const
 QVariant_ScriptShape ScriptTreeNode::shape() const
 {
     const TopoDS_Shape shape = XCaf::shape(DocumentTreeNode::label(m_doc, m_nodeId));
-    return QVariant::fromValue(ScriptShape(shape, m_jsEngine));
+    return QVariant::fromValue(ScriptShape(shape));
 }
 
 } // namespace Mayo

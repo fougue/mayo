@@ -9,6 +9,7 @@
 #include "../base/occ_handle.h"
 
 #include "script_geom_curve.h"
+#include "script_typedefs.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
@@ -26,22 +27,6 @@
 #include <gp_Torus.hxx>
 
 namespace Mayo {
-
-#ifndef _MAYO_DOCGEN_
-using QVariant_ScriptGeomSurface = QVariant;
-using QVariant_ScriptGeomCylinder = QVariant;
-using QVariant_ScriptGeomPlane = QVariant;
-using QVariant_ScriptGeomCone = QVariant;
-using QVariant_ScriptGeomSphere = QVariant;
-using QVariant_ScriptGeomTorus = QVariant;
-using QVariant_ScriptGeomBezierSurface = QVariant;
-using QVariant_ScriptGeomBSplineSurface = QVariant;
-using QVariant_ScriptGeomSurfaceOfLinearExtrusion = QVariant;
-using QVariant_ScriptGeomSurfaceOfRevolution = QVariant;
-using QVariant_ScriptGeomOffsetSurface = QVariant;
-
-using ScriptGeomSurfaceType = unsigned;  // ->GeomAbs_SurfaceType
-#endif
 
 class ScriptGeomSurface {
     Q_GADGET

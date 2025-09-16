@@ -12,16 +12,14 @@
 #include "script_global.h"
 
 #include <QtCore/QVariant>
-#include <QtQml/QJSEngine>
 
 #include <BRep_Tool.hxx>
 #include <TopoDS.hxx>
 
 namespace Mayo {
 
-ScriptShape::ScriptShape(const TopoDS_Shape& shape, QJSEngine* jsEngine)
-    : m_shape(shape),
-    m_jsEngine(jsEngine)
+ScriptShape::ScriptShape(const TopoDS_Shape& shape)
+    : m_shape(shape)
 {
 }
 
@@ -62,37 +60,6 @@ QVariant ScriptShape::geometry() const
     }
 
     return {};
-}
-
-//! \brief Visits each sub-shape and executes callback `fn` on the visited sub-shape
-//!
-//! The sub-shapes visited are restricted by a shape type filter specified with `filter`.
-//! This means that if for example ShapeType.Edge is passed then only the sub-shapes of type "edge"
-//! will be visited\n
-//! `ShapeTraverseCallback` is a unary callback function which is passed the Shape object of the
-//! visited sub-shape. Any value returned by the callback is ignored
-//! \code{.js}
-//! var circleCount = 0;
-//! shape.traverse(ShapeType.Edge, edge => {
-//!     if (edge.geometry.type == GeomCurveType.Circle)
-//!         ++circleCount;
-//! });
-//! console.debug("Circle count = " + circleCount);
-//! \endcode
-void ScriptShape::traverse(ScriptShapeType filter, QJSValue_ShapeTraverseCallback fn)
-{
-    if (!m_jsEngine)
-        return; // TODO Handle error(throw exception?)
-
-    if (!fn.isCallable())
-        return;
-
-    const auto shapeTypeEnum = static_cast<TopAbs_ShapeEnum>(filter);
-    BRepUtils::forEachSubShape(m_shape, shapeTypeEnum, [&](const TopoDS_Shape& subShape) {
-        auto jsSubShape = m_jsEngine->toScriptValue(ScriptShape(subShape));
-        auto jsVal = fn.call({ jsSubShape });
-        logScriptError(jsVal, "Shape.traverse()");
-    });
 }
 
 } // namespace Mayo

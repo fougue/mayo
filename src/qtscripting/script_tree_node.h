@@ -8,11 +8,9 @@
 
 #include "../base/document_ptr.h"
 #include "../base/libtree.h"
-
 #include "script_shape.h"
 
 #include <QtCore/QObject>
-class QJSEngine;
 
 namespace Mayo {
 
@@ -31,7 +29,7 @@ class ScriptTreeNode {
     Q_PROPERTY(QVariant_ScriptShape shape READ shape)
 public:
     ScriptTreeNode() = default;
-    ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId, QJSEngine* jsEngine = nullptr);
+    ScriptTreeNode(const DocumentPtr& doc, TreeNodeId nodeId);
 
     TreeNodeId id() const { return m_nodeId; }
     TreeNodeId parentId() const;
@@ -52,12 +50,7 @@ public:
 private:
     DocumentPtr m_doc;
     TreeNodeId m_nodeId = 0;
-    QJSEngine* m_jsEngine = nullptr;
 };
-
-#ifndef _MAYO_DOCGEN_
-using QVariant_ScriptTreeNode = QVariant;
-#endif
 
 } // namespace Mayo
 

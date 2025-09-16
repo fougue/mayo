@@ -6,21 +6,14 @@
 
 #pragma once
 
+#include "script_typedefs.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
 #include <gp_Ax1.hxx>
 #include <gp_Ax3.hxx>
 
 namespace Mayo {
-
-#ifndef _MAYO_DOCGEN_
-using QVariant_Coords3D = QVariant;
-using QVariant_ScriptGeomAx1 = QVariant;
-using QVariant_ScriptGeomAx3 = QVariant;
-
-using ScriptGeomContinuity = unsigned; // ->GeomAbs_Shape
-using ScriptGeomBSplineKnotDistribution = unsigned; // ->GeomAbs_BSplKnotDistribution
-#endif
 
 class ScriptGeomAx1 {
     Q_GADGET

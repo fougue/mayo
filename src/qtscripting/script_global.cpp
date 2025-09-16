@@ -15,6 +15,7 @@
 #include "script_document.h"
 #include "script_geom_curve.h"
 #include "script_geom_surface.h"
+#include "script_mayo.h"
 #include "script_shape.h"
 #include "script_tree_node.h"
 
@@ -175,9 +176,10 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
 
     jsEngine->installExtensions(QJSEngine::ConsoleExtension);
 
-    auto scriptApp = new ScriptApplication(app, env, jsEngine);
-    QJSValue jsApp = jsEngine->newQObject(scriptApp);
-    jsEngine->globalObject().setProperty("application", jsApp);
+    auto scriptMayo = new ScriptMayo(env, jsEngine);
+    scriptMayo->setMainApplication(app);
+    QJSValue jsMayoObject = jsEngine->newQObject(scriptMayo);
+    jsEngine->globalObject().setProperty("Mayo", jsMayoObject);
 
     addScriptEnum<GeomAbs_BSplKnotDistribution>(jsEngine);
     addScriptEnum<GeomAbs_CurveType>(jsEngine);
@@ -226,7 +228,8 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
         //     In Qt5 qRegisterMetaType() must be called for all Script enumeration types and Script
         //     type aliases appearing in functions marked with Q_INVOKABLE
         //     Call to Q_DECLARE_METATYPE() seems to be not needed
-        qRegisterMetaType<QObjectPtr_ScriptDocument>("QObjectPtr_ScriptDocument");
+        qRegisterMetaType<Ptr_ScriptApplication>("Ptr_ScriptApplication");
+        qRegisterMetaType<Ptr_ScriptDocument>("Ptr_ScriptDocument");
         qRegisterMetaType<QVariant_ScriptTreeNode>("QVariant_ScriptTreeNode");
         qRegisterMetaType<QVariant_Coords3D>("QVariant_Coords3D");
         qRegisterMetaType<ScriptGeomBSplineKnotDistribution>("ScriptGeomBSplineKnotDistribution");
@@ -235,9 +238,14 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
         qRegisterMetaType<ScriptGeomSurfaceType>("ScriptGeomSurfaceType");
         qRegisterMetaType<ScriptShapeOrientation>("ScriptShapeOrientation");
         qRegisterMetaType<ScriptShapeType>("ScriptShapeType");
+        qRegisterMetaType<TaskId>("TaskId");
         qRegisterMetaType<TreeNodeId>("TreeNodeId");
-        qRegisterMetaType<QJSValue_DocumentTraverseModelTreeCallback>("QJSValue_DocumentTraverseModelTreeCallback");
-        qRegisterMetaType<QJSValue_ShapeTraverseCallback>("QJSValue_ShapeTraverseCallback");
+        qRegisterMetaType<QJSValue_JsonObject>("QJSValue_JsonObject");
+        qRegisterMetaType<QJSValueList_ArrayOfTaskId>("QJSValueList_ArrayOfTaskId");
+        qRegisterMetaType<QJSValue_MayoTraverseModelTreeCallback>("QJSValue_MayoTraverseModelTreeCallback");
+        qRegisterMetaType<QJSValue_MayoTraverseShapeCallback>("QJSValue_MayoTraverseShapeCallback");
+        qRegisterMetaType<QJSValue_ScriptDocument>("QJSValue_ScriptDocument");
+        qRegisterMetaType<QJSValue_ScriptShape>("QJSValue_ScriptShape");
         metaTypesRegistered = true;
     }
 }

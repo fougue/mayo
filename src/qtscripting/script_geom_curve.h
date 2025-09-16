@@ -9,6 +9,7 @@
 #include "../base/occ_handle.h"
 
 #include "script_geom.h"
+#include "script_typedefs.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
@@ -25,20 +26,6 @@
 #include <gp_Parab.hxx>
 
 namespace Mayo {
-
-#ifndef _MAYO_DOCGEN_
-using QVariant_ScriptGeomCurve = QVariant;
-using QVariant_ScriptGeomLine = QVariant;
-using QVariant_ScriptGeomCircle = QVariant;
-using QVariant_ScriptGeomEllipse = QVariant;
-using QVariant_ScriptGeomHyperbola = QVariant;
-using QVariant_ScriptGeomParabola = QVariant;
-using QVariant_ScriptGeomBezierCurve = QVariant;
-using QVariant_ScriptGeomBSplineCurve = QVariant;
-using QVariant_ScriptGeomOffsetCurve = QVariant;
-
-using ScriptGeomCurveType = unsigned;  // ->GeomAbs_CurveType
-#endif
 
 //! \brief Base geometric parameterized(U) curve in 3D space
 class ScriptGeomCurve {
