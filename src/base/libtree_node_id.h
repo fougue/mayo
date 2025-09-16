@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
+** Copyright (c) 2025, Fougue Ltd. <https://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
@@ -10,13 +10,7 @@
 
 namespace Mayo {
 
-// Task identifier type
-using TaskId = uint32_t;
-
-// Reserved value for null tasks
-constexpr TaskId TaskId_null = UINT32_MAX;
-
-// Syntactic sugar for task auto-deletion flag(see TaskManager::run/exec())
-enum class TaskAutoDestroy { On, Off };
+// Tree node identifier type
+using TreeNodeId = uint32_t;
 
 } // namespace Mayo

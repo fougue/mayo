@@ -135,7 +135,7 @@ std::locale getFrLocale()
 // Equivalent of QSignalSpy for KDBindings signals
 struct SignalEmitSpy {
     struct UnknownType {};
-    using ArgValue = std::variant<UnknownType, std::int64_t, std::uint64_t>;
+    using ArgValue = std::variant<UnknownType, int64_t, uint64_t>;
     using SignalArguments = std::vector<ArgValue>;
 
     template<typename... Args>
@@ -1126,8 +1126,8 @@ void TestBase::LibTask_test()
 
     QCOMPARE(sigStarted.count, 1);
     QCOMPARE(sigEnded.count, 1);
-    QCOMPARE(std::get<TaskId>(sigStarted.vecSignals.front().at(0)), taskId);
-    QCOMPARE(std::get<TaskId>(sigEnded.vecSignals.front().at(0)), taskId);
+    QCOMPARE(std::get<uint64_t>(sigStarted.vecSignals.front().at(0)), taskId);
+    QCOMPARE(std::get<uint64_t>(sigEnded.vecSignals.front().at(0)), taskId);
     QVERIFY(!vecProgressRec.empty());
     int prevPct = 0;
     for (const ProgressRecord& rec : vecProgressRec) {

@@ -7,15 +7,12 @@
 #pragma once
 
 #include "cpp_utils.h"
+#include "libtree_node_id.h"
 #include "span.h"
 #include <algorithm>
-#include <cstdint>
 #include <vector>
 
 namespace Mayo {
-
-// Tree node identifier type
-using TreeNodeId = uint32_t;
 
 // Provides tree-like organization of data
 //
