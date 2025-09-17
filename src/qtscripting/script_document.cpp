@@ -25,12 +25,14 @@
 #include <TDF_Tool.hxx>
 
 #include <QtCore/QtDebug>
+#include <QtCore/QEventLoop>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonValue>
 #include <QtQml/QJSEngine>
 #include <QtQml/QJSValueIterator>
 
 #include <fmt/format.h>
+#include <utility>
 
 namespace Mayo {
 
@@ -231,98 +233,32 @@ private:
 
 } // namespace
 
-/*!
-  \brief Runs an asynchronous task to import file at location `strFilepath` into the Document object
+bool ScriptDocument::importFile(
+        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+    )
+{
+    auto taskId = this->createImportFileTask(strFilepath, jsOptions, jsCallbacks);
+    TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
+    taskMgr.exec(taskId);
 
-  The return value is the import task identifier . This identifier can be used with
-  \ref Mayo::waitForDone(TaskId, int) "Mayo.waitForDone(TaskId)" to wait for completion of import
-  task.
+    // TODO Document why QEventLopp::processEvents() is needed here. Reminder: weird crash caused by
+    // TaskManager::signalProgressChanged emitted after next processEvents() because of BREP mesh
+    // computation threads
+    // NOTE Unfortunately QAbstractEventDispatcher::instance() returns null
+    QEventLoop eventLoop;
+    eventLoop.processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
 
-  \param strFilepath Location of the file to be imported. Prefer absolute file path
-  \param jsOptions Options for the import operation. This parameter is specified as a JSON object
-  and must use special members.<br>
-  Root members take the name of the supported file formats, eg STEP, IGES, DXF, GLTF, ...<br>
-  Each file format has its own parameters that can be specified, eg:
-  \code{.js}
-  {
-      STEP: {
-          readSubShapesNames: true,
-          productContext: STEP.ProductContext.Both
-      },
-      DXF: {
-          importAnnotations: true,
-          groupLayers: true
-      }
-  }
-  \endcode
-  Although only one set of paremters will be used(the format matching the input file), parameters
-  for multiple file formats can be specified(other formats will just be ignored).<br>
-  This allows to define specific parameters in a single object(eg one JS constant) and pass it to
-  this function.<br>
-  Note that these parameters are optional. By default the parameter values are taken from mayo user
-  settings
-  \param jsCallbacks Callbacks for the import operation. This parameter is specified as a JSON object
-*/
+    return true;
+}
+
 TaskId ScriptDocument::asyncImportFile(
         QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
     )
 {
-    // Make it a pointer so it can be captured by value in lambda functions
-    const ScriptEnvironment* env = &m_jsApp->mayoObject()->environment();
-    if (!env->ioSystem)
-        return false;
-
-    const QJsonValue jsonOptions = QJsonValue::fromVariant(jsOptions.toVariant());
-    printJsonValue(jsonOptions);
-
-    const IO::Format format = env->ioSystem->probeFormat(filepathFrom(strFilepath));
-    auto messengerPtr = std::make_unique<MessengerBySignal>();
-    auto messenger = messengerPtr.get();
+    auto taskId = this->createImportFileTask(strFilepath, jsOptions, jsCallbacks);
     TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
-    auto importTaskId = taskMgr.newTask([=](TaskProgress* progress) {
-        ImplParametersProvider jsParamsProvider;
-        auto readerParams = this->createReaderParametersFromJson(jsonOptions, format, [=](std::string_view err) {
-            logScriptError(m_jsApp->mayoObject()->jsEngine(), err, "Document.asyncImportFile()");
-        });
-        jsParamsProvider.addReaderParameters(format, std::move(readerParams));
-        env->ioSystem->importInDocument()
-            .targetDocument(this->baseDocument())
-            .withFilepath(filepathFrom(strFilepath))
-            .withParametersProvider(
-                jsParamsProvider.hasReaderParameters() ? &jsParamsProvider : env->ioParametersProvider
-             )
-            .withEntityPostProcess(env->ioEntityImportPostProcess)
-            .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-            .withEntityPostProcessInfoProgress(20, "Mesh BRep shapes")
-            .withTaskProgress(progress)
-            .withMessenger(messenger)
-            .execute()
-        ;
-    });
-
-    ScriptMayo::TaskCallbacks callbacks;
-    for (QJSValueIterator it(jsCallbacks); it.hasNext();) {
-        it.next();
-        if (it.name() == "onStarted") {
-            callbacks.onStarted = it.value();
-        }
-        else if (it.name() == "onProgress") {
-            callbacks.onProgress = it.value();
-        }
-        else if (it.name() == "onEnded") {
-            callbacks.onEnded = it.value();
-        }
-        else if (it.name() == "onWarning") {
-            callbacks.onWarning = it.value();
-        }
-        else if (it.name() == "onError") {
-            callbacks.onError = it.value();
-        }
-    }
-
-    m_jsApp->mayoObject()->registerTask(importTaskId, callbacks, std::move(messengerPtr));
-    taskMgr.run(importTaskId);
-    return importTaskId;
+    taskMgr.run(taskId);
+    return taskId;
 }
 
 ScriptDocument::ScriptDocument(const DocumentPtr& doc, ScriptApplication* jsApp)
@@ -376,6 +312,66 @@ std::unique_ptr<PropertyGroup> ScriptDocument::createReaderParametersFromJson(
     ioUpdateErrorCallback = errorCallback ? ioUpdateErrorCallback : nullptr;
     ioUpdateParametersFromJson(jsonFormatParams, ptrParams.get(), propValueConverter, ioUpdateErrorCallback);
     return ptrParams;
+}
+
+TaskId ScriptDocument::createImportFileTask(
+        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+    )
+{
+    // Make it a pointer so it can be captured by value in lambda functions
+    const ScriptEnvironment* env = &m_jsApp->mayoObject()->environment();
+    if (!env->ioSystem)
+        return false;
+
+    const QJsonValue jsonOptions = QJsonValue::fromVariant(jsOptions.toVariant());
+    //printJsonValue(jsonOptions);
+
+    const IO::Format format = env->ioSystem->probeFormat(filepathFrom(strFilepath));
+    auto messengerPtr = std::make_unique<MessengerBySignal>();
+    auto messenger = messengerPtr.get();
+    TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
+    auto taskId = taskMgr.newTask([=](TaskProgress* progress) {
+        ImplParametersProvider jsParamsProvider;
+        auto readerParams = this->createReaderParametersFromJson(jsonOptions, format, [=](std::string_view err) {
+            logScriptError(m_jsApp->mayoObject()->jsEngine(), err, "Document.asyncImportFile()");
+        });
+        jsParamsProvider.addReaderParameters(format, std::move(readerParams));
+        env->ioSystem->importInDocument()
+            .targetDocument(this->baseDocument())
+            .withFilepath(filepathFrom(strFilepath))
+            .withParametersProvider(
+                jsParamsProvider.hasReaderParameters() ? &jsParamsProvider : env->ioParametersProvider
+            )
+            .withEntityPostProcess(env->ioEntityImportPostProcess)
+            .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+            .withEntityPostProcessInfoProgress(20, "Mesh BRep shapes")
+            .withTaskProgress(progress)
+            .withMessenger(messenger)
+            .execute()
+            ;
+    });
+
+    ScriptMayo::TaskCallbacks callbacks;
+    std::pair<QJSValue*, const char*> callableNames[] = {
+        { &callbacks.onStarted, "onStarted" },
+        { &callbacks.onProgress, "onProgress" },
+        { &callbacks.onEnded, "onEnded" },
+        { &callbacks.onInfo, "onInfo" },
+        { &callbacks.onWarning, "onWarning" },
+        { &callbacks.onError, "onError" }
+    };
+    for (QJSValueIterator it(jsCallbacks); it.hasNext();) {
+        it.next();
+        for (const auto& [callablePtr, strName] : callableNames) {
+            if (it.name() == strName) {
+                *callablePtr = it.value();
+                break;
+            }
+        }
+    }
+
+    m_jsApp->mayoObject()->registerTask(taskId, callbacks, std::move(messengerPtr));
+    return taskId;
 }
 
 } // namespace Mayo

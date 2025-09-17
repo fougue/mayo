@@ -77,10 +77,11 @@ public:
     Q_INVOKABLE QColor tagShapeColor(const QString& tag) const;
 #endif
 
-    // TODO Provide both sync/async importFile functions?
-    //Q_INVOKABLE bool importFile(QString strFilepath, QJSValue jsonOptions, QJSValue fnCallbacks);
+    Q_INVOKABLE bool importFile(
+        QString strFilepath, QJSValue_JsonObject jsOptions = {}, QJSValue_JsonObject jsCallbacks = {}
+    );
     Q_INVOKABLE TaskId asyncImportFile(
-        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+        QString strFilepath, QJSValue_JsonObject jsOptions = {}, QJSValue_JsonObject jsCallbacks = {}
     );
 
     DocumentPtr document() const { return m_doc; }
@@ -100,6 +101,10 @@ private:
         IO::Format format,
         const std::function<void(std::string_view)>& errorCallback = nullptr
     ) const;
+
+    TaskId createImportFileTask(
+        QString strFilepath, QJSValue_JsonObject jsOptions, QJSValue_JsonObject jsCallbacks
+    );
 
     friend class ScriptApplication;
     ScriptApplication* m_jsApp = nullptr;
