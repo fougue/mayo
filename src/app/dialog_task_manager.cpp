@@ -177,7 +177,7 @@ void DialogTaskManager::onTaskProgress(TaskId taskId, int percent)
     }
 }
 
-void DialogTaskManager::onTaskProgressStep(TaskId taskId, std::string_view name)
+void DialogTaskManager::onTaskProgressStep(TaskId taskId, std::string name)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (!widget)

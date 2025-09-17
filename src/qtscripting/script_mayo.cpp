@@ -29,26 +29,26 @@ ScriptMayo::ScriptMayo(const ScriptEnvironment& scriptEnv, QJSEngine* jsEngine)
     m_scriptEnv(scriptEnv),
     m_jsEngine(jsEngine)
 {
-    m_taskMgr.signalStarted.connectSlot([&](TaskId taskId) {
+    m_taskMgr.signalStarted.connectSlot([=](TaskId taskId) {
         Task* task = this->findTask(taskId);
         if (task && task->callbacks.onStarted.isCallable())
             task->callbacks.onStarted.call({taskId});
     });
-    m_taskMgr.signalProgressStep.connectSlot([=](TaskId taskId, const std::string& step) {
+    m_taskMgr.signalProgressStep.connectSlot([=](TaskId taskId, std::string step) {
         Task* task = this->findTask(taskId);
         if (task && task->callbacks.onProgress.isCallable()) {
             task->progressStepTitle = to_QString(step);
             task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
         }
     });
-    m_taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+    m_taskMgr.signalProgressChanged.connectSlot([=](TaskId taskId, int pct) {
         Task* task = this->findTask(taskId);
         if (task && task->callbacks.onProgress.isCallable()) {
             task->progressPct = pct;
             task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
         }
     });
-    m_taskMgr.signalEnded.connectSlot([&](TaskId taskId) {
+    m_taskMgr.signalEnded.connectSlot([=](TaskId taskId) {
         Task* task = this->findTask(taskId);
         if (task && task->callbacks.onEnded.isCallable())
             task->callbacks.onEnded.call({taskId});

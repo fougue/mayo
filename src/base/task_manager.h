@@ -71,7 +71,7 @@ public:
     Signal<TaskId> signalStarted;
 
     // Signal emitted when the current step description of some task has changed
-    Signal<TaskId, const std::string&> signalProgressStep;
+    Signal<TaskId, std::string> signalProgressStep;
 
     // Signal emitted when the current progress of some task has changed
     Signal<TaskId, int> signalProgressChanged;
