@@ -241,10 +241,27 @@ bool ScriptDocument::importFile(
     TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
     taskMgr.exec(taskId);
 
-    // TODO Document why QEventLopp::processEvents() is needed here. Reminder: weird crash caused by
-    // TaskManager::signalProgressChanged emitted after next processEvents() because of BREP mesh
-    // computation threads
-    // NOTE Unfortunately QAbstractEventDispatcher::instance() returns null
+    // NOTE
+    // Scripting execution can crash in this typical scenario:
+    //     Some script is executed and ends with this:
+    //         doc.importFile("myfile.step");
+    //     Then another script is executed and starts with:
+    //         doc.asyncImportFile("otherfile.step");
+    //
+    // The crash is caused at the beginning of asyncImportFile() due to some slot that should have
+    // been called during importFile() function. The slot called is what gets executed in ScriptMayo
+    // when TaskManager::signalProgressStep() is emitted, causing dereference of dangling pointer.
+    // ScriptDocument::importFile() is synchronous, but it may executes threaded operations for the
+    // OpenCascade BREP meshing with BRepMesh_IncrementalMesh and InParallel option is by default
+    // set to 'true'.
+    // The BREP meshing threads emit many "progress step" signals which are queued and delivered at
+    // next events processing. Unfortunately this processing will likely happen after the script has
+    // finished, when going back to the main event loop.
+    // A good workaround to prevent this is to force any pending event to be processed before exiting
+    // synchronous functions like ScriptDocument::importFile()
+    //
+    // NOTE
+    // QAbstractEventDispatcher::instance() is interesting but always returns null...
     QEventLoop eventLoop;
     eventLoop.processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
 
