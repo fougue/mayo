@@ -7,6 +7,7 @@
 #include "script_mayo.h"
 #include "script_application.h"
 #include "script_document.h"
+#include "script_engine.h"
 
 #include "../base/brep_utils.h"
 #include "../base/document.h"
@@ -29,31 +30,10 @@ ScriptMayo::ScriptMayo(const ScriptEnvironment& scriptEnv, QJSEngine* jsEngine)
     m_scriptEnv(scriptEnv),
     m_jsEngine(jsEngine)
 {
-    m_taskMgr.signalStarted.connectSlot([=](TaskId taskId) {
-        Task* task = this->findTask(taskId);
-        if (task && task->callbacks.onStarted.isCallable())
-            task->callbacks.onStarted.call({taskId});
-    });
-    m_taskMgr.signalProgressStep.connectSlot([=](TaskId taskId, std::string step) {
-        Task* task = this->findTask(taskId);
-        if (task && task->callbacks.onProgress.isCallable()) {
-            task->progressStepTitle = to_QString(step);
-            task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
-        }
-    });
-    m_taskMgr.signalProgressChanged.connectSlot([=](TaskId taskId, int pct) {
-        Task* task = this->findTask(taskId);
-        if (task && task->callbacks.onProgress.isCallable()) {
-            task->progressPct = pct;
-            task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
-        }
-    });
-    m_taskMgr.signalEnded.connectSlot([=](TaskId taskId) {
-        Task* task = this->findTask(taskId);
-        if (task && task->callbacks.onEnded.isCallable())
-            task->callbacks.onEnded.call({taskId});
-        m_mapTask.erase(taskId);
-    });
+    m_taskMgr.signalStarted.connectSlot(&ScriptMayo::onTaskStarted, this);
+    m_taskMgr.signalProgressStep.connectSlot(&ScriptMayo::onTaskProgressStep, this);
+    m_taskMgr.signalProgressChanged.connectSlot(&ScriptMayo::onTaskProgressChanged, this);
+    m_taskMgr.signalEnded.connectSlot(&ScriptMayo::onTaskEnded, this);
 }
 
 QString ScriptMayo::versionString() const
@@ -157,7 +137,7 @@ void ScriptMayo::traverseModelTree(
         }
 #endif
         auto jsVal = fn.call({ QJSValue{nodeId} });
-        logScriptError(jsVal, "traverseModelTree()");
+        ScriptEngine::logError(jsVal, "Mayo.traverseModelTree()");
     });
 }
 
@@ -194,7 +174,7 @@ void ScriptMayo::traverseShape(
     BRepUtils::forEachSubShape(scriptShape.shape(), shapeTypeEnum, [&](const TopoDS_Shape& subShape) {
         auto jsSubShape = m_jsEngine->toScriptValue(ScriptShape(subShape));
         auto jsVal = fn.call({ jsSubShape });
-        logScriptError(jsVal, "Mayo.traverseShape()");
+        ScriptEngine::logError(jsVal, "Mayo.traverseShape()");
     });
 }
 
@@ -228,10 +208,79 @@ void ScriptMayo::registerTask(
     });
 }
 
+QVariant ScriptMayo::taskResult(TaskId taskId) const
+{
+    const Task* task = this->findTask(taskId);
+    return task ? task->result : QVariant{};
+}
+
+void ScriptMayo::setTaskResult(TaskId taskId, const QVariant& result)
+{
+    Task* task = this->findTask(taskId);
+    if (task)
+        task->result = result;
+}
+
+void ScriptMayo::setTaskAboutToBeDestroyedCallback(TaskId taskId, std::function<void()> fn)
+{
+    Task* task = this->findTask(taskId);
+    if (task)
+        task->onAboutToBeDestroyed = std::move(fn);
+}
+
 ScriptMayo::Task* ScriptMayo::findTask(TaskId taskId)
 {
     auto it = m_mapTask.find(taskId);
+    return it != m_mapTask.end() ? &it->second : nullptr;
+}
+
+const ScriptMayo::Task* ScriptMayo::findTask(TaskId taskId) const
+{
+    auto it = m_mapTask.find(taskId);
     return it != m_mapTask.cend() ? &it->second : nullptr;
+}
+
+void ScriptMayo::onTaskStarted(TaskId taskId)
+{
+    qDebug() << "onTaskStarted";
+    Task* task = this->findTask(taskId);
+    if (task && task->callbacks.onStarted.isCallable())
+        task->callbacks.onStarted.call({taskId});
+}
+
+void ScriptMayo::onTaskProgressStep(TaskId taskId, std::string step)
+{
+    qDebug() << "onTaskProgressStep";
+    Task* task = this->findTask(taskId);
+    if (task && task->callbacks.onProgress.isCallable()) {
+        task->progressStepTitle = to_QString(step);
+        task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
+    }
+}
+
+void ScriptMayo::onTaskProgressChanged(TaskId taskId, int pct)
+{
+    qDebug() << "onTaskProgressChanged";
+    Task* task = this->findTask(taskId);
+    if (task && task->callbacks.onProgress.isCallable()) {
+        task->progressPct = pct;
+        task->callbacks.onProgress.call({ task->progressStepTitle, task->progressPct, taskId });
+    }
+}
+
+void ScriptMayo::onTaskEnded(TaskId taskId)
+{
+    qDebug() << "onTaskEnded()";
+    Task* task = this->findTask(taskId);
+    if (task && task->callbacks.onEnded.isCallable()) {
+        const QJSValue jsResult = m_jsEngine->toScriptValue(task->result);
+        task->callbacks.onEnded.call({taskId, jsResult});
+    }
+
+    if (task && task->onAboutToBeDestroyed)
+        task->onAboutToBeDestroyed();
+
+    m_mapTask.erase(taskId);
 }
 
 void ScriptMayo::setMainApplication(const ApplicationPtr& app)

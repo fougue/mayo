@@ -4,61 +4,34 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "../base/filepath.h"
-#include "../base/task_manager.h"
+#pragma once
+
+#include "../qtscripting/script_engine.h"
 
 #include <QtWidgets/QDialog>
-#include <functional>
-
-class QJSEngine;
 
 namespace Mayo {
+
+class ScriptEngine;
 
 // Provides a dialog to control execution of a JS script
 class DialogExecScript : public QDialog {
     Q_OBJECT
 public:
-    // Ctor & dtor
-    DialogExecScript(QWidget* parent = nullptr);
+    DialogExecScript(ScriptEngine* engine, QWidget* parent = nullptr);
     ~DialogExecScript();
 
-    // Set the function used to initialize a JS engine
-    using ScriptEngineInitializer = std::function<void(QJSEngine*)>;
-    void setScriptEngineInitializer(ScriptEngineInitializer fn);
-
-    // Path to the script file to be executed
-    void setScriptFilePath(const FilePath& scriptFilePath);
-
-    // Asynchronous execution of script file defined with setScriptFilePath()
-    // Does nothing(returns) if script execution is currently running
-    void startScript();
-
 private:
-    void onTaskStarted(TaskId taskId);
-    void onTaskEnded(TaskId taskId);
+    void onScriptEvaluateStarted();
+    void onScriptEvaluateEnded(ScriptEngine::EndReason reason);
 
-    void interruptScriptExec();
-    void restartOrStopScriptExec();
-
-    struct Message {
-        QtMsgType type = QtDebugMsg;
-        QString text;
-        QString contextFile;
-        int contextLine = -1;
-    };
-
-    void addConsoleOutput(const Message& msg);
+    void addConsoleOutput(const ScriptEngine::Message& msg);
 
     void tryCloseDialog();
 
     class Ui_DialogExecScript* m_ui = nullptr;
-    ScriptEngineInitializer m_fnScriptEngineInit;
-    QJSEngine* m_jsEngine = nullptr;
-    QString m_scriptFilePath;
-    TaskManager m_taskMgr;
-    TaskId m_scriptExecTaskId = TaskId_null;
-    bool m_wasScriptExecInterrupted = false;
-    bool m_scriptExecIsRunning = false;
+    ScriptEngine* m_scriptEngine = nullptr;
+    ScopedSignalConnections<> m_sigConns;
 };
 
 } // namespace Mayo

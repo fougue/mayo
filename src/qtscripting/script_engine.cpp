@@ -1,35 +1,41 @@
 /****************************************************************************
-** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
+** Copyright (c) 2025, Fougue Ltd. <https://www.fougue.pro>
 ** All rights reserved.
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-#include "script_global.h"
+#include "script_engine.h"
+#include "script_application.h"
+#include "script_document.h"
+#include "script_mayo.h"
+#include "script_typedefs.h"
 
 #include "../base/io_system.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/property_enumeration.h"
-#include "../base/property_value_conversion.h"
+#include "../qtcommon/filepath_conv.h"
+#include "../qtcommon/log_message_handler.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "../qtcommon/qstring_conv.h"
-#include "script_application.h"
-#include "script_document.h"
-#include "script_geom_curve.h"
-#include "script_geom_surface.h"
-#include "script_mayo.h"
-#include "script_shape.h"
-#include "script_tree_node.h"
 
+#include <QtCore/QFile>
 #include <QtCore/QMessageLogger>
 #include <QtQml/QJSEngine>
-#include <QtQml/QJSValue>
+
 #include <GeomAbs_BSplKnotDistribution.hxx>
 #include <GeomAbs_CurveType.hxx>
 #include <GeomAbs_Shape.hxx>
 #include <GeomAbs_SurfaceType.hxx>
+#include <TopAbs_Orientation.hxx>
+#include <TopAbs_ShapeEnum.hxx>
 
 namespace Mayo {
 
 namespace {
+
+//
+// Helper functions dedicated to C++/JS enumeration mapping
+//
 
 template<typename Enum> using ScriptEnumValue = std::pair<std::string_view, Enum>;
 template<typename Enum> struct ScriptEnumBinding {};
@@ -161,15 +167,152 @@ std::string_view getEnumerationTypeName(const Property* property)
     return propEnum->enumeration().name();
 }
 
-} // namespace
+//
+// Misc helper functions
+//
 
-const PropertyValueConversion& ScriptEnvironment::getPropertyValueConverter(const ScriptEnvironment& env)
+QString scriptProgram(const QString& strFilepath)
 {
-    static const PropertyValueConversion defaultPropValueConverter;
-    return env.propertyValueConverter ? *env.propertyValueConverter : defaultPropValueConverter;
+    QFile file(strFilepath);
+    if (file.open(QIODevice::ReadOnly))
+        return file.readAll();
+
+    return {};
 }
 
-void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const ScriptEnvironment& env)
+MessageType toMayoMessageType(QtMsgType type)
+{
+    switch (type) {
+    case QtDebugMsg:
+        return MessageType::Trace;
+    case QtInfoMsg:
+        return MessageType::Info;
+    case QtWarningMsg:
+        return MessageType::Warning;
+    case QtCriticalMsg:
+    //case QtSystemMsg:
+    case QtFatalMsg:
+        return MessageType::Error;
+    }
+
+    return MessageType::Trace;
+}
+
+} // namespace
+
+ScriptEngine::ScriptEngine(const ApplicationPtr& mainApp, const ScriptEnvironment& env)
+    : m_mainApp(mainApp),
+      m_scriptEnv(env)
+{
+    m_taskMgr.signalStarted.connectSlot(&ScriptEngine::onTaskStarted, this);
+    m_taskMgr.signalEnded.connectSlot(&ScriptEngine::onTaskEnded, this);
+}
+
+void ScriptEngine::setScriptFilePath(const FilePath& filePath)
+{
+    m_scriptFilePath = filepathCanonical(filePath).make_preferred();
+}
+
+void ScriptEngine::runEvaluate()
+{
+    if (m_isEvaluateRunning)
+        return;
+
+    m_scriptExecTaskId = m_taskMgr.newTask([=](TaskProgress*) {
+        // Override the "console output" handler of LogMessageHandler, first keep the current handler
+        // so it can be restored before exiting
+        auto& logMsgHandler = LogMessageHandler::instance();
+        auto onEntryJsConsoleOutputHandler = logMsgHandler.jsConsoleOutputHandler();
+        auto _ = gsl::finally([&]{
+            logMsgHandler.setJsConsoleOutputHandler(onEntryJsConsoleOutputHandler);
+        });
+        logMsgHandler.setJsConsoleOutputHandler(
+            [=](QtMsgType type, const QMessageLogContext& context, const QString& text) {
+                Message msg;
+                msg.type = toMayoMessageType(type);
+                msg.text = to_stdString(text);
+                msg.contextFile = std::string{context.file ? context.file : ""};
+                msg.contextLine = context.line;
+                this->signalMessage.send(msg);
+            }
+        );
+
+        // Evaluate script program
+        m_jsEngine = new QJSEngine;
+        ScriptEngine::init(m_jsEngine, m_mainApp, m_scriptEnv);
+        const QString strScriptFilePath = filepathTo<QString>(m_scriptFilePath);
+        auto jsVal = m_jsEngine->evaluate(scriptProgram(strScriptFilePath), strScriptFilePath);
+        ScriptEngine::logError(jsVal);
+    });
+    m_taskMgr.run(m_scriptExecTaskId);
+}
+
+void ScriptEngine::stopEvaluate()
+{
+    if (m_jsEngine) {
+        m_wasEvaluateStopped = true;
+        m_jsEngine->setInterrupted(true);
+    }
+}
+
+void ScriptEngine::runOrStopEvaluate()
+{
+    if (m_isEvaluateRunning)
+        this->stopEvaluate();
+    else
+        this->runEvaluate();
+}
+
+bool ScriptEngine::isEvaluateRunning() const
+{
+    return m_isEvaluateRunning;
+}
+
+bool ScriptEngine::waitForEvaluateEnd(int msecs)
+{
+    return m_taskMgr.waitForDone(m_scriptExecTaskId, msecs);
+}
+
+void ScriptEngine::logError(const QJSValue& jsVal, const char* functionName)
+{
+    if (jsVal.isError()) {
+        //const QByteArray name = jsVal.property("name").toString().toUtf8();
+        const QByteArray message = jsVal.property("message").toString().toUtf8();
+        const QByteArray fileName = jsVal.property("fileName").toString().toUtf8();
+        const int lineNumber = jsVal.property("lineNumber").toInt();
+        const QMessageLogger msgLogger(fileName.constData(), lineNumber, functionName, "js");
+        //msgLogger.critical("%s: %s", name.constData(), message.constData());
+        msgLogger.critical(message.constData());
+    }
+}
+
+void ScriptEngine::logError(QJSEngine* jsEngine, std::string_view message, const char* functionName)
+{
+    if (jsEngine) {
+        auto jsError = jsEngine->newErrorObject(QJSValue::GenericError, to_QString(message));
+        ScriptEngine::logError(jsError, functionName);
+    }
+}
+
+// Configures the JS engine so it can support Mayo Scripting API
+//
+// * Installs the required JS extensions(eg Console)
+//
+// * Registers a global 'Mayo' JS object bound to 'app' parameter. This implies JS scripts can
+//   access the already loaded documents in Mayo
+//
+// * Registers Mayo Scripting enumerations as plain objects for cleaner syntax in JS scripts
+//   Example:
+//       GeomCurveType {
+//           Line: intLiteral,
+//           Circle: intLiteral,
+//           Ellipse: intLiteral,
+//           ...
+//        };
+//   To be used in JS code as GeomCurveType.Circle instead of error-prone int/string literal
+//   This also includes enums declared for any IO reader/writer provided by the IO::System object
+//   of input ScriptEnvironment
+void ScriptEngine::init(QJSEngine* jsEngine, const ApplicationPtr& app, const ScriptEnvironment& env)
 {
     if (!jsEngine)
         return;
@@ -250,25 +393,30 @@ void initScriptEngine(QJSEngine* jsEngine, const ApplicationPtr& app, const Scri
     }
 }
 
-void logScriptError(const QJSValue& jsVal, const char* functionName)
+void ScriptEngine::onTaskStarted(TaskId taskId)
 {
-    if (jsVal.isError()) {
-        //const QByteArray name = jsVal.property("name").toString().toUtf8();
-        const QByteArray message = jsVal.property("message").toString().toUtf8();
-        const QByteArray fileName = jsVal.property("fileName").toString().toUtf8();
-        const int lineNumber = jsVal.property("lineNumber").toInt();
-        const QMessageLogger msgLogger(fileName.constData(), lineNumber, functionName, "js");
-        //msgLogger.critical("%s: %s", name.constData(), message.constData());
-        msgLogger.critical(message.constData());
-    }
+    if (m_scriptExecTaskId != taskId)
+        return;
+
+    m_isEvaluateRunning = true;
+    m_wasEvaluateStopped = false;
+    this->signalEvaluateStarted.send();
 }
 
-void logScriptError(QJSEngine* jsEngine, std::string_view message, const char* functionName)
+void ScriptEngine::onTaskEnded(TaskId taskId)
 {
-    if (jsEngine) {
-        auto jsError = jsEngine->newErrorObject(QJSValue::GenericError, to_QString(message));
-        logScriptError(jsError, functionName);
-    }
+    if (m_scriptExecTaskId != taskId)
+        return;
+
+    m_isEvaluateRunning = false;
+    if (!m_wasEvaluateStopped)
+        this->signalEvaluateEnded.send(EndReason::Finished);
+    else
+        this->signalEvaluateEnded.send(EndReason::Stopped);
+
+    m_jsEngine->setInterrupted(false);
+    delete m_jsEngine;
+    m_jsEngine = nullptr;
 }
 
 } // namespace Mayo

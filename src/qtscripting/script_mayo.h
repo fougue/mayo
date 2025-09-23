@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include "../base/application_ptr.h"
 #include "../base/messenger.h"
 #include "../base/task_manager.h"
-#include "script_global.h"
+#include "script_environment.h"
 #include "script_typedefs.h"
 
 #include <QtCore/QObject>
@@ -62,6 +63,10 @@ public:
     void registerTask(
         TaskId taskId, const TaskCallbacks& callbacks, std::unique_ptr<MessengerBySignal> msg
     );
+    QVariant taskResult(TaskId taskId) const;
+    void setTaskResult(TaskId taskId, const QVariant& result);
+    void setTaskAboutToBeDestroyedCallback(TaskId taskId, std::function<void()> fn);
+
     TaskManager& taskManager() { return m_taskMgr; }
     QJSEngine* jsEngine() const { return m_jsEngine; }
     const ScriptEnvironment& environment() const { return m_scriptEnv; }
@@ -72,8 +77,16 @@ private:
         QString progressStepTitle;
         TaskCallbacks callbacks;
         std::unique_ptr<MessengerBySignal> messenger;
+        std::function<void()> onAboutToBeDestroyed;
+        QVariant result;
     };
     Task* findTask(TaskId taskId);
+    const Task* findTask(TaskId taskId) const;
+
+    void onTaskStarted(TaskId taskId);
+    void onTaskProgressStep(TaskId taskId, std::string step);
+    void onTaskProgressChanged(TaskId taskId, int pct);
+    void onTaskEnded(TaskId taskId);
 
     const ScriptEnvironment m_scriptEnv;
     QJSEngine* m_jsEngine = nullptr;

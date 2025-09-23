@@ -9,7 +9,6 @@
 #include "../base/brep_utils.h"
 #include "script_geom_curve.h"
 #include "script_geom_surface.h"
-#include "script_global.h"
 
 #include <QtCore/QVariant>
 

@@ -17,7 +17,7 @@
 #  include "../app/qtgui_utils.h"
 #endif
 #include "script_application.h"
-#include "script_global.h"
+#include "script_engine.h"
 #include "script_mayo.h"
 #include "script_shape.h"
 #include "script_tree_node.h"
@@ -238,8 +238,12 @@ bool ScriptDocument::importFile(
     )
 {
     auto taskId = this->createImportFileTask(strFilepath, jsOptions, jsCallbacks);
-    TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
-    taskMgr.exec(taskId);
+    ScriptMayo* mayoObject = m_jsApp->mayoObject();
+    QVariant taskResult;
+    mayoObject->setTaskAboutToBeDestroyedCallback(taskId, [&]{
+        taskResult = mayoObject->taskResult(taskId);
+    });
+    mayoObject->taskManager().exec(taskId);
 
     // NOTE
     // Scripting execution can crash in this typical scenario:
@@ -265,7 +269,7 @@ bool ScriptDocument::importFile(
     QEventLoop eventLoop;
     eventLoop.processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
 
-    return true;
+    return taskResult.isValid() ? taskResult.toBool() : false;
 }
 
 TaskId ScriptDocument::asyncImportFile(
@@ -273,8 +277,7 @@ TaskId ScriptDocument::asyncImportFile(
     )
 {
     auto taskId = this->createImportFileTask(strFilepath, jsOptions, jsCallbacks);
-    TaskManager& taskMgr = m_jsApp->mayoObject()->taskManager();
-    taskMgr.run(taskId);
+    m_jsApp->mayoObject()->taskManager().run(taskId);
     return taskId;
 }
 
@@ -350,10 +353,10 @@ TaskId ScriptDocument::createImportFileTask(
     auto taskId = taskMgr.newTask([=](TaskProgress* progress) {
         ImplParametersProvider jsParamsProvider;
         auto readerParams = this->createReaderParametersFromJson(jsonOptions, format, [=](std::string_view err) {
-            logScriptError(m_jsApp->mayoObject()->jsEngine(), err, "Document.asyncImportFile()");
+            ScriptEngine::logError(m_jsApp->mayoObject()->jsEngine(), err, "Document.asyncImportFile()");
         });
         jsParamsProvider.addReaderParameters(format, std::move(readerParams));
-        env->ioSystem->importInDocument()
+        const bool ok = env->ioSystem->importInDocument()
             .targetDocument(this->baseDocument())
             .withFilepath(filepathFrom(strFilepath))
             .withParametersProvider(
@@ -366,6 +369,9 @@ TaskId ScriptDocument::createImportFileTask(
             .withMessenger(messenger)
             .execute()
             ;
+        qDebug() << "importInDocument()" << ok;
+        if (progress)
+            m_jsApp->mayoObject()->setTaskResult(progress->taskId(), ok);
     });
 
     ScriptMayo::TaskCallbacks callbacks;

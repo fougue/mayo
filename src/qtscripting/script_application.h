@@ -21,7 +21,7 @@ namespace Mayo {
 
 class ScriptMayo;
 
-//! \brief Container of document objects
+//! \brief Container of Document objects
 class ScriptApplication : public QObject {
     Q_OBJECT
     Q_PROPERTY(int documentCount READ documentCount NOTIFY documentCountChanged)

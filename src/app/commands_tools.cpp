@@ -11,7 +11,7 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
-#include "../qtscripting/script_global.h"
+#include "../qtscripting/script_engine.h"
 #include "app_module.h"
 #include "dialog_exec_script.h"
 #include "dialog_inspect_xde.h"
@@ -126,20 +126,21 @@ void CommandExecScript::execute()
 
 void CommandExecScript::runScript(IAppContext* context, const FilePath& scriptFilePath)
 {
-    auto dlg = new DialogExecScript(context->widgetMain());
-    dlg->setScriptEngineInitializer([=](QJSEngine* jsEngine) {
-        ScriptEnvironment scriptEnv;
-        scriptEnv.ioSystem = AppModule::get()->ioSystem();
-        scriptEnv.ioParametersProvider = AppModule::get();
-        scriptEnv.ioEntityImportPostProcess = [=](TDF_Label labelEntity, TaskProgress* progress) {
-            AppModule::get()->computeBRepMesh(labelEntity, progress);
-        };
-        initScriptEngine(jsEngine, context->guiApp()->application(), scriptEnv);
-    });
-    dlg->setScriptFilePath(scriptFilePath);
+    ScriptEnvironment scriptEnv;
+    scriptEnv.ioSystem = AppModule::get()->ioSystem();
+    scriptEnv.ioParametersProvider = AppModule::get();
+    scriptEnv.ioEntityImportPostProcess = [=](TDF_Label labelEntity, TaskProgress* progress) {
+        AppModule::get()->computeBRepMesh(labelEntity, progress);
+    };
+
+    auto scriptEngine = new ScriptEngine(context->guiApp()->application(), scriptEnv);
+    scriptEngine->setScriptFilePath(scriptFilePath);
+
+    auto dlg = new DialogExecScript(scriptEngine, context->widgetMain());
     QtWidgetsUtils::asyncDialogExec(dlg);
-    dlg->startScript();
+    QObject::connect(dlg, &QDialog::finished, [=]{ delete scriptEngine; });
     AppModule::get()->prependRecentScript(scriptFilePath);
+    scriptEngine->runEvaluate();
 }
 
 CommandExecRecentScript::CommandExecRecentScript(IAppContext* context)

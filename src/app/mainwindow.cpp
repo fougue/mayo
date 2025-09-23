@@ -13,7 +13,6 @@
 #include "../gui/gui_document.h"
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
-#include "../qtscripting/script_global.h"
 #include "app_context.h"
 #include "app_module.h"
 #include "commands_file.h"
