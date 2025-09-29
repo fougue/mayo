@@ -10,13 +10,13 @@
 #include "script_mayo.h"
 #include "script_typedefs.h"
 
-#include "../base/io_system.h"
 #include "../base/io_parameters_provider.h"
+#include "../base/io_system.h"
 #include "../base/property_enumeration.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
-#include "../qtcommon/qtcore_utils.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QMessageLogger>
