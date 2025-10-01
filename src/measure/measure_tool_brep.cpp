@@ -14,24 +14,27 @@
 #include "../base/text_id.h"
 #include "../graphics/graphics_shape_object_driver.h"
 
-#include <gp_Elips.hxx>
 #include <AIS_Shape.hxx>
-#include <Bnd_OBB.hxx>
-#include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
-#include <GC_MakeCircle.hxx>
+#include <BRep_Tool.hxx>
+#include <Bnd_OBB.hxx>
+#include <ElSLib.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
 #include <GCPnts_QuasiUniformAbscissa.hxx>
+#include <GC_MakeCircle.hxx>
 #include <GProp_GProps.hxx>
 #include <Precision.hxx>
+#include <ProjLib.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
+#include <gp_Elips.hxx>
+#include <math_Jacobi.hxx>
 
 #include <Standard_Version.hxx>
 #if OCC_VERSION_HEX >= 0x070500
@@ -41,6 +44,8 @@
 using PrsDim_AngleDimension = AIS_AngleDimension;
 #endif
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
 
@@ -158,6 +163,141 @@ gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
     throwErrorIf<ErrorCode::CenterFailure>(shapeProps.Mass() < Precision::Confusion());
     return shapeProps.CentreOfMass();
 }
+
+// Defines the result of fittedPlane() function
+struct FittedPlaneResult {
+    bool success = false;
+    gp_Pln value;
+    double coplanarity = Precision::Infinite();
+};
+
+// Computes optimal plane from input 3D points
+FittedPlaneResult fittedPlane(Span<const gp_Pnt> points)
+{
+    // Compute centroid point
+    gp_Pnt centroid;
+    for (const gp_Pnt& pnt : points)
+        centroid.ChangeCoord() += pnt.Coord();
+
+    centroid.ChangeCoord() /= int(points.size());
+
+    // Compute covariance matrix of centered coordinates
+    math_Matrix covMatrix(1, 3, 1, 3, 0.);
+    for (const gp_Pnt& pnt : points) {
+        const gp_XYZ v = pnt.XYZ() - centroid.XYZ();
+        for (int i = 1; i <= 3; ++i) {
+            for (int j = 1; j <= 3; ++j)
+                covMatrix(i, j) += v.Coord(i) * v.Coord(j);
+        }
+    }
+
+    // Find eigen vectors and values of the covariance matrix
+    math_Jacobi jacobiSolver(covMatrix);
+    if (!jacobiSolver.IsDone())
+        return {};
+
+    const math_Vector& eigenValues = jacobiSolver.Values();
+    const math_Matrix& eigenVectors = jacobiSolver.Vectors();
+
+    int countOfNonNullEigenValues = 0;
+    for (int i = 1; i <= 3; ++i) {
+        if (!MathUtils::fuzzyIsNull(eigenValues(i)))
+            ++countOfNonNullEigenValues;
+    }
+
+    if (countOfNonNullEigenValues == 0 || countOfNonNullEigenValues == 1)
+        return {};
+
+    const int eigenMinIndex = eigenValues.Min();
+    const int eigenMaxIndex = eigenValues.Max();
+
+    // Plane normal is the eigen vector associated to smallest eigen value
+    gp_Vec normal(
+        eigenVectors(1, eigenMinIndex),
+        eigenVectors(2, eigenMinIndex),
+        eigenVectors(3, eigenMinIndex)
+    );
+    if (normal.IsEqual(gp_Vec{}, Precision::Confusion(), Precision::Angular()))
+        return {};
+
+    FittedPlaneResult result;
+    result.success = true;
+    result.value = gp_Pln{centroid, normal.Normalized()};
+    if (!MathUtils::fuzzyIsNull(eigenValues(eigenMaxIndex)))
+        result.coplanarity = eigenValues(eigenMinIndex) / eigenValues(eigenMaxIndex);
+    else
+        result.coplanarity = 0.;
+
+    return result;
+}
+
+// Defines the result of fittedCircle_taubin() function
+struct FittedCircle2DResult {
+    bool success = false;
+    gp_Pnt2d center;
+    double radius = 0.;
+};
+
+// Compute optimal circle from input 3D points and plane
+// This function uses Taubin method that is considered one of the best for circular regression(more
+// stable than Kasa method)
+FittedCircle2DResult fittedCircle2D_taubin(Span<const gp_Pnt2d> points)
+{
+    const size_t N = points.size();
+
+    // Center input points
+    double meanX = 0;
+    double meanY = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        meanX += pnt.X();
+        meanY += pnt.Y();
+    }
+
+    meanX /= N;
+    meanY /= N;
+
+    // Build needed matrix
+    double Sxx = 0, Syy = 0, Sxy = 0;
+    double Sxz = 0, Syz = 0, Szz = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        const double x = pnt.X() - meanX;
+        const double y = pnt.Y() - meanY;
+        const double z = x*x + y*y;
+        Sxx += x * x;
+        Syy += y * y;
+        Sxy += x * y;
+        Sxz += x * z;
+        Syz += y * z;
+        Szz += z * z;
+    }
+
+    // Solve quadratic system
+    const double Cov_xy = Sxx * Syy - Sxy * Sxy;
+    // If Cov_xy is null this means input points are aligned
+    if (MathUtils::fuzzyIsNull(Cov_xy))
+        return {};
+
+    const double A2 = 0.5 * (Sxz * Syy - Syz * Sxy) / Cov_xy;
+    const double B2 = 0.5 * (Syz * Sxx - Sxz * Sxy) / Cov_xy;
+
+    const double centerX = A2 + meanX;
+    const double centerY = B2 + meanY;
+
+    double radius = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        const double dx = pnt.X() - centerX;
+        const double dy = pnt.Y() - centerY;
+        radius += std::sqrt(dx*dx + dy*dy);
+    }
+
+    radius /= N;
+    FittedCircle2DResult result;
+    result.success = true;
+    result.center = gp_Pnt2d{centerX, centerY};
+    result.radius = radius;
+    return result;
+}
+
 } // namespace
 
 Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
@@ -266,11 +406,50 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
         circle = curve.Circle();
     }
     else if (curve.GetType() == GeomAbs_Ellipse) {
-        const gp_Elips ellipse  = curve.Ellipse();
+        const gp_Elips ellipse = curve.Ellipse();
         if (std::abs(ellipse.MinorRadius() - ellipse.MajorRadius()) < Precision::Confusion())
             circle = gp_Circ{ ellipse.Position(), ellipse.MinorRadius() };
     }
     else {
+        // Discretize input curve
+        constexpr size_t DiscreteCount = 64;
+        std::array<gp_Pnt, DiscreteCount> discrete;
+        {
+            const GCPnts_QuasiUniformAbscissa pnts(curve, int(discrete.size()));
+            throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone());
+            for (int i = 1; i <= pnts.NbPoints(); ++i)
+                discrete[i - 1] = GeomUtils::d0(curve, pnts.Parameter(i));
+        }
+
+        // Compute plane containing the points
+        const FittedPlaneResult plane = fittedPlane(discrete);
+        throwErrorIf<ErrorCode::NotCircularEdge>(!plane.success);
+        throwErrorIf<ErrorCode::NotCircularEdge>(plane.coplanarity > 1e-4);
+
+        // Project points on the plane
+        std::array<gp_Pnt2d, DiscreteCount> discrete2d;
+        for (size_t i = 0; i < DiscreteCount; ++i)
+            discrete2d[i] = ProjLib::Project(plane.value, discrete[i]);
+
+        // Compute optimal circle from 2D points
+        const FittedCircle2DResult circle2d = fittedCircle2D_taubin(discrete2d);
+        throwErrorIf<ErrorCode::NotCircularEdge>(!circle2d.success);
+
+        // Check mean(average) relative error
+        double sumError = 0.;
+        for (const gp_Pnt2d& pnt : discrete2d) {
+            const double distCenter = pnt.Distance(circle2d.center);
+            sumError += std::abs(distCenter - circle2d.radius);
+        }
+
+        const double meanError = sumError / circle2d.radius;
+        throwErrorIf<ErrorCode::NotCircularEdge>(meanError > 0.01); // error must be <= 1%
+
+        // Project the 2D center in 3D space to get the circle result
+        const gp_Pnt2d& center2d = circle2d.center;
+        const gp_Pnt center = ElSLib::Value(center2d.X(), center2d.Y(), plane.value);
+        circle = gp_Circ{gp_Ax2{center, plane.value.Axis().Direction()}, circle2d.radius};
+#if 0
         // Try to create a circle from 3 sample points on the curve
         {
             const GCPnts_QuasiUniformAbscissa pnts(curve, 4); // More points to avoid confusion
@@ -295,6 +474,7 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
                 throwErrorIf<ErrorCode::NotCircularEdge>(std::abs(dist - circle->Radius()) > 1e-4);
             }
         }
+#endif
     }
 
     throwErrorIf<ErrorCode::NotCircularEdge>(!circle);
