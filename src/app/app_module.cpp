@@ -124,6 +124,7 @@ const Enumeration& AppModule::languages()
         { 0, AppModule::textId("en") },
         { 1, AppModule::textId("fr") },
         { 2, AppModule::textId("zh") },
+        { 3, AppModule::textId("de") },
     };
     return langs;
 }

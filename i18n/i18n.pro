@@ -38,3 +38,4 @@ TRANSLATIONS += \
     mayo_en.ts \
     mayo_fr.ts \
     mayo_zh.ts \
+    mayo_de.ts \
