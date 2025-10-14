@@ -9,11 +9,13 @@
 #include "application.h"
 #include "caf_utils.h"
 #include "cpp_utils.h"
+#include "string_conv.h"
 
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 
+#include <stdexcept>
 #include <unordered_set>
 
 namespace Mayo {
@@ -70,6 +72,22 @@ const char* Document::toNameFormat(Document::Format format)
 const char Document::NameFormatBinary[] = "BinDocMayo";
 const char Document::NameFormatXml[] = "XmlDocMayo";
 const char Document::TypeName[] = "Mayo::Document";
+
+Document::Format Document::storageFormat() const
+{
+    auto strFormat = to_stdString(this->StorageFormat());
+    if (strFormat == Document::NameFormatBinary)
+        return Document::Format::Binary;
+    else if (strFormat == Document::NameFormatXml)
+        return Document::Format::Xml;
+
+    throw std::runtime_error("Document::storageFormat(): unknow string format");
+}
+
+void Document::setStorageFormat(Format format)
+{
+    this->ChangeStorageFormat(to_OccExtString(Document::toNameFormat(format)));
+}
 
 bool Document::isXCafDocument() const
 {

@@ -42,6 +42,9 @@ public:
     static const char TypeName[];
     virtual const char* dynTypeName() const { return Document::TypeName; }
 
+    Format storageFormat() const;
+    void setStorageFormat(Format format);
+
     bool isXCafDocument() const;
     XCaf& xcaf() { return m_xcaf; }
     const XCaf& xcaf() const { return m_xcaf; }

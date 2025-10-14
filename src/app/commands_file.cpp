@@ -278,7 +278,7 @@ CommandNewDocument::CommandNewDocument(IAppContext* context)
 void CommandNewDocument::execute()
 {
     static unsigned docSequenceId = 0;
-    auto docPtr = this->app()->newDocument(Document::Format::Binary);
+    auto docPtr = this->app()->newDocument();
     docPtr->setName(to_stdString(Command::tr("Anonymous%1").arg(++docSequenceId)));
 }
 

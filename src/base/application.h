@@ -37,7 +37,7 @@ public:
     };
 
     int documentCount() const;
-    DocumentPtr newDocument(Document::Format docFormat = Document::Format::Binary);
+    DocumentPtr newDocument(std::string_view name = {});
     DocumentPtr openDocument(const FilePath& filepath, PCDM_ReaderStatus* ptrReadStatus = nullptr);
     DocumentPtr findDocumentByIndex(int docIndex) const;
     DocumentPtr findDocumentByIdentifier(Document::Identifier docIdent) const;

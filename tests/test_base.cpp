@@ -196,9 +196,6 @@ void TestBase::Application_test()
         QVERIFY(!doc.IsNull());
         QCOMPARE(spyDocAdded.count, 1);
         QCOMPARE(app->documentCount(), 1);
-        QCOMPARE(app->findIndexOfDocument(doc), 0);
-        QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
-        QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
 
         SignalEmitSpy spyDocClosed(&app->signalDocumentAboutToClose);
         app->closeDocument(doc);
@@ -243,6 +240,27 @@ void TestBase::Application_test()
     }
 
     QCOMPARE(app->documentCount(), 0);
+}
+
+void TestBase::Application_newDocument_test()
+{
+    auto app = makeOccHandle<Application>();
+    std::string recordedNewDocName;
+    app->signalDocumentAdded.connectSlot([&](const DocumentPtr& doc) {
+        recordedNewDocName = doc->name();
+    });
+    SignalEmitSpy spyDocNameChanged(&app->signalDocumentNameChanged);
+
+    const char newDocName[] = "MyDocument";
+    DocumentPtr doc = app->newDocument(newDocName);
+    QVERIFY(!doc.IsNull());
+    QCOMPARE(app->documentCount(), 1);
+    QCOMPARE(app->findIndexOfDocument(doc), 0);
+    QCOMPARE(app->findDocumentByIndex(0).get(), doc.get());
+    QCOMPARE(app->findDocumentByIdentifier(doc->identifier()).get(), doc.get());
+
+    QCOMPARE(recordedNewDocName, newDocName);
+    QCOMPARE(spyDocNameChanged.count, 0);
 }
 
 void TestBase::DocumentRefCount_test()

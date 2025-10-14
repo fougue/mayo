@@ -47,9 +47,20 @@ private:
     ApplicationPtr m_app;
 };
 
+// Pimpl of Application class
 struct Application::Private {
+    // Sequence to generate unique integers
+    // Used to create an identifier for each Document object(unique in the scope of an Application)
+    // TODO Introduce a Sequence class with currentValue() and nextValue() member functions
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
+
+    // Mapping of identifier -> Document
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+
+    // Used only for Application::newDocument()
+    // It stores the optional "name" argument passed to Application::newDocument() so a Document
+    // with name property already set can be created by NewDocument() override
+    std::string m_newDocument_argName;
 };
 
 struct ApplicationI18N {
@@ -71,15 +82,15 @@ int Application::documentCount() const
     return this->NbDocuments();
 }
 
-DocumentPtr Application::newDocument(Document::Format docFormat)
+DocumentPtr Application::newDocument(std::string_view name)
 {
-    const char* docNameFormat = Document::toNameFormat(docFormat);
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 6, 0)
     OccHandle<CDM_Document> stdDoc;
 #else
     OccHandle<TDocStd_Document> stdDoc;
 #endif
-    this->NewDocument(docNameFormat, stdDoc);
+    d->m_newDocument_argName = std::string{name};
+    this->NewDocument(Document::NameFormatBinary, stdDoc);
     return DocumentPtr::DownCast(stdDoc);
 }
 
@@ -200,8 +211,10 @@ void Application::NewDocument(const TCollection_ExtendedString&, OccHandle<TDocS
     // Extended from XCAFApp_Application::NewDocument() implementation, ensure that in future
     // OpenCascade versions this code is still compatible!
     DocumentPtr newDoc = new Document(this);
+    newDoc->setName(d->m_newDocument_argName);
     CDF_Application::Open(newDoc); // Add the document in the session
     this->addDocument(newDoc);
+    d->m_newDocument_argName.clear();
     outDocument = newDoc;
 }
 
