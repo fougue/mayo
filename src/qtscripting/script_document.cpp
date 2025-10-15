@@ -369,7 +369,6 @@ TaskId ScriptDocument::createImportFileTask(
             .withMessenger(messenger)
             .execute()
             ;
-        qDebug() << "importInDocument()" << ok;
         if (progress)
             m_jsApp->mayoObject()->setTaskResult(progress->taskId(), ok);
     });

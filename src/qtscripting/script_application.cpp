@@ -44,7 +44,7 @@ int ScriptApplication::documentCount() const
 
 //! \brief Creates and adds new document to this application
 //! \details Throws signal documentAdded() when finished
-Ptr_ScriptDocument ScriptApplication::newDocument()
+Ptr_ScriptDocument ScriptApplication::newDocument(QString name)
 {
     if (!m_app)
         return nullptr;
@@ -52,9 +52,9 @@ Ptr_ScriptDocument ScriptApplication::newDocument()
     // Make sure to call Application::newDocument() in the main thread
     std::promise<DocumentPtr> docPromise;
     std::future<DocumentPtr> docFuture = docPromise.get_future();
-    QtCoreUtils::runJobOnMainThread([&]{
+    QtCoreUtils::runJobOnMainThread([this, name, &docPromise]{
         m_sigConns.block(true);
-        auto doc = m_app->newDocument();
+        auto doc = m_app->newDocument(to_stdString(name));
         m_sigConns.block(false);
         docPromise.set_value(doc);
     });
