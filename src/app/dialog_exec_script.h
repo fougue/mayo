@@ -23,7 +23,7 @@ public:
 
 private:
     void onScriptEvaluateStarted();
-    void onScriptEvaluateEnded(ScriptEngine::EndReason reason);
+    void onScriptEvaluateEnded(ScriptEngine::Result evalResult, ScriptEngine::EndReason endReason);
 
     void addConsoleOutput(const ScriptEngine::Message& msg);
 

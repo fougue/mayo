@@ -243,6 +243,8 @@ void ScriptEngine::runEvaluate()
         const QString strScriptFilePath = filepathTo<QString>(m_scriptFilePath);
         auto jsVal = m_jsEngine->evaluate(scriptProgram(strScriptFilePath), strScriptFilePath);
         ScriptEngine::logError(jsVal);
+        m_evalResult.success = !jsVal.isError();
+        m_evalResult.value = QJsonValue::fromVariant(jsVal.toVariant());
     });
     m_taskMgr.run(m_scriptExecTaskId);
 }
@@ -410,9 +412,9 @@ void ScriptEngine::onTaskEnded(TaskId taskId)
 
     m_isEvaluateRunning = false;
     if (!m_wasEvaluateStopped)
-        this->signalEvaluateEnded.send(EndReason::Finished);
+        this->signalEvaluateEnded.send(m_evalResult, EndReason::Finished);
     else
-        this->signalEvaluateEnded.send(EndReason::Stopped);
+        this->signalEvaluateEnded.send(m_evalResult, EndReason::Stopped);
 
     m_jsEngine->setInterrupted(false);
     delete m_jsEngine;

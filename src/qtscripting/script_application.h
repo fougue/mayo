@@ -31,16 +31,6 @@ public:
     int documentCount() const;
 
     Q_INVOKABLE Ptr_ScriptDocument newDocument(QString name = {});
-
-#if 0
-    Q_INVOKABLE Ptr_ScriptDocument openDocument(
-        QString location, JsonObject jsOptions = {}, QJSValue_JsonObject jsCallbacks = {}
-    );
-    Q_INVOKABLE TaskId asyncOpenDocument(
-        QString location, JsonObject jsOptions = {}, QJSValue_JsonObject jsCallbacks = {}
-    );
-#endif
-
     Q_INVOKABLE Ptr_ScriptDocument documentAt(int docIndex) const;
     Q_INVOKABLE Ptr_ScriptDocument findDocumentByLocation(QString location) const;
     Q_INVOKABLE int findIndexOfDocument(Ptr_ScriptDocument doc) const;

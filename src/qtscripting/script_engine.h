@@ -13,6 +13,7 @@
 #include "../base/task_manager.h"
 #include "script_environment.h"
 
+#include <QtCore/QJsonValue>
 class QJSEngine;
 class QJSValue;
 
@@ -36,7 +37,8 @@ public:
 
     // Stops(interrupts) any running script evaluation started with runEvaluate() and not
     // finished yet
-    // Emits signalEvaluateEnded(EndReason::Stopped) when the evaluation task has stopped
+    // Emits signalEvaluateEnded() with endReason==EndReason::Stopped when the evaluation task has
+    // stopped
     void stopEvaluate();
 
     // Depending on isEvaluateRunning() status, calls runEvaluate() or stopEvaluate()
@@ -66,6 +68,12 @@ public:
         Finished, Stopped
     };
 
+    // Result of a script evaluation, emitted by signalEvaluateEnded
+    struct Result {
+        bool success = false;
+        QJsonValue value;
+    };
+
     // Signal emitted when a JS console API function is called, such as `console.log()`
     Signal<Message> signalMessage;
 
@@ -73,7 +81,7 @@ public:
     Signal<> signalEvaluateStarted;
 
     // Signal emitted when the evaluation of the script file has ended(finished or stopped)
-    Signal<EndReason> signalEvaluateEnded;
+    Signal<Result, EndReason> signalEvaluateEnded;
 
     // -- Helper functions
 
@@ -98,6 +106,7 @@ private:
     TaskId m_scriptExecTaskId = TaskId_null;
     bool m_wasEvaluateStopped = false;
     bool m_isEvaluateRunning = false;
+    Result m_evalResult;
 };
 
 } // namespace Mayo

@@ -53,10 +53,12 @@ void DialogExecScript::onScriptEvaluateStarted()
     m_ui->treeWidget_Output->clear();
 }
 
-void DialogExecScript::onScriptEvaluateEnded(ScriptEngine::EndReason reason)
+void DialogExecScript::onScriptEvaluateEnded(
+        ScriptEngine::Result /*evalResult*/, ScriptEngine::EndReason endReason
+    )
 {
     const QString strScriptFilePath = filepathTo<QString>(m_scriptEngine->scriptFilePath());
-    const bool wasEvaluateStopped = reason == ScriptEngine::EndReason::Stopped;
+    const bool wasEvaluateStopped = endReason == ScriptEngine::EndReason::Stopped;
     if (!wasEvaluateStopped)
         m_ui->label_Status->setText(tr("Finished '%1'").arg(strScriptFilePath));
     else
