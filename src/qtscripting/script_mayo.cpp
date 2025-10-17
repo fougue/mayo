@@ -103,6 +103,14 @@ bool ScriptMayo::waitForDone(QJSValueList_ArrayOfTaskId taskIdArray, int msecs)
 }
 
 /*!
+  \brief Instructs the task of identifier 'taskId' to abort as soon as possible
+ */
+void ScriptMayo::requestAbort(TaskId taskId)
+{
+    m_taskMgr.requestAbort(taskId);
+}
+
+/*!
   \brief Visits each node in the Document model tree and executes callback `fn` on the visited node
 
   `MayoTraverseModelTreeCallback` is a unary callback function which is passed the TreeNodeId

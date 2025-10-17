@@ -51,6 +51,8 @@ public:
     Q_INVOKABLE bool waitForDone(TaskId taskId, int msecs = -1);
     Q_INVOKABLE bool waitForDone(QJSValueList_ArrayOfTaskId taskIdArray, int msecs = -1);
 
+    Q_INVOKABLE void requestAbort(TaskId taskId);
+
     //! \internal
     struct TaskCallbacks {
         QJSValue onStarted;
