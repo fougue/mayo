@@ -258,7 +258,6 @@ void ScriptMayo::onTaskStarted(TaskId taskId)
 
 void ScriptMayo::onTaskProgressStep(TaskId taskId, std::string step)
 {
-    qDebug() << "onTaskProgressStep";
     Task* task = this->findTask(taskId);
     if (task && task->callbacks.onProgress.isCallable()) {
         task->progressStepTitle = to_QString(step);
@@ -268,7 +267,6 @@ void ScriptMayo::onTaskProgressStep(TaskId taskId, std::string step)
 
 void ScriptMayo::onTaskProgressChanged(TaskId taskId, int pct)
 {
-    qDebug() << "onTaskProgressChanged";
     Task* task = this->findTask(taskId);
     if (task && task->callbacks.onProgress.isCallable()) {
         task->progressPct = pct;
@@ -278,7 +276,6 @@ void ScriptMayo::onTaskProgressChanged(TaskId taskId, int pct)
 
 void ScriptMayo::onTaskEnded(TaskId taskId)
 {
-    qDebug() << "onTaskEnded()";
     Task* task = this->findTask(taskId);
     if (task && task->callbacks.onEnded.isCallable()) {
         const QJSValue jsResult = m_jsEngine->toScriptValue(task->result);
