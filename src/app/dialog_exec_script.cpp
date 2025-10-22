@@ -13,6 +13,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "ui_dialog_exec_script.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 
 namespace Mayo {
@@ -91,8 +92,20 @@ void DialogExecScript::addConsoleOutput(const ScriptEngine::Message& msg)
         item->setFont(0, QtGuiUtils::FontChange(item->font(0)).bold(true));
     }
 
+    const QString strContextFile = to_QString(msg.contextFile);
     item->setText(1, to_QString(msg.text));
-    item->setText(2, QFileInfo(to_QString(msg.contextFile)).fileName());
+    item->setText(2, QFileInfo{strContextFile}.fileName());
+
+    // Set tooltip for the context file column
+    const QUrl contextUrl{strContextFile};
+    if (contextUrl.isValid() && contextUrl.isLocalFile()) {
+        const QString strCanonicalContextFile = QFileInfo{contextUrl.toLocalFile()}.canonicalFilePath();
+        item->setToolTip(2, QDir::toNativeSeparators(strCanonicalContextFile));
+    }
+    else {
+        item->setToolTip(2, strContextFile);
+    }
+
     item->setText(3, QString::number(msg.contextLine));
     m_ui->treeWidget_Output->addTopLevelItem(item);
 }
