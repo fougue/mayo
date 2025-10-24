@@ -25,7 +25,7 @@ private:
     void onScriptEvaluateStarted();
     void onScriptEvaluateEnded(ScriptEngine::Result evalResult, ScriptEngine::EndReason endReason);
 
-    void addConsoleOutput(const ScriptEngine::Message& msg);
+    void addOutputMessage(const ScriptEngine::Message& msg);
 
     void tryCloseDialog();
 

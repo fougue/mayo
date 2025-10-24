@@ -15,6 +15,7 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include <QtWidgets/QButtonGroup>
 
 namespace Mayo {
 
@@ -24,14 +25,28 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
       m_scriptEngine(engine)
 {
     m_ui->setupUi(this);
+
+    auto btnGroup = new QButtonGroup(this);
+    btnGroup->addButton(m_ui->btn_OutputList, 0);
+    btnGroup->addButton(m_ui->btn_OutputText, 1);
+    btnGroup->addButton(m_ui->btn_Script, 2);
+    btnGroup->setExclusive(true);
+
+    m_ui->stack_Panes->setCurrentWidget(m_ui->page_OutputList);
+    m_ui->btn_OutputList->setChecked(true);
+
     m_sigConns
-        << m_scriptEngine->signalMessage.connectSlot(&DialogExecScript::addConsoleOutput, this)
+        << m_scriptEngine->signalMessage.connectSlot(&DialogExecScript::addOutputMessage, this)
         << m_scriptEngine->signalEvaluateStarted.connectSlot(&DialogExecScript::onScriptEvaluateStarted, this)
         << m_scriptEngine->signalEvaluateEnded.connectSlot(&DialogExecScript::onScriptEvaluateEnded, this)
         ;
     QObject::connect(
-        m_ui->btn_restartStop, &QAbstractButton::clicked,
+        m_ui->btn_RestartStop, &QAbstractButton::clicked,
         this, [=]{ m_scriptEngine->runOrStopEvaluate(); }
+    );
+    QObject::connect(
+        btnGroup, &QButtonGroup::idClicked,
+        m_ui->stack_Panes, &QStackedWidget::setCurrentIndex
     );
     QObject::connect(
         m_ui->buttonBox->button(QDialogButtonBox::Close), &QAbstractButton::clicked,
@@ -48,10 +63,11 @@ void DialogExecScript::onScriptEvaluateStarted()
 {
     const QString strScriptFilePath = filepathTo<QString>(m_scriptEngine->scriptFilePath());
     m_ui->label_Status->setText(tr("Executing '%1'...").arg(strScriptFilePath));
-    m_ui->btn_restartStop->setText(tr("Stop"));
+    m_ui->btn_RestartStop->setText(tr("Stop"));
     m_ui->progressBar_Execution->setRange(0, 0);
     m_ui->progressBar_Execution->setValue(-1);
-    m_ui->treeWidget_Output->clear();
+    m_ui->treeWidget_OutputList->clear();
+    m_ui->editText_OutputText->clear();
 }
 
 void DialogExecScript::onScriptEvaluateEnded(
@@ -65,14 +81,14 @@ void DialogExecScript::onScriptEvaluateEnded(
     else
         m_ui->label_Status->setText(tr("Stopped '%1'").arg(strScriptFilePath));
 
-    m_ui->btn_restartStop->setText(tr("Restart"));
+    m_ui->btn_RestartStop->setText(tr("Restart"));
     m_ui->progressBar_Execution->setRange(0, 100);
     m_ui->progressBar_Execution->setValue(!wasEvaluateStopped ? 100 : 0);
-    for (int col = 0; col < m_ui->treeWidget_Output->columnCount(); ++col)
-        m_ui->treeWidget_Output->resizeColumnToContents(col);
+    for (int col = 0; col < m_ui->treeWidget_OutputList->columnCount(); ++col)
+        m_ui->treeWidget_OutputList->resizeColumnToContents(col);
 }
 
-void DialogExecScript::addConsoleOutput(const ScriptEngine::Message& msg)
+void DialogExecScript::addOutputMessage(const ScriptEngine::Message& msg)
 {
     auto fnStrMsgType = [](MessageType type) -> QString {
         switch (type) {
@@ -92,8 +108,9 @@ void DialogExecScript::addConsoleOutput(const ScriptEngine::Message& msg)
         item->setFont(0, QtGuiUtils::FontChange(item->font(0)).bold(true));
     }
 
+    const QString strText = to_QString(msg.text);
     const QString strContextFile = to_QString(msg.contextFile);
-    item->setText(1, to_QString(msg.text));
+    item->setText(1, strText);
     item->setText(2, QFileInfo{strContextFile}.fileName());
 
     // Set tooltip for the context file column
@@ -107,7 +124,8 @@ void DialogExecScript::addConsoleOutput(const ScriptEngine::Message& msg)
     }
 
     item->setText(3, QString::number(msg.contextLine));
-    m_ui->treeWidget_Output->addTopLevelItem(item);
+    m_ui->treeWidget_OutputList->addTopLevelItem(item);
+    m_ui->editText_OutputText->appendPlainText(strText);
 }
 
 void DialogExecScript::tryCloseDialog()
