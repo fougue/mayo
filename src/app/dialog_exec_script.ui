@@ -70,7 +70,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="page_OutputList">
         <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -172,7 +172,7 @@
         </layout>
        </widget>
        <widget class="QWidget" name="page_Script">
-        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <layout class="QHBoxLayout" name="layout_PageScript">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -207,6 +207,9 @@
            <property name="text">
             <string>1  Output List</string>
            </property>
+           <property name="shortcut">
+            <string>Alt+1</string>
+           </property>
            <property name="checkable">
             <bool>true</bool>
            </property>
@@ -226,6 +229,9 @@
            <property name="text">
             <string>2  Output Text</string>
            </property>
+           <property name="shortcut">
+            <string>Alt+2</string>
+           </property>
            <property name="checkable">
             <bool>true</bool>
            </property>
@@ -241,6 +247,9 @@
           <widget class="QToolButton" name="btn_Script">
            <property name="text">
             <string>3  Script</string>
+           </property>
+           <property name="shortcut">
+            <string>Alt+3</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
