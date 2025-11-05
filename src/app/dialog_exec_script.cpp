@@ -27,6 +27,7 @@ namespace Mayo {
 
 namespace {
 
+// Provides side widget to QPlainTextEdit to display line numbers
 class LineNumberArea : public QWidget {
 public:
     LineNumberArea(QPlainTextEdit* editor)
@@ -74,11 +75,11 @@ protected:
         QPainter painter(this);
         painter.fillRect(event->rect(), windowColor);
 
-        QTextBlock block = m_editor->cursorForPosition({}).block();
         const int viewportHeight = m_editor->viewport()->height();
         const int fontHeight = m_editor->fontMetrics().height();
         const int frameOffset = m_editor->viewport()->geometry().top();
 
+        QTextBlock block = m_editor->cursorForPosition({}).block();
         while (block.isValid()) {
             const QRect rect = m_editor->cursorRect(QTextCursor{block});
             const int y = rect.top() + frameOffset;
@@ -99,14 +100,12 @@ private:
     QPlainTextEdit* m_editor = nullptr;
 };
 
-
+// Provides syntax highlighting for JavaScript code
 class JavaScriptHighlighter : public QSyntaxHighlighter
 {
 public:
     JavaScriptHighlighter(QTextDocument* parent = nullptr)
-        : QSyntaxHighlighter(parent),
-        m_commentStartRegExp("/\\*"),
-        m_commentEndRegExp("\\*/")
+        : QSyntaxHighlighter(parent)
     {
         m_commentFormat.setForeground(Qt::green);
         //m_commentFormat.setFontItalic(true);
@@ -205,9 +204,6 @@ private:
     std::vector<HighlightingRule> m_highlightingRules;
     QTextCharFormat m_commentFormat;
     QTextCharFormat m_templateFormat;
-    // Regexps for multilines comments
-    QRegularExpression m_commentStartRegExp;
-    QRegularExpression m_commentEndRegExp;
 };
 
 } // namespace
@@ -219,6 +215,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
 {
     m_ui->setupUi(this);
 
+    // Create QButtonGroup for the tab bar buttons
     {
         auto btnGroup = new QButtonGroup(this);
         btnGroup->addButton(m_ui->btn_OutputList, 0);
@@ -231,9 +228,11 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         );
     }
 
+    // Set "Output List" as starting panel
     m_ui->stack_Panes->setCurrentWidget(m_ui->page_OutputList);
     m_ui->btn_OutputList->setChecked(true);
 
+    // Initialize panels
     const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     m_ui->editText_OutputText->setFont(fixedFont);
     m_ui->editText_Script->setFont(fixedFont);
@@ -242,12 +241,14 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     new JavaScriptHighlighter(m_ui->editText_Script->document());
     m_ui->layout_PageScript->insertWidget(0, new LineNumberArea(m_ui->editText_Script));
 
+    // Load script file contents into text editor
     {
         QFile file(filepathTo<QString>(engine->scriptFilePath()));
         if (file.open(QIODevice::ReadOnly))
             m_ui->editText_Script->setPlainText(file.readAll());
     }
 
+    // Signal/slot connections
     m_sigConns
         << m_scriptEngine->signalMessage.connectSlot(&DialogExecScript::addOutputMessage, this)
         << m_scriptEngine->signalEvaluateStarted.connectSlot(&DialogExecScript::onScriptEvaluateStarted, this)
@@ -260,6 +261,10 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     QObject::connect(
         m_ui->buttonBox->button(QDialogButtonBox::Close), &QAbstractButton::clicked,
         this, &DialogExecScript::tryCloseDialog
+    );
+    QObject::connect(
+        m_ui->treeWidget_OutputList, &QTreeWidget::itemDoubleClicked,
+        this, &DialogExecScript::onOutputListItemClicked
     );
 }
 
@@ -357,6 +362,29 @@ void DialogExecScript::tryCloseDialog()
     else {
         this->reject();
     }
+}
+
+void DialogExecScript::onOutputListItemClicked(QTreeWidgetItem* item)
+{
+    if (!item)
+        return;
+
+    if (item->text(2) != filepathTo<QString>(m_scriptEngine->scriptFilePath().filename()))
+        return;
+
+    const int lineNumber = item->text(3).toInt();
+    auto editor = m_ui->editText_Script;
+    if (lineNumber < 1 || lineNumber > editor->blockCount())
+        return;
+
+    const QTextBlock block = editor->document()->findBlockByNumber(lineNumber - 1);
+    if (block.isValid()) {
+        editor->setTextCursor(QTextCursor{block});
+        editor->centerCursor();
+    }
+
+    m_ui->btn_Script->setChecked(true);
+    m_ui->stack_Panes->setCurrentWidget(m_ui->page_Script);
 }
 
 } // namespace Mayo

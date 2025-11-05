@@ -10,6 +10,8 @@
 
 #include <QtWidgets/QDialog>
 
+class QTreeWidgetItem;
+
 namespace Mayo {
 
 class ScriptEngine;
@@ -28,6 +30,8 @@ private:
     void addOutputMessage(const ScriptEngine::Message& msg);
 
     void tryCloseDialog();
+
+    void onOutputListItemClicked(QTreeWidgetItem* item);
 
     class Ui_DialogExecScript* m_ui = nullptr;
     ScriptEngine* m_scriptEngine = nullptr;
