@@ -270,6 +270,10 @@ public:
         p.setColor(QPalette::Link, linkColor);
         p.setColor(QPalette::LinkVisited, linkColor);
 
+        // Fix background color when text is selected in eg QPlainTextEdit and contextual menu
+        // is displayed(by mouse right-click)
+        p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Highlight));
+
         const QColor disabledGray(40, 40, 40);
         const QColor disabledTextGray(128, 128, 128);
         p.setColor(QPalette::Disabled, QPalette::Window, disabledGray);
@@ -279,6 +283,7 @@ public:
         p.setColor(QPalette::Disabled, QPalette::Text, disabledTextGray);
         p.setColor(QPalette::Disabled, QPalette::ButtonText, disabledTextGray);
         p.setColor(QPalette::Disabled, QPalette::WindowText, disabledTextGray);
+
         qApp->setPalette(p);
 
         const QString css =
