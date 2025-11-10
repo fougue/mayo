@@ -10,6 +10,7 @@
 
 #include <QtWidgets/QDialog>
 
+class QFileSystemWatcher;
 class QTreeWidgetItem;
 
 namespace Mayo {
@@ -32,9 +33,11 @@ private:
     void tryCloseDialog();
 
     void onOutputListItemClicked(QTreeWidgetItem* item);
+    void onFileChanged(const QString& path);
 
     class Ui_DialogExecScript* m_ui = nullptr;
     ScriptEngine* m_scriptEngine = nullptr;
+    QFileSystemWatcher* m_fileSystemWatcher = nullptr;
     ScopedSignalConnections<> m_sigConns;
 };
 

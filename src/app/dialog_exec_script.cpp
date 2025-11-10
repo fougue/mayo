@@ -15,6 +15,7 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include <QtCore/QFileSystemWatcher>
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPainter>
 #include <QtGui/QSyntaxHighlighter>
@@ -211,6 +212,7 @@ private:
 DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogExecScript),
+      m_fileSystemWatcher(new QFileSystemWatcher(this)),
       m_scriptEngine(engine)
 {
     m_ui->setupUi(this);
@@ -230,6 +232,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
 
     // Set "Output List" as starting panel
     m_ui->stack_Panes->setCurrentWidget(m_ui->page_OutputList);
+    m_ui->stack_PaneToolbars->setCurrentWidget(m_ui->page_OutputListToolbar);
     m_ui->btn_OutputList->setChecked(true);
 
     // Initialize panels
@@ -265,6 +268,14 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     QObject::connect(
         m_ui->treeWidget_OutputList, &QTreeWidget::itemDoubleClicked,
         this, &DialogExecScript::onOutputListItemClicked
+    );
+    QObject::connect(
+        m_ui->stack_Panes, &QStackedWidget::currentChanged,
+        m_ui->stack_PaneToolbars, &QStackedWidget::setCurrentIndex
+    );
+    QObject::connect(
+        m_fileSystemWatcher, &QFileSystemWatcher::fileChanged,
+        this, &DialogExecScript::onFileChanged
     );
 }
 
@@ -385,6 +396,16 @@ void DialogExecScript::onOutputListItemClicked(QTreeWidgetItem* item)
 
     m_ui->btn_Script->setChecked(true);
     m_ui->stack_Panes->setCurrentWidget(m_ui->page_Script);
+}
+
+void DialogExecScript::onFileChanged(const QString& path)
+{
+    if (!filepathEquivalent(m_scriptEngine->scriptFilePath(), filepathFrom(path)))
+        return;
+
+    QFile file(path);
+    if (file.open(QIODevice::ReadOnly))
+        m_ui->editText_Script->setPlainText(file.readAll());
 }
 
 } // namespace Mayo
