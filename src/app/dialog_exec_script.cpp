@@ -6,8 +6,10 @@
 
 #include "dialog_exec_script.h"
 
+#include "line_edit_extra.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
+#include "theme.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "../qtcommon/qstring_conv.h"
@@ -20,6 +22,10 @@
 #include <QtGui/QPainter>
 #include <QtGui/QSyntaxHighlighter>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QMenu>
+
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QWidgetAction>
 
 #include <algorithm>
 #include <vector>
@@ -227,6 +233,33 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         QObject::connect(
             btnGroup, &QButtonGroup::idClicked,
             m_ui->stack_Panes, &QStackedWidget::setCurrentIndex
+        );
+    }
+
+    // Set LineEditExtra for "Filter" edit in "Output List" panel
+    {
+        auto fnCreateCheckAction = [](const QString& text, QObject* parent, Qt::CheckState state = Qt::Unchecked) {
+            auto checkBox = new QCheckBox(text);
+            checkBox->setCheckState(state);
+            auto action = new QWidgetAction(parent);
+            action->setDefaultWidget(checkBox);
+            return action;
+        };
+
+        auto lineEditExtra = new LineEditExtra(m_ui->edit_OutputListFilter);
+        lineEditExtra->setButtonIcon(LineEditExtra::Side::Left, mayoTheme()->icon(Theme::Icon::Magnifier));
+        lineEditExtra->setButtonVisible(LineEditExtra::Side::Left, true);
+        auto menuOptions = new QMenu(m_ui->edit_OutputListFilter);
+        menuOptions->addAction(fnCreateCheckAction(tr("Use regular expressions"), lineEditExtra));
+        menuOptions->addAction(fnCreateCheckAction(tr("Case sensitive"), lineEditExtra));
+        lineEditExtra->setButtonMenu(LineEditExtra::Side::Left, menuOptions);
+
+        lineEditExtra->setButtonIcon(LineEditExtra::Side::Right, this->style()->standardIcon(QStyle::QStyle::SP_LineEditClearButton));
+        lineEditExtra->setButtonVisible(LineEditExtra::Side::Right, true);
+        lineEditExtra->setAutoHideButton(LineEditExtra::Side::Right, true);
+        QObject::connect(
+            lineEditExtra, &LineEditExtra::rightButtonClicked,
+            m_ui->edit_OutputListFilter, &QLineEdit::clear
         );
     }
 
