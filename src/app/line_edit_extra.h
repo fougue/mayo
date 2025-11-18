@@ -31,16 +31,16 @@ public:
     QMenu* buttonMenu(Side side) const;
     void setButtonMenu(Side side, QMenu* menu);
 
-    void setButtonVisible(Side side, bool visible);
+    void setButtonVisible(Side side, bool on);
     bool isButtonVisible(Side side) const;
 
     // Set whether tabbing in will trigger the menu
-    void setMenuTabFocusTrigger(Side side, bool v);
+    void setMenuTabFocusTrigger(Side side, bool on);
     bool hasMenuTabFocusTrigger(Side side) const;
 
     // Set if icon should be hidden when text is empty
-    void setAutoHideButton(Side side, bool h);
-    bool hasAutoHideButton(Side side) const;
+    void setButtonAutoHide(Side side, bool on);
+    bool isButtonAutoHide(Side side) const;
 
     QLineEdit* widget() const { return m_widget; }
 

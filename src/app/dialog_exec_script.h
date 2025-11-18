@@ -10,7 +10,10 @@
 
 #include <QtWidgets/QDialog>
 
+#include <functional>
+
 class QFileSystemWatcher;
+class QLineEdit;
 class QTreeWidgetItem;
 
 namespace Mayo {
@@ -34,6 +37,27 @@ private:
 
     void onOutputListItemClicked(QTreeWidgetItem* item);
     void onFileChanged(const QString& path);
+
+    struct TextFilter {
+        enum Option {
+            None = 0x0,
+            UseRegExp = 0x01,
+            CaseSensitive = 0x02,
+            All = 0xFF
+        };
+        using Options = unsigned;
+
+        QString key;
+        Options options = Option::None;
+    };
+
+    void applyOutputListFilter(const TextFilter& filter);
+    void applyOutputTextFilter(const TextFilter& filter);
+
+    using ApplyTextFilter = std::function<void(const TextFilter&)>;
+    static void installFilterLineEdit(
+        QLineEdit* lineEdit, TextFilter::Options options, ApplyTextFilter fnApplyFilter
+    );
 
     class Ui_DialogExecScript* m_ui = nullptr;
     ScriptEngine* m_scriptEngine = nullptr;

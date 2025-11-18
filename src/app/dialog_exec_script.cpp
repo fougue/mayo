@@ -6,6 +6,7 @@
 
 #include "dialog_exec_script.h"
 
+#include "javascript_syntax_highlighter.h"
 #include "line_edit_extra.h"
 #include "qtgui_utils.h"
 #include "qtwidgets_utils.h"
@@ -20,15 +21,12 @@
 #include <QtCore/QFileSystemWatcher>
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPainter>
-#include <QtGui/QSyntaxHighlighter>
 #include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QMenu>
-
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QWidgetAction>
 
 #include <algorithm>
-#include <vector>
 
 namespace Mayo {
 
@@ -107,112 +105,6 @@ private:
     QPlainTextEdit* m_editor = nullptr;
 };
 
-// Provides syntax highlighting for JavaScript code
-class JavaScriptHighlighter : public QSyntaxHighlighter
-{
-public:
-    JavaScriptHighlighter(QTextDocument* parent = nullptr)
-        : QSyntaxHighlighter(parent)
-    {
-        m_commentFormat.setForeground(Qt::green);
-        //m_commentFormat.setFontItalic(true);
-        m_templateFormat.setForeground(QColor(Qt::magenta).lighter());
-
-        QTextCharFormat stringFormat;
-        stringFormat.setForeground(Qt::green);
-
-        QTextCharFormat keywordFormat;
-        keywordFormat.setForeground(Qt::cyan);
-        keywordFormat.setFontWeight(QFont::Bold);
-
-        const char* allKeywords[] = {
-            "in", "of", "do", "void", "with", "delete", "from", "as", "var", "let", "const",
-            "function", "return", "if", "else", "for", "while", "break", "continue", "switch",
-            "case", "default", "true", "false", "null", "undefined", "new", "this", "class",
-            "extends", "super", "try", "catch", "finally", "throw", "typeof", "instanceof",
-            "import", "export", "await"
-        };
-        const QString wordBoundary{"\\b"};
-        for (const char* keyword : allKeywords) {
-            const QString strRegExp = wordBoundary + keyword + wordBoundary;
-            m_highlightingRules.push_back({ QRegularExpression{strRegExp}, keywordFormat });
-        }
-
-        // Rule for comments on a single line(// ...)
-        m_highlightingRules.push_back({ QRegularExpression{"//[^\n]*"}, m_commentFormat });
-
-        // Rule for strings within double quotes("...")
-        m_highlightingRules.push_back({ QRegularExpression{"\".*?\""}, stringFormat });
-
-        // Rule for strings within single quotes('...')
-        m_highlightingRules.push_back({ QRegularExpression{"'.*?'"}, stringFormat });
-    }
-
-protected:
-    enum BlockState {
-        MultiLineComment = 1, TemplateLiteral = 2
-    };
-
-    void highlightBlock(const QString& text) override
-    {
-        // Apply simple rules
-        for (const HighlightingRule& rule : qAsConst(m_highlightingRules)) {
-            QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
-            while (matchIterator.hasNext()) {
-                QRegularExpressionMatch match = matchIterator.next();
-                setFormat(match.capturedStart(), match.capturedLength(), rule.format);
-            }
-        }
-
-        // Handle multilines comments
-        highlightWithinDelimiters(text, "/*", "*/", BlockState::MultiLineComment, m_commentFormat);
-
-        // Handle template literals
-        highlightWithinDelimiters(text, "`", "`", BlockState::TemplateLiteral, m_templateFormat);
-    }
-
-private:
-    void highlightWithinDelimiters(
-            const QString& text,
-            const char* cstrStart,
-            const char* cstrEnd,
-            BlockState state,
-            const QTextCharFormat& charFormat
-        )
-    {
-        QLatin1String strStart(cstrStart);
-        QLatin1String strEnd(cstrEnd);
-
-        int startIndex = 0;
-        if (previousBlockState() != state)
-            startIndex = text.indexOf(strStart);
-
-        while (startIndex >= 0) {
-            const int endIndex = text.indexOf(strEnd, startIndex + 1);
-            int stringLength;
-            if (endIndex == -1) {
-                setCurrentBlockState(state);
-                stringLength = text.length() - startIndex;
-            }
-            else {
-                stringLength = endIndex - startIndex + strEnd.size();
-            }
-
-            setFormat(startIndex, stringLength, charFormat);
-            startIndex = text.indexOf(strStart, startIndex + stringLength);
-        }
-    }
-
-    struct HighlightingRule {
-        QRegularExpression pattern;
-        QTextCharFormat format;
-    };
-
-    std::vector<HighlightingRule> m_highlightingRules;
-    QTextCharFormat m_commentFormat;
-    QTextCharFormat m_templateFormat;
-};
-
 } // namespace
 
 DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
@@ -236,32 +128,19 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         );
     }
 
-    // Set LineEditExtra for "Filter" edit in "Output List" panel
-    {
-        auto fnCreateCheckAction = [](const QString& text, QObject* parent, Qt::CheckState state = Qt::Unchecked) {
-            auto checkBox = new QCheckBox(text);
-            checkBox->setCheckState(state);
-            auto action = new QWidgetAction(parent);
-            action->setDefaultWidget(checkBox);
-            return action;
-        };
+    // Set "Filter" edit in "Output List" panel
+    installFilterLineEdit(
+        m_ui->edit_OutputListFilter,
+        TextFilter::Option::All,
+        [=](const TextFilter& filter) { this->applyOutputListFilter(filter); }
+    );
 
-        auto lineEditExtra = new LineEditExtra(m_ui->edit_OutputListFilter);
-        lineEditExtra->setButtonIcon(LineEditExtra::Side::Left, mayoTheme()->icon(Theme::Icon::Magnifier));
-        lineEditExtra->setButtonVisible(LineEditExtra::Side::Left, true);
-        auto menuOptions = new QMenu(m_ui->edit_OutputListFilter);
-        menuOptions->addAction(fnCreateCheckAction(tr("Use regular expressions"), lineEditExtra));
-        menuOptions->addAction(fnCreateCheckAction(tr("Case sensitive"), lineEditExtra));
-        lineEditExtra->setButtonMenu(LineEditExtra::Side::Left, menuOptions);
-
-        lineEditExtra->setButtonIcon(LineEditExtra::Side::Right, this->style()->standardIcon(QStyle::QStyle::SP_LineEditClearButton));
-        lineEditExtra->setButtonVisible(LineEditExtra::Side::Right, true);
-        lineEditExtra->setAutoHideButton(LineEditExtra::Side::Right, true);
-        QObject::connect(
-            lineEditExtra, &LineEditExtra::rightButtonClicked,
-            m_ui->edit_OutputListFilter, &QLineEdit::clear
-        );
-    }
+    // Set "Filter" edit in "Output Text" panel
+    installFilterLineEdit(
+        m_ui->edit_OutputTextFilter,
+        TextFilter::Option::All,
+        [=](const TextFilter& filter) { this->applyOutputTextFilter(filter); }
+    );
 
     // Set "Output List" as starting panel
     m_ui->stack_Panes->setCurrentWidget(m_ui->page_OutputList);
@@ -274,7 +153,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     m_ui->editText_Script->setFont(fixedFont);
     m_ui->editText_Script->setWordWrapMode(QTextOption::NoWrap);
     m_ui->editText_Script->setLineWrapMode(QPlainTextEdit::NoWrap);
-    new JavaScriptHighlighter(m_ui->editText_Script->document());
+    new JavaScriptSyntaxHighlighter(m_ui->editText_Script->document());
     m_ui->layout_PageScript->insertWidget(0, new LineNumberArea(m_ui->editText_Script));
 
     // Load script file contents into text editor
@@ -439,6 +318,73 @@ void DialogExecScript::onFileChanged(const QString& path)
     QFile file(path);
     if (file.open(QIODevice::ReadOnly))
         m_ui->editText_Script->setPlainText(file.readAll());
+}
+
+void DialogExecScript::installFilterLineEdit(
+        QLineEdit* lineEdit, TextFilter::Options options, ApplyTextFilter fnApplyFilter
+    )
+{
+    auto fnCreateCheckAction = [](const QString& text, QObject* parent, Qt::CheckState state = Qt::Unchecked) {
+        auto checkBox = new QCheckBox(text);
+        checkBox->setCheckState(state);
+        auto action = new QWidgetAction(parent);
+        action->setDefaultWidget(checkBox);
+        return action;
+    };
+
+    auto lineEditExtra = new LineEditExtra(lineEdit);
+    auto menuOptions = new QMenu(lineEdit);
+    if (options & TextFilter::Option::UseRegExp)
+        menuOptions->addAction(fnCreateCheckAction(tr("Use regular expressions"), lineEditExtra));
+
+    if (options & TextFilter::Option::CaseSensitive)
+        menuOptions->addAction(fnCreateCheckAction(tr("Case sensitive"), lineEditExtra));
+
+    lineEditExtra->setButtonMenu(LineEditExtra::Side::Left, menuOptions);
+    lineEditExtra->setButtonIcon(LineEditExtra::Side::Left, mayoTheme()->icon(Theme::Icon::Magnifier));
+    lineEditExtra->setButtonVisible(LineEditExtra::Side::Left, true);
+
+    const QIcon iconClearBtn = lineEdit->style()->standardIcon(QStyle::QStyle::SP_LineEditClearButton);
+    lineEditExtra->setButtonIcon(LineEditExtra::Side::Right, iconClearBtn);
+    lineEditExtra->setButtonVisible(LineEditExtra::Side::Right, true);
+    lineEditExtra->setButtonAutoHide(LineEditExtra::Side::Right, true);
+    QObject::connect(
+        lineEditExtra, &LineEditExtra::rightButtonClicked, lineEdit, &QLineEdit::clear
+    );
+
+    // Helper function to get `action` check state(if it's checkable)
+    auto fnGetActionCheckState = [](const QAction* action) {
+        auto wAction = dynamic_cast<const QWidgetAction*>(action);
+        auto checkBox = wAction ? dynamic_cast<const QCheckBox*>(wAction->defaultWidget()) : nullptr;
+        if (checkBox)
+            return checkBox->checkState();
+
+        if (action->isCheckable())
+            return action->isChecked() ? Qt::Checked : Qt::Unchecked;
+
+        return Qt::Unchecked;
+    };
+    // Helper function to get current TextFilter object from the Option menu
+    auto fnGetTextFilter = [=]{
+        TextFilter filter;
+        filter.key = lineEdit->text();
+        if (fnGetActionCheckState(menuOptions->actions().at(0)) == Qt::Checked)
+            filter.options |= TextFilter::Option::UseRegExp;
+        if (fnGetActionCheckState(menuOptions->actions().at(1)) == Qt::Checked)
+            filter.options |= TextFilter::Option::CaseSensitive;
+        return filter;
+    };
+    QObject::connect(
+        lineEdit, &QLineEdit::textChanged, lineEdit, [=]{ fnApplyFilter(fnGetTextFilter()); }
+    );
+}
+
+void DialogExecScript::applyOutputListFilter(const TextFilter& filter)
+{
+}
+
+void DialogExecScript::applyOutputTextFilter(const TextFilter& filter)
+{
 }
 
 } // namespace Mayo

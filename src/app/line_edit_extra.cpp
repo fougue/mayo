@@ -20,10 +20,11 @@
 
 namespace Mayo {
 
+// Provides button to be embedded in QLineEdit with LineEditExtra
 class LineEditExtra::IconButton : public QAbstractButton {
     //Q_OBJECT
     //Q_PROPERTY(float iconOpacity READ iconOpacity WRITE setIconOpacity)
-    //Q_PROPERTY(bool autoHide READ hasAutoHide WRITE setAutoHide)
+    //Q_PROPERTY(bool autoHide READ isAutoHide WRITE setAutoHide)
 public:
     IconButton(QWidget* parent = nullptr);
 
@@ -31,11 +32,11 @@ public:
     void setIconOpacity(float value);
     void animateShow(bool visible);
 
-    void setAutoHide(bool hide) { m_autoHide = hide; }
-    bool hasAutoHide() const { return m_autoHide; }
+    void setAutoHide(bool on) { m_autoHide = on; }
+    bool isAutoHide() const { return m_autoHide; }
 
     void setMenuIndicator(bool on) { m_hasMenuIndicator = on; }
-    bool hasMenuIndocator() const { return m_hasMenuIndicator; }
+    bool hasMenuIndicator() const { return m_hasMenuIndicator; }
 
     QSize sizeHint() const override;
 
@@ -206,10 +207,10 @@ void LineEditExtra::setButtonMenu(Side side, QMenu* menu)
     menu->installEventFilter(this);
 }
 
-void LineEditExtra::setButtonVisible(Side side, bool visible)
+void LineEditExtra::setButtonVisible(Side side, bool on)
 {
-    this->iconButton(side)->setVisible(visible);
-    m_iconEnabled[toInt(side)] = visible;
+    this->iconButton(side)->setVisible(on);
+    m_iconEnabled[toInt(side)] = on;
     this->updateMargins();
 }
 
@@ -223,25 +224,25 @@ bool LineEditExtra::hasMenuTabFocusTrigger(Side side) const
     return m_menuTabFocusTrigger[toInt(side)];
 }
 
-void LineEditExtra::setMenuTabFocusTrigger(Side side, bool v)
+void LineEditExtra::setMenuTabFocusTrigger(Side side, bool on)
 {
-    if (m_menuTabFocusTrigger[toInt(side)] == v)
+    if (m_menuTabFocusTrigger[toInt(side)] == on)
         return;
 
-    m_menuTabFocusTrigger[toInt(side)] = v;
-    this->iconButton(side)->setFocusPolicy(v ? Qt::TabFocus : Qt::NoFocus);
+    m_menuTabFocusTrigger[toInt(side)] = on;
+    this->iconButton(side)->setFocusPolicy(on ? Qt::TabFocus : Qt::NoFocus);
 }
 
-bool LineEditExtra::hasAutoHideButton(Side side) const
+bool LineEditExtra::isButtonAutoHide(Side side) const
 {
-    return this->iconButton(side)->hasAutoHide();
+    return this->iconButton(side)->isAutoHide();
 }
 
-void LineEditExtra::setAutoHideButton(Side side, bool h)
+void LineEditExtra::setButtonAutoHide(Side side, bool on)
 {
     auto iconBtn = this->iconButton(side);
-    iconBtn->setAutoHide(h);
-    if (h)
+    iconBtn->setAutoHide(on);
+    if (on)
         iconBtn->setIconOpacity(m_widget->text().isEmpty() ?  0.0 : 1.0);
     else
         iconBtn->setIconOpacity(1.0);
@@ -249,6 +250,7 @@ void LineEditExtra::setAutoHideButton(Side side, bool h)
 
 bool LineEditExtra::eventFilter(QObject* object, QEvent* event)
 {
+    // Handle specific events for target QLineEdit
     if (object == m_widget) {
         if (event->type() == QEvent::Resize) {
             this->updateButtonPositions();
@@ -256,6 +258,7 @@ bool LineEditExtra::eventFilter(QObject* object, QEvent* event)
         }
     }
 
+    // Find if watched object is an icon button
     int btnIndex = -1;
     for (int i = 0; i < 2; ++i) {
         if (object == m_iconButton[i]) {
@@ -264,6 +267,7 @@ bool LineEditExtra::eventFilter(QObject* object, QEvent* event)
         }
     }
 
+    // Handle specific events for icon button
     if (btnIndex != -1) {
         if (event->type() == QEvent::FocusIn
             && m_menuTabFocusTrigger[btnIndex] && m_menu[btnIndex])
@@ -325,7 +329,7 @@ void LineEditExtra::handleIconClicked(Side side)
 void LineEditExtra::handleTextChanged(const QString& text)
 {
     for (IconButton* btn : m_iconButton) {
-        if (btn->hasAutoHide())
+        if (btn->isAutoHide())
             btn->setIconOpacity(text.isEmpty() ? 0.f : 1.f);
     }
 }
