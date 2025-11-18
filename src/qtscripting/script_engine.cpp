@@ -284,7 +284,7 @@ void ScriptEngine::logError(const QJSValue& jsVal, const char* functionName)
         const int lineNumber = jsVal.property("lineNumber").toInt();
         const QMessageLogger msgLogger(fileName.constData(), lineNumber, functionName, "js");
         //msgLogger.critical("%s: %s", name.constData(), message.constData());
-        msgLogger.critical(message.constData());
+        msgLogger.critical("%s", message.constData());
     }
 }
 

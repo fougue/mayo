@@ -197,6 +197,8 @@ void ScriptMayo::registerTask(
     task->messenger->signalMessage.connectSlot([=](MessageType msgType, std::string msg) {
         const QJSValueList jsCallbackArgs{ to_QString(msg), taskId };
         switch (msgType) {
+        case MessageType::Trace:
+            break; // Skipped
         case MessageType::Info: {
             if (task->callbacks.onInfo.isCallable())
                 task->callbacks.onInfo.call(jsCallbackArgs);
