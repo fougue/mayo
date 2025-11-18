@@ -38,6 +38,9 @@ private:
     void onOutputListItemClicked(const QModelIndex& index);
     void onFileChanged(const QString& path);
 
+    class OutputListModel;
+    OutputListModel* outputListModel() const;
+
     struct TextFilter {
         enum Option {
             None = 0x0,

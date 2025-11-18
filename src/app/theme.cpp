@@ -87,6 +87,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::LeftSidebar: return "left-sidebar.svg";
     case Theme::Icon::BackSquare: return "back-square.svg";
     case Theme::Icon::IndicatorDown: return "indicator-down_8.png";
+    case Theme::Icon::Filter: return "filter.svg";
     case Theme::Icon::Magnifier: return "magnifier.svg";
     case Theme::Icon::Reload: return "reload.svg";
     case Theme::Icon::Stop: return "stop.svg";
@@ -114,7 +115,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::XdeAssembly: return "xde-assembly.svg";
     case Theme::Icon::XdeSimpleShape: return "xde-simple-shape.svg";
     }
-    return QString();
+    return {};
 }
 
 class ThemeClassic : public Theme {
@@ -158,7 +159,7 @@ public:
         case Theme::Color::MessageIndicator_ErrorBackground:
             return QColor(225, 127, 127, 140);
         }
-        return QColor();
+        return {};
     }
 
     const QIcon& icon(Icon icn) const override
@@ -228,7 +229,7 @@ public:
         case Theme::Color::MessageIndicator_ErrorBackground:
             return QColor(225, 127, 127, 140);
         }
-        return QColor();
+        return {};
     }
 
     const QIcon& icon(Icon icn) const override

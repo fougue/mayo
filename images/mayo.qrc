@@ -94,5 +94,7 @@
         <file>themes/dark/visibility-show-selection-only.svg</file>
         <file>themes/classic/magnifier.svg</file>
         <file>themes/dark/magnifier.svg</file>
+        <file>themes/classic/filter.svg</file>
+        <file>themes/dark/filter.svg</file>
     </qresource>
 </RCC>

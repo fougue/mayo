@@ -20,6 +20,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QFileSystemWatcher>
+#include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPainter>
 #include <QtWidgets/QButtonGroup>
@@ -59,7 +60,7 @@ public:
         }
 
         const int space = 5 + m_editor->fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
-        return QSize(space, 0);
+        return QSize{space, 0};
     }
 
 protected:
@@ -104,8 +105,37 @@ private:
     QPlainTextEdit* m_editor = nullptr;
 };
 
+// Helper function to get `action` check state(if it's checkable)
+Qt::CheckState getActionCheckState(const QAction* action)
+{
+    auto wAction = dynamic_cast<const QWidgetAction*>(action);
+    auto btn = wAction ? dynamic_cast<const QAbstractButton*>(wAction->defaultWidget()) : nullptr;
+    if (btn && btn->isCheckable())
+        return btn->isChecked() ? Qt::Checked : Qt::Unchecked;
+
+    if (action->isCheckable())
+        return action->isChecked() ? Qt::Checked : Qt::Unchecked;
+
+    return Qt::Unchecked;
+}
+
+// Helper function create QWidgetAction wrapping a checkbox
+// QWidgetAction objects are used to avoid auto closing of the menu when an action is triggered
+std::pair<QAbstractButton*, QAction*> createCheckAction(
+        const QString& text, QObject* parent, Qt::CheckState state = Qt::Unchecked
+    )
+{
+    auto checkBox = new QCheckBox(text);
+    checkBox->setCheckState(state);
+    auto action = new QWidgetAction(parent);
+    action->setDefaultWidget(checkBox);
+    return {checkBox, action};
+}
+
+} // namespace
+
 // Provides Qt model for "Output List" panel
-class OutputListModel : public QAbstractTableModel {
+class DialogExecScript::OutputListModel : public QAbstractTableModel {
 public:
     enum Column {
         Type = 0, Text, ContextFile, ContextLine
@@ -113,7 +143,7 @@ public:
 
     OutputListModel(QObject* parent = nullptr)
         : QAbstractTableModel(parent),
-          m_backgroundError(Qt::red)
+        m_backgroundError(Qt::red)
     {
         m_fontTypeCommon = QtGuiUtils::FontChange(QFont{}).scalePointSizeF(0.8).capitalization(QFont::AllUppercase);
         m_fontTypeError = QtGuiUtils::FontChange(m_fontTypeCommon).bold(true);
@@ -245,8 +275,6 @@ private:
     QBrush m_backgroundError;
 };
 
-} // namespace
-
 DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
     : QDialog(parent),
       m_ui(new Ui_DialogExecScript),
@@ -255,8 +283,14 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
 {
     m_ui->setupUi(this);
 
-    m_ui->treeView_OutputList->setModel(new OutputListModel(this));
-    m_ui->treeView_OutputList->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    // Initialize Qt model for "Output List" panel
+    {
+        auto filterModel = new QSortFilterProxyModel(this);
+        filterModel->setFilterKeyColumn(OutputListModel::Column::Text);
+        filterModel->setSourceModel(new OutputListModel(this));
+        m_ui->treeView_OutputList->setModel(filterModel);
+        m_ui->treeView_OutputList->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    }
 
     // Create QButtonGroup for the tab bar buttons
     {
@@ -276,6 +310,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         TextFilter::Option::All,
         [=](const TextFilter& filter) { this->applyOutputListFilter(filter); }
     );
+    m_ui->btn_OutputListFilter->setIcon(mayoTheme()->icon(Theme::Icon::Filter));
 
     // Set "Filter" edit in "Output Text" panel
     installFilterLineEdit(
@@ -283,6 +318,13 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         TextFilter::Option::All,
         [=](const TextFilter& filter) { this->applyOutputTextFilter(filter); }
     );
+    {
+        auto menu = new QMenu(this);
+        menu->addAction(createCheckAction(tr("INFO"), this, Qt::Checked).second);
+        menu->addAction(createCheckAction(tr("WARNING"), this, Qt::Checked).second);
+        menu->addAction(createCheckAction(tr("CRITICAL"), this, Qt::Checked).second);
+        m_ui->btn_OutputListFilter->setMenu(menu);
+    }
 
     // Set "Output List" as starting panel
     m_ui->stack_Panes->setCurrentWidget(m_ui->page_OutputList);
@@ -345,7 +387,7 @@ void DialogExecScript::onScriptEvaluateStarted()
     m_ui->btn_RestartStop->setText(tr("Stop"));
     m_ui->progressBar_Execution->setRange(0, 0);
     m_ui->progressBar_Execution->setValue(-1);
-    static_cast<OutputListModel*>(m_ui->treeView_OutputList->model())->clear();
+    this->outputListModel()->clear();
     m_ui->editText_OutputText->clear();
 }
 
@@ -367,7 +409,7 @@ void DialogExecScript::onScriptEvaluateEnded(
 
 void DialogExecScript::addOutputMessage(const ScriptEngine::Message& msg)
 {
-    static_cast<OutputListModel*>(m_ui->treeView_OutputList->model())->addMessage(msg);
+    this->outputListModel()->addMessage(msg);
     m_ui->editText_OutputText->appendPlainText(to_QString(msg.text));
 }
 
@@ -431,21 +473,34 @@ void DialogExecScript::installFilterLineEdit(
         QLineEdit* lineEdit, TextFilter::Options options, ApplyTextFilter fnApplyFilter
     )
 {
-    auto fnCreateCheckAction = [](const QString& text, QObject* parent, Qt::CheckState state = Qt::Unchecked) {
-        auto checkBox = new QCheckBox(text);
-        checkBox->setCheckState(state);
-        auto action = new QWidgetAction(parent);
-        action->setDefaultWidget(checkBox);
+    auto lineEditExtra = new LineEditExtra(lineEdit);
+    auto menuOptions = new QMenu(lineEdit);
+
+    // Helper function to get current TextFilter object from the Option menu
+    auto fnGetTextFilter = [=]{
+        TextFilter filter;
+        filter.key = lineEdit->text();
+        if (getActionCheckState(menuOptions->actions().at(0)) == Qt::Checked)
+            filter.options |= TextFilter::Option::UseRegExp;
+        if (getActionCheckState(menuOptions->actions().at(1)) == Qt::Checked)
+            filter.options |= TextFilter::Option::CaseSensitive;
+        return filter;
+    };
+    // Helper function create QWidgetAction wrapping a checkbox
+    // QWidgetAction objects are used to avoid auto closing of the menu when an action is triggered
+    auto fnCreateCheckAction = [=](const QString& text, Qt::CheckState state = Qt::Unchecked) {
+        auto [btn, action] = createCheckAction(text, lineEdit, state);
+        QObject::connect(
+            btn, &QAbstractButton::toggled, lineEdit, [=]{ fnApplyFilter(fnGetTextFilter()); }
+        );
         return action;
     };
 
-    auto lineEditExtra = new LineEditExtra(lineEdit);
-    auto menuOptions = new QMenu(lineEdit);
     if (options & TextFilter::Option::UseRegExp)
-        menuOptions->addAction(fnCreateCheckAction(tr("Use regular expressions"), lineEditExtra));
+        menuOptions->addAction(fnCreateCheckAction(tr("Use regular expressions")));
 
     if (options & TextFilter::Option::CaseSensitive)
-        menuOptions->addAction(fnCreateCheckAction(tr("Case sensitive"), lineEditExtra));
+        menuOptions->addAction(fnCreateCheckAction(tr("Case sensitive")));
 
     lineEditExtra->setButtonMenu(LineEditExtra::Side::Left, menuOptions);
     lineEditExtra->setButtonIcon(LineEditExtra::Side::Left, mayoTheme()->icon(Theme::Icon::Magnifier));
@@ -458,36 +513,26 @@ void DialogExecScript::installFilterLineEdit(
     QObject::connect(
         lineEditExtra, &LineEditExtra::rightButtonClicked, lineEdit, &QLineEdit::clear
     );
-
-    // Helper function to get `action` check state(if it's checkable)
-    auto fnGetActionCheckState = [](const QAction* action) {
-        auto wAction = dynamic_cast<const QWidgetAction*>(action);
-        auto checkBox = wAction ? dynamic_cast<const QCheckBox*>(wAction->defaultWidget()) : nullptr;
-        if (checkBox)
-            return checkBox->checkState();
-
-        if (action->isCheckable())
-            return action->isChecked() ? Qt::Checked : Qt::Unchecked;
-
-        return Qt::Unchecked;
-    };
-    // Helper function to get current TextFilter object from the Option menu
-    auto fnGetTextFilter = [=]{
-        TextFilter filter;
-        filter.key = lineEdit->text();
-        if (fnGetActionCheckState(menuOptions->actions().at(0)) == Qt::Checked)
-            filter.options |= TextFilter::Option::UseRegExp;
-        if (fnGetActionCheckState(menuOptions->actions().at(1)) == Qt::Checked)
-            filter.options |= TextFilter::Option::CaseSensitive;
-        return filter;
-    };
     QObject::connect(
         lineEdit, &QLineEdit::textChanged, lineEdit, [=]{ fnApplyFilter(fnGetTextFilter()); }
     );
 }
 
+DialogExecScript::OutputListModel* DialogExecScript::outputListModel() const
+{
+    auto proxyModel = dynamic_cast<QSortFilterProxyModel*>(m_ui->treeView_OutputList->model());
+    return dynamic_cast<OutputListModel*>(proxyModel->sourceModel());
+}
+
 void DialogExecScript::applyOutputListFilter(const TextFilter& filter)
 {
+    auto filterModel = dynamic_cast<QSortFilterProxyModel*>(m_ui->treeView_OutputList->model());
+    const bool isCaseSensitive = filter.options & TextFilter::CaseSensitive;
+    filterModel->setFilterCaseSensitivity(isCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
+    if (filter.options & TextFilter::UseRegExp)
+        filterModel->setFilterRegularExpression(filter.key);
+    else
+        filterModel->setFilterFixedString(filter.key);
 }
 
 void DialogExecScript::applyOutputTextFilter(const TextFilter& filter)
