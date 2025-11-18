@@ -16,6 +16,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "ui_dialog_exec_script.h"
 
+#include <QtCore/QAbstractTableModel>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QFileSystemWatcher>
@@ -32,7 +33,7 @@ namespace Mayo {
 
 namespace {
 
-// Provides side widget to QPlainTextEdit to display line numbers
+// Provides QPlainTextEdit side widget to display line numbers
 class LineNumberArea : public QWidget {
 public:
     LineNumberArea(QPlainTextEdit* editor)
@@ -41,12 +42,10 @@ public:
     {
         setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
         QObject::connect(
-            editor, &QPlainTextEdit::updateRequest,
-            this, &LineNumberArea::onEditorUpdateRequest
+            editor, &QPlainTextEdit::updateRequest, this, &LineNumberArea::onEditorUpdateRequest
         );
         QObject::connect(
-            editor, &QPlainTextEdit::blockCountChanged,
-            this, &QWidget::updateGeometry
+            editor, &QPlainTextEdit::blockCountChanged, this, &QWidget::updateGeometry
         );
     }
 
@@ -105,6 +104,147 @@ private:
     QPlainTextEdit* m_editor = nullptr;
 };
 
+// Provides Qt model for "Output List" panel
+class OutputListModel : public QAbstractTableModel {
+public:
+    enum Column {
+        Type = 0, Text, ContextFile, ContextLine
+    };
+
+    OutputListModel(QObject* parent = nullptr)
+        : QAbstractTableModel(parent),
+          m_backgroundError(Qt::red)
+    {
+        m_fontTypeCommon = QtGuiUtils::FontChange(QFont{}).scalePointSizeF(0.8).capitalization(QFont::AllUppercase);
+        m_fontTypeError = QtGuiUtils::FontChange(m_fontTypeCommon).bold(true);
+    }
+
+    void addMessage(const ScriptEngine::Message& msg)
+    {
+        const int rowMsg = int(m_messages.size());
+        this->beginInsertRows(QModelIndex{}, rowMsg, rowMsg);
+
+        const QString strContextFile = to_QString(msg.contextFile);
+
+        Message qmsg;
+        qmsg.type = msg.type;
+        qmsg.text = to_QString(msg.text);
+        qmsg.contextFile = QFileInfo{strContextFile}.fileName();
+        qmsg.contextCanonicalFilePath = strContextFile;
+        qmsg.contextLine = QString::number(msg.contextLine);
+
+        const QUrl contextUrl{strContextFile};
+        if (contextUrl.isValid() && contextUrl.isLocalFile()) {
+            const QString strCanonicalContextFile = QFileInfo{contextUrl.toLocalFile()}.canonicalFilePath();
+            qmsg.contextCanonicalFilePath = QDir::toNativeSeparators(strCanonicalContextFile);
+        }
+
+        m_messages.push_back(std::move(qmsg));
+
+        this->endInsertRows();
+    }
+
+    void clear()
+    {
+        this->beginResetModel();
+        m_messages.clear();
+        this->endResetModel();
+    }
+
+    int rowCount(const QModelIndex& /*parent*/) const override
+    {
+        return int(m_messages.size());
+    }
+
+    int columnCount(const QModelIndex& /*parent*/) const override
+    {
+        return 4;
+    }
+
+    QVariant data(const QModelIndex& index, int role) const override
+    {
+        const Message& msg = m_messages.at(index.row());
+
+        switch (index.column()) {
+        case Column::Type: {
+            if (role == Qt::DisplayRole) {
+                switch (msg.type) {
+                case MessageType::Trace: return DialogExecScript::tr("debug");
+                case MessageType::Info: return DialogExecScript::tr("info");
+                case MessageType::Warning: return DialogExecScript::tr("warning");
+                case MessageType::Error: return DialogExecScript::tr("critical");
+                default: return DialogExecScript::tr("?");
+                }
+            }
+            else if (role == Qt::FontRole) {
+                if (msg.type == MessageType::Error)
+                    return m_fontTypeError;
+                else
+                    return m_fontTypeCommon;
+            }
+            else if (role == Qt::BackgroundRole) {
+                if (msg.type == MessageType::Error)
+                    return m_backgroundError;
+            }
+
+            break;
+        }
+        case Column::Text: {
+            if (role == Qt::DisplayRole)
+                return msg.text;
+
+            break;
+        }
+        case Column::ContextFile: {
+            if (role == Qt::DisplayRole)
+                return msg.contextFile;
+            else if (role == Qt::ToolTipRole)
+                return msg.contextCanonicalFilePath;
+
+            break;
+        }
+        case Column::ContextLine: {
+            if (role == Qt::DisplayRole)
+                return msg.contextLine;
+
+            break;
+        }
+        } // endswitch()
+
+        return QVariant{};
+    }
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override
+    {
+        if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+            if (section == Column::Type)
+                return DialogExecScript::tr("Type");
+            else if (section == Column::Text)
+                return DialogExecScript::tr("Message");
+            else if (section == Column::ContextFile)
+                return DialogExecScript::tr("File");
+            else if (section == Column::ContextLine)
+                return DialogExecScript::tr("Line");
+        }
+
+        return QAbstractTableModel::headerData(section, orientation, role);
+    }
+
+private:
+    struct Message {
+        MessageType type = MessageType::Trace;
+        QString text;
+        QString contextFile;
+        QString contextCanonicalFilePath;
+        QString contextLine;
+    };
+
+    std::vector<Message> m_messages;
+    QFont m_fontTypeCommon;
+    QFont m_fontTypeError;
+    QBrush m_backgroundError;
+};
+
 } // namespace
 
 DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
@@ -115,6 +255,9 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
 {
     m_ui->setupUi(this);
 
+    m_ui->treeView_OutputList->setModel(new OutputListModel(this));
+    m_ui->treeView_OutputList->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
     // Create QButtonGroup for the tab bar buttons
     {
         auto btnGroup = new QButtonGroup(this);
@@ -123,8 +266,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         btnGroup->addButton(m_ui->btn_Script, 2);
         btnGroup->setExclusive(true);
         QObject::connect(
-            btnGroup, &QButtonGroup::idClicked,
-            m_ui->stack_Panes, &QStackedWidget::setCurrentIndex
+            btnGroup, &QButtonGroup::idClicked, m_ui->stack_Panes, &QStackedWidget::setCurrentIndex
         );
     }
 
@@ -178,7 +320,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
         this, &DialogExecScript::tryCloseDialog
     );
     QObject::connect(
-        m_ui->treeWidget_OutputList, &QTreeWidget::itemDoubleClicked,
+        m_ui->treeView_OutputList, &QAbstractItemView::doubleClicked,
         this, &DialogExecScript::onOutputListItemClicked
     );
     QObject::connect(
@@ -203,7 +345,7 @@ void DialogExecScript::onScriptEvaluateStarted()
     m_ui->btn_RestartStop->setText(tr("Stop"));
     m_ui->progressBar_Execution->setRange(0, 0);
     m_ui->progressBar_Execution->setValue(-1);
-    m_ui->treeWidget_OutputList->clear();
+    static_cast<OutputListModel*>(m_ui->treeView_OutputList->model())->clear();
     m_ui->editText_OutputText->clear();
 }
 
@@ -221,48 +363,12 @@ void DialogExecScript::onScriptEvaluateEnded(
     m_ui->btn_RestartStop->setText(tr("Restart"));
     m_ui->progressBar_Execution->setRange(0, 100);
     m_ui->progressBar_Execution->setValue(!wasEvaluateStopped ? 100 : 0);
-    for (int col = 0; col < m_ui->treeWidget_OutputList->columnCount(); ++col)
-        m_ui->treeWidget_OutputList->resizeColumnToContents(col);
 }
 
 void DialogExecScript::addOutputMessage(const ScriptEngine::Message& msg)
 {
-    auto fnStrMsgType = [](MessageType type) -> QString {
-        switch (type) {
-        case MessageType::Trace: return tr("debug");
-        case MessageType::Info: return tr("info");
-        case MessageType::Warning: return tr("warning");
-        case MessageType::Error: return tr("critical");
-        default: return tr("?");
-        }
-    };
-
-    auto item = new QTreeWidgetItem;
-    item->setText(0, fnStrMsgType(msg.type));
-    item->setFont(0, QtGuiUtils::FontChange(item->font(0)).scalePointSizeF(0.8).capitalization(QFont::AllUppercase));
-    if (msg.type == MessageType::Error) {
-        item->setBackground(0, QColor(Qt::red));
-        item->setFont(0, QtGuiUtils::FontChange(item->font(0)).bold(true));
-    }
-
-    const QString strText = to_QString(msg.text);
-    const QString strContextFile = to_QString(msg.contextFile);
-    item->setText(1, strText);
-    item->setText(2, QFileInfo{strContextFile}.fileName());
-
-    // Set tooltip for the context file column
-    const QUrl contextUrl{strContextFile};
-    if (contextUrl.isValid() && contextUrl.isLocalFile()) {
-        const QString strCanonicalContextFile = QFileInfo{contextUrl.toLocalFile()}.canonicalFilePath();
-        item->setToolTip(2, QDir::toNativeSeparators(strCanonicalContextFile));
-    }
-    else {
-        item->setToolTip(2, strContextFile);
-    }
-
-    item->setText(3, QString::number(msg.contextLine));
-    m_ui->treeWidget_OutputList->addTopLevelItem(item);
-    m_ui->editText_OutputText->appendPlainText(strText);
+    static_cast<OutputListModel*>(m_ui->treeView_OutputList->model())->addMessage(msg);
+    m_ui->editText_OutputText->appendPlainText(to_QString(msg.text));
 }
 
 void DialogExecScript::tryCloseDialog()
@@ -287,15 +393,16 @@ void DialogExecScript::tryCloseDialog()
     }
 }
 
-void DialogExecScript::onOutputListItemClicked(QTreeWidgetItem* item)
+void DialogExecScript::onOutputListItemClicked(const QModelIndex& index)
 {
-    if (!item)
+    if (!index.isValid())
         return;
 
-    if (item->text(2) != filepathTo<QString>(m_scriptEngine->scriptFilePath().filename()))
+    const QString strScriptFileName = filepathTo<QString>(m_scriptEngine->scriptFilePath().filename());
+    if (index.siblingAtColumn(OutputListModel::Column::ContextFile).data() != strScriptFileName)
         return;
 
-    const int lineNumber = item->text(3).toInt();
+    const int lineNumber = index.siblingAtColumn(OutputListModel::Column::ContextLine).data().toInt();
     auto editor = m_ui->editText_Script;
     if (lineNumber < 1 || lineNumber > editor->blockCount())
         return;

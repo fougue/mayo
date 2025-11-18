@@ -14,7 +14,7 @@
 
 class QFileSystemWatcher;
 class QLineEdit;
-class QTreeWidgetItem;
+class QModelIndex;
 
 namespace Mayo {
 
@@ -35,7 +35,7 @@ private:
 
     void tryCloseDialog();
 
-    void onOutputListItemClicked(QTreeWidgetItem* item);
+    void onOutputListItemClicked(const QModelIndex& index);
     void onFileChanged(const QString& path);
 
     struct TextFilter {
