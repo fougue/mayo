@@ -50,6 +50,12 @@ public:
     static constexpr auto values() {
         return magic_enum::enum_values<EnumType>();
     }
+
+    template<typename EnumType>
+    static constexpr int enumIndex(EnumType enumValue) {
+        const auto res = magic_enum::enum_index(enumValue);
+        return res.has_value() ? int(res.value()) : -1;
+    }
 };
 
 } // namespace Mayo

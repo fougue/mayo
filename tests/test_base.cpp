@@ -856,6 +856,10 @@ void TestBase::MetaEnum_test()
 
     QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_VERTEX, "Abs"), "TopAbs_VERTEX");
     QCOMPARE(MetaEnum::nameWithoutPrefix(TopAbs_VERTEX, ""), "TopAbs_VERTEX");
+
+    QCOMPARE(MetaEnum::enumIndex(TopAbs_COMPOUND), 0);
+    QCOMPARE(MetaEnum::enumIndex(TopAbs_SOLID), 2);
+    QCOMPARE(MetaEnum::enumIndex(TopAbs_FACE), 4);
 }
 
 void TestBase::MeshUtils_test()
