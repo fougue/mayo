@@ -10,10 +10,10 @@
 
 #include <QtWidgets/QDialog>
 
-#include <functional>
+#include <vector>
 
+class QAction;
 class QFileSystemWatcher;
-class QLineEdit;
 class QModelIndex;
 
 namespace Mayo {
@@ -42,27 +42,29 @@ private:
     OutputListModel* outputListModel() const;
 
     struct TextFilter {
-        enum Option {
-            None = 0x0,
+        enum Option : unsigned {
             UseRegExp = 0x01,
             CaseSensitive = 0x02,
-            All = 0xFF
+            IncludeDebugMessages = 0x10,
+            IncludeInfoMessages = 0x20,
+            IncludeWarningMessages = 0x40,
+            IncludeErrorMessages = 0x80
         };
         using Options = unsigned;
+        static constexpr Options AllOptions = 0xFF;
 
         QString key;
-        Options options = Option::None;
+        Options options = 0;
     };
 
-    void applyOutputListFilter(const TextFilter& filter);
-    void applyOutputTextFilter(const TextFilter& filter);
+    QAction* findAction(TextFilter::Option option) const;
+    TextFilter getOutputTextFilter() const;
+    void applyOutputFilter(const TextFilter& filter);
 
-    using ApplyTextFilter = std::function<void(const TextFilter&)>;
-    static void installFilterLineEdit(
-        QLineEdit* lineEdit, TextFilter::Options options, ApplyTextFilter fnApplyFilter
-    );
+    void installOutputFilterLineEdit();
 
     class Ui_DialogExecScript* m_ui = nullptr;
+    std::vector<std::pair<TextFilter::Option, QAction*>> m_outputFilterActions;
     ScriptEngine* m_scriptEngine = nullptr;
     QFileSystemWatcher* m_fileSystemWatcher = nullptr;
     ScopedSignalConnections<> m_sigConns;

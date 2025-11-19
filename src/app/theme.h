@@ -52,6 +52,7 @@ public:
         LeftSidebar,
         BackSquare,
         IndicatorDown,
+        Filter,
         Magnifier,
         Reload,
         Stop,
