@@ -9,17 +9,12 @@
 #include "theme.h"
 #include "ui_widget_measure.h"
 
-#include "../base/unit_system.h"
 #include "../gui/gui_document.h"
 #include "../measure/measure_tool_brep.h"
 #include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QtDebug>
 #include <QtGui/QFontDatabase>
-
-#include <cmath>
-#include <codecvt>
-#include <vector>
 
 namespace Mayo {
 

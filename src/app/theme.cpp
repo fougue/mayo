@@ -6,7 +6,6 @@
 
 #include "theme.h"
 #include "../base/meta_enum.h"
-#include "../base/span.h"
 
 #include <QtGui/QImage>
 #include <QtGui/QPalette>

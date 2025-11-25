@@ -5,7 +5,6 @@
 ****************************************************************************/
 
 #include "widget_model_tree_builder_mesh.h"
-#include "../base/caf_utils.h"
 #include "../graphics/graphics_mesh_object_driver.h"
 #include "theme.h"
 #include "widget_model_tree.h"

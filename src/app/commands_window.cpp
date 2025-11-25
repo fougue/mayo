@@ -7,7 +7,6 @@
 #include "commands_window.h"
 
 #include "../base/application.h"
-#include "../gui/gui_application.h"
 #include "theme.h"
 
 #include <QtGui/QShowEvent>

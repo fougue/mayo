@@ -6,8 +6,6 @@
 
 #include "dialog_task_manager.h"
 
-#include "../base/application.h"
-#include "../base/settings.h"
 #include "../base/task_manager.h"
 #include "../qtcommon/qstring_conv.h"
 #include "ui_dialog_task_manager.h"

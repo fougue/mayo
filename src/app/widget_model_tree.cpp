@@ -9,7 +9,6 @@
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
 #include "../base/document.h"
-#include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "item_view_buttons.h"

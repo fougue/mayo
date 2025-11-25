@@ -14,8 +14,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace Mayo {
-namespace ListHelper {
+namespace Mayo::ListHelper {
 
 struct ModelItem {
     QString name;
@@ -111,7 +110,6 @@ private:
     mutable QPixmap m_blurredPixmap;
 };
 
-} // namespace ListHelper
-} // namespace Mayo
+} // namespace Mayo::ListHelper
 
 Q_DECLARE_METATYPE(Mayo::ListHelper::ModelItem*)

@@ -6,8 +6,6 @@
 
 #include "property_builtins.h"
 
-#include "tkernel_utils.h"
-
 namespace Mayo {
 
 BasePropertyQuantity::BasePropertyQuantity(PropertyGroup* grp, const TextId& name)

@@ -20,10 +20,8 @@ class QScreen;
 
 #include <type_traits>
 
-namespace Mayo {
-
 // Provides a collection of tools for the QtGui module
-namespace QtGuiUtils {
+namespace Mayo::QtGuiUtils {
 
 // Color conversion functions OCCT -> Qt
 QColor toQColor(const Quantity_Color& c);
@@ -111,5 +109,4 @@ Quantity_Color toColor(const QColor& c)
     return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OtherColorType);
 }
 
-} // namespace QtGuiUtils
-} // namespace Mayo
+} // namespace Mayo::QtGuiUtils

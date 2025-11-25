@@ -8,7 +8,7 @@
 
 #include "grid_helper.h"
 #include "list_helper.h"
-#include <QtCore/QFileInfo>
+class QFileInfo;
 
 namespace Mayo {
 

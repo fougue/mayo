@@ -9,7 +9,6 @@
 #include "property_item_delegate.h"
 #include "../base/property.h"
 #include "../base/span.h"
-#include "../base/unit.h"
 
 #include <QtWidgets/QWidget>
 

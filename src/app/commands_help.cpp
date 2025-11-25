@@ -10,7 +10,6 @@
 #include "dialog_about.h"
 #include "library_info.h"
 #include "qtwidgets_utils.h"
-#include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>

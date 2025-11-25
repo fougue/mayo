@@ -35,14 +35,12 @@ public:
     class ProxyItemDelegate : public ProxyStyledItemDelegate {
     public:
         ProxyItemDelegate(
-                const ItemViewButtons* itemBtns,
-                QStyledItemDelegate* srcDelegate,
-                QObject* parent = nullptr);
+            const ItemViewButtons* itemBtns, QStyledItemDelegate* srcDelegate, QObject* parent = nullptr
+        );
 
         void paint(
-                QPainter* painter,
-                const QStyleOptionViewItem& option,
-                const QModelIndex& index) const override;
+            QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+        ) const override;
 
     private:
         const ItemViewButtons* m_itemBtns;
@@ -81,7 +79,8 @@ private:
 ItemViewButtons::Private::ProxyItemDelegate::ProxyItemDelegate(
         const ItemViewButtons* itemBtns,
         QStyledItemDelegate* srcDelegate,
-        QObject* parent)
+        QObject* parent
+    )
     : ProxyStyledItemDelegate(srcDelegate, parent),
       m_itemBtns(itemBtns)
 {
@@ -90,7 +89,8 @@ ItemViewButtons::Private::ProxyItemDelegate::ProxyItemDelegate(
 void ItemViewButtons::Private::ProxyItemDelegate::paint(
         QPainter* painter,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     ProxyStyledItemDelegate::paint(painter, option, index);
     if (m_itemBtns)
@@ -137,7 +137,8 @@ void ItemViewButtons::Private::itemViewUpdateAt(const QModelIndex& index)
 void ItemViewButtons::Private::paintButton(
         ButtonInfo* btnInfo,
         QPainter* painter,
-        const QStyleOptionViewItem& option)
+        const QStyleOptionViewItem& option
+    )
 {
     if (!btnInfo || !painter)
         return;
@@ -250,7 +251,8 @@ bool ItemViewButtons::eventFilter(QObject* object, QEvent* event)
 void ItemViewButtons::paint(
         QPainter* painter,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     bool mouseIsOver = false;
     if (painter && painter->device() && painter->device()->devType() == QInternal::Widget) {
@@ -496,7 +498,8 @@ void ItemViewButtons::installDefaultItemDelegate()
  *  don't want to modify it to integrate with ItemViewButtons
  */
 QStyledItemDelegate* ItemViewButtons::createProxyItemDelegate(
-        QStyledItemDelegate* sourceDelegate, QObject* parent) const
+        QStyledItemDelegate* sourceDelegate, QObject* parent
+    ) const
 {
     return new Private::ProxyItemDelegate(this, sourceDelegate, parent);
 }

@@ -11,8 +11,7 @@
 #include <QtWidgets/QHeaderView>
 #include <algorithm>
 
-namespace Mayo {
-namespace GridHelper {
+namespace Mayo::GridHelper {
 
 void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
 {
@@ -31,32 +30,32 @@ void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
             emit this->layoutChanged();
         });
         QObject::connect(
-                    newModel, &QAbstractItemModel::modelAboutToBeReset,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::modelAboutToBeReset,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::modelReset,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::modelReset,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsAboutToBeInserted,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::rowsAboutToBeInserted,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsInserted,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::rowsInserted,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsAboutToBeRemoved,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::rowsAboutToBeRemoved,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsRemoved,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::rowsRemoved,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::dataChanged,
-                    this, &ProxyModel::onDataChanged
+            newModel, &QAbstractItemModel::dataChanged,
+            this, &ProxyModel::onDataChanged
         );
     }
 }
@@ -165,5 +164,4 @@ void View::leaveEvent(QEvent*)
     this->viewportEvent(&hoverEvent); // Seemingly needed to kill the hover paint
 }
 
-} // namespace GridHelper
-} // namespace Mayo
+} // namespace Mayo::GridHelper

@@ -6,7 +6,6 @@
 
 #include "property_editor_factory.h"
 
-#include "../base/application.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/unit_system.h"

@@ -19,12 +19,13 @@
 #include <algorithm>
 #if __cpp_lib_to_chars
 #  include <charconv>
+#else
+#  include <cstdlib>
+#  include <cstring>
+#  include <sstream>
 #endif
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <sstream>
 
 namespace Mayo {
 

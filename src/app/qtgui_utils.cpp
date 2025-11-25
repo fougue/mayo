@@ -18,10 +18,8 @@
 
 #include <gsl/assert>
 #include <algorithm>
-#include <cmath>
 
-namespace Mayo {
-namespace QtGuiUtils {
+namespace Mayo::QtGuiUtils {
 
 namespace {
 
@@ -254,5 +252,4 @@ QByteArray toQByteArray(const QPixmap& pixmap, const char* format)
     return bytes;
 }
 
-} // namespace QtGuiUtils
-} // namespace Mayo
+} // namespace Mayo::QtGuiUtils

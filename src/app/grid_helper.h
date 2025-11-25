@@ -9,10 +9,8 @@
 #include <QtWidgets/QTableView>
 #include <optional>
 
-namespace Mayo {
-
 // Provides helper tools for "grid" view
-namespace GridHelper {
+namespace Mayo::GridHelper {
 
 // Provides a proxy model to layout items along a grid(this setColumnCount())
 class ProxyModel : public QAbstractItemModel {
@@ -35,7 +33,7 @@ public:
 
 private:
     void onDataChanged(
-            const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
     );
 
     QAbstractItemModel* m_sourceModel = nullptr;
@@ -57,5 +55,4 @@ private:
     QSize m_itemSize = { 230, 180 };
 };
 
-} // namespace GridHelper
-} // namespace Mayo
+} // namespace Mayo::GridHelper

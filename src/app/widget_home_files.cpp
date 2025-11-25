@@ -6,10 +6,7 @@
 
 #include "widget_home_files.h"
 
-#include "../base/application.h"
 #include "../base/settings.h"
-#include "../gui/gui_application.h"
-#include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
 #include "app_module.h"
 #include "qstring_utils.h"

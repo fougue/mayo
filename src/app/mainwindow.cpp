@@ -7,8 +7,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "../base/application.h"
-#include "../base/global.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../qtcommon/qstring_conv.h"

@@ -6,8 +6,6 @@
 
 #include "widget_gui_document.h"
 
-#include "../base/cpp_utils.h"
-#include "../base/unit_system.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
