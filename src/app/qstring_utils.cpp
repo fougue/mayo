@@ -9,7 +9,6 @@
 #include <gp_Trsf.hxx>
 #include <Precision.hxx>
 #include <Quantity_Color.hxx>
-#include <cctype>
 
 namespace Mayo {
 

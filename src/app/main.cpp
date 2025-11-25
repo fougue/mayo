@@ -26,11 +26,9 @@
 #include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/log_message_handler.h"
-#include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
 #include "commands_help.h"
 #include "document_tree_node_properties_providers.h"
-#include "library_info.h"
 #include "mainwindow.h"
 #include "qtgui_utils.h"
 #include "theme.h"
@@ -56,10 +54,7 @@
 #include <fmt/format.h>
 #include <gsl/util>
 #include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <memory>
-#include <unordered_map>
 
 namespace Mayo {
 
@@ -103,7 +98,7 @@ static CommandLineArguments processCommandLine()
                 QStringList{ "t", "theme" },
                 Main::tr("Theme for the UI(classic|dark)"),
                 Main::tr("name")
-     );
+    );
     cmdParser.addOption(cmdOptionTheme);
 
     const QCommandLineOption cmdFileSettings(
@@ -422,9 +417,9 @@ static int runApp(QCoreApplication* qtApp)
     const QColor bkgGradientStart = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientStart);
     const QColor bkgGradientEnd = mayoTheme()->color(Theme::Color::View3d_BackgroundGradientEnd);
     GuiDocument::setDefaultGradientBackground({
-                QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
-                QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
-                Aspect_GFM_VER
+        QtGuiUtils::toPreferredColorSpace(bkgGradientStart),
+        QtGuiUtils::toPreferredColorSpace(bkgGradientEnd),
+        Aspect_GFM_VER
     });
 
     // Create MainWindow

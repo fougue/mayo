@@ -52,12 +52,16 @@ public:
 
     Aspect_TypeOfTriedronPosition graphicsViewCubeCornerValue() const;
 
-    // System
+    // Settings groups
     const Settings::GroupIndex groupId_system;
+    const Settings::GroupIndex groupId_application;
+    const Settings::GroupIndex groupId_meshing;
+    const Settings::GroupIndex groupId_graphics;
+
+    // System
     PropertyInt unitSystemDecimals{ this, textId("decimalCount") };
     PropertyEnum<UnitSystem::Schema> unitSystemSchema{ this, textId("schema") };
     // Application
-    const Settings::GroupIndex groupId_application;
     PropertyEnumeration language;
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
@@ -67,14 +71,12 @@ public:
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
-    const Settings::GroupIndex groupId_meshing;
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
     PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
-    const Settings::GroupIndex groupId_graphics;
     PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
     PropertyEnumeration viewCubeCorner; // Enum: Aspect_TypeOfTriedronPosition
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };

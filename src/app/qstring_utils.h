@@ -11,7 +11,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLocale>
 #include <QtCore/QString>
-#include <utility>
 class Quantity_Color;
 class gp_Pnt;
 class gp_Dir;

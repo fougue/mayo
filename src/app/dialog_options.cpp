@@ -8,8 +8,6 @@
 
 #include "../base/cpp_utils.h"
 #include "../base/settings.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"

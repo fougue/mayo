@@ -15,12 +15,12 @@
 #include "app_module.h"
 #include "ui_widget_clip_planes.h"
 
-#include <algorithm>
 #include <QtCore/QFile>
 #include <Bnd_Box.hxx>
 #include <Graphic3d_ClipPlane.hxx>
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
+#include <cmath>
 
 namespace Mayo {
 

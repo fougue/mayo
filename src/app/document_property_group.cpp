@@ -8,7 +8,6 @@
 
 #include "app_module.h"
 #include "qstring_utils.h"
-#include "../base/application.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
 

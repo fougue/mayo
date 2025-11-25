@@ -41,9 +41,7 @@
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QWindow>
 
-#include <stdexcept>
 #include <thread>
-#include <vector>
 
 namespace Mayo {
 

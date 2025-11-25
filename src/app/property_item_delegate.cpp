@@ -5,9 +5,7 @@
 ****************************************************************************/
 
 #include "property_item_delegate.h"
-#include "../base/application.h"
 #include "../base/property_builtins.h"
-#include "../base/settings.h"
 #include "../base/unit_system.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"

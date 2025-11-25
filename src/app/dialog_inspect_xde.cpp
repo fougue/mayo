@@ -6,13 +6,11 @@
 
 #include "dialog_inspect_xde.h"
 
-#include "../base/application.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
 #include "../base/cpp_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/meta_enum.h"
-#include "../base/settings.h"
 #include "../base/tkernel_utils.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"

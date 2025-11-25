@@ -37,8 +37,7 @@ static QPixmap blurredPixmap(const QPixmap& pixmap, int radius)
 } // namespace QtGuiUtils
 #endif
 
-namespace Mayo {
-namespace ListHelper {
+namespace Mayo::ListHelper {
 
 static QtGuiUtils::FontChange fontChange(const QWidget* widget) {
     return QtGuiUtils::FontChange(widget->font());
@@ -108,13 +107,14 @@ ItemDelegate::ItemDelegate(QObject* parent)
     m_itemAnimation.setStartValue(0);
     m_itemAnimation.setEndValue(m_itemSize.height());
     QObject::connect(
-                &m_itemAnimation, &QVariantAnimation::valueChanged,
-                this, &ItemDelegate::drawItem
+        &m_itemAnimation, &QVariantAnimation::valueChanged,
+        this, &ItemDelegate::drawItem
     );
 }
 
 void ItemDelegate::paint(
-        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+    ) const
 {
     const ModelItem* item = Model::itemPtrAt(index);
     if (!item)
@@ -235,7 +235,8 @@ bool ItemDelegate::editorEvent(
         QEvent* event,
         QAbstractItemModel* model,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index)
+        const QModelIndex& index
+    )
 {
     if (event->type() == QEvent::MouseButtonRelease) {
         const ModelItem* item = Model::itemPtrAt(index);
@@ -259,5 +260,4 @@ void ItemDelegate::drawItem()
         m_widget->viewport()->update(m_area);
 }
 
-} // namespace ListHelper
-} // namespace Mayo
+} // namespace Mayo::ListHelper

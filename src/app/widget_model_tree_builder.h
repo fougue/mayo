@@ -10,7 +10,6 @@
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
 #include "widget_model_tree.h"
-#include <vector>
 #include <QtCore/QString>
 class QAction;
 class QObject;

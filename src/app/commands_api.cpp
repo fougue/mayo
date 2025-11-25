@@ -11,7 +11,7 @@
 
 #include <QtWidgets/QWidget>
 #include <fmt/format.h>
-#include <exception>
+#include <stdexcept>
 
 namespace Mayo {
 

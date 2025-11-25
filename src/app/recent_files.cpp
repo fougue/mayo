@@ -6,9 +6,6 @@
 
 #include "recent_files.h"
 
-#include "../base/meta_enum.h"
-#include "../qtcommon/filepath_conv.h"
-
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
 

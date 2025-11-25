@@ -7,7 +7,6 @@
 #pragma once
 
 #include "../base/application_item.h"
-#include "../base/property.h"
 #include "../gui/gui_document.h"
 
 #include <QtWidgets/QWidget>
