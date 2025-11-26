@@ -41,30 +41,26 @@ private:
     class OutputListModel;
     OutputListModel* outputListModel() const;
 
-    struct TextFilter {
-        enum Option : unsigned {
-            UseRegExp = 0x01,
-            CaseSensitive = 0x02,
-            IncludeDebugMessages = 0x10,
-            IncludeInfoMessages = 0x20,
-            IncludeWarningMessages = 0x40,
-            IncludeErrorMessages = 0x80
-        };
-        using Options = unsigned;
-        static constexpr Options AllOptions = 0xFF;
-
-        QString key;
-        Options options = 0;
+    enum TextFilterOption : unsigned {
+        UseRegExp = 0x01,
+        CaseSensitive = 0x02,
+        IncludeDebugMessages = 0x10,
+        IncludeInfoMessages = 0x20,
+        IncludeWarningMessages = 0x40,
+        IncludeErrorMessages = 0x80
     };
+    using TextFilterOptions = unsigned;
+    static constexpr TextFilterOptions TextFilterAllOptions = 0xFF;
 
-    QAction* findAction(TextFilter::Option option) const;
-    TextFilter getOutputTextFilter() const;
-    void applyOutputFilter(const TextFilter& filter);
+    QAction* findAction(TextFilterOption option) const;
+    bool isActionChecked(TextFilterOption option) const;
+
+    void applyOutputFilter();
 
     void installOutputFilterLineEdit();
 
     class Ui_DialogExecScript* m_ui = nullptr;
-    std::vector<std::pair<TextFilter::Option, QAction*>> m_outputFilterActions;
+    std::vector<std::pair<TextFilterOption, QAction*>> m_outputFilterActions;
     ScriptEngine* m_scriptEngine = nullptr;
     QFileSystemWatcher* m_fileSystemWatcher = nullptr;
     ScopedSignalConnections<> m_sigConns;

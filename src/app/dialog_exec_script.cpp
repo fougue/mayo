@@ -4,7 +4,7 @@
 ** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 ****************************************************************************/
 
-// Allows DialogExecScript::TextFilter::Option to be supported by magic_enum library
+// Allows DialogExecScript::TextFilterOption to be supported by magic_enum library
 #define MAGIC_ENUM_RANGE_MAX 0xFF
 
 #include "dialog_exec_script.h"
@@ -27,6 +27,7 @@
 #include <QtCore/QSortFilterProxyModel>
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPainter>
+#include <QtGui/QTextDocument>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QMenu>
@@ -344,13 +345,13 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
             const int msgType = model->data(indexMsgType, OutputListModel::MessageTypeRole).toInt();
             switch (static_cast<MessageType>(msgType)) {
             case MessageType::Trace:
-                return getActionCheckState(this->findAction(TextFilter::IncludeDebugMessages)) == Qt::Checked;
+                return this->isActionChecked(TextFilterOption::IncludeDebugMessages);
             case MessageType::Info:
-                return getActionCheckState(this->findAction(TextFilter::IncludeInfoMessages)) == Qt::Checked;
+                return this->isActionChecked(TextFilterOption::IncludeInfoMessages);
             case MessageType::Warning:
-                return getActionCheckState(this->findAction(TextFilter::IncludeWarningMessages)) == Qt::Checked;
+                return this->isActionChecked(TextFilterOption::IncludeWarningMessages);
             case MessageType::Error:
-                return getActionCheckState(this->findAction(TextFilter::IncludeErrorMessages)) == Qt::Checked;
+                return this->isActionChecked(TextFilterOption::IncludeErrorMessages);
             }
             return false;
         });
@@ -515,11 +516,21 @@ void DialogExecScript::installOutputFilterLineEdit()
         return action;
     };
     auto fnApplyTextFilter = [=]{
-        this->applyOutputFilter(this->getOutputTextFilter());
+        const QString filterKey = lineEdit->text();
+        auto filterModel = dynamic_cast<QSortFilterProxyModel*>(m_ui->treeView_OutputList->model());
+        const bool isCaseSensitive = this->isActionChecked(TextFilterOption::CaseSensitive);
+        filterModel->setFilterCaseSensitivity(isCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
+        if (this->isActionChecked(TextFilterOption::UseRegExp))
+            filterModel->setFilterRegularExpression(filterKey);
+        else
+            filterModel->setFilterFixedString(filterKey);
+
+        this->applyOutputFilter();
     };
     auto fnApplyFilterModel = [=]{
-        auto filterModel = dynamic_cast<FunctionFilterProxyModel*>(m_ui->treeView_OutputList->model());
+        auto filterModel = dynamic_cast<QSortFilterProxyModel*>(m_ui->treeView_OutputList->model());
         filterModel->invalidate();
+        this->applyOutputFilter();
     };
 
     // Create menu for the filtering options
@@ -534,7 +545,7 @@ void DialogExecScript::installOutputFilterLineEdit()
 
     const QList<QAction*> menuActions = menuOptions->actions();
     m_outputFilterActions.clear();
-    for (auto option : MetaEnum::values<TextFilter::Option>())
+    for (auto option : MetaEnum::values<TextFilterOption>())
         m_outputFilterActions.push_back({ option, menuActions.at(MetaEnum::enumIndex(option)) });
 
     // Create LineEditExtra object
@@ -560,7 +571,7 @@ DialogExecScript::OutputListModel* DialogExecScript::outputListModel() const
     return dynamic_cast<OutputListModel*>(proxyModel->sourceModel());
 }
 
-QAction* DialogExecScript::findAction(TextFilter::Option option) const
+QAction* DialogExecScript::findAction(TextFilterOption option) const
 {
     const int optionIndex = MetaEnum::enumIndex(option);
     if (0 <= optionIndex && optionIndex < m_outputFilterActions.size())
@@ -569,29 +580,25 @@ QAction* DialogExecScript::findAction(TextFilter::Option option) const
     return nullptr;
 }
 
-DialogExecScript::TextFilter DialogExecScript::getOutputTextFilter() const
+bool DialogExecScript::isActionChecked(TextFilterOption option) const
 {
-    auto lineEdit = m_ui->edit_OutputFilter;
-
-    TextFilter filter;
-    filter.key = lineEdit->text();
-    for (auto option : MetaEnum::values<TextFilter::Option>()) {
-        if (getActionCheckState(this->findAction(option)) == Qt::Checked)
-            filter.options |= option;
-    }
-
-    return filter;
+    return getActionCheckState(this->findAction(option)) == Qt::Checked;
 }
 
-void DialogExecScript::applyOutputFilter(const TextFilter& filter)
+void DialogExecScript::applyOutputFilter()
 {
     auto filterModel = dynamic_cast<QSortFilterProxyModel*>(m_ui->treeView_OutputList->model());
-    const bool isCaseSensitive = filter.options & TextFilter::CaseSensitive;
-    filterModel->setFilterCaseSensitivity(isCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
-    if (filter.options & TextFilter::UseRegExp)
-        filterModel->setFilterRegularExpression(filter.key);
-    else
-        filterModel->setFilterFixedString(filter.key);
+    QTextDocument* outputTextDoc = m_ui->editText_OutputText->document();
+    const QTextBlock blockStart = outputTextDoc->begin();
+    const QTextBlock blockEnd = outputTextDoc->end();
+    for (QTextBlock block = blockStart; block != blockEnd; block = block.next()) {
+        const QModelIndex indexRow = this->outputListModel()->index(block.blockNumber(), 0);
+        const bool isRowAccepted = filterModel->mapFromSource(indexRow).isValid();
+        block.setVisible(isRowAccepted);
+    }
+
+    // Weird trick to force update after calls to QTextBlock::setVisible()
+    m_ui->editText_OutputText->setDocument(outputTextDoc);
 }
 
 } // namespace Mayo
