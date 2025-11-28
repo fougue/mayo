@@ -298,11 +298,11 @@ public:
                 QAbstractItemView {
                     show-decoration-selected: 1;
                     background: #252525;
-                    selection-background-color: #505050;
+                    selection-background-color: #383838;
                 }
                 QAbstractItemView::item:hover { background: #383838; }
                 QMenu {
-                    background: #252525;
+                    background: #323232;
                     border: 1px solid rgb(100,100,100);
                 }
                 QMenu::item:selected { background: rgb(110,110,110); }
@@ -310,21 +310,23 @@ public:
                     background: rgb(110,110,110);
                     height: 1px;
                 }
-                QLineEdit { background: #505050; }
-                QTextEdit { background: #505050; }
-                QSpinBox  { background: #505050; }
-                QDoubleSpinBox { background: #505050; }
+                QLineEdit { background: #323232; }
+                QTextEdit { background: #323232; }
+                QPlainTextEdit { background: #323232; }
+                QSpinBox  { background: #323232; }
+                QDoubleSpinBox { background: #323232; }
                 QToolButton:checked { background: #383838; }
                 QToolButton:pressed { background: #383838; }
-                QComboBox { background: #505050; }
+                QComboBox { background: #323232; }
                 QGroupBox {
                     border: 1px solid #808080;
                     margin-top: 4ex;
                 }
-                QFileDialog { background: #505050; }
-                QComboBox:editable { background: #505050; }
+                QFileDialog { background: #323232; }
+                QComboBox::item:hover { background: #505050; }
+                QComboBox:editable { background: #323232; }
                 QComboBox:disabled { background: rgb(40,40,40); }
-                QProgressBar { background: #505050; }
+                QProgressBar { background: #323232; }
                 )";
         qApp->setStyleSheet(css);
     }
