@@ -319,6 +319,7 @@ DialogExecScript::DialogExecScript(ScriptEngine* engine, QWidget* parent)
       m_scriptEngine(engine)
 {
     m_ui->setupUi(this);
+    m_defaultTextCharFormat = m_ui->editText_OutputText->currentCharFormat();
 
     // Create QButtonGroup for the tab bar buttons
     {
@@ -447,6 +448,12 @@ void DialogExecScript::onScriptEvaluateEnded(
 void DialogExecScript::addOutputMessage(const ScriptEngine::Message& msg)
 {
     this->outputListModel()->addMessage(msg);
+
+    QTextCharFormat charFormat = m_defaultTextCharFormat;
+    if (msg.type == MessageType::Error)
+        charFormat.setForeground(QColor(255, 100, 100));
+
+    m_ui->editText_OutputText->setCurrentCharFormat(charFormat);
     m_ui->editText_OutputText->appendPlainText(to_QString(msg.text));
 }
 

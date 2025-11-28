@@ -8,6 +8,7 @@
 
 #include "../qtscripting/script_engine.h"
 
+#include <QtGui/QTextCharFormat>
 #include <QtWidgets/QDialog>
 
 #include <vector>
@@ -64,6 +65,7 @@ private:
     ScriptEngine* m_scriptEngine = nullptr;
     QFileSystemWatcher* m_fileSystemWatcher = nullptr;
     ScopedSignalConnections<> m_sigConns;
+    QTextCharFormat m_defaultTextCharFormat;
 };
 
 } // namespace Mayo
