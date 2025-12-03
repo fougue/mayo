@@ -57,10 +57,10 @@ int Model::rowCount(const QModelIndex&) const
 QVariant Model::data(const QModelIndex& index, int role) const
 {
     if (!this->hasStorage())
-        return QVariant();
+        return {};
 
     if (!index.isValid() || index.row() >= this->storage()->count())
-        return QVariant();
+        return {};
 
     const ModelItem* item = this->storage()->at(index.row());
     switch (role) {
@@ -76,7 +76,7 @@ QVariant Model::data(const QModelIndex& index, int role) const
             return this->findPixmap(item->imageUrl);
     }
     default:
-        return QVariant();
+        return {};
     }
 }
 
@@ -107,8 +107,7 @@ ItemDelegate::ItemDelegate(QObject* parent)
     m_itemAnimation.setStartValue(0);
     m_itemAnimation.setEndValue(m_itemSize.height());
     QObject::connect(
-        &m_itemAnimation, &QVariantAnimation::valueChanged,
-        this, &ItemDelegate::drawItem
+        &m_itemAnimation, &QVariantAnimation::valueChanged, this, &ItemDelegate::drawItem
     );
 }
 
@@ -130,7 +129,7 @@ void ItemDelegate::paint(
     const bool hovered = option.state & QStyle::State_MouseOver;
     const int yShift = itemBottom - 20;
     const int yName = itemBottom - 20;
-    const QRect rectText = QRect(x, y + yName, w, h);
+    const QRect rectText{x, y + yName, w, h};
     const QPixmap pm = Model::itemPixmapAt(index);
 
     QTextOption textOption;
@@ -169,9 +168,10 @@ void ItemDelegate::paint(
             painter->setPen(m_textColor);
             painter->setFont(fontChange(option.widget).adjustSize(-1));
             painter->drawText(
-                        rectPixmap.adjusted(6, m_itemSpacing, -6, -m_itemSpacing),
-                        item->description,
-                        textOption);
+                rectPixmap.adjusted(6, m_itemSpacing, -6, -m_itemSpacing),
+                item->description,
+                textOption
+            );
         }
 
         painter->setPen(m_pixmapColor);

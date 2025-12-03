@@ -16,17 +16,18 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
-static const QIcon& nullQIcon()
+const QIcon& nullQIcon()
 {
     static const QIcon null;
     return null;
 }
 
-static QString cssFlatComboBox(
+QString cssFlatComboBox(
         const QString& urlPixDownArrow,
-        const QString& urlPixDownArrowDisabled)
+        const QString& urlPixDownArrowDisabled
+    )
 {
     const QPalette appPalette = qApp->palette();
     const QString css = QString(
@@ -59,14 +60,14 @@ static QString cssFlatComboBox(
     return css;
 }
 
-static QPixmap invertedPixmap(const QPixmap& pix)
+QPixmap invertedPixmap(const QPixmap& pix)
 {
     QImage img = pix.toImage();
     img.invertPixels();
     return QPixmap::fromImage(img);
 }
 
-static QString iconFileName(Theme::Icon icn)
+QString iconFileName(Theme::Icon icn)
 {
     switch (icn) {
     case Theme::Icon::AddFile: return "add-file.svg";
@@ -112,7 +113,7 @@ static QString iconFileName(Theme::Icon icn)
     case Theme::Icon::XdeAssembly: return "xde-assembly.svg";
     case Theme::Icon::XdeSimpleShape: return "xde-simple-shape.svg";
     }
-    return QString();
+    return {};
 }
 
 class ThemeClassic : public Theme {
@@ -156,7 +157,7 @@ public:
         case Theme::Color::MessageIndicator_ErrorBackground:
             return QColor(225, 127, 127, 140);
         }
-        return QColor();
+        return {};
     }
 
     const QIcon& icon(Icon icn) const override
@@ -226,7 +227,7 @@ public:
         case Theme::Color::MessageIndicator_ErrorBackground:
             return QColor(225, 127, 127, 140);
         }
-        return QColor();
+        return {};
     }
 
     const QIcon& icon(Icon icn) const override
@@ -332,15 +333,15 @@ private:
     std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
 };
 
-} // namespace Internal
+} // namespace
 
 Theme* createTheme(const QString& key)
 {
     if (key == "classic")
-        return new Internal::ThemeClassic;
+        return new ThemeClassic;
 
     if (key == "dark")
-        return new Internal::ThemeDark;
+        return new ThemeDark;
 
     return nullptr;
 }

@@ -22,7 +22,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool hasChildren(const QModelIndex& parent) const override;
     QModelIndex index(int row, int column, const QModelIndex&) const override;
-    QModelIndex parent(const QModelIndex&) const override { return QModelIndex(); }
+    QModelIndex parent(const QModelIndex&) const override { return {}; }
     int rowCount(const QModelIndex& parent) const override;
 
     int columnCount(const QModelIndex& parent) const override;
