@@ -9,9 +9,15 @@
 
 #include <QtGui/QImage>
 #include <QtGui/QPalette>
+#include <QtGui/QPainter>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QProxyStyle>
 #include <QtWidgets/QStyleFactory>
+
+#include <QtCore/QtDebug>
+
+#include <memory>
 #include <unordered_map>
 
 namespace Mayo {
@@ -24,41 +30,60 @@ const QIcon& nullQIcon()
     return null;
 }
 
-QString cssFlatComboBox(
-        const QString& urlPixDownArrow,
-        const QString& urlPixDownArrowDisabled
-    )
-{
-    const QPalette appPalette = qApp->palette();
-    const QString css = QString(
-                R"(
-                QComboBox {
-                    border-style: solid;
-                    background: %1;
-                    padding: 2px 15px 2px 10px;
-                }
-                QComboBox:hover {
-                    border-style: solid;
-                    background: %2;
-                    padding: 2px 15px 2px 10px;
-                }
-                QComboBox::drop-down {
-                    subcontrol-origin: padding;
-                    subcontrol-position: top right;
-                    width: 15px;
-                    border-left-width: 0px;
-                    border-top-right-radius: 3px;
-                    border-bottom-right-radius: 3px;
-                }
-                QComboBox::down-arrow { image: url(%3); }
-                QComboBox::down-arrow:disabled { image: url(%4); }
-                )"
-                ).arg(appPalette.color(QPalette::Window).name(),
-                      appPalette.color(QPalette::Window).darker(110).name(),
-                      urlPixDownArrow,
-                      urlPixDownArrowDisabled);
-    return css;
-}
+// Provides a specific style for "flat" QComboBox behavior
+// This kind of QComboBox is used in toolbar just below Mayo's main  menubar
+class FlatComboBoxStyle : public QProxyStyle {
+public:
+    FlatComboBoxStyle(QStyle* style)
+        : QProxyStyle(style)
+    {
+    }
+
+    void setArrowPixmap(const QPixmap& pixmap)
+    {
+        m_arrowPixmap = pixmap;
+    }
+
+    void drawComplexControl(
+            QStyle::ComplexControl control,
+            const QStyleOptionComplex* option,
+            QPainter* painter,
+            const QWidget* widget
+        ) const override
+    {
+
+        auto opt = qstyleoption_cast<const QStyleOptionComboBox*>(option);
+        if (control != QStyle::CC_ComboBox || !opt) {
+            QProxyStyle::drawComplexControl(control, option, painter, widget);
+            return;
+        }
+
+        if (
+            option->state.testFlag(QStyle::State_Enabled)
+            && option->state.testFlag(QStyle::State_Active)
+            && option->state.testFlag(QStyle::State_MouseOver)
+            )
+        {
+            QStyleOptionToolButton optsBtn;
+            optsBtn.initFrom(widget);
+            optsBtn.features = QStyleOptionToolButton::None;
+            optsBtn.toolButtonStyle = Qt::ToolButtonIconOnly;
+            this->drawPrimitive(QStyle::PE_PanelButtonTool, &optsBtn, painter, widget);
+        }
+
+        const QRect arrowRect = this->subControlRect(QStyle::CC_ComboBox, opt, QStyle::SC_ComboBoxArrow, widget);
+        const QRect arrowPixmapRect(
+            arrowRect.left() + arrowRect.width() / 2 - (m_arrowPixmap.width() / 2),
+            arrowRect.top() + arrowRect.height() / 2 - (m_arrowPixmap.height() / 2),
+            m_arrowPixmap.width(),
+            m_arrowPixmap.height()
+        );
+        painter->drawPixmap(arrowPixmapRect, m_arrowPixmap);
+    }
+
+private:
+    QPixmap m_arrowPixmap;
+};
 
 QPixmap invertedPixmap(const QPixmap& pix)
 {
@@ -173,17 +198,19 @@ public:
             const QString icnFileName = iconFileName(icn);
             m_mapIcon.emplace(icn, QIcon(QPixmap(icnBasePath + icnFileName)));
         }
+
+        m_flatComboBoxStyle.reset(new FlatComboBoxStyle(nullptr));
+        m_flatComboBoxStyle->setArrowPixmap(QPixmap(":/images/themes/classic/indicator-down_8.png"));
     }
 
     void setupHeaderComboBox(QComboBox* cb) override
     {
-        const QString urlDown(":/images/themes/classic/indicator-down_8.png");
-        const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
-        cb->setStyleSheet(cssFlatComboBox(urlDown, urlDownDisabled));
+        cb->setStyle(m_flatComboBoxStyle.get());
     }
 
 private:
     std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
+    std::unique_ptr<FlatComboBoxStyle> m_flatComboBoxStyle;
 };
 
 class ThemeDark : public Theme {
@@ -257,11 +284,15 @@ public:
             m_mapIcon.emplace(icn, pix);
         }
 
-        qApp->setStyle(QStyleFactory::create("Fusion"));
+        auto fusionStyle = QStyleFactory::create("Fusion");
+        qApp->setStyle(fusionStyle);
+        m_flatComboBoxStyle.reset(new FlatComboBoxStyle(fusionStyle));
+        m_flatComboBoxStyle->setArrowPixmap(QPixmap(":/images/themes/dark/indicator-down_8.png"));
+
         QPalette p = qApp->palette();
-        p.setColor(QPalette::Base, QColor(80, 80, 80));
-        p.setColor(QPalette::Window, QColor(37, 37, 37));
-        p.setColor(QPalette::Button, QColor(73, 73, 73));
+        p.setColor(QPalette::Base, QColor(50, 50, 50));   // #323232
+        p.setColor(QPalette::Window, QColor(37, 37, 37)); // #252525
+        p.setColor(QPalette::Button, QColor(73, 73, 73)); // #494949
         p.setColor(QPalette::Text, Qt::white);
         p.setColor(QPalette::ButtonText, Qt::white);
         p.setColor(QPalette::WindowText, Qt::white);
@@ -270,8 +301,8 @@ public:
         p.setColor(QPalette::Link, linkColor);
         p.setColor(QPalette::LinkVisited, linkColor);
 
-        const QColor disabledGray(40, 40, 40);
-        const QColor disabledTextGray(128, 128, 128);
+        const QColor disabledGray(40, 40, 40); // #282828
+        const QColor disabledTextGray(128, 128, 128); // #808080
         p.setColor(QPalette::Disabled, QPalette::Window, disabledGray);
         p.setColor(QPalette::Disabled, QPalette::Base, disabledGray);
         p.setColor(QPalette::Disabled, QPalette::AlternateBase, disabledGray);
@@ -281,7 +312,7 @@ public:
         p.setColor(QPalette::Disabled, QPalette::WindowText, disabledTextGray);
         qApp->setPalette(p);
 
-        const QString css =
+        QString css =
                 R"(
                 QFrame[frameShape="5"] {
                     color: gray;
@@ -290,12 +321,14 @@ public:
                 }
                 QAbstractItemView {
                     show-decoration-selected: 1;
-                    background: #252525;
-                    selection-background-color: #505050;
+                    background: mayo_PaletteWindowColor;
+                    selection-background-color: mayo_MenuItemSelectedColor;
                 }
-                QAbstractItemView::item:hover { background: #383838; }
+                QAbstractItemView::item:hover { background: mayo_MenuItemSelectedColor; }
+                QMenuBar::item:selected { background: mayo_PaletteButtonColor; }
+                QMenuBar::item:pressed { background: mayo_PaletteHighlightColor; }
                 QMenu {
-                    background: #252525;
+                    background: mayo_PaletteBaseColor;
                     border: 1px solid rgb(100,100,100);
                 }
                 QMenu::item:selected { background: rgb(110,110,110); }
@@ -303,34 +336,39 @@ public:
                     background: rgb(110,110,110);
                     height: 1px;
                 }
-                QLineEdit { background: #505050; }
-                QTextEdit { background: #505050; }
-                QSpinBox  { background: #505050; }
-                QDoubleSpinBox { background: #505050; }
+                QLineEdit { background: mayo_PaletteBaseColor; }
+                QTextEdit { background: mayo_PaletteBaseColor; }
+                QSpinBox  { background: mayo_PaletteBaseColor; }
+                QDoubleSpinBox { background: mayo_PaletteBaseColor; }
                 QToolButton:checked { background: #383838; }
                 QToolButton:pressed { background: #383838; }
-                QComboBox { background: #505050; }
                 QGroupBox {
                     border: 1px solid #808080;
                     margin-top: 4ex;
                 }
-                QFileDialog { background: #505050; }
-                QComboBox:editable { background: #505050; }
-                QComboBox:disabled { background: rgb(40,40,40); }
-                QProgressBar { background: #505050; }
+                QFileDialog { background: mayo_PaletteBaseColor; }
+                QComboBox { background: mayo_PaletteButtonColor; }
+                QComboBox:editable { background: mayo_PaletteButtonColor; }
+                QComboBox:disabled { background: mayo_PaletteBaseColor_Disabled; }
+                QProgressBar { background: mayo_PaletteBaseColor; }
                 )";
+        css.replace("mayo_MenuItemSelectedColor", QColor{80, 80, 80}.name());
+        css.replace("mayo_PaletteBaseColor_Disabled", p.color(QPalette::Disabled, QPalette::Base).name());
+        css.replace("mayo_PaletteBaseColor", p.color(QPalette::Base).name());
+        css.replace("mayo_PaletteWindowColor", p.color(QPalette::Window).name());
+        css.replace("mayo_PaletteButtonColor", p.color(QPalette::Button).name());
+        css.replace("mayo_PaletteHighlightColor", p.color(QPalette::Highlight).name());
         qApp->setStyleSheet(css);
     }
 
     void setupHeaderComboBox(QComboBox* cb) override
     {
-        const QString urlDown(":/images/themes/dark/indicator-down_8.png");
-        const QString urlDownDisabled(":/images/themes/classic/indicator-down-disabled_8.png");
-        cb->setStyleSheet(cssFlatComboBox(urlDown, urlDownDisabled));
+        cb->setStyle(m_flatComboBoxStyle.get());
     }
 
 private:
     std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
+    std::unique_ptr<FlatComboBoxStyle> m_flatComboBoxStyle;
 };
 
 } // namespace
