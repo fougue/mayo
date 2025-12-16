@@ -382,12 +382,16 @@ public:
                 QMenuBar::item:pressed { background: mayo_PaletteHighlightColor; }
                 QMenu {
                     background: mayo_PaletteBaseColor;
-                    border: 1px solid rgb(100,100,100);
+                    border: 1px solid mayo_MenuBorderColor;
                 }
                 QMenu::item:selected { background: rgb(110,110,110); }
                 QMenu::separator {
-                    background: rgb(110,110,110);
+                    background: mayo_MenuBorderColor;
                     height: 1px;
+                }
+                QComboBox QAbstractItemView {
+                    background: mayo_PaletteBaseColor;
+                    border: 1px solid mayo_MenuBorderColor;
                 }
                 QLineEdit { background: mayo_PaletteBaseColor; }
                 QTextEdit { background: mayo_PaletteBaseColor; }
@@ -408,6 +412,7 @@ public:
                 QComboBox:disabled { background: mayo_PaletteBaseColor_Disabled; }
                 QProgressBar { background: mayo_PaletteBaseColor; }
                 )";
+        css.replace("mayo_MenuBorderColor", QColor{100, 100, 100}.name());
         css.replace("mayo_MenuItemSelectedColor", QColor{80, 80, 80}.name());
         css.replace("mayo_PaletteBaseColor_Disabled", p.color(QPalette::Disabled, QPalette::Base).name());
         css.replace("mayo_PaletteBaseColor", p.color(QPalette::Base).name());
