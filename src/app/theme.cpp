@@ -17,7 +17,6 @@
 
 #include <QtCore/QtDebug>
 
-#include <memory>
 #include <unordered_map>
 
 namespace Mayo {
@@ -30,11 +29,15 @@ const QIcon& nullQIcon()
     return null;
 }
 
-// Provides a specific style for "flat" QComboBox behavior
-// This kind of QComboBox is used in toolbar just below Mayo's main  menubar
-class FlatComboBoxStyle : public QProxyStyle {
+// Provides a specific style dedicated to Mayo look and feel
+// * One of the special things are the "header" combo boxes. This is the kind of QComboBox object
+//   used in toolbar just below Mayo's main menubar.
+//   These QComboBoxes look as "auto raised" QToolButtons and also the arrow indicator is more
+//   visible
+// * Height of the items in QComboBox popups are a bit enlarged
+class MayoStyle : public QProxyStyle {
 public:
-    FlatComboBoxStyle(QStyle* style)
+    MayoStyle(QStyle* style)
         : QProxyStyle(style)
     {
     }
@@ -45,19 +48,65 @@ public:
     }
 
     void drawComplexControl(
-            QStyle::ComplexControl control,
-            const QStyleOptionComplex* option,
-            QPainter* painter,
-            const QWidget* widget
+            ComplexControl ctrl, const QStyleOptionComplex* opt, QPainter* painter, const QWidget* widget
         ) const override
     {
+        if (ctrl == QStyle::CC_ComboBox && hasHeaderQComboBoxMark(widget))
+            this->drawHeaderQComboBox(opt, painter, widget);
+        else
+            QProxyStyle::drawComplexControl(ctrl, opt, painter, widget);
+    }
 
-        auto opt = qstyleoption_cast<const QStyleOptionComboBox*>(option);
-        if (control != QStyle::CC_ComboBox || !opt) {
-            QProxyStyle::drawComplexControl(control, option, painter, widget);
-            return;
+    QSize sizeFromContents(
+            ContentsType type, const QStyleOption* opt, const QSize& size, const QWidget* widget
+        ) const override
+    {
+        QSize sizeResult = QProxyStyle::sizeFromContents(type, opt, size, widget);
+        if (type == CT_ItemViewItem) {
+            auto comboBox = findQComboBoxParent(widget);
+            if (comboBox) {
+                const double f = hasHeaderQComboBoxMark(comboBox) ? 1.5 : 1.25;
+                sizeResult.setHeight(sizeResult.height() * f);
+            }
         }
 
+        return sizeResult;
+    }
+
+    static void markAsHeaderQComboBox(QComboBox* cb)
+    {
+        cb->setProperty("mayo_isHeaderComboBox", true);
+    }
+
+    static bool hasHeaderQComboBoxMark(const QWidget* widget)
+    {
+        if (widget) {
+            const QVariant v = widget->property("mayo_isHeaderComboBox");
+            return !v.isNull() ? v.toBool() : false;
+        }
+
+        return false;
+    }
+
+private:
+    static QComboBox* findQComboBoxParent(const QWidget* widget)
+    {
+        QWidget* it = widget ? widget->parentWidget() : nullptr;
+        while (it) {
+            auto comboBox = qobject_cast<QComboBox*>(it);
+            if (comboBox)
+                return comboBox;
+            else
+                it = it->parentWidget();
+        }
+
+        return nullptr;
+    }
+
+    void drawHeaderQComboBox(
+            const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget
+        ) const
+    {
         if (
             option->state.testFlag(QStyle::State_Enabled)
             && option->state.testFlag(QStyle::State_Active)
@@ -68,10 +117,13 @@ public:
             optsBtn.initFrom(widget);
             optsBtn.features = QStyleOptionToolButton::None;
             optsBtn.toolButtonStyle = Qt::ToolButtonIconOnly;
+            if (option->state.testFlag(QStyle::State_On))
+                optsBtn.state |= QStyle::State_On;
+
             this->drawPrimitive(QStyle::PE_PanelButtonTool, &optsBtn, painter, widget);
         }
 
-        const QRect arrowRect = this->subControlRect(QStyle::CC_ComboBox, opt, QStyle::SC_ComboBoxArrow, widget);
+        const QRect arrowRect = this->subControlRect(QStyle::CC_ComboBox, option, QStyle::SC_ComboBoxArrow, widget);
         const QRect arrowPixmapRect(
             arrowRect.left() + arrowRect.width() / 2 - (m_arrowPixmap.width() / 2),
             arrowRect.top() + arrowRect.height() / 2 - (m_arrowPixmap.height() / 2),
@@ -81,8 +133,8 @@ public:
         painter->drawPixmap(arrowPixmapRect, m_arrowPixmap);
     }
 
-private:
     QPixmap m_arrowPixmap;
+    QPixmap m_arrowR180Pixmap;
 };
 
 QPixmap invertedPixmap(const QPixmap& pix)
@@ -199,18 +251,18 @@ public:
             m_mapIcon.emplace(icn, QIcon(QPixmap(icnBasePath + icnFileName)));
         }
 
-        m_flatComboBoxStyle.reset(new FlatComboBoxStyle(nullptr));
-        m_flatComboBoxStyle->setArrowPixmap(QPixmap(":/images/themes/classic/indicator-down_8.png"));
+        auto mayoStyle = new MayoStyle(qApp->style());
+        mayoStyle->setArrowPixmap(QPixmap(":/images/themes/classic/indicator-down_8.png"));
+        qApp->setStyle(mayoStyle);
     }
 
     void setupHeaderComboBox(QComboBox* cb) override
     {
-        cb->setStyle(m_flatComboBoxStyle.get());
+        MayoStyle::markAsHeaderQComboBox(cb);
     }
 
 private:
     std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
-    std::unique_ptr<FlatComboBoxStyle> m_flatComboBoxStyle;
 };
 
 class ThemeDark : public Theme {
@@ -284,10 +336,10 @@ public:
             m_mapIcon.emplace(icn, pix);
         }
 
-        auto fusionStyle = QStyleFactory::create("Fusion");
-        qApp->setStyle(fusionStyle);
-        m_flatComboBoxStyle.reset(new FlatComboBoxStyle(fusionStyle));
-        m_flatComboBoxStyle->setArrowPixmap(QPixmap(":/images/themes/dark/indicator-down_8.png"));
+        auto mayoStyle = new MayoStyle(QStyleFactory::create("Fusion"));
+        mayoStyle->setArrowPixmap(QPixmap(":/images/themes/dark/indicator-down_8.png"));
+        qApp->setStyle(mayoStyle);
+        qApp->setEffectEnabled(Qt::UI_AnimateCombo, false);
 
         QPalette p = qApp->palette();
         p.setColor(QPalette::Base, QColor(50, 50, 50));   // #323232
@@ -296,6 +348,7 @@ public:
         p.setColor(QPalette::Text, Qt::white);
         p.setColor(QPalette::ButtonText, Qt::white);
         p.setColor(QPalette::WindowText, Qt::white);
+        p.setColor(QPalette::PlaceholderText, p.color(QPalette::Text).darker());
         p.setColor(QPalette::HighlightedText, Qt::white);
         const QColor linkColor(115, 131, 191);
         p.setColor(QPalette::Link, linkColor);
@@ -329,12 +382,16 @@ public:
                 QMenuBar::item:pressed { background: mayo_PaletteHighlightColor; }
                 QMenu {
                     background: mayo_PaletteBaseColor;
-                    border: 1px solid rgb(100,100,100);
+                    border: 1px solid mayo_MenuBorderColor;
                 }
                 QMenu::item:selected { background: rgb(110,110,110); }
                 QMenu::separator {
-                    background: rgb(110,110,110);
+                    background: mayo_MenuBorderColor;
                     height: 1px;
+                }
+                QComboBox QAbstractItemView {
+                    background: mayo_PaletteBaseColor;
+                    border: 1px solid mayo_MenuBorderColor;
                 }
                 QLineEdit { background: mayo_PaletteBaseColor; }
                 QTextEdit { background: mayo_PaletteBaseColor; }
@@ -347,11 +404,15 @@ public:
                     margin-top: 4ex;
                 }
                 QFileDialog { background: mayo_PaletteBaseColor; }
-                QComboBox { background: mayo_PaletteButtonColor; }
+                QComboBox {
+                    background: mayo_PaletteButtonColor;
+                    combobox-popup: 0;  /* This avoids the popup to hide the combo box with Fusion style */
+                }
                 QComboBox:editable { background: mayo_PaletteButtonColor; }
                 QComboBox:disabled { background: mayo_PaletteBaseColor_Disabled; }
                 QProgressBar { background: mayo_PaletteBaseColor; }
                 )";
+        css.replace("mayo_MenuBorderColor", QColor{100, 100, 100}.name());
         css.replace("mayo_MenuItemSelectedColor", QColor{80, 80, 80}.name());
         css.replace("mayo_PaletteBaseColor_Disabled", p.color(QPalette::Disabled, QPalette::Base).name());
         css.replace("mayo_PaletteBaseColor", p.color(QPalette::Base).name());
@@ -363,12 +424,11 @@ public:
 
     void setupHeaderComboBox(QComboBox* cb) override
     {
-        cb->setStyle(m_flatComboBoxStyle.get());
+        MayoStyle::markAsHeaderQComboBox(cb);
     }
 
 private:
     std::unordered_map<Theme::Icon, QIcon> m_mapIcon;
-    std::unique_ptr<FlatComboBoxStyle> m_flatComboBoxStyle;
 };
 
 } // namespace
