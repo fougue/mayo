@@ -13,6 +13,8 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QProxyStyle>
+#include <QtWidgets/QSplitter>
+#include <QtWidgets/QSplitterHandle>
 #include <QtWidgets/QStyleFactory>
 
 #include <QtCore/QtDebug>
@@ -42,9 +44,24 @@ public:
     {
     }
 
-    void setArrowPixmap(const QPixmap& pixmap)
+    void setQComboBoxArrowPixmap(const QPixmap& pixmap)
     {
-        m_arrowPixmap = pixmap;
+        m_qComboBoxArrowPixmap = pixmap;
+    }
+
+    void setQSplitterHighlightColor(const QColor& c)
+    {
+        m_qSplitterHighlightColor = c;
+    }
+
+    void drawControl(
+            ControlElement elm, const QStyleOption* opt, QPainter* painter, const QWidget* widget
+        ) const override
+    {
+        if (elm == QStyle::CE_Splitter)
+            this->drawQSplitter(elm, opt, painter, widget);
+        else
+            QProxyStyle::drawControl(elm, opt, painter, widget);
     }
 
     void drawComplexControl(
@@ -71,6 +88,15 @@ public:
         }
 
         return sizeResult;
+    }
+
+    void polish(QWidget* widget) override
+    {
+        QProxyStyle::polish(widget);
+        if (qobject_cast<QSplitter*>(widget) || qobject_cast<QSplitterHandle*>(widget)) {
+            widget->setMouseTracking(true);
+            widget->setAttribute(Qt::WA_Hover, true);
+        }
     }
 
     static void markAsHeaderQComboBox(QComboBox* cb)
@@ -103,6 +129,15 @@ private:
         return nullptr;
     }
 
+    void drawQSplitter(
+            ControlElement elm, const QStyleOption* opt, QPainter* painter, const QWidget* widget
+        ) const
+    {
+        QProxyStyle::drawControl(elm, opt, painter, widget);
+        if (opt && opt->state.testFlag(QStyle::State_MouseOver) && m_qSplitterHighlightColor.isValid())
+            painter->fillRect(opt->rect, m_qSplitterHighlightColor);
+    }
+
     void drawHeaderQComboBox(
             const QStyleOptionComplex* option, QPainter* painter, const QWidget* widget
         ) const
@@ -125,17 +160,24 @@ private:
 
         const QRect arrowRect = this->subControlRect(QStyle::CC_ComboBox, option, QStyle::SC_ComboBoxArrow, widget);
         const QRect arrowPixmapRect(
-            arrowRect.left() + arrowRect.width() / 2 - (m_arrowPixmap.width() / 2),
-            arrowRect.top() + arrowRect.height() / 2 - (m_arrowPixmap.height() / 2),
-            m_arrowPixmap.width(),
-            m_arrowPixmap.height()
+            arrowRect.left() + arrowRect.width() / 2 - (m_qComboBoxArrowPixmap.width() / 2),
+            arrowRect.top() + arrowRect.height() / 2 - (m_qComboBoxArrowPixmap.height() / 2),
+            m_qComboBoxArrowPixmap.width(),
+            m_qComboBoxArrowPixmap.height()
         );
-        painter->drawPixmap(arrowPixmapRect, m_arrowPixmap);
+        painter->drawPixmap(arrowPixmapRect, m_qComboBoxArrowPixmap);
     }
 
-    QPixmap m_arrowPixmap;
-    QPixmap m_arrowR180Pixmap;
+    QPixmap m_qComboBoxArrowPixmap;
+    QColor m_qSplitterHighlightColor;
 };
+
+QColor alphaChanged(const QColor& c, int alpha)
+{
+    QColor n = c;
+    n.setAlpha(alpha);
+    return n;
+}
 
 QPixmap invertedPixmap(const QPixmap& pix)
 {
@@ -252,7 +294,9 @@ public:
         }
 
         auto mayoStyle = new MayoStyle(qApp->style());
-        mayoStyle->setArrowPixmap(QPixmap(":/images/themes/classic/indicator-down_8.png"));
+        mayoStyle->setQComboBoxArrowPixmap(QPixmap(":/images/themes/classic/indicator-down_8.png"));
+        const QColor windowColor = qApp->palette().color(QPalette::Window);
+        mayoStyle->setQSplitterHighlightColor(alphaChanged(windowColor.darker(120), 150));
         qApp->setStyle(mayoStyle);
     }
 
@@ -336,11 +380,6 @@ public:
             m_mapIcon.emplace(icn, pix);
         }
 
-        auto mayoStyle = new MayoStyle(QStyleFactory::create("Fusion"));
-        mayoStyle->setArrowPixmap(QPixmap(":/images/themes/dark/indicator-down_8.png"));
-        qApp->setStyle(mayoStyle);
-        qApp->setEffectEnabled(Qt::UI_AnimateCombo, false);
-
         QPalette p = qApp->palette();
         p.setColor(QPalette::Base, QColor(50, 50, 50));   // #323232
         p.setColor(QPalette::Window, QColor(37, 37, 37)); // #252525
@@ -420,6 +459,13 @@ public:
         css.replace("mayo_PaletteButtonColor", p.color(QPalette::Button).name());
         css.replace("mayo_PaletteHighlightColor", p.color(QPalette::Highlight).name());
         qApp->setStyleSheet(css);
+
+        // Set style
+        auto mayoStyle = new MayoStyle(QStyleFactory::create("Fusion"));
+        mayoStyle->setQComboBoxArrowPixmap(QPixmap(":/images/themes/dark/indicator-down_8.png"));
+        mayoStyle->setQSplitterHighlightColor(alphaChanged(p.color(QPalette::Button), 150));
+        qApp->setStyle(mayoStyle);
+        qApp->setEffectEnabled(Qt::UI_AnimateCombo, false);
     }
 
     void setupHeaderComboBox(QComboBox* cb) override
