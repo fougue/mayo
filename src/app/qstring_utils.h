@@ -32,14 +32,14 @@ public:
     static QString text(const gp_Pnt& pos, const TextOptions& opt);
     static QString text(const gp_Dir& pos, const TextOptions& opt);
     static QString text(const gp_Trsf& trsf, const TextOptions& opt);
-    static QString text(const Quantity_Color& color, const QString& format = "RGB(%1, %2 %3)");
+    static QString text(const Quantity_Color& color, const QString& format = "RGB(%1, %2, %3)");
 
-    static QString bytesText(uint64_t sizeBytes, const QLocale& locale = QLocale());
+    static QString bytesText(uint64_t sizeBytes, const QLocale& locale = {});
 
     static QString yesNoText(bool on);
     static QString yesNoText(CheckState state);
 
-    static void append(QString* dst, const QString& str, const QLocale& locale = QLocale());
+    static void append(QString* dst, const QString& str, const QLocale& locale = {});
 };
 
 } // namespace Mayo
