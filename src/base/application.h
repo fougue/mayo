@@ -46,6 +46,13 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
+    // Option to automatically expand compound shapes to assemblies
+    // If ON this expansion happens for each entity added with Document::addEntityTreeNode() or
+    // Document::addEntityTreeNodeSequence()
+    // Changing this option doesn't affect any existing entity already added
+    bool autoExpandCompoundToAssembly() const;
+    void setAutoExpandCompoundToAssembly(bool on);
+
     static void defineMayoFormat(const ApplicationPtr& app);
 
     static Span<const char*> envOpenCascadeOptions();

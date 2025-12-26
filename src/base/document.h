@@ -92,6 +92,7 @@ private:
     void setIdentifier(Identifier ident) { m_identifier = ident; }
     TreeNodeId findEntity(const TDF_Label& label) const;
     bool containsLabel(const TDF_Label& label) const;
+    void deepExpandCompounds(const TDF_Label& label);
 
     ApplicationPtr m_app;
     Identifier m_identifier = -1;

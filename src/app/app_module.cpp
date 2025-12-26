@@ -96,6 +96,10 @@ AppModule::AppModule()
 
     m_settings->setPropertyValueConversion(this);
     Application::defineMayoFormat(m_application);
+    m_settings->signalPropertyChanged.connectSlot([=](const Property* prop){
+        if (prop == &m_props.autoExpandCompoundToAssembly)
+            m_application->setAutoExpandCompoundToAssembly(m_props.autoExpandCompoundToAssembly);
+    });
 }
 
 QStringUtils::TextOptions AppModule::defaultTextOptions() const

@@ -39,6 +39,8 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
       groupId_application(settings->addGroup(textId("application"))),
       groupId_meshing(settings->addGroup(textId("meshing"))),
       groupId_graphics(settings->addGroup(textId("graphics"))),
+      groupId_import(settings->addGroup(textId("import"))),
+      groupId_export(settings->addGroup(textId("export"))),
       language(this, textId("language"), &AppModule::languages()),
       viewCubeCorner(this, textId("viewCubeCorner"), &cornerEnumeration()),
       m_settings(settings)
@@ -95,6 +97,9 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->meshDefaultsShowEdges, sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowNodes, sectionId_graphicsMeshDefaults);
 
+    // Import
+    settings->addSetting(&this->autoExpandCompoundToAssembly, groupId_import);
+
     // Register reset functions
     settings->addResetFunction(sectionId_systemUnits, [=]{
         this->unitSystemDecimals.setValue(2);
@@ -139,14 +144,16 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->meshDefaultsShowEdges.setValue(meshDefaults.showEdges);
         this->meshDefaultsShowNodes.setValue(meshDefaults.showNodes);
     });
+    settings->addResetFunction(groupId_import, [=]{
+        this->autoExpandCompoundToAssembly.setValue(true);
+    });
 }
 
 void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
 {
     // Import
-    const auto groupId_Import = m_settings->addGroup(textId("import"));
     for (IO::Format format : ioSystem->readerFormats()) {
-        auto sectionId_format = m_settings->addSection(groupId_Import, IO::formatIdentifier(format));
+        auto sectionId_format = m_settings->addSection(groupId_import, IO::formatIdentifier(format));
         const IO::FactoryReader* factory = ioSystem->findFactoryReader(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, m_settings);
         if (ptrGroup) {
@@ -161,9 +168,8 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
     }
 
     // Export
-    const auto groupId_Export = m_settings->addGroup(textId("export"));
     for (IO::Format format : ioSystem->writerFormats()) {
-        auto sectionId_format = m_settings->addSection(groupId_Export, IO::formatIdentifier(format));
+        auto sectionId_format = m_settings->addSection(groupId_export, IO::formatIdentifier(format));
         const IO::FactoryWriter* factory = ioSystem->findFactoryWriter(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, m_settings);
         if (ptrGroup) {
@@ -252,6 +258,12 @@ void AppModuleProperties::retranslate()
     );
     this->clipPlanesCappingHatchOn.setDescription(
         textIdTr("Enable capping hatch texture of currently clipped graphics")
+    );
+
+    // Import
+    this->autoExpandCompoundToAssembly.setDescription(
+        textIdTr("Automatically expand compound shapes to assemblies. For some input models this "
+                 "allows 3D exploding")
     );
 }
 

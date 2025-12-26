@@ -13,6 +13,7 @@
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_Editor.hxx>
 
 #include <unordered_set>
 
@@ -161,10 +162,17 @@ bool Document::containsLabel(const TDF_Label& label) const
     return Document::findFrom(label).get() == this;
 }
 
+void Document::deepExpandCompounds(const TDF_Label& label)
+{
+    if (m_app && m_app->autoExpandCompoundToAssembly())
+        XCAFDoc_Editor::Expand(this->Main(), label, true);
+}
+
 void Document::addEntityTreeNode(const TDF_Label& label)
 {
     // TODO Allow custom population of the model tree for the new entity
     if (this->containsLabel(label) && this->findEntity(label) == 0) {
+        this->deepExpandCompounds(label);
         const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
         this->signalEntityAdded.send(nodeId);
     }
@@ -176,6 +184,7 @@ void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
     vecTreeNodeId.reserve(seqLabel.Size());
     for (const TDF_Label& label : seqLabel) {
         if (this->containsLabel(label) && this->findEntity(label) == 0) {
+            this->deepExpandCompounds(label);
             const TreeNodeId treeNodeId = m_xcaf.deepBuildAssemblyTree(0, label);
             vecTreeNodeId.push_back(treeNodeId);
         }

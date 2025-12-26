@@ -50,6 +50,7 @@ private:
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+    bool m_autoExpandCompoundToAssembly = true;
 };
 
 struct ApplicationI18N {
@@ -141,6 +142,16 @@ void Application::closeDocument(const DocumentPtr& doc)
     doc->signalEntityAboutToBeDestroyed.disconnectAll();
     this->signalDocumentClosed.send(doc);
     //doc->Main().ForgetAllAttributes(true/*clearChildren*/);
+}
+
+bool Application::autoExpandCompoundToAssembly() const
+{
+    return d->m_autoExpandCompoundToAssembly;
+}
+
+void Application::setAutoExpandCompoundToAssembly(bool on)
+{
+    d->m_autoExpandCompoundToAssembly = on;
 }
 
 void Application::defineMayoFormat(const ApplicationPtr& app)
