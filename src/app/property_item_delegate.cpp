@@ -13,6 +13,7 @@
 #include "qmeta_property.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 
 #include <QtCore/QDir>
@@ -150,7 +151,8 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
 
 static QString propertyValueText(
         const BasePropertyQuantity* prop,
-        const PropertyItemDelegate::UnitTranslation& unitTr)
+        const PropertyItemDelegate::UnitTranslation& unitTr
+    )
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return PropertyItemDelegate::tr("%1%2")
@@ -171,7 +173,8 @@ void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEdi
 }
 
 bool PropertyItemDelegate::overridePropertyUnitTranslation(
-        const BasePropertyQuantity* prop, PropertyItemDelegate::UnitTranslation unitTr)
+        const BasePropertyQuantity* prop, PropertyItemDelegate::UnitTranslation unitTr
+    )
 {
     if (!prop || prop->quantityUnit() != unitTr.unit)
         return false;
@@ -181,7 +184,8 @@ bool PropertyItemDelegate::overridePropertyUnitTranslation(
 }
 
 void PropertyItemDelegate::paint(
-        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+    ) const
 {
     bool cellPainted = false;
     if (index.column() == 1) {
@@ -191,26 +195,21 @@ void PropertyItemDelegate::paint(
             painter->save();
 
             QApplication::style()->drawPrimitive(
-                QStyle::PE_PanelItemViewItem,
-                &option,
-                painter,
-                option.widget
+                QStyle::PE_PanelItemViewItem, &option, painter, option.widget
             );
 
             const QColor color = QtGuiUtils::toQColor(propColor->value());
             const QPixmap pixColor = IPropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
             painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
-            const QString strColor = propertyValueText(propColor);
 
-            QRect labelRect = option.rect;
-            labelRect.setX(option.rect.x() + pixColor.width() + 6);
+            const QString strColor = propertyValueText(propColor);
+            const QRect labelRect = option.rect.adjusted(pixColor.width() + 6, 0, 0, 0);
+            const Qt::Alignment itemAlignement =
+                QtWidgetsUtils::textLeadingAlignment(option.direction, option.widget, &option.locale)
+                | Qt::AlignVCenter;
+            const bool isItemEnabled = option.state.testFlag(QStyle::State_Enabled);
             QApplication::style()->drawItemText(
-                painter,
-                labelRect,
-                Qt::AlignLeft | Qt::AlignVCenter,
-                option.palette,
-                option.state.testFlag(QStyle::State_Enabled),
-                strColor
+                painter, labelRect, itemAlignement, option.palette, isItemEnabled, strColor
             );
 
             painter->restore();
@@ -291,11 +290,12 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
         return tr("ERROR no stringifier for property type '%1'").arg(propTypeName);
     }
 
-    return QString();
+    return {};
 }
 
 QWidget* PropertyItemDelegate::createEditor(
-        QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index) const
+        QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index
+    ) const
 {
     if (index.column() == 0)
         return nullptr;
