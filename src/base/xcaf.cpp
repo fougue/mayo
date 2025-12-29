@@ -372,12 +372,6 @@ TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& l
         const TDF_Label referred = XCaf::shapeReferred(label);
         this->deepBuildAssemblyTree(node, referred);
     }
-#if 0
-    else if (XCaf::isShapeSimple(label)) {
-        for (const TDF_Label& child : XCaf::shapeSubs(label))
-            this->deepBuildAssemblyTree(node, child);
-    }
-#endif
 
     return node;
 }

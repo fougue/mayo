@@ -57,6 +57,8 @@ public:
     const Settings::GroupIndex groupId_application;
     const Settings::GroupIndex groupId_meshing;
     const Settings::GroupIndex groupId_graphics;
+    const Settings::GroupIndex groupId_import;
+    const Settings::GroupIndex groupId_export;
 
     // System
     PropertyInt unitSystemDecimals{ this, textId("decimalCount") };
@@ -91,6 +93,8 @@ public:
     PropertyEnumeration meshDefaultsMaterial{ this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial() };
     PropertyBool meshDefaultsShowEdges{ this, textId("showEgesOn") };
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
+    // Import
+    PropertyBool autoExpandCompoundToAssembly{ this, textId("autoExpandCompoundToAssembly") };
 
 protected:
     // -- from PropertyGroup
