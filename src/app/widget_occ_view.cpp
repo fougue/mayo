@@ -10,13 +10,13 @@
 #endif
 
 #include "../base/occ_handle.h"
-#include "widget_occ_view.h"
+#include "../graphics/graphics_utils.h"
 #include "occt_window.h"
+#include "qtopengl_utils.h"
+#include "widget_occ_view.h"
 
 #include <QtGui/QResizeEvent>
-#if OCC_VERSION_HEX >= 0x070600
-#  include <Aspect_NeutralWindow.hxx>
-#endif
+#include <OpenGl_GraphicDriver.hxx>
 
 namespace Mayo {
 
@@ -41,58 +41,19 @@ IWidgetOccView* IWidgetOccView::create(const OccHandle<V3d_View>& view, QWidget*
 
 #if OCC_VERSION_HEX >= 0x070600
 
-// Defined in widget_occ_view.cpp
-bool QOpenGLWidgetOccView_isCoreProfile();
-void QOpenGLWidgetOccView_createOpenGlContext(std::function<void(Aspect_RenderingContext)> fnCallback);
+// Defined in widget_occ_view_impl.cpp
 OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver();
-bool QOpenGLWidgetOccView_wrapFrameBuffer(const OccHandle<Graphic3d_GraphicDriver>&);
-Graphic3d_Vec2i QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(const OccHandle<Graphic3d_GraphicDriver>&);
-
-
-static OccHandle<Aspect_NeutralWindow> createNativeWindow([[maybe_unused]] QWidget* widget)
-{
-    auto window = new Aspect_NeutralWindow;
-    // On non-Windows systems Aspect_Drawable is aliased to 'unsigned long' so can't init with nullptr
-    Aspect_Drawable nativeWin = 0;
-#ifdef Q_OS_WIN
-    HDC  wglDevCtx = wglGetCurrentDC();
-    HWND wglWin = WindowFromDC(wglDevCtx);
-    nativeWin = (Aspect_Drawable)wglWin;
-#else
-    nativeWin = (Aspect_Drawable)widget->winId();
-#endif
-    window->SetNativeHandle(nativeWin);
-    return window;
-}
 
 QOpenGLWidgetOccView::QOpenGLWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent)
     : QOpenGLWidget(parent),
       IWidgetOccView(view)
 {
+    this->setAttribute(Qt::WA_AcceptTouchEvents);
     this->setMouseTracking(true);
     this->setBackgroundRole(QPalette::NoRole);
 
     this->setUpdatesEnabled(true);
     this->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
-
-    QSurfaceFormat glFormat;
-    glFormat.setDepthBufferSize(24);
-    glFormat.setStencilBufferSize(8);
-    if (QOpenGLWidgetOccView_isCoreProfile())
-        glFormat.setVersion(4, 5);
-
-    glFormat.setProfile(
-                QOpenGLWidgetOccView_isCoreProfile() ?
-                    QSurfaceFormat::CoreProfile :
-                    QSurfaceFormat::CompatibilityProfile
-    );
-    // Use QtOccFrameBuffer fallback
-    // To request sRGBColorSpace colorspace to meet OCCT expectations then consider code below:
-    // #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    //     glFormat.setColorSpace(QSurfaceFormat::sRGBColorSpace);
-    //     this->setTextureFormat(GL_SRGB8_ALPHA8);
-    // #endif
-    this->setFormat(glFormat);
 }
 
 void QOpenGLWidgetOccView::redraw()
@@ -112,16 +73,20 @@ OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView::createCompatibleGraphic
 
 void QOpenGLWidgetOccView::initializeGL()
 {
+    auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(this->v3dView()->Viewer()->Driver());
+    QtOpenGlUtils::setCapsFromSurfaceFormat(driver->ChangeOptions(), this->format());
+
+    auto nativeWin = (Aspect_Drawable)this->effectiveWinId();
     const QRect wrect = this->rect();
     const Graphic3d_Vec2i viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
-    QOpenGLWidgetOccView_createOpenGlContext([=](Aspect_RenderingContext context) {
-        auto window = OccHandle<Aspect_NeutralWindow>::DownCast(this->v3dView()->Window());
-        if (!window)
-            window = createNativeWindow(this);
 
-        window->SetSize(viewSize.x(), viewSize.y());
-        this->v3dView()->SetWindow(window, context);
-    });
+    if (!QtOpenGlUtils::initializeGlWindow(this->v3dView(), nativeWin, viewSize, this->devicePixelRatioF())) {
+        Message::SendFail() << "OpenGl_Context is unable to wrap OpenGL context";
+        return;
+    }
+
+    // Restore Qt framebuffer
+    this->makeCurrent();
 }
 
 void QOpenGLWidgetOccView::paintGL()
@@ -129,23 +94,34 @@ void QOpenGLWidgetOccView::paintGL()
     if (!this->v3dView()->Window())
         return;
 
-    const OccHandle<Graphic3d_GraphicDriver>& driver = this->v3dView()->Viewer()->Driver();
-    if (!QOpenGLWidgetOccView_wrapFrameBuffer(driver))
-        return;
-
-    Graphic3d_Vec2i viewSizeOld;
-    const Graphic3d_Vec2i viewSizeNew = QOpenGLWidgetOccView_getDefaultframeBufferViewportSize(driver);
-    auto window = OccHandle<Aspect_NeutralWindow>::DownCast(this->v3dView()->Window());
-    window->Size(viewSizeOld.x(), viewSizeOld.y());
-    if (viewSizeNew != viewSizeOld) {
-        window->SetSize(viewSizeNew.x(), viewSizeNew.y());
-        this->v3dView()->MustBeResized();
-        this->v3dView()->Invalidate();
+    const double devPixelRatioOld = this->v3dView()->Window()->DevicePixelRatio();
+    auto nativeWin = (Aspect_Drawable)this->effectiveWinId();
+    if (this->v3dView()->Window()->NativeHandle() != QtOpenGlUtils::glNativeWindow(nativeWin)) {
+        // Workaround window recreation done by Qt on monitor (QScreen) disconnection
+        Message::SendWarning() << "Native window handle has changed by QOpenGLWidget!";
+        this->initializeGL();
+    }
+    else if (this->devicePixelRatioF() != devPixelRatioOld) {
+        this->initializeGL();
     }
 
-    // Redraw the viewer
-    //this->v3dView()->InvalidateImmediate();
+    // Wrap FBO created by QOpenGLFramebufferObject
+    if (!QtOpenGlUtils::initializeGlFramebufferObject(this->v3dView())) {
+        Message::SendWarning() << "Default FBO wrapper creation failed";
+        return;
+    }
+
+    // Reset global GL state from Qt before redrawing OCCT
+    QtOpenGlUtils::resetGlStateBeforeOcct(this->v3dView());
+
+    // Flush pending input events and redraw the viewer
+    //Handle(V3d_View) aView = !myFocusView.IsNull() ? myFocusView : myView;
+    //aView->InvalidateImmediate();
+    //AIS_ViewController::FlushViewEvents(myContext, aView, true);
     this->v3dView()->Redraw();
+
+    // Reset global GL state after OCCT before redrawing Qt
+    QtOpenGlUtils::resetGlStateAfterOcct(this->v3dView());
 }
 
 #endif // OCC_VERSION_HEX >= 0x070600

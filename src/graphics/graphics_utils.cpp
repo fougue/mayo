@@ -207,22 +207,22 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObje
 
 int GraphicsUtils::AspectWindow_width(const OccHandle<Aspect_Window>& wnd)
 {
-    if (wnd.IsNull())
-        return 0;
-
-    int w, h;
-    wnd->Size(w, h);
-    return w;
+    return AspectWindow_size(wnd).x();
 }
 
 int GraphicsUtils::AspectWindow_height(const OccHandle<Aspect_Window>& wnd)
 {
-    if (wnd.IsNull())
-        return 0;
+    return AspectWindow_size(wnd).y();
+}
 
-    int w, h;
-    wnd->Size(w, h);
-    return h;
+Graphic3d_Vec2i GraphicsUtils::AspectWindow_size(const OccHandle<Aspect_Window>& wnd)
+{
+    if (wnd.IsNull())
+        return {};
+
+    Graphic3d_Vec2i size;
+    wnd->Size(size.x(), size.y());
+    return size;
 }
 
 OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_create()
@@ -235,7 +235,8 @@ OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_creat
 }
 
 void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(
-        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch)
+        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch
+    )
 {
     if (hatch == Aspect_HS_SOLID)
         plane->SetCappingHatchOff();

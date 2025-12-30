@@ -1,0 +1,52 @@
+/****************************************************************************
+** Copyright (c) 2025, Fougue Ltd. <https://www.fougue.pro>
+** All rights reserved.
+** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+****************************************************************************/
+
+#pragma once
+
+#include "../base/occ_handle.h"
+
+#include <QtGui/QSurfaceFormat>
+
+#include <Aspect_Drawable.hxx>
+#include <Graphic3d_Vec2.hxx>
+#include <OpenGl_Context.hxx>
+#include <V3d_View.hxx>
+class OpenGl_Caps;
+
+namespace Mayo::QtOpenGlUtils {
+
+// Perform global Qt platform setup - to be called before QCoreApplication creation
+// Defines platform plugin to load(eg xcb on Linux) and graphic driver(eg desktop OpenGL with
+// desired profile/surface).
+void platformSetup(int argc, char* argv[]);
+
+// Define default Qt surface format for GL context
+QSurfaceFormat surfaceFormat(QSurfaceFormat::OpenGLContextProfile profile, bool debug = false);
+
+// OpenCascade GL caps from Qt surface format
+void setCapsFromSurfaceFormat(OpenGl_Caps& caps, const QSurfaceFormat& format);
+
+
+// Cleanup up global GL state after Qt before redrawing OpenCascade view
+void resetGlStateBeforeOcct(const OccHandle<V3d_View>& view);
+
+// Cleanup up global GL state after OCCT before redrawing Qt
+void resetGlStateAfterOcct(const OccHandle<V3d_View>& view);
+
+// Initialize native window for OpenCascade view
+bool initializeGlWindow(
+    const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const Graphic3d_Vec2i& size, double pixelRatio
+);
+
+// Wrap FBO created by QOpenGLFramebufferObject to OpenCascade viewe target
+bool initializeGlFramebufferObject(const OccHandle<V3d_View>& view);
+
+// Return active native window bound to OpenGL context
+Aspect_Drawable glNativeWindow(Aspect_Drawable nativeWin);
+
+OccHandle<OpenGl_Context> glContext(const OccHandle<V3d_View>& view);
+
+} // namespace Mayo::QtOpenGlUtils

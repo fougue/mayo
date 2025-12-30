@@ -31,6 +31,7 @@
 #include "document_tree_node_properties_providers.h"
 #include "mainwindow.h"
 #include "qtgui_utils.h"
+#include "qtopengl_utils.h"
 #include "theme.h"
 #include "widget_model_tree.h"
 #include "widget_model_tree_builder_mesh.h"
@@ -445,36 +446,8 @@ int main(int argc, char* argv[])
 {
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
 
-    // Helper function to check if application arguments contain any option listed in 'listOption'
-    // IMPORTANT: capture by reference, because QApplication constructor may alter argc(due to
-    //            parsing of arguments)
-    auto fnArgsContainAnyOf = [&](std::initializer_list<const char*> listOption) {
-        for (int i = 1; i < argc; ++i) {
-            for (const char* option : listOption) {
-                if (std::strcmp(argv[i], option) == 0)
-                    return true;
-            }
-        }
-        return false;
-    };
+    Mayo::QtOpenGlUtils::platformSetup(argc, argv);
 
-    // OpenCascade TKOpenGl depends on XLib for Linux(excepting Android) and BSD systems(excepting macOS)
-    // See for example implementation of Aspect_DisplayConnection where XLib is explicitly used
-    // On systems running eg Wayland this would cause problems(see https://github.com/fougue/mayo/issues/178)
-    // As a workaround the Qt platform is forced to xcb
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || (defined(Q_OS_BSD4) && !defined(Q_OS_MACOS))
-    if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") && !fnArgsContainAnyOf({ "-platform" }))
-        qputenv("QT_QPA_PLATFORM", "xcb");
-#elif defined(Q_OS_HAIKU)
-    if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") && !fnArgsContainAnyOf({ "-platform" }))
-        qputenv("QT_QPA_PLATFORM", "haiku");
-#endif
-
-    // Configure and create Qt application object
-#if defined(Q_OS_WIN)
-    // Never use ANGLE on Windows, since OCCT 3D Viewer does not expect this
-    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-#endif
     QCoreApplication::setOrganizationName("Fougue Ltd");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");

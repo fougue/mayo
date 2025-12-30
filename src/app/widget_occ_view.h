@@ -43,6 +43,8 @@ private:
 };
 
 #if OCC_VERSION_HEX >= 0x070600
+// Provides OpenCascade view that reuses OpenGL context created by QOpenGLWidget
+// Widgets on top will be blended by Qt naturally
 // Integration of OpenCascade 7.6 with QOpenGLWidget allows widgets with translucid background to be
 // correctly displayed over V3d_View
 // QOpenGLWidgetOccView implementation is based on https://github.com/gkv311/occt-samples-qopenglwidget
