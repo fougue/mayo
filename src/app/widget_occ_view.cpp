@@ -20,6 +20,12 @@
 
 namespace Mayo {
 
+static void enableMsaa4x(const OccHandle<V3d_View>& view)
+{
+    if (view->Viewer()->Driver()->InquireLimit(Graphic3d_TypeOfLimit_MaxMsaa) >= 4)
+        view->ChangeRenderingParams().NbMsaaSamples = 4;
+}
+
 static IWidgetOccView::Creator& getWidgetOccViewCreator()
 {
     static IWidgetOccView::Creator fn = [](const OccHandle<V3d_View>& view, QWidget* parent) {
@@ -84,6 +90,14 @@ void QOpenGLWidgetOccView::initializeGL()
         Message::SendFail() << "OpenGl_Context is unable to wrap OpenGL context";
         return;
     }
+
+    // NOTE
+    // OpenCascade's MSAA path uses multisample textures and GLSL "sampler2DMS" which require either
+    // OpenGL 3.2(GLSL 1.50) or the extension GL_ARB_texture_multisample. Without these, the Fragment
+    // Shader[occt_blit_msaa4_gamma] fails to compile causing FBO blit errors.
+    // Therefore MSAA is enabled only when GL >= 3.2 is available
+    if (driver->GetSharedContext()->IsGlGreaterEqual(3, 2))
+        enableMsaa4x(this->v3dView());
 
     // Restore Qt framebuffer
     this->makeCurrent();
@@ -166,6 +180,7 @@ void QWidgetOccView::showEvent(QShowEvent*)
             hWnd->Map();
 
         this->v3dView()->MustBeResized();
+        enableMsaa4x(this->v3dView());
     }
 }
 
