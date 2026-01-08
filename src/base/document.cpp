@@ -12,6 +12,7 @@
 
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
+#include <TopExp_Explorer.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_Editor.hxx>
 
@@ -164,8 +165,26 @@ bool Document::containsLabel(const TDF_Label& label) const
 
 void Document::deepExpandCompounds(const TDF_Label& label)
 {
-    if (m_app && m_app->autoExpandCompoundToAssembly())
-        XCAFDoc_Editor::Expand(this->Main(), label, true);
+    if (!m_app || !m_app->autoExpandCompoundToAssembly())
+        return;
+
+    if (XCaf::isShapeAssembly(label)) {
+        for (const TDF_Label& child : XCaf::shapeComponents(label))
+            this->deepExpandCompounds(child);
+    }
+    else if (XCaf::isShapeReference(label)) {
+        const TDF_Label referred = XCaf::shapeReferred(label);
+        this->deepExpandCompounds(referred);
+    }
+    else if (XCaf::isShape(label) && XCaf::isShapeSimple(label)) {
+        const TopoDS_Shape shape = XCaf::shape(label);
+        // Only expand compound|compsolid shapes containing at least one solid
+        if (shape.ShapeType() == TopAbs_COMPOUND || shape.ShapeType() == TopAbs_COMPSOLID) {
+            TopExp_Explorer explorer(shape, TopAbs_SOLID);
+            if (explorer.More())
+                XCAFDoc_Editor::Expand(this->Main(), label, false/*!recursive*/);
+        }
+    }
 }
 
 void Document::addEntityTreeNode(const TDF_Label& label)
