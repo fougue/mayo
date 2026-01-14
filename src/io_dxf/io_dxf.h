@@ -9,15 +9,15 @@
 #include "../base/io_single_format_factory.h"
 
 #include <TopoDS_Shape.hxx>
-#include <unordered_map>
 #include <string>
-#include <vector>
 
 namespace Mayo::IO {
 
 // Reader for DXF file format based on FreeCad's CDxfRead
 class DxfReader : public Reader {
 public:
+    ~DxfReader();
+
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
     TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
 
@@ -41,8 +41,8 @@ private:
         int aci = 0;
         TopoDS_Shape shape;
     };
-    std::unordered_map<std::string, std::vector<Entity>> m_layers;
     Parameters m_params;
+    Internal* m_internal = nullptr;
 };
 
 // Provides factory to create DxfReader objects
