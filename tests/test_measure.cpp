@@ -8,6 +8,7 @@
 #include "qttest_utils.h"
 #include "../src/base/application.h"
 #include "../src/base/geom_utils.h"
+#include "../src/base/math_const.h"
 #include "../src/base/task_progress.h"
 #include "../src/base/unit_system.h"
 #include "../src/io_occ/io_occ_stl.h"
@@ -109,8 +110,7 @@ void TestMeasure::BRepCircle_PolygonEdge_test()
     const int pntCount = 128;
     TColgp_Array1OfPnt points(1, pntCount);
     for (int i = 0; i < pntCount; ++i) {
-        const double pi = 3.14159265358979323846;
-        const double a = 1.5 * pi * (static_cast<double>(i) / static_cast<double>(pntCount));
+        const double a = 1.5 * MathConst::pi * (static_cast<double>(i) / static_cast<double>(pntCount));
         const double x = radius * std::cos(a);
         const double y = radius * std::sin(a);
         points.ChangeValue(i + 1) = gp_Pnt{ pntCenter.X() + x, pntCenter.Y() + y, pntCenter.Z() };
