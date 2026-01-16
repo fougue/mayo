@@ -83,6 +83,11 @@ constexpr int indexInSpan(gsl::span<T> span, typename gsl::span<T>::const_refere
 template<typename Container>
 constexpr int indexInSpan(const Container& cont, typename Container::const_reference item);
 
+// Helper type for the visitor type in std::visit()
+template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+// Explicit deduction guide(not needed as of C++20)
+template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
 } // namespace CppUtils
 } // namespace Mayo
 
