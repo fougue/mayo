@@ -58,4 +58,25 @@ bool GeomUtils::hasScaling(const gp_Trsf& trsf)
     return std::abs(std::abs(trsf.ScaleFactor()) - 1.) > scalePrec || trsf.IsNegative();
 }
 
+gp_Trsf GeomUtils::makeTranslation(const gp_Vec& v)
+{
+    gp_Trsf trsf;
+    trsf.SetTranslation(v);
+    return trsf;
+}
+
+gp_Trsf GeomUtils::makeTranslation(const gp_Pnt& p1, const gp_Pnt& p2)
+{
+    gp_Trsf trsf;
+    trsf.SetTranslation(p1, p2);
+    return trsf;
+}
+
+gp_Trsf GeomUtils::makeRotation(const gp_Ax1& ax1, double angle_rad)
+{
+    gp_Trsf trsf;
+    trsf.SetRotation(ax1, angle_rad);
+    return trsf;
+}
+
 } // namespace Mayo::GeomUtils
