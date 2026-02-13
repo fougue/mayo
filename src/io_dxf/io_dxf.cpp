@@ -35,6 +35,7 @@
 #include <Font_BRepTextBuilder.hxx>
 #include <Font_FontMgr.hxx>
 #include <GeomAPI_Interpolate.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <Graphic3d_HorizontalTextAlignment.hxx>
@@ -61,11 +62,14 @@
 
 #include <variant>
 
-#define MAYO_IO_DXF_DEBUG_TRACE 1
+//#define MAYO_IO_DXF_DEBUG_TRACE 1
 
 namespace Mayo::IO {
 
 namespace {
+
+template<typename T>
+using ConstRefWrap = std::reference_wrapper<const T>;
 
 bool startsWith(std::string_view str, std::string_view prefix)
 {
@@ -278,8 +282,8 @@ public:
     TopoDS_Shape createShape(const Dxf_SPLINE& spline);
     TopoDS_Shape createShape(const Dxf_TEXT& text);
 
-    static OccHandle<Geom_BSplineCurve> createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
-    static OccHandle<Geom_BSplineCurve> createInterpolationSpline(const Dxf_SPLINE& spline);
+    static TopoDS_Shape createSplineFromPolesAndKnots(const Dxf_SPLINE& spline);
+    static TopoDS_Shape createInterpolationSpline(const Dxf_SPLINE& spline);
 
     gp_Pnt toPnt(const DxfCoords& coords) const;
     void addShape(const TopoDS_Shape& shape, const Dxf_BaseEntity& srcEntity);
@@ -366,19 +370,19 @@ std::string getEntityName(const Dxf_EntityVariant& entityVar)
     using namespace std::string_literals;
     return std::visit(Cpp::Overloaded{
         [](std::monostate) { return std::string{}; },
-        [=](std::reference_wrapper<const Dxf_3DFACE>) { return "3DFACE"s; },
-        [=](std::reference_wrapper<const Dxf_ARC>) { return "ARC"s; },
-        [=](std::reference_wrapper<const Dxf_CIRCLE>) { return "CIRCLE"s; },
-        [=](std::reference_wrapper<const Dxf_ELLIPSE>) { return "ELLIPSE"s; },
-        [=](std::reference_wrapper<const Dxf_INSERT> obj) { return "INSERT_" + std::string{obj.get().blockName}; },
-        [=](std::reference_wrapper<const Dxf_LINE>) { return "LINE"s; },
-        [=](std::reference_wrapper<const Dxf_LWPOLYLINE>) { return "LWPOLYLINE"s; },
-        [=](std::reference_wrapper<const Dxf_MTEXT>) { return "MTEXT"s; },
-        [=](std::reference_wrapper<const Dxf_POINT>) { return "POINT"s; },
-        [=](std::reference_wrapper<const Dxf_POLYLINE>) { return "POLYLINE"s; },
-        [=](std::reference_wrapper<const Dxf_SOLID>) { return "SOLID"s; },
-        [=](std::reference_wrapper<const Dxf_SPLINE>) { return "SPLINE"s; },
-        [=](std::reference_wrapper<const Dxf_TEXT>) { return "TEXT"s; }
+        [=](ConstRefWrap<Dxf_3DFACE>) { return "3DFACE"s; },
+        [=](ConstRefWrap<Dxf_ARC>) { return "ARC"s; },
+        [=](ConstRefWrap<Dxf_CIRCLE>) { return "CIRCLE"s; },
+        [=](ConstRefWrap<Dxf_ELLIPSE>) { return "ELLIPSE"s; },
+        [=](ConstRefWrap<Dxf_INSERT> obj) { return "INSERT_" + std::string{obj.get().blockName}; },
+        [=](ConstRefWrap<Dxf_LINE>) { return "LINE"s; },
+        [=](ConstRefWrap<Dxf_LWPOLYLINE>) { return "LWPOLYLINE"s; },
+        [=](ConstRefWrap<Dxf_MTEXT>) { return "MTEXT"s; },
+        [=](ConstRefWrap<Dxf_POINT>) { return "POINT"s; },
+        [=](ConstRefWrap<Dxf_POLYLINE>) { return "POLYLINE"s; },
+        [=](ConstRefWrap<Dxf_SOLID>) { return "SOLID"s; },
+        [=](ConstRefWrap<Dxf_SPLINE>) { return "SPLINE"s; },
+        [=](ConstRefWrap<Dxf_TEXT>) { return "TEXT"s; }
         }, entityVar
     );
 }
@@ -724,19 +728,19 @@ TopoDS_Shape DxfReader::Internal::createEntityShape(const Dxf_EntityVariant& ent
 {
     const TopoDS_Shape entityShape = std::visit(Cpp::Overloaded{
         [](std::monostate) { return TopoDS_Shape{}; },
-        [=](std::reference_wrapper<const Dxf_3DFACE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_ARC> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_CIRCLE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_ELLIPSE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_INSERT> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_LINE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_LWPOLYLINE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_MTEXT> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_POINT> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_POLYLINE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_SOLID> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_SPLINE> obj) { return createShape(obj); },
-        [=](std::reference_wrapper<const Dxf_TEXT> obj) { return createShape(obj); }
+        [=](ConstRefWrap<Dxf_3DFACE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_ARC> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_CIRCLE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_ELLIPSE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_INSERT> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_LINE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_LWPOLYLINE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_MTEXT> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_POINT> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_POLYLINE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_SOLID> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_SPLINE> obj) { return createShape(obj); },
+        [=](ConstRefWrap<Dxf_TEXT> obj) { return createShape(obj); }
     }, entityVar);
     return entityShape;
 }
@@ -1513,23 +1517,18 @@ TopoDS_Shape DxfReader::Internal::createShape(const Dxf_SPLINE& spline)
             && !spline.controlPoints.empty()
             && !spline.knots.empty()
         ;
-        OccHandle<Geom_BSplineCurve> geom;
         if (hasExactNurbs)
-            geom = createSplineFromPolesAndKnots(spline);
+            return createSplineFromPolesAndKnots(spline);
         else if (!spline.fitPoints.empty())
-            geom = createInterpolationSpline(spline);
-
-        if (geom.IsNull())
-            throw Standard_Failure("Geom_BSplineCurve object is null");
-
-        return BRepBuilderAPI_MakeEdge(geom);
+            return createInterpolationSpline(spline);
     }
     catch (const Standard_Failure& err) {
         m_messenger->emitWarning(
             fmt::format("DxfReader - Failed to create bspline({})", err.GetMessageString())
         );
-        return {};
     }
+
+    return {};
 }
 
 TopoDS_Shape DxfReader::Internal::createShape(const Dxf_TEXT& text)
@@ -1703,7 +1702,7 @@ TopoDS_Face DxfReader::Internal::makeFace(const Dxf_QuadBase& quad)
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
+TopoDS_Shape DxfReader::Internal::createSplineFromPolesAndKnots(const Dxf_SPLINE& spline)
 {
     if (spline.weights.size() > spline.controlPoints.size())
         return {};
@@ -1716,7 +1715,7 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(
     TColgp_Array1OfPnt occPoles(1, iNumPoles);
     for (const DxfCoords& pnt : spline.controlPoints) {
         const auto iPnt = static_cast<int>(&pnt - &spline.controlPoints.front());
-        occPoles.ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
+        occPoles.ChangeValue(iPnt + 1) = toOccPnt(pnt);
     }
 
     // Handle knots and mults
@@ -1762,11 +1761,47 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(
     std::cout << std::endl;
 #endif
 
-    return new Geom_BSplineCurve(occPoles, occWeights, occUniqueKnots, occMults, spline.degree, isPeriodic);
+    // Check internal mutls(forbidden: mult == degree+1 inside)
+    bool hasForbiddenInternal = false;
+    for (int i = (occMults.Lower() + 1); i < occMults.Upper(); ++i) {
+        if (occMults[i] > spline.degree) { // required: <= degree
+            hasForbiddenInternal = true;
+            break;
+        }
+    }
+
+    if (!hasForbiddenInternal) {
+        auto curve = makeOccHandle<Geom_BSplineCurve>(
+            occPoles, occWeights, occUniqueKnots, occMults, spline.degree, isPeriodic
+        );
+        if (curve)
+            return BRepBuilderAPI_MakeEdge(curve);
+    }
+    else {
+        // Split curve into cubic Bézier segments
+        const int numPolesPerSegment = spline.degree + 1;
+        const int numSegments = occUniqueKnots.Size() - 1;
+        if (numSegments * numPolesPerSegment != iNumPoles)
+            return {};
+
+        BRepBuilderAPI_MakeWire wireBuilder;
+        for (int i = 0; i < numSegments; ++i) {
+            TColgp_Array1OfPnt segPoles(1, numPolesPerSegment);
+            for (int j = 0; j < numPolesPerSegment; ++j)
+                segPoles.SetValue(j+1, occPoles.Value(i * numPolesPerSegment + j + 1));
+
+            wireBuilder.Add(BRepBuilderAPI_MakeEdge(makeOccHandle<Geom_BezierCurve>(segPoles)));
+        }
+
+        if (wireBuilder.IsDone())
+            return wireBuilder.Wire();
+    }
+
+    return {};
 }
 
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
-OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
+TopoDS_Shape DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
 {
     const auto fitPointCount = gsl::narrow<int>(spline.fitPoints.size());
 
@@ -1801,7 +1836,7 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(cons
     if (!interp.IsDone())
         return {}; // TODO Emit error message
 
-    return interp.Curve();
+    return BRepBuilderAPI_MakeEdge(interp.Curve());
 }
 
 } // namespace Mayo::IO
