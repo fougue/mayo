@@ -10,93 +10,121 @@
 
 #include "dxf_format_common.h"
 
+// NOTE
+//   According AUTOCAD documentation "Group Codes in Numerical Order" section states that codes 50-58
+//   are expressed in degrees
+
 // Common group codes for entities
 struct Dxf_BaseEntity {
-    // Code: 5
+    // Code 5
     DxfStringRef handle;
-    // Code: 6
+    // Code 6
     DxfStringRef lineTypeName;
-    // Code: 8
+    // Code 8
     DxfStringRef layerName;
-    // Code: 60
+    // Code 60
     bool isVisible = true;
-    // Code: 62
+    // Code 62
     DxfColorIndex colorId = dxfColorByLayer;
-    // Code: 67
+    // Code 67
     enum class Space { Model = 0, Paper = 1 };
     Space space = Space::Model;
 };
 
 struct Dxf_BaseGeom2dEntity : public Dxf_BaseEntity {
-    // Code: 39
+    // Code 39
     double thickness = 0.;
-    // Code: 210, 220, 230
+    // Code 210, 220, 230
     DxfCoords extrusionDirection = {0., 0., 1.};
 };
 
 struct Dxf_POINT : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords location;
-    // Code: 50
+    // Code 50
     double angleXAxis = 0.; // degrees
 };
 
 struct Dxf_TEXT : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
-    DxfCoords firstAlignmentPoint = {};
-    // Code: 40
-    double height = 0.;
-    // Code: 1
+    // Code 1
     DxfStringRef str;
-    // Code: 50
-    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
-    // states that codes 50-58 are in degrees
-    double rotationAngle = 0.; // degress
-    // Code: 41
-    // "This value is also adjusted when fit-type text is used"
-    double relativeXScaleFactorWidth = 1.;
-    // Code: 51
-    // AutoCad documentation doesn't specify units, but "Group Codes in Numerical Order" section
-    // states that codes 50-58 are in degrees
-    double obliqueAngle = 0.; // degrees
-    // Code: 7  text style name(default=STANDARD)
+    // Code 7  text style name(default=STANDARD)
     DxfStringRef styleName;
-    // Code: 71  (0: default, 2: backward(mirrored in X), 4: upside down(mirrored in Y)
+    // Code 10, 20, 30
+    DxfCoords firstAlignmentPoint = {};  // OCS
+    // Code 11, 21, 31
+    //   AUTOCAD doc: "This value is meaningful only if the value of a 72 or 73 group is nonzero (if
+    //   the justification is anything other than baseline/left)"
+    DxfCoords secondAlignmentPoint = {}; // OCS
+    // Code 40
+    double height = 0.;
+    // Code 41  (AUTOCAD doc: "This value is also adjusted when fit-type text is used")
+    double relativeXScaleFactorWidth = 1.;
+    // Code 50
+    double rotationAngle = 0.; // degrees
+    // Code 51
+    double obliqueAngle = 0.;  // degrees
+    // Code 71  Text generation flags
+    //   0: default
+    //   2: text is backward(mirrored in X)
+    //   4: text is upside down(mirrored in Y)
     unsigned generationFlags = 0;
-
-    // Code: 72
+    // Code 72
     enum class HorizontalJustification {
-        Left = 0, Center = 1, Right = 2, Aligned = 3, Middle = 4, Fit = 5
+        Left = 0, Center = 1, Right = 2,
+        Aligned = 3, // If vertical alignment == 0
+        Middle = 4,  // If vertical alignment == 0
+        Fit = 5      // If vertical alignment == 0
     };
     HorizontalJustification horizontalJustification = HorizontalJustification::Left;
-    // Code: 11, 21, 31
-    DxfCoords secondAlignmentPoint = {};
-
+    // Code 73
     enum class VerticalJustification {
         Baseline = 0, Bottom = 1, Middle = 2, Top = 3
     };
-    // Code: 73
     VerticalJustification verticalJustification = VerticalJustification::Baseline;
 };
 
+struct Dxf_ATTRIB : public Dxf_TEXT {
+    // Code 2  (AUTOCAD doc: "cannot contain spaces")
+    DxfStringRef tag;
+    // Code 70
+    //   1: attribute is invisible(does not appear)
+    //   2: this is a constant attribute
+    //   4: verification is required on input of this attribute
+    //   8: attribute is preset(no prompt during insertion)
+    unsigned flags = 0;
+    // Code 73  (AUTOCAD doc: "not currently used")
+    double fixedLength = 0.;
+    // Code 340
+    DxfStringRef mtextHandle;
+
+    // NOTE
+    //   Code 10, 20, 30 "textStartPoint" -> same meaning as for Dxf_TEXT::firstAlignmentPoint
+    //   Code 11, 21, 31 "alignmentPoint" -> same meaning as for Dxf_TEXT::secondAlignmentPoint
+    //   AUTOCAD doc: "Present only if 72 or 74 group is present and nonzero"
+
+    // NOTE
+    //   Code 74 is the same as TEXT code 73
+};
+
 struct Dxf_MTEXT : public Dxf_BaseGeom2dEntity {
-    // Code: 1, 3
+    // Code 1, 3
     DxfStringRef str;
-    // Code: 7  text style name(default=STANDARD)
+    // Code 7  text style name(default=STANDARD)
     DxfStringRef styleName;
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords insertionPoint = {};
-    // Code: 11, 21, 31
+    // Code 11, 21, 31
     DxfCoords xAxisDirection = {1., 0., 0.}; // WCS
-    // Code: 40
+    // Code 40
     double height = 0.;
-    // Code: 41
+    // Code 41
     double referenceRectangleWidth = 0;
-    // Code: 44
+    // Code 44
     // Percentage of default(3-on-5) line spacing to be applied. Valid values range from 0.25 to 4.0
     double lineSpacingFactor = 1.;
     // Code 50
-    double rotationAngle = 0.; // radians(AutoCad documentation)
+    double rotationAngle = 0.; // degrees
     // Code 71
     enum class AttachmentPoint {
         TopLeft = 1, TopCenter,    TopRight,
@@ -114,7 +142,7 @@ struct Dxf_MTEXT : public Dxf_BaseGeom2dEntity {
     //     2: Exact(taller characters will not override)
     unsigned lineSpacingStyle = 0;
 
-    // NOTE AutoCad documentation states that codes 42, 43 are "read-only, ignored if supplied"
+    // NOTE AUTOCAD documentation states that codes 42, 43 are "read-only, ignored if supplied"
 
     // TODO Code 90(background fill setting)
     // TODO Code 420-429(background color, if RGB)
@@ -138,9 +166,9 @@ struct Dxf_MTEXT : public Dxf_BaseGeom2dEntity {
 };
 
 struct Dxf_LINE : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords startPoint = {};
-    // Code: 11, 21, 31
+    // Code 11, 21, 31
     DxfCoords endPoint = {};
 };
 
@@ -159,28 +187,28 @@ struct Dxf_POLYLINE : public Dxf_BaseGeom2dEntity {
         };
         using Flags = unsigned;
 
-        // Code: 10, 20, 30
+        // Code 10, 20, 30
         DxfCoords point = {};
-        // Code: 40
+        // Code 40
         double startingWidth = 0.;
-        // Code: 41
+        // Code 41
         double endingWidth = 0.;
-        // Code: 42
+        // Code 42
         double bulge = 0.;
-        // Code: 50
+        // Code 50
         // If flags & CurveFitTangent, should appear only on first and last vertices
         double curveFitTangentDirection = 0.;
-        // Code: 70
+        // Code 70
         Flags flags = Flag::None;
-        // Code: 71
+        // Code 71
         int polyfaceMeshVertex1 = 0;
-        // Code: 72
+        // Code 72
         int polyfaceMeshVertex2 = 0;
-        // Code: 73
+        // Code 73
         int polyfaceMeshVertex3 = 0;
-        // Code: 74
+        // Code 74
         int polyfaceMeshVertex4 = 0;
-        // Code: 91
+        // Code 91
         // int identifier = 0;
     };
 
@@ -204,21 +232,21 @@ struct Dxf_POLYLINE : public Dxf_BaseGeom2dEntity {
         BezierSurface = 8
     };
 
-    // Code: 70
+    // Code 70
     Flags flags = Flag::None;
-    // Code: 40
+    // Code 40
     double defaultStartWidth = 0.;
-    // Code: 41
+    // Code 41
     double defaultEndWidth = 0.;
-    // Code: 71(number of vertices in the mesh)
+    // Code 71(number of vertices in the mesh)
     int polygonMeshMVertexCount = 0;
-    // Code: 72(number of faces in the mesh)
+    // Code 72(number of faces in the mesh)
     int polygonMeshNVertexCount = 0;
-    // Code: 73
+    // Code 73
     double smoothSurfaceMDensity = 0.;
-    // Code: 74
+    // Code 74
     double smoothSurfaceNDensity = 0.;
-    // Code: 75
+    // Code 75
     PolylineType polylineType = PolylineType::NoSmoothSurfaceFitted;
 
     std::vector<Vertex> vertices;
@@ -226,57 +254,57 @@ struct Dxf_POLYLINE : public Dxf_BaseGeom2dEntity {
 
 struct Dxf_LWPOLYLINE : public Dxf_BaseGeom2dEntity {
     struct Vertex {
-        // Code: 10
+        // Code 10
         double x = 0.;
-        // Code: 20
+        // Code 20
         double y = 0.;
-        // Code: 40
+        // Code 40
         double startWidth = 0.;
-        // Code: 41
+        // Code 41
         double endWidth = 0.;
-        // Code: 42
+        // Code 42
         double bulge = 0.;
     };
 
-    // Code: 38
+    // Code 38
     double elevation = 0.;
-    // Code: 43
+    // Code 43
     double constantWidth = 0.;
-    // Code: 70 (1: Closed, 128: Plinegen)
+    // Code 70 (1: Closed, 128: Plinegen)
     unsigned flag = 0;
 
     std::vector<Vertex> vertices;
 };
 
 struct Dxf_INSERT : public Dxf_BaseEntity {
-    // Code: 2
+    // Code 2
     DxfStringRef blockName;
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords insertPoint = {}; // OCS
-    // Code: 41, 42, 43
+    // Code 41, 42, 43
     DxfScale scaleFactor = { 1., 1., 1. };
-    // Code: 50
+    // Code 50
     double rotationAngle = 0.; // degrees
-    // Code: 70
+    // Code 70
     int columnCount = 1;
-    // Code: 71
+    // Code 71
     int rowCount = 1;
-    // Code: 44
+    // Code 44
     double columnSpacing = 0.;
-    // Code: 45
+    // Code 45
     double rowSpacing = 0.;
-    // Code: 210, 220, 230
+    // Code 210, 220, 230
     DxfCoords extrusionDirection = { 0., 0., 1. };
 };
 
 struct Dxf_QuadBase {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords corner1;
-    // Code: 11, 21, 31
+    // Code 11, 21, 31
     DxfCoords corner2;
-    // Code: 12, 22, 32
+    // Code 12, 22, 32
     DxfCoords corner3;
-    // Code: 13, 23, 33
+    // Code 13, 23, 33
     DxfCoords corner4;
     bool hasCorner4 = false;
 };
@@ -291,7 +319,7 @@ struct Dxf_3DFACE : public Dxf_BaseEntity, public Dxf_QuadBase {
     };
     using Flags = unsigned;
 
-    // Code: 70
+    // Code 70
     Flags flags = Flag::None;
 };
 
@@ -309,65 +337,65 @@ struct Dxf_SPLINE : public Dxf_BaseEntity {
     };
     using Flags = unsigned;
 
-    // Code: 210, 220, 230
+    // Code 210, 220, 230
     DxfCoords normalVector = { 0., 0., 1. };
-    // Code: 70
+    // Code 70
     Flags flags = Flag::None;
-    // Code: 71
+    // Code 71
     int degree = 0;
 
     // NOTE: value of code 72 is knots.size()
     // NOTE: value of code 73 is controlPoints.size()
     // NOTE: value of code 74 is fitPoints.size()
 
-    // Code: 42
+    // Code 42
     double knotTolerance = 0.0000001;
-    // Code: 43
+    // Code 43
     double controlPointTolerance = 0.0000001;
-    // Code: 44
+    // Code 44
     double fitTolerance = 0.0000000001;
 
-    // Code: 12, 22, 32
+    // Code 12, 22, 32
     DxfCoords startTangent = {};
-    // Code: 13, 23, 33
+    // Code 13, 23, 33
     DxfCoords endTangent = {};
-    // Code: 40
+    // Code 40
     std::vector<double> knots;
-    // Code: 41
+    // Code 41
     std::vector<double> weights;
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     std::vector<DxfCoords> controlPoints;
-    // Code: 11, 21, 31
+    // Code 11, 21, 31
     std::vector<DxfCoords> fitPoints;
 };
 
 struct Dxf_ARC : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords centerPoint = {};
-    // Code: 40
+    // Code 40
     double radius = 0.;
-    // Code: 50
+    // Code 50
     double startAngle = 0; // degrees
-    // Code: 51
+    // Code 51
     double endAngle = 0; // degrees
 };
 
 struct Dxf_CIRCLE : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords centerPoint = {};
-    // Code: 40
+    // Code 40
     double radius = 0.;
 };
 
 struct Dxf_ELLIPSE : public Dxf_BaseGeom2dEntity {
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords centerPoint = {};
-    // Code: 11, 21, 31
+    // Code 11, 21, 31
     DxfCoords majorAxisEndPoint = {};
-    // Code: 40
+    // Code 40
     double ratioMinorMajorAxis = 0.;
-    // Code: 41
+    // Code 41
     double startParam = 0.;
-    // Code: 42
+    // Code 42
     double endParam = 2 * 3.14159265358979323846;
 };

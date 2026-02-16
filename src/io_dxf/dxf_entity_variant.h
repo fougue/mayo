@@ -25,6 +25,7 @@ struct Dxf_POLYLINE;
 struct Dxf_SOLID;
 struct Dxf_SPLINE;
 struct Dxf_TEXT;
+struct Dxf_ATTRIB;
 
 using Dxf_EntityVariant = std::variant<
     std::monostate,
@@ -40,7 +41,8 @@ using Dxf_EntityVariant = std::variant<
     std::reference_wrapper<const Dxf_POLYLINE>,
     std::reference_wrapper<const Dxf_SOLID>,
     std::reference_wrapper<const Dxf_SPLINE>,
-    std::reference_wrapper<const Dxf_TEXT>
+    std::reference_wrapper<const Dxf_TEXT>,
+    std::reference_wrapper<const Dxf_ATTRIB>
 >;
 
 // Utility function that tries to read the T held inside `variant` and returns a pointer to that

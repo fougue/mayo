@@ -12,17 +12,17 @@
 #include <vector>
 
 struct Dxf_BLOCK {
-    // Code: 2 or 3
+    // Code 2 or 3
     DxfStringRef name;
-    // Code: 8
+    // Code 8
     DxfStringRef layerName;
-    // Code: 10, 20, 30
+    // Code 10, 20, 30
     DxfCoords basePoint = {};
-    // Code: 70
+    // Code 70
     unsigned flags = 0;
-    // Code: 1
+    // Code 1
     DxfStringRef xrefPathName;
-    // Code: 4
+    // Code 4
     DxfStringRef description;
 
     // Contents
