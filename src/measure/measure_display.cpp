@@ -5,6 +5,7 @@
 
 #include "measure_display.h"
 
+#include "../base/geom_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/text_id.h"
 #include "../base/unit_system.h"
@@ -362,13 +363,10 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
           makeOccHandle<Geom_CartesianPoint>(angle.pnt2))
       )
 {
-    auto fnVecIsNull = [](const gp_Vec& v) {
-        return v.SquareMagnitude() < Precision::SquareConfusion();
-    };
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
-    const gp_Dir nCircle = fnVecIsNull(vec1) || fnVecIsNull(vec2) ? gp::DZ() : gp_Dir{vec1.Crossed(vec2)};
-    const gp_Dir xCircle = fnVecIsNull(vec1) ? gp::DX() : gp_Dir{vec1};
+    const gp_Dir nCircle = GeomUtils::isNull(vec1) || GeomUtils::isNull(vec2) ? gp::DZ() : gp_Dir{vec1.Crossed(vec2)};
+    const gp_Dir xCircle = GeomUtils::isNull(vec1) ? gp::DX() : gp_Dir{vec1};
     const gp_Ax2 axCircle(angle.pntCenter, nCircle, xCircle);
     auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
     const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);

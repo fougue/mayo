@@ -216,7 +216,7 @@ FittedPlaneResult fittedPlane(gsl::span<const gp_Pnt> points)
         eigenVectors(2, eigenMinIndex),
         eigenVectors(3, eigenMinIndex)
     );
-    if (normal.IsEqual(gp_Vec{}, Precision::Confusion(), Precision::Angular()))
+    if (GeomUtils::isNull(normal))
         return {};
 
     FittedPlaneResult result;
@@ -509,7 +509,7 @@ MeasureCircle MeasureToolBRep::brepCircleFromPolygonEdge(const TopoDS_Edge& edge
 
     MeasureCircle result;
     result.pntAnchor = polyline->Nodes().First().Transformed(loc);
-    result.isArc = !polyline->Nodes().First().IsEqual(polyline->Nodes().Last(), Precision::Confusion());
+    result.isArc = !GeomUtils::equal(polyline->Nodes().First(), polyline->Nodes().Last());
     result.value = circle;
     return result;
 }

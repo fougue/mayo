@@ -9,6 +9,7 @@
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <gp_Trsf.hxx>
+#include <Precision.hxx>
 class Adaptor3d_Curve;
 class gp_Ax1;
 
@@ -25,7 +26,20 @@ bool hasScaling(const gp_Trsf& trsf);
 
 gp_Trsf makeTranslation(const gp_Vec& v);
 gp_Trsf makeTranslation(const gp_Pnt& p1, const gp_Pnt& p2);
-
 gp_Trsf makeRotation(const gp_Ax1& ax1, double angle_rad);
+
+bool equal(
+    const gp_Pnt& lhs,
+    const gp_Pnt& rhs,
+    double linearTol = Precision::Confusion()
+);
+bool equal(
+    const gp_Vec& lhs,
+    const gp_Vec& rhs,
+    double linearTol = Precision::Confusion(),
+    double angularTol = Precision::Angular()
+);
+
+bool isNull(const gp_Vec& v, double sqrLinearTol = Precision::SquareConfusion());
 
 } // namespace Mayo::GeomUtils

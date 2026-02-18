@@ -6,6 +6,7 @@
 #include "widget_clip_planes.h"
 
 #include "../base/bnd_utils.h"
+#include "../base/geom_utils.h"
 #include "../base/math_utils.h"
 #include "../base/settings.h"
 #include "../base/tkernel_utils.h"
@@ -173,7 +174,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
             const gp_Vec vecNormal(
                 customXDirSpin->value(), customYDirSpin->value(), customZDirSpin->value()
             );
-            if (vecNormal.Magnitude() > Precision::Confusion()) {
+            if (!GeomUtils::isNull(vecNormal)) {
                 const gp_Dir normal(vecNormal);
                 const auto bbc = BndBoxCoords::get(m_bndBox);
                 this->setPlaneRange(data, MathUtils::planeRange(bbc, normal));

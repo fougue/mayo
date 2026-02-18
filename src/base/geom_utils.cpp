@@ -79,4 +79,19 @@ gp_Trsf GeomUtils::makeRotation(const gp_Ax1& ax1, double angle_rad)
     return trsf;
 }
 
-} // namespace Mayo::GeomUtils
+bool GeomUtils::equal(const gp_Pnt& lhs, const gp_Pnt& rhs, double linearTol)
+{
+    return lhs.IsEqual(rhs, linearTol);
+}
+
+bool GeomUtils::equal(const gp_Vec& lhs, const gp_Vec& rhs, double linearTol, double angularTol)
+{
+    return lhs.IsEqual(rhs, linearTol, angularTol);
+}
+
+bool GeomUtils::isNull(const gp_Vec& v, double sqrLinearTol)
+{
+    return v.SquareMagnitude() <= sqrLinearTol;
+}
+
+} // namespace Mayo
