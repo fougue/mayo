@@ -12,6 +12,7 @@
 #include <Precision.hxx>
 class Adaptor3d_Curve;
 class gp_Ax1;
+class gp_Ax2;
 
 namespace Mayo::GeomUtils {
 
@@ -27,6 +28,7 @@ bool hasScaling(const gp_Trsf& trsf);
 gp_Trsf makeTranslation(const gp_Vec& v);
 gp_Trsf makeTranslation(const gp_Pnt& p1, const gp_Pnt& p2);
 gp_Trsf makeRotation(const gp_Ax1& ax1, double angle_rad);
+gp_Trsf makeMirror(const gp_Ax2& ax2);
 
 bool equal(
     const gp_Pnt& lhs,

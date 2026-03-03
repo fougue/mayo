@@ -79,6 +79,13 @@ gp_Trsf GeomUtils::makeRotation(const gp_Ax1& ax1, double angle_rad)
     return trsf;
 }
 
+gp_Trsf GeomUtils::makeMirror(const gp_Ax2& ax2)
+{
+    gp_Trsf trsf;
+    trsf.SetMirror(ax2);
+    return trsf;
+}
+
 bool GeomUtils::equal(const gp_Pnt& lhs, const gp_Pnt& rhs, double linearTol)
 {
     return lhs.IsEqual(rhs, linearTol);
