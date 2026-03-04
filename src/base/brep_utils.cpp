@@ -30,6 +30,15 @@ TopoDS_Compound BRepUtils::makeEmptyCompound()
 
 void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape)
 {
+    if (!ptrTargetShape)
+        return;
+
+    if (shape.IsNull())
+        return;
+
+    if (ptrTargetShape->IsNull())
+        *ptrTargetShape = BRepUtils::makeEmptyCompound();
+
     TopoDS_Builder builder;
     builder.Add(*ptrTargetShape, shape);
 }
