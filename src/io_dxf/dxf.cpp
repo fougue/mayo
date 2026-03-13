@@ -13,15 +13,13 @@
 #include <cctype>
 #include <clocale>
 #include <cmath>
-#if __cpp_lib_to_chars
-#  include <charconv>
-#endif
 
 #include <functional>
 #include <iomanip>
 #include <stdexcept>
 
 #include "../base/filepath.h"
+#include "../base/libfromchars.h"
 #include "dxf.h"
 
 #include <iostream>
@@ -71,30 +69,10 @@ template<typename T> bool isStringToErrorValue(T value)
 template<typename T>
 T stringToNumeric(const std::string& line, StringToErrorMode errorMode)
 {
-#if __cpp_lib_to_chars
     T value;
-    auto [ptr, err] = std::from_chars(line.c_str(), line.c_str() + line.size(), value);
+    auto [ptr, err] = Mayo::fromChars(line, value);
     if (err == std::errc())
         return value;
-#else
-    try {
-        if constexpr(std::is_same_v<T, int>) {
-            return std::stoi(line);
-        }
-        else if constexpr(std::is_same_v<T, unsigned>) {
-            return std::stoul(line);
-        }
-        else if constexpr(std::is_same_v<T, double>) {
-            return std::stod(line);
-        }
-        else {
-            if (errorMode == StringToErrorMode::ReturnErrorValue)
-                return std::numeric_limits<T>::max();
-            else
-                throw std::runtime_error("Failed to fetch numeric value from line:\n" + line);
-        }
-    } catch (...) {
-#endif
 
     if (errorMode == StringToErrorMode::ReturnErrorValue) {
         return std::numeric_limits<T>::max();
@@ -110,10 +88,6 @@ T stringToNumeric(const std::string& line, StringToErrorMode errorMode)
 
         throw std::runtime_error("Failed to fetch " + strTypeName + " value from line:\n" + line);
     }
-
-#ifndef __cpp_lib_to_chars
-    }
-#endif
 }
 
 int stringToInt(const std::string& line, StringToErrorMode errorMode)

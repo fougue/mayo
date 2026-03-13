@@ -5,8 +5,8 @@
 ****************************************************************************/
 
 #include "unit_system.h"
+#include "libfromchars.h"
 
-#include <fast_float/fast_float.h>
 #include <cassert>
 
 namespace Mayo {
@@ -266,7 +266,7 @@ UnitSystem::TranslateResult UnitSystem::parseQuantity(std::string_view strQuanti
     fnAssignUnit(Unit::None);
 
     double v;
-    auto res = fast_float::from_chars(strQuantity.data(), strQuantity.data() + strQuantity.size(), v);
+    auto res = Mayo::fromChars(strQuantity, v);
     if (res.ec != std::errc())
         return {};
 

@@ -12,6 +12,7 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
+#include "../base/libfromchars.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
@@ -24,11 +25,6 @@
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
 
-#if __cpp_lib_to_chars
-#  include <charconv>
-#else
-#  include <cstdlib>
-#endif
 #include <array>
 #include <fstream>
 #include <locale>
@@ -119,20 +115,12 @@ T strToNum(std::string_view str)
     if (str.empty())
         return num;
 
-#if __cpp_lib_to_chars
-    auto result = std::from_chars(str.data(), str.data() + str.size(), num);
+    auto result = Mayo::fromChars(str, num);
     if (result.ec != std::errc()) {
         // TODO Handle error code
         // throw std::runtime_error(std::make_error_code(err).message());
     }
-#else
-    errno = 0;
-    num = std::strtod(str.data(), nullptr);
-    if (errno != 0) {
-        // TODO Handle error code
-        // throw std::runtime_error(std::strerror(errno));
-    }
-#endif
+
     return num;
 }
 
