@@ -109,7 +109,7 @@ public:
     QAction* findCommandAction(std::string_view name) const;
 
     // Construct and add new Command object with arguments 'args'
-    // The command is associated to identigfier 'name' and can be retrieved later on with findCommand()
+    // The command is associated to identifier 'name' and can be retrieved later on with findCommand()
     template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
 
     // Same behavior as addCommand() function
