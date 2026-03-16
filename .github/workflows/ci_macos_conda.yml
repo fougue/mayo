@@ -41,9 +41,11 @@ jobs:
           run: |
               mkdir ${{github.workspace}}/build
               cd ${{github.workspace}}/build
+              #ASSIMP_CMAKE_DIR=$(find "$CONDA/envs/ci_macos_conda/lib/cmake" -maxdepth 1 -type d -name "assimp-*" | head -n 1)
+              #echo ASSIMP_CMAKE_DIR=$ASSIMP_CMAKE_DIR
               export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/Qt5;$CMAKE_PREFIX_PATH"
               export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/opencascade;$CMAKE_PREFIX_PATH"
-              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/assimp-5.4;$CMAKE_PREFIX_PATH"
+              export CMAKE_PREFIX_PATH="ASSIMP_CMAKE_DIR;$CMAKE_PREFIX_PATH"
               cmake .. \
                     -DMayo_BuildTests=ON \
                     -DMayo_BuildPluginAssimp=ON \
