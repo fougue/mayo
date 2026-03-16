@@ -7,6 +7,7 @@
 #include "commands_file.h"
 
 #include "../base/application.h"
+#include "../base/io_system.h"
 #include "../base/task_manager.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
@@ -53,21 +54,6 @@ QString fileFilter(IO::Format format)
             .arg(filter);
 }
 
-IO::Format formatFromFilter(const QString& filter)
-{
-    for (IO::Format format : AppModule::get()->ioSystem()->readerFormats()) {
-        if (filter == fileFilter(format))
-            return format;
-    }
-
-    for (IO::Format format : AppModule::get()->ioSystem()->writerFormats()) {
-        if (filter == fileFilter(format))
-            return format;
-    }
-
-    return IO::Format_Unknown;
-}
-
 // TODO: move in Options
 struct ImportExportSettings {
     FilePath openDir;
@@ -91,7 +77,6 @@ struct ImportExportSettings {
 struct OpenFileNames {
     std::vector<FilePath> listFilepath;
     ImportExportSettings lastIoSettings;
-    IO::Format selectedFormat;
 
     enum GetOption {
         GetOne,
@@ -104,7 +89,6 @@ struct OpenFileNames {
         )
     {
         OpenFileNames result;
-        result.selectedFormat = IO::Format_Unknown;
         result.lastIoSettings = ImportExportSettings::load();
         QStringList listFormatFilter;
         for (IO::Format format : AppModule::get()->ioSystem()->readerFormats())
@@ -136,11 +120,6 @@ struct OpenFileNames {
 
         if (!result.listFilepath.empty()) {
             result.lastIoSettings.openDir = result.listFilepath.front();
-            result.selectedFormat =
-                result.lastIoSettings.selectedFilter != allFilesFilter ?
-                    formatFromFilter(result.lastIoSettings.selectedFilter) :
-                    IO::Format_Unknown
-                ;
             ImportExportSettings::save(result.lastIoSettings);
         }
 
@@ -442,7 +421,11 @@ void CommandExportSelectedApplicationItems::execute()
         return;
 
     lastSettings.openDir = filepathFrom(strFilepath);
-    const IO::Format format = formatFromFilter(lastSettings.selectedFilter);
+    // IMPORTANT
+    //     Don't try to deduce format from the selected file filter. The native UI may change the
+    //     input filters for some reason(add spaces, locale, ...)
+    //     See issue https://github.com/fougue/mayo/issues/357
+    const IO::Format format = appModule->ioSystem()->probeFormat(filepathFrom(strFilepath));
     const TaskId taskId = this->taskMgr()->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
