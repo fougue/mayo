@@ -217,6 +217,9 @@ void GuiDocument::setDevicePixelRatio(double ratio)
 GuiDocument::~GuiDocument()
 {
     delete m_cameraAnimation;
+    // IMPORTANT
+    //    Calling V3d_View::Remove() here avoids TKOpenGl error "wglMakeCurrent() has failed"
+    m_v3dView->Remove();
 }
 
 Document::Identifier GuiDocument::documentIdentifier() const
