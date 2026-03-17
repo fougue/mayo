@@ -21,7 +21,6 @@
 #include "widget_occ_view_controller.h"
 #include "qtwidgets_utils.h"
 
-#include <QtCore/QtDebug>
 #include <QtGui/QPainter>
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QBoxLayout>
@@ -154,6 +153,10 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
         this->layoutWidgetPanels();
         m_guiDoc->graphicsView().redraw();
     });
+}
+
+WidgetGuiDocument::~WidgetGuiDocument()
+{
 }
 
 Document::Identifier WidgetGuiDocument::documentIdentifier() const

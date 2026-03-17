@@ -29,6 +29,7 @@ class WidgetOccViewController : public QObject, public V3dViewController {
     Q_OBJECT
 public:
     WidgetOccViewController(IWidgetOccView* occView = nullptr);
+    ~WidgetOccViewController();
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 

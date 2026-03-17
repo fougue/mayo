@@ -15,8 +15,11 @@ namespace Mayo {
 class FileCommandTools {
 public:
     static void closeDocument(IAppContext* context, Document::Identifier docId);
+    static void closeAllDocuments(IAppContext* context);
+
     static void openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath);
     static void openDocument(IAppContext* context, const FilePath& filePath);
+
     static void importInDocument(
         IAppContext* context,
         const DocumentPtr& targetDoc,

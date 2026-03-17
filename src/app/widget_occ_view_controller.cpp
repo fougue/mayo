@@ -9,7 +9,6 @@
 #include "qtgui_utils.h"
 #include "theme.h"
 
-#include <QtCore/QDebug>
 #include <QtCore/QElapsedTimer>
 #include <QtGui/QBitmap>
 #include <QtGui/QCursor>
@@ -110,6 +109,10 @@ WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     m_inputSequence.setPrePushCallback([=](Input in) { m_actionMatcher->onInputPrePush(in); });
     m_inputSequence.setPreReleaseCallback([=](Input in) { m_actionMatcher->onInputPreRelease(in); });
     m_inputSequence.setClearCallback([=] { m_actionMatcher->onInputCleared(); });
+}
+
+WidgetOccViewController::~WidgetOccViewController()
+{
 }
 
 bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)

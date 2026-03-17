@@ -30,6 +30,7 @@ class WidgetGuiDocument : public QWidget {
     Q_OBJECT
 public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
+    ~WidgetGuiDocument();
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
     WidgetOccViewController* controller() const { return m_controller; }

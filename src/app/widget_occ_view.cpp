@@ -62,6 +62,10 @@ QOpenGLWidgetOccView::QOpenGLWidgetOccView(const OccHandle<V3d_View>& view, QWid
     this->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
 }
 
+QOpenGLWidgetOccView::~QOpenGLWidgetOccView()
+{
+}
+
 void QOpenGLWidgetOccView::redraw()
 {
     this->update();

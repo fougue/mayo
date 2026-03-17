@@ -148,6 +148,12 @@ void FileCommandTools::closeDocument(IAppContext* context, Document::Identifier 
     app->closeDocument(doc);
 }
 
+void FileCommandTools::closeAllDocuments(IAppContext* context)
+{
+    while (!context->guiApp()->guiDocuments().empty())
+        FileCommandTools::closeDocument(context, context->currentDocument());
+}
+
 void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)
 {
     assert(context != nullptr);
@@ -524,8 +530,7 @@ CommandCloseAllDocuments::CommandCloseAllDocuments(IAppContext* context)
 
 void CommandCloseAllDocuments::execute()
 {
-    while (!this->guiApp()->guiDocuments().empty())
-        FileCommandTools::closeDocument(this->context(), this->currentDocument());
+    FileCommandTools::closeAllDocuments(this->context());
 }
 
 bool CommandCloseAllDocuments::getEnabledStatus() const
@@ -593,6 +598,7 @@ CommandQuitApplication::CommandQuitApplication(IAppContext* context)
 
 void CommandQuitApplication::execute()
 {
+    FileCommandTools::closeAllDocuments(this->context());
     QApplication::quit();
 }
 

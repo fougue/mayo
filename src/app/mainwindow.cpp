@@ -111,6 +111,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
     }
 
     AppModule::get()->properties()->appUiState.setValue(uiState);
+    FileCommandTools::closeAllDocuments(m_appContext);
     QMainWindow::closeEvent(event);
 }
 

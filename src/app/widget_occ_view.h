@@ -25,6 +25,8 @@ namespace Mayo {
 // IWidgetOccView does not handle input devices interaction like keyboard and mouse
 class IWidgetOccView {
 public:
+    virtual ~IWidgetOccView() = default;
+
     const OccHandle<V3d_View>& v3dView() const { return m_view; }
 
     virtual void redraw() = 0;
@@ -51,6 +53,7 @@ private:
 class QOpenGLWidgetOccView : public QOpenGLWidget, public IWidgetOccView {
 public:
     QOpenGLWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent = nullptr);
+    ~QOpenGLWidgetOccView();
 
     void redraw() override;
     QWidget* widget() override { return this; }
