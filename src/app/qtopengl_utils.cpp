@@ -199,6 +199,26 @@ void setCapsFromSurfaceFormat(OpenGl_Caps& caps, const QSurfaceFormat& format)
 #endif
 }
 
+
+#if OCC_VERSION_HEX >= 0x070600
+
+Aspect_Drawable glNativeWindow(Aspect_Drawable nativeWin)
+{
+#ifdef Q_OS_WIN
+    HDC wglDevCtx = wglGetCurrentDC();
+    HWND wglWin = WindowFromDC(wglDevCtx);
+    nativeWin = (Aspect_Drawable)wglWin;
+#endif
+
+    return nativeWin;
+}
+
+OccHandle<OpenGl_Context> glContext(const OccHandle<V3d_View>& view)
+{
+    auto glView = OccHandle<OpenGl_View>::DownCast(view->View());
+    return glView->GlWindow()->GetGlContext();
+}
+
 void resetGlStateBeforeOcct(const OccHandle<V3d_View>& view)
 {
     OccHandle<OpenGl_Context> glCtx = QtOpenGlUtils::glContext(view);
@@ -305,22 +325,6 @@ bool initializeGlFramebufferObject(const OccHandle<V3d_View>& view)
 
     return true;
 }
-
-Aspect_Drawable glNativeWindow(Aspect_Drawable nativeWin)
-{
-#ifdef Q_OS_WIN
-    HDC wglDevCtx = wglGetCurrentDC();
-    HWND wglWin = WindowFromDC(wglDevCtx);
-    nativeWin = (Aspect_Drawable)wglWin;
-#endif
-
-    return nativeWin;
-}
-
-OccHandle<OpenGl_Context> glContext(const OccHandle<V3d_View>& view)
-{
-    auto glView = OccHandle<OpenGl_View>::DownCast(view->View());
-    return glView->GlWindow()->GetGlContext();
-}
+#endif // OCC_VERSION_HEX >= 0x070600
 
 } // namespace Mayo::QtOpenGlUtils

@@ -11,6 +11,7 @@
 
 namespace Mayo {
 
+#if OCC_VERSION_HEX >= 0x070600
 OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
 {
     auto gfxDriver = new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/);
@@ -23,6 +24,7 @@ OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphics
 
     return gfxDriver;
 }
+#endif
 
 OccHandle<Graphic3d_GraphicDriver> QWidgetOccView_createCompatibleGraphicsDriver()
 {
