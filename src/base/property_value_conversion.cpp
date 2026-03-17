@@ -29,6 +29,7 @@ namespace {
 // Helper that converts a double number into a string
 static std::string toString(double value, int prec = 6)
 {
+#if __cpp_lib_to_chars
     char buff[64] = {};
     auto toCharsFormat = std::chars_format::general;
     auto resToChars = std::to_chars(std::begin(buff), std::end(buff), value, toCharsFormat, prec);
@@ -36,6 +37,9 @@ static std::string toString(double value, int prec = 6)
         throw std::runtime_error("value_too_large");
 
     return std::string(buff, resToChars.ptr - buff);
+#else
+    return fmt::format("{:.{}g}", value, prec);
+#endif
 }
 
 static std::string toString(const gp_XYZ& coords, int prec = 6)
