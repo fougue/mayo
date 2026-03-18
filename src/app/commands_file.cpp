@@ -16,6 +16,7 @@
 #include "recent_files.h"
 #include "theme.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
@@ -158,6 +159,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
             docPtr = app->newDocument();
             docPtr->setName(fp.filename().u8string());
             docPtr->setFilePath(fp);
+            // WARNING
             // Use the Document identifier instead of handle within the job function(capture)
             // Using the handle increases the ref count and the task will be released on next
             // task creation, so the document won't be destroyed
@@ -201,17 +203,32 @@ void FileCommandTools::importInDocument(
         IAppContext* context, const DocumentPtr& targetDoc, Span<const FilePath> listFilePaths
     )
 {
-    auto appModule = AppModule::get();
+    // WARNING
+    // Use the Document identifier instead of handle within the job function(capture)
+    // Using the handle increases the ref count and the task will be released on next task creation,
+    // so the document won't be destroyed
     const Document::Identifier targetDocId = targetDoc->identifier();
+
+    // WARNING
+    // Can't safely use `listFilePaths` in the lambda passed to TaskManager::newTask()
+    // As the lambda will be executed in another thread the memory pointed to by `listFilePaths` may
+    // have been destroyed
+    // The solution is to copy the span into a local array that can be captured and safely used by
+    // the lambda
+    std::vector<FilePath> arrayFilePaths;
+    arrayFilePaths.resize(listFilePaths.size());
+    std::copy(listFilePaths.begin(), listFilePaths.end(), arrayFilePaths.begin());
+
     const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
 
+        auto appModule = AppModule::get();
         auto doc = appModule->application()->findDocumentByIdentifier(targetDocId);
         const bool okImport =
             appModule->ioSystem()->importInDocument()
                 .targetDocument(doc)
-                .withFilepaths(listFilePaths)
+                .withFilepaths(arrayFilePaths)
                 .withParametersProvider(appModule)
                 .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
                     appModule->computeBRepMesh(labelEntity, progress);
