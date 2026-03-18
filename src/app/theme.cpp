@@ -388,6 +388,7 @@ public:
         p.setColor(QPalette::ButtonText, Qt::white);
         p.setColor(QPalette::WindowText, Qt::white);
         p.setColor(QPalette::PlaceholderText, p.color(QPalette::Text).darker());
+        p.setColor(QPalette::Highlight, QColor(0, 120, 215));
         p.setColor(QPalette::HighlightedText, Qt::white);
         const QColor linkColor(115, 131, 191);
         p.setColor(QPalette::Link, linkColor);
