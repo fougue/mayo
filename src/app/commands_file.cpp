@@ -376,8 +376,6 @@ void CommandImportInCurrentDocument::execute()
         return;
 
     FileCommandTools::importInDocument(this->context(), guiDoc->document(), resFileNames.listFilepath);
-    for (const FilePath& fp : resFileNames.listFilepath)
-        AppModule::get()->prependRecentFile(fp);
 }
 
 bool CommandImportInCurrentDocument::getEnabledStatus() const

@@ -284,6 +284,9 @@ void AppModule::recordRecentFile(GuiDocument* guiDoc)
     if (!guiDoc)
         return;
 
+    if (guiDoc->document()->filePath().empty())
+        return; // Anonymous document -> skip
+
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
     if (!recentFile) {
         qDebug() << fmt::format(
