@@ -113,11 +113,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);
         this->linkWithDocumentSelector.setValue(true);
         this->appUiState.setValue({});
-#ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
-#else
-        this->forceOpenGlFallbackWidget.setValue(true);
-#endif
     });
     settings->addResetFunction(groupId_graphics, [=]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
