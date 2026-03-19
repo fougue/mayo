@@ -243,9 +243,9 @@ void TestApp::RecentFiles_test()
         const QPixmap rhsPix = QtGuiUtils::toQPixmap(rhs.thumbnail.imageData);
         const QImage lhsImg = lhsPix.toImage();
         const QImage rhsImg = rhsPix.toImage();
-        for (int i = 0; i < lhsPix.width(); ++i) {
-            for (int j = 0; j < lhsPix.height(); ++j) {
-                QCOMPARE(lhsImg.pixel(i, j), rhsImg.pixel(i, j));
+        for (int x = 0; x < lhsPix.width(); ++x) {
+            for (int y = 0; y < lhsPix.height(); ++y) {
+                QCOMPARE(lhsImg.pixel(x, y), rhsImg.pixel(x, y));
             }
         } // endfor
     }

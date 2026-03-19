@@ -65,8 +65,6 @@ Settings::Variant QSettingsStorage::value(std::string_view key) const
     default:
         return {};
     } // endswitch
-
-    return {};
 }
 
 void QSettingsStorage::setValue(std::string_view key, const Settings::Variant& value)
