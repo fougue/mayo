@@ -434,10 +434,23 @@ static int runApp(QCoreApplication* qtApp)
 
     appModule->settings()->resetAll();
     fnLoadAppSettings(appModule->settings());
-    const int code = qtApp->exec();
-    appModule->recordRecentFiles(guiApp);
-    appModule->settings()->save();
-    return code;
+    try {
+        const int code = qtApp->exec();
+        appModule->recordRecentFiles(guiApp);
+        appModule->settings()->save();
+        return code;
+    }
+    catch (const std::exception& err) {
+        fnCriticalExit(err.what());
+    }
+    catch (const Standard_Failure& err) {
+        fnCriticalExit(Main::tr("[%1] %2").arg(err.DynamicType()->Name(), err.GetMessageString()));
+    }
+    catch (...) {
+        fnCriticalExit(Main::tr("Unknown exception"));
+    }
+
+    return EXIT_FAILURE;
 }
 
 } // namespace Mayo
