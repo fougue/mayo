@@ -87,6 +87,7 @@ CommandEditOptions::CommandEditOptions(IAppContext* context)
     : Command(context)
 {
     auto action = new QAction(this);
+    action->setMenuRole(QAction::PreferencesRole);
     action->setText(Command::tr("Options"));
     action->setToolTip(Command::tr("Options"));
     this->setAction(action);

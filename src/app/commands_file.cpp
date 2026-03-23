@@ -592,6 +592,7 @@ CommandQuitApplication::CommandQuitApplication(IAppContext* context)
     : Command(context)
 {
     auto action = new QAction(this);
+    action->setMenuRole(QAction::QuitRole);
     action->setText(Command::tr("Quit"));
     this->setAction(action);
 }

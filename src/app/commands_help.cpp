@@ -35,6 +35,7 @@ CommandAbout::CommandAbout(IAppContext* context)
     : Command(context)
 {
     auto action = new QAction(this);
+    action->setMenuRole(QAction::AboutRole);
     action->setText(Command::tr("About %1").arg(QCoreApplication::applicationName()));
     this->setAction(action);
 }
