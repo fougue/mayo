@@ -556,8 +556,9 @@ if(Mayo_BuildApp)
             MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
             MACOSX_BUNDLE_COPYRIGHT ${Mayo_Copyright}
             MACOSX_BUNDLE_ICON_FILE appicon.icns
-            WIN32_EXECUTABLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "pro.fougue.mayo"  # See QTBUG-135882
             MACOSX_BUNDLE TRUE
+            WIN32_EXECUTABLE TRUE
     )
 
     if(Mayo_PostBuildCopyRuntimeDLLs)
