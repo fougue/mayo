@@ -36,7 +36,7 @@ namespace Mayo {
 
 namespace {
 
-QPixmap createColorPixmap(const QColor& color, const QSize& size = QSize(64, 64))
+QPixmap createColorPixmap(const QColor& color, const QSize& size = {64, 64})
 {
     QPixmap pix(size);
     QPainter painter(&pix);
@@ -47,17 +47,18 @@ QPixmap createColorPixmap(const QColor& color, const QSize& size = QSize(64, 64)
 FilePath temporaryFilePath()
 {
     QTemporaryFile file;
-    file.open();
-    return filepathFrom(QFileInfo(file));
+    return file.open() ? filepathFrom(QFileInfo(file)) : FilePath{};
 }
 
 RecentFile createRecentFile(const QPixmap& thumbnail)
 {
-    QTemporaryFile file;
-    file.open();
     RecentFile rf;
-    rf.filepath = filepathFrom(QFileInfo(file));
-    rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+    QTemporaryFile file;
+    if (file.open()) {
+        rf.filepath = filepathFrom(QFileInfo(file));
+        rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+    }
+
     rf.thumbnail.imageData = QtGuiUtils::toQByteArray(thumbnail);
     rf.thumbnail.imageCacheKey = thumbnail.cacheKey();
     return rf;

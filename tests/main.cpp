@@ -9,6 +9,7 @@
 #include "test_measure.h"
 #include "test_app.h"
 
+#include <QtCore/QtDebug>
 #include <QtCore/QTemporaryFile>
 
 #include <cstring>
@@ -98,9 +99,23 @@ int main(int argc, char* argv[])
         if (ptrArgOutputFileName) {
             const bool isFirstTest = &test == &vecTest.front();
             QFile outputTestFile(outputTestFileName);
+            if (!outputTestFile.open(QIODevice::ReadOnly)) {
+                qCritical() << QString("Failed to open file %1 [%2]")
+                               .arg(outputTestFileName, outputTestFile.errorString());
+                continue;
+            }
+
             QFile outputFile(argOutputFile.path);
-            outputTestFile.open(QIODevice::ReadOnly);
-            outputFile.open(QIODevice::WriteOnly | (isFirstTest ? QIODevice::NotOpen : QIODevice::Append));
+            QFile::OpenMode fileWriteMode = QIODevice::WriteOnly;
+            if (isFirstTest)
+                fileWriteMode |= QIODevice::Append;
+
+            if (!outputFile.open(fileWriteMode)) {
+                qCritical() << QString("Failed to open file %1 [%2]")
+                               .arg(argOutputFile.path, outputFile.errorString());
+                continue;
+            }
+
             outputFile.write(outputTestFile.readAll());
         }
     }
