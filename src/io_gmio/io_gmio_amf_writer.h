@@ -23,7 +23,7 @@ namespace Mayo::IO {
 // Requires gmio >= v0.4.0
 class GmioAmfWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);

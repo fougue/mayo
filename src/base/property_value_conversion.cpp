@@ -100,7 +100,7 @@ PropertyValueConversion::Variant::Variant(const std::string& str)
     : BaseVariantType(str)
 {}
 
-PropertyValueConversion::Variant::Variant(Span<const uint8_t> bytes)
+PropertyValueConversion::Variant::Variant(gsl::span<const uint8_t> bytes)
     : BaseVariantType(std::vector<uint8_t>(bytes.begin(), bytes.end()))
 {}
 
@@ -417,7 +417,7 @@ std::vector<uint8_t> PropertyValueConversion::Variant::toByteArray(bool* ok) con
     return {};
 }
 
-Span<const uint8_t> PropertyValueConversion::Variant::toConstRefByteArray(bool* ok) const
+gsl::span<const uint8_t> PropertyValueConversion::Variant::toConstRefByteArray(bool* ok) const
 {
     assignBoolPtr(ok, true);
     if (std::holds_alternative<std::vector<uint8_t>>(*this))

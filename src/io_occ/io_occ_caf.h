@@ -13,10 +13,10 @@
 #include "../base/application_item.h"
 #include "../base/document_ptr.h"
 #include "../base/filepath.h"
-#include "../base/span.h"
 
 #include <Transfer_FinderProcess.hxx>
 #include <XSControl_WorkSession.hxx>
+#include <gsl/span>
 #include <mutex>
 class IGESCAFControl_Reader;
 class STEPCAFControl_Reader;
@@ -45,7 +45,7 @@ bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskPr
 TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
+bool cafTransfer(IGESCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);
+bool cafTransfer(STEPCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);
 
 } // namespace Mayo::IO::Private

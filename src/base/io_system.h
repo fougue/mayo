@@ -13,7 +13,7 @@
 #include "io_writer.h"
 #include "libtree.h"
 #include "property.h"
-#include "span.h"
+#include <gsl/span>
 #include "text_id.h"
 
 #include <functional>
@@ -55,8 +55,8 @@ public:
     std::unique_ptr<Reader> createReader(Format format) const;
     std::unique_ptr<Writer> createWriter(Format format) const;
 
-    Span<const Format> readerFormats() const { return m_vecReaderFormat; }
-    Span<const Format> writerFormats() const { return m_vecWriterFormat; }
+    gsl::span<const Format> readerFormats() const { return m_vecReaderFormat; }
+    gsl::span<const Format> writerFormats() const { return m_vecWriterFormat; }
 
     //
     // Import service
@@ -68,7 +68,7 @@ public:
         DocumentPtr targetDocument;
 
         // List of files to be imported in target document
-        Span<const FilePath> filepaths;
+        gsl::span<const FilePath> filepaths;
 
         // Optional: provider of format-specific parameters to be considered when reading
         const ParametersProvider* parametersProvider = nullptr;
@@ -105,7 +105,7 @@ public:
     // Contains arguments for the exportApplicationItems() function
     struct Args_ExportApplicationItems {
         // List of items to be exported
-        Span<const ApplicationItem> applicationItems;
+        gsl::span<const ApplicationItem> applicationItems;
 
         // Path to the target file where items will be written
         FilePath targetFilepath;
@@ -134,7 +134,7 @@ public:
         using Operation = Operation_ImportInDocument;
         Operation& targetDocument(const DocumentPtr& document);
         Operation& withFilepath(const FilePath& filepath);
-        Operation& withFilepaths(Span<const FilePath> filepaths);
+        Operation& withFilepaths(gsl::span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
 
         Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
@@ -164,7 +164,7 @@ public:
         Operation& targetFile(const FilePath& filepath);
         Operation& targetFormat(Format format);
         Operation& withItem(const ApplicationItem& appItem);
-        Operation& withItems(Span<const ApplicationItem> appItems);
+        Operation& withItems(gsl::span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
@@ -183,14 +183,14 @@ public:
     // Iterate over `spanItem` and call `fnCallback` for each item. Guarantees that doublon items
     // will be visited only once
     static void visitUniqueItems(
-            Span<const ApplicationItem> spanItem,
+            gsl::span<const ApplicationItem> spanItem,
             std::function<void(const ApplicationItem&)> fnCallback
     );
 
     // Iterate over `spanItem` and then deep traverse the corresponding tree node to
     // call `fnCallback` for each item. Guarantees that doublon items will be visited only once
     static void traverseUniqueItems(
-            Span<const ApplicationItem> spanItem,
+            gsl::span<const ApplicationItem> spanItem,
             std::function<void(const DocumentTreeNode&)> fnCallback,
             TreeTraversal mode = TreeTraversal::PreOrder
     );

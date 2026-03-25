@@ -49,7 +49,7 @@ GraphicsMeshObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const 
 GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label) const
 {
     OccHandle<Poly_Triangulation> polyTri;
-    Span<const Quantity_Color> spanNodeColor;
+    gsl::span<const Quantity_Color> spanNodeColor;
     //const TopLoc_Location* ptrLocationPolyTri = nullptr;
     if (XCaf::isShape(label)) {
         const TopoDS_Shape shape = XCaf::shape(label);
@@ -117,7 +117,7 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
 
 class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroup {
 public:
-    ObjectProperties(Span<const GraphicsObjectPtr> spanObject)
+    ObjectProperties(gsl::span<const GraphicsObjectPtr> spanObject)
     {
         NCollection_Vec3<float> sumColor = {};
         NCollection_Vec3<float> sumEdgeColor = {};
@@ -205,7 +205,7 @@ public:
 };
 
 std::unique_ptr<PropertyGroup>
-GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+GraphicsMeshObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     return std::make_unique<ObjectProperties>(spanObject);

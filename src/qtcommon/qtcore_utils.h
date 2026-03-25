@@ -7,9 +7,9 @@
 #pragma once
 
 #include "../base/global.h"
-#include "../base/span.h"
 
 #include <QtCore/QByteArray>
+#include <gsl/span>
 #include <string_view>
 #include <vector>
 
@@ -37,7 +37,7 @@ QByteArray QByteArray_fromRawData(const char (&str)[N])
 
 // Convenience function over QByteArray::fromRawData() taking a span of bytes
 template<typename ByteType>
-QByteArray QByteArray_fromRawData(Span<const ByteType> bytes)
+QByteArray QByteArray_fromRawData(gsl::span<const ByteType> bytes)
 {
     static_assert(sizeof(ByteType) == 1, "size of ByteType must be one byte");
     return QtCoreUtils::QByteArray_fromRawData(
@@ -47,7 +47,7 @@ QByteArray QByteArray_fromRawData(Span<const ByteType> bytes)
 
 // Converts a span of bytes to QByteArray object
 template<typename ByteType>
-QByteArray toQByteArray(Span<const ByteType> bytes)
+QByteArray toQByteArray(gsl::span<const ByteType> bytes)
 {
     static_assert(sizeof(ByteType) == 1, "size of ByteType must be one byte");
     return QByteArray{ reinterpret_cast<const char*>(bytes.data()), int(bytes.size()) };

@@ -66,7 +66,7 @@ std::string_view formatName(Format format)
     return "";
 }
 
-Span<std::string_view> formatFileSuffixes(Format format)
+gsl::span<std::string_view> formatFileSuffixes(Format format)
 {
     static std::string_view suffix_img[]  = { "bmp", "jpeg", "jpg", "png", "gif", "ppm", "tiff" };
     static std::string_view suffix_3ds[]  = { "3ds" };

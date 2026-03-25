@@ -7,8 +7,9 @@
 #pragma once
 
 #include "../base/filepath.h"
-#include "../base/span.h"
 #include "commands_api.h"
+
+#include <gsl/span>
 
 namespace Mayo {
 
@@ -17,13 +18,13 @@ public:
     static void closeDocument(IAppContext* context, Document::Identifier docId);
     static void closeAllDocuments(IAppContext* context);
 
-    static void openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath);
+    static void openDocumentsFromList(IAppContext* context, gsl::span<const FilePath> listFilePath);
     static void openDocument(IAppContext* context, const FilePath& filePath);
 
     static void importInDocument(
         IAppContext* context,
         const DocumentPtr& targetDoc,
-        Span<const FilePath> listFilePaths
+        gsl::span<const FilePath> listFilePaths
     );
     static void importInDocument(
         IAppContext* context,

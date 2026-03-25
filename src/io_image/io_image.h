@@ -39,7 +39,7 @@ class ImageWriter : public Writer {
 public:
     ImageWriter(GuiApplication* guiApp);
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(
@@ -103,7 +103,7 @@ private:
 class ImageFactoryWriter : public FactoryWriter {
 public:
     ImageFactoryWriter(GuiApplication* guiApp);
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 

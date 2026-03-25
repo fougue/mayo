@@ -33,7 +33,7 @@ namespace Mayo::IO {
 
 namespace {
 
-bool containsFormat(Span<const Format> spanFormat, Format format)
+bool containsFormat(gsl::span<const Format> spanFormat, Format format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
     return itFormat != spanFormat.end();
@@ -421,7 +421,7 @@ System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appIte
 
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems)
+System::Operation_ExportApplicationItems::withItems(gsl::span<const ApplicationItem> appItems)
 {
     m_args.applicationItems = appItems;
     return *this;
@@ -464,7 +464,7 @@ System::Operation_ExportApplicationItems System::exportApplicationItems() const
 }
 
 void System::visitUniqueItems(
-        Span<const ApplicationItem> spanItem,
+        gsl::span<const ApplicationItem> spanItem,
         std::function<void (const ApplicationItem&)> fnCallback
     )
 {
@@ -491,7 +491,7 @@ void System::visitUniqueItems(
 }
 
 void System::traverseUniqueItems(
-        Span<const ApplicationItem> spanItem,
+        gsl::span<const ApplicationItem> spanItem,
         std::function<void(const DocumentTreeNode&)> fnCallback,
         TreeTraversal mode
     )
@@ -517,7 +517,7 @@ System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document)
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(Span<const FilePath> filepaths)
+System::Operation_ImportInDocument::withFilepaths(gsl::span<const FilePath> filepaths)
 {
     m_args.filepaths = filepaths;
     return *this;
@@ -547,7 +547,7 @@ System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress)
 System::Operation_ImportInDocument::Operation&
 System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
 {
-    return this->withFilepaths(Span<const FilePath>(&filepath, 1));
+    return this->withFilepaths(gsl::span<const FilePath>(&filepath, 1));
 }
 
 System::Operation_ImportInDocument::Operation&

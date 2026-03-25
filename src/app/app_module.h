@@ -76,11 +76,11 @@ public:
     // Information about 3rd-party libraries used by the application
     void addLibraryInfo(const LibraryInfo& lib);
     void addLibraryInfo(std::string_view libName, std::string_view version, std::string_view versionDetails = "");
-    Span<const LibraryInfo> libraryInfoArray() const;
+    gsl::span<const LibraryInfo> libraryInfoArray() const;
 
     // Logging
     void clearMessageLog();
-    Span<const Message> messageLog() const { return m_messageLog; }
+    gsl::span<const Message> messageLog() const { return m_messageLog; }
     Signal<const Messenger::Message&> signalMessage;
     Signal<> signalMessageLogCleared;
 

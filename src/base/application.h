@@ -10,8 +10,8 @@
 #include "document.h"
 #include "occ_handle.h"
 #include "signal.h"
-#include "span.h"
 
+#include <gsl/span>
 #include <CDF_DirectoryIterator.hxx>
 #include <Standard_Version.hxx>
 #include <XCAFApp_Application.hxx>
@@ -55,8 +55,8 @@ public:
 
     static void defineMayoFormat(const ApplicationPtr& app);
 
-    static Span<const char*> envOpenCascadeOptions();
-    static Span<const char*> envOpenCascadePaths();
+    static gsl::span<const char*> envOpenCascadeOptions();
+    static gsl::span<const char*> envOpenCascadePaths();
 
     // Signals
     Signal<const DocumentPtr&> signalDocumentAdded;

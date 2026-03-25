@@ -154,7 +154,7 @@ void FileCommandTools::closeAllDocuments(IAppContext* context)
         FileCommandTools::closeDocument(context, context->currentDocument());
 }
 
-void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)
+void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<const FilePath> listFilePath)
 {
     assert(context != nullptr);
     auto app = context->guiApp()->application();
@@ -202,11 +202,11 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
 
 void FileCommandTools::openDocument(IAppContext* context, const FilePath& filePath)
 {
-    FileCommandTools::openDocumentsFromList(context, Span<const FilePath>(&filePath, 1));
+    FileCommandTools::openDocumentsFromList(context, gsl::span<const FilePath>(&filePath, 1));
 }
 
 void FileCommandTools::importInDocument(
-        IAppContext* context, const DocumentPtr& targetDoc, Span<const FilePath> listFilePaths
+        IAppContext* context, const DocumentPtr& targetDoc, gsl::span<const FilePath> listFilePaths
     )
 {
     // WARNING
@@ -260,7 +260,7 @@ void FileCommandTools::importInDocument(
         IAppContext* context, const DocumentPtr& targetDoc, const FilePath& filePath
     )
 {
-    FileCommandTools::importInDocument(context, targetDoc, Span<const FilePath>(&filePath, 1));
+    FileCommandTools::importInDocument(context, targetDoc, gsl::span<const FilePath>(&filePath, 1));
 }
 
 CommandNewDocument::CommandNewDocument(IAppContext* context)

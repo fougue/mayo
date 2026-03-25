@@ -8,8 +8,8 @@
 
 #include "../base/application_ptr.h"
 #include "../base/filepath.h"
-#include "../base/span.h"
 
+#include <gsl/span>
 #include <functional>
 
 namespace Mayo {
@@ -17,8 +17,8 @@ namespace Mayo {
 // Contains arguments for the cli_asyncExportDocuments() function
 struct CliExportArgs {
     bool progressReport = true;
-    Span<const FilePath> filesToOpen;
-    Span<const FilePath> filesToExport;
+    gsl::span<const FilePath> filesToOpen;
+    gsl::span<const FilePath> filesToExport;
 };
 
 // Asynchronously exports input file(s) listed in 'args'

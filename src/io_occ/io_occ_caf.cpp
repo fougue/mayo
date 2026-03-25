@@ -54,7 +54,7 @@ TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc,
 }
 
 template<typename CafWriterType>
-bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool cafGenericWriteTransfer(CafWriterType& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
@@ -120,11 +120,11 @@ OccHandle<Transfer_FinderProcess> cafFinderProcess(const STEPCAFControl_Writer& 
     return writer.Writer().WS()->TransferWriter()->FinderProcess();
 }
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(IGESCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(STEPCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 

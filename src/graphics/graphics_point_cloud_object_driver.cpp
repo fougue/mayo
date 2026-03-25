@@ -50,7 +50,7 @@ Enumeration::Value GraphicsPointCloudObjectDriver::currentDisplayMode(const Grap
 }
 
 std::unique_ptr<PropertyGroup>
-GraphicsPointCloudObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+GraphicsPointCloudObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     return {};

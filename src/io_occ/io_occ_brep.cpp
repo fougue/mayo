@@ -48,7 +48,7 @@ TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progr
     return CafUtils::makeLabelSequence({ labelShape });
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OccBRepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 

@@ -341,7 +341,7 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
 {
     m_ui->widget_Properties->clear();
     m_ptrCurrentNodeProperties.clear();
-    Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
+    gsl::span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& appItem = spanAppItem.front();
         if (appItem.isDocument()) {

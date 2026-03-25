@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "span.h"
 #include "text_id.h"
+
+#include <gsl/span>
 #include <initializer_list>
 #include <vector>
 #include <type_traits>
@@ -66,7 +67,7 @@ public:
     const Item& itemAt(int index) const { return m_vecItem.at(index); }
 
     // Returns read-only array of the items
-    Span<const Item> items() const { return m_vecItem; }
+    gsl::span<const Item> items() const { return m_vecItem; }
 
     // Creates an Enumeration object from an enumerated type, using MetaEnum helper
     // Note: client code has to include header "enumeration_fromenum.h"

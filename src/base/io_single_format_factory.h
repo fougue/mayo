@@ -14,7 +14,7 @@ namespace Mayo::IO {
 template<Format Fmt, typename FormatReader>
 class SingleFormatFactoryReader : public FactoryReader {
 public:
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Reader> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 };
@@ -22,7 +22,7 @@ public:
 template<Format Fmt, typename FormatWriter>
 class SingleFormatFactoryWriter : public FactoryWriter {
 public:
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 };
@@ -32,7 +32,7 @@ public:
 // --
 
 template<Format Fmt, typename FormatReader>
-Span<const Format> SingleFormatFactoryReader<Fmt, FormatReader>::formats() const
+gsl::span<const Format> SingleFormatFactoryReader<Fmt, FormatReader>::formats() const
 {
     static const Format arrayFormat[] = { Fmt };
     return arrayFormat;
@@ -58,7 +58,7 @@ SingleFormatFactoryReader<Fmt, FormatReader>::createProperties(Format format, Pr
 }
 
 template<Format Fmt, typename FormatWriter>
-Span<const Format> SingleFormatFactoryWriter<Fmt, FormatWriter>::formats() const
+gsl::span<const Format> SingleFormatFactoryWriter<Fmt, FormatWriter>::formats() const
 {
     static const Format arrayFormat[] = { Fmt };
     return arrayFormat;

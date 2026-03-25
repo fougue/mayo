@@ -10,7 +10,7 @@
 #include "filepath.h"
 #include "io_format.h"
 #include "messenger_client.h"
-#include "span.h"
+#include <gsl/span>
 #include <TDF_LabelSequence.hxx>
 #include <memory>
 
@@ -47,7 +47,7 @@ public:
     virtual ~FactoryReader() = default;
 
     // Returns supported formats, ie the formats this factory can create readers for
-    virtual Span<const Format> formats() const = 0;
+    virtual gsl::span<const Format> formats() const = 0;
 
     // Creates and returns a Reader object that matches the given format, or nullptr if no matching reader is found
     virtual std::unique_ptr<Reader> create(Format format) const = 0;

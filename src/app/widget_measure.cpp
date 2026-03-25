@@ -9,6 +9,7 @@
 #include "theme.h"
 #include "ui_widget_measure.h"
 
+#include "../base/cpp_utils.h"
 #include "../gui/gui_document.h"
 #include "../measure/measure_tool_brep.h"
 #include "../qtcommon/qstring_conv.h"
@@ -348,7 +349,7 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     // Create MeasureDisplay objects needing currently two selected graphics objects
     if (vecSelectedOwner_onEntry.size() >= 1) {
         for (const GraphicsOwnerPtr& owner : vecNewSelected) {
-            const int indexOwner = Span_itemIndex(vecNewSelected, owner);
+            const int indexOwner = Cpp::indexInSpan(vecNewSelected, owner);
             const GraphicsOwnerPtr& prevOwner =
                 indexOwner == 0 ?
                     vecSelectedOwner_onEntry.back() :

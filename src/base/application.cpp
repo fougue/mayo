@@ -169,7 +169,7 @@ void Application::defineMayoFormat(const ApplicationPtr& app)
     );
 }
 
-Span<const char*> Application::envOpenCascadeOptions()
+gsl::span<const char*> Application::envOpenCascadeOptions()
 {
     static const char* arrayOptionName[] = {
         "MMGT_OPT",
@@ -181,7 +181,7 @@ Span<const char*> Application::envOpenCascadeOptions()
     return arrayOptionName;
 }
 
-Span<const char*> Application::envOpenCascadePaths()
+gsl::span<const char*> Application::envOpenCascadePaths()
 {
     static const char* arrayPathName[] = {
         "CSF_SHMessage",

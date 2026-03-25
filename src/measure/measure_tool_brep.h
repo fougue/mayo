@@ -16,7 +16,7 @@ namespace Mayo {
 // Provides measurement services for BRep shapes
 class MeasureToolBRep : public IMeasureTool {
 public:
-    Span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const override;
+    gsl::span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const override;
     bool supports(const GraphicsObjectPtr& object) const override;
     bool supports(MeasureType type) const override;
 

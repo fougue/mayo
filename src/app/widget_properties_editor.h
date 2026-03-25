@@ -8,9 +8,9 @@
 
 #include "property_item_delegate.h"
 #include "../base/property.h"
-#include "../base/span.h"
 
 #include <QtWidgets/QWidget>
+#include <gsl/span>
 
 namespace Mayo {
 
@@ -34,7 +34,7 @@ public:
 
     void addLineSpacer(int height);
     void addLineWidget(QWidget* widget, int height = -1);
-    Span<QWidget* const> lineWidgets() const;
+    gsl::span<QWidget* const> lineWidgets() const;
 
     double rowHeightFactor() const;
     void setRowHeightFactor(double v);

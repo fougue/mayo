@@ -7,6 +7,7 @@
 #pragma once
 
 #include <exception>
+#include <gsl/span>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -78,13 +79,25 @@ void throwErrorIf(bool condition, ErrorArgs... args);
 // Same as static_cast<R>(t) but throws exception if 't' does not fit inside type 'R'
 template<typename R, typename T> constexpr R safeStaticCast(T t);
 
+// Returns the index of 'item' contained in 'span'
+template<typename T>
+constexpr int indexInSpan(gsl::span<T> span, typename gsl::span<T>::const_reference item);
+
+template<typename Container>
+constexpr int indexInSpan(const Container& cont, typename Container::const_reference item);
+
 } // namespace CppUtils
+} // namespace Mayo
+
 
 // --
 // -- Implementation
 // --
 
-namespace CppUtils {
+#include <cassert>
+#include <climits>
+
+namespace Mayo::CppUtils {
 
 const std::string& nullString()
 {
@@ -193,7 +206,7 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept
     return std::in_range(t, u);
 #else
     return cmpGreaterEqual(t, std::numeric_limits<R>::lowest())
-            && cmpLessEqual(t, std::numeric_limits<R>::max());
+           && cmpLessEqual(t, std::numeric_limits<R>::max());
 #endif
 }
 
@@ -210,6 +223,21 @@ template<typename R, typename T> constexpr R safeStaticCast(T t)
     return static_cast<R>(t);
 }
 
-} // namespace CppUtils
+template<typename T>
+constexpr int indexInSpan(gsl::span<T> span, typename gsl::span<T>::const_reference item)
+{
+    assert(!span.empty());
+    auto index = &item - &span.front();
+    assert(index >= 0);
+    assert(index <= INT_MAX);
+    assert(&span[static_cast<typename gsl::span<T>::size_type>(index)] == &item);
+    return static_cast<int>(index);
+}
 
-} // namespace Mayo
+template<typename Container>
+constexpr int indexInSpan(const Container& cont, typename Container::const_reference item)
+{
+    return indexInSpan(gsl::span<const typename Container::value_type>(cont), item);
+}
+
+} // namespace Mayo::CppUtils

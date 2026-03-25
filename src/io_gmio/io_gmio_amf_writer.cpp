@@ -186,7 +186,7 @@ public:
     PropertyBool useZip64{ this, textId("useZip64") };
 };
 
-bool GmioAmfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress)
+bool GmioAmfWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress)
 {
     m_vecMaterial.clear();
     m_vecMesh.clear();

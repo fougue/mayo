@@ -9,7 +9,7 @@
 #include "filepath.h"
 #include "io_format.h"
 #include "messenger_client.h"
-#include "span.h"
+#include <gsl/span>
 #include <memory>
 
 namespace Mayo {
@@ -30,7 +30,7 @@ public:
 
     // Converts items(documents and document nodes) into data ready to be written
     // Returns 'true' on success
-    virtual bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
+    virtual bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) = 0;
 
     // Writes contents(items passed to transfer()) to the file at path 'fp'
     // Returns 'true' on success
@@ -46,7 +46,7 @@ public:
     virtual ~FactoryWriter() = default;
 
     // Returns supported formats, ie the formats this factory can create writers for
-    virtual Span<const Format> formats() const = 0;
+    virtual gsl::span<const Format> formats() const = 0;
 
     // Creates and returns a Writer object that matches the given format, or nullptr if no matching writer is found
     virtual std::unique_ptr<Writer> create(Format format) const = 0;

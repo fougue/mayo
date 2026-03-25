@@ -31,7 +31,7 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 }
 
 TriangulationAnnexDataPtr TriangulationAnnexData::Set(
-        const TDF_Label& label, Span<const Quantity_Color> spanNodeColor)
+        const TDF_Label& label, gsl::span<const Quantity_Color> spanNodeColor)
 {
     TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
     data->copyNodeColors(spanNodeColor);
@@ -77,7 +77,7 @@ Standard_OStream& TriangulationAnnexData::Dump(Standard_OStream& ostr) const
     return ostr;
 }
 
-void Mayo::TriangulationAnnexData::copyNodeColors(Span<const Quantity_Color> spanNodeColor)
+void Mayo::TriangulationAnnexData::copyNodeColors(gsl::span<const Quantity_Color> spanNodeColor)
 {
     m_vecNodeColor.clear();
     std::copy(spanNodeColor.begin(), spanNodeColor.end(), std::back_inserter(m_vecNodeColor));

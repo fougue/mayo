@@ -81,7 +81,7 @@ public:
     PropertyString comment{ this, PlyWriterI18N::textId("comment") };
 };
 
-bool PlyWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool PlyWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     progress = progress ? progress : &TaskProgress::null();
     m_vecNode.clear();

@@ -384,13 +384,13 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
 }
 
 void WidgetModelTree::onApplicationItemSelectionModelChanged(
-        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected
+        gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected
     )
 {
     this->connectTreeWidgetDocumentSelectionChanged(false);
     auto _ = gsl::finally([=] { this->connectTreeWidgetDocumentSelectionChanged(true); });
 
-    auto fnSetSelected = [=](Span<const ApplicationItem> spanAppItem, bool on) {
+    auto fnSetSelected = [=](gsl::span<const ApplicationItem> spanAppItem, bool on) {
         for (const ApplicationItem& appItem : spanAppItem) {
             if (!appItem.isDocumentTreeNode())
                 continue;

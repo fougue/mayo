@@ -90,7 +90,7 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
     return CafUtils::makeLabelSequence({ entityLabel });
 }
 
-bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OccStlWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = BRepUtils::makeEmptyCompound();
     System::visitUniqueItems(appItems, [=](const ApplicationItem& appItem) {

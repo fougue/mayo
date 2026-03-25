@@ -413,7 +413,7 @@ void TestBase::PropertyValueConversionVariant_toInt_test_data()
     QTest::newRow("'non_int_str'") << Variant{"non_int_str"} << 0 << false;
 
     const uint8_t bytes[] = { 52, 55 }; // ascii: {'4', '7'}
-    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << 47 << true;
+    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << 47 << true;
 }
 
 void TestBase::PropertyValueConversionVariant_toString_test()
@@ -447,7 +447,7 @@ void TestBase::PropertyValueConversionVariant_toString_test_data()
     QTest::newRow("'some string'") << Variant{"some string"} << std::string{"some string"};
 
     const uint8_t bytes[] = { 48, 65 }; // ascii: {'0', 'A'}
-    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << std::string{"0A"};
+    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << std::string{"0A"};
 }
 
 void TestBase::PropertyValueConversion_test()
@@ -966,7 +966,7 @@ void TestBase::Settings_test()
         settingsStorage->setValue("main/someInt", Settings::Variant{5});
 
         const uint8_t bytes[] = { 97, 98, 99, 100, 101, 95, 49, 50, 51, 52, 53 };
-        const Settings::Variant bytesVar(Span<const uint8_t>(bytes, std::size(bytes)));
+        const Settings::Variant bytesVar(gsl::span<const uint8_t>(bytes, std::size(bytes)));
         QVERIFY(std::holds_alternative<std::vector<uint8_t>>(bytesVar));
         settingsStorage->setValue("main/someTestData", bytesVar);
 
@@ -1168,11 +1168,11 @@ void TestBase::Span_test()
     const std::string& item2 = vecString.at(2);
     const std::string& item3 = vecString.at(3);
     const std::string& item4 = vecString.at(4);
-    QCOMPARE(Span_itemIndex(vecString, item0), 0);
-    QCOMPARE(Span_itemIndex(vecString, item1), 1);
-    QCOMPARE(Span_itemIndex(vecString, item2), 2);
-    QCOMPARE(Span_itemIndex(vecString, item3), 3);
-    QCOMPARE(Span_itemIndex(vecString, item4), 4);
+    QCOMPARE(Cpp::indexInSpan(vecString, item0), 0);
+    QCOMPARE(Cpp::indexInSpan(vecString, item1), 1);
+    QCOMPARE(Cpp::indexInSpan(vecString, item2), 2);
+    QCOMPARE(Cpp::indexInSpan(vecString, item3), 3);
+    QCOMPARE(Cpp::indexInSpan(vecString, item4), 4);
 }
 
 void TestBase::XCaf_userDefinedAttributes_test()

@@ -72,7 +72,7 @@ public:
     OccIgesWriter& operator=(const OccIgesWriter&) = delete; // Not copyable
     ~OccIgesWriter();
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters

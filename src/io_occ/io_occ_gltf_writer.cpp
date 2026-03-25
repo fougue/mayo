@@ -115,7 +115,7 @@ public:
     PropertyBool keepIndices16b{ this, textId("keepIndices16b") };
 };
 
-bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
+bool OccGltfWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();

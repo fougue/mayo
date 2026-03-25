@@ -21,7 +21,7 @@ std::vector<uint8_t> AppUiState::toBlob(const AppUiState& state)
     return QtCoreUtils::toStdByteArray(blob);
 }
 
-AppUiState AppUiState::fromBlob(Span<const uint8_t> blob, bool* ok)
+AppUiState AppUiState::fromBlob(gsl::span<const uint8_t> blob, bool* ok)
 {
     auto fnSetOk = [=](bool v) {
         if (ok)

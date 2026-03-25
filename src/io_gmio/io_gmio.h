@@ -17,7 +17,7 @@ namespace Mayo::IO {
 // Provides factory for gmio-based Writer objects
 class GmioFactoryWriter : public FactoryWriter {
 public:
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 

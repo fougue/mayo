@@ -17,7 +17,6 @@
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
-#include "../base/span.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -25,6 +24,7 @@
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
 
+#include <gsl/span>
 #include <array>
 #include <fstream>
 #include <locale>
@@ -87,7 +87,7 @@ void getWords(const std::string& strLine, std::vector<std::string_view>& vecOutW
     }
 }
 
-bool hasEmptyString(Span<const std::string_view> spanStr)
+bool hasEmptyString(gsl::span<const std::string_view> spanStr)
 {
     for (std::string_view str : spanStr) {
         if (str.empty())
@@ -137,7 +137,7 @@ std::uint32_t strToColorComponent(std::string_view str)
     return unsigned(v > 1. ? v : v * 255);
 }
 
-std::uint32_t toRgbaColor(Span<const std::string_view> spanWord)
+std::uint32_t toRgbaColor(gsl::span<const std::string_view> spanWord)
 {
     const unsigned r = spanWord.size() > 0 ? strToColorComponent(spanWord[0]) : 0;
     const unsigned g = spanWord.size() > 1 ? strToColorComponent(spanWord[1]) : 0;
@@ -315,7 +315,7 @@ TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
     std::vector<Quantity_Color> vecVertexColor;
     vecVertexColor.reserve(m_vecVertex.size());
     for (const Vertex& vertex : m_vecVertex) {
-        const auto ivertex = Span_itemIndex(m_vecVertex, vertex);
+        const auto ivertex = Cpp::indexInSpan(m_vecVertex, vertex);
         MeshUtils::setNode(mesh, ivertex + 1, vertex.coords);
         const std::uint32_t c = vertex.color;
         if (vertex.hasColor) {

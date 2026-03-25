@@ -8,10 +8,10 @@
 
 #include "../base/application_ptr.h"
 #include "../base/application_item_selection_model.h"
-#include "../base/span.h"
 #include "../graphics/graphics_object_driver.h"
 #include "gui_document.h"
 
+#include <gsl/span>
 #include <memory>
 
 namespace Mayo {
@@ -42,15 +42,15 @@ public:
 
     const ApplicationPtr& application() const;
 
-    Span<GuiDocument*> guiDocuments();
-    Span<GuiDocument* const> guiDocuments() const;
+    gsl::span<GuiDocument*> guiDocuments();
+    gsl::span<GuiDocument* const> guiDocuments() const;
     GuiDocument* findGuiDocument(const DocumentPtr& doc) const;
 
     ApplicationItemSelectionModel* selectionModel() const;
 
     void addGraphicsObjectDriver(GraphicsObjectDriverPtr ptr);
     void addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDriver> ptr);
-    Span<const GraphicsObjectDriverPtr> graphicsObjectDrivers() const;
+    gsl::span<const GraphicsObjectDriverPtr> graphicsObjectDrivers() const;
     GraphicsObjectPtr createGraphicsObject(const TDF_Label& label) const;
     GraphicsObjectDriverPtr findCompatibleGraphicsObjectDriver(const TDF_Label& label) const;
 
