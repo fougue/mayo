@@ -54,11 +54,7 @@
 #include <climits>
 #include <cstring>
 #include <memory>
-<<<<<<< HEAD
-=======
 #include <random>
-#include <sstream>
->>>>>>> 1657db7 (Base: add new StringCache helper)
 #include <string>
 #include <type_traits>
 #include <unordered_map>
