@@ -113,7 +113,7 @@ public:
     OccStepWriter& operator=(const OccStepWriter&) = delete; // Not copyable
     ~OccStepWriter();
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters

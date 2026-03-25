@@ -149,7 +149,7 @@ void MessageCollecter::emitMessage(MessageType msgType, std::string_view text)
     }
 }
 
-Span<const Messenger::Message> MessageCollecter::messages() const
+gsl::span<const Messenger::Message> MessageCollecter::messages() const
 {
     return m_vecMessage;
 }

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "signal.h"
-#include "span.h"
+#include <gsl/span>
 #include "text_id.h"
 
 #include <vector>
@@ -30,7 +30,7 @@ public:
     virtual ~PropertyGroup() = default;
 
     // TODO Rename to get() or items() ?
-    Span<Property* const> properties() const;
+    gsl::span<Property* const> properties() const;
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 

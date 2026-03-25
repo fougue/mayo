@@ -162,7 +162,7 @@ void AppModule::addLibraryInfo(
     this->addLibraryInfo(libInfo);
 }
 
-Span<const LibraryInfo> AppModule::libraryInfoArray() const
+gsl::span<const LibraryInfo> AppModule::libraryInfoArray() const
 {
     return m_vecLibraryInfo;
 }

@@ -12,7 +12,7 @@
 
 namespace Mayo::IO {
 
-Span<const Format> GmioFactoryWriter::formats() const
+gsl::span<const Format> GmioFactoryWriter::formats() const
 {
     static const Format array[] = { Format_AMF };
     return array;

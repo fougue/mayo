@@ -17,7 +17,7 @@ PropertyGroup::PropertyGroup(PropertyGroup* parentGroup)
 {
 }
 
-Span<Property* const> PropertyGroup::properties() const
+gsl::span<Property* const> PropertyGroup::properties() const
 {
     return m_properties;
 }

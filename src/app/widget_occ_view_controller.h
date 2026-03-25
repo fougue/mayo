@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "../base/span.h"
 #include "../gui/v3d_view_controller.h"
 #include "view3d_navigation_style.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
+#include <gsl/span>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -69,7 +69,7 @@ private:
         void push(Input in);
         void release(Input in);
         void clear();
-        Span<const Input> data() const { return m_inputs; }
+        gsl::span<const Input> data() const { return m_inputs; }
 
         enum class Operation { None, Push, Release };
         Operation lastOperation() const { return m_lastOperation; }

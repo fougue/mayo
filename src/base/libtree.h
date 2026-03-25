@@ -7,7 +7,8 @@
 #pragma once
 
 #include "cpp_utils.h"
-#include "span.h"
+
+#include <gsl/span>
 #include <algorithm>
 #include <cstdint>
 #include <vector>
@@ -63,7 +64,7 @@ public:
     bool nodeIsLeaf(TreeNodeId id) const;
 
     // Read-only array of all the roots
-    Span<const TreeNodeId> roots() const;
+    gsl::span<const TreeNodeId> roots() const;
 
     // Removes all nodes, tree will become empty
     void clear();
@@ -283,7 +284,7 @@ template<typename T> size_t Tree<T>::nodeCount() const
     return m_vecNode.size();
 }
 
-template<typename T> Span<const TreeNodeId> Tree<T>::roots() const
+template<typename T> gsl::span<const TreeNodeId> Tree<T>::roots() const
 {
     return m_vecRoot;
 }

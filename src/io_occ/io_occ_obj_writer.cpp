@@ -45,7 +45,7 @@ public:
     PropertyEnum<RWMesh_CoordinateSystem> outputCoordinateSystem{ this, OccObjWriterI18N::textId("outputCoordinateSystem") };
 };
 
-bool OccObjWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
+bool OccObjWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();

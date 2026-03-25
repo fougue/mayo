@@ -172,7 +172,7 @@ struct FittedPlaneResult {
 };
 
 // Computes optimal plane from input 3D points
-FittedPlaneResult fittedPlane(Span<const gp_Pnt> points)
+FittedPlaneResult fittedPlane(gsl::span<const gp_Pnt> points)
 {
     // Compute centroid point
     gp_Pnt centroid;
@@ -241,7 +241,7 @@ struct FittedCircle2DResult {
 // Compute optimal circle from input 3D points and plane
 // This function uses Taubin method that is considered one of the best for circular regression(more
 // stable than Kasa method)
-FittedCircle2DResult fittedCircle2D_taubin(Span<const gp_Pnt2d> points)
+FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
 {
     const size_t N = points.size();
 
@@ -300,7 +300,7 @@ FittedCircle2DResult fittedCircle2D_taubin(Span<const gp_Pnt2d> points)
 
 } // namespace
 
-Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
+gsl::span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
 {
     switch (type) {
     case MeasureType::VertexPosition: {

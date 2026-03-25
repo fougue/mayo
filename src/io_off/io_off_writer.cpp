@@ -26,7 +26,7 @@ namespace Mayo::IO {
 
 struct OffWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OffWriterI18N) };
 
-bool OffWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OffWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_vecTreeNode.clear();
     m_vecTreeNode.reserve(appItems.size());

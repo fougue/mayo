@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "span.h"
+#include <gsl/span>
 
 #include <functional>
 #include <sstream>
@@ -97,7 +97,7 @@ public:
 
     void emitMessage(MessageType msgType, std::string_view text) override;
 
-    Span<const Messenger::Message> messages() const;
+    gsl::span<const Messenger::Message> messages() const;
     std::string asString(std::string_view separator, MessageType msgType) const;
     std::string asString(std::string_view separator) const;
 

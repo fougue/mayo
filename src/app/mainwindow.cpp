@@ -364,7 +364,7 @@ void MainWindow::onMessage(const Messenger::Message& msg)
     }
 }
 
-void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
+void MainWindow::openDocumentsFromList(gsl::span<const FilePath> listFilePath)
 {
     FileCommandTools::openDocumentsFromList(m_appContext, listFilePath);
 }

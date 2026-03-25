@@ -31,7 +31,7 @@ public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
-    void openDocumentsFromList(Span<const FilePath> listFilePath);
+    void openDocumentsFromList(gsl::span<const FilePath> listFilePath);
 
 protected:
     void showEvent(QShowEvent* event) override;

@@ -193,7 +193,7 @@ OccIgesWriter::~OccIgesWriter()
     m_writer->~IGESCAFControl_Writer();
 }
 
-bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccIgesWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;

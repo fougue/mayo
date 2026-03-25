@@ -87,7 +87,7 @@ private:
     }
 
     std::optional<Quantity_Color> m_faceColor;
-    Span<const Quantity_Color> m_nodeColors;
+    gsl::span<const Quantity_Color> m_nodeColors;
     TopLoc_Location m_location;
     OccHandle<Poly_Triangulation> m_triangulation;
 };

@@ -18,7 +18,7 @@ namespace Mayo {
 struct GuiApplication::Private {
 
     void onApplicationItemSelectionChanged(
-            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected)
+            gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected)
     {
         std::unordered_set<GuiDocument*> setGuiDocDirty;
         auto fnToggleItemSelected = [&](const ApplicationItem& item) {
@@ -71,12 +71,12 @@ const ApplicationPtr& GuiApplication::application() const
     return d->m_app;
 }
 
-Span<GuiDocument*> GuiApplication::guiDocuments()
+gsl::span<GuiDocument*> GuiApplication::guiDocuments()
 {
     return d->m_vecGuiDocument;
 }
 
-Span<GuiDocument* const> GuiApplication::guiDocuments() const
+gsl::span<GuiDocument* const> GuiApplication::guiDocuments() const
 {
     return d->m_vecGuiDocument;
 }
@@ -106,7 +106,7 @@ void GuiApplication::addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDrive
     d->m_vecGfxObjectDriver.push_back(ptr.release()); // Will be converted to opencascade::handle<>
 }
 
-Span<const GraphicsObjectDriverPtr> GuiApplication::graphicsObjectDrivers() const
+gsl::span<const GraphicsObjectDriverPtr> GuiApplication::graphicsObjectDrivers() const
 {
     return d->m_vecGfxObjectDriver;
 }

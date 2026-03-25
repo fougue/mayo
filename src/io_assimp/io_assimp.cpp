@@ -11,7 +11,7 @@
 
 namespace Mayo::IO {
 
-Span<const Format> AssimpFactoryReader::formats() const
+gsl::span<const Format> AssimpFactoryReader::formats() const
 {
     static const Format array[] = {
         Format_AMF,

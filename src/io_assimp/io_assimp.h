@@ -15,7 +15,7 @@ namespace Mayo::IO {
 // Provides factory for Assimp-based Reader objects
 class AssimpFactoryReader : public FactoryReader {
 public:
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Reader> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 

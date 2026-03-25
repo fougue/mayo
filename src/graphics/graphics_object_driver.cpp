@@ -16,7 +16,7 @@ GraphicsObjectDriverPtr GraphicsObjectDriver::get(const GraphicsObjectPtr& objec
         return {};
 }
 
-GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(Span<const GraphicsObjectPtr> spanObject)
+GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(gsl::span<const GraphicsObjectPtr> spanObject)
 {
     GraphicsObjectDriverPtr commonGfxDriver;
     for (const GraphicsObjectPtr& object : spanObject) {
@@ -42,7 +42,7 @@ void GraphicsObjectDriver::throwIf_differentDriver(const GraphicsObjectPtr& obje
         throw std::invalid_argument("Invalid driver for graphics object");
 }
 
-void GraphicsObjectDriver::throwIf_differentDriver(Span<const GraphicsObjectPtr> objects) const
+void GraphicsObjectDriver::throwIf_differentDriver(gsl::span<const GraphicsObjectPtr> objects) const
 {
     for (const GraphicsObjectPtr& object : objects)
         this->throwIf_differentDriver(object);

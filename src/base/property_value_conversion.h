@@ -7,7 +7,7 @@
 #pragma once
 
 #include "property.h"
-#include "span.h"
+#include <gsl/span>
 
 #include <string>
 #include <variant>
@@ -32,7 +32,7 @@ public:
         Variant(double v);
         Variant(const char* str);
         Variant(const std::string& str);
-        Variant(Span<const uint8_t> bytes);
+        Variant(gsl::span<const uint8_t> bytes);
 
         bool isValid() const;
         bool toBool(bool* ok = nullptr) const;
@@ -43,7 +43,7 @@ public:
         const std::string& toConstRefString(bool* ok = nullptr) const;
 
         std::vector<uint8_t> toByteArray(bool* ok = nullptr) const;
-        Span<const uint8_t> toConstRefByteArray(bool* ok = nullptr) const;
+        gsl::span<const uint8_t> toConstRefByteArray(bool* ok = nullptr) const;
 
         bool isConvertibleToConstRefString() const;
         bool isByteArray() const;

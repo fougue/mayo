@@ -180,7 +180,7 @@ ImageWriter::ImageWriter(GuiApplication* guiApp)
     }
 }
 
-bool ImageWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool ImageWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_vecAppItem.clear();
     System::visitUniqueItems(appItems, [&](const ApplicationItem& item) { m_vecAppItem.push_back(item); });
@@ -235,7 +235,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
             fnMapGraphicsObject(labelNode);
         }
 
-        const auto itemProgress = Span_itemIndex(m_vecAppItem, appItem);
+        const auto itemProgress = Cpp::indexInSpan(m_vecAppItem, appItem);
         progress->setValue(MathUtils::toPercent(itemProgress, 0, itemCount));
     }
 
@@ -375,7 +375,7 @@ ImageFactoryWriter::ImageFactoryWriter(GuiApplication* guiApp)
 {
 }
 
-Span<const Format> ImageFactoryWriter::formats() const
+gsl::span<const Format> ImageFactoryWriter::formats() const
 {
     static const Format arrayFormat[] = { Format_Image };
     return arrayFormat;

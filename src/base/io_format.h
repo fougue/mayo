@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "span.h"
+#include <gsl/span>
 #include <string_view>
 
 namespace Mayo::IO {
@@ -42,7 +42,7 @@ std::string_view formatIdentifier(Format format);
 std::string_view formatName(Format format);
 
 // Returns array of applicable file suffixes(extensions) corresponding to 'format'
-Span<std::string_view> formatFileSuffixes(Format format);
+gsl::span<std::string_view> formatFileSuffixes(Format format);
 
 // Does 'format' provide BRep model ?
 bool formatProvidesBRep(Format format);

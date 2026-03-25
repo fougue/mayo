@@ -317,7 +317,7 @@ OccStepWriter::~OccStepWriter()
     m_writer->~STEPCAFControl_Writer();
 }
 
-bool OccStepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccStepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;

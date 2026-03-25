@@ -64,7 +64,7 @@ private:
         const QItemSelection& selected, const QItemSelection& deselected
     );
     void onApplicationItemSelectionModelChanged(
-        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected
+        gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected
     );
 
     void connectTreeModelDataChanged(bool on);

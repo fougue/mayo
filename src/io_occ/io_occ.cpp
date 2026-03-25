@@ -35,7 +35,7 @@ namespace Mayo::IO {
 
 namespace { using PtrPropertyGroup = std::unique_ptr<PropertyGroup>; }
 
-Span<const Format> OccFactoryReader::formats() const
+gsl::span<const Format> OccFactoryReader::formats() const
 {
     static const Format arrayFormat[] = {
         Format_STEP, Format_IGES, Format_OCCBREP, Format_STL
@@ -97,7 +97,7 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
     return {};
 }
 
-Span<const Format> OccFactoryWriter::formats() const
+gsl::span<const Format> OccFactoryWriter::formats() const
 {
     static const Format arrayFormat[] = {
         Format_STEP, Format_IGES, Format_OCCBREP, Format_STL, Format_VRML

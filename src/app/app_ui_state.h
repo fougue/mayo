@@ -7,8 +7,8 @@
 #pragma once
 
 #include "../base/property_builtins.h"
-#include "../base/span.h"
 
+#include <gsl/span>
 #include <vector>
 
 namespace Mayo {
@@ -21,7 +21,7 @@ struct AppUiState {
 
     // Serialization functions
     static std::vector<uint8_t> toBlob(const AppUiState& state);
-    static AppUiState fromBlob(Span<const uint8_t> blob, bool* ok = nullptr);
+    static AppUiState fromBlob(gsl::span<const uint8_t> blob, bool* ok = nullptr);
 };
 using PropertyAppUiState = GenericProperty<AppUiState>;
 

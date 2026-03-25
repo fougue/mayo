@@ -128,7 +128,7 @@ Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsO
 }
 
 std::unique_ptr<PropertyGroup>
-GraphicsShapeObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+GraphicsShapeObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     //return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);

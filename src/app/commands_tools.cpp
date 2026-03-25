@@ -55,7 +55,7 @@ CommandInspectXde::CommandInspectXde(IAppContext* context)
 
 void CommandInspectXde::execute()
 {
-    const Span<const ApplicationItem> spanAppItem = this->guiApp()->selectionModel()->selectedItems();
+    const gsl::span<const ApplicationItem> spanAppItem = this->guiApp()->selectionModel()->selectedItems();
     DocumentPtr doc;
     for (const ApplicationItem& appItem : spanAppItem) {
         if (appItem.document()->isXCafDocument()) {
@@ -73,7 +73,7 @@ void CommandInspectXde::execute()
 
 bool CommandInspectXde::getEnabledStatus() const
 {
-    Span<const ApplicationItem> spanSelectedAppItem = this->guiApp()->selectionModel()->selectedItems();
+    gsl::span<const ApplicationItem> spanSelectedAppItem = this->guiApp()->selectionModel()->selectedItems();
     const ApplicationItem firstAppItem =
             !spanSelectedAppItem.empty() ? spanSelectedAppItem.front() : ApplicationItem();
     return spanSelectedAppItem.size() == 1

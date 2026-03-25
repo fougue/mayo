@@ -136,7 +136,7 @@ void WidgetPropertiesEditor::addLineWidget(QWidget* widget, int height)
     d->addLineWidgetItem(widget, height);
 }
 
-Span<QWidget* const> WidgetPropertiesEditor::lineWidgets() const
+gsl::span<QWidget* const> WidgetPropertiesEditor::lineWidgets() const
 {
     return d->vecLineWidget;
 }

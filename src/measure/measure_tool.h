@@ -8,7 +8,6 @@
 
 #include "measure_type.h"
 #include "../base/quantity.h"
-#include "../base/span.h"
 #include "../graphics/graphics_object_ptr.h"
 #include "../graphics/graphics_owner_ptr.h"
 
@@ -16,6 +15,7 @@
 #include <gp_Lin.hxx>
 #include <gp_Pnt.hxx>
 
+#include <gsl/span>
 #include <string_view>
 #include <variant>
 
@@ -100,7 +100,7 @@ class IMeasureTool {
 public:
     virtual ~IMeasureTool() = default;
 
-    virtual Span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const = 0;
+    virtual gsl::span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const = 0;
     virtual bool supports(const GraphicsObjectPtr& object) const = 0;
     virtual bool supports(MeasureType type) const = 0;
 

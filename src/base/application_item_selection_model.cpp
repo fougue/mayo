@@ -10,7 +10,7 @@ namespace Mayo {
 
 namespace Internal {
 
-static bool hasApplicationItem(Span<ApplicationItem> vec, const ApplicationItem& item)
+static bool hasApplicationItem(gsl::span<ApplicationItem> vec, const ApplicationItem& item)
 {
     auto itFound = std::find(vec.begin(), vec.end(), item);
     return itFound != vec.end();
@@ -24,7 +24,7 @@ static std::vector<ApplicationItem>::iterator findApplicationItem(
 
 } // namespace Internal
 
-Span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
+gsl::span<const ApplicationItem> ApplicationItemSelectionModel::selectedItems() const
 {
     return m_vecSelectedItem;
 }
@@ -43,7 +43,7 @@ void ApplicationItemSelectionModel::add(const ApplicationItem& item)
     }
 }
 
-void ApplicationItemSelectionModel::add(Span<ApplicationItem> vecItem)
+void ApplicationItemSelectionModel::add(gsl::span<ApplicationItem> vecItem)
 {
     std::vector<ApplicationItem> signalVecItem;
     for (const ApplicationItem& item : vecItem) {
@@ -67,7 +67,7 @@ void ApplicationItemSelectionModel::remove(const ApplicationItem& item)
     }
 }
 
-void ApplicationItemSelectionModel::remove(Span<ApplicationItem> vecItem)
+void ApplicationItemSelectionModel::remove(gsl::span<ApplicationItem> vecItem)
 {
     std::vector<ApplicationItem> signalVecItem;
     for (const ApplicationItem& item : vecItem) {
