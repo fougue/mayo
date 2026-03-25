@@ -167,9 +167,28 @@ double computeStringWidth(const NCollection_String& str, Font_BRepFont& brepFont
     return w;
 }
 
+gp_Pnt toCorrectedPnt(const gp_Pnt& pnt)
+{
+    auto fixCoordValue = [](double coord, double fallback = 0.) {
+        if (std::isnan(coord))
+            return fallback;
+
+        if (!std::isfinite(coord))
+            return fallback;
+
+        // Incoherent value, too big for OpenCascade
+        if (std::abs(coord) > 1e50)
+            return fallback;
+
+        return coord;
+    };
+
+    return {fixCoordValue(pnt.X()), fixCoordValue(pnt.Y()), fixCoordValue(pnt.Z())};
+}
+
 gp_Pnt toOccPnt(const DxfCoords& coords)
 {
-    return { coords.x, coords.y, coords.z };
+    return toCorrectedPnt({ coords.x, coords.y, coords.z });
 }
 
 gp_Vec toOccVec(const DxfCoords& coords)
@@ -231,7 +250,7 @@ Placement makePlacementFromOcs(
         + gp_Vec{pl.frame.w} * centerOcs.z
     );
     // Z=w, X=u → deterministic orientation
-    pl.ax2 = gp_Ax2{cw, pl.frame.w, pl.frame.u};
+    pl.ax2 = gp_Ax2{toCorrectedPnt(cw), pl.frame.w, pl.frame.u};
     return pl;
 }
 
@@ -287,9 +306,9 @@ gp_Trsf unitScaleTrsf(const gp_Pnt& pnt, const Frame& frame, const DxfScale& sca
 // OCS point -> WCS(with ⟨u,v,w⟩ frame)
 gp_Pnt ocsPointToWcs(const DxfCoords& pnt, const Frame& frame)
 {
-    return gp::Origin().Translated(
+    return toCorrectedPnt(gp::Origin().Translated(
         gp_Vec{frame.u}*pnt.x + gp_Vec{frame.v}*pnt.y + gp_Vec{frame.w}*pnt.z
-    );
+    ));
 }
 
 // OCS vector -> WCS(with ⟨u,v,w⟩ frame)
@@ -303,32 +322,29 @@ std::string getEntityName(const Dxf_EntityVariant& entityVar)
     using namespace std::string_literals;
     return std::visit(Cpp::Overloaded{
         [](std::monostate) { return std::string{}; },
-        [=](ConstRefWrap<Dxf_3DFACE>) { return "3DFACE"s; },
-        [=](ConstRefWrap<Dxf_ARC>) { return "ARC"s; },
-        [=](ConstRefWrap<Dxf_CIRCLE>) { return "CIRCLE"s; },
-        [=](ConstRefWrap<Dxf_ELLIPSE>) { return "ELLIPSE"s; },
-        [=](ConstRefWrap<Dxf_INSERT> obj) { return "INSERT_" + std::string{obj.get().blockName}; },
-        [=](ConstRefWrap<Dxf_LINE>) { return "LINE"s; },
-        [=](ConstRefWrap<Dxf_LWPOLYLINE>) { return "LWPOLYLINE"s; },
-        [=](ConstRefWrap<Dxf_MTEXT>) { return "MTEXT"s; },
-        [=](ConstRefWrap<Dxf_POINT>) { return "POINT"s; },
-        [=](ConstRefWrap<Dxf_POLYLINE>) { return "POLYLINE"s; },
-        [=](ConstRefWrap<Dxf_SOLID>) { return "SOLID"s; },
-        [=](ConstRefWrap<Dxf_SPLINE>) { return "SPLINE"s; },
-        [=](ConstRefWrap<Dxf_TEXT>) { return "TEXT"s; },
-        [=](ConstRefWrap<Dxf_ATTRIB>) { return "ATTRIB"s; }
+        [](ConstRefWrap<Dxf_3DFACE>) { return "3DFACE"s; },
+        [](ConstRefWrap<Dxf_ARC>) { return "ARC"s; },
+        [](ConstRefWrap<Dxf_CIRCLE>) { return "CIRCLE"s; },
+        [](ConstRefWrap<Dxf_ELLIPSE>) { return "ELLIPSE"s; },
+        [](ConstRefWrap<Dxf_INSERT> obj) { return "INSERT_" + std::string{obj.get().blockName}; },
+        [](ConstRefWrap<Dxf_LINE>) { return "LINE"s; },
+        [](ConstRefWrap<Dxf_LWPOLYLINE>) { return "LWPOLYLINE"s; },
+        [](ConstRefWrap<Dxf_MTEXT>) { return "MTEXT"s; },
+        [](ConstRefWrap<Dxf_POINT>) { return "POINT"s; },
+        [](ConstRefWrap<Dxf_POLYLINE>) { return "POLYLINE"s; },
+        [](ConstRefWrap<Dxf_SOLID>) { return "SOLID"s; },
+        [](ConstRefWrap<Dxf_SPLINE>) { return "SPLINE"s; },
+        [](ConstRefWrap<Dxf_TEXT>) { return "TEXT"s; },
+        [](ConstRefWrap<Dxf_ATTRIB>) { return "ATTRIB"s; }
         }, entityVar
     );
 }
 
 DxfStringRef getEntityLayerName(const Dxf_EntityVariant& entityVar)
 {
-    return std::visit([](auto&& arg) -> std::string_view {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, std::monostate>)
-            return {};
-        else
-            return arg.get().layerName;
+    return std::visit(Cpp::Overloaded{
+        [](std::monostate) { return DxfStringRef{}; },
+        [](auto cref) { return cref.get().layerName; }
         }, entityVar
     );
 }
