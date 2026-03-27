@@ -253,7 +253,7 @@ CommandZoomInCurrentDocument::CommandZoomInCurrentDocument(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom In"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
-    action->setShortcut(Qt::CTRL | Qt::Key_Plus);
+    action->setShortcut(QKeySequence::StandardKey::ZoomIn);
     this->setAction(action);
 }
 
@@ -270,7 +270,7 @@ CommandZoomOutCurrentDocument::CommandZoomOutCurrentDocument(IAppContext* contex
     auto action = new QAction(this);
     action->setText(Command::tr("Zoom Out"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
-    action->setShortcut(Qt::CTRL | Qt::Key_Minus);
+    action->setShortcut(QKeySequence::StandardKey::ZoomOut);
     this->setAction(action);
 }
 

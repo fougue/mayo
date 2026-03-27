@@ -90,6 +90,7 @@ CommandEditOptions::CommandEditOptions(IAppContext* context)
     action->setMenuRole(QAction::PreferencesRole);
     action->setText(Command::tr("Options"));
     action->setToolTip(Command::tr("Options"));
+    action->setShortcut(QKeySequence::StandardKey::Preferences);
     this->setAction(action);
 }
 
