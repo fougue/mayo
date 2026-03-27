@@ -269,7 +269,7 @@ CommandNewDocument::CommandNewDocument(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("New"));
     action->setToolTip(Command::tr("New Document"));
-    action->setShortcut(Qt::CTRL | Qt::Key_N);
+    action->setShortcut(QKeySequence::StandardKey::New);
     this->setAction(action);
 }
 
@@ -286,7 +286,7 @@ CommandOpenDocuments::CommandOpenDocuments(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("Open"));
     action->setToolTip(Command::tr("Open Documents"));
-    action->setShortcut(Qt::CTRL | Qt::Key_O);
+    action->setShortcut(QKeySequence::StandardKey::Open);
     this->setAction(action);
 
     context->widgetMain()->setAcceptDrops(true);
@@ -480,7 +480,7 @@ CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)
     action->setText(Command::tr("Close \"%1\""));
     action->setToolTip(action->text());
     action->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
-    action->setShortcut(Qt::CTRL | Qt::Key_W);
+    action->setShortcut(QKeySequence::StandardKey::Close);
     this->setAction(action);
 
     QObject::connect(
@@ -524,7 +524,6 @@ CommandCloseAllDocuments::CommandCloseAllDocuments(IAppContext* context)
     auto action = new QAction(this);
     action->setText(Command::tr("Close all"));
     action->setToolTip(Command::tr("Close all documents"));
-    action->setShortcut((Qt::CTRL | Qt::SHIFT) | Qt::Key_W);
     this->setAction(action);
 }
 
@@ -594,6 +593,7 @@ CommandQuitApplication::CommandQuitApplication(IAppContext* context)
     auto action = new QAction(this);
     action->setMenuRole(QAction::QuitRole);
     action->setText(Command::tr("Quit"));
+    action->setShortcut(QKeySequence::StandardKey::Quit);
     this->setAction(action);
 }
 

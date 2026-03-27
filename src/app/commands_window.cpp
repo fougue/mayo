@@ -20,7 +20,7 @@ CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext
     auto action = new QAction(this);
     action->setText(Command::tr("Fullscreen"));
     action->setToolTip(Command::tr("Switch Fullscreen/Normal"));
-    action->setShortcut(Qt::Key_F11);
+    action->setShortcut(QKeySequence::StandardKey::FullScreen);
     action->setCheckable(true);
     action->setChecked(context->widgetMain()->isFullScreen());
     this->setAction(action);
@@ -161,7 +161,7 @@ CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
     action->setText(Command::tr("Previous Document"));
     action->setToolTip(Command::tr("Previous Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Back));
-    action->setShortcut(Qt::ALT | Qt::Key_Left);
+    action->setShortcut(QKeySequence::StandardKey::Back);
     this->setAction(action);
 }
 
@@ -187,7 +187,7 @@ CommandNextDocument::CommandNextDocument(IAppContext* context)
     action->setText(Command::tr("Next Document"));
     action->setToolTip(Command::tr("Next Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Next));
-    action->setShortcut(Qt::ALT | Qt::Key_Right);
+    action->setShortcut(QKeySequence::StandardKey::Forward);
     this->setAction(action);
 }
 
