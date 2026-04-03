@@ -219,7 +219,7 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         }
     };
 
-    const int itemCount = CppUtils::safeStaticCast<int>(m_vecAppItem.size());
+    const int itemCount = static_cast<int>(m_vecAppItem.size());
     // Render application items
     for (const ApplicationItem& appItem : m_vecAppItem) {
         if (appItem.isDocument()) {

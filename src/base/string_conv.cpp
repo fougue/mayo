@@ -13,10 +13,10 @@
 #  include <locale.h>
 #endif
 
-#include "string_conv.h"
-
 #include "cpp_utils.h"
 #include "math_utils.h"
+#include "string_conv.h"
+
 #include <gsl/util>
 #include <algorithm>
 #include <sstream>
@@ -43,14 +43,21 @@ UINT getAnsiCodePageForLocale(LCID lcid)
 
 bool toUtf16String(std::string_view str, UINT localeAcp, std::vector<wchar_t>& utf16)
 {
+    if (!Cpp::cmpLessEqual(str.size(), INT_MAX))
+        return false;
+
     // Compute length of utf16 string for memory allocation
-    const int lenStr = CppUtils::safeStaticCast<int>(str.size());
+    const int lenStr = static_cast<int>(str.size());
     const int lenUtf16 = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, nullptr, 0);
-    if (lenUtf16 == 0)
-        return {};
+    if (lenUtf16 <= 0)
+        return false;
+
+    // +1 for null terminator, guard overflow
+    if (lenUtf16 >= INT_MAX)
+        return false;
 
     // Encode to utf16 string
-    utf16.resize(lenUtf16 + 1);
+    utf16.resize(static_cast<size_t>(lenUtf16) + 1);
     const int convCount = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, utf16.data(), lenUtf16);
     if (convCount == 0)
         utf16.resize(1);
@@ -89,7 +96,8 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
         return {};
 
     // Encode intermediate utf16 string to utf8
-    const int lenUtf16 = Cpp::safeStaticCast<int>(utf16.size()) - 1;
+    // NOTE static_cast<int> for lenUtf16 is safe as toUtf16String() guarantees size fits 'int' type
+    const int lenUtf16 = static_cast<int>(utf16.size()) - 1;
     const int lenUtf8 = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), lenUtf16, nullptr, 0, nullptr, nullptr);
     thread_local std::vector<char> utf8;
     utf8.resize(lenUtf8 + 1);

@@ -9,7 +9,6 @@
 #include "../base/application_item.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/triangulation_annex_data.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_access.h"
@@ -31,6 +30,7 @@
 #include <gmio_stl/stl_error.h>
 
 #include <fmt/format.h>
+#include <gsl/narrow>
 #include <cmath>
 #include <unordered_map>
 
@@ -262,8 +262,8 @@ bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     gmio_amf_document amfDoc = {};
     amfDoc.cookie = this;
     amfDoc.unit = GMIO_AMF_UNIT_MILLIMETER;
-    amfDoc.object_count = int(m_vecObject.size());
-    amfDoc.material_count = int(m_vecMaterial.size());
+    amfDoc.object_count = static_cast<int>(m_vecObject.size());
+    amfDoc.material_count = static_cast<int>(m_vecMaterial.size());
     amfDoc.constellation_count = !m_vecInstance.empty() ? 1 : 0;
     amfDoc.func_get_document_element = &GmioAmfWriter::amf_getDocumentElement;
     amfDoc.func_get_document_element_metadata = &GmioAmfWriter::amf_getDocumentElementMetadata;
@@ -290,7 +290,7 @@ bool GmioAmfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     amfOptions.create_zip_archive = m_params.createZipArchive;
     amfOptions.dont_use_zip64_extensions = !m_params.useZip64;
     amfOptions.zip_entry_filename = m_params.zipEntryFilename.c_str();
-    amfOptions.zip_entry_filename_len = CppUtils::safeStaticCast<uint16_t>(m_params.zipEntryFilename.size());
+    amfOptions.zip_entry_filename_len = gsl::narrow<uint16_t>(m_params.zipEntryFilename.size());
     // TODO Handle gmio_amf_write_options::z_compress_options
     const int error = gmio_amf_write_file(filepath.u8string().c_str(), &amfDoc, &amfOptions);
     return gmio_no_error(error);
@@ -316,12 +316,12 @@ void GmioAmfWriter::applyProperties(const PropertyGroup* group)
 int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 {
     // Object meshes
-    const int meshCount = int(m_vecMesh.size());
+    const int meshCount = static_cast<int>(m_vecMesh.size());
 
     auto fnAddMesh = [&](const OccHandle<Poly_Triangulation>& polyTri, const TopLoc_Location& loc) {
         if (!polyTri.IsNull()) {
             Mesh mesh;
-            mesh.id = int(m_vecMesh.size());
+            mesh.id = static_cast<int>(m_vecMesh.size());
             mesh.triangulation = polyTri;
             mesh.location = loc;
             // TODO mesh.materialId = ?
@@ -351,10 +351,10 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
             return mat.color == color;
         });
         if (itColor != m_vecMaterial.cend()) {
-            materialId = CppUtils::safeStaticCast<int>(itColor - m_vecMaterial.cbegin());
+            materialId = gsl::narrow<int>(itColor - m_vecMaterial.cbegin());
         }
         else {
-            materialId = CppUtils::safeStaticCast<int>(m_vecMaterial.size());
+            materialId = gsl::narrow<int>(m_vecMaterial.size());
             Material material;
             material.id = materialId;
             material.color = color;
@@ -365,9 +365,9 @@ int GmioAmfWriter::createObject(const TDF_Label& labelShape)
 
     // Add object
     Object object;
-    object.id = CppUtils::safeStaticCast<int>(m_vecObject.size());
+    object.id = gsl::narrow<int>(m_vecObject.size());
     object.firstMeshId = meshCount;
-    object.lastMeshId = CppUtils::safeStaticCast<int>(m_vecMesh.size()) - 1;
+    object.lastMeshId = gsl::narrow<int>(m_vecMesh.size()) - 1;
     object.name = to_stdString(CafUtils::labelAttrStdName(labelShape));
     object.materialId = materialId;
     m_vecObject.push_back(std::move(object));
@@ -406,7 +406,7 @@ void GmioAmfWriter::amf_getDocumentElement(
         *amfConstellation = {};
         // At most one constellation
         amfConstellation->id = 0;
-        amfConstellation->instance_count = int(writer->m_vecInstance.size());
+        amfConstellation->instance_count = static_cast<int>(writer->m_vecInstance.size());
     }
 }
 

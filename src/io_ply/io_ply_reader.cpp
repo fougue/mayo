@@ -23,6 +23,8 @@
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
 
+#include <cassert>
+
 namespace Mayo::IO {
 
 bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
@@ -153,27 +155,28 @@ TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
 TDF_Label PlyReader::transferMesh(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     // Create target mesh
-    const int triangleCount = CppUtils::safeStaticCast<int>(m_vecIndex.size() / 3);
+    assert(Cpp::cmpLessEqual((m_vecIndex.size() / 3), INT_MAX));
+    const int triangleCount = static_cast<int>(m_vecIndex.size() / 3);
     auto mesh = makeOccHandle<Poly_Triangulation>(m_nodeCount, triangleCount, false/*hasUvNodes*/);
     if (!m_vecNormalCoord.empty())
         MeshUtils::allocateNormals(mesh);
 
     // Copy nodes(vertices) into mesh
-    for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
+    for (int i = 0; Cpp::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
         const auto& vec = m_vecNodeCoord;
         const gp_Pnt node = { vec.at(i), vec.at(i + 1), vec.at(i + 2) };
         MeshUtils::setNode(mesh, (i / 3) + 1, node);
     }
 
     // Copy triangles indices into mesh
-    for (int i = 0; CppUtils::cmpLess(i, m_vecIndex.size()); i += 3) {
+    for (int i = 0; Cpp::cmpLess(i, m_vecIndex.size()); i += 3) {
         const auto& vec = m_vecIndex;
         const Poly_Triangle tri = { 1 + vec.at(i), 1 + vec.at(i + 1), 1 + vec.at(i + 2) };
         MeshUtils::setTriangle(mesh, (i / 3) + 1, tri);
     }
 
     // Copy normals(optional) into mesh
-    for (int i = 0; CppUtils::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
+    for (int i = 0; Cpp::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
         const auto& vec = m_vecNormalCoord;
         const MeshUtils::Poly_Triangulation_NormalType n(vec.at(i), vec.at(i + 1), vec.at(i + 2));
         MeshUtils::setNormal(mesh, (i / 3) + 1, n);
@@ -181,7 +184,7 @@ TDF_Label PlyReader::transferMesh(DocumentPtr doc, TaskProgress* /*progress*/)
 
     // Copy colors(optional) into mesh
     std::vector<Quantity_Color> vecColor;
-    for (int i = 0; CppUtils::cmpLess(i, m_vecColorComponent.size()); i += 3) {
+    for (int i = 0; Cpp::cmpLess(i, m_vecColorComponent.size()); i += 3) {
         const auto& vec = m_vecColorComponent;
         const Quantity_Color color = {
             vec.at(i) / 255., vec.at(i + 1) / 255., vec.at(i + 2) / 255.,
@@ -201,23 +204,24 @@ TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progres
 {
     const bool hasColors = !m_vecColorComponent.empty();
     const bool hasNormals = false; //!m_vecNormalCoord.empty();
+    assert(Cpp::cmpLessEqual(m_vecNodeCoord.size(), INT_MAX));
     auto gfxPoints = new Graphic3d_ArrayOfPoints(
-        CppUtils::safeStaticCast<int>(m_vecNodeCoord.size()), hasColors, hasNormals
+        static_cast<int>(m_vecNodeCoord.size()), hasColors, hasNormals
     );
 
     // Add nodes(vertices) into point cloud
-    for (int i = 0; CppUtils::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
+    for (int i = 0; Cpp::cmpLess(i, m_vecNodeCoord.size()); i += 3) {
         const auto& vec = m_vecNodeCoord;
         const gp_Pnt node = { vec.at(i), vec.at(i + 1), vec.at(i + 2) };
         gfxPoints->AddVertex(node);
     }
 
     if (hasColors) {
-        for (int i = 0; CppUtils::cmpLess(i, m_vecColorComponent.size()); i += 3) {
+        for (int i = 0; Cpp::cmpLess(i, m_vecColorComponent.size()); i += 3) {
             const auto& vec = m_vecColorComponent;
             const Quantity_Color color{
-                        vec.at(i) / 255., vec.at(i + 1) / 255., vec.at(i + 2) / 255.,
-                        TKernelUtils::preferredRgbColorType()
+                vec.at(i) / 255., vec.at(i + 1) / 255., vec.at(i + 2) / 255.,
+                TKernelUtils::preferredRgbColorType()
             };
             gfxPoints->SetVertexColor((i / 3) + 1, color);
         }
@@ -225,7 +229,7 @@ TDF_Label PlyReader::transferPointCloud(DocumentPtr doc, TaskProgress* /*progres
 
 #if 0
     if (hasNormals) {
-        for (int i = 0; CppUtils::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
+        for (int i = 0; Cpp::cmpLess(i, m_vecNormalCoord.size()); i += 3) {
             const auto& vec = m_vecNormalCoord;
             gfxPoints->SetVertexNormal((i / 3) + 1, vec.at(i), vec.at(i + 1), vec.at(i + 2));
         }

@@ -6,8 +6,6 @@
 
 #include "enumeration.h"
 
-#include "cpp_utils.h"
-
 #include <fmt/format.h>
 #include <algorithm>
 #include <cassert>
@@ -43,7 +41,7 @@ int Enumeration::findIndexByValue_untyped(Value value) const
     auto it = std::find_if(m_vecItem.cbegin(), m_vecItem.cend(), [=](const Item& item) {
         return item.value == value;
     });
-    return it != m_vecItem.cend() ? CppUtils::safeStaticCast<int>(it - m_vecItem.cbegin()) : -1;
+    return it != m_vecItem.cend() ? static_cast<int>(it - m_vecItem.cbegin()) : -1;
 }
 
 Enumeration::Value Enumeration::findValueByName(std::string_view name) const

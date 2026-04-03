@@ -20,7 +20,6 @@ private slots:
     void DocumentRefCount_test();
 
     void CppUtils_toggle_test();
-    void CppUtils_safeStaticCast_test();
 
     void TextId_test();
 

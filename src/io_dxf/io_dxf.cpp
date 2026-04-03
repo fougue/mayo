@@ -47,6 +47,7 @@
 #include <gp_Trsf.hxx>
 
 #include <fmt/format.h>
+#include <gsl/narrow>
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -211,7 +212,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         if (it != mapAciColorLabel.cend())
             return it->second;
 
-        if (0 <= aci && CppUtils::cmpLess(aci, std::size(aciTable))) {
+        if (0 <= aci && Cpp::cmpLess(aci, std::size(aciTable))) {
             const RGB_Color& c = aciTable[aci].second;
             const TDF_Label colorLabel = colorTool->AddColor(
                         Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB)
@@ -223,17 +224,17 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         return TDF_Label();
     };
 
-    int iShape = 0;
-    int shapeCount = 0;
+    unsigned iShape = 0;
+    unsigned shapeCount = 0;
     for (const auto& [layerName, vecEntity] : m_layers) {
         if (!startsWith(layerName, "BLOCKS")) {
-            shapeCount = CppUtils::safeStaticCast<int>(shapeCount + vecEntity.size());
+            shapeCount += static_cast<unsigned>(vecEntity.size());
             const TDF_Label layerLabel = layerTool->AddLayer(to_OccExtString(layerName));
             mapLayerNameLabel.insert({ layerName, layerLabel });
         }
     }
     auto fnUpdateProgressValue = [&]{
-        progress->setValue(MathUtils::toPercent(iShape, 0, shapeCount));
+        progress->setValue(MathUtils::toPercent(iShape, 0u, shapeCount));
     };
 
     auto fnSetShapeColor = [=](const TDF_Label& labelShape, int aci) {
@@ -247,7 +248,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
             if (startsWith(layerName, "BLOCKS"))
                 continue; // Skip
 
-            const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
+            const TDF_Label layerLabel = Cpp::findValue(layerName, mapLayerNameLabel);
             for (const DxfReader::Entity& entity : vecEntity) {
                 const std::string shapeName = std::string("Shape_") + std::to_string(++iShape);
                 const TDF_Label shapeLabel = fnAddRootShape(entity.shape, shapeName, layerLabel);
@@ -268,7 +269,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
             }
 
             if (!comp.IsNull()) {
-                const TDF_Label layerLabel = CppUtils::findValue(layerName, mapLayerNameLabel);
+                const TDF_Label layerLabel = Cpp::findValue(layerName, mapLayerNameLabel);
                 const TDF_Label compLabel = fnAddRootShape(comp, layerName, layerLabel);
                 // Check if all entities have the same color
                 bool uniqueColor = true;
@@ -292,7 +293,7 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
                 }
             }
 
-            iShape = CppUtils::safeStaticCast<int>(iShape + vecEntity.size());
+            iShape += static_cast<unsigned>(vecEntity.size());
             fnUpdateProgressValue();
         }
     }
@@ -451,7 +452,7 @@ void DxfReader::Internal::OnReadPolyline(const Dxf_POLYLINE& polyline)
     }
     else {
         const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
-        const int nodeCount = CppUtils::safeStaticCast<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
+        const auto nodeCount = gsl::narrow<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
         MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
         for (unsigned i = 0; i < vertices.size(); ++i)
             polygonBuilder.setNode(i + 1, this->toPnt(vertices.at(i).point));
@@ -894,15 +895,15 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(
     const bool isPeriodic = (spline.flags & Dxf_SPLINE::Periodic) != 0;
 
     // Handle poles
-    const auto iNumPoles = CppUtils::safeStaticCast<int>(spline.controlPoints.size());
+    const auto iNumPoles = gsl::narrow<int>(spline.controlPoints.size());
     TColgp_Array1OfPnt occPoles(1, iNumPoles);
     for (const DxfCoords& pnt : spline.controlPoints) {
-        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.controlPoints.front());
+        const auto iPnt = static_cast<int>(&pnt - &spline.controlPoints.front());
         occPoles.ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
     }
 
     // Handle knots and mults
-    const auto iNumKnots = CppUtils::safeStaticCast<int>(spline.knots.size());
+    const auto iNumKnots = gsl::narrow<int>(spline.knots.size());
     TColStd_Array1OfReal occKnots(1, iNumKnots);
     std::copy(spline.knots.cbegin(), spline.knots.cend(), occKnots.begin());
 
@@ -952,12 +953,12 @@ OccHandle<Geom_BSplineCurve> DxfReader::Internal::createSplineFromPolesAndKnots(
 // Excerpted from FreeCad/src/Mod/Import/App/ImpExpDxf
 OccHandle<Geom_BSplineCurve> DxfReader::Internal::createInterpolationSpline(const Dxf_SPLINE& spline)
 {
-    const auto iNumPoints = CppUtils::safeStaticCast<int>(spline.fitPoints.size());
+    const auto iNumPoints = gsl::narrow<int>(spline.fitPoints.size());
 
     // Handle poles
     auto fitpoints = makeOccHandle<TColgp_HArray1OfPnt>(1, iNumPoints);
     for (const DxfCoords& pnt : spline.fitPoints) {
-        const auto iPnt = CppUtils::safeStaticCast<int>(&pnt - &spline.fitPoints.front());
+        const auto iPnt = static_cast<int>(&pnt - &spline.fitPoints.front());
         fitpoints->ChangeValue(iPnt + 1) = gp_Pnt{pnt.x, pnt.y, pnt.z};
     }
 
