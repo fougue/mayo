@@ -258,16 +258,6 @@ void TestBase::CppUtils_toggle_test()
     QCOMPARE(v, false);
 }
 
-void TestBase::CppUtils_safeStaticCast_test()
-{
-    QCOMPARE(CppUtils::safeStaticCast<int>(42u), 42);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MIN), INT_MIN);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX), INT_MAX);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX - 1), INT_MAX - 1);
-    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(unsigned(INT_MAX) + 1), std::overflow_error);
-    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(UINT_MAX), std::overflow_error);
-}
-
 void TestBase::TextId_test()
 {
     struct TextIdContext {

@@ -25,6 +25,7 @@
 #include <TDataStd_Name.hxx>
 
 #include <gsl/span>
+#include <gsl/narrow>
 #include <array>
 #include <fstream>
 #include <locale>
@@ -212,13 +213,13 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     auto fnUpdateProgress = [=]{
         const auto total = vertexCount + facetCount;
         const auto current = m_vecVertex.size() + m_vecFacet.size();
-        if (current % 100 || CppUtils::cmpGreaterEqual(current, total))
+        if (current % 100 || Cpp::cmpGreaterEqual(current, total))
             progress->setValue(MathUtils::toPercent(current, 0, total));
     };
 
     // Consume vertices
     m_vecVertex.reserve(vertexCount);
-    while (!ifs.eof() && CppUtils::cmpLess(m_vecVertex.size(), vertexCount)) {
+    while (!ifs.eof() && Cpp::cmpLess(m_vecVertex.size(), vertexCount)) {
         getNonCommentLine(ifs, strLine);
         const auto arrayStrCoord = getWords<3>(strLine);
         if (hasEmptyString(arrayStrCoord))
@@ -242,11 +243,11 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_vecAllFacetIndex.reserve(facetCount * 3);
     m_vecFacet.reserve(facetCount);
     std::vector<std::string_view> vecWord;
-    while (!ifs.eof() && CppUtils::cmpLess(m_vecFacet.size(), facetCount)) {
+    while (!ifs.eof() && Cpp::cmpLess(m_vecFacet.size(), facetCount)) {
         getNonCommentLine(ifs, strLine);
         getWords(strLine, vecWord);
         const Facet facet = { int(m_vecAllFacetIndex.size()), strToNum<int>(vecWord.front()) };
-        if (CppUtils::cmpLess((vecWord.size() + 1), facet.vertexCount))
+        if (Cpp::cmpLess((vecWord.size() + 1), facet.vertexCount))
             return fnError(OffReaderI18N::textIdTr("Inconsistent vertex count of face"));
 
         for (int i = 0; i < facet.vertexCount; ++i) {
@@ -296,7 +297,7 @@ TDF_LabelSequence OffReader::transfer(DocumentPtr doc, TaskProgress* progress)
 TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
 {
     // Vertex and triangle count
-    const int vertexCount = CppUtils::safeStaticCast<int>(m_vecVertex.size());
+    const int vertexCount = gsl::narrow<int>(m_vecVertex.size());
     int triangleCount = 0;
     for (const Facet& facet : m_vecFacet)
         triangleCount += facet.vertexCount - 2;

@@ -8,12 +8,12 @@
 
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/meta_enum.h"
 #include "../base/tkernel_utils.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
 #include "qmeta_tdf_label.h"
 #include "qstring_utils.h"
@@ -429,9 +429,10 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
     else if (imgTexture->DataBuffer() && !imgTexture->DataBuffer()->IsEmpty()) {
         // Texture is provided by some embedded data
         item->setText(1, DialogInspectXde::tr("<data>"));
-        const char* buffData = reinterpret_cast<const char*>(imgTexture->DataBuffer()->Data());
-        const int buffSize = Cpp::safeStaticCast<int>(imgTexture->DataBuffer()->Size());
-        item->setImage(1, QByteArray::fromRawData(buffData, buffSize));
+        auto buffData = reinterpret_cast<const char*>(imgTexture->DataBuffer()->Data());
+        auto buffSize = imgTexture->DataBuffer()->Size();
+        std::string_view buff{buffData, buffSize};
+        item->setImage(1, QtCoreUtils::QByteArray_fromRawData(buff));
     }
 
     return item;

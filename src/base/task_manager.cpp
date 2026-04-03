@@ -161,7 +161,7 @@ int TaskManager::globalProgress() const
 const std::string& TaskManager::title(TaskId id) const
 {
     const Entity* entity = d->findEntity(id);
-    return entity ? entity->title : CppUtils::nullString();
+    return entity ? entity->title : Cpp::nullString();
 }
 
 void TaskManager::setTitle(TaskId id, std::string_view title)

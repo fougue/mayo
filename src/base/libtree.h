@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "cpp_utils.h"
-
 #include <gsl/span>
 #include <algorithm>
 #include <cstdint>
@@ -335,7 +333,7 @@ template<typename T, typename FN>
 void traverseTree_unorder(const Tree<T>& tree, const FN& callback)
 {
     for (const typename Tree<T>::TreeNode& node : tree.m_vecNode) {
-        const auto id = CppUtils::safeStaticCast<TreeNodeId>((&node - &tree.m_vecNode.front()) + 1);
+        const auto id = static_cast<TreeNodeId>((&node - &tree.m_vecNode.front()) + 1);
         if (!tree.isNodeDeleted(id))
             callback(id);
     }

@@ -21,10 +21,10 @@
 
 #include <Poly_Triangulation.hxx>
 
-#include <gsl/util>
 #include <fmt/format.h>
-
+#include <gsl/util>
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <locale>
 #include <string>
@@ -262,7 +262,8 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
     const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
     for (int i = 1; i <= triangulation->NbTriangles(); ++i) {
         const Poly_Triangle& triangle = triangulation->Triangle(i);
-        const int32_t offset = CppUtils::safeStaticCast<int32_t>(m_vecNode.size());
+        assert(Cpp::cmpLessEqual(m_vecNode.size(), INT32_MAX));
+        auto offset = static_cast<int32_t>(m_vecNode.size());
         const Face face{
             offset + triangle(1) - 1, offset + triangle(2) - 1, offset + triangle(3) - 1
         };

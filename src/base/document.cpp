@@ -16,6 +16,7 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_Editor.hxx>
 
+#include <cassert>
 #include <unordered_set>
 
 namespace Mayo {
@@ -90,7 +91,8 @@ bool Document::isEntity(TreeNodeId nodeId)
 
 int Document::entityCount() const
 {
-    return CppUtils::safeStaticCast<int>(m_modelTree.roots().size());
+    assert(Cpp::cmpLessEqual(m_modelTree.roots().size(), INT_MAX));
+    return static_cast<int>(m_modelTree.roots().size());
 }
 
 TDF_Label Document::entityLabel(int index) const

@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <exception>
 #include <gsl/span>
+
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -75,9 +76,6 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept;
 // Throws object of specified error type if 'condition' is met
 template<typename ErrorType, typename... ErrorArgs>
 void throwErrorIf(bool condition, ErrorArgs... args);
-
-// Same as static_cast<R>(t) but throws exception if 't' does not fit inside type 'R'
-template<typename R, typename T> constexpr R safeStaticCast(T t);
 
 // Returns the index of 'item' contained in 'span'
 template<typename T>
@@ -215,12 +213,6 @@ template<typename ErrorType, typename... ErrorArgs> void throwErrorIf(bool condi
     if (condition) {
         throw ErrorType(args...);
     }
-}
-
-template<typename R, typename T> constexpr R safeStaticCast(T t)
-{
-    throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
-    return static_cast<R>(t);
 }
 
 template<typename T>

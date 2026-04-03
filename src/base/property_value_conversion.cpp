@@ -396,7 +396,7 @@ const std::string& PropertyValueConversion::Variant::toConstRefString(bool* ok) 
     }
 
     assignBoolPtr(ok, false);
-    return CppUtils::nullString();
+    return Cpp::nullString();
 }
 
 std::vector<uint8_t> PropertyValueConversion::Variant::toByteArray(bool* ok) const

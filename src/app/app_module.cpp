@@ -8,7 +8,6 @@
 
 #include "../base/bnd_utils.h"
 #include "../base/brep_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
@@ -143,7 +142,7 @@ QString AppModule::languageCode() const
     }
 
     std::string_view langDefault = langs.findNameByValue(0);
-    return QString::fromUtf8(langDefault.data(), CppUtils::safeStaticCast<int>(langDefault.size()));
+    return QString::fromUtf8(langDefault.data(), static_cast<int>(langDefault.size()));
 }
 
 void AppModule::addLibraryInfo(const LibraryInfo& lib)
