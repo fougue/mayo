@@ -29,6 +29,7 @@ struct Dxf_BaseEntity {
     // Code 67
     enum class Space { Model = 0, Paper = 1 };
     Space space = Space::Model;
+    // TODO Code 420: "true" RGB color(24bit)
 };
 
 struct Dxf_BaseGeom2dEntity : public Dxf_BaseEntity {

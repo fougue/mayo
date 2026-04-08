@@ -72,21 +72,24 @@ namespace {
 template<typename T>
 using ConstRefWrap = std::reference_wrapper<const T>;
 
+// Is `ch` a digit character in "classic" locale?
 bool isDigit_C(char ch)
 {
     return '0' <= ch && ch <= '9';
 }
 
-char toLowerCase_C(char c)
+// Returns `ch` converted to lower-case, assuming "classic" locale
+char toLowerCase_C(char ch)
 {
-    return std::tolower(c, std::locale::classic());
+    return std::tolower(ch, std::locale::classic());
 }
 
+// Returns string `str` converted to lower-case, assuming "classic" locale
 std::string toLowerCase_C(const std::string& str)
 {
     std::string lstr = str;
-    for (char& c : lstr)
-        c = std::tolower(c, std::locale::classic());
+    for (char& ch : lstr)
+        ch = toLowerCase_C(ch);
 
     return lstr;
 }
@@ -104,7 +107,7 @@ std::array<char, 4> toUtf8(char16_t code)
     std::array<char, 4> u8Code = {'?', '\0', '\0', '\0'};
     if (code <= 0x7F) {
         // Case 1: 0000..007F → ASCII encoded in one utf8 byte
-        // utf8‑8 layout for ASCII: 0xxxxxxx
+        // utf8 layout for ASCII: 0xxxxxxx
         u8Code[0] = char(code);
     }
     else if (code <= 0x7FF) {
@@ -139,6 +142,7 @@ std::array<char, 4> toUtf8(char16_t code)
     return u8Code;
 }
 
+// Returns enumeration of all font names on the system
 const Enumeration& systemFontNames()
 {
     static Enumeration fontNames;
@@ -154,6 +158,7 @@ const Enumeration& systemFontNames()
     return fontNames;
 }
 
+// Returns graphical width of string `str` using input BREP font
 double computeStringWidth(const NCollection_String& str, Font_BRepFont& brepFont)
 {
     double w = 0.;
@@ -219,6 +224,13 @@ struct Placement {
     Frame frame;
 };
 
+// Builds an orthonormal frame from a given direction vector(OCS Z-axis)
+// Given direction `w` this function constructs a right-handed orthonormal basis(u, v, w), where:
+//     * `w` is used as the Z axis,
+//     * u is computed by projecting a non-colinear reference vector onto the plane perpendicular to `w`
+//     * v is the cross product w × u.
+// The function ensures numerical robustness by selecting an initial reference vector that is not
+// nearly colinear with `w` and falling back to an alternative axis if needed
 Frame makeOcsFrame(const gp_Dir& w)
 {
     // Choose 'a' non-colinear with 'w'(45° ~ 0.70710678)
@@ -342,9 +354,19 @@ std::string getEntityName(const Dxf_EntityVariant& entityVar)
 
 DxfStringRef getEntityLayerName(const Dxf_EntityVariant& entityVar)
 {
-    return std::visit(Cpp::Overloaded{
+    DxfStringRef layerName = std::visit(Cpp::Overloaded{
         [](std::monostate) { return DxfStringRef{}; },
         [](auto cref) { return cref.get().layerName; }
+        }, entityVar
+    );
+    return !layerName.empty() ? layerName : "0";
+}
+
+const Dxf_BaseEntity* getBaseEntityPtr(const Dxf_EntityVariant& entityVar)
+{
+    return std::visit(Cpp::Overloaded{
+        [](std::monostate) { return static_cast<const Dxf_BaseEntity*>(nullptr); },
+        [](auto cref) { return static_cast<const Dxf_BaseEntity*>(std::addressof(cref.get())); }
         }, entityVar
     );
 }
@@ -459,6 +481,11 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 
 TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
+    struct TransferObject {
+        const Dxf_EntityVariant* entityVariantPtr{nullptr};
+        TopoDS_Shape shape;
+    };
+
     if (!m_impl)
         return {};
 
@@ -467,7 +494,6 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
     OccHandle<XCAFDoc_ColorTool> colorTool = doc->xcaf().colorTool();
     OccHandle<XCAFDoc_LayerTool> layerTool = doc->xcaf().layerTool();
     std::unordered_map<DxfStringRef, TDF_Label> mapLayerNameLabel;
-    std::unordered_map<DxfColorIndex, TDF_Label> mapAciColorLabel;
 
     auto fnAddRootShape = [&](const TopoDS_Shape& shape, std::string_view shapeName, TDF_Label layer) {
         const TDF_Label labelShape = shapeTool->NewShape();
@@ -480,9 +506,10 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
         return labelShape;
     };
 
-    auto fnAddAci = [&](DxfColorIndex aci) -> TDF_Label {
-        auto it = mapAciColorLabel.find(aci);
-        if (it != mapAciColorLabel.cend())
+    std::unordered_map<DxfColorIndex, TDF_Label> mapColorIndexLabel;
+    auto fnAddColorIndex = [&](DxfColorIndex aci) -> TDF_Label {
+        auto it = mapColorIndexLabel.find(aci);
+        if (it != mapColorIndexLabel.cend())
             return it->second;
 
         if (0 <= aci && Cpp::cmpLess(aci, std::size(aciTable))) {
@@ -490,44 +517,110 @@ TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
             const TDF_Label colorLabel = colorTool->AddColor(
                 Quantity_Color(c.r / 255., c.g / 255., c.b / 255., Quantity_TOC_RGB)
             );
-            mapAciColorLabel.insert({ aci, colorLabel });
+            mapColorIndexLabel.insert({ aci, colorLabel });
             return colorLabel;
         }
 
         return TDF_Label{};
     };
 
-    unsigned iShape = 0;
-    for (const auto& [layerName, vecEntity] : m_layers) {
+    auto fnSetShapeColor = [=](TDF_Label labelShape, DxfColorIndex aci) {
+        const TDF_Label labelColor = fnAddColorIndex(aci);
+        if (!labelColor.IsNull())
+            colorTool->SetColor(labelShape, labelColor, XCAFDoc_ColorGen);
+    };
+
+    auto fnExplicitColorIndex = [](
+            const Dxf_EntityVariant& entityVar, const Dxf_LAYER* dxfLayer, const Dxf_INSERT* dxfInsert
+        )
+    {
+        auto baseEntityPtr = getBaseEntityPtr(entityVar);
+        if (baseEntityPtr) {
+            if (baseEntityPtr->colorId == dxfColorByLayer && dxfLayer) {
+                return dxfLayer->colorId;
+            }
+            else if (baseEntityPtr->colorId == dxfColorByBlock && dxfInsert) {
+                return dxfInsert->colorId;
+            }
+
+            return baseEntityPtr->colorId;
+        }
+
+        return -1;
+    };
+
     if (m_params.groupLayers) {
-        std::unordered_map<const Dxf_LAYER*, TopoDS_Shape> mapShapeByLayer;
+        using ArrayOfTransferObjects = std::vector<TransferObject>;
+        std::unordered_map<const Dxf_LAYER*, ArrayOfTransferObjects> mapObjectsByLayer;
         for (const Dxf_EntityVariant& entityVar : m_impl->allEntities()) {
-#if 0
-            std::cout << "transfer() ith: " << Span_itemIndex(m_impl->allEntities(), entityVar)
-                      << " " << getEntityName(entityVar)
-                      << std::endl;
-#endif
             const TopoDS_Shape entityShape = m_impl->createEntityShape(entityVar);
             if (entityShape.IsNull())
                 continue; // Skip
 
-            DxfStringRef layerName = getEntityLayerName(entityVar);
-            const Dxf_LAYER* layer = m_impl->findLayer(layerName);
-            auto it = mapShapeByLayer.find(layer);
-            if (it == mapShapeByLayer.cend()) {
-                TopoDS_Shape layerShape = BRepUtils::makeEmptyCompound();
-                it = mapShapeByLayer.insert({ layer, layerShape }).first;
+            const Dxf_LAYER* dxfLayer = m_impl->findLayer(getEntityLayerName(entityVar));
+            if (!dxfLayer)
+                dxfLayer = m_impl->findLayer("0");
+
+            assert(dxfLayer != nullptr);
+            ArrayOfTransferObjects* arrayOfTransferObjects = nullptr;
+            {
+                auto it = mapObjectsByLayer.find(dxfLayer);
+                if (it == mapObjectsByLayer.cend()) {
+                    it = mapObjectsByLayer.insert({dxfLayer, ArrayOfTransferObjects{}}).first;
+                    assert(it != mapObjectsByLayer.cend());
+                }
+
+                arrayOfTransferObjects = &it->second;
             }
 
-            assert(it != mapShapeByLayer.cend());
-            TopoDS_Shape& layerShape = it->second;
-            BRepUtils::addShape(&layerShape, entityShape);
+            TransferObject object;
+            object.entityVariantPtr = &entityVar;
+            object.shape = entityShape;
+            assert(arrayOfTransferObjects != nullptr);
+            arrayOfTransferObjects->push_back(std::move(object));
         }
 
-        for (const auto& [layer, shape] : mapShapeByLayer) {
-            DxfStringRef layerName = layer ? layer->name : std::string_view{"0"};
-            TDF_Label label = layerTool->AddLayer(to_OccExtString(layerName));
-            fnAddRootShape(shape, layerName, label);
+        for (const auto& [layer, objects] : mapObjectsByLayer) {
+            TopoDS_Shape layerShape;
+            for (const TransferObject& obj : objects) {
+                if (!obj.shape.IsNull())
+                    BRepUtils::addShape(&layerShape, obj.shape);
+            }
+
+            if (layerShape.IsNull())
+                continue; // Skip
+
+            //const TDF_Label layerLabel = Cpp::findValue(layerName, mapLayerNameLabel);
+            const TDF_Label shapeLabel = fnAddRootShape(layerShape, layer->name, {});
+            // Check if all entities have the same color
+            bool uniqueColor = true;
+            assert(!objects.empty());
+            const DxfColorIndex aci = objects.front().explicitColorId;
+            for (const TransferObject& obj : objects) {
+                uniqueColor = obj.explicitColorId == aci;
+                if (!uniqueColor)
+                    break;
+
+                auto dxfInsert = dxfEntityVariantGet<Dxf_INSERT>(*obj.entityVariantPtr);
+                if (dxfInsert) {
+                    const Dxf_BLOCK* block = m_impl->findBlock(dxfInsert->blockName);
+                    if (block) {
+                        for (const Dxf_EntityVariant& subEntity : block->entities) {
+                        }
+                    }
+                }
+            }
+
+            if (uniqueColor) {
+                fnSetShapeColor(shapeLabel, aci);
+            }
+            else {
+                for (const TransferObject& obj : objects) {
+                    assert(!obj.shape.IsNull());
+                    const TDF_Label objShapeLabel = shapeTool->AddSubShape(shapeLabel, obj.shape);
+                    fnSetShapeColor(objShapeLabel, obj.explicitColorId);
+                }
+            }
         }
     }
     else {

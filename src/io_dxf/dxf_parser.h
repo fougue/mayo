@@ -115,6 +115,8 @@ private:
         std::string_view entityTypeName
     );
 
+    void addLayer(Dxf_LAYER&& layer);
+
     template<typename EntityValue, typename Entity>
     void addEntity(Entity&& entity, std::deque<EntityValue>& entityStore);
 

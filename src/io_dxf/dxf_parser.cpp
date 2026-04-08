@@ -222,6 +222,15 @@ const Dxf_STYLE* DxfParser::findStyle(DxfStringRef name) const
     return it != m_mapStyle.cend() ? it->second : nullptr;
 }
 
+void DxfParser::addLayer(Dxf_LAYER&& layer)
+{
+    if (this->findLayer(layer.name) == nullptr) {
+        m_layers.push_back(std::forward<Dxf_LAYER>(layer));
+        const auto& layerStored = m_layers.back();
+        m_mapLayer.insert({layerStored.name, &layerStored});
+    }
+}
+
 bool DxfParser::parseEntity(
         const std::function<void()>& fnEntityHandler,
         const std::function<void(int)>& fnCodeHandler,
@@ -988,6 +997,7 @@ bool DxfParser::parseInsert()
 
 bool DxfParser::parseDimension()
 {
+#if 0
     DxfCoords s = {}; // startpoint
     DxfCoords e = {}; // endpoint
     DxfCoords p = {}; // dimpoint
@@ -1035,6 +1045,7 @@ bool DxfParser::parseDimension()
             break;
         }
     }
+#endif
 
     return false;
 }
@@ -1170,12 +1181,11 @@ bool DxfParser::parseLayer()
         const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
         if (n == 0) {
             if (layer.name.empty()) {
-                this->reportError_readInteger("DXF::parseLayer() - no layer name");
+                this->reportError("DXF::parseLayer() - no layer name");
                 return false;
             }
 
-            m_layers.push_back(std::move(layer));
-            m_mapLayer.insert({m_layers.back().name, &m_layers.back()});
+            this->addLayer(std::move(layer));
             return true;
         }
         else if (isStringToErrorValue(n)) {
@@ -1481,21 +1491,25 @@ void DxfParser::parse(std::istream& stream)
                     continue;
                 }
                 else {
-                    m_fail = false;
+                    m_fail = true;
                     std::string errMsg = "DXF::parse() - Failed to parse " + m_str;
                     if (!exceptionMsg.empty())
                         errMsg += "\nError: " + exceptionMsg;
 
                     this->reportError(errMsg);
-                    if (m_str == "LAYER") // Some objects or tables can have "LAYER" as name...
-                        continue;
-                    else
-                        return;
                 }
             }
         }
 
         getLine();
+    }
+
+    // Ensure layer "0" is there
+    {
+        Dxf_LAYER layer0;
+        layer0.name = "0";
+        layer0.colorId = 7;
+        this->addLayer(std::move(layer0));
     }
 }
 
