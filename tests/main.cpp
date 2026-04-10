@@ -97,7 +97,6 @@ int main(int argc, char* argv[])
 
         // Append the temporary file to the target output file
         if (ptrArgOutputFileName) {
-            const bool isFirstTest = &test == &vecTest.front();
             QFile outputTestFile(outputTestFileName);
             if (!outputTestFile.open(QIODevice::ReadOnly)) {
                 qCritical() << QString("Failed to open file %1 [%2]")
@@ -107,8 +106,10 @@ int main(int argc, char* argv[])
 
             QFile outputFile(argOutputFile.path);
             QFile::OpenMode fileWriteMode = QIODevice::WriteOnly;
-            if (isFirstTest)
+            if (&test != &vecTest.front()) {
+                // "Append" file mode if not first unit test
                 fileWriteMode |= QIODevice::Append;
+            }
 
             if (!outputFile.open(fileWriteMode)) {
                 qCritical() << QString("Failed to open file %1 [%2]")
