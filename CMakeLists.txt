@@ -185,6 +185,9 @@ set(MayoCore_LinkDirectories)
 set(MayoCore_LinkLibraries)
 set(MayoIO_LinkLibraries)
 
+find_package(Threads REQUIRED)
+list(APPEND MayoCore_LinkLibraries Threads::Threads)
+
 if(MSVC)
     list(APPEND MayoCore_LinkLibraries Opengl32 User32)
 elseif(APPLE)
