@@ -986,7 +986,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ````
 BSD 2-Clause License
 
-Copyright (c) 2017, Fougue Ltd. <http://www.fougue.pro>
+Copyright (c) 2017, Fougue Ltd. <https://www.fougue.pro>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
