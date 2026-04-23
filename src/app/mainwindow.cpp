@@ -155,7 +155,7 @@ void MainWindow::createCommands()
     this->addCommand<CommandEditOptions>();
 
     // "Window" commands
-    this->addCommand<CommandLeftSidebarWidgetToggle>();
+    this->addCommand<CommandLeftSidebarWidgetToggle>(this->widgetPageDocuments()->widgetLeftSideBar());
     this->addCommand<CommandMainWidgetToggleFullscreen>();
     this->addCommand<CommandSwitchMainWidgetMode>();
     this->addCommand<CommandPreviousDocument>();

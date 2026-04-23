@@ -11,6 +11,8 @@
 #include <QtGui/QShowEvent>
 #include <QtWidgets/QWidget>
 
+#include <cassert>
+
 namespace Mayo {
 
 CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext* context)
@@ -40,23 +42,25 @@ void CommandMainWidgetToggleFullscreen::execute()
     }
 }
 
-CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* context)
-    : Command(context)
+CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* context, QWidget* panelWidget)
+    : Command(context),
+      m_panelWidget(panelWidget)
 {
+    assert(panelWidget);
+
     auto action = new QAction(this);
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
     action->setShortcut(Qt::ALT | Qt::Key_0);
     action->setCheckable(true);
-    action->setChecked(context->pageDocuments_widgetLeftSideBar()->isVisible());
+    action->setChecked(panelWidget->isVisible());
     this->setAction(action);
     this->updateAction();
-    context->pageDocuments_widgetLeftSideBar()->installEventFilter(this);
+    panelWidget->installEventFilter(this);
 }
 
 void CommandLeftSidebarWidgetToggle::execute()
 {
-    QWidget* widget = this->context()->pageDocuments_widgetLeftSideBar();
-    widget->setVisible(!widget->isVisible());
+    m_panelWidget->setVisible(!m_panelWidget->isVisible());
 }
 
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
@@ -67,7 +71,7 @@ bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
 {
     if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
-        if (watched == this->context()->pageDocuments_widgetLeftSideBar()) {
+        if (watched == m_panelWidget) {
             this->updateAction();
             return true;
         }
@@ -78,7 +82,7 @@ bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event
 
 void CommandLeftSidebarWidgetToggle::updateAction()
 {
-    if (this->context()->pageDocuments_widgetLeftSideBar()->isVisible()) {
+    if (m_panelWidget->isVisible()) {
         this->action()->setText(Command::tr("Hide Left Sidebar"));
         this->action()->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
     }

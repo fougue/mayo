@@ -25,7 +25,6 @@ public:
     QWidget* widgetPage(Page page) const override;
     Page currentPage() const override;
     void setCurrentPage(Page page) override;
-    QWidget* pageDocuments_widgetLeftSideBar() const override;
 
     int findDocumentIndex(Document::Identifier docId) const override;
     Document::Identifier findDocumentFromIndex(int index) const override;

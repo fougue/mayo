@@ -24,7 +24,7 @@ private:
 // the "Documents" main page
 class CommandLeftSidebarWidgetToggle : public Command {
 public:
-    CommandLeftSidebarWidgetToggle(IAppContext* context);
+    CommandLeftSidebarWidgetToggle(IAppContext* context, QWidget* panelWidget);
 
     void execute() override;
     bool getEnabledStatus() const override;
@@ -35,6 +35,8 @@ public:
 
 private:
     void updateAction();
+
+    QWidget* m_panelWidget = nullptr;
 };
 
 class CommandSwitchMainWidgetMode : public Command {

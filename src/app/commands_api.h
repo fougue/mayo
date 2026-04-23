@@ -40,7 +40,6 @@ public:
     virtual QWidget* widgetPage(Page page) const = 0;
     virtual Page currentPage() const = 0;
     virtual void setCurrentPage(Page page) = 0;
-    virtual QWidget* pageDocuments_widgetLeftSideBar() const = 0;
 
     virtual Document::Identifier currentDocument() const = 0;
     virtual void setCurrentDocument(Document::Identifier docId) = 0;
@@ -109,6 +108,7 @@ public:
 
     // Construct and add new Command object with arguments 'args'
     // The command is associated to identifier 'name' and can be retrieved later on with findCommand()
+    // IMPORTANT `name` must refer to a static string(eg CmdType::Name)
     template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
 
     // Same behavior as addCommand() function

@@ -42,12 +42,6 @@ TaskManager* AppContext::taskMgr() const
     return &m_wnd->m_taskMgr;
 }
 
-QWidget* AppContext::pageDocuments_widgetLeftSideBar() const
-{
-    const WidgetMainControl* pageDocs = m_wnd->widgetPageDocuments();
-    return pageDocs ? pageDocs->widgetLeftSideBar() : nullptr;
-}
-
 QWidget* AppContext::widgetMain() const
 {
     return m_wnd;
