@@ -1,5 +1,5 @@
 /****************************************************************************
-+** Copyright (c) 2022, Fougue Ltd. <https://www.fougue.pro>
++** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
 +** All rights reserved.
 +** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
 +****************************************************************************/

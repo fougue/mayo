@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "../base/application.h"
@@ -90,48 +89,48 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("Mayo the opensource 3D CAD viewer and converter")
+        Main::tr("Mayo the opensource 3D CAD viewer and converter")
     );
     cmdParser.addHelpOption();
     cmdParser.addVersionOption();
 
     const QCommandLineOption cmdOptionTheme(
-                QStringList{ "t", "theme" },
-                Main::tr("Theme for the UI(classic|dark)"),
-                Main::tr("name")
+        QStringList{ "t", "theme" },
+        Main::tr("Theme for the UI(classic|dark)"),
+        Main::tr("name")
     );
     cmdParser.addOption(cmdOptionTheme);
 
     const QCommandLineOption cmdFileSettings(
-                QStringList{ "s", "settings" },
-                Main::tr("Settings file(INI format) to load at startup"),
-                Main::tr("filepath")
+        QStringList{ "s", "settings" },
+        Main::tr("Settings file(INI format) to load at startup"),
+        Main::tr("filepath")
     );
     cmdParser.addOption(cmdFileSettings);
 
     const QCommandLineOption cmdFileLog(
-                QStringList{ "log-file" },
-                Main::tr("Writes log messages into output file"),
-                Main::tr("filepath")
+        QStringList{ "log-file" },
+        Main::tr("Writes log messages into output file"),
+        Main::tr("filepath")
     );
     cmdParser.addOption(cmdFileLog);
 
     const QCommandLineOption cmdDebugLogs(
-                QStringList{ "debug-logs" },
-                Main::tr("Don't filter out debug log messages in release build")
+        QStringList{ "debug-logs" },
+        Main::tr("Don't filter out debug log messages in release build")
     );
     cmdParser.addOption(cmdDebugLogs);
 
     const QCommandLineOption cmdSysInfo(
-                QStringList{ "system-info" },
-                Main::tr("Show detailed system information and quit")
+        QStringList{ "system-info" },
+        Main::tr("Show detailed system information and quit")
     );
     cmdParser.addOption(cmdSysInfo);
 
     cmdParser.addPositionalArgument(
-                Main::tr("files"),
-                Main::tr("Files to open at startup, optionally"),
-                Main::tr("[files...]")
+        Main::tr("files"),
+        Main::tr("Files to open at startup, optionally"),
+        Main::tr("[files...]")
     );
 
     cmdParser.process(QCoreApplication::arguments());
@@ -461,7 +460,7 @@ int main(int argc, char* argv[])
 
     Mayo::QtOpenGlUtils::platformSetup(argc, argv);
 
-    QCoreApplication::setOrganizationName("Fougue Ltd");
+    QCoreApplication::setOrganizationName("Fougue");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("Mayo");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));

@@ -1,5 +1,10 @@
 @echo off
 
+REM ****************************************************************************
+REM * Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+REM * SPDX-License-Identifier: BSD-2-Clause
+REM ****************************************************************************
+
 set _OPENCASCADE_ROOTDIR_=%1
 
 if not exist "%_OPENCASCADE_ROOTDIR_%\env.bat"  echo set(OpenCASCADE_FOUND false)
