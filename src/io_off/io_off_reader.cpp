@@ -145,10 +145,11 @@ std::uint32_t toRgbaColor(gsl::span<const std::string_view> spanWord)
     const unsigned b = spanWord.size() > 2 ? strToColorComponent(spanWord[2]) : 0;
     const unsigned a = spanWord.size() > 3 ? strToColorComponent(spanWord[3]) : 0;
     const std::uint32_t color =
-            ((r << 24)   & 0xFF000000)
+              ((r << 24) & 0xFF000000)
             | ((g << 16) & 0x00FF0000)
             | ((b << 8)  & 0x0000FF00)
-            | (a         & 0x000000FF);
+            | (a         & 0x000000FF)
+        ;
     return color;
 }
 

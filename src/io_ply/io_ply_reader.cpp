@@ -17,8 +17,8 @@
 #include "../base/point_cloud_data.h"
 #include "../base/property_builtins.h"
 #include "../base/tkernel_utils.h"
-#include "miniply.h"
-// TODO Move miniply library files into 3rdparty folder
+
+#include <miniply/miniply.h>
 
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>

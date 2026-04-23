@@ -225,6 +225,7 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_off/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/3rdparty/miniply/miniply.cpp
 )
 
 ##########
