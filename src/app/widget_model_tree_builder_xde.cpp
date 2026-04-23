@@ -1,3 +1,8 @@
+/****************************************************************************
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
+****************************************************************************/
+
 #include "widget_model_tree_builder_xde.h"
 
 #include "../base/caf_utils.h"

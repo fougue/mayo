@@ -35,7 +35,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="../../mayo.qrc">:/images/appicon_64.png</pixmap>
+      <pixmap resource="../../images/mayo.qrc">:/images/appicon_64.png</pixmap>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -50,7 +50,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Mayo By Fougue Ltd.</string>
+      <string>Mayo By Fougue</string>
      </property>
     </widget>
    </item>
@@ -128,7 +128,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../mayo.qrc"/>
+  <include location="../../images/mayo.qrc"/>
  </resources>
  <connections>
   <connection>

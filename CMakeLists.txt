@@ -1,7 +1,6 @@
 #****************************************************************************
-#* Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
-#* All rights reserved.
-#* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+#* Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+#* SPDX-License-Identifier: BSD-2-Clause
 #****************************************************************************
 
 cmake_minimum_required(VERSION 3.10)
@@ -18,7 +17,7 @@ project(
     LANGUAGES CXX
 )
 
-set(Mayo_Copyright "Copyright @ 2016-present, Fougue Ltd., All Rights Reserved")
+set(Mayo_Copyright "Copyright (c) 2016, Fougue SAS")
 mark_as_advanced(FORCE Mayo_Copyright)
 
 set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
