@@ -20,9 +20,8 @@ namespace Mayo {
 CommandReportBug::CommandReportBug(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Report Bug"));
-    this->setAction(action);
 }
 
 void CommandReportBug::execute()
@@ -33,10 +32,9 @@ void CommandReportBug::execute()
 CommandAbout::CommandAbout(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setMenuRole(QAction::AboutRole);
     action->setText(Command::tr("About %1").arg(QCoreApplication::applicationName()));
-    this->setAction(action);
 }
 
 void CommandAbout::execute()

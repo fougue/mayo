@@ -9,6 +9,7 @@
 #include "../gui/gui_application.h"
 
 #include <QtWidgets/QWidget>
+
 #include <fmt/format.h>
 #include <stdexcept>
 
@@ -46,15 +47,24 @@ void Command::setCurrentDocument(const DocumentPtr& doc)
     m_context->setCurrentDocument(doc->identifier());
 }
 
-void Command::setAction(QAction* action)
+QAction* Command::createAction()
 {
-    m_action = action;
-    QObject::connect(action, &QAction::triggered, this, &Command::execute);
+    if (!m_action) {
+        m_action = new QAction(this);
+        QObject::connect(m_action, &QAction::triggered, this, &Command::execute);
+    }
+
+    return m_action;
 }
 
 CommandContainer::CommandContainer(IAppContext* appContext)
     : m_appContext(appContext)
 {
+}
+
+CommandContainer::~CommandContainer()
+{
+    this->clear();
 }
 
 void CommandContainer::setAppContext(IAppContext* appContext)
@@ -66,7 +76,7 @@ void CommandContainer::setAppContext(IAppContext* appContext)
 Command* CommandContainer::findCommand(std::string_view name) const
 {
     auto it = m_mapCommand.find(name);
-    return it != m_mapCommand.cend() ? it->second : nullptr;
+    return it != m_mapCommand.cend() ? it->second.get() : nullptr;
 }
 
 QAction* CommandContainer::findCommandAction(std::string_view name) const
@@ -77,17 +87,13 @@ QAction* CommandContainer::findCommandAction(std::string_view name) const
 
 void CommandContainer::clear()
 {
-    for (auto [name, cmd] : m_mapCommand) {
-        delete cmd;
-    }
-
     m_mapCommand.clear();
 }
 
-void CommandContainer::addCommand_impl(std::string_view name, Command* cmd)
+void CommandContainer::addCommand_impl(std::string_view name, std::unique_ptr<Command> cmd)
 {
     assert(m_appContext != nullptr);
-    auto [it, ok] = m_mapCommand.insert({ name, cmd });
+    auto [it, ok] = m_mapCommand.emplace(name, std::move(cmd));
     if (!ok)
         throw std::invalid_argument(fmt::format("Command name {} already exists", name));
 }

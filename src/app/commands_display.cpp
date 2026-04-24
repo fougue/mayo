@@ -50,10 +50,9 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
     group->addAction(m_actionOrtho);
     group->addAction(m_actionPersp);
 
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Projection"));
     action->setMenu(menu);
-    this->setAction(action);
 
     QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
         GuiDocument* guiDoc = this->currentGuiDocument();
@@ -97,9 +96,8 @@ void CommandChangeProjection::onCurrentDocumentChanged()
 CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Mode"));
-    this->setAction(action);
 }
 
 CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* containerMenu)
@@ -167,12 +165,11 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
 CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Show Origin Trihedron"));
     action->setToolTip(Command::tr("Show/Hide Origin Trihedron"));
     action->setCheckable(true);
     action->setChecked(false);
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -211,12 +208,11 @@ void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 CommandTogglePerformanceStats::CommandTogglePerformanceStats(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Show Performance Stats"));
     action->setToolTip(Command::tr("Show/Hide rendering performance statistics"));
     action->setCheckable(true);
     action->setChecked(false);
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -249,11 +245,10 @@ void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 CommandZoomInCurrentDocument::CommandZoomInCurrentDocument(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Zoom In"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
     action->setShortcut(QKeySequence::StandardKey::ZoomIn);
-    this->setAction(action);
 }
 
 void CommandZoomInCurrentDocument::execute()
@@ -266,11 +261,10 @@ void CommandZoomInCurrentDocument::execute()
 CommandZoomOutCurrentDocument::CommandZoomOutCurrentDocument(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Zoom Out"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
     action->setShortcut(QKeySequence::StandardKey::ZoomOut);
-    this->setAction(action);
 }
 
 void CommandZoomOutCurrentDocument::execute()
@@ -283,11 +277,10 @@ void CommandZoomOutCurrentDocument::execute()
 CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Turn Counter Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
     action->setShortcut(Qt::CTRL | Qt::Key_Left);
-    this->setAction(action);
 }
 
 void CommandTurnViewCounterClockWise::execute()
@@ -301,11 +294,10 @@ void CommandTurnViewCounterClockWise::execute()
 CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Turn Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
     action->setShortcut(Qt::CTRL | Qt::Key_Right);
-    this->setAction(action);
 }
 
 void CommandTurnViewClockWise::execute()

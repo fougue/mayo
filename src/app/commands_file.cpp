@@ -265,11 +265,10 @@ void FileCommandTools::importInDocument(
 CommandNewDocument::CommandNewDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("New"));
     action->setToolTip(Command::tr("New Document"));
     action->setShortcut(QKeySequence::StandardKey::New);
-    this->setAction(action);
 }
 
 void CommandNewDocument::execute()
@@ -282,11 +281,10 @@ void CommandNewDocument::execute()
 CommandOpenDocuments::CommandOpenDocuments(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Open"));
     action->setToolTip(Command::tr("Open Documents"));
     action->setShortcut(QKeySequence::StandardKey::Open);
-    this->setAction(action);
 
     context->widgetMain()->setAcceptDrops(true);
     context->widgetMain()->installEventFilter(this);
@@ -333,9 +331,8 @@ bool CommandOpenDocuments::eventFilter(QObject* watched, QEvent* event)
 CommandRecentFiles::CommandRecentFiles(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Recent files"));
-    this->setAction(action);
 }
 
 CommandRecentFiles::CommandRecentFiles(IAppContext* context, QMenu* containerMenu)
@@ -380,11 +377,10 @@ void CommandRecentFiles::recreateEntries()
 CommandImportInCurrentDocument::CommandImportInCurrentDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Import"));
     action->setToolTip(Command::tr("Import in current document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Import));
-    this->setAction(action);
 }
 
 void CommandImportInCurrentDocument::execute()
@@ -409,11 +405,10 @@ bool CommandImportInCurrentDocument::getEnabledStatus() const
 CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Export selected items"));
     action->setToolTip(Command::tr("Export selected items"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Export));
-    this->setAction(action);
 }
 
 void CommandExportSelectedApplicationItems::execute()
@@ -475,12 +470,11 @@ bool CommandExportSelectedApplicationItems::getEnabledStatus() const
 CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close \"%1\""));
     action->setToolTip(action->text());
     action->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
     action->setShortcut(QKeySequence::StandardKey::Close);
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -520,10 +514,9 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
 CommandCloseAllDocuments::CommandCloseAllDocuments(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close all"));
     action->setToolTip(Command::tr("Close all documents"));
-    this->setAction(action);
 }
 
 void CommandCloseAllDocuments::execute()
@@ -539,10 +532,9 @@ bool CommandCloseAllDocuments::getEnabledStatus() const
 CommandCloseAllDocumentsExceptCurrent::CommandCloseAllDocumentsExceptCurrent(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close all except current"));
     action->setToolTip(Command::tr("Close all except current document"));
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -589,11 +581,10 @@ void CommandCloseAllDocumentsExceptCurrent::updateActionText(Document::Identifie
 CommandQuitApplication::CommandQuitApplication(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setMenuRole(QAction::QuitRole);
     action->setText(Command::tr("Quit"));
     action->setShortcut(QKeySequence::StandardKey::Quit);
-    this->setAction(action);
 }
 
 void CommandQuitApplication::execute()
