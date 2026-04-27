@@ -71,8 +71,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-    // Force deletion of Command objects as some of them are event filters of MainWindow widgets
-    m_cmdContainer.clear();
     delete m_ui;
 }
 

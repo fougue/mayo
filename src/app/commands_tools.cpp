@@ -23,11 +23,10 @@ namespace Mayo {
 CommandSaveViewImage::CommandSaveViewImage(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Save View to Image"));
     action->setToolTip(Command::tr("Save View to Image"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Camera));
-    this->setAction(action);
 }
 
 void CommandSaveViewImage::execute()
@@ -46,10 +45,9 @@ bool CommandSaveViewImage::getEnabledStatus() const
 CommandInspectXde::CommandInspectXde(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Inspect XDE"));
     action->setToolTip(Command::tr("Inspect XDE"));
-    this->setAction(action);
 }
 
 void CommandInspectXde::execute()
@@ -85,12 +83,11 @@ bool CommandInspectXde::getEnabledStatus() const
 CommandEditOptions::CommandEditOptions(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setMenuRole(QAction::PreferencesRole);
     action->setText(Command::tr("Options"));
     action->setToolTip(Command::tr("Options"));
     action->setShortcut(QKeySequence::StandardKey::Preferences);
-    this->setAction(action);
 }
 
 void CommandEditOptions::execute()

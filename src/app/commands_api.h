@@ -11,8 +11,11 @@
 
 #include <QtCore/QObject>
 #include <QAction> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
-#include <unordered_map>
 class QWidget;
+
+#include <memory>
+#include <unordered_map>
+#include <type_traits>
 
 namespace Mayo {
 
@@ -78,23 +81,40 @@ protected:
     int currentDocumentIndex() const;
 
     void setCurrentDocument(const DocumentPtr& doc);
-    void setAction(QAction* action);
+    QAction* createAction();
 
 private:
     IAppContext* m_context = nullptr;
     QAction* m_action = nullptr;
 };
 
-// Provides an associative container dedicated to Command objects
-// Each command in the container is mapped to a unique identifier(ie the "command name")
+// Provides an associative container for Command objects
+//
+// Each command is identified by a unique key("command name") and can be retrieved later using that
+// identifier. Commands are typically registered once during application initialization and then
+// queried or iterated over as needed.
+//
+// The container owns the Command instances it creates and is responsible for their lifetime. All
+// commands are destroyed when clear() is called or when the container itself is destroyed.
 class CommandContainer {
 public:
     CommandContainer() = default;
     CommandContainer(IAppContext* appContext);
+    ~CommandContainer();
+
+    CommandContainer(const CommandContainer&) = delete;
+    CommandContainer& operator=(const CommandContainer&) = delete;
 
     IAppContext* appContext() const { return m_appContext; }
     void setAppContext(IAppContext* appContext);
 
+    // Iterates over all commands stored in the container and applies the given function to each entry.
+    // Example:
+    //     container.foreachCommand([](std::string_view name, Command* cmd) { ... });
+    // Notes:
+    //   - The iteration order is unspecified(depends on std::unordered_map)
+    //   - The container must not be modified during iteration(no calls to addNamedCommand(), clear(), ...)
+    //   - The function `fn` must not delete the Command objects
     template<typename Function> void foreachCommand(Function fn);
 
     // Returns the Command object mapped to 'name'
@@ -106,22 +126,42 @@ public:
     // Might return null in case no command is mapped to 'name'
     QAction* findCommandAction(std::string_view name) const;
 
-    // Construct and add new Command object with arguments 'args'
-    // The command is associated to identifier 'name' and can be retrieved later on with findCommand()
-    // IMPORTANT `name` must refer to a static string(eg CmdType::Name)
-    template<typename CmdType, typename... Args> CmdType* addCommand(std::string_view name, Args... p);
+    // Construct and register new Command of type `CmdType`
+    // The command is created using the provided arguments `args...` and associated with its
+    // implicit name, defined by `CmdType::Name`. That name must refer to static storage, eg string
+    // literal or static constexpr string
+    // The newly created command is owned by the container and can later be retrieved using findCommand()
+    template<typename CmdType, typename... Args> CmdType* addNamedCommand(Args&&... args);
 
-    // Same behavior as addCommand() function
-    // The command name is implicit and found by assuming the presence of CmdType::Name class member
-    template<typename CmdType, typename... Args> CmdType* addNamedCommand(Args... p);
-
+    // Deletes all commands owned by the container and clears the internal mapping
+    // Notes:
+    //   - All Command pointers previously returned by the container become invalid
+    //   - Associated QAction objects(if any) owned by the commands are also destroyed
+    //   - The container remains valid and can be reused to register new commands
+    //   - This function must not be called while iterating over the container
     void clear();
 
 private:
-    void addCommand_impl(std::string_view name, Command* cmd);
+    // Helper to check CmdType::Name exists and is convertible to std::string_view
+    template<typename, typename = std::void_t<>>
+    struct has_valid_name : std::false_type {};
+
+    // Helper to check CmdType::Name exists and is convertible to std::string_view
+    template<typename T>
+    struct has_valid_name<T, std::void_t<decltype(T::Name)>>
+        : std::bool_constant<std::is_convertible_v<decltype(T::Name), std::string_view>> {}
+    ;
+
+    // Construct and add new Command object with arguments 'args'
+    // The command is associated to identifier 'name' and can be retrieved later on with findCommand()
+    // IMPORTANT `name` must refer to a static string(eg CmdType::Name)
+    template<typename CmdType, typename... Args>
+    CmdType* addCommand(std::string_view name, Args&&... args);
+
+    void addCommand_impl(std::string_view name, std::unique_ptr<Command> cmd);
 
     IAppContext* m_appContext = nullptr;
-    std::unordered_map<std::string_view, Command*> m_mapCommand;
+    std::unordered_map<std::string_view, std::unique_ptr<Command>> m_mapCommand;
 };
 
 
@@ -133,25 +173,28 @@ private:
 template<typename Function>
 void CommandContainer::foreachCommand(Function fn)
 {
-    for (auto [name, cmd] : m_mapCommand) {
-        fn(name, cmd);
+    for (const auto& [name, cmd] : m_mapCommand) {
+        fn(name, cmd.get());
     }
 }
 
 template<typename CmdType, typename... Args>
-CmdType* CommandContainer::addCommand(std::string_view name, Args... p)
+CmdType* CommandContainer::addCommand(std::string_view name, Args&&... args)
 {
-    auto cmd = new CmdType(m_appContext, p...);
-    this->addCommand_impl(name, cmd);
-    return cmd;
+    auto cmd = std::make_unique<CmdType>(m_appContext, std::forward<Args>(args)...);
+    auto cmdPtr = cmd.get();
+    this->addCommand_impl(name, std::move(cmd));
+    return cmdPtr;
 }
 
 template<typename CmdType, typename... Args>
-CmdType* CommandContainer::addNamedCommand(Args... p)
+CmdType* CommandContainer::addNamedCommand(Args&&... args)
 {
-    auto cmd = new CmdType(m_appContext, p...);
-    this->addCommand_impl(CmdType::Name, cmd);
-    return cmd;
+    static_assert(
+        has_valid_name<CmdType>::value,
+        "CmdType::Name must exist and be convertible to std::string_view"
+    );
+    return this->addCommand<CmdType>(CmdType::Name, std::forward<Args>(args)...);
 }
 
 } // namespace Mayo

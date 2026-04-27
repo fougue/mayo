@@ -47,9 +47,8 @@ namespace Mayo {
 CommandSystemInformation::CommandSystemInformation(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("System Information..."));
-    this->setAction(action);
 }
 
 void CommandSystemInformation::execute()

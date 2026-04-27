@@ -18,13 +18,12 @@ namespace Mayo {
 CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Fullscreen"));
     action->setToolTip(Command::tr("Switch Fullscreen/Normal"));
     action->setShortcut(QKeySequence::StandardKey::FullScreen);
     action->setCheckable(true);
     action->setChecked(context->widgetMain()->isFullScreen());
-    this->setAction(action);
 }
 
 void CommandMainWidgetToggleFullscreen::execute()
@@ -48,12 +47,11 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
 {
     assert(panelWidget);
 
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
     action->setShortcut(Qt::ALT | Qt::Key_0);
     action->setCheckable(true);
     action->setChecked(panelWidget->isVisible());
-    this->setAction(action);
     this->updateAction();
     panelWidget->installEventFilter(this);
 }
@@ -97,10 +95,9 @@ void CommandLeftSidebarWidgetToggle::updateAction()
 CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setToolTip(Command::tr("Go To Home Page"));
     action->setShortcut(Qt::CTRL | Qt::Key_0);
-    this->setAction(action);
     this->updateAction();
     context->widgetPage(IAppContext::Page::Home)->installEventFilter(this);
     context->widgetPage(IAppContext::Page::Documents)->installEventFilter(this);
@@ -160,12 +157,11 @@ void CommandSwitchMainWidgetMode::updateAction()
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Previous Document"));
     action->setToolTip(Command::tr("Previous Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Back));
     action->setShortcut(QKeySequence::StandardKey::Back);
-    this->setAction(action);
 }
 
 void CommandPreviousDocument::execute()
@@ -186,12 +182,11 @@ bool CommandPreviousDocument::getEnabledStatus() const
 CommandNextDocument::CommandNextDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Next Document"));
     action->setToolTip(Command::tr("Next Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Next));
     action->setShortcut(QKeySequence::StandardKey::Forward);
-    this->setAction(action);
 }
 
 void CommandNextDocument::execute()
