@@ -27,7 +27,18 @@ class TaskManager;
 
 class Command;
 
-// Provides interface to access/interact with application
+//
+// Provides interface to access/interact with application state and services
+//
+// IAppContext acts as a central access point for application-wide resources such as the GUI
+// application, task manager, document management, and main UI widgets.
+// It decouples high-level components(Command objects) from concrete UI implementations(MainWindow)
+//
+// The interface intentionally exposes both high-level concepts(documents) and UI-related
+// elements(widgets), acting as a pragmatic bridge layer
+// State changes are not automatically propagated; callers must explicitly invoke
+// updateControlsEnabledStatus() when needed
+//
 class IAppContext : public QObject {
     Q_OBJECT
 public:
@@ -50,13 +61,22 @@ public:
     virtual int findDocumentIndex(Document::Identifier docId) const = 0;
     virtual Document::Identifier findDocumentFromIndex(int index) const = 0;
 
+    // Must be called whenever application state changes in a way that may affect
+    // command enabled/disabled status(eg current document, selection, mode, etc.)
     virtual void updateControlsEnabledStatus() = 0;
 
 signals:
     void currentDocumentChanged(Mayo::Document::Identifier docId);
 };
 
+//
 // Represents a single action in the application
+//
+// A Command object encapsulates a unit of user-triggered behavior(eg menu action, toolbar button,
+// shortcut). It provides both the execution logic and the optional UI binding through a QAction.
+// Commands are typically created and owned by CommandContainer and operate in the context of an
+// IAppContext, which gives access to application state and services.
+//
 class Command : public QObject {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Command)
@@ -64,12 +84,26 @@ public:
     Command(IAppContext* context);
     virtual ~Command() = default;
 
+    // Executes the command logic(implemented by derived classes)
+    // Typically triggered by the associated QAction
     virtual void execute() = 0;
 
+    // Returns the application context associated with this command
     IAppContext* context() const { return m_context; }
 
+    // Returns the associated QAction, if any
+    // May return nullptr if createAction() has not been called
     QAction* action() const { return m_action; }
+
+    // Returns whether the command is currently enabled.
+    // Can be overridden to implement dynamic enable/disable logic based on application state
+    // The returned value is applied to the QAction when updateEnabled() is called
     virtual bool getEnabledStatus() const { return true; }
+
+    // Updates the enabled state of the associated QAction
+    // If a QAction exists, its enabled state is set according to getEnabledStatus()
+    // Does nothing if no action has been created
+    void updateEnabled();
 
 protected:
     Application* app() const;
@@ -81,6 +115,11 @@ protected:
     int currentDocumentIndex() const;
 
     void setCurrentDocument(const DocumentPtr& doc);
+
+    // Creates(if needed) and returns the QAction associated with this command
+    // The action is owned by the Command by QObject parent-child mechanism(parent=this)
+    // The action is connected to execute()
+    // Subsequent calls return the same QAction instance
     QAction* createAction();
 
 private:
@@ -88,6 +127,7 @@ private:
     QAction* m_action = nullptr;
 };
 
+//
 // Provides an associative container for Command objects
 //
 // Each command is identified by a unique key("command name") and can be retrieved later using that
@@ -96,6 +136,7 @@ private:
 //
 // The container owns the Command instances it creates and is responsible for their lifetime. All
 // commands are destroyed when clear() is called or when the container itself is destroyed.
+//
 class CommandContainer {
 public:
     CommandContainer() = default;

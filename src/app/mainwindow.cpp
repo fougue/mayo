@@ -369,7 +369,7 @@ void MainWindow::openDocumentsFromList(gsl::span<const FilePath> listFilePath)
 void MainWindow::updateControlsActivation()
 {
     m_cmdContainer.foreachCommand([](std::string_view, Command* cmd) {
-        cmd->action()->setEnabled(cmd->getEnabledStatus());
+        cmd->updateEnabled();
     });
 }
 

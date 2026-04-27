@@ -31,6 +31,12 @@ Application* Command::app() const
     return m_context ? m_context->guiApp()->application().get() : nullptr;
 }
 
+void Command::updateEnabled()
+{
+    if (m_action)
+        m_action->setEnabled(this->getEnabledStatus());
+}
+
 GuiDocument* Command::currentGuiDocument() const
 {
     DocumentPtr doc = this->app()->findDocumentByIdentifier(this->currentDocument());
