@@ -1,0 +1,64 @@
+name: SonarCloud
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed to access history
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y update
+          # Qt5
+          sudo apt-get install -y qtbase5-dev libqt5svg5-dev
+          # OpenCascade
+          sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
+          sudo apt-get -y install libtbb-dev libxi-dev
+          # Assimp
+          sudo apt-get -y install libassimp-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+              -DMayo_BuildTests=ON \
+              -DMayo_BuildPluginAssimp=ON
+
+      - name: Build(instrumented)
+        run: |
+          curl -sSLo build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip -o build-wrapper.zip
+          build-wrapper-linux-x86/build-wrapper-linux-x86-64 \
+              --out-dir bw-output \
+              cmake --build build --config Release --parallel $(nproc)
+
+      - name: SonarCloud Scan
+        run: |
+          sudo apt-get install -y unzip
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip -q sonar-scanner.zip
+          SCANNER_DIR=$(find . -maxdepth 1 -type d -name "sonar-scanner-*")
+
+          $SCANNER_DIR/bin/sonar-scanner \
+            -Dsonar.projectKey=fougue_mayo \
+            -Dsonar.organization=fougue \
+            -Dsonar.sources=. \
+            -Dsonar.cfamily.cpp-standard=c++17 \
+            -Dsonar.inclusions=src/**/*.cpp,src/**/*.h \
+            -Dsonar.exclusions=**/3rdparty/**,**/*moc_*.cpp,**/ui_*.h \
+            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${SONAR_TOKEN}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
