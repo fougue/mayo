@@ -4,7 +4,6 @@
 [![Linux CI](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_linux_ubuntu.yml)
 [![macOS CI](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml)
 <br>
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fougue_mayo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fougue_mayo)
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
 [![Version](https://img.shields.io/badge/version-v0.9.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
   
