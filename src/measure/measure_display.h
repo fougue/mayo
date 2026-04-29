@@ -104,7 +104,8 @@ private:
 
 class MeasureDisplayVertex : public BaseMeasureDisplay {
 public:
-    MeasureDisplayVertex(const gp_Pnt& pnt);
+    explicit MeasureDisplayVertex(const gp_Pnt& pnt);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -120,7 +121,8 @@ private:
 
 class MeasureDisplayCircleCenter : public BaseMeasureDisplay {
 public:
-    MeasureDisplayCircleCenter(const MeasureCircle& circle);
+    explicit MeasureDisplayCircleCenter(const MeasureCircle& circle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -138,7 +140,8 @@ private:
 
 class MeasureDisplayCircleDiameter : public BaseMeasureDisplay {
 public:
-    MeasureDisplayCircleDiameter(const MeasureCircle& circle);
+    explicit MeasureDisplayCircleDiameter(const MeasureCircle& circle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 3; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -158,7 +161,8 @@ private:
 
 class MeasureDisplayDistance : public BaseMeasureDisplay {
 public:
-    MeasureDisplayDistance(const MeasureDistance& dist);
+    explicit MeasureDisplayDistance(const MeasureDistance& dist);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -180,7 +184,8 @@ private:
 
 class MeasureDisplayAngle : public BaseMeasureDisplay {
 public:
-    MeasureDisplayAngle(MeasureAngle angle);
+    explicit MeasureDisplayAngle(MeasureAngle angle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -202,7 +207,8 @@ private:
 
 class MeasureDisplayLength : public BaseMeasureDisplay {
 public:
-    MeasureDisplayLength(const MeasureLength& length);
+    explicit MeasureDisplayLength(const MeasureLength& length);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -221,7 +227,8 @@ private:
 
 class MeasureDisplayArea : public BaseMeasureDisplay {
 public:
-    MeasureDisplayArea(const MeasureArea& area);
+    explicit MeasureDisplayArea(const MeasureArea& area);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -240,7 +247,8 @@ private:
 
 class MeasureDisplayBoundingBox : public BaseMeasureDisplay {
 public:
-    MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+    explicit MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 6; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;

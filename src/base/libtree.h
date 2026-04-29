@@ -222,7 +222,7 @@ template<typename T>
 TreeNodeId Tree<T>::appendChild(TreeNodeId parentId, T&& data)
 {
     TreeNode* node = this->appendChild(parentId);
-    node->data = std::forward<T>(data);
+    node->data = std::move(data);
     return this->lastNodeId();
 }
 

@@ -16,8 +16,8 @@ namespace Mayo {
 
 template<typename EnumType>
 struct EnumNames {
-    static inline const std::string_view trContext = "";
-    static inline const std::string_view junkPrefix = "";
+    static inline const std::string_view trContext = {};
+    static inline const std::string_view junkPrefix = {};
 };
 
 template<typename EnumType>

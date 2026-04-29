@@ -106,7 +106,7 @@ bool OccStlWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgr
     return !m_shape.IsNull();
 }
 
-bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStlWriter::writeFile(const FilePath& filepath, [[maybe_unused]]TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
         bool facesMeshed = true;
@@ -132,7 +132,6 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         auto indicator = makeOccHandle<OccProgressIndicator>(progress);
         return writer.Write(m_shape, strFilepath.c_str(), TKernelUtils::start(indicator));
 #else
-        MAYO_UNUSED(progress);
         return writer.Write(m_shape, strFilepath.c_str());
 #endif
     }

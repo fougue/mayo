@@ -39,7 +39,7 @@ namespace Mayo {
 
 template<> struct EnumNames<IO::OccCommon::LengthUnit> {
     inline static std::string_view trContext = IO::OccCommon::textIdContext();
-    inline static std::string_view junkPrefix = "";
+    inline static std::string_view junkPrefix = {};
 };
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)

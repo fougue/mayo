@@ -99,17 +99,17 @@ bool BRepUtils::isGeometric(const TopoDS_Face& face)
 }
 
 void BRepUtils::computeMesh(
-        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress
+        const TopoDS_Shape& shape,
+        const OccBRepMeshParameters& params,
+        [[maybe_unused]]TaskProgress* progress
     )
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
-    BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
+    [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
 #else
-    BRepMesh_IncrementalMesh mesher(shape, params);
-    MAYO_UNUSED(progress);
+    [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params);
 #endif
-    MAYO_UNUSED(mesher);
 }
 
 } // namespace Mayo

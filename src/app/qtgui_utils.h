@@ -71,7 +71,7 @@ QPoint globalPosition(const QMouseEvent* event);
 // Fluent-like helper to change font properties
 class FontChange {
 public:
-    FontChange(const QFont& font);
+    explicit FontChange(const QFont& font);
 
     FontChange& size(int size);
     FontChange& adjustSize(int offset);

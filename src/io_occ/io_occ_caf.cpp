@@ -41,14 +41,13 @@ TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc,
     const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
     OccHandle<TDocStd_Document> stdDoc = doc;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
+    [[maybe_unused]]const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
 #else
     OccHandle<XSControl_WorkSession> ws = Private::cafWorkSession(reader);
     ws->MapReader()->SetProgress(indicator);
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
     const bool okTransfer = reader.Transfer(stdDoc);
 #endif
-    MAYO_UNUSED(okTransfer);
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 

@@ -789,7 +789,8 @@ void DxfReader::Internal::OnReadDimension(const DxfCoords& s, const DxfCoords& e
 
 void DxfReader::Internal::OnReadSolid(const Dxf_SOLID& solid)
 {
-    Dxf_QuadBase quad = solid;
+    const Dxf_QuadBase& baseQuad = solid;
+    Dxf_QuadBase quad = baseQuad;
     if (solid.hasCorner4) {
         // See https://ezdxf.readthedocs.io/en/stable/dxfentities/solid.html
         std::swap(quad.corner3, quad.corner4);

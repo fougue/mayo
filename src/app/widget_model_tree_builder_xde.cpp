@@ -31,8 +31,8 @@ class WidgetModelTreeBuilder_Xde::Module : public PropertyGroup {
 public:
     static Module* get()
     {
-        static Module module;
-        return &module;
+        static Module obj;
+        return &obj;
     }
 
     enum class NameFormat { Instance, Product, Both };

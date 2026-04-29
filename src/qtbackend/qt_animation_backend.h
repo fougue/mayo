@@ -15,7 +15,7 @@ namespace Mayo {
 // Provides implementation of IAnimationBackend based on QAbstractAnimation
 class QtAnimationBackend : public IAnimationBackend {
 public:
-    QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear);
+    explicit QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear);
 
     void setDuration(QuantityTime t) override;
 

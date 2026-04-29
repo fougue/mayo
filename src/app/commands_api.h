@@ -81,8 +81,8 @@ class Command : public QObject {
     Q_OBJECT
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Command)
 public:
-    Command(IAppContext* context);
-    virtual ~Command() = default;
+    explicit Command(IAppContext* context);
+    ~Command() override = default;
 
     // Executes the command logic(implemented by derived classes)
     // Typically triggered by the associated QAction
@@ -140,7 +140,7 @@ private:
 class CommandContainer {
 public:
     CommandContainer() = default;
-    CommandContainer(IAppContext* appContext);
+    explicit CommandContainer(IAppContext* appContext);
     ~CommandContainer();
 
     CommandContainer(const CommandContainer&) = delete;
@@ -156,7 +156,7 @@ public:
     //   - The iteration order is unspecified(depends on std::unordered_map)
     //   - The container must not be modified during iteration(no calls to addNamedCommand(), clear(), ...)
     //   - The function `fn` must not delete the Command objects
-    template<typename Function> void foreachCommand(Function fn);
+    template<typename Function> void foreachCommand(Function fn) const;
 
     // Returns the Command object mapped to 'name'
     // That object was previously created and associated with a call to addCommand()/addNamedCommand()
@@ -212,7 +212,7 @@ private:
 // --
 
 template<typename Function>
-void CommandContainer::foreachCommand(Function fn)
+void CommandContainer::foreachCommand(Function fn) const
 {
     for (const auto& [name, cmd] : m_mapCommand) {
         fn(name, cmd.get());

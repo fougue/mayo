@@ -91,7 +91,9 @@ void TaskManager::run(TaskId id, TaskAutoDestroy policy)
 
     entity->isFinished = false;
     entity->autoDestroy = policy;
-    entity->control = std::async([=]{ d->execEntity(entity); });
+    // If not specified the default policy is "std::launch::async | std::launch::deferred" and which
+    // one is selected is implementation-defined
+    entity->control = std::async(std::launch::async, [=]{ d->execEntity(entity); });
 }
 
 void TaskManager::exec(TaskId id, TaskAutoDestroy policy)

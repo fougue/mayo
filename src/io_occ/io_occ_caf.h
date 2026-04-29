@@ -30,7 +30,7 @@ namespace Mayo::IO::Private {
 std::mutex& cafGlobalMutex();
 
 #define MayoIO_CafGlobalScopedLock(name) \
-    [[maybe_unused]] std::lock_guard<std::mutex> name(Mayo::IO::Private::cafGlobalMutex());
+    [[maybe_unused]] std::scoped_lock name(Mayo::IO::Private::cafGlobalMutex());
 
 OccHandle<XSControl_WorkSession> cafWorkSession(const IGESCAFControl_Reader& reader);
 OccHandle<XSControl_WorkSession> cafWorkSession(const STEPCAFControl_Reader& reader);

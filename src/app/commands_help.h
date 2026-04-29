@@ -11,7 +11,7 @@ namespace Mayo {
 
 class CommandReportBug : public Command {
 public:
-    CommandReportBug(IAppContext* context);
+    explicit CommandReportBug(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "report-bug";
@@ -19,7 +19,7 @@ public:
 
 class CommandSystemInformation : public Command {
 public:
-    CommandSystemInformation(IAppContext* context);
+    explicit CommandSystemInformation(IAppContext* context);
     void execute() override;
 
     static QString data();
@@ -28,7 +28,7 @@ public:
 
 class CommandAbout : public Command {
 public:
-    CommandAbout(IAppContext* context);
+    explicit CommandAbout(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "about";

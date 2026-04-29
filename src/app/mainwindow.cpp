@@ -172,7 +172,7 @@ void MainWindow::createMenus()
         menu->addAction(m_cmdContainer.findCommandAction(commandName));
     };
 
-    // TODO Create menu bar programmatically(not hard-code in .ui file)
+    // TODO Create menu bar programmatically(not hard-coded in .ui file)
 
     {   // File
         auto menu = m_ui->menu_File;

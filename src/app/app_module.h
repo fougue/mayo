@@ -43,10 +43,10 @@ class AppModule :
 {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
+    virtual ~AppModule() = default;
+
     // Query singleton instance
     static AppModule* get();
-
-    ~AppModule();
 
     // Application object
     const ApplicationPtr& application() const { return m_application; }
@@ -54,7 +54,8 @@ public:
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
     AppModuleProperties* properties() { return &m_props; }
-    Settings* settings() const { return m_settings; }
+    Settings* settings() { return &m_settings; }
+    const Settings* settings() const { return &m_settings; }
 
     // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
@@ -74,7 +75,7 @@ public:
 
     // Information about 3rd-party libraries used by the application
     void addLibraryInfo(const LibraryInfo& lib);
-    void addLibraryInfo(std::string_view libName, std::string_view version, std::string_view versionDetails = "");
+    void addLibraryInfo(std::string_view libName, std::string_view version, std::string_view versionDetails = {});
     gsl::span<const LibraryInfo> libraryInfoArray() const;
 
     // Logging
@@ -126,7 +127,7 @@ private:
     bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
 
     ApplicationPtr m_application;
-    Settings* m_settings = nullptr;
+    Settings m_settings;
     IO::System m_ioSystem;
     AppModuleProperties m_props;
     std::vector<Messenger::Message> m_messageLog;

@@ -369,9 +369,8 @@ static int runApp(QCoreApplication* qtApp)
 #endif
 
     // Initialize Gui application
-    auto guiApp = new GuiApplication(app);
-    auto _ = gsl::finally([=]{ delete guiApp; });
-    initGui(guiApp);
+    auto guiApp = std::make_unique<GuiApplication>(app);
+    initGui(guiApp.get());
 
     // Register providers to query document tree node properties
     appModule->addPropertiesProvider(std::make_unique<XCaf_DocumentTreeNodePropertiesProvider>());
@@ -389,7 +388,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
-    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp.get()));
     IO::addPredefinedFormatProbes(ioSystem);
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
@@ -423,7 +422,7 @@ static int runApp(QCoreApplication* qtApp)
     });
 
     // Create MainWindow
-    MainWindow mainWindow(guiApp);
+    MainWindow mainWindow(guiApp.get());
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
     appModule->settings()->loadProperty(&appModule->properties()->appUiState);
     mainWindow.show();
@@ -435,7 +434,7 @@ static int runApp(QCoreApplication* qtApp)
     fnLoadAppSettings(appModule->settings());
     try {
         const int code = qtApp->exec();
-        appModule->recordRecentFiles(guiApp);
+        appModule->recordRecentFiles(guiApp.get());
         appModule->settings()->save();
         return code;
     }

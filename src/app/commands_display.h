@@ -15,13 +15,13 @@ namespace Mayo {
 
 class BaseCommandDisplay : public Command {
 public:
-    BaseCommandDisplay(IAppContext* context);
+    explicit BaseCommandDisplay(IAppContext* context);
     bool getEnabledStatus() const override;
 };
 
 class CommandChangeProjection : public BaseCommandDisplay {
 public:
-    CommandChangeProjection(IAppContext* context);
+    explicit CommandChangeProjection(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "change-projection";
@@ -34,7 +34,7 @@ private:
 
 class CommandChangeDisplayMode : public BaseCommandDisplay {
 public:
-    CommandChangeDisplayMode(IAppContext* context);
+    explicit CommandChangeDisplayMode(IAppContext* context);
     CommandChangeDisplayMode(IAppContext* context, QMenu* containerMenu);
     void execute() override;
 
@@ -46,7 +46,7 @@ private:
 
 class CommandToggleOriginTrihedron : public BaseCommandDisplay {
 public:
-    CommandToggleOriginTrihedron(IAppContext* context);
+    explicit CommandToggleOriginTrihedron(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "toggle-origin-trihedron";
@@ -57,7 +57,7 @@ private:
 
 class CommandTogglePerformanceStats : public BaseCommandDisplay {
 public:
-    CommandTogglePerformanceStats(IAppContext* context);
+    explicit CommandTogglePerformanceStats(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "toggle-performance-stats";
@@ -68,7 +68,7 @@ private:
 
 class CommandZoomInCurrentDocument : public BaseCommandDisplay {
 public:
-    CommandZoomInCurrentDocument(IAppContext* context);
+    explicit CommandZoomInCurrentDocument(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "current-doc-zoom-in";
@@ -76,7 +76,7 @@ public:
 
 class CommandZoomOutCurrentDocument : public BaseCommandDisplay {
 public:
-    CommandZoomOutCurrentDocument(IAppContext* context);
+    explicit CommandZoomOutCurrentDocument(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "current-doc-zoom-out";
@@ -84,7 +84,7 @@ public:
 
 class CommandTurnViewCounterClockWise : public BaseCommandDisplay {
 public:
-    CommandTurnViewCounterClockWise(IAppContext* context);
+    explicit CommandTurnViewCounterClockWise(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "current-doc-turn-view-ccw";
@@ -92,7 +92,7 @@ public:
 
 class CommandTurnViewClockWise : public BaseCommandDisplay {
 public:
-    CommandTurnViewClockWise(IAppContext* context);
+    explicit CommandTurnViewClockWise(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "current-doc-turn-view-cw";

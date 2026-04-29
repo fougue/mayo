@@ -25,9 +25,6 @@
 #  define MAYO_OS_UNIX
 #endif
 
-// Avoid "unused parameter" warnings
-#define MAYO_UNUSED(x) (void)x;
-
 namespace Mayo {
 
 enum class CheckState { Off, Partially, On };

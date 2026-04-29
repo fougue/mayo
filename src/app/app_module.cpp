@@ -81,8 +81,7 @@ QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
 
 AppModule::AppModule()
     : m_application(new Application),
-      m_settings(new Settings),
-      m_props(m_settings),
+      m_props(&m_settings),
       m_stdLocale(std::locale("")),
       m_qtLocale(QLocale::system())
 {
@@ -92,9 +91,9 @@ AppModule::AppModule()
         metaTypesRegistered = true;
     }
 
-    m_settings->setPropertyValueConversion(this);
+    m_settings.setPropertyValueConversion(this);
     Application::defineMayoFormat(m_application);
-    m_settings->signalPropertyChanged.connectSlot([=](const Property* prop){
+    m_settings.signalPropertyChanged.connectSlot([this](const Property* prop){
         if (prop == &m_props.autoExpandCompoundToAssembly)
             m_application->setAutoExpandCompoundToAssembly(m_props.autoExpandCompoundToAssembly);
     });
@@ -132,7 +131,7 @@ const Enumeration& AppModule::languages()
 QString AppModule::languageCode() const
 {
     const char keyLang[] = "application/language";
-    const Settings::Variant code = m_settings->findValueFromKey(keyLang);
+    const Settings::Variant code = m_settings.findValueFromKey(keyLang);
     const Enumeration& langs = AppModule::languages();
     if (code.isConvertibleToConstRefString()) {
         const std::string& strCode = code.toConstRefString();
@@ -225,7 +224,7 @@ void AppModule::emitMessage(MessageType msgType, std::string_view text)
     const std::string stext{text};
     const Messenger::Message* msg = nullptr;
     {
-        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        [[maybe_unused]] std::scoped_lock lock(m_mutexMessageLog);
         m_messageLog.push_back({ msgType, stext });
         msg = &m_messageLog.back();
     }
@@ -236,7 +235,7 @@ void AppModule::emitMessage(MessageType msgType, std::string_view text)
 void AppModule::clearMessageLog()
 {
     {
-        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        [[maybe_unused]] std::scoped_lock lock(m_mutexMessageLog);
         m_messageLog.clear();
     }
 
@@ -455,12 +454,6 @@ AppModule* AppModule::get()
 {
     static AppModule appModule;
     return &appModule;
-}
-
-AppModule::~AppModule()
-{
-    delete m_settings;
-    m_settings = nullptr;
 }
 
 bool AppModule::impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc)

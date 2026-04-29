@@ -50,11 +50,11 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
     group->addAction(m_actionOrtho);
     group->addAction(m_actionPersp);
 
-    auto action = this->createAction();
-    action->setText(Command::tr("Projection"));
-    action->setMenu(menu);
+    auto menuAction = this->createAction();
+    menuAction->setText(Command::tr("Projection"));
+    menuAction->setMenu(menu);
 
-    QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
+    QObject::connect(group, &QActionGroup::triggered, this, [this](const QAction* action) {
         GuiDocument* guiDoc = this->currentGuiDocument();
         if (guiDoc) {
             guiDoc->v3dView()->Camera()->SetProjectionType(
@@ -74,6 +74,8 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
 
 void CommandChangeProjection::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandChangeProjection::onCurrentDocumentChanged()
@@ -111,6 +113,8 @@ CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* 
 
 void CommandChangeDisplayMode::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandChangeDisplayMode::recreateMenuDisplayMode()
