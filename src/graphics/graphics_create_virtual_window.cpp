@@ -33,10 +33,11 @@
 
 namespace Mayo {
 
-OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_GraphicDriver>& gfxDriver, int wndWidth, int wndHeight)
+OccHandle<Aspect_Window> graphicsCreateVirtualWindow(
+        [[maybe_unused]]const OccHandle<Graphic3d_GraphicDriver>& gfxDriver, int wndWidth, int wndHeight
+    )
 {
 #if defined(MAYO_OS_WINDOWS)
-    MAYO_UNUSED(gfxDriver);
     // Create a "virtual" WNT window being a pure WNT window redefined to be never shown
     static OccHandle<WNT_WClass> wClass;
     if (wClass.IsNull()) {
@@ -46,10 +47,8 @@ OccHandle<Aspect_Window> graphicsCreateVirtualWindow(const OccHandle<Graphic3d_G
 
     auto wnd = new WNT_Window("", wClass, WS_POPUP, 0, 0, wndWidth, wndHeight, Quantity_NOC_BLACK);
 #elif defined(MAYO_OS_MAC)
-    MAYO_UNUSED(gfxDriver);
     auto wnd = new Cocoa_Window("", 0, 0, wndWidth, wndHeight);
 #elif defined(MAYO_OS_ANDROID)
-    MAYO_UNUSED(gfxDriver);
     auto wnd = new Aspect_NeutralWindow;
     wnd->SetSize(wndWidth, wndHeight);
 #else

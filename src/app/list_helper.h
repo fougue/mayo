@@ -23,7 +23,7 @@ struct ModelItem {
 };
 
 struct ModelStorage {
-    virtual ~ModelStorage() {}
+    virtual ~ModelStorage() = default;
     virtual int count() const = 0;
     virtual const ModelItem* at(int i) const = 0;
 };

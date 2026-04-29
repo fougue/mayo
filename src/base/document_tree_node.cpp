@@ -28,7 +28,7 @@ TDF_Label DocumentTreeNode::label() const
     if (this->isValid())
         return m_document->modelTree().nodeData(m_id);
     else
-        return TDF_Label();
+        return {};
 }
 
 bool DocumentTreeNode::isEntity() const

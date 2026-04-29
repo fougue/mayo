@@ -75,7 +75,7 @@ struct DoubleToStringOptions {
 
 class DoubleToStringOperation {
 public:
-    DoubleToStringOperation(double value);
+    explicit DoubleToStringOperation(double value);
     DoubleToStringOperation& locale(const std::locale& l);
     DoubleToStringOperation& decimalCount(int c);
     DoubleToStringOperation& removeTrailingZeroes(bool on);

@@ -33,19 +33,19 @@ WidgetClipPlanes::WidgetClipPlanes(GraphicsViewPtr view, QWidget* parent)
 
     m_vecClipPlaneData = {
         {
-            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DX())),
+            makeOccHandle<Graphic3d_ClipPlane>(gp_Pln{gp::Origin(), gp::DX()}),
             UiClipPlane(m_ui->check_X, m_ui->widget_X)
         },
         {
-            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DY())),
+            makeOccHandle<Graphic3d_ClipPlane>(gp_Pln{gp::Origin(), gp::DY()}),
             UiClipPlane(m_ui->check_Y, m_ui->widget_Y)
         },
         {
-            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp::DZ())),
+            makeOccHandle<Graphic3d_ClipPlane>(gp_Pln{gp::Origin(), gp::DZ()}),
             UiClipPlane(m_ui->check_Z, m_ui->widget_Z)
         },
         {
-            new Graphic3d_ClipPlane(gp_Pln(gp::Origin(), gp_Dir(1, 1, 1))),
+            makeOccHandle<Graphic3d_ClipPlane>(gp_Pln{gp::Origin(), gp_Dir{1., 1., 1.}}),
             UiClipPlane(m_ui->check_Custom, m_ui->widget_Custom)
         }
     };

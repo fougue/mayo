@@ -28,12 +28,12 @@ public:
     };
 
     struct IRubberBand {
-        virtual ~IRubberBand() {}
+        virtual ~IRubberBand() = default;
         virtual void updateGeometry(int x, int y, int width, int height) = 0;
         virtual void setVisible(bool on) = 0;
     };
 
-    V3dViewController(const OccHandle<V3d_View>& view);
+    explicit V3dViewController(const OccHandle<V3d_View>& view);
     virtual ~V3dViewController() = default;
 
     DynamicAction currentDynamicAction() const;

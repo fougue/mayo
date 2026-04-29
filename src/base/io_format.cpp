@@ -12,7 +12,7 @@ namespace Mayo::IO {
 std::string_view formatIdentifier(Format format)
 {
     switch (format) {
-    case Format_Unknown: return "";
+    case Format_Unknown: return {};
     case Format_Image: return "Image";
     case Format_STEP:  return "STEP";
     case Format_IGES:  return "IGES";
@@ -34,7 +34,7 @@ std::string_view formatIdentifier(Format format)
     case Format_Blender: return "Blender";
     }
 
-    return "";
+    return {};
 }
 
 std::string_view formatName(Format format)
@@ -62,7 +62,7 @@ std::string_view formatName(Format format)
     case Format_Blender: return "Blender File Format";
     }
 
-    return "";
+    return {};
 }
 
 gsl::span<std::string_view> formatFileSuffixes(Format format)

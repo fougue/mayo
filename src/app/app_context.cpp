@@ -77,7 +77,7 @@ void AppContext::setCurrentPage(Page page)
 
 V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) const
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* candidate) {
+    auto widgetDoc = this->findWidgetGuiDocument([=](const WidgetGuiDocument* candidate) {
         return candidate->guiDocument() == guiDoc;
     });
     return widgetDoc ? widgetDoc->controller() : nullptr;
@@ -85,7 +85,7 @@ V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) cons
 
 int AppContext::findDocumentIndex(Document::Identifier docId) const
 {
-    const int guiDocumentCount = int(this->guiApp()->guiDocuments().size());
+    const auto guiDocumentCount = static_cast<int>(this->guiApp()->guiDocuments().size());
     for (int i = 0; i < guiDocumentCount; ++i) {
         if (GuiDocument::documentIdentifier(this->guiDocument(i)) == docId)
             return i;
@@ -107,8 +107,8 @@ Document::Identifier AppContext::currentDocument() const
 
 void AppContext::setCurrentDocument(Document::Identifier docId)
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* widgetDoc) {
-        return widgetDoc->documentIdentifier() == docId;
+    auto widgetDoc = this->findWidgetGuiDocument([=](const WidgetGuiDocument* candidate) {
+        return candidate->documentIdentifier() == docId;
     });
     const int docIndex = m_wnd->widgetPageDocuments()->indexOfWidgetGuiDocument(widgetDoc);
     m_wnd->widgetPageDocuments()->setCurrentDocumentIndex(docIndex);
@@ -133,7 +133,7 @@ WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
     return m_wnd->widgetPageDocuments()->widgetGuiDocument(idx);
 }
 
-WidgetGuiDocument* AppContext::findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const
+WidgetGuiDocument* AppContext::findWidgetGuiDocument(const FindWidgetGuiDocumentPredicate& fn) const
 {
     const int widgetCount = m_wnd->widgetPageDocuments()->widgetGuiDocumentCount();
     for (int i = 0; i < widgetCount; ++i) {

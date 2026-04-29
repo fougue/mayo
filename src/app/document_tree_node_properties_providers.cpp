@@ -109,7 +109,7 @@ XCaf_DocumentTreeNodePropertiesProvider::Properties::Properties(const DocumentTr
 
     // Shape type
     const TopAbs_ShapeEnum shapeType = XCAFDoc_ShapeTool::GetShape(label).ShapeType();
-    m_propertyShapeType.setValue(MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_").data());
+    m_propertyShapeType.setValue(std::string{ MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_") });
 
     // XDE shape kind
     {

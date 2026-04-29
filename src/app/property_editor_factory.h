@@ -10,6 +10,9 @@
 #include <QtGui/QPixmap>
 class QWidget;
 
+#include <functional>
+#include <unordered_map>
+
 namespace Mayo {
 
 class BasePropertyQuantity;
@@ -30,8 +33,30 @@ public:
 
 class DefaultPropertyEditorFactory : public IPropertyEditorFactory {
 public:
+    DefaultPropertyEditorFactory();
+
     QWidget* createEditor(Property* property, QWidget* parentWidget) const override;
     void syncEditorWithProperty(QWidget* editor) const override;
+
+private:
+    template<typename PropType, typename EditorType>
+    void registerPropertyEditor();
+
+    using Creator = std::function<QWidget*(Property*, QWidget*)>;
+    std::unordered_map<const char*, Creator> m_mapCreator;
 };
+
+// --
+// -- Implementation
+// --
+
+template<typename PropType, typename EditorType>
+void DefaultPropertyEditorFactory::registerPropertyEditor()
+{
+    Creator fnCreateEditor = [](Property* prop, QWidget* parent) -> QWidget* {
+        return new EditorType(static_cast<PropType*>(prop), parent);
+    };
+    m_mapCreator[PropType::TypeName] = std::move(fnCreateEditor);
+}
 
 } // namespace Mayo

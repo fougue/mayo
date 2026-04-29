@@ -24,6 +24,7 @@
 #include <gsl/util>
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <fstream>
 #include <locale>
 #include <string>
@@ -36,16 +37,16 @@ enum class Endianness { Unknown, Little, Big };
 
 Endianness hostEndianness()
 {
-    union IntBytes32Convert {
-        uint32_t integer;
-        uint8_t  bytes[4];
-    };
-    IntBytes32Convert conv;
-    conv.integer = 0x01020408;
-    if (conv.bytes[0] == 0x08 && conv.bytes[3] == 0x01)
+    const uint32_t value = 0x01020408u;
+    unsigned char bytes[sizeof(value)];
+    std::memcpy(bytes, &value, sizeof(value));
+    // Little: bytes = {08, 04, 02, 01}
+    // Big   : bytes = {01, 02, 04, 08}
+
+    if (bytes[0] == 0x08 && bytes[3] == 0x01)
         return Endianness::Little;
 
-    if (conv.bytes[0] == 0x01 && conv.bytes[3] == 0x08)
+    if (bytes[0] == 0x01 && bytes[3] == 0x08)
         return Endianness::Big;
 
     return Endianness::Unknown;

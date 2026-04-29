@@ -343,6 +343,8 @@ CommandRecentFiles::CommandRecentFiles(IAppContext* context, QMenu* containerMen
 
 void CommandRecentFiles::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandRecentFiles::recreateEntries()

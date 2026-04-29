@@ -6,6 +6,7 @@
 #include "application.h"
 #include "filepath_conv.h"
 #include "property_builtins.h"
+#include "string_conv.h"
 #include "task_common.h"
 #include "tkernel_utils.h"
 
@@ -155,16 +156,23 @@ void Application::setAutoExpandCompoundToAssembly(bool on)
 
 void Application::defineMayoFormat(const ApplicationPtr& app)
 {
+    if (!app)
+        return;
+
     const char strFougueCopyright[] = "Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>";
     app->DefineFormat(
-        Document::NameFormatBinary, ApplicationI18N::textIdTr("Binary Mayo Document Format").data(), "myb",
-        new Document::FormatBinaryRetrievalDriver(app),
-        new BinXCAFDrivers_DocumentStorageDriver
+        Document::NameFormatBinary,
+        to_OccAsciiString(ApplicationI18N::textIdTr("Binary Mayo Document Format")),
+        "myb",
+        makeOccHandle<Document::FormatBinaryRetrievalDriver>(app),
+        makeOccHandle<BinXCAFDrivers_DocumentStorageDriver>()
     );
     app->DefineFormat(
-        Document::NameFormatXml, ApplicationI18N::textIdTr("XML Mayo Document Format").data(), "myx",
-        new Document::FormatXmlRetrievalDriver(app),
-        new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright)
+        Document::NameFormatXml,
+        to_OccAsciiString(ApplicationI18N::textIdTr("XML Mayo Document Format")),
+        "myx",
+        makeOccHandle<Document::FormatXmlRetrievalDriver>(app),
+        makeOccHandle<XmlXCAFDrivers_DocumentStorageDriver>(strFougueCopyright)
     );
 }
 

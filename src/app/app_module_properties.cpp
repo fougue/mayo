@@ -100,11 +100,11 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->autoExpandCompoundToAssembly, groupId_import);
 
     // Register reset functions
-    settings->addResetFunction(sectionId_systemUnits, [=]{
+    settings->addResetFunction(sectionId_systemUnits, [this]{
         this->unitSystemDecimals.setValue(2);
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
-    settings->addResetFunction(groupId_application, [&]{
+    settings->addResetFunction(groupId_application, [this]{
         this->language.setValue(AppModule::languages().findValueByName("en"));
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
@@ -114,24 +114,24 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->appUiState.setValue({});
         this->forceOpenGlFallbackWidget.setValue(false);
     });
-    settings->addResetFunction(groupId_graphics, [=]{
+    settings->addResetFunction(groupId_graphics, [this]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
         this->viewCubeCorner.setValue(Aspect_TOTP_LEFT_LOWER);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
     });
-    settings->addResetFunction(groupId_meshing, [&]{
+    settings->addResetFunction(groupId_meshing, [this]{
         this->meshingQuality.setValue(BRepMeshQuality::Normal);
         this->meshingChordalDeflection.setQuantity(1 * Quantity_Millimeter);
         this->meshingAngularDeflection.setQuantity(20 * Quantity_Degree);
         this->meshingRelative.setValue(false);
     });
-    settings->addResetFunction(sectionId_graphicsClipPlanes, [=]{
+    settings->addResetFunction(sectionId_graphicsClipPlanes, [this]{
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
     });
-    settings->addResetFunction(sectionId_graphicsMeshDefaults, [=]{
+    settings->addResetFunction(sectionId_graphicsMeshDefaults, [this]{
         const GraphicsMeshObjectDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
         this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
@@ -139,7 +139,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->meshDefaultsShowEdges.setValue(meshDefaults.showEdges);
         this->meshDefaultsShowNodes.setValue(meshDefaults.showNodes);
     });
-    settings->addResetFunction(groupId_import, [=]{
+    settings->addResetFunction(groupId_import, [this]{
         this->autoExpandCompoundToAssembly.setValue(true);
     });
 }

@@ -15,7 +15,7 @@ class WidgetGuiDocument;
 // Provides implementation of IAppContext based on MainWindow
 class AppContext : public IAppContext {
 public:
-    AppContext(MainWindow* wnd);
+    explicit AppContext(MainWindow* wnd);
 
     GuiApplication* guiApp() const override;
     TaskManager* taskMgr() const override;
@@ -35,9 +35,11 @@ public:
     void updateControlsEnabledStatus() override;
 
 private:
+    using FindWidgetGuiDocumentPredicate = std::function<bool(const WidgetGuiDocument*)>;
+
     GuiDocument* guiDocument(int idx) const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
-    WidgetGuiDocument* findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const;
+    WidgetGuiDocument* findWidgetGuiDocument(const FindWidgetGuiDocumentPredicate& fn) const;
 
     void onCurrentDocumentIndexChanged(int docIndex);
 

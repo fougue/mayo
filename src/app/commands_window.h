@@ -11,7 +11,7 @@ namespace Mayo {
 
 class CommandMainWidgetToggleFullscreen : public Command {
 public:
-    CommandMainWidgetToggleFullscreen(IAppContext* context);
+    explicit CommandMainWidgetToggleFullscreen(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "toggle-fullscreen";
@@ -41,7 +41,7 @@ private:
 
 class CommandSwitchMainWidgetMode : public Command {
 public:
-    CommandSwitchMainWidgetMode(IAppContext* context);
+    explicit CommandSwitchMainWidgetMode(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -55,7 +55,7 @@ private:
 
 class CommandPreviousDocument : public Command {
 public:
-    CommandPreviousDocument(IAppContext* context);
+    explicit CommandPreviousDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -64,7 +64,7 @@ public:
 
 class CommandNextDocument : public Command {
 public:
-    CommandNextDocument(IAppContext* context);
+    explicit CommandNextDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 

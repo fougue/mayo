@@ -41,8 +41,8 @@ private:
 
     void createCommands();
     void createMenus();
-    template<typename CmdType, typename... Args> void addCommand(Args... p) {
-        m_cmdContainer.addNamedCommand<CmdType>(std::forward<Args>(p)...);
+    template<typename CmdType, typename... Args> void addCommand(Args&&... args) {
+        m_cmdContainer.addNamedCommand<CmdType>(std::forward<Args>(args)...);
     }
 
     void onOperationFinished(bool ok, const QString& msg);

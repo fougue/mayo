@@ -343,39 +343,31 @@ struct PropertyQuantityEditor : public InterfacePropertyEditor, public QDoubleSp
 
 } // namespace
 
+DefaultPropertyEditorFactory::DefaultPropertyEditorFactory()
+{
+    this->registerPropertyEditor<PropertyBool, PropertyBoolEditor>();
+    this->registerPropertyEditor<PropertyInt, PropertyIntEditor>();
+    this->registerPropertyEditor<PropertyDouble, PropertyDoubleEditor>();
+    this->registerPropertyEditor<PropertyCheckState, PropertyCheckStateEditor>();
+    this->registerPropertyEditor<PropertyString, PropertyStringEditor>();
+    this->registerPropertyEditor<PropertyOccColor, PropertyOccColorEditor>();
+    this->registerPropertyEditor<PropertyOccPnt, Property3dCoordsEditor<PropertyOccPnt>>();
+    this->registerPropertyEditor<PropertyOccVec, Property3dCoordsEditor<PropertyOccVec>>();
+    this->registerPropertyEditor<PropertyEnumeration, PropertyEnumerationEditor>();
+    this->registerPropertyEditor<BasePropertyQuantity, PropertyQuantityEditor>();
+}
+
 QWidget* DefaultPropertyEditorFactory::createEditor(Property* property, QWidget* parentWidget) const
 {
+    if (!property)
+        return nullptr;
+
     QWidget* editor = nullptr;
-    const char* propTypeName = property ? property->dynTypeName() : nullptr;
-    if (propTypeName == PropertyBool::TypeName)
-        editor = new PropertyBoolEditor(static_cast<PropertyBool*>(property), parentWidget);
-
-    if (propTypeName == PropertyInt::TypeName)
-        editor = new PropertyIntEditor(static_cast<PropertyInt*>(property), parentWidget);
-
-    if (propTypeName == PropertyDouble::TypeName)
-        editor = new PropertyDoubleEditor(static_cast<PropertyDouble*>(property), parentWidget);
-
-    if (propTypeName == PropertyCheckState::TypeName)
-        editor = new PropertyCheckStateEditor(static_cast<PropertyCheckState*>(property), parentWidget);
-
-    if (propTypeName == PropertyString::TypeName)
-        editor = new PropertyStringEditor(static_cast<PropertyString*>(property), parentWidget);
-
-    if (propTypeName == PropertyOccColor::TypeName)
-        editor = new PropertyOccColorEditor(static_cast<PropertyOccColor*>(property), parentWidget);
-
-    if (propTypeName == PropertyOccPnt::TypeName)
-        editor = new Property3dCoordsEditor<PropertyOccPnt>(static_cast<PropertyOccPnt*>(property), parentWidget);
-
-    if (propTypeName == PropertyOccVec::TypeName)
-        editor = new Property3dCoordsEditor<PropertyOccVec>(static_cast<PropertyOccVec*>(property), parentWidget);
-
-    if (propTypeName == PropertyEnumeration::TypeName)
-        editor = new PropertyEnumerationEditor(static_cast<PropertyEnumeration*>(property), parentWidget);
-
-    if (propTypeName == BasePropertyQuantity::TypeName)
-        editor = new PropertyQuantityEditor(static_cast<BasePropertyQuantity*>(property), parentWidget);
+    auto itCreator = m_mapCreator.find(property->dynTypeName());
+    if (itCreator != m_mapCreator.cend()) {
+        auto& fnCreateEditor = itCreator->second;
+        editor = fnCreateEditor(property, parentWidget);
+    }
 
     this->syncEditorWithProperty(editor);
     return editor;
@@ -385,7 +377,7 @@ void DefaultPropertyEditorFactory::syncEditorWithProperty(QWidget* editor) const
 {
     auto intf = dynamic_cast<InterfacePropertyEditor*>(editor);
     if (intf) {
-        QSignalBlocker sigBlocker(editor); Q_UNUSED(sigBlocker);
+        [[maybe_unused]] QSignalBlocker sigBlocker(editor);
         intf->syncWithProperty();
     }
 }
@@ -401,9 +393,9 @@ UnitSystem::TranslateResult IPropertyEditorFactory::unitTranslate(const BaseProp
     }
 
     return UnitSystem::translate(
-                AppModule::get()->properties()->unitSystemSchema,
-                property->quantityValue(),
-                property->quantityUnit()
+        AppModule::get()->properties()->unitSystemSchema,
+        property->quantityValue(),
+        property->quantityUnit()
     );
 }
 

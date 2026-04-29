@@ -34,7 +34,7 @@ public:
 
 class CommandNewDocument : public Command {
 public:
-    CommandNewDocument(IAppContext* context);
+    explicit CommandNewDocument(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "new-doc";
@@ -42,7 +42,7 @@ public:
 
 class CommandOpenDocuments : public Command {
 public:
-    CommandOpenDocuments(IAppContext* context);
+    explicit CommandOpenDocuments(IAppContext* context);
     void execute() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -51,7 +51,7 @@ public:
 
 class CommandRecentFiles : public Command {
 public:
-    CommandRecentFiles(IAppContext* context);
+    explicit CommandRecentFiles(IAppContext* context);
     CommandRecentFiles(IAppContext* context, QMenu* containerMenu);
     void execute() override;
     void recreateEntries();
@@ -61,7 +61,7 @@ public:
 
 class CommandImportInCurrentDocument : public Command {
 public:
-    CommandImportInCurrentDocument(IAppContext* context);
+    explicit CommandImportInCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -70,7 +70,7 @@ public:
 
 class CommandExportSelectedApplicationItems : public Command {
 public:
-    CommandExportSelectedApplicationItems(IAppContext* context);
+    explicit CommandExportSelectedApplicationItems(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -79,7 +79,7 @@ public:
 
 class CommandCloseCurrentDocument : public Command {
 public:
-    CommandCloseCurrentDocument(IAppContext* context);
+    explicit CommandCloseCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -91,7 +91,7 @@ private:
 
 class CommandCloseAllDocuments : public Command {
 public:
-    CommandCloseAllDocuments(IAppContext* context);
+    explicit CommandCloseAllDocuments(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -100,7 +100,7 @@ public:
 
 class CommandCloseAllDocumentsExceptCurrent : public Command {
 public:
-    CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
+    explicit CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -112,7 +112,7 @@ private:
 
 class CommandQuitApplication : public Command {
 public:
-    CommandQuitApplication(IAppContext* context);
+    explicit CommandQuitApplication(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "quit-app";

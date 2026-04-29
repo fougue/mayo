@@ -13,14 +13,13 @@
 
 namespace Mayo::Internal {
 
-using InfoValue = std::variant<bool, int, double, std::string>;
-std::map<std::string, InfoValue> getOccOpenGlInfos()
+OccOpenGlInfos getOccOpenGlInfos()
 {
     OpenGl_Context occContext;
     if (!occContext.Init())
         throw std::runtime_error("Unable to initialize OpenGl_Context object");
 
-    std::map<std::string, InfoValue> infos;
+    OccOpenGlInfos infos;
 
     TColStd_IndexedDataMapOfStringString dict;
     occContext.DiagnosticInformation(dict, Graphic3d_DiagnosticInfo_Basic);
@@ -33,12 +32,12 @@ std::map<std::string, InfoValue> getOccOpenGlInfos()
     infos["HasRayTracing"] = occContext.HasRayTracing();
     infos["HasRayTracingTextures"] = occContext.HasRayTracingTextures();
     infos["HasRayTracingAdaptiveSampling"] = occContext.HasRayTracingAdaptiveSampling();
-    infos["UseVBO"] = occContext.ToUseVbo();;
+    infos["UseVBO"] = occContext.ToUseVbo();
 
 #if OCC_VERSION_HEX >= 0x070400
     infos["MaxDumpSizeX"] = occContext.MaxDumpSizeX();
     infos["MaxDumpSizeY"] = occContext.MaxDumpSizeY();
-    infos["HasRayTracingAdaptiveSamplingAtomic"] = occContext.HasRayTracingAdaptiveSamplingAtomic();;
+    infos["HasRayTracingAdaptiveSamplingAtomic"] = occContext.HasRayTracingAdaptiveSamplingAtomic();
 #endif
 
 #if OCC_VERSION_HEX >= 0x070500
@@ -46,12 +45,12 @@ std::map<std::string, InfoValue> getOccOpenGlInfos()
     infos["HasSRGB"] = occContext.HasSRGB();
     infos["RenderSRGB"] = occContext.ToRenderSRGB();
     infos["IsWindowSRGB"] = occContext.IsWindowSRGB();
-    infos["HasPBR"] = occContext.HasPBR();;
+    infos["HasPBR"] = occContext.HasPBR();
 #endif
 
 #if OCC_VERSION_HEX >= 0x070700
     infos["GraphicsLibrary"] = std::string{MetaEnum::name(occContext.GraphicsLibrary())};
-    infos["HasTextureMultisampling"] = occContext.HasTextureMultisampling();;
+    infos["HasTextureMultisampling"] = occContext.HasTextureMultisampling();
 #endif
 
     return infos;

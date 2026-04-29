@@ -28,7 +28,7 @@ OcctWindow::OcctWindow ( QWidget* theWidget, const Quantity_NameOfColor theBackC
 // =======================================================================
 void OcctWindow::Destroy()
 {
-  myWidget = NULL;
+  myWidget = nullptr;
 }
 
 // =======================================================================
@@ -38,7 +38,7 @@ void OcctWindow::Destroy()
 Aspect_Drawable OcctWindow::NativeParentHandle() const
 {
   QWidget* aParentWidget = myWidget->parentWidget();
-  if ( aParentWidget != NULL )
+  if ( aParentWidget != nullptr )
     return (Aspect_Drawable)aParentWidget->winId();
   else
     return 0;
