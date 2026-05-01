@@ -12,9 +12,9 @@
 #include "io_writer.h"
 #include "libtree.h"
 #include "property.h"
-#include <gsl/span>
 #include "text_id.h"
 
+#include <gsl/span>
 #include <functional>
 #include <memory>
 #include <string>

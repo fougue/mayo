@@ -4,7 +4,6 @@
 ****************************************************************************/
 
 #include "io_occ_caf.h"
-#include "../base/global.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/io_system.h"

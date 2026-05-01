@@ -6,9 +6,9 @@
 #pragma once
 
 #include "signal.h"
-#include <gsl/span>
 #include "text_id.h"
 
+#include <gsl/span>
 #include <vector>
 #include <string_view>
 

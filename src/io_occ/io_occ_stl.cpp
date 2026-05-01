@@ -11,7 +11,6 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
-#include "../base/global.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"

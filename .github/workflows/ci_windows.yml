@@ -8,12 +8,14 @@ jobs:
             matrix:
                 occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0]
                 assimp_version: [5.4.3]
+                pch: [OFF]
                 include:
                     - occ_version: 7.8.0
                       assimp_version: 5.3.1
+                      pch: ON
 
         runs-on: windows-latest
-        name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}
+        name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}${{ matrix.pch == 'ON' && '-pch' || '' }}
 
         steps:
         - name: Set globals
@@ -99,6 +101,7 @@ jobs:
               set occ_version=${{matrix.occ_version}}
               set assimp_version=${{matrix.assimp_version}}
               cmake .. ^
+                    -DMayo_EnablePch=${{matrix.pch}} ^
                     -DMayo_BuildTests=ON ^
                     -DMayo_BuildPluginAssimp=ON ^
                     -DMayo_PostBuildCopyRuntimeDLLs=ON ^

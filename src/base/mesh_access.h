@@ -11,7 +11,6 @@ class DocumentTreeNode;
 
 // OpenCascade
 #include <Quantity_Color.hxx>
-#include <Standard_Handle.hxx>
 class Poly_Triangulation;
 class TopLoc_Location;
 
@@ -31,8 +30,8 @@ public:
 
 // Iterates over meshes from `treeNode` and call `fnCallback` for each item.
 void IMeshAccess_visitMeshes(
-        const DocumentTreeNode& treeNode,
-        std::function<void(const IMeshAccess&)> fnCallback
+    const DocumentTreeNode& treeNode,
+    std::function<void(const IMeshAccess&)> fnCallback
 );
 
 } // namespace Mayo
