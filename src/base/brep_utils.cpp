@@ -5,7 +5,6 @@
 
 #include "brep_utils.h"
 
-#include "global.h"
 #include "tkernel_utils.h"
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include "occ_progress_indicator.h"

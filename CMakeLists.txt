@@ -3,7 +3,7 @@
 #* SPDX-License-Identifier: BSD-2-Clause
 #****************************************************************************
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 set(Mayo_VersionMajor 0)
 set(Mayo_VersionMinor 10)
@@ -85,6 +85,12 @@ endif()
 option(Mayo_BuildApp "Build Mayo GUI application" ON)
 option(Mayo_BuildConvCli "Build Mayo CLI converter" ON)
 
+if(MSVC)
+    option(Mayo_EnablePch "Enable precompiled headers" OFF)
+    mark_as_advanced(Mayo_EnablePch)
+    message(STATUS "Mayo_EnablePch=${Mayo_EnablePch}")
+endif()
+
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
 
@@ -120,9 +126,9 @@ if(QT_FOUND)
 endif()
 
 #qt_standard_project_setup()
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTOUIC OFF)
+set(CMAKE_AUTORCC OFF)
 
 ##########
 # Compiler config
@@ -461,6 +467,10 @@ target_link_libraries(MayoCoreLib INTERFACE MayoCore ${MayoCore_LinkLibraries})
 target_link_directories(MayoCoreLib INTERFACE ${MayoCore_LinkDirectories})
 target_include_directories(MayoCoreLib INTERFACE ${Mayo_IncludeDirectories})
 
+if(Mayo_EnablePch)
+    target_precompile_headers(MayoCore PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+endif()
+
 ##########
 # Target: MayoIO(static lib)
 ##########
@@ -474,6 +484,10 @@ target_link_libraries(MayoIO PRIVATE MayoCore ${MayoIO_LinkLibraries})
 
 add_library(MayoIOLib INTERFACE)
 target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibraries})
+
+if(Mayo_EnablePch)
+    target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+endif()
 
 ##########
 # Target: MayoApp
@@ -551,6 +565,10 @@ if(Mayo_BuildApp)
     # Required by generated Qt UI files
     target_include_directories(mayo PRIVATE ${PROJECT_SOURCE_DIR}/src/app)
 
+    if(Mayo_EnablePch)
+        target_precompile_headers(mayo PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoApp_pch.h")
+    endif()
+
     set_target_properties(
         mayo
         PROPERTIES
@@ -562,6 +580,7 @@ if(Mayo_BuildApp)
             MACOSX_BUNDLE_GUI_IDENTIFIER "pro.fougue.mayo"  # See QTBUG-135882
             MACOSX_BUNDLE TRUE
             WIN32_EXECUTABLE TRUE
+            AUTOMOC ON  AUTOUIC ON  AUTORCC ON
     )
 
     if(Mayo_PostBuildCopyRuntimeDLLs)
@@ -656,8 +675,14 @@ if(Mayo_BuildConvCli)
         Qt${QT_VERSION_MAJOR}::Core
     )
 
+    if(Mayo_EnablePch)
+        target_precompile_headers(mayo-conv PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+    endif()
+
     set_target_properties(
-        mayo-conv PROPERTIES WIN32_EXECUTABLE FALSE
+        mayo-conv PROPERTIES
+            WIN32_EXECUTABLE FALSE
+            AUTORCC ON
     )
 endif() # Mayo_BuildConvCli
 
@@ -702,7 +727,9 @@ if(Mayo_BuildTests)
     )
 
     set_target_properties(
-        test-mayo PROPERTIES WIN32_EXECUTABLE FALSE
+        test-mayo PROPERTIES
+            WIN32_EXECUTABLE FALSE
+            AUTOMOC ON
     )
 
     file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)

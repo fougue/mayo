@@ -93,7 +93,8 @@ private:
 
 void IMeshAccess_visitMeshes(
         const DocumentTreeNode& treeNode,
-        std::function<void(const IMeshAccess&)> fnCallback)
+        std::function<void(const IMeshAccess&)> fnCallback
+    )
 {
     if (!fnCallback || !treeNode.isValid())
         return;

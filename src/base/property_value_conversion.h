@@ -6,8 +6,8 @@
 #pragma once
 
 #include "property.h"
-#include <gsl/span>
 
+#include <gsl/span>
 #include <string>
 #include <variant>
 #include <vector>

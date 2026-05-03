@@ -9,8 +9,10 @@
 #include "filepath.h"
 #include "io_format.h"
 #include "messenger_client.h"
-#include <gsl/span>
+
 #include <TDF_LabelSequence.hxx>
+
+#include <gsl/span>
 #include <memory>
 
 namespace Mayo {
