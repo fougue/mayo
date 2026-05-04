@@ -116,6 +116,7 @@ public:
 // Base interface for errors reported by measurement services of IMeasureTool
 class IMeasureError {
 public:
+    virtual ~IMeasureError() = default;
     virtual std::string_view message() const = 0;
 };
 

@@ -13,7 +13,9 @@ namespace Mayo {
 #if OCC_VERSION_HEX >= 0x070600
 OccHandle<Graphic3d_GraphicDriver> QOpenGLWidgetOccView_createCompatibleGraphicsDriver()
 {
-    auto gfxDriver = new OpenGl_GraphicDriver(GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/);
+    auto gfxDriver = makeOccHandle<OpenGl_GraphicDriver>(
+        GraphicsUtils::AspectDisplayConnection_create(), false/*dontInit*/
+    );
     // Let QOpenGLWidget manage buffer swap
     gfxDriver->ChangeOptions().buffersNoSwap = true;
     // Don't write into alpha channel

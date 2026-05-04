@@ -81,7 +81,7 @@ public:
     DoubleToStringOperation& removeTrailingZeroes(bool on);
     DoubleToStringOperation& roundToZero(bool on);
     DoubleToStringOperation& toUtf8(bool on);
-    operator std::string();
+    operator std::string() const;
     std::string get() const;
 
 private:

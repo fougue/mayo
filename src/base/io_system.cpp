@@ -86,7 +86,7 @@ Format System::probeFormat(const FilePath& filepath) const
         const auto& clocale = std::locale::classic();
         return std::tolower(lhs, clocale) == std::tolower(rhs, clocale);
     };
-    auto fnMatchFileSuffix = [=](Format format) {
+    auto fnMatchFileSuffix = [&](Format format) {
         for (std::string_view candidate : formatFileSuffixes(format)) {
             if (candidate.size() == fileSuffix.size()
                 && std::equal(candidate.cbegin(), candidate.cend(), fileSuffix.cbegin(), fnCharIEqual))

@@ -286,7 +286,7 @@ static void loadLabelMaterialProperties(
         fnAddItem(createPropertyTreeItem("DensityValType", to_QString(densityValueType)));
     }
     else {
-        density = materialTool->GetDensityForShape(label);
+        density = XCAFDoc_MaterialTool::GetDensityForShape(label);
         if (!qFuzzyIsNull(density))
             fnAddItem(createPropertyTreeItem("Density", density, densityValueTextOptions));
     }
@@ -559,19 +559,19 @@ static void loadLabelShapeProperties(
     if (XCAFDoc_ShapeTool::GetShape(label, shape))
         fnAddItem(createPropertyTreeItem("ShapeType", MetaEnum::name(shape.ShapeType())));
 
-    fnAddItem(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
+    fnAddItem(createPropertyTreeItem("IsShape", XCAFDoc_ShapeTool::IsShape(label)));
     fnAddItem(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
-    fnAddItem(createPropertyTreeItem("IsFree", shapeTool->IsFree(label)));
-    fnAddItem(createPropertyTreeItem("IsAssembly", shapeTool->IsAssembly(label)));
-    fnAddItem(createPropertyTreeItem("IsComponent", shapeTool->IsComponent(label)));
-    fnAddItem(createPropertyTreeItem("IsSimpleShape", shapeTool->IsSimpleShape(label)));
-    fnAddItem(createPropertyTreeItem("IsCompound", shapeTool->IsCompound(label)));
-    fnAddItem(createPropertyTreeItem("IsSubShape", shapeTool->IsSubShape(label)));
-    fnAddItem(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
-    fnAddItem(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
+    fnAddItem(createPropertyTreeItem("IsFree", XCAFDoc_ShapeTool::IsFree(label)));
+    fnAddItem(createPropertyTreeItem("IsAssembly", XCAFDoc_ShapeTool::IsAssembly(label)));
+    fnAddItem(createPropertyTreeItem("IsComponent", XCAFDoc_ShapeTool::IsComponent(label)));
+    fnAddItem(createPropertyTreeItem("IsSimpleShape", XCAFDoc_ShapeTool::IsSimpleShape(label)));
+    fnAddItem(createPropertyTreeItem("IsCompound", XCAFDoc_ShapeTool::IsCompound(label)));
+    fnAddItem(createPropertyTreeItem("IsSubShape", XCAFDoc_ShapeTool::IsSubShape(label)));
+    fnAddItem(createPropertyTreeItem("IsExternRef", XCAFDoc_ShapeTool::IsExternRef(label)));
+    fnAddItem(createPropertyTreeItem("IsReference", XCAFDoc_ShapeTool::IsReference(label)));
 
     TDF_LabelSequence seqLabelUser;
-    shapeTool->GetUsers(label, seqLabelUser);
+    XCAFDoc_ShapeTool::GetUsers(label, seqLabelUser);
     fnAddItem(createPropertyTreeItem("UserCount", seqLabelUser.Size()));
 
     if (XCAFDoc_ShapeTool::IsReference(label)) {

@@ -227,24 +227,6 @@ static void initOpenCascadeEnvironment(const FilePath& settingsFilepath)
     return reinterpret_cast<const char*>(glVersion);
 }
 
-// Helper to parse a string containing a semantic version eg "4.6.5 CodeNamed"
-// Note: only major and minor versions are detected
-[[maybe_unused]] static QVersionNumber parseSemanticVersionString(std::string_view strVersion)
-{
-    if (strVersion.empty())
-        return {};
-
-    const char* ptrVersionStart = strVersion.data();
-    const char* ptrVersionEnd = ptrVersionStart + strVersion.size();
-    const int versionMajor = std::atoi(ptrVersionStart);
-    int versionMinor = 0;
-    auto ptrDot = std::find(ptrVersionStart, ptrVersionEnd, '.');
-    if (ptrDot != ptrVersionEnd)
-        versionMinor = std::atoi(ptrDot + 1);
-
-    return QVersionNumber(versionMajor, versionMinor);
-}
-
 Thumbnail createGuiDocumentThumbnail(GuiDocument* guiDoc, QSize size)
 {
     Thumbnail thumbnail;
@@ -284,8 +266,8 @@ static void initGui(GuiApplication* guiApp)
     AppModule::get()->settings()->loadProperty(&propForceOpenGlFallbackWidget);
     const bool hasQGuiApplication = qobject_cast<QGuiApplication*>(QCoreApplication::instance());
     if (!propForceOpenGlFallbackWidget && hasQGuiApplication) { // QOpenGL requires QGuiApplication
-        const std::string strGlVersion = queryGlVersionString();
-        const QVersionNumber glVersion = parseSemanticVersionString(strGlVersion);
+        const QString strGlVersion = QString::fromStdString(queryGlVersionString());
+        const QVersionNumber glVersion = QVersionNumber::fromString(strGlVersion);
         if (!glVersion.isNull() && glVersion.majorVersion() >= 2) { // Requires at least OpenGL version >= 2.0
             setFunctionCreateGraphicsDriver(&QOpenGLWidgetOccView::createCompatibleGraphicsDriver);
             IWidgetOccView::setCreator(&QOpenGLWidgetOccView::create);

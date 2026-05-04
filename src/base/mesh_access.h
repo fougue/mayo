@@ -23,6 +23,7 @@ namespace Mayo {
 // Provides an interface to access mesh geometry
 class IMeshAccess {
 public:
+    virtual ~IMeshAccess() = default;
     virtual std::optional<Quantity_Color> nodeColor(int i) const = 0;
     virtual const TopLoc_Location& location() const = 0;
     virtual const OccHandle<Poly_Triangulation>& triangulation() const = 0;

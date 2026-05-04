@@ -50,4 +50,16 @@ std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& plan
     return {};
 }
 
+int intRound(double v) noexcept
+{
+    if (std::isnan(v))
+        return 0;
+
+    auto lv = std::lround(v);
+    if constexpr (sizeof(int) != sizeof(long))
+        lv = std::clamp(lv, static_cast<long>(INT_MIN), static_cast<long>(INT_MAX));
+
+    return static_cast<int>(lv);
+}
+
 } // namespace Mayo::MathUtils

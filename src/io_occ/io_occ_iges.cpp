@@ -225,7 +225,7 @@ void OccIgesWriter::applyProperties(const PropertyGroup* group)
     }
 }
 
-void OccIgesWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
+void OccIgesWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) const
 {
     rollback->change("write.iges.brep.mode", int(m_params.brepMode));
     rollback->change("write.iges.plane.mode", int(m_params.planeMode));

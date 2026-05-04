@@ -369,7 +369,7 @@ void OccStepWriter::applyProperties(const PropertyGroup* group)
     }
 }
 
-void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
+void OccStepWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) const
 {
     rollback->change("write.step.schema", int(m_params.schema));
     rollback->change("write.step.unit", OccCommon::toCafString(m_params.lengthUnit));

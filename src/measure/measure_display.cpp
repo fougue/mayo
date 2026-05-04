@@ -163,8 +163,7 @@ void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 // --
 
 MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
-    : m_pnt(pnt),
-      m_gfxText(new AIS_TextLabel)
+    : m_pnt(pnt)
 {
     m_gfxText->SetPosition(pnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -188,8 +187,7 @@ GraphicsObjectPtr MeasureDisplayVertex::graphicsObjectAt(int i) const
 
 MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circle)
     : m_circle(circle.value),
-      m_gfxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(m_circle.Location()))),
-      m_gfxText(new AIS_TextLabel)
+      m_gfxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(m_circle.Location())))
 {
     m_gfxText->SetPosition(m_circle.Location());
     if (circle.isArc)
@@ -229,8 +227,7 @@ GraphicsObjectPtr MeasureDisplayCircleCenter::graphicsObjectAt(int i) const
 
 MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& circle)
     : m_circle(circle.value),
-      m_gfxCircle(new AIS_Circle(makeOccHandle<Geom_Circle>(m_circle))),
-      m_gfxDiameterText(new AIS_TextLabel)
+      m_gfxCircle(new AIS_Circle(makeOccHandle<Geom_Circle>(m_circle)))
 {
     const gp_Pnt otherPntAnchor = diameterOpposedPnt(circle.pntAnchor, m_circle);
     m_gfxDiameter = new AIS_Line(
@@ -286,7 +283,6 @@ MeasureDisplayDistance::MeasureDisplayDistance(const MeasureDistance& dist)
           makeOccHandle<Geom_CartesianPoint>(dist.pnt1),
           makeOccHandle<Geom_CartesianPoint>(dist.pnt2))
       ),
-      m_gfxDistText(new AIS_TextLabel),
       m_gfxPnt1(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt1))),
       m_gfxPnt2(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt2)))
 {
@@ -364,8 +360,7 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
       m_gfxEntity2(new AIS_Line(
           makeOccHandle<Geom_CartesianPoint>(angle.pntCenter),
           makeOccHandle<Geom_CartesianPoint>(angle.pnt2))
-      ),
-      m_gfxAngleText(new AIS_TextLabel)
+      )
 {
     auto fnVecIsNull = [](const gp_Vec& v) {
         return v.SquareMagnitude() < Precision::SquareConfusion();
@@ -430,8 +425,7 @@ void MeasureDisplayAngle::sumAdd(const IMeasureDisplay& other)
 // --
 
 MeasureDisplayLength::MeasureDisplayLength(const MeasureLength& length)
-    : m_length(length),
-      m_gfxLenText(new AIS_TextLabel)
+    : m_length(length)
 {
     m_gfxLenText->SetPosition(length.middlePnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -468,8 +462,7 @@ void MeasureDisplayLength::sumAdd(const IMeasureDisplay& other)
 // --
 
 MeasureDisplayArea::MeasureDisplayArea(const MeasureArea& area)
-    : m_area(area),
-      m_gfxAreaText(new AIS_TextLabel)
+    : m_area(area)
 {
     m_gfxAreaText->SetPosition(area.middlePnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -508,10 +501,7 @@ void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)
 MeasureDisplayBoundingBox::MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd)
     : m_bnd(bnd),
       m_gfxMinPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(bnd.cornerMin))),
-      m_gfxMaxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(bnd.cornerMax))),
-      m_gfxXLengthText(new AIS_TextLabel),
-      m_gfxYLengthText(new AIS_TextLabel),
-      m_gfxZLengthText(new AIS_TextLabel)
+      m_gfxMaxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(bnd.cornerMax)))
 {
 
     const TopoDS_Shape shapeBox = BRepPrimAPI_MakeBox(bnd.cornerMin, bnd.cornerMax);

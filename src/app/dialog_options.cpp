@@ -97,7 +97,7 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
 class CustomStyle : public QProxyStyle {
 public:
     CustomStyle()
-        : QProxyStyle(qApp->style())
+        : QProxyStyle(QApplication::style())
     {}
 
     static QStyle* instance() {

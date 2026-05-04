@@ -91,8 +91,11 @@ void TaskManager::run(TaskId id, TaskAutoDestroy policy)
 
     entity->isFinished = false;
     entity->autoDestroy = policy;
-    // If not specified the default policy is "std::launch::async | std::launch::deferred" and which
-    // one is selected is implementation-defined
+    // NOSONAR(cpp:S8460) Intentional usage of std::async() here
+    //   * The returned future is stored in entity->control, so the destructor-blocking behavior is
+    //     controlled
+    //   * The std::launch::async policy is specified, if not the default is async|deferred" and
+    //     which one gets selected is implementation-defined
     entity->control = std::async(std::launch::async, [=]{ d->execEntity(entity); });
 }
 

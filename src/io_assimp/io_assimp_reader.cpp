@@ -736,7 +736,7 @@ void AssimpReader::transferSceneNode(
         TopoDS_Face face = BRepUtils::makeFace(triangulation);
         face.Location(nodeAbsoluteTrsf);
         const TDF_Label labelComponent = targetDoc->xcaf().shapeTool()->AddComponent(labelEntity, face);
-        const TDF_Label labelFace = targetDoc->xcaf().shapeReferred(labelComponent);
+        const TDF_Label labelFace = XCaf::shapeReferred(labelComponent);
 
         if (mesh->mMaterialIndex < m_vecMaterial.size()) {
             const OccHandle<XCAFDoc_VisMaterial>& material = m_vecMaterial.at(mesh->mMaterialIndex);

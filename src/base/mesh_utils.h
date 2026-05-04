@@ -47,6 +47,7 @@ enum class Orientation {
 
 class AdaptorPolyline2d {
 public:
+    virtual ~AdaptorPolyline2d() = default;
     virtual gp_Pnt2d pointAt(int index) const = 0;
     virtual int pointCount() const = 0;
     virtual bool empty() const { return this->pointCount() <= 0; }
@@ -54,6 +55,7 @@ public:
 
 class AdaptorPolyline3d {
 public:
+    virtual ~AdaptorPolyline3d() = default;
     virtual const gp_Pnt& pointAt(int i) const = 0;
     virtual int pointCount() const = 0;
     virtual int empty() const { return this->pointCount() <= 0; }

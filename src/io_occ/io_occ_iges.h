@@ -101,7 +101,7 @@ public:
     void applyProperties(const PropertyGroup* group) override;
 
 private:
-    void changeStaticVariables(OccStaticVariablesRollback* rollback);
+    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
     IGESCAFControl_Writer* m_writer = nullptr;

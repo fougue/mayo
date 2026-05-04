@@ -157,14 +157,14 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     thread_local std::vector<char> utf8;
     utf8.resize(str.size());
     std::fill(utf8.begin(), utf8.end(), '\0');
-    constexpr size_t iconvError = -1;
+    constexpr size_t iconvError = SIZE_MAX;
     size_t iconvRes = 0;
     constexpr int maxAttemptCount = 10;
     int attemptCount = 0;
     do {
-        char* strData = const_cast<char*>(str.data());
+        auto strData = const_cast<char*>(str.data());
         size_t lenStr = str.size();
-        utf8.resize(utf8.size() + (utf8.size() * 0.25) + 1); // Grow size by 25% each attempt
+        utf8.resize(utf8.size() + (utf8.size() / 4) + 1); // Grow size by 25% each attempt
         std::fill(utf8.begin(), utf8.end(), '\0');
         char* utf8Data = utf8.data();
         size_t lenUtf8 = utf8.size();
@@ -183,16 +183,6 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
 
 std::string to_stdString(double value, const DoubleToStringOptions& opts)
 {
-    // Helper function to return the last character of string 'str'
-    auto fnLastChar = [](const std::string& str) {
-        return !str.empty() ? str.at(str.size() - 1) : char{};
-    };
-    // Helper function to erase the last character of the string pointed to by 'str'
-    auto fnEraseLastChar = [](std::string* str) {
-        if (!str->empty())
-            str->erase(str->size() - 1);
-    };
-
     value = opts.roundToZero && MathUtils::fuzzyIsNull(value) ? 0. : value;
     std::ostringstream sstr;
     sstr.imbue(opts.locale);
@@ -201,11 +191,11 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
     if (opts.removeTrailingZeroes) {
         const char chDecPnt = std::use_facet<std::numpunct<char>>(opts.locale).decimal_point();
         if (str.find(chDecPnt) != std::string::npos) { // Remove useless trailing zeroes
-            while (fnLastChar(str) == '0')
-                fnEraseLastChar(&str);
+            while (!str.empty() && str.back() == '0')
+                str.pop_back();
 
-            if (fnLastChar(str) == chDecPnt)
-                fnEraseLastChar(&str);
+            if (!str.empty() && str.back() == chDecPnt)
+                str.pop_back();
         }
     }
 
@@ -247,7 +237,7 @@ DoubleToStringOperation& DoubleToStringOperation::toUtf8(bool on)
     return *this;
 }
 
-DoubleToStringOperation::operator std::string()
+DoubleToStringOperation::operator std::string() const
 {
     return to_stdString(m_value, m_opts);
 }

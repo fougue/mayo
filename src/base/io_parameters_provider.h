@@ -14,6 +14,7 @@ namespace Mayo::IO {
 // Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
 public:
+    virtual ~ParametersProvider() = default;
     virtual const PropertyGroup* findReaderParameters(Format format) const = 0;
     virtual const PropertyGroup* findWriterParameters(Format format) const = 0;
 };

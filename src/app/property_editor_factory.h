@@ -8,10 +8,11 @@
 #include "../base/unit_system.h"
 
 #include <QtGui/QPixmap>
-class QWidget;
 
 #include <functional>
 #include <unordered_map>
+
+class QWidget;
 
 namespace Mayo {
 
