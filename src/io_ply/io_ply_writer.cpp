@@ -279,7 +279,7 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
         for (int i = 0; i < triangulation->NbNodes(); ++i) {
             const std::optional<Quantity_Color> nodeColor = mesh.nodeColor(i);
             const Quantity_Color& defaultNodeColor = m_params.defaultColor.GetRGB();
-            m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor ? nodeColor.value() : defaultNodeColor));
+            m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor.value_or(defaultNodeColor)));
         }
     }
 }

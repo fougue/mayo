@@ -159,7 +159,7 @@ void Application::defineMayoFormat(const ApplicationPtr& app)
     if (!app)
         return;
 
-    const char strFougueCopyright[] = "Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>";
+    constexpr auto strFougueCopyright = "Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>";
     app->DefineFormat(
         Document::NameFormatBinary,
         to_OccAsciiString(ApplicationI18N::textIdTr("Binary Mayo Document Format")),

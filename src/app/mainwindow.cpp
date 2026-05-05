@@ -247,7 +247,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         if (!fillAreaQColor.isValid())
             return;
 
-        auto fillArea = new Graphic3d_AspectFillArea3d;
+        auto fillArea = makeOccHandle<Graphic3d_AspectFillArea3d>();
         auto defaultShadingAspect = gfxScene->drawerDefault()->ShadingAspect();
         if (defaultShadingAspect && defaultShadingAspect->Aspect())
             *fillArea = *defaultShadingAspect->Aspect();

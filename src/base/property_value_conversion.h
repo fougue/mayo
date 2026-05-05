@@ -17,6 +17,8 @@ namespace Mayo {
 // Mechanism to convert value of a Property object to/from a basic variant type
 class PropertyValueConversion {
 public:
+    virtual ~PropertyValueConversion() = default;
+
     // Alias of the std::variant<...> type used by custom PropertyValueConversion::Variant
     using BaseVariantType = std::variant<
         std::monostate, bool, int, double, std::string, std::vector<uint8_t>

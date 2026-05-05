@@ -8,6 +8,9 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
 
+    env:
+      OCCT_VERSION: 7.9.3
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,21 +21,47 @@ jobs:
           sudo apt-get -y update
           # Qt5
           sudo apt-get install -y qtbase5-dev libqt5svg5-dev
-          # OpenCascade
-          sudo apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
-          sudo apt-get -y install libtbb-dev libxi-dev
+          # OpenCasacade
+          sudo apt-get -y install libfreetype-dev  libfreeimage-dev  rapidjson-dev  tcl-dev  tk-dev
           # Assimp
           sudo apt-get -y install libassimp-dev
+          # Sonar
+          sudo apt-get install -y unzip
 
-      - name: Configure
+      - name: Cache OpenCascade
+        id: cache-occt
+        uses: actions/cache@v4
+        with:
+          path: /opt/occt
+          key: occt-${{ env.OCCT_VERSION }}-ubuntu
+
+      - name: Build OpenCascade(if not cached)
+        if: steps.cache-occt.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch V${OCCT_VERSION//./_} \
+              https://github.com/Open-Cascade-SAS/OCCT.git /tmp/occt
+          cmake -S /tmp/occt -B /tmp/occt-build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=/opt/occt \
+              -DBUILD_LIBRARY_TYPE=Shared \
+              -DBUILD_DOC_Overview=OFF \
+              -DBUILD_MODULE_Draw=OFF \
+              -DUSE_FREEIMAGE=ON \
+              -DUSE_FREETYPE=ON \
+              -DUSE_RAPIDJSON=ON
+          cmake --build /tmp/occt-build --parallel $(nproc) --target install --config Release
+          rm -rf /tmp/occt*
+
+      - name: Configure Mayo build
         run: |
           cmake -S . -B build \
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
               -DMayo_BuildTests=ON \
-              -DMayo_BuildPluginAssimp=ON
+              -DMayo_BuildPluginAssimp=ON \
+              -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade
 
-      - name: Build(instrumented)
+      - name: Build Mayo(instrumented)
         run: |
           curl -sSLo build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -o build-wrapper.zip
@@ -42,22 +71,12 @@ jobs:
 
       - name: SonarCloud Scan
         run: |
-          sudo apt-get install -y unzip
           curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip -q sonar-scanner.zip
           SCANNER_DIR=$(find . -maxdepth 1 -type d -name "sonar-scanner-*")
 
           $SCANNER_DIR/bin/sonar-scanner \
-            -Dsonar.projectKey=fougue_mayo \
-            -Dsonar.organization=fougue \
-            -Dsonar.sources=. \
-            -Dsonar.cfamily.gcc.preprocessorMacros=Standard_Noexcept=noexcept \
-            -Dsonar.cfamily.clang.preprocessorMacros=Standard_Noexcept=noexcept \
-            -Dsonar.cfamily.cpp-standard=c++17 \
-            -Dsonar.inclusions=src/**/*.cpp,src/**/*.h \
-            -Dsonar.exclusions=**/3rdparty/**,**/*moc_*.cpp,**/ui_*.h \
-            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json \
-            -Dsonar.host.url=https://sonarcloud.io \
+            -Dproject.settings=.github/sonar/project.properties \
             -Dsonar.token=${SONAR_TOKEN}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

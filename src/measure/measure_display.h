@@ -112,7 +112,7 @@ public:
 
 private:
     gp_Pnt m_pnt;
-    OccHandle<AIS_TextLabel> m_gfxText;
+    OccHandle<AIS_TextLabel> m_gfxText{new AIS_TextLabel};
 };
 
 // --
@@ -130,7 +130,7 @@ public:
 private:
     gp_Circ m_circle;
     OccHandle<AIS_Point> m_gfxPoint;
-    OccHandle<AIS_TextLabel> m_gfxText;
+    OccHandle<AIS_TextLabel> m_gfxText{new AIS_TextLabel};
     OccHandle<AIS_Circle> m_gfxCircle;
 };
 
@@ -152,7 +152,7 @@ private:
     gp_Circ m_circle;
     OccHandle<AIS_Circle> m_gfxCircle;
     OccHandle<AIS_Line> m_gfxDiameter;
-    OccHandle<AIS_TextLabel> m_gfxDiameterText;
+    OccHandle<AIS_TextLabel> m_gfxDiameterText{new AIS_TextLabel};
 };
 
 // --
@@ -173,7 +173,7 @@ public:
 private:
     MeasureDistance m_dist;
     OccHandle<AIS_Line> m_gfxLength;
-    OccHandle<AIS_TextLabel> m_gfxDistText;
+    OccHandle<AIS_TextLabel> m_gfxDistText{new AIS_TextLabel};
     OccHandle<AIS_Point> m_gfxPnt1;
     OccHandle<AIS_Point> m_gfxPnt2;
 };
@@ -198,7 +198,7 @@ private:
     OccHandle<AIS_Line> m_gfxEntity1;
     OccHandle<AIS_Line> m_gfxEntity2;
     OccHandle<AIS_Circle> m_gfxAngle;
-    OccHandle<AIS_TextLabel> m_gfxAngleText;
+    OccHandle<AIS_TextLabel> m_gfxAngleText{new AIS_TextLabel};
 };
 
 // --
@@ -218,7 +218,7 @@ public:
 
 private:
     MeasureLength m_length;
-    OccHandle<AIS_TextLabel> m_gfxLenText;
+    OccHandle<AIS_TextLabel> m_gfxLenText{new AIS_TextLabel};
 };
 
 // --
@@ -238,7 +238,7 @@ public:
 
 private:
     MeasureArea m_area;
-    OccHandle<AIS_TextLabel> m_gfxAreaText;
+    OccHandle<AIS_TextLabel> m_gfxAreaText{new AIS_TextLabel};
 };
 
 // --
@@ -258,9 +258,9 @@ private:
     OccHandle<AIS_Point> m_gfxMinPoint;
     OccHandle<AIS_Point> m_gfxMaxPoint;
     OccHandle<AIS_InteractiveObject> m_gfxBox;
-    OccHandle<AIS_TextLabel> m_gfxXLengthText;
-    OccHandle<AIS_TextLabel> m_gfxYLengthText;
-    OccHandle<AIS_TextLabel> m_gfxZLengthText;
+    OccHandle<AIS_TextLabel> m_gfxXLengthText{new AIS_TextLabel};
+    OccHandle<AIS_TextLabel> m_gfxYLengthText{new AIS_TextLabel};
+    OccHandle<AIS_TextLabel> m_gfxZLengthText{new AIS_TextLabel};
 };
 
 } // namespace Mayo

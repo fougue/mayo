@@ -44,6 +44,7 @@ static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
 
 // Base interface of all property editors
 struct InterfacePropertyEditor {
+    virtual ~InterfacePropertyEditor() = default;
     virtual void syncWithProperty() = 0;
 };
 

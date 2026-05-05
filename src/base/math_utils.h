@@ -57,7 +57,11 @@ inline bool fuzzyEqual(double d1, double d2) {
     return (std::abs(d1 - d2) * 1000000000000. <= std::min(std::abs(d1), std::abs(d2)));
 }
 
-
+// Rounds the floating-point value `v` to the nearest integer and returns it as `int`
+// Uses std::lround() semantics(round half away from zero)
+// If `v` is NaN, returns 0
+// If the rounded value exceeds the range of `int`, the result is clamped to `[INT_MIN, INT_MAX]`
+int intRound(double v) noexcept;
 
 // --
 // -- Implementation

@@ -15,19 +15,16 @@
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_Volume.hxx>
+
+#include <optional>
 #include <set>
 
 namespace Mayo {
 
 bool XCaf::isNull() const
 {
-    OccHandle<TDocStd_Document> doc = TDocStd_Document::Get(m_labelMain);
-    if (!doc.IsNull()) {
-        if (XCAFDoc_DocumentTool::IsXCAFDocument(doc))
-            return false;
-    }
-
-    return true;
+    auto doc = TDocStd_Document::Get(m_labelMain);
+    return doc.IsNull() || !XCAFDoc_DocumentTool::IsXCAFDocument(doc);
 }
 
 OccHandle<XCAFDoc_ShapeTool> XCaf::shapeTool() const
@@ -168,7 +165,7 @@ bool XCaf::isShapeSub(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::IsSubShape(lbl);
 }
 
-bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
+bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape) const
 {
     return this->shapeTool()->IsSubShape(lbl, shape);
 }
@@ -197,20 +194,17 @@ bool XCaf::hasShapeColor(const TDF_Label& lbl) const
 Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
 {
     OccHandle<XCAFDoc_ColorTool> tool = this->colorTool();
-    Quantity_Color color = {};
     if (!tool)
-        return color;
+        return {};
 
-    if (tool->GetColor(lbl, XCAFDoc_ColorGen, color))
-        return color;
+    constexpr XCAFDoc_ColorType colorTypes[] = { XCAFDoc_ColorGen, XCAFDoc_ColorSurf, XCAFDoc_ColorCurv};
+    for (auto ctype : colorTypes) {
+        Quantity_Color color;
+        if (tool->GetColor(lbl, ctype, color))
+            return color;
+    }
 
-    if (tool->GetColor(lbl, XCAFDoc_ColorSurf, color))
-        return color;
-
-    if (tool->GetColor(lbl, XCAFDoc_ColorCurv, color))
-        return color;
-
-    return color;
+    return {};
 }
 
 TDF_Label XCaf::findShapeLabel(const TopoDS_Shape& shape, FindShapeLabelFlags flags) const

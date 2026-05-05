@@ -59,6 +59,8 @@ public:
         std::string text;
     };
 
+    virtual ~Messenger() = default;
+
     // Dispatch the message 'text' to all observers
     virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
 

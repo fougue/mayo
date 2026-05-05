@@ -62,7 +62,7 @@ void GuiDocumentListModel::removeGuiDocument(const GuiDocument* guiDoc)
 {
     auto itFound = std::find(m_vecGuiDocument.begin(), m_vecGuiDocument.end(), guiDoc);
     if (itFound != m_vecGuiDocument.end()) {
-        const int row = itFound - m_vecGuiDocument.begin();
+        const auto row = static_cast<int>(itFound - m_vecGuiDocument.begin());
         this->beginRemoveRows(QModelIndex(), row, row);
         m_vecGuiDocument.erase(itFound);
         this->endRemoveRows();
@@ -77,8 +77,8 @@ void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const s
         [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
     );
     if (itFound != m_vecGuiDocument.cend()) {
-        const int row = itFound - m_vecGuiDocument.begin();
-        const QModelIndex itemIndex = this->index(row);
+        const auto row = static_cast<int>(itFound - m_vecGuiDocument.begin());
+        const auto itemIndex = this->index(row);
         emit this->dataChanged(itemIndex, itemIndex, { Qt::DisplayRole, Qt::EditRole });
     }
 }

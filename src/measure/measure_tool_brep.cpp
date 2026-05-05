@@ -243,6 +243,7 @@ struct FittedCircle2DResult {
 FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
 {
     const size_t N = points.size();
+    const double invN = 1. / static_cast<double>(N);
 
     // Center input points
     double meanX = 0;
@@ -252,8 +253,8 @@ FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
         meanY += pnt.Y();
     }
 
-    meanX /= N;
-    meanY /= N;
+    meanX *= invN;
+    meanY *= invN;
 
     // Build needed matrix
     double Sxx = 0, Syy = 0, Sxy = 0;
@@ -289,7 +290,7 @@ FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
         radius += std::sqrt(dx*dx + dy*dy);
     }
 
-    radius /= N;
+    radius *= invN;
     FittedCircle2DResult result;
     result.success = true;
     result.center = gp_Pnt2d{centerX, centerY};

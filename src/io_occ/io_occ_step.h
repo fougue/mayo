@@ -153,7 +153,7 @@ public:
     void applyProperties(const PropertyGroup* params) override;
 
 private:
-    void changeStaticVariables(OccStaticVariablesRollback* rollback);
+    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
     STEPCAFControl_Writer* m_writer = nullptr;
