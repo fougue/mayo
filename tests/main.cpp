@@ -5,6 +5,7 @@
 
 #include "test_base.h"
 #include "test_io.h"
+#include "test_graphics.h"
 #include "test_measure.h"
 #include "test_app.h"
 
@@ -76,6 +77,7 @@ int main(int argc, char* argv[])
     std::vector<std::unique_ptr<QObject>> vecTest;
     vecTest.emplace_back(new Mayo::TestBase);
     vecTest.emplace_back(new Mayo::TestIO);
+    vecTest.emplace_back(new Mayo::TestGraphics);
     vecTest.emplace_back(new Mayo::TestMeasure);
     vecTest.emplace_back(new Mayo::TestApp);
 

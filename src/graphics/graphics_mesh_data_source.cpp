@@ -20,7 +20,7 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
 {
     if (!m_mesh.IsNull()) {
         const int lenCoords = m_mesh->NbNodes();
-        m_nodeCoords = new TColStd_HArray2OfReal(1, lenCoords, 1, 3);
+        m_nodeCoords = makeOccHandle<TColStd_HArray2OfReal>(1, lenCoords, 1, 3);
 
         for(int i = 1; i <= lenCoords; ++i) {
             m_nodes.Add(i);
@@ -32,8 +32,8 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
 
         const Poly_Array1OfTriangle& aSeq = MeshUtils::triangles(m_mesh);
         const int lenTriangles = aSeq.Length();
-        m_elemNormals = new TColStd_HArray2OfReal(1, lenTriangles, 1, 3);
-        m_elemNodes = new TColStd_HArray2OfInteger(1, lenTriangles, 1, 3);
+        m_elemNormals = makeOccHandle<TColStd_HArray2OfReal>(1, lenTriangles, 1, 3);
+        m_elemNodes = makeOccHandle<TColStd_HArray2OfInteger>(1, lenTriangles, 1, 3);
 
         for(int i = 1; i <= lenTriangles; ++i ) {
             m_elements.Add(i);
