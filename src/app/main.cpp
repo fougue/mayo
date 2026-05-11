@@ -389,7 +389,12 @@ static int runApp(QCoreApplication* qtApp)
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Mesh>());
     WidgetModelTree::addPrototypeBuilder(std::make_unique<WidgetModelTreeBuilder_Xde>());
 
-    // Create theme
+    // Create theme: prefer saved setting, fall back to CLI arg
+    {
+        const QString savedTheme = appModule->properties()->themeName.value();
+        if (!savedTheme.isEmpty())
+            args.themeName = savedTheme;
+    }
     globalTheme.reset(createTheme(args.themeName));
     if (!globalTheme)
         fnCriticalExit(Main::tr("Failed to load theme '%1'").arg(args.themeName));

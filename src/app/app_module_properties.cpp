@@ -67,7 +67,9 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->actionOnDocumentFileChange, groupId_application);
     settings->addSetting(&this->linkWithDocumentSelector, groupId_application);
     settings->addSetting(&this->forceOpenGlFallbackWidget, groupId_application);
+    settings->addSetting(&this->themeName, groupId_application);
     settings->addSetting(&this->appUiState, groupId_application);
+    this->themeName.setUserVisible(false);
     this->recentFiles.setUserVisible(false);
     this->lastOpenDir.setUserVisible(false);
     this->lastSelectedFormatFilter.setUserVisible(false);
@@ -113,6 +115,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->linkWithDocumentSelector.setValue(true);
         this->appUiState.setValue({});
         this->forceOpenGlFallbackWidget.setValue(false);
+        this->themeName.setValue("dark");
     });
     settings->addResetFunction(groupId_graphics, [this]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);

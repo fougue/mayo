@@ -12,6 +12,9 @@
 #include <QtWidgets/QWidget>
 
 #include <cassert>
+#include "app_module.h"
+#include "app_module_properties.h"
+#include <QtWidgets/QMessageBox>
 
 namespace Mayo {
 
@@ -205,5 +208,27 @@ bool CommandNextDocument::getEnabledStatus() const
             && currDocumentIndex < (appDocumentCount - 1)
         ;
 }
+CommandSwitchTheme::CommandSwitchTheme(IAppContext* context)
+    : Command(context)
+{
+    auto action = this->createAction();
+    const bool isDark = AppModule::get()->properties()->themeName.value() == "dark";
+    action->setText(isDark ? Command::tr("Switch to Light Theme") : Command::tr("Switch to Dark Theme"));
+    action->setToolTip(action->text());
+}
 
+void CommandSwitchTheme::execute()
+{
+    auto* props = AppModule::get()->properties();
+    const QString currentTheme = props->themeName.value();
+    const QString newTheme = (currentTheme == "dark") ? "classic" : "dark";
+    props->themeName.setValue(newTheme);
+    AppModule::get()->settings()->save();
+
+    QMessageBox::information(
+        this->widgetMain(),
+        Command::tr("Theme Changed"),
+        Command::tr("Theme will be applied on next application restart.")
+    );
+}
 } // namespace Mayo

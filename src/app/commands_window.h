@@ -70,5 +70,12 @@ public:
 
     static constexpr std::string_view Name = "next-doc";
 };
+class CommandSwitchTheme : public Command {
+public:
+    explicit CommandSwitchTheme(IAppContext* context);
+    void execute() override;
+
+    static constexpr std::string_view Name = "switch-theme";
+};
 
 } // namespace Mayo
