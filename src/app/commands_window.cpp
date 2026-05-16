@@ -12,8 +12,7 @@
 #include <QtWidgets/QWidget>
 
 #include <cassert>
-#include "app_module.h"
-#include "app_module_properties.h"
+
 
 
 namespace Mayo {
@@ -208,28 +207,5 @@ bool CommandNextDocument::getEnabledStatus() const
             && currDocumentIndex < (appDocumentCount - 1)
         ;
 }
-CommandSwitchTheme::CommandSwitchTheme(IAppContext* context)
-    : Command(context)
-{
-    auto action = this->createAction();
-    const bool isDark = AppModule::get()->properties()->themeName.value() == "dark";
-    action->setText(isDark ? Command::tr("Switch to Light Theme") : Command::tr("Switch to Dark Theme"));
-    action->setToolTip(action->text());
-}
 
-void CommandSwitchTheme::execute()
-{
-    auto* props = AppModule::get()->properties();
-    const QString currentTheme = props->themeName.value();
-    const QString newTheme = (currentTheme == "dark") ? "classic" : "dark";
-    props->themeName.setValue(newTheme);
-    AppModule::get()->settings()->save();
-
-    // Update action text to reflect new state
-    const bool nowDark = (newTheme == "dark");
-    this->action()->setText(
-        nowDark ? Command::tr("Switch to Light Theme") 
-                : Command::tr("Switch to Dark Theme")
-    );
-}
 } // namespace Mayo

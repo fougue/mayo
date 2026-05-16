@@ -156,7 +156,7 @@ void MainWindow::createCommands()
     this->addCommand<CommandLeftSidebarWidgetToggle>(this->widgetPageDocuments()->widgetLeftSideBar());
     this->addCommand<CommandMainWidgetToggleFullscreen>();
     this->addCommand<CommandSwitchMainWidgetMode>();
-    this->addCommand<CommandSwitchTheme>();
+    
     this->addCommand<CommandPreviousDocument>();
     this->addCommand<CommandNextDocument>();
 
@@ -218,7 +218,7 @@ void MainWindow::createMenus()
         fnAddAction(menu, CommandMainWidgetToggleFullscreen::Name);
         menu->addSeparator();
         fnAddAction(menu, CommandSwitchMainWidgetMode::Name);
-        fnAddAction(menu, CommandSwitchTheme::Name);
+        
         fnAddAction(menu, CommandPreviousDocument::Name);
         fnAddAction(menu, CommandNextDocument::Name);
     }
