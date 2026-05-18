@@ -146,49 +146,49 @@ double DxfParser::mm(double value) const
 
     switch (m_unit) {
     case DxfUnit::Unspecified:
-        return (value * 1.0);  // We don't know any better
+        return value * 1.0;  // We don't know any better
     case DxfUnit::Inches:
-        return (value * 25.4);
+        return value * 25.4;
     case DxfUnit::Feet:
-        return (value * 25.4 * 12);
+        return value * 25.4 * 12;
     case DxfUnit::Miles:
-        return (value * 1609344.0);
+        return value * 1609344.0;
     case DxfUnit::Millimeters:
-        return (value * 1.0);
+        return value * 1.0;
     case DxfUnit::Centimeters:
-        return (value * 10.0);
+        return value * 10.0;
     case DxfUnit::Meters:
-        return (value * 1000.0);
+        return value * 1000.0;
     case DxfUnit::Kilometers:
-        return (value * 1000000.0);
+        return value * 1000000.0;
     case DxfUnit::Microinches:
-        return (value * 25.4 / 1000.0);
+        return value * 25.4 / 1000.0;
     case DxfUnit::Mils:
-        return (value * 25.4 / 1000.0);
+        return value * 25.4 / 1000.0;
     case DxfUnit::Yards:
-        return (value * 3 * 12 * 25.4);
+        return value * 3 * 12 * 25.4;
     case DxfUnit::Angstroms:
-        return (value * 0.0000001);
+        return value * 0.0000001;
     case DxfUnit::Nanometers:
-        return (value * 0.000001);
+        return value * 0.000001;
     case DxfUnit::Microns:
-        return (value * 0.001);
+        return value * 0.001;
     case DxfUnit::Decimeters:
-        return (value * 100.0);
+        return value * 100.0;
     case DxfUnit::Dekameters:
-        return (value * 10000.0);
+        return value * 10000.0;
     case DxfUnit::Hectometers:
-        return (value * 100000.0);
+        return value * 100000.0;
     case DxfUnit::Gigameters:
-        return (value * 1000000000000.0);
+        return value * 1000000000000.0;
     case DxfUnit::AstronomicalUnits:
-        return (value * 149597870690000.0);
+        return value * 149597870690000.0;
     case DxfUnit::LightYears:
-        return (value * 9454254955500000000.0);
+        return value * 9454254955500000000.0;
     case DxfUnit::Parsecs:
-        return (value * 30856774879000000000.0);
+        return value * 30856774879000000000.0;
     default:
-        return (value * 1.0);  // We don't know any better
+        return value * 1.0;  // We don't know any better
     }
 }
 
@@ -996,57 +996,8 @@ bool DxfParser::parseInsert()
 
 bool DxfParser::parseDimension()
 {
-#if 0
-    DxfCoords s = {}; // startpoint
-    DxfCoords e = {}; // endpoint
-    DxfCoords p = {}; // dimpoint
-    double rot = -1.0; // rotation
-
-    while (!inputStream().eof()) {
-        getLine();
-        const int n = stringToInt(m_str, StringToErrorMode::ReturnErrorValue);
-        if (n == 0) {
-            // next item found
-            return true;
-        }
-        else if (isStringToErrorValue(n)) {
-            this->reportError_readInteger("DXF::parseDimension()");
-            return false;
-        }
-
-        getLine();
-        switch (n){
-        case 13: case 23: case 33:
-            // start coords
-            handleCoordCode<13, 23, 33>(n, &s);
-            break;
-        case 14: case 24: case 34:
-            // end coords
-            handleCoordCode<14, 24, 34>(n, &e);
-            break;
-        case 10: case 20: case 30:
-            // dimline coords
-            handleCoordCode<10, 20, 30>(n, &p);
-            break;
-        case 50:
-            // rotation
-            rot = stringToDouble(m_str);
-            break;
-        case 100:
-        case 39:
-        case 210:
-        case 220:
-        case 230:
-            // skip the next line
-            break;
-        default:
-            //handleCommonGroupCode(n);
-            break;
-        }
-    }
-#endif
-
-    return false;
+    // TODO Implement...
+    return true;
 }
 
 bool DxfParser::parseBlock()

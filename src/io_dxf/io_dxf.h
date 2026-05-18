@@ -60,6 +60,14 @@ public:
     static std::string getPlainMText(std::string_view strMText);
 
 private:
+    // Transfer DXF objects by creating a Document root(entity) per DXF layer
+    // In the resulting model tree each Document entity is actually a DXF layer
+    TDF_LabelSequence transferByGroupLayers(DocumentPtr doc, TaskProgress* progress);
+
+    // Transfer DXF objects without considering layers
+    // This creates a Document root(entity) per DXF object
+    TDF_LabelSequence transferBySingleEntities(DocumentPtr doc, TaskProgress* progress);
+
     class Properties;
     class ReaderImpl;
 
