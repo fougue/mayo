@@ -46,10 +46,10 @@ public:
 
     // Current progress of task identified by 'id'
     // NOTE The task must have been allocated previously with newTask()
-    int progress(TaskId id) const;
+    double progress(TaskId id) const;
 
     // Current progress of all tasks
-    int globalProgress() const;
+    double globalProgress() const;
 
     // Title(description) of a task identified by 'id'
     const std::string& title(TaskId id) const;
@@ -73,7 +73,7 @@ public:
     Signal<TaskId, const std::string&> signalProgressStep;
 
     // Signal emitted when the current progress of some task has changed
-    Signal<TaskId, int> signalProgressChanged;
+    Signal<TaskId, double> signalProgressChanged;
 
     // Signal emitted when requestAbort() was called on some task
     Signal<TaskId> signalAbortRequested;

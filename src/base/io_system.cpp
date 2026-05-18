@@ -313,7 +313,7 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
         vecTaskData.resize(listFilepath.size());
 
         TaskManager childTaskManager;
-        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, int) {
+        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, double) {
             rootProgress->setValue(childTaskManager.globalProgress());
         });
 

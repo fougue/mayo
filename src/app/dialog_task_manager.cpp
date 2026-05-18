@@ -160,11 +160,11 @@ void DialogTaskManager::onTaskEnded(TaskId taskId)
     }
 }
 
-void DialogTaskManager::onTaskProgress(TaskId taskId, int percent)
+void DialogTaskManager::onTaskProgress(TaskId taskId, double percent)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (widget) {
-        if (percent >= 0) {
+        if (percent >= 0.) {
             widget->m_progress->setValue(percent);
         }
         else {

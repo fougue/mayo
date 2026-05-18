@@ -1025,25 +1025,21 @@ void TestBase::LibTask_test()
 {
     struct ProgressRecord {
         TaskId taskId;
-        int value;
+        double value;
     };
 
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        {
-            TaskProgress subProgress(progress, 40);
-            for (int i = 0; i <= 100; ++i)
-                subProgress.setValue(i);
-        }
+        TaskProgress subProgress1(progress, 40);
+        for (int i = 0; i <= 100; ++i)
+            subProgress1.setValue(i);
 
-        {
-            TaskProgress subProgress(progress, 60);
-            for (int i = 0; i <= 100; ++i)
-                subProgress.setValue(i);
-        }
+        TaskProgress subProgress2(progress, 60);
+        for (int i = 0; i <= 100; ++i)
+            subProgress2.setValue(i);
     });
     std::vector<ProgressRecord> vecProgressRec;
-    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, double pct) {
         vecProgressRec.push_back({ taskId, pct });
     });
 
@@ -1064,8 +1060,8 @@ void TestBase::LibTask_test()
         prevPct = rec.value;
     }
 
-    QCOMPARE(vecProgressRec.front().value, 0);
-    QCOMPARE(vecProgressRec.back().value, 100);
+    QCOMPARE(vecProgressRec.front().value, 0.);
+    QCOMPARE(vecProgressRec.back().value, 100.);
 }
 
 void TestBase::LibTree_test()

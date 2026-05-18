@@ -28,8 +28,7 @@ public:
     TaskManager* taskManager() const { return m_taskMgr; }
 
     // Value in [0,100]
-    int value() const { return m_value; }
-    void setValue(int pct);
+    double value() const { return m_value; }
     void setValue(double pct);
 
     const std::string& step() const { return m_step; }
@@ -55,13 +54,13 @@ private:
 
     friend class TaskManager;
 
-    TaskProgress* m_parent = nullptr;
-    TaskManager* m_taskMgr = nullptr;
-    TaskId m_taskId = TaskId_null;
-    double m_portionSize = -1;
-    std::atomic<int> m_value = 0;
+    TaskProgress* m_parent{nullptr};
+    TaskManager* m_taskMgr{nullptr};
+    TaskId m_taskId{TaskId_null};
+    double m_portionSize{-1.};
+    std::atomic<double> m_value = 0.;
     std::string m_step;
-    bool m_isAbortRequested = false;
+    bool m_isAbortRequested{false};
 };
 
 } // namespace Mayo

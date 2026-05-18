@@ -10,6 +10,7 @@
 
 #include <QtWinExtras/QWinTaskbarButton>
 #include <QtWinExtras/QWinTaskbarProgress>
+#include <cmath>
 
 namespace Mayo {
 
@@ -17,7 +18,7 @@ WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(TaskManager* taskMgr, QObject
     : QObject(parent),
       m_taskbarBtn(new QWinTaskbarButton(this))
 {
-    taskMgr->signalStarted.connectSlot([=](TaskId taskId) { this->onTaskProgress(taskId, 0); });
+    taskMgr->signalStarted.connectSlot([=](TaskId taskId) { this->onTaskProgress(taskId, 0.); });
     taskMgr->signalProgressChanged.connectSlot(&WinTaskbarGlobalProgress::onTaskProgress, this);
     taskMgr->signalEnded.connectSlot(&WinTaskbarGlobalProgress::onTaskEnded, this);
 }
@@ -27,7 +28,7 @@ void WinTaskbarGlobalProgress::setWindow(QWindow* window)
     m_taskbarBtn->setWindow(window);
 }
 
-void WinTaskbarGlobalProgress::onTaskProgress(TaskId taskId, int percent)
+void WinTaskbarGlobalProgress::onTaskProgress(TaskId taskId, double percent)
 {
     auto it = m_mapTaskIdProgress.find(taskId);
     if (it != m_mapTaskIdProgress.end())
@@ -50,16 +51,16 @@ void WinTaskbarGlobalProgress::updateTaskbar()
     if (m_mapTaskIdProgress.empty()) {
         taskbarProgress->stop();
         taskbarProgress->hide();
-        m_globalPct = 0;
+        m_globalPct = 0.;
         return;
     }
 
     int taskCount = 0;
-    int taskAccumPct = 0;
+    double taskAccumPct = 0.;
     bool isProgressIndeterminate = false;
     for (const auto& mapPair : m_mapTaskIdProgress) {
-        const int pct = mapPair.second;
-        if (pct >= 0)
+        const double pct = mapPair.second;
+        if (pct >= 0.)
             taskAccumPct += pct;
         else
             isProgressIndeterminate = true;
@@ -70,13 +71,13 @@ void WinTaskbarGlobalProgress::updateTaskbar()
     taskbarProgress->show();
     taskbarProgress->resume();
     if (!isProgressIndeterminate) {
-        const int newGlobalPct = MathUtils::toPercent(taskAccumPct, 0, taskCount * 100);
-        m_globalPct = std::max(newGlobalPct, m_globalPct);
+        const double newGlobalPct = MathUtils::toPercent(taskAccumPct, 0, taskCount * 100);
+        m_globalPct = std::round(std::max(newGlobalPct, m_globalPct));
         taskbarProgress->setRange(0, 100);
         taskbarProgress->setValue(m_globalPct);
     }
     else {
-        m_globalPct = 0;
+        m_globalPct = 0.;
         taskbarProgress->setRange(0, 0);
     }
 }
