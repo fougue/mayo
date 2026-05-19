@@ -6,6 +6,7 @@
 #include "dialog_task_manager.h"
 
 #include "../base/task_manager.h"
+#include "../base/math_utils.h"
 #include "../qtcommon/qstring_conv.h"
 #include "ui_dialog_task_manager.h"
 #include "app_module.h"
@@ -160,12 +161,12 @@ void DialogTaskManager::onTaskEnded(TaskId taskId)
     }
 }
 
-void DialogTaskManager::onTaskProgress(TaskId taskId, int percent)
+void DialogTaskManager::onTaskProgress(TaskId taskId, double percent)
 {
     TaskWidget* widget = this->taskWidget(taskId);
     if (widget) {
-        if (percent >= 0) {
-            widget->m_progress->setValue(percent);
+        if (percent >= 0.) {
+            widget->m_progress->setValue(MathUtils::intRound(percent));
         }
         else {
             widget->createUnboundedProgressTimer();

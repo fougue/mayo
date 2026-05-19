@@ -69,6 +69,15 @@ private slots:
 
     void Settings_test();
 
+    void StringCache_addFirstTimeThenCachedReturnsSameViewAndFlag_test();
+    void StringCache_addTwoSmallStringsContiguous_test();
+    void StringCache_addWhenRemainingCapacityInsufficientCreatesNewPool_test();
+    void StringCache_addWithNullAlreadyCachedPtrIsOK_test();
+    void StringCache_clearThenReAddReturnsNewViewAndNotCached_test();
+    void StringCache_viewRemainsValidAfterSubsequentAddsWithinCapacity_test();
+    void StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test();
+    void StringCache_stressFuzzRandomStringsDedupAndClear_test();
+
     void UnitSystem_test();
     void UnitSystem_test_data();
 

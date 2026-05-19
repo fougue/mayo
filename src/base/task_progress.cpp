@@ -6,6 +6,8 @@
 #include "task_progress.h"
 #include "task_manager.h"
 
+#include "math_utils.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -39,7 +41,7 @@ bool TaskProgress::isNull() const
     return m_taskId == TaskId_null;
 }
 
-void TaskProgress::setValue(int pct)
+void TaskProgress::setValue(double pct)
 {
     if (m_taskId == TaskId_null)
         return;
@@ -47,23 +49,23 @@ void TaskProgress::setValue(int pct)
     if (m_isAbortRequested)
         return;
 
-    const int valueOnEntry = m_value;
-    m_value = std::clamp(pct, 0, 100);
-    if (m_value != 0 && m_value == valueOnEntry)
-        return;
+    const double valueOnEntry = m_value;
+    pct = std::clamp(pct, 0., 100.);
+    m_value = pct;
 
     if (m_parent) {
-        const auto valueDeltaInParent = std::round((m_value - valueOnEntry) * (m_portionSize / 100.));
+        const auto valueDeltaInParent = (m_value - valueOnEntry) * (m_portionSize / 100.);
         m_parent->setValue(m_parent->value() + valueDeltaInParent);
     }
     else {
-        m_taskMgr->signalProgressChanged.send(m_taskId, m_value);
+        // Single decimal rounding function
+        auto fnRound = [](double v) { return std::round(v * 10.) / 10.; };
+        if (MathUtils::fuzzyIsNull(fnRound(pct))
+            || !MathUtils::fuzzyEqual(fnRound(valueOnEntry), fnRound(pct)))
+        {
+            m_taskMgr->signalProgressChanged.send(m_taskId, m_value);
+        }
     }
-}
-
-void TaskProgress::setValue(double pct)
-{
-    this->setValue(static_cast<int>(std::lround(pct)));
 }
 
 void TaskProgress::setStep(std::string_view title)

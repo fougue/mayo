@@ -282,6 +282,107 @@ void TestIO::IO_bugGitHub258_test()
     QCOMPARE(triangulation->NbTriangles(), 12);
 }
 
+void TestIO::IO_dxfReplaceTextControlCodes_test()
+{
+    QFETCH(QString, strInput);
+    QFETCH(QString, strOutput);
+
+    std::string str = strInput.toStdString();
+    IO::DxfReader::replaceTextControlCodes(&str);
+    QCOMPARE(QString::fromStdString(str), strOutput);
+}
+
+void TestIO::IO_dxfReplaceTextControlCodes_test_data()
+{
+    QTest::addColumn<QString>("strInput");
+    QTest::addColumn<QString>("strOutput");
+
+    QTest::newRow("test1") << "Temperature: 37%%dC  Diameter: %%c45mm" << "Temperature: 37°C  Diameter: Ø45mm";
+    QTest::newRow("test2") << "Percent %%%" << "Percent %";
+    QTest::newRow("test3") << "%%d%%c%%p%%%%%o%%u%%k" << "°Ø±%";
+    QTest::newRow("test4") << "char %%" << "char %%";
+    QTest::newRow("test5") << "%%" << "%%";
+    QTest::newRow("test6") << "Weird %%1 %%12 %%200 %%245 %%45589" << "Weird %%1 %%12 ? ? ?89";
+    QTest::newRow("test7") << "%%oText%%o and %%uother%%u" << "Text and other";
+    QTest::newRow("test8") << "%%D%%C%%P%%%%%O%%U%%K" << "°Ø±%";
+    QTest::newRow("test9") << "Unsupported:\"%%a %%!\" OK:%%p" << "Unsupported:\"%%a %%!\" OK:±";
+    QTest::newRow("test10") << "abc %% " << "abc %% ";
+    QTest::newRow("test11") << "%%12Z%%12Z" << "%%12Z%%12Z";
+    QTest::newRow("test12") << "%%d abc %%uDEF%%u GHI %%p" << "° abc DEF GHI ±";
+    QTest::newRow("test13") << "%%c中文%%c" << "Ø中文Ø";
+    QTest::newRow("test14") << "%%c%%uX" << "ØX";
+    QTest::newRow("test15") << "%%cé%%c" << "ØéØ";
+    QTest::newRow("test16") << "%%o%%c" << "Ø";
+}
+
+void TestIO::IO_dxfGetPlainMText_test()
+{
+    QFETCH(QString, strInput);
+    QFETCH(QString, strOutput);
+
+    const std::string strActual = IO::DxfReader::getPlainMText(strInput.toStdString());
+    QCOMPARE(QString::fromStdString(strActual), strOutput);
+}
+
+void TestIO::IO_dxfGetPlainMText_test_data()
+{
+    QTest::addColumn<QString>("strInput");
+    QTest::addColumn<QString>("strOutput");
+
+    QTest::newRow("basic-braces-H-W-P")
+        << "{ \\H1.5x;Big }\\P Normal \\W0.8;Small"
+        << "Big\n Normal Small";
+
+    QTest::newRow("underline-overscore")
+        << "\\LUnder\\l line \\OOver\\o line"
+        << "Under line Over line";
+
+    //QTest::newRow("stacked-simple")
+    //    << "\\S10^3; et \\S1/2; et \\SA ^ B ;"
+    //    << "10/3 et 1/2 et A/B";
+
+    QTest::newRow("colors-aci-rgb")
+        << "\\C1;Red \\c16711680;RedRGB"
+        << "Red RedRGB";
+
+    QTest::newRow("font-switch")
+        << "\\fNoto Sans|b1;Bold text \\fArial|b0;fine"
+        << "Bold text fine";
+
+    QTest::newRow("unicode-uplus")
+        << "Deg: \\U+00B0 Dia: \\U+00D8 Breve: \\U+0103"
+        << "Deg: ° Dia: Ø Breve: ă";
+
+    QTest::newRow("text-control-codes")
+        << "T=37%%dC  D=%%c45  Tol=%%p  Percent=%%%"
+        << "T=37°C  D=Ø45  Tol=±  Percent=%";
+
+    QTest::newRow("tab-stops")
+        << "Before \\pt0.24,17;X and \\pxt0.24,17;Y After"
+        << "Before X and Y After";
+
+    //QTest::newRow("optional-semicolon")
+    //    << "\\A2Align haut \\C7Blanc \\c255RGB \\H2xGrand"
+    //    << "Align haut Blanc RGB Grand";
+
+    QTest::newRow("unknown-seqs")
+        << "Keep \\Zhere and { } keep \\\\X too"
+        << "Keep \\Zhere and  keep \\\\X too";
+
+    //QTest::newRow("unicode-surrogate")
+    //    << "Bad \\U+D800 ok"
+    //    << "Bad ? ok";
+
+    QTest::newRow("caret-codes_0") << "A^IB^JC^MZ" << "A\tB\nCZ";
+    QTest::newRow("caret-codes_1") << "X^IY^JZ^M." << "X\tY\nZ.";
+
+    QTest::newRow("unicode-plus")
+        << "A\\U+00B0B \\U+00D8 C \\U+0103"
+        << "A°B Ø C ă";
+
+    QTest::newRow("unicode-unchanged") << "X \\U+010 Y" << "X \\U+010 Y";
+}
+
 void TestIO::initTestCase()
 {
     m_ioSystem = new IO::System;

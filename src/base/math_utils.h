@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "math_const.h"
+
 #include <gp_Dir.hxx>
 #include <gp_Pln.hxx>
 #include <algorithm>
@@ -36,7 +38,7 @@ double planePosition(const gp_Pln& plane);
 std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& planeNormal);
 
 // Returns a + t(b − a)
-template<typename T, typename U> static T lerp(T a, T b, U t);
+template<typename T, typename U> constexpr T lerp(T a, T b, U t);
 
 // Returns true if the absolute value of 'f' is within 0.00001f of 0.0
 inline bool fuzzyIsNull(float f) { return std::abs(f) <= 0.00001f; }
@@ -63,6 +65,16 @@ inline bool fuzzyEqual(double d1, double d2) {
 // If the rounded value exceeds the range of `int`, the result is clamped to `[INT_MIN, INT_MAX]`
 int intRound(double v) noexcept;
 
+// Returns `angle` converted from degrees to radians
+constexpr double degreeToRadian(double angle) {
+    return angle * MathConst::pi / 180.;
+}
+
+// Returns `angle` converted from radians to degrees
+constexpr double radianToDegree(double angle) {
+    return angle * 180. / MathConst::pi;
+}
+
 // --
 // -- Implementation
 // --
@@ -82,7 +94,7 @@ double toPercent(T val, T1 omin, T2 omax)
     return mappedValue(val, omin, omax, 0, 100);
 }
 
-template<typename T, typename U> T lerp(T a, T b, U t)
+template<typename T, typename U> T constexpr lerp(T a, T b, U t)
 {
 #ifdef __cpp_lib_interpolate
     return std::lerp(a, b, t);

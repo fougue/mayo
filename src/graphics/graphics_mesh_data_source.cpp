@@ -5,6 +5,7 @@
 
 #include "graphics_mesh_data_source.h"
 
+#include "../base/geom_utils.h"
 #include "../base/mesh_utils.h"
 
 #include <Precision.hxx>
@@ -46,7 +47,7 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
             const gp_Vec aV2(m_mesh->Node(V[1]), m_mesh->Node(V[2]));
 
             gp_Vec aN = aV1.Crossed(aV2);
-            if (aN.SquareMagnitude() > Precision::SquareConfusion())
+            if (!GeomUtils::isNull(aN))
                 aN.Normalize();
             else
                 aN.SetCoord(0.0, 0.0, 0.0);

@@ -26,13 +26,13 @@ public:
     void setWindow(QWindow* window);
 
 private:
-    void onTaskProgress(TaskId taskId, int percent);
+    void onTaskProgress(TaskId taskId, double percent);
     void onTaskEnded(TaskId taskId);
     void updateTaskbar();
 
-    std::unordered_map<TaskId, int> m_mapTaskIdProgress;
+    std::unordered_map<TaskId, double> m_mapTaskIdProgress;
     QWinTaskbarButton* m_taskbarBtn = nullptr;
-    int m_globalPct = 0;
+    double m_globalPct = 0.;
 };
 
 } // namespace Mayo

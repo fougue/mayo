@@ -5,6 +5,8 @@
 
 #include "ais_text.h"
 
+#include "../base/geom_utils.h"
+
 #include <gp_Pnt.hxx>
 #include <Graphic3d_AspectText3d.hxx>
 #include <OSD_Environment.hxx>
@@ -172,9 +174,9 @@ AIS_Text::TextProperties::TextProperties()
 bool AIS_Text::TextProperties::operator==(const AIS_Text::TextProperties& other) const
 {
     return m_font == other.m_font
-            && m_position.SquareDistance(other.m_position) < Precision::Confusion()
-            && m_text == other.m_text
-            && m_aspect == other.m_aspect;
+           && GeomUtils::equal(m_position, other.m_position)
+           && m_text == other.m_text
+           && m_aspect == other.m_aspect;
 }
 
 } // namespace Mayo

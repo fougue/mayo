@@ -26,7 +26,7 @@ private:
 
     void onTaskStarted(TaskId taskId);
     void onTaskEnded(TaskId taskId);
-    void onTaskProgress(TaskId taskId, int percent);
+    void onTaskProgress(TaskId taskId, double percent);
     void onTaskProgressStep(TaskId taskId, std::string_view name);
     void interruptTask();
 

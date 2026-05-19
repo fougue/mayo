@@ -89,7 +89,7 @@ void MainWindow::showEvent(QShowEvent* event)
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
-    auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
+    auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString{}, findMode);
     if (!winProgress)
         winProgress = new WinTaskbarGlobalProgress(&m_taskMgr, this);
 

@@ -58,4 +58,47 @@ bool GeomUtils::hasScaling(const gp_Trsf& trsf)
     return std::abs(std::abs(trsf.ScaleFactor()) - 1.) > scalePrec || trsf.IsNegative();
 }
 
-} // namespace Mayo::GeomUtils
+gp_Trsf GeomUtils::makeTranslation(const gp_Vec& v)
+{
+    gp_Trsf trsf;
+    trsf.SetTranslation(v);
+    return trsf;
+}
+
+gp_Trsf GeomUtils::makeTranslation(const gp_Pnt& p1, const gp_Pnt& p2)
+{
+    gp_Trsf trsf;
+    trsf.SetTranslation(p1, p2);
+    return trsf;
+}
+
+gp_Trsf GeomUtils::makeRotation(const gp_Ax1& ax1, double angle_rad)
+{
+    gp_Trsf trsf;
+    trsf.SetRotation(ax1, angle_rad);
+    return trsf;
+}
+
+gp_Trsf GeomUtils::makeMirror(const gp_Ax2& ax2)
+{
+    gp_Trsf trsf;
+    trsf.SetMirror(ax2);
+    return trsf;
+}
+
+bool GeomUtils::equal(const gp_Pnt& lhs, const gp_Pnt& rhs, double linearTol)
+{
+    return lhs.IsEqual(rhs, linearTol);
+}
+
+bool GeomUtils::equal(const gp_Vec& lhs, const gp_Vec& rhs, double linearTol, double angularTol)
+{
+    return lhs.IsEqual(rhs, linearTol, angularTol);
+}
+
+bool GeomUtils::isNull(const gp_Vec& v, double sqrLinearTol)
+{
+    return v.SquareMagnitude() <= sqrLinearTol;
+}
+
+} // namespace Mayo

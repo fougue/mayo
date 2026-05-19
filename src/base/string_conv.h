@@ -111,15 +111,15 @@ template<size_t N> struct StringConv<char[N], TCollection_ExtendedString> {
 };
 
 
-#if 0
 // std::string_view -> TCollection_ExtendedString
 template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
-    static auto to(std::string_view str) {
-        const TCollection_AsciiString asciiStr(str.data(), int(str.size()));
-        return TCollection_ExtendedString(asciiStr, true/*multi-byte*/);
+    // NOTE
+    //   Needs const& because of string_conv() which takes a const& type
+    static auto to(const std::string_view& str) {
+        const TCollection_AsciiString occStr(str.data(), int(str.size()));
+        return TCollection_ExtendedString(occStr); // Multi-byte handling by default
     }
 };
-#endif
 
 // --
 // -- std::string_view -> X

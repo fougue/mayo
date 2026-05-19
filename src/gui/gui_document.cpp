@@ -68,14 +68,13 @@ static GuiDocument::GradientBackground& defaultGradientBackground()
 // NOTE: excerpt from OpenCascade/src/AIS/AIS_ViewCube.cpp
 static gp_Dir findClosestUpDirection(const OccHandle<Graphic3d_Camera>& camera, const gp_Dir& upStart)
 {
-    constexpr double pi = 3.14159265358979323846;
     const gp_Dir newDir = camera->Direction();
     const gp_Ax1 newDirAx1(gp::Origin(), newDir);
     const gp_Dir upArray[] = {
         camera->Up(),
-        camera->Up().Rotated(newDirAx1, pi / 2.),
-        camera->Up().Rotated(newDirAx1, pi),
-        camera->Up().Rotated(newDirAx1, pi * 1.5),
+        camera->Up().Rotated(newDirAx1, MathConst::pi / 2.),
+        camera->Up().Rotated(newDirAx1, MathConst::pi),
+        camera->Up().Rotated(newDirAx1, MathConst::pi * 1.5),
     };
 
     double bestAngle = Precision::Infinite();

@@ -143,23 +143,22 @@ void TaskManager::foreachTask(const std::function<void(TaskId)>& fn)
         fn(mapPair.first);
 }
 
-int TaskManager::progress(TaskId id) const
+double TaskManager::progress(TaskId id) const
 {
     const Entity* entity = d->findEntity(id);
-    return entity ? entity->taskProgress.value() : 0;
+    return entity ? entity->taskProgress.value() : 0.;
 }
 
-int TaskManager::globalProgress() const
+double TaskManager::globalProgress() const
 {
-    int taskAccumPct = 0;
+    double taskAccumPct = 0.;
     for (const auto& mapPair : d->mapEntity) {
         const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
-        if (ptrEntity->taskProgress.value() > 0)
+        if (ptrEntity->taskProgress.value() > 0.)
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    const auto pct = MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
-    return std::lround(pct);
+    return MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
 }
 
 const std::string& TaskManager::title(TaskId id) const

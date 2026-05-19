@@ -26,6 +26,12 @@ private slots:
     void IO_bugGitHub166_test_data();
     void IO_bugGitHub258_test();
 
+    void IO_dxfReplaceTextControlCodes_test();
+    void IO_dxfReplaceTextControlCodes_test_data();
+
+    void IO_dxfGetPlainMText_test();
+    void IO_dxfGetPlainMText_test_data();
+
     void initTestCase();
     void cleanupTestCase();
 
