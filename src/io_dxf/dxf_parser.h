@@ -52,16 +52,10 @@ public:
 private:
     std::istream& inputStream();
     void getLine();
+    void putLine(std::string_view value);
 
     void reportError(std::string_view msg);
-
-    std::istream* m_inputStream = nullptr;
-
-    bool m_fail = false;
-    std::string m_str;
-    std::string m_unusedLine;
-    DxfUnit m_unit = DxfUnit::Millimeters;
-    bool m_measurement_inch = false;
+    void reportError_readInteger(std::string_view context);
 
     void resolveAcadVer(DxfStringRef strVersion);
     void resolveEncoding(DxfVersion version);
@@ -92,6 +86,12 @@ private:
 
     void parseHeaderVariable();
 
+    bool parseEntity(
+        const std::function<void()>& fnEntityHandler,
+        const std::function<void(int)>& fnCodeHandler,
+        std::string_view entityTypeName
+    );
+
     template<unsigned XCode = 10, unsigned YCode = 20, unsigned ZCode = 30>
     void handleCoordCode(int n, DxfCoords* coords) const;
 
@@ -101,23 +101,21 @@ private:
     void handleCommonGroupCode(Dxf_BaseEntity* entity, int n);
     void handleCommonGroupCode(Dxf_BaseGeom2dEntity* entity, int n);
 
-    void putLine(const std::string& value);
-
-    void reportError_readInteger(std::string_view context);
-
-private:
     void handleDxfTextCode(Dxf_TEXT& text, int n);
-
-    bool parseEntity(
-        const std::function<void()>& fnEntityHandler,
-        const std::function<void(int)>& fnCodeHandler,
-        std::string_view entityTypeName
-    );
 
     void addLayer(Dxf_LAYER&& layer);
 
     template<typename EntityValue, typename Entity>
     void addEntity(Entity&& entity, std::deque<EntityValue>& entityStore);
+
+
+    std::istream* m_inputStream = nullptr;
+
+    bool m_fail = false;
+    std::string m_str;
+    std::string m_unusedLine;
+    DxfUnit m_unit = DxfUnit::Millimeters;
+    bool m_measurement_inch = false;
 
     // Version from $ACADVER variable in DXF
     DxfVersion m_version = DxfVersion::RUnknown;

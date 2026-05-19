@@ -66,12 +66,12 @@ inline bool fuzzyEqual(double d1, double d2) {
 int intRound(double v) noexcept;
 
 // Returns `angle` converted from degrees to radians
-inline constexpr double degreeToRadian(double angle) {
+constexpr double degreeToRadian(double angle) {
     return angle * MathConst::pi / 180.;
 }
 
 // Returns `angle` converted from radians to degrees
-inline constexpr double radianToDegree(double angle) {
+constexpr double radianToDegree(double angle) {
     return angle * 180. / MathConst::pi;
 }
 

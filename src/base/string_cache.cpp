@@ -22,19 +22,14 @@ struct StringCache::Pimpl {
     unsigned poolSize = StringCache::defaultPoolSize;
 };
 
-StringCache::StringCache()
-{
-}
+StringCache::StringCache() = default;
 
-StringCache::~StringCache()
-{
-    delete d;
-}
+StringCache::~StringCache() = default;
 
 void StringCache::createPimpl()
 {
     if (!d)
-        d = new Pimpl;
+        d = std::make_unique<Pimpl>();
 }
 
 unsigned StringCache::poolSize() const
@@ -50,8 +45,7 @@ void StringCache::setPoolSize(unsigned s)
 
 void StringCache::clear()
 {
-    delete d;
-    d = nullptr;
+    d.reset();
 }
 
 std::string_view StringCache::add(std::string_view str, bool* alreadyCached)

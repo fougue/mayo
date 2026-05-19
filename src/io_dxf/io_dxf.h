@@ -16,6 +16,7 @@ namespace Mayo::IO {
 // Reader for DXF file format
 class DxfReader : public Reader {
 public:
+    DxfReader();
     ~DxfReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
@@ -72,7 +73,7 @@ private:
     class ReaderImpl;
 
     Parameters m_params;
-    ReaderImpl* m_impl = nullptr;
+    std::unique_ptr<ReaderImpl> m_impl;
 };
 
 // Provides factory to create DxfReader objects

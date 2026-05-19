@@ -299,12 +299,12 @@ gp_Trsf unitScaleTrsf(const gp_Pnt& pnt, const Frame& frame, const DxfScale& sca
     }
     else if (negativeCount == 1) {
         // Mirror normal to the corresponding axis
-        const gp_Dir n = (sx < 0) ? frame.u : (sy < 0) ? frame.v : frame.w;
+        const gp_Dir n = (sx < 0) ? frame.u : ((sy < 0) ? frame.v : frame.w);
         trsf.SetMirror(gp_Ax2(pnt, n));   // plane passing through `pnt` which normal `n`
     }
     else if (negativeCount == 2) {
         // Rotate by 180° around axis corresponding to positive sign
-        const gp_Dir axis = (sx > 0) ? frame.u : (sy > 0) ? frame.v : frame.w;
+        const gp_Dir axis = (sx > 0) ? frame.u : ((sy > 0) ? frame.v : frame.w);
         trsf.SetRotation(gp_Ax1(pnt, axis), MathConst::pi);
     }
     else {
@@ -421,7 +421,7 @@ public:
         auto it = m_mapLayerNameLabel.find(dxfLayerName);
         if (it == m_mapLayerNameLabel.cend()) {
             layerLabel = m_doc->xcaf().layerTool()->AddLayer(to_OccExtString(dxfLayerName));
-            m_mapLayerNameLabel.insert({ dxfLayerName, layerLabel });
+            m_mapLayerNameLabel.try_emplace(dxfLayerName, layerLabel);
         }
         else {
             layerLabel = it->second;
@@ -510,6 +510,11 @@ private:
     TopoDS_Shape createShapeCurveFit(const Dxf_POLYLINE& polyline);
     TopoDS_Shape createShapeSplineFit(const Dxf_POLYLINE& polyline);
 
+    // Create OCC curve corresponding to arc via bulge
+    static OccHandle<Geom_TrimmedCurve> makeArcFromBulge(
+        const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& planeNormal
+    );
+
     enum class BlockState {
         Unvisited, Visiting, Resolved
     };
@@ -554,15 +559,13 @@ public:
     PropertyEnumeration fontNameForTextObjects{ this, textId("fontNameForTextObjects"), &systemFontNames() };
 };
 
-DxfReader::~DxfReader()
-{
-    delete m_impl;
-}
+DxfReader::DxfReader() = default;
+
+DxfReader::~DxfReader() = default;
 
 bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
-    delete m_impl;
-    m_impl = new DxfReader::ReaderImpl;
+    m_impl = std::make_unique<DxfReader::ReaderImpl>();
     m_impl->setParameters(m_params);
     m_impl->setMessenger(this->messenger() ? this->messenger() : &Messenger::null());
     return m_impl->read(filepath, progress);
@@ -966,54 +969,53 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LINE& line)
     return makeExtrusionShape(BRepBuilderAPI_MakeEdge(p1, p2), line.thickness, frame.w);
 }
 
+OccHandle<Geom_TrimmedCurve> DxfReader::ReaderImpl::makeArcFromBulge(
+        const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& planeNormal
+    )
+{
+    // Chord
+    const gp_Vec chord(p0, p1);
+    const double c = chord.Magnitude();
+    if (c <= gp::Resolution() || MathUtils::fuzzyIsNull(bulge))
+        return {};
+
+    // Chord direction and perpendicular vec in the plane
+    const gp_Vec d = chord / c;
+    gp_Vec perp = gp_Vec{planeNormal} ^ d; // n × chordDir
+    if (GeomUtils::isNull(perp))
+        return {};
+
+    perp.Normalize();
+
+    // Signed angle and geom parameters
+    const double theta = 4.0 * std::atan(bulge); // CCW>0, CW<0
+
+    // Radius and offset center from middle of the chord
+    const double sinHalf = std::sin(0.5 * theta);
+    const double tanHalf = std::tan(0.5 * theta);
+    if (MathUtils::fuzzyIsNull(sinHalf) || MathUtils::fuzzyIsNull(tanHalf))
+        return {};
+
+    const double R = std::abs((0.5 * c) / sinHalf);
+    const double h = (0.5 * c) / tanHalf; // Signed(same as theta)
+
+    // Middle and center
+    const gp_Pnt mid = p0.Translated(d * (0.5 * c));
+    const gp_Pnt center = mid.Translated(perp * h);
+
+    // Circle in the plane, positive radius
+    const gp_Circ circ(gp_Ax2{center, planeNormal}, R);
+
+    // p0 and p1 parameters on the circle
+    const double a0 = ElCLib::Parameter(circ, p0);
+    const double a1 = a0 + theta; // Enforces sense + arc length
+
+    // Trimmed arc
+    return new Geom_TrimmedCurve(makeOccHandle<Geom_Circle>(circ), a0, a1);
+}
+
 TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
 {
-    // Create OCC curve corresponding to arc via bulge
-    auto makeArcFromBulge = [](
-            const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& planeNormal
-        ) -> OccHandle<Geom_TrimmedCurve>
-    {
-        // Chord
-        const gp_Vec chord(p0, p1);
-        const double c = chord.Magnitude();
-        if (c <= gp::Resolution() || MathUtils::fuzzyIsNull(bulge))
-            return {};
-
-        // Chord direction and perpendicular vec in the plane
-        const gp_Vec d = chord / c;
-        gp_Vec perp = gp_Vec{planeNormal} ^ d; // n × chordDir
-        if (GeomUtils::isNull(perp))
-            return {};
-
-        perp.Normalize();
-
-        // Signed angle and geom parameters
-        const double theta = 4.0 * std::atan(bulge); // CCW>0, CW<0
-
-        // Radius and offset center from middle of the chord
-        const double sinHalf = std::sin(0.5 * theta);
-        const double tanHalf = std::tan(0.5 * theta);
-        if (MathUtils::fuzzyIsNull(sinHalf) || MathUtils::fuzzyIsNull(tanHalf))
-            return {};
-
-        const double R = std::abs((0.5 * c) / sinHalf);
-        const double h = (0.5 * c) / tanHalf; // Signed(same as theta)
-
-        // Middle and center
-        const gp_Pnt mid = p0.Translated(d * (0.5 * c));
-        const gp_Pnt center = mid.Translated(perp * h);
-
-        // Circle in the plane, positive radius
-        const gp_Circ circ(gp_Ax2{center, planeNormal}, R);
-
-        // p0 and p1 parameters on the circle
-        const double a0 = ElCLib::Parameter(circ, p0);
-        const double a1 = a0 + theta; // Enforces sense + arc length
-
-        // Trimmed arc
-        return new Geom_TrimmedCurve(makeOccHandle<Geom_Circle>(circ), a0, a1);
-    };
-
     const size_t n = polyline.vertices.size();
     if (n < 2)
         return {};
@@ -1145,27 +1147,16 @@ TDF_LabelSequence DxfReader::transferByGroupLayers(DocumentPtr doc, TaskProgress
             continue; // Skip
 
         const Dxf_LAYER* dxfLayer = m_impl->findLayer(getEntityLayerName(entityVar));
-        if (!dxfLayer)
-            dxfLayer = m_impl->findLayer("0");
-
+        dxfLayer = !dxfLayer ? m_impl->findLayer("0") : dxfLayer;
         assert(dxfLayer != nullptr);
-        ArrayOfTransferObjects* arrayOfTransferObjects = nullptr;
-        {
-            auto it = mapObjectsByLayer.find(dxfLayer);
-            if (it == mapObjectsByLayer.cend()) {
-                it = mapObjectsByLayer.insert({dxfLayer, ArrayOfTransferObjects{}}).first;
-                assert(it != mapObjectsByLayer.cend());
-            }
-
-            arrayOfTransferObjects = &it->second;
-        }
 
         TransferObject object;
         object.entityVariantPtr = &entityVar;
         object.shape = entityShape;
         object.explicitColorId = findColorIndex(entityVar, dxfLayer, nullptr);
-        assert(arrayOfTransferObjects != nullptr);
-        arrayOfTransferObjects->push_back(std::move(object));
+
+        auto& arrayOfTransferObjects = mapObjectsByLayer[dxfLayer];
+        arrayOfTransferObjects.push_back(std::move(object));
         progress->setValue(MathUtils::toPercent(
             Cpp::indexInSpan(m_impl->allEntities(), entityVar), 0, m_impl->allEntities().size()
         ));
@@ -1173,25 +1164,19 @@ TDF_LabelSequence DxfReader::transferByGroupLayers(DocumentPtr doc, TaskProgress
 
     for (const auto& [layer, objects] : mapObjectsByLayer) {
         TopoDS_Shape layerShape;
-        for (const TransferObject& obj : objects) {
-            if (!obj.shape.IsNull())
-                BRepUtils::addShape(&layerShape, obj.shape);
-        }
+        for (const TransferObject& obj : objects)
+            BRepUtils::addShape(&layerShape, obj.shape);
 
-        if (layerShape.IsNull())
-            continue; // Skip
+        assert(!layerShape.IsNull());
+        assert(!objects.empty());
 
         const TDF_Label layerLabel = transferHelper.getOrAddLayerLabel(layer->name);
         const TDF_Label shapeLabel = transferHelper.addRootShape(layerShape, layer->name, layerLabel);
         // Check if all entities have the same color
-        bool uniqueColor = true;
-        assert(!objects.empty());
-        const DxfColorIndex aci = !objects.empty() ? objects.front().explicitColorId : -1;
-        for (const TransferObject& obj : objects) {
-            uniqueColor = obj.explicitColorId == aci;
-            if (!uniqueColor)
-                break;
-        }
+        const DxfColorIndex aci = objects.front().explicitColorId;
+        const bool uniqueColor = std::all_of(objects.cbegin(), objects.cend(), [=](const TransferObject& obj) {
+            return obj.explicitColorId == aci;
+        });
 
         if (uniqueColor) {
             transferHelper.setShapeColor(shapeLabel, aci);
@@ -1377,7 +1362,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_POINT& point)
         if (pdsize > 0.)
             return pdsize;
 
-        const double vpHeight = viewportHeight ? *viewportHeight : -1.;
+        const double vpHeight = viewportHeight.value_or(-1.);
         if (MathUtils::fuzzyIsNull(pdsize))
             return vpHeight > 0. ? 0.05 * vpHeight : fallbackAbsSize;
 
@@ -1727,14 +1712,18 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_POLYLINE& polyline)
 
 TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_SOLID& solid)
 {
-    Dxf_QuadBase quad = solid;
+    const Dxf_QuadBase* quadPtr = &solid;
+    Dxf_QuadBase quadLocal; // Needed only if solid has a fourth corner
+
     if (solid.hasCorner4) {
         // See https://ezdxf.readthedocs.io/en/stable/dxfentities/solid.html
-        std::swap(quad.corner3, quad.corner4);
+        quadLocal = static_cast<const Dxf_QuadBase&>(solid);
+        std::swap(quadLocal.corner3, quadLocal.corner4);
+        quadPtr = &quadLocal;
     }
 
     try {
-        return makeFace(quad);
+        return makeFace(*quadPtr);
     }
     catch (...) {
         m_messenger->emitError("createShape(Dxf_SOLID) failed");

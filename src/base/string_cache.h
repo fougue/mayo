@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string_view>
 
 namespace Mayo {
@@ -34,6 +35,14 @@ public:
     // All previously returned std::string_view values become invalid
     ~StringCache();
 
+    // Non copyable
+    StringCache(const StringCache&) = delete;
+    StringCache& operator=(const StringCache&) = delete;
+
+    // Movable
+    StringCache(StringCache&& other) noexcept = default;
+    StringCache& operator=(StringCache&& other) noexcept = default;
+
     // Returns the current size used when allocating new string pools
     unsigned poolSize() const;
 
@@ -61,7 +70,7 @@ public:
 private:
     void createPimpl();
     struct Pimpl;
-    Pimpl* d = nullptr;
+    std::unique_ptr<Pimpl> d;
 };
 
 } // namespace Mayo

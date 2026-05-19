@@ -27,7 +27,7 @@ namespace {
 
 class ScopedCLocale {
 public:
-    ScopedCLocale(int category)
+    explicit ScopedCLocale(int category)
         : m_category(category),
           m_savedLocale(std::setlocale(category, nullptr))
     {
@@ -110,27 +110,27 @@ using namespace DxfPrivate;
 
 DxfParser::DxfParser()
 {
-    m_mapEntityHandler.insert({ "ARC", [=]{ return parseArc(); } });
-    m_mapEntityHandler.insert({ "BLOCK", [=]{ return parseBlock(); } });
-    m_mapEntityHandler.insert({ "CIRCLE", [=]{ return parseCircle(); } });
-    m_mapEntityHandler.insert({ "DIMENSION", [=]{ return parseDimension(); } });
-    m_mapEntityHandler.insert({ "ELLIPSE", [=]{ return parseEllipse(); } });
-    m_mapEntityHandler.insert({ "INSERT", [=]{ return parseInsert(); } });
-    m_mapEntityHandler.insert({ "LAYER", [=]{ return parseLayer(); } });
-    m_mapEntityHandler.insert({ "LINE", [=]{ return parseLine(); } });
-    m_mapEntityHandler.insert({ "LWPOLYLINE", [=]{ return parseLwPolyLine(); } });
-    m_mapEntityHandler.insert({ "MTEXT", [=]{ return parseMText(); } });
-    m_mapEntityHandler.insert({ "POINT", [=]{ return parsePoint(); } });
-    m_mapEntityHandler.insert({ "POLYLINE", [=]{ return parsePolyLine(); } });
-    m_mapEntityHandler.insert({ "SECTION", [=]{ return parseSection(); } });
-    m_mapEntityHandler.insert({ "SOLID", [=]{ return parseSolid(); } });
-    m_mapEntityHandler.insert({ "3DFACE", [=]{ return parse3dFace(); } });
-    m_mapEntityHandler.insert({ "SPLINE", [=]{ return parseSpline(); } });
-    m_mapEntityHandler.insert({ "STYLE", [=]{ return parseStyle(); } });
-    m_mapEntityHandler.insert({ "TEXT", [=]{ return parseText(); } });
-    m_mapEntityHandler.insert({ "ATTRIB", [=]{ return parseAttrib(); } });
-    m_mapEntityHandler.insert({ "TABLE", [=]{ return parseTable(); } });
-    m_mapEntityHandler.insert({ "ENDSEC", [=]{ return parseEndSec(); } });
+    m_mapEntityHandler.try_emplace("ARC", [=]{ return parseArc(); });
+    m_mapEntityHandler.try_emplace("BLOCK", [=]{ return parseBlock(); });
+    m_mapEntityHandler.try_emplace("CIRCLE", [=]{ return parseCircle(); });
+    m_mapEntityHandler.try_emplace("DIMENSION", [=]{ return parseDimension(); });
+    m_mapEntityHandler.try_emplace("ELLIPSE", [=]{ return parseEllipse(); });
+    m_mapEntityHandler.try_emplace("INSERT", [=]{ return parseInsert(); });
+    m_mapEntityHandler.try_emplace("LAYER", [=]{ return parseLayer(); });
+    m_mapEntityHandler.try_emplace("LINE", [=]{ return parseLine(); });
+    m_mapEntityHandler.try_emplace("LWPOLYLINE", [=]{ return parseLwPolyLine(); });
+    m_mapEntityHandler.try_emplace("MTEXT", [=]{ return parseMText(); });
+    m_mapEntityHandler.try_emplace("POINT", [=]{ return parsePoint(); });
+    m_mapEntityHandler.try_emplace("POLYLINE", [=]{ return parsePolyLine(); });
+    m_mapEntityHandler.try_emplace("SECTION", [=]{ return parseSection(); });
+    m_mapEntityHandler.try_emplace("SOLID", [=]{ return parseSolid(); });
+    m_mapEntityHandler.try_emplace("3DFACE", [=]{ return parse3dFace(); });
+    m_mapEntityHandler.try_emplace("SPLINE", [=]{ return parseSpline(); });
+    m_mapEntityHandler.try_emplace("STYLE", [=]{ return parseStyle(); });
+    m_mapEntityHandler.try_emplace("TEXT", [=]{ return parseText(); });
+    m_mapEntityHandler.try_emplace("ATTRIB", [=]{ return parseAttrib(); });
+    m_mapEntityHandler.try_emplace("TABLE", [=]{ return parseTable(); });
+    m_mapEntityHandler.try_emplace("ENDSEC", [=]{ return parseEndSec(); });
 }
 
 double DxfParser::mm(double value) const
@@ -224,9 +224,9 @@ const Dxf_STYLE* DxfParser::findStyle(DxfStringRef name) const
 void DxfParser::addLayer(Dxf_LAYER&& layer)
 {
     if (this->findLayer(layer.name) == nullptr) {
-        m_layers.push_back(std::forward<Dxf_LAYER>(layer));
+        m_layers.push_back(std::move(layer));
         const auto& layerStored = m_layers.back();
-        m_mapLayer.insert({layerStored.name, &layerStored});
+        m_mapLayer.try_emplace(layerStored.name, &layerStored);
     }
 }
 
@@ -1008,7 +1008,7 @@ bool DxfParser::parseBlock()
     auto endBlockHandled = [&]{
         if (m_str == "ENDBLK") {
             m_blocks.push_back(std::move(block));
-            m_mapBlock.insert({m_blocks.back().name, &m_blocks.back()});
+            m_mapBlock.try_emplace(m_blocks.back().name, &m_blocks.back());
             return true;
         }
         else {
@@ -1118,7 +1118,7 @@ void DxfParser::getLine()
         m_getLinePostCallback(getLineSize);
 }
 
-void DxfParser::putLine(const std::string& value)
+void DxfParser::putLine(std::string_view value)
 {
     m_unusedLine = value;
 }
@@ -1179,7 +1179,7 @@ bool DxfParser::parseStyle()
             }
 
             m_styles.push_back(std::move(style));
-            m_mapStyle.insert({m_styles.back().name, &m_styles.back()});
+            m_mapStyle.try_emplace(m_styles.back().name, &m_styles.back());
             return true;
         }
         else if (isStringToErrorValue(n)) {
@@ -1240,7 +1240,7 @@ void DxfParser::resolveAcadVer(DxfStringRef strVersion)
         "AC1032"
     };
 
-    assert(
+    static_assert(
         std::size(versionNames)
         == (static_cast<int>(DxfVersion::RNewer) - static_cast<int>(DxfVersion::ROlder) - 1)
     );
@@ -1359,7 +1359,7 @@ void DxfParser::parseHeaderVariable()
     }
 
     if (varValue.index() != 0) { // Not std::monostate
-        m_mapHeaderVarValue.insert({ varName, varValue });
+        m_mapHeaderVarValue.try_emplace(varName, varValue);
         if (varName == "INSUNITS") {
             m_unit = static_cast<DxfUnit>(dxfGetInt(varValue, int(DxfUnit::Unspecified)));
         }
