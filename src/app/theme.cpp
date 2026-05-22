@@ -4,6 +4,7 @@
 ****************************************************************************/
 
 #include "theme.h"
+
 #include "../base/meta_enum.h"
 
 #include <QtGui/QImage>
@@ -15,6 +16,7 @@
 #include <QtWidgets/QSplitter>
 #include <QtWidgets/QSplitterHandle>
 #include <QtWidgets/QStyleFactory>
+#include <QtWidgets/QStyledItemDelegate>
 
 #include <QtCore/QtDebug>
 
@@ -29,6 +31,7 @@ const QIcon& nullQIcon()
     static const QIcon null;
     return null;
 }
+
 
 // Provides a specific style dedicated to Mayo look and feel
 // * One of the special things are the "header" combo boxes. This is the kind of QComboBox object
@@ -80,10 +83,8 @@ public:
         QSize sizeResult = QProxyStyle::sizeFromContents(type, opt, size, widget);
         if (type == CT_ItemViewItem) {
             auto comboBox = findQComboBoxParent(widget);
-            if (comboBox) {
-                const double f = hasHeaderQComboBoxMark(comboBox) ? 1.5 : 1.25;
-                sizeResult.setHeight(sizeResult.height() * f);
-            }
+            if (comboBox)
+                setComboBoxViewItemHeightHint(comboBox, &sizeResult);
         }
 
         return sizeResult;
@@ -95,6 +96,14 @@ public:
         if (qobject_cast<QSplitter*>(widget) || qobject_cast<QSplitterHandle*>(widget)) {
             widget->setMouseTracking(true);
             widget->setAttribute(Qt::WA_Hover, true);
+        }
+
+        if (auto comboBox = qobject_cast<QComboBox*>(widget)) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            // Qt5/Fusion: sizeFromContents(CT_ItemViewItem) not used for popup item height
+            // Use delegate approach instead
+            comboBox->setItemDelegate(new ComboBoxItemDelegate);
+#endif
         }
     }
 
@@ -113,7 +122,31 @@ public:
         return false;
     }
 
+    static void setComboBoxViewItemHeightHint(const QComboBox* cb, QSize* sizeHint)
+    {
+        if (cb && sizeHint) {
+            const double f = hasHeaderQComboBoxMark(cb) ? 1.5 : 1.25;
+            sizeHint->setHeight(sizeHint->height() * f);
+        }
+    }
+
 private:
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    class ComboBoxItemDelegate : public QStyledItemDelegate {
+    public:
+        ComboBoxItemDelegate(QObject* parent = nullptr)
+            : QStyledItemDelegate(parent)
+        {}
+
+        QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            QSize size = QStyledItemDelegate::sizeHint(option, index);
+            setComboBoxViewItemHeightHint(MayoStyle::findQComboBoxParent(option.widget), &size);
+            return size;
+        }
+    };
+#endif
+
     static QComboBox* findQComboBoxParent(const QWidget* widget)
     {
         QWidget* it = widget ? widget->parentWidget() : nullptr;
