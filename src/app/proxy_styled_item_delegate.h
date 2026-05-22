@@ -10,18 +10,18 @@
 namespace Mayo {
 
 // Convenience class that simplifies dynamically overriding of QStyledItemDelegate
-// QStyledItemDelegate protected functions cannot be overridden through proxy technique, this is a
-// limitation that applies to :
+// QStyledItemDelegate protected functions cannot be overridden through proxy technique, this
+// limitation applies to :
 //     - QStyledItemDelegate::initStyleOption()
 //     - QStyledItemDelegate::eventFilter()
 //     - QStyledItemDelegate::editorEvent()
 class ProxyStyledItemDelegate : public QStyledItemDelegate {
 public:
     ProxyStyledItemDelegate(QObject* parent = nullptr);
-    ProxyStyledItemDelegate(QStyledItemDelegate* srcDelegate, QObject* parent = nullptr);
+    ProxyStyledItemDelegate(QAbstractItemDelegate* srcDelegate, QObject* parent = nullptr);
 
-    QStyledItemDelegate* sourceDelegate() const;
-    void setSourceDelegate(QStyledItemDelegate* srcDelegate);
+    QAbstractItemDelegate* sourceDelegate() const;
+    void setSourceDelegate(QAbstractItemDelegate* srcDelegate);
 
     void paint(
         QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
@@ -38,7 +38,7 @@ public:
     void setEditorData(QWidget* editor, const QModelIndex& index) const override;
 
     void setModelData(
-        QWidget* editor,QAbstractItemModel* model, const QModelIndex& index
+        QWidget* editor, QAbstractItemModel* model, const QModelIndex& index
     ) const override;
 
     void updateEditorGeometry(
@@ -46,7 +46,7 @@ public:
     ) const override;
 
 private:
-    QStyledItemDelegate* m_sourceDelegate;
+    QAbstractItemDelegate* m_sourceDelegate = nullptr;
 };
 
 } // namespace Mayo
