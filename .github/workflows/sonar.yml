@@ -81,7 +81,12 @@ jobs:
 
       - name: SonarCloud Scan
         run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          echo "SONAR_TOKEN length:"
+          echo -n "$SONAR_TOKEN" | wc -c
+          echo "Contents of project.properties file:"
+          cat .github/sonar/project.properties
+
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-8.1.0.6389-linux-x64.zip
           unzip -q sonar-scanner.zip
           SCANNER_DIR=$(find . -maxdepth 1 -type d -name "sonar-scanner-*")
 
