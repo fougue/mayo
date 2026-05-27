@@ -1081,13 +1081,11 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
 
 std::string DxfReader::getPlainMText(std::string_view strMText)
 {
-    auto strReplaceAll = [](std::string* str, const char* strBefore, const char* strAfter) {
-        const size_t strBeforeLen = std::strlen(strBefore);
-        const size_t strAfterLen = std::strlen(strAfter);
+    auto strReplaceAll = [](std::string* str, std::string_view strBefore, std::string_view strAfter) {
         size_t pos = str->find(strBefore, 0);
         while (pos != std::string::npos) {
-            str->replace(pos, strBeforeLen, strAfter);
-            pos = str->find(strBefore, pos + strAfterLen);
+            str->replace(pos, strBefore.size(), strAfter);
+            pos = str->find(strBefore, pos + strAfter.size());
         }
     };
 
