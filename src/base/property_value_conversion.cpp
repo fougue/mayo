@@ -75,28 +75,8 @@ static gp_XYZ xyzFromString(std::string_view str)
 
 } // namespace
 
-PropertyValueConversion::Variant::Variant(bool v)
-    : BaseVariantType(v)
-{}
-
-PropertyValueConversion::Variant::Variant(int v)
-    : BaseVariantType(v)
-{}
-
-PropertyValueConversion::Variant::Variant(float v)
-    : Variant(static_cast<double>(v))
-{}
-
-PropertyValueConversion::Variant::Variant(double v)
-    : BaseVariantType(v)
-{}
-
 PropertyValueConversion::Variant::Variant(const char* str)
     : BaseVariantType(std::string(str))
-{}
-
-PropertyValueConversion::Variant::Variant(const std::string& str)
-    : BaseVariantType(str)
 {}
 
 PropertyValueConversion::Variant::Variant(gsl::span<const uint8_t> bytes)
@@ -395,7 +375,7 @@ const std::string& PropertyValueConversion::Variant::toConstRefString(bool* ok) 
     }
 
     assignBoolPtr(ok, false);
-    return Cpp::nullString();
+    return Cpp::staticObject<std::string>();
 }
 
 std::vector<uint8_t> PropertyValueConversion::Variant::toByteArray(bool* ok) const

@@ -9,11 +9,10 @@
 
 #include <exception>
 #include <stdexcept>
-#include <string>
+#include <type_traits>
 #include <utility>
 #ifndef __cpp_lib_integer_comparison_functions
 #  include <limits>
-#  include <type_traits>
 #endif
 
 namespace Mayo {
@@ -36,8 +35,12 @@ using MappedType = typename AssociativeContainer::mapped_type;
 template<typename AssociativeContainer>
 using KeyType = typename AssociativeContainer::key_type;
 
-// Returns a default empty std::string object, whose memory address can be used safely
-inline const std::string& nullString();
+// Returns a process-wide singleton instance of type T
+// The object is created on first use and then reused for all subsequent calls.
+// This function is intended for stateless or immutable default instances, such as "null objects",
+// empty containers, or shared sentinel values
+template<typename T>
+const std::decay_t<T>& staticObject();
 
 // Finds in associative container the value mapped to 'key'
 // If 'key' isn't found then a default-constructed value is returned
@@ -101,10 +104,15 @@ template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 namespace Mayo::CppUtils {
 
-const std::string& nullString()
+template<typename T>
+const std::decay_t<T>& staticObject()
 {
-    static std::string str;
-    return str;
+    using U = std::decay_t<T>;
+    static_assert(std::is_object_v<U>, "staticObject<T>: T must be an object type");
+    static_assert(std::is_default_constructible_v<U>, "staticObject<T>: T must be default constructible");
+    // NOTE Since C++11 initialization of local static variables is thread-safe
+    static const U object{};
+    return object;
 }
 
 template<typename AssociativeContainer>

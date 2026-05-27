@@ -9,6 +9,7 @@
 
 namespace Mayo {
 
+class AppUiState;
 class CommandContainer;
 
 // Provides an interface for main pages within the Mayo application
@@ -27,6 +28,14 @@ public:
 
     // Update the activation("enabled" status) of the controls(ie any widget) belonging to this page
     virtual void updatePageControlsActivation() = 0;
+
+    // Restores the persistent UI state associated with this page
+    // Typically called during application startup or after the page has been fully constructed
+    virtual void restoreUiState(const AppUiState& state) = 0;
+
+    // Saves the current UI state of this page into `state`
+    // Typically called before application shutdown
+    virtual void saveUiState(AppUiState& state) = 0;
 
 signals:
     // Signal emitted when a "global" or "complete" activation at the whole application level is

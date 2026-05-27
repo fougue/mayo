@@ -7,6 +7,7 @@
 #include "ui_widget_main_control.h"
 
 #include "../base/application.h"
+#include "../base/cpp_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
@@ -28,6 +29,7 @@
 #include "widget_occ_view.h"
 #include "widget_properties_editor.h"
 
+#include <QtDebug>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
@@ -38,6 +40,11 @@
 #include <unordered_map>
 
 namespace Mayo {
+
+namespace {
+const char key_IsLeftSideBarVisible[] = "pageDocuments_IsLeftSideBarVisible";
+const char key_LeftSideBarWidthFactor[] = "pageDocuments_LeftSideBarWidthFactor";
+} // namespace
 
 WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     : IWidgetMainPage(parent),
@@ -130,6 +137,7 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     m_ui->stack_GuiDocuments->installEventFilter(this);
+    this->widgetLeftSideBar()->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     m_ui->widget_MouseCoords->hide();
     this->setWidgetLeftSideBarWidthFactor(0.25);
@@ -189,11 +197,6 @@ QWidget* WidgetMainControl::widgetLeftSideBar() const
     return m_ui->widget_Left;
 }
 
-double WidgetMainControl::widgetLeftSideBarWidthFactor() const
-{
-    return m_widgetLeftSideBarWidthFactor;
-}
-
 void WidgetMainControl::setWidgetLeftSideBarWidthFactor(double factor)
 {
     const int mainWidth = this->geometry().width();
@@ -222,13 +225,41 @@ bool WidgetMainControl::eventFilter(QObject* watched, QEvent* event)
     }
 
     if (watched == m_ui->stack_GuiDocuments) {
-        if (eventType == QEvent::Enter || eventType == QEvent::Leave) {
+        if (eventType == QEvent::Enter || eventType == QEvent::Leave)
             m_ui->widget_MouseCoords->setHidden(eventType == QEvent::Leave);
-            return true;
+    }
+
+    if (watched == this->widgetLeftSideBar()) {
+        if (eventType == QEvent::Show) {
+            m_widgetLeftSideBarIsVisble = true;
+        }
+        else if (eventType == QEvent::Hide && AppModule::get()->application()->documentCount() > 0) {
+            // When all documents are closed the Documents page gets hidden which isn't something
+            // triggered by user. So check if the application is empty to detect this case
+            m_widgetLeftSideBarIsVisble = false;
         }
     }
 
     return false;
+}
+
+void WidgetMainControl::restoreUiState(const AppUiState& state)
+{
+    const auto& varLeftSideBarVisible = state.get(key_IsLeftSideBarVisible);
+    if (varLeftSideBarVisible.isValid()) {
+        this->widgetLeftSideBar()->setVisible(varLeftSideBarVisible.toBool());
+        m_widgetLeftSideBarIsVisble = varLeftSideBarVisible.toBool();
+    }
+
+    const auto& varLeftSideBarWidthFactor = state.get(key_LeftSideBarWidthFactor);
+    if (varLeftSideBarWidthFactor.isValid())
+        this->setWidgetLeftSideBarWidthFactor(varLeftSideBarWidthFactor.toDouble());
+}
+
+void WidgetMainControl::saveUiState(AppUiState& state)
+{
+    state.set(key_IsLeftSideBarVisible, m_widgetLeftSideBarIsVisble);
+    state.set(key_LeftSideBarWidthFactor, m_widgetLeftSideBarWidthFactor);
 }
 
 QMenu* WidgetMainControl::createMenuModelTreeSettings()

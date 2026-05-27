@@ -406,7 +406,16 @@ static int runApp(QCoreApplication* qtApp)
     // Create MainWindow
     MainWindow mainWindow(guiApp.get());
     mainWindow.setWindowTitle(QCoreApplication::applicationName());
+    appModule->signalMessage.connectSlot(&MainWindow::showMessage, &mainWindow);
+
     appModule->settings()->loadProperty(&appModule->properties()->appUiState);
+    mainWindow.restoreUiState(appModule->properties()->appUiState);
+    mainWindow.addOnCloseCallback([&]{
+        AppUiState state = appModule->properties()->appUiState;
+        mainWindow.saveUiState(state);
+        appModule->properties()->appUiState.setValue(state);
+    });
+
     mainWindow.show();
     if (!args.listFilepathToOpen.empty()) {
         QTimer::singleShot(0, qtApp, [&]{ mainWindow.openDocumentsFromList(args.listFilepathToOpen); });

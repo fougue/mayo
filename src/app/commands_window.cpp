@@ -50,8 +50,6 @@ CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* cont
     auto action = this->createAction();
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
     action->setShortcut(Qt::ALT | Qt::Key_0);
-    action->setCheckable(true);
-    action->setChecked(panelWidget->isVisible());
     this->updateAction();
     panelWidget->installEventFilter(this);
 }
@@ -68,11 +66,9 @@ bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 
 bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
 {
-    if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
-        if (watched == m_panelWidget) {
-            this->updateAction();
-            return true;
-        }
+    auto eventType = event->type();
+    if (watched == m_panelWidget || eventType == QEvent::Show || eventType == QEvent::Hide) {
+        this->updateAction();
     }
 
     return Command::eventFilter(watched, event);
@@ -130,10 +126,9 @@ bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
 {
     if (event->type() == QEvent::Show) {
         if (watched == this->context()->widgetPage(IAppContext::Page::Home)
-                || watched == this->context()->widgetPage(IAppContext::Page::Documents))
+            || watched == this->context()->widgetPage(IAppContext::Page::Documents))
         {
             this->updateAction();
-            return true;
         }
     }
 
