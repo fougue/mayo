@@ -32,13 +32,13 @@ const QIcon& nullQIcon()
     return null;
 }
 
-
 // Provides a specific style dedicated to Mayo look and feel
 // * One of the special things are the "header" combo boxes. This is the kind of QComboBox object
 //   used in toolbar just below Mayo's main menubar.
 //   These QComboBoxes look as "auto raised" QToolButtons and also the arrow indicator is more
 //   visible
 // * Height of the items in QComboBox popups are a bit enlarged
+//   Qt5 needs a special ItemDelegate as QStyle::sizeFromContents() isn't used for combobox popups
 class MayoStyle : public QProxyStyle {
 public:
     MayoStyle(QStyle* style)
@@ -289,24 +289,24 @@ public:
             return appPalette.color(QPalette::Button).darker(125);
         case Theme::Color::ButtonView3d_Hover:
         case Theme::Color::ButtonView3d_Checked:
-            return QColor(65, 200, 250);
+            return QColor{65, 200, 250};
         case Theme::Color::Graphic3d_AspectFillArea:
-            return QColor(128, 200, 255);
+            return QColor{128, 200, 255};
         case Theme::Color::View3d_BackgroundGradientStart:
-            return QColor(128, 148, 255);
+            return QColor{128, 148, 255};
         case Theme::Color::View3d_BackgroundGradientEnd:
             return Qt::white;
         case Theme::Color::RubberBandView3d_Line:
-            return QColor(65, 200, 250);
+            return QColor{65, 200, 250};
         case Theme::Color::RubberBandView3d_Fill:
-            return QColor(65, 200, 250).lighter();
+            return QColor{65, 200, 250}.lighter();
         case Theme::Color::MessageIndicator_InfoBackground:
-            return QColor(128, 200, 255);
+            return QColor{128, 200, 255};
         case Theme::Color::MessageIndicator_InfoText:
         case Theme::Color::MessageIndicator_ErrorText:
             return appPalette.color(QPalette::WindowText);
         case Theme::Color::MessageIndicator_ErrorBackground:
-            return QColor(225, 127, 127, 140);
+            return QColor{225, 127, 127, 140};
         }
         return {};
     }
@@ -367,9 +367,9 @@ public:
         case Theme::Color::Graphic3d_AspectFillArea:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::View3d_BackgroundGradientStart:
-            return QColor(100, 100, 100);
+            return QColor{100, 100, 100};
         case Theme::Color::View3d_BackgroundGradientEnd:
-            return QColor(200, 200, 200);
+            return QColor{200, 200, 200};
         case Theme::Color::RubberBandView3d_Line:
             return appPalette.color(QPalette::Highlight);
         case Theme::Color::RubberBandView3d_Fill:
@@ -380,7 +380,7 @@ public:
         case Theme::Color::MessageIndicator_ErrorText:
             return appPalette.color(QPalette::WindowText);
         case Theme::Color::MessageIndicator_ErrorBackground:
-            return QColor(225, 127, 127, 140);
+            return QColor{225, 127, 127, 140};
         }
         return {};
     }
@@ -401,7 +401,8 @@ public:
             const QString icnBasePath =
                     !fnIsNeutralIcon(icn) ?
                         ":/images/themes/dark/" :
-                        ":/images/themes/classic/";
+                        ":/images/themes/classic/"
+                ;
             QPixmap pix(icnBasePath + icnFileName);
             if (!fnIsNeutralIcon(icn)) {
                 const bool invertColors = icn != Icon::XdeAssembly && icn != Icon::XdeSimpleShape;
@@ -413,21 +414,21 @@ public:
         }
 
         QPalette p = qApp->palette();
-        p.setColor(QPalette::Base, QColor(50, 50, 50));   // #323232
-        p.setColor(QPalette::Window, QColor(37, 37, 37)); // #252525
-        p.setColor(QPalette::Button, QColor(73, 73, 73)); // #494949
+        p.setColor(QPalette::Base, QColor{50, 50, 50});   // #323232
+        p.setColor(QPalette::Window, QColor{37, 37, 37}); // #252525
+        p.setColor(QPalette::Button, QColor{73, 73, 73}); // #494949
         p.setColor(QPalette::Text, Qt::white);
         p.setColor(QPalette::ButtonText, Qt::white);
         p.setColor(QPalette::WindowText, Qt::white);
         p.setColor(QPalette::PlaceholderText, p.color(QPalette::Text).darker());
-        p.setColor(QPalette::Highlight, QColor(0, 120, 215));
+        p.setColor(QPalette::Highlight, QColor{0, 120, 215});
         p.setColor(QPalette::HighlightedText, Qt::white);
         const QColor linkColor(115, 131, 191);
         p.setColor(QPalette::Link, linkColor);
         p.setColor(QPalette::LinkVisited, linkColor);
 
-        const QColor disabledGray(40, 40, 40); // #282828
-        const QColor disabledTextGray(128, 128, 128); // #808080
+        const QColor disabledGray{40, 40, 40}; // #282828
+        const QColor disabledTextGray{128, 128, 128}; // #808080
         p.setColor(QPalette::Disabled, QPalette::Window, disabledGray);
         p.setColor(QPalette::Disabled, QPalette::Base, disabledGray);
         p.setColor(QPalette::Disabled, QPalette::AlternateBase, disabledGray);

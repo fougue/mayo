@@ -42,10 +42,6 @@ public:
     // Widget at the left side of the app providing access to the model tree, file system, ...
     QWidget* widgetLeftSideBar() const;
 
-    // Factor value must be in [0, 1]
-    double widgetLeftSideBarWidthFactor() const;
-    void setWidgetLeftSideBarWidthFactor(double factor);
-
     int widgetGuiDocumentCount() const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     WidgetGuiDocument* currentWidgetGuiDocument() const;
@@ -56,6 +52,9 @@ public:
     void setCurrentDocumentIndex(int idx);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
+
+    void restoreUiState(const AppUiState& state) override;
+    void saveUiState(AppUiState& state) override;
 
 signals:
     void currentDocumentIndexChanged(int docIndex);
@@ -82,6 +81,9 @@ private:
 
     void reloadDocumentAfterChange(const DocumentPtr& doc);
 
+    // Factor value must be in [0, 1]
+    void setWidgetLeftSideBarWidthFactor(double factor);
+
     class Ui_WidgetMainControl* m_ui = nullptr;
     GuiApplication* m_guiApp = nullptr;
     IAppContext* m_appContext = nullptr;
@@ -89,6 +91,8 @@ private:
     std::vector<std::unique_ptr<PropertyGroup>> m_ptrCurrentNodeProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
+
+    bool m_widgetLeftSideBarIsVisble = true;
     double m_widgetLeftSideBarWidthFactor = 0.25;
 };
 

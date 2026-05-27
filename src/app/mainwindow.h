@@ -10,11 +10,16 @@
 #include "../base/messenger.h"
 #include "../base/task_manager.h"
 #include "../base/text_id.h"
+
 #include <QtWidgets/QMainWindow>
+
+#include <functional>
 #include <unordered_map>
+#include <vector>
 
 namespace Mayo {
 
+class AppUiState;
 class GuiApplication;
 class GuiDocument;
 class IWidgetMainPage;
@@ -30,7 +35,26 @@ public:
     MainWindow(GuiApplication* guiApp, QWidget* parent = nullptr);
     ~MainWindow();
 
+    // Opens the documents referenced by `listFilePath`
+    // Each file path is forwarded to the document asynchronous loading/import mechanism
+    // Unsupported, missing, or invalid files may generate warning/error messages through the
+    // application's messaging system
     void openDocumentsFromList(gsl::span<const FilePath> listFilePath);
+
+    // Restores the persistent UI state of the main window
+    // This automatically calls IWidgetMainPage::restoreUiState() on all widget pages
+    void restoreUiState(const AppUiState& state);
+
+    // Saves the current UI state of the main window into `state`
+    // This automatically calls IWidgetMainPage::saveUiState() on all widget pages
+    void saveUiState(AppUiState& state);
+
+    // Displays message to the user
+    // Depending on the message type and configuration, the message may appear as popup, dialog, ...
+    void showMessage(const Messenger::Message& msg);
+
+    // Registers callback invoked when the main window is closing with QWidget::closeEvent()
+    void addOnCloseCallback(std::function<void()> fn);
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -49,8 +73,6 @@ private:
     void onGuiDocumentAdded(GuiDocument* guiDoc);
     void onGuiDocumentErased(GuiDocument* guiDoc);
 
-    void onMessage(const Messenger::Message& msg);
-
     void updateControlsActivation();
     void updateCurrentPage();
 
@@ -66,6 +88,7 @@ private:
     TaskManager m_taskMgr;
     class Ui_MainWindow* m_ui = nullptr;
     std::unordered_map<IAppContext::Page, IWidgetMainPage*> m_mapWidgetPage;
+    std::vector<std::function<void()>> m_onCloseCallbacks;
 };
 
 } // namespace Mayo

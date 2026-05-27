@@ -11,7 +11,7 @@
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_context.h"
-#include "app_module.h"
+#include "app_ui_state.h"
 #include "commands_file.h"
 #include "commands_display.h"
 #include "commands_tools.h"
@@ -60,7 +60,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
     for (auto [code, page] : m_mapWidgetPage)
         page->initialize(&m_cmdContainer);
 
-    AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
     guiApp->signalGuiDocumentErased.connectSlot(&MainWindow::onGuiDocumentErased, this);
 
@@ -76,16 +75,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::showEvent(QShowEvent* event)
 {
-    const auto& uiState = AppModule::get()->properties()->appUiState.value();
-    if (!uiState.mainWindowGeometry.empty())
-        this->restoreGeometry(QtCoreUtils::QByteArray_fromRawData<uint8_t>(uiState.mainWindowGeometry));
-
-    WidgetMainControl* pageDocs = this->widgetPageDocuments();
-    if (pageDocs) {
-        pageDocs->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
-        pageDocs->setWidgetLeftSideBarWidthFactor(uiState.pageDocuments_widgetLeftSideBarWidthFactor);
-    }
-
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
@@ -99,15 +88,9 @@ void MainWindow::showEvent(QShowEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    AppUiState uiState = AppModule::get()->properties()->appUiState;
-    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(this->saveGeometry());
-    WidgetMainControl* pageDocs = this->widgetPageDocuments();
-    if (pageDocs) {
-        uiState.pageDocuments_isLeftSideBarVisible = pageDocs->widgetLeftSideBar()->isVisible();
-        uiState.pageDocuments_widgetLeftSideBarWidthFactor = pageDocs->widgetLeftSideBarWidthFactor();
-    }
+    for (const auto& fn : m_onCloseCallbacks)
+        fn();
 
-    AppModule::get()->properties()->appUiState.setValue(uiState);
     FileCommandTools::closeAllDocuments(m_appContext);
     QMainWindow::closeEvent(event);
 }
@@ -341,7 +324,7 @@ QDialog* runMessageBox(
     return dlg;
 }
 
-void MainWindow::onMessage(const Messenger::Message& msg)
+void MainWindow::showMessage(const Messenger::Message& msg)
 {
     const auto qtext = to_QString(msg.text);
 
@@ -364,6 +347,31 @@ void MainWindow::onMessage(const Messenger::Message& msg)
 void MainWindow::openDocumentsFromList(gsl::span<const FilePath> listFilePath)
 {
     FileCommandTools::openDocumentsFromList(m_appContext, listFilePath);
+}
+
+void MainWindow::restoreUiState(const AppUiState& state)
+{
+    const auto& varMainWindowGeom = state.get("mainWindowGeometry");
+    if (varMainWindowGeom.isByteArray()) {
+        this->restoreGeometry(
+            QtCoreUtils::QByteArray_fromRawData<uint8_t>(varMainWindowGeom.toConstRefByteArray())
+        );
+    }
+
+    for (auto [code, page] : m_mapWidgetPage)
+        page->restoreUiState(state);
+}
+
+void MainWindow::saveUiState(AppUiState& state)
+{
+    state.set("mainWindowGeometry", QtCoreUtils::toStdByteArray(this->saveGeometry()));
+    for (auto [code, page] : m_mapWidgetPage)
+        page->saveUiState(state);
+}
+
+void MainWindow::addOnCloseCallback(std::function<void ()> fn)
+{
+    m_onCloseCallbacks.push_back(std::move(fn));
 }
 
 void MainWindow::updateControlsActivation()

@@ -188,10 +188,10 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
         QByteArray blob;
         QDataStream stream(&blob, QIODevice::WriteOnly);
         AppModule::writeRecentFiles(stream, filesProp.value());
-        return Variant(QtCoreUtils::toStdByteArray(blob));
+        return Variant{QtCoreUtils::toStdByteArray(blob)};
     }
     else if (isType<PropertyAppUiState>(prop)) {
-        return Variant(AppUiState::toBlob(constRef<PropertyAppUiState>(prop)));
+        return Variant{AppUiState::toBlob(constRef<PropertyAppUiState>(prop))};
     }
     else {
         return PropertyValueConversion::toVariant(prop);

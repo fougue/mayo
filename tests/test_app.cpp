@@ -277,23 +277,28 @@ void TestApp::AppUiState_test()
     // This is the result of:
     //     QWidget widget;
     //     auto data = widget.saveGeometry();
-    const char widgetSaveGeometry_data[] = {
-        '\x01', '\xD9', '\xD0', '\xCB', '\x00', '\x03', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
-        '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x02', '\x7F', '\x00', '\x00', '\x01', '\xDF',
-        '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x02', '\x7F',
-        '\x00', '\x00', '\x01', '\xDF', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
-        '\x07', '\x80', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
-        '\x02', '\x7F', '\x00', '\x00', '\x01', '\xDF'
+    const uint8_t widgetSaveGeometry_data[] = {
+        0x01, 0xD9, 0xD0, 0xCB, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x07, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF
     };
-    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(widgetSaveGeometry_data);
-    uiState.pageDocuments_isLeftSideBarVisible = true;
+    uiState.set("mainWindowGeometry", AppUiState::Variant{widgetSaveGeometry_data});
+    uiState.set("pageDocuments_isLeftSideBarVisible", true);
     const std::vector<uint8_t> blobSave = AppUiState::toBlob(uiState);
 
     bool ok = false;
-    const AppUiState uiState_read = AppUiState::fromBlob(blobSave, &ok);
+    const auto uiState_read = AppUiState::fromBlob(blobSave, &ok);
     QVERIFY(ok);
-    QCOMPARE(uiState.mainWindowGeometry, uiState_read.mainWindowGeometry);
-    QCOMPARE(uiState.pageDocuments_isLeftSideBarVisible, uiState_read.pageDocuments_isLeftSideBarVisible);
+    QCOMPARE(
+        uiState.get("mainWindowGeometry"),
+        uiState_read.get("mainWindowGeometry")
+    );
+    QCOMPARE(
+        uiState.get("pageDocuments_isLeftSideBarVisible"),
+        uiState_read.get("pageDocuments_isLeftSideBarVisible")
+    );
  }
 
 void TestApp::StringConv_test()
