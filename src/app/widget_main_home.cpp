@@ -44,6 +44,17 @@ void WidgetMainHome::initialize(const CommandContainer* cmdContainer)
 
 void WidgetMainHome::updatePageControlsActivation()
 {
+    // This page has no controls requiring dynamic activation updates
+}
+
+void WidgetMainHome::restoreUiState(const AppUiState&)
+{
+    // No persistent UI state for this page
+}
+
+void WidgetMainHome::saveUiState(AppUiState&)
+{
+    // No persistent UI state for this page
 }
 
 } // namespace Mayo

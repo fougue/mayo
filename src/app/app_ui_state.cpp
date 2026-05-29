@@ -80,7 +80,7 @@ std::vector<uint8_t> AppUiState::toBlob(const AppUiState& state)
         stream << QtCoreUtils::QByteArray_fromRawData(key);
         stream << static_cast<uint8_t>(value.index());
         std::visit(Cpp::Overloaded{
-            [](std::monostate) {},
+            [](std::monostate) { /* No payload for empty variant value */ },
             [&](bool v) { stream << v; },
             [&](int v) { stream << static_cast<int32_t>(v); },
             [&](double v) { stream << v; },

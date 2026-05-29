@@ -10,8 +10,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace Mayo {
-namespace MeshUtils {
+namespace Mayo::MeshUtils {
 
 namespace {
 
@@ -280,5 +279,4 @@ OccHandle<Poly_Polygon3D> Polygon3dBuilder::get() const
     return m_polygon;
 }
 
-} // namespace MeshUtils
-} // namespace Mayo
+} // namespace Mayo::MeshUtils

@@ -69,7 +69,7 @@ private:
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
 
     void onGuiDocumentAdded(GuiDocument* guiDoc);
-    void onGuiDocumentErased(GuiDocument* guiDoc);
+    void onGuiDocumentErased(const GuiDocument* guiDoc);
 
     void onCurrentDocumentIndexChanged(int idx);
     void onDocumentFileChanged(const DocumentPtr& doc);

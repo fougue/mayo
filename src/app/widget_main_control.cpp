@@ -440,7 +440,7 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
     // Helper function to reload document
     auto fnReloadDoc = [this](const DocumentPtr& doc) {
         while (doc->entityCount() > 0)
-            doc->destroyEntity(doc->entityTreeNodeId(0));
+            doc->destroyEntity(doc->firstEntityNodeId());
         FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
     };
 
@@ -470,7 +470,7 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
         msgBox->setTextFormat(Qt::AutoText);
 #endif
         QtWidgetsUtils::asyncDialogExec(msgBox);
-        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
+        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](const QAbstractButton* btn) {
             m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
             if (btn == msgBox->button(QMessageBox::Yes))
                 fnReloadDoc(doc);
@@ -566,7 +566,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     this->setCurrentDocumentIndex(newDocIndex);
 }
 
-void WidgetMainControl::onGuiDocumentErased(GuiDocument* guiDoc)
+void WidgetMainControl::onGuiDocumentErased(const GuiDocument* guiDoc)
 {
     const Document::Identifier docId = guiDoc->document()->identifier();
     const int widgetCount = this->widgetGuiDocumentCount();
@@ -621,11 +621,13 @@ void WidgetMainControl::onCurrentDocumentIndexChanged(int idx)
 
 void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
 {
-    WidgetGuiDocument* widgetDoc = nullptr;
-    for (int i = 0; i < this->widgetGuiDocumentCount() && !widgetDoc; ++i) {
+    const WidgetGuiDocument* widgetDoc = nullptr;
+    for (int i = 0; i < this->widgetGuiDocumentCount(); ++i) {
         const DocumentPtr& candidateDoc = this->widgetGuiDocument(i)->guiDocument()->document();
-        if (candidateDoc->identifier() == doc->identifier())
+        if (candidateDoc->identifier() == doc->identifier()) {
             widgetDoc = this->widgetGuiDocument(i);
+            break;
+        }
     }
 
     if (!widgetDoc)

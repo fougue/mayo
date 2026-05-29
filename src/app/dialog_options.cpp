@@ -120,7 +120,7 @@ public:
 };
 
 // Reserved name for Property(ie setting) editors. QObject::objectName() will return this name
-static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
+const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
 
 } // namespace
 

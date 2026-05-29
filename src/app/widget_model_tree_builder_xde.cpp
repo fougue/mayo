@@ -133,7 +133,7 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
         group->addAction(action);
     }
 
-    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
+    QObject::connect(group, &QActionGroup::triggered, [=](const QAction* action) {
         this->setInstanceNameFormat(action->data().toByteArray());
     });
 

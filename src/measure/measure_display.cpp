@@ -314,7 +314,6 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
         ));
     }
     else {
-        ;
         this->setText(fmt::format(
             MeasureDisplayI18N::textIdTr("{0}: {1}{2}<br>Point1: {3}<br>Point2: {4}"),
             fnStrDistanceType(m_dist.type),

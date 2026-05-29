@@ -39,7 +39,7 @@ void TestGraphics::Regression_bugGitHub255_test()
     QVERIFY(XCaf::isShape(shapeLabel));
 
     auto graphicsShapeDriver = makeOccHandle<GraphicsShapeObjectDriver>();
-    auto graphicsShape = graphicsShapeDriver->createObject(doc->entityLabel(0));
+    auto graphicsShape = graphicsShapeDriver->createObject(doc->firstEntityNodeLabel());
     QVERIFY(!graphicsShape.IsNull());
     QCOMPARE(graphicsShape->GetOwner(), graphicsShapeDriver);
 

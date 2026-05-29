@@ -210,11 +210,11 @@ void TestBase::Application_test()
         fnAddNewShapeEntity(doc, "SomeShape");
         QCOMPARE(spyEntityAdded.count, 1);
         QCOMPARE(doc->entityCount(), 1);
-        QVERIFY(XCaf::isShape(doc->entityLabel(0)));
-        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), to_OccExtString("SomeShape"));
+        QVERIFY(XCaf::isShape(doc->firstEntityNodeLabel()));
+        QCOMPARE(CafUtils::labelAttrStdName(doc->firstEntityNodeLabel()), to_OccExtString("SomeShape"));
 
         SignalEmitSpy spyEntityDestroyed(&app->signalDocumentEntityAboutToBeDestroyed);
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(spyEntityDestroyed.count, 1);
         QCOMPARE(doc->entityCount(), 0);
     }
@@ -232,9 +232,9 @@ void TestBase::Application_test()
         fnAddNewShapeEntity(doc, "Shape2");
         QCOMPARE(doc->entityCount(), 2);
 
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(doc->entityCount(), 1);
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(doc->entityCount(), 0);
     }
 

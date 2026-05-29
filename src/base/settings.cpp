@@ -37,7 +37,7 @@ struct SectionResetFunction {
     Settings::ResetFunction fnReset;
 };
 
-static bool isValidIdentifier(std::string_view identifier)
+bool isValidIdentifier(std::string_view identifier)
 {
     return !identifier.empty() /*&& !identifier.simplified().isEmpty()*/;
 }
@@ -182,7 +182,7 @@ void Settings::saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude
         for (const Settings_Section& section : group.vecSection) {
             const std::string sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
-                Property* prop = setting.property;
+                const Property* prop = setting.property;
                 if (!fnExclude || !fnExclude(*prop)) {
                     std::string_view propKey = prop->name().key;
                     const std::string settingPath = std::string(sectionPath).append("/").append(propKey);

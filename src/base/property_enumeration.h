@@ -61,7 +61,7 @@ private:
 
 template<typename EnumType>
 class PropertyEnum : public PropertyEnumeration {
-    static_assert(std::is_enum<EnumType>::value, "ENUM must be an enumeration type");
+    static_assert(std::is_enum_v<EnumType>, "ENUM must be an enumeration type");
 public:
     PropertyEnum(PropertyGroup* grp, const TextId& name);
 

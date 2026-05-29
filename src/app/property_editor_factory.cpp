@@ -33,7 +33,7 @@ class PropertyEditorI18N { Q_DECLARE_TR_FUNCTIONS(Mayo::PropertyEditorI18N) };
 namespace {
 
 // Helper that returns an empty widget with stretch-based horizontal space
-static QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
+QWidget* hSpacerWidget(QWidget* parent, int stretch = 1)
 {
     auto widget = new QWidget(parent);
     QSizePolicy sp = widget->sizePolicy();

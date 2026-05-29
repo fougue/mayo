@@ -132,8 +132,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 
     m_cameraAnimation->setView(m_v3dView);
 
-    for (int i = 0; i < doc->entityCount(); ++i)
-        this->mapEntity(doc->entityTreeNodeId(i));
+    for (TreeNodeId nodeId : doc->allEntityNodeIds())
+        this->mapEntity(nodeId);
 
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);

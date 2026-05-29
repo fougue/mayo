@@ -20,8 +20,8 @@ public:
     void initialize(const CommandContainer* cmdContainer) override;
     void updatePageControlsActivation() override;
 
-    void restoreUiState(const AppUiState&) override {}
-    void saveUiState(AppUiState&) override {}
+    void restoreUiState(const AppUiState&) override;
+    void saveUiState(AppUiState&) override;
 
 private:
     class Ui_WidgetMainHome* m_ui = nullptr;

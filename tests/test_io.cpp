@@ -39,7 +39,7 @@ void TestIO::IO_Reload_bugGitHub332_test()
         const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
-        const TDF_Label entityLabel = doc->entityLabel(0);
+        const TDF_Label entityLabel = doc->firstEntityNodeLabel();
         QCOMPARE(to_stdString(CafUtils::labelAttrStdName(entityLabel)), std::string{"Root"});
         QVERIFY(XCaf::isShapeAssembly(entityLabel));
         QCOMPARE(XCaf::shapeComponents(entityLabel).Size(), 3);
@@ -54,7 +54,7 @@ void TestIO::IO_Reload_bugGitHub332_test()
 
     // Clear document: destroy all entities
     while (doc->entityCount() > 0)
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
 
     QCOMPARE(doc->entityCount(), 0);
     QCOMPARE(doc->xcaf().topLevelFreeShapes().Size(), 0);
@@ -64,7 +64,7 @@ void TestIO::IO_Reload_bugGitHub332_test()
         const bool okImport = m_ioSystem->importInDocument().targetDocument(doc).withFilepath(docFilePath).execute();
         QVERIFY(okImport);
         QCOMPARE(doc->entityCount(), 1);
-        const TDF_Label entityLabel = doc->entityLabel(0);
+        const TDF_Label entityLabel = doc->firstEntityNodeLabel();
         QVERIFY(XCaf::isShapeAssembly(entityLabel));
         QCOMPARE(XCaf::shapeComponents(entityLabel).Size(), 3);
         QCOMPARE(doc->xcaf().topLevelFreeShapes().Size(), 1);
@@ -273,7 +273,7 @@ void TestIO::IO_bugGitHub258_test()
     QVERIFY(okImport);
     QVERIFY(doc->entityCount() == 1);
 
-    const TopoDS_Shape shape = doc->xcaf().shape(doc->entityLabel(0));
+    const TopoDS_Shape shape = doc->xcaf().shape(doc->firstEntityNodeLabel());
     const TopoDS_Face& face = TopoDS::Face(shape);
     TopLoc_Location locFace;
     auto triangulation = BRep_Tool::Triangulation(face, locFace);
