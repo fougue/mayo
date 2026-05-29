@@ -29,17 +29,17 @@ namespace Mayo::IO {
 
 namespace {
 
-static TopoDS_Shape asShape(const DocumentPtr& doc)
+TopoDS_Shape asShape(const DocumentPtr& doc)
 {
     TopoDS_Shape shape;
 
     if (doc->entityCount() == 1) {
-        shape = XCaf::shape(doc->entityLabel(0));
+        shape = XCaf::shape(doc->firstEntityNodeLabel());
     }
     else if (doc->entityCount() > 1) {
         TopoDS_Compound cmpd = BRepUtils::makeEmptyCompound();
-        for (int i = 0; i < doc->entityCount(); ++i)
-            BRepUtils::addShape(&cmpd, XCaf::shape(doc->entityLabel(i)));
+        for (TreeNodeId nodeId : doc->allEntityNodeIds())
+            BRepUtils::addShape(&cmpd, XCaf::shape(doc->modelTreeNodeLabel(nodeId)));
 
         shape = cmpd;
     }

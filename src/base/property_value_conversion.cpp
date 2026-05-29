@@ -26,7 +26,7 @@ namespace Mayo {
 namespace {
 
 // Helper that converts a double number into a string
-static std::string toString(double value, int prec = 6)
+std::string toString(double value, int prec = 6)
 {
 #if __cpp_lib_to_chars
     char buff[64] = {};
@@ -41,7 +41,7 @@ static std::string toString(double value, int prec = 6)
 #endif
 }
 
-static std::string toString(const gp_XYZ& coords, int prec = 6)
+std::string toString(const gp_XYZ& coords, int prec = 6)
 {
     const std::string strX = toString(coords.X(), prec);
     const std::string strY = toString(coords.Y(), prec);
@@ -49,7 +49,7 @@ static std::string toString(const gp_XYZ& coords, int prec = 6)
     return strX + ", " + strY + ", " + strZ;
 }
 
-static gp_XYZ xyzFromString(std::string_view str)
+gp_XYZ xyzFromString(std::string_view str)
 {
     const char* ptrCoord = str.data();
     const char* const ptrCoordEnd = str.data() + str.size();

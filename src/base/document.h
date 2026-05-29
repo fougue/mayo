@@ -46,13 +46,15 @@ public:
     const XCaf& xcaf() const { return m_xcaf; }
 
     TDF_Label rootLabel() const;
-    bool isEntity(TreeNodeId nodeId);
+
     int entityCount() const;
-    TDF_Label entityLabel(int index) const;
-    TreeNodeId entityTreeNodeId(int index) const;
-    DocumentTreeNode entityTreeNode(int index) const;
+    bool isEntity(TreeNodeId nodeId);
+    gsl::span<const TreeNodeId> allEntityNodeIds() const;
+    TreeNodeId firstEntityNodeId() const;
+    TDF_Label  firstEntityNodeLabel() const;
 
     const Tree<TDF_Label>& modelTree() const { return m_modelTree; }
+    TDF_Label modelTreeNodeLabel(TreeNodeId nodeId) const;
     void rebuildModelTree();
 
     static DocumentPtr findFrom(const TDF_Label& label);

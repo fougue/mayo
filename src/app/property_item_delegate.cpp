@@ -56,12 +56,12 @@ protected:
     }
 };
 
-static QStringUtils::TextOptions appDefaultTextOptions()
+QStringUtils::TextOptions appDefaultTextOptions()
 {
     return AppModule::get()->defaultTextOptions();
 }
 
-static QString toStringDHMS(QuantityTime time)
+QString toStringDHMS(QuantityTime time)
 {
     const double duration_s = UnitSystem::seconds(time);
     const double days = duration_s / 86400.;
@@ -88,54 +88,54 @@ static QString toStringDHMS(QuantityTime time)
     return text.trimmed();
 }
 
-static QString propertyValueText(const PropertyBool* prop) {
+QString propertyValueText(const PropertyBool* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyInt* prop) {
+QString propertyValueText(const PropertyInt* prop) {
     return AppModule::get()->qtLocale().toString(prop->value());
 }
 
-static QString propertyValueText(const PropertyDouble* prop) {
+QString propertyValueText(const PropertyDouble* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyCheckState* prop) {
+QString propertyValueText(const PropertyCheckState* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyString* prop) {
+QString propertyValueText(const PropertyString* prop) {
     return to_QString(prop->value());
 }
 
-static QString propertyValueText(const PropertyFilePath* prop) {
+QString propertyValueText(const PropertyFilePath* prop) {
     const FilePath filepath = filepathCanonical(prop->value());
     return QDir::toNativeSeparators(filepathTo<QString>(filepath));
 }
 
-static QString propertyValueText(const PropertyOccColor* prop) {
+QString propertyValueText(const PropertyOccColor* prop) {
     return QStringUtils::text(prop->value());
 }
 
-static QString propertyValueText(const PropertyOccPnt* prop) {
+QString propertyValueText(const PropertyOccPnt* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyOccTrsf* prop) {
+QString propertyValueText(const PropertyOccTrsf* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyEnumeration* prop)
+QString propertyValueText(const PropertyEnumeration* prop)
 {
     for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
             return to_QString(enumItem.name.tr());
     }
 
-    return QString();
+    return {};
 }
 
-static QString propertyValueText(const BasePropertyQuantity* prop)
+QString propertyValueText(const BasePropertyQuantity* prop)
 {
     if (prop->quantityUnit() == Unit::Time) {
         auto propTime = static_cast<const PropertyTime*>(prop);
@@ -148,7 +148,7 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
             .arg(trRes.strUnit);
 }
 
-static QString propertyValueText(
+QString propertyValueText(
         const BasePropertyQuantity* prop,
         const PropertyItemDelegate::UnitTranslation& unitTr
     )

@@ -61,7 +61,7 @@ bool GraphicsUtils::V3dView_hasClipPlane(
     )
 {
     const OccHandle<Graphic3d_SequenceOfHClipPlane>& seqClipPlane = view->ClipPlanes();
-    if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
+    if (seqClipPlane.IsNull() || seqClipPlane->IsEmpty())
         return false;
 
     for (Graphic3d_SequenceOfHClipPlane::Iterator it(*seqClipPlane); it.More(); it.Next()) {

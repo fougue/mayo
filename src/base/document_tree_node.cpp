@@ -26,7 +26,7 @@ const DocumentTreeNode& DocumentTreeNode::null()
 TDF_Label DocumentTreeNode::label() const
 {
     if (this->isValid())
-        return m_document->modelTree().nodeData(m_id);
+        return m_document->modelTreeNodeLabel(m_id);
     else
         return {};
 }

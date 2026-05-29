@@ -113,7 +113,7 @@ void TaskManager::exec(TaskId id, TaskAutoDestroy policy)
 
 bool TaskManager::waitForDone(TaskId id, int msecs)
 {
-    Entity* entity = d->findEntity(id);
+    const Entity* entity = d->findEntity(id);
     if (!entity)
         return true;
 
@@ -205,7 +205,7 @@ void TaskManager::Private::cleanGarbage()
 {
     auto it = this->mapEntity.begin();
     while (it != this->mapEntity.end()) {
-        Entity* entity = it->second.get();
+        const Entity* entity = it->second.get();
         if (entity->isFinished && entity->autoDestroy == TaskAutoDestroy::On) {
             if (entity->control.valid())
                 entity->control.wait();

@@ -220,8 +220,8 @@ bool ImageWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         if (appItem.isDocument()) {
             // Iterate other root entities
             const DocumentPtr doc = appItem.document();
-            for (int i = 0; i < doc->entityCount(); ++i) {
-                const TDF_Label labelEntity = doc->entityLabel(i);
+            for (TreeNodeId nodeId : doc->allEntityNodeIds()) {
+                const TDF_Label labelEntity = doc->modelTreeNodeLabel(nodeId);
                 fnMapGraphicsObject(labelEntity);
             }
         }

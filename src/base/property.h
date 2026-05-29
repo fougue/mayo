@@ -76,7 +76,7 @@ struct PropertyChangedBlocker {
 };
 
 #define Mayo_PropertyChangedBlocker(group) \
-            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group);
+            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group)
 
 // Provides an abstract storage of a value with associated meta-data(name, description, ...)
 class Property {

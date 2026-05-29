@@ -1285,9 +1285,11 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_MTEXT& mtext)
 
     // Enable word wrapping only if text contains spaces or tabs
     bool strHasWordSeparators = false;
-    for (int i = 0; i < occTextStr.Length() && !strHasWordSeparators; ++i) {
-        if (occTextStr.GetChar(i) == ' ' || occTextStr.GetChar(i) == '\x09'/*tab*/)
+    for (int i = 0; i < occTextStr.Length(); ++i) {
+        if (occTextStr.GetChar(i) == ' ' || occTextStr.GetChar(i) == '\x09'/*tab*/) {
             strHasWordSeparators = true;
+            break;
+        }
     }
 
     if (strHasWordSeparators) {

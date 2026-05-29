@@ -25,6 +25,7 @@
 
 #include <gsl/span>
 #include <gsl/narrow>
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <locale>
@@ -89,22 +90,13 @@ void getWords(const std::string& strLine, std::vector<std::string_view>& vecOutW
 
 bool hasEmptyString(gsl::span<const std::string_view> spanStr)
 {
-    for (std::string_view str : spanStr) {
-        if (str.empty())
-            return true;
-    }
-
-    return false;
+    return std::any_of(spanStr.begin(), spanStr.end(), [](std::string_view str) { return str.empty(); });
 }
 
 bool isAnyOf(std::string_view str, std::initializer_list<std::string_view> listCandidates)
 {
-    for (std::string_view candidate : listCandidates) {
-        if (str == candidate)
-            return true;
-    }
-
-    return false;
+    auto it = std::find(listCandidates.begin(), listCandidates.end(), str);
+    return it != listCandidates.end();
 }
 
 template<typename T>

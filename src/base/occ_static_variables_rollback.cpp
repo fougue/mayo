@@ -23,13 +23,13 @@ struct OccStaticVariablesRollback::Private {
 
         StaticVariableRecord record;
         record.strKey = strKey;
-        if constexpr(std::is_same<int, T>::value) {
+        if constexpr(std::is_same_v<int, T>) {
             record.value = Interface_Static::IVal(strKey);
         }
-        else if constexpr(std::is_same<double, T>::value) {
+        else if constexpr(std::is_same_v<double, T>) {
             record.value = Interface_Static::RVal(strKey);
         }
-        else if constexpr(std::is_same<std::string_view, T>::value) {
+        else if constexpr(std::is_same_v<std::string_view, T>) {
             record.value = Interface_Static::CVal(strKey);
         }
 
@@ -40,16 +40,16 @@ struct OccStaticVariablesRollback::Private {
     static bool changeStaticVariable(const char* strKey, T value)
     {
         bool ok = false;
-        if constexpr(std::is_same<int, T>::value) {
+        if constexpr(std::is_same_v<int, T>) {
             ok = Interface_Static::SetIVal(strKey, value);
         }
-        else if constexpr(std::is_same<double, T>::value) {
+        else if constexpr(std::is_same_v<double, T>) {
             ok = Interface_Static::SetRVal(strKey, value);
         }
-        else if constexpr(std::is_same<std::string_view, T>::value) {
+        else if constexpr(std::is_same_v<std::string_view, T>) {
             ok = Interface_Static::SetCVal(strKey, value.data());
         }
-        else if constexpr(std::is_same<std::string, T>::value) {
+        else if constexpr(std::is_same_v<std::string, T>) {
             ok = Interface_Static::SetCVal(strKey, value.c_str());
         }
 

@@ -40,7 +40,7 @@ void DialogAbout::addLibraryInfo(std::string_view libName, std::string_view libV
 {
     auto label = new QLabel(this);
     label->setText(tr("%1 %2").arg(to_QString(libName), to_QString(libVersion)));
-    m_ui->layout_Infos->addWidget(label);;
+    m_ui->layout_Infos->addWidget(label);
 }
 
 } // namespace Mayo

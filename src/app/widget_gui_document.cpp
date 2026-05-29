@@ -415,8 +415,8 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // "Show all" action
     QObject::connect(actionShowAll, &QAction::triggered, this, [=]{
-        for (int i = 0; i < doc->entityCount(); ++i)
-            m_guiDoc->setNodeVisible(doc->entityTreeNodeId(i), true);
+        for (TreeNodeId nodeId : doc->allEntityNodeIds())
+            m_guiDoc->setNodeVisible(nodeId, true);
         m_guiDoc->graphicsScene()->redraw();
     });
 
@@ -437,8 +437,8 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
     // "Show selection only" action
     QObject::connect(actionShowSelOnly, &QAction::triggered, this, [=]{
         // Hide all entities(root nodes)
-        for (int i = 0; i < doc->entityCount(); ++i)
-            m_guiDoc->setNodeVisible(doc->entityTreeNodeId(i), false);
+        for (TreeNodeId nodeId : doc->allEntityNodeIds())
+            m_guiDoc->setNodeVisible(nodeId, false);
 
         // Show selected document nodes
         for (TreeNodeId nodeId : fnGetDocSelectedNodeIds())
@@ -449,18 +449,19 @@ void WidgetGuiDocument::createMenuItemVisibility(QWidget* container)
 
     // Popup menu
     QObject::connect(menuBtn, &ButtonFlat::clicked, this, [=]{
-        bool allEntityVisible = true;
-        for (int i = 0; i < doc->entityCount() && allEntityVisible; ++i)
-            allEntityVisible = m_guiDoc->nodeVisibleState(doc->entityTreeNodeId(i)) == CheckState::On;
-
+        const bool allEntityVisible = std::all_of(
+            doc->allEntityNodeIds().begin(), doc->allEntityNodeIds().end(),
+            [=](TreeNodeId nodeId) { return m_guiDoc->nodeVisibleState(nodeId) == CheckState::On; }
+        );
         const auto vecSelectedNodeId = fnGetDocSelectedNodeIds();
-        bool allSelectedItemVisible = true;
-        for (size_t i = 0; i < vecSelectedNodeId.size() && allSelectedItemVisible; ++i)
-            allSelectedItemVisible = m_guiDoc->nodeVisibleState(vecSelectedNodeId.at(i)) == CheckState::On;
-
-        bool allSelectedItemHidden = true;
-        for (size_t i = 0; i < vecSelectedNodeId.size() && allSelectedItemHidden; ++i)
-            allSelectedItemHidden = m_guiDoc->nodeVisibleState(vecSelectedNodeId.at(i)) == CheckState::Off;
+        const bool allSelectedItemVisible = std::all_of(
+            vecSelectedNodeId.cbegin(), vecSelectedNodeId.cend(),
+            [=](TreeNodeId nodeId) { return m_guiDoc->nodeVisibleState(nodeId) == CheckState::On; }
+        );
+        const bool allSelectedItemHidden = std::all_of(
+            vecSelectedNodeId.cbegin(), vecSelectedNodeId.cend(),
+            [=](TreeNodeId nodeId) { return m_guiDoc->nodeVisibleState(nodeId) == CheckState::Off; }
+        );
 
         actionShowAll->setEnabled(!allEntityVisible);
         actionShowSel->setEnabled(!allSelectedItemVisible);

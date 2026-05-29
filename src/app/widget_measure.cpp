@@ -397,7 +397,7 @@ void WidgetMeasure::onDocumentEntityAdded(TreeNodeId entityNodeId)
 void WidgetMeasure::updateMessagePanel()
 {
     // Clear message panel
-    while (m_ui->layout_Message->count() > 0) {
+    while (!m_ui->layout_Message->isEmpty()) {
         QLayoutItem* item = m_ui->layout_Message->takeAt(m_ui->layout_Message->count() - 1);
         delete item->widget();
         delete item;

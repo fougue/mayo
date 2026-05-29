@@ -94,19 +94,24 @@ int Document::entityCount() const
     return static_cast<int>(m_modelTree.roots().size());
 }
 
-TDF_Label Document::entityLabel(int index) const
+gsl::span<const TreeNodeId> Document::allEntityNodeIds() const
 {
-    return m_modelTree.nodeData(this->entityTreeNodeId(index));
+    return m_modelTree.roots();
 }
 
-TreeNodeId Document::entityTreeNodeId(int index) const
+TreeNodeId Document::firstEntityNodeId() const
 {
-    return m_modelTree.roots()[index];
+    return !m_modelTree.roots().empty() ? m_modelTree.roots().front() : 0;
 }
 
-DocumentTreeNode Document::entityTreeNode(int index) const
+TDF_Label Document::firstEntityNodeLabel() const
 {
-    return { DocumentPtr(this), this->entityTreeNodeId(index) };
+    return this->modelTreeNodeLabel(this->firstEntityNodeId());
+}
+
+TDF_Label Document::modelTreeNodeLabel(TreeNodeId nodeId) const
+{
+    return m_modelTree.nodeData(nodeId);
 }
 
 void Document::rebuildModelTree()
@@ -137,7 +142,7 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
 TDF_Label Document::newEntityLabel()
 {
     OccHandle<TDF_TagSource> tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
-    Expects(!tagSrc.IsNull());
+    assert(!tagSrc.IsNull());
     if (tagSrc->Get() == 0)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
 
@@ -151,9 +156,9 @@ TDF_Label Document::newEntityShapeLabel()
 
 TreeNodeId Document::findEntity(const TDF_Label& label) const
 {
-    for (int i = 0; i < this->entityCount(); ++i) {
-        if (this->entityLabel(i) == label)
-            return this->entityTreeNodeId(i);
+    for (TreeNodeId nodeId : this->allEntityNodeIds()) {
+        if (this->modelTreeNodeLabel(nodeId) == label)
+            return nodeId;
     }
 
     return 0;
@@ -216,7 +221,7 @@ void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)
 {
-    Expects(this->modelTree().nodeIsRoot(entityTreeNodeId));
+    assert(this->modelTree().nodeIsRoot(entityTreeNodeId));
 
     TDF_Label entityLabel = m_modelTree.nodeData(entityTreeNodeId);
     if (CafUtils::isNullOrEmpty(entityLabel))

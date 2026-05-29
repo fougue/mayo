@@ -13,7 +13,7 @@ template<typename Scalar, typename Tag>
 class TypedScalar {
 public:
     using ScalarType = Scalar;
-    static_assert(std::is_scalar<Scalar>::value, "Type T is not scalar");
+    static_assert(std::is_scalar_v<Scalar>, "Type T is not scalar");
 
     TypedScalar() = default;
     explicit TypedScalar(Scalar scalar) : m_scalar(scalar) {}

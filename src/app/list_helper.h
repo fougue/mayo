@@ -29,8 +29,8 @@ struct ModelStorage {
 };
 
 template<typename ItemType> struct DefaultModelStorage : public ModelStorage {
-    static_assert(!std::is_pointer<ItemType>::value);
-    static_assert(std::is_base_of<ModelItem, ItemType>::value);
+    static_assert(!std::is_pointer_v<ItemType>);
+    static_assert(std::is_base_of_v<ModelItem, ItemType>);
     int count() const override { return int(m_items.size()); }
     const ItemType* at(int i) const override { return &m_items.at(i); }
     std::vector<ItemType> m_items;

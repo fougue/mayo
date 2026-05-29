@@ -111,9 +111,8 @@ template<ErrorCode Err> void throwErrorIf(bool cond)
         throw BRepMeasureError<Err>();
 }
 
-const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
+TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
 {
-    static const TopoDS_Shape nullShape;
     auto brepOwner = OccHandle<StdSelect_BRepOwner>::DownCast(owner);
     TopLoc_Location ownerLoc = owner->Location();
 #if OCC_VERSION_HEX >= 0x070600
@@ -128,7 +127,7 @@ const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
         ownerLoc = trsf;
     }
 #endif
-    return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : nullShape;
+    return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : TopoDS_Shape{};
 }
 
 gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
