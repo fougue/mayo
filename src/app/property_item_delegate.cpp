@@ -163,7 +163,7 @@ QString propertyValueText(
 
 PropertyItemDelegate::PropertyItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent),
-      m_editorFactory(new DefaultPropertyEditorFactory)
+    m_editorFactory(std::make_unique<DefaultPropertyEditorFactory>())
 {}
 
 void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
@@ -178,7 +178,7 @@ bool PropertyItemDelegate::overridePropertyUnitTranslation(
     if (!prop || prop->quantityUnit() != unitTr.unit)
         return false;
 
-    m_mapPropUnitTr.emplace(prop, unitTr);
+    m_mapPropUnitTr.try_emplace(prop, unitTr);
     return true;
 }
 

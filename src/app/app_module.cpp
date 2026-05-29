@@ -270,7 +270,7 @@ const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
             std::find_if(
                 listRecentFile.cbegin(),
                 listRecentFile.cend(),
-                [=](const RecentFile& recentFile) {
+                [&](const RecentFile& recentFile) {
         return filepathEquivalent(fp, recentFile.filepath);
     });
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;

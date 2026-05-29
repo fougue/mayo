@@ -35,8 +35,8 @@ public:
     const_iterator cend() const { return m_map.cend(); }
 
     const Variant* find(std::string_view key) const;
-    const Variant& get(std::string key) const;
-    void set(std::string key, Variant value);
+    const Variant& get(std::string_view key) const;
+    void set(std::string_view key, Variant value);
 
     // Serializes AppUiState object into a compact binary blob
     //

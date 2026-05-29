@@ -111,13 +111,12 @@ DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent)
 
 DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 {
-    for (const auto& mapPair : d->m_mapIdentifierDocument) {
-        const DocumentPtr& docPtr = mapPair.second;
+    for (const auto& [docId, docPtr] : d->m_mapIdentifierDocument) {
         if (filepathEquivalent(docPtr->filePath(), location))
             return docPtr;
     }
 
-    return DocumentPtr();
+    return {};
 }
 
 int Application::findIndexOfDocument(const DocumentPtr& doc) const

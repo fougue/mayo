@@ -14,10 +14,11 @@
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
 #include <QtGui/QPixmap>
-class QMouseEvent;
-class QScreen;
 
 #include <type_traits>
+
+class QMouseEvent;
+class QScreen;
 
 // Provides a collection of tools for the QtGui module
 namespace Mayo::QtGuiUtils {

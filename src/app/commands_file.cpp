@@ -177,7 +177,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<con
                         .targetDocument(app->findDocumentByIdentifier(newDocId))
                         .withFilepath(fp)
                         .withParametersProvider(appModule)
-                        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                        .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
                             appModule->computeBRepMesh(labelEntity, progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
@@ -235,7 +235,7 @@ void FileCommandTools::importInDocument(
                 .targetDocument(doc)
                 .withFilepaths(arrayFilePaths)
                 .withParametersProvider(appModule)
-                .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
                     appModule->computeBRepMesh(labelEntity, progress);
                 })
                 .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)

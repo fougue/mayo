@@ -96,5 +96,5 @@ void CommandEditOptions::execute()
     QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
-} // namespace Mayo {
+} // namespace Mayo
 

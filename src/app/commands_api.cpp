@@ -99,7 +99,7 @@ void CommandContainer::clear()
 void CommandContainer::addCommand_impl(std::string_view name, std::unique_ptr<Command> cmd)
 {
     assert(m_appContext != nullptr);
-    auto [it, ok] = m_mapCommand.emplace(name, std::move(cmd));
+    auto [it, ok] = m_mapCommand.try_emplace(name, std::move(cmd));
     if (!ok)
         throw std::invalid_argument(fmt::format("Command name {} already exists", name));
 }

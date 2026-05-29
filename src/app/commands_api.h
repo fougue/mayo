@@ -6,16 +6,16 @@
 #pragma once
 
 #include "../base/document.h"
-#include "../base/filepath.h"
 #include "../base/text_id.h"
 
 #include <QtCore/QObject>
 #include <QAction> // WARNING Qt5 <QtWidgets/...> / Qt6 <QtGui/...>
-class QWidget;
 
 #include <memory>
 #include <unordered_map>
 #include <type_traits>
+
+class QWidget;
 
 namespace Mayo {
 

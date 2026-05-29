@@ -316,7 +316,7 @@ void ItemViewButtons::addButton(int btnId, const QIcon& icon, const QString& too
         info.displayColumn = -1;
         info.itemSide = ItemRightSide;
         info.itemDisplayModes = DisplayOnDetection;
-        d->m_btnInfos.insert({ btnId, info });
+        d->m_btnInfos.try_emplace(btnId, info);
     }
     else {
         qWarning() << QString("%1 : there is already a button of index '%2'")

@@ -10,11 +10,11 @@
 
 #include <QtWidgets/QWidget>
 #include <functional>
+#include <memory>
+
 class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
-
-#include <memory>
 
 namespace Mayo {
 

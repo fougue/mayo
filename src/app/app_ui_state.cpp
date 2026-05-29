@@ -40,6 +40,7 @@ PropertyValueConversion::Variant readVariant(QDataStream& stream, uint8_t typeIn
     case 3: return Variant{read<double>(stream)};
     case 4: return Variant{read<QString>(stream).toStdString()};
     case 5: return Variant{QtCoreUtils::toStdByteArray(read<QByteArray>(stream))};
+    default: return {};
     }
 
     return {};
@@ -55,15 +56,15 @@ const AppUiState::Variant* AppUiState::find(std::string_view key) const
     return it != m_map.cend() ? &it->second : nullptr;
 }
 
-const AppUiState::Variant& AppUiState::get(std::string key) const
+const AppUiState::Variant& AppUiState::get(std::string_view key) const
 {
     const Variant* ptr = this->find(key);
     return ptr ? *ptr : Cpp::staticObject<Variant>();
 }
 
-void AppUiState::set(std::string key, Variant value)
+void AppUiState::set(std::string_view key, Variant value)
 {
-    m_map.insert_or_assign(key, std::move(value));
+    m_map.insert_or_assign(std::string{key}, std::move(value));
 }
 
 std::vector<uint8_t> AppUiState::toBlob(const AppUiState& state)

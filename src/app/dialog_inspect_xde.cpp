@@ -341,13 +341,13 @@ public:
     void setImage(int col, const FilePath& filePath)
     {
         const ItemData item{filePath, {}, {}};
-        m_mapColumnItemData.insert({ col, item });
+        m_mapColumnItemData.try_emplace(col, item);
     }
 
     void setImage(int col, const QByteArray& data)
     {
         const ItemData item{{}, data, {}};
-        m_mapColumnItemData.insert({ col, item });
+        m_mapColumnItemData.try_emplace(col, item);
     }
 
     QVariant data(int column, int role) const override

@@ -14,6 +14,8 @@
 
 namespace Mayo {
 
+class Ui_DialogOptions;
+
 // Provides a dialog to edit Settings(options) and exchange with INI file
 class DialogOptions : public QDialog {
     Q_OBJECT
@@ -34,7 +36,7 @@ private:
 
     void handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index);
 
-    class Ui_DialogOptions* m_ui = nullptr;
+    std::unique_ptr<Ui_DialogOptions> m_ui;
     std::unique_ptr<IPropertyEditorFactory> m_editorFactory;
     std::unordered_map<const Property*, QWidget*> m_mapSettingEditor;
     std::unordered_map<Property*, Settings::Variant> m_mapSettingInitialValue;
