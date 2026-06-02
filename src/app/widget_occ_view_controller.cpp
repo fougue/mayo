@@ -102,7 +102,7 @@ WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
       V3dViewController(occView->v3dView()),
       m_occView(occView),
       m_navigStyle(View3dNavigationStyle::Catia),
-      m_actionMatcher(createActionMatcher(m_navigStyle, &m_inputSequence))
+      m_actionMatcher(createActionMatcher(m_navigStyle, m_inputSequence))
 {
     m_occView->widget()->installEventFilter(this);
     m_inputSequence.setPrePushCallback([=](Input in) { m_actionMatcher->onInputPrePush(in); });
@@ -137,7 +137,7 @@ void WidgetOccViewController::setNavigationStyle(View3dNavigationStyle style)
 {
     m_navigStyle = style;
     m_inputSequence.clear();
-    m_actionMatcher = createActionMatcher(style, &m_inputSequence);
+    m_actionMatcher = createActionMatcher(style, m_inputSequence);
 }
 
 void WidgetOccViewController::redrawView()
@@ -307,7 +307,8 @@ void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)
 
 class WidgetOccViewController::Mayo_ActionMatcher : public ActionMatcher {
 public:
-    Mayo_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::LeftButton });
@@ -329,7 +330,7 @@ public:
 
 class WidgetOccViewController::Catia_ActionMatcher : public ActionMatcher {
 public:
-    Catia_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {
+    Catia_ActionMatcher(const InputSequence& seq) : ActionMatcher(seq) {
         m_timer.start();
     }
 
@@ -389,7 +390,8 @@ private:
 
 class WidgetOccViewController::SolidWorks_ActionMatcher : public ActionMatcher {
 public:
-    SolidWorks_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -400,7 +402,7 @@ public:
     }
 
     bool matchZoom() const override {
-        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });
     }
 
     bool matchWindowZoom() const override {
@@ -410,7 +412,8 @@ public:
 
 class WidgetOccViewController::Unigraphics_ActionMatcher : public ActionMatcher {
 public:
-    Unigraphics_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -431,7 +434,8 @@ public:
 
 class WidgetOccViewController::ProEngineer_ActionMatcher : public ActionMatcher {
 public:
-    ProEngineer_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -442,7 +446,7 @@ public:
     }
 
     bool matchZoom() const override {
-        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
     }
 
     bool matchWindowZoom() const override {
@@ -451,7 +455,7 @@ public:
 };
 
 std::unique_ptr<WidgetOccViewController::ActionMatcher>
-WidgetOccViewController::createActionMatcher(View3dNavigationStyle style, const InputSequence* seq)
+WidgetOccViewController::createActionMatcher(View3dNavigationStyle style, const InputSequence& seq)
 {
     switch(style) {
     case View3dNavigationStyle::Mayo: return std::make_unique<Mayo_ActionMatcher>(seq);

@@ -164,7 +164,7 @@ void ButtonFlat::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (m_defaultAction != nullptr) {
-            QSignalBlocker sigBlock(this); Q_UNUSED(sigBlock);
+            [[maybe_unused]] QSignalBlocker sigBlock(this);
             m_defaultAction->trigger();
         }
 

@@ -20,7 +20,7 @@ PointCloudDataPtr PointCloudData::Set(const TDF_Label& label)
 {
     PointCloudDataPtr data;
     if (!label.FindAttribute(PointCloudData::GetID(), data)) {
-        data = new PointCloudData;
+        data = makeOccHandle<PointCloudData>();
         label.AddAttribute(data);
     }
 
@@ -48,7 +48,7 @@ void PointCloudData::Restore(const OccHandle<TDF_Attribute>& attribute)
 
 OccHandle<TDF_Attribute> PointCloudData::NewEmpty() const
 {
-    return new PointCloudData;
+    return makeOccHandle<PointCloudData>();
 }
 
 void PointCloudData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const

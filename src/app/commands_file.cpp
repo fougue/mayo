@@ -78,14 +78,11 @@ struct OpenFileNames {
     std::vector<FilePath> listFilepath;
     ImportExportSettings lastIoSettings;
 
-    enum GetOption {
-        GetOne,
-        GetMany
-    };
+    enum class GetOption { One, Many };
 
     static OpenFileNames get(
             QWidget* parentWidget,
-            OpenFileNames::GetOption option = OpenFileNames::GetMany
+            OpenFileNames::GetOption option = OpenFileNames::GetOption::Many
         )
     {
         OpenFileNames result;
@@ -100,7 +97,7 @@ struct OpenFileNames {
         const QString dlgOpenDir = filepathTo<QString>(result.lastIoSettings.openDir);
         const QString dlgFilter = listFormatFilter.join(QLatin1String(";;"));
         QString* dlgPtrSelFilter = &result.lastIoSettings.selectedFilter;
-        if (option == OpenFileNames::GetOne) {
+        if (option == OpenFileNames::GetOption::One) {
             const QString strFilepath =
                 QFileDialog::getOpenFileName(
                     parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
@@ -135,6 +132,17 @@ QString strFilepathQuoted(const QString& filepath)
     }
 
     return filepath;
+}
+
+std::vector<FilePath> getLocalFilePaths(const QList<QUrl>& listUrl)
+{
+    std::vector<FilePath> filePaths;
+    for (const QUrl& url : listUrl) {
+        if (url.isLocalFile())
+            filePaths.push_back(filepathFrom(url.toLocalFile()));
+    }
+
+    return filePaths;
 }
 
 } // namespace
@@ -310,14 +318,8 @@ bool CommandOpenDocuments::eventFilter(QObject* watched, QEvent* event)
         else if (event->type() == QEvent::Drop) {
             auto dropEvent = static_cast<QDropEvent*>(event);
             const QList<QUrl> listUrl = dropEvent->mimeData()->urls();
-            std::vector<FilePath> listFilePath;
-            for (const QUrl& url : listUrl) {
-                if (url.isLocalFile())
-                    listFilePath.push_back(filepathFrom(url.toLocalFile()));
-            }
-
             dropEvent->acceptProposedAction();
-            FileCommandTools::openDocumentsFromList(this->context(), listFilePath);
+            FileCommandTools::openDocumentsFromList(this->context(), getLocalFilePaths(listUrl));
             return true;
         }
         else {
@@ -335,7 +337,7 @@ CommandRecentFiles::CommandRecentFiles(IAppContext* context)
     action->setText(Command::tr("Recent files"));
 }
 
-CommandRecentFiles::CommandRecentFiles(IAppContext* context, QMenu* containerMenu)
+CommandRecentFiles::CommandRecentFiles(IAppContext* context, const QMenu* containerMenu)
     : CommandRecentFiles(context)
 {
     QObject::connect(containerMenu, &QMenu::aboutToShow, this, &CommandRecentFiles::recreateEntries);
@@ -557,7 +559,7 @@ void CommandCloseAllDocumentsExceptCurrent::execute()
     for (GuiDocument* guiDoc : this->guiApp()->guiDocuments())
         vecGuiDoc.push_back(guiDoc);
 
-    for (GuiDocument* guiDoc : vecGuiDoc) {
+    for (const GuiDocument* guiDoc : vecGuiDoc) {
         if (guiDoc != currentGuiDoc)
             FileCommandTools::closeDocument(this->context(), guiDoc->document()->identifier());
     }

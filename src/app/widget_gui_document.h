@@ -50,7 +50,7 @@ private:
     void toggleWidgetClipPlanes(bool on);
     void toggleWidgetExplode(bool on);
     void toggleWidgetMeasure(bool on);
-    void exclusiveButtonCheck(ButtonFlat* btn);
+    void exclusiveButtonCheck(const ButtonFlat* btn);
 
     void createMenuViewProjections(QWidget* container);
     void createMenuItemVisibility(QWidget* container);
@@ -61,7 +61,7 @@ private:
 
     ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
     QMenu* createViewMenu(QWidget* parent) const;
-    static void popupViewMenu(QMenu* menu, const ButtonFlat* btnMenu, QWidget* container);
+    static void popupViewMenu(QMenu* menu, const ButtonFlat* btnMenu, const QWidget* container);
 
     GuiDocument* m_guiDoc = nullptr;
     IWidgetOccView* m_qtOccView = nullptr;

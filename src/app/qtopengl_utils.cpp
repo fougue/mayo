@@ -262,7 +262,7 @@ bool initializeGlWindow(
     )
 {
     auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(view->Viewer()->Driver());
-    OccHandle<OpenGl_Context> glCtx = new OpenGl_Context;
+    auto glCtx = makeOccHandle<OpenGl_Context>();
     if (!glCtx->Init(!driver->Options().contextCompatible)) {
         Message::SendFail() << "Error: OpenGl_Context is unable to wrap OpenGL context";
         return false;
@@ -270,7 +270,7 @@ bool initializeGlWindow(
 
     auto window = OccHandle<OcctNeutralWindow>::DownCast(view->Window());
     if (window.IsNull()) {
-        window = new OcctNeutralWindow;
+        window = makeOccHandle<OcctNeutralWindow>();
         window->SetVirtual(true);
     }
 
@@ -295,7 +295,7 @@ bool initializeGlFramebufferObject(const OccHandle<V3d_View>& view)
     OccHandle<OpenGl_Context> glCtx = QtOpenGlUtils::glContext(view);
     OccHandle<OpenGl_FrameBuffer> defaultFbo = glCtx->DefaultFrameBuffer();
     if (defaultFbo.IsNull()) {
-        defaultFbo = new OcctQtFrameBuffer;
+        defaultFbo = makeOccHandle<OcctQtFrameBuffer>();
         glCtx->SetDefaultFrameBuffer(defaultFbo);
     }
 

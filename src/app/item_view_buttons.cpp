@@ -64,7 +64,7 @@ public:
     void setAllIsOverButtonState(bool on);
     QModelIndex modelIndexForButtonDisplay(const QModelIndex& index) const;
     void itemViewUpdateAt(const QModelIndex& index);
-    void paintButton(ButtonInfo* btnInfo, QPainter* painter, const QStyleOptionViewItem& option);
+    void paintButton(const ButtonInfo* btnInfo, QPainter* painter, const QStyleOptionViewItem& option);
     void resetButtonUnderMouseState();
 
     QAbstractItemView* m_view = nullptr;
@@ -134,7 +134,7 @@ void ItemViewButtons::Private::itemViewUpdateAt(const QModelIndex& index)
 }
 
 void ItemViewButtons::Private::paintButton(
-        ButtonInfo* btnInfo,
+        const ButtonInfo* btnInfo,
         QPainter* painter,
         const QStyleOptionViewItem& option
     )

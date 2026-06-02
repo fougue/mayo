@@ -19,14 +19,12 @@
 #include "../graphics/graphics_mesh_object_driver.h"
 #include "../graphics/graphics_point_cloud_object_driver.h"
 #include "../graphics/graphics_shape_object_driver.h"
-#include "../qtcommon/qstring_conv.h"
 
 #include <Bnd_Box.hxx>
 #include <TDataStd_Name.hxx>
 
-#include <QtCore/QStringList>
-
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace Mayo {
 
@@ -53,6 +51,9 @@ public:
         const TextId& name,
         const OccHandle<TDataStd_NamedData>& data
     );
+
+    static std::string strShapeKinds(const TDF_Label& label);
+    static std::string strShapeLayers(const XCaf& xcaf, const TDF_Label& label);
 
     PropertyString m_propertyName{ this, textId("Name") };
     PropertyString m_propertyShapeType{ this, textId("Shape") };
@@ -83,8 +84,14 @@ public:
 XCaf_DocumentTreeNodePropertiesProvider::Properties::Properties(const DocumentTreeNode& treeNode)
     : m_label(treeNode.label())
 {
-    const TDF_Label& label = m_label;
     const XCaf& xcaf = treeNode.document()->xcaf();
+    const TDF_Label& label = m_label;
+    const bool isShapeLabelReference = XCaf::isShapeReference(label);
+
+    auto fnRemovePropertyIf = [=](Property& prop, bool condition) {
+        if (condition)
+            this->removeProperty(&prop);
+    };
 
     m_propertyName.setUserData(XCafSubGroup_Core);
     m_propertyShapeType.setUserData(XCafSubGroup_Core);
@@ -112,73 +119,34 @@ XCaf_DocumentTreeNodePropertiesProvider::Properties::Properties(const DocumentTr
     m_propertyShapeType.setValue(std::string{ MetaEnum::nameWithoutPrefix(shapeType, "TopAbs_") });
 
     // XDE shape kind
-    {
-        QStringList listXdeShapeKind;
-        if (XCaf::isShapeAssembly(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Assembly")));
-
-        if (XCaf::isShapeReference(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Reference")));
-
-        if (XCaf::isShapeComponent(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Component")));
-
-        if (XCaf::isShapeCompound(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Compound")));
-
-        if (XCaf::isShapeSimple(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Simple")));
-
-        if (XCaf::isShapeSub(label))
-            listXdeShapeKind.push_back(to_QString(textIdTr("Sub")));
-
-        m_propertyXdeShapeKind.setValue(to_stdString(listXdeShapeKind.join('+')));
-    }
+    m_propertyXdeShapeKind.setValue(Properties::strShapeKinds(label));
 
     // XDE layers
-    {
-        TDF_LabelSequence seqLayerLabel = xcaf.layers(label);
-        if (XCaf::isShapeReference(label)) {
-            TDF_LabelSequence seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
-            seqLayerLabel.Append(seqLayerLabelProduct);
-        }
-
-        QStringList listLayerName;
-        for (const TDF_Label& layerLabel : seqLayerLabel)
-            listLayerName.push_back(to_QString(xcaf.layerName(layerLabel)));
-
-        if (!seqLayerLabel.IsEmpty())
-            m_propertyXdeLayer.setValue(to_stdString(listLayerName.join(", ")));
-        else
-            this->removeProperty(&m_propertyXdeLayer);
-    }
+    m_propertyXdeLayer.setValue(Properties::strShapeLayers(xcaf, label));
+    fnRemovePropertyIf(m_propertyXdeLayer, m_propertyXdeLayer.value().empty());
 
     // Instance location
-    if (XCaf::isShapeReference(label)) {
-        const TopLoc_Location loc = XCaf::shapeReferenceLocation(label);
-        m_propertyInstanceLocation.setValue(loc.Transformation());
-    }
-    else {
-        this->removeProperty(&m_propertyInstanceLocation);
-    }
+    fnRemovePropertyIf(m_propertyInstanceLocation, !isShapeLabelReference);
+    if (isShapeLabelReference)
+        m_propertyInstanceLocation.setValue(XCaf::shapeReferenceLocation(label).Transformation());
 
     // Color
-    if (xcaf.hasShapeColor(label))
-        m_propertyColor.setValue(xcaf.shapeColor(label));
-    else
-        this->removeProperty(&m_propertyColor);
+    {
+        const bool hasShapeLabelColor = xcaf.hasShapeColor(label);
+        fnRemovePropertyIf(m_propertyColor, !hasShapeLabelColor);
+        if (hasShapeLabelColor)
+            m_propertyColor.setValue(xcaf.shapeColor(label));
+    }
 
     // Material
     {
-        const TDF_Label labelPart = XCaf::isShapeReference(label) ? XCaf::shapeReferred(label) : label;
+        const TDF_Label labelPart = isShapeLabelReference ? XCaf::shapeReferred(label) : label;
         const OccHandle<XCAFDoc_Material> material = XCaf::shapeMaterial(labelPart);
+        fnRemovePropertyIf(m_propertyMaterialDensity, !material);
+        fnRemovePropertyIf(m_propertyMaterialName, !material);
         if (material) {
             m_propertyMaterialDensity.setQuantity(XCaf::shapeMaterialDensity(material));
             m_propertyMaterialName.setValue(to_stdString(material->GetName()));
-        }
-        else {
-            this->removeProperty(&m_propertyMaterialDensity);
-            this->removeProperty(&m_propertyMaterialName);
         }
     }
 
@@ -186,47 +154,35 @@ XCaf_DocumentTreeNodePropertiesProvider::Properties::Properties(const DocumentTr
     {
         auto validProps = XCaf::validationProperties(label);
         m_propertyValidationCentroid.setValue(validProps.centroid);
-        if (!validProps.hasCentroid)
-            this->removeProperty(&m_propertyValidationCentroid);
-
         m_propertyValidationArea.setQuantity(validProps.area);
-        if (!validProps.hasArea)
-            this->removeProperty(&m_propertyValidationArea);
-
         m_propertyValidationVolume.setQuantity(validProps.volume);
-        if (!validProps.hasVolume)
-            this->removeProperty(&m_propertyValidationVolume);
+        fnRemovePropertyIf(m_propertyValidationCentroid, !validProps.hasCentroid);
+        fnRemovePropertyIf(m_propertyValidationArea, !validProps.hasArea);
+        fnRemovePropertyIf(m_propertyValidationVolume, !validProps.hasVolume);
     }
 
     // Product entity's properties
-    if (XCaf::isShapeReference(label)) {
+    fnRemovePropertyIf(m_propertyProductName, !isShapeLabelReference);
+    fnRemovePropertyIf(m_propertyProductValidationCentroid, !isShapeLabelReference);
+    fnRemovePropertyIf(m_propertyProductValidationArea, !isShapeLabelReference);
+    fnRemovePropertyIf(m_propertyProductValidationVolume, !isShapeLabelReference);
+    fnRemovePropertyIf(m_propertyProductColor, !isShapeLabelReference);
+    if (isShapeLabelReference) {
         m_labelProduct = XCaf::shapeReferred(label);
 
         m_propertyProductName.setValue(to_stdString(CafUtils::labelAttrStdName(m_labelProduct)));
         auto validProps = XCaf::validationProperties(m_labelProduct);
         m_propertyProductValidationCentroid.setValue(validProps.centroid);
-        if (!validProps.hasCentroid)
-            this->removeProperty(&m_propertyProductValidationCentroid);
-
-        m_propertyProductValidationArea.setQuantity(validProps.area);
-        if (!validProps.hasArea)
-            this->removeProperty(&m_propertyProductValidationArea);
-
+        m_propertyProductValidationArea.setQuantity(validProps.area);        
         m_propertyProductValidationVolume.setQuantity(validProps.volume);
-        if (!validProps.hasVolume)
-            this->removeProperty(&m_propertyProductValidationVolume);
+        fnRemovePropertyIf(m_propertyProductValidationCentroid, !validProps.hasCentroid);
+        fnRemovePropertyIf(m_propertyProductValidationArea, !validProps.hasArea);
+        fnRemovePropertyIf(m_propertyProductValidationVolume, !validProps.hasVolume);
 
-        if (xcaf.hasShapeColor(m_labelProduct))
+        const bool hasShapeProductLabelColor = xcaf.hasShapeColor(m_labelProduct);
+        fnRemovePropertyIf(m_propertyProductColor, !hasShapeProductLabelColor);
+        if (hasShapeProductLabelColor)
             m_propertyProductColor.setValue(xcaf.shapeColor(m_labelProduct));
-        else
-            this->removeProperty(&m_propertyProductColor);
-    }
-    else {
-        this->removeProperty(&m_propertyProductName);
-        this->removeProperty(&m_propertyProductValidationCentroid);
-        this->removeProperty(&m_propertyProductValidationArea);
-        this->removeProperty(&m_propertyProductValidationVolume);
-        this->removeProperty(&m_propertyProductColor);
     }
 
     // User-defined attributes
@@ -339,7 +295,49 @@ std::unique_ptr<Property> XCaf_DocumentTreeNodePropertiesProvider::Properties::c
     return {};
 }
 
+std::string XCaf_DocumentTreeNodePropertiesProvider::Properties::strShapeKinds(const TDF_Label& label)
+{
+    std::vector<std::string_view> listShapeKind;
+    if (XCaf::isShapeAssembly(label))
+        listShapeKind.push_back(textIdTr("Assembly"));
 
+    if (XCaf::isShapeReference(label))
+        listShapeKind.push_back(textIdTr("Reference"));
+
+    if (XCaf::isShapeComponent(label))
+        listShapeKind.push_back(textIdTr("Component"));
+
+    if (XCaf::isShapeCompound(label))
+        listShapeKind.push_back(textIdTr("Compound"));
+
+    if (XCaf::isShapeSimple(label))
+        listShapeKind.push_back(textIdTr("Simple"));
+
+    if (XCaf::isShapeSub(label))
+        listShapeKind.push_back(textIdTr("Sub"));
+
+    return fmt::format("{}", fmt::join(listShapeKind, "+"));
+}
+
+std::string XCaf_DocumentTreeNodePropertiesProvider::Properties::strShapeLayers(
+        const XCaf& xcaf, const TDF_Label& label
+    )
+{
+    TDF_LabelSequence seqLayerLabel = xcaf.layers(label);
+    if (XCaf::isShapeReference(label)) {
+        TDF_LabelSequence seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
+        seqLayerLabel.Append(seqLayerLabelProduct);
+    }
+
+    if (seqLayerLabel.IsEmpty())
+        return {};
+
+    std::vector<std::string> listLayerName;
+    for (const TDF_Label& layerLabel : seqLayerLabel)
+        listLayerName.push_back(to_stdString(xcaf.layerName(layerLabel)));
+
+    return fmt::format("{}", fmt::join(listLayerName, ", "));
+}
 
 bool XCaf_DocumentTreeNodePropertiesProvider::supports(const DocumentTreeNode& treeNode) const
 {

@@ -420,8 +420,8 @@ static int runApp(QCoreApplication* qtApp)
 #endif
 
     // Initialize Gui application
-    auto guiApp = new GuiApplication(app);
-    initGui(guiApp);
+    auto guiApp = std::make_unique<GuiApplication>(app);
+    initGui(guiApp.get());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
@@ -434,7 +434,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
-    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp.get()));
     IO::addPredefinedFormatProbes(ioSystem);
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();

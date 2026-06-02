@@ -22,7 +22,7 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 {
     TriangulationAnnexDataPtr data;
     if (!label.FindAttribute(TriangulationAnnexData::GetID(), data)) {
-        data = new TriangulationAnnexData;
+        data = makeOccHandle<TriangulationAnnexData>();
         label.AddAttribute(data);
     }
 
@@ -59,7 +59,7 @@ void TriangulationAnnexData::Restore(const OccHandle<TDF_Attribute>& attribute)
 
 OccHandle<TDF_Attribute> TriangulationAnnexData::NewEmpty() const
 {
-    return new TriangulationAnnexData;
+    return makeOccHandle<TriangulationAnnexData>();
 }
 
 void TriangulationAnnexData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const

@@ -92,7 +92,7 @@ private:
     // Base class to provide matching of DynamicAction from an InputSequence object
     class ActionMatcher {
     public:
-        ActionMatcher(const InputSequence* seq) : inputs(*seq) {}
+        ActionMatcher(const InputSequence& seq) : inputs(seq) {}
         virtual ~ActionMatcher() = default;
 
         virtual bool matchRotation() const = 0;
@@ -108,7 +108,9 @@ private:
     };
 
     // Fabrication to create corresponding ActionMatcher from navigation style
-    static std::unique_ptr<ActionMatcher> createActionMatcher(View3dNavigationStyle style, const InputSequence* seq);
+    static std::unique_ptr<ActionMatcher> createActionMatcher(
+        View3dNavigationStyle style, const InputSequence& seq
+    );
     class Mayo_ActionMatcher;
     class Catia_ActionMatcher;
     class SolidWorks_ActionMatcher;

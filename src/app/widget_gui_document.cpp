@@ -154,9 +154,7 @@ WidgetGuiDocument::WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent)
     });
 }
 
-WidgetGuiDocument::~WidgetGuiDocument()
-{
-}
+WidgetGuiDocument::~WidgetGuiDocument() = default;
 
 Document::Identifier WidgetGuiDocument::documentIdentifier() const
 {
@@ -259,7 +257,7 @@ void WidgetGuiDocument::toggleWidgetMeasure(bool on)
     this->updageWidgetPanelControls(m_widgetMeasure, m_btnMeasure);
 }
 
-void WidgetGuiDocument::exclusiveButtonCheck(ButtonFlat* btnCheck)
+void WidgetGuiDocument::exclusiveButtonCheck(const ButtonFlat* btnCheck)
 {
     if (!btnCheck || !btnCheck->isChecked())
         return;
@@ -330,7 +328,7 @@ QMenu* WidgetGuiDocument::createViewMenu(QWidget* parent) const
     return menu;
 }
 
-void WidgetGuiDocument::popupViewMenu(QMenu* menu, const ButtonFlat* menuBtn, QWidget* container)
+void WidgetGuiDocument::popupViewMenu(QMenu* menu, const ButtonFlat* menuBtn, const QWidget* container)
 {
     menu->popup(menuBtn->mapToGlobal(QPoint{0, container->height()}));
 }

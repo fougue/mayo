@@ -37,7 +37,7 @@ void OcctWindow::Destroy()
 // =======================================================================
 Aspect_Drawable OcctWindow::NativeParentHandle() const
 {
-  QWidget* aParentWidget = myWidget->parentWidget();
+  const QWidget* aParentWidget = myWidget->parentWidget();
   if ( aParentWidget != nullptr )
     return (Aspect_Drawable)aParentWidget->winId();
   else

@@ -102,7 +102,7 @@ CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context)
     action->setText(Command::tr("Mode"));
 }
 
-CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* containerMenu)
+CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, const QMenu* containerMenu)
     : CommandChangeDisplayMode(context)
 {
     QObject::connect(
@@ -159,7 +159,7 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
                 action->setChecked(true);
         }
 
-        QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
+        QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
             guiDoc->setActiveDisplayMode(driver, action->data().toInt());
             guiDoc->graphicsView().redraw();
         });
@@ -180,7 +180,7 @@ CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
         this, &CommandToggleOriginTrihedron::onCurrentDocumentChanged
     );
     context->guiApp()->signalGuiDocumentOriginTrihedronVisibilityToggled.connectSlot(
-        [=](GuiDocument* guiDoc, bool on) {
+        [=](const GuiDocument* guiDoc, bool on) {
             if (guiDoc->documentIdentifier() == context->currentDocument())
                 action->setChecked(on);
         }
@@ -198,7 +198,7 @@ void CommandToggleOriginTrihedron::execute()
 
 void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 {
-    GuiDocument* guiDoc = this->currentGuiDocument();
+    const GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
         // Sync action with current visibility status of origin trihedron
         [[maybe_unused]] QSignalBlocker sigBlk(this->action());
@@ -235,11 +235,11 @@ void CommandTogglePerformanceStats::execute()
 
 void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 {
-    GuiDocument* guiDoc = this->currentGuiDocument();
+    const GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
         // Sync action with current visibility status of rendering performance stats
         [[maybe_unused]] QSignalBlocker sigBlk(this->action());
-        this->action()->setChecked(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
+        this->action()->setChecked(guiDoc->v3dView()->RenderingParams().ToShowStats);
     }
     else {
         this->action()->setChecked(false);

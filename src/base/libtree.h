@@ -143,7 +143,7 @@ void visitDirectChildren(TreeNodeId id, const Tree<U>& tree, const FN& callback)
 // -- Implementation
 // --
 
-template<typename T> Tree<T>::Tree() {}
+template<typename T> Tree<T>::Tree() = default;
 
 template<typename T> TreeNodeId Tree<T>::nodeSiblingPrevious(TreeNodeId id) const
 {

@@ -14,10 +14,29 @@
 #include "widget_main_home.h"
 
 #include <cassert>
+#include <type_traits>
 
 #include <QtCore/QtDebug>
 
 namespace Mayo {
+
+namespace {
+
+template<typename Predicate>
+WidgetGuiDocument* findWidgetGuiDocument(const WidgetMainControl* ctrl, Predicate fn)
+{
+    static_assert(std::is_invocable_r_v<bool, Predicate, const WidgetGuiDocument*>);
+    const int widgetCount = ctrl->widgetGuiDocumentCount();
+    for (int i = 0; i < widgetCount; ++i) {
+        auto candidate = ctrl->widgetGuiDocument(i);
+        if (candidate && fn(candidate))
+            return candidate;
+    }
+
+    return nullptr;
+}
+
+} // namespace
 
 AppContext::AppContext(MainWindow* wnd)
     : IAppContext(wnd),
@@ -77,8 +96,9 @@ void AppContext::setCurrentPage(Page page)
 
 V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) const
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](const WidgetGuiDocument* candidate) {
-        return candidate->guiDocument() == guiDoc;
+    auto widgetMainCtrl = m_wnd->widgetPageDocuments();
+    auto widgetDoc = findWidgetGuiDocument(widgetMainCtrl, [=](const WidgetGuiDocument* widget) {
+        return widget->guiDocument() == guiDoc;
     });
     return widgetDoc ? widgetDoc->controller() : nullptr;
 }
@@ -107,8 +127,9 @@ Document::Identifier AppContext::currentDocument() const
 
 void AppContext::setCurrentDocument(Document::Identifier docId)
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](const WidgetGuiDocument* candidate) {
-        return candidate->documentIdentifier() == docId;
+    auto widgetMainCtrl = m_wnd->widgetPageDocuments();
+    auto widgetDoc = findWidgetGuiDocument(widgetMainCtrl, [=](const WidgetGuiDocument* widget) {
+        return widget->documentIdentifier() == docId;
     });
     const int docIndex = m_wnd->widgetPageDocuments()->indexOfWidgetGuiDocument(widgetDoc);
     m_wnd->widgetPageDocuments()->setCurrentDocumentIndex(docIndex);
@@ -124,23 +145,6 @@ GuiDocument* AppContext::guiDocument(int idx) const
     auto spanGuiDocuments = this->guiApp()->guiDocuments();
     if (0 <= idx && idx < spanGuiDocuments.size())
         return spanGuiDocuments[idx];
-
-    return nullptr;
-}
-
-WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
-{
-    return m_wnd->widgetPageDocuments()->widgetGuiDocument(idx);
-}
-
-WidgetGuiDocument* AppContext::findWidgetGuiDocument(const FindWidgetGuiDocumentPredicate& fn) const
-{
-    const int widgetCount = m_wnd->widgetPageDocuments()->widgetGuiDocumentCount();
-    for (int i = 0; i < widgetCount; ++i) {
-        auto candidate = this->widgetGuiDocument(i);
-        if (candidate && fn(candidate))
-            return candidate;
-    }
 
     return nullptr;
 }

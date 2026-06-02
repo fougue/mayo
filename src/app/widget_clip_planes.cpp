@@ -169,7 +169,7 @@ void WidgetClipPlanes::connectUi(ClipPlaneData* data)
     QDoubleSpinBox* customXDirSpin = ui.customXDirSpin();
     QDoubleSpinBox* customYDirSpin = ui.customYDirSpin();
     QDoubleSpinBox* customZDirSpin = ui.customZDirSpin();
-    auto fnConnectDirSpin = [=](QDoubleSpinBox* dirSpin) {
+    auto fnConnectDirSpin = [=](const QDoubleSpinBox* dirSpin) {
         QObject::connect(dirSpin, signalSpinValueChanged, this, [=]{
             const gp_Vec vecNormal(
                 customXDirSpin->value(), customYDirSpin->value(), customZDirSpin->value()

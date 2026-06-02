@@ -35,12 +35,7 @@ public:
     void updateControlsEnabledStatus() override;
 
 private:
-    using FindWidgetGuiDocumentPredicate = std::function<bool(const WidgetGuiDocument*)>;
-
     GuiDocument* guiDocument(int idx) const;
-    WidgetGuiDocument* widgetGuiDocument(int idx) const;
-    WidgetGuiDocument* findWidgetGuiDocument(const FindWidgetGuiDocumentPredicate& fn) const;
-
     void onCurrentDocumentIndexChanged(int docIndex);
 
     MainWindow* m_wnd = nullptr;

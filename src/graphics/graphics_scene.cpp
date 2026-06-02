@@ -20,7 +20,7 @@ namespace Mayo {
 // Defined in graphics_create_driver.cpp
 OccHandle<Graphic3d_GraphicDriver> graphicsCreateDriver();
 
-namespace Internal {
+namespace {
 
 static OccHandle<V3d_Viewer> createOccViewer()
 {
@@ -29,20 +29,20 @@ static OccHandle<V3d_Viewer> createOccViewer()
     viewer->SetDefaultViewProj(V3d_XposYnegZpos);
     viewer->SetComputedMode(true);
     viewer->SetDefaultComputedMode(true);
-//    viewer->SetDefaultVisualization(V3d_ZBUFFER);
-//    viewer->SetDefaultShadingModel(V3d_GOURAUD);
+    //    viewer->SetDefaultVisualization(V3d_ZBUFFER);
+    //    viewer->SetDefaultShadingModel(V3d_GOURAUD);
     viewer->SetDefaultLights();
 
-//    auto ambientLight = new V3d_AmbientLight;
-//    ambientLight->SetIntensity(0.7f);
-//    viewer->AddLight(ambientLight);
+    //    auto ambientLight = new V3d_AmbientLight;
+    //    ambientLight->SetIntensity(0.7f);
+    //    viewer->AddLight(ambientLight);
 
-//    auto dirLight = new V3d_DirectionalLight;
-//    dirLight->SetIntensity(0.8f);
-//    dirLight->SetHeadlight(true);
-//    dirLight->SetDirection(0, 0, -1);
-//    dirLight->SetSmoothAngle(3.14159265f * 6.f / 180.f);
-//    viewer->AddLight(dirLight);
+    //    auto dirLight = new V3d_DirectionalLight;
+    //    dirLight->SetIntensity(0.8f);
+    //    dirLight->SetHeadlight(true);
+    //    dirLight->SetDirection(0, 0, -1);
+    //    dirLight->SetSmoothAngle(3.14159265f * 6.f / 180.f);
+    //    viewer->AddLight(dirLight);
 
     viewer->SetLightOn();
 
@@ -62,16 +62,11 @@ static OccHandle<V3d_Viewer> createOccViewer()
     return viewer;
 }
 
-} // namespace Internal
-
-namespace {
-
 class InteractiveContext : public AIS_InteractiveContext {
     DEFINE_STANDARD_RTTI_INLINE(InteractiveContext, AIS_InteractiveContext)
 public:
-    InteractiveContext(const OccHandle<V3d_Viewer>& viewer)
-        : AIS_InteractiveContext(viewer)
-    {}
+    // Inherit AIS_InteractiveContext constructor
+    using AIS_InteractiveContext::AIS_InteractiveContext;
 
     constexpr const GraphicsOwnerPtr& member_myLastPicked() const { return myLastPicked; }
 
@@ -100,7 +95,7 @@ public:
 GraphicsScene::GraphicsScene()
     : d(new Private)
 {
-    d->m_aisContext = new InteractiveContext(Internal::createOccViewer());
+    d->m_aisContext = makeOccHandle<InteractiveContext>(createOccViewer());
 }
 
 GraphicsScene::~GraphicsScene()

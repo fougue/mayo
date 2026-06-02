@@ -80,7 +80,7 @@ QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
 } // namespace
 
 AppModule::AppModule()
-    : m_application(new Application),
+    : m_application(makeOccHandle<Application>()),
       m_props(&m_settings),
       m_stdLocale(std::locale("")),
       m_qtLocale(QLocale::system())

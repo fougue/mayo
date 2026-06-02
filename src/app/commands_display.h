@@ -35,7 +35,7 @@ private:
 class CommandChangeDisplayMode : public BaseCommandDisplay {
 public:
     explicit CommandChangeDisplayMode(IAppContext* context);
-    CommandChangeDisplayMode(IAppContext* context, QMenu* containerMenu);
+    CommandChangeDisplayMode(IAppContext* context, const QMenu* containerMenu);
     void execute() override;
 
     static constexpr std::string_view Name = "change-display-mode";

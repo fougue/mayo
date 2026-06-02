@@ -36,6 +36,7 @@ public:
     // Variant type to be used when (de)serializing values
     class Variant : public BaseVariantType {
     public:
+        // Inherit std::variant<...> constructors
         using BaseVariantType::BaseVariantType;
 
         Variant(const char* str);

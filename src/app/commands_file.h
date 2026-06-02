@@ -52,7 +52,7 @@ public:
 class CommandRecentFiles : public Command {
 public:
     explicit CommandRecentFiles(IAppContext* context);
-    CommandRecentFiles(IAppContext* context, QMenu* containerMenu);
+    CommandRecentFiles(IAppContext* context, const QMenu* containerMenu);
     void execute() override;
     void recreateEntries();
 
