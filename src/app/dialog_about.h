@@ -13,7 +13,7 @@ namespace Mayo {
 class DialogAbout : public QDialog {
     Q_OBJECT
 public:
-    DialogAbout(QWidget* parent = nullptr);
+    explicit DialogAbout(QWidget* parent = nullptr);
     ~DialogAbout();
 
     void addLibraryInfo(std::string_view libName, std::string_view libVersion);

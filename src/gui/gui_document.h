@@ -164,7 +164,7 @@ private:
 
     struct GraphicsEntity {
         struct Object {
-            Object(const GraphicsObjectPtr& p) : ptr(p) {}
+            explicit Object(const GraphicsObjectPtr& p) : ptr(p) {}
             GraphicsObjectPtr ptr;
             gp_Trsf trsfOriginal;
             Bnd_Box bndBox;

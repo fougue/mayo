@@ -41,10 +41,7 @@ const QIcon& nullQIcon()
 //   Qt5 needs a special ItemDelegate as QStyle::sizeFromContents() isn't used for combobox popups
 class MayoStyle : public QProxyStyle {
 public:
-    MayoStyle(QStyle* style)
-        : QProxyStyle(style)
-    {
-    }
+    using QProxyStyle::QProxyStyle; // Inherit QProxyStyle constructors
 
     void setQComboBoxArrowPixmap(const QPixmap& pixmap)
     {
@@ -134,9 +131,7 @@ private:
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     class ComboBoxItemDelegate : public QStyledItemDelegate {
     public:
-        ComboBoxItemDelegate(QObject* parent = nullptr)
-            : QStyledItemDelegate(parent)
-        {}
+        using QStyledItemDelegate::QStyledItemDelegate; // Inherit QStyledItemDelegate constructors
 
         QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {

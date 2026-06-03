@@ -36,7 +36,7 @@ namespace Mayo::IO {
 // The image format is specified with the extension for the target file path(eg .png, .jpeg, ...)
 class ImageWriter : public Writer {
 public:
-    ImageWriter(GuiApplication* guiApp);
+    explicit ImageWriter(GuiApplication* guiApp);
 
     bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
@@ -101,7 +101,7 @@ private:
 
 class ImageFactoryWriter : public FactoryWriter {
 public:
-    ImageFactoryWriter(GuiApplication* guiApp);
+    explicit ImageFactoryWriter(GuiApplication* guiApp);
     gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;

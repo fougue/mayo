@@ -31,7 +31,7 @@ struct TaskManager::Entity {
 // Pimpl struct providing private(hidden) interface of TaskManager class
 struct TaskManager::Private {
     // Ctor
-    Private(TaskManager* mgr) : taskMgr(mgr) {}
+    explicit Private(TaskManager* mgr) : taskMgr(mgr) {}
 
     // Const/mutable functions to find an Entity from a task identifier. Returns null if not found
     TaskManager::Entity* findEntity(TaskId id);

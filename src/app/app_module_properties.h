@@ -41,7 +41,7 @@ class AppModuleProperties : public PropertyGroup {
 public:
     // Create properties, the PropertyGroup will be a child of group `settings`
     // Any value/enabled change will be reported to the Settings object to emit signals
-    AppModuleProperties(Settings* settings);
+    explicit AppModuleProperties(Settings* settings);
 
     // Iterates over reader/writer factories and bind properties
     void IO_bindParameters(const IO::System* ioSystem);

@@ -82,7 +82,7 @@ public:
 // This avoids to subclass Messenger
 class MessengerByCallback : public Messenger {
 public:
-    MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
+    explicit MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
     void emitMessage(MessageType msgType, std::string_view text) override;
 
 private:

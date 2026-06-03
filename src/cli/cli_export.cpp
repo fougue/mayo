@@ -127,7 +127,7 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     MessageCollecter errorCollect;
     errorCollect.only(MessageType::Error);
     const IO::Format format = appModule->ioSystem()->probeFormat(filepath);
-    const ApplicationItem appItems[] = { doc };
+    const ApplicationItem appItems[] = { ApplicationItem{doc} };
     const bool okExport = appModule->ioSystem()->exportApplicationItems()
                 .targetFile(filepath)
                 .targetFormat(format)

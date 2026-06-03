@@ -116,7 +116,7 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
 
 class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroup {
 public:
-    ObjectProperties(gsl::span<const GraphicsObjectPtr> spanObject)
+    explicit ObjectProperties(gsl::span<const GraphicsObjectPtr> spanObject)
     {
         NCollection_Vec3<float> sumColor = {};
         NCollection_Vec3<float> sumEdgeColor = {};

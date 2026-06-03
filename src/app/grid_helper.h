@@ -42,7 +42,7 @@ private:
 // Provides Qt view with grid layout
 class View : public QTableView {
 public:
-    View(QWidget* parent);
+    explicit View(QWidget* parent);
 
     QSize itemSize() const { return m_itemSize; }
     void setItemSize(QSize size);

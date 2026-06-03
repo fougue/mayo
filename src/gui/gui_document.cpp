@@ -669,22 +669,22 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
                     const TreeNodeId grandParentNodeId = docModelTree.nodeParent(parentNodeId);
                     const TopLoc_Location locGrandParentShape = XCaf::shapeAbsoluteLocation(docModelTree, grandParentNodeId);
                     gfxObject->SetLocalTransformation(locGrandParentShape);
-                    gfxEntity.vecObject.push_back(gfxObject);
+                    gfxEntity.vecObject.emplace_back(gfxObject);
                 }
                 else {
-                    auto gfxInstance = new AIS_ConnectedInteractive;
+                    auto gfxInstance = makeOccHandle<AIS_ConnectedInteractive>();
                     gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
                     gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
                     gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
                     gfxInstance->SetOwner(gfxProduct->GetOwner());
-                    gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
+                    gfxEntity.vecObject.emplace_back(gfxInstance);
                 }
 
                 if (XCaf::isShapeReference(parentNodeLabel))
                     id = docModelTree.nodeParent(id);
             }
             else {
-                gfxEntity.vecObject.push_back(gfxProduct);
+                gfxEntity.vecObject.emplace_back(gfxProduct);
             }
 
             const GraphicsEntity::Object& lastGfxObject = gfxEntity.vecObject.back();

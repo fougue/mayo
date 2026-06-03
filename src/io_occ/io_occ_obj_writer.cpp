@@ -23,7 +23,7 @@ struct OccObjWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjWriterI
 
 class OccObjWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->inputCoordinateSystem.setDescription(

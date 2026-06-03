@@ -14,7 +14,7 @@ namespace Mayo {
 class WidgetHomeFiles : public QWidget {
     Q_OBJECT
 public:
-    WidgetHomeFiles(QWidget* parent = nullptr);
+    explicit WidgetHomeFiles(QWidget* parent = nullptr);
 
 signals:
     void newDocumentRequested();

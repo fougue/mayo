@@ -27,7 +27,7 @@ class IWidgetOccView;
 class WidgetOccViewController : public QObject, public V3dViewController {
     Q_OBJECT
 public:
-    WidgetOccViewController(IWidgetOccView* occView = nullptr);
+    explicit WidgetOccViewController(IWidgetOccView* occView = nullptr);
     ~WidgetOccViewController();
 
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -92,7 +92,7 @@ private:
     // Base class to provide matching of DynamicAction from an InputSequence object
     class ActionMatcher {
     public:
-        ActionMatcher(const InputSequence& seq) : inputs(seq) {}
+        explicit ActionMatcher(const InputSequence& seq) : inputs(seq) {}
         virtual ~ActionMatcher() = default;
 
         virtual bool matchRotation() const = 0;

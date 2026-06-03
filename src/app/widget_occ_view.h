@@ -37,7 +37,7 @@ public:
     static IWidgetOccView* create(const OccHandle<V3d_View>& view, QWidget* parent = nullptr);
 
 protected:
-    IWidgetOccView(const OccHandle<V3d_View>& view) : m_view(view) {}
+    explicit IWidgetOccView(const OccHandle<V3d_View>& view) : m_view(view) {}
 
 private:
     OccHandle<V3d_View> m_view;

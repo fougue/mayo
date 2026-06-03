@@ -60,7 +60,7 @@ using RubberBandWidget_ParentType = QRubberBand;
 
 class RubberBandWidget : public RubberBandWidget_ParentType {
 public:
-    RubberBandWidget(QWidget* parent)
+    explicit RubberBandWidget(QWidget* parent)
 #if OCC_VERSION_HEX >= 0x070600
         : RubberBandWidget_ParentType(parent)
     {}
@@ -173,7 +173,7 @@ void WidgetOccViewController::setViewCursor(const QCursor &cursor)
 }
 
 struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBand {
-    RubberBand(QWidget* parent)
+    explicit RubberBand(QWidget* parent)
         : m_rubberBand(parent)
     {
     }
@@ -330,7 +330,7 @@ public:
 
 class WidgetOccViewController::Catia_ActionMatcher : public ActionMatcher {
 public:
-    Catia_ActionMatcher(const InputSequence& seq) : ActionMatcher(seq) {
+    explicit Catia_ActionMatcher(const InputSequence& seq) : ActionMatcher(seq) {
         m_timer.start();
     }
 

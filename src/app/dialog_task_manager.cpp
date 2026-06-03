@@ -27,7 +27,7 @@ namespace Mayo {
 
 class DialogTaskManager::TaskWidget : public QWidget {
 public:
-    TaskWidget(QWidget* parent = nullptr);
+    explicit TaskWidget(QWidget* parent = nullptr);
 
     QLabel* m_label = nullptr;
     QProgressBar* m_progress = nullptr;

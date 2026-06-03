@@ -14,7 +14,7 @@ namespace Mayo {
 static QString valueText(double value, const QStringUtils::TextOptions& opt)
 {
     auto fnLastChar = [](const QString& str) {
-        return !str.isEmpty() ? str.at(str.size() - 1) : QChar();
+        return !str.isEmpty() ? str.at(str.size() - 1) : QChar{};
     };
 
     const double c = std::abs(value) < Precision::Confusion() ? 0. : value;

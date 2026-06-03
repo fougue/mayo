@@ -19,7 +19,7 @@ namespace Mayo::IO {
 class OccIgesReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->bsplineContinuity.setDescription(
@@ -149,19 +149,20 @@ void OccIgesReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 class OccIgesWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->planeMode.setDescription(
-                    textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
-                             "Writing p-curves on planes is disabled"));
+            textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
+                     "Writing p-curves on planes is disabled")
+        );
         this->brepMode.setDescriptions({
-                    { BRepMode::Faces, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 "
-                      "(Trimmed Surface) entities, no BRep entities will be written to the IGES file")
-                    },
-                    { BRepMode::BRep, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 "
-                      "(Face) entities, the IGES file will contain BRep entities")
-                    }
+            { BRepMode::Faces, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 "
+              "(Trimmed Surface) entities, no BRep entities will be written to the IGES file")
+            },
+            { BRepMode::BRep, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 "
+              "(Face) entities, the IGES file will contain BRep entities")
+            }
         });
     }
 

@@ -217,7 +217,7 @@ void TestIO::IO_bugGitHub166_test()
     const bool okExport = m_ioSystem->exportApplicationItems()
             .targetFile(strOutputFilePath.toStdString())
             .targetFormat(outputFormat)
-            .withItem(doc)
+            .withItem(ApplicationItem{doc})
             .execute()
         ;
     QVERIFY(okExport);

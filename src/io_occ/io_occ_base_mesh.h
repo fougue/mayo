@@ -33,7 +33,7 @@ public:
     virtual const Parameters& constParameters() const = 0;
 
 protected:
-    OccBaseMeshReader(RWMesh_CafReader& reader);
+    explicit OccBaseMeshReader(RWMesh_CafReader& reader);
     virtual void applyParameters();
 
 private:
@@ -45,7 +45,7 @@ private:
 class OccBaseMeshReaderProperties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
 public:
-    OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
+    explicit OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
 
     void restoreDefaults() override;
 

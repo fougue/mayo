@@ -344,7 +344,9 @@ void WidgetMainControl::editDocumentTreeNode(const DocumentTreeNode& docTreeNode
             }
         }
 
-        propGroup->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(docTreeNode); });
+        propGroup->signalPropertyChanged.connectSlot([=]{
+            uiModelTree->refreshItemText(ApplicationItem{docTreeNode});
+        });
         m_ptrCurrentNodeProperties.push_back(std::move(propGroup));
     }
 

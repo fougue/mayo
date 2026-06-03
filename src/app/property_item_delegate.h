@@ -19,7 +19,7 @@ class BasePropertyQuantity;
 class PropertyItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
-    PropertyItemDelegate(QObject* parent = nullptr);
+    explicit PropertyItemDelegate(QObject* parent = nullptr);
 
     double rowHeightFactor() const { return m_rowHeightFactor; }
     void setRowHeightFactor(double v) { m_rowHeightFactor = v; }

@@ -24,7 +24,7 @@ namespace Mayo::IO {
 class OccVrmlWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->shapeRepresentation.mutableEnumeration().chopPrefix("VrmlAPI_");

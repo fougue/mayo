@@ -25,7 +25,7 @@ class Property;
 // as well the parent group's callbacks.
 class PropertyGroup {
 public:
-    PropertyGroup(PropertyGroup* parentGroup = nullptr);
+    explicit PropertyGroup(PropertyGroup* parentGroup = nullptr);
     virtual ~PropertyGroup() = default;
 
     // TODO Rename to get() or items() ?
@@ -70,7 +70,7 @@ private:
 // It blocks call to PropertyGroup::onPropertyChanged() in its constructor and in the destructor it
 // resets the state to what it was before the constructor ran.
 struct PropertyChangedBlocker {
-    PropertyChangedBlocker(PropertyGroup* group);
+    explicit PropertyChangedBlocker(PropertyGroup* group);
     ~PropertyChangedBlocker();
     PropertyGroup* const m_group = nullptr;
 };

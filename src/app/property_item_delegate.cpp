@@ -27,9 +27,7 @@ namespace {
 
 class PanelEditor : public QWidget {
 public:
-    PanelEditor(QWidget* parent = nullptr)
-        : QWidget(parent)
-    {}
+    using QWidget::QWidget; // Inherit QWidget constructors
 
     static QWidget* create(QWidget* parentWidget)
     {

@@ -14,7 +14,7 @@ namespace Mayo {
 class WidgetMainHome : public IWidgetMainPage {
     Q_OBJECT
 public:
-    WidgetMainHome(QWidget* parent = nullptr);
+    explicit WidgetMainHome(QWidget* parent = nullptr);
     ~WidgetMainHome();
 
     void initialize(const CommandContainer* cmdContainer) override;

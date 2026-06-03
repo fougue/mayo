@@ -57,7 +57,7 @@ public:
         ItemViewButtons::DisplayModes itemDisplayModes;
     };
 
-    Private(ItemViewButtons* backPtr);
+    explicit Private(ItemViewButtons* backPtr);
 
     const ButtonInfo* buttonInfo(int btnId) const;
     ButtonInfo* mutableButtonInfo(int btnId);

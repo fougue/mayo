@@ -28,7 +28,7 @@ namespace Mayo::IO {
 class OccStepReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->productContext.setDescription(
@@ -229,7 +229,7 @@ void OccStepReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 class OccStepWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccStepWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->schema.setDescription(textIdTr("Version of schema used for the output STEP file"));

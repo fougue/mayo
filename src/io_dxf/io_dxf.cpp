@@ -392,7 +392,7 @@ DxfColorIndex findColorIndex(
 
 class TransferHelper {
 public:
-    TransferHelper(DocumentPtr targetDoc)
+    explicit TransferHelper(DocumentPtr targetDoc)
         : m_doc(targetDoc)
     {}
 
@@ -536,7 +536,7 @@ private:
 class DxfReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::DxfReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->importAnnotations.setDescription(

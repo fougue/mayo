@@ -14,8 +14,8 @@ namespace Mayo {
 class ApplicationItem {
 public:
     ApplicationItem() = default;
-    ApplicationItem(const DocumentPtr& doc);
-    ApplicationItem(const DocumentTreeNode& node);
+    explicit ApplicationItem(const DocumentPtr& doc);
+    explicit ApplicationItem(const DocumentTreeNode& node);
 
     bool isValid() const;
     bool isDocument() const;

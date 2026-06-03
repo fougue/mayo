@@ -25,7 +25,7 @@ namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
-    FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
     OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app);  }
@@ -37,7 +37,7 @@ private:
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
-    FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
     OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app); }

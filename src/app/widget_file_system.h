@@ -16,7 +16,7 @@ namespace Mayo {
 class WidgetFileSystem : public QWidget {
     Q_OBJECT
 public:
-    WidgetFileSystem(QWidget* parent = nullptr);
+    explicit WidgetFileSystem(QWidget* parent = nullptr);
 
     QFileInfo currentLocation() const;
     void setLocation(const QFileInfo& fiLoc);

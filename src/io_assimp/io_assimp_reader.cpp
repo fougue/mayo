@@ -273,7 +273,7 @@ OccHandle<Poly_Triangulation> createOccTriangulation(const aiMesh* mesh)
 // Provides assimp progress handler for TaskProgress
 class AssimpProgressHandler : public Assimp::ProgressHandler {
 public:
-    AssimpProgressHandler(TaskProgress* progress)
+    explicit AssimpProgressHandler(TaskProgress* progress)
         : m_progress(progress)
     {}
 
@@ -300,10 +300,7 @@ private:
 
 class AssimpReader::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-    }
+    using PropertyGroup::PropertyGroup; // Inherit PropertyGroup constructors
 };
 
 bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)

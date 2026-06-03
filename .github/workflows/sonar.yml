@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -y update
-          # Qt5
-          sudo apt-get install -y qtbase5-dev libqt5svg5-dev
+          # Qt6
+          sudo apt-get -y install qt6-base-dev qt6-svg-dev libxcb-cursor0
           # OpenCasacade
           sudo apt-get -y install libfreetype-dev  libfreeimage-dev  rapidjson-dev  tcl-dev  tk-dev
           # Assimp

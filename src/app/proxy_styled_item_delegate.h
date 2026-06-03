@@ -17,8 +17,8 @@ namespace Mayo {
 //     - QStyledItemDelegate::editorEvent()
 class ProxyStyledItemDelegate : public QStyledItemDelegate {
 public:
-    ProxyStyledItemDelegate(QObject* parent = nullptr);
-    ProxyStyledItemDelegate(QAbstractItemDelegate* srcDelegate, QObject* parent = nullptr);
+    explicit ProxyStyledItemDelegate(QObject* parent = nullptr);
+    explicit ProxyStyledItemDelegate(QAbstractItemDelegate* srcDelegate, QObject* parent = nullptr);
 
     QAbstractItemDelegate* sourceDelegate() const;
     void setSourceDelegate(QAbstractItemDelegate* srcDelegate);

@@ -22,7 +22,7 @@ namespace Mayo {
 
 class GraphicsMeshDataSource : public MeshVS_DataSource {
 public:
-    GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh);
+    explicit GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh);
 
     bool GetGeom(const int ID, const bool IsElement, TColStd_Array1OfReal& Coords, int& NbNodes, MeshVS_EntityType& Type) const override;
     bool GetGeomType(const int ID, const bool IsElement, MeshVS_EntityType& Type) const override;

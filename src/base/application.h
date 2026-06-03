@@ -25,8 +25,8 @@ public:
 
     // Iterator over Documents contained in an Application
     struct DocumentIterator : private CDF_DirectoryIterator {
-        DocumentIterator(const ApplicationPtr& app);
-        DocumentIterator(const Application* app);
+        explicit DocumentIterator(const ApplicationPtr& app);
+        explicit DocumentIterator(const Application* app);
         bool hasNext() const;
         void next();
         DocumentPtr current() const;

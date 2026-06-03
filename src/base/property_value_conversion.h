@@ -39,8 +39,8 @@ public:
         // Inherit std::variant<...> constructors
         using BaseVariantType::BaseVariantType;
 
-        Variant(const char* str);
-        Variant(gsl::span<const uint8_t> bytes);
+        explicit Variant(const char* str);
+        explicit Variant(gsl::span<const uint8_t> bytes);
 
         bool isValid() const;
         bool toBool(bool* ok = nullptr) const;

@@ -15,7 +15,7 @@ class TaskProgress;
 // Provides implementation of OpenCascade-based progress indicator around Mayo::TaskProgress
 class OccProgressIndicator : public Message_ProgressIndicator {
 public:
-    OccProgressIndicator(TaskProgress* progress);
+    explicit OccProgressIndicator(TaskProgress* progress);
 
     bool UserBreak() override;
 

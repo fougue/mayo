@@ -82,7 +82,7 @@ public: // -- from TDocStd_Document
     DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 private:
-    Document(const ApplicationPtr& app);
+    explicit Document(const ApplicationPtr& app);
     ~Document();
 
     friend class Application;

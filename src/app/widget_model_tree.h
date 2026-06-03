@@ -33,7 +33,7 @@ public:
     using Item = ApplicationItem;
     using BuilderPtr = std::unique_ptr<WidgetModelTreeBuilder>;
 
-    WidgetModelTree(QWidget* widget = nullptr);
+    explicit WidgetModelTree(QWidget* widget = nullptr);
     ~WidgetModelTree();
 
     void refreshItemText(const ApplicationItem& appItem);

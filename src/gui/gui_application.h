@@ -32,7 +32,7 @@ class GuiDocument;
 // entities owned by the Base::Document
 class GuiApplication {
 public:
-    GuiApplication(const ApplicationPtr& app);
+    explicit GuiApplication(const ApplicationPtr& app);
     ~GuiApplication();
 
     // Not copyable

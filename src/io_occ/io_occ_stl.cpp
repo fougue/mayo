@@ -55,7 +55,7 @@ struct OccStlWriterI18N {
 
 class OccStlWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(OccStlWriterI18N::textIdContext());

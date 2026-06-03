@@ -35,9 +35,7 @@ namespace {
 // Provides an overlay widget to be used within 3D view
 class PanelView3d : public QWidget {
 public:
-    PanelView3d(WidgetGuiDocument* parent = nullptr)
-        : QWidget(parent)
-    {}
+    using QWidget::QWidget; // Inherit QWidget constructors
 
 protected:
     void paintEvent(QPaintEvent*) override

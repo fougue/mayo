@@ -146,7 +146,7 @@ public:
 
     private:
         friend class System;
-        Operation_ImportInDocument(const System& system);
+        explicit Operation_ImportInDocument(const System& system);
         const System& m_system;
         Args_ImportInDocument m_args;
     };
@@ -171,7 +171,7 @@ public:
 
     private:
         friend class System;
-        Operation_ExportApplicationItems(const System& system);
+        explicit Operation_ExportApplicationItems(const System& system);
         const System& m_system;
         Args_ExportApplicationItems m_args;
     };

@@ -60,7 +60,7 @@ struct PlyWriterI18N {
 
 class PlyWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(PlyWriterI18N::textIdContext());

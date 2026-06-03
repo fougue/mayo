@@ -41,9 +41,7 @@ static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
 
 class TreeWidget : public QTreeWidget {
 public:
-    TreeWidget(QWidget* parent = nullptr)
-        : QTreeWidget(parent)
-    { }
+    using QTreeWidget::QTreeWidget; // Inherit QTreeWidget constructors
 
     QModelIndex indexFromItem(QTreeWidgetItem* item, int column = 0) const {
         return QTreeWidget::indexFromItem(item, column);

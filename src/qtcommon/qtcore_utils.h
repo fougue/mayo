@@ -10,6 +10,7 @@
 #include <QtCore/QByteArray>
 #include <gsl/span>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 // Provides a collection of tools for the QtCore module
@@ -32,9 +33,11 @@ QByteArray QByteArray_fromRawData(const char (&str)[N])
 template<typename ByteType>
 QByteArray QByteArray_fromRawData(gsl::span<const ByteType> bytes)
 {
-    static_assert(sizeof(ByteType) == 1, "size of ByteType must be one byte");
+    static_assert(sizeof(ByteType) == 1);
+    static_assert(std::is_trivially_copyable_v<ByteType>);
+    // Safe: char is allowed to alias any object representation
     return QByteArray_fromRawData(
-        std::string_view{ reinterpret_cast<const char*>(bytes.data()), bytes.size() }
+        std::string_view{ reinterpret_cast<const char*>(bytes.data()), bytes.size() } // NOSONAR
     );
 }
 
@@ -45,8 +48,10 @@ QByteArray toQByteArray(const char* data, size_t size);
 template<typename ByteType>
 QByteArray toQByteArray(gsl::span<const ByteType> bytes)
 {
-    static_assert(sizeof(ByteType) == 1, "size of ByteType must be one byte");
-    return toQByteArray(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    static_assert(sizeof(ByteType) == 1);
+    static_assert(std::is_trivially_copyable_v<ByteType>);
+    // Safe: char is allowed to alias any object representation
+    return toQByteArray(reinterpret_cast<const char*>(bytes.data()), bytes.size()); // NOSONAR
 }
 
 // Converts a QByteArray object to std::vector<uint8_t>

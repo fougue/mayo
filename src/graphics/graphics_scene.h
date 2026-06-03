@@ -117,7 +117,7 @@ private:
 
 class GraphicsSceneRedrawBlocker {
 public:
-    GraphicsSceneRedrawBlocker(GraphicsScene* scene);
+    explicit GraphicsSceneRedrawBlocker(GraphicsScene* scene);
     ~GraphicsSceneRedrawBlocker();
 
     GraphicsSceneRedrawBlocker(const GraphicsSceneRedrawBlocker&) = delete;

@@ -18,7 +18,7 @@ namespace Mayo {
 class ButtonFlat : public QWidget {
     Q_OBJECT
 public:
-    ButtonFlat(QWidget* parent = nullptr);
+    explicit ButtonFlat(QWidget* parent = nullptr);
 
     bool isCheckable() const;
     void setCheckable(bool on);

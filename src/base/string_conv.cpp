@@ -7,6 +7,7 @@
 #if defined(MAYO_OS_WINDOWS)
 #  include <Windows.h>
 #else
+#  include <cerrno>
 #  include <iconv.h>
 #  include <langinfo.h>
 #  include <locale.h>
@@ -123,7 +124,7 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     const std::string localeName = locale.name();
     std::string charset;
     {
-        const locale_t nullLocale = reinterpret_cast<locale_t>(0);
+        const locale_t nullLocale = {};
         const locale_t loc = newlocale(LC_CTYPE_MASK, localeName.c_str(), nullLocale);
         if (loc != nullLocale) {
             const char* zcharset = nl_langinfo_l(CODESET, loc);
@@ -149,33 +150,43 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
 
     // Allocate conversion descriptor
     iconv_t convd = iconv_open("UTF-8", charset.c_str());
-    [[maybe_unused]] auto _ = gsl::finally([=]{ iconv_close(convd); });
-    if (convd == reinterpret_cast<iconv_t>(-1))
+    // POSIX: iconv_open() returns (iconv_t)-1 on failure
+    if (convd == reinterpret_cast<iconv_t>(-1)) // NOSONAR
         return std::string{str};
+
+    [[maybe_unused]] auto iconvCloseGuard = gsl::finally([=]{ iconv_close(convd); });
 
     // Attempt to convert input string to utf8(limit attempt count)
     thread_local std::vector<char> utf8;
-    utf8.resize(str.size());
-    std::fill(utf8.begin(), utf8.end(), '\0');
-    constexpr size_t iconvError = SIZE_MAX;
-    size_t iconvRes = 0;
-    constexpr int maxAttemptCount = 10;
+    static constexpr size_t maxRetainedBufferSize = 64 * 1024; // 64KB
+    if (utf8.capacity() > maxRetainedBufferSize)
+        utf8 = std::vector<char>{};
+
+    auto fnGrowUtf8BufferSize = [&](size_t baseSize) {
+        utf8.resize(baseSize + (baseSize / 2) + 1); // Grow size by 50%
+        std::fill(utf8.begin(), utf8.end(), '\0');
+    };
+
+    fnGrowUtf8BufferSize(str.size());
+    constexpr int maxAttemptCount = 16;
     int attemptCount = 0;
-    do {
+    while (attemptCount++ < maxAttemptCount) {
         auto strData = const_cast<char*>(str.data());
         size_t lenStr = str.size();
-        utf8.resize(utf8.size() + (utf8.size() / 4) + 1); // Grow size by 25% each attempt
-        std::fill(utf8.begin(), utf8.end(), '\0');
         char* utf8Data = utf8.data();
-        size_t lenUtf8 = utf8.size();
-        iconvRes = iconv(convd, &strData, &lenStr, &utf8Data, &lenUtf8);
-        ++attemptCount;
-    } while (iconvRes == iconvError && attemptCount < maxAttemptCount);
+        size_t lenOut = utf8.size(); // On success: remaining bytes in utf8 buffer after conversion
+        errno = 0;
+        const size_t iconvRes = iconv(convd, &strData, &lenStr, &utf8Data, &lenOut);
+        // POSIX: iconv() returns (size_t)-1 on failure. Note: (size_t)-1 == SIZE_MAX
+        if (iconvRes != SIZE_MAX)
+            return std::string{utf8.data(), utf8.size() - lenOut}; // Success
+        else if (errno == E2BIG)
+            fnGrowUtf8BufferSize(utf8.size()); // Grow size for each attempt
+        else
+            break; // EILSEQ, EINVAL: new attempt is worthless(failure)
+    }
 
-    if (iconvRes == iconvError)
-        return std::string{str};
-
-    return utf8.data();
+    return std::string{str}; // Fallback on failure
 #endif
 }
 

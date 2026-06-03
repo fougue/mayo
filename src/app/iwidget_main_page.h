@@ -19,7 +19,7 @@ class IWidgetMainPage : public QWidget {
     Q_OBJECT
 public:
     // Builds UI objects(eg this might calls setupUi() on Qt-generated widgets)
-    IWidgetMainPage(QWidget* parent = nullptr)
+    explicit IWidgetMainPage(QWidget* parent = nullptr)
         : QWidget(parent)
     {}
 

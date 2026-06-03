@@ -39,7 +39,7 @@ static constexpr uint64_t XCafSubGroup_ProductMetaData = 4;
 class XCaf_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::XCaf_DocumentTreeNodeProperties)
 public:
-    Properties(const DocumentTreeNode& treeNode);
+    explicit Properties(const DocumentTreeNode& treeNode);
 
     void onPropertyChanged(Property* prop) override;
     void addUdas(
@@ -369,7 +369,7 @@ TextId XCaf_DocumentTreeNodePropertiesProvider::subGroupLabelFromId(uint64_t id)
 class Mesh_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Mesh_DocumentTreeNodeProperties)
 public:
-    Properties(const DocumentTreeNode& treeNode)
+    explicit Properties(const DocumentTreeNode& treeNode)
     {
         OccHandle<Poly_Triangulation> mesh;
         IMeshAccess_visitMeshes(treeNode, [&](const IMeshAccess& access) {
@@ -416,7 +416,7 @@ TextId Mesh_DocumentTreeNodePropertiesProvider::subGroupLabelFromId(uint64_t id)
 class PointCloud_DocumentTreeNodePropertiesProvider::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::PointCloud_DocumentTreeNodeProperties)
 public:
-    Properties(const DocumentTreeNode& treeNode)
+    explicit Properties(const DocumentTreeNode& treeNode)
     {
         auto attrPointCloudData = CafUtils::findAttribute<PointCloudData>(treeNode.label());
 

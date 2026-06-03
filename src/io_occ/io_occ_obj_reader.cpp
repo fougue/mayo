@@ -11,7 +11,7 @@ namespace Mayo::IO {
 class OccObjReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup)
     {
         this->singlePrecisionVertexCoords.setDescription(

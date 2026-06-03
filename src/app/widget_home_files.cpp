@@ -177,7 +177,7 @@ private:
 
 class HomeFilesDelegate : public ListHelper::ItemDelegate {
 public:
-    HomeFilesDelegate(WidgetHomeFiles* widget)
+    explicit HomeFilesDelegate(WidgetHomeFiles* widget)
         : ListHelper::ItemDelegate(widget),
           m_widget(widget)
     {}

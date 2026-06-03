@@ -15,7 +15,7 @@ namespace Mayo {
 class DialogInspectXde : public QDialog {
     Q_OBJECT
 public:
-    DialogInspectXde(QWidget* parent = nullptr);
+    explicit DialogInspectXde(QWidget* parent = nullptr);
     ~DialogInspectXde();
 
     void load(const OccHandle<TDocStd_Document>& doc);

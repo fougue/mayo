@@ -16,7 +16,7 @@ namespace Mayo {
 // Provides UI edition of properties
 class WidgetPropertiesEditor : public QWidget {
 public:
-    WidgetPropertiesEditor(QWidget* parent = nullptr);
+    explicit WidgetPropertiesEditor(QWidget* parent = nullptr);
     ~WidgetPropertiesEditor();
 
     using GroupId = int;

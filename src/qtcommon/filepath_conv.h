@@ -12,10 +12,27 @@
 
 namespace Mayo {
 
-// Returns a FilePath object constructed from input
-inline FilePath filepathFrom(const QByteArray& bytes) { return filepathFrom(std::string_view{ bytes.constData() }); }
-inline FilePath filepathFrom(const QString& str) { return reinterpret_cast<const char16_t*>(str.utf16()); }
-inline FilePath filepathFrom(const QFileInfo& fi) { return filepathFrom(fi.filePath()); }
+// QByteArray -> FilePath
+inline FilePath filepathFrom(const QByteArray& bytes) {
+    return filepathFrom(std::string_view{ bytes.constData() });
+}
+
+// QString -> FilePath
+inline FilePath filepathFrom(const QString& str) {
+    static_assert(sizeof(char16_t) == sizeof(ushort));
+    static_assert(alignof(char16_t) == alignof(ushort));
+    const auto ptr = reinterpret_cast<const char16_t*>(str.utf16()); // NOSONAR
+    return std::filesystem::path{ptr, ptr + str.size()};
+}
+
+// QFileInfo -> FilePath
+inline FilePath filepathFrom(const QFileInfo& fi) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return fi.filesystemFilePath();
+#else
+    return filepathFrom(fi.filePath());
+#endif
+}
 
 // FilePath -> QByteArray
 template<> struct FilePathConv<QByteArray> {

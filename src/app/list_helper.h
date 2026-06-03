@@ -43,7 +43,7 @@ public:
         RoleItemImage
     };
 
-    Model(QObject* parent);
+    explicit Model(QObject* parent);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
@@ -64,7 +64,7 @@ private:
 class ItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
-    ItemDelegate(QObject* parent = nullptr);
+    explicit ItemDelegate(QObject* parent = nullptr);
 
     void paint(
             QPainter* painter,
