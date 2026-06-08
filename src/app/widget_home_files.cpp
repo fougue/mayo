@@ -33,7 +33,7 @@ struct HomeFileItem : public ListHelper::ModelItem {
 
 class HomeFilesModel : public ListHelper::Model {
 public:
-    HomeFilesModel(QObject* parent)
+    explicit HomeFilesModel(QObject* parent)
         : ListHelper::Model(parent)
     {
         auto storage = std::make_unique<ListHelper::DefaultModelStorage<HomeFileItem>>();
