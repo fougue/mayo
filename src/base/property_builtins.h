@@ -6,6 +6,7 @@
 #pragma once
 
 #include "global.h"
+#include "cpp_utils.h"
 #include "property.h"
 #include "filepath.h"
 #include "quantity.h"
@@ -23,13 +24,12 @@ template<typename T>
 class GenericProperty : public Property {
 public:
     using ValueType = T;
-    // TODO Add value_type traits for T
 
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
-    const T& value() const { return m_value; }
+    Cpp::ValueOrConstRefType<T> value() const { return m_value; }
     bool setValue(const T& val);
-    operator const T&() const { return this->value(); }
+    operator Cpp::ValueOrConstRefType<T>() const { return this->value(); }
 
     const char* dynTypeName() const override { return TypeName; }
     static const char TypeName[];

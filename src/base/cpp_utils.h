@@ -27,6 +27,16 @@ namespace Cpp = CppUtils;
 
 namespace CppUtils {
 
+
+// Optimized value return type for T.
+// Returns `T` by value if it is trivially copyable and small, otherwise returns it as `const T&`
+template <typename T>
+using ValueOrConstRefType = std::conditional_t<
+    std::is_trivially_copyable_v<T> && sizeof(T) <= sizeof(void*),
+    /*true->*/ T,
+    /*false->*/const T&
+>;
+
 // Type alias for the value type associated(mapped) to a key for an associative container(eg std::map)
 template<typename AssociativeContainer>
 using MappedType = typename AssociativeContainer::mapped_type;
