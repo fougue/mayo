@@ -125,7 +125,7 @@ private:
                 return WidgetHomeFiles::tr("today %1").arg(strTime);
             }
             else if (diffDays == 1) {
-                return WidgetHomeFiles::tr("yersterday %1").arg(strTime);
+                return WidgetHomeFiles::tr("yesterday %1").arg(strTime);
             }
             else if (date.year() == currentDate.year() && date.weekNumber() == currentDate.weekNumber()) {
                 const QString strDayName = date.toString("dddd");
