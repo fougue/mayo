@@ -7,11 +7,14 @@ jobs:
         strategy:
             matrix:
                 occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0]
-                assimp_version: [5.4.3]
+                assimp_version: [6.0.5]
                 pch: [OFF]
                 include:
-                    - occ_version: 7.8.0
+                    - occ_version: 7.7.0
                       assimp_version: 5.3.1
+                      pch: ON
+                    - occ_version: 7.8.0
+                      assimp_version: 5.4.3
                       pch: ON
 
         runs-on: windows-latest
@@ -41,6 +44,8 @@ jobs:
                   echo "assimp_zip_sha256=b6097488fa5b7a0cc610e8258e74aaa9552b48a13bc8680eedd66512d788e64f" >> "${GITHUB_OUTPUT}"
               ) else if "%assimp_version%"=="5.4.3" (
                   echo "assimp_zip_sha256=b321031eba023d8874ed794aa9aad5b6b132b2e4b8835ecc99ba428be48d0305" >> "${GITHUB_OUTPUT}"
+              ) else if "%assimp_version%"=="6.0.5" (
+                  echo "assimp_zip_sha256=d5493ad1e3f0e5af2986c0d6bb39c48497c90c4360e6d559f08f873b78fb58d0" >> "${GITHUB_OUTPUT}"
               )
 
         - name: Checkout
