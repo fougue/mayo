@@ -25,25 +25,42 @@ template<typename T> T read(QDataStream& stream)
     return value;
 }
 
+enum class VariantType : uint8_t {
+    Empty = 0,
+    Bool = 1,
+    Int = 2,
+    Double = 3,
+    String = 4,
+    Bytes = 5
+};
+
 PropertyValueConversion::Variant readVariant(QDataStream& stream, uint8_t typeIndex)
 {
     using Variant = PropertyValueConversion::Variant;
-    static_assert(std::is_same_v<bool, std::variant_alternative_t<1, Variant>>);
-    static_assert(std::is_same_v<int, std::variant_alternative_t<2, Variant>>);
-    static_assert(std::is_same_v<double, std::variant_alternative_t<3, Variant>>);
-    static_assert(std::is_same_v<std::string, std::variant_alternative_t<4, Variant>>);
-    static_assert(std::is_same_v<std::vector<uint8_t>, std::variant_alternative_t<5, Variant>>);
-
-    switch (typeIndex) {
-    case 1: return Variant{read<bool>(stream)};
-    case 2: return Variant{static_cast<int>(read<int32_t>(stream))};
-    case 3: return Variant{read<double>(stream)};
-    case 4: return Variant{read<QString>(stream).toStdString()};
-    case 5: return Variant{QtCoreUtils::toStdByteArray(read<QByteArray>(stream))};
+    switch (static_cast<VariantType>(typeIndex)) {
+    case VariantType::Bool: return Variant{read<bool>(stream)};
+    case VariantType::Int:  return Variant{static_cast<int>(read<int32_t>(stream))};
+    case VariantType::Double: return Variant{read<double>(stream)};
+    case VariantType::String: return Variant{read<QString>(stream).toStdString()};
+    case VariantType::Bytes:  return Variant{QtCoreUtils::toStdByteArray(read<QByteArray>(stream))};
     default: return {};
     }
 
     return {};
+}
+
+VariantType getVariantType(const PropertyValueConversion::Variant& value)
+{
+    return std::visit(Cpp::Overloaded{
+        [](std::monostate) { return VariantType::Empty; },
+        [](bool) { return VariantType::Bool; },
+        [](int) { return VariantType::Int; },
+        [](double) { return VariantType::Double; },
+        [](const std::string&) { return VariantType::String; },
+        [](const std::vector<uint8_t>&) { return VariantType::Bytes; }
+        },
+        value.asBaseVariant()
+    );
 }
 
 } // namespace
@@ -79,7 +96,7 @@ std::vector<uint8_t> AppUiState::toBlob(const AppUiState& state)
     stream << static_cast<uint32_t>(state.size());
     for (const auto& [key, value] : state) {
         stream << QtCoreUtils::QByteArray_fromRawData(key);
-        stream << static_cast<uint8_t>(value.index());
+        stream << static_cast<uint8_t>(getVariantType(value));
         std::visit(Cpp::Overloaded{
             [](std::monostate) { /* No payload for empty variant value */ },
             [&](bool v) { stream << v; },
@@ -89,7 +106,7 @@ std::vector<uint8_t> AppUiState::toBlob(const AppUiState& state)
             [&](const std::vector<uint8_t>& bytes) {
                 stream << QtCoreUtils::QByteArray_fromRawData<uint8_t>(bytes);
             }},
-            value
+            value.asBaseVariant()
         );
     }
 

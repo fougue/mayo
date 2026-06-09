@@ -55,6 +55,11 @@ public:
 
         bool isConvertibleToConstRefString() const;
         bool isByteArray() const;
+
+        // Returns the underlying std::variant<> base object
+        // Workaround for std::visit() compilation issues with some older libstdc++(eg GCC 9)
+        // when Variant is used directly
+        const BaseVariantType& asBaseVariant() const { return *this; }
     };
     // Associative container mapping string keys to Variant values
     // Uses transparent string comparison(std::less<>) in order to support heterogeneous lookup with
