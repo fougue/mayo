@@ -7,7 +7,7 @@
 
 // Module : GUI
 
-#include "../../base/task_common.h"
+#include "../base/task_common.h"
 
 #include <unordered_map>
 #include <QtCore/QObject>

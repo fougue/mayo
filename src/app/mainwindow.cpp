@@ -26,7 +26,7 @@
 #include "widget_message_indicator.h"
 
 #ifdef Q_OS_WIN
-#  include "windows/win_taskbar_global_progress.h"
+#  include "win_taskbar_global_progress.h"
 #endif
 
 #include <QtDebug>

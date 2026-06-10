@@ -17,8 +17,10 @@ project(
     LANGUAGES CXX
 )
 
-set(Mayo_Copyright "Copyright (c) 2016, Fougue SAS")
-mark_as_advanced(FORCE Mayo_Copyright)
+set(Mayo_CompanyName "Fougue SAS")
+set(Mayo_Copyright "Copyright (c) 2016, ${Mayo_CompanyName}")
+set(MayoApp_Description  ${PROJECT_DESCRIPTION})
+set(MayoConv_Description "MayoConv - Opensource 3D CAD converter(CLI)")
 
 set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
 
@@ -437,6 +439,10 @@ endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config.h  @ONLY)
 configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
+if(WIN32)
+    configure_file(${PROJECT_SOURCE_DIR}/src/app/version.rc.cmake MayoApp_version.rc  @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/src/cli/version.rc.cmake MayoConv_version.rc @ONLY)
+endif()
 
 ##########
 # Icons for Mayo exe targets
@@ -497,7 +503,7 @@ set(MayoApp_HeaderFiles)
 set(MayoApp_SourceFiles)
 set(MayoApp_LinkLibraries)
 
-# MayoApp headers
+# MayoApp headers + sources
 file(
     GLOB MayoApp_HeaderFiles
     ${PROJECT_SOURCE_DIR}/src/app/*.h
@@ -506,11 +512,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.h
 )
 
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND MayoApp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.h)
-endif()
-
-# MayoApp sources
 file(
     GLOB MayoApp_SourceFiles
     ${PROJECT_SOURCE_DIR}/src/app/*.cpp
@@ -520,7 +521,12 @@ file(
 )
 
 if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND MayoApp_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.cpp)
+    list(APPEND MayoApp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/win_taskbar_global_progress.h)
+    list(APPEND MayoApp_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/win_taskbar_global_progress.cpp)
+endif()
+
+if(WIN32)
+    list(APPEND MayoApp_SourceFiles ${CMAKE_BINARY_DIR}/MayoApp_version.rc)
 endif()
 
 # MayoApp UI files
@@ -654,6 +660,9 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
+if(WIN32)
+    list(APPEND MayoConv_SourceFiles ${CMAKE_BINARY_DIR}/MayoConv_version.rc)
+endif()
 
 if(Mayo_BuildConvCli)
     add_executable(
