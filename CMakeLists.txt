@@ -437,11 +437,11 @@ endif()
 # Configure files
 ##########
 
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config.h  @ONLY)
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/mayo_config.h.in  common/mayo_config.h  @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/mayo_version.h.in common/mayo_version.h @ONLY)
 if(WIN32)
-    configure_file(${PROJECT_SOURCE_DIR}/src/app/version.rc.cmake MayoApp_version.rc  @ONLY)
-    configure_file(${PROJECT_SOURCE_DIR}/src/cli/version.rc.cmake MayoConv_version.rc @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/version_MayoApp.rc.in  version_MayoApp.rc  @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/version_MayoConv.rc.in version_MayoConv.rc @ONLY)
 endif()
 
 ##########
@@ -526,7 +526,7 @@ if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
 endif()
 
 if(WIN32)
-    list(APPEND MayoApp_SourceFiles ${CMAKE_BINARY_DIR}/MayoApp_version.rc)
+    list(APPEND MayoApp_SourceFiles ${CMAKE_BINARY_DIR}/version_MayoApp.rc)
 endif()
 
 # MayoApp UI files
@@ -572,7 +572,7 @@ if(Mayo_BuildApp)
     target_include_directories(mayo PRIVATE ${PROJECT_SOURCE_DIR}/src/app)
 
     if(Mayo_EnablePch)
-        target_precompile_headers(mayo PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoApp_pch.h")
+        target_precompile_headers(mayo PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoApp.h")
     endif()
 
     set_target_properties(
@@ -661,7 +661,7 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
 if(WIN32)
-    list(APPEND MayoConv_SourceFiles ${CMAKE_BINARY_DIR}/MayoConv_version.rc)
+    list(APPEND MayoConv_SourceFiles ${CMAKE_BINARY_DIR}/version_MayoConv.rc)
 endif()
 
 if(Mayo_BuildConvCli)
@@ -685,7 +685,7 @@ if(Mayo_BuildConvCli)
     )
 
     if(Mayo_EnablePch)
-        target_precompile_headers(mayo-conv PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+        target_precompile_headers(mayo-conv PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
     endif()
 
     set_target_properties(
