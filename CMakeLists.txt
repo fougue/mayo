@@ -474,7 +474,7 @@ target_link_directories(MayoCoreLib INTERFACE ${MayoCore_LinkDirectories})
 target_include_directories(MayoCoreLib INTERFACE ${Mayo_IncludeDirectories})
 
 if(Mayo_EnablePch)
-    target_precompile_headers(MayoCore PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+    target_precompile_headers(MayoCore PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
 endif()
 
 ##########
@@ -492,7 +492,7 @@ add_library(MayoIOLib INTERFACE)
 target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibraries})
 
 if(Mayo_EnablePch)
-    target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/MayoCore_pch.h")
+    target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
 endif()
 
 ##########
@@ -520,9 +520,9 @@ file(
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.cpp
 )
 
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND MayoApp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/win_taskbar_global_progress.h)
-    list(APPEND MayoApp_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/win_taskbar_global_progress.cpp)
+if(NOT (WIN32 AND QT_VERSION_MAJOR EQUAL 5))
+    list(FILTER MayoApp_HeaderFiles EXCLUDE REGEX "win_taskbar.*\\.h$")
+    list(FILTER MayoApp_SourceFiles EXCLUDE REGEX "win_taskbar.*\\.cpp$")
 endif()
 
 if(WIN32)
