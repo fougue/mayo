@@ -80,6 +80,8 @@ if(OpenCASCADE_FOUND)
         list(REMOVE_ITEM OpenCASCADE_3RDPARTY_BINARY_DIRS ${OpenCASCADE_QT_BINDIR})
     endif()
 
+    list(REMOVE_DUPLICATES OpenCASCADE_3RDPARTY_BINARY_DIRS)
+
     # Create imported target for each toolkit
     set(
         OpenCASCADE_TOOLKITS
