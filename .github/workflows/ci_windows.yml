@@ -45,7 +45,7 @@ jobs:
               ) else if "%assimp_version%"=="5.4.3" (
                   echo "assimp_zip_sha256=b321031eba023d8874ed794aa9aad5b6b132b2e4b8835ecc99ba428be48d0305" >> "${GITHUB_OUTPUT}"
               ) else if "%assimp_version%"=="6.0.5" (
-                  echo "assimp_zip_sha256=d5493ad1e3f0e5af2986c0d6bb39c48497c90c4360e6d559f08f873b78fb58d0" >> "${GITHUB_OUTPUT}"
+                  echo "assimp_zip_sha256=7f4fbcbbc9d04d88a790e12bde60c4ffe1f46dd6c40cec8ce8b36f80c11e175a" >> "${GITHUB_OUTPUT}"
               )
 
         - name: Checkout
