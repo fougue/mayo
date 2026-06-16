@@ -9,9 +9,9 @@
 #include "theme.h"
 
 #include <QtCore/QElapsedTimer>
-#include <QtGui/QBitmap>
 #include <QtGui/QCursor>
 #include <QtGui/QPainter>
+#include <QtGui/QPixmap>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QRubberBand>
@@ -20,33 +20,16 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
 static const QCursor& rotateCursor()
 {
     static QCursor cursor;
-    if (!cursor.bitmap()) {
-        constexpr int cursorWidth = 16;
-        constexpr int cursorHeight = 16;
+    if (!cursor.pixmap()) {
         constexpr int cursorHotX = 6;
         constexpr int cursorHotY = 8;
-
-        static unsigned char cursorBitmap[] = {
-            0xf0, 0xef, 0x18, 0xb8, 0x0c, 0x90, 0xe4, 0x83,
-            0x34, 0x86, 0x1c, 0x83, 0x00, 0x81, 0x00, 0xff,
-            0xff, 0x00, 0x81, 0x00, 0xc1, 0x38, 0x61, 0x2c,
-            0xc1, 0x27, 0x09, 0x30, 0x1d, 0x18, 0xf7, 0x0f
-        };
-        static unsigned char cursorMaskBitmap[] = {
-            0xf0, 0xef, 0xf8, 0xff, 0xfc, 0xff, 0xfc, 0xff, 0x3c, 0xfe, 0x1c, 0xff, 0x00, 0xff, 0x00,
-            0xff, 0xff, 0x00, 0xff, 0x00, 0xff, 0x38, 0x7f, 0x3c, 0xff, 0x3f, 0xff, 0x3f, 0xff, 0x1f,
-            0xf7, 0x0f
-        };
-
-        const QBitmap cursorBmp = QBitmap::fromData({ cursorWidth, cursorHeight }, cursorBitmap);
-        const QBitmap maskBmp = QBitmap::fromData({ cursorWidth, cursorHeight }, cursorMaskBitmap);
-        const QCursor tempCursor(cursorBmp, maskBmp, cursorHotX, cursorHotY);
-        cursor = std::move(tempCursor);
+        const QPixmap pixmap(":/images/graphics/rotate_cursor.png");
+        cursor = QCursor(pixmap, cursorHotX, cursorHotY);
     }
 
     return cursor;
@@ -95,7 +78,7 @@ protected:
 #endif
 };
 
-} // namespace Internal
+} // namespace
 
 WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     : QObject(occView->widget()),
@@ -149,7 +132,7 @@ void WidgetOccViewController::redrawView()
 void WidgetOccViewController::startDynamicAction(V3dViewController::DynamicAction action)
 {
     if (action == DynamicAction::Rotation)
-        this->setViewCursor(Internal::rotateCursor());
+        this->setViewCursor(rotateCursor());
     else if (action == DynamicAction::Panning)
         this->setViewCursor(Qt::SizeAllCursor);
     else if (action == DynamicAction::Zoom)
@@ -187,7 +170,7 @@ struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBa
     }
 
 private:
-    Internal::RubberBandWidget m_rubberBand;
+    RubberBandWidget m_rubberBand;
 };
 
 std::unique_ptr<V3dViewController::IRubberBand> WidgetOccViewController::createRubberBand()
