@@ -141,6 +141,15 @@ void BaseMeasureDisplay::adaptScale(const OccHandle<AIS_TextLabel>& gfxText, con
     gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);
 }
 
+void BaseMeasureDisplay::setTextLabel(OccHandle<AIS_TextLabel> textLabel, const std::string& str)
+{
+    TCollection_ExtendedString extStr = to_OccExtString(" " + str + " ");
+    extStr.ChangeAll(0x00A0, 0x0020); // no-break space
+    extStr.ChangeAll(0x202F, 0x0020); // narrow NBSP
+    extStr.ChangeAll(0x2009, 0x0020); // thin space
+    textLabel->SetText(extStr);
+}
+
 void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 {
     for (int i = 0; i < measureDisplay->graphicsObjectsCount(); ++i) {
@@ -173,7 +182,7 @@ MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
 void MeasureDisplayVertex::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_pnt, config));
-    m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_pnt, config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxText, graphicsText(m_pnt, config));
     BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
@@ -203,7 +212,7 @@ MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circ
 void MeasureDisplayCircleCenter::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_circle.Location(), config));
-    m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_circle.Location(), config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxText, graphicsText(m_circle.Location(), config));
     BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
@@ -254,7 +263,7 @@ void MeasureDisplayCircleDiameter::update(const MeasureDisplayConfig& config)
         MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
     ));
 
-    m_gfxDiameterText->SetText(to_OccExtString(fmt::format(MeasureDisplayI18N::textIdTr(" Ø{0}"), strDiameter)));
+    BaseMeasureDisplay::setTextLabel(m_gfxDiameterText, fmt::format(MeasureDisplayI18N::textIdTr("Ø{0}"), strDiameter));
     BaseMeasureDisplay::adaptScale(m_gfxDiameterText, config);
 }
 
@@ -324,7 +333,7 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
         ));
     }
 
-    m_gfxDistText->SetText(to_OccExtString(" " + strLength));
+    BaseMeasureDisplay::setTextLabel(m_gfxDistText, strLength);
     BaseMeasureDisplay::adaptScale(m_gfxDistText, config);
 }
 
@@ -388,7 +397,7 @@ void MeasureDisplayAngle::update(const MeasureDisplayConfig& config)
         strAngle,
         trAngle.strUnit
     ));
-    m_gfxAngleText->SetText(to_OccExtString(" " + strAngle));
+    BaseMeasureDisplay::setTextLabel(m_gfxAngleText, strAngle);
     BaseMeasureDisplay::adaptScale(m_gfxAngleText, config);
 }
 
@@ -438,7 +447,7 @@ void MeasureDisplayLength::update(const MeasureDisplayConfig& config)
         strLength,
         trLength.strUnit
     ));
-    m_gfxLenText->SetText(to_OccExtString(" " + strLength));
+    BaseMeasureDisplay::setTextLabel(m_gfxLenText, strLength);
     BaseMeasureDisplay::adaptScale(m_gfxLenText, config);
 }
 
@@ -475,7 +484,7 @@ void MeasureDisplayArea::update(const MeasureDisplayConfig& config)
         strArea,
         trArea.strUnit
     ));
-    m_gfxAreaText->SetText(to_OccExtString(" " + strArea));
+    BaseMeasureDisplay::setTextLabel(m_gfxAreaText, strArea);
     BaseMeasureDisplay::adaptScale(m_gfxAreaText, config);
 }
 
@@ -542,9 +551,9 @@ void MeasureDisplayBoundingBox::update(const MeasureDisplayConfig& config)
         trVolume.strUnit
     ));
 
-    m_gfxXLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trXLength, config)));
-    m_gfxYLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trYLength, config)));
-    m_gfxZLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trZLength, config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxXLengthText, BaseMeasureDisplay::text(trXLength, config));
+    BaseMeasureDisplay::setTextLabel(m_gfxYLengthText, BaseMeasureDisplay::text(trYLength, config));
+    BaseMeasureDisplay::setTextLabel(m_gfxZLengthText, BaseMeasureDisplay::text(trZLength, config));
     BaseMeasureDisplay::adaptScale(m_gfxXLengthText, config);
     BaseMeasureDisplay::adaptScale(m_gfxYLengthText, config);
     BaseMeasureDisplay::adaptScale(m_gfxZLengthText, config);

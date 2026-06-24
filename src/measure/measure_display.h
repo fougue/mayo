@@ -91,6 +91,11 @@ protected:
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static void adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config);
 
+    // Converts the UTF8 string to a TCollection_ExtendedString suitable for AIS_TextLabel display
+    // Normalizes Unicode space variants (U+00A0, U+202F, U+2009, ...) to regular space (U+0020)
+    // to work around a Font_TextFormatter limitation on Windows (still there on v7.9.x)
+    static void setTextLabel(OccHandle<AIS_TextLabel> textLabel, const std::string& str);
+
     static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 
 private:
