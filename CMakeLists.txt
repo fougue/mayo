@@ -590,8 +590,15 @@ if(Mayo_BuildApp)
     )
 
     if(Mayo_PostBuildCopyRuntimeDLLs)
+        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
+        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+        execute_process(
+            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
+            OUTPUT_VARIABLE QtPluginsDir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
         # Copy required Qt plugins
-        set(QtPluginsDir "${QT_DIR}/../../../plugins")
         file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
         file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
         file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
