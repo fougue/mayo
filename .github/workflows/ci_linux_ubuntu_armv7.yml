@@ -3,77 +3,77 @@ name: Linux Ubuntu armv7
 on: [push]
 
 jobs:
-    build-ubuntu:
-        strategy:
-            matrix:
-                include:
-                    - arch: armv7
-                      distro: ubuntu_latest
+  build-ubuntu:
+    strategy:
+      matrix:
+        include:
+          - arch: armv7
+            distro: ubuntu_latest
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
-        - name: Get current branch name
-          uses: nelonoel/branch-name@v1.0.1
+    - name: Get current branch name
+      uses: nelonoel/branch-name@v1.0.1
 
-        - name: Run Build
-          uses: uraimo/run-on-arch-action@v2
-          with:
-              arch: ${{matrix.arch}}
-              distro: ${{matrix.distro}}
+    - name: Run Build
+      uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: ${{matrix.arch}}
+        distro: ${{matrix.distro}}
 
-              # Not required, but speeds up builds
-              githubToken: ${{github.token}}
+        # Not required, but speeds up builds
+        githubToken: ${{github.token}}
 
-              install: |
-                  apt-get -y update
+        install: |
+          apt-get -y update
 
-                  apt-get -y install cmake git g++
+          apt-get -y install cmake git g++
 
-                  # Needed to run unit tests
-                  apt-get -y install xvfb
+          # Needed to run unit tests
+          apt-get -y install xvfb
 
-                  # Install Qt5
-                  apt-get -y install qtbase5-dev libqt5svg5-dev
+          # Install Qt5
+          apt-get -y install qtbase5-dev libqt5svg5-dev
 
-                  # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
-                  apt-get -y install libxcb-cursor0
+          # Dependencies for "xcb" Qt plugin(actually needed for Qt6)
+          apt-get -y install libxcb-cursor0
 
-                  # Install OpenCascade
-                  apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
+          # Install OpenCascade
+          apt-get -y install libocct-data-exchange-dev libocct-draw-dev occt-misc
 
-                  # Dependencies for OpenCascade
-                  apt-get -y install libtbb-dev libxi-dev
+          # Dependencies for OpenCascade
+          apt-get -y install libtbb-dev libxi-dev
 
-                  # Install Assimp
-                  apt-get -y install libassimp-dev
+          # Install Assimp
+          apt-get -y install libassimp-dev
 
-              env: |
-                  DISPLAY: :0
-                  GIT_BRANCH_NAME: ${{env.BRANCH_NAME}}
-                  RUN_ARCH_NAME: ${{matrix.arch}}
+        env: |
+          DISPLAY: :0
+          GIT_BRANCH_NAME: ${{env.BRANCH_NAME}}
+          RUN_ARCH_NAME: ${{matrix.arch}}
 
-              run: |
-                  git clone --quiet https://github.com/fougue/mayo.git
-                  cd mayo
+        run: |
+          git clone --quiet https://github.com/fougue/mayo.git
+          cd mayo
 
-                  # Fixes "fatal: detected dubious ownership in repository at '/home/runner/work/mayo/mayo'"
-                  git config --global --add safe.directory `realpath $PWD/..`
+          # Fixes "fatal: detected dubious ownership in repository at '/home/runner/work/mayo/mayo'"
+          git config --global --add safe.directory `realpath $PWD/..`
 
-                  echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
-                  git checkout $GIT_BRANCH_NAME
-                  cd ..
-                  mkdir build
-                  cd build
+          echo GIT_BRANCH_NAME=$GIT_BRANCH_NAME
+          git checkout $GIT_BRANCH_NAME
+          cd ..
+          mkdir build
+          cd build
 
-                  cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON
-                  cmake --build . --config Release --parallel `nproc`
+          cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON
+          cmake --build . --config Release --parallel `nproc`
 
-                  # Execute Unit Tests
-                  #     Note: for some unknown reason unit tests are crashing for armv7(on very first test)
-                  ## Xvfb $DISPLAY -screen 0 1280x1024x24 &
-                  ## sleep 5s
-                  ## ./test-mayo
+          # Execute Unit Tests
+          #   Note: for some unknown reason unit tests are crashing for armv7(on very first test)
+          ## Xvfb $DISPLAY -screen 0 1280x1024x24 &
+          ## sleep 5s
+          ## ./test-mayo

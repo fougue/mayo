@@ -3,41 +3,41 @@ name: Linux Fedora x64
 on: [push]
 
 jobs:
-    build-fedora:
-        runs-on: ubuntu-latest
-        name: build-fedora40-qt5
+  build-fedora:
+    runs-on: ubuntu-latest
+    name: build-fedora40-qt5
 
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-          with:
-              path: 'mayo'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: 'mayo'
 
-        - name: Setup Podman
-          run: |
-              sudo apt update
-              sudo apt-get -y install podman
-              podman pull fedora:40
+    - name: Setup Podman
+      run: |
+        sudo apt update
+        sudo apt-get -y install podman
+        podman pull fedora:40
 
-        - name: Create container and run build+tests
-          run: |
-              {
-                  echo 'FROM fedora:40'
-                  echo 'RUN dnf -y update'
-                  echo 'RUN dnf -y install xorg-x11-server-Xvfb'
-                  echo 'RUN dnf -y install make cmake git gcc-c++'
-                  echo 'RUN dnf -y install qt5-qtbase qt5-qtsvg xcb-util-cursor'
-                  echo 'RUN dnf -y install opencascade-devel'
-                  echo 'RUN dnf -y install assimp assimp-devel'
-                  echo 'RUN dnf clean all'
-                  echo 'COPY mayo mayo'
-                  echo 'WORKDIR /mayo'
-                  echo 'RUN mkdir build'
-                  echo 'WORKDIR /mayo/build'
-                  echo 'RUN cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON'
-                  echo 'RUN cmake --build . --parallel --config Release'
-                  #echo 'RUN Xvfb $DISPLAY -screen 0 1280x1024x24 &'
-                  #echo 'RUN sleep 5s'
-                  #echo 'RUN ./test-mayo'
-              } > podmanfile
-              podman build --tag fedora40-ci -f ./podmanfile
+    - name: Create container and run build+tests
+      run: |
+        {
+          echo 'FROM fedora:40'
+          echo 'RUN dnf -y update'
+          echo 'RUN dnf -y install xorg-x11-server-Xvfb'
+          echo 'RUN dnf -y install make cmake git gcc-c++'
+          echo 'RUN dnf -y install qt5-qtbase qt5-qtsvg xcb-util-cursor'
+          echo 'RUN dnf -y install opencascade-devel'
+          echo 'RUN dnf -y install assimp assimp-devel'
+          echo 'RUN dnf clean all'
+          echo 'COPY mayo mayo'
+          echo 'WORKDIR /mayo'
+          echo 'RUN mkdir build'
+          echo 'WORKDIR /mayo/build'
+          echo 'RUN cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON'
+          echo 'RUN cmake --build . --parallel --config Release'
+          #echo 'RUN Xvfb $DISPLAY -screen 0 1280x1024x24 &'
+          #echo 'RUN sleep 5s'
+          #echo 'RUN ./test-mayo'
+        } > podmanfile
+        podman build --tag fedora40-ci -f ./podmanfile

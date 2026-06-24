@@ -4,51 +4,51 @@ name: macOS arm64
 on: [push]
 
 jobs:
-    build-macos:
-        strategy:
-            matrix:
-                qt_version_major: [5, 6]
-                os: [macos-latest]
-                #os: [macos-latest-large, macos-latest-xlarge]
+  build-macos:
+    strategy:
+      matrix:
+        qt_version_major: [5, 6]
+        os: [macos-latest]
+        #os: [macos-latest-large, macos-latest-xlarge]
 
-        runs-on: ${{matrix.os}}
-        name: build-${{matrix.os}}-qt${{matrix.qt_version_major}}
+    runs-on: ${{matrix.os}}
+    name: build-${{matrix.os}}-qt${{matrix.qt_version_major}}
 
-        steps:
-        - name: Set globals
-          id: globals
-          run: |
-              echo qt_path=$(brew --prefix qt@${{matrix.qt_version_major}}) >> ${GITHUB_OUTPUT}
+    steps:
+    - name: Set globals
+      id: globals
+      run: |
+        echo qt_path=$(brew --prefix qt@${{matrix.qt_version_major}}) >> ${GITHUB_OUTPUT}
 
-        - name: Checkout
-          uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-        - name: Install Qt
-          run: brew install qt@${{matrix.qt_version_major}}
+    - name: Install Qt
+      run: brew install qt@${{matrix.qt_version_major}}
 
-        - name: Install OpenCascade
-          run: brew install opencascade
+    - name: Install OpenCascade
+      run: brew install opencascade
 
-        - name: Install Assimp
-          run: brew install assimp
+    - name: Install Assimp
+      run: brew install assimp
 
-        - name: Get count of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v1
-          id: cpu-cores
+    - name: Get count of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v1
+      id: cpu-cores
 
-        - name: Build
-          run: |
-              mkdir ${{github.workspace}}/build
-              cd ${{github.workspace}}/build
-              cmake .. \
-                    -DMayo_BuildTests=ON \
-                    -DMayo_BuildPluginAssimp=ON \
-                    -DQT_DIR=${{steps.globals.outputs.qt_path}}/lib/cmake/Qt${{matrix.qt_version_major}}
-              cmake --build . \
-                    --config Release \
-                    --parallel ${{steps.cpu-cores.outputs.count}}
+    - name: Build
+      run: |
+        mkdir ${{github.workspace}}/build
+        cd ${{github.workspace}}/build
+        cmake .. \
+          -DMayo_BuildTests=ON \
+          -DMayo_BuildPluginAssimp=ON \
+          -DQT_DIR=${{steps.globals.outputs.qt_path}}/lib/cmake/Qt${{matrix.qt_version_major}}
+        cmake --build . \
+          --config Release \
+          --parallel ${{steps.cpu-cores.outputs.count}}
 
-        - name: Execute Unit Tests
-          working-directory: ${{github.workspace}}/build
-          run: |
-              ./test-mayo
+    - name: Execute Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ./test-mayo

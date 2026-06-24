@@ -3,58 +3,58 @@ name: macOS-conda arm64
 on: [push]
 
 jobs:
-    build-macos-conda:
-        runs-on: macos-latest
-        name: build-macos-qt5
+  build-macos-conda:
+    runs-on: macos-latest
+    name: build-macos-qt5
 
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
-        - name: Set Conda Environment
-          uses: conda-incubator/setup-miniconda@v3
-          with:
-              miniconda-version: "latest"
-              activate-environment: ci_macos_conda
+    - name: Set Conda Environment
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniconda-version: "latest"
+        activate-environment: ci_macos_conda
 
-        - name: Set conda classic solver
-          shell: bash -el {0}
-          run: conda install --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive
+    - name: Set conda classic solver
+      shell: bash -el {0}
+      run: conda install --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive
 
-        - name: Install Qt5
-          shell: bash -el {0}
-          run: conda install conda-forge::qt
+    - name: Install Qt5
+      shell: bash -el {0}
+      run: conda install conda-forge::qt
 
-        - name: Install OpenCascade
-          shell: bash -el {0}
-          run: conda install conda-forge::occt
+    - name: Install OpenCascade
+      shell: bash -el {0}
+      run: conda install conda-forge::occt
 
-        - name: Install Assimp
-          shell: bash -el {0}
-          run: conda install conda-forge::assimp
+    - name: Install Assimp
+      shell: bash -el {0}
+      run: conda install conda-forge::assimp
 
-        - name: Get count of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v1
-          id: cpu-cores
+    - name: Get count of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v1
+      id: cpu-cores
 
-        - name: Build
-          run: |
-              mkdir ${{github.workspace}}/build
-              cd ${{github.workspace}}/build
-              #ASSIMP_CMAKE_DIR=$(find "$CONDA/envs/ci_macos_conda/lib/cmake" -maxdepth 1 -type d -name "assimp-*" | head -n 1)
-              #echo ASSIMP_CMAKE_DIR=$ASSIMP_CMAKE_DIR
-              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/Qt5;$CMAKE_PREFIX_PATH"
-              export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/opencascade;$CMAKE_PREFIX_PATH"
-              export CMAKE_PREFIX_PATH="ASSIMP_CMAKE_DIR;$CMAKE_PREFIX_PATH"
-              cmake .. \
-                    -DMayo_BuildTests=ON \
-                    -DMayo_BuildPluginAssimp=ON \
-                    -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
-              cmake --build . \
-                    --config Release \
-                    --parallel ${{steps.cpu-cores.outputs.count}}
+    - name: Build
+      run: |
+        mkdir ${{github.workspace}}/build
+        cd ${{github.workspace}}/build
+        #ASSIMP_CMAKE_DIR=$(find "$CONDA/envs/ci_macos_conda/lib/cmake" -maxdepth 1 -type d -name "assimp-*" | head -n 1)
+        #echo ASSIMP_CMAKE_DIR=$ASSIMP_CMAKE_DIR
+        export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/Qt5;$CMAKE_PREFIX_PATH"
+        export CMAKE_PREFIX_PATH="$CONDA/envs/ci_macos_conda/lib/cmake/opencascade;$CMAKE_PREFIX_PATH"
+        export CMAKE_PREFIX_PATH="ASSIMP_CMAKE_DIR;$CMAKE_PREFIX_PATH"
+        cmake .. \
+          -DMayo_BuildTests=ON \
+          -DMayo_BuildPluginAssimp=ON \
+          -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
+        cmake --build . \
+          --config Release \
+          --parallel ${{steps.cpu-cores.outputs.count}}
 
-        - name: Execute Unit Tests
-          working-directory: ${{github.workspace}}/build
-          run: |
-              ./test-mayo
+    - name: Execute Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ./test-mayo

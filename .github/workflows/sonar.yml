@@ -49,35 +49,35 @@ jobs:
         if: steps.cache-occt.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 --branch V${OCCT_VERSION//./_} \
-              https://github.com/Open-Cascade-SAS/OCCT.git /tmp/occt
+            https://github.com/Open-Cascade-SAS/OCCT.git /tmp/occt
           cmake -S /tmp/occt -B /tmp/occt-build \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_INSTALL_PREFIX=/opt/occt \
-              -DBUILD_LIBRARY_TYPE=Shared \
-              -DBUILD_DOC_Overview=OFF \
-              -DBUILD_MODULE_Draw=OFF \
-              -DUSE_FREEIMAGE=ON \
-              -DUSE_FREETYPE=ON \
-              -DUSE_RAPIDJSON=ON
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/opt/occt \
+            -DBUILD_LIBRARY_TYPE=Shared \
+            -DBUILD_DOC_Overview=OFF \
+            -DBUILD_MODULE_Draw=OFF \
+            -DUSE_FREEIMAGE=ON \
+            -DUSE_FREETYPE=ON \
+            -DUSE_RAPIDJSON=ON
           cmake --build /tmp/occt-build --parallel $(nproc) --target install --config Release
           rm -rf /tmp/occt*
 
       - name: Configure Mayo build
         run: |
           cmake -S . -B build \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-              -DMayo_BuildTests=ON \
-              -DMayo_BuildPluginAssimp=ON \
-              -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DMayo_BuildTests=ON \
+            -DMayo_BuildPluginAssimp=ON \
+            -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade
 
       - name: Build Mayo(instrumented)
         run: |
           curl -sSLo build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -o build-wrapper.zip
           build-wrapper-linux-x86/build-wrapper-linux-x86-64 \
-              --out-dir bw-output \
-              cmake --build build --config Release --parallel $(nproc)
+            --out-dir bw-output \
+            cmake --build build --config Release --parallel $(nproc)
 
       - name: SonarCloud Scan
         run: |
