@@ -93,6 +93,9 @@ struct OpenFileNames {
 
         const QString allFilesFilter = Command::tr("All files(*.*)");
         listFormatFilter.append(allFilesFilter);
+        if (!listFormatFilter.contains(result.lastIoSettings.selectedFilter))
+            result.lastIoSettings.selectedFilter = allFilesFilter;
+
         const QString dlgTitle = Command::tr("Select Part File");
         const QString dlgOpenDir = filepathTo<QString>(result.lastIoSettings.openDir);
         const QString dlgFilter = listFormatFilter.join(QLatin1String(";;"));
