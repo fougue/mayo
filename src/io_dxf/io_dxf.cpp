@@ -1029,54 +1029,38 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
         return pl.ax2.Location().Translated(vec);
     };
 
-    BRepBuilderAPI_MakeWire wireBuilder;
+    BRepBuilderAPI_MakeWire makeWire;
+    auto addEdge = [&](const gp_Pnt& p0, const gp_Pnt& p1, double bulge) {
+        if (GeomUtils::equal(p0, p1))
+            return;
+
+        if (MathUtils::fuzzyIsNull(bulge)) {
+            makeWire.Add(BRepBuilderAPI_MakeEdge(p0, p1));
+        } else {
+            OccHandle<Geom_TrimmedCurve> arc = makeArcFromBulge(p0, p1, bulge, normal);
+            if (!arc.IsNull())
+                makeWire.Add(BRepBuilderAPI_MakeEdge(arc));
+            else
+                makeWire.Add(BRepBuilderAPI_MakeEdge(p0, p1));
+        }
+    };
+
     for (size_t i = 0; i + 1 < n; ++i) {
         const auto& v0 = polyline.vertices.at(i);
         const auto& v1 = polyline.vertices.at(i+1);
-        const gp_Pnt p0 = makePolar(v0);
-        const gp_Pnt p1 = makePolar(v1);
-
-        if (MathUtils::fuzzyIsNull(v0.bulge)) {
-            wireBuilder.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        } else {
-            OccHandle<Geom_TrimmedCurve> arc = makeArcFromBulge(p0, p1, v0.bulge, normal);
-            if (!arc.IsNull())
-                wireBuilder.Add(BRepBuilderAPI_MakeEdge(arc));
-            else if (!GeomUtils::equal(p0, p1))
-                wireBuilder.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        }
+        addEdge(makePolar(v0), makePolar(v1), v0.bulge);
     }
 
     if (isClosed) {
         const auto& vLast = polyline.vertices.at(n - 1);
         const auto& vFirst = polyline.vertices.at(0);
-        const gp_Pnt p0 = makePolar(vLast);
-        const gp_Pnt p1 = makePolar(vFirst);
-
-        if (MathUtils::fuzzyIsNull(vLast.bulge)) {
-            wireBuilder.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        } else {
-            OccHandle<Geom_TrimmedCurve> arc = makeArcFromBulge(p0, p1, vLast.bulge, normal);
-            if (arc)
-                wireBuilder.Add(BRepBuilderAPI_MakeEdge(arc));
-            else
-                wireBuilder.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        }
+        addEdge(makePolar(vLast), makePolar(vFirst), vLast.bulge);
     }
 
-    if (!wireBuilder.IsDone())
+    if (!makeWire.IsDone())
         return {}; // TODO Emit error message?
 
-#if 0
-    if (isClosed) {
-        const gp_Pln plane(pl.ax2.Location(), normal);
-        BRepBuilderAPI_MakeFace faceBuilder(plane, wireBuilder.Wire(), true/*inside*/);
-        if (faceBuilder.IsDone())
-            return makeExtrusionShape(faceBuilder.Face(), polyline.thickness, pl.frame.w);
-    }
-#endif
-
-    return makeExtrusionShape(wireBuilder.Wire(), polyline.thickness, pl.frame.w);
+    return makeExtrusionShape(makeWire.Wire(), polyline.thickness, pl.frame.w);
 }
 
 std::string DxfReader::getPlainMText(std::string_view strMText)
@@ -1441,12 +1425,12 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_POINT& point)
         const gp_Pnt p3 = ax2.Location().Translated( h*ux + h*vy);
         const gp_Pnt p4 = ax2.Location().Translated(-h*ux + h*vy);
 
-        BRepBuilderAPI_MakeWire wireBuilder;
-        wireBuilder.Add(BRepBuilderAPI_MakeEdge(p1, p2));
-        wireBuilder.Add(BRepBuilderAPI_MakeEdge(p2, p3));
-        wireBuilder.Add(BRepBuilderAPI_MakeEdge(p3, p4));
-        wireBuilder.Add(BRepBuilderAPI_MakeEdge(p4, p1));
-        BRepUtils::addShape(&shape, wireBuilder.Wire());
+        BRepBuilderAPI_MakeWire makeWire;
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p1, p2));
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p2, p3));
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p3, p4));
+        makeWire.Add(BRepBuilderAPI_MakeEdge(p4, p1));
+        BRepUtils::addShape(&shape, makeWire.Wire());
     }
 
     return shape;
@@ -2049,17 +2033,17 @@ TopoDS_Shape DxfReader::ReaderImpl::createSplineFromPolesAndKnots(const Dxf_SPLI
         if (numSegments * numPolesPerSegment != iNumPoles)
             return {};
 
-        BRepBuilderAPI_MakeWire wireBuilder;
+        BRepBuilderAPI_MakeWire makeWire;
         for (int i = 0; i < numSegments; ++i) {
             TColgp_Array1OfPnt segPoles(1, numPolesPerSegment);
             for (int j = 0; j < numPolesPerSegment; ++j)
                 segPoles.SetValue(j+1, occPoles.Value(i * numPolesPerSegment + j + 1));
 
-            wireBuilder.Add(BRepBuilderAPI_MakeEdge(makeOccHandle<Geom_BezierCurve>(segPoles)));
+            makeWire.Add(BRepBuilderAPI_MakeEdge(makeOccHandle<Geom_BezierCurve>(segPoles)));
         }
 
-        if (wireBuilder.IsDone())
-            return wireBuilder.Wire();
+        if (makeWire.IsDone())
+            return makeWire.Wire();
     }
 
     return {};

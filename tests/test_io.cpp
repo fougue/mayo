@@ -383,6 +383,19 @@ void TestIO::IO_dxfGetPlainMText_test_data()
     QTest::newRow("unicode-unchanged") << "X \\U+010 Y" << "X \\U+010 Y";
 }
 
+void TestIO::IO_dxfLwPolylineClosedDuplicateLastVertex_test()
+{
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    const bool okImport = m_ioSystem->importInDocument()
+        .targetDocument(doc)
+        .withFilepath("tests/inputs/lwpolyline_closed_duplicate_last_vertex.dxf")
+        .execute();
+    QVERIFY(okImport);
+    QCOMPARE(doc->entityCount(), 1);
+}
+
 void TestIO::initTestCase()
 {
     m_ioSystem = new IO::System;

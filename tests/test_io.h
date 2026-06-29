@@ -32,6 +32,8 @@ private slots:
     void IO_dxfGetPlainMText_test();
     void IO_dxfGetPlainMText_test_data();
 
+    void IO_dxfLwPolylineClosedDuplicateLastVertex_test();
+
     void initTestCase();
     void cleanupTestCase();
 
