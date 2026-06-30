@@ -1036,10 +1036,15 @@ OccHandle<Geom_TrimmedCurve> DxfReader::ReaderImpl::makeArcFromBulge(
 
     // p0 and p1 parameters on the circle
     const double a0 = ElCLib::Parameter(circ, p0);
-    const double a1 = a0 + theta; // Enforces sense + arc length
+    const double a1 = a0 + theta;
 
     // Trimmed arc
-    return new Geom_TrimmedCurve(makeOccHandle<Geom_Circle>(circ), a0, a1);
+    auto geom = makeOccHandle<Geom_Circle>(circ);
+    auto curve = makeOccHandle<Geom_TrimmedCurve>(geom, std::min(a0, a1), std::max(a0, a1));
+    if (a1 < a0)
+        curve->Reverse();
+
+    return curve;
 }
 
 TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
