@@ -217,54 +217,82 @@ struct Frame {
     gp_Dir u;
     gp_Dir v;
     gp_Dir w;
+
+    // Returns the frame with its (u, v) axes rotated by `theta` around `frame.w` (w unchanged)
+    Frame rotated(double theta) const
+    {
+        const gp_Dir uRot{ gp_Vec{this->u} * std::cos(theta) + gp_Vec{this->v} * std::sin(theta) };
+        const gp_Dir vRot{ gp_Vec{this->w} ^ gp_Vec{uRot} };
+        return { uRot, vRot, this->w };
+    }
+
+    // Builds the local->WCS transformation: maps the local axes (DX,DY,DZ) onto the OCS axes
+    gp_Trsf makeOcsToWcsTrsf() const
+    {
+        gp_Trsf trsf;
+        trsf.SetDisplacement(
+            gp_Ax3(gp::Origin(), gp::DZ(), gp::DX()), // local axes
+            gp_Ax3(gp::Origin(), this->w, this->u)    // target OCS axes
+        );
+        return trsf;
+    }
+
+    // Builds the World Coordinate System frame from an OCS extrusion direction, following
+    // AutoCAD's "Arbitrary Axis Algorithm"
+    // Reference: https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-4622B5B0-3D7B-4C7C-A1FD-A50461A1F46E
+    // (or DXF Reference, "OCS to WCS Transformations")
+    static Frame makeOcs(const gp_Dir& w)
+    {
+        constexpr double threshold = 1. / 64.;
+
+        // Select the reference world axis depending on Az.x and Az.y
+        const bool useWorldY = std::abs(w.X()) < threshold && std::abs(w.Y()) < threshold;
+        const gp_Dir worldRef = useWorldY ? gp::DY() : gp::DZ();
+
+        // Ax = worldRef × Az
+        const gp_Vec axVec = gp_Vec(worldRef) ^ gp_Vec(w);
+
+        // worldRef and Az are never colinear here: when useWorldY is true, |Az.x| and |Az.y|
+        // are both < 1/64 so Az can't be parallel to DY; otherwise Az can't be parallel to DZ
+        // (that would require |Az.x|,|Az.y| < 1/64, which is excluded by the branch condition)
+        const gp_Dir u{axVec};
+
+        // Ay = Az × Ax
+        const gp_Dir v{gp_Vec(w) ^ gp_Vec(u)};
+
+        return {u, v, w};
+    }
+
+    static const Frame& local()
+    {
+        static const Frame frame{gp::DX(), gp::DY(), gp::DZ()};
+        return frame;
+    }
 };
 
 struct Placement {
     gp_Ax2 ax2;
     Frame frame;
-};
 
-// Builds an orthonormal frame from a given direction vector(OCS Z-axis)
-// Given direction `w` this function constructs a right-handed orthonormal basis(u, v, w), where:
-//     * `w` is used as the Z axis,
-//     * u is computed by projecting a non-colinear reference vector onto the plane perpendicular to `w`
-//     * v is the cross product w × u.
-// The function ensures numerical robustness by selecting an initial reference vector that is not
-// nearly colinear with `w` and falling back to an alternative axis if needed
-Frame makeOcsFrame(const gp_Dir& w)
-{
-    // Choose 'a' non-colinear with 'w'(45° ~ 0.70710678)
-    gp_Dir a = (std::abs(w.Z()) < 0.7071067811865476) ? gp::DZ() : gp::DX();
-
-    // Project 'a' in the perpendicular plane to 'w' : uvec = a - (a·w) w
-    gp_Vec uvec = gp_Vec(a) - gp_Vec(w) * (a.Dot(w));
-    if (GeomUtils::isNull(uvec)) {
-        // a ≈ colinear to w → try with another 'a'
-        a = gp::DY();
-        uvec = gp_Vec(a) - gp_Vec(w) * (a.Dot(w));
+    static Placement makeFromOcs(
+            const DxfCoords& centerOcs,
+            const DxfCoords& extrusionDir,
+            const gp_Pnt& originWcs = gp::Origin()
+        )
+    {
+        Placement pl;
+        pl.frame = Frame::makeOcs(toOccDir(extrusionDir));
+        // Mapping OCS -> WCS
+        const gp_Pnt cw = originWcs.Translated(
+              gp_Vec{pl.frame.u} * centerOcs.x
+            + gp_Vec{pl.frame.v} * centerOcs.y
+            + gp_Vec{pl.frame.w} * centerOcs.z
+        );
+        // Z=w, X=u → deterministic orientation
+        pl.ax2 = gp_Ax2{toCorrectedPnt(cw), pl.frame.w, pl.frame.u};
+        return pl;
     }
-
-    const gp_Dir u{uvec};
-    const gp_Dir v{gp_Vec(w) ^ gp_Vec(u)};
-    return {u, v, w};
-}
-
-Placement makePlacementFromOcs(
-        const DxfCoords& centerOcs, const DxfCoords& extrusionDir, const gp_Pnt& originWcs = gp::Origin()
-    )
-{
-    Placement pl;
-    pl.frame = makeOcsFrame(toOccDir(extrusionDir));
-    // Mapping OCS -> WCS
-    const gp_Pnt cw = originWcs.Translated(
-        gp_Vec{pl.frame.u} * centerOcs.x
-        + gp_Vec{pl.frame.v} * centerOcs.y
-        + gp_Vec{pl.frame.w} * centerOcs.z
-    );
-    // Z=w, X=u → deterministic orientation
-    pl.ax2 = gp_Ax2{toCorrectedPnt(cw), pl.frame.w, pl.frame.u};
-    return pl;
-}
+};
 
 TopoDS_Shape makeExtrusionShape(const TopoDS_Shape& shape, double thickness, const gp_Dir& extrusionDir)
 {
@@ -280,12 +308,13 @@ TopoDS_Shape makeExtrusionShape(const TopoDS_Shape& shape, double thickness, con
 // Is `scale` a unit-like triple{±1, ±1, ±1}?
 bool isUnitScale(const DxfScale& scale)
 {
-    return MathUtils::fuzzyEqual(std::abs(scale.x), 1.)
-           && MathUtils::fuzzyEqual(std::abs(scale.y), 1)
-           && MathUtils::fuzzyEqual(std::abs(scale.z), 1)
+    return    MathUtils::fuzzyEqual(std::abs(scale.x), 1.)
+           && MathUtils::fuzzyEqual(std::abs(scale.y), 1.)
+           && MathUtils::fuzzyEqual(std::abs(scale.z), 1.)
         ;
 }
 
+// Mirror/scale transform working purely in LOCAL coordinates
 gp_Trsf unitScaleTrsf(const gp_Pnt& pnt, const Frame& frame, const DxfScale& scale)
 {
     gp_Trsf trsf;
@@ -294,17 +323,17 @@ gp_Trsf unitScaleTrsf(const gp_Pnt& pnt, const Frame& frame, const DxfScale& sca
     const double sx = scale.x;
     const double sy = scale.y;
     const double sz = scale.z;
-    const int negativeCount = (sx < .0 ? 1 : 0) + (sy < 0. ? 1 : 0) + (sz < 0. ? 1 : 0);
+    const int negativeCount = (sx < 0. ? 1 : 0) + (sy < 0. ? 1 : 0) + (sz < 0. ? 1 : 0);
     if (negativeCount == 0) {
     }
     else if (negativeCount == 1) {
         // Mirror normal to the corresponding axis
-        const gp_Dir n = (sx < 0) ? frame.u : ((sy < 0) ? frame.v : frame.w);
+        const gp_Dir n = (sx < 0.) ? frame.u : ((sy < 0.) ? frame.v : frame.w);
         trsf.SetMirror(gp_Ax2(pnt, n));   // plane passing through `pnt` which normal `n`
     }
     else if (negativeCount == 2) {
         // Rotate by 180° around axis corresponding to positive sign
-        const gp_Dir axis = (sx > 0) ? frame.u : ((sy > 0) ? frame.v : frame.w);
+        const gp_Dir axis = (sx > 0.) ? frame.u : ((sy > 0.) ? frame.v : frame.w);
         trsf.SetRotation(gp_Ax1(pnt, axis), MathConst::pi);
     }
     else {
@@ -781,7 +810,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_ARC& arc)
         return C.Translated(gp_Vec{u} * (R * std::cos(theta)) + gp_Vec{v} * (R * std::sin(theta)));
     };
 
-    const Placement pl = makePlacementFromOcs(arc.centerPoint, arc.extrusionDirection);
+    const auto pl = Placement::makeFromOcs(arc.centerPoint, arc.extrusionDirection);
 
     const gp_Circ circ{pl.ax2, arc.radius};
 
@@ -814,7 +843,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_CIRCLE& circle)
         return {};
     }
 
-    const Placement pl = makePlacementFromOcs(circle.centerPoint, circle.extrusionDirection);
+    const auto pl = Placement::makeFromOcs(circle.centerPoint, circle.extrusionDirection);
     const gp_Circ circ{pl.ax2, circle.radius};
     return makeExtrusionShape(BRepBuilderAPI_MakeEdge(circ), circle.thickness, pl.frame.w);
 }
@@ -826,7 +855,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_ELLIPSE& ellipse)
         return {};
     }
 
-    Placement pl = makePlacementFromOcs(ellipse.centerPoint, ellipse.extrusionDirection);
+    auto pl = Placement::makeFromOcs(ellipse.centerPoint, ellipse.extrusionDirection);
 
     const gp_Vec majorw =
         gp_Vec{pl.frame.u} * ellipse.majorAxisEndPoint.x
@@ -889,7 +918,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_INSERT& insert)
         return {};
 
     // OCS frame of the INSERT
-    const Frame frame = makeOcsFrame(toOccDir(insert.extrusionDirection));
+    const Frame frame = Frame::makeOcs(toOccDir(insert.extrusionDirection));
 
     // Parameters for grid-like insertion
     const int rows = std::max(1, insert.rowCount);
@@ -903,33 +932,33 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_INSERT& insert)
 
     // Common pre-computations
     const gp_Pnt insertPnt_wcs = ocsPointToWcs(insert.insertPoint, frame);
-    const gp_Vec blockPnt_wcs = ocsVecToWcs(block.basePoint, frame);
     const double theta = MathUtils::degreeToRadian(insert.rotationAngle);
+    const Frame rotFrame = frame.rotated(theta);
 
     auto gridCellPoint = [&](int row, int col) -> gp_Pnt {
         const gp_Vec offset =
-            gp_Vec{frame.u} * (insert.rowSpacing * row)
-            + gp_Vec{frame.v} * (insert.columnSpacing * col)
+              gp_Vec{rotFrame.u} * (insert.rowSpacing * row)
+            + gp_Vec{rotFrame.v} * (insert.columnSpacing * col)
         ;
         return insertPnt_wcs.Translated(offset);
     };
 
     if (unitScale) {
-        const gp_Trsf scaleTrsf = unitScaleTrsf(gp::Origin(), frame, insert.scaleFactor);
-        const gp_Trsf rotationTrsf = GeomUtils::makeRotation(gp_Ax1{gp::Origin(), frame.w}, theta);
-        const gp_Trsf t1Trsf = GeomUtils::makeTranslation(-blockPnt_wcs);
+        const gp_Trsf scaleTrsf = unitScaleTrsf(gp::Origin(), Frame::local(), insert.scaleFactor);
+        const gp_Trsf frameTrsf = rotFrame.makeOcsToWcsTrsf();
+        const gp_Trsf t1Trsf = GeomUtils::makeTranslation(-toOccVec(block.basePoint));
         for (int j = 0; j < rows; ++j) {
             for (int i = 0; i < cols; ++i) {
-                const gp_Trsf t2Trsf = GeomUtils::makeTranslation(gridCellPoint(i, j).XYZ());
-                const gp_Trsf trsf = t2Trsf * rotationTrsf * scaleTrsf * t1Trsf;
+                const gp_Trsf t2Trsf = GeomUtils::makeTranslation(gridCellPoint(j, i).XYZ());
+                const gp_Trsf trsf = t2Trsf * frameTrsf * scaleTrsf * t1Trsf;
                 BRepUtils::addShape(&result, content.Moved(trsf));
             }
         }
     }
     else {
         // Non-unit scale -> GTransform
+        // L = R(theta) * matFrame * matScale  (scale in LOCAL axes, then OCS basis change, then rotation
 
-        // U = [u v w]
         const gp_Mat matFrame{
             frame.u.X(), frame.v.X(), frame.w.X(),
             frame.u.Y(), frame.v.Y(), frame.w.Y(),
@@ -941,15 +970,14 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_INSERT& insert)
             0,    sf.y, 0,
             0,    0,    sf.z
         };
-        const gp_Mat Ms = matFrame * matScale * matFrame.Transposed();
         const gp_Trsf R = GeomUtils::makeRotation(gp_Ax1{gp::Origin(), frame.w}, theta);
-        const gp_Mat L = R.VectorialPart() * Ms;
-        const gp_XYZ LB = L * blockPnt_wcs.XYZ();
+        const gp_Mat L = R.VectorialPart() * matFrame * matScale;
+        const gp_XYZ LB = L * toOccVec(block.basePoint).XYZ();
         for (int j = 0; j < rows; ++j) {
             for (int i = 0; i < cols; ++i) {
                 gp_GTrsf G;
                 G.SetVectorialPart(L);
-                G.SetTranslationPart(gridCellPoint(i, j).XYZ() - LB);
+                G.SetTranslationPart(gridCellPoint(j, i).XYZ() - LB);
                 BRepUtils::addShape(&result, BRepBuilderAPI_GTransform(content, G, true/*copy*/).Shape());
             }
         }
@@ -960,7 +988,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_INSERT& insert)
 
 TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LINE& line)
 {
-    const Frame frame = makeOcsFrame(toOccDir(line.extrusionDirection));
+    const Frame frame = Frame::makeOcs(toOccDir(line.extrusionDirection));
     const gp_Pnt p1 = ocsPointToWcs(line.startPoint, frame);
     const gp_Pnt p2 = ocsPointToWcs(line.endPoint, frame);
     if (GeomUtils::equal(p1, p2))
@@ -1021,7 +1049,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
         return {};
 
     const bool isClosed = (polyline.flag & 1u) != 0u;
-    const Placement pl = makePlacementFromOcs({0., 0., polyline.elevation}, polyline.extrusionDirection);
+    const auto pl = Placement::makeFromOcs({0., 0., polyline.elevation}, polyline.extrusionDirection);
     const gp_Dir& normal = pl.ax2.Direction();
 
     auto makePolar = [&](const Dxf_LWPOLYLINE::Vertex& vertex) -> gp_Pnt {
@@ -1221,7 +1249,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_MTEXT& mtext)
         return {};
 
     const gp_Dir extrusionDir = toOccDir(mtext.extrusionDirection);
-    const Frame frame = makeOcsFrame(extrusionDir);
+    const Frame frame = Frame::makeOcs(extrusionDir);
     const gp_Pnt pt = ocsPointToWcs(mtext.insertionPoint, frame);
     const std::string& fontName = m_params.fontNameForTextObjects;
     const double lineHeight = 1.4 * mtext.height;
@@ -1326,7 +1354,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_POINT& point)
     const bool drawSquare = (pdmode & 64) != 0;
     const int base = pdmode & 0x1F; // 0..31; base values 0,1,2,3,4
 
-    gp_Ax2 ax2 = makePlacementFromOcs(point.location, point.extrusionDirection).ax2;
+    gp_Ax2 ax2 = Placement::makeFromOcs(point.location, point.extrusionDirection).ax2;
     const double angleXAxis = pdmode != 0 ? point.angleXAxis : 0.;
     if (!MathUtils::fuzzyIsNull(point.angleXAxis)) {
         const double angleXAxis_rad = MathUtils::degreeToRadian(angleXAxis);
@@ -1574,7 +1602,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolyline2d(const Dxf_POLYLINE& po
     const bool isPolylineClosed = (polyline.flags & Dxf_POLYLINE::Flag::Closed) != 0;
     const int nodeCount = gsl::narrow<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
     const gp_Dir extrusionDir = toOccDir(polyline.extrusionDirection);
-    const Frame frame = makeOcsFrame(extrusionDir);
+    const Frame frame = Frame::makeOcs(extrusionDir);
     MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
         polygonBuilder.setNode(i + 1, ocsPointToWcs(vertices.at(i).point, frame));
@@ -1593,7 +1621,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapeCurveFit(const Dxf_POLYLINE& poly
     const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
     const int nodeCount = gsl::narrow<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
     const gp_Dir extrusionDir = toOccDir(polyline.extrusionDirection);
-    const Frame frame = makeOcsFrame(extrusionDir);
+    const Frame frame = Frame::makeOcs(extrusionDir);
     auto points = makeOccHandle<TColgp_HArray1OfPnt>(1, nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
         points->SetValue(i + 1, ocsPointToWcs(vertices.at(i).point, frame));
@@ -1635,7 +1663,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapeSplineFit(const Dxf_POLYLINE& pol
 {
     const bool isPolylineClosed = polyline.flags & Dxf_POLYLINE::Flag::Closed;
     const gp_Dir extrusionDir = toOccDir(polyline.extrusionDirection);
-    const Frame frame = makeOcsFrame(extrusionDir);
+    const Frame frame = Frame::makeOcs(extrusionDir);
 
     std::vector<const Dxf_POLYLINE::Vertex*> ctrlPoints;
     std::vector<const Dxf_POLYLINE::Vertex*> splineVertices;
