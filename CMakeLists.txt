@@ -761,6 +761,9 @@ endif()
 
 add_custom_target(
     OtherFiles SOURCES
+    .github/CI_OVERVIEW.md
+    .github/FUNDING.yml
+    .github/sonar/project.properties
     .github/workflows/ci_linux_arch.yml
     .github/workflows/ci_linux_fedora.yml
     .github/workflows/ci_linux_ubuntu.yml
@@ -768,11 +771,13 @@ add_custom_target(
     .github/workflows/ci_macos.yml
     .github/workflows/ci_macos_conda.yml
     .github/workflows/ci_windows.yml
+    .github/workflows/sonar.yml
     images/credits.txt
     scripts/bump-version.rb
     scripts/gen-cmake-opencascade-vars.bat
-    src/mayo_config.h.cmake
-    src/mayo_version.h.cmake
+    cmake/mayo_config.h.in
+    cmake/mayo_version.h.in
+    LICENSE.txt
     README.md
 )
 

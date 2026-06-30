@@ -21,7 +21,7 @@ jobs:
         echo qt_path=$(brew --prefix qt@${{matrix.qt_version_major}}) >> ${GITHUB_OUTPUT}
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Install Qt
       run: brew install qt@${{matrix.qt_version_major}}

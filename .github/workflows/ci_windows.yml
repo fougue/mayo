@@ -50,17 +50,17 @@ jobs:
         )
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         cache: true
         cache-key-prefix: QtCache
 
     - name: Cache OpenCascade archive
       id: cache-occ
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
         key: occ-${{matrix.occ_version}}
@@ -77,7 +77,7 @@ jobs:
 
     - name: Cache Assimp archive
       id: cache-assimp
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: assimp-${{matrix.assimp_version}}.zip
         key: assimp-${{matrix.assimp_version}}
