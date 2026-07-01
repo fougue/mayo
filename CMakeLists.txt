@@ -266,6 +266,10 @@ if(WIN32)
     include(${PROJECT_SOURCE_DIR}/cmake/OpenCascadeWin.cmake)
     if (OpenCASCADE_FOUND)
         # Add OpenCASCADE include directory
+        if(OpenCASCADE_VERSION VERSION_LESS 7.5.0)
+            list(APPEND Mayo_IncludeDirectories ${PROJECT_SOURCE_DIR}/src/3rdparty/occt/patch_pre7.5)
+        endif()
+
         list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
 
         # Add OpenCASCADE library directories
