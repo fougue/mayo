@@ -539,9 +539,21 @@ private:
     TopoDS_Shape createShapeCurveFit(const Dxf_POLYLINE& polyline);
     TopoDS_Shape createShapeSplineFit(const Dxf_POLYLINE& polyline);
 
+    template<typename VertexType, typename VertexToPointFunction>
+    static TopoDS_Shape createShapeFromVertices(
+        const std::vector<VertexType>& vertices,
+        VertexToPointFunction vertexToPoint,
+        const gp_Dir& normal,
+        bool isClosed
+    );
+
     // Create OCC curve corresponding to arc via bulge
     static OccHandle<Geom_TrimmedCurve> makeArcFromBulge(
         const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& planeNormal
+    );
+
+    static TopoDS_Edge makeBulgeEdge(
+        const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& normal
     );
 
     enum class BlockState {
@@ -707,7 +719,7 @@ bool DxfReader::ReaderImpl::setSourceEncoding(std::string_view codepage)
     }
     else {
         m_srcEncoding = Resource_ANSI;
-        m_messenger->emitWarning("Codepage " + std::string{codepage} + " not supported");
+        m_messenger->emitWarning(fmt::format(Properties::textIdTr("Codepage '{}' not supported"), codepage));
     }
 
     return true;
@@ -997,6 +1009,43 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LINE& line)
     return makeExtrusionShape(BRepBuilderAPI_MakeEdge(p1, p2), line.thickness, frame.w);
 }
 
+template<typename VertexType, typename VertexToPointFunction>
+TopoDS_Shape DxfReader::ReaderImpl::createShapeFromVertices(
+    const std::vector<VertexType>& vertices,
+    VertexToPointFunction vertexToPoint,
+    const gp_Dir& normal,
+    bool isClosed
+    )
+{
+    const size_t n = vertices.size();
+    if (n < 2)
+        return {};
+
+    BRepBuilderAPI_MakeWire makeWire;
+    auto addEdge = [&](const gp_Pnt& p0, const gp_Pnt& p1, double bulge) {
+        const TopoDS_Edge edge = makeBulgeEdge(p0, p1, bulge, normal);
+        if (!edge.IsNull())
+            makeWire.Add(edge);
+    };
+
+    for (size_t i = 0; i + 1 < n; ++i) {
+        const auto& v0 = vertices.at(i);
+        const auto& v1 = vertices.at(i + 1);
+        addEdge(vertexToPoint(v0), vertexToPoint(v1), v0.bulge);
+    }
+
+    if (isClosed) {
+        const auto& vLast = vertices.at(n - 1);
+        const auto& vFirst = vertices.at(0);
+        addEdge(vertexToPoint(vLast), vertexToPoint(vFirst), vLast.bulge);
+    }
+
+    if (makeWire.IsDone())
+        return makeWire.Wire();
+
+    return {};
+}
+
 OccHandle<Geom_TrimmedCurve> DxfReader::ReaderImpl::makeArcFromBulge(
         const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& planeNormal
     )
@@ -1047,53 +1096,35 @@ OccHandle<Geom_TrimmedCurve> DxfReader::ReaderImpl::makeArcFromBulge(
     return curve;
 }
 
-TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
+TopoDS_Edge DxfReader::ReaderImpl::makeBulgeEdge(
+        const gp_Pnt& p0, const gp_Pnt& p1, double bulge, const gp_Dir& normal
+    )
 {
-    const size_t n = polyline.vertices.size();
-    if (n < 2)
+    if (GeomUtils::equal(p0, p1))
         return {};
 
+    if (!MathUtils::fuzzyIsNull(bulge)) {
+        OccHandle<Geom_TrimmedCurve> arc = makeArcFromBulge(p0, p1, bulge, normal);
+        if (!arc.IsNull())
+            return BRepBuilderAPI_MakeEdge(arc);
+    }
+
+    return BRepBuilderAPI_MakeEdge(p0, p1);
+}
+
+TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_LWPOLYLINE& polyline)
+{
     const bool isClosed = (polyline.flag & 1u) != 0u;
     const auto pl = Placement::makeFromOcs({0., 0., polyline.elevation}, polyline.extrusionDirection);
-    const gp_Dir& normal = pl.ax2.Direction();
-
-    auto makePolar = [&](const Dxf_LWPOLYLINE::Vertex& vertex) -> gp_Pnt {
+    auto makePolarPnt = [&](const Dxf_LWPOLYLINE::Vertex& vertex) -> gp_Pnt {
         const gp_Vec vec = gp_Vec{pl.frame.u} * vertex.x + gp_Vec{pl.frame.v} * vertex.y;
         return pl.ax2.Location().Translated(vec);
     };
-
-    BRepBuilderAPI_MakeWire makeWire;
-    auto addEdge = [&](const gp_Pnt& p0, const gp_Pnt& p1, double bulge) {
-        if (GeomUtils::equal(p0, p1))
-            return;
-
-        if (MathUtils::fuzzyIsNull(bulge)) {
-            makeWire.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        } else {
-            OccHandle<Geom_TrimmedCurve> arc = makeArcFromBulge(p0, p1, bulge, normal);
-            if (!arc.IsNull())
-                makeWire.Add(BRepBuilderAPI_MakeEdge(arc));
-            else
-                makeWire.Add(BRepBuilderAPI_MakeEdge(p0, p1));
-        }
-    };
-
-    for (size_t i = 0; i + 1 < n; ++i) {
-        const auto& v0 = polyline.vertices.at(i);
-        const auto& v1 = polyline.vertices.at(i+1);
-        addEdge(makePolar(v0), makePolar(v1), v0.bulge);
-    }
-
-    if (isClosed) {
-        const auto& vLast = polyline.vertices.at(n - 1);
-        const auto& vFirst = polyline.vertices.at(0);
-        addEdge(makePolar(vLast), makePolar(vFirst), vLast.bulge);
-    }
-
-    if (!makeWire.IsDone())
+    TopoDS_Shape shape = createShapeFromVertices(polyline.vertices, makePolarPnt, pl.frame.w, isClosed);
+    if (shape.IsNull())
         return {}; // TODO Emit error message?
 
-    return makeExtrusionShape(makeWire.Wire(), polyline.thickness, pl.frame.w);
+    return makeExtrusionShape(shape, polyline.thickness, pl.frame.w);
 }
 
 std::string DxfReader::getPlainMText(std::string_view strMText)
@@ -1602,22 +1633,16 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolyline3d(const Dxf_POLYLINE& po
 
 TopoDS_Shape DxfReader::ReaderImpl::createShapePolyline2d(const Dxf_POLYLINE& polyline)
 {
-    // TODO Handle Dxf_POLYLINE::Vertex::bulge
-    const auto& vertices = polyline.vertices;
-    const bool isPolylineClosed = (polyline.flags & Dxf_POLYLINE::Flag::Closed) != 0;
-    const int nodeCount = gsl::narrow<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
-    const gp_Dir extrusionDir = toOccDir(polyline.extrusionDirection);
-    const Frame frame = Frame::makeOcs(extrusionDir);
-    MeshUtils::Polygon3dBuilder polygonBuilder(nodeCount);
-    for (unsigned i = 0; i < vertices.size(); ++i)
-        polygonBuilder.setNode(i + 1, ocsPointToWcs(vertices.at(i).point, frame));
+    const bool isClosed = (polyline.flags & Dxf_POLYLINE::Flag::Closed) != 0;
+    const Frame frame = Frame::makeOcs(toOccDir(polyline.extrusionDirection));
+    auto makeWcsPnt = [&](const Dxf_POLYLINE::Vertex& vertex) -> gp_Pnt {
+        return ocsPointToWcs(vertex.point, frame);
+    };
+    TopoDS_Shape shape = createShapeFromVertices(polyline.vertices, makeWcsPnt, frame.w, isClosed);
+    if (shape.IsNull())
+        return {}; // TODO Emit error message?
 
-    if (isPolylineClosed)
-        polygonBuilder.setNode(nodeCount, ocsPointToWcs(vertices.at(0).point, frame));
-
-    polygonBuilder.finalize();
-    const TopoDS_Shape shape = BRepUtils::makeEdge(polygonBuilder.get());
-    return makeExtrusionShape(shape, polyline.thickness, extrusionDir);
+    return makeExtrusionShape(shape, polyline.thickness, frame.w);
 }
 
 TopoDS_Shape DxfReader::ReaderImpl::createShapeCurveFit(const Dxf_POLYLINE& polyline)
