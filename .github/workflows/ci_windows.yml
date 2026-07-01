@@ -17,8 +17,7 @@ jobs:
             assimp_version: 5.4.3
             pch: ON
 
-    # NOTE windows-latest may use a newer MSVC version incompatible with OpenCascade < 7.5
-    runs-on: windows-2022
+    runs-on: windows-latest
     name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}${{ matrix.pch == 'ON' && '-pch' || '' }}
 
     steps:
