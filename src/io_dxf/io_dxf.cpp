@@ -870,7 +870,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_ELLIPSE& ellipse)
     auto pl = Placement::makeFromOcs(ellipse.centerPoint, ellipse.extrusionDirection);
 
     const gp_Vec majorw =
-        gp_Vec{pl.frame.u} * ellipse.majorAxisEndPoint.x
+          gp_Vec{pl.frame.u} * ellipse.majorAxisEndPoint.x
         + gp_Vec{pl.frame.v} * ellipse.majorAxisEndPoint.y
         + gp_Vec{pl.frame.w} * ellipse.majorAxisEndPoint.z
     ;

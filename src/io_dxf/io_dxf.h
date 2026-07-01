@@ -27,11 +27,11 @@ public:
         bool groupLayers = true;
         std::string fontNameForTextObjects = "Arial";
         // TODO
-        //     Add syncAttribs option? If ON the reader creates missing ATTRIBs from ATTDEF
-        //     Or mode-like:
-        //         * "strict"   -> no creation of missing ATTRIBs
-        //         * "sync"     -> creates missing ATTRIBs from ATTDEF
-        //         * "diagnose" -> no creation but lists "incomplete" INSERTs regarding ATTDEF
+        // Add syncAttribs option? If ON the reader creates missing ATTRIBs from ATTDEF
+        // Or mode-like:
+        //   * "strict"   -> no creation of missing ATTRIBs
+        //   * "sync"     -> creates missing ATTRIBs from ATTDEF
+        //   * "diagnose" -> no creation but lists "incomplete" INSERTs regarding ATTDEF
     };
     Parameters& parameters() { return m_params; }
     const Parameters& constParameters() const { return m_params; }

@@ -1385,6 +1385,8 @@ void DxfParser::parse(std::istream& stream)
     m_strCache.clear();
 
     m_codePage.clear();
+    m_version = DxfVersion::RUnknown;
+    this->resolveEncoding(m_version);
 
     m_points.clear();
     m_arcs.clear();
