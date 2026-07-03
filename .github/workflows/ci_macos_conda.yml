@@ -27,7 +27,7 @@ jobs:
 
     - name: Install OpenCascade
       shell: bash -el {0}
-      run: conda install conda-forge::occt
+      run: conda install conda-forge::occt=7.9.3
 
     - name: Install Assimp
       shell: bash -el {0}
