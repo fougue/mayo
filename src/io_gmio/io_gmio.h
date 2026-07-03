@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,13 +11,12 @@
 
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Provides factory for gmio-based Writer objects
 class GmioFactoryWriter : public FactoryWriter {
 public:
-    Span<const Format> formats() const override;
+    gsl::span<const Format> formats() const override;
     std::unique_ptr<Writer> create(Format format) const override;
     std::unique_ptr<PropertyGroup> createProperties(Format format, PropertyGroup* parentGroup) const override;
 
@@ -37,10 +35,9 @@ struct GmioLib {
     static std::string_view strVersion();
     static std::string_view strVersionDetails() { return "(build)"; }
 #else
-    static std::string_view strVersion() { return ""; }
-    static std::string_view strVersionDetails() { return ""; }
+    static std::string_view strVersion() { return {}; }
+    static std::string_view strVersionDetails() { return {}; }
 #endif
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -1,6 +1,6 @@
 BSD 2-Clause License
 
-Copyright (c) 2016, Fougue Ltd. <http://www.fougue.pro>
+Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

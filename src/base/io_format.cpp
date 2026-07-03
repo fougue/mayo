@@ -1,20 +1,18 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_format.h"
 
 #include <algorithm>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 std::string_view formatIdentifier(Format format)
 {
     switch (format) {
-    case Format_Unknown: return "";
+    case Format_Unknown: return {};
     case Format_Image: return "Image";
     case Format_STEP:  return "STEP";
     case Format_IGES:  return "IGES";
@@ -36,7 +34,7 @@ std::string_view formatIdentifier(Format format)
     case Format_Blender: return "Blender";
     }
 
-    return "";
+    return {};
 }
 
 std::string_view formatName(Format format)
@@ -64,10 +62,10 @@ std::string_view formatName(Format format)
     case Format_Blender: return "Blender File Format";
     }
 
-    return "";
+    return {};
 }
 
-Span<std::string_view> formatFileSuffixes(Format format)
+gsl::span<std::string_view> formatFileSuffixes(Format format)
 {
     static std::string_view suffix_img[]  = { "bmp", "jpeg", "jpg", "png", "gif", "ppm", "tiff" };
     static std::string_view suffix_3ds[]  = { "3ds" };
@@ -133,5 +131,4 @@ bool formatProvidesMesh(Format format)
         ;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

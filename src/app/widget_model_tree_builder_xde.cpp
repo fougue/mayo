@@ -1,13 +1,16 @@
+/****************************************************************************
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
+****************************************************************************/
+
 #include "widget_model_tree_builder_xde.h"
 
-#include "../base/application.h"
 #include "../base/caf_utils.h"
 #include "../base/document.h"
 #include "../base/property_enumeration.h"
 #include "../base/settings.h"
 #include "../base/xcaf.h"
 #include "../graphics/graphics_shape_object_driver.h"
-#include "../gui/gui_application.h"
 #include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
@@ -28,8 +31,8 @@ class WidgetModelTreeBuilder_Xde::Module : public PropertyGroup {
 public:
     static Module* get()
     {
-        static Module module;
-        return &module;
+        static Module obj;
+        return &obj;
     }
 
     enum class NameFormat { Instance, Product, Both };
@@ -130,7 +133,7 @@ WidgetModelTree_UserActions WidgetModelTreeBuilder_Xde::createUserActions(QObjec
         group->addAction(action);
     }
 
-    QObject::connect(group, &QActionGroup::triggered, [=](QAction* action) {
+    QObject::connect(group, &QActionGroup::triggered, [=](const QAction* action) {
         this->setInstanceNameFormat(action->data().toByteArray());
     });
 

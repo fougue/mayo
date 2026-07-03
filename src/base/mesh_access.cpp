@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "mesh_access.h"
@@ -87,14 +86,15 @@ private:
     }
 
     std::optional<Quantity_Color> m_faceColor;
-    Span<const Quantity_Color> m_nodeColors;
+    gsl::span<const Quantity_Color> m_nodeColors;
     TopLoc_Location m_location;
     OccHandle<Poly_Triangulation> m_triangulation;
 };
 
 void IMeshAccess_visitMeshes(
         const DocumentTreeNode& treeNode,
-        std::function<void(const IMeshAccess&)> fnCallback)
+        std::function<void(const IMeshAccess&)> fnCallback
+    )
 {
     if (!fnCallback || !treeNode.isValid())
         return;

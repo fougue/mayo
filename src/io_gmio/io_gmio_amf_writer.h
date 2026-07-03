@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -17,14 +16,13 @@
 #include <string>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // gmio-based writer for AMF format
 // Requires gmio >= v0.4.0
 class GmioAmfWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
@@ -125,6 +123,4 @@ private:
     std::vector<Instance> m_vecInstance;
 };
 
-} // namespace IO
-} // namespace Mayo
-
+} // namespace Mayo::IO

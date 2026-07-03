@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "button_flat.h"
@@ -165,7 +164,7 @@ void ButtonFlat::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (m_defaultAction != nullptr) {
-            QSignalBlocker sigBlock(this); Q_UNUSED(sigBlock);
+            [[maybe_unused]] QSignalBlocker sigBlock(this);
             m_defaultAction->trigger();
         }
 

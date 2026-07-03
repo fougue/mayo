@@ -1,14 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "app_module.h"
 
 #include "../base/bnd_utils.h"
 #include "../base/brep_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/io_reader.h"
 #include "../base/io_writer.h"
 #include "../base/io_system.h"
@@ -17,7 +15,6 @@
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
-#include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 
 #include <BRepBndLib.hxx>
@@ -83,9 +80,8 @@ QuantityLength shapeChordalDeflection(const TopoDS_Shape& shape)
 } // namespace
 
 AppModule::AppModule()
-    : m_application(new Application),
-      m_settings(new Settings),
-      m_props(m_settings),
+    : m_application(makeOccHandle<Application>()),
+      m_props(&m_settings),
       m_stdLocale(std::locale("")),
       m_qtLocale(QLocale::system())
 {
@@ -95,8 +91,12 @@ AppModule::AppModule()
         metaTypesRegistered = true;
     }
 
-    m_settings->setPropertyValueConversion(this);
+    m_settings.setPropertyValueConversion(this);
     Application::defineMayoFormat(m_application);
+    m_settings.signalPropertyChanged.connectSlot([this](const Property* prop){
+        if (prop == &m_props.autoExpandCompoundToAssembly)
+            m_application->setAutoExpandCompoundToAssembly(m_props.autoExpandCompoundToAssembly);
+    });
 }
 
 QStringUtils::TextOptions AppModule::defaultTextOptions() const
@@ -122,7 +122,8 @@ const Enumeration& AppModule::languages()
 {
     static const Enumeration langs = {
         { 0, AppModule::textId("en") },
-        { 1, AppModule::textId("fr") }
+        { 1, AppModule::textId("fr") },
+        { 2, AppModule::textId("zh") },
     };
     return langs;
 }
@@ -130,7 +131,7 @@ const Enumeration& AppModule::languages()
 QString AppModule::languageCode() const
 {
     const char keyLang[] = "application/language";
-    const Settings::Variant code = m_settings->findValueFromKey(keyLang);
+    const Settings::Variant code = m_settings.findValueFromKey(keyLang);
     const Enumeration& langs = AppModule::languages();
     if (code.isConvertibleToConstRefString()) {
         const std::string& strCode = code.toConstRefString();
@@ -139,7 +140,28 @@ QString AppModule::languageCode() const
     }
 
     std::string_view langDefault = langs.findNameByValue(0);
-    return QString::fromUtf8(langDefault.data(), CppUtils::safeStaticCast<int>(langDefault.size()));
+    return QString::fromUtf8(langDefault.data(), static_cast<int>(langDefault.size()));
+}
+
+void AppModule::addLibraryInfo(const LibraryInfo& lib)
+{
+    if (!lib.name.empty() && !lib.version.empty())
+        m_vecLibraryInfo.push_back(lib);
+}
+
+void AppModule::addLibraryInfo(
+        std::string_view libName, std::string_view version, std::string_view versionDetails
+    )
+{
+    const LibraryInfo libInfo{
+        std::string{libName}, std::string{version}, std::string{versionDetails}
+    };
+    this->addLibraryInfo(libInfo);
+}
+
+gsl::span<const LibraryInfo> AppModule::libraryInfoArray() const
+{
+    return m_vecLibraryInfo;
 }
 
 bool AppModule::excludeSettingPredicate(const Property& prop)
@@ -166,10 +188,10 @@ Settings::Variant AppModule::toVariant(const Property& prop) const
         QByteArray blob;
         QDataStream stream(&blob, QIODevice::WriteOnly);
         AppModule::writeRecentFiles(stream, filesProp.value());
-        return Variant(QtCoreUtils::toStdByteArray(blob));
+        return Variant{QtCoreUtils::toStdByteArray(blob)};
     }
     else if (isType<PropertyAppUiState>(prop)) {
-        return Variant(AppUiState::toBlob(constRef<PropertyAppUiState>(prop)));
+        return Variant{AppUiState::toBlob(constRef<PropertyAppUiState>(prop))};
     }
     else {
         return PropertyValueConversion::toVariant(prop);
@@ -199,19 +221,21 @@ bool AppModule::fromVariant(Property* prop, const Settings::Variant& variant) co
 
 void AppModule::emitMessage(MessageType msgType, std::string_view text)
 {
-    const QString qtext = to_QString(text);
+    const std::string stext{text};
+    const Messenger::Message* msg = nullptr;
     {
-        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
-        m_messageLog.push_back({ msgType, qtext });
+        [[maybe_unused]] std::scoped_lock lock(m_mutexMessageLog);
+        m_messageLog.push_back({ msgType, stext });
+        msg = &m_messageLog.back();
     }
 
-    this->signalMessage.send(msgType, qtext);
+    this->signalMessage.send(*msg);
 }
 
 void AppModule::clearMessageLog()
 {
     {
-        [[maybe_unused]] std::lock_guard<std::mutex> lock(m_mutexMessageLog);
+        [[maybe_unused]] std::scoped_lock lock(m_mutexMessageLog);
         m_messageLog.clear();
     }
 
@@ -246,7 +270,7 @@ const RecentFile* AppModule::findRecentFile(const FilePath& fp) const
             std::find_if(
                 listRecentFile.cbegin(),
                 listRecentFile.cend(),
-                [=](const RecentFile& recentFile) {
+                [&](const RecentFile& recentFile) {
         return filepathEquivalent(fp, recentFile.filepath);
     });
     return itFound != listRecentFile.cend() ? &(*itFound) : nullptr;
@@ -256,6 +280,9 @@ void AppModule::recordRecentFile(GuiDocument* guiDoc)
 {
     if (!guiDoc)
         return;
+
+    if (guiDoc->document()->filePath().empty())
+        return; // Anonymous document -> skip
 
     const RecentFile* recentFile = this->findRecentFile(guiDoc->document()->filePath());
     if (!recentFile) {
@@ -407,26 +434,26 @@ void AppModule::addPropertiesProvider(std::unique_ptr<DocumentTreeNodeProperties
     m_vecDocTreeNodePropsProvider.push_back(std::move(ptr));
 }
 
-std::unique_ptr<PropertyGroupSignals> AppModule::properties(const DocumentTreeNode& treeNode) const
+const DocumentTreeNodePropertiesProvider* AppModule::findPropertiesProvider(const DocumentTreeNode& treeNode) const
 {
     for (const auto& provider : m_vecDocTreeNodePropsProvider) {
         if (provider->supports(treeNode))
-            return provider->properties(treeNode);
+            return provider.get();
     }
 
-    return std::unique_ptr<PropertyGroupSignals>();
+    return nullptr;
+}
+
+std::unique_ptr<PropertyGroup> AppModule::properties(const DocumentTreeNode& treeNode) const
+{
+    const auto provider = this->findPropertiesProvider(treeNode);
+    return provider ? provider->properties(treeNode) : std::unique_ptr<PropertyGroup>{};
 }
 
 AppModule* AppModule::get()
 {
     static AppModule appModule;
     return &appModule;
-}
-
-AppModule::~AppModule()
-{
-    delete m_settings;
-    m_settings = nullptr;
 }
 
 bool AppModule::impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc)

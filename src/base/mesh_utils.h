@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -48,6 +47,7 @@ enum class Orientation {
 
 class AdaptorPolyline2d {
 public:
+    virtual ~AdaptorPolyline2d() = default;
     virtual gp_Pnt2d pointAt(int index) const = 0;
     virtual int pointCount() const = 0;
     virtual bool empty() const { return this->pointCount() <= 0; }
@@ -55,6 +55,7 @@ public:
 
 class AdaptorPolyline3d {
 public:
+    virtual ~AdaptorPolyline3d() = default;
     virtual const gp_Pnt& pointAt(int i) const = 0;
     virtual int pointCount() const = 0;
     virtual int empty() const { return this->pointCount() <= 0; }

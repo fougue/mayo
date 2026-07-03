@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "qstring_utils.h"
@@ -9,14 +8,13 @@
 #include <gp_Trsf.hxx>
 #include <Precision.hxx>
 #include <Quantity_Color.hxx>
-#include <cctype>
 
 namespace Mayo {
 
 static QString valueText(double value, const QStringUtils::TextOptions& opt)
 {
     auto fnLastChar = [](const QString& str) {
-        return !str.isEmpty() ? str.at(str.size() - 1) : QChar();
+        return !str.isEmpty() ? str.at(str.size() - 1) : QChar{};
     };
 
     const double c = std::abs(value) < Precision::Confusion() ? 0. : value;

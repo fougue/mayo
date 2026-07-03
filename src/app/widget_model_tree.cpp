@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_model_tree.h"
@@ -9,7 +8,6 @@
 #include "../base/application.h"
 #include "../base/application_item_selection_model.h"
 #include "../base/document.h"
-#include "../base/settings.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "item_view_buttons.h"
@@ -18,6 +16,7 @@
 
 #include <QtCore/QtDebug>
 #include <QtCore/QMetaType>
+#include <QtGui/QMouseEvent>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItemIterator>
 
@@ -29,8 +28,7 @@
 Q_DECLARE_METATYPE(Mayo::DocumentPtr)
 Q_DECLARE_METATYPE(Mayo::DocumentTreeNode)
 
-namespace Mayo {
-namespace Internal {
+namespace Mayo::Internal {
 
 static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
 {
@@ -43,9 +41,7 @@ static std::vector<WidgetModelTree::BuilderPtr>& arrayPrototypeBuilder()
 
 class TreeWidget : public QTreeWidget {
 public:
-    TreeWidget(QWidget* parent = nullptr)
-        : QTreeWidget(parent)
-    { }
+    using QTreeWidget::QTreeWidget; // Inherit QTreeWidget constructors
 
     QModelIndex indexFromItem(QTreeWidgetItem* item, int column = 0) const {
         return QTreeWidget::indexFromItem(item, column);
@@ -54,15 +50,23 @@ public:
     QTreeWidgetItem* itemFromIndex(const QModelIndex& index) const {
         return QTreeWidget::itemFromIndex(index);
     }
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override
+    {
+        if (event->buttons().testFlag(Qt::RightButton)) {
+        }
+        else {
+            QTreeWidget::mousePressEvent(event);
+        }
+    }
 };
 
-} // namespace Internal
-} // namespace Mayo
+} // namespace Mayo::Internal
+
 #include "ui_widget_model_tree.h"
 
-namespace Mayo {
-
-namespace Internal {
+namespace Mayo::Internal {
 
 enum TreeItemRole {
     TreeItemTypeRole = Qt::UserRole + 1,
@@ -81,8 +85,9 @@ static TreeItemType treeItemType(const QTreeWidgetItem* treeItem)
 {
     const QVariant varType = treeItem->data(0, TreeItemTypeRole);
     return varType.isValid() ?
-                static_cast<Internal::TreeItemType>(varType.toInt()) :
-                Internal::TreeItemType_Unknown;
+               static_cast<Internal::TreeItemType>(varType.toInt()) :
+               Internal::TreeItemType_Unknown
+        ;
 }
 
 static DocumentPtr treeItemDocument(const QTreeWidgetItem* treeItem)
@@ -108,7 +113,7 @@ static void setTreeItemDocument(QTreeWidgetItem* treeItem, const DocumentPtr& do
 static void setTreeItemDocumentTreeNode(QTreeWidgetItem* treeItem, const DocumentTreeNode& node)
 {
     const TreeItemType treeItemType =
-            node.isEntity() ? TreeItemType_DocumentEntity : TreeItemType_DocumentTreeNode;
+        node.isEntity() ? TreeItemType_DocumentEntity : TreeItemType_DocumentTreeNode;
     treeItem->setData(0, TreeItemTypeRole, treeItemType);
     treeItem->setData(0, TreeItemDocumentTreeNodeRole, QVariant::fromValue(node));
 }
@@ -124,7 +129,10 @@ static ApplicationItem toApplicationItem(const QTreeWidgetItem* treeItem)
     return ApplicationItem();
 }
 
-} // namespace Internal
+} // namespace Mayo::Internal
+
+
+namespace Mayo {
 
 WidgetModelTree::WidgetModelTree(QWidget* widget)
     : QWidget(widget),
@@ -141,15 +149,11 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     auto modelTreeBtns = new ItemViewButtons(m_ui->treeWidget_Model, this);
     constexpr int idBtnRemove = 1;
     modelTreeBtns->addButton(
-                idBtnRemove,
-                mayoTheme()->icon(Theme::Icon::Cross),
-                tr("Remove from document")
-        );
+        idBtnRemove, mayoTheme()->icon(Theme::Icon::Cross), tr("Remove from document")
+    );
     modelTreeBtns->setButtonDetection(
-                idBtnRemove,
-                Internal::TreeItemTypeRole,
-                QVariant(Internal::TreeItemType_DocumentEntity)
-        );
+        idBtnRemove, Internal::TreeItemTypeRole, QVariant{Internal::TreeItemType_DocumentEntity}
+    );
     modelTreeBtns->setButtonDisplayColumn(idBtnRemove, 0);
     modelTreeBtns->setButtonDisplayModes(idBtnRemove, ItemViewButtons::DisplayOnDetection);
     modelTreeBtns->setButtonItemSide(idBtnRemove, ItemViewButtons::ItemRightSide);
@@ -157,13 +161,13 @@ WidgetModelTree::WidgetModelTree(QWidget* widget)
     modelTreeBtns->setButtonIconSize(idBtnRemove, QSize(iconSize * 0.66, iconSize * 0.66));
     modelTreeBtns->installDefaultItemDelegate();
     QObject::connect(
-                modelTreeBtns, &ItemViewButtons::buttonClicked,
-                this, [=](int btnId, const QModelIndex& index) {
-        if (btnId == idBtnRemove && index.isValid()) {
-            const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
-            const DocumentTreeNode entityNode = Internal::treeItemDocumentTreeNode(treeItem);
-            entityNode.document()->destroyEntity(entityNode.id());
-        }
+        modelTreeBtns, &ItemViewButtons::buttonClicked,
+        this, [=](int btnId, const QModelIndex& index) {
+            if (btnId == idBtnRemove && index.isValid()) {
+                const QTreeWidgetItem* treeItem = m_ui->treeWidget_Model->itemFromIndex(index);
+                const DocumentTreeNode entityNode = Internal::treeItemDocumentTreeNode(treeItem);
+                entityNode.document()->destroyEntity(entityNode.id());
+            }
     });
 
     this->connectTreeModelDataChanged(true);
@@ -318,10 +322,10 @@ QTreeWidgetItem* WidgetModelTree::findTreeItem(const DocumentTreeNode& node) con
 WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentPtr& doc) const
 {
     auto it = std::find_if(
-                std::next(m_vecBuilder.cbegin()),
-                m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); }
-        );
+        std::next(m_vecBuilder.cbegin()),
+        m_vecBuilder.cend(),
+        [=](const BuilderPtr& builder) { return builder->supportsDocument(doc); }
+    );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -329,10 +333,10 @@ WidgetModelTreeBuilder* WidgetModelTree::findSupportBuilder(const DocumentTreeNo
 {
     Expects(node.isValid());
     auto it = std::find_if(
-                std::next(m_vecBuilder.cbegin()),
-                m_vecBuilder.cend(),
-                [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); }
-        );
+        std::next(m_vecBuilder.cbegin()),
+        m_vecBuilder.cend(),
+        [=](const BuilderPtr& builder) { return builder->supportsDocumentTreeNode(node); }
+    );
     return it != m_vecBuilder.cend() ? it->get() : m_vecBuilder.front().get();
 }
 
@@ -352,16 +356,9 @@ void WidgetModelTree::onDocumentEntityAboutToBeDestroyed(const DocumentPtr& doc,
     delete treeItem;
 }
 
-//void WidgetModelTree::onDocumentItemPropertyChanged(
-//        DocumentItem* docItem, Property* prop)
-//{
-//    QTreeWidgetItem* treeItem = this->findTreeItem(docItem);
-//    if (treeItem && prop == &docItem->propertyLabel)
-//        this->findSupportBuilder(docItem)->refreshTextTreeItem(docItem, treeItem);
-//}
-
 void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
-        const QItemSelection& selected, const QItemSelection& deselected)
+        const QItemSelection& selected, const QItemSelection& deselected
+    )
 {
     const QModelIndexList listSelectedIndex = selected.indexes();
     const QModelIndexList listDeselectedIndex = deselected.indexes();
@@ -384,12 +381,13 @@ void WidgetModelTree::onTreeWidgetDocumentSelectionChanged(
 }
 
 void WidgetModelTree::onApplicationItemSelectionModelChanged(
-        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected)
+        gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected
+    )
 {
     this->connectTreeWidgetDocumentSelectionChanged(false);
     auto _ = gsl::finally([=] { this->connectTreeWidgetDocumentSelectionChanged(true); });
 
-    auto fnSetSelected = [=](Span<const ApplicationItem> spanAppItem, bool on) {
+    auto fnSetSelected = [=](gsl::span<const ApplicationItem> spanAppItem, bool on) {
         for (const ApplicationItem& appItem : spanAppItem) {
             if (!appItem.isDocumentTreeNode())
                 continue;
@@ -412,9 +410,9 @@ void WidgetModelTree::connectTreeModelDataChanged(bool on)
 {
     if (on) {
         m_connTreeModelDataChanged = QObject::connect(
-                    m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
-                    this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection
-            );
+            m_ui->treeWidget_Model->model(), &QAbstractItemModel::dataChanged,
+            this, &WidgetModelTree::onTreeModelDataChanged, Qt::UniqueConnection
+        );
     }
     else {
         QObject::disconnect(m_connTreeModelDataChanged);
@@ -425,10 +423,10 @@ void WidgetModelTree::connectTreeWidgetDocumentSelectionChanged(bool on)
 {
     if (on) {
         m_connTreeWidgetDocumentSelectionChanged = QObject::connect(
-                    m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
-                    this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
-                    Qt::UniqueConnection
-            );
+            m_ui->treeWidget_Model->selectionModel(), &QItemSelectionModel::selectionChanged,
+            this, &WidgetModelTree::onTreeWidgetDocumentSelectionChanged,
+            Qt::UniqueConnection
+        );
     }
     else {
         QObject::disconnect(m_connTreeWidgetDocumentSelectionChanged);

@@ -1,19 +1,17 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "../base/application.h"
-#include "../base/global.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
+#include "../qtcommon/qstring_conv.h"
 #include "../qtcommon/qtcore_utils.h"
 #include "app_context.h"
-#include "app_module.h"
+#include "app_ui_state.h"
 #include "commands_file.h"
 #include "commands_display.h"
 #include "commands_tools.h"
@@ -28,10 +26,16 @@
 #include "widget_message_indicator.h"
 
 #ifdef Q_OS_WIN
-#  include "windows/win_taskbar_global_progress.h"
+#  include "win_taskbar_global_progress.h"
 #endif
 
 #include <QtDebug>
+#include <QtGui/QFontMetrics>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QStyle>
 
 namespace Mayo {
 
@@ -56,7 +60,6 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
     for (auto [code, page] : m_mapWidgetPage)
         page->initialize(&m_cmdContainer);
 
-    AppModule::get()->signalMessage.connectSlot(&MainWindow::onMessage, this);
     guiApp->signalGuiDocumentAdded.connectSlot(&MainWindow::onGuiDocumentAdded, this);
     guiApp->signalGuiDocumentErased.connectSlot(&MainWindow::onGuiDocumentErased, this);
 
@@ -67,27 +70,15 @@ MainWindow::MainWindow(GuiApplication* guiApp, QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-    // Force deletion of Command objects as some of them are event filters of MainWindow widgets
-    m_cmdContainer.clear();
     delete m_ui;
 }
 
 void MainWindow::showEvent(QShowEvent* event)
 {
-    const auto& uiState = AppModule::get()->properties()->appUiState.value();
-    if (!uiState.mainWindowGeometry.empty())
-        this->restoreGeometry(QtCoreUtils::QByteArray_fromRawData<uint8_t>(uiState.mainWindowGeometry));
-
-    WidgetMainControl* pageDocs = this->widgetPageDocuments();
-    if (pageDocs) {
-        pageDocs->widgetLeftSideBar()->setVisible(uiState.pageDocuments_isLeftSideBarVisible);
-        pageDocs->setWidgetLeftSideBarWidthFactor(uiState.pageDocuments_widgetLeftSideBarWidthFactor);
-    }
-
     QMainWindow::showEvent(event);
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     constexpr Qt::FindChildOption findMode = Qt::FindDirectChildrenOnly;
-    auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString(), findMode);
+    auto winProgress = this->findChild<WinTaskbarGlobalProgress*>(QString{}, findMode);
     if (!winProgress)
         winProgress = new WinTaskbarGlobalProgress(&m_taskMgr, this);
 
@@ -97,15 +88,10 @@ void MainWindow::showEvent(QShowEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    AppUiState uiState = AppModule::get()->properties()->appUiState;
-    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(this->saveGeometry());
-    WidgetMainControl* pageDocs = this->widgetPageDocuments();
-    if (pageDocs) {
-        uiState.pageDocuments_isLeftSideBarVisible = pageDocs->widgetLeftSideBar()->isVisible();
-        uiState.pageDocuments_widgetLeftSideBarWidthFactor = pageDocs->widgetLeftSideBarWidthFactor();
-    }
+    for (const auto& fn : m_onCloseCallbacks)
+        fn();
 
-    AppModule::get()->properties()->appUiState.setValue(uiState);
+    FileCommandTools::closeAllDocuments(m_appContext);
     QMainWindow::closeEvent(event);
 }
 
@@ -150,7 +136,7 @@ void MainWindow::createCommands()
     this->addCommand<CommandEditOptions>();
 
     // "Window" commands
-    this->addCommand<CommandLeftSidebarWidgetToggle>();
+    this->addCommand<CommandLeftSidebarWidgetToggle>(this->widgetPageDocuments()->widgetLeftSideBar());
     this->addCommand<CommandMainWidgetToggleFullscreen>();
     this->addCommand<CommandSwitchMainWidgetMode>();
     this->addCommand<CommandPreviousDocument>();
@@ -169,7 +155,7 @@ void MainWindow::createMenus()
         menu->addAction(m_cmdContainer.findCommandAction(commandName));
     };
 
-    // TODO Create menu bar programmatically(not hard-code in .ui file)
+    // TODO Create menu bar programmatically(not hard-coded in .ui file)
 
     {   // File
         auto menu = m_ui->menu_File;
@@ -244,7 +230,7 @@ void MainWindow::onGuiDocumentAdded(GuiDocument* guiDoc)
         if (!fillAreaQColor.isValid())
             return;
 
-        auto fillArea = new Graphic3d_AspectFillArea3d;
+        auto fillArea = makeOccHandle<Graphic3d_AspectFillArea3d>();
         auto defaultShadingAspect = gfxScene->drawerDefault()->ShadingAspect();
         if (defaultShadingAspect && defaultShadingAspect->Aspect())
             *fillArea = *defaultShadingAspect->Aspect();
@@ -272,33 +258,126 @@ void MainWindow::onGuiDocumentErased(GuiDocument* /*guiDoc*/)
     this->updateControlsActivation();
 }
 
-void MainWindow::onMessage(MessageType msgType, const QString& text)
+// Async execution of a resizable message box dialog
+// Text is also selectable and displayed within a scroll area
+QDialog* runMessageBox(
+        QMessageBox::Icon icon,
+        QWidget* parentWidget,
+        const QString& text,
+        QDialogButtonBox::StandardButtons btns = QDialogButtonBox::StandardButton::Ok
+    )
 {
-    switch (msgType) {
+    auto dlg = new QDialog(parentWidget);
+    dlg->setModal(true);
+
+    QStyle::StandardPixmap dlgIcon;
+    QString title;
+    switch (icon) {
+    case QMessageBox::NoIcon:
+    case QMessageBox::Information:
+        dlgIcon = QStyle::SP_MessageBoxInformation;
+        title = MainWindow::tr("Information");
+        break;
+    case QMessageBox::Warning:
+        dlgIcon = QStyle::SP_MessageBoxWarning;
+        title = MainWindow::tr("Warning");
+        break;
+    case QMessageBox::Critical:
+        dlgIcon = QStyle::SP_MessageBoxCritical;
+        title = MainWindow::tr("Error");
+        break;
+    case QMessageBox::Question:
+        dlgIcon = QStyle::SP_MessageBoxQuestion;
+        title = MainWindow::tr("Question");
+        break;
+    }
+
+    dlg->setWindowTitle(title);
+
+    auto dlgMsgLayout = new QHBoxLayout;
+    auto label = new QLabel(dlg);
+    const int iconSize = QApplication::style()->pixelMetric(QStyle::PM_MessageBoxIconSize, nullptr, dlg);
+    label->setPixmap(QApplication::style()->standardIcon(dlgIcon).pixmap(iconSize, iconSize));
+    dlgMsgLayout->addWidget(label, 0, Qt::AlignHCenter | Qt::AlignTop);
+
+    auto textLabel = new QLabel;
+    textLabel->setText(text);
+    textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+    auto scrollArea = new QScrollArea(dlg);
+    scrollArea->setWidget(textLabel);
+    scrollArea->setWidgetResizable(true);
+    textLabel->setAlignment(Qt::AlignTop);
+    dlgMsgLayout->addWidget(scrollArea, 5);
+
+    auto dlgLayout = new QVBoxLayout(dlg);
+    auto btnBox = new QDialogButtonBox(btns, dlg);
+    if (btns.testFlag(QDialogButtonBox::StandardButton::Ok)) {
+        btnBox->button(QDialogButtonBox::StandardButton::Ok)->setDefault(true);
+        btnBox->button(QDialogButtonBox::StandardButton::Ok)->setFocus();
+    }
+
+    dlgLayout->addLayout(dlgMsgLayout);
+    dlgLayout->addWidget(btnBox);
+
+    QObject::connect(btnBox, &QDialogButtonBox::accepted, dlg, &QDialog::accept);
+    QtWidgetsUtils::asyncDialogExec(dlg);
+    return dlg;
+}
+
+void MainWindow::showMessage(const Messenger::Message& msg)
+{
+    const auto qtext = to_QString(msg.text);
+
+    switch (msg.type) {
     case MessageType::Trace:
-        qDebug() << text;
+        qDebug() << qtext;
         break;
     case MessageType::Info:
-        WidgetMessageIndicator::showInfo(text, this);
+        WidgetMessageIndicator::showInfo(qtext, this);
         break;
     case MessageType::Warning:
-        QtWidgetsUtils::asyncMsgBoxWarning(this, tr("Warning"), text);
+        runMessageBox(QMessageBox::Warning, this, qtext);
         break;
     case MessageType::Error:
-        QtWidgetsUtils::asyncMsgBoxCritical(this, tr("Error"), text);
+        runMessageBox(QMessageBox::Critical, this, qtext);
         break;
     }
 }
 
-void MainWindow::openDocumentsFromList(Span<const FilePath> listFilePath)
+void MainWindow::openDocumentsFromList(gsl::span<const FilePath> listFilePath)
 {
     FileCommandTools::openDocumentsFromList(m_appContext, listFilePath);
+}
+
+void MainWindow::restoreUiState(const AppUiState& state)
+{
+    const auto& varMainWindowGeom = state.get("mainWindowGeometry");
+    if (varMainWindowGeom.isByteArray()) {
+        this->restoreGeometry(
+            QtCoreUtils::QByteArray_fromRawData<uint8_t>(varMainWindowGeom.toConstRefByteArray())
+        );
+    }
+
+    for (auto [code, page] : m_mapWidgetPage)
+        page->restoreUiState(state);
+}
+
+void MainWindow::saveUiState(AppUiState& state)
+{
+    state.set("mainWindowGeometry", QtCoreUtils::toStdByteArray(this->saveGeometry()));
+    for (auto [code, page] : m_mapWidgetPage)
+        page->saveUiState(state);
+}
+
+void MainWindow::addOnCloseCallback(std::function<void ()> fn)
+{
+    m_onCloseCallbacks.push_back(std::move(fn));
 }
 
 void MainWindow::updateControlsActivation()
 {
     m_cmdContainer.foreachCommand([](std::string_view, Command* cmd) {
-        cmd->action()->setEnabled(cmd->getEnabledStatus());
+        cmd->updateEnabled();
     });
 }
 

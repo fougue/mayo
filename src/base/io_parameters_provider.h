@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,15 +9,14 @@
 
 namespace Mayo { class PropertyGroup; }
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Abstract mechanism to provide reader/writer parameters for a format
 class ParametersProvider {
 public:
+    virtual ~ParametersProvider() = default;
     virtual const PropertyGroup* findReaderParameters(Format format) const = 0;
     virtual const PropertyGroup* findWriterParameters(Format format) const = 0;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

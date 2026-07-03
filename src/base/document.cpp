@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "document.h"
@@ -9,9 +8,15 @@
 #include "application.h"
 #include "caf_utils.h"
 #include "cpp_utils.h"
+
 #include <TDF_ChildIterator.hxx>
 #include <TDF_TagSource.hxx>
+#include <TopExp_Explorer.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_Editor.hxx>
+
+#include <cassert>
+#include <unordered_set>
 
 namespace Mayo {
 
@@ -85,22 +90,28 @@ bool Document::isEntity(TreeNodeId nodeId)
 
 int Document::entityCount() const
 {
-    return CppUtils::safeStaticCast<int>(m_modelTree.roots().size());
+    assert(Cpp::cmpLessEqual(m_modelTree.roots().size(), INT_MAX));
+    return static_cast<int>(m_modelTree.roots().size());
 }
 
-TDF_Label Document::entityLabel(int index) const
+gsl::span<const TreeNodeId> Document::allEntityNodeIds() const
 {
-    return m_modelTree.nodeData(this->entityTreeNodeId(index));
+    return m_modelTree.roots();
 }
 
-TreeNodeId Document::entityTreeNodeId(int index) const
+TreeNodeId Document::firstEntityNodeId() const
 {
-    return m_modelTree.roots()[index];
+    return !m_modelTree.roots().empty() ? m_modelTree.roots().front() : 0;
 }
 
-DocumentTreeNode Document::entityTreeNode(int index) const
+TDF_Label Document::firstEntityNodeLabel() const
 {
-    return { DocumentPtr(this), this->entityTreeNodeId(index) };
+    return this->modelTreeNodeLabel(this->firstEntityNodeId());
+}
+
+TDF_Label Document::modelTreeNodeLabel(TreeNodeId nodeId) const
+{
+    return m_modelTree.nodeData(nodeId);
 }
 
 void Document::rebuildModelTree()
@@ -131,7 +142,7 @@ DocumentPtr Document::findFrom(const TDF_Label& label)
 TDF_Label Document::newEntityLabel()
 {
     OccHandle<TDF_TagSource> tagSrc = CafUtils::findAttribute<TDF_TagSource>(this->rootLabel());
-    Expects(!tagSrc.IsNull());
+    assert(!tagSrc.IsNull());
     if (tagSrc->Get() == 0)
         this->rootLabel().NewChild(); // Reserve label 0:1 for XCAF Main()
 
@@ -145,23 +156,48 @@ TDF_Label Document::newEntityShapeLabel()
 
 TreeNodeId Document::findEntity(const TDF_Label& label) const
 {
-    for (int i = 0; i < this->entityCount(); ++i) {
-        if (this->entityLabel(i) == label)
-            return this->entityTreeNodeId(i);
+    for (TreeNodeId nodeId : this->allEntityNodeIds()) {
+        if (this->modelTreeNodeLabel(nodeId) == label)
+            return nodeId;
     }
 
     return 0;
 }
 
-bool Document::containsLabel(const TDF_Label &label) const
+bool Document::containsLabel(const TDF_Label& label) const
 {
     return Document::findFrom(label).get() == this;
+}
+
+void Document::deepExpandCompounds(const TDF_Label& label)
+{
+    if (!m_app || !m_app->autoExpandCompoundToAssembly())
+        return;
+
+    if (XCaf::isShapeAssembly(label)) {
+        for (const TDF_Label& child : XCaf::shapeComponents(label))
+            this->deepExpandCompounds(child);
+    }
+    else if (XCaf::isShapeReference(label)) {
+        const TDF_Label referred = XCaf::shapeReferred(label);
+        this->deepExpandCompounds(referred);
+    }
+    else if (XCaf::isShape(label) && XCaf::isShapeSimple(label)) {
+        const TopoDS_Shape shape = XCaf::shape(label);
+        // Only expand compound|compsolid shapes containing at least one solid
+        if (shape.ShapeType() == TopAbs_COMPOUND || shape.ShapeType() == TopAbs_COMPSOLID) {
+            TopExp_Explorer explorer(shape, TopAbs_SOLID);
+            if (explorer.More())
+                XCAFDoc_Editor::Expand(this->Main(), label, false/*!recursive*/);
+        }
+    }
 }
 
 void Document::addEntityTreeNode(const TDF_Label& label)
 {
     // TODO Allow custom population of the model tree for the new entity
     if (this->containsLabel(label) && this->findEntity(label) == 0) {
+        this->deepExpandCompounds(label);
         const TreeNodeId nodeId = m_xcaf.deepBuildAssemblyTree(0, label);
         this->signalEntityAdded.send(nodeId);
     }
@@ -173,6 +209,7 @@ void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
     vecTreeNodeId.reserve(seqLabel.Size());
     for (const TDF_Label& label : seqLabel) {
         if (this->containsLabel(label) && this->findEntity(label) == 0) {
+            this->deepExpandCompounds(label);
             const TreeNodeId treeNodeId = m_xcaf.deepBuildAssemblyTree(0, label);
             vecTreeNodeId.push_back(treeNodeId);
         }
@@ -184,13 +221,32 @@ void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
 
 void Document::destroyEntity(TreeNodeId entityTreeNodeId)
 {
-    Expects(this->modelTree().nodeIsRoot(entityTreeNodeId));
+    assert(this->modelTree().nodeIsRoot(entityTreeNodeId));
 
     TDF_Label entityLabel = m_modelTree.nodeData(entityTreeNodeId);
     if (CafUtils::isNullOrEmpty(entityLabel))
         return;
 
     this->signalEntityAboutToBeDestroyed.send(entityTreeNodeId);
+
+    std::unordered_set<TDF_Label> setSimpleShapeLabel;
+    traverseTree_postOrder(entityTreeNodeId, m_modelTree, [&](TreeNodeId nodeId) {
+        TDF_Label nodeLabel = m_modelTree.nodeData(nodeId);
+        if (XCaf::isShapeSimple(nodeLabel))
+            setSimpleShapeLabel.insert(nodeLabel);
+        else if (XCaf::isShapeComponent(nodeLabel))
+            m_xcaf.shapeTool()->RemoveComponent(nodeLabel);
+        else if (XCaf::isShapeReference(nodeLabel))
+            m_xcaf.shapeTool()->RemoveShape(nodeLabel, false/*!removeCompletely*/);
+        else
+            nodeLabel.ForgetAllAttributes();
+    });
+
+    for (const TDF_Label& label : setSimpleShapeLabel) {
+        if (!XCaf::hasShapeUsers(label))
+            m_xcaf.shapeTool()->RemoveShape(label, true/*removeCompletely*/);
+    }
+
     entityLabel.ForgetAllAttributes();
     entityLabel.Nullify();
     m_modelTree.removeRoot(entityTreeNodeId);

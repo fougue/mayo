@@ -1,51 +1,62 @@
-name: macOS
+#name: macOS x64/arm64
+name: macOS arm64
 
 on: [push]
 
 jobs:
-    build-macos:
-        strategy:
-            matrix:
-                include:
-                    - qt_version_name: 5.15
-                      qt_version_major: 5
-                    - qt_version_name: 6.7
-                      qt_version_major: 6
+  build-macos:
+    strategy:
+      matrix:
+        qt_version_major: [5, 6]
+        os: [macos-latest]
+        #os: [macos-latest-large, macos-latest-xlarge]
 
-        runs-on: macos-latest
-        name: build-macos-qt${{matrix.qt_version_name}}
+    runs-on: ${{matrix.os}}
+    name: build-${{matrix.os}}-qt${{matrix.qt_version_major}}
 
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+    steps:
+    - name: Set globals
+      id: globals
+      run: |
+        echo qt_path=$(brew --prefix qt@${{matrix.qt_version_major}}) >> ${GITHUB_OUTPUT}
 
-        - name: Install Qt
-          run: brew install qt@${{matrix.qt_version_major}}
+    - name: Checkout
+      uses: actions/checkout@v7
 
-        - name: Install OpenCascade
-          run: brew install opencascade
+    - name: Install Qt
+      run: brew install qt@${{matrix.qt_version_major}}
 
-        - name: Install Assimp
-          run: brew install assimp
+    - name: Install OpenCascade
+      run: |
+        brew tap-new local/pinned || true
+        curl -fsSL -o "$(brew --repo local/pinned)/Formula/opencascade.rb" \
+          https://raw.githubusercontent.com/Homebrew/homebrew-core/a8a19dc560345e127253bf8f20c53e8d2ffabdf3/Formula/o/opencascade.rb
 
-        - name: Get count of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v1
-          id: cpu-cores
+        sed -i '' '/no_autobump!/d' "$(brew --repo local/pinned)/Formula/opencascade.rb"
+        brew install local/pinned/opencascade
+        brew pin opencascade
+        brew info opencascade
 
-        - name: Build
-          run: |
-              mkdir ${{github.workspace}}/build
-              cd ${{github.workspace}}/build
-              cmake --version
-              cmake .. \
-                    -DMayo_BuildTests=ON \
-                    -DMayo_BuildPluginAssimp=ON \
-                    -DQT_DIR=$(brew --prefix qt@${{matrix.qt_version_major}})/lib/cmake/Qt${{matrix.qt_version_major}}
-              cmake --build . \
-                    --config Release \
-                    --parallel ${{steps.cpu-cores.outputs.count}}
+    - name: Install Assimp
+      run: brew install assimp
 
-        - name: Execute Unit Tests
-          working-directory: ${{github.workspace}}/build
-          run: |
-              ./mayo.app/Contents/MacOS/mayo --runtests
+    - name: Get count of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v1
+      id: cpu-cores
+
+    - name: Build
+      run: |
+        mkdir ${{github.workspace}}/build
+        cd ${{github.workspace}}/build
+        cmake .. \
+          -DMayo_BuildTests=ON \
+          -DMayo_BuildPluginAssimp=ON \
+          -DQT_DIR=${{steps.globals.outputs.qt_path}}/lib/cmake/Qt${{matrix.qt_version_major}}
+        cmake --build . \
+          --config Release \
+          --parallel ${{steps.cpu-cores.outputs.count}}
+
+    - name: Execute Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ./test-mayo

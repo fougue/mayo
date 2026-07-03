@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "xcaf.h"
@@ -16,19 +15,16 @@
 #include <XCAFDoc_Centroid.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_Volume.hxx>
+
+#include <optional>
 #include <set>
 
 namespace Mayo {
 
 bool XCaf::isNull() const
 {
-    OccHandle<TDocStd_Document> doc = TDocStd_Document::Get(m_labelMain);
-    if (!doc.IsNull()) {
-        if (XCAFDoc_DocumentTool::IsXCAFDocument(doc))
-            return false;
-    }
-
-    return true;
+    auto doc = TDocStd_Document::Get(m_labelMain);
+    return doc.IsNull() || !XCAFDoc_DocumentTool::IsXCAFDocument(doc);
 }
 
 OccHandle<XCAFDoc_ShapeTool> XCaf::shapeTool() const
@@ -169,9 +165,18 @@ bool XCaf::isShapeSub(const TDF_Label& lbl)
     return XCAFDoc_ShapeTool::IsSubShape(lbl);
 }
 
-bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape)
+bool XCaf::isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape) const
 {
     return this->shapeTool()->IsSubShape(lbl, shape);
+}
+
+bool XCaf::hasShapeUsers(const TDF_Label& lbl)
+{
+    OccHandle<TDataStd_TreeNode> treeNode;
+    if (!lbl.FindAttribute(XCAFDoc::ShapeRefGUID(), treeNode))
+        return true;
+
+    return treeNode && !treeNode->First().IsNull();
 }
 
 bool XCaf::hasShapeColor(const TDF_Label& lbl) const
@@ -181,27 +186,25 @@ bool XCaf::hasShapeColor(const TDF_Label& lbl) const
         return false;
 
     return tool->IsSet(lbl, XCAFDoc_ColorGen)
-            || tool->IsSet(lbl, XCAFDoc_ColorSurf)
-            || tool->IsSet(lbl, XCAFDoc_ColorCurv);
+           || tool->IsSet(lbl, XCAFDoc_ColorSurf)
+           || tool->IsSet(lbl, XCAFDoc_ColorCurv)
+        ;
 }
 
 Quantity_Color XCaf::shapeColor(const TDF_Label& lbl) const
 {
     OccHandle<XCAFDoc_ColorTool> tool = this->colorTool();
-    Quantity_Color color = {};
     if (!tool)
-        return color;
+        return {};
 
-    if (tool->GetColor(lbl, XCAFDoc_ColorGen, color))
-        return color;
+    constexpr XCAFDoc_ColorType colorTypes[] = { XCAFDoc_ColorGen, XCAFDoc_ColorSurf, XCAFDoc_ColorCurv};
+    for (auto ctype : colorTypes) {
+        Quantity_Color color;
+        if (tool->GetColor(lbl, ctype, color))
+            return color;
+    }
 
-    if (tool->GetColor(lbl, XCAFDoc_ColorSurf, color))
-        return color;
-
-    if (tool->GetColor(lbl, XCAFDoc_ColorCurv, color))
-        return color;
-
-    return color;
+    return {};
 }
 
 TDF_Label XCaf::findShapeLabel(const TopoDS_Shape& shape, FindShapeLabelFlags flags) const
@@ -337,6 +340,18 @@ TDF_LabelSequence XCaf::diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther
     return seqDiff;
 }
 
+OccHandle<TDataStd_NamedData> XCaf::shapeUserDefinedAttributes(const TDF_Label& lbl) const
+{
+    if (lbl.IsNull())
+        return {};
+
+#if OCC_VERSION_HEX >= 0x070400
+    return this->shapeTool()->GetNamedProperties(lbl, false/*!create*/);
+#else
+    return {};
+#endif
+}
+
 TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& label)
 {
     Expects(m_modelTree != nullptr);
@@ -350,12 +365,6 @@ TreeNodeId XCaf::deepBuildAssemblyTree(TreeNodeId parentNode, const TDF_Label& l
         const TDF_Label referred = XCaf::shapeReferred(label);
         this->deepBuildAssemblyTree(node, referred);
     }
-#if 0
-    else if (XCaf::isShapeSimple(label)) {
-        for (const TDF_Label& child : XCaf::shapeSubs(label))
-            this->deepBuildAssemblyTree(node, child);
-    }
-#endif
 
     return node;
 }

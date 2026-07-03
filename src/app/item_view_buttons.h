@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -22,28 +21,26 @@ namespace Mayo {
  * \class ItemViewButtons
  * \brief Provides buttons integrated to items displayed by QAbstractItemView
  *
- * ItemViewButtons allows to add buttons inside any QAbstractItemView
- * without subclassing the item-view class.
+ * ItemViewButtons allows to add buttons inside any QAbstractItemView without subclassing the
+ * item-view class.
  *
- * It only requires that its paint() method is called whenever any view item has
- * to be drawn. If you have a custom delegate (eg. a subclass of QStyledItemDelegate)
- * then just call at some point ItemViewButtons::paint() inside
- * the delegate's paint() method :
+ * It only requires that its paint() method is called whenever any view item has to be drawn. If you
+ * have a custom delegate(eg. a subclass of QStyledItemDelegate) then just call at some point
+ * ItemViewButtons::paint() inside the delegate's paint() method :
  * \code
- * void MyCustomDeleagate::paint(QPainter* painter,
- *                               const QStyleOptionViewItem& option,
- *                               const QModelIndex& index) const
+ * void MyCustomDelegate::paint(
+ *         QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+ *     ) const
  * {
  *   QStyledItemDelegate::paint(painter, option, index);
  *   // Specific paint operations ...
- *
  *   m_itemViewBtns->paint(painter, option, index);
  * }
  * \endcode
  *
- * If you do not want to modify your delegate class then createProxyItemDelegate()
- * might be the right option : this will create a new delegate around yours with
- * the paint() method correctly called.
+ * If you do not want to modify your delegate class then createProxyItemDelegate() might be the
+ * right option : this will create a new delegate around yours with the paint() method correctly
+ * called.
  *
  * If the item-view does not use any delegate then just call installDefaultItemDelegate()
  *
@@ -73,11 +70,11 @@ public:
     // View control
     QAbstractItemView* itemView() const;
 
-    bool eventFilter(QObject *object, QEvent *event) override;
+    bool eventFilter(QObject* object, QEvent* event) override;
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;
 
     // Button management
-    void addButton(int btnId, const QIcon& icon = QIcon(), const QString& toolTip = QString());
+    void addButton(int btnId, const QIcon& icon = {}, const QString& toolTip = {});
     void copyButtonProperties(int srcBtnId, int dstBtnId);
 
     int buttonDetectionMatchRole(int btnId) const;
@@ -105,8 +102,7 @@ public:
     // Delegates
     void installDefaultItemDelegate();
     QStyledItemDelegate* createProxyItemDelegate(
-            QStyledItemDelegate* sourceDelegate,
-            QObject* parent = nullptr
+            QStyledItemDelegate* sourceDelegate, QObject* parent = nullptr
         ) const;
 
 signals:

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "gui_document.h"
@@ -65,6 +64,32 @@ static GuiDocument::GradientBackground& defaultGradientBackground()
     return defaultGradientBackground;
 }
 
+// Find the Up direction closest to current instead of `upStart`
+// NOTE: excerpt from OpenCascade/src/AIS/AIS_ViewCube.cpp
+static gp_Dir findClosestUpDirection(const OccHandle<Graphic3d_Camera>& camera, const gp_Dir& upStart)
+{
+    const gp_Dir newDir = camera->Direction();
+    const gp_Ax1 newDirAx1(gp::Origin(), newDir);
+    const gp_Dir upArray[] = {
+        camera->Up(),
+        camera->Up().Rotated(newDirAx1, MathConst::pi / 2.),
+        camera->Up().Rotated(newDirAx1, MathConst::pi),
+        camera->Up().Rotated(newDirAx1, MathConst::pi * 1.5),
+    };
+
+    double bestAngle = Precision::Infinite();
+    gp_Dir upBest;
+    for (const gp_Dir& up : upArray) {
+        const double angle = up.Angle(upStart);
+        if (bestAngle > angle) {
+            bestAngle = angle;
+            upBest = up;
+        }
+    }
+
+    return upBest;
+}
+
 } // namespace Internal
 
 GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
@@ -78,20 +103,25 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     this->setViewTrihedronMode(ViewTrihedronMode::AisViewCube);
-    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_UPPER);
+    this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
 #else
     this->setViewTrihedronMode(ViewTrihedronMode::V3dViewZBuffer);
     this->setViewTrihedronCorner(Aspect_TOTP_LEFT_LOWER);
 #endif
 
     //m_v3dView->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr);
-    // 3D view - Enable anti-aliasing with MSAA
-    m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
-    m_v3dView->ChangeRenderingParams().NbMsaaSamples = 4;
+    // 3D view - Configure stats
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
         Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
     );
+    // 3D view - Enable anti-aliasing
+    // NOTE Graphic3d_RenderingParams::NbMsaaSamples needs to be set just after an OpenGL is active,
+    //      generally after binding to window
+    //      Can't call Graphic3d_GraphicDriver::InquireLimit(MaxMsaa) here because it needs an
+    //      OpenGL context
+    m_v3dView->ChangeRenderingParams().IsAntialiasingEnabled = true;
+
     // 3D view - Set gradient background
     m_v3dView->SetBgGradientColors(
         GuiDocument::defaultGradientBackground().color1,
@@ -102,9 +132,8 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
 
     m_cameraAnimation->setView(m_v3dView);
 
-    for (int i = 0; i < doc->entityCount(); ++i)
-        this->mapEntity(doc->entityTreeNodeId(i));
-
+    for (TreeNodeId nodeId : doc->allEntityNodeIds())
+        this->mapEntity(nodeId);
 
     doc->signalEntityAdded.connectSlot(&GuiDocument::onDocumentEntityAdded, this);
     doc->signalEntityAboutToBeDestroyed.connectSlot(&GuiDocument::onDocumentEntityAboutToBeDestroyed, this);
@@ -175,23 +204,9 @@ void GuiDocument::setDevicePixelRatio(double ratio)
         break;
     }
     case ViewTrihedronMode::AisViewCube: {
-#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
-        auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
-        if (viewCube) {
-            viewCube->SetSize(55 * m_devicePixelRatio, true/*adaptOtherParams*/);
-            viewCube->SetFontHeight(12 * m_devicePixelRatio);
-            const int xyOffset = std::lround(85 * m_devicePixelRatio);
-            viewCube->SetTransformPersistence(
-                        new Graphic3d_TransformPers(
-                                Graphic3d_TMF_TriedronPers,
-                                m_viewTrihedronCorner,
-                                Graphic3d_Vec2i(xyOffset, xyOffset)
-                            )
-            );
-            viewCube->Redisplay(true/*allModes*/);
-        }
-#endif
-
+        this->configureViewCubeSizes();
+        if (m_aisViewCube)
+            m_gfxScene.recomputeObjectPresentation(m_aisViewCube);
         break;
     }
     } // endswitch
@@ -200,10 +215,24 @@ void GuiDocument::setDevicePixelRatio(double ratio)
 GuiDocument::~GuiDocument()
 {
     delete m_cameraAnimation;
+    // IMPORTANT
+    //    Calling V3d_View::Remove() here avoids TKOpenGl error "wglMakeCurrent() has failed"
+    m_v3dView->Remove();
+}
+
+Document::Identifier GuiDocument::documentIdentifier() const
+{
+    return m_document ? m_document->identifier() : -1;
+}
+
+Document::Identifier GuiDocument::documentIdentifier(const GuiDocument* guiDoc)
+{
+    return guiDoc ? guiDoc->documentIdentifier() : -1;
 }
 
 void GuiDocument::foreachGraphicsObject(
-        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn) const
+        TreeNodeId nodeId, const std::function<void (GraphicsObjectPtr)>& fn
+    ) const
 {
     if (!fn)
         return;
@@ -234,25 +263,18 @@ TreeNodeId GuiDocument::nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObjec
     return 0;
 }
 
-void GuiDocument::toggleItemSelected(const ApplicationItem& appItem)
+void GuiDocument::toggleNodeSelected(TreeNodeId nodeId)
 {
-    const DocumentPtr doc = appItem.document();
-    if (doc != this->document())
-        return;
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
+        m_gfxScene.toggleOwnerSelected(gfxObject->GlobalSelOwner());
+    });
+}
 
-    if (appItem.isDocumentTreeNode()) {
-        const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-        const TreeNodeId entityNodeId = doc->modelTree().nodeRoot(docTreeNode.id());
-        const GraphicsEntity* gfxEntity = this->findGraphicsEntity(entityNodeId);
-        if (!gfxEntity)
-            return;
-
-        traverseTree(docTreeNode.id(), doc->modelTree(), [=](TreeNodeId id) {
-            GraphicsObjectPtr gfxObject = CppUtils::findValue(id, gfxEntity->mapTreeNodeGfxObject);
-            if (gfxObject)
-                m_gfxScene.toggleOwnerSelection(gfxObject->GlobalSelOwner());
-        });
-    }
+void GuiDocument::setNodeSelected(TreeNodeId nodeId, bool on)
+{
+    this->foreachGraphicsObject(nodeId, [=](GraphicsObjectPtr gfxObject) {
+        m_gfxScene.setOwnerSelected(gfxObject->GlobalSelOwner(), on);
+    });
 }
 
 int GuiDocument::activeDisplayMode(const GraphicsObjectDriverPtr& driver) const
@@ -300,7 +322,7 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     if (itNode->second == nodeVisibleState)
         return; // Same visible state
 
-    // Helper data/function to keep track of all the nodes whose visibility state are altered
+    // Helper data/function to keep track of all the nodes whose visibility state is altered
     std::unordered_map<TreeNodeId, CheckState> mapNodeIdVisibleState;
     auto fnSetNodeVisibleState = [&](TreeNodeId id, CheckState state) {
         auto it = m_mapTreeNodeCheckState.find(id);
@@ -337,14 +359,15 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
     }
 
     if (on && isAppItemSelected)
-        this->toggleItemSelected(appItem);
+        this->setNodeSelected(nodeId, true);
 
     // Keep selection state of input node children
-    traverseTree(nodeId, docModelTree, [=](TreeNodeId id) {
-        if (id != nodeId) {
-            const ApplicationItem childAppItem({ m_document, id });
-            if (on && m_guiApp->selectionModel()->isSelected(childAppItem))
-                this->toggleItemSelected(childAppItem);
+    traverseTree(nodeId, docModelTree, [=](TreeNodeId childNodeId) {
+        if (childNodeId != nodeId) {
+            const ApplicationItem childAppItem({ m_document, childNodeId });
+            const bool isChildNodeSelected = m_guiApp->selectionModel()->isSelected(childAppItem);
+            if (on && isChildNodeSelected)
+                this->setNodeSelected(childNodeId, true);
         }
     });
 
@@ -380,15 +403,8 @@ void GuiDocument::setNodeVisible(TreeNodeId nodeId, bool on)
 void GuiDocument::setExplodingFactor(double t)
 {
     m_explodingFactor = t;
-    for (const GraphicsEntity& entity : m_vecGraphicsEntity) {
-        const gp_Pnt entityCenter = BndBoxCoords::get(entity.bndBox).center();
-        for (const GraphicsEntity::Object& object : entity.vecObject) {
-            const gp_Vec vecDirection(entityCenter, BndBoxCoords::get(object.bndBox).center());
-            gp_Trsf trsfMove;
-            trsfMove.SetTranslation(2 * t * vecDirection);
-            m_gfxScene.setObjectTransformation(object.ptr, trsfMove * object.trsfOriginal);
-        }
-    }
+    for (const GraphicsEntity& entity : m_vecGraphicsEntity)
+        applyExplodingFactor(entity, t);
 
     m_gfxScene.redraw();
 }
@@ -402,6 +418,7 @@ void GuiDocument::toggleOriginTrihedronVisibility()
 {
     const bool visible = !this->isOriginTrihedronVisible();
     m_gfxScene.setObjectVisible(m_aisOriginTrihedron, visible);
+    this->signalOriginTrihedronVisibilityToggled.send(visible);
 }
 
 bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
@@ -412,7 +429,7 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
     auto viewCubeOwner = OccHandle<AIS_ViewCubeOwner>::DownCast(gfxOwner);
     if (viewCubeOwner) {
-        this->setViewCameraOrientation(viewCubeOwner->MainOrientation());
+        this->setViewCameraOrientation(viewCubeOwner->MainOrientation(), ViewOrientationFlag_All);
         return true;
     }
 #endif
@@ -420,11 +437,20 @@ bool GuiDocument::processAction(const GraphicsOwnerPtr& gfxOwner)
     return false;
 }
 
-void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection)
+void GuiDocument::setViewCameraOrientation(V3d_TypeOfOrientation projection, ViewOrientationFlags flags)
 {
     this->runViewCameraAnimation([=](OccHandle<V3d_View> view) {
         view->SetProj(projection);
-        GraphicsUtils::V3dView_fitAll(view, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics));
+        if (flags & ViewOrientationFlag_FindClosestUp) {
+            const gp_Dir& upStart = m_cameraAnimation->cameraStart()->Up();
+            view->Camera()->SetUp(Internal::findClosestUpDirection(view->Camera(), upStart));
+        }
+
+        if (flags & ViewOrientationFlag_FitAll) {
+            GraphicsUtils::V3dView_fitAll(
+                view, this->graphicsBoundingBox(OnlySelectedGraphics | OnlyVisibleGraphics)
+            );
+        }
     });
 }
 
@@ -463,25 +489,17 @@ void GuiDocument::setViewTrihedronMode(ViewTrihedronMode mode)
         if (m_aisViewCube.IsNull()) {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
             auto aisViewCube = new AIS_ViewCube;
+            m_aisViewCube = aisViewCube;
             aisViewCube->SetBoxColor(Quantity_NOC_GRAY75);
             //aisViewCube->SetFixedAnimationLoop(false);
-            aisViewCube->SetSize(55);
-            aisViewCube->SetFontHeight(12);
             aisViewCube->SetAxesLabels("", "", "");
-            aisViewCube->SetTransformPersistence(
-                new Graphic3d_TransformPers(
-                    Graphic3d_TMF_TriedronPers,
-                    m_viewTrihedronCorner,
-                    Graphic3d_Vec2i(85, 85)
-                )
-            );
+            this->configureViewCubeSizes();
             m_gfxScene.addObject(aisViewCube);
             //aisViewCube->Attributes()->DatumAspect()->LineAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             const OccHandle<Prs3d_DatumAspect>& datumAspect = aisViewCube->Attributes()->DatumAspect();
             datumAspect->ShadingAspect(Prs3d_DP_XAxis)->SetColor(Quantity_NOC_RED2);
             datumAspect->ShadingAspect(Prs3d_DP_YAxis)->SetColor(Quantity_NOC_GREEN2);
             datumAspect->ShadingAspect(Prs3d_DP_ZAxis)->SetColor(Quantity_NOC_BLUE2);
-            m_aisViewCube = aisViewCube;
 #endif
         }
 
@@ -534,9 +552,10 @@ int GuiDocument::aisViewCubeBoundingSize() const
              + hnd->BoxEdgeMinSize()
              + hnd->BoxCornerMinSize()
              + hnd->RoundRadius()
-             )
+            )
         + hnd->AxesPadding()
-        + hnd->FontHeight();
+        + hnd->FontHeight()
+    ;
     return std::lround(size);
 #else
     return 0;
@@ -650,22 +669,22 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
                     const TreeNodeId grandParentNodeId = docModelTree.nodeParent(parentNodeId);
                     const TopLoc_Location locGrandParentShape = XCaf::shapeAbsoluteLocation(docModelTree, grandParentNodeId);
                     gfxObject->SetLocalTransformation(locGrandParentShape);
-                    gfxEntity.vecObject.push_back(gfxObject);
+                    gfxEntity.vecObject.emplace_back(gfxObject);
                 }
                 else {
-                    auto gfxInstance = new AIS_ConnectedInteractive;
+                    auto gfxInstance = makeOccHandle<AIS_ConnectedInteractive>();
                     gfxInstance->Connect(gfxProduct, XCaf::shapeAbsoluteLocation(docModelTree, id));
                     gfxInstance->SetDisplayMode(gfxProduct->DisplayMode());
                     gfxInstance->Attributes()->SetFaceBoundaryDraw(gfxProduct->Attributes()->FaceBoundaryDraw());
                     gfxInstance->SetOwner(gfxProduct->GetOwner());
-                    gfxEntity.vecObject.push_back(GraphicsObjectPtr(gfxInstance));
+                    gfxEntity.vecObject.emplace_back(gfxInstance);
                 }
 
                 if (XCaf::isShapeReference(parentNodeLabel))
                     id = docModelTree.nodeParent(id);
             }
             else {
-                gfxEntity.vecObject.push_back(gfxProduct);
+                gfxEntity.vecObject.emplace_back(gfxProduct);
             }
 
             const GraphicsEntity::Object& lastGfxObject = gfxEntity.vecObject.back();
@@ -686,6 +705,9 @@ void GuiDocument::mapEntity(TreeNodeId entityTreeNodeId)
         object.trsfOriginal = m_gfxScene.objectTransformation(object.ptr);
         BndUtils::add(&gfxEntity.bndBox, object.bndBox);
     }
+
+    if (!MathUtils::fuzzyIsNull(m_explodingFactor))
+        this->applyExplodingFactor(gfxEntity, m_explodingFactor);
 
     m_gfxScene.redraw();
 
@@ -719,17 +741,51 @@ void GuiDocument::unmapEntity(TreeNodeId entityTreeNodeId)
 const GuiDocument::GraphicsEntity* GuiDocument::findGraphicsEntity(TreeNodeId entityTreeNodeId) const
 {
     auto itFound = std::find_if(
-                m_vecGraphicsEntity.cbegin(),
-                m_vecGraphicsEntity.cend(),
-                [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
+        m_vecGraphicsEntity.cbegin(),
+        m_vecGraphicsEntity.cend(),
+        [=](const GraphicsEntity& item) { return item.treeNodeId == entityTreeNodeId; }
     );
     return itFound != m_vecGraphicsEntity.cend() ? &(*itFound) : nullptr;
+}
+
+void GuiDocument::applyExplodingFactor(const GraphicsEntity& entity, double t)
+{
+    const gp_Pnt entityCenter = BndBoxCoords::get(entity.bndBox).center();
+    for (const GraphicsEntity::Object& object : entity.vecObject) {
+        const gp_Vec vecDirection(entityCenter, BndBoxCoords::get(object.bndBox).center());
+        gp_Trsf trsfMove;
+        trsfMove.SetTranslation(2 * t * vecDirection);
+        m_gfxScene.setObjectTransformation(object.ptr, trsfMove * object.trsfOriginal);
+    }
 }
 
 void GuiDocument::v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner)
 {
     const double scale = 0.075 * m_devicePixelRatio;
     m_v3dView->TriedronDisplay(corner, Quantity_NOC_GRAY50, scale, V3d_ZBUFFER);
+}
+
+void GuiDocument::configureViewCubeSizes()
+{
+    const int viewCubePxSize = 64;
+    const int viewCubePxFontHeight = 12;
+    const int viewCubePxOffsetXY = 90;
+
+#if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)
+    auto viewCube = OccHandle<AIS_ViewCube>::DownCast(m_aisViewCube);
+    if (viewCube) {
+        viewCube->SetSize(viewCubePxSize * m_devicePixelRatio, true/*adaptOtherParams*/);
+        viewCube->SetFontHeight(viewCubePxFontHeight * m_devicePixelRatio);
+        const int offsetXY = std::lround(viewCubePxOffsetXY * m_devicePixelRatio);
+        viewCube->SetTransformPersistence(
+            new Graphic3d_TransformPers(
+                Graphic3d_TMF_TriedronPers,
+                m_viewTrihedronCorner,
+                Graphic3d_Vec2i{offsetXY, offsetXY}
+            )
+        );
+    }
+#endif
 }
 
 } // namespace Mayo

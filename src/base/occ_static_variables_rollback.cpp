@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "occ_static_variables_rollback.h"
@@ -11,8 +10,7 @@
 #include <iostream>
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OccStaticVariablesRollback::Private {
     template<typename T>
@@ -25,13 +23,13 @@ struct OccStaticVariablesRollback::Private {
 
         StaticVariableRecord record;
         record.strKey = strKey;
-        if constexpr(std::is_same<int, T>::value) {
+        if constexpr(std::is_same_v<int, T>) {
             record.value = Interface_Static::IVal(strKey);
         }
-        else if constexpr(std::is_same<double, T>::value) {
+        else if constexpr(std::is_same_v<double, T>) {
             record.value = Interface_Static::RVal(strKey);
         }
-        else if constexpr(std::is_same<std::string_view, T>::value) {
+        else if constexpr(std::is_same_v<std::string_view, T>) {
             record.value = Interface_Static::CVal(strKey);
         }
 
@@ -42,16 +40,16 @@ struct OccStaticVariablesRollback::Private {
     static bool changeStaticVariable(const char* strKey, T value)
     {
         bool ok = false;
-        if constexpr(std::is_same<int, T>::value) {
+        if constexpr(std::is_same_v<int, T>) {
             ok = Interface_Static::SetIVal(strKey, value);
         }
-        else if constexpr(std::is_same<double, T>::value) {
+        else if constexpr(std::is_same_v<double, T>) {
             ok = Interface_Static::SetRVal(strKey, value);
         }
-        else if constexpr(std::is_same<std::string_view, T>::value) {
+        else if constexpr(std::is_same_v<std::string_view, T>) {
             ok = Interface_Static::SetCVal(strKey, value.data());
         }
-        else if constexpr(std::is_same<std::string, T>::value) {
+        else if constexpr(std::is_same_v<std::string, T>) {
             ok = Interface_Static::SetCVal(strKey, value.c_str());
         }
 
@@ -103,5 +101,4 @@ OccStaticVariablesRollback::~OccStaticVariablesRollback()
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

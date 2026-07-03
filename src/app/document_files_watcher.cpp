@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "document_files_watcher.h"
@@ -127,18 +126,14 @@ bool DocumentFilesWatcher::isDocumentChangeAcknowledged(const DocumentPtr& doc) 
 
 void DocumentFilesWatcher::onDocumentFilePathChanged(const DocumentPtr&, const FilePath& fp)
 {
-    if (m_isEnabled) {
-        if (filepathExists(fp))
-            this->fileSystemWatcher()->addPath(filepathTo<QString>(fp));
-    }
+    if (m_isEnabled && filepathExists(fp))
+        this->fileSystemWatcher()->addPath(filepathTo<QString>(fp));
 }
 
 void DocumentFilesWatcher::onDocumentAdded(const DocumentPtr& doc)
 {
-    if (m_isEnabled) {
-        if (filepathExists(doc->filePath()))
-            this->fileSystemWatcher()->addPath(filepathTo<QString>(doc->filePath()));
-    }
+    if (m_isEnabled && filepathExists(doc->filePath()))
+        this->fileSystemWatcher()->addPath(filepathTo<QString>(doc->filePath()));
 }
 
 void DocumentFilesWatcher::onDocumentAboutToClose(const DocumentPtr& doc)

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -16,7 +15,7 @@ namespace Mayo {
 // Provides measurement services for BRep shapes
 class MeasureToolBRep : public IMeasureTool {
 public:
-    Span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const override;
+    gsl::span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const override;
     bool supports(const GraphicsObjectPtr& object) const override;
     bool supports(MeasureType type) const override;
 

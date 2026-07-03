@@ -1,15 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include <utility>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct RGB_Color {
     int r;
@@ -277,5 +275,4 @@ const std::pair<int, RGB_Color> aciTable[] = {
     { 255, RGB_Color{ 255, 255, 255 } },
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

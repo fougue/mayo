@@ -1,16 +1,14 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
-#include "span.h"
+#include <gsl/span>
 #include <string_view>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Predefined I/O formats
 enum Format {
@@ -43,7 +41,7 @@ std::string_view formatIdentifier(Format format);
 std::string_view formatName(Format format);
 
 // Returns array of applicable file suffixes(extensions) corresponding to 'format'
-Span<std::string_view> formatFileSuffixes(Format format);
+gsl::span<std::string_view> formatFileSuffixes(Format format);
 
 // Does 'format' provide BRep model ?
 bool formatProvidesBRep(Format format);
@@ -51,5 +49,4 @@ bool formatProvidesBRep(Format format);
 // Does 'format' provide mesh model ?
 bool formatProvidesMesh(Format format);
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

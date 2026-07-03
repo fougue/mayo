@@ -1,12 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "application.h"
 #include "filepath_conv.h"
 #include "property_builtins.h"
+#include "string_conv.h"
 #include "task_common.h"
 #include "tkernel_utils.h"
 
@@ -25,7 +25,7 @@ namespace Mayo {
 
 class Document::FormatBinaryRetrievalDriver : public BinXCAFDrivers_DocumentRetrievalDriver {
 public:
-    FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatBinaryRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
     OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app);  }
@@ -37,7 +37,7 @@ private:
 
 class Document::FormatXmlRetrievalDriver : public XmlXCAFDrivers_DocumentRetrievalDriver {
 public:
-    FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
+    explicit FormatXmlRetrievalDriver(const ApplicationPtr& app) : m_app(app) {}
 
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 6, 0)
     OccHandle<CDM_Document> CreateDocument() override { return new Document(m_app); }
@@ -50,6 +50,7 @@ private:
 struct Application::Private {
     std::atomic<Document::Identifier> m_seqDocumentIdentifier = {};
     std::unordered_map<Document::Identifier, DocumentPtr> m_mapIdentifierDocument;
+    bool m_autoExpandCompoundToAssembly = true;
 };
 
 struct ApplicationI18N {
@@ -110,13 +111,12 @@ DocumentPtr Application::findDocumentByIdentifier(Document::Identifier docIdent)
 
 DocumentPtr Application::findDocumentByLocation(const FilePath& location) const
 {
-    for (const auto& mapPair : d->m_mapIdentifierDocument) {
-        const DocumentPtr& docPtr = mapPair.second;
+    for (const auto& [docId, docPtr] : d->m_mapIdentifierDocument) {
         if (filepathEquivalent(docPtr->filePath(), location))
             return docPtr;
     }
 
-    return DocumentPtr();
+    return {};
 }
 
 int Application::findIndexOfDocument(const DocumentPtr& doc) const
@@ -131,30 +131,51 @@ int Application::findIndexOfDocument(const DocumentPtr& doc) const
 
 void Application::closeDocument(const DocumentPtr& doc)
 {
+    if (!doc)
+        return;
+
     XCAFApp_Application::Close(doc);
     doc->signalNameChanged.disconnectAll();
     doc->signalFilePathChanged.disconnectAll();
     doc->signalEntityAdded.disconnectAll();
     doc->signalEntityAboutToBeDestroyed.disconnectAll();
+    this->signalDocumentClosed.send(doc);
     //doc->Main().ForgetAllAttributes(true/*clearChildren*/);
+}
+
+bool Application::autoExpandCompoundToAssembly() const
+{
+    return d->m_autoExpandCompoundToAssembly;
+}
+
+void Application::setAutoExpandCompoundToAssembly(bool on)
+{
+    d->m_autoExpandCompoundToAssembly = on;
 }
 
 void Application::defineMayoFormat(const ApplicationPtr& app)
 {
-    const char strFougueCopyright[] = "Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>";
+    if (!app)
+        return;
+
+    constexpr auto strFougueCopyright = "Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>";
     app->DefineFormat(
-        Document::NameFormatBinary, ApplicationI18N::textIdTr("Binary Mayo Document Format").data(), "myb",
-        new Document::FormatBinaryRetrievalDriver(app),
-        new BinXCAFDrivers_DocumentStorageDriver
+        Document::NameFormatBinary,
+        to_OccAsciiString(ApplicationI18N::textIdTr("Binary Mayo Document Format")),
+        "myb",
+        makeOccHandle<Document::FormatBinaryRetrievalDriver>(app),
+        makeOccHandle<BinXCAFDrivers_DocumentStorageDriver>()
     );
     app->DefineFormat(
-        Document::NameFormatXml, ApplicationI18N::textIdTr("XML Mayo Document Format").data(), "myx",
-        new Document::FormatXmlRetrievalDriver(app),
-        new XmlXCAFDrivers_DocumentStorageDriver(strFougueCopyright)
+        Document::NameFormatXml,
+        to_OccAsciiString(ApplicationI18N::textIdTr("XML Mayo Document Format")),
+        "myx",
+        makeOccHandle<Document::FormatXmlRetrievalDriver>(app),
+        makeOccHandle<XmlXCAFDrivers_DocumentStorageDriver>(strFougueCopyright)
     );
 }
 
-Span<const char*> Application::envOpenCascadeOptions()
+gsl::span<const char*> Application::envOpenCascadeOptions()
 {
     static const char* arrayOptionName[] = {
         "MMGT_OPT",
@@ -166,7 +187,7 @@ Span<const char*> Application::envOpenCascadeOptions()
     return arrayOptionName;
 }
 
-Span<const char*> Application::envOpenCascadePaths()
+gsl::span<const char*> Application::envOpenCascadePaths()
 {
     static const char* arrayPathName[] = {
         "CSF_SHMessage",

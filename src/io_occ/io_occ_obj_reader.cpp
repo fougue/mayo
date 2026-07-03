@@ -1,19 +1,17 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_obj_reader.h"
 #include "../base/property_builtins.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccObjReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccObjReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup)
     {
         this->singlePrecisionVertexCoords.setDescription(
@@ -55,5 +53,4 @@ void OccObjReader::applyParameters()
     m_reader.SetSinglePrecision(m_params.singlePrecisionVertexCoords);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

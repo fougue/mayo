@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,8 +9,7 @@
 #include "../base/io_writer.h"
 #include <TopoDS_Shape.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for OpenCascade BRep file format
 class OccBRepReader : public Reader {
@@ -28,7 +26,7 @@ private:
 // Writer for OpenCascade BRep file format
 class OccBRepWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
     void applyProperties(const PropertyGroup*) override {}
 
@@ -36,5 +34,4 @@ private:
     TopoDS_Shape m_shape;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

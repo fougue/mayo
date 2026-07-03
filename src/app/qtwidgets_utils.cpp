@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "qtwidgets_utils.h"
@@ -118,6 +117,32 @@ void QtWidgetsUtils::moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, in
 void QtWidgetsUtils::collapseWidget(QWidget *widget, bool on)
 {
     widget->setMaximumHeight(on ? 0 : 16777215/*Qt_defaultMaximumWidth*/);
+}
+
+Qt::Alignment QtWidgetsUtils::textLeadingAlignment(
+        Qt::LayoutDirection dir, const QWidget* widget, const QLocale* locale
+    )
+{
+    auto fnToTextHAlign = [](Qt::LayoutDirection dir) {
+        if (dir == Qt::LeftToRight)
+            return Qt::AlignLeft;
+        else
+            return Qt::AlignRight;
+    };
+
+    if (dir != Qt::LayoutDirectionAuto)
+        return fnToTextHAlign(dir);
+
+    if (widget && widget->layoutDirection() != Qt::LayoutDirectionAuto)
+        return fnToTextHAlign(widget->layoutDirection());
+
+    if (locale && locale->textDirection() != Qt::LayoutDirectionAuto)
+        return fnToTextHAlign(locale->textDirection());
+
+    if (qGuiApp && qGuiApp->layoutDirection() != Qt::LayoutDirectionAuto)
+        return fnToTextHAlign(qGuiApp->layoutDirection());
+
+    return Qt::AlignLeading;
 }
 
 } // namespace Mayo

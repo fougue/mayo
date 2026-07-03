@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -23,8 +22,7 @@ struct aiMesh;
 struct aiNode;
 struct aiTexture;
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Assimp-based reader
 // Requires OpenCascade >= v7.5.0(for XCAFDoc_VisMaterial)
@@ -69,5 +67,4 @@ private:
     std::unordered_map<std::string, OccHandle<Image_Texture>> m_mapFileTexture;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

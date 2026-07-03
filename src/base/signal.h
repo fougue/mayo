@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -80,21 +79,18 @@ public:
     // When send() is called, the functions will be executed with the arguments provided to send()
     SignalConnectionHandle connectSlot(const std::function<void(Args...)>& fnSlot)
     {
-        if (getGlobalSignalThreadHelper()) {
-            auto threadContext = getGlobalSignalThreadHelper()->getCurrentThreadContext();
-            auto connectThreadId = std::this_thread::get_id();
-            auto fnWrap = [=](Args... args) {
-                auto emitThreadId = std::this_thread::get_id();
-                if (emitThreadId == connectThreadId)
-                    fnSlot(args...);
-                else
-                    getGlobalSignalThreadHelper()->execInThread(threadContext, [=]{ fnSlot(args...); });
-            };
-            return this->connect(fnWrap);
-        }
-        else {
+        if (!getGlobalSignalThreadHelper())
             return this->connect(fnSlot);
-        }
+
+        auto threadContext = getGlobalSignalThreadHelper()->getCurrentThreadContext();
+        auto connectThreadId = std::this_thread::get_id();
+        auto fnWrap = [=](Args... args) { // NOSONAR(cpp:S3584)
+            if (std::this_thread::get_id() == connectThreadId)
+                fnSlot(args...);
+            else
+                getGlobalSignalThreadHelper()->execInThread(threadContext, [=]{ fnSlot(args...); });
+        };
+        return this->connect(fnWrap);
     }
 
     // Template overload of Signal::connectSlot() making easier arbitrary connections of functions

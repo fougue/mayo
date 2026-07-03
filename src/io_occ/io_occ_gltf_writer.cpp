@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_gltf_writer.h"
@@ -19,13 +18,12 @@
 #include <fmt/format.h>
 #include <RWGltf_CafWriter.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccGltfWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->inputCoordinateSystem.setDescription(
@@ -116,7 +114,7 @@ public:
     PropertyBool keepIndices16b{ this, textId("keepIndices16b") };
 };
 
-bool OccGltfWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress*)
+bool OccGltfWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress*)
 {
     m_document.Nullify();
     m_seqRootLabel.Clear();
@@ -219,5 +217,4 @@ void OccGltfWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

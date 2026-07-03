@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_window.h"
@@ -12,18 +11,19 @@
 #include <QtGui/QShowEvent>
 #include <QtWidgets/QWidget>
 
+#include <cassert>
+
 namespace Mayo {
 
 CommandMainWidgetToggleFullscreen::CommandMainWidgetToggleFullscreen(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Fullscreen"));
     action->setToolTip(Command::tr("Switch Fullscreen/Normal"));
-    action->setShortcut(Qt::Key_F11);
+    action->setShortcut(QKeySequence::StandardKey::FullScreen);
     action->setCheckable(true);
     action->setChecked(context->widgetMain()->isFullScreen());
-    this->setAction(action);
 }
 
 void CommandMainWidgetToggleFullscreen::execute()
@@ -41,23 +41,22 @@ void CommandMainWidgetToggleFullscreen::execute()
     }
 }
 
-CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* context)
-    : Command(context)
+CommandLeftSidebarWidgetToggle::CommandLeftSidebarWidgetToggle(IAppContext* context, QWidget* panelWidget)
+    : Command(context),
+      m_panelWidget(panelWidget)
 {
-    auto action = new QAction(this);
+    assert(panelWidget);
+
+    auto action = this->createAction();
     action->setToolTip(Command::tr("Show/Hide Left Sidebar"));
-    action->setShortcut(Qt::ALT + Qt::Key_0);
-    action->setCheckable(true);
-    action->setChecked(context->pageDocuments_widgetLeftSideBar()->isVisible());
-    this->setAction(action);
+    action->setShortcut(Qt::ALT | Qt::Key_0);
     this->updateAction();
-    context->pageDocuments_widgetLeftSideBar()->installEventFilter(this);
+    panelWidget->installEventFilter(this);
 }
 
 void CommandLeftSidebarWidgetToggle::execute()
 {
-    QWidget* widget = this->context()->pageDocuments_widgetLeftSideBar();
-    widget->setVisible(!widget->isVisible());
+    m_panelWidget->setVisible(!m_panelWidget->isVisible());
 }
 
 bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
@@ -67,11 +66,9 @@ bool CommandLeftSidebarWidgetToggle::getEnabledStatus() const
 
 bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event)
 {
-    if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
-        if (watched == this->context()->pageDocuments_widgetLeftSideBar()) {
-            this->updateAction();
-            return true;
-        }
+    auto eventType = event->type();
+    if (watched == m_panelWidget || eventType == QEvent::Show || eventType == QEvent::Hide) {
+        this->updateAction();
     }
 
     return Command::eventFilter(watched, event);
@@ -79,7 +76,7 @@ bool CommandLeftSidebarWidgetToggle::eventFilter(QObject* watched, QEvent* event
 
 void CommandLeftSidebarWidgetToggle::updateAction()
 {
-    if (this->context()->pageDocuments_widgetLeftSideBar()->isVisible()) {
+    if (m_panelWidget->isVisible()) {
         this->action()->setText(Command::tr("Hide Left Sidebar"));
         this->action()->setIcon(mayoTheme()->icon(Theme::Icon::BackSquare));
     }
@@ -94,10 +91,9 @@ void CommandLeftSidebarWidgetToggle::updateAction()
 CommandSwitchMainWidgetMode::CommandSwitchMainWidgetMode(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setToolTip(Command::tr("Go To Home Page"));
-    action->setShortcut(Qt::CTRL + Qt::Key_0);
-    this->setAction(action);
+    action->setShortcut(Qt::CTRL | Qt::Key_0);
     this->updateAction();
     context->widgetPage(IAppContext::Page::Home)->installEventFilter(this);
     context->widgetPage(IAppContext::Page::Documents)->installEventFilter(this);
@@ -130,10 +126,9 @@ bool CommandSwitchMainWidgetMode::eventFilter(QObject* watched, QEvent* event)
 {
     if (event->type() == QEvent::Show) {
         if (watched == this->context()->widgetPage(IAppContext::Page::Home)
-                || watched == this->context()->widgetPage(IAppContext::Page::Documents))
+            || watched == this->context()->widgetPage(IAppContext::Page::Documents))
         {
             this->updateAction();
-            return true;
         }
     }
 
@@ -157,18 +152,18 @@ void CommandSwitchMainWidgetMode::updateAction()
 CommandPreviousDocument::CommandPreviousDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Previous Document"));
     action->setToolTip(Command::tr("Previous Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Back));
-    action->setShortcut(Qt::ALT + Qt::Key_Left);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Back);
 }
 
 void CommandPreviousDocument::execute()
 {
     const int prevDocIndex = this->currentDocumentIndex() - 1;
-    this->context()->setCurrentDocument(this->context()->findDocumentFromIndex(prevDocIndex));
+    auto prevDocId = this->context()->findDocumentFromIndex(prevDocIndex);
+    this->context()->setCurrentDocument(prevDocId);
 }
 
 bool CommandPreviousDocument::getEnabledStatus() const
@@ -182,12 +177,11 @@ bool CommandPreviousDocument::getEnabledStatus() const
 CommandNextDocument::CommandNextDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Next Document"));
     action->setToolTip(Command::tr("Next Document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Next));
-    action->setShortcut(Qt::ALT + Qt::Key_Right);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Forward);
 }
 
 void CommandNextDocument::execute()
@@ -199,9 +193,11 @@ void CommandNextDocument::execute()
 bool CommandNextDocument::getEnabledStatus() const
 {
     const int appDocumentCount = this->app()->documentCount();
+    const int currDocumentIndex = this->currentDocumentIndex();
     return appDocumentCount != 0
             && this->context()->currentPage() == IAppContext::Page::Documents
-            && this->currentDocumentIndex() < appDocumentCount - 1
+            && currDocumentIndex >= 0
+            && currDocumentIndex < (appDocumentCount - 1)
         ;
 }
 

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,7 +9,6 @@
 #include "../base/document_tree_node.h"
 #include "../base/property_builtins.h"
 #include "widget_model_tree.h"
-#include <vector>
 #include <QtCore/QString>
 class QAction;
 class QObject;

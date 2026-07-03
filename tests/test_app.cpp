@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 // Avoid MSVC conflicts with M_E, M_LOG2, ...
@@ -16,7 +15,6 @@
 #include "../src/app/qstring_utils.h"
 #include "../src/app/qtgui_utils.h"
 #include "../src/app/recent_files.h"
-#include "../src/app/theme.h"
 #include "../src/base/application.h"
 #include "../src/base/document.h"
 #include "../src/qtcommon/filepath_conv.h"
@@ -28,16 +26,16 @@
 #include <QtCore/QFile>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QVariant>
+#include <QtGui/QGuiApplication>
 #include <QtGui/QPainter>
 #include <QtGui/QPixmap>
-#include <QtWidgets/QWidget>
 #include <QtTest/QSignalSpy>
 
 namespace Mayo {
 
 namespace {
 
-QPixmap createColorPixmap(const QColor& color, const QSize& size = QSize(64, 64))
+QPixmap createColorPixmap(const QColor& color, const QSize& size = {64, 64})
 {
     QPixmap pix(size);
     QPainter painter(&pix);
@@ -48,17 +46,18 @@ QPixmap createColorPixmap(const QColor& color, const QSize& size = QSize(64, 64)
 FilePath temporaryFilePath()
 {
     QTemporaryFile file;
-    file.open();
-    return filepathFrom(QFileInfo(file));
+    return file.open() ? filepathFrom(QFileInfo(file)) : FilePath{};
 }
 
 RecentFile createRecentFile(const QPixmap& thumbnail)
 {
-    QTemporaryFile file;
-    file.open();
     RecentFile rf;
-    rf.filepath = filepathFrom(QFileInfo(file));
-    rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+    QTemporaryFile file;
+    if (file.open()) {
+        rf.filepath = filepathFrom(QFileInfo(file));
+        rf.thumbnailTimestamp = RecentFile::timestampLastModified(rf.filepath);
+    }
+
     rf.thumbnail.imageData = QtGuiUtils::toQByteArray(thumbnail);
     rf.thumbnail.imageCacheKey = thumbnail.cacheKey();
     return rf;
@@ -95,8 +94,11 @@ void TestApp::DocumentFilesWatcher_test()
     doc->setFilePath(cadFilePath);
 
     // Check file change on document is caught
-    fnCopyCadFile();
-    const bool okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
+    bool okWait = false;
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        okWait = QTest::qWaitFor([&]{ return changedDocId != -1; });
+    });
     QVERIFY(okWait);
     QCOMPARE(signalCallCount, 1);
     QCOMPARE(changedDocId, doc->identifier());
@@ -104,8 +106,10 @@ void TestApp::DocumentFilesWatcher_test()
     // Check further file changes are not monitored until last one is acknowledged
     changedDocId = -1;
     signalCallCount = 0;
-    fnCopyCadFile();
-    QTest::qWait(signalSendDelay_ms * 1.5);
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        QTest::qWait(signalSendDelay_ms * 1.5);
+    });
     QCOMPARE(changedDocId, -1);
     QCOMPARE(signalCallCount, 0);
 
@@ -113,8 +117,10 @@ void TestApp::DocumentFilesWatcher_test()
     docFilesWatcher.acknowledgeDocumentFileChange(doc);
     app->closeDocument(doc);
     changedDocId = -1;
-    fnCopyCadFile();
-    QTest::qWait(signalSendDelay_ms * 1.5);
+    this->runWithinEventLoop([&]{
+        fnCopyCadFile();
+        QTest::qWait(signalSendDelay_ms * 1.5);
+     });
     QCOMPARE(changedDocId, -1);
     QCOMPARE(signalCallCount, 0);
 }
@@ -237,9 +243,9 @@ void TestApp::RecentFiles_test()
         const QPixmap rhsPix = QtGuiUtils::toQPixmap(rhs.thumbnail.imageData);
         const QImage lhsImg = lhsPix.toImage();
         const QImage rhsImg = rhsPix.toImage();
-        for (int i = 0; i < lhsPix.width(); ++i) {
-            for (int j = 0; j < lhsPix.height(); ++j) {
-                QCOMPARE(lhsImg.pixel(i, j), rhsImg.pixel(i, j));
+        for (int x = 0; x < lhsPix.width(); ++x) {
+            for (int y = 0; y < lhsPix.height(); ++y) {
+                QCOMPARE(lhsImg.pixel(x, y), rhsImg.pixel(x, y));
             }
         } // endfor
     }
@@ -266,18 +272,34 @@ void TestApp::RecentFiles_QPixmap_test()
 
 void TestApp::AppUiState_test()
 {
-    QWidget widget;
     AppUiState uiState;
-    uiState.mainWindowGeometry = QtCoreUtils::toStdByteArray(widget.saveGeometry());
-    uiState.pageDocuments_isLeftSideBarVisible = true;
-    std::vector<uint8_t> blobSave = AppUiState::toBlob(uiState);
+    // NOTE
+    // This is the result of:
+    //     QWidget widget;
+    //     auto data = widget.saveGeometry();
+    const uint8_t widgetSaveGeometry_data[] = {
+        0x01, 0xD9, 0xD0, 0xCB, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x07, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x7F, 0x00, 0x00, 0x01, 0xDF
+    };
+    uiState.set("mainWindowGeometry", AppUiState::Variant{widgetSaveGeometry_data});
+    uiState.set("pageDocuments_isLeftSideBarVisible", true);
+    const std::vector<uint8_t> blobSave = AppUiState::toBlob(uiState);
 
     bool ok = false;
-    const AppUiState uiState_read = AppUiState::fromBlob(blobSave, &ok);
+    const auto uiState_read = AppUiState::fromBlob(blobSave, &ok);
     QVERIFY(ok);
-    QCOMPARE(uiState.mainWindowGeometry, uiState_read.mainWindowGeometry);
-    QCOMPARE(uiState.pageDocuments_isLeftSideBarVisible, uiState_read.pageDocuments_isLeftSideBarVisible);
-}
+    QCOMPARE(
+        uiState.get("mainWindowGeometry"),
+        uiState_read.get("mainWindowGeometry")
+    );
+    QCOMPARE(
+        uiState.get("pageDocuments_isLeftSideBarVisible"),
+        uiState_read.get("pageDocuments_isLeftSideBarVisible")
+    );
+ }
 
 void TestApp::StringConv_test()
 {
@@ -296,6 +318,27 @@ void TestApp::QtGuiUtils_test()
     auto occColorA = QtGuiUtils::toColor<Quantity_ColorRGBA>(qtColorA);
     QCOMPARE(QtGuiUtils::toQColor(occColor), qtColor);
     QCOMPARE(QtGuiUtils::toQColor(occColorA), qtColorA);
+}
+
+void TestApp::initTestCase()
+{
+    int argc = 0;
+    m_app = new QGuiApplication(argc, nullptr);
+}
+
+void TestApp::cleanupTestCase()
+{
+    delete m_app;
+    m_app = nullptr;
+}
+
+void TestApp::runWithinEventLoop(const std::function<void()>& fn, int delayMSec)
+{
+    QTimer::singleShot(delayMSec, m_app, [&]{
+        fn();
+        m_app->exit();
+    });
+    m_app->exec();
 }
 
 } // namespace Mayo

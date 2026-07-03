@@ -1,12 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "graphics_object_driver.h"
+
+#include <MeshVS_DisplayModeFlags.hxx>
 
 namespace Mayo {
 
@@ -23,7 +24,7 @@ public:
     GraphicsObjectPtr createObject(const TDF_Label& label) const override;
     void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const override;
+    std::unique_ptr<PropertyGroup> properties(gsl::span<const GraphicsObjectPtr> spanObject) const override;
 
     static Support meshSupportStatus(const TDF_Label& label);
 
@@ -36,6 +37,12 @@ public:
     };
     static const DefaultValues& defaultValues();
     static void setDefaultValues(const DefaultValues& values);
+
+    enum DisplayMode {
+        DisplayMode_Wireframe = MeshVS_DMF_WireFrame,
+        DisplayMode_Shaded = MeshVS_DMF_Shading,
+        DisplayMode_Shrink = MeshVS_DMF_Shrink
+    };
 
     DEFINE_STANDARD_RTTI_INLINE(GraphicsMeshObjectDriver, GraphicsObjectDriver)
 

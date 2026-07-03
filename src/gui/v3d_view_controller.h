@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -29,12 +28,12 @@ public:
     };
 
     struct IRubberBand {
-        virtual ~IRubberBand() {}
+        virtual ~IRubberBand() = default;
         virtual void updateGeometry(int x, int y, int width, int height) = 0;
         virtual void setVisible(bool on) = 0;
     };
 
-    V3dViewController(const OccHandle<V3d_View>& view);
+    explicit V3dViewController(const OccHandle<V3d_View>& view);
     virtual ~V3dViewController() = default;
 
     DynamicAction currentDynamicAction() const;

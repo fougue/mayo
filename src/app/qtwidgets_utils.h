@@ -1,13 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include <QtGui/QCursor>
 #include <QtWidgets/QMessageBox>
+class QLocale;
 class QMenu;
 class QScreen;
 class QWidget;
@@ -59,6 +59,11 @@ public:
     static void moveWidgetLeftTo(QWidget* widget, const QWidget* nextTo, int margin = 0);
 
     static void collapseWidget(QWidget* widget, bool on);
+
+    // Resolves layout direction to return correct leading alignment for text display
+    static Qt::Alignment textLeadingAlignment(
+        Qt::LayoutDirection dir, const QWidget* widget = nullptr, const QLocale* locale = nullptr
+    );
 };
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)

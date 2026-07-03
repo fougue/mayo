@@ -1,19 +1,17 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_gltf_reader.h"
 #include "../base/property_builtins.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccGltfReader::Properties : public OccBaseMeshReaderProperties {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccGltfReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : OccBaseMeshReaderProperties(parentGroup)
     {
         this->skipEmptyNodes.setDescription(
@@ -62,5 +60,4 @@ void OccGltfReader::applyParameters()
     m_reader.SetMeshNameAsFallback(m_params.useMeshNameAsFallback);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

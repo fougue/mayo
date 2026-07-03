@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_gmio.h"
@@ -10,10 +9,9 @@
 
 #include <gmio_core/version.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
-Span<const Format> GmioFactoryWriter::formats() const
+gsl::span<const Format> GmioFactoryWriter::formats() const
 {
     static const Format array[] = { Format_AMF };
     return array;
@@ -41,5 +39,4 @@ std::string_view GmioLib::strVersion()
     return GMIO_VERSION_STR;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

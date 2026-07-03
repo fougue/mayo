@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "document_tree_node.h"
@@ -27,9 +26,9 @@ const DocumentTreeNode& DocumentTreeNode::null()
 TDF_Label DocumentTreeNode::label() const
 {
     if (this->isValid())
-        return m_document->modelTree().nodeData(m_id);
+        return m_document->modelTreeNodeLabel(m_id);
     else
-        return TDF_Label();
+        return {};
 }
 
 bool DocumentTreeNode::isEntity() const

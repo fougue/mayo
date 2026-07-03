@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -14,8 +13,7 @@
 #include <RWMesh_CoordinateSystem.hxx>
 class RWMesh_CafReader;
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Base class around OpenCascade RWMesh_CafReader
 class OccBaseMeshReader : public Reader {
@@ -35,7 +33,7 @@ public:
     virtual const Parameters& constParameters() const = 0;
 
 protected:
-    OccBaseMeshReader(RWMesh_CafReader& reader);
+    explicit OccBaseMeshReader(RWMesh_CafReader& reader);
     virtual void applyParameters();
 
 private:
@@ -47,7 +45,7 @@ private:
 class OccBaseMeshReaderProperties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccBaseMeshReaderProperties)
 public:
-    OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
+    explicit OccBaseMeshReaderProperties(PropertyGroup* parentGroup);
 
     void restoreDefaults() override;
 
@@ -60,5 +58,4 @@ public:
     PropertyEnum<LengthUnit> systemLengthUnit;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

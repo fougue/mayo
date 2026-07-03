@@ -1,15 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "dialog_options.h"
 
 #include "../base/cpp_utils.h"
 #include "../base/settings.h"
-#include "../base/property_builtins.h"
-#include "../base/property_enumeration.h"
 #include "../qtbackend/qsettings_storage.h"
 #include "../qtcommon/qstring_conv.h"
 #include "app_module.h"
@@ -100,7 +97,7 @@ QAbstractItemModel* createGroupSectionModel(const Settings* settings, QObject* p
 class CustomStyle : public QProxyStyle {
 public:
     CustomStyle()
-        : QProxyStyle(qApp->style())
+        : QProxyStyle(QApplication::style())
     {}
 
     static QStyle* instance() {
@@ -123,14 +120,14 @@ public:
 };
 
 // Reserved name for Property(ie setting) editors. QObject::objectName() will return this name
-static const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
+const char reservedPropertyEditorName[] = "__Mayo_propertyEditor";
 
 } // namespace
 
 DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     : QDialog(parent),
-      m_ui(new Ui_DialogOptions),
-      m_editorFactory(new DefaultPropertyEditorFactory),
+      m_ui(std::make_unique<Ui_DialogOptions>()),
+      m_editorFactory(std::make_unique<DefaultPropertyEditorFactory>()),
       m_settings(settings)
 {
     m_ui->setupUi(this);
@@ -215,8 +212,8 @@ DialogOptions::DialogOptions(Settings* settings, QWidget* parent)
     // Backup initial value of changed settings, so they can be restored on dialog cancellation
     m_connSettingsAboutToChange = settings->signalAboutToChange.connectSlot([=](Property* property) {
         if (m_mapSettingInitialValue.find(property) == m_mapSettingInitialValue.cend()) {
-            const Settings::Variant propertyValue = settings->propertyValueConversion().toVariant(*property);
-            m_mapSettingInitialValue.insert({ property, propertyValue});
+            const auto propertyValue = settings->propertyValueConversion().toVariant(*property);
+            m_mapSettingInitialValue.try_emplace(property, propertyValue);
         }
     });
 
@@ -281,7 +278,6 @@ DialogOptions::~DialogOptions()
     m_connSettingsAboutToChange.disconnect();
     m_connSettingsChanged.disconnect();
     m_connSettingsEnabled.disconnect();
-    delete m_ui;
 }
 
 void DialogOptions::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
@@ -350,9 +346,9 @@ void DialogOptions::syncEditor(QWidget* editor)
 
 void DialogOptions::loadFromFile()
 {
-    const QString startDirPath = QString();
     const QString filepath = QFileDialog::getOpenFileName(
-                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)"));
+        this, tr("Choose INI file"), {}/*startDirPath*/, tr("INI files(*.ini)")
+    );
     if (filepath.isEmpty())
         return;
 
@@ -373,9 +369,8 @@ void DialogOptions::loadFromFile()
 
 void DialogOptions::saveAs()
 {
-    const QString startDirPath = QString();
     const QString filepath = QFileDialog::getSaveFileName(
-                this, tr("Choose INI file"), startDirPath, tr("INI files(*.ini)")
+        this, tr("Choose INI file"), {}/*startDirPath*/, tr("INI files(*.ini)")
     );
     if (filepath.isEmpty())
         return;

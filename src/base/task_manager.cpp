@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "task_manager.h"
@@ -32,7 +31,7 @@ struct TaskManager::Entity {
 // Pimpl struct providing private(hidden) interface of TaskManager class
 struct TaskManager::Private {
     // Ctor
-    Private(TaskManager* mgr) : taskMgr(mgr) {}
+    explicit Private(TaskManager* mgr) : taskMgr(mgr) {}
 
     // Const/mutable functions to find an Entity from a task identifier. Returns null if not found
     TaskManager::Entity* findEntity(TaskId id);
@@ -92,7 +91,12 @@ void TaskManager::run(TaskId id, TaskAutoDestroy policy)
 
     entity->isFinished = false;
     entity->autoDestroy = policy;
-    entity->control = std::async([=]{ d->execEntity(entity); });
+    // NOSONAR[cpp:S8460] Intentional usage of std::async() here
+    //   * The returned future is stored in entity->control, so the destructor-blocking behavior is
+    //     controlled
+    //   * The std::launch::async policy is specified, if not the default is async|deferred and
+    //     which one gets selected is implementation-defined
+    entity->control = std::async(std::launch::async, [=]{ d->execEntity(entity); }); // NOSONAR
 }
 
 void TaskManager::exec(TaskId id, TaskAutoDestroy policy)
@@ -109,7 +113,7 @@ void TaskManager::exec(TaskId id, TaskAutoDestroy policy)
 
 bool TaskManager::waitForDone(TaskId id, int msecs)
 {
-    Entity* entity = d->findEntity(id);
+    const Entity* entity = d->findEntity(id);
     if (!entity)
         return true;
 
@@ -139,29 +143,28 @@ void TaskManager::foreachTask(const std::function<void(TaskId)>& fn)
         fn(mapPair.first);
 }
 
-int TaskManager::progress(TaskId id) const
+double TaskManager::progress(TaskId id) const
 {
     const Entity* entity = d->findEntity(id);
-    return entity ? entity->taskProgress.value() : 0;
+    return entity ? entity->taskProgress.value() : 0.;
 }
 
-int TaskManager::globalProgress() const
+double TaskManager::globalProgress() const
 {
-    int taskAccumPct = 0;
+    double taskAccumPct = 0.;
     for (const auto& mapPair : d->mapEntity) {
         const std::unique_ptr<Entity>& ptrEntity = mapPair.second;
-        if (ptrEntity->taskProgress.value() > 0)
+        if (ptrEntity->taskProgress.value() > 0.)
             taskAccumPct += ptrEntity->taskProgress.value();
     }
 
-    const auto pct = MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
-    return std::lround(pct);
+    return MathUtils::toPercent(taskAccumPct, 0, d->mapEntity.size() * 100);
 }
 
 const std::string& TaskManager::title(TaskId id) const
 {
     const Entity* entity = d->findEntity(id);
-    return entity ? entity->title : CppUtils::nullString();
+    return entity ? entity->title : Cpp::staticObject<std::string>();
 }
 
 void TaskManager::setTitle(TaskId id, std::string_view title)
@@ -202,7 +205,7 @@ void TaskManager::Private::cleanGarbage()
 {
     auto it = this->mapEntity.begin();
     while (it != this->mapEntity.end()) {
-        Entity* entity = it->second.get();
+        const Entity* entity = it->second.get();
         if (entity->isFinished && entity->autoDestroy == TaskAutoDestroy::On) {
             if (entity->control.valid())
                 entity->control.wait();

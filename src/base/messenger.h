@@ -1,14 +1,16 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
+#include <gsl/span>
+
 #include <functional>
 #include <sstream>
 #include <string_view>
+#include <vector>
 
 namespace Mayo {
 
@@ -52,6 +54,13 @@ private:
 // messages will be further processed
 class Messenger {
 public:
+    struct Message {
+        MessageType type;
+        std::string text;
+    };
+
+    virtual ~Messenger() = default;
+
     // Dispatch the message 'text' to all observers
     virtual void emitMessage(MessageType msgType, std::string_view text) = 0;
 
@@ -73,11 +82,33 @@ public:
 // This avoids to subclass Messenger
 class MessengerByCallback : public Messenger {
 public:
-    MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
+    explicit MessengerByCallback(std::function<void(MessageType, std::string_view)> fnCallback);
     void emitMessage(MessageType msgType, std::string_view text) override;
 
 private:
     std::function<void(MessageType, std::string_view)> m_fnCallback;
+};
+
+// Collects emitted messages into a array
+class MessageCollecter : public Messenger {
+public:
+    void only(MessageType msgType);
+    void ignore(MessageType msgType);
+    bool isIgnored(MessageType msgType) const;
+
+    void emitMessage(MessageType msgType, std::string_view text) override;
+
+    gsl::span<const Messenger::Message> messages() const;
+    std::string asString(std::string_view separator, MessageType msgType) const;
+    std::string asString(std::string_view separator) const;
+
+    void clear();
+
+private:
+    static unsigned toFlag(MessageType msgType);
+
+    unsigned m_ignoredTypes = 0;
+    std::vector<Messenger::Message> m_vecMessage;
 };
 
 } // namespace Mayo

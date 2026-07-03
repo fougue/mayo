@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_measure.h"
@@ -9,17 +8,13 @@
 #include "theme.h"
 #include "ui_widget_measure.h"
 
-#include "../base/unit_system.h"
+#include "../base/cpp_utils.h"
 #include "../gui/gui_document.h"
 #include "../measure/measure_tool_brep.h"
 #include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QtDebug>
 #include <QtGui/QFontDatabase>
-
-#include <cmath>
-#include <codecvt>
-#include <vector>
 
 namespace Mayo {
 
@@ -76,24 +71,24 @@ WidgetMeasure::WidgetMeasure(GuiDocument* guiDoc, QWidget* parent)
 
     m_ui->setupUi(this);
     QObject::connect(
-                m_ui->combo_MeasureType, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureTypeChanged
+        m_ui->combo_MeasureType, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureTypeChanged
     );
     QObject::connect(
-                m_ui->combo_LengthUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_LengthUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_AngleUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_AngleUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_AreaUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_AreaUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
     QObject::connect(
-                m_ui->combo_VolumeUnit, qOverload<int>(&QComboBox::currentIndexChanged),
-                this, &WidgetMeasure::onMeasureUnitsChanged
+        m_ui->combo_VolumeUnit, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &WidgetMeasure::onMeasureUnitsChanged
     );
 
     this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
@@ -102,6 +97,8 @@ WidgetMeasure::WidgetMeasure(GuiDocument* guiDoc, QWidget* parent)
 
 WidgetMeasure::~WidgetMeasure()
 {
+    m_connGraphicsSelectionChanged.disconnect();
+    m_connDocumentEntityAdded.disconnect();
     delete m_ui;
 }
 
@@ -111,8 +108,12 @@ void WidgetMeasure::setMeasureOn(bool on)
     auto gfxScene = m_guiDoc->graphicsScene();
     if (on) {
         this->onMeasureTypeChanged(m_ui->combo_MeasureType->currentIndex());
-        m_connGraphicsSelectionChanged =
-                gfxScene->signalSelectionChanged.connectSlot(&WidgetMeasure::onGraphicsSelectionChanged, this);
+        m_connGraphicsSelectionChanged = gfxScene->signalSelectionChanged.connectSlot(
+            &WidgetMeasure::onGraphicsSelectionChanged, this
+        );
+        m_connDocumentEntityAdded = m_guiDoc->document()->signalEntityAdded.connectSlot(
+            &WidgetMeasure::onDocumentEntityAdded, this
+        );
     }
     else {
         gfxScene->foreachDisplayedObject([=](const GraphicsObjectPtr& gfxObject) {
@@ -121,6 +122,7 @@ void WidgetMeasure::setMeasureOn(bool on)
         });
         gfxScene->clearSelection();
         m_connGraphicsSelectionChanged.disconnect();
+        m_connDocumentEntityAdded.disconnect();
     }
 }
 
@@ -274,6 +276,7 @@ MeasureDisplayConfig WidgetMeasure::currentMeasureDisplayConfig() const
 void WidgetMeasure::onGraphicsSelectionChanged()
 {
     auto gfxScene = m_guiDoc->graphicsScene();
+    const std::vector<GraphicsOwnerPtr> vecSelectedOwner_onEntry = m_vecSelectedOwner;
     std::vector<GraphicsOwnerPtr> vecNewSelected;
     std::vector<GraphicsOwnerPtr> vecDeselected;
     {
@@ -343,15 +346,21 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     }
 
     // Create MeasureDisplay objects needing currently two selected graphics objects
-    if (m_vecSelectedOwner.size() == 2) {
-        const GraphicsOwnerPtr& owner1 = m_vecSelectedOwner.front();
-        const GraphicsOwnerPtr& owner2 = m_vecSelectedOwner.back();
-        try {
-            const MeasureValue value = IMeasureTool_computeValue(*m_tool, measureType, owner1, owner2);
-            if (MeasureValue_isValid(value))
-                fnAddMeasureDisplay(BaseMeasureDisplay::createFrom(measureType, value), { owner1, owner2 });
-        } catch (const IMeasureError& err) {
-            m_errorMessage = to_QString(err.message());
+    if (vecSelectedOwner_onEntry.size() >= 1) {
+        for (const GraphicsOwnerPtr& owner : vecNewSelected) {
+            const int indexOwner = Cpp::indexInSpan(vecNewSelected, owner);
+            const GraphicsOwnerPtr& prevOwner =
+                indexOwner == 0 ?
+                    vecSelectedOwner_onEntry.back() :
+                    vecNewSelected.at(indexOwner - 1)
+                ;
+            try {
+                const MeasureValue value = IMeasureTool_computeValue(*m_tool, measureType, prevOwner, owner);
+                if (MeasureValue_isValid(value))
+                    fnAddMeasureDisplay(BaseMeasureDisplay::createFrom(measureType, value), { prevOwner, owner });
+            } catch (const IMeasureError& err) {
+                m_errorMessage = to_QString(err.message());
+            }
         }
     }
 
@@ -370,10 +379,25 @@ void WidgetMeasure::onGraphicsSelectionChanged()
     this->updateMessagePanel();
 }
 
+void WidgetMeasure::onDocumentEntityAdded(TreeNodeId entityNodeId)
+{
+    if (!m_tool)
+        return;
+
+    auto measureType = this->currentMeasureType();
+    if (measureType == MeasureType::None)
+        return;
+
+    m_guiDoc->foreachGraphicsObject(entityNodeId, [=](const GraphicsObjectPtr& gfxObject) {
+        for (GraphicsObjectSelectionMode mode : m_tool->selectionModes(measureType))
+            m_guiDoc->graphicsScene()->activateObjectSelection(gfxObject, mode);
+    });
+}
+
 void WidgetMeasure::updateMessagePanel()
 {
     // Clear message panel
-    while (m_ui->layout_Message->count() > 0) {
+    while (!m_ui->layout_Message->isEmpty()) {
         QLayoutItem* item = m_ui->layout_Message->takeAt(m_ui->layout_Message->count() - 1);
         delete item->widget();
         delete item;
@@ -416,7 +440,7 @@ void WidgetMeasure::updateMessagePanel()
 
         // Handle the case where there are many measures and sum is a supported operation
         if (m_vecMeasureDisplay.size() > 1) {
-            auto sumMeasure = BaseMeasureDisplay::createEmptySumFrom(this->currentMeasureType());
+            auto sumMeasure = BaseMeasureDisplay::createEmptySum(this->currentMeasureType());
             if (sumMeasure && sumMeasure->isSumSupported()) {
                 for (const IMeasureDisplayPtr& measure : m_vecMeasureDisplay)
                     sumMeasure->sumAdd(*measure);
@@ -451,8 +475,9 @@ void WidgetMeasure::eraseMeasureDisplay(const IMeasureDisplay* measure)
 
 void WidgetMeasure::addLink(const GraphicsOwnerPtr& owner, const IMeasureDisplayPtr& measure)
 {
-    if (owner && measure)
+    if (owner && measure) {
         m_vecLinkGfxOwnerMeasure.push_back({ owner, measure.get() });
+    }
 }
 
 void WidgetMeasure::eraseLink(const GraphicsOwner_MeasureDisplay* link)
@@ -466,9 +491,9 @@ void WidgetMeasure::eraseLink(const GraphicsOwner_MeasureDisplay* link)
 const WidgetMeasure::GraphicsOwner_MeasureDisplay* WidgetMeasure::findLink(const GraphicsOwnerPtr& owner) const
 {
     auto itFound = std::find_if(
-                m_vecLinkGfxOwnerMeasure.begin(),
-                m_vecLinkGfxOwnerMeasure.end(),
-                [=](const GraphicsOwner_MeasureDisplay& link) { return link.gfxOwner == owner; }
+        m_vecLinkGfxOwnerMeasure.begin(),
+        m_vecLinkGfxOwnerMeasure.end(),
+        [=](const GraphicsOwner_MeasureDisplay& link) { return link.gfxOwner == owner; }
     );
     return itFound != m_vecLinkGfxOwnerMeasure.end() ? &(*itFound) : nullptr;
 }

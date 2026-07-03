@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -25,6 +24,8 @@ namespace Mayo {
 // IWidgetOccView does not handle input devices interaction like keyboard and mouse
 class IWidgetOccView {
 public:
+    virtual ~IWidgetOccView() = default;
+
     const OccHandle<V3d_View>& v3dView() const { return m_view; }
 
     virtual void redraw() = 0;
@@ -36,19 +37,22 @@ public:
     static IWidgetOccView* create(const OccHandle<V3d_View>& view, QWidget* parent = nullptr);
 
 protected:
-    IWidgetOccView(const OccHandle<V3d_View>& view) : m_view(view) {}
+    explicit IWidgetOccView(const OccHandle<V3d_View>& view) : m_view(view) {}
 
 private:
     OccHandle<V3d_View> m_view;
 };
 
 #if OCC_VERSION_HEX >= 0x070600
+// Provides OpenCascade view that reuses OpenGL context created by QOpenGLWidget
+// Widgets on top will be blended by Qt naturally
 // Integration of OpenCascade 7.6 with QOpenGLWidget allows widgets with translucid background to be
 // correctly displayed over V3d_View
 // QOpenGLWidgetOccView implementation is based on https://github.com/gkv311/occt-samples-qopenglwidget
 class QOpenGLWidgetOccView : public QOpenGLWidget, public IWidgetOccView {
 public:
     QOpenGLWidgetOccView(const OccHandle<V3d_View>& view, QWidget* parent = nullptr);
+    ~QOpenGLWidgetOccView();
 
     void redraw() override;
     QWidget* widget() override { return this; }

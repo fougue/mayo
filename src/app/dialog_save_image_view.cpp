@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "dialog_save_image_view.h"
@@ -23,12 +22,13 @@ namespace Internal {
 
 static QImage qtImageTemp(const Image_PixMap& occImg)
 {
-    const QImage img(occImg.Data(),
-                     int(occImg.Width()),
-                     int(occImg.Height()),
-                     int(occImg.SizeRowBytes()),
-                     QImage::Format_RGBA8888);
-    return img;
+    return QImage{
+        occImg.Data(),
+        int(occImg.Width()),
+        int(occImg.Height()),
+        int(occImg.SizeRowBytes()),
+        QImage::Format_RGBA8888
+    };
 }
 
 } // namespace Internal
@@ -73,7 +73,7 @@ void DialogSaveImageView::saveFile()
     const QString fileName = QFileDialog::getSaveFileName(
         this,
         tr("Select image file"),
-        QString(),
+        QString{},
         listFormat.join(QLatin1String(";;")),
         &selectedFormat
     );

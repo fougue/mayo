@@ -1,12 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_file.h"
 
 #include "../base/application.h"
+#include "../base/io_system.h"
 #include "../base/task_manager.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
@@ -15,6 +15,7 @@
 #include "recent_files.h"
 #include "theme.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fmt/format.h>
 #include <QtCore/QtDebug>
@@ -53,21 +54,6 @@ QString fileFilter(IO::Format format)
             .arg(filter);
 }
 
-IO::Format formatFromFilter(const QString& filter)
-{
-    for (IO::Format format : AppModule::get()->ioSystem()->readerFormats()) {
-        if (filter == fileFilter(format))
-            return format;
-    }
-
-    for (IO::Format format : AppModule::get()->ioSystem()->writerFormats()) {
-        if (filter == fileFilter(format))
-            return format;
-    }
-
-    return IO::Format_Unknown;
-}
-
 // TODO: move in Options
 struct ImportExportSettings {
     FilePath openDir;
@@ -91,20 +77,15 @@ struct ImportExportSettings {
 struct OpenFileNames {
     std::vector<FilePath> listFilepath;
     ImportExportSettings lastIoSettings;
-    IO::Format selectedFormat;
 
-    enum GetOption {
-        GetOne,
-        GetMany
-    };
+    enum class GetOption { One, Many };
 
     static OpenFileNames get(
             QWidget* parentWidget,
-            OpenFileNames::GetOption option = OpenFileNames::GetMany
+            OpenFileNames::GetOption option = OpenFileNames::GetOption::Many
         )
     {
         OpenFileNames result;
-        result.selectedFormat = IO::Format_Unknown;
         result.lastIoSettings = ImportExportSettings::load();
         QStringList listFormatFilter;
         for (IO::Format format : AppModule::get()->ioSystem()->readerFormats())
@@ -112,23 +93,26 @@ struct OpenFileNames {
 
         const QString allFilesFilter = Command::tr("All files(*.*)");
         listFormatFilter.append(allFilesFilter);
+        if (!listFormatFilter.contains(result.lastIoSettings.selectedFilter))
+            result.lastIoSettings.selectedFilter = allFilesFilter;
+
         const QString dlgTitle = Command::tr("Select Part File");
         const QString dlgOpenDir = filepathTo<QString>(result.lastIoSettings.openDir);
         const QString dlgFilter = listFormatFilter.join(QLatin1String(";;"));
         QString* dlgPtrSelFilter = &result.lastIoSettings.selectedFilter;
-        if (option == OpenFileNames::GetOne) {
+        if (option == OpenFileNames::GetOption::One) {
             const QString strFilepath =
-                    QFileDialog::getOpenFileName(
-                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
-                    );
+                QFileDialog::getOpenFileName(
+                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
+                );
             result.listFilepath.clear();
             result.listFilepath.push_back(filepathFrom(strFilepath));
         }
         else {
             const QStringList listStrFilePath =
-                    QFileDialog::getOpenFileNames(
-                        parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
-                    );
+                QFileDialog::getOpenFileNames(
+                    parentWidget, dlgTitle, dlgOpenDir, dlgFilter, dlgPtrSelFilter
+                );
             result.listFilepath.clear();
             for (const QString& strFilePath : listStrFilePath)
                 result.listFilepath.push_back(filepathFrom(strFilePath));
@@ -136,10 +120,6 @@ struct OpenFileNames {
 
         if (!result.listFilepath.empty()) {
             result.lastIoSettings.openDir = result.listFilepath.front();
-            result.selectedFormat =
-                    result.lastIoSettings.selectedFilter != allFilesFilter ?
-                        formatFromFilter(result.lastIoSettings.selectedFilter) :
-                        IO::Format_Unknown;
             ImportExportSettings::save(result.lastIoSettings);
         }
 
@@ -157,6 +137,17 @@ QString strFilepathQuoted(const QString& filepath)
     return filepath;
 }
 
+std::vector<FilePath> getLocalFilePaths(const QList<QUrl>& listUrl)
+{
+    std::vector<FilePath> filePaths;
+    for (const QUrl& url : listUrl) {
+        if (url.isLocalFile())
+            filePaths.push_back(filepathFrom(url.toLocalFile()));
+    }
+
+    return filePaths;
+}
+
 } // namespace
 
 
@@ -164,12 +155,16 @@ void FileCommandTools::closeDocument(IAppContext* context, Document::Identifier 
 {
     auto app = context->guiApp()->application();
     DocumentPtr doc = app->findDocumentByIdentifier(docId);
-    context->deleteDocumentWidget(doc);
     app->closeDocument(doc);
-    context->updateControlsEnabledStatus();
 }
 
-void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath)
+void FileCommandTools::closeAllDocuments(IAppContext* context)
+{
+    while (!context->guiApp()->guiDocuments().empty())
+        FileCommandTools::closeDocument(context, context->currentDocument());
+}
+
+void FileCommandTools::openDocumentsFromList(IAppContext* context, gsl::span<const FilePath> listFilePath)
 {
     assert(context != nullptr);
     auto app = context->guiApp()->application();
@@ -180,6 +175,7 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
             docPtr = app->newDocument();
             docPtr->setName(fp.filename().u8string());
             docPtr->setFilePath(fp);
+            // WARNING
             // Use the Document identifier instead of handle within the job function(capture)
             // Using the handle increases the ref count and the task will be released on next
             // task creation, so the document won't be destroyed
@@ -188,18 +184,18 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
                 QElapsedTimer chrono;
                 chrono.start();
                 const bool okImport =
-                        appModule->ioSystem()->importInDocument()
+                    appModule->ioSystem()->importInDocument()
                         .targetDocument(app->findDocumentByIdentifier(newDocId))
                         .withFilepath(fp)
                         .withParametersProvider(appModule)
-                        .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
+                        .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
                             appModule->computeBRepMesh(labelEntity, progress);
                         })
                         .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
                         .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
                         .withMessenger(appModule)
                         .withTaskProgress(progress)
-                        .execute();
+                    .execute();
                 if (okImport)
                     appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
             });
@@ -216,32 +212,48 @@ void FileCommandTools::openDocumentsFromList(IAppContext* context, Span<const Fi
 
 void FileCommandTools::openDocument(IAppContext* context, const FilePath& filePath)
 {
-    FileCommandTools::openDocumentsFromList(context, Span<const FilePath>(&filePath, 1));
+    FileCommandTools::openDocumentsFromList(context, gsl::span<const FilePath>(&filePath, 1));
 }
 
 void FileCommandTools::importInDocument(
-        IAppContext* context, const DocumentPtr& targetDoc, Span<const FilePath> listFilePaths
+        IAppContext* context, const DocumentPtr& targetDoc, gsl::span<const FilePath> listFilePaths
     )
 {
-    auto appModule = AppModule::get();
+    // WARNING
+    // Use the Document identifier instead of handle within the job function(capture)
+    // Using the handle increases the ref count and the task will be released on next task creation,
+    // so the document won't be destroyed
     const Document::Identifier targetDocId = targetDoc->identifier();
+
+    // WARNING
+    // Can't safely use `listFilePaths` in the lambda passed to TaskManager::newTask()
+    // As the lambda will be executed in another thread the memory pointed to by `listFilePaths` may
+    // have been destroyed
+    // The solution is to copy the span into a local array that can be captured and safely used by
+    // the lambda
+    std::vector<FilePath> arrayFilePaths;
+    arrayFilePaths.resize(listFilePaths.size());
+    std::copy(listFilePaths.begin(), listFilePaths.end(), arrayFilePaths.begin());
+
     const TaskId taskId = context->taskMgr()->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
 
+        auto appModule = AppModule::get();
         auto doc = appModule->application()->findDocumentByIdentifier(targetDocId);
-        const bool okImport = appModule->ioSystem()->importInDocument()
-                                  .targetDocument(doc)
-                                  .withFilepaths(listFilePaths)
-                                  .withParametersProvider(appModule)
-                                  .withEntityPostProcess([=](TDF_Label labelEntity, TaskProgress* progress) {
-                                      appModule->computeBRepMesh(labelEntity, progress);
-                                  })
-                                  .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
-                                  .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
-                                  .withMessenger(appModule)
-                                  .withTaskProgress(progress)
-                                  .execute();
+        const bool okImport =
+            appModule->ioSystem()->importInDocument()
+                .targetDocument(doc)
+                .withFilepaths(arrayFilePaths)
+                .withParametersProvider(appModule)
+                .withEntityPostProcess([appModule](TDF_Label labelEntity, TaskProgress* progress) {
+                    appModule->computeBRepMesh(labelEntity, progress);
+                })
+                .withEntityPostProcessRequiredIf(&IO::formatProvidesBRep)
+                .withEntityPostProcessInfoProgress(20, Command::textIdTr("Mesh BRep shapes"))
+                .withMessenger(appModule)
+                .withTaskProgress(progress)
+            .execute();
         if (okImport)
             appModule->emitInfo(fmt::format(Command::textIdTr("Import time: {}ms"), chrono.elapsed()));
     });
@@ -258,17 +270,16 @@ void FileCommandTools::importInDocument(
         IAppContext* context, const DocumentPtr& targetDoc, const FilePath& filePath
     )
 {
-    FileCommandTools::importInDocument(context, targetDoc, Span<const FilePath>(&filePath, 1));
+    FileCommandTools::importInDocument(context, targetDoc, gsl::span<const FilePath>(&filePath, 1));
 }
 
 CommandNewDocument::CommandNewDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("New"));
     action->setToolTip(Command::tr("New Document"));
-    action->setShortcut(Qt::CTRL + Qt::Key_N);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::New);
 }
 
 void CommandNewDocument::execute()
@@ -281,11 +292,10 @@ void CommandNewDocument::execute()
 CommandOpenDocuments::CommandOpenDocuments(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Open"));
     action->setToolTip(Command::tr("Open Documents"));
-    action->setShortcut(Qt::CTRL + Qt::Key_O);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Open);
 
     context->widgetMain()->setAcceptDrops(true);
     context->widgetMain()->installEventFilter(this);
@@ -311,14 +321,8 @@ bool CommandOpenDocuments::eventFilter(QObject* watched, QEvent* event)
         else if (event->type() == QEvent::Drop) {
             auto dropEvent = static_cast<QDropEvent*>(event);
             const QList<QUrl> listUrl = dropEvent->mimeData()->urls();
-            std::vector<FilePath> listFilePath;
-            for (const QUrl& url : listUrl) {
-                if (url.isLocalFile())
-                    listFilePath.push_back(filepathFrom(url.toLocalFile()));
-            }
-
             dropEvent->acceptProposedAction();
-            FileCommandTools::openDocumentsFromList(this->context(), listFilePath);
+            FileCommandTools::openDocumentsFromList(this->context(), getLocalFilePaths(listUrl));
             return true;
         }
         else {
@@ -332,22 +336,20 @@ bool CommandOpenDocuments::eventFilter(QObject* watched, QEvent* event)
 CommandRecentFiles::CommandRecentFiles(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Recent files"));
-    this->setAction(action);
 }
 
-CommandRecentFiles::CommandRecentFiles(IAppContext* context, QMenu* containerMenu)
+CommandRecentFiles::CommandRecentFiles(IAppContext* context, const QMenu* containerMenu)
     : CommandRecentFiles(context)
 {
-    QObject::connect(
-                containerMenu, &QMenu::aboutToShow,
-                this, &CommandRecentFiles::recreateEntries
-    );
+    QObject::connect(containerMenu, &QMenu::aboutToShow, this, &CommandRecentFiles::recreateEntries);
 }
 
 void CommandRecentFiles::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandRecentFiles::recreateEntries()
@@ -382,11 +384,10 @@ void CommandRecentFiles::recreateEntries()
 CommandImportInCurrentDocument::CommandImportInCurrentDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Import"));
     action->setToolTip(Command::tr("Import in current document"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Import));
-    this->setAction(action);
 }
 
 void CommandImportInCurrentDocument::execute()
@@ -400,8 +401,6 @@ void CommandImportInCurrentDocument::execute()
         return;
 
     FileCommandTools::importInDocument(this->context(), guiDoc->document(), resFileNames.listFilepath);
-    for (const FilePath& fp : resFileNames.listFilepath)
-        AppModule::get()->prependRecentFile(fp);
 }
 
 bool CommandImportInCurrentDocument::getEnabledStatus() const
@@ -413,11 +412,10 @@ bool CommandImportInCurrentDocument::getEnabledStatus() const
 CommandExportSelectedApplicationItems::CommandExportSelectedApplicationItems(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Export selected items"));
     action->setToolTip(Command::tr("Export selected items"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Export));
-    this->setAction(action);
 }
 
 void CommandExportSelectedApplicationItems::execute()
@@ -434,30 +432,34 @@ void CommandExportSelectedApplicationItems::execute()
 
     auto lastSettings = ImportExportSettings::load();
     const QString strFilepath =
-            QFileDialog::getSaveFileName(
-                this->widgetMain(),
-                Command::tr("Select Output File"),
-                filepathTo<QString>(lastSettings.openDir),
-                listWriterFileFilter.join(QLatin1String(";;")),
-                &lastSettings.selectedFilter
-            );
+        QFileDialog::getSaveFileName(
+            this->widgetMain(),
+            Command::tr("Select Output File"),
+            filepathTo<QString>(lastSettings.openDir),
+            listWriterFileFilter.join(QLatin1String(";;")),
+            &lastSettings.selectedFilter
+        );
     if (strFilepath.isEmpty())
         return;
 
     lastSettings.openDir = filepathFrom(strFilepath);
-    const IO::Format format = formatFromFilter(lastSettings.selectedFilter);
+    // IMPORTANT
+    //     Don't try to deduce format from the selected file filter. The native UI may change the
+    //     input filters for some reason(add spaces, locale, ...)
+    //     See issue https://github.com/fougue/mayo/issues/357
+    const IO::Format format = appModule->ioSystem()->probeFormat(filepathFrom(strFilepath));
     const TaskId taskId = this->taskMgr()->newTask([=](TaskProgress* progress) {
         QElapsedTimer chrono;
         chrono.start();
         const bool okExport =
-                appModule->ioSystem()->exportApplicationItems()
+            appModule->ioSystem()->exportApplicationItems()
                 .targetFile(filepathFrom(strFilepath))
                 .targetFormat(format)
                 .withItems(this->guiApp()->selectionModel()->selectedItems())
                 .withParameters(appModule->findWriterParameters(format))
                 .withMessenger(appModule)
                 .withTaskProgress(progress)
-                .execute();
+            .execute();
         if (okExport)
             appModule->emitInfo(fmt::format(Command::textIdTr("Export time: {}ms"), chrono.elapsed()));
     });
@@ -475,16 +477,15 @@ bool CommandExportSelectedApplicationItems::getEnabledStatus() const
 CommandCloseCurrentDocument::CommandCloseCurrentDocument(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close \"%1\""));
     action->setToolTip(action->text());
     action->setIcon(mayoTheme()->icon(Theme::Icon::Cross));
-    action->setShortcut(Qt::CTRL + Qt::Key_W);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Close);
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandCloseCurrentDocument::updateActionText
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandCloseCurrentDocument::updateActionText
     );
     this->app()->signalDocumentNameChanged.connectSlot([=](const DocumentPtr& doc) {
         if (this->currentDocument() == doc->identifier())
@@ -509,9 +510,10 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
     DocumentPtr docPtr = this->app()->findDocumentByIdentifier(docId);
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
-            docPtr ?
-                Command::tr("Close %1").arg(strFilepathQuoted(docName)) :
-                Command::tr("Close");
+        docPtr ?
+            Command::tr("Close %1").arg(strFilepathQuoted(docName)) :
+            Command::tr("Close")
+        ;
     this->action()->setText(textActionClose);
     this->action()->setToolTip(textActionClose);
 }
@@ -519,17 +521,14 @@ void CommandCloseCurrentDocument::updateActionText(Document::Identifier docId)
 CommandCloseAllDocuments::CommandCloseAllDocuments(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close all"));
     action->setToolTip(Command::tr("Close all documents"));
-    action->setShortcut((Qt::CTRL | Qt::SHIFT) + Qt::Key_W);
-    this->setAction(action);
 }
 
 void CommandCloseAllDocuments::execute()
 {
-    while (!this->guiApp()->guiDocuments().empty())
-        FileCommandTools::closeDocument(this->context(), this->currentDocument());
+    FileCommandTools::closeAllDocuments(this->context());
 }
 
 bool CommandCloseAllDocuments::getEnabledStatus() const
@@ -540,10 +539,9 @@ bool CommandCloseAllDocuments::getEnabledStatus() const
 CommandCloseAllDocumentsExceptCurrent::CommandCloseAllDocumentsExceptCurrent(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Close all except current"));
     action->setToolTip(Command::tr("Close all except current document"));
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -564,7 +562,7 @@ void CommandCloseAllDocumentsExceptCurrent::execute()
     for (GuiDocument* guiDoc : this->guiApp()->guiDocuments())
         vecGuiDoc.push_back(guiDoc);
 
-    for (GuiDocument* guiDoc : vecGuiDoc) {
+    for (const GuiDocument* guiDoc : vecGuiDoc) {
         if (guiDoc != currentGuiDoc)
             FileCommandTools::closeDocument(this->context(), guiDoc->document()->identifier());
     }
@@ -580,22 +578,25 @@ void CommandCloseAllDocumentsExceptCurrent::updateActionText(Document::Identifie
     DocumentPtr docPtr = this->app()->findDocumentByIdentifier(docId);
     const QString docName = to_QString(docPtr ? docPtr->name() : std::string{});
     const QString textActionClose =
-            docPtr ?
-                Command::tr("Close all except %1").arg(strFilepathQuoted(docName)) :
-                Command::tr("Close all except current");
+        docPtr ?
+            Command::tr("Close all except %1").arg(strFilepathQuoted(docName)) :
+            Command::tr("Close all except current")
+        ;
     this->action()->setText(textActionClose);
 }
 
 CommandQuitApplication::CommandQuitApplication(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
+    action->setMenuRole(QAction::QuitRole);
     action->setText(Command::tr("Quit"));
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Quit);
 }
 
 void CommandQuitApplication::execute()
 {
+    FileCommandTools::closeAllDocuments(this->context());
     QApplication::quit();
 }
 

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -14,8 +13,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace Mayo {
-namespace ListHelper {
+namespace Mayo::ListHelper {
 
 struct ModelItem {
     QString name;
@@ -25,14 +23,14 @@ struct ModelItem {
 };
 
 struct ModelStorage {
-    virtual ~ModelStorage() {}
+    virtual ~ModelStorage() = default;
     virtual int count() const = 0;
     virtual const ModelItem* at(int i) const = 0;
 };
 
 template<typename ItemType> struct DefaultModelStorage : public ModelStorage {
-    static_assert(!std::is_pointer<ItemType>::value);
-    static_assert(std::is_base_of<ModelItem, ItemType>::value);
+    static_assert(!std::is_pointer_v<ItemType>);
+    static_assert(std::is_base_of_v<ModelItem, ItemType>);
     int count() const override { return int(m_items.size()); }
     const ItemType* at(int i) const override { return &m_items.at(i); }
     std::vector<ItemType> m_items;
@@ -45,7 +43,7 @@ public:
         RoleItemImage
     };
 
-    Model(QObject* parent);
+    explicit Model(QObject* parent);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
@@ -66,7 +64,7 @@ private:
 class ItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
-    ItemDelegate(QObject* parent = nullptr);
+    explicit ItemDelegate(QObject* parent = nullptr);
 
     void paint(
             QPainter* painter,
@@ -111,7 +109,6 @@ private:
     mutable QPixmap m_blurredPixmap;
 };
 
-} // namespace ListHelper
-} // namespace Mayo
+} // namespace Mayo::ListHelper
 
 Q_DECLARE_METATYPE(Mayo::ListHelper::ModelItem*)

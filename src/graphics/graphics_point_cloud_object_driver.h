@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -24,7 +23,7 @@ public:
     GraphicsObjectPtr createObject(const TDF_Label& label) const override;
     void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const override;
     Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const override;
-    std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const override;
+    std::unique_ptr<PropertyGroup> properties(gsl::span<const GraphicsObjectPtr> spanObject) const override;
 
     static Support pointCloudSupportStatus(const TDF_Label& label);
 

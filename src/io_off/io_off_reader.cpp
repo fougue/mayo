@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_off_reader.h"
@@ -12,11 +11,11 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
+#include "../base/libfromchars.h"
 #include "../base/math_utils.h"
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/property_builtins.h"
-#include "../base/span.h"
 #include "../base/task_progress.h"
 #include "../base/tkernel_utils.h"
 
@@ -24,19 +23,16 @@
 #include <Poly_Triangulation.hxx>
 #include <TDataStd_Name.hxx>
 
-#if __cpp_lib_to_chars
-#  include <charconv>
-#else
-#  include <cstdlib>
-#endif
+#include <gsl/span>
+#include <gsl/narrow>
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <locale>
 #include <string>
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OffReaderI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OffReaderI18N) };
 
@@ -92,24 +88,15 @@ void getWords(const std::string& strLine, std::vector<std::string_view>& vecOutW
     }
 }
 
-bool hasEmptyString(Span<const std::string_view> spanStr)
+bool hasEmptyString(gsl::span<const std::string_view> spanStr)
 {
-    for (std::string_view str : spanStr) {
-        if (str.empty())
-            return true;
-    }
-
-    return false;
+    return std::any_of(spanStr.begin(), spanStr.end(), [](std::string_view str) { return str.empty(); });
 }
 
 bool isAnyOf(std::string_view str, std::initializer_list<std::string_view> listCandidates)
 {
-    for (std::string_view candidate : listCandidates) {
-        if (str == candidate)
-            return true;
-    }
-
-    return false;
+    auto it = std::find(listCandidates.begin(), listCandidates.end(), str);
+    return it != listCandidates.end();
 }
 
 template<typename T>
@@ -120,20 +107,12 @@ T strToNum(std::string_view str)
     if (str.empty())
         return num;
 
-#if __cpp_lib_to_chars
-    auto result = std::from_chars(str.data(), str.data() + str.size(), num);
+    auto result = Mayo::fromChars(str, num);
     if (result.ec != std::errc()) {
         // TODO Handle error code
         // throw std::runtime_error(std::make_error_code(err).message());
     }
-#else
-    errno = 0;
-    num = std::strtod(str.data(), nullptr);
-    if (errno != 0) {
-        // TODO Handle error code
-        // throw std::runtime_error(std::strerror(errno));
-    }
-#endif
+
     return num;
 }
 
@@ -150,17 +129,18 @@ std::uint32_t strToColorComponent(std::string_view str)
     return unsigned(v > 1. ? v : v * 255);
 }
 
-std::uint32_t toRgbaColor(Span<const std::string_view> spanWord)
+std::uint32_t toRgbaColor(gsl::span<const std::string_view> spanWord)
 {
     const unsigned r = spanWord.size() > 0 ? strToColorComponent(spanWord[0]) : 0;
     const unsigned g = spanWord.size() > 1 ? strToColorComponent(spanWord[1]) : 0;
     const unsigned b = spanWord.size() > 2 ? strToColorComponent(spanWord[2]) : 0;
     const unsigned a = spanWord.size() > 3 ? strToColorComponent(spanWord[3]) : 0;
     const std::uint32_t color =
-            ((r << 24)   & 0xFF000000)
+              ((r << 24) & 0xFF000000)
             | ((g << 16) & 0x00FF0000)
             | ((b << 8)  & 0x0000FF00)
-            | (a         & 0x000000FF);
+            | (a         & 0x000000FF)
+        ;
     return color;
 }
 
@@ -225,13 +205,13 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     auto fnUpdateProgress = [=]{
         const auto total = vertexCount + facetCount;
         const auto current = m_vecVertex.size() + m_vecFacet.size();
-        if (current % 100 || CppUtils::cmpGreaterEqual(current, total))
+        if (current % 100 || Cpp::cmpGreaterEqual(current, total))
             progress->setValue(MathUtils::toPercent(current, 0, total));
     };
 
     // Consume vertices
     m_vecVertex.reserve(vertexCount);
-    while (!ifs.eof() && CppUtils::cmpLess(m_vecVertex.size(), vertexCount)) {
+    while (!ifs.eof() && Cpp::cmpLess(m_vecVertex.size(), vertexCount)) {
         getNonCommentLine(ifs, strLine);
         const auto arrayStrCoord = getWords<3>(strLine);
         if (hasEmptyString(arrayStrCoord))
@@ -255,11 +235,11 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     m_vecAllFacetIndex.reserve(facetCount * 3);
     m_vecFacet.reserve(facetCount);
     std::vector<std::string_view> vecWord;
-    while (!ifs.eof() && CppUtils::cmpLess(m_vecFacet.size(), facetCount)) {
+    while (!ifs.eof() && Cpp::cmpLess(m_vecFacet.size(), facetCount)) {
         getNonCommentLine(ifs, strLine);
         getWords(strLine, vecWord);
         const Facet facet = { int(m_vecAllFacetIndex.size()), strToNum<int>(vecWord.front()) };
-        if (CppUtils::cmpLess((vecWord.size() + 1), facet.vertexCount))
+        if (Cpp::cmpLess((vecWord.size() + 1), facet.vertexCount))
             return fnError(OffReaderI18N::textIdTr("Inconsistent vertex count of face"));
 
         for (int i = 0; i < facet.vertexCount; ++i) {
@@ -309,7 +289,7 @@ TDF_LabelSequence OffReader::transfer(DocumentPtr doc, TaskProgress* progress)
 TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
 {
     // Vertex and triangle count
-    const int vertexCount = CppUtils::safeStaticCast<int>(m_vecVertex.size());
+    const int vertexCount = gsl::narrow<int>(m_vecVertex.size());
     int triangleCount = 0;
     for (const Facet& facet : m_vecFacet)
         triangleCount += facet.vertexCount - 2;
@@ -328,7 +308,7 @@ TDF_Label OffReader::transferMesh(DocumentPtr doc, TaskProgress* progress)
     std::vector<Quantity_Color> vecVertexColor;
     vecVertexColor.reserve(m_vecVertex.size());
     for (const Vertex& vertex : m_vecVertex) {
-        const auto ivertex = Span_itemIndex(m_vecVertex, vertex);
+        const auto ivertex = Cpp::indexInSpan(m_vecVertex, vertex);
         MeshUtils::setNode(mesh, ivertex + 1, vertex.coords);
         const std::uint32_t c = vertex.color;
         if (vertex.hasColor) {
@@ -381,5 +361,4 @@ TDF_Label OffReader::transferPointCloud(DocumentPtr /*doc*/, TaskProgress* /*pro
     return {};
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

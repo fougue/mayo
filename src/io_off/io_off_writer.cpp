@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_off_writer.h"
@@ -22,12 +21,11 @@
 #include <locale>
 #include <string>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 struct OffWriterI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OffWriterI18N) };
 
-bool OffWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OffWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_vecTreeNode.clear();
     m_vecTreeNode.reserve(appItems.size());
@@ -117,5 +115,4 @@ void OffWriter::applyProperties(const PropertyGroup*)
 {
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

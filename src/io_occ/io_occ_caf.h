@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -13,10 +12,10 @@
 #include "../base/application_item.h"
 #include "../base/document_ptr.h"
 #include "../base/filepath.h"
-#include "../base/span.h"
 
 #include <Transfer_FinderProcess.hxx>
 #include <XSControl_WorkSession.hxx>
+#include <gsl/span>
 #include <mutex>
 class IGESCAFControl_Reader;
 class STEPCAFControl_Reader;
@@ -24,17 +23,14 @@ class STEPCAFControl_Reader;
 class IGESCAFControl_Writer;
 class STEPCAFControl_Writer;
 
-namespace Mayo {
+namespace Mayo { class TaskProgress; }
 
-class TaskProgress;
-
-namespace IO {
-namespace Private {
+namespace Mayo::IO::Private {
 
 std::mutex& cafGlobalMutex();
 
 #define MayoIO_CafGlobalScopedLock(name) \
-    [[maybe_unused]] std::lock_guard<std::mutex> name(Mayo::IO::Private::cafGlobalMutex());
+    [[maybe_unused]] std::scoped_lock name(Mayo::IO::Private::cafGlobalMutex())
 
 OccHandle<XSControl_WorkSession> cafWorkSession(const IGESCAFControl_Reader& reader);
 OccHandle<XSControl_WorkSession> cafWorkSession(const STEPCAFControl_Reader& reader);
@@ -48,9 +44,7 @@ bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskPr
 TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress);
+bool cafTransfer(IGESCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);
+bool cafTransfer(STEPCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);
 
-} // namespace Private
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO::Private

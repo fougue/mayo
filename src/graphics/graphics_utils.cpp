@@ -1,11 +1,9 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "graphics_utils.h"
-#include "../base/bnd_utils.h"
 #include "../base/global.h"
 #include "../base/math_utils.h"
 #include "../base/tkernel_utils.h"
@@ -63,7 +61,7 @@ bool GraphicsUtils::V3dView_hasClipPlane(
     )
 {
     const OccHandle<Graphic3d_SequenceOfHClipPlane>& seqClipPlane = view->ClipPlanes();
-    if (seqClipPlane.IsNull() || seqClipPlane->Size() == 0)
+    if (seqClipPlane.IsNull() || seqClipPlane->IsEmpty())
         return false;
 
     for (Graphic3d_SequenceOfHClipPlane::Iterator it(*seqClipPlane); it.More(); it.Next()) {
@@ -207,22 +205,22 @@ Bnd_Box GraphicsUtils::AisObject_boundingBox(const OccHandle<AIS_InteractiveObje
 
 int GraphicsUtils::AspectWindow_width(const OccHandle<Aspect_Window>& wnd)
 {
-    if (wnd.IsNull())
-        return 0;
-
-    int w, h;
-    wnd->Size(w, h);
-    return w;
+    return AspectWindow_size(wnd).x();
 }
 
 int GraphicsUtils::AspectWindow_height(const OccHandle<Aspect_Window>& wnd)
 {
-    if (wnd.IsNull())
-        return 0;
+    return AspectWindow_size(wnd).y();
+}
 
-    int w, h;
-    wnd->Size(w, h);
-    return h;
+Graphic3d_Vec2i GraphicsUtils::AspectWindow_size(const OccHandle<Aspect_Window>& wnd)
+{
+    if (wnd.IsNull())
+        return {};
+
+    Graphic3d_Vec2i size;
+    wnd->Size(size.x(), size.y());
+    return size;
 }
 
 OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_create()
@@ -235,7 +233,8 @@ OccHandle<Aspect_DisplayConnection> GraphicsUtils::AspectDisplayConnection_creat
 }
 
 void GraphicsUtils::Gfx3dClipPlane_setCappingHatch(
-        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch)
+        const OccHandle<Graphic3d_ClipPlane>& plane, Aspect_HatchStyle hatch
+    )
 {
     if (hatch == Aspect_HS_SOLID)
         plane->SetCappingHatchOff();

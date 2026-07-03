@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -62,7 +61,7 @@ struct BRepUtils {
     // Deserializes string 'str' obtained from 'shapeToToString()' into a shape object
     static TopoDS_Shape shapeFromString(const std::string& str);
 
-    // Does 'edge' rely on 3D curve of curve on surface?
+    // Does 'edge' rely on 3D curve or curve on surface?
     static bool isGeometric(const TopoDS_Edge& edge);
 
     // Does 'face' rely on a geometric surface?

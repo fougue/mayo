@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -16,8 +15,7 @@
 
 #include <type_traits>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccStaticVariablesRollback;
 
@@ -114,7 +112,7 @@ public:
     OccStepWriter& operator=(const OccStepWriter&) = delete; // Not copyable
     ~OccStepWriter();
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters
@@ -155,7 +153,7 @@ public:
     void applyProperties(const PropertyGroup* params) override;
 
 private:
-    void changeStaticVariables(OccStaticVariablesRollback* rollback);
+    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
     STEPCAFControl_Writer* m_writer = nullptr;
@@ -164,5 +162,4 @@ private:
     Schema m_schemaLastTransfer = Schema::AP214_IS;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

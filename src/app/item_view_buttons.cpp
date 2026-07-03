@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "item_view_buttons.h"
@@ -35,14 +34,12 @@ public:
     class ProxyItemDelegate : public ProxyStyledItemDelegate {
     public:
         ProxyItemDelegate(
-                const ItemViewButtons* itemBtns,
-                QStyledItemDelegate* srcDelegate,
-                QObject* parent = nullptr);
+            const ItemViewButtons* itemBtns, QStyledItemDelegate* srcDelegate, QObject* parent = nullptr
+        );
 
         void paint(
-                QPainter* painter,
-                const QStyleOptionViewItem& option,
-                const QModelIndex& index) const override;
+            QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+        ) const override;
 
     private:
         const ItemViewButtons* m_itemBtns;
@@ -60,14 +57,14 @@ public:
         ItemViewButtons::DisplayModes itemDisplayModes;
     };
 
-    Private(ItemViewButtons* backPtr);
+    explicit Private(ItemViewButtons* backPtr);
 
     const ButtonInfo* buttonInfo(int btnId) const;
     ButtonInfo* mutableButtonInfo(int btnId);
     void setAllIsOverButtonState(bool on);
     QModelIndex modelIndexForButtonDisplay(const QModelIndex& index) const;
     void itemViewUpdateAt(const QModelIndex& index);
-    void paintButton(ButtonInfo* btnInfo, QPainter* painter, const QStyleOptionViewItem& option);
+    void paintButton(const ButtonInfo* btnInfo, QPainter* painter, const QStyleOptionViewItem& option);
     void resetButtonUnderMouseState();
 
     QAbstractItemView* m_view = nullptr;
@@ -81,7 +78,8 @@ private:
 ItemViewButtons::Private::ProxyItemDelegate::ProxyItemDelegate(
         const ItemViewButtons* itemBtns,
         QStyledItemDelegate* srcDelegate,
-        QObject* parent)
+        QObject* parent
+    )
     : ProxyStyledItemDelegate(srcDelegate, parent),
       m_itemBtns(itemBtns)
 {
@@ -90,7 +88,8 @@ ItemViewButtons::Private::ProxyItemDelegate::ProxyItemDelegate(
 void ItemViewButtons::Private::ProxyItemDelegate::paint(
         QPainter* painter,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     ProxyStyledItemDelegate::paint(painter, option, index);
     if (m_itemBtns)
@@ -135,9 +134,10 @@ void ItemViewButtons::Private::itemViewUpdateAt(const QModelIndex& index)
 }
 
 void ItemViewButtons::Private::paintButton(
-        ButtonInfo* btnInfo,
+        const ButtonInfo* btnInfo,
         QPainter* painter,
-        const QStyleOptionViewItem& option)
+        const QStyleOptionViewItem& option
+    )
 {
     if (!btnInfo || !painter)
         return;
@@ -250,7 +250,8 @@ bool ItemViewButtons::eventFilter(QObject* object, QEvent* event)
 void ItemViewButtons::paint(
         QPainter* painter,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index) const
+        const QModelIndex& index
+    ) const
 {
     bool mouseIsOver = false;
     if (painter && painter->device() && painter->device()->devType() == QInternal::Widget) {
@@ -315,7 +316,7 @@ void ItemViewButtons::addButton(int btnId, const QIcon& icon, const QString& too
         info.displayColumn = -1;
         info.itemSide = ItemRightSide;
         info.itemDisplayModes = DisplayOnDetection;
-        d->m_btnInfos.insert({ btnId, info });
+        d->m_btnInfos.try_emplace(btnId, info);
     }
     else {
         qWarning() << QString("%1 : there is already a button of index '%2'")
@@ -496,7 +497,8 @@ void ItemViewButtons::installDefaultItemDelegate()
  *  don't want to modify it to integrate with ItemViewButtons
  */
 QStyledItemDelegate* ItemViewButtons::createProxyItemDelegate(
-        QStyledItemDelegate* sourceDelegate, QObject* parent) const
+        QStyledItemDelegate* sourceDelegate, QObject* parent
+    ) const
 {
     return new Private::ProxyItemDelegate(this, sourceDelegate, parent);
 }

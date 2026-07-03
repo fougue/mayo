@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -17,6 +16,8 @@
 #include "../base/settings.h"
 #include "../base/unit_system.h"
 #include "view3d_navigation_style.h"
+
+#include <Aspect_TypeOfTriedronPosition.hxx>
 
 #include <memory>
 #include <unordered_map>
@@ -40,7 +41,7 @@ class AppModuleProperties : public PropertyGroup {
 public:
     // Create properties, the PropertyGroup will be a child of group `settings`
     // Any value/enabled change will be reported to the Settings object to emit signals
-    AppModuleProperties(Settings* settings);
+    explicit AppModuleProperties(Settings* settings);
 
     // Iterates over reader/writer factories and bind properties
     void IO_bindParameters(const IO::System* ioSystem);
@@ -48,12 +49,20 @@ public:
     // Re-initialize translatable descriptions assigned to properties
     void retranslate();
 
-    // System
+    Aspect_TypeOfTriedronPosition graphicsViewCubeCornerValue() const;
+
+    // Settings groups
     const Settings::GroupIndex groupId_system;
+    const Settings::GroupIndex groupId_application;
+    const Settings::GroupIndex groupId_meshing;
+    const Settings::GroupIndex groupId_graphics;
+    const Settings::GroupIndex groupId_import;
+    const Settings::GroupIndex groupId_export;
+
+    // System
     PropertyInt unitSystemDecimals{ this, textId("decimalCount") };
     PropertyEnum<UnitSystem::Schema> unitSystemSchema{ this, textId("schema") };
     // Application
-    const Settings::GroupIndex groupId_application;
     PropertyEnumeration language;
     PropertyRecentFiles recentFiles{ this, textId("recentFiles") };
     PropertyFilePath lastOpenDir{ this, textId("lastOpenFolder") };
@@ -63,15 +72,14 @@ public:
     PropertyBool forceOpenGlFallbackWidget{ this, textId("forceOpenGlFallbackWidget") };
     PropertyAppUiState appUiState{ this, textId("appUiState") };
     // Meshing
-    const Settings::GroupIndex groupId_meshing;
     enum class BRepMeshQuality { VeryCoarse, Coarse, Normal, Precise, VeryPrecise, UserDefined };
     PropertyEnum<BRepMeshQuality> meshingQuality{ this, textId("meshingQuality") };
     PropertyLength meshingChordalDeflection{ this, textId("meshingChordalDeflection") };
     PropertyAngle meshingAngularDeflection{ this, textId("meshingAngularDeflection") };
     PropertyBool meshingRelative{ this, textId("meshingRelative") };
     // Graphics
-    const Settings::GroupIndex groupId_graphics;
     PropertyEnum<View3dNavigationStyle> navigationStyle{ this, textId("navigationStyle") };
+    PropertyEnumeration viewCubeCorner; // Enum: Aspect_TypeOfTriedronPosition
     PropertyBool defaultShowOriginTrihedron{ this, textId("defaultShowOriginTrihedron") };
     PropertyDouble instantZoomFactor{ this, textId("instantZoomFactor") };
     PropertyAngle turnViewAngleIncrement{ this, textId("turnViewAngleIncrement") };
@@ -84,6 +92,8 @@ public:
     PropertyEnumeration meshDefaultsMaterial{ this, textId("material"), &OcctEnums::Graphic3d_NameOfMaterial() };
     PropertyBool meshDefaultsShowEdges{ this, textId("showEgesOn") };
     PropertyBool meshDefaultsShowNodes{ this, textId("showNodesOn") };
+    // Import
+    PropertyBool autoExpandCompoundToAssembly{ this, textId("autoExpandCompoundToAssembly") };
 
 protected:
     // -- from PropertyGroup

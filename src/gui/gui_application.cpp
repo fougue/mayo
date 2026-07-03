@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "gui_application.h"
@@ -18,13 +17,13 @@ namespace Mayo {
 struct GuiApplication::Private {
 
     void onApplicationItemSelectionChanged(
-            Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected)
+            gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected)
     {
         std::unordered_set<GuiDocument*> setGuiDocDirty;
         auto fnToggleItemSelected = [&](const ApplicationItem& item) {
             GuiDocument* guiDoc = m_backPtr->findGuiDocument(item.document());
             if (guiDoc) {
-                guiDoc->toggleItemSelected(item);
+                guiDoc->toggleNodeSelected(item.documentTreeNode().id());
                 setGuiDocDirty.insert(guiDoc);
             }
         };
@@ -54,7 +53,7 @@ GuiApplication::GuiApplication(const ApplicationPtr& app)
     d->m_app = app;
 
     app->signalDocumentAdded.connectSlot(&GuiApplication::onDocumentAdded, this);
-    app->signalDocumentAboutToClose.connectSlot(&GuiApplication::onDocumentAboutToClose, this);
+    app->signalDocumentClosed.connectSlot(&GuiApplication::onDocumentClosed, this);
     this->connectApplicationItemSelectionChanged(true);
 }
 
@@ -71,12 +70,12 @@ const ApplicationPtr& GuiApplication::application() const
     return d->m_app;
 }
 
-Span<GuiDocument*> GuiApplication::guiDocuments()
+gsl::span<GuiDocument*> GuiApplication::guiDocuments()
 {
     return d->m_vecGuiDocument;
 }
 
-Span<GuiDocument* const> GuiApplication::guiDocuments() const
+gsl::span<GuiDocument* const> GuiApplication::guiDocuments() const
 {
     return d->m_vecGuiDocument;
 }
@@ -106,27 +105,36 @@ void GuiApplication::addGraphicsObjectDriver(std::unique_ptr<GraphicsObjectDrive
     d->m_vecGfxObjectDriver.push_back(ptr.release()); // Will be converted to opencascade::handle<>
 }
 
-Span<const GraphicsObjectDriverPtr> GuiApplication::graphicsObjectDrivers() const
+gsl::span<const GraphicsObjectDriverPtr> GuiApplication::graphicsObjectDrivers() const
 {
     return d->m_vecGfxObjectDriver;
 }
 
 GraphicsObjectPtr GuiApplication::createGraphicsObject(const TDF_Label& label) const
 {
+    auto driver = this->findCompatibleGraphicsObjectDriver(label);
+    if (driver)
+        return driver->createObject(label);
+
+    return {};
+}
+
+GraphicsObjectDriverPtr GuiApplication::findCompatibleGraphicsObjectDriver(const TDF_Label& label) const
+{
     GraphicsObjectDriver* driverPartialSupport = nullptr;
     for (const GraphicsObjectDriverPtr& driver : d->m_vecGfxObjectDriver) {
         const GraphicsObjectDriver::Support support = driver->supportStatus(label);
         if (support == GraphicsObjectDriver::Support::Complete)
-            return driver->createObject(label);
+            return driver;
 
         if (support == GraphicsObjectDriver::Support::Partial)
             driverPartialSupport = driver.get();
     }
 
     if (driverPartialSupport)
-        return driverPartialSupport->createObject(label);
-    else
-        return {};
+        return driverPartialSupport;
+
+    return {};
 }
 
 bool GuiApplication::automaticDocumentMapping() const
@@ -142,17 +150,35 @@ void GuiApplication::setAutomaticDocumentMapping(bool on)
 void GuiApplication::onDocumentAdded(const DocumentPtr& doc)
 {
     if (d->m_automaticDocumentMapping) {
-        d->m_vecGuiDocument.push_back(new GuiDocument(doc, this));
-        this->signalGuiDocumentAdded.send(d->m_vecGuiDocument.back());
+        auto guiDoc = new GuiDocument(doc, this);
+        d->m_vecGuiDocument.push_back(guiDoc);
+
+        guiDoc->signalNodesVisibilityChanged.connectSlot([=](const GuiDocument::MapVisibilityByTreeNodeId& map) {
+            this->signalGuiDocumentNodesVisibilityChanged.send(guiDoc, map);
+        });
+        guiDoc->signalGraphicsBoundingBoxChanged.connectSlot([=](const Bnd_Box& box) {
+            this->signalGuiDocumentGraphicsBoundingBoxChanged.send(guiDoc, box);
+        });
+        guiDoc->signalViewTrihedronModeChanged.connectSlot([=](GuiDocument::ViewTrihedronMode mode) {
+            this->signalGuiDocumentViewTrihedronModeChanged.send(guiDoc, mode);
+        });
+        guiDoc->signalViewTrihedronCornerChanged.connectSlot([=](Aspect_TypeOfTriedronPosition pos) {
+            this->signalGuiDocumentViewTrihedronCornerChanged.send(guiDoc, pos);
+        });
+        guiDoc->signalOriginTrihedronVisibilityToggled.connectSlot([=](bool on) {
+            this->signalGuiDocumentOriginTrihedronVisibilityToggled.send(guiDoc, on);
+        });
+
+        this->signalGuiDocumentAdded.send(guiDoc);
     }
 }
 
-void GuiApplication::onDocumentAboutToClose(const DocumentPtr& doc)
+void GuiApplication::onDocumentClosed(const DocumentPtr& doc)
 {
     auto itFound = std::find_if(
-                d->m_vecGuiDocument.begin(),
-                d->m_vecGuiDocument.end(),
-                [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
+        d->m_vecGuiDocument.begin(),
+        d->m_vecGuiDocument.end(),
+        [=](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
     );
     if (itFound != d->m_vecGuiDocument.end()) {
         GuiDocument* guiDoc = *itFound;

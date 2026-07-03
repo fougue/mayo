@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,8 +11,7 @@
 #include <IGESCAFControl_Reader.hxx>
 #include <IGESCAFControl_Writer.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccStaticVariablesRollback;
 
@@ -73,7 +71,7 @@ public:
     OccIgesWriter& operator=(const OccIgesWriter&) = delete; // Not copyable
     ~OccIgesWriter();
 
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     // Parameters
@@ -103,7 +101,7 @@ public:
     void applyProperties(const PropertyGroup* group) override;
 
 private:
-    void changeStaticVariables(OccStaticVariablesRollback* rollback);
+    void changeStaticVariables(OccStaticVariablesRollback* rollback) const;
 
     class Properties;
     IGESCAFControl_Writer* m_writer = nullptr;
@@ -111,5 +109,4 @@ private:
     Parameters m_params;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_main_home.h"
@@ -45,6 +44,17 @@ void WidgetMainHome::initialize(const CommandContainer* cmdContainer)
 
 void WidgetMainHome::updatePageControlsActivation()
 {
+    // This page has no controls requiring dynamic activation updates
+}
+
+void WidgetMainHome::restoreUiState(const AppUiState&)
+{
+    // No persistent UI state for this page
+}
+
+void WidgetMainHome::saveUiState(AppUiState&)
+{
+    // No persistent UI state for this page
 }
 
 } // namespace Mayo

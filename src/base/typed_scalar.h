@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -14,7 +13,7 @@ template<typename Scalar, typename Tag>
 class TypedScalar {
 public:
     using ScalarType = Scalar;
-    static_assert(std::is_scalar<Scalar>::value, "Type T is not scalar");
+    static_assert(std::is_scalar_v<Scalar>, "Type T is not scalar");
 
     TypedScalar() = default;
     explicit TypedScalar(Scalar scalar) : m_scalar(scalar) {}

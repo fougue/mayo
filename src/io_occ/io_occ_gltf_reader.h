@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -9,8 +8,7 @@
 #include "io_occ_base_mesh.h"
 #include <RWGltf_CafReader.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based reader for glTF format
 // Requires OpenCascade >= v7.4.0
@@ -39,5 +37,4 @@ private:
     RWGltf_CafReader m_reader;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

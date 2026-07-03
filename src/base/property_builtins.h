@@ -1,12 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "global.h"
+#include "cpp_utils.h"
 #include "property.h"
 #include "filepath.h"
 #include "quantity.h"
@@ -24,13 +24,12 @@ template<typename T>
 class GenericProperty : public Property {
 public:
     using ValueType = T;
-    // TODO Add value_type traits for T
 
     GenericProperty(PropertyGroup* grp, const TextId& name);
 
-    const T& value() const { return m_value; }
+    Cpp::ValueOrConstRefType<T> value() const { return m_value; }
     bool setValue(const T& val);
-    operator const T&() const { return this->value(); }
+    operator Cpp::ValueOrConstRefType<T>() const { return this->value(); }
 
     const char* dynTypeName() const override { return TypeName; }
     static const char TypeName[];
@@ -78,8 +77,9 @@ public:
     using ValueType = T;
     GenericScalarProperty(PropertyGroup* grp, const TextId& name);
     GenericScalarProperty(
-            PropertyGroup* grp, const TextId& name,
-            T minimum, T maximum, T singleStep);
+        PropertyGroup* grp, const TextId& name,
+        T minimum, T maximum, T singleStep
+    );
 };
 
 class BasePropertyQuantity :
@@ -178,8 +178,9 @@ GenericScalarProperty<T>::GenericScalarProperty(PropertyGroup* grp, const TextId
 
 template<typename T>
 GenericScalarProperty<T>::GenericScalarProperty(
-            PropertyGroup* grp, const TextId& name,
-            T minimum, T maximum, T singleStep)
+        PropertyGroup* grp, const TextId& name,
+        T minimum, T maximum, T singleStep
+    )
     : GenericProperty<T>(grp, name),
       PropertyScalarConstraints<T>(minimum, maximum, singleStep)
 { }

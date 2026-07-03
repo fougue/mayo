@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -23,7 +22,6 @@
 
 namespace Mayo {
 
-class ApplicationItem;
 class GuiApplication;
 class V3dViewCameraAnimation;
 
@@ -48,6 +46,8 @@ public:
 
     // Gets the base document linked to
     const DocumentPtr& document() const { return m_document; }
+    Document::Identifier documentIdentifier() const;
+    static Document::Identifier documentIdentifier(const GuiDocument* guiDoc);
 
     // Gets the owning GuiApplication object
     GuiApplication* guiApplication() const { return m_guiApp; }
@@ -76,8 +76,11 @@ public:
     // Finds the tree node id associated to graphics object
     TreeNodeId nodeFromGraphicsObject(const GraphicsObjectPtr& gfxObject) const;
 
-    // Toggles selected status of an application item(doesn't affect Application's selection model)
-    void toggleItemSelected(const ApplicationItem& appItem);
+    // Toggles selected status of a tree node(doesn't affect Application's selection model)
+    void toggleNodeSelected(TreeNodeId nodeId);
+
+    // Sets selected status of a tree node(doesn't affect Application's selection model)
+    void setNodeSelected(TreeNodeId nodeId, bool on);
 
     // Executes action associated to a 3D sensitive item
     bool processAction(const GraphicsOwnerPtr& gfxOwner);
@@ -99,8 +102,22 @@ public:
     void toggleOriginTrihedronVisibility();
 
     // -- Camera animation
+
+    // Flags relevant to setViewCameraOrientation() function
+    enum ViewOrientationFlag {
+        // No flags
+        ViewOrientationFlag_None = 0x0,
+        // Do view "fit all" after camera orientation change
+        ViewOrientationFlag_FitAll = 0x1,
+        // Find closest UP vector when changing camera orientation
+        ViewOrientationFlag_FindClosestUp = 0x2,
+        // All flags ON
+        ViewOrientationFlag_All = 0xFF
+    };
+    using ViewOrientationFlags = unsigned;
+
     V3dViewCameraAnimation* viewCameraAnimation() const { return m_cameraAnimation; }
-    void setViewCameraOrientation(V3d_TypeOfOrientation projection);
+    void setViewCameraOrientation(V3d_TypeOfOrientation projection, ViewOrientationFlags flags = 0);
     void runViewCameraAnimation(const V3dViewCameraAnimation::ViewFunction& fnViewChange);
     void stopViewCameraAnimation();
 
@@ -134,6 +151,7 @@ public:
     mutable Signal<const Bnd_Box&> signalGraphicsBoundingBoxChanged;
     mutable Signal<ViewTrihedronMode> signalViewTrihedronModeChanged;
     mutable Signal<Aspect_TypeOfTriedronPosition> signalViewTrihedronCornerChanged;
+    mutable Signal<bool> signalOriginTrihedronVisibilityToggled;
 
     // -- Implementation
 private:
@@ -146,7 +164,7 @@ private:
 
     struct GraphicsEntity {
         struct Object {
-            Object(const GraphicsObjectPtr& p) : ptr(p) {}
+            explicit Object(const GraphicsObjectPtr& p) : ptr(p) {}
             GraphicsObjectPtr ptr;
             gp_Trsf trsfOriginal;
             Bnd_Box bndBox;
@@ -161,7 +179,10 @@ private:
 
     const GraphicsEntity* findGraphicsEntity(TreeNodeId entityTreeNodeId) const;
 
+    void applyExplodingFactor(const GraphicsEntity& entity, double t);
+
     void v3dViewTrihedronDisplay(Aspect_TypeOfTriedronPosition corner);
+    void configureViewCubeSizes();
 
     GuiApplication* m_guiApp = nullptr;
     DocumentPtr m_document;

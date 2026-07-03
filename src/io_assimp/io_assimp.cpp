@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_assimp.h"
@@ -9,10 +8,9 @@
 
 #include <assimp/version.h>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
-Span<const Format> AssimpFactoryReader::formats() const
+gsl::span<const Format> AssimpFactoryReader::formats() const
 {
     static const Format array[] = {
         Format_AMF,
@@ -98,5 +96,5 @@ std::string_view AssimpLib::strVersionDetails()
 
     return str;
 }
-} // namespace IO
-} // namespace Mayo
+
+} // namespace Mayo::IO

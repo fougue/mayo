@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -16,7 +15,7 @@ class TaskProgress;
 // Provides implementation of OpenCascade-based progress indicator around Mayo::TaskProgress
 class OccProgressIndicator : public Message_ProgressIndicator {
 public:
-    OccProgressIndicator(TaskProgress* progress);
+    explicit OccProgressIndicator(TaskProgress* progress);
 
     bool UserBreak() override;
 

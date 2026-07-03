@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_assimp_reader.h"
@@ -42,8 +41,7 @@
 
 //#define MAYO_ASSIMP_READER_HANDLE_SCALING 1
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -275,7 +273,7 @@ OccHandle<Poly_Triangulation> createOccTriangulation(const aiMesh* mesh)
 // Provides assimp progress handler for TaskProgress
 class AssimpProgressHandler : public Assimp::ProgressHandler {
 public:
-    AssimpProgressHandler(TaskProgress* progress)
+    explicit AssimpProgressHandler(TaskProgress* progress)
         : m_progress(progress)
     {}
 
@@ -302,10 +300,7 @@ private:
 
 class AssimpReader::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
-        : PropertyGroup(parentGroup)
-    {
-    }
+    using PropertyGroup::PropertyGroup; // Inherit PropertyGroup constructors
 };
 
 bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
@@ -560,7 +555,7 @@ OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
     // Helper function to get the color value of some property
     auto fnGetColor4D = [=](const char* key, unsigned type, unsigned index, aiColor4D* ptrColor, bool* ptrDefinedFlag = nullptr) {
         const aiReturn res = material->Get(key, type, index, *ptrColor);
-        // Some models have wrong color components outside [0, 1] range, and Quantity_Color reject
+        // Some models have wrong color components outside [0, 1] range, and Quantity_Color rejects
         // them(exception in constructor)
         ptrColor->r = std::clamp(ptrColor->r, 0.f, 1.f);
         ptrColor->g = std::clamp(ptrColor->g, 0.f, 1.f);
@@ -632,30 +627,29 @@ OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
 
     // PBR
     XCAFDoc_VisMaterialPBR matPbr;
-    matPbr.IsDefined = false;
 
     {
         aiString strTexture;
-        if (fnGetTexture(aiTextureType_BASE_COLOR, &strTexture, &matPbr.IsDefined))
+        if (fnGetTexture(aiTextureType_BASE_COLOR, &strTexture))
             matPbr.BaseColorTexture = fnFindOccTexture(strTexture);
 
         if (fnGetTexture(aiTextureType_METALNESS, &strTexture))
             matPbr.MetallicRoughnessTexture = fnFindOccTexture(strTexture);
 
-        if (fnGetTexture(aiTextureType_EMISSION_COLOR, &strTexture, &matPbr.IsDefined))
+        if (fnGetTexture(aiTextureType_EMISSION_COLOR, &strTexture))
             matPbr.EmissiveTexture = fnFindOccTexture(strTexture);
 
-        if (fnGetTexture(aiTextureType_AMBIENT_OCCLUSION, &strTexture, &matPbr.IsDefined))
+        if (fnGetTexture(aiTextureType_AMBIENT_OCCLUSION, &strTexture))
             matPbr.OcclusionTexture = fnFindOccTexture(strTexture);
 
-        if (fnGetTexture(aiTextureType_NORMALS, &strTexture, &matPbr.IsDefined))
+        if (fnGetTexture(aiTextureType_NORMALS, &strTexture))
             matPbr.NormalTexture = fnFindOccTexture(strTexture);
     }
 
 #ifdef AI_MATKEY_BASE_COLOR
     {
         aiColor4D color;
-        if (fnGetColor4D(AI_MATKEY_BASE_COLOR, &color, &matPbr.IsDefined))
+        if (fnGetColor4D(AI_MATKEY_BASE_COLOR, &color))
             matPbr.BaseColor = Quantity_ColorRGBA(toOccColor(color), color.a);
     }
 #endif
@@ -664,24 +658,34 @@ OccHandle<XCAFDoc_VisMaterial> AssimpReader::createOccVisMaterial(
         // TODO Handle EmissiveFactor
     }
 
+    bool hasPbrMetallicFactor = false;
+    bool hasPbrRoughnessFactor = false;
     {
         ai_real value;
 #ifdef AI_MATKEY_METALLIC_FACTOR
-        if (fnGetReal(AI_MATKEY_METALLIC_FACTOR, &value, &matPbr.IsDefined))
+        if (fnGetReal(AI_MATKEY_METALLIC_FACTOR, &value, &hasPbrMetallicFactor))
             matPbr.Metallic = std::clamp(value, 0.f, 1.f);
 #endif
 
 #ifdef AI_MATKEY_ROUGHNESS_FACTOR
-        if (fnGetReal(AI_MATKEY_ROUGHNESS_FACTOR, &value, &matPbr.IsDefined))
+        if (fnGetReal(AI_MATKEY_ROUGHNESS_FACTOR, &value, &hasPbrRoughnessFactor))
             matPbr.Roughness = std::clamp(value, 0.f, 1.f);
 #endif
 
-        if (fnGetReal(AI_MATKEY_REFRACTI, &value, &matPbr.IsDefined)) {
+        if (fnGetReal(AI_MATKEY_REFRACTI, &value)) {
             // Refraction index must be in range [1.0, 3.0]
             // If < 1 then an exception is thrown by Graphic3d_MaterialAspect::SetRefractionIndex()
             matPbr.RefractionIndex = std::clamp(value, 1.f, 3.f);
         }
     }
+
+    matPbr.IsDefined =
+        !matPbr.BaseColorTexture.IsNull()
+        || !matPbr.MetallicRoughnessTexture.IsNull()
+        || !matPbr.EmissiveTexture.IsNull()
+        || !matPbr.OcclusionTexture.IsNull()
+        || (hasPbrMetallicFactor && hasPbrRoughnessFactor)
+    ;
 
     if (matCommon.IsDefined)
         mat->SetCommonMaterial(matCommon);
@@ -738,7 +742,7 @@ void AssimpReader::transferSceneNode(
         TopoDS_Face face = BRepUtils::makeFace(triangulation);
         face.Location(nodeAbsoluteTrsf);
         const TDF_Label labelComponent = targetDoc->xcaf().shapeTool()->AddComponent(labelEntity, face);
-        const TDF_Label labelFace = targetDoc->xcaf().shapeReferred(labelComponent);
+        const TDF_Label labelFace = XCaf::shapeReferred(labelComponent);
 
         if (mesh->mMaterialIndex < m_vecMaterial.size()) {
             const OccHandle<XCAFDoc_VisMaterial>& material = m_vecMaterial.at(mesh->mMaterialIndex);
@@ -766,5 +770,4 @@ void AssimpReader::transferSceneNode(
         this->transferSceneNode(node->mChildren[ichild], targetDoc, labelEntity, fnCallbackMesh);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

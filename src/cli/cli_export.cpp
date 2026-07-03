@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "cli_export.h"
@@ -53,23 +52,6 @@ struct Helper : public QObject {
     int lastPrintProgressLineCount = 0;
 };
 
-// Collects emitted error messages into a single string object
-class ErrorMessageCollect : public Messenger {
-public:
-    void emitMessage(MessageType msgType, std::string_view text) override
-    {
-        if (msgType == MessageType::Error) {
-            m_message += text;
-            m_message += " ";
-        }
-    }
-
-    const std::string& message() const { return m_message; }
-
-private:
-    std::string m_message;
-};
-
 void printTaskProgress(Helper* helper, TaskId taskId)
 {
     std::string strMessage = helper->taskMgr.title(taskId);
@@ -119,7 +101,8 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
             break; // Interrupt
     }
 
-    ErrorMessageCollect errorCollect;
+    MessageCollecter errorCollect;
+    errorCollect.only(MessageType::Error);
     const bool okImport = appModule->ioSystem()->importInDocument()
         .targetDocument(doc)
         .withFilepaths(args.filesToOpen)
@@ -132,7 +115,7 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
         .withMessenger(&errorCollect)
         .withTaskProgress(progress)
         .execute();
-    helper->taskMgr.setTitle(progress->taskId(), okImport ? CliExport::textIdTr("Imported") : errorCollect.message());
+    helper->taskMgr.setTitle(progress->taskId(), okImport ? CliExport::textIdTr("Imported") : errorCollect.asString(" "));
     helper->mapTaskStatus.at(progress->taskId())->success = okImport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;
     return okImport;
@@ -141,9 +124,10 @@ bool importInDocument(DocumentPtr doc, const CliExportArgs& args, Helper* helper
 void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* helper, TaskProgress* progress)
 {
     auto appModule = AppModule::get();
-    ErrorMessageCollect errorCollect;
+    MessageCollecter errorCollect;
+    errorCollect.only(MessageType::Error);
     const IO::Format format = appModule->ioSystem()->probeFormat(filepath);
-    const ApplicationItem appItems[] = { doc };
+    const ApplicationItem appItems[] = { ApplicationItem{doc} };
     const bool okExport = appModule->ioSystem()->exportApplicationItems()
                 .targetFile(filepath)
                 .targetFormat(format)
@@ -156,7 +140,7 @@ void exportDocument(const DocumentPtr& doc, const FilePath& filepath, Helper* he
     const std::string msg =
             okExport ?
                 fmt::format(CliExport::textIdTr("Exported {}"), strFilename) :
-                errorCollect.message();
+                errorCollect.asString(" ");
     helper->taskMgr.setTitle(progress->taskId(), msg);
     helper->mapTaskStatus.at(progress->taskId())->success = okExport;
     helper->mapTaskStatus.at(progress->taskId())->finished = true;

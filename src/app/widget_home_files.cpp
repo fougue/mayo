@@ -1,15 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_home_files.h"
 
-#include "../base/application.h"
 #include "../base/settings.h"
-#include "../gui/gui_application.h"
-#include "../gui/gui_document.h"
 #include "../qtcommon/filepath_conv.h"
 #include "app_module.h"
 #include "qstring_utils.h"
@@ -37,7 +33,7 @@ struct HomeFileItem : public ListHelper::ModelItem {
 
 class HomeFilesModel : public ListHelper::Model {
 public:
-    HomeFilesModel(QObject* parent)
+    explicit HomeFilesModel(QObject* parent)
         : ListHelper::Model(parent)
     {
         auto storage = std::make_unique<ListHelper::DefaultModelStorage<HomeFileItem>>();
@@ -129,7 +125,7 @@ private:
                 return WidgetHomeFiles::tr("today %1").arg(strTime);
             }
             else if (diffDays == 1) {
-                return WidgetHomeFiles::tr("yersterday %1").arg(strTime);
+                return WidgetHomeFiles::tr("yesterday %1").arg(strTime);
             }
             else if (date.year() == currentDate.year() && date.weekNumber() == currentDate.weekNumber()) {
                 const QString strDayName = date.toString("dddd");
@@ -181,7 +177,7 @@ private:
 
 class HomeFilesDelegate : public ListHelper::ItemDelegate {
 public:
-    HomeFilesDelegate(WidgetHomeFiles* widget)
+    explicit HomeFilesDelegate(WidgetHomeFiles* widget)
         : ListHelper::ItemDelegate(widget),
           m_widget(widget)
     {}

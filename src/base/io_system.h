@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -13,9 +12,9 @@
 #include "io_writer.h"
 #include "libtree.h"
 #include "property.h"
-#include "span.h"
 #include "text_id.h"
 
+#include <gsl/span>
 #include <functional>
 #include <memory>
 #include <string>
@@ -55,8 +54,8 @@ public:
     std::unique_ptr<Reader> createReader(Format format) const;
     std::unique_ptr<Writer> createWriter(Format format) const;
 
-    Span<const Format> readerFormats() const { return m_vecReaderFormat; }
-    Span<const Format> writerFormats() const { return m_vecWriterFormat; }
+    gsl::span<const Format> readerFormats() const { return m_vecReaderFormat; }
+    gsl::span<const Format> writerFormats() const { return m_vecWriterFormat; }
 
     //
     // Import service
@@ -68,7 +67,7 @@ public:
         DocumentPtr targetDocument;
 
         // List of files to be imported in target document
-        Span<const FilePath> filepaths;
+        gsl::span<const FilePath> filepaths;
 
         // Optional: provider of format-specific parameters to be considered when reading
         const ParametersProvider* parametersProvider = nullptr;
@@ -96,7 +95,7 @@ public:
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
-    bool importInDocument(const Args_ImportInDocument& args);
+    bool importInDocument(const Args_ImportInDocument& args) const;
 
     //
     // Export service
@@ -105,7 +104,7 @@ public:
     // Contains arguments for the exportApplicationItems() function
     struct Args_ExportApplicationItems {
         // List of items to be exported
-        Span<const ApplicationItem> applicationItems;
+        gsl::span<const ApplicationItem> applicationItems;
 
         // Path to the target file where items will be written
         FilePath targetFilepath;
@@ -122,7 +121,7 @@ public:
         // Optional: the indicator object used to report progress of the import operation
         TaskProgress* progress = nullptr;
     };
-    bool exportApplicationItems(const Args_ExportApplicationItems& args);
+    bool exportApplicationItems(const Args_ExportApplicationItems& args) const;
 
     //
     // Fluent API: import service
@@ -134,7 +133,7 @@ public:
         using Operation = Operation_ImportInDocument;
         Operation& targetDocument(const DocumentPtr& document);
         Operation& withFilepath(const FilePath& filepath);
-        Operation& withFilepaths(Span<const FilePath> filepaths);
+        Operation& withFilepaths(gsl::span<const FilePath> filepaths);
         Operation& withParametersProvider(const ParametersProvider* provider);
 
         Operation& withEntityPostProcess(std::function<void(TDF_Label, TaskProgress*)> fn);
@@ -147,11 +146,11 @@ public:
 
     private:
         friend class System;
-        Operation_ImportInDocument(System& system);
-        System& m_system;
+        explicit Operation_ImportInDocument(const System& system);
+        const System& m_system;
         Args_ImportInDocument m_args;
     };
-    Operation_ImportInDocument importInDocument();
+    Operation_ImportInDocument importInDocument() const;
 
     //
     // Fluent API: export service
@@ -164,7 +163,7 @@ public:
         Operation& targetFile(const FilePath& filepath);
         Operation& targetFormat(Format format);
         Operation& withItem(const ApplicationItem& appItem);
-        Operation& withItems(Span<const ApplicationItem> appItems);
+        Operation& withItems(gsl::span<const ApplicationItem> appItems);
         Operation& withParameters(const PropertyGroup* parameters);
         Operation& withMessenger(Messenger* messenger);
         Operation& withTaskProgress(TaskProgress* progress);
@@ -172,25 +171,25 @@ public:
 
     private:
         friend class System;
-        Operation_ExportApplicationItems(System& system);
-        System& m_system;
+        explicit Operation_ExportApplicationItems(const System& system);
+        const System& m_system;
         Args_ExportApplicationItems m_args;
     };
-    Operation_ExportApplicationItems exportApplicationItems();
+    Operation_ExportApplicationItems exportApplicationItems() const;
 
     // Helpers
 
     // Iterate over `spanItem` and call `fnCallback` for each item. Guarantees that doublon items
     // will be visited only once
     static void visitUniqueItems(
-            Span<const ApplicationItem> spanItem,
+            gsl::span<const ApplicationItem> spanItem,
             std::function<void(const ApplicationItem&)> fnCallback
     );
 
     // Iterate over `spanItem` and then deep traverse the corresponding tree node to
     // call `fnCallback` for each item. Guarantees that doublon items will be visited only once
     static void traverseUniqueItems(
-            Span<const ApplicationItem> spanItem,
+            gsl::span<const ApplicationItem> spanItem,
             std::function<void(const DocumentTreeNode&)> fnCallback,
             TreeTraversal mode = TreeTraversal::PreOrder
     );

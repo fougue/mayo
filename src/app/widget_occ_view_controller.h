@@ -1,17 +1,16 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
-#include "../base/span.h"
 #include "../gui/v3d_view_controller.h"
 #include "view3d_navigation_style.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QPoint>
+#include <gsl/span>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -28,7 +27,8 @@ class IWidgetOccView;
 class WidgetOccViewController : public QObject, public V3dViewController {
     Q_OBJECT
 public:
-    WidgetOccViewController(IWidgetOccView* occView = nullptr);
+    explicit WidgetOccViewController(IWidgetOccView* occView = nullptr);
+    ~WidgetOccViewController();
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -68,7 +68,7 @@ private:
         void push(Input in);
         void release(Input in);
         void clear();
-        Span<const Input> data() const { return m_inputs; }
+        gsl::span<const Input> data() const { return m_inputs; }
 
         enum class Operation { None, Push, Release };
         Operation lastOperation() const { return m_lastOperation; }
@@ -92,7 +92,7 @@ private:
     // Base class to provide matching of DynamicAction from an InputSequence object
     class ActionMatcher {
     public:
-        ActionMatcher(const InputSequence* seq) : inputs(*seq) {}
+        explicit ActionMatcher(const InputSequence& seq) : inputs(seq) {}
         virtual ~ActionMatcher() = default;
 
         virtual bool matchRotation() const = 0;
@@ -108,7 +108,9 @@ private:
     };
 
     // Fabrication to create corresponding ActionMatcher from navigation style
-    static std::unique_ptr<ActionMatcher> createActionMatcher(View3dNavigationStyle style, const InputSequence* seq);
+    static std::unique_ptr<ActionMatcher> createActionMatcher(
+        View3dNavigationStyle style, const InputSequence& seq
+    );
     class Mayo_ActionMatcher;
     class Catia_ActionMatcher;
     class SolidWorks_ActionMatcher;

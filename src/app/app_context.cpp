@@ -1,10 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "app_context.h"
+
+#include "../gui/gui_application.h"
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -13,8 +14,29 @@
 #include "widget_main_home.h"
 
 #include <cassert>
+#include <type_traits>
+
+#include <QtCore/QtDebug>
 
 namespace Mayo {
+
+namespace {
+
+template<typename Predicate>
+WidgetGuiDocument* findWidgetGuiDocument(const WidgetMainControl* ctrl, Predicate fn)
+{
+    static_assert(std::is_invocable_r_v<bool, Predicate, const WidgetGuiDocument*>);
+    const int widgetCount = ctrl->widgetGuiDocumentCount();
+    for (int i = 0; i < widgetCount; ++i) {
+        auto candidate = ctrl->widgetGuiDocument(i);
+        if (candidate && fn(candidate))
+            return candidate;
+    }
+
+    return nullptr;
+}
+
+} // namespace
 
 AppContext::AppContext(MainWindow* wnd)
     : IAppContext(wnd),
@@ -37,12 +59,6 @@ GuiApplication* AppContext::guiApp() const
 TaskManager* AppContext::taskMgr() const
 {
     return &m_wnd->m_taskMgr;
-}
-
-QWidget* AppContext::pageDocuments_widgetLeftSideBar() const
-{
-    const WidgetMainControl* pageDocs = m_wnd->widgetPageDocuments();
-    return pageDocs ? pageDocs->widgetLeftSideBar() : nullptr;
 }
 
 QWidget* AppContext::widgetMain() const
@@ -80,39 +96,40 @@ void AppContext::setCurrentPage(Page page)
 
 V3dViewController* AppContext::v3dViewController(const GuiDocument* guiDoc) const
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* candidate) {
-        return candidate->guiDocument() == guiDoc;
+    auto widgetMainCtrl = m_wnd->widgetPageDocuments();
+    auto widgetDoc = findWidgetGuiDocument(widgetMainCtrl, [=](const WidgetGuiDocument* widget) {
+        return widget->guiDocument() == guiDoc;
     });
     return widgetDoc ? widgetDoc->controller() : nullptr;
 }
 
 int AppContext::findDocumentIndex(Document::Identifier docId) const
 {
-    int index = -1;
-    auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* candidate) {
-            ++index;
-            return candidate->documentIdentifier() == docId;
-    });
-    return widgetDoc ? index : -1;
+    const auto guiDocumentCount = static_cast<int>(this->guiApp()->guiDocuments().size());
+    for (int i = 0; i < guiDocumentCount; ++i) {
+        if (GuiDocument::documentIdentifier(this->guiDocument(i)) == docId)
+            return i;
+    }
+
+    return -1;
 }
 
 Document::Identifier AppContext::findDocumentFromIndex(int index) const
 {
-    auto widgetDoc = this->widgetGuiDocument(index);
-    return widgetDoc ? widgetDoc->documentIdentifier() : -1;
+    return GuiDocument::documentIdentifier(this->guiDocument(index));
 }
 
 Document::Identifier AppContext::currentDocument() const
 {
     const int index = m_wnd->widgetPageDocuments()->currentDocumentIndex();
-    auto widgetDoc = this->widgetGuiDocument(index);
-    return widgetDoc ? widgetDoc->documentIdentifier() : -1;
+    return GuiDocument::documentIdentifier(this->guiDocument(index));
 }
 
 void AppContext::setCurrentDocument(Document::Identifier docId)
 {
-    auto widgetDoc = this->findWidgetGuiDocument([=](WidgetGuiDocument* widgetDoc) {
-        return widgetDoc->documentIdentifier() == docId;
+    auto widgetMainCtrl = m_wnd->widgetPageDocuments();
+    auto widgetDoc = findWidgetGuiDocument(widgetMainCtrl, [=](const WidgetGuiDocument* widget) {
+        return widget->documentIdentifier() == docId;
     });
     const int docIndex = m_wnd->widgetPageDocuments()->indexOfWidgetGuiDocument(widgetDoc);
     m_wnd->widgetPageDocuments()->setCurrentDocumentIndex(docIndex);
@@ -123,35 +140,19 @@ void AppContext::updateControlsEnabledStatus()
     m_wnd->updateControlsActivation();
 }
 
-void AppContext::deleteDocumentWidget(const DocumentPtr& doc)
+GuiDocument* AppContext::guiDocument(int idx) const
 {
-    auto widgetDoc = this->findWidgetGuiDocument([&](WidgetGuiDocument* widgetDoc) {
-            return widgetDoc->documentIdentifier() == doc->identifier();
-    });
-    m_wnd->widgetPageDocuments()->removeWidgetGuiDocument(widgetDoc);
-}
-
-WidgetGuiDocument* AppContext::widgetGuiDocument(int idx) const
-{
-    return m_wnd->widgetPageDocuments()->widgetGuiDocument(idx);
-}
-
-WidgetGuiDocument* AppContext::findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const
-{
-    const int widgetCount = m_wnd->widgetPageDocuments()->widgetGuiDocumentCount();
-    for (int i = 0; i < widgetCount; ++i) {
-        auto candidate = this->widgetGuiDocument(i);
-        if (candidate && fn(candidate))
-            return candidate;
-    }
+    auto spanGuiDocuments = this->guiApp()->guiDocuments();
+    if (0 <= idx && idx < spanGuiDocuments.size())
+        return spanGuiDocuments[idx];
 
     return nullptr;
 }
 
 void AppContext::onCurrentDocumentIndexChanged(int docIndex)
 {
-    auto widgetDoc = this->widgetGuiDocument(docIndex);
-    emit this->currentDocumentChanged(widgetDoc ? widgetDoc->documentIdentifier() : -1);
+    auto guiDoc = this->guiDocument(docIndex);
+    emit this->currentDocumentChanged(GuiDocument::documentIdentifier(guiDoc));
 }
 
 } // namespace Mayo

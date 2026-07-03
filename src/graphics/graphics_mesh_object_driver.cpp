@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "graphics_mesh_object_driver.h"
@@ -34,11 +33,11 @@ struct GraphicsMeshObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Graph
 GraphicsMeshObjectDriver::GraphicsMeshObjectDriver()
 {
     this->setDisplayModes({
-        { MeshVS_DMF_WireFrame, GraphicsMeshObjectDriverI18N::textId("Mesh_Wireframe") },
-        { MeshVS_DMF_Shading, GraphicsMeshObjectDriverI18N::textId("Mesh_Shaded") },
-        { MeshVS_DMF_Shrink, GraphicsMeshObjectDriverI18N::textId("Mesh_Shrink") } // MeshVS_DA_ShrinkCoeff
+        { DisplayMode_Wireframe, GraphicsMeshObjectDriverI18N::textId("Wireframe") },
+        { DisplayMode_Shaded, GraphicsMeshObjectDriverI18N::textId("Shaded") },
+        { DisplayMode_Shrink, GraphicsMeshObjectDriverI18N::textId("Shrink") } // MeshVS_DA_ShrinkCoeff
     });
-    this->setDefaultDisplayMode(MeshVS_DMF_Shading);
+    this->setDefaultDisplayMode(DisplayMode_Shaded);
 }
 
 GraphicsMeshObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const TDF_Label& label) const
@@ -49,7 +48,7 @@ GraphicsMeshObjectDriver::Support GraphicsMeshObjectDriver::supportStatus(const 
 GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label) const
 {
     OccHandle<Poly_Triangulation> polyTri;
-    Span<const Quantity_Color> spanNodeColor;
+    gsl::span<const Quantity_Color> spanNodeColor;
     //const TopLoc_Location* ptrLocationPolyTri = nullptr;
     if (XCaf::isShape(label)) {
         const TopoDS_Shape shape = XCaf::shape(label);
@@ -86,7 +85,7 @@ GraphicsObjectPtr GraphicsMeshObjectDriver::createObject(const TDF_Label& label)
         object->GetDrawer()->SetBoolean(MeshVS_DA_DisplayNodes, defaultValues().showNodes);
         object->GetDrawer()->SetColor(MeshVS_DA_InteriorColor, defaultValues().color);
         object->GetDrawer()->SetMaterial(
-                    MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material)
+            MeshVS_DA_FrontMaterial, Graphic3d_MaterialAspect(defaultValues().material)
         );
         object->GetDrawer()->SetColor(MeshVS_DA_EdgeColor, defaultValues().edgeColor);
         object->GetDrawer()->SetBoolean(MeshVS_DA_ColorReflection, true);
@@ -115,9 +114,9 @@ Enumeration::Value GraphicsMeshObjectDriver::currentDisplayMode(const GraphicsOb
     return object->DisplayMode();
 }
 
-class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroupSignals {
+class GraphicsMeshObjectDriver::ObjectProperties : public PropertyGroup {
 public:
-    ObjectProperties(Span<const GraphicsObjectPtr> spanObject)
+    explicit ObjectProperties(gsl::span<const GraphicsObjectPtr> spanObject)
     {
         NCollection_Vec3<float> sumColor = {};
         NCollection_Vec3<float> sumEdgeColor = {};
@@ -194,7 +193,7 @@ public:
             }
         }
 
-        PropertyGroupSignals::onPropertyChanged(prop);
+        PropertyGroup::onPropertyChanged(prop);
     }
 
     std::vector<OccHandle<MeshVS_Mesh>> m_vecMeshVisu;
@@ -204,8 +203,8 @@ public:
     PropertyCheckState m_propertyShowNodes{ this, GraphicsMeshObjectDriverI18N::textId("showNodes") };
 };
 
-std::unique_ptr<PropertyGroupSignals>
-GraphicsMeshObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+std::unique_ptr<PropertyGroup>
+GraphicsMeshObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     return std::make_unique<ObjectProperties>(spanObject);
@@ -234,11 +233,13 @@ GraphicsMeshObjectDriver::DefaultValues& graphicsMeshDefaultValues()
 
 } // namespace Internal
 
-const GraphicsMeshObjectDriver::DefaultValues& GraphicsMeshObjectDriver::defaultValues() {
+const GraphicsMeshObjectDriver::DefaultValues& GraphicsMeshObjectDriver::defaultValues()
+{
     return Internal::graphicsMeshDefaultValues();
 }
 
-void GraphicsMeshObjectDriver::setDefaultValues(const DefaultValues& values) {
+void GraphicsMeshObjectDriver::setDefaultValues(const DefaultValues& values)
+{
     Internal::graphicsMeshDefaultValues() = values;
 }
 

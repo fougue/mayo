@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -62,7 +61,7 @@ private:
 
 template<typename EnumType>
 class PropertyEnum : public PropertyEnumeration {
-    static_assert(std::is_enum<EnumType>::value, "ENUM must be an enumeration type");
+    static_assert(std::is_enum_v<EnumType>, "ENUM must be an enumeration type");
 public:
     PropertyEnum(PropertyGroup* grp, const TextId& name);
 

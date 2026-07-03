@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -76,13 +75,13 @@ struct DoubleToStringOptions {
 
 class DoubleToStringOperation {
 public:
-    DoubleToStringOperation(double value);
+    explicit DoubleToStringOperation(double value);
     DoubleToStringOperation& locale(const std::locale& l);
     DoubleToStringOperation& decimalCount(int c);
     DoubleToStringOperation& removeTrailingZeroes(bool on);
     DoubleToStringOperation& roundToZero(bool on);
     DoubleToStringOperation& toUtf8(bool on);
-    operator std::string();
+    operator std::string() const;
     std::string get() const;
 
 private:
@@ -112,14 +111,15 @@ template<size_t N> struct StringConv<char[N], TCollection_ExtendedString> {
 };
 
 
-#if 0
 // std::string_view -> TCollection_ExtendedString
 template<> struct StringConv<std::string_view, TCollection_ExtendedString> {
-    static auto to(std::string_view str) {
-        return TCollection_ExtendedString(str.data(), true/*multi-byte*/);
+    // NOTE
+    //   Needs const& because of string_conv() which takes a const& type
+    static auto to(const std::string_view& str) {
+        const TCollection_AsciiString occStr(str.data(), int(str.size()));
+        return TCollection_ExtendedString(occStr); // Multi-byte handling by default
     }
 };
-#endif
 
 // --
 // -- std::string_view -> X

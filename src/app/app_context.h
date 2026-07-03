@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -16,7 +15,7 @@ class WidgetGuiDocument;
 // Provides implementation of IAppContext based on MainWindow
 class AppContext : public IAppContext {
 public:
-    AppContext(MainWindow* wnd);
+    explicit AppContext(MainWindow* wnd);
 
     GuiApplication* guiApp() const override;
     TaskManager* taskMgr() const override;
@@ -26,7 +25,6 @@ public:
     QWidget* widgetPage(Page page) const override;
     Page currentPage() const override;
     void setCurrentPage(Page page) override;
-    QWidget* pageDocuments_widgetLeftSideBar() const override;
 
     int findDocumentIndex(Document::Identifier docId) const override;
     Document::Identifier findDocumentFromIndex(int index) const override;
@@ -35,12 +33,9 @@ public:
     void setCurrentDocument(Document::Identifier docId) override;
 
     void updateControlsEnabledStatus() override;
-    void deleteDocumentWidget(const DocumentPtr& doc) override;
 
 private:
-    WidgetGuiDocument* widgetGuiDocument(int idx) const;
-    WidgetGuiDocument* findWidgetGuiDocument(std::function<bool(WidgetGuiDocument*)> fn) const;
-
+    GuiDocument* guiDocument(int idx) const;
     void onCurrentDocumentIndexChanged(int docIndex);
 
     MainWindow* m_wnd = nullptr;

@@ -1,11 +1,9 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_caf.h"
-#include "../base/global.h"
 #include "../base/document.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/io_system.h"
@@ -19,10 +17,13 @@
 #include <STEPCAFControl_Writer.hxx>
 #include <gsl/util>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO::Private {
 
 namespace {
+
+// NOTE
+// Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
+// But concurrent calls to Transfer() to the same target Document must be serialized
 
 template<typename CafReaderType>
 bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskProgress* /*progress*/)
@@ -39,19 +40,18 @@ TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc,
     const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
     OccHandle<TDocStd_Document> stdDoc = doc;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
-    const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
+    [[maybe_unused]]const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
 #else
     OccHandle<XSControl_WorkSession> ws = Private::cafWorkSession(reader);
     ws->MapReader()->SetProgress(indicator);
     auto _ = gsl::finally([&]{ ws->MapReader()->SetProgress(nullptr); });
     const bool okTransfer = reader.Transfer(stdDoc);
 #endif
-    MAYO_UNUSED(okTransfer);
     return doc->xcaf().diffTopLevelFreeShapes(seqMark);
 }
 
 template<typename CafWriterType>
-bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool cafGenericWriteTransfer(CafWriterType& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
 #if OCC_VERSION_HEX < OCC_VERSION_CHECK(7, 5, 0)
@@ -78,8 +78,6 @@ bool cafGenericWriteTransfer(CafWriterType& writer, Span<const ApplicationItem> 
 }
 
 } // namespace
-
-namespace Private {
 
 std::mutex& cafGlobalMutex()
 {
@@ -119,14 +117,12 @@ OccHandle<Transfer_FinderProcess> cafFinderProcess(const STEPCAFControl_Writer& 
     return writer.Writer().WS()->TransferWriter()->FinderProcess();
 }
 
-bool cafTransfer(IGESCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(IGESCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-bool cafTransfer(STEPCAFControl_Writer& writer, Span<const ApplicationItem> appItems, TaskProgress* progress) {
+bool cafTransfer(STEPCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress) {
     return cafGenericWriteTransfer(writer, appItems, progress);
 }
 
-} // namespace Private
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO::Private

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_ply_writer.h"
@@ -21,16 +20,16 @@
 
 #include <Poly_Triangulation.hxx>
 
-#include <gsl/util>
 #include <fmt/format.h>
-
+#include <gsl/util>
 #include <algorithm>
+#include <cassert>
+#include <cstring>
 #include <fstream>
 #include <locale>
 #include <string>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
@@ -38,16 +37,16 @@ enum class Endianness { Unknown, Little, Big };
 
 Endianness hostEndianness()
 {
-    union IntBytes32Convert {
-        uint32_t integer;
-        uint8_t  bytes[4];
-    };
-    IntBytes32Convert conv;
-    conv.integer = 0x01020408;
-    if (conv.bytes[0] == 0x08 && conv.bytes[3] == 0x01)
+    const uint32_t value = 0x01020408u;
+    unsigned char bytes[sizeof(value)];
+    std::memcpy(bytes, &value, sizeof(value));
+    // Little: bytes = {08, 04, 02, 01}
+    // Big   : bytes = {01, 02, 04, 08}
+
+    if (bytes[0] == 0x08 && bytes[3] == 0x01)
         return Endianness::Little;
 
-    if (conv.bytes[0] == 0x01 && conv.bytes[3] == 0x08)
+    if (bytes[0] == 0x01 && bytes[3] == 0x08)
         return Endianness::Big;
 
     return Endianness::Unknown;
@@ -61,7 +60,7 @@ struct PlyWriterI18N {
 
 class PlyWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(PlyWriterI18N::textIdContext());
@@ -82,7 +81,7 @@ public:
     PropertyString comment{ this, PlyWriterI18N::textId("comment") };
 };
 
-bool PlyWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool PlyWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     progress = progress ? progress : &TaskProgress::null();
     m_vecNode.clear();
@@ -263,7 +262,8 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
     const OccHandle<Poly_Triangulation>& triangulation = mesh.triangulation();
     for (int i = 1; i <= triangulation->NbTriangles(); ++i) {
         const Poly_Triangle& triangle = triangulation->Triangle(i);
-        const int32_t offset = CppUtils::safeStaticCast<int32_t>(m_vecNode.size());
+        assert(Cpp::cmpLessEqual(m_vecNode.size(), INT32_MAX));
+        auto offset = static_cast<int32_t>(m_vecNode.size());
         const Face face{
             offset + triangle(1) - 1, offset + triangle(2) - 1, offset + triangle(3) - 1
         };
@@ -279,7 +279,7 @@ void PlyWriter::addMesh(const IMeshAccess& mesh)
         for (int i = 0; i < triangulation->NbNodes(); ++i) {
             const std::optional<Quantity_Color> nodeColor = mesh.nodeColor(i);
             const Quantity_Color& defaultNodeColor = m_params.defaultColor.GetRGB();
-            m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor ? nodeColor.value() : defaultNodeColor));
+            m_vecNodeColor.push_back(PlyWriter::toColor(nodeColor.value_or(defaultNodeColor)));
         }
     }
 }
@@ -313,5 +313,4 @@ PlyWriter::Color PlyWriter::toColor(const Quantity_Color& c)
     return { uint8_t(cc.Red() * 255), uint8_t(cc.Green() * 255), uint8_t(cc.Blue() * 255) };
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

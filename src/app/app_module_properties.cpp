@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "app_module_properties.h"
@@ -18,13 +17,31 @@
 
 namespace Mayo {
 
+namespace {
+
+const Enumeration& cornerEnumeration()
+{
+    static const Enumeration corners = {
+        { Aspect_TOTP_LEFT_UPPER, AppModuleProperties::textId("TopLeft") },
+        { Aspect_TOTP_RIGHT_UPPER, AppModuleProperties::textId("TopRight") },
+        { Aspect_TOTP_LEFT_LOWER, AppModuleProperties::textId("BottomLeft") },
+        { Aspect_TOTP_RIGHT_LOWER, AppModuleProperties::textId("BottomRight") }
+    };
+    return corners;
+}
+
+} // namespace
+
 AppModuleProperties::AppModuleProperties(Settings* settings)
     : PropertyGroup(settings),
       groupId_system(settings->addGroup(textId("system"))),
       groupId_application(settings->addGroup(textId("application"))),
       groupId_meshing(settings->addGroup(textId("meshing"))),
       groupId_graphics(settings->addGroup(textId("graphics"))),
+      groupId_import(settings->addGroup(textId("import"))),
+      groupId_export(settings->addGroup(textId("export"))),
       language(this, textId("language"), &AppModule::languages()),
+      viewCubeCorner(this, textId("viewCubeCorner"), &cornerEnumeration()),
       m_settings(settings)
 {
     const auto sectionId_systemUnits = settings->addSection(groupId_system, textId("units"));
@@ -65,6 +82,7 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
 
     // Graphics
     settings->addSetting(&this->navigationStyle, groupId_graphics);
+    settings->addSetting(&this->viewCubeCorner, groupId_graphics);
     settings->addSetting(&this->defaultShowOriginTrihedron, groupId_graphics);
     settings->addSetting(&this->instantZoomFactor, groupId_graphics);
     settings->addSetting(&this->turnViewAngleIncrement, groupId_graphics);
@@ -78,12 +96,15 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
     settings->addSetting(&this->meshDefaultsShowEdges, sectionId_graphicsMeshDefaults);
     settings->addSetting(&this->meshDefaultsShowNodes, sectionId_graphicsMeshDefaults);
 
+    // Import
+    settings->addSetting(&this->autoExpandCompoundToAssembly, groupId_import);
+
     // Register reset functions
-    settings->addResetFunction(sectionId_systemUnits, [=]{
+    settings->addResetFunction(sectionId_systemUnits, [this]{
         this->unitSystemDecimals.setValue(2);
         this->unitSystemSchema.setValue(UnitSystem::SI);
     });
-    settings->addResetFunction(groupId_application, [&]{
+    settings->addResetFunction(groupId_application, [this]{
         this->language.setValue(AppModule::languages().findValueByName("en"));
         this->recentFiles.setValue({});
         this->lastOpenDir.setValue({});
@@ -91,29 +112,26 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->actionOnDocumentFileChange.setValue(ActionOnDocumentFileChange::None);
         this->linkWithDocumentSelector.setValue(true);
         this->appUiState.setValue({});
-#ifndef MAYO_OS_MAC
         this->forceOpenGlFallbackWidget.setValue(false);
-#else
-        this->forceOpenGlFallbackWidget.setValue(true);
-#endif
     });
-    settings->addResetFunction(groupId_graphics, [=]{
+    settings->addResetFunction(groupId_graphics, [this]{
         this->navigationStyle.setValue(View3dNavigationStyle::Mayo);
+        this->viewCubeCorner.setValue(Aspect_TOTP_LEFT_LOWER);
         this->defaultShowOriginTrihedron.setValue(true);
         this->instantZoomFactor.setValue(5.);
         this->turnViewAngleIncrement.setQuantity(5 * Quantity_Degree);
     });
-    settings->addResetFunction(groupId_meshing, [&]{
+    settings->addResetFunction(groupId_meshing, [this]{
         this->meshingQuality.setValue(BRepMeshQuality::Normal);
         this->meshingChordalDeflection.setQuantity(1 * Quantity_Millimeter);
         this->meshingAngularDeflection.setQuantity(20 * Quantity_Degree);
         this->meshingRelative.setValue(false);
     });
-    settings->addResetFunction(sectionId_graphicsClipPlanes, [=]{
+    settings->addResetFunction(sectionId_graphicsClipPlanes, [this]{
         this->clipPlanesCappingOn.setValue(true);
         this->clipPlanesCappingHatchOn.setValue(true);
     });
-    settings->addResetFunction(sectionId_graphicsMeshDefaults, [=]{
+    settings->addResetFunction(sectionId_graphicsMeshDefaults, [this]{
         const GraphicsMeshObjectDriver::DefaultValues meshDefaults;
         this->meshDefaultsColor.setValue(meshDefaults.color);
         this->meshDefaultsEdgeColor.setValue(meshDefaults.edgeColor);
@@ -121,14 +139,16 @@ AppModuleProperties::AppModuleProperties(Settings* settings)
         this->meshDefaultsShowEdges.setValue(meshDefaults.showEdges);
         this->meshDefaultsShowNodes.setValue(meshDefaults.showNodes);
     });
+    settings->addResetFunction(groupId_import, [this]{
+        this->autoExpandCompoundToAssembly.setValue(true);
+    });
 }
 
 void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
 {
     // Import
-    const auto groupId_Import = m_settings->addGroup(textId("import"));
     for (IO::Format format : ioSystem->readerFormats()) {
-        auto sectionId_format = m_settings->addSection(groupId_Import, IO::formatIdentifier(format));
+        auto sectionId_format = m_settings->addSection(groupId_import, IO::formatIdentifier(format));
         const IO::FactoryReader* factory = ioSystem->findFactoryReader(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, m_settings);
         if (ptrGroup) {
@@ -143,9 +163,8 @@ void AppModuleProperties::IO_bindParameters(const IO::System* ioSystem)
     }
 
     // Export
-    const auto groupId_Export = m_settings->addGroup(textId("export"));
     for (IO::Format format : ioSystem->writerFormats()) {
-        auto sectionId_format = m_settings->addSection(groupId_Export, IO::formatIdentifier(format));
+        auto sectionId_format = m_settings->addSection(groupId_export, IO::formatIdentifier(format));
         const IO::FactoryWriter* factory = ioSystem->findFactoryWriter(format);
         std::unique_ptr<PropertyGroup> ptrGroup = factory->createProperties(format, m_settings);
         if (ptrGroup) {
@@ -222,6 +241,7 @@ void AppModuleProperties::retranslate()
     this->turnViewAngleIncrement.setDescription(
         textIdTr("Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)")
     );
+    this->viewCubeCorner.setDescription(textIdTr("Corner where 3D view cube is located"));
 
     // -- Graphics/ClipPlanes
     this->defaultShowOriginTrihedron.setDescription(
@@ -233,6 +253,12 @@ void AppModuleProperties::retranslate()
     );
     this->clipPlanesCappingHatchOn.setDescription(
         textIdTr("Enable capping hatch texture of currently clipped graphics")
+    );
+
+    // Import
+    this->autoExpandCompoundToAssembly.setDescription(
+        textIdTr("Automatically expand compound shapes to assemblies. For some input models this "
+                 "allows 3D exploding")
     );
 }
 
@@ -261,6 +287,11 @@ void AppModuleProperties::onPropertyChanged(Property* prop)
     }
 
     PropertyGroup::onPropertyChanged(prop);
+}
+
+Aspect_TypeOfTriedronPosition AppModuleProperties::graphicsViewCubeCornerValue() const
+{
+    return static_cast<Aspect_TypeOfTriedronPosition>(this->viewCubeCorner.value());
 }
 
 } // namespace Mayo

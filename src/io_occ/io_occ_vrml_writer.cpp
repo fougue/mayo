@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_vrml_writer.h"
@@ -20,13 +19,12 @@
 #include <VrmlData_ShapeConvert.hxx>
 #include <fstream>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccVrmlWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccVrmlWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->shapeRepresentation.mutableEnumeration().chopPrefix("VrmlAPI_");
@@ -43,7 +41,7 @@ public:
     PropertyEnum<VrmlAPI_RepresentationOfShape> shapeRepresentation{ this, textId("shapeRepresentation") };
 };
 
-bool OccVrmlWriter::transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress)
+bool OccVrmlWriter::transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress)
 {
     m_scene.reset(new VrmlData_Scene);
     VrmlData_ShapeConvert converter(*m_scene);
@@ -106,5 +104,4 @@ void OccVrmlWriter::applyProperties(const PropertyGroup* params)
     }
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

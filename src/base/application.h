@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,8 +9,8 @@
 #include "document.h"
 #include "occ_handle.h"
 #include "signal.h"
-#include "span.h"
 
+#include <gsl/span>
 #include <CDF_DirectoryIterator.hxx>
 #include <Standard_Version.hxx>
 #include <XCAFApp_Application.hxx>
@@ -26,8 +25,8 @@ public:
 
     // Iterator over Documents contained in an Application
     struct DocumentIterator : private CDF_DirectoryIterator {
-        DocumentIterator(const ApplicationPtr& app);
-        DocumentIterator(const Application* app);
+        explicit DocumentIterator(const ApplicationPtr& app);
+        explicit DocumentIterator(const Application* app);
         bool hasNext() const;
         void next();
         DocumentPtr current() const;
@@ -46,14 +45,22 @@ public:
 
     void closeDocument(const DocumentPtr& doc);
 
+    // Option to automatically expand compound shapes to assemblies
+    // If ON this expansion happens for each entity added with Document::addEntityTreeNode() or
+    // Document::addEntityTreeNodeSequence()
+    // Changing this option doesn't affect any existing entity already added
+    bool autoExpandCompoundToAssembly() const;
+    void setAutoExpandCompoundToAssembly(bool on);
+
     static void defineMayoFormat(const ApplicationPtr& app);
 
-    static Span<const char*> envOpenCascadeOptions();
-    static Span<const char*> envOpenCascadePaths();
+    static gsl::span<const char*> envOpenCascadeOptions();
+    static gsl::span<const char*> envOpenCascadePaths();
 
     // Signals
     Signal<const DocumentPtr&> signalDocumentAdded;
     Signal<const DocumentPtr&> signalDocumentAboutToClose;
+    Signal<const DocumentPtr&> signalDocumentClosed;
     Signal<const DocumentPtr&, const std::string&> signalDocumentNameChanged;
     Signal<const DocumentPtr&, const FilePath&> signalDocumentFilePathChanged;
     Signal<const DocumentPtr&, TreeNodeId> signalDocumentEntityAdded;

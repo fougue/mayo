@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_tools.h"
@@ -24,11 +23,10 @@ namespace Mayo {
 CommandSaveViewImage::CommandSaveViewImage(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Save View to Image"));
     action->setToolTip(Command::tr("Save View to Image"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::Camera));
-    this->setAction(action);
 }
 
 void CommandSaveViewImage::execute()
@@ -47,15 +45,14 @@ bool CommandSaveViewImage::getEnabledStatus() const
 CommandInspectXde::CommandInspectXde(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Inspect XDE"));
     action->setToolTip(Command::tr("Inspect XDE"));
-    this->setAction(action);
 }
 
 void CommandInspectXde::execute()
 {
-    const Span<const ApplicationItem> spanAppItem = this->guiApp()->selectionModel()->selectedItems();
+    const gsl::span<const ApplicationItem> spanAppItem = this->guiApp()->selectionModel()->selectedItems();
     DocumentPtr doc;
     for (const ApplicationItem& appItem : spanAppItem) {
         if (appItem.document()->isXCafDocument()) {
@@ -73,7 +70,7 @@ void CommandInspectXde::execute()
 
 bool CommandInspectXde::getEnabledStatus() const
 {
-    Span<const ApplicationItem> spanSelectedAppItem = this->guiApp()->selectionModel()->selectedItems();
+    gsl::span<const ApplicationItem> spanSelectedAppItem = this->guiApp()->selectionModel()->selectedItems();
     const ApplicationItem firstAppItem =
             !spanSelectedAppItem.empty() ? spanSelectedAppItem.front() : ApplicationItem();
     return spanSelectedAppItem.size() == 1
@@ -86,10 +83,11 @@ bool CommandInspectXde::getEnabledStatus() const
 CommandEditOptions::CommandEditOptions(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
+    action->setMenuRole(QAction::PreferencesRole);
     action->setText(Command::tr("Options"));
     action->setToolTip(Command::tr("Options"));
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::Preferences);
 }
 
 void CommandEditOptions::execute()
@@ -98,5 +96,5 @@ void CommandEditOptions::execute()
     QtWidgetsUtils::asyncDialogExec(dlg);
 }
 
-} // namespace Mayo {
+} // namespace Mayo
 

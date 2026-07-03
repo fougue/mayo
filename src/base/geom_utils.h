@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -9,15 +8,40 @@
 #include <utility>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
+#include <gp_Trsf.hxx>
+#include <Precision.hxx>
 class Adaptor3d_Curve;
+class gp_Ax1;
+class gp_Ax2;
 
-namespace Mayo {
-namespace GeomUtils {
+namespace Mayo::GeomUtils {
 
 double normalizedU(const Adaptor3d_Curve& curve, double u);
+
 gp_Pnt d0(const Adaptor3d_Curve& curve, double u);
 gp_Vec d1(const Adaptor3d_Curve& curve, double u);
 std::pair<gp_Pnt, gp_Vec> d0d1(const Adaptor3d_Curve& curve, double u);
 
-} // namespace GeomUtils
-} // namespace Mayo
+// Detects if transformation matrix 'trsf' contains scaling
+bool hasScaling(const gp_Trsf& trsf);
+
+gp_Trsf makeTranslation(const gp_Vec& v);
+gp_Trsf makeTranslation(const gp_Pnt& p1, const gp_Pnt& p2);
+gp_Trsf makeRotation(const gp_Ax1& ax1, double angle_rad);
+gp_Trsf makeMirror(const gp_Ax2& ax2);
+
+bool equal(
+    const gp_Pnt& lhs,
+    const gp_Pnt& rhs,
+    double linearTol = Precision::Confusion()
+);
+bool equal(
+    const gp_Vec& lhs,
+    const gp_Vec& rhs,
+    double linearTol = Precision::Confusion(),
+    double angularTol = Precision::Angular()
+);
+
+bool isNull(const gp_Vec& v, double sqrLinearTol = Precision::SquareConfusion());
+
+} // namespace Mayo::GeomUtils

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_stl.h"
@@ -12,7 +11,6 @@
 #include "../base/triangulation_annex_data.h"
 #include "../base/document.h"
 #include "../base/filepath_conv.h"
-#include "../base/global.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
@@ -27,22 +25,21 @@
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Compound.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
-static TopoDS_Shape asShape(const DocumentPtr& doc)
+TopoDS_Shape asShape(const DocumentPtr& doc)
 {
     TopoDS_Shape shape;
 
     if (doc->entityCount() == 1) {
-        shape = XCaf::shape(doc->entityLabel(0));
+        shape = XCaf::shape(doc->firstEntityNodeLabel());
     }
     else if (doc->entityCount() > 1) {
         TopoDS_Compound cmpd = BRepUtils::makeEmptyCompound();
-        for (int i = 0; i < doc->entityCount(); ++i)
-            BRepUtils::addShape(&cmpd, XCaf::shape(doc->entityLabel(i)));
+        for (TreeNodeId nodeId : doc->allEntityNodeIds())
+            BRepUtils::addShape(&cmpd, XCaf::shape(doc->modelTreeNodeLabel(nodeId)));
 
         shape = cmpd;
     }
@@ -58,7 +55,7 @@ struct OccStlWriterI18N {
 
 class OccStlWriter::Properties : public PropertyGroup {
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->targetFormat.mutableEnumeration().changeTrContext(OccStlWriterI18N::textIdContext());
@@ -91,7 +88,7 @@ TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progre
     return CafUtils::makeLabelSequence({ entityLabel });
 }
 
-bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OccStlWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = BRepUtils::makeEmptyCompound();
     System::visitUniqueItems(appItems, [=](const ApplicationItem& appItem) {
@@ -108,7 +105,7 @@ bool OccStlWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* 
     return !m_shape.IsNull();
 }
 
-bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
+bool OccStlWriter::writeFile(const FilePath& filepath, [[maybe_unused]]TaskProgress* progress)
 {
     if (!m_shape.IsNull()) {
         bool facesMeshed = true;
@@ -134,7 +131,6 @@ bool OccStlWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         auto indicator = makeOccHandle<OccProgressIndicator>(progress);
         return writer.Write(m_shape, strFilepath.c_str(), TKernelUtils::start(indicator));
 #else
-        MAYO_UNUSED(progress);
         return writer.Write(m_shape, strFilepath.c_str());
 #endif
     }
@@ -154,5 +150,4 @@ void OccStlWriter::applyProperties(const PropertyGroup* params)
         m_params.format = ptr->targetFormat;
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -9,10 +8,10 @@
 #include "../base/document_ptr.h"
 #include "../base/filepath.h"
 #include "../base/property.h"
-#include "../base/tkernel_utils.h"
 #include "iwidget_main_page.h"
 
 #include <memory>
+#include <vector>
 #include <unordered_set>
 
 class QFileInfo;
@@ -23,6 +22,7 @@ namespace Mayo {
 class IAppContext;
 class CommandContainer;
 class DocumentFilesWatcher;
+class DocumentTreeNode;
 class GuiApplication;
 class GuiDocument;
 class ItemViewButtons;
@@ -42,10 +42,6 @@ public:
     // Widget at the left side of the app providing access to the model tree, file system, ...
     QWidget* widgetLeftSideBar() const;
 
-    // Factor value must be in [0, 1]
-    double widgetLeftSideBarWidthFactor() const;
-    void setWidgetLeftSideBarWidthFactor(double factor);
-
     int widgetGuiDocumentCount() const;
     WidgetGuiDocument* widgetGuiDocument(int idx) const;
     WidgetGuiDocument* currentWidgetGuiDocument() const;
@@ -57,18 +53,27 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
+    void restoreUiState(const AppUiState& state) override;
+    void saveUiState(AppUiState& state) override;
+
 signals:
     void currentDocumentIndexChanged(int docIndex);
 
 private:
     QMenu* createMenuModelTreeSettings();
 
+    void editDocumentTreeNode(const DocumentTreeNode& docTreeNode);
+
     void onApplicationItemSelectionChanged();
     void onLeftContentsPageChanged(int pageId);
     void onWidgetFileSystemLocationActivated(const QFileInfo& loc);
+
     void onGuiDocumentAdded(GuiDocument* guiDoc);
+    void onGuiDocumentErased(const GuiDocument* guiDoc);
+
     void onCurrentDocumentIndexChanged(int idx);
     void onDocumentFileChanged(const DocumentPtr& doc);
+    void onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp);
     void onSplitterMainMoved(int pos, int index);
 
     QWidget* findLeftHeaderPlaceHolder() const;
@@ -76,14 +81,18 @@ private:
 
     void reloadDocumentAfterChange(const DocumentPtr& doc);
 
+    // Factor value must be in [0, 1]
+    void setWidgetLeftSideBarWidthFactor(double factor);
+
     class Ui_WidgetMainControl* m_ui = nullptr;
     GuiApplication* m_guiApp = nullptr;
     IAppContext* m_appContext = nullptr;
     ItemViewButtons* m_listViewBtns = nullptr;
-    std::unique_ptr<PropertyGroup> m_ptrCurrentNodeDataProperties;
-    std::unique_ptr<PropertyGroupSignals> m_ptrCurrentNodeGraphicsProperties;
+    std::vector<std::unique_ptr<PropertyGroup>> m_ptrCurrentNodeProperties;
     DocumentFilesWatcher* m_docFilesWatcher = nullptr;
     std::unordered_set<DocumentPtr> m_pendingDocsToReload;
+
+    bool m_widgetLeftSideBarIsVisble = true;
     double m_widgetLeftSideBarWidthFactor = 0.25;
 };
 

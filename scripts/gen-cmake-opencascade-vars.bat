@@ -1,5 +1,10 @@
 @echo off
 
+REM ****************************************************************************
+REM * Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+REM * SPDX-License-Identifier: BSD-2-Clause
+REM ****************************************************************************
+
 set _OPENCASCADE_ROOTDIR_=%1
 
 if not exist "%_OPENCASCADE_ROOTDIR_%\env.bat"  echo set(OpenCASCADE_FOUND false)
@@ -46,5 +51,14 @@ echo set(CSF_OPT_BIN32D "%CSF_OPT_BIN32D:\=/%")
 echo set(CSF_OPT_BIN64 "%CSF_OPT_BIN64:\=/%")
 echo set(CSF_OPT_BIN64D "%CSF_OPT_BIN64D:\=/%")
 echo set(OpenCASCADE_HAVE_RAPIDJSON "%HAVE_RAPIDJSON%")
+
+echo get_filename_component(TCL_DIR ${TCL_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(TK_DIR ${TK_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(FREETYPE_DIR ${FREETYPE_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(FREEIMAGE_DIR ${FREEIMAGE_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(FFMPEG_DIR ${FFMPEG_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(TBB_DIR ${TBB_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(OPENVR_DIR ${OPENVR_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
+echo get_filename_component(JEMALLOC_DIR ${JEMALLOC_DIR} ABSOLUTE BASE_DIR "%_OPENCASCADE_ROOTDIR_%")
 
 REM TODO What about variables CSF_SHMessage, CSF_MDTVTexturesDirectory, ...

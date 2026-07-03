@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -14,7 +13,7 @@ namespace Mayo {
 class DialogAbout : public QDialog {
     Q_OBJECT
 public:
-    DialogAbout(QWidget* parent = nullptr);
+    explicit DialogAbout(QWidget* parent = nullptr);
     ~DialogAbout();
 
     void addLibraryInfo(std::string_view libName, std::string_view libVersion);

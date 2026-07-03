@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -20,11 +19,15 @@ private slots:
     void DocumentRefCount_test();
 
     void CppUtils_toggle_test();
-    void CppUtils_safeStaticCast_test();
 
     void TextId_test();
 
     void FilePath_test();
+
+    void MessageCollecter_ignoreSingleMessageType_test();
+    void MessageCollecter_ignoreSingleMessageType_test_data();
+    void MessageCollecter_only_test();
+    void MessageCollecter_only_test_data();
 
     void OccHandle_test();
 
@@ -41,21 +44,13 @@ private slots:
     void PropertyQuantityValueConversion_test();
     void PropertyQuantityValueConversion_test_data();
 
-    void IO_probeFormat_test();
-    void IO_probeFormat_test_data();
-    void IO_probeFormatDirect_test();
-    void IO_OccStaticVariablesRollback_test();
-    void IO_OccStaticVariablesRollback_test_data();
-    void IO_bugGitHub166_test();
-    void IO_bugGitHub166_test_data();
-    void IO_bugGitHub258_test();
-
     void DoubleToString_test();
     void StringConv_test();
 
     void BRepUtils_test();
 
-    void CafUtils_test();
+    void CafUtils_labelTag_test();
+    void CafUtils_getNamedDataKeys_test();
 
     void MeshUtils_test();
     void MeshUtils_test_data();
@@ -74,19 +69,26 @@ private slots:
 
     void Settings_test();
 
+    void StringCache_addFirstTimeThenCachedReturnsSameViewAndFlag_test();
+    void StringCache_addTwoSmallStringsContiguous_test();
+    void StringCache_addWhenRemainingCapacityInsufficientCreatesNewPool_test();
+    void StringCache_addWithNullAlreadyCachedPtrIsOK_test();
+    void StringCache_clearThenReAddReturnsNewViewAndNotCached_test();
+    void StringCache_viewRemainsValidAfterSubsequentAddsWithinCapacity_test();
+    void StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test();
+    void StringCache_stressFuzzRandomStringsDedupAndClear_test();
+
     void UnitSystem_test();
     void UnitSystem_test_data();
 
     void LibTask_test();
     void LibTree_test();
+    void LibTree_nodeRoot_test();
+    void LibTree_removeRoot_test();
 
     void Span_test();
 
-    void initTestCase();
-    void cleanupTestCase();
-
-private:
-    IO::System* m_ioSystem = nullptr;
+    void XCaf_userDefinedAttributes_test();
 };
 
 } // namespace Mayo

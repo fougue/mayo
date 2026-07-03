@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,7 +11,7 @@ namespace Mayo {
 
 class CommandSaveViewImage : public Command {
 public:
-    CommandSaveViewImage(IAppContext* context);
+    explicit CommandSaveViewImage(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -21,7 +20,7 @@ public:
 
 class CommandInspectXde : public Command {
 public:
-    CommandInspectXde(IAppContext* context);
+    explicit CommandInspectXde(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -30,7 +29,7 @@ public:
 
 class CommandEditOptions : public Command {
 public:
-    CommandEditOptions(IAppContext* context);
+    explicit CommandEditOptions(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "edit-options";

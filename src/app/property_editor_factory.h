@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -9,6 +8,10 @@
 #include "../base/unit_system.h"
 
 #include <QtGui/QPixmap>
+
+#include <functional>
+#include <unordered_map>
+
 class QWidget;
 
 namespace Mayo {
@@ -31,8 +34,30 @@ public:
 
 class DefaultPropertyEditorFactory : public IPropertyEditorFactory {
 public:
+    DefaultPropertyEditorFactory();
+
     QWidget* createEditor(Property* property, QWidget* parentWidget) const override;
     void syncEditorWithProperty(QWidget* editor) const override;
+
+private:
+    template<typename PropType, typename EditorType>
+    void registerPropertyEditor();
+
+    using Creator = std::function<QWidget*(Property*, QWidget*)>;
+    std::unordered_map<const char*, Creator> m_mapCreator;
 };
+
+// --
+// -- Implementation
+// --
+
+template<typename PropType, typename EditorType>
+void DefaultPropertyEditorFactory::registerPropertyEditor()
+{
+    Creator fnCreateEditor = [](Property* prop, QWidget* parent) -> QWidget* {
+        return new EditorType(static_cast<PropType*>(prop), parent);
+    };
+    m_mapCreator[PropType::TypeName] = std::move(fnCreateEditor);
+}
 
 } // namespace Mayo

@@ -1,10 +1,10 @@
  /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "settings.h"
+#include "cpp_utils.h"
 
 #include <fmt/format.h>
 #include <gsl/util>
@@ -37,7 +37,7 @@ struct SectionResetFunction {
     Settings::ResetFunction fnReset;
 };
 
-static bool isValidIdentifier(std::string_view identifier)
+bool isValidIdentifier(std::string_view identifier)
 {
     return !identifier.empty() /*&& !identifier.simplified().isEmpty()*/;
 }
@@ -182,7 +182,7 @@ void Settings::saveAs(Storage* target, const ExcludePropertyPredicate& fnExclude
         for (const Settings_Section& section : group.vecSection) {
             const std::string sectionPath = d->sectionPath(group, section);
             for (const Settings_Setting& setting : section.vecSetting) {
-                Property* prop = setting.property;
+                const Property* prop = setting.property;
                 if (!fnExclude || !fnExclude(*prop)) {
                     std::string_view propKey = prop->name().key;
                     const std::string settingPath = std::string(sectionPath).append("/").append(propKey);
@@ -232,7 +232,7 @@ Settings::GroupIndex Settings::addGroup(std::string_view identifier)
 
     for (const Settings_Group& group : d->m_vecGroup) {
         if (group.identifier.key == identifier)
-            return GroupIndex(Span_itemIndex(d->m_vecGroup, group));
+            return GroupIndex(Cpp::indexInSpan(d->m_vecGroup, group));
     }
 
     d->m_vecGroup.push_back({});
@@ -327,9 +327,9 @@ Settings::SettingIndex Settings::findProperty(const Property* property) const
         for (const Settings_Section& section : group.vecSection) {
             for (const Settings_Setting& setting : section.vecSetting) {
                 if (setting.property == property) {
-                    const auto idSetting = Span_itemIndex(section.vecSetting, setting);
-                    const auto idSection = Span_itemIndex(group.vecSection, section);
-                    const auto idGroup = Span_itemIndex(d->m_vecGroup, group);
+                    const auto idSetting = Cpp::indexInSpan(section.vecSetting, setting);
+                    const auto idSection = Cpp::indexInSpan(group.vecSection, section);
+                    const auto idGroup = Cpp::indexInSpan(d->m_vecGroup, group);
                     return SettingIndex(SectionIndex(GroupIndex(idGroup), idSection), idSetting);
                 }
             }
@@ -360,7 +360,7 @@ Settings::SettingIndex Settings::addSetting(Property* property, GroupIndex group
 //    sectionDefault->identifier = "DEFAULT";
 //    sectionDefault->title = tr("DEFAULT");
     sectionDefault->isDefault = true;
-    const SectionIndex sectionId(groupId, Span_itemIndex(group.vecSection, *sectionDefault));
+    const SectionIndex sectionId(groupId, Cpp::indexInSpan(group.vecSection, *sectionDefault));
     return this->addSetting(property, sectionId);
 }
 

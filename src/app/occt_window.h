@@ -85,15 +85,15 @@ public:
 
   void Size( Standard_Integer& theWidth, Standard_Integer& theHeight ) const override;
 
-  Aspect_FBConfig NativeFBConfig() const override { return NULL; }
+  Aspect_FBConfig NativeFBConfig() const override { return nullptr; }
 
   DEFINE_STANDARD_RTTIEXT(OcctWindow,Aspect_Window)
 
-protected:
-  Standard_Integer myXLeft;
-  Standard_Integer myYTop;
-  Standard_Integer myXRight;
-  Standard_Integer myYBottom;
+private:
+  int myXLeft;
+  int myYTop;
+  int myXRight;
+  int myYBottom;
   QWidget* myWidget;
 };
 

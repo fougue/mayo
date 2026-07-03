@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -48,8 +47,12 @@ public:
     void start();
     void stop();
 
+    const OccHandle<Graphic3d_Camera>& cameraStart() const { return m_cameraStart; }
     void setCameraStart(const OccHandle<Graphic3d_Camera>& camera);
+
+    const OccHandle<Graphic3d_Camera>& cameraEnd() const { return m_cameraEnd; }
     void setCameraEnd(const OccHandle<Graphic3d_Camera>& camera);
+
     void configureCameraChange(const ViewFunction& fnViewChange);
 
     void setRenderFunction(ViewFunction fnViewRender);

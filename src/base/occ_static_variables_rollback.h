@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -11,8 +10,7 @@
 #include <variant>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Resets an OpenCascade static variable(see Interface_Static) to its previous value on destruction
 // It can be used to revert state when an exception is thrown without needing to write
@@ -52,5 +50,4 @@ private:
     std::vector<StaticVariableRecord> m_vecRecord;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

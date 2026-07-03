@@ -1,14 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "measure_type.h"
 #include "../base/quantity.h"
-#include "../base/span.h"
 #include "../graphics/graphics_object_ptr.h"
 #include "../graphics/graphics_owner_ptr.h"
 
@@ -16,22 +14,21 @@
 #include <gp_Lin.hxx>
 #include <gp_Pnt.hxx>
 
+#include <gsl/span>
 #include <string_view>
 #include <variant>
 
 namespace Mayo {
-
-enum class DistanceType {
-    None,
-    Mininmum,
-    CenterToCenter
-};
 
 // Void measure value
 struct MeasureNone {};
 
 // Measure of a distance between two entities
 struct MeasureDistance {
+    enum class Type {
+        None, Mininmum, CenterToCenter
+    };
+
     // Point on 1st entity from which the distance is measured
     gp_Pnt pnt1;
     // Point on 2nd entity from which the distance is measured
@@ -39,7 +36,7 @@ struct MeasureDistance {
     // Length of the distance
     QuantityLength value;
     // Distance type
-    DistanceType type = DistanceType::None;
+    Type type = Type::None;
 };
 
 // Measure of a circle entity
@@ -102,7 +99,7 @@ class IMeasureTool {
 public:
     virtual ~IMeasureTool() = default;
 
-    virtual Span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const = 0;
+    virtual gsl::span<const GraphicsObjectSelectionMode> selectionModes(MeasureType type) const = 0;
     virtual bool supports(const GraphicsObjectPtr& object) const = 0;
     virtual bool supports(MeasureType type) const = 0;
 
@@ -119,6 +116,7 @@ public:
 // Base interface for errors reported by measurement services of IMeasureTool
 class IMeasureError {
 public:
+    virtual ~IMeasureError() = default;
     virtual std::string_view message() const = 0;
 };
 

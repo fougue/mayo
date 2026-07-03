@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,22 +11,25 @@
 
 #include <QtWidgets/QWidget>
 #include <V3d_TypeOfOrientation.hxx>
-#include <vector>
+
+class QMenu;
 
 namespace Mayo {
 
 class ButtonFlat;
 class GuiDocument;
+class IWidgetOccView;
 class WidgetClipPlanes;
 class WidgetExplodeAssembly;
 class WidgetGrid;
 class WidgetMeasure;
-class IWidgetOccView;
 
+// QWidget providing user-interaction with a GuiDocument object
 class WidgetGuiDocument : public QWidget {
     Q_OBJECT
 public:
     WidgetGuiDocument(GuiDocument* guiDoc, QWidget* parent = nullptr);
+    ~WidgetGuiDocument();
 
     GuiDocument* guiDocument() const { return m_guiDoc; }
     WidgetOccViewController* controller() const { return m_controller; }
@@ -48,14 +50,18 @@ private:
     void toggleWidgetClipPlanes(bool on);
     void toggleWidgetExplode(bool on);
     void toggleWidgetMeasure(bool on);
-    void exclusiveButtonCheck(ButtonFlat* btn);
+    void exclusiveButtonCheck(const ButtonFlat* btn);
 
-    void recreateMenuViewProjections(QWidget* container);
+    void createMenuViewProjections(QWidget* container);
+    void createMenuItemVisibility(QWidget* container);
     QRect viewControlsRect() const;
     void layoutViewControls();
     void layoutWidgetPanel(QWidget* panel);
+    void layoutWidgetPanels();
 
     ButtonFlat* createViewBtn(QWidget* parent, Theme::Icon icon, const QString& tooltip) const;
+    QMenu* createViewMenu(QWidget* parent) const;
+    static void popupViewMenu(QMenu* menu, const ButtonFlat* btnMenu, const QWidget* container);
 
     GuiDocument* m_guiDoc = nullptr;
     IWidgetOccView* m_qtOccView = nullptr;
@@ -72,7 +78,6 @@ private:
     ButtonFlat* m_btnEditClipping = nullptr;
     ButtonFlat* m_btnExplode = nullptr;
     ButtonFlat* m_btnMeasure = nullptr;
-    std::vector<QWidget*> m_vecWidgetForViewProj;
 };
 
 } // namespace Mayo

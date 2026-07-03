@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,13 +11,12 @@
 
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Writer for OFF file format
 class OffWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
     void applyProperties(const PropertyGroup* group) override;
 
@@ -31,5 +29,4 @@ private:
 // Provides factory to create OffWriter objects
 class OffFactoryWriter : public SingleFormatFactoryWriter<Format_OFF, OffWriter> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO {

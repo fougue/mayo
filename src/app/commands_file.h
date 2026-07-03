@@ -1,26 +1,29 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "../base/filepath.h"
-#include "../base/span.h"
 #include "commands_api.h"
+
+#include <gsl/span>
 
 namespace Mayo {
 
 class FileCommandTools {
 public:
     static void closeDocument(IAppContext* context, Document::Identifier docId);
-    static void openDocumentsFromList(IAppContext* context, Span<const FilePath> listFilePath);
+    static void closeAllDocuments(IAppContext* context);
+
+    static void openDocumentsFromList(IAppContext* context, gsl::span<const FilePath> listFilePath);
     static void openDocument(IAppContext* context, const FilePath& filePath);
+
     static void importInDocument(
         IAppContext* context,
         const DocumentPtr& targetDoc,
-        Span<const FilePath> listFilePaths
+        gsl::span<const FilePath> listFilePaths
     );
     static void importInDocument(
         IAppContext* context,
@@ -31,7 +34,7 @@ public:
 
 class CommandNewDocument : public Command {
 public:
-    CommandNewDocument(IAppContext* context);
+    explicit CommandNewDocument(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "new-doc";
@@ -39,7 +42,7 @@ public:
 
 class CommandOpenDocuments : public Command {
 public:
-    CommandOpenDocuments(IAppContext* context);
+    explicit CommandOpenDocuments(IAppContext* context);
     void execute() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -48,8 +51,8 @@ public:
 
 class CommandRecentFiles : public Command {
 public:
-    CommandRecentFiles(IAppContext* context);
-    CommandRecentFiles(IAppContext* context, QMenu* containerMenu);
+    explicit CommandRecentFiles(IAppContext* context);
+    CommandRecentFiles(IAppContext* context, const QMenu* containerMenu);
     void execute() override;
     void recreateEntries();
 
@@ -58,7 +61,7 @@ public:
 
 class CommandImportInCurrentDocument : public Command {
 public:
-    CommandImportInCurrentDocument(IAppContext* context);
+    explicit CommandImportInCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -67,7 +70,7 @@ public:
 
 class CommandExportSelectedApplicationItems : public Command {
 public:
-    CommandExportSelectedApplicationItems(IAppContext* context);
+    explicit CommandExportSelectedApplicationItems(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -76,7 +79,7 @@ public:
 
 class CommandCloseCurrentDocument : public Command {
 public:
-    CommandCloseCurrentDocument(IAppContext* context);
+    explicit CommandCloseCurrentDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -88,7 +91,7 @@ private:
 
 class CommandCloseAllDocuments : public Command {
 public:
-    CommandCloseAllDocuments(IAppContext* context);
+    explicit CommandCloseAllDocuments(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -97,7 +100,7 @@ public:
 
 class CommandCloseAllDocumentsExceptCurrent : public Command {
 public:
-    CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
+    explicit CommandCloseAllDocumentsExceptCurrent(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -109,7 +112,7 @@ private:
 
 class CommandQuitApplication : public Command {
 public:
-    CommandQuitApplication(IAppContext* context);
+    explicit CommandQuitApplication(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "quit-app";

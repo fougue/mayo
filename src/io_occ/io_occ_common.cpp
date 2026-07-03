@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_common.h"
@@ -11,8 +10,7 @@
 #include <fmt/format.h>
 #include <stdexcept>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
 {
@@ -30,5 +28,4 @@ const char* OccCommon::toCafString(OccCommon::LengthUnit unit)
     throw std::invalid_argument(fmt::format("{} isn't supported", MetaEnum::name(unit)));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

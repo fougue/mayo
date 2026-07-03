@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -23,7 +22,7 @@ namespace Mayo {
 
 class GraphicsMeshDataSource : public MeshVS_DataSource {
 public:
-    GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh);
+    explicit GraphicsMeshDataSource(const OccHandle<Poly_Triangulation>& mesh);
 
     bool GetGeom(const int ID, const bool IsElement, TColStd_Array1OfReal& Coords, int& NbNodes, MeshVS_EntityType& Type) const override;
     bool GetGeomType(const int ID, const bool IsElement, MeshVS_EntityType& Type) const override;

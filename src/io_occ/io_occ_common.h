@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -13,8 +12,7 @@
 #  include <RWMesh_CoordinateSystem.hxx>
 #endif
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccCommon {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccCommon)
@@ -34,11 +32,14 @@ public:
     static const char* toCafString(LengthUnit unit);
 };
 
-} // namespace IO
+} // namespace Mayo::IO
+
+
+namespace Mayo {
 
 template<> struct EnumNames<IO::OccCommon::LengthUnit> {
     inline static std::string_view trContext = IO::OccCommon::textIdContext();
-    inline static std::string_view junkPrefix = "";
+    inline static std::string_view junkPrefix = {};
 };
 
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 4, 0)

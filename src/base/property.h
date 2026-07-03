@@ -1,15 +1,14 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "signal.h"
-#include "span.h"
 #include "text_id.h"
 
+#include <gsl/span>
 #include <vector>
 #include <string_view>
 
@@ -26,16 +25,20 @@ class Property;
 // as well the parent group's callbacks.
 class PropertyGroup {
 public:
-    PropertyGroup(PropertyGroup* parentGroup = nullptr);
+    explicit PropertyGroup(PropertyGroup* parentGroup = nullptr);
     virtual ~PropertyGroup() = default;
 
     // TODO Rename to get() or items() ?
-    Span<Property* const> properties() const;
+    gsl::span<Property* const> properties() const;
 
     PropertyGroup* parentGroup() const { return m_parentGroup; }
 
     // Reinitialize properties to their default values
     virtual void restoreDefaults();
+
+    Signal<Property*> signalPropertyAboutToChange;
+    Signal<Property*> signalPropertyChanged;
+    Signal<Property*, bool> signalPropertyEnabled;
 
 protected:
     // Callback executed when Property value is about to change
@@ -67,13 +70,13 @@ private:
 // It blocks call to PropertyGroup::onPropertyChanged() in its constructor and in the destructor it
 // resets the state to what it was before the constructor ran.
 struct PropertyChangedBlocker {
-    PropertyChangedBlocker(PropertyGroup* group);
+    explicit PropertyChangedBlocker(PropertyGroup* group);
     ~PropertyChangedBlocker();
     PropertyGroup* const m_group = nullptr;
 };
 
 #define Mayo_PropertyChangedBlocker(group) \
-            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group);
+            [[maybe_unused]] Mayo::PropertyChangedBlocker __Mayo_PropertyChangedBlocker(group)
 
 // Provides an abstract storage of a value with associated meta-data(name, description, ...)
 class Property {
@@ -103,6 +106,11 @@ public:
     bool isEnabled() const { return m_isEnabled; }
     void setEnabled(bool on);
 
+    bool hasUserData() const { return m_hasUserData; }
+    uint64_t userData() const;
+    void setUserData(uint64_t d);
+    void clearUserData();
+
     virtual const char* dynTypeName() const = 0;
 
 protected:
@@ -124,16 +132,8 @@ private:
     bool m_isUserReadOnly = false;
     bool m_isUserVisible = true;
     bool m_isEnabled = true;
-};
-
-class PropertyGroupSignals : public PropertyGroup {
-public:
-    Signal<Property*> signalPropertyAboutToChange;
-    Signal<Property*> signalPropertyChanged;
-
-protected:
-    void onPropertyAboutToChange(Property* prop) override;
-    void onPropertyChanged(Property* prop) override;
+    uint64_t m_userData;
+    bool m_hasUserData = false;
 };
 
 // --

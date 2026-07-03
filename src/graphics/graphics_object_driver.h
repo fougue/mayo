@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,10 +9,11 @@
 #include "../base/enumeration.h"
 #include "../base/label_data.h"
 #include "../base/property.h"
-#include "../base/span.h"
+#include "../base/text_id.h"
 
 #include <Standard_Transient.hxx>
 #include <TDF_Label.hxx>
+#include <gsl/span>
 #include <memory>
 
 namespace Mayo {
@@ -36,10 +36,10 @@ public:
     virtual void applyDisplayMode(GraphicsObjectPtr object, Enumeration::Value mode) const = 0;
     virtual Enumeration::Value currentDisplayMode(const GraphicsObjectPtr& object) const = 0;
 
-    virtual std::unique_ptr<PropertyGroupSignals> properties(Span<const GraphicsObjectPtr> spanObject) const = 0;
+    virtual std::unique_ptr<PropertyGroup> properties(gsl::span<const GraphicsObjectPtr> spanObject) const = 0;
 
     static GraphicsObjectDriverPtr get(const GraphicsObjectPtr& object);
-    static GraphicsObjectDriverPtr getCommon(Span<const GraphicsObjectPtr> spanObject);
+    static GraphicsObjectDriverPtr getCommon(gsl::span<const GraphicsObjectPtr> spanObject);
 
     DEFINE_STANDARD_RTTI_INLINE(GraphicsObjectDriver, Standard_Transient)
 
@@ -48,11 +48,13 @@ protected:
     void setDefaultDisplayMode(Enumeration::Value mode) { m_defaultDisplayMode = mode; }
     void throwIf_invalidDisplayMode(Enumeration::Value mode) const;
     void throwIf_differentDriver(const GraphicsObjectPtr& object) const;
-    void throwIf_differentDriver(Span<const GraphicsObjectPtr> objects) const;
+    void throwIf_differentDriver(gsl::span<const GraphicsObjectPtr> objects) const;
 
 private:
     Enumeration m_enumDisplayModes;
     Enumeration::Value m_defaultDisplayMode = -1;
 };
+
+struct GraphicsObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectDriverI18N) };
 
 } // namespace Mayo

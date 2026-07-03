@@ -1,13 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
-#include "span.h"
 #include "text_id.h"
+
+#include <gsl/span>
 #include <initializer_list>
 #include <vector>
 #include <type_traits>
@@ -66,7 +66,7 @@ public:
     const Item& itemAt(int index) const { return m_vecItem.at(index); }
 
     // Returns read-only array of the items
-    Span<const Item> items() const { return m_vecItem; }
+    gsl::span<const Item> items() const { return m_vecItem; }
 
     // Creates an Enumeration object from an enumerated type, using MetaEnum helper
     // Note: client code has to include header "enumeration_fromenum.h"

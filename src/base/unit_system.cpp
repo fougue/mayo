@@ -1,12 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "unit_system.h"
+#include "libfromchars.h"
 
-#include <fast_float/fast_float.h>
 #include <cassert>
 
 namespace Mayo {
@@ -266,7 +265,7 @@ UnitSystem::TranslateResult UnitSystem::parseQuantity(std::string_view strQuanti
     fnAssignUnit(Unit::None);
 
     double v;
-    auto res = fast_float::from_chars(strQuantity.data(), strQuantity.data() + strQuantity.size(), v);
+    auto res = Mayo::fromChars(strQuantity, v);
     if (res.ec != std::errc())
         return {};
 

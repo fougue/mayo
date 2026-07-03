@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "../app/app_module.h"
@@ -131,12 +130,14 @@ void showSystemInformation(std::ostream& ostr)
          << "  commit:" << strVersionCommitId
          << "  revnum:" << versionRevisionNumber
          << "  " << QT_POINTER_SIZE * 8 << "bit"
-         << '\n';
+         << '\n'
+    ;
 
     // OS version
     ostr << '\n' << "OS: " << QSysInfo::prettyProductName()
          << " [" << QSysInfo::kernelType() << " version " << QSysInfo::kernelVersion() << "]" << '\n'
-         << "Current CPU Architecture: " << QSysInfo::currentCpuArchitecture() << '\n';
+         << "Current CPU Architecture: " << QSysInfo::currentCpuArchitecture() << '\n'
+    ;
 
     // Qt version
     ostr << '\n' << QLibraryInfo::build() << '\n';
@@ -145,10 +146,11 @@ void showSystemInformation(std::ostream& ostr)
     ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
 
     // Other registered libraries
-    for (const LibraryInfo& libInfo : LibraryInfoArray::get()) {
+    for (const LibraryInfo& libInfo : AppModule::get()->libraryInfoArray()) {
         ostr << '\n' << libInfo.name << ": " << libInfo.version
              << " " << libInfo.versionDetails
-             << '\n';
+             << '\n'
+        ;
     }
 
     // I/O supported formats
@@ -178,7 +180,7 @@ static CommandLineArguments processCommandLine()
     // Configure command-line parser
     QCommandLineParser cmdParser;
     cmdParser.setApplicationDescription(
-                Main::tr("mayo-conv the opensource CAD converter")
+        Main::tr("mayo-conv the opensource CAD converter")
     );
 
     const QCommandLineOption cmdShowHelp(
@@ -215,42 +217,42 @@ static CommandLineArguments processCommandLine()
     cmdParser.addOption(cmdWriteSettingsCache);
 
     const QCommandLineOption cmdFileToExport(
-                QStringList{ "e", "export" },
-                Main::tr("Export opened files into an output file, can be repeated for different "
-                         "formats(eg. -e file.stp -e file.igs...)"),
-                Main::tr("filepath")
+        QStringList{ "e", "export" },
+        Main::tr("Export opened files into an output file, can be repeated for different "
+                 "formats(eg. -e file.stp -e file.igs...)"),
+        Main::tr("filepath")
     );
     cmdParser.addOption(cmdFileToExport);
 
     const QCommandLineOption cmdLogFile(
-                QStringList{ "log-file" },
-                Main::tr("Writes log messages into output file"),
-                Main::tr("filepath")
+        QStringList{ "log-file" },
+        Main::tr("Writes log messages into output file"),
+        Main::tr("filepath")
     );
     cmdParser.addOption(cmdLogFile);
 
     const QCommandLineOption cmdDebugLogs(
-                QStringList{ "debug-logs" },
-                Main::tr("Don't filter out debug log messages in release build")
+        QStringList{ "debug-logs" },
+        Main::tr("Don't filter out debug log messages in release build")
     );
     cmdParser.addOption(cmdDebugLogs);
 
     const QCommandLineOption cmdNoProgress(
-                QStringList{ "no-progress" },
-                Main::tr("Disable progress reporting in console output")
+        QStringList{ "no-progress" },
+        Main::tr("Disable progress reporting in console output")
     );
     cmdParser.addOption(cmdNoProgress);
 
     const QCommandLineOption cmdSysInfo(
-                QStringList{ "system-info" },
-                Main::tr("Show detailed system information and quit")
+        QStringList{ "system-info" },
+        Main::tr("Show detailed system information and quit")
     );
     cmdParser.addOption(cmdSysInfo);
 
     cmdParser.addPositionalArgument(
-                Main::tr("files"),
-                Main::tr("Files to open(import)"),
-                Main::tr("[files...]")
+        Main::tr("files"),
+        Main::tr("Files to open(import)"),
+        Main::tr("[files...]")
     );
 
     cmdParser.process(QCoreApplication::arguments());
@@ -343,9 +345,9 @@ static void initGui(GuiApplication* guiApp)
     setFunctionCreateGraphicsDriver([]{
         return makeOccHandle<OpenGl_GraphicDriver>(GraphicsUtils::AspectDisplayConnection_create());
     });
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsShapeObjectDriver>());
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsMeshObjectDriver>());
-    guiApp->addGraphicsObjectDriver(std::make_unique<GraphicsPointCloudObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsShapeObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsMeshObjectDriver>());
+    guiApp->addGraphicsObjectDriver(makeOccHandle<GraphicsPointCloudObjectDriver>());
 }
 
 // Initializes and runs Mayo application
@@ -406,14 +408,20 @@ static int runApp(QCoreApplication* qtApp)
 
     // Initialize Base application
     auto app = appModule->application();
+    appModule->addLibraryInfo(
+        IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
+    );
+    appModule->addLibraryInfo(
+        IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
+    );
     TextId::addTranslatorFunction(&qtAppTranslate); // Set Qt i18n backend
 #ifdef MAYO_OS_WINDOWS
     initOpenCascadeEnvironment("opencascade.conf");
 #endif
 
     // Initialize Gui application
-    auto guiApp = new GuiApplication(app);
-    initGui(guiApp);
+    auto guiApp = std::make_unique<GuiApplication>(app);
+    initGui(guiApp.get());
 
     // Register I/O objects
     IO::System* ioSystem = appModule->ioSystem();
@@ -426,7 +434,7 @@ static int runApp(QCoreApplication* qtApp)
     ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
     ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
     ioSystem->addFactoryWriter(IO::GmioFactoryWriter::create());
-    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp));
+    ioSystem->addFactoryWriter(std::make_unique<IO::ImageFactoryWriter>(guiApp.get()));
     IO::addPredefinedFormatProbes(ioSystem);
     appModule->properties()->IO_bindParameters(ioSystem);
     appModule->properties()->retranslate();
@@ -447,14 +455,6 @@ static int runApp(QCoreApplication* qtApp)
         qInfo().noquote() << Main::tr("Settings cache written to %1").arg(strFilepathSettings);
         return 0;
     }
-
-    // Register library infos
-    LibraryInfoArray::add(
-        IO::AssimpLib::strName(), IO::AssimpLib::strVersion(), IO::AssimpLib::strVersionDetails()
-    );
-    LibraryInfoArray::add(
-        IO::GmioLib::strName(), IO::GmioLib::strVersion(), IO::GmioLib::strVersionDetails()
-    );
 
     // Process CLI
      if (args.showSystemInformation) {
@@ -500,7 +500,7 @@ int main(int argc, char* argv[])
     qInstallMessageHandler(&Mayo::LogMessageHandler::qtHandler);
 
     // Configure and create Qt application object
-    QCoreApplication::setOrganizationName("Fougue Ltd");
+    QCoreApplication::setOrganizationName("Fougue");
     QCoreApplication::setOrganizationDomain("www.fougue.pro");
     QCoreApplication::setApplicationName("MayoConv");
     QCoreApplication::setApplicationVersion(QString::fromUtf8(Mayo::strVersion));

@@ -1,124 +1,125 @@
-name: Windows
+name: Windows x64
 
 on: [push]
 
 jobs:
-    build-windows-msvc:
-        strategy:
-            matrix:
-                include:
-                    - occ_version: 7.3.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.4.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.5.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.6.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.7.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.8.0
-                      assimp_version: 5.4.3
-                    - occ_version: 7.8.0
-                      assimp_version: 5.3.1
+  build-windows:
+    strategy:
+      matrix:
+        occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0]
+        assimp_version: [6.0.5]
+        pch: [OFF]
+        include:
+          - occ_version: 7.7.0
+            assimp_version: 5.3.1
+            pch: ON
+          - occ_version: 7.8.0
+            assimp_version: 5.4.3
+            pch: ON
 
-        runs-on: windows-latest
-        name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}
+    runs-on: windows-latest
+    name: build-win-msvc-occt${{matrix.occ_version}}-assimp${{matrix.assimp_version}}${{ matrix.pch == 'ON' && '-pch' || '' }}
 
-        steps:
-        - name: Set globals
-          id: globals
-          shell: cmd
-          run: |
-              if "%occ_version%"=="7.3.0" (
-                  echo "occ_zip_sha256=2503e69d595bb4c4e760b629aba3d8cee5e6b8d0da43b0d790a7949c67fd15d0" >> "${GITHUB_OUTPUT}"
-              ) else if "%occ_version%"=="7.4.0" (
-                  echo "occ_zip_sha256=6664b9a4213036ff0960edd2426258cf66844386c1a2338fa62e008f40c476bb" >> "${GITHUB_OUTPUT}"
-              ) else if "%occ_version%"=="7.5.0" (
-                  echo "occ_zip_sha256=8000f261ecbf6689e48439aa5895304069d00a14efe28eb7f1d108450cb7a74f" >> "${GITHUB_OUTPUT}"
-              ) else if "%occ_version%"=="7.6.0" (
-                  echo "occ_zip_sha256=137788c7693f74fb98797adfd06c1b00f66dac59beca5c3073c1f62c98b7a80f" >> "${GITHUB_OUTPUT}"
-              ) else if "%occ_version%"=="7.7.0" (
-                  echo "occ_zip_sha256=82afb7bd5fd7097189ee4e98bf3bc02b4030cae7a82967db68d5f2b556801779" >> "${GITHUB_OUTPUT}"
-              ) else if "%occ_version%"=="7.8.0" (
-                  echo "occ_zip_sha256=beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee" >> "${GITHUB_OUTPUT}"
-              )
-              if "%assimp_version%"=="5.3.1" (
-                  echo "assimp_zip_sha256=b6097488fa5b7a0cc610e8258e74aaa9552b48a13bc8680eedd66512d788e64f" >> "${GITHUB_OUTPUT}"
-              ) else if "%assimp_version%"=="5.4.3" (
-                  echo "assimp_zip_sha256=b321031eba023d8874ed794aa9aad5b6b132b2e4b8835ecc99ba428be48d0305" >> "${GITHUB_OUTPUT}"
-              )
+    steps:
+    - name: Set globals
+      id: globals
+      shell: cmd
+      run: |
+        if "%occ_version%"=="7.3.0" (
+          echo "occ_zip_sha256=2503e69d595bb4c4e760b629aba3d8cee5e6b8d0da43b0d790a7949c67fd15d0" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.4.0" (
+          echo "occ_zip_sha256=6664b9a4213036ff0960edd2426258cf66844386c1a2338fa62e008f40c476bb" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.5.0" (
+          echo "occ_zip_sha256=8000f261ecbf6689e48439aa5895304069d00a14efe28eb7f1d108450cb7a74f" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.6.0" (
+          echo "occ_zip_sha256=137788c7693f74fb98797adfd06c1b00f66dac59beca5c3073c1f62c98b7a80f" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.7.0" (
+          echo "occ_zip_sha256=82afb7bd5fd7097189ee4e98bf3bc02b4030cae7a82967db68d5f2b556801779" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.8.0" (
+          echo "occ_zip_sha256=beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="7.9.0" (
+          echo "occ_zip_sha256=e3ec8adea37dd519d6580e3dd1288625c2b0dccbd811c9348c4b138ff9938d32" >> "${GITHUB_OUTPUT}"
+        )
 
-        - name: Checkout
-          uses: actions/checkout@v3
+        if "%assimp_version%"=="5.3.1" (
+          echo "assimp_zip_sha256=b6097488fa5b7a0cc610e8258e74aaa9552b48a13bc8680eedd66512d788e64f" >> "${GITHUB_OUTPUT}"
+        ) else if "%assimp_version%"=="5.4.3" (
+          echo "assimp_zip_sha256=b321031eba023d8874ed794aa9aad5b6b132b2e4b8835ecc99ba428be48d0305" >> "${GITHUB_OUTPUT}"
+        ) else if "%assimp_version%"=="6.0.5" (
+          echo "assimp_zip_sha256=7f4fbcbbc9d04d88a790e12bde60c4ffe1f46dd6c40cec8ce8b36f80c11e175a" >> "${GITHUB_OUTPUT}"
+        )
 
-        - name: Install Qt
-          uses: jurplel/install-qt-action@v3
-          with:
-              cache: true
-              cache-key-prefix: QtCache
+    - name: Checkout
+      uses: actions/checkout@v7
 
-        - name: Cache OpenCascade archive
-          id: cache-occ
-          uses: actions/cache@v3
-          with:
-              path: OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
-              key: occ-${{matrix.occ_version}}
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        cache: true
+        cache-key-prefix: QtCache
 
-        - name: Download OpenCascade
-          if: steps.cache-occ.outputs.cache-hit != 'true'
-          uses: carlosperate/download-file-action@v2
-          with:
-              file-url: 'https://www.fougue.pro/share/bin/OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip'
-              sha256: ${{steps.globals.outputs.occ_zip_sha256}}
+    - name: Cache OpenCascade archive
+      id: cache-occ
+      uses: actions/cache@v5
+      with:
+        path: OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
+        key: occ-${{matrix.occ_version}}
 
-        - name: Extract OpenCascade
-          run: 7z x OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
+    - name: Download OpenCascade
+      if: steps.cache-occ.outputs.cache-hit != 'true'
+      uses: carlosperate/download-file-action@v2
+      with:
+        file-url: 'https://www.fougue.pro/share/bin/OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip'
+        sha256: ${{steps.globals.outputs.occ_zip_sha256}}
 
-        - name: Cache Assimp archive
-          id: cache-assimp
-          uses: actions/cache@v3
-          with:
-              path: assimp-${{matrix.assimp_version}}.zip
-              key: assimp-${{matrix.assimp_version}}
+    - name: Extract OpenCascade
+      run: 7z x OpenCASCADE-${{matrix.occ_version}}-vc14-64.zip
 
-        - name: Download Assimp
-          if: steps.cache-assimp.outputs.cache-hit != 'true'
-          uses: carlosperate/download-file-action@v2
-          with:
-              file-url: 'https://www.fougue.pro/share/bin/assimp-${{matrix.assimp_version}}.zip'
-              sha256: ${{steps.globals.outputs.assimp_zip_sha256}}
+    - name: Cache Assimp archive
+      id: cache-assimp
+      uses: actions/cache@v5
+      with:
+        path: assimp-${{matrix.assimp_version}}.zip
+        key: assimp-${{matrix.assimp_version}}
 
-        - name: Extract Assimp
-          run: 7z x assimp-${{matrix.assimp_version}}.zip
+    - name: Download Assimp
+      if: steps.cache-assimp.outputs.cache-hit != 'true'
+      uses: carlosperate/download-file-action@v2
+      with:
+        file-url: 'https://www.fougue.pro/share/bin/assimp-${{matrix.assimp_version}}.zip'
+        sha256: ${{steps.globals.outputs.assimp_zip_sha256}}
 
-        - name: Get count of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v1
-          id: cpu-cores
+    - name: Extract Assimp
+      run: 7z x assimp-${{matrix.assimp_version}}.zip
 
-        - name: Configure Compiler
-          uses: ilammy/msvc-dev-cmd@v1
+    - name: Get count of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v1
+      id: cpu-cores
 
-        - name: Build
-          shell: cmd
-          run: |
-              mkdir ${{github.workspace}}\build
-              cd ${{github.workspace}}\build
-              set assimp_version=${{matrix.assimp_version}}
-              cmake --version
-              cmake .. ^
-                    -DMayo_BuildTests=ON ^
-                    -DMayo_BuildPluginAssimp=ON ^
-                    -DMayo_PostBuildCopyRuntimeDLLs=ON ^
-                    -DOpenCASCADE_DIR=../OpenCASCADE-${{matrix.occ_version}}-vc14-64/opencascade-${{matrix.occ_version}} ^
-                    -Dassimp_DIR=${{github.workspace}}/assimp-${{matrix.assimp_version}}/lib/cmake/assimp-%assimp_version:~0,3%
-              cmake --build . ^
-                    --config Debug ^
-                    --parallel ${{steps.cpu-cores.outputs.count}}
+    - name: Configure Compiler
+      uses: ilammy/msvc-dev-cmd@v1
 
-        - name: Execute Unit Tests
-          working-directory: ${{github.workspace}}/build
-          shell: cmd
-          run: |
-              debug\mayo.exe --runtests -o utests-output.txt
-              more utests-output.txt
+    - name: Build
+      shell: cmd
+      run: |
+        mkdir ${{github.workspace}}\build
+        cd ${{github.workspace}}\build
+        set occ_version=${{matrix.occ_version}}
+        set assimp_version=${{matrix.assimp_version}}
+        cmake .. ^
+          -DMayo_EnablePch=${{matrix.pch}} ^
+          -DMayo_BuildTests=ON ^
+          -DMayo_BuildPluginAssimp=ON ^
+          -DMayo_PostBuildCopyRuntimeDLLs=ON ^
+          -DOpenCASCADE_DIR=${{github.workspace}}/OpenCASCADE-%occ_version%-vc14-64/opencascade-%occ_version% ^
+          -Dassimp_DIR=${{github.workspace}}/assimp-%assimp_version%/lib/cmake/assimp-%assimp_version:~0,3%
+        cmake --build . ^
+          --config Debug ^
+          --parallel ${{steps.cpu-cores.outputs.count}}
+
+    - name: Execute Unit Tests
+      working-directory: ${{github.workspace}}/build
+      shell: cmd
+      run: |
+        debug\test-mayo.exe -o utests-output.txt
+        more utests-output.txt

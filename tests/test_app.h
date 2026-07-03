@@ -1,13 +1,16 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
+
+#include <functional>
+
+class QGuiApplication;
 
 namespace Mayo {
 
@@ -31,6 +34,14 @@ private slots:
     void StringConv_test();
 
     void QtGuiUtils_test();
+
+    void initTestCase();
+    void cleanupTestCase();
+
+private:
+    void runWithinEventLoop(const std::function<void()>& fn, int delayMSec = 100);
+
+    QGuiApplication* m_app = nullptr;
 };
 
 } // namespace Mayo

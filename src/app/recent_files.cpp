@@ -1,13 +1,9 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "recent_files.h"
-
-#include "../base/meta_enum.h"
-#include "../qtcommon/filepath_conv.h"
 
 #include <fmt/format.h>
 #include <QtCore/QtDebug>

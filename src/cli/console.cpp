@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "console.h"
@@ -19,9 +18,9 @@
 
 namespace Mayo {
 
-void consoleSetTextColor(ConsoleColor color)
+void consoleSetTextColor([[maybe_unused]]ConsoleColor color)
 {
-    constexpr bool isBrightText = true;
+    [[maybe_unused]]constexpr bool isBrightText = true;
 #ifdef MAYO_OS_WINDOWS
     auto fnColorFlags = [](ConsoleColor color) {
         switch (color) {
@@ -40,30 +39,28 @@ void consoleSetTextColor(ConsoleColor color)
 
     // There is no difference between STD_OUTPUT_HANDLE/STD_ERROR_HANDLE for std::cout/std::cerr
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStdout) {
+    if (hStdout && hStdout != INVALID_HANDLE_VALUE) {
         const bool isDefaultColor = color == ConsoleColor::Default;
         const WORD brightFlag = isBrightText && !isDefaultColor ? FOREGROUND_INTENSITY : 0;
         const WORD flags = fnColorFlags(color) | brightFlag;
         SetConsoleTextAttribute(hStdout, flags);
     }
 #elif defined(MAYO_OS_WASM)
-    // Terminal capabilities are undefined on this platform.
-    // std::cout could be redirected to HTML page, into terminal or somewhere else.
-    MAYO_UNUSED(color);
-    MAYO_UNUSED(isBrightText);
+    // Terminal capabilities are undefined on this platform
+    // std::cout could be redirected to HTML page, into terminal or somewhere else
 #else
     auto fnCode = [](ConsoleColor color, bool isBrightText) {
         switch (color) {
-        case ConsoleColor::Black:   return isBrightText ? "\e[30;1m" : "\e[30m";
-        case ConsoleColor::Red:     return isBrightText ? "\e[31;1m" : "\e[31m";
-        case ConsoleColor::Green:   return isBrightText ? "\e[32;1m" : "\e[32m";
-        case ConsoleColor::Yellow:  return isBrightText ? "\e[33;1m" : "\e[33m";
-        case ConsoleColor::Blue:    return isBrightText ? "\e[34;1m" : "\e[34m";
-        case ConsoleColor::Magenta: return isBrightText ? "\e[35;1m" : "\e[35m";
-        case ConsoleColor::Cyan:    return isBrightText ? "\e[36;1m" : "\e[36m";
-        case ConsoleColor::White:   return isBrightText ? "\e[37;1m" : "\e[37m";
+        case ConsoleColor::Black:   return isBrightText ? "\x1B[30;1m" : "\x1B[30m";
+        case ConsoleColor::Red:     return isBrightText ? "\x1B[31;1m" : "\x1B[31m";
+        case ConsoleColor::Green:   return isBrightText ? "\x1B[32;1m" : "\x1B[32m";
+        case ConsoleColor::Yellow:  return isBrightText ? "\x1B[33;1m" : "\x1B[33m";
+        case ConsoleColor::Blue:    return isBrightText ? "\x1B[34;1m" : "\x1B[34m";
+        case ConsoleColor::Magenta: return isBrightText ? "\x1B[35;1m" : "\x1B[35m";
+        case ConsoleColor::Cyan:    return isBrightText ? "\x1B[36;1m" : "\x1B[36m";
+        case ConsoleColor::White:   return isBrightText ? "\x1B[37;1m" : "\x1B[37m";
         case ConsoleColor::Default:
-        default: return "\e[0m";
+        default: return "\x1B[0m";
         }
     };
     std::cout << fnCode(color, isBrightText);

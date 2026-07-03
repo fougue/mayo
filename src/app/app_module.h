@@ -1,16 +1,16 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "app_module_properties.h"
+#include "document_tree_node_properties_providers.h"
+#include "library_info.h"
 #include "qstring_utils.h"
 
 #include "../base/application.h"
-#include "../base/document_tree_node_properties_provider.h"
 #include "../base/io_parameters_provider.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
@@ -43,16 +43,10 @@ class AppModule :
 {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::AppModule)
 public:
-    // Loggable message
-    struct Message {
-        MessageType type;
-        QString text;
-    };
+    virtual ~AppModule() = default;
 
     // Query singleton instance
     static AppModule* get();
-
-    ~AppModule();
 
     // Application object
     const ApplicationPtr& application() const { return m_application; }
@@ -60,7 +54,8 @@ public:
     // Settings
     const AppModuleProperties* properties() const { return &m_props; }
     AppModuleProperties* properties() { return &m_props; }
-    Settings* settings() const { return m_settings; }
+    Settings* settings() { return &m_settings; }
+    const Settings* settings() const { return &m_settings; }
 
     // Predicate suitable to Settings::loadFrom() and Settings::saveAs()
     static bool excludeSettingPredicate(const Property& prop);
@@ -78,10 +73,15 @@ public:
     // Short-name of the current language in use(eg. en=english)
     QString languageCode() const;
 
+    // Information about 3rd-party libraries used by the application
+    void addLibraryInfo(const LibraryInfo& lib);
+    void addLibraryInfo(std::string_view libName, std::string_view version, std::string_view versionDetails = {});
+    gsl::span<const LibraryInfo> libraryInfoArray() const;
+
     // Logging
     void clearMessageLog();
-    Span<const Message> messageLog() const { return m_messageLog; }
-    Signal<MessageType, QString> signalMessage;
+    gsl::span<const Message> messageLog() const { return m_messageLog; }
+    Signal<const Messenger::Message&> signalMessage;
     Signal<> signalMessageLogCleared;
 
     // Recent files
@@ -101,7 +101,8 @@ public:
 
     // Providers to query document tree node properties
     void addPropertiesProvider(std::unique_ptr<DocumentTreeNodePropertiesProvider> ptr);
-    std::unique_ptr<PropertyGroupSignals> properties(const DocumentTreeNode& treeNode) const;
+    const DocumentTreeNodePropertiesProvider* findPropertiesProvider(const DocumentTreeNode& treeNode) const;
+    std::unique_ptr<PropertyGroup> properties(const DocumentTreeNode& treeNode) const;
 
     // IO::System object
     const IO::System* ioSystem() const { return &m_ioSystem; }
@@ -126,15 +127,16 @@ private:
     bool impl_recordRecentFile(RecentFile* recentFile, GuiDocument* guiDoc);
 
     ApplicationPtr m_application;
-    Settings* m_settings = nullptr;
+    Settings m_settings;
     IO::System m_ioSystem;
     AppModuleProperties m_props;
-    std::vector<Message> m_messageLog;
+    std::vector<Messenger::Message> m_messageLog;
     std::mutex m_mutexMessageLog;
     std::locale m_stdLocale;
     QLocale m_qtLocale;
     std::vector<std::unique_ptr<DocumentTreeNodePropertiesProvider>> m_vecDocTreeNodePropsProvider;
     std::function<Thumbnail(GuiDocument*, QSize)> m_fnRecentFileThumbnailRecorder;
+    std::vector<LibraryInfo> m_vecLibraryInfo;
 };
 
 } // namespace Mayo

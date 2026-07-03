@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -14,6 +13,8 @@
 #include <unordered_map>
 
 namespace Mayo {
+
+class Ui_DialogOptions;
 
 // Provides a dialog to edit Settings(options) and exchange with INI file
 class DialogOptions : public QDialog {
@@ -35,7 +36,7 @@ private:
 
     void handleTreeViewButtonClick_restoreDefaults(const QModelIndex& index);
 
-    class Ui_DialogOptions* m_ui = nullptr;
+    std::unique_ptr<Ui_DialogOptions> m_ui;
     std::unique_ptr<IPropertyEditorFactory> m_editorFactory;
     std::unordered_map<const Property*, QWidget*> m_mapSettingEditor;
     std::unordered_map<Property*, Settings::Variant> m_mapSettingInitialValue;

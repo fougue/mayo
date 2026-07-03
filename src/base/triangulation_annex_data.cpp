@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "triangulation_annex_data.h"
@@ -23,7 +22,7 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 {
     TriangulationAnnexDataPtr data;
     if (!label.FindAttribute(TriangulationAnnexData::GetID(), data)) {
-        data = new TriangulationAnnexData;
+        data = makeOccHandle<TriangulationAnnexData>();
         label.AddAttribute(data);
     }
 
@@ -31,7 +30,7 @@ TriangulationAnnexDataPtr TriangulationAnnexData::Set(const TDF_Label& label)
 }
 
 TriangulationAnnexDataPtr TriangulationAnnexData::Set(
-        const TDF_Label& label, Span<const Quantity_Color> spanNodeColor)
+        const TDF_Label& label, gsl::span<const Quantity_Color> spanNodeColor)
 {
     TriangulationAnnexDataPtr data = TriangulationAnnexData::Set(label);
     data->copyNodeColors(spanNodeColor);
@@ -60,7 +59,7 @@ void TriangulationAnnexData::Restore(const OccHandle<TDF_Attribute>& attribute)
 
 OccHandle<TDF_Attribute> TriangulationAnnexData::NewEmpty() const
 {
-    return new TriangulationAnnexData;
+    return makeOccHandle<TriangulationAnnexData>();
 }
 
 void TriangulationAnnexData::Paste(const OccHandle<TDF_Attribute>& into, const OccHandle<TDF_RelocationTable>&) const
@@ -77,7 +76,7 @@ Standard_OStream& TriangulationAnnexData::Dump(Standard_OStream& ostr) const
     return ostr;
 }
 
-void Mayo::TriangulationAnnexData::copyNodeColors(Span<const Quantity_Color> spanNodeColor)
+void Mayo::TriangulationAnnexData::copyNodeColors(gsl::span<const Quantity_Color> spanNodeColor)
 {
     m_vecNodeColor.clear();
     std::copy(spanNodeColor.begin(), spanNodeColor.end(), std::back_inserter(m_vecNodeColor));

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -16,7 +15,7 @@ namespace Mayo {
 // Provides implementation of IAnimationBackend based on QAbstractAnimation
 class QtAnimationBackend : public IAnimationBackend {
 public:
-    QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear);
+    explicit QtAnimationBackend(QEasingCurve::Type easingType = QEasingCurve::Linear);
 
     void setDuration(QuantityTime t) override;
 

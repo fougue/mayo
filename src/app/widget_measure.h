@@ -1,19 +1,17 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "../base/signal.h"
+#include "../base/libtree.h"
 #include "../measure/measure_display.h"
 #include "../measure/measure_tool.h"
 
 #include <QtWidgets/QWidget>
 #include <memory>
-#include <string>
-#include <string_view>
 #include <vector>
 
 namespace Mayo {
@@ -48,6 +46,7 @@ private:
     MeasureDisplayConfig currentMeasureDisplayConfig() const;
 
     void onGraphicsSelectionChanged();
+    void onDocumentEntityAdded(TreeNodeId entityNodeId);
 
     void updateMessagePanel();
 
@@ -72,6 +71,7 @@ private:
     IMeasureTool* m_tool = nullptr;
     QString m_errorMessage;
     SignalConnectionHandle m_connGraphicsSelectionChanged;
+    SignalConnectionHandle m_connDocumentEntityAdded;
 };
 
 } // namespace Mayo

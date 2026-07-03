@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 // Avoid MSVC conflicts with M_E, M_LOG2, ...
@@ -20,41 +19,31 @@
 #include "../src/base/filepath.h"
 #include "../src/base/filepath_conv.h"
 #include "../src/base/geom_utils.h"
-#include "../src/base/io_system.h"
-#include "../src/base/occ_static_variables_rollback.h"
 #include "../src/base/libtree.h"
 #include "../src/base/occ_handle.h"
 #include "../src/base/mesh_utils.h"
+#include "../src/base/messenger.h"
 #include "../src/base/meta_enum.h"
 #include "../src/base/property_builtins.h"
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
 #include "../src/base/settings.h"
+#include "../src/base/string_cache.h"
 #include "../src/base/string_conv.h"
 #include "../src/base/task_manager.h"
 #include "../src/base/tkernel_utils.h"
 #include "../src/base/unit.h"
 #include "../src/base/unit_system.h"
-#include "../src/io_dxf/io_dxf.h"
-#include "../src/io_occ/io_occ.h"
-#include "../src/io_off/io_off_reader.h"
-#include "../src/io_off/io_off_writer.h"
-#include "../src/io_ply/io_ply_reader.h"
-#include "../src/io_ply/io_ply_writer.h"
-#include <common/mayo_config.h>
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
-#include <GCPnts_TangentialDeflection.hxx>
-#include <Interface_ParamType.hxx>
-#include <Interface_Static.hxx>
 #include <NCollection_String.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <TDataStd_Name.hxx>
 
 #include <QtCore/QtDebug>
-#include <QtCore/QFile>
 #include <QtCore/QVariant>
 
 #include <gsl/util>
@@ -64,24 +53,23 @@
 #include <cmath>
 #include <climits>
 #include <cstring>
-#include <fstream>
-#include <iostream>
 #include <memory>
-#include <sstream>
+#include <random>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <unordered_map>
 
 // Needed for Q_FECTH()
 Q_DECLARE_METATYPE(Mayo::UnitSystem::TranslateResult)
-Q_DECLARE_METATYPE(Mayo::IO::Format)
 Q_DECLARE_METATYPE(std::vector<gp_Pnt2d>)
 Q_DECLARE_METATYPE(Mayo::MeshUtils::Orientation)
+Q_DECLARE_METATYPE(Mayo::MessageType)
 Q_DECLARE_METATYPE(std::string)
 Q_DECLARE_METATYPE(Mayo::PropertyValueConversion::Variant)
+Q_DECLARE_METATYPE(std::shared_ptr<Mayo::Property>)
 
 namespace Mayo {
 
@@ -186,16 +174,22 @@ struct SignalEmitSpy {
     SignalConnectionHandle sigConnection;
 };
 
+template<typename T>
+std::shared_ptr<Property> createPropertyPtr()
+{
+    return std::make_shared<T>(nullptr, TextId{});
+}
+
 } // namespace
 
 void TestBase::Application_test()
 {
     auto app = makeOccHandle<Application>();
-    auto fnImportInDocument = [=](const DocumentPtr& doc, const FilePath& fp) {
-        return m_ioSystem->importInDocument()
-                .targetDocument(doc)
-                .withFilepath(fp)
-                .execute();
+    auto fnAddNewShapeEntity = [](DocumentPtr doc, const char* strEntityName) {
+        const TDF_Label shapeLabel = doc->newEntityShapeLabel();
+        TDataStd_Name::Set(shapeLabel, to_OccExtString(strEntityName));
+        doc->addEntityTreeNode(shapeLabel);
+        return shapeLabel;
     };
     QCOMPARE(app->documentCount(), 0);
 
@@ -220,15 +214,14 @@ void TestBase::Application_test()
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
         QCOMPARE(doc->entityCount(), 0);
         SignalEmitSpy spyEntityAdded(&app->signalDocumentEntityAdded);
-        const bool okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
-        QVERIFY(okImport);
+        fnAddNewShapeEntity(doc, "SomeShape");
         QCOMPARE(spyEntityAdded.count, 1);
         QCOMPARE(doc->entityCount(), 1);
-        QVERIFY(XCaf::isShape(doc->entityLabel(0)));
-        QCOMPARE(CafUtils::labelAttrStdName(doc->entityLabel(0)), to_OccExtString("Cube"));
+        QVERIFY(XCaf::isShape(doc->firstEntityNodeLabel()));
+        QCOMPARE(CafUtils::labelAttrStdName(doc->firstEntityNodeLabel()), to_OccExtString("SomeShape"));
 
         SignalEmitSpy spyEntityDestroyed(&app->signalDocumentEntityAboutToBeDestroyed);
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(spyEntityDestroyed.count, 1);
         QCOMPARE(doc->entityCount(), 0);
     }
@@ -240,23 +233,19 @@ void TestBase::Application_test()
         QCOMPARE(app->documentCount(), 0);
         DocumentPtr doc = app->newDocument();
         auto _ = gsl::finally([=]{ app->closeDocument(doc); });
-        bool okImport = true;
-        okImport = fnImportInDocument(doc, "tests/inputs/cube.stlb");
-        QVERIFY(okImport);
+        fnAddNewShapeEntity(doc, "Shape1");
         QCOMPARE(doc->entityCount(), 1);
 
-        okImport = fnImportInDocument(doc, "tests/inputs/cube.step");
-        QVERIFY(okImport);
+        fnAddNewShapeEntity(doc, "Shape2");
         QCOMPARE(doc->entityCount(), 2);
 
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(doc->entityCount(), 1);
-        doc->destroyEntity(doc->entityTreeNodeId(0));
+        doc->destroyEntity(doc->firstEntityNodeId());
         QCOMPARE(doc->entityCount(), 0);
     }
 
     QCOMPARE(app->documentCount(), 0);
-
 }
 
 void TestBase::DocumentRefCount_test()
@@ -275,16 +264,6 @@ void TestBase::CppUtils_toggle_test()
     QCOMPARE(v, true);
     CppUtils::toggle(v);
     QCOMPARE(v, false);
-}
-
-void TestBase::CppUtils_safeStaticCast_test()
-{
-    QCOMPARE(CppUtils::safeStaticCast<int>(42u), 42);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MIN), INT_MIN);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX), INT_MAX);
-    QCOMPARE(CppUtils::safeStaticCast<int>(INT_MAX - 1), INT_MAX - 1);
-    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(unsigned(INT_MAX) + 1), std::overflow_error);
-    QVERIFY_EXCEPTION_THROWN(CppUtils::safeStaticCast<int>(UINT_MAX), std::overflow_error);
 }
 
 void TestBase::TextId_test()
@@ -313,6 +292,56 @@ void TestBase::FilePath_test()
         const TCollection_ExtendedString extStrTestPath(strTestPath, true/*multi-byte*/);
         QCOMPARE(filepathTo<TCollection_ExtendedString>(testPath), extStrTestPath);
     }
+}
+
+void TestBase::MessageCollecter_ignoreSingleMessageType_test()
+{
+    QFETCH(MessageType, msgTypeToIgnore);
+
+    MessageCollecter msgCollect;
+    msgCollect.ignore(msgTypeToIgnore);
+    QVERIFY(msgCollect.isIgnored(msgTypeToIgnore));
+    for (auto msgType : MetaEnum::values<MessageType>()) {
+        if (msgType != msgTypeToIgnore)
+            QVERIFY(!msgCollect.isIgnored(msgType));
+    }
+
+    for (const auto& [value, name] : MetaEnum::entries<MessageType>())
+        msgCollect.emitMessage(value, std::string{name} + " message");
+
+    QCOMPARE(msgCollect.messages().size(), MetaEnum::count<MessageType>() - 1);
+    for (const auto& msg : msgCollect.messages())
+        QVERIFY(msg.type != msgTypeToIgnore);
+}
+
+void TestBase::MessageCollecter_ignoreSingleMessageType_test_data()
+{
+    QTest::addColumn<MessageType>("msgTypeToIgnore");
+    for (const auto& [value, name] : MetaEnum::entries<MessageType>())
+        QTest::newRow(std::string{name}.c_str()) << value;
+}
+
+void TestBase::MessageCollecter_only_test()
+{
+    QFETCH(MessageType, msgTypeSingle);
+
+    MessageCollecter msgCollect;
+    msgCollect.only(msgTypeSingle);
+    for (const auto& [value, name] : MetaEnum::entries<MessageType>())
+        msgCollect.emitMessage(value, std::string{name} + " message");
+
+    QCOMPARE(msgCollect.messages().size(), 1);
+    QCOMPARE(msgCollect.messages().front().type, msgTypeSingle);
+    QCOMPARE(msgCollect.asString(" "), msgCollect.messages().front().text);
+    QCOMPARE(msgCollect.asString(" ", msgTypeSingle), msgCollect.messages().front().text);
+    QVERIFY(msgCollect.asString(" ").back() != ' ');
+}
+
+void TestBase::MessageCollecter_only_test_data()
+{
+    QTest::addColumn<MessageType>("msgTypeSingle");
+    for (const auto& [value, name] : MetaEnum::entries<MessageType>())
+        QTest::newRow(std::string{name}.c_str()) << value;
 }
 
 void TestBase::OccHandle_test()
@@ -382,7 +411,7 @@ void TestBase::PropertyValueConversionVariant_toInt_test_data()
     QTest::newRow("'non_int_str'") << Variant{"non_int_str"} << 0 << false;
 
     const uint8_t bytes[] = { 52, 55 }; // ascii: {'4', '7'}
-    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << 47 << true;
+    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << 47 << true;
 }
 
 void TestBase::PropertyValueConversionVariant_toString_test()
@@ -416,61 +445,43 @@ void TestBase::PropertyValueConversionVariant_toString_test_data()
     QTest::newRow("'some string'") << Variant{"some string"} << std::string{"some string"};
 
     const uint8_t bytes[] = { 48, 65 }; // ascii: {'0', 'A'}
-    QTest::newRow("bytes") << Variant{Span<const uint8_t>(bytes)} << std::string{"0A"};
+    QTest::newRow("bytes") << Variant{gsl::span<const uint8_t>(bytes)} << std::string{"0A"};
 }
 
 void TestBase::PropertyValueConversion_test()
 {
-    QFETCH(QString, strPropertyName);
+    QFETCH(std::shared_ptr<Property>, ptrProperty);
     QFETCH(PropertyValueConversion::Variant, variantValue);
 
-    std::unique_ptr<Property> prop;
-    if (strPropertyName == PropertyBool::TypeName) {
-        prop.reset(new PropertyBool(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyInt::TypeName) {
-        prop.reset(new PropertyInt(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyDouble::TypeName) {
-        prop.reset(new PropertyDouble(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyString::TypeName) {
-        prop.reset(new PropertyString(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyOccColor::TypeName) {
-        prop.reset(new PropertyOccColor(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyEnumeration::TypeName) {
-        enum class MayoTest_Color { Bleu, Blanc, Rouge };
-        prop.reset(new PropertyEnum<MayoTest_Color>(nullptr, {}));
-    }
-    else if (strPropertyName == PropertyFilePath::TypeName) {
-        prop.reset(new PropertyFilePath(nullptr, {}));
-    }
-
-    QVERIFY(prop);
+    QVERIFY(ptrProperty);
 
     PropertyValueConversion conv;
-    QVERIFY(conv.fromVariant(prop.get(), variantValue));
-    QCOMPARE(conv.toVariant(*prop.get()), variantValue);
+    QVERIFY(conv.fromVariant(ptrProperty.get(), variantValue));
+    QCOMPARE(conv.toVariant(*ptrProperty.get()), variantValue);
 }
 
 void TestBase::PropertyValueConversion_test_data()
 {
     using Variant = PropertyValueConversion::Variant;
-    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<std::shared_ptr<Property>>("ptrProperty");
     QTest::addColumn<Variant>("variantValue");
-    QTest::newRow("bool(false)") << PropertyBool::TypeName << Variant(false);
-    QTest::newRow("bool(true)") << PropertyBool::TypeName << Variant(true);
-    QTest::newRow("int(-50)") << PropertyInt::TypeName << Variant(-50);
-    QTest::newRow("int(1979)") << PropertyInt::TypeName << Variant(1979);
-    QTest::newRow("double(-1e6)") << PropertyDouble::TypeName << Variant(-1e6);
-    QTest::newRow("double(3.1415926535)") << PropertyDouble::TypeName << Variant(3.1415926535);
-    QTest::newRow("String(\"test\")") << PropertyString::TypeName << Variant("test");
-    QTest::newRow("OccColor(#0000AA)") << PropertyOccColor::TypeName << Variant("#0000AA");
-    QTest::newRow("OccColor(#FFFFFF)") << PropertyOccColor::TypeName << Variant("#FFFFFF");
-    QTest::newRow("OccColor(#BB0000)") << PropertyOccColor::TypeName << Variant("#BB0000");
-    QTest::newRow("Enumeration(Color)") << PropertyEnumeration::TypeName << Variant("Blanc");
+    QTest::newRow("bool(false)") << createPropertyPtr<PropertyBool>() << Variant(false);
+    QTest::newRow("bool(true)") << createPropertyPtr<PropertyBool>() << Variant(true);
+    QTest::newRow("int(-50)") << createPropertyPtr<PropertyInt>() << Variant(-50);
+    QTest::newRow("int(1979)") << createPropertyPtr<PropertyInt>() << Variant(1979);
+    QTest::newRow("double(-1e6)") << createPropertyPtr<PropertyDouble>() << Variant(-1e6);
+    QTest::newRow("double(3.1415926535)") << createPropertyPtr<PropertyDouble>() << Variant(3.1415926535);
+    QTest::newRow("String(\"test\")") << createPropertyPtr<PropertyString>() << Variant("test");
+    QTest::newRow("OccPnt(1.15, -0.5, 3.14)") << createPropertyPtr<PropertyOccPnt>() << Variant("1.15, -0.5, 3.14");
+    QTest::newRow("OccVec(-1.7, 0.05, 85.1)") << createPropertyPtr<PropertyOccVec>() << Variant("-1.7, 0.05, 85.1");
+    QTest::newRow("OccColor(#0000AA)") << createPropertyPtr<PropertyOccColor>() << Variant("#0000AA");
+    QTest::newRow("OccColor(#FFFFFF)") << createPropertyPtr<PropertyOccColor>() << Variant("#FFFFFF");
+    QTest::newRow("OccColor(#BB0000)") << createPropertyPtr<PropertyOccColor>() << Variant("#BB0000");
+
+    enum class MayoTest_Color { Bleu, Blanc, Rouge };
+    QTest::newRow("Enumeration(Color)") << createPropertyPtr<PropertyEnum<MayoTest_Color>>() << Variant("Blanc");
+
+    QTest::newRow("QuantityLength(15mm)") << createPropertyPtr<PropertyLength>() << Variant("15mm");
 }
 
 void TestBase::PropertyValueConversion_bugGitHub219_test()
@@ -487,242 +498,28 @@ void TestBase::PropertyValueConversion_bugGitHub219_test()
 
 void TestBase::PropertyQuantityValueConversion_test()
 {
-    QFETCH(QString, strPropertyName);
+    QFETCH(std::shared_ptr<Property>, ptrProperty);
     QFETCH(PropertyValueConversion::Variant, variantFrom);
     QFETCH(PropertyValueConversion::Variant, variantTo);
 
-    std::unique_ptr<Property> prop;
-    if (strPropertyName == "PropertyLength") {
-        prop.reset(new PropertyLength(nullptr, {}));
-    }
-    else if (strPropertyName == "PropertyAngle") {
-        prop.reset(new PropertyAngle(nullptr, {}));
-    }
-
-    QVERIFY(prop);
+    QVERIFY(ptrProperty);
 
     PropertyValueConversion conv;
     conv.setDoubleToStringPrecision(7);
-    QVERIFY(conv.fromVariant(prop.get(), variantFrom));
-    QCOMPARE(conv.toVariant(*prop.get()), variantTo);
+    QVERIFY(conv.fromVariant(ptrProperty.get(), variantFrom));
+    QCOMPARE(conv.toVariant(*ptrProperty.get()), variantTo);
 }
 
 void TestBase::PropertyQuantityValueConversion_test_data()
 {
     using Variant = PropertyValueConversion::Variant;
-    QTest::addColumn<QString>("strPropertyName");
+    QTest::addColumn<std::shared_ptr<Property>>("ptrProperty");
     QTest::addColumn<Variant>("variantFrom");
     QTest::addColumn<Variant>("variantTo");
-    QTest::newRow("Length(25mm)") << "PropertyLength" << Variant("25mm") << Variant("25mm");
-    QTest::newRow("Length(2m)") << "PropertyLength" << Variant("2m") << Variant("2000mm");
-    QTest::newRow("Angle(1.57079rad)") << "PropertyAngle" << Variant("1.57079rad") << Variant("1.57079rad");
-    QTest::newRow("Angle(90°)") << "PropertyAngle" << Variant("90°") << Variant("1.570796rad");
-}
-
-void TestBase::IO_probeFormat_test()
-{
-    QFETCH(QString, strFilePath);
-    QFETCH(IO::Format, expectedPartFormat);
-
-    QCOMPARE(m_ioSystem->probeFormat(strFilePath.toStdString()), expectedPartFormat);
-}
-
-void TestBase::IO_probeFormat_test_data()
-{
-    QTest::addColumn<QString>("strFilePath");
-    QTest::addColumn<IO::Format>("expectedPartFormat");
-
-    QTest::newRow("cube.step") << "tests/inputs/cube.step" << IO::Format_STEP;
-    QTest::newRow("cube.iges") << "tests/inputs/cube.iges" << IO::Format_IGES;
-    QTest::newRow("cube.brep") << "tests/inputs/cube.brep" << IO::Format_OCCBREP;
-    QTest::newRow("bezier_curve.brep") << "tests/inputs/mayo_bezier_curve.brep" << IO::Format_OCCBREP;
-    QTest::newRow("cube.stla") << "tests/inputs/cube.stla" << IO::Format_STL;
-    QTest::newRow("cube.stlb") << "tests/inputs/cube.stlb" << IO::Format_STL;
-    QTest::newRow("cube.obj") << "tests/inputs/cube.obj" << IO::Format_OBJ;
-    QTest::newRow("cube.ply") << "tests/inputs/cube.ply" << IO::Format_PLY;
-    QTest::newRow("cube.off") << "tests/inputs/cube.off" << IO::Format_OFF;
-    QTest::newRow("cube.wrl") << "tests/inputs/cube.wrl" << IO::Format_VRML;
-}
-
-void TestBase::IO_probeFormatDirect_test()
-{
-    char fileSample[1024];
-    IO::System::FormatProbeInput input;
-
-    auto fnSetProbeInput = [&](const FilePath& fp) {
-        std::memset(fileSample, 0, std::size(fileSample));
-        std::ifstream ifstr;
-        ifstr.open(fp, std::ios::in | std::ios::binary);
-        ifstr.read(fileSample, std::size(fileSample));
-
-        input.filepath = fp;
-        input.contentsBegin = std::string_view(fileSample, ifstr.gcount());
-        input.hintFullSize = filepathFileSize(fp);
-    };
-
-    fnSetProbeInput("tests/inputs/cube.step");
-    QCOMPARE(IO::probeFormat_STEP(input), IO::Format_STEP);
-
-    fnSetProbeInput("tests/inputs/cube.iges");
-    QCOMPARE(IO::probeFormat_IGES(input), IO::Format_IGES);
-
-    fnSetProbeInput("tests/inputs/cube.brep");
-    QCOMPARE(IO::probeFormat_OCCBREP(input), IO::Format_OCCBREP);
-
-    fnSetProbeInput("tests/inputs/cube.stla");
-    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
-
-    fnSetProbeInput("tests/inputs/cube.stlb");
-    QCOMPARE(IO::probeFormat_STL(input), IO::Format_STL);
-
-    fnSetProbeInput("tests/inputs/cube.obj");
-    QCOMPARE(IO::probeFormat_OBJ(input), IO::Format_OBJ);
-
-    fnSetProbeInput("tests/inputs/cube.ply");
-    QCOMPARE(IO::probeFormat_PLY(input), IO::Format_PLY);
-
-    fnSetProbeInput("tests/inputs/cube.off");
-    QCOMPARE(IO::probeFormat_OFF(input), IO::Format_OFF);
-}
-
-void TestBase::IO_OccStaticVariablesRollback_test()
-{
-    QFETCH(QString, varName);
-    QFETCH(QVariant, varInitValue);
-    QFETCH(QVariant, varChangeValue);
-
-    auto fnStaticVariableType = [](QVariant value) {
-        switch (value.type()) {
-        case QVariant::Int: return Interface_ParamInteger;
-        case QVariant::Double: return Interface_ParamReal;
-        case QVariant::String: return Interface_ParamText;
-        default: return Interface_ParamMisc;
-        }
-    };
-    auto fnStaticVariableValue = [](const char* varName, QVariant::Type valueType) -> QVariant {
-        switch (valueType) {
-        case QVariant::Int: return Interface_Static::IVal(varName);
-        case QVariant::Double: return Interface_Static::RVal(varName);
-        case QVariant::String: return Interface_Static::CVal(varName);
-        default: return {};
-        }
-    };
-
-    QCOMPARE(varInitValue.type(), varChangeValue.type());
-    const QByteArray bytesVarName = varName.toLatin1();
-    const char* cVarName = bytesVarName.constData();
-    const QByteArray bytesVarInitValue = varInitValue.toString().toLatin1();
-    Interface_Static::Init("MAYO", cVarName, fnStaticVariableType(varInitValue), bytesVarInitValue.constData());
-    QVERIFY(Interface_Static::IsPresent(cVarName));
-    QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.type()), varInitValue);
-
-    {
-        IO::OccStaticVariablesRollback rollback;
-        if (varChangeValue.type() == QVariant::Int)
-            rollback.change(cVarName, varChangeValue.toInt());
-        else if (varChangeValue.type() == QVariant::Double)
-            rollback.change(cVarName, varChangeValue.toDouble());
-        else if (varChangeValue.type() == QVariant::String)
-            rollback.change(cVarName, varChangeValue.toString().toStdString());
-
-        QCOMPARE(fnStaticVariableValue(cVarName, varChangeValue.type()), varChangeValue);
-    }
-
-    QCOMPARE(fnStaticVariableValue(cVarName, varInitValue.type()), varInitValue);
-}
-
-void TestBase::IO_OccStaticVariablesRollback_test_data()
-{
-    QTest::addColumn<QString>("varName");
-    QTest::addColumn<QVariant>("varInitValue");
-    QTest::addColumn<QVariant>("varChangeValue");
-
-    QTest::newRow("var_int1") << "mayo.test.variable_int1" << QVariant(25) << QVariant(40);
-    QTest::newRow("var_int2") << "mayo.test.variable_int2" << QVariant(0) << QVariant(5);
-    QTest::newRow("var_double1") << "mayo.test.variable_double1" << QVariant(1.5) << QVariant(4.5);
-    QTest::newRow("var_double2") << "mayo.test.variable_double2" << QVariant(50.7) << QVariant(25.8);
-    QTest::newRow("var_str1") << "mayo.test.variable_str1" << QVariant("") << QVariant("value");
-    QTest::newRow("var_str2") << "mayo.test.variable_str2" << QVariant("foo") << QVariant("blah");
-}
-
-void TestBase::IO_bugGitHub166_test()
-{
-    QFETCH(QString, strInputFilePath);
-    QFETCH(QString, strOutputFilePath);
-    QFETCH(IO::Format, outputFormat);
-
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument()
-            .targetDocument(doc)
-            .withFilepath(strInputFilePath.toStdString())
-            .execute();
-    QVERIFY(okImport);
-    QVERIFY(doc->entityCount() > 0);
-
-    const bool okExport = m_ioSystem->exportApplicationItems()
-            .targetFile(strOutputFilePath.toStdString())
-            .targetFormat(outputFormat)
-            .withItem(doc)
-            .execute();
-    QVERIFY(okExport);
-    app->closeDocument(doc);
-
-    doc = app->newDocument();
-    const bool okImportOutput = m_ioSystem->importInDocument()
-            .targetDocument(doc)
-            .withFilepath(strOutputFilePath.toStdString())
-            .execute();
-    QVERIFY(okImportOutput);
-    QVERIFY(doc->entityCount() > 0);
-}
-
-void TestBase::IO_bugGitHub166_test_data()
-{
-    QTest::addColumn<QString>("strInputFilePath");
-    QTest::addColumn<QString>("strOutputFilePath");
-    QTest::addColumn<IO::Format>("outputFormat");
-
-    QTest::newRow("PLY->STL") << "tests/inputs/cube.ply" << "tests/outputs/cube.stl" << IO::Format_STL;
-    QTest::newRow("STL->PLY") << "tests/inputs/cube.stla" << "tests/outputs/cube.ply" << IO::Format_PLY;
-
-#if OCC_VERSION_HEX >= 0x070400
-    QTest::newRow("OBJ->PLY") << "tests/inputs/cube.obj" << "tests/outputs/cube.ply" << IO::Format_PLY;
-    QTest::newRow("OBJ->STL") << "tests/inputs/cube.obj" << "tests/outputs/cube.stl" << IO::Format_STL;
-#  ifdef OPENCASCADE_HAVE_RAPIDJSON
-    QTest::newRow("glTF->PLY") << "tests/inputs/cube.gltf" << "tests/outputs/cube.ply" << IO::Format_PLY;
-    QTest::newRow("glTF->STL") << "tests/inputs/cube.gltf" << "tests/outputs/cube.stl" << IO::Format_STL;
-#  endif
-#endif
-
-#if OCC_VERSION_HEX >= 0x070600
-    QTest::newRow("PLY->OBJ") << "tests/inputs/cube.ply" << "tests/outputs/cube.obj" << IO::Format_OBJ;
-    QTest::newRow("STL->OBJ") << "tests/inputs/cube.stla" << "tests/outputs/cube.obj" << IO::Format_OBJ;
-#  ifdef OPENCASCADE_HAVE_RAPIDJSON
-    QTest::newRow("glTF->OBJ") << "tests/inputs/cube.gltf" << "tests/outputs/cube.obj" << IO::Format_OBJ;
-    QTest::newRow("OBJ->glTF") << "tests/inputs/cube.obj" << "tests/outputs/cube.glTF" << IO::Format_GLTF;
-#  endif
-#endif
-}
-
-void TestBase::IO_bugGitHub258_test()
-{
-    auto app = makeOccHandle<Application>();
-    DocumentPtr doc = app->newDocument();
-    const bool okImport = m_ioSystem->importInDocument()
-                              .targetDocument(doc)
-                              .withFilepath("tests/inputs/#258_cube.off")
-                              .execute();
-    QVERIFY(okImport);
-    QVERIFY(doc->entityCount() == 1);
-
-    const TopoDS_Shape shape = doc->xcaf().shape(doc->entityLabel(0));
-    const TopoDS_Face& face = TopoDS::Face(shape);
-    TopLoc_Location locFace;
-    auto triangulation = BRep_Tool::Triangulation(face, locFace);
-    QVERIFY(!triangulation.IsNull());
-    QCOMPARE(triangulation->NbNodes(), 24);
-    QCOMPARE(triangulation->NbTriangles(), 12);
+    QTest::newRow("Length(25mm)") << createPropertyPtr<PropertyLength>() << Variant("25mm") << Variant("25mm");
+    QTest::newRow("Length(2m)") << createPropertyPtr<PropertyLength>() << Variant("2m") << Variant("2000mm");
+    QTest::newRow("Angle(1.57079rad)") << createPropertyPtr<PropertyAngle>() << Variant("1.57079rad") << Variant("1.57079rad");
+    QTest::newRow("Angle(90°)") << createPropertyPtr<PropertyAngle>() << Variant("90°") << Variant("1.570796rad");
 }
 
 void TestBase::DoubleToString_test()
@@ -777,9 +574,60 @@ void TestBase::BRepUtils_test()
     }
 }
 
-void TestBase::CafUtils_test()
+void TestBase::CafUtils_labelTag_test()
 {
     // TODO Add CafUtils::labelTag() test for multi-threaded safety
+}
+
+void TestBase::CafUtils_getNamedDataKeys_test()
+{
+    QVERIFY(CafUtils::getNamedDataKeys({}).empty());
+    QCOMPARE(CafUtils::namedDataCount({}), 0);
+
+    auto data = makeOccHandle<TDataStd_NamedData>();
+    QVERIFY(CafUtils::getNamedDataKeys(data).empty());
+    QCOMPARE(CafUtils::namedDataCount(data), 0);
+
+    data->SetInteger(L"int1", 496);
+    data->SetInteger(L"int2", 987);
+    data->SetReal(L"double1", 1.214);
+    data->SetReal(L"double2", 15.06);
+    data->SetByte(L"byte1", 31);
+    data->SetString(L"string1", "Mayo");
+    data->SetString(L"string2", "Fougue");
+
+    {
+        const int cintArray1[] = { 1, 9, 2, 8, 3, 7, 4};
+        const TColStd_Array1OfInteger intArray1(cintArray1[0], 1, int(std::size(cintArray1)));
+        data->SetArrayOfIntegers(L"intArray1", makeOccHandle<TColStd_HArray1OfInteger>(intArray1));
+    }
+
+    {
+        const double cdoubleArray1[] = { 1.9, 8.2, 3.7, 6.4, 5.5 };
+        const TColStd_Array1OfReal doubleArray1(cdoubleArray1[0], 1, int(std::size(cdoubleArray1)));
+        data->SetArrayOfReals(L"doubleArray1", makeOccHandle<TColStd_HArray1OfReal>(doubleArray1));
+    }
+
+    auto keys = CafUtils::getNamedDataKeys(data);
+    QCOMPARE(CafUtils::namedDataCount(data), keys.size());
+
+    auto fnFindKey = [](const TCollection_ExtendedString& label, const auto& keys) {
+        auto it = std::find_if(
+            keys.cbegin(), keys.cend(), [&](const auto& dkey) { return dkey.label() == label; }
+        );
+        return it != keys.cend() ? *it : CafUtils::NamedDataKey{};
+    };
+
+    QCOMPARE(fnFindKey(L"int1", keys).type, CafUtils::NamedDataType::Int);
+    QCOMPARE(fnFindKey(L"int2", keys).type, CafUtils::NamedDataType::Int);
+    QCOMPARE(fnFindKey(L"double1", keys).type, CafUtils::NamedDataType::Double);
+    QCOMPARE(fnFindKey(L"double2", keys).type, CafUtils::NamedDataType::Double);
+    QCOMPARE(fnFindKey(L"byte1", keys).type, CafUtils::NamedDataType::Byte);
+    QCOMPARE(fnFindKey(L"string1", keys).type, CafUtils::NamedDataType::String);
+    QCOMPARE(fnFindKey(L"string2", keys).type, CafUtils::NamedDataType::String);
+    QCOMPARE(fnFindKey(L"intArray1", keys).type, CafUtils::NamedDataType::IntArray);
+    QCOMPARE(fnFindKey(L"doubleArray1", keys).type, CafUtils::NamedDataType::DoubleArray);
+    QCOMPARE(fnFindKey(L"?", keys).type, CafUtils::NamedDataType::None);
 }
 
 void TestBase::MeshUtils_orientation_test()
@@ -802,60 +650,56 @@ void TestBase::MeshUtils_orientation_test_data()
     QTest::addColumn<std::vector<gp_Pnt2d>>("vecPoint");
     QTest::addColumn<Mayo::MeshUtils::Orientation>("orientation");
 
-    std::vector<gp_Pnt2d> vecPoint;
-    vecPoint.push_back(gp_Pnt2d(0, 0));
-    vecPoint.push_back(gp_Pnt2d(0, 10));
-    vecPoint.push_back(gp_Pnt2d(10, 10));
-    vecPoint.push_back(gp_Pnt2d(10, 0));
-    vecPoint.push_back(gp_Pnt2d(0, 0)); // Closed polyline
-    QTest::newRow("case1") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
-
-    vecPoint.erase(std::prev(vecPoint.end())); // Open polyline
-    QTest::newRow("case2") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
-
-    std::reverse(vecPoint.begin(), vecPoint.end());
-    QTest::newRow("case3") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
-
-    vecPoint.clear();
-    vecPoint.push_back(gp_Pnt2d(0, 0));
-    vecPoint.push_back(gp_Pnt2d(0, 10));
-    vecPoint.push_back(gp_Pnt2d(10, 10));
-    QTest::newRow("case4") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
-
-    vecPoint.clear();
-    vecPoint.push_back(gp_Pnt2d(0, 0));
-    vecPoint.push_back(gp_Pnt2d(0, 10));
-    vecPoint.push_back(gp_Pnt2d(-10, 10));
-    vecPoint.push_back(gp_Pnt2d(-10, 0));
-    QTest::newRow("case5") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
-
-    std::reverse(vecPoint.begin(), vecPoint.end());
-    QTest::newRow("case6") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    {
+        // Closed polyline
+        const std::vector<gp_Pnt2d> vecPoint = {{0,0}, {0,10}, {10,10}, {10,0}, {0,0}};
+        QTest::newRow("case1") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
 
     {
-        QFile file("tests/inputs/mayo_bezier_curve.brep");
-        QVERIFY(file.open(QIODevice::ReadOnly));
+        // Open polyline
+        const std::vector<gp_Pnt2d> vecPoint = {{0,0}, {0,10}, {10,10}, {10,0}};
+        QTest::newRow("case2") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
 
-        const TopoDS_Shape shape = BRepUtils::shapeFromString(file.readAll().toStdString());
-        QVERIFY(!shape.IsNull());
+    {
+        const std::vector<gp_Pnt2d> vecPoint = {{10,0}, {10,10}, {0,10}, {0,0}};
+        QTest::newRow("case3") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
+    }
 
-        TopoDS_Edge edge;
-        BRepUtils::forEachSubShape(shape, TopAbs_EDGE, [&](const TopoDS_Shape& subShape) {
-            edge = TopoDS::Edge(subShape);
-        });
-        QVERIFY(!edge.IsNull());
+    {
+        const std::vector<gp_Pnt2d> vecPoint = {{0,0}, {0,10}, {10,10}};
+        QTest::newRow("case4") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
 
-        const GCPnts_TangentialDeflection discr(BRepAdaptor_Curve(edge), 0.1, 0.1);
-        vecPoint.clear();
-        for (int i = 1; i <= discr.NbPoints(); ++i) {
-            const gp_Pnt pnt = discr.Value(i);
-            vecPoint.push_back(gp_Pnt2d(pnt.X(), pnt.Y()));
-        }
+    {
+        const std::vector<gp_Pnt2d> vecPoint = {{0,0}, {0,10}, {-10,10}, {-10,0}};
+        QTest::newRow("case5") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
+    }
 
+    {
+        const std::vector<gp_Pnt2d> vecPoint = {{-10,0}, {-10,10}, {0,10}, {0,0}};
+        QTest::newRow("case6") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+    }
+
+    {
+        std::vector<gp_Pnt2d> vecPoint = {
+            {-2.07,-0.81}, {-1.98,-0.68}, {-1.87,-0.59}, {-1.76,-0.51}, {-1.65,-0.46}, {-1.52,-0.43},
+            {-1.36,-0.41}, {-1.09,-0.40}, {-0.10,-0.44}, {0.38,-0.38}, {0.70,-0.27}, {0.92,-0.14},
+            {1.08,-0.01}, {1.16,0.09}, {1.19,0.16}, {1.21,0.21}, {1.21,0.25}, {1.21,0.27}, {1.20,0.30},
+            {1.19,0.31}, {1.18,0.33}, {1.17,0.34}, {1.15,0.35}, {1.13,0.36}, {1.11,0.37}, {1.08,0.37},
+            {1.05,0.37}, {1.00,0.37}, {0.95,0.35}, {0.87,0.33}, {0.77,0.27}, {0.53,0.11}, {0.48,0.09},
+            {0.45,0.09}, {0.43,0.09}, {0.41,0.09}, {0.39,0.10}, {0.37,0.11}, {0.35,0.12}, {0.34,0.14},
+            {0.32,0.16}, {0.31,0.19}, {0.29,0.24}, {0.28,0.30}, {0.24,0.55}, {0.21,0.62}, {0.18,0.67},
+            {0.13,0.73}, {0.07,0.78}, {-0.01,0.83}, {-0.12,0.88}, {-0.24,0.91}, {-0.44,0.95}, {-0.70,0.96},
+            {-0.98,0.93}, {-1.27,0.87}, {-1.54,0.76}, {-1.72,0.65}, {-1.85,0.53}, {-1.95,0.40}, {-2.02,0.27},
+            {-2.06,0.12}, {-2.09,-0.05}, {-2.10,-0.40}, {-2.07,-0.81}
+        };
         QTest::newRow("case7") << vecPoint << Mayo::MeshUtils::Orientation::CounterClockwise;
 
-        std::reverse(vecPoint.begin(), vecPoint.end());
-        QTest::newRow("case8") << vecPoint << Mayo::MeshUtils::Orientation::Clockwise;
+        std::vector<gp_Pnt2d> vecPointReversed = vecPoint;
+        std::reverse(vecPointReversed.begin(), vecPointReversed.end());
+        QTest::newRow("case8") << vecPointReversed << Mayo::MeshUtils::Orientation::Clockwise;
     }
 }
 
@@ -1094,7 +938,7 @@ void TestBase::Settings_test()
         settingsStorage->setValue("main/someInt", Settings::Variant{5});
 
         const uint8_t bytes[] = { 97, 98, 99, 100, 101, 95, 49, 50, 51, 52, 53 };
-        const Settings::Variant bytesVar(Span<const uint8_t>(bytes, std::size(bytes)));
+        const Settings::Variant bytesVar(gsl::span<const uint8_t>(bytes, std::size(bytes)));
         QVERIFY(std::holds_alternative<std::vector<uint8_t>>(bytesVar));
         settingsStorage->setValue("main/someTestData", bytesVar);
 
@@ -1162,25 +1006,21 @@ void TestBase::LibTask_test()
 {
     struct ProgressRecord {
         TaskId taskId;
-        int value;
+        double value;
     };
 
     TaskManager taskMgr;
     const TaskId taskId = taskMgr.newTask([=](TaskProgress* progress) {
-        {
-            TaskProgress subProgress(progress, 40);
-            for (int i = 0; i <= 100; ++i)
-                subProgress.setValue(i);
-        }
+        TaskProgress subProgress1(progress, 40);
+        for (int i = 0; i <= 100; ++i)
+            subProgress1.setValue(i);
 
-        {
-            TaskProgress subProgress(progress, 60);
-            for (int i = 0; i <= 100; ++i)
-                subProgress.setValue(i);
-        }
+        TaskProgress subProgress2(progress, 60);
+        for (int i = 0; i <= 100; ++i)
+            subProgress2.setValue(i);
     });
     std::vector<ProgressRecord> vecProgressRec;
-    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, int pct) {
+    taskMgr.signalProgressChanged.connectSlot([&](TaskId taskId, double pct) {
         vecProgressRec.push_back({ taskId, pct });
     });
 
@@ -1201,8 +1041,8 @@ void TestBase::LibTask_test()
         prevPct = rec.value;
     }
 
-    QCOMPARE(vecProgressRec.front().value, 0);
-    QCOMPARE(vecProgressRec.back().value, 100);
+    QCOMPARE(vecProgressRec.front().value, 0.);
+    QCOMPARE(vecProgressRec.back().value, 100.);
 }
 
 void TestBase::LibTree_test()
@@ -1258,6 +1098,36 @@ void TestBase::LibTree_test()
     }
 }
 
+void TestBase::LibTree_nodeRoot_test()
+{
+    Tree<int> tree;
+    tree.appendChild(0, -1);
+    tree.appendChild(0, -2);
+    QCOMPARE(tree.nodeRoot(0), 0);
+}
+
+void TestBase::LibTree_removeRoot_test()
+{
+    Tree<std::string> tree;
+    QCOMPARE(tree.nodeCount(), 0);
+
+    const TreeNodeId root1 = tree.appendChild(0, "root1");
+    const TreeNodeId root2 = tree.appendChild(0, "root2");
+    QCOMPARE(tree.nodeCount(), 2);
+    tree.appendChild(root1, "1-child1");
+    tree.appendChild(root1, "1-child2");
+    tree.appendChild(root2, "2-child1");
+    tree.appendChild(root2, "2-child2");
+    tree.appendChild(root2, "2-child3");
+    QCOMPARE(tree.nodeCount(), 7);
+
+    tree.removeRoot(root2);
+    QVERIFY(tree.nodeCount() > 0);
+    tree.removeRoot(root1);
+    // All root nodes removed: the count of nodes must be 0
+    QCOMPARE(tree.nodeCount(), 0);
+}
+
 void TestBase::Span_test()
 {
     const std::vector<std::string> vecString = { "first", "second", "third", "fourth", "fifth" };
@@ -1266,34 +1136,232 @@ void TestBase::Span_test()
     const std::string& item2 = vecString.at(2);
     const std::string& item3 = vecString.at(3);
     const std::string& item4 = vecString.at(4);
-    QCOMPARE(Span_itemIndex(vecString, item0), 0);
-    QCOMPARE(Span_itemIndex(vecString, item1), 1);
-    QCOMPARE(Span_itemIndex(vecString, item2), 2);
-    QCOMPARE(Span_itemIndex(vecString, item3), 3);
-    QCOMPARE(Span_itemIndex(vecString, item4), 4);
+    QCOMPARE(Cpp::indexInSpan(vecString, item0), 0);
+    QCOMPARE(Cpp::indexInSpan(vecString, item1), 1);
+    QCOMPARE(Cpp::indexInSpan(vecString, item2), 2);
+    QCOMPARE(Cpp::indexInSpan(vecString, item3), 3);
+    QCOMPARE(Cpp::indexInSpan(vecString, item4), 4);
 }
 
-void TestBase::initTestCase()
+void TestBase::StringCache_addFirstTimeThenCachedReturnsSameViewAndFlag_test()
 {
-    m_ioSystem = new IO::System;
+    StringCache cache;
 
-    m_ioSystem->addFactoryReader(std::make_unique<IO::DxfFactoryReader>());
-    m_ioSystem->addFactoryReader(std::make_unique<IO::OccFactoryReader>());
-    m_ioSystem->addFactoryReader(std::make_unique<IO::OffFactoryReader>());
-    m_ioSystem->addFactoryReader(std::make_unique<IO::PlyFactoryReader>());
+    std::string_view str{"hello"};
+    bool already = true;
+    auto cachedStr1 = cache.add(str, &already);
+    QVERIFY(!already);
+    QCOMPARE(cachedStr1.size(), str.size());
+    QCOMPARE(cachedStr1, str);
 
-    m_ioSystem->addFactoryWriter(std::make_unique<IO::OccFactoryWriter>());
-    m_ioSystem->addFactoryWriter(std::make_unique<IO::OffFactoryWriter>());
-    m_ioSystem->addFactoryWriter(std::make_unique<IO::PlyFactoryWriter>());
+    already = false;
+    auto cachedStr2 = cache.add(str, &already);
+    QVERIFY(already);
 
-    IO::addPredefinedFormatProbes(m_ioSystem);
+    QCOMPARE(cachedStr1.size(), cachedStr2.size());
+    QCOMPARE(cachedStr1.data(), cachedStr2.data());
 }
 
-void TestBase::cleanupTestCase()
+void TestBase::StringCache_addTwoSmallStringsContiguous_test()
 {
-    delete m_ioSystem;
-    m_ioSystem = nullptr;
+    StringCache cache;
+    cache.setPoolSize(64);
+
+    std::string_view str1{"abc"};
+    std::string_view str2{"defg"};
+    QVERIFY(cache.poolSize() > (str1.size() + str2.size()));
+
+    auto cachedStr1 = cache.add(str1);
+    auto cachedStr2 = cache.add(str2);
+
+    QVERIFY(!cachedStr1.empty() && !cachedStr2.empty());
+    QCOMPARE(cachedStr1.size(), str1.size());
+    QCOMPARE(cachedStr2.size(), str2.size());
+    // Sequential concat in same pool
+    QCOMPARE(cachedStr1.data() + cachedStr1.size(), cachedStr2.data());
+
+    // Sanity check on contents
+    QCOMPARE(cachedStr1, str1);
+    QCOMPARE(cachedStr2, str2);
+}
+
+void TestBase::StringCache_addWhenRemainingCapacityInsufficientCreatesNewPool_test()
+{
+    // Set too small pool size to fit two consecutive strings
+    StringCache cache;
+    cache.setPoolSize(128);
+
+    const std::string str1(size_t(120), 'a');
+    const std::string str2(size_t(20), 'B');
+
+    auto cachedStr1 = cache.add(str1); // Should fit in first pool
+    auto cachedStr2 = cache.add(str2); // New pool expected
+
+    QVERIFY(!cachedStr1.empty() && !cachedStr2.empty());
+    // The two cached strings must not be in the same pool
+    QVERIFY((cachedStr1.data() + cachedStr1.size()) != cachedStr2.data());
+    // Not at same address
+    QVERIFY(cachedStr1.data() != cachedStr2.data());
+
+    QCOMPARE(cachedStr1, str1);
+    QCOMPARE(cachedStr2, str2);
+}
+
+void TestBase::StringCache_addWithNullAlreadyCachedPtrIsOK_test()
+{
+    StringCache cache;
+
+    std::string_view str{"xyz"};
+    auto cachedStr1 = cache.add(str, nullptr);
+    QCOMPARE(cachedStr1, str);
+
+    auto cachedStr2 = cache.add(str, nullptr);
+    QCOMPARE(cachedStr1.data(), cachedStr2.data());
+}
+
+void TestBase::StringCache_clearThenReAddReturnsNewViewAndNotCached_test()
+{
+    StringCache cache;
+
+    std::string_view str{"abc"};
+    {
+        bool already = true;
+        auto cachedStr = cache.add(str, &already);
+        QVERIFY(!already);
+        QCOMPARE(cachedStr, str);
+    }
+
+    cache.clear();
+
+    {
+        bool already = true;
+        auto cachedStr = cache.add(str, &already);
+        QVERIFY(!already); // After clear(), must no longer be cached
+        QCOMPARE(cachedStr, str);
+    }
+}
+
+
+void TestBase::StringCache_viewRemainsValidAfterSubsequentAddsWithinCapacity_test()
+{
+    StringCache cache;
+    cache.setPoolSize(64);
+
+    std::string_view str{"anchor"};
+    auto v0 = cache.add(str);
+
+    // Add several small strings fitting in current pool
+    std::string_view smalls[] = {"a", "bb", "ccc", "dddd", "ee", "f", "g"};
+    size_t total = 0;
+    for (const std::string_view& s : smalls) {
+        total += s.size();
+        cache.add(s);
+    }
+    QVERIFY(total + v0.size() < cache.poolSize());
+
+    // Initial cached string must still point to `str`
+    QCOMPARE(v0, str);
+}
+
+
+void TestBase::StringCache_longStringLargerThanPoolWorksAndNextInsertsOK_test()
+{
+    StringCache cache;
+    cache.setPoolSize(64); // Small poolSize
+
+    // String bigger than pool
+    const std::string longStr(size_t(64 * 5), 'A');
+
+    bool already = true;
+    auto vlong = cache.add(longStr, &already);
+
+    QVERIFY(!already);
+    QCOMPARE(vlong.size(), longStr.size());
+    QCOMPARE(vlong, longStr);
+
+    // Cache small string and check StringCache remains coherent
+    auto v2 = cache.add("ok");
+    QCOMPARE(v2, "ok");
+}
+
+
+void TestBase::StringCache_stressFuzzRandomStringsDedupAndClear_test()
+{
+    StringCache cache;
+    cache.setPoolSize(2048);
+
+    size_t N = 2000; // Count of random insertions
+    std::vector<std::string> saved;
+    saved.reserve(N);
+
+    // Pseudo-radom generator
+    std::mt19937 rng(1337/*arbitrary seed*/);
+    std::uniform_int_distribution<int> lenDist(1, 40);
+    std::uniform_int_distribution<int> charDist(0, 25);
+
+    // First pass: insertion
+    for (int i = 0; i < N; ++i) {
+        const int len = lenDist(rng);
+        std::string s;
+        s.reserve(len);
+        for (int j = 0; j < len; ++j)
+            s.push_back('a' + charDist(rng));
+
+        // Avoid collisions
+        if (std::find(saved.cbegin(), saved.cend(), s) != saved.cend())
+            break;
+
+        saved.push_back(s);
+
+        bool already = true;
+        auto v = cache.add(s, &already);
+        QVERIFY(!already);
+        QCOMPARE(v, s);
+    }
+
+    N = saved.size();
+    // Verifying caching
+    for (int k = 0; k < 100; ++k) {
+        int idx = rng() % N;
+        const std::string& s = saved[idx];
+        bool already = false;
+        auto v = cache.add(s, &already);
+        QVERIFY(already);
+        QCOMPARE(v, s);
+    }
+
+    // Clear: invalidates cache
+    cache.clear();
+
+    // Re-insert after clear()
+    std::vector<int> idxVisited;
+    for (int k = 0; k < 100; ++k) {
+        const int idx = rng() % N;
+        if (std::find(idxVisited.cbegin(), idxVisited.cend(), idx) == idxVisited.cend())
+            break;
+
+        const std::string& s = saved[idx];
+        idxVisited.push_back(idx);
+        bool already = true;
+        auto v = cache.add(s, &already);
+        QVERIFY(!already);
+        QCOMPARE(v, s);
+    }
+}
+
+void TestBase::XCaf_userDefinedAttributes_test()
+{
+    auto app = makeOccHandle<Application>();
+    DocumentPtr doc = app->newDocument();
+
+    // Must not crash for null labels
+    QVERIFY(doc->xcaf().shapeUserDefinedAttributes(TDF_Label{}).IsNull());
+
+    // Must not create user defined attributes if none attached
+    const TDF_Label shapeLabel = doc->newEntityShapeLabel();
+    TDataStd_Name::Set(shapeLabel, L"Shape1");
+    doc->addEntityTreeNode(shapeLabel);
+    QVERIFY(doc->xcaf().shapeUserDefinedAttributes(shapeLabel).IsNull());
 }
 
 } // namespace Mayo
-

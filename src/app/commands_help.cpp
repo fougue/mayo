@@ -1,15 +1,14 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_help.h"
 
+#include "app_module.h"
 #include "dialog_about.h"
 #include "library_info.h"
 #include "qtwidgets_utils.h"
-#include "../qtcommon/qstring_conv.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
@@ -21,9 +20,8 @@ namespace Mayo {
 CommandReportBug::CommandReportBug(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Report Bug"));
-    this->setAction(action);
 }
 
 void CommandReportBug::execute()
@@ -34,15 +32,15 @@ void CommandReportBug::execute()
 CommandAbout::CommandAbout(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
+    action->setMenuRole(QAction::AboutRole);
     action->setText(Command::tr("About %1").arg(QCoreApplication::applicationName()));
-    this->setAction(action);
 }
 
 void CommandAbout::execute()
 {
     auto dlg = new DialogAbout(this->widgetMain());
-    for (const auto& libInfo : LibraryInfoArray::get())
+    for (const LibraryInfo& libInfo : AppModule::get()->libraryInfoArray())
         dlg->addLibraryInfo(libInfo.name, libInfo.version);
 
     QtWidgetsUtils::asyncDialogExec(dlg);

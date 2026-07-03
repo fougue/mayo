@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,7 +11,7 @@ namespace Mayo {
 
 class CommandReportBug : public Command {
 public:
-    CommandReportBug(IAppContext* context);
+    explicit CommandReportBug(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "report-bug";
@@ -20,7 +19,7 @@ public:
 
 class CommandSystemInformation : public Command {
 public:
-    CommandSystemInformation(IAppContext* context);
+    explicit CommandSystemInformation(IAppContext* context);
     void execute() override;
 
     static QString data();
@@ -29,7 +28,7 @@ public:
 
 class CommandAbout : public Command {
 public:
-    CommandAbout(IAppContext* context);
+    explicit CommandAbout(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "about";

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -15,14 +14,14 @@
 #include <QtGui/QFont>
 #include <QtGui/QGradient>
 #include <QtGui/QPixmap>
-class QScreen;
 
 #include <type_traits>
 
-namespace Mayo {
+class QMouseEvent;
+class QScreen;
 
 // Provides a collection of tools for the QtGui module
-namespace QtGuiUtils {
+namespace Mayo::QtGuiUtils {
 
 // Color conversion functions OCCT -> Qt
 QColor toQColor(const Quantity_Color& c);
@@ -65,10 +64,15 @@ int screenPixelWidth(double screenRatio, const QScreen* screen = nullptr);
 int screenPixelHeight(double screenRatio, const QScreen* screen = nullptr);
 QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* screen = nullptr);
 
+// Returns the global position of the mouse cursor at the time of the event
+// This is a helper function to facilitates Qt5/Qt6 portability as Qt5 QMouseEvent::globalPos() has
+// been deprecated in Qt6
+QPoint globalPosition(const QMouseEvent* event);
+
 // Fluent-like helper to change font properties
 class FontChange {
 public:
-    FontChange(const QFont& font);
+    explicit FontChange(const QFont& font);
 
     FontChange& size(int size);
     FontChange& adjustSize(int offset);
@@ -105,5 +109,4 @@ Quantity_Color toColor(const QColor& c)
     return Quantity_Color(c.redF(), c.greenF(), c.blueF(), OtherColorType);
 }
 
-} // namespace QtGuiUtils
-} // namespace Mayo
+} // namespace Mayo::QtGuiUtils

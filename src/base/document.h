@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -47,13 +46,15 @@ public:
     const XCaf& xcaf() const { return m_xcaf; }
 
     TDF_Label rootLabel() const;
-    bool isEntity(TreeNodeId nodeId);
+
     int entityCount() const;
-    TDF_Label entityLabel(int index) const;
-    TreeNodeId entityTreeNodeId(int index) const;
-    DocumentTreeNode entityTreeNode(int index) const;
+    bool isEntity(TreeNodeId nodeId);
+    gsl::span<const TreeNodeId> allEntityNodeIds() const;
+    TreeNodeId firstEntityNodeId() const;
+    TDF_Label  firstEntityNodeLabel() const;
 
     const Tree<TDF_Label>& modelTree() const { return m_modelTree; }
+    TDF_Label modelTreeNodeLabel(TreeNodeId nodeId) const;
     void rebuildModelTree();
 
     static DocumentPtr findFrom(const TDF_Label& label);
@@ -81,7 +82,7 @@ public: // -- from TDocStd_Document
     DEFINE_STANDARD_RTTI_INLINE(Document, TDocStd_Document)
 
 private:
-    Document(const ApplicationPtr& app);
+    explicit Document(const ApplicationPtr& app);
     ~Document();
 
     friend class Application;
@@ -92,6 +93,7 @@ private:
     void setIdentifier(Identifier ident) { m_identifier = ident; }
     TreeNodeId findEntity(const TDF_Label& label) const;
     bool containsLabel(const TDF_Label& label) const;
+    void deepExpandCompounds(const TDF_Label& label);
 
     ApplicationPtr m_app;
     Identifier m_identifier = -1;

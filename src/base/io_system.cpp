@@ -1,13 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_system.h"
 
 #include "caf_utils.h"
-#include "cpp_utils.h"
 #include "document.h"
 #include "io_parameters_provider.h"
 #include "io_reader.h"
@@ -18,6 +16,8 @@
 #include "tkernel_utils.h"
 
 #include <fmt/format.h>
+#include <gsl/util>
+
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -27,15 +27,28 @@
 #include <unordered_set>
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace {
 
-bool containsFormat(Span<const Format> spanFormat, Format format)
+bool containsFormat(gsl::span<const Format> spanFormat, Format format)
 {
     auto itFormat = std::find(spanFormat.begin(), spanFormat.end(), format);
     return itFormat != spanFormat.end();
+}
+
+void dispatchErrors(std::string_view headerMsg, const MessageCollecter& msgCollect, Messenger* target)
+{
+    const std::string strErrors = msgCollect.asString("\n    ", MessageType::Error);
+    if (!strErrors.empty())
+        target->error() << fmt::format("{}\n    {}", headerMsg, strErrors);
+}
+
+void dispatchWarnings(std::string_view headerMsg, const MessageCollecter& msgCollect, Messenger* target)
+{
+    const std::string strWarnings = msgCollect.asString("\n    ", MessageType::Warning);
+    if (!strWarnings.empty())
+        target->warning() << fmt::format("{}\n    {}", headerMsg, strWarnings);
 }
 
 } // namespace
@@ -73,7 +86,7 @@ Format System::probeFormat(const FilePath& filepath) const
         const auto& clocale = std::locale::classic();
         return std::tolower(lhs, clocale) == std::tolower(rhs, clocale);
     };
-    auto fnMatchFileSuffix = [=](Format format) {
+    auto fnMatchFileSuffix = [&](Format format) {
         for (std::string_view candidate : formatFileSuffixes(format)) {
             if (candidate.size() == fileSuffix.size()
                 && std::equal(candidate.cbegin(), candidate.cend(), fileSuffix.cbegin(), fnCharIEqual))
@@ -171,12 +184,8 @@ std::unique_ptr<Writer> System::createWriter(Format format) const
     return {};
 }
 
-bool System::importInDocument(const Args_ImportInDocument& args)
+bool System::importInDocument(const Args_ImportInDocument& args) const
 {
-    // NOTE
-    // Maybe STEP/IGES CAF ReadFile() can be run concurrently(they should)
-    // But concurrent calls to Transfer() to the same target Document must be serialized
-
     DocumentPtr doc = args.targetDocument;
     const auto listFilepath = args.filepaths;
     TaskProgress* rootProgress = args.progress ? args.progress : &TaskProgress::null();
@@ -194,6 +203,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TDF_LabelSequence seqTransferredEntity;
         bool readSuccess = false;
         bool transferred = false;
+        MessageCollecter messenger;
     };
 
     auto fnEntityPostProcessRequired = [&](Format format) {
@@ -202,18 +212,20 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         else
             return false;
     };
-    auto fnAddError = [&](const FilePath& fp, std::string_view errorMsg) {
+    auto fnAddError = [&](TaskData& taskData, std::string_view errorMsg) {
         ok = false;
-        messenger->emitError(fmt::format(textIdTr("Error during import of '{}'\n{}"), fp.u8string(), errorMsg));
+        taskData.messenger.error() << fmt::format(
+            textIdTr("Error during import of '{}'\n{}"), taskData.filepath.u8string(), errorMsg
+        );
     };
-    auto fnReadFileError = [&](const FilePath& fp, std::string_view errorMsg) {
-        fnAddError(fp, errorMsg);
+    auto fnReadFileError = [&](TaskData& taskData, std::string_view errorMsg) {
+        fnAddError(taskData, errorMsg);
         return false;
     };
     auto fnReadFile = [&](TaskData& taskData) {
         taskData.fileFormat = this->probeFormat(taskData.filepath);
         if (taskData.fileFormat == Format_Unknown)
-            return fnReadFileError(taskData.filepath, textIdTr("Unknown format"));
+            return fnReadFileError(taskData, textIdTr("Unknown format"));
 
         double portionSize = 40;
         if (fnEntityPostProcessRequired(taskData.fileFormat))
@@ -222,17 +234,17 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         TaskProgress progress(taskData.progress, portionSize, textIdTr("Reading file"));
         taskData.reader = this->createReader(taskData.fileFormat);
         if (!taskData.reader)
-            return fnReadFileError(taskData.filepath, textIdTr("No supporting reader"));
+            return fnReadFileError(taskData, textIdTr("No supporting reader"));
 
-        taskData.reader->setMessenger(messenger);
+        taskData.reader->setMessenger(&taskData.messenger);
         if (args.parametersProvider) {
             taskData.reader->applyProperties(
-                        args.parametersProvider->findReaderParameters(taskData.fileFormat)
+                args.parametersProvider->findReaderParameters(taskData.fileFormat)
             );
         }
 
         if (!taskData.reader->readFile(taskData.filepath, &progress))
-            return fnReadFileError(taskData.filepath, textIdTr("File read problem"));
+            return fnReadFileError(taskData, textIdTr("File read problem"));
 
         return true;
     };
@@ -245,7 +257,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         if (taskData.reader && !TaskProgress::isAbortRequested(&progress)) {
             taskData.seqTransferredEntity = taskData.reader->transfer(doc, &progress);
             if (taskData.seqTransferredEntity.IsEmpty())
-                fnAddError(taskData.filepath, textIdTr("File transfer problem"));
+                fnAddError(taskData, textIdTr("File transfer problem"));
         }
 
         taskData.transferred = true;
@@ -255,9 +267,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             return;
 
         TaskProgress progress(
-                    taskData.progress,
-                    args.entityPostProcessProgressSize,
-                    args.entityPostProcessProgressStep
+            taskData.progress, args.entityPostProcessProgressSize, args.entityPostProcessProgressStep
         );
         const double subPortionSize = 100. / double(taskData.seqTransferredEntity.Size());
         for (const TDF_Label& labelEntity : taskData.seqTransferredEntity) {
@@ -272,6 +282,18 @@ bool System::importInDocument(const Args_ImportInDocument& args)
         // Document's model tree within slots connected to signal(and living in other threads)
         doc->addEntityTreeNodeSequence(taskData.seqTransferredEntity);
     };
+    auto fnDispatchMessages = [=](TaskData& taskData) {
+        const auto strFilepath = taskData.filepath.make_preferred().u8string();
+        dispatchWarnings(
+            fmt::format("Warning(s) during import from '{}'", strFilepath),
+            taskData.messenger, messenger
+        );
+        dispatchErrors(
+            fmt::format("Errors(s) during import from '{}'", strFilepath),
+            taskData.messenger, messenger
+        );
+        taskData.messenger.clear();
+    };
 
     if (listFilepath.size() == 1) { // Single file case
         TaskData taskData;
@@ -283,13 +305,15 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             fnPostProcess(taskData);
             fnAddModelTreeEntities(taskData);
         }
+
+        fnDispatchMessages(taskData);
     }
     else { // Many files case
         std::vector<TaskData> vecTaskData;
         vecTaskData.resize(listFilepath.size());
 
         TaskManager childTaskManager;
-        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, int) {
+        childTaskManager.signalProgressChanged.connectSlot([&](TaskId, double) {
             rootProgress->setValue(childTaskManager.globalProgress());
         });
 
@@ -306,7 +330,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
             childTaskManager.run(taskData.taskId, TaskAutoDestroy::Off);
 
         // Transfer to document
-        auto taskDataCount = CppUtils::safeStaticCast<int>(vecTaskData.size());
+        auto taskDataCount = static_cast<int>(vecTaskData.size());
         while (taskDataCount > 0 && !rootProgress->isAbortRequested()) {
             auto it = std::find_if(vecTaskData.begin(), vecTaskData.end(), [&](const TaskData& taskData) {
                 return !taskData.transferred && childTaskManager.waitForDone(taskData.taskId, 25);
@@ -319,6 +343,7 @@ bool System::importInDocument(const Args_ImportInDocument& args)
                     fnAddModelTreeEntities(*it);
                 }
 
+                fnDispatchMessages(*it);
                 --taskDataCount;
             }
         } // endwhile
@@ -327,25 +352,32 @@ bool System::importInDocument(const Args_ImportInDocument& args)
     return ok;
 }
 
-System::Operation_ImportInDocument System::importInDocument() {
+System::Operation_ImportInDocument System::importInDocument() const
+{
     return Operation_ImportInDocument(*this);
 }
 
-bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
+bool System::exportApplicationItems(const Args_ExportApplicationItems& args) const
 {
     TaskProgress* progress = args.progress ? args.progress : &TaskProgress::null();
-    Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
-    auto fnError = [=](std::string_view errorMsg) {
-        const std::string strFilepath = args.targetFilepath.u8string();
-        messenger->emitError(fmt::format(textIdTr("Error during export to '{}'\n{}"), strFilepath, errorMsg));
+    MessageCollecter msgCollect;
+    auto fnError = [&](std::string_view errorMsg) {
+        msgCollect.error() << errorMsg;
         return false;
     };
+
+    auto _ = gsl::finally([&]{
+        Messenger* messenger = args.messenger ? args.messenger : &Messenger::null();
+        const std::string strFilepath = args.targetFilepath.u8string();
+        dispatchWarnings(fmt::format("Warning(s) during export to '{}'", strFilepath), msgCollect, messenger);
+        dispatchErrors(fmt::format("Errors(s) during export to '{}'", strFilepath), msgCollect, messenger);
+    });
 
     std::unique_ptr<Writer> writer = this->createWriter(args.targetFormat);
     if (!writer)
         return fnError(textIdTr("No supporting writer"));
 
-    writer->setMessenger(args.messenger);
+    writer->setMessenger(&msgCollect);
     writer->applyProperties(args.parameters);
     {
         TaskProgress transferProgress(progress, 40, textIdTr("Transfer"));
@@ -365,64 +397,72 @@ bool System::exportApplicationItems(const Args_ExportApplicationItems& args)
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath) {
+System::Operation_ExportApplicationItems::targetFile(const FilePath& filepath)
+{
     m_args.targetFilepath = filepath;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::targetFormat(Format format) {
+System::Operation_ExportApplicationItems::targetFormat(Format format)
+{
     m_args.targetFormat = format;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem) {
+System::Operation_ExportApplicationItems::withItem(const ApplicationItem& appItem)
+{
     m_args.applicationItems = { &appItem, 1 };
     return *this;
 }
 
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withItems(Span<const ApplicationItem> appItems) {
+System::Operation_ExportApplicationItems::withItems(gsl::span<const ApplicationItem> appItems)
+{
     m_args.applicationItems = appItems;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters) {
+System::Operation_ExportApplicationItems::withParameters(const PropertyGroup* parameters)
+{
     m_args.parameters = parameters;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger) {
+System::Operation_ExportApplicationItems::withMessenger(Messenger* messenger)
+{
     m_args.messenger = messenger;
     return *this;
 }
 
 System::Operation_ExportApplicationItems&
-System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress) {
+System::Operation_ExportApplicationItems::withTaskProgress(TaskProgress* progress)
+{
     m_args.progress = progress;
     return *this;
 }
 
-bool System::Operation_ExportApplicationItems::execute() {
+bool System::Operation_ExportApplicationItems::execute()
+{
     return m_system.exportApplicationItems(m_args);
 }
 
-System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(System& system)
+System::Operation_ExportApplicationItems::Operation_ExportApplicationItems(const System& system)
     : m_system(system)
 {
 }
 
-System::Operation_ExportApplicationItems System::exportApplicationItems()
+System::Operation_ExportApplicationItems System::exportApplicationItems() const
 {
     return Operation_ExportApplicationItems(*this);
 }
 
 void System::visitUniqueItems(
-        Span<const ApplicationItem> spanItem,
+        gsl::span<const ApplicationItem> spanItem,
         std::function<void (const ApplicationItem&)> fnCallback
     )
 {
@@ -449,7 +489,7 @@ void System::visitUniqueItems(
 }
 
 void System::traverseUniqueItems(
-        Span<const ApplicationItem> spanItem,
+        gsl::span<const ApplicationItem> spanItem,
         std::function<void(const DocumentTreeNode&)> fnCallback,
         TreeTraversal mode
     )
@@ -468,31 +508,36 @@ void System::traverseUniqueItems(
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document) {
+System::Operation_ImportInDocument::targetDocument(const DocumentPtr& document)
+{
     m_args.targetDocument = document;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withFilepaths(Span<const FilePath> filepaths) {
+System::Operation_ImportInDocument::withFilepaths(gsl::span<const FilePath> filepaths)
+{
     m_args.filepaths = filepaths;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider) {
+System::Operation_ImportInDocument::withParametersProvider(const ParametersProvider* provider)
+{
     m_args.parametersProvider = provider;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withMessenger(Messenger* messenger) {
+System::Operation_ImportInDocument::withMessenger(Messenger* messenger)
+{
     m_args.messenger = messenger;
     return *this;
 }
 
 System::Operation_ImportInDocument&
-System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
+System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress)
+{
     m_args.progress = progress;
     return *this;
 }
@@ -500,7 +545,7 @@ System::Operation_ImportInDocument::withTaskProgress(TaskProgress* progress) {
 System::Operation_ImportInDocument::Operation&
 System::Operation_ImportInDocument::withFilepath(const FilePath& filepath)
 {
-    return this->withFilepaths(Span<const FilePath>(&filepath, 1));
+    return this->withFilepaths(gsl::span<const FilePath>(&filepath, 1));
 }
 
 System::Operation_ImportInDocument::Operation&
@@ -525,11 +570,12 @@ System::Operation_ImportInDocument::withEntityPostProcessInfoProgress(int progre
     return *this;
 }
 
-bool System::Operation_ImportInDocument::execute() {
+bool System::Operation_ImportInDocument::execute()
+{
     return m_system.importInDocument(m_args);
 }
 
-System::Operation_ImportInDocument::Operation_ImportInDocument(System& system)
+System::Operation_ImportInDocument::Operation_ImportInDocument(const System& system)
     : m_system(system)
 {
 }
@@ -631,5 +677,4 @@ void addPredefinedFormatProbes(System* system)
     system->addFormatProbe(probeFormat_OFF);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -15,11 +14,14 @@ namespace Mayo {
 class WidgetMainHome : public IWidgetMainPage {
     Q_OBJECT
 public:
-    WidgetMainHome(QWidget* parent = nullptr);
+    explicit WidgetMainHome(QWidget* parent = nullptr);
     ~WidgetMainHome();
 
     void initialize(const CommandContainer* cmdContainer) override;
     void updatePageControlsActivation() override;
+
+    void restoreUiState(const AppUiState&) override;
+    void saveUiState(AppUiState&) override;
 
 private:
     class Ui_WidgetMainHome* m_ui = nullptr;

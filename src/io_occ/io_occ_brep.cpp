@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_brep.h"
@@ -20,8 +19,7 @@
 #include <BRepTools.hxx>
 #include <TDataStd_Name.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
 {
@@ -49,7 +47,7 @@ TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progr
     return CafUtils::makeLabelSequence({ labelShape });
 }
 
-bool OccBRepWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
+bool OccBRepWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* /*progress*/)
 {
     m_shape = TopoDS_Shape();
 
@@ -84,5 +82,4 @@ bool OccBRepWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     return BRepTools::Write(m_shape, filepath.u8string().c_str(), TKernelUtils::start(indicator));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

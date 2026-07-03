@@ -1,0 +1,37 @@
+name: Linux Arch x64
+
+on: [push]
+
+jobs:
+  build-archlinux:
+    runs-on: ubuntu-latest
+    name: build-archlinux-qt5
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        path: 'mayo'
+
+    - name: Setup Podman
+      run: |
+        sudo apt update
+        sudo apt-get -y install podman
+        podman pull docker.io/library/archlinux:latest
+
+    - name: Create container and run build+tests
+      run: |
+        {
+          echo 'FROM archlinux:latest'
+          echo 'RUN pacman -Syu --noconfirm'
+          echo 'RUN pacman -Sy --noconfirm make cmake git gcc'
+          echo 'RUN pacman -Sy --noconfirm qt5-base qt5-svg xcb-util-cursor'
+          echo 'RUN pacman -Sy --noconfirm opencascade libxi'
+          echo 'RUN pacman -Sy --noconfirm assimp'
+          echo 'COPY mayo mayo'
+          echo 'RUN mkdir /mayo/build'
+          echo 'WORKDIR /mayo/build'
+          echo 'RUN cmake .. -DMayo_BuildTests=ON -DMayo_BuildPluginAssimp=ON'
+          echo 'RUN cmake --build . --parallel --config Release'
+        } > podmanfile
+        podman build --tag archlinux-ci -f ./podmanfile

@@ -1,18 +1,17 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_occ_view_controller.h"
 #include "widget_occ_view.h"
+#include "qtgui_utils.h"
 #include "theme.h"
 
-#include <QtCore/QDebug>
 #include <QtCore/QElapsedTimer>
-#include <QtGui/QBitmap>
 #include <QtGui/QCursor>
 #include <QtGui/QPainter>
+#include <QtGui/QPixmap>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
 #include <QtWidgets/QRubberBand>
@@ -21,33 +20,16 @@
 
 namespace Mayo {
 
-namespace Internal {
+namespace {
 
 static const QCursor& rotateCursor()
 {
     static QCursor cursor;
-    if (!cursor.bitmap()) {
-        constexpr int cursorWidth = 16;
-        constexpr int cursorHeight = 16;
+    if (!cursor.pixmap()) {
         constexpr int cursorHotX = 6;
         constexpr int cursorHotY = 8;
-
-        static unsigned char cursorBitmap[] = {
-            0xf0, 0xef, 0x18, 0xb8, 0x0c, 0x90, 0xe4, 0x83,
-            0x34, 0x86, 0x1c, 0x83, 0x00, 0x81, 0x00, 0xff,
-            0xff, 0x00, 0x81, 0x00, 0xc1, 0x38, 0x61, 0x2c,
-            0xc1, 0x27, 0x09, 0x30, 0x1d, 0x18, 0xf7, 0x0f
-        };
-        static unsigned char cursorMaskBitmap[] = {
-            0xf0, 0xef, 0xf8, 0xff, 0xfc, 0xff, 0xfc, 0xff, 0x3c, 0xfe, 0x1c, 0xff, 0x00, 0xff, 0x00,
-            0xff, 0xff, 0x00, 0xff, 0x00, 0xff, 0x38, 0x7f, 0x3c, 0xff, 0x3f, 0xff, 0x3f, 0xff, 0x1f,
-            0xf7, 0x0f
-        };
-
-        const QBitmap cursorBmp = QBitmap::fromData({ cursorWidth, cursorHeight }, cursorBitmap);
-        const QBitmap maskBmp = QBitmap::fromData({ cursorWidth, cursorHeight }, cursorMaskBitmap);
-        const QCursor tempCursor(cursorBmp, maskBmp, cursorHotX, cursorHotY);
-        cursor = std::move(tempCursor);
+        const QPixmap pixmap(":/images/graphics/rotate_cursor.png");
+        cursor = QCursor(pixmap, cursorHotX, cursorHotY);
     }
 
     return cursor;
@@ -61,7 +43,7 @@ using RubberBandWidget_ParentType = QRubberBand;
 
 class RubberBandWidget : public RubberBandWidget_ParentType {
 public:
-    RubberBandWidget(QWidget* parent)
+    explicit RubberBandWidget(QWidget* parent)
 #if OCC_VERSION_HEX >= 0x070600
         : RubberBandWidget_ParentType(parent)
     {}
@@ -96,19 +78,23 @@ protected:
 #endif
 };
 
-} // namespace Internal
+} // namespace
 
 WidgetOccViewController::WidgetOccViewController(IWidgetOccView* occView)
     : QObject(occView->widget()),
       V3dViewController(occView->v3dView()),
       m_occView(occView),
       m_navigStyle(View3dNavigationStyle::Catia),
-      m_actionMatcher(createActionMatcher(m_navigStyle, &m_inputSequence))
+      m_actionMatcher(createActionMatcher(m_navigStyle, m_inputSequence))
 {
     m_occView->widget()->installEventFilter(this);
     m_inputSequence.setPrePushCallback([=](Input in) { m_actionMatcher->onInputPrePush(in); });
     m_inputSequence.setPreReleaseCallback([=](Input in) { m_actionMatcher->onInputPreRelease(in); });
     m_inputSequence.setClearCallback([=] { m_actionMatcher->onInputCleared(); });
+}
+
+WidgetOccViewController::~WidgetOccViewController()
+{
 }
 
 bool WidgetOccViewController::eventFilter(QObject* watched, QEvent* event)
@@ -134,7 +120,7 @@ void WidgetOccViewController::setNavigationStyle(View3dNavigationStyle style)
 {
     m_navigStyle = style;
     m_inputSequence.clear();
-    m_actionMatcher = createActionMatcher(style, &m_inputSequence);
+    m_actionMatcher = createActionMatcher(style, m_inputSequence);
 }
 
 void WidgetOccViewController::redrawView()
@@ -146,7 +132,7 @@ void WidgetOccViewController::redrawView()
 void WidgetOccViewController::startDynamicAction(V3dViewController::DynamicAction action)
 {
     if (action == DynamicAction::Rotation)
-        this->setViewCursor(Internal::rotateCursor());
+        this->setViewCursor(rotateCursor());
     else if (action == DynamicAction::Panning)
         this->setViewCursor(Qt::SizeAllCursor);
     else if (action == DynamicAction::Zoom)
@@ -170,7 +156,7 @@ void WidgetOccViewController::setViewCursor(const QCursor &cursor)
 }
 
 struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBand {
-    RubberBand(QWidget* parent)
+    explicit RubberBand(QWidget* parent)
         : m_rubberBand(parent)
     {
     }
@@ -184,7 +170,7 @@ struct WidgetOccViewController::RubberBand : public V3dViewController::IRubberBa
     }
 
 private:
-    Internal::RubberBandWidget m_rubberBand;
+    RubberBandWidget m_rubberBand;
 };
 
 std::unique_ptr<V3dViewController::IRubberBand> WidgetOccViewController::createRubberBand()
@@ -250,13 +236,13 @@ void WidgetOccViewController::handleKeyRelease(const QKeyEvent* event)
 void WidgetOccViewController::handleMouseButtonPress(const QMouseEvent* event)
 {
     m_inputSequence.push(event->button());
-    const QPoint currPos = m_occView->widget()->mapFromGlobal(event->globalPos());
+    const QPoint currPos = m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event));
     m_prevPos = toPosition(currPos);
 }
 
 void WidgetOccViewController::handleMouseMove(const QMouseEvent* event)
 {
-    const Position currPos = toPosition(m_occView->widget()->mapFromGlobal(event->globalPos()));
+    const Position currPos = toPosition(m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event)));
     const Position prevPos = m_prevPos;
     m_prevPos = currPos;
     if (m_actionMatcher->matchRotation())
@@ -286,7 +272,7 @@ void WidgetOccViewController::handleMouseButtonRelease(const QMouseEvent* event)
     m_inputSequence.release(event->button());
     const bool hadDynamicAction = this->hasCurrentDynamicAction();
     if (this->isWindowZoomingStarted())
-        this->windowZoom(toPosition(m_occView->widget()->mapFromGlobal(event->globalPos())));
+        this->windowZoom(toPosition(m_occView->widget()->mapFromGlobal(QtGuiUtils::globalPosition(event))));
 
     this->stopDynamicAction();
     if (!hadDynamicAction)
@@ -304,7 +290,8 @@ void WidgetOccViewController::handleMouseWheel(const QWheelEvent* event)
 
 class WidgetOccViewController::Mayo_ActionMatcher : public ActionMatcher {
 public:
-    Mayo_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::LeftButton });
@@ -326,7 +313,7 @@ public:
 
 class WidgetOccViewController::Catia_ActionMatcher : public ActionMatcher {
 public:
-    Catia_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {
+    explicit Catia_ActionMatcher(const InputSequence& seq) : ActionMatcher(seq) {
         m_timer.start();
     }
 
@@ -386,7 +373,8 @@ private:
 
 class WidgetOccViewController::SolidWorks_ActionMatcher : public ActionMatcher {
 public:
-    SolidWorks_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -397,7 +385,7 @@ public:
     }
 
     bool matchZoom() const override {
-        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Shift, Qt::MiddleButton });
     }
 
     bool matchWindowZoom() const override {
@@ -407,7 +395,8 @@ public:
 
 class WidgetOccViewController::Unigraphics_ActionMatcher : public ActionMatcher {
 public:
-    Unigraphics_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -428,7 +417,8 @@ public:
 
 class WidgetOccViewController::ProEngineer_ActionMatcher : public ActionMatcher {
 public:
-    ProEngineer_ActionMatcher(const InputSequence* seq) : ActionMatcher(seq) {}
+    // Inherit ActionMatcher constructor
+    using ActionMatcher::ActionMatcher;
 
     bool matchRotation() const override {
         return this->inputs.equal({ Qt::MiddleButton });
@@ -439,7 +429,7 @@ public:
     }
 
     bool matchZoom() const override {
-        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });;
+        return this->inputs.equal({ Qt::Key_Control, Qt::MiddleButton });
     }
 
     bool matchWindowZoom() const override {
@@ -448,7 +438,7 @@ public:
 };
 
 std::unique_ptr<WidgetOccViewController::ActionMatcher>
-WidgetOccViewController::createActionMatcher(View3dNavigationStyle style, const InputSequence* seq)
+WidgetOccViewController::createActionMatcher(View3dNavigationStyle style, const InputSequence& seq)
 {
     switch(style) {
     case View3dNavigationStyle::Mayo: return std::make_unique<Mayo_ActionMatcher>(seq);

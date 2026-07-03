@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -10,6 +9,7 @@
 
 #include <Aspect_HatchStyle.hxx>
 #include <Bnd_Box.hxx>
+#include <Graphic3d_Vec2.hxx>
 #include <Quantity_Color.hxx>
 
 // Note: can't include Aspect_DisplayConnection.hxx as this is causing name conflicts 
@@ -62,6 +62,7 @@ struct GraphicsUtils {
 
     static int AspectWindow_width(const OccHandle<Aspect_Window>& wnd);
     static int AspectWindow_height(const OccHandle<Aspect_Window>& wnd);
+    static Graphic3d_Vec2i AspectWindow_size(const OccHandle<Aspect_Window>& wnd);
     static OccHandle<Aspect_DisplayConnection> AspectDisplayConnection_create();
 
     static void Gfx3dClipPlane_setCappingHatch(

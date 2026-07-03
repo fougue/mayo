@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "list_helper.h"
@@ -37,8 +36,7 @@ static QPixmap blurredPixmap(const QPixmap& pixmap, int radius)
 } // namespace QtGuiUtils
 #endif
 
-namespace Mayo {
-namespace ListHelper {
+namespace Mayo::ListHelper {
 
 static QtGuiUtils::FontChange fontChange(const QWidget* widget) {
     return QtGuiUtils::FontChange(widget->font());
@@ -58,10 +56,10 @@ int Model::rowCount(const QModelIndex&) const
 QVariant Model::data(const QModelIndex& index, int role) const
 {
     if (!this->hasStorage())
-        return QVariant();
+        return {};
 
     if (!index.isValid() || index.row() >= this->storage()->count())
-        return QVariant();
+        return {};
 
     const ModelItem* item = this->storage()->at(index.row());
     switch (role) {
@@ -77,7 +75,7 @@ QVariant Model::data(const QModelIndex& index, int role) const
             return this->findPixmap(item->imageUrl);
     }
     default:
-        return QVariant();
+        return {};
     }
 }
 
@@ -108,13 +106,13 @@ ItemDelegate::ItemDelegate(QObject* parent)
     m_itemAnimation.setStartValue(0);
     m_itemAnimation.setEndValue(m_itemSize.height());
     QObject::connect(
-                &m_itemAnimation, &QVariantAnimation::valueChanged,
-                this, &ItemDelegate::drawItem
+        &m_itemAnimation, &QVariantAnimation::valueChanged, this, &ItemDelegate::drawItem
     );
 }
 
 void ItemDelegate::paint(
-        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+    ) const
 {
     const ModelItem* item = Model::itemPtrAt(index);
     if (!item)
@@ -130,7 +128,7 @@ void ItemDelegate::paint(
     const bool hovered = option.state & QStyle::State_MouseOver;
     const int yShift = itemBottom - 20;
     const int yName = itemBottom - 20;
-    const QRect rectText = QRect(x, y + yName, w, h);
+    const QRect rectText{x, y + yName, w, h};
     const QPixmap pm = Model::itemPixmapAt(index);
 
     QTextOption textOption;
@@ -169,9 +167,10 @@ void ItemDelegate::paint(
             painter->setPen(m_textColor);
             painter->setFont(fontChange(option.widget).adjustSize(-1));
             painter->drawText(
-                        rectPixmap.adjusted(6, m_itemSpacing, -6, -m_itemSpacing),
-                        item->description,
-                        textOption);
+                rectPixmap.adjusted(6, m_itemSpacing, -6, -m_itemSpacing),
+                item->description,
+                textOption
+            );
         }
 
         painter->setPen(m_pixmapColor);
@@ -235,7 +234,8 @@ bool ItemDelegate::editorEvent(
         QEvent* event,
         QAbstractItemModel* model,
         const QStyleOptionViewItem& option,
-        const QModelIndex& index)
+        const QModelIndex& index
+    )
 {
     if (event->type() == QEvent::MouseButtonRelease) {
         const ModelItem* item = Model::itemPtrAt(index);
@@ -259,5 +259,4 @@ void ItemDelegate::drawItem()
         m_widget->viewport()->update(m_area);
 }
 
-} // namespace ListHelper
-} // namespace Mayo
+} // namespace Mayo::ListHelper

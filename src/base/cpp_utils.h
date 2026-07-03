@@ -1,18 +1,18 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
+#include <gsl/span>
+
 #include <exception>
 #include <stdexcept>
-#include <string>
+#include <type_traits>
 #include <utility>
 #ifndef __cpp_lib_integer_comparison_functions
 #  include <limits>
-#  include <type_traits>
 #endif
 
 namespace Mayo {
@@ -27,6 +27,16 @@ namespace Cpp = CppUtils;
 
 namespace CppUtils {
 
+
+// Optimized value return type for T.
+// Returns `T` by value if it is trivially copyable and small, otherwise returns it as `const T&`
+template <typename T>
+using ValueOrConstRefType = std::conditional_t<
+    std::is_trivially_copyable_v<T> && sizeof(T) <= sizeof(void*),
+    /*true->*/ T,
+    /*false->*/const T&
+>;
+
 // Type alias for the value type associated(mapped) to a key for an associative container(eg std::map)
 template<typename AssociativeContainer>
 using MappedType = typename AssociativeContainer::mapped_type;
@@ -35,8 +45,12 @@ using MappedType = typename AssociativeContainer::mapped_type;
 template<typename AssociativeContainer>
 using KeyType = typename AssociativeContainer::key_type;
 
-// Returns a default empty std::string object, whose memory address can be used safely
-inline const std::string& nullString();
+// Returns a process-wide singleton instance of type T
+// The object is created on first use and then reused for all subsequent calls.
+// This function is intended for stateless or immutable default instances, such as "null objects",
+// empty containers, or shared sentinel values
+template<typename T>
+const std::decay_t<T>& staticObject();
 
 // Finds in associative container the value mapped to 'key'
 // If 'key' isn't found then a default-constructed value is returned
@@ -75,27 +89,46 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept;
 template<typename ErrorType, typename... ErrorArgs>
 void throwErrorIf(bool condition, ErrorArgs... args);
 
-// Same as static_cast<R>(t) but throws exception if 't' does not fit inside type 'R'
-template<typename R, typename T> constexpr R safeStaticCast(T t);
+// Returns the index of 'item' contained in 'span'
+template<typename T>
+constexpr int indexInSpan(gsl::span<T> span, typename gsl::span<T>::const_reference item);
+
+template<typename Container>
+constexpr int indexInSpan(const Container& cont, typename Container::const_reference item);
+
+// Helper type for the visitor type in std::visit()
+template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+// Explicit deduction guide(not needed as of C++20)
+template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 } // namespace CppUtils
+} // namespace Mayo
+
 
 // --
 // -- Implementation
 // --
 
-namespace CppUtils {
+#include <cassert>
+#include <climits>
 
-const std::string& nullString()
+namespace Mayo::CppUtils {
+
+template<typename T>
+const std::decay_t<T>& staticObject()
 {
-    static std::string str;
-    return str;
+    using U = std::decay_t<T>;
+    static_assert(std::is_object_v<U>, "staticObject<T>: T must be an object type");
+    static_assert(std::is_default_constructible_v<U>, "staticObject<T>: T must be default constructible");
+    // NOTE Since C++11 initialization of local static variables is thread-safe
+    static const U object{};
+    return object;
 }
 
 template<typename AssociativeContainer>
 MappedType<AssociativeContainer> findValue(
-    const KeyType<AssociativeContainer>& key, const AssociativeContainer& container
-)
+        const KeyType<AssociativeContainer>& key, const AssociativeContainer& container
+    )
 {
     auto it = container.find(key);
     if (it != container.cend()) {
@@ -193,7 +226,7 @@ template<typename R, typename T> constexpr bool inRange(T t) noexcept
     return std::in_range(t, u);
 #else
     return cmpGreaterEqual(t, std::numeric_limits<R>::lowest())
-            && cmpLessEqual(t, std::numeric_limits<R>::max());
+           && cmpLessEqual(t, std::numeric_limits<R>::max());
 #endif
 }
 
@@ -204,12 +237,21 @@ template<typename ErrorType, typename... ErrorArgs> void throwErrorIf(bool condi
     }
 }
 
-template<typename R, typename T> constexpr R safeStaticCast(T t)
+template<typename T>
+constexpr int indexInSpan(gsl::span<T> span, typename gsl::span<T>::const_reference item)
 {
-    throwErrorIf<std::overflow_error>(!inRange<R>(t), "Value too big to fit inside range type");
-    return static_cast<R>(t);
+    assert(!span.empty());
+    auto index = &item - &span.front();
+    assert(index >= 0);
+    assert(index <= INT_MAX);
+    assert(&span[static_cast<typename gsl::span<T>::size_type>(index)] == &item);
+    return static_cast<int>(index);
 }
 
-} // namespace CppUtils
+template<typename Container>
+constexpr int indexInSpan(const Container& cont, typename Container::const_reference item)
+{
+    return indexInSpan(gsl::span<const typename Container::value_type>(cont), item);
+}
 
-} // namespace Mayo
+} // namespace Mayo::CppUtils

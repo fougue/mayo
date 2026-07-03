@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -30,6 +29,7 @@ private slots:
 
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
+    void BRepAngle_QuasiLinearBSpline45degrees_test();
 
     void BRepLength_PolygonEdge_test();
 

@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "proxy_styled_item_delegate.h"
@@ -9,25 +8,45 @@
 namespace Mayo {
 
 ProxyStyledItemDelegate::ProxyStyledItemDelegate(QObject* parent)
-    : QStyledItemDelegate(parent),
-      m_sourceDelegate(nullptr)
+    : QStyledItemDelegate(parent)
 {
 }
 
-ProxyStyledItemDelegate::ProxyStyledItemDelegate(QStyledItemDelegate* srcDelegate, QObject* parent)
-    : QStyledItemDelegate(parent),
-      m_sourceDelegate(srcDelegate)
+ProxyStyledItemDelegate::ProxyStyledItemDelegate(QAbstractItemDelegate* srcDelegate, QObject* parent)
+    : QStyledItemDelegate(parent)
 {
+    this->setSourceDelegate(srcDelegate);
 }
 
-QStyledItemDelegate* ProxyStyledItemDelegate::sourceDelegate() const
+QAbstractItemDelegate* ProxyStyledItemDelegate::sourceDelegate() const
 {
     return m_sourceDelegate;
 }
 
-void ProxyStyledItemDelegate::setSourceDelegate(QStyledItemDelegate* srcDelegate)
+void ProxyStyledItemDelegate::setSourceDelegate(QAbstractItemDelegate* srcDelegate)
 {
+    if (m_sourceDelegate) {
+        QObject::disconnect(
+            m_sourceDelegate, &QAbstractItemDelegate::commitData,
+            this, &QAbstractItemDelegate::commitData
+        );
+        QObject::disconnect(
+            m_sourceDelegate, &QAbstractItemDelegate::closeEditor,
+            this, &QAbstractItemDelegate::closeEditor
+        );
+    }
+
     m_sourceDelegate = srcDelegate;
+    if (m_sourceDelegate) {
+        QObject::connect(
+            m_sourceDelegate, &QAbstractItemDelegate::commitData,
+            this, &QAbstractItemDelegate::commitData
+        );
+        QObject::connect(
+            m_sourceDelegate, &QAbstractItemDelegate::closeEditor,
+            this, &QAbstractItemDelegate::closeEditor
+        );
+    }
 }
 
 void ProxyStyledItemDelegate::paint(
@@ -52,8 +71,9 @@ QSize ProxyStyledItemDelegate::sizeHint(const QStyleOptionViewItem& option, cons
 
 QString ProxyStyledItemDelegate::displayText(const QVariant& value, const QLocale& locale) const
 {
-    if (m_sourceDelegate)
-        return m_sourceDelegate->displayText(value, locale);
+    auto srcStyledDelegate = qobject_cast<QStyledItemDelegate*>(m_sourceDelegate);
+    if (srcStyledDelegate)
+        return srcStyledDelegate->displayText(value, locale);
     else
         return QStyledItemDelegate::displayText(value, locale);
 }

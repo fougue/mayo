@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -11,8 +10,7 @@
 
 #include <vector>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Reader for PLY file format based on miniply library
 class PlyReader : public Reader {
@@ -38,5 +36,4 @@ private:
 // Provides factory to create PlyReader objects
 class PlyFactoryReader : public SingleFormatFactoryReader<Format_PLY, PlyReader> {};
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

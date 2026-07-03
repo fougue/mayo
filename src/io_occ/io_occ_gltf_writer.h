@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -13,14 +12,13 @@
 #include <RWMesh_CoordinateSystemConverter.hxx>
 #include <TDF_LabelSequence.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // OpenCascade-based writer for glTF format
 // Requires OpenCascade >= v7.5.0
 class OccGltfWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> spanAppItem, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
@@ -60,6 +58,4 @@ private:
     TDF_LabelSequence m_seqRootLabel;
 };
 
-} // namespace IO
-} // namespace Mayo
-
+} // namespace Mayo::IO

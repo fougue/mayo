@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "math_utils.h"
@@ -12,18 +11,14 @@
 #include <cmath>
 #include <limits>
 
-namespace Mayo {
-namespace MathUtils {
+namespace Mayo::MathUtils {
 
 bool isReversedStandardDir(const gp_Dir& n)
 {
-    for (int i = 0; i < 3; ++i) {
-        const double c = n.XYZ().GetData()[i];
-        if (c < 0 && (std::abs(c) - 1) < Precision::Confusion())
-            return true;
-    }
-
-    return false;
+    auto isUnitCoord = [](double v) -> bool {
+        return v < 0 && std::abs(v + 1.) < Precision::Confusion();
+    };
+    return isUnitCoord(n.X()) || isUnitCoord(n.Y()) || isUnitCoord(n.Z());
 }
 
 double planePosition(const gp_Pln& plane)
@@ -55,5 +50,16 @@ std::pair<double, double> planeRange(const BndBoxCoords& bbc, const gp_Dir& plan
     return {};
 }
 
-} // namespace MathUtils
-} // namespace Mayo
+int intRound(double v) noexcept
+{
+    if (std::isnan(v))
+        return 0;
+
+    auto lv = std::lround(v);
+    if constexpr (sizeof(int) != sizeof(long))
+        lv = std::clamp(lv, static_cast<long>(INT_MIN), static_cast<long>(INT_MAX));
+
+    return static_cast<int>(lv);
+}
+
+} // namespace Mayo::MathUtils

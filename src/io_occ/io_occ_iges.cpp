@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_iges.h"
@@ -15,13 +14,12 @@
 #include <IGESControl_Controller.hxx>
 #include <Interface_Static.hxx>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 class OccIgesReader::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesReader::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->bsplineContinuity.setDescription(
@@ -151,19 +149,20 @@ void OccIgesReader::changeStaticVariables(OccStaticVariablesRollback* rollback) 
 class OccIgesWriter::Properties : public PropertyGroup {
     MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::IO::OccIgesWriter::Properties)
 public:
-    Properties(PropertyGroup* parentGroup)
+    explicit Properties(PropertyGroup* parentGroup)
         : PropertyGroup(parentGroup)
     {
         this->planeMode.setDescription(
-                    textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
-                             "Writing p-curves on planes is disabled"));
+            textIdTr("Indicates if planes should be saved as Bsplines or Planes (type 108). "
+                     "Writing p-curves on planes is disabled")
+        );
         this->brepMode.setDescriptions({
-                    { BRepMode::Faces, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 "
-                      "(Trimmed Surface) entities, no BRep entities will be written to the IGES file")
-                    },
-                    { BRepMode::BRep, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 "
-                      "(Face) entities, the IGES file will contain BRep entities")
-                    }
+            { BRepMode::Faces, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 144 "
+              "(Trimmed Surface) entities, no BRep entities will be written to the IGES file")
+            },
+            { BRepMode::BRep, textIdTr("OpenCascade TopoDS_Faces will be translated into IGES 510 "
+              "(Face) entities, the IGES file will contain BRep entities")
+            }
         });
     }
 
@@ -194,7 +193,7 @@ OccIgesWriter::~OccIgesWriter()
     m_writer->~IGESCAFControl_Writer();
 }
 
-bool OccIgesWriter::transfer(Span<const ApplicationItem> appItems, TaskProgress* progress)
+bool OccIgesWriter::transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;
@@ -227,12 +226,11 @@ void OccIgesWriter::applyProperties(const PropertyGroup* group)
     }
 }
 
-void OccIgesWriter::changeStaticVariables(OccStaticVariablesRollback* rollback)
+void OccIgesWriter::changeStaticVariables(OccStaticVariablesRollback* rollback) const
 {
     rollback->change("write.iges.brep.mode", int(m_params.brepMode));
     rollback->change("write.iges.plane.mode", int(m_params.planeMode));
     rollback->change("write.iges.unit", OccCommon::toCafString(m_params.lengthUnit));
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

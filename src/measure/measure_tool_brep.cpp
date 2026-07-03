@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "measure_tool_brep.h"
@@ -14,24 +13,30 @@
 #include "../base/text_id.h"
 #include "../graphics/graphics_shape_object_driver.h"
 
-#include <gp_Elips.hxx>
 #include <AIS_Shape.hxx>
-#include <Bnd_OBB.hxx>
-#include <BRep_Tool.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
-#include <GC_MakeCircle.hxx>
+#include <BRep_Tool.hxx>
+#include <Bnd_OBB.hxx>
+#include <ElCLib.hxx>
+#include <ElSLib.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
 #include <GCPnts_QuasiUniformAbscissa.hxx>
+#include <GC_MakeCircle.hxx>
 #include <GProp_GProps.hxx>
+#include <Geom_BSplineCurve.hxx>
 #include <Precision.hxx>
+#include <ProjLib.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
+#include <gp_Elips.hxx>
+#include <math_Jacobi.hxx>
 
 #include <Standard_Version.hxx>
 #if OCC_VERSION_HEX >= 0x070500
@@ -41,6 +46,8 @@
 using PrsDim_AngleDimension = AIS_AngleDimension;
 #endif
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
 
@@ -107,9 +114,8 @@ template<ErrorCode Err> void throwErrorIf(bool cond)
         throw BRepMeasureError<Err>();
 }
 
-const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
+TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
 {
-    static const TopoDS_Shape nullShape;
     auto brepOwner = OccHandle<StdSelect_BRepOwner>::DownCast(owner);
     TopLoc_Location ownerLoc = owner->Location();
 #if OCC_VERSION_HEX >= 0x070600
@@ -124,7 +130,7 @@ const TopoDS_Shape getShape(const GraphicsOwnerPtr& owner)
         ownerLoc = trsf;
     }
 #endif
-    return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : nullShape;
+    return brepOwner ? brepOwner->Shape().Moved(ownerLoc) : TopoDS_Shape{};
 }
 
 gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
@@ -158,9 +164,192 @@ gp_Pnt computeShapeCenter(const TopoDS_Shape& shape)
     throwErrorIf<ErrorCode::CenterFailure>(shapeProps.Mass() < Precision::Confusion());
     return shapeProps.CentreOfMass();
 }
+
+// Defines the result of fittedPlane() function
+struct FittedPlaneResult {
+    bool success = false;
+    gp_Pln value;
+    double coplanarity = Precision::Infinite();
+};
+
+// Computes optimal plane from input 3D points
+FittedPlaneResult fittedPlane(gsl::span<const gp_Pnt> points)
+{
+    // Compute centroid point
+    gp_Pnt centroid;
+    for (const gp_Pnt& pnt : points)
+        centroid.ChangeCoord() += pnt.Coord();
+
+    centroid.ChangeCoord() /= int(points.size());
+
+    // Compute covariance matrix of centered coordinates
+    math_Matrix covMatrix(1, 3, 1, 3, 0.);
+    for (const gp_Pnt& pnt : points) {
+        const gp_XYZ v = pnt.XYZ() - centroid.XYZ();
+        for (int i = 1; i <= 3; ++i) {
+            for (int j = 1; j <= 3; ++j)
+                covMatrix(i, j) += v.Coord(i) * v.Coord(j);
+        }
+    }
+
+    // Find eigen vectors and values of the covariance matrix
+    math_Jacobi jacobiSolver(covMatrix);
+    if (!jacobiSolver.IsDone())
+        return {};
+
+    const math_Vector& eigenValues = jacobiSolver.Values();
+    const math_Matrix& eigenVectors = jacobiSolver.Vectors();
+
+    int countOfNonNullEigenValues = 0;
+    for (int i = 1; i <= 3; ++i) {
+        if (!MathUtils::fuzzyIsNull(eigenValues(i)))
+            ++countOfNonNullEigenValues;
+    }
+
+    if (countOfNonNullEigenValues == 0 || countOfNonNullEigenValues == 1)
+        return {};
+
+    const int eigenMinIndex = eigenValues.Min();
+    const int eigenMaxIndex = eigenValues.Max();
+
+    // Plane normal is the eigen vector associated to smallest eigen value
+    gp_Vec normal(
+        eigenVectors(1, eigenMinIndex),
+        eigenVectors(2, eigenMinIndex),
+        eigenVectors(3, eigenMinIndex)
+    );
+    if (GeomUtils::isNull(normal))
+        return {};
+
+    FittedPlaneResult result;
+    result.success = true;
+    result.value = gp_Pln{centroid, normal.Normalized()};
+    if (!MathUtils::fuzzyIsNull(eigenValues(eigenMaxIndex)))
+        result.coplanarity = eigenValues(eigenMinIndex) / eigenValues(eigenMaxIndex);
+    else
+        result.coplanarity = 0.;
+
+    return result;
+}
+
+// Defines the result of fittedCircle_taubin() function
+struct FittedCircle2DResult {
+    bool success = false;
+    gp_Pnt2d center;
+    double radius = 0.;
+};
+
+// Compute optimal circle from input 3D points and plane
+// This function uses Taubin method that is considered one of the best for circular regression(more
+// stable than Kasa method)
+FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
+{
+    const size_t N = points.size();
+    const double invN = 1. / static_cast<double>(N);
+
+    // Center input points
+    double meanX = 0;
+    double meanY = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        meanX += pnt.X();
+        meanY += pnt.Y();
+    }
+
+    meanX *= invN;
+    meanY *= invN;
+
+    // Build needed matrix
+    double Sxx = 0, Syy = 0, Sxy = 0;
+    double Sxz = 0, Syz = 0, Szz = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        const double x = pnt.X() - meanX;
+        const double y = pnt.Y() - meanY;
+        const double z = x*x + y*y;
+        Sxx += x * x;
+        Syy += y * y;
+        Sxy += x * y;
+        Sxz += x * z;
+        Syz += y * z;
+        Szz += z * z;
+    }
+
+    // Solve quadratic system
+    const double Cov_xy = Sxx * Syy - Sxy * Sxy;
+    // If Cov_xy is null this means input points are aligned
+    if (MathUtils::fuzzyIsNull(Cov_xy))
+        return {};
+
+    const double A2 = 0.5 * (Sxz * Syy - Syz * Sxy) / Cov_xy;
+    const double B2 = 0.5 * (Syz * Sxx - Sxz * Sxy) / Cov_xy;
+
+    const double centerX = A2 + meanX;
+    const double centerY = B2 + meanY;
+
+    double radius = 0;
+    for (const gp_Pnt2d& pnt : points) {
+        const double dx = pnt.X() - centerX;
+        const double dy = pnt.Y() - centerY;
+        radius += std::sqrt(dx*dx + dy*dy);
+    }
+
+    radius *= invN;
+    FittedCircle2DResult result;
+    result.success = true;
+    result.center = gp_Pnt2d{centerX, centerY};
+    result.radius = radius;
+    return result;
+}
+
+// Attempts to convert a linear BSpline edge into an equivalent analytic edge
+// If the underlying curve is Geom_BSplineCurve whose control poles are all collinear this function
+// rebuilds and returns an equivalent edge based on a gp_Lin.
+TopoDS_Edge tryGetLinearEdge(const TopoDS_Edge& edge)
+{
+    if (edge.IsNull())
+        return edge;
+
+    const BRepAdaptor_Curve curve(edge);
+    if (curve.GetType() == GeomAbs_BSplineCurve) {
+        OccHandle<Geom_BSplineCurve> bspline = curve.BSpline();
+        if (bspline->NbPoles() < 2)
+            return edge;
+
+        const gp_Pnt p0 = bspline->Pole(1);
+        const gp_Pnt p1 = bspline->Pole(bspline->NbPoles());
+        if (GeomUtils::equal(p0, p1))
+            return edge;
+
+        const double distTolerance = std::max(BRep_Tool::Tolerance(edge), Precision::Confusion());
+        const gp_Lin line(p0, gp_Vec{p0, p1});
+        for (int i = 2; i < bspline->NbPoles(); ++i) {
+            if (line.Distance(bspline->Pole(i)) > distTolerance)
+                return edge;
+        }
+
+        const double tFirst = ElCLib::Parameter(line, curve.Value(curve.FirstParameter()));
+        const double tLast  = ElCLib::Parameter(line, curve.Value(curve.LastParameter()));
+        const double t0 = std::min(tFirst, tLast);
+        const double t1 = std::max(tFirst, tLast);
+        if (MathUtils::fuzzyEqual(t0, t1))
+            return edge;
+
+        BRepBuilderAPI_MakeEdge makeEdge(line, t0, t1);
+        if (!makeEdge.IsDone())
+            return edge;
+
+        TopoDS_Edge linEdge = makeEdge.Edge();
+        if (tFirst > tLast)
+            linEdge.Reverse();
+
+        return linEdge;
+    }
+
+    return edge;
+}
+
 } // namespace
 
-Span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
+gsl::span<const GraphicsObjectSelectionMode> MeasureToolBRep::selectionModes(MeasureType type) const
 {
     switch (type) {
     case MeasureType::VertexPosition: {
@@ -266,11 +455,50 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
         circle = curve.Circle();
     }
     else if (curve.GetType() == GeomAbs_Ellipse) {
-        const gp_Elips ellipse  = curve.Ellipse();
+        const gp_Elips ellipse = curve.Ellipse();
         if (std::abs(ellipse.MinorRadius() - ellipse.MajorRadius()) < Precision::Confusion())
             circle = gp_Circ{ ellipse.Position(), ellipse.MinorRadius() };
     }
     else {
+        // Discretize input curve
+        constexpr size_t DiscreteCount = 64;
+        std::array<gp_Pnt, DiscreteCount> discrete;
+        {
+            const GCPnts_QuasiUniformAbscissa pnts(curve, int(discrete.size()));
+            throwErrorIf<ErrorCode::NotCircularEdge>(!pnts.IsDone());
+            for (int i = 1; i <= pnts.NbPoints(); ++i)
+                discrete[i - 1] = GeomUtils::d0(curve, pnts.Parameter(i));
+        }
+
+        // Compute plane containing the points
+        const FittedPlaneResult plane = fittedPlane(discrete);
+        throwErrorIf<ErrorCode::NotCircularEdge>(!plane.success);
+        throwErrorIf<ErrorCode::NotCircularEdge>(plane.coplanarity > 1e-4);
+
+        // Project points on the plane
+        std::array<gp_Pnt2d, DiscreteCount> discrete2d;
+        for (size_t i = 0; i < DiscreteCount; ++i)
+            discrete2d[i] = ProjLib::Project(plane.value, discrete[i]);
+
+        // Compute optimal circle from 2D points
+        const FittedCircle2DResult circle2d = fittedCircle2D_taubin(discrete2d);
+        throwErrorIf<ErrorCode::NotCircularEdge>(!circle2d.success);
+
+        // Check mean(average) relative error
+        double sumError = 0.;
+        for (const gp_Pnt2d& pnt : discrete2d) {
+            const double distCenter = pnt.Distance(circle2d.center);
+            sumError += std::abs(distCenter - circle2d.radius);
+        }
+
+        const double meanError = sumError / circle2d.radius;
+        throwErrorIf<ErrorCode::NotCircularEdge>(meanError > 0.01); // error must be <= 1%
+
+        // Project the 2D center in 3D space to get the circle result
+        const gp_Pnt2d& center2d = circle2d.center;
+        const gp_Pnt center = ElSLib::Value(center2d.X(), center2d.Y(), plane.value);
+        circle = gp_Circ{gp_Ax2{center, plane.value.Axis().Direction()}, circle2d.radius};
+#if 0
         // Try to create a circle from 3 sample points on the curve
         {
             const GCPnts_QuasiUniformAbscissa pnts(curve, 4); // More points to avoid confusion
@@ -295,6 +523,7 @@ MeasureCircle MeasureToolBRep::brepCircleFromGeometricEdge(const TopoDS_Edge& ed
                 throwErrorIf<ErrorCode::NotCircularEdge>(std::abs(dist - circle->Radius()) > 1e-4);
             }
         }
+#endif
     }
 
     throwErrorIf<ErrorCode::NotCircularEdge>(!circle);
@@ -329,7 +558,7 @@ MeasureCircle MeasureToolBRep::brepCircleFromPolygonEdge(const TopoDS_Edge& edge
 
     MeasureCircle result;
     result.pntAnchor = polyline->Nodes().First().Transformed(loc);
-    result.isArc = !polyline->Nodes().First().IsEqual(polyline->Nodes().Last(), Precision::Confusion());
+    result.isArc = !GeomUtils::equal(polyline->Nodes().First(), polyline->Nodes().Last());
     result.value = circle;
     return result;
 }
@@ -366,7 +595,7 @@ MeasureDistance MeasureToolBRep::brepMinDistance(
     distResult.pnt1 = dist.PointOnShape1(1);
     distResult.pnt2 = dist.PointOnShape2(1);
     distResult.value = dist.Value() * Quantity_Millimeter;
-    distResult.type = DistanceType::Mininmum;
+    distResult.type = MeasureDistance::Type::Mininmum;
     return distResult;
 }
 
@@ -384,7 +613,7 @@ MeasureDistance MeasureToolBRep::brepCenterDistance(
     distResult.pnt1 = centerOfMass1;
     distResult.pnt2 = centerOfMass2;
     distResult.value = centerOfMass1.Distance(centerOfMass2) * Quantity_Millimeter;
-    distResult.type = DistanceType::CenterToCenter;
+    distResult.type = MeasureDistance::Type::CenterToCenter;
     return distResult;
 }
 
@@ -395,8 +624,9 @@ MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
-    TopoDS_Edge edge1 = TopoDS::Edge(shape1);
-    TopoDS_Edge edge2 = TopoDS::Edge(shape2);
+    TopoDS_Edge edge1 = tryGetLinearEdge(TopoDS::Edge(shape1));
+    TopoDS_Edge edge2 = tryGetLinearEdge(TopoDS::Edge(shape2));
+
     // TODO What if edge1 and edge2 are not geometric?
     const BRepAdaptor_Curve curve1(edge1);
     const BRepAdaptor_Curve curve2(edge2);

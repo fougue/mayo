@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "graphics_shape_object_driver.h"
@@ -30,10 +29,10 @@ struct GraphicsShapeObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::Grap
 GraphicsShapeObjectDriver::GraphicsShapeObjectDriver()
 {
     this->setDisplayModes({
-        { DisplayMode_Wireframe, GraphicsShapeObjectDriverI18N::textId("Shape_Wireframe") },
-        { DisplayMode_HiddenLineRemoval, GraphicsShapeObjectDriverI18N::textId("Shape_HiddenLineRemoval") },
-        { DisplayMode_Shaded, GraphicsShapeObjectDriverI18N::textId("Shape_Shaded") },
-        { DisplayMode_ShadedWithFaceBoundary, GraphicsShapeObjectDriverI18N::textId("Shape_ShadedWithFaceBoundary") }
+        { DisplayMode_Wireframe, GraphicsShapeObjectDriverI18N::textId("Wireframe") },
+        { DisplayMode_HiddenLineRemoval, GraphicsShapeObjectDriverI18N::textId("HiddenLineRemoval") },
+        { DisplayMode_Shaded, GraphicsShapeObjectDriverI18N::textId("Shaded") },
+        { DisplayMode_ShadedWithFaceBoundary, GraphicsShapeObjectDriverI18N::textId("ShadedWithFaceBoundary") }
     });
     this->setDefaultDisplayMode(DisplayMode_ShadedWithFaceBoundary);
 }
@@ -53,6 +52,7 @@ GraphicsObjectPtr GraphicsShapeObjectDriver::createObject(const TDF_Label& label
         object->Attributes()->SetFaceBoundaryAspect(
             new Prs3d_LineAspect(Quantity_NOC_BLACK, Aspect_TOL_SOLID, 1.)
         );
+        object->Attributes()->SetAutoTriangulation(false);
         object->Attributes()->SetIsoOnTriangulation(true);
         //object->Attributes()->SetShadingModel(Graphic3d_TypeOfShadingModel_Pbr, true/*overrideDefaults*/);
         object->SetOwner(this);
@@ -126,8 +126,8 @@ Enumeration::Value GraphicsShapeObjectDriver::currentDisplayMode(const GraphicsO
     return -1;
 }
 
-std::unique_ptr<PropertyGroupSignals>
-GraphicsShapeObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+std::unique_ptr<PropertyGroup>
+GraphicsShapeObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     //return std::make_unique<GraphicsObjectBasePropertyGroup>(spanObject);

@@ -1,22 +1,22 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "global.h"
 #if defined(MAYO_OS_WINDOWS)
 #  include <Windows.h>
 #else
+#  include <cerrno>
 #  include <iconv.h>
 #  include <langinfo.h>
 #  include <locale.h>
 #endif
 
-#include "string_conv.h"
-
 #include "cpp_utils.h"
 #include "math_utils.h"
+#include "string_conv.h"
+
 #include <gsl/util>
 #include <algorithm>
 #include <sstream>
@@ -43,14 +43,21 @@ UINT getAnsiCodePageForLocale(LCID lcid)
 
 bool toUtf16String(std::string_view str, UINT localeAcp, std::vector<wchar_t>& utf16)
 {
+    if (!Cpp::cmpLessEqual(str.size(), INT_MAX))
+        return false;
+
     // Compute length of utf16 string for memory allocation
-    const int lenStr = CppUtils::safeStaticCast<int>(str.size());
+    const int lenStr = static_cast<int>(str.size());
     const int lenUtf16 = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, nullptr, 0);
-    if (lenUtf16 == 0)
-        return {};
+    if (lenUtf16 <= 0)
+        return false;
+
+    // +1 for null terminator, guard overflow
+    if (lenUtf16 >= INT_MAX)
+        return false;
 
     // Encode to utf16 string
-    utf16.resize(lenUtf16 + 1);
+    utf16.resize(static_cast<size_t>(lenUtf16) + 1);
     const int convCount = MultiByteToWideChar(localeAcp, MB_ERR_INVALID_CHARS, str.data(), lenStr, utf16.data(), lenUtf16);
     if (convCount == 0)
         utf16.resize(1);
@@ -89,7 +96,8 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
         return {};
 
     // Encode intermediate utf16 string to utf8
-    const int lenUtf16 = Cpp::safeStaticCast<int>(utf16.size()) - 1;
+    // NOTE static_cast<int> for lenUtf16 is safe as toUtf16String() guarantees size fits 'int' type
+    const int lenUtf16 = static_cast<int>(utf16.size()) - 1;
     const int lenUtf8 = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), lenUtf16, nullptr, 0, nullptr, nullptr);
     thread_local std::vector<char> utf8;
     utf8.resize(lenUtf8 + 1);
@@ -116,7 +124,7 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
     const std::string localeName = locale.name();
     std::string charset;
     {
-        const locale_t nullLocale = reinterpret_cast<locale_t>(0);
+        const locale_t nullLocale = {};
         const locale_t loc = newlocale(LC_CTYPE_MASK, localeName.c_str(), nullLocale);
         if (loc != nullLocale) {
             const char* zcharset = nl_langinfo_l(CODESET, loc);
@@ -142,33 +150,43 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
 
     // Allocate conversion descriptor
     iconv_t convd = iconv_open("UTF-8", charset.c_str());
-    [[maybe_unused]] auto _ = gsl::finally([=]{ iconv_close(convd); });
-    if (convd == reinterpret_cast<iconv_t>(-1))
+    // POSIX: iconv_open() returns (iconv_t)-1 on failure
+    if (convd == reinterpret_cast<iconv_t>(-1)) // NOSONAR
         return std::string{str};
+
+    [[maybe_unused]] auto iconvCloseGuard = gsl::finally([=]{ iconv_close(convd); });
 
     // Attempt to convert input string to utf8(limit attempt count)
     thread_local std::vector<char> utf8;
-    utf8.resize(str.size());
-    std::fill(utf8.begin(), utf8.end(), '\0');
-    constexpr size_t iconvError = -1;
-    size_t iconvRes = 0;
-    constexpr int maxAttemptCount = 10;
-    int attemptCount = 0;
-    do {
-        char* strData = const_cast<char*>(str.data());
-        size_t lenStr = str.size();
-        utf8.resize(utf8.size() + (utf8.size() * 0.25) + 1); // Grow size by 25% each attempt
+    static constexpr size_t maxRetainedBufferSize = 64 * 1024; // 64KB
+    if (utf8.capacity() > maxRetainedBufferSize)
+        utf8 = std::vector<char>{};
+
+    auto fnGrowUtf8BufferSize = [&](size_t baseSize) {
+        utf8.resize(baseSize + (baseSize / 2) + 1); // Grow size by 50%
         std::fill(utf8.begin(), utf8.end(), '\0');
+    };
+
+    fnGrowUtf8BufferSize(str.size());
+    constexpr int maxAttemptCount = 16;
+    int attemptCount = 0;
+    while (attemptCount++ < maxAttemptCount) {
+        auto strData = const_cast<char*>(str.data());
+        size_t lenStr = str.size();
         char* utf8Data = utf8.data();
-        size_t lenUtf8 = utf8.size();
-        iconvRes = iconv(convd, &strData, &lenStr, &utf8Data, &lenUtf8);
-        ++attemptCount;
-    } while (iconvRes == iconvError && attemptCount < maxAttemptCount);
+        size_t lenOut = utf8.size(); // On success: remaining bytes in utf8 buffer after conversion
+        errno = 0;
+        const size_t iconvRes = iconv(convd, &strData, &lenStr, &utf8Data, &lenOut);
+        // POSIX: iconv() returns (size_t)-1 on failure. Note: (size_t)-1 == SIZE_MAX
+        if (iconvRes != SIZE_MAX)
+            return std::string{utf8.data(), utf8.size() - lenOut}; // Success
+        else if (errno == E2BIG)
+            fnGrowUtf8BufferSize(utf8.size()); // Grow size for each attempt
+        else
+            break; // EILSEQ, EINVAL: new attempt is worthless(failure)
+    }
 
-    if (iconvRes == iconvError)
-        return std::string{str};
-
-    return utf8.data();
+    return std::string{str}; // Fallback on failure
 #endif
 }
 
@@ -176,16 +194,6 @@ std::string toUtf8String(std::string_view str, const std::locale& locale)
 
 std::string to_stdString(double value, const DoubleToStringOptions& opts)
 {
-    // Helper function to return the last character of string 'str'
-    auto fnLastChar = [](const std::string& str) {
-        return !str.empty() ? str.at(str.size() - 1) : char{};
-    };
-    // Helper function to erase the last character of the string pointed to by 'str'
-    auto fnEraseLastChar = [](std::string* str) {
-        if (!str->empty())
-            str->erase(str->size() - 1);
-    };
-
     value = opts.roundToZero && MathUtils::fuzzyIsNull(value) ? 0. : value;
     std::ostringstream sstr;
     sstr.imbue(opts.locale);
@@ -194,11 +202,11 @@ std::string to_stdString(double value, const DoubleToStringOptions& opts)
     if (opts.removeTrailingZeroes) {
         const char chDecPnt = std::use_facet<std::numpunct<char>>(opts.locale).decimal_point();
         if (str.find(chDecPnt) != std::string::npos) { // Remove useless trailing zeroes
-            while (fnLastChar(str) == '0')
-                fnEraseLastChar(&str);
+            while (!str.empty() && str.back() == '0')
+                str.pop_back();
 
-            if (fnLastChar(str) == chDecPnt)
-                fnEraseLastChar(&str);
+            if (!str.empty() && str.back() == chDecPnt)
+                str.pop_back();
         }
     }
 
@@ -240,7 +248,7 @@ DoubleToStringOperation& DoubleToStringOperation::toUtf8(bool on)
     return *this;
 }
 
-DoubleToStringOperation::operator std::string()
+DoubleToStringOperation::operator std::string() const
 {
     return to_stdString(m_value, m_opts);
 }

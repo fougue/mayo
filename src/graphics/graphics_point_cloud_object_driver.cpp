@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "graphics_point_cloud_object_driver.h"
@@ -49,8 +48,8 @@ Enumeration::Value GraphicsPointCloudObjectDriver::currentDisplayMode(const Grap
     return object->DisplayMode();
 }
 
-std::unique_ptr<PropertyGroupSignals>
-GraphicsPointCloudObjectDriver::properties(Span<const GraphicsObjectPtr> spanObject) const
+std::unique_ptr<PropertyGroup>
+GraphicsPointCloudObjectDriver::properties(gsl::span<const GraphicsObjectPtr> spanObject) const
 {
     this->throwIf_differentDriver(spanObject);
     return {};

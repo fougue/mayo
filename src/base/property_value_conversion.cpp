@@ -1,13 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "property_value_conversion.h"
 
 #include "cpp_utils.h"
 #include "filepath_conv.h"
+#include "libfromchars.h"
 #include "math_utils.h"
 #include "property_builtins.h"
 #include "property_enumeration.h"
@@ -17,21 +17,16 @@
 
 #include <fmt/format.h>
 #include <algorithm>
-#if __cpp_lib_to_chars
-#  include <charconv>
-#endif
-#include <cstdlib>
-#include <cstring>
+#include <charconv>
 #include <iostream>
 #include <stdexcept>
-#include <sstream>
 
 namespace Mayo {
 
 namespace {
 
 // Helper that converts a double number into a string
-static std::string toString(double value, int prec = 6)
+std::string toString(double value, int prec = 6)
 {
 #if __cpp_lib_to_chars
     char buff[64] = {};
@@ -42,14 +37,11 @@ static std::string toString(double value, int prec = 6)
 
     return std::string(buff, resToChars.ptr - buff);
 #else
-    std::stringstream sstr;
-    sstr.precision(prec);
-    sstr << value;
-    return sstr.str();
+    return fmt::format("{:.{}g}", value, prec);
 #endif
 }
 
-static std::string toString(const gp_XYZ& coords, int prec = 6)
+std::string toString(const gp_XYZ& coords, int prec = 6)
 {
     const std::string strX = toString(coords.X(), prec);
     const std::string strY = toString(coords.Y(), prec);
@@ -57,25 +49,18 @@ static std::string toString(const gp_XYZ& coords, int prec = 6)
     return strX + ", " + strY + ", " + strZ;
 }
 
-static gp_XYZ xyzFromString(std::string_view str)
+gp_XYZ xyzFromString(std::string_view str)
 {
     const char* ptrCoord = str.data();
     const char* const ptrCoordEnd = str.data() + str.size();
     auto fnParseNextCoord = [&]{
         const std::locale& locale = std::locale::classic();
         ptrCoord = std::find_if(ptrCoord, ptrCoordEnd, [&](char ch) { return !std::isspace(ch, locale); });
-        auto ptrComma = std::find(ptrCoord, ptrCoordEnd, L',');
+        auto ptrComma = std::find(ptrCoord, ptrCoordEnd, ',');
         double coord = 0;
-#if __cpp_lib_to_chars
-        auto [ptr, err] = std::from_chars(ptrCoord, ptrComma, coord);
+        auto [ptr, err] = Mayo::fromChars(ptrCoord, ptrComma, coord);
         if (err != std::errc())
             throw std::runtime_error(std::make_error_code(err).message());
-#else
-        errno = 0;
-        coord = std::strtod(ptrCoord, nullptr);
-        if (errno != 0)
-            throw std::runtime_error(std::strerror(errno));
-#endif
 
         ptrCoord = ptrComma + 1;
         return coord;
@@ -88,44 +73,155 @@ static gp_XYZ xyzFromString(std::string_view str)
     return coords;
 }
 
+void printFromVariantError(const Property* prop, std::string_view text)
+{
+    // TODO Use other output stream(dedicated Messenger object?)
+    std::cerr << fmt::format("PropertyValueConversion::fromVariant() {} [ propertyName={}, propertyType={} ]",
+                             text, prop->name().key, prop->dynTypeName())
+              << std::endl;
+}
+
+// Helper function to set Property value from Variant
+//   `prop`
+//       the target property to set the value of
+//   `variant`
+//       the source variant value to convert from
+//   `fnConvert`
+//       the function used to get the value out of `variant`. This function must be one of
+//       Variant::toBool(), toInt(), ...
+template<typename PropertyType, typename ValueType>
+bool propertyFromVariant(
+        PropertyType* prop,
+        const PropertyValueConversion::Variant& variant,
+        ValueType (PropertyValueConversion::Variant::*fnConvertTo)(bool*) const
+    )
+{
+    static_assert(std::is_base_of_v<Property, PropertyType>);
+
+    bool ok = false;
+    auto value = (variant.*fnConvertTo)(&ok);
+    if (ok)
+        return prop->setValue(value);
+    else
+        printFromVariantError(prop, fmt::format("Variant not convertible to {}", prop->dynTypeName()));
+
+    return false;
+}
+
+// Helper function to set Property value from Variant holding a string representation of X,Y,Z coordinates
+// See xyzFromString() function
+template<typename PropertyType>
+bool propertyFromVariantXyz(PropertyType* prop, const PropertyValueConversion::Variant& variant)
+{
+    static_assert(
+        std::is_same_v<PropertyType, PropertyOccPnt> || std::is_same_v<PropertyType, PropertyOccVec>
+    );
+
+    if (variant.isConvertibleToConstRefString()) {
+        try {
+            return prop->setValue(xyzFromString(variant.toConstRefString()));
+        } catch (const std::exception& err) {
+            printFromVariantError(prop, fmt::format("Failed with error '{}'", err.what()));
+        }
+    }
+    else {
+        printFromVariantError(prop, "Variant expected to hold string");
+    }
+
+    return false;
+}
+
+// Helper function to set Property value from Variant holding a filepath specification
+bool propertyFromVariantFilePath(PropertyFilePath* prop, const PropertyValueConversion::Variant& variant)
+{
+    // Note: explicit conversion from utf8 std::string to std::filesystem::path
+    //       If character type of the source string is "char" then FilePath constructor assumes
+    //       native narrow encoding(which might cause encoding issues)
+    if (variant.isConvertibleToConstRefString())
+        return prop->setValue(filepathFrom(variant.toConstRefString()));
+
+    printFromVariantError(prop, "Variant expected to hold string");
+    return false;
+}
+
+// Helper function to set Property value from Variant holding a string representation of hexadecimal
+// color(format: #RRGGBB)
+bool propertyFromVariantColor(PropertyOccColor* prop, const PropertyValueConversion::Variant& variant)
+{
+    if (variant.isConvertibleToConstRefString()) {
+        const std::string& strColorHex = variant.toConstRefString();
+        Quantity_Color color;
+        if (TKernelUtils::colorFromHex(strColorHex, &color))
+            return prop->setValue(color);
+        else
+            printFromVariantError(prop, fmt::format("Not hexadecimal format '{}'", strColorHex));
+    }
+    else {
+        printFromVariantError(prop, "Variant expected to hold string");
+    }
+
+    return false;
+}
+
+// Helper function to set Property value from Variant holding the name of an enumerated value
+bool propertyFromVariantEnumValue(PropertyEnumeration* prop, const PropertyValueConversion::Variant& variant)
+{
+    if (variant.isConvertibleToConstRefString()) {
+        const std::string& name = variant.toConstRefString();
+        const Enumeration::Item* ptrItem = prop->enumeration().findItemByName(name);
+        if (ptrItem)
+            return prop->setValue(ptrItem->value);
+
+        printFromVariantError(prop, fmt::format("Found no enumeration item for '{}'", name));
+    }
+    else {
+        printFromVariantError(prop, "Variant expected to hold string");
+    }
+
+    return false;
+}
+
+// Helper function to set Property value from Variant holding a string representation of a quantity
+bool propertyFromVariantQuantity(BasePropertyQuantity* prop, const PropertyValueConversion::Variant& variant)
+{
+    if (variant.isConvertibleToConstRefString()) {
+        const std::string& strQty = variant.toConstRefString();
+        Unit unit;
+        const UnitSystem::TranslateResult trRes = UnitSystem::parseQuantity(strQty, &unit);
+        if (!trRes.strUnit || MathUtils::fuzzyIsNull(trRes.factor)) {
+            printFromVariantError(prop, fmt::format("Failed to parse quantity string '{}'", strQty));
+            return false;
+        }
+
+        if (unit != Unit::None && unit != prop->quantityUnit()) {
+            printFromVariantError(prop, fmt::format("Unit mismatch with quantity string '{}'", strQty));
+            return false;
+        }
+
+        return prop->setQuantityValue(trRes.value * trRes.factor);
+    }
+
+    printFromVariantError(prop, "Variant expected to hold string");
+    return false;
+}
+
 } // namespace
-
-PropertyValueConversion::Variant::Variant(bool v)
-    : BaseVariantType(v)
-{}
-
-PropertyValueConversion::Variant::Variant(int v)
-    : BaseVariantType(v)
-{}
-
-PropertyValueConversion::Variant::Variant(float v)
-    : Variant(static_cast<double>(v))
-{}
-
-PropertyValueConversion::Variant::Variant(double v)
-    : BaseVariantType(v)
-{}
 
 PropertyValueConversion::Variant::Variant(const char* str)
     : BaseVariantType(std::string(str))
 {}
 
-PropertyValueConversion::Variant::Variant(const std::string& str)
-    : BaseVariantType(str)
-{}
-
-PropertyValueConversion::Variant::Variant(Span<const uint8_t> bytes)
+PropertyValueConversion::Variant::Variant(gsl::span<const uint8_t> bytes)
     : BaseVariantType(std::vector<uint8_t>(bytes.begin(), bytes.end()))
 {}
 
 PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Property& prop) const
 {
-    auto fnError = [&](std::string_view text) {
+    auto fnPrintError = [&](std::string_view text) {
         // TODO Use other output stream(dedicated Messenger object?)
         std::cerr << fmt::format("PropertyValueConversion::toVariant() {} [ propertyName={}, propertyType={} ]",
                                  text, prop.name().key, prop.dynTypeName())
                   << std::endl;
-        return PropertyValueConversion::Variant{};
     };
 
     if (isType<PropertyBool>(prop)) {
@@ -137,9 +233,6 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
     else if (isType<PropertyDouble>(prop)) {
         return constRef<PropertyDouble>(prop).value();
     }
-    else if (isType<PropertyCheckState>(prop)) {
-        return fnError("Support of this property type not yet implemented");
-    }
     else if (isType<PropertyString>(prop)) {
         return constRef<PropertyString>(prop).value();
     }
@@ -150,18 +243,15 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
         try {
             return toString(constRef<PropertyOccPnt>(prop).value().XYZ(), m_doubleToStringPrecision);
         } catch (const std::exception& err) {
-            return fnError(fmt::format("Failed with error: '{}'", err.what()));
+            fnPrintError(fmt::format("Failed with error: '{}'", err.what()));
         }
     }
     else if (isType<PropertyOccVec>(prop)) {
         try {
             return toString(constRef<PropertyOccVec>(prop).value().XYZ(), m_doubleToStringPrecision);
         } catch (const std::exception& err) {
-            return fnError(fmt::format("Failed with error: '{}'", err.what()));
+            fnPrintError(fmt::format("Failed with error: '{}'", err.what()));
         }
-    }
-    else if (isType<PropertyOccTrsf>(prop)) {
-        return fnError("Support of this property type not yet implemented");
     }
     else if (isType<PropertyOccColor>(prop)) {
         return TKernelUtils::colorToHex(constRef<PropertyOccColor>(prop));
@@ -176,8 +266,11 @@ PropertyValueConversion::Variant PropertyValueConversion::toVariant(const Proper
             const double value = trRes.value * trRes.factor;
             return toString(value, m_doubleToStringPrecision) + trRes.strUnit;
         } catch (const std::exception& err) {
-            return fnError(fmt::format("Failed with error: '{}'", err.what()));
+            fnPrintError(fmt::format("Failed with error: '{}'", err.what()));
         }
+    }
+    else {
+        fnPrintError("Support of this property type not yet implemented");
     }
 
     return {};
@@ -188,125 +281,41 @@ bool PropertyValueConversion::fromVariant(Property* prop, const Variant& variant
     if (!prop)
         return false;
 
-    auto fnError = [=](std::string_view text) {
-        // TODO Use other output stream(dedicated Messenger object?)
-        std::cerr << fmt::format("PropertyValueConversion::fromVariant() {} [ propertyName={}, propertyType={} ]",
-                                 text, prop->name().key, prop->dynTypeName())
-                  << std::endl;
-        return false;
-    };
-
     if (isType<PropertyBool>(prop)) {
-        bool okConversion = false;
-        const bool on = variant.toBool(&okConversion);
-        if (okConversion)
-            return ptr<PropertyBool>(prop)->setValue(on);
-
-        return fnError("Variant not convertible to bool");
+        return propertyFromVariant(ptr<PropertyBool>(prop), variant, &Variant::toBool);
     }
     else if (isType<PropertyInt>(prop)) {
-        bool okConversion = false;
-        const int v = variant.toInt(&okConversion);
-        if (okConversion)
-            return ptr<PropertyInt>(prop)->setValue(v);
-
-        return fnError("Variant not convertible to int");
+        return propertyFromVariant(ptr<PropertyInt>(prop), variant, &Variant::toInt);
     }
     else if (isType<PropertyDouble>(prop)) {
-        bool okConversion = false;
-        const double v = variant.toDouble(&okConversion);
-        if (okConversion)
-            return ptr<PropertyDouble>(prop)->setValue(v);
-
-        return fnError("Variant not convertible to double");
-    }
-    else if (isType<PropertyCheckState>(prop)) {
-        return fnError("Support of this property type not yet implemented");
+        return propertyFromVariant(ptr<PropertyDouble>(prop), variant, &Variant::toDouble);
     }
     else if (isType<PropertyString>(prop)) {
         if (variant.isConvertibleToConstRefString())
-            return ptr<PropertyString>(prop)->setValue(variant.toConstRefString());
-
-        bool okConversion = false;
-        const std::string str = variant.toString(&okConversion);
-        if (okConversion)
-            return ptr<PropertyString>(prop)->setValue(str);
-
-        return fnError("Variant not convertible to string");
+            return propertyFromVariant(ptr<PropertyString>(prop), variant, &Variant::toConstRefString);
+        else
+            return propertyFromVariant(ptr<PropertyString>(prop), variant, &Variant::toString);
     }
     else if (isType<PropertyFilePath>(prop)) {
-        // Note: explicit conversion from utf8 std::string to std::filesystem::path
-        //       If character type of the source string is "char" then FilePath constructor assumes
-        //       native narrow encoding(which might cause encoding issues)
-        if (variant.isConvertibleToConstRefString())
-            return ptr<PropertyFilePath>(prop)->setValue(filepathFrom(variant.toConstRefString()));
-        else
-            return fnError("Variant expected to hold string");
+        return propertyFromVariantFilePath(ptr<PropertyFilePath>(prop), variant);
     }
     else if (isType<PropertyOccPnt>(prop)) {
-        if (variant.isConvertibleToConstRefString()) {
-            try {
-                return ptr<PropertyOccPnt>(prop)->setValue(xyzFromString(variant.toConstRefString()));
-            } catch (const std::exception& err) {
-                return fnError(fmt::format("Failed with error '{}'", err.what()));
-            }
-        }
-
-        return fnError("Variant expected to hold string");
+        return propertyFromVariantXyz(ptr<PropertyOccPnt>(prop), variant);
     }
     else if (isType<PropertyOccVec>(prop)) {
-        if (variant.isConvertibleToConstRefString()) {
-            try {
-                return ptr<PropertyOccVec>(prop)->setValue(xyzFromString(variant.toConstRefString()));
-            } catch (const std::exception& err) {
-                return fnError(fmt::format("Failed with error '{}'", err.what()));
-            }
-        }
-
-        return fnError("Variant expected to hold string");
-    }
-    else if (isType<PropertyOccTrsf>(prop)) {
-        return fnError("Support of this property type not yet implemented");
+        return propertyFromVariantXyz(ptr<PropertyOccVec>(prop), variant);
     }
     else if (isType<PropertyOccColor>(prop)) {
-        if (variant.isConvertibleToConstRefString()) {
-            const std::string& strColorHex = variant.toConstRefString();
-            Quantity_Color color;
-            if (!TKernelUtils::colorFromHex(strColorHex, &color))
-                return fnError(fmt::format("Not hexadecimal format '{}'", strColorHex));
-
-            return ptr<PropertyOccColor>(prop)->setValue(color);
-        }
-
-        return fnError("Variant expected to hold string");
+        return propertyFromVariantColor(ptr<PropertyOccColor>(prop), variant);
     }
     else if (isType<PropertyEnumeration>(prop)) {
-        if (variant.isConvertibleToConstRefString()) {
-            const std::string& name = variant.toConstRefString();
-            const Enumeration::Item* ptrItem = ptr<PropertyEnumeration>(prop)->enumeration().findItemByName(name);
-            if (ptrItem)
-                return ptr<PropertyEnumeration>(prop)->setValue(ptrItem->value);
-
-            return fnError(fmt::format("Found no enumeration item for '{}'", name));
-        }
-
-        return fnError("Variant expected to hold string");
+        return propertyFromVariantEnumValue(ptr<PropertyEnumeration>(prop), variant);
     }
     else if (isType<BasePropertyQuantity>(prop)) {
-        if (variant.isConvertibleToConstRefString()) {
-            const std::string& strQty = variant.toConstRefString();
-            Unit unit;
-            const UnitSystem::TranslateResult trRes = UnitSystem::parseQuantity(strQty, &unit);
-            if (!trRes.strUnit || MathUtils::fuzzyIsNull(trRes.factor))
-                return fnError(fmt::format("Failed to parse quantity string '{}'", strQty));
-
-            if (unit != Unit::None && unit != ptr<BasePropertyQuantity>(prop)->quantityUnit())
-                return fnError(fmt::format("Unit mismatch with quantity string '{}'", strQty));
-
-            return ptr<BasePropertyQuantity>(prop)->setQuantityValue(trRes.value * trRes.factor);
-        }
-
-        return fnError("Variant expected to hold string");
+        return propertyFromVariantQuantity(ptr<BasePropertyQuantity>(prop), variant);
+    }
+    else {
+        printFromVariantError(prop, fmt::format("Support of {} not yet implemented", prop->dynTypeName()));
     }
 
     return false;
@@ -410,7 +419,7 @@ const std::string& PropertyValueConversion::Variant::toConstRefString(bool* ok) 
     }
 
     assignBoolPtr(ok, false);
-    return CppUtils::nullString();
+    return Cpp::staticObject<std::string>();
 }
 
 std::vector<uint8_t> PropertyValueConversion::Variant::toByteArray(bool* ok) const
@@ -431,7 +440,7 @@ std::vector<uint8_t> PropertyValueConversion::Variant::toByteArray(bool* ok) con
     return {};
 }
 
-Span<const uint8_t> PropertyValueConversion::Variant::toConstRefByteArray(bool* ok) const
+gsl::span<const uint8_t> PropertyValueConversion::Variant::toConstRefByteArray(bool* ok) const
 {
     assignBoolPtr(ok, true);
     if (std::holds_alternative<std::vector<uint8_t>>(*this))

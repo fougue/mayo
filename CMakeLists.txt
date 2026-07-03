@@ -1,13 +1,12 @@
 #****************************************************************************
-#* Copyright (c) 2024, Fougue Ltd. <https://www.fougue.pro>
-#* All rights reserved.
-#* See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+#* Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+#* SPDX-License-Identifier: BSD-2-Clause
 #****************************************************************************
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 set(Mayo_VersionMajor 0)
-set(Mayo_VersionMinor 9)
+set(Mayo_VersionMinor 10)
 set(Mayo_VersionPatch 0)
 set(Mayo_Version ${Mayo_VersionMajor}.${Mayo_VersionMinor}.${Mayo_VersionPatch})
 
@@ -18,8 +17,10 @@ project(
     LANGUAGES CXX
 )
 
-set(Mayo_Copyright "Copyright @ 2016-present, Fougue Ltd., All Rights Reserved")
-mark_as_advanced(FORCE Mayo_Copyright)
+set(Mayo_CompanyName "Fougue SAS")
+set(Mayo_Copyright "Copyright (c) 2016, ${Mayo_CompanyName}")
+set(MayoApp_Description  ${PROJECT_DESCRIPTION})
+set(MayoConv_Description "MayoConv - Opensource 3D CAD converter(CLI)")
 
 set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
 
@@ -83,9 +84,14 @@ This simplifies running Mayo from eg Visual Studio IDE\
     )
 endif()
 
-# TODO Make option Mayo_BuildTests dependent of Mayo_BuildApp)
 option(Mayo_BuildApp "Build Mayo GUI application" ON)
 option(Mayo_BuildConvCli "Build Mayo CLI converter" ON)
+
+if(MSVC)
+    option(Mayo_EnablePch "Enable precompiled headers" OFF)
+    mark_as_advanced(Mayo_EnablePch)
+    message(STATUS "Mayo_EnablePch=${Mayo_EnablePch}")
+endif()
 
 # TODO
 # option(Mayo_BuildPluginGmio "Build plugin to import/export mesh files supported by gmio" OFF)
@@ -122,9 +128,9 @@ if(QT_FOUND)
 endif()
 
 #qt_standard_project_setup()
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTOUIC OFF)
+set(CMAKE_AUTORCC OFF)
 
 ##########
 # Compiler config
@@ -145,6 +151,8 @@ if(MSVC)
     list(APPEND Mayo_CompileOptions /we4150)
     # Specify both the source character set and the execution character set as UTF-8
     list(APPEND Mayo_CompileOptions /utf-8)
+    # Enables multi-processing for compiling source files
+    list(APPEND Mayo_CompileOptions /MP)
     if(QT_VERSION_MAJOR EQUAL 6)
         list(APPEND Mayo_CompileDefinitions _USE_MATH_DEFINES)
     endif()
@@ -184,9 +192,14 @@ set(MayoCore_LinkDirectories)
 set(MayoCore_LinkLibraries)
 set(MayoIO_LinkLibraries)
 
+find_package(Threads REQUIRED)
+list(APPEND MayoCore_LinkLibraries Threads::Threads)
+
 if(MSVC)
     list(APPEND MayoCore_LinkLibraries Opengl32 User32)
 elseif(APPLE)
+    list(APPEND MayoCore_LinkLibraries iconv)
+elseif(HAIKU)
     list(APPEND MayoCore_LinkLibraries iconv)
 endif()
 
@@ -219,6 +232,7 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_occ/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_off/*.cpp
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/3rdparty/miniply/miniply.cpp
 )
 
 ##########
@@ -241,21 +255,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/io_ply/*.h
 )
 
-##########
-# Unit tests
-##########
-
-if(Mayo_BuildTests)
-    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
-    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-
-    set(MAYO_WITH_TESTS 1)
-    list(APPEND MayoTests_LinkLibraries Qt${QT_VERSION_MAJOR}::Test)
-
-    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
-    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
-endif()
 
 ##########
 # OpenCascade
@@ -267,6 +266,10 @@ if(WIN32)
     include(${PROJECT_SOURCE_DIR}/cmake/OpenCascadeWin.cmake)
     if (OpenCASCADE_FOUND)
         # Add OpenCASCADE include directory
+        if(OpenCASCADE_VERSION VERSION_LESS 7.5.0)
+            list(APPEND Mayo_IncludeDirectories ${PROJECT_SOURCE_DIR}/src/3rdparty/occt/patch_pre7.5)
+        endif()
+
         list(APPEND Mayo_IncludeDirectories ${OpenCASCADE_INCLUDE_DIR})
 
         # Add OpenCASCADE library directories
@@ -438,8 +441,12 @@ endif()
 # Configure files
 ##########
 
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_config.h.cmake  common/mayo_config.h  @ONLY)
-configure_file(${PROJECT_SOURCE_DIR}/src/mayo_version.h.cmake common/mayo_version.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/mayo_config.h.in  common/mayo_config.h  @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/mayo_version.h.in common/mayo_version.h @ONLY)
+if(WIN32)
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/version_MayoApp.rc.in  version_MayoApp.rc  @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/version_MayoConv.rc.in version_MayoConv.rc @ONLY)
+endif()
 
 ##########
 # Icons for Mayo exe targets
@@ -470,6 +477,10 @@ target_link_libraries(MayoCoreLib INTERFACE MayoCore ${MayoCore_LinkLibraries})
 target_link_directories(MayoCoreLib INTERFACE ${MayoCore_LinkDirectories})
 target_include_directories(MayoCoreLib INTERFACE ${Mayo_IncludeDirectories})
 
+if(Mayo_EnablePch)
+    target_precompile_headers(MayoCore PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
+endif()
+
 ##########
 # Target: MayoIO(static lib)
 ##########
@@ -484,6 +495,10 @@ target_link_libraries(MayoIO PRIVATE MayoCore ${MayoIO_LinkLibraries})
 add_library(MayoIOLib INTERFACE)
 target_link_libraries(MayoIOLib INTERFACE MayoIO MayoCoreLib ${MayoIO_LinkLibraries})
 
+if(Mayo_EnablePch)
+    target_precompile_headers(MayoIO PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
+endif()
+
 ##########
 # Target: MayoApp
 ##########
@@ -492,7 +507,7 @@ set(MayoApp_HeaderFiles)
 set(MayoApp_SourceFiles)
 set(MayoApp_LinkLibraries)
 
-# MayoApp headers
+# MayoApp headers + sources
 file(
     GLOB MayoApp_HeaderFiles
     ${PROJECT_SOURCE_DIR}/src/app/*.h
@@ -501,11 +516,6 @@ file(
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.h
 )
 
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND MayoApp_HeaderFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.h)
-endif()
-
-# MayoApp sources
 file(
     GLOB MayoApp_SourceFiles
     ${PROJECT_SOURCE_DIR}/src/app/*.cpp
@@ -514,19 +524,17 @@ file(
     ${PROJECT_SOURCE_DIR}/src/qtcommon/*.cpp
 )
 
-if(WIN32 AND QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND MayoApp_SourceFiles ${PROJECT_SOURCE_DIR}/src/app/windows/win_taskbar_global_progress.cpp)
+if(NOT (WIN32 AND QT_VERSION_MAJOR EQUAL 5))
+    list(FILTER MayoApp_HeaderFiles EXCLUDE REGEX "win_taskbar.*\\.h$")
+    list(FILTER MayoApp_SourceFiles EXCLUDE REGEX "win_taskbar.*\\.cpp$")
+endif()
+
+if(WIN32)
+    list(APPEND MayoApp_SourceFiles ${CMAKE_BINARY_DIR}/version_MayoApp.rc)
 endif()
 
 # MayoApp UI files
 file(GLOB MayoApp_QtUiFiles ${PROJECT_SOURCE_DIR}/src/app/*.ui)
-
-# MayoApp unit tests
-if(Mayo_BuildTests)
-    list(APPEND MayoApp_HeaderFiles ${MayoTests_HeaderFiles})
-    list(APPEND MayoApp_SourceFiles ${MayoTests_SourceFiles})
-    list(APPEND MayoApp_LinkLibraries ${MayoTests_LinkLibraries})
-endif()
 
 # MayoApp libs
 list(
@@ -567,6 +575,10 @@ if(Mayo_BuildApp)
     # Required by generated Qt UI files
     target_include_directories(mayo PRIVATE ${PROJECT_SOURCE_DIR}/src/app)
 
+    if(Mayo_EnablePch)
+        target_precompile_headers(mayo PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoApp.h")
+    endif()
+
     set_target_properties(
         mayo
         PROPERTIES
@@ -575,13 +587,22 @@ if(Mayo_BuildApp)
             MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
             MACOSX_BUNDLE_COPYRIGHT ${Mayo_Copyright}
             MACOSX_BUNDLE_ICON_FILE appicon.icns
-            WIN32_EXECUTABLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "pro.fougue.mayo"  # See QTBUG-135882
             MACOSX_BUNDLE TRUE
+            WIN32_EXECUTABLE TRUE
+            AUTOMOC ON  AUTOUIC ON  AUTORCC ON
     )
 
     if(Mayo_PostBuildCopyRuntimeDLLs)
+        # Run "qmake -query QT_INSTALL_PLUGINS" to retrieve base folder of Qt plugins
+        get_target_property(Qt_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+        execute_process(
+            COMMAND ${Qt_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
+            OUTPUT_VARIABLE QtPluginsDir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
         # Copy required Qt plugins
-        set(QtPluginsDir "${QT_DIR}/../../../plugins")
         file(GLOB QtPluginIconEnginesDLLs  "${QtPluginsDir}/iconengines/qsvgicon*.dll")
         file(GLOB QtPluginImageFormatsDLLs "${QtPluginsDir}/imageformats/qsvg*.dll")
         file(GLOB QtPluginPlatformsDLLs    "${QtPluginsDir}/platforms/qwindows*.dll")
@@ -648,9 +669,11 @@ list(
     ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
     ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
     ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
-    ${PROJECT_SOURCE_DIR}/src/app/library_info.cpp
     ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
 )
+if(WIN32)
+    list(APPEND MayoConv_SourceFiles ${CMAKE_BINARY_DIR}/version_MayoConv.rc)
+endif()
 
 if(Mayo_BuildConvCli)
     add_executable(
@@ -665,14 +688,76 @@ if(Mayo_BuildConvCli)
 
     target_compile_definitions(mayo-conv PRIVATE ${Mayo_CompileDefinitions})
     target_compile_options(mayo-conv PRIVATE ${Mayo_CompileOptions})
-
     target_link_libraries(
         mayo-conv PRIVATE
         MayoCoreLib
         MayoIOLib
         Qt${QT_VERSION_MAJOR}::Core
     )
+
+    if(Mayo_EnablePch)
+        target_precompile_headers(mayo-conv PRIVATE "${PROJECT_SOURCE_DIR}/cmake/pch_MayoCore.h")
+    endif()
+
+    set_target_properties(
+        mayo-conv PROPERTIES
+            WIN32_EXECUTABLE FALSE
+            AUTORCC ON
+    )
 endif() # Mayo_BuildConvCli
+
+##########
+# Target: test-mayo
+##########
+
+if(Mayo_BuildTests)
+    enable_testing()
+
+    file(GLOB MayoTests_HeaderFiles ${PROJECT_SOURCE_DIR}/tests/*.h)
+    file(GLOB MayoTests_SourceFiles ${PROJECT_SOURCE_DIR}/tests/*.cpp)
+    add_executable(
+        test-mayo
+        ${MayoTests_HeaderFiles}
+        ${MayoTests_SourceFiles}
+        # src/measure
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_display.cpp
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool.cpp
+        ${PROJECT_SOURCE_DIR}/src/measure/measure_tool_brep.cpp
+        # src/app
+        ${PROJECT_SOURCE_DIR}/src/app/app_module.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/app_module_properties.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/app_ui_state.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/document_files_watcher.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/qstring_utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/qtgui_utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/app/recent_files.cpp
+        # src/qtcommon
+        ${PROJECT_SOURCE_DIR}/src/qtcommon/qtcore_utils.cpp
+    )
+
+    target_compile_definitions(test-mayo PRIVATE ${Mayo_CompileDefinitions})
+    target_compile_options(test-mayo PRIVATE ${Mayo_CompileOptions})
+    target_link_libraries(
+        test-mayo PRIVATE
+        MayoCoreLib
+        MayoIOLib
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Test
+    )
+
+    set_target_properties(
+        test-mayo PROPERTIES
+            WIN32_EXECUTABLE FALSE
+            AUTOMOC ON
+    )
+
+    file(GLOB MayoTests_InputFiles ${PROJECT_SOURCE_DIR}/tests/inputs/*.*)
+    file(COPY ${MayoTests_InputFiles} DESTINATION ${CMAKE_BINARY_DIR}/tests/inputs)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
+
+    add_test(NAME test-mayo COMMAND test-mayo)
+endif()
 
 ##########
 # Target: OtherFiles
@@ -680,16 +765,23 @@ endif() # Mayo_BuildConvCli
 
 add_custom_target(
     OtherFiles SOURCES
-    .github/workflows/ci_linux.yml
-    .github/workflows/ci_linux_arm.yml
+    .github/CI_OVERVIEW.md
+    .github/FUNDING.yml
+    .github/sonar/project.properties
+    .github/workflows/ci_linux_arch.yml
+    .github/workflows/ci_linux_fedora.yml
+    .github/workflows/ci_linux_ubuntu.yml
+    .github/workflows/ci_linux_ubuntu_armv7.yml
     .github/workflows/ci_macos.yml
     .github/workflows/ci_macos_conda.yml
     .github/workflows/ci_windows.yml
+    .github/workflows/sonar.yml
     images/credits.txt
     scripts/bump-version.rb
     scripts/gen-cmake-opencascade-vars.bat
-    src/mayo_config.h.cmake
-    src/mayo_version.h.cmake
+    cmake/mayo_config.h.in
+    cmake/mayo_version.h.in
+    LICENSE.txt
     README.md
 )
 

@@ -1,21 +1,18 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "dialog_inspect_xde.h"
 
-#include "../base/application.h"
 #include "../base/brep_utils.h"
 #include "../base/caf_utils.h"
-#include "../base/cpp_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/meta_enum.h"
-#include "../base/settings.h"
 #include "../base/tkernel_utils.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
+#include "../qtcommon/qtcore_utils.h"
 #include "app_module.h"
 #include "qmeta_tdf_label.h"
 #include "qstring_utils.h"
@@ -289,7 +286,7 @@ static void loadLabelMaterialProperties(
         fnAddItem(createPropertyTreeItem("DensityValType", to_QString(densityValueType)));
     }
     else {
-        density = materialTool->GetDensityForShape(label);
+        density = XCAFDoc_MaterialTool::GetDensityForShape(label);
         if (!qFuzzyIsNull(density))
             fnAddItem(createPropertyTreeItem("Density", density, densityValueTextOptions));
     }
@@ -344,13 +341,13 @@ public:
     void setImage(int col, const FilePath& filePath)
     {
         const ItemData item{filePath, {}, {}};
-        m_mapColumnItemData.insert({ col, item });
+        m_mapColumnItemData.try_emplace(col, item);
     }
 
     void setImage(int col, const QByteArray& data)
     {
         const ItemData item{{}, data, {}};
-        m_mapColumnItemData.insert({ col, item });
+        m_mapColumnItemData.try_emplace(col, item);
     }
 
     QVariant data(int column, int role) const override
@@ -431,9 +428,10 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHan
     else if (imgTexture->DataBuffer() && !imgTexture->DataBuffer()->IsEmpty()) {
         // Texture is provided by some embedded data
         item->setText(1, DialogInspectXde::tr("<data>"));
-        const char* buffData = reinterpret_cast<const char*>(imgTexture->DataBuffer()->Data());
-        const int buffSize = Cpp::safeStaticCast<int>(imgTexture->DataBuffer()->Size());
-        item->setImage(1, QByteArray::fromRawData(buffData, buffSize));
+        auto buffData = reinterpret_cast<const char*>(imgTexture->DataBuffer()->Data());
+        auto buffSize = imgTexture->DataBuffer()->Size();
+        std::string_view buff{buffData, buffSize};
+        item->setImage(1, QtCoreUtils::QByteArray_fromRawData(buff));
     }
 
     return item;
@@ -561,16 +559,20 @@ static void loadLabelShapeProperties(
     if (XCAFDoc_ShapeTool::GetShape(label, shape))
         fnAddItem(createPropertyTreeItem("ShapeType", MetaEnum::name(shape.ShapeType())));
 
-    fnAddItem(createPropertyTreeItem("IsShape", shapeTool->IsShape(label)));
+    fnAddItem(createPropertyTreeItem("IsShape", XCAFDoc_ShapeTool::IsShape(label)));
     fnAddItem(createPropertyTreeItem("IsTopLevel", shapeTool->IsTopLevel(label)));
-    fnAddItem(createPropertyTreeItem("IsFree", shapeTool->IsFree(label)));
-    fnAddItem(createPropertyTreeItem("IsAssembly", shapeTool->IsAssembly(label)));
-    fnAddItem(createPropertyTreeItem("IsComponent", shapeTool->IsComponent(label)));
-    fnAddItem(createPropertyTreeItem("IsSimpleShape", shapeTool->IsSimpleShape(label)));
-    fnAddItem(createPropertyTreeItem("IsCompound", shapeTool->IsCompound(label)));
-    fnAddItem(createPropertyTreeItem("IsSubShape", shapeTool->IsSubShape(label)));
-    fnAddItem(createPropertyTreeItem("IsExternRef", shapeTool->IsExternRef(label)));
-    fnAddItem(createPropertyTreeItem("IsReference", shapeTool->IsReference(label)));
+    fnAddItem(createPropertyTreeItem("IsFree", XCAFDoc_ShapeTool::IsFree(label)));
+    fnAddItem(createPropertyTreeItem("IsAssembly", XCAFDoc_ShapeTool::IsAssembly(label)));
+    fnAddItem(createPropertyTreeItem("IsComponent", XCAFDoc_ShapeTool::IsComponent(label)));
+    fnAddItem(createPropertyTreeItem("IsSimpleShape", XCAFDoc_ShapeTool::IsSimpleShape(label)));
+    fnAddItem(createPropertyTreeItem("IsCompound", XCAFDoc_ShapeTool::IsCompound(label)));
+    fnAddItem(createPropertyTreeItem("IsSubShape", XCAFDoc_ShapeTool::IsSubShape(label)));
+    fnAddItem(createPropertyTreeItem("IsExternRef", XCAFDoc_ShapeTool::IsExternRef(label)));
+    fnAddItem(createPropertyTreeItem("IsReference", XCAFDoc_ShapeTool::IsReference(label)));
+
+    TDF_LabelSequence seqLabelUser;
+    XCAFDoc_ShapeTool::GetUsers(label, seqLabelUser);
+    fnAddItem(createPropertyTreeItem("UserCount", seqLabelUser.Size()));
 
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
@@ -788,9 +790,11 @@ static void deepLoadChildrenLabels(const TDF_Label& label, QTreeWidgetItem* tree
 {
     for (TDF_ChildIterator it(label, false/*!allLevels*/); it.More(); it.Next()) {
         const TDF_Label childLabel = it.Value();
-        auto childTreeItem = new QTreeWidgetItem(treeItem);
-        loadLabel(childLabel, childTreeItem);
-        deepLoadChildrenLabels(childLabel, childTreeItem);
+        if (!CafUtils::isNullOrEmpty(childLabel)) {
+            auto childTreeItem = new QTreeWidgetItem(treeItem);
+            loadLabel(childLabel, childTreeItem);
+            deepLoadChildrenLabels(childLabel, childTreeItem);
+        }
     }
 }
 

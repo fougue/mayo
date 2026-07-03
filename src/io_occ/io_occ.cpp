@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ.h"
@@ -31,12 +30,11 @@
 #  include "io_occ_vrml_reader.h"
 #endif
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 namespace { using PtrPropertyGroup = std::unique_ptr<PropertyGroup>; }
 
-Span<const Format> OccFactoryReader::formats() const
+gsl::span<const Format> OccFactoryReader::formats() const
 {
     static const Format arrayFormat[] = {
         Format_STEP, Format_IGES, Format_OCCBREP, Format_STL
@@ -98,7 +96,7 @@ PtrPropertyGroup OccFactoryReader::createProperties(Format format, PropertyGroup
     return {};
 }
 
-Span<const Format> OccFactoryWriter::formats() const
+gsl::span<const Format> OccFactoryWriter::formats() const
 {
     static const Format arrayFormat[] = {
         Format_STEP, Format_IGES, Format_OCCBREP, Format_STL, Format_VRML
@@ -162,5 +160,4 @@ PtrPropertyGroup OccFactoryWriter::createProperties(Format format, PropertyGroup
     return {};
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

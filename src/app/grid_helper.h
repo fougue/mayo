@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -9,10 +8,8 @@
 #include <QtWidgets/QTableView>
 #include <optional>
 
-namespace Mayo {
-
 // Provides helper tools for "grid" view
-namespace GridHelper {
+namespace Mayo::GridHelper {
 
 // Provides a proxy model to layout items along a grid(this setColumnCount())
 class ProxyModel : public QAbstractItemModel {
@@ -24,7 +21,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool hasChildren(const QModelIndex& parent) const override;
     QModelIndex index(int row, int column, const QModelIndex&) const override;
-    QModelIndex parent(const QModelIndex&) const override { return QModelIndex(); }
+    QModelIndex parent(const QModelIndex&) const override { return {}; }
     int rowCount(const QModelIndex& parent) const override;
 
     int columnCount(const QModelIndex& parent) const override;
@@ -35,7 +32,7 @@ public:
 
 private:
     void onDataChanged(
-            const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
     );
 
     QAbstractItemModel* m_sourceModel = nullptr;
@@ -45,7 +42,7 @@ private:
 // Provides Qt view with grid layout
 class View : public QTableView {
 public:
-    View(QWidget* parent);
+    explicit View(QWidget* parent);
 
     QSize itemSize() const { return m_itemSize; }
     void setItemSize(QSize size);
@@ -57,5 +54,4 @@ private:
     QSize m_itemSize = { 230, 180 };
 };
 
-} // namespace GridHelper
-} // namespace Mayo
+} // namespace Mayo::GridHelper

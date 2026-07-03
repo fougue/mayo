@@ -1,12 +1,10 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "brep_utils.h"
 
-#include "global.h"
 #include "tkernel_utils.h"
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
 #  include "occ_progress_indicator.h"
@@ -32,6 +30,15 @@ TopoDS_Compound BRepUtils::makeEmptyCompound()
 
 void BRepUtils::addShape(TopoDS_Shape* ptrTargetShape, const TopoDS_Shape& shape)
 {
+    if (!ptrTargetShape)
+        return;
+
+    if (shape.IsNull())
+        return;
+
+    if (ptrTargetShape->IsNull())
+        *ptrTargetShape = BRepUtils::makeEmptyCompound();
+
     TopoDS_Builder builder;
     builder.Add(*ptrTargetShape, shape);
 }
@@ -100,17 +107,17 @@ bool BRepUtils::isGeometric(const TopoDS_Face& face)
 }
 
 void BRepUtils::computeMesh(
-        const TopoDS_Shape& shape, const OccBRepMeshParameters& params, TaskProgress* progress
+        const TopoDS_Shape& shape,
+        const OccBRepMeshParameters& params,
+        [[maybe_unused]]TaskProgress* progress
     )
 {
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
-    BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
+    [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params, TKernelUtils::start(indicator));
 #else
-    BRepMesh_IncrementalMesh mesher(shape, params);
-    MAYO_UNUSED(progress);
+    [[maybe_unused]]BRepMesh_IncrementalMesh mesher(shape, params);
 #endif
-    MAYO_UNUSED(mesher);
 }
 
 } // namespace Mayo

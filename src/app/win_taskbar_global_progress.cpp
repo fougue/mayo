@@ -1,0 +1,85 @@
+/****************************************************************************
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
+****************************************************************************/
+
+#include "win_taskbar_global_progress.h"
+
+#include "../base/math_utils.h"
+#include "../base/task_manager.h"
+
+#include <QtWinExtras/QWinTaskbarButton>
+#include <QtWinExtras/QWinTaskbarProgress>
+#include <cmath>
+
+namespace Mayo {
+
+WinTaskbarGlobalProgress::WinTaskbarGlobalProgress(TaskManager* taskMgr, QObject* parent)
+    : QObject(parent),
+      m_taskbarBtn(new QWinTaskbarButton(this))
+{
+    taskMgr->signalStarted.connectSlot([=](TaskId taskId) { this->onTaskProgress(taskId, 0.); });
+    taskMgr->signalProgressChanged.connectSlot(&WinTaskbarGlobalProgress::onTaskProgress, this);
+    taskMgr->signalEnded.connectSlot(&WinTaskbarGlobalProgress::onTaskEnded, this);
+}
+
+void WinTaskbarGlobalProgress::setWindow(QWindow* window)
+{
+    m_taskbarBtn->setWindow(window);
+}
+
+void WinTaskbarGlobalProgress::onTaskProgress(TaskId taskId, double percent)
+{
+    auto it = m_mapTaskIdProgress.find(taskId);
+    if (it != m_mapTaskIdProgress.end())
+        it->second = percent;
+    else
+        m_mapTaskIdProgress.insert({ taskId, percent });
+
+    this->updateTaskbar();
+}
+
+void WinTaskbarGlobalProgress::onTaskEnded(TaskId taskId)
+{
+    m_mapTaskIdProgress.erase(taskId);
+    this->updateTaskbar();
+}
+
+void WinTaskbarGlobalProgress::updateTaskbar()
+{
+    QWinTaskbarProgress* taskbarProgress = m_taskbarBtn->progress();
+    if (m_mapTaskIdProgress.empty()) {
+        taskbarProgress->stop();
+        taskbarProgress->hide();
+        m_globalPct = 0.;
+        return;
+    }
+
+    int taskCount = 0;
+    double taskAccumPct = 0.;
+    bool isProgressIndeterminate = false;
+    for (const auto& mapPair : m_mapTaskIdProgress) {
+        const double pct = mapPair.second;
+        if (pct >= 0.)
+            taskAccumPct += pct;
+        else
+            isProgressIndeterminate = true;
+
+        ++taskCount;
+    }
+
+    taskbarProgress->show();
+    taskbarProgress->resume();
+    if (!isProgressIndeterminate) {
+        const double newGlobalPct = MathUtils::toPercent(taskAccumPct, 0, taskCount * 100);
+        m_globalPct = std::round(std::max(newGlobalPct, m_globalPct));
+        taskbarProgress->setRange(0, 100);
+        taskbarProgress->setValue(m_globalPct);
+    }
+    else {
+        m_globalPct = 0.;
+        taskbarProgress->setRange(0, 0);
+    }
+}
+
+} // namespace Mayo

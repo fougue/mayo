@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -11,13 +10,12 @@
 #include <VrmlData_Scene.hxx>
 #include <memory>
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 // Opencascade-based writer for VRML(v2.0 UTF8) file format
 class OccVrmlWriter : public Writer {
 public:
-    bool transfer(Span<const ApplicationItem> appItems, TaskProgress* progress) override;
+    bool transfer(gsl::span<const ApplicationItem> appItems, TaskProgress* progress) override;
     bool writeFile(const FilePath& filepath, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
@@ -38,5 +36,4 @@ private:
     VrmlAPI_RepresentationOfShape m_shapeRepresentation = VrmlAPI_BothRepresentation;
 };
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

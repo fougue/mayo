@@ -1,22 +1,20 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "../base/application_item.h"
-#include "../base/property.h"
 #include "../gui/gui_document.h"
 
 #include <QtWidgets/QWidget>
 #include <functional>
+#include <memory>
+
 class QItemSelection;
 class QTreeWidget;
 class QTreeWidgetItem;
-
-#include <memory>
 
 namespace Mayo {
 
@@ -35,7 +33,7 @@ public:
     using Item = ApplicationItem;
     using BuilderPtr = std::unique_ptr<WidgetModelTreeBuilder>;
 
-    WidgetModelTree(QWidget* widget = nullptr);
+    explicit WidgetModelTree(QWidget* widget = nullptr);
     ~WidgetModelTree();
 
     void refreshItemText(const ApplicationItem& appItem);
@@ -65,7 +63,7 @@ private:
         const QItemSelection& selected, const QItemSelection& deselected
     );
     void onApplicationItemSelectionModelChanged(
-        Span<const ApplicationItem> selected, Span<const ApplicationItem> deselected
+        gsl::span<const ApplicationItem> selected, gsl::span<const ApplicationItem> deselected
     );
 
     void connectTreeModelDataChanged(bool on);

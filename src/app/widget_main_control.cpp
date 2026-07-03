@@ -1,13 +1,13 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "widget_main_control.h"
 #include "ui_widget_main_control.h"
 
 #include "../base/application.h"
+#include "../base/cpp_utils.h"
 #include "../graphics/graphics_utils.h"
 #include "../gui/gui_application.h"
 #include "../qtcommon/filepath_conv.h"
@@ -29,6 +29,7 @@
 #include "widget_occ_view.h"
 #include "widget_properties_editor.h"
 
+#include <QtDebug>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
 #include <QtWidgets/QMenu>
@@ -36,8 +37,14 @@
 
 #include <algorithm>
 #include <cassert>
+#include <unordered_map>
 
 namespace Mayo {
+
+namespace {
+const char key_IsLeftSideBarVisible[] = "pageDocuments_IsLeftSideBarVisible";
+const char key_LeftSideBarWidthFactor[] = "pageDocuments_LeftSideBarWidthFactor";
+} // namespace
 
 WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     : IWidgetMainPage(parent),
@@ -64,6 +71,18 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
     mayoTheme()->setupHeaderComboBox(m_ui->combo_LeftContents);
     mayoTheme()->setupHeaderComboBox(m_ui->combo_GuiDocuments);
 
+    m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
+    m_listViewBtns->installDefaultItemDelegate();
+
+    // IMPORTANT:
+    // GuiDocumentListModel object must be created *BEFORE* signal/slot connection between
+    // GuiApplication::signalGuiDocumentAdded and WidgetMainControl::onGuiDocumentAdded()
+    // onGuiDocumentAdded() is changing the currentIndex of combo_GuiDocuments but the GuiModel
+    // must have been updated before
+    auto guiDocModel = new GuiDocumentListModel(guiApp, this);
+    m_ui->combo_GuiDocuments->setModel(guiDocModel);
+    m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+
     // "Window" actions and navigation in documents
     QObject::connect(
         m_ui->combo_GuiDocuments, qOverload<int>(&QComboBox::currentIndexChanged),
@@ -87,12 +106,18 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
         this, &WidgetMainControl::onSplitterMainMoved
     );
 
-    guiApp->application()->signalDocumentFilePathChanged.connectSlot([=](const DocumentPtr& doc, const FilePath& fp) {
-        if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
-            m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
-    });
-    guiApp->selectionModel()->signalChanged.connectSlot(&WidgetMainControl::onApplicationItemSelectionChanged, this);
-    guiApp->signalGuiDocumentAdded.connectSlot(&WidgetMainControl::onGuiDocumentAdded, this);
+    guiApp->application()->signalDocumentFilePathChanged.connectSlot(
+        &WidgetMainControl::onDocumentFilePathChanged, this
+    );
+    guiApp->selectionModel()->signalChanged.connectSlot(
+        &WidgetMainControl::onApplicationItemSelectionChanged, this
+    );
+    guiApp->signalGuiDocumentAdded.connectSlot(
+        &WidgetMainControl::onGuiDocumentAdded, this
+    );
+    guiApp->signalGuiDocumentErased.connectSlot(
+        &WidgetMainControl::onGuiDocumentErased, this
+    );
 
     // Document files monitoring
     auto appModule = AppModule::get();
@@ -104,22 +129,15 @@ WidgetMainControl::WidgetMainControl(GuiApplication* guiApp, QWidget* parent)
             m_pendingDocsToReload.clear();
         }
     });
-    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(&WidgetMainControl::onDocumentFileChanged, this);
-
-    // Creation of annex objects
-    m_listViewBtns = new ItemViewButtons(m_ui->listView_OpenedDocuments, this);
-    m_listViewBtns->installDefaultItemDelegate();
-
-    // BEWARE MainWindow::onGuiDocumentAdded() must be called before
-    // MainWindow::onCurrentDocumentIndexChanged()
-    auto guiDocModel = new GuiDocumentListModel(guiApp, this);
-    m_ui->combo_GuiDocuments->setModel(guiDocModel);
-    m_ui->listView_OpenedDocuments->setModel(guiDocModel);
+    m_docFilesWatcher->signalDocumentFileChanged.connectSlot(
+        &WidgetMainControl::onDocumentFileChanged, this
+    );
 
     // Finalize setup
     m_ui->widget_LeftHeader->installEventFilter(this);
     m_ui->widget_ControlGuiDocuments->installEventFilter(this);
     m_ui->stack_GuiDocuments->installEventFilter(this);
+    this->widgetLeftSideBar()->installEventFilter(this);
     this->onLeftContentsPageChanged(m_ui->stack_LeftContents->currentIndex());
     m_ui->widget_MouseCoords->hide();
     this->setWidgetLeftSideBarWidthFactor(0.25);
@@ -150,7 +168,7 @@ void WidgetMainControl::initialize(const CommandContainer* cmdContainer)
     // Opened documents GUI
     auto actionCloseDoc = fnFindAction(CommandCloseCurrentDocument::Name);
     m_listViewBtns->addButton(1, actionCloseDoc->icon(), actionCloseDoc->toolTip());
-    m_listViewBtns->setButtonDetection(1, -1, QVariant());
+    m_listViewBtns->setButtonDetection(1, -1, QVariant{});
     m_listViewBtns->setButtonDisplayColumn(1, 0);
     m_listViewBtns->setButtonDisplayModes(1, ItemViewButtons::DisplayOnDetection);
     m_listViewBtns->setButtonItemSide(1, ItemViewButtons::ItemRightSide);
@@ -177,11 +195,6 @@ void WidgetMainControl::updatePageControlsActivation()
 QWidget* WidgetMainControl::widgetLeftSideBar() const
 {
     return m_ui->widget_Left;
-}
-
-double WidgetMainControl::widgetLeftSideBarWidthFactor() const
-{
-    return m_widgetLeftSideBarWidthFactor;
 }
 
 void WidgetMainControl::setWidgetLeftSideBarWidthFactor(double factor)
@@ -212,13 +225,41 @@ bool WidgetMainControl::eventFilter(QObject* watched, QEvent* event)
     }
 
     if (watched == m_ui->stack_GuiDocuments) {
-        if (eventType == QEvent::Enter || eventType == QEvent::Leave) {
+        if (eventType == QEvent::Enter || eventType == QEvent::Leave)
             m_ui->widget_MouseCoords->setHidden(eventType == QEvent::Leave);
-            return true;
+    }
+
+    if (watched == this->widgetLeftSideBar()) {
+        if (eventType == QEvent::Show) {
+            m_widgetLeftSideBarIsVisble = true;
+        }
+        else if (eventType == QEvent::Hide && AppModule::get()->application()->documentCount() > 0) {
+            // When all documents are closed the Documents page gets hidden which isn't something
+            // triggered by user. So check if the application is empty to detect this case
+            m_widgetLeftSideBarIsVisble = false;
         }
     }
 
     return false;
+}
+
+void WidgetMainControl::restoreUiState(const AppUiState& state)
+{
+    const auto& varLeftSideBarVisible = state.get(key_IsLeftSideBarVisible);
+    if (varLeftSideBarVisible.isValid()) {
+        this->widgetLeftSideBar()->setVisible(varLeftSideBarVisible.toBool());
+        m_widgetLeftSideBarIsVisble = varLeftSideBarVisible.toBool();
+    }
+
+    const auto& varLeftSideBarWidthFactor = state.get(key_LeftSideBarWidthFactor);
+    if (varLeftSideBarWidthFactor.isValid())
+        this->setWidgetLeftSideBarWidthFactor(varLeftSideBarWidthFactor.toDouble());
+}
+
+void WidgetMainControl::saveUiState(AppUiState& state)
+{
+    state.set(key_IsLeftSideBarVisible, m_widgetLeftSideBarIsVisble);
+    state.set(key_LeftSideBarWidthFactor, m_widgetLeftSideBarWidthFactor);
 }
 
 QMenu* WidgetMainControl::createMenuModelTreeSettings()
@@ -250,43 +291,100 @@ QMenu* WidgetMainControl::createMenuModelTreeSettings()
     return menu;
 }
 
-void WidgetMainControl::onApplicationItemSelectionChanged()
+void WidgetMainControl::editDocumentTreeNode(const DocumentTreeNode& docTreeNode)
 {
     WidgetModelTree* uiModelTree = m_ui->widget_ModelTree;
-    WidgetPropertiesEditor* uiProps = m_ui->widget_Properties;
+    WidgetPropertiesEditor* uiEditor = m_ui->widget_Properties;
 
-    uiProps->clear();
-    Span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
+    // Edit "Data" properties retrieved with DocumentTreeNodePropertiesProvider
+    {
+        auto provider = AppModule::get()->findPropertiesProvider(docTreeNode);
+        auto propGroup = provider ? provider->properties(docTreeNode) : std::unique_ptr<PropertyGroup>{};
+        if (!propGroup)
+            return;
+
+        // Create UI groups
+        std::unordered_map<uint64_t, WidgetPropertiesEditor::GroupId> mapGroupId;
+        std::unordered_map<WidgetPropertiesEditor::GroupId, int> mapPropertyCount;
+        auto fnFindUiGroupId = [&](const Property* prop) {
+            if (!prop || !prop->hasUserData())
+                return -1;
+
+            auto it = mapGroupId.find(prop->userData());
+            return it != mapGroupId.cend() ? it->second : -1;
+        };
+
+        for (const Property* prop : propGroup->properties()) {
+            int uiGroupId = fnFindUiGroupId(prop);
+            if (prop->hasUserData() && uiGroupId == -1) {
+                const TextId subGroupTextId = provider->subGroupLabelFromId(prop->userData());
+                const QString subGroupText = to_QString(subGroupTextId.tr());
+                uiGroupId = uiEditor->addGroup(subGroupText);
+                mapGroupId.insert({ prop->userData(), uiGroupId });
+            }
+
+            if (uiGroupId != -1) {
+                auto it = mapPropertyCount.find(uiGroupId);
+                if (it != mapPropertyCount.cend())
+                    ++(it->second);
+                else
+                    mapPropertyCount.insert({ uiGroupId, 0 });
+            }
+        }
+
+        // Create UI for properties
+        for (Property* prop : propGroup->properties())
+            uiEditor->editProperty(prop, fnFindUiGroupId(prop));
+
+        // Indicate property count when >= 20 for any concerned group
+        for (const auto [uiGroupId, propCount] : mapPropertyCount) {
+            if (propCount >= 20) {
+                const QString uiGroupName = uiEditor->groupName(uiGroupId);
+                uiEditor->setGroupName(uiGroupId, tr("%1(%2)").arg(uiGroupName).arg(propCount));
+            }
+        }
+
+        propGroup->signalPropertyChanged.connectSlot([=]{
+            uiModelTree->refreshItemText(ApplicationItem{docTreeNode});
+        });
+        m_ptrCurrentNodeProperties.push_back(std::move(propGroup));
+    }
+
+    // Edit "Graphics" properties
+    {
+        GuiDocument* guiDoc = m_guiApp->findGuiDocument(docTreeNode.document());
+        std::vector<GraphicsObjectPtr> vecGfxObject;
+        guiDoc->foreachGraphicsObject(docTreeNode.id(), [&](GraphicsObjectPtr gfxObject) {
+            vecGfxObject.push_back(std::move(gfxObject));
+        });
+        auto gfxDriver = GraphicsObjectDriver::getCommon(vecGfxObject);
+        auto propGroup = gfxDriver ? gfxDriver->properties(vecGfxObject) : std::unique_ptr<PropertyGroup>{};
+        if (propGroup) {
+            uiEditor->editProperties(propGroup.get(), uiEditor->addGroup(tr("Graphics")));
+            propGroup->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
+            m_ptrCurrentNodeProperties.push_back(std::move(propGroup));
+        }
+    }
+
+    uiEditor->fitToContents();
+}
+
+void WidgetMainControl::onApplicationItemSelectionChanged()
+{
+    m_ui->widget_Properties->clear();
+    m_ptrCurrentNodeProperties.clear();
+    gsl::span<const ApplicationItem> spanAppItem = m_guiApp->selectionModel()->selectedItems();
     if (spanAppItem.size() == 1) {
         const ApplicationItem& appItem = spanAppItem.front();
         if (appItem.isDocument()) {
             auto dataProps = new DocumentPropertyGroup(appItem.document());
-            uiProps->editProperties(dataProps, uiProps->addGroup(tr("Data")));
-            m_ptrCurrentNodeDataProperties.reset(dataProps);
+            WidgetPropertiesEditor* uiEditor = m_ui->widget_Properties;
+            uiEditor->editProperties(dataProps, uiEditor->addGroup(tr("Data")));
+            uiEditor->fitToContents();
+            m_ptrCurrentNodeProperties.emplace_back(dataProps);
         }
         else if (appItem.isDocumentTreeNode()) {
-            const DocumentTreeNode& docTreeNode = appItem.documentTreeNode();
-            auto dataProps = AppModule::get()->properties(docTreeNode);
-            if (dataProps) {
-                uiProps->editProperties(dataProps.get(), uiProps->addGroup(tr("Data")));
-                dataProps->signalPropertyChanged.connectSlot([=]{ uiModelTree->refreshItemText(appItem); });
-                m_ptrCurrentNodeDataProperties = std::move(dataProps);
-            }
-
-            GuiDocument* guiDoc = m_guiApp->findGuiDocument(appItem.document());
-            std::vector<GraphicsObjectPtr> vecGfxObject;
-            guiDoc->foreachGraphicsObject(docTreeNode.id(), [&](GraphicsObjectPtr gfxObject) {
-                vecGfxObject.push_back(std::move(gfxObject));
-            });
-            auto commonGfxDriver = GraphicsObjectDriver::getCommon(vecGfxObject);
-            if (commonGfxDriver) {
-                auto gfxProps = commonGfxDriver->properties(vecGfxObject);
-                if (gfxProps) {
-                    uiProps->editProperties(gfxProps.get(), uiProps->addGroup(tr("Graphics")));
-                    gfxProps->signalPropertyChanged.connectSlot([=]{ guiDoc->graphicsScene()->redraw(); });
-                    m_ptrCurrentNodeGraphicsProperties = std::move(gfxProps);
-                }
-            }
+            this->editDocumentTreeNode(appItem.documentTreeNode());
         }
 
         auto app = m_guiApp->application();
@@ -295,10 +393,6 @@ void WidgetMainControl::onApplicationItemSelectionChanged()
             if (index != -1)
                 this->setCurrentDocumentIndex(index);
         }
-    }
-    else {
-        // TODO
-        uiProps->clear();
     }
 
     emit this->updateGlobalControlsActivationRequired();
@@ -327,9 +421,7 @@ void WidgetMainControl::onLeftContentsPageChanged(int pageId)
 
 QWidget* WidgetMainControl::findLeftHeaderPlaceHolder() const
 {
-    return m_ui->widget_LeftHeader->findChild<QWidget*>(
-                "LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly
-    );
+    return m_ui->widget_LeftHeader->findChild<QWidget*>("LeftHeaderPlaceHolder", Qt::FindDirectChildrenOnly);
 }
 
 QWidget* WidgetMainControl::recreateLeftHeaderPlaceHolder()
@@ -350,7 +442,7 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
     // Helper function to reload document
     auto fnReloadDoc = [this](const DocumentPtr& doc) {
         while (doc->entityCount() > 0)
-            doc->destroyEntity(doc->entityTreeNodeId(0));
+            doc->destroyEntity(doc->firstEntityNodeId());
         FileCommandTools::importInDocument(m_appContext, doc, doc->filePath());
     };
 
@@ -369,9 +461,9 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
             tr("Document file `%1` has been changed since it was opened\n\n"
                "Do you want to reload that document?\n\n"
                "File: `%2`")
-                .arg(to_QString(doc->name()))
-                .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
-            ;
+            .arg(to_QString(doc->name()))
+            .arg(QDir::toNativeSeparators(filepathTo<QString>(doc->filePath())))
+        ;
         const auto msgBtns = QMessageBox::Yes | QMessageBox::No;
         auto msgBox = new QMessageBox(QMessageBox::Question, tr("Question"), strQuestion, msgBtns, this);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -380,7 +472,7 @@ void WidgetMainControl::reloadDocumentAfterChange(const DocumentPtr& doc)
         msgBox->setTextFormat(Qt::AutoText);
 #endif
         QtWidgetsUtils::asyncDialogExec(msgBox);
-        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](QAbstractButton* btn) {
+        QObject::connect(msgBox, &QMessageBox::buttonClicked, this, [=](const QAbstractButton* btn) {
             m_docFilesWatcher->acknowledgeDocumentFileChange(doc);
             if (btn == msgBox->button(QMessageBox::Yes))
                 fnReloadDoc(doc);
@@ -395,7 +487,8 @@ WidgetGuiDocument* WidgetMainControl::widgetGuiDocument(int idx) const
 
 WidgetGuiDocument* WidgetMainControl::currentWidgetGuiDocument() const
 {
-    return this->widgetGuiDocument(this->currentDocumentIndex());
+    const int currDocIndex = this->currentDocumentIndex();
+    return this->widgetGuiDocument(currDocIndex);
 }
 
 int WidgetMainControl::indexOfWidgetGuiDocument(WidgetGuiDocument* widgetDoc) const
@@ -425,6 +518,7 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
     auto appProps = appModule->properties();
     auto widget = new WidgetGuiDocument(guiDoc);
     guiDoc->setDevicePixelRatio(widget->devicePixelRatioF());
+    guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
     auto widgetCtrl = widget->controller();
     widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
     widgetCtrl->setNavigationStyle(appProps->navigationStyle);
@@ -433,12 +527,22 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
         gfxScene->redraw();
     }
 
-    appModule->settings()->signalChanged.connectSlot([=](const Property* setting) {
-        if (setting == &appProps->instantZoomFactor)
-            widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
-        else if (setting == &appProps->navigationStyle)
-            widgetCtrl->setNavigationStyle(appProps->navigationStyle);
-    });
+    auto connSettingsSignalChanged = appModule->settings()->signalChanged.connectSlot(
+        [=](const Property* setting) {
+            if (setting == &appProps->instantZoomFactor)
+                widgetCtrl->setInstantZoomFactor(appProps->instantZoomFactor);
+            else if (setting == &appProps->navigationStyle)
+                widgetCtrl->setNavigationStyle(appProps->navigationStyle);
+            else if (setting == &appProps->viewCubeCorner)
+                guiDoc->setViewTrihedronCorner(appProps->graphicsViewCubeCornerValue());
+        }
+    );
+    // NOTE
+    // "mutable" lambda needed here because the captured variable needs to be modified
+    // By default, with a lambda, variables captured by value are immutable(const)
+    QObject::connect(
+        widget, &QObject::destroyed, this, [=]() mutable { connSettingsSignalChanged.disconnect(); }
+    );
 
     // React to mouse move in 3D view:
     //   * update highlighting
@@ -450,9 +554,10 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
         auto selector = gfxScene->mainSelector();
         selector->Pick(xPos, yPos, guiDoc->v3dView());
         const gp_Pnt pos3d =
-                selector->NbPicked() > 0 ?
-                    selector->PickedPoint(1) :
-                    GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), xPos, yPos);
+            selector->NbPicked() > 0 ?
+                selector->PickedPoint(1) :
+                GraphicsUtils::V3dView_to3dPosition(guiDoc->v3dView(), xPos, yPos)
+        ;
         m_ui->label_ValuePosX->setText(QString::number(pos3d.X(), 'f', 3));
         m_ui->label_ValuePosY->setText(QString::number(pos3d.Y(), 'f', 3));
         m_ui->label_ValuePosZ->setText(QString::number(pos3d.Z(), 'f', 3));
@@ -460,7 +565,22 @@ void WidgetMainControl::onGuiDocumentAdded(GuiDocument* guiDoc)
 
     m_ui->stack_GuiDocuments->addWidget(widget);
     const int newDocIndex = m_guiApp->application()->documentCount() - 1;
-    QTimer::singleShot(0, this, [=]{ this->setCurrentDocumentIndex(newDocIndex); });
+    this->setCurrentDocumentIndex(newDocIndex);
+}
+
+void WidgetMainControl::onGuiDocumentErased(const GuiDocument* guiDoc)
+{
+    const Document::Identifier docId = guiDoc->document()->identifier();
+    const int widgetCount = this->widgetGuiDocumentCount();
+    for (int i = 0; i < widgetCount; ++i) {
+        WidgetGuiDocument* widget = this->widgetGuiDocument(i);
+        if (widget->documentIdentifier() == docId) {
+            this->removeWidgetGuiDocument(widget);
+            break;
+        }
+    }
+
+    emit this->updateGlobalControlsActivationRequired();
 }
 
 int WidgetMainControl::currentDocumentIndex() const
@@ -503,11 +623,13 @@ void WidgetMainControl::onCurrentDocumentIndexChanged(int idx)
 
 void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
 {
-    WidgetGuiDocument* widgetDoc = nullptr;
-    for (int i = 0; i < this->widgetGuiDocumentCount() && !widgetDoc; ++i) {
+    const WidgetGuiDocument* widgetDoc = nullptr;
+    for (int i = 0; i < this->widgetGuiDocumentCount(); ++i) {
         const DocumentPtr& candidateDoc = this->widgetGuiDocument(i)->guiDocument()->document();
-        if (candidateDoc->identifier() == doc->identifier())
+        if (candidateDoc->identifier() == doc->identifier()) {
             widgetDoc = this->widgetGuiDocument(i);
+            break;
+        }
     }
 
     if (!widgetDoc)
@@ -517,6 +639,12 @@ void WidgetMainControl::onDocumentFileChanged(const DocumentPtr& doc)
         this->reloadDocumentAfterChange(doc);
     else
         m_pendingDocsToReload.insert(doc);
+}
+
+void WidgetMainControl::onDocumentFilePathChanged(const DocumentPtr& doc, const FilePath& fp)
+{
+    if (this->currentWidgetGuiDocument()->documentIdentifier() == doc->identifier())
+        m_ui->widget_FileSystem->setLocation(filepathTo<QFileInfo>(fp));
 }
 
 void WidgetMainControl::onSplitterMainMoved(int pos, int /*index*/)

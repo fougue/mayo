@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "qtgui_utils.h"
@@ -12,15 +11,14 @@
 #include <QtCore/QBuffer>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
+#include <QtGui/QMouseEvent>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
 
 #include <gsl/assert>
 #include <algorithm>
-#include <cmath>
 
-namespace Mayo {
-namespace QtGuiUtils {
+namespace Mayo::QtGuiUtils {
 
 namespace {
 
@@ -37,7 +35,8 @@ constexpr bool isInRange(double v, double start, double end)
 
 } // namespace
 
-QColor toQColor(const Quantity_Color& c) {
+QColor toQColor(const Quantity_Color& c)
+{
     return QColor(c.Red() * 255., c.Green() * 255., c.Blue() * 255.);
 }
 
@@ -48,7 +47,8 @@ QColor toQColor(const Quantity_ColorRGBA& c)
     return qc;
 }
 
-QColor toQColor(const Quantity_NameOfColor c) {
+QColor toQColor(const Quantity_NameOfColor c)
+{
     return toQColor(Quantity_Color(c));
 }
 
@@ -128,7 +128,7 @@ QGradient subGradient(const QGradient& gradient, double t1, double t2)
     subStops.push_back({ 1., linearColorAt(gradient, t2) });
     QLinearGradient subGradient(0, 0, 1, 0);
     subGradient.setStops(subStops);
-    return std::move(subGradient);
+    return subGradient;
 }
 
 int screenPixelWidth(double screenRatio, const QScreen* screen)
@@ -151,6 +151,15 @@ QSize screenPixelSize(double widthRatio, double heightRatio, const QScreen* scre
         QtGuiUtils::screenPixelWidth(widthRatio, screen),
         QtGuiUtils::screenPixelHeight(heightRatio, screen)
     );
+}
+
+QPoint globalPosition(const QMouseEvent* event)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    return event->globalPos();
+#else
+    return event->globalPosition().toPoint();
+#endif
 }
 
 FontChange::FontChange(const QFont& font)
@@ -242,5 +251,4 @@ QByteArray toQByteArray(const QPixmap& pixmap, const char* format)
     return bytes;
 }
 
-} // namespace QtGuiUtils
-} // namespace Mayo
+} // namespace Mayo::QtGuiUtils

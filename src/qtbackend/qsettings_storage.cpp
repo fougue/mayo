@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "qsettings_storage.h"
@@ -65,8 +64,6 @@ Settings::Variant QSettingsStorage::value(std::string_view key) const
     default:
         return {};
     } // endswitch
-
-    return {};
 }
 
 void QSettingsStorage::setValue(std::string_view key, const Settings::Variant& value)

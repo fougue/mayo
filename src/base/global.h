@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -25,9 +24,6 @@
 #if !defined(MAYO_OS_WINDOWS)
 #  define MAYO_OS_UNIX
 #endif
-
-// Avoid "unused parameter" warnings
-#define MAYO_UNUSED(x) (void)x;
 
 namespace Mayo {
 

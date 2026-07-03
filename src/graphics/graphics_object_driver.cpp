@@ -1,14 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "graphics_object_driver.h"
 
 namespace Mayo {
-
-namespace { struct GraphicsObjectDriverI18N { MAYO_DECLARE_TEXT_ID_FUNCTIONS(Mayo::GraphicsObjectDriver) }; }
 
 GraphicsObjectDriverPtr GraphicsObjectDriver::get(const GraphicsObjectPtr& object)
 {
@@ -18,7 +15,7 @@ GraphicsObjectDriverPtr GraphicsObjectDriver::get(const GraphicsObjectPtr& objec
         return {};
 }
 
-GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(Span<const GraphicsObjectPtr> spanObject)
+GraphicsObjectDriverPtr GraphicsObjectDriver::getCommon(gsl::span<const GraphicsObjectPtr> spanObject)
 {
     GraphicsObjectDriverPtr commonGfxDriver;
     for (const GraphicsObjectPtr& object : spanObject) {
@@ -44,7 +41,7 @@ void GraphicsObjectDriver::throwIf_differentDriver(const GraphicsObjectPtr& obje
         throw std::invalid_argument("Invalid driver for graphics object");
 }
 
-void GraphicsObjectDriver::throwIf_differentDriver(Span<const GraphicsObjectPtr> objects) const
+void GraphicsObjectDriver::throwIf_differentDriver(gsl::span<const GraphicsObjectPtr> objects) const
 {
     for (const GraphicsObjectPtr& object : objects)
         this->throwIf_differentDriver(object);

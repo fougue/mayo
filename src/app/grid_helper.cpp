@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "grid_helper.h"
@@ -11,8 +10,7 @@
 #include <QtWidgets/QHeaderView>
 #include <algorithm>
 
-namespace Mayo {
-namespace GridHelper {
+namespace Mayo::GridHelper {
 
 void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
 {
@@ -31,32 +29,32 @@ void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
             emit this->layoutChanged();
         });
         QObject::connect(
-                    newModel, &QAbstractItemModel::modelAboutToBeReset,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::modelAboutToBeReset,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::modelReset,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::modelReset,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsAboutToBeInserted,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::rowsAboutToBeInserted,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsInserted,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::rowsInserted,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsAboutToBeRemoved,
-                    this, &ProxyModel::beginResetModel
+            newModel, &QAbstractItemModel::rowsAboutToBeRemoved,
+            this, &ProxyModel::beginResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::rowsRemoved,
-                    this, &ProxyModel::endResetModel
+            newModel, &QAbstractItemModel::rowsRemoved,
+            this, &ProxyModel::endResetModel
         );
         QObject::connect(
-                    newModel, &QAbstractItemModel::dataChanged,
-                    this, &ProxyModel::onDataChanged
+            newModel, &QAbstractItemModel::dataChanged,
+            this, &ProxyModel::onDataChanged
         );
     }
 }
@@ -64,13 +62,13 @@ void ProxyModel::setSourceModel(QAbstractItemModel* newModel)
 QVariant ProxyModel::data(const QModelIndex& index, int role) const
 {
     const std::optional<QModelIndex> sourceIndex = this->mapToSource(index);
-    return sourceIndex ? this->sourceModel()->data(*sourceIndex, role) : QVariant();
+    return sourceIndex ? this->sourceModel()->data(*sourceIndex, role) : QVariant{};
 }
 
 Qt::ItemFlags ProxyModel::flags(const QModelIndex& index) const
 {
     const std::optional<QModelIndex> sourceIndex = this->mapToSource(index);
-    return sourceIndex ? this->sourceModel()->flags(*sourceIndex) : Qt::ItemFlags();
+    return sourceIndex ? this->sourceModel()->flags(*sourceIndex) : Qt::ItemFlags{};
 }
 
 bool ProxyModel::hasChildren(const QModelIndex& parent) const
@@ -84,7 +82,7 @@ int ProxyModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid())
         return 0;
 
-    const int rows = this->sourceModel()->rowCount(QModelIndex());
+    const int rows = this->sourceModel()->rowCount({});
     return (rows + m_columnCount - 1) / m_columnCount;
 }
 
@@ -110,7 +108,7 @@ QModelIndex ProxyModel::index(int row, int column, const QModelIndex&) const
 std::optional<QModelIndex> ProxyModel::mapToSource(const QModelIndex& proxyIndex) const
 {
     if (!proxyIndex.isValid())
-        return QModelIndex();
+        return QModelIndex{};
 
     const int sourceRow = proxyIndex.row() * m_columnCount + proxyIndex.column();
     if (sourceRow < sourceModel()->rowCount())
@@ -122,7 +120,7 @@ std::optional<QModelIndex> ProxyModel::mapToSource(const QModelIndex& proxyIndex
 QModelIndex ProxyModel::mapFromSource(const QModelIndex& sourceIndex) const
 {
     if (!sourceIndex.isValid())
-        return QModelIndex();
+        return QModelIndex{};
 
     const int proxyRow = sourceIndex.row() / m_columnCount;
     const int proxyColumn = sourceIndex.row() % m_columnCount;
@@ -130,7 +128,8 @@ QModelIndex ProxyModel::mapFromSource(const QModelIndex& sourceIndex) const
 }
 
 void ProxyModel::onDataChanged(
-        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+        const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles
+    )
 {
     emit this->dataChanged(this->mapFromSource(topLeft), this->mapFromSource(bottomRight), roles);
 }
@@ -165,5 +164,4 @@ void View::leaveEvent(QEvent*)
     this->viewportEvent(&hoverEvent); // Seemingly needed to kill the hover paint
 }
 
-} // namespace GridHelper
-} // namespace Mayo
+} // namespace Mayo::GridHelper

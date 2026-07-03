@@ -68,6 +68,11 @@
         <translation>French</translation>
     </message>
     <message>
+        <location filename="../src/app/app_module.cpp" line="126"/>
+        <source>zh</source>
+        <translation>Chinese</translation>
+    </message>
+    <message>
         <source>system</source>
         <translation type="vanished">System</translation>
     </message>
@@ -211,62 +216,87 @@
 <context>
     <name>Mayo::AppModuleProperties</name>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="27"/>
+        <location filename="../src/app/app_module_properties.cpp" line="43"/>
         <source>language</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="23"/>
+        <location filename="../src/app/app_module_properties.cpp" line="37"/>
         <source>system</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="24"/>
+        <location filename="../src/app/app_module_properties.cpp" line="25"/>
+        <source>TopLeft</source>
+        <translation>Top Left</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="26"/>
+        <source>TopRight</source>
+        <translation>Top Right</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="27"/>
+        <source>BottomLeft</source>
+        <translation>Bottom Left</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="28"/>
+        <source>BottomRight</source>
+        <translation>Bottom Right</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="38"/>
         <source>application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="25"/>
+        <location filename="../src/app/app_module_properties.cpp" line="39"/>
         <source>meshing</source>
         <translation>BRep Meshing</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="26"/>
+        <location filename="../src/app/app_module_properties.cpp" line="40"/>
         <source>graphics</source>
         <translation>Graphics</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="30"/>
+        <location filename="../src/app/app_module_properties.cpp" line="44"/>
+        <source>viewCubeCorner</source>
+        <translation>View Cube Corner</translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="47"/>
         <source>units</source>
         <translation>Units</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="31"/>
+        <location filename="../src/app/app_module_properties.cpp" line="48"/>
         <source>clipPlanes</source>
         <translation>Clip planes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="32"/>
+        <location filename="../src/app/app_module_properties.cpp" line="49"/>
         <source>meshDefaults</source>
         <translation>Mesh Defaults</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="129"/>
+        <location filename="../src/app/app_module_properties.cpp" line="41"/>
         <source>import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="146"/>
+        <location filename="../src/app/app_module_properties.cpp" line="42"/>
         <source>export</source>
         <translation>Export</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="170"/>
+        <location filename="../src/app/app_module_properties.cpp" line="189"/>
         <source>Language used for the application. Change will take effect after application restart</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="174"/>
+        <location filename="../src/app/app_module_properties.cpp" line="193"/>
         <source>Action to be done after some opened document file is changed(modified) externally
 
 Select options `{0}` or `{1}` so the application monitors changes made to opened files
@@ -277,12 +307,12 @@ Select `{1}` to automatically reload documents without any user interaction</sou
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="183"/>
+        <location filename="../src/app/app_module_properties.cpp" line="202"/>
         <source>In case where multiple documents are opened, make sure the document displayed in the 3D view corresponds to what is selected in the model tree</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="187"/>
+        <location filename="../src/app/app_module_properties.cpp" line="206"/>
         <source>Force usage of the fallback Qt widget to display OpenGL graphics.
 
 When `OFF` the application will try to use OpenGL framebuffer for rendering, this allows to display overlay widgets(eg measure tools panel) with translucid background. However using OpenGL framebuffer might cause troubles for some users(eg empty 3D window) especially on macOS.
@@ -293,74 +323,84 @@ This option is applicable when OpenCascade ≥ 7.6 version. Change will take eff
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="201"/>
+        <location filename="../src/app/app_module_properties.cpp" line="220"/>
         <source>Controls precision of the mesh to be computed from the BRep shape</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="204"/>
+        <location filename="../src/app/app_module_properties.cpp" line="223"/>
         <source>For the tessellation of faces the chordal deflection limits the distance between a curve and its tessellation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="208"/>
+        <location filename="../src/app/app_module_properties.cpp" line="227"/>
         <source>For the tessellation of faces the angular deflection limits the angle between subsequent segments in a polyline</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="212"/>
+        <location filename="../src/app/app_module_properties.cpp" line="231"/>
         <source>Relative computation of edge tolerance
 
 If activated, deflection used for the polygonalisation of each edge will be `ChordalDeflection` &amp;#215; `SizeOfEdge`. The deflection used for the faces will be the maximum deflection of their edges.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="220"/>
+        <location filename="../src/app/app_module_properties.cpp" line="239"/>
         <source>3D view manipulation shortcuts configuration to mimic other common CAD applications</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="223"/>
+        <location filename="../src/app/app_module_properties.cpp" line="242"/>
         <source>Angle increment used to turn(rotate) the 3D view around the normal of the view plane(Z axis frame reference)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="228"/>
+        <location filename="../src/app/app_module_properties.cpp" line="244"/>
+        <source>Corner where 3D view cube is located</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.cpp" line="248"/>
         <source>Show or hide by default the trihedron centered at world origin. This doesn&apos;t affect 3D view of currently opened documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="232"/>
+        <location filename="../src/app/app_module_properties.cpp" line="252"/>
         <source>Enable capping of currently clipped graphics</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.cpp" line="235"/>
+        <location filename="../src/app/app_module_properties.cpp" line="255"/>
         <source>Enable capping hatch texture of currently clipped graphics</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="53"/>
+        <location filename="../src/app/app_module_properties.cpp" line="260"/>
+        <source>Automatically expand compound shapes to assemblies. For some input models this allows 3D exploding</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/app_module_properties.h" line="63"/>
         <source>decimalCount</source>
         <translation>Count Of Decimals</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="54"/>
+        <location filename="../src/app/app_module_properties.h" line="64"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="58"/>
+        <location filename="../src/app/app_module_properties.h" line="67"/>
         <source>recentFiles</source>
         <translation>Recent Files</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="59"/>
+        <location filename="../src/app/app_module_properties.h" line="68"/>
         <source>lastOpenFolder</source>
         <translation>Last Open Folder</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="60"/>
+        <location filename="../src/app/app_module_properties.h" line="69"/>
         <source>lastSelectedFormatFilter</source>
         <translation>Last Selected Format Filter</translation>
     </message>
@@ -369,152 +409,157 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation type="vanished">Reload Documents On File Changes</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="61"/>
+        <location filename="../src/app/app_module_properties.h" line="70"/>
         <source>actionOnDocumentFileChange</source>
         <translation>Action After Document File Change</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="62"/>
+        <location filename="../src/app/app_module_properties.h" line="71"/>
         <source>linkWithDocumentSelector</source>
         <translation>Link With Document Selector</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="63"/>
+        <location filename="../src/app/app_module_properties.h" line="72"/>
         <source>forceOpenGlFallbackWidget</source>
         <translation>Force OpenGL Fallback Widget</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="64"/>
+        <location filename="../src/app/app_module_properties.h" line="73"/>
         <source>appUiState</source>
         <translation>Application UI state</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="68"/>
+        <location filename="../src/app/app_module_properties.h" line="76"/>
         <source>meshingQuality</source>
         <translation>Quality</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="69"/>
+        <location filename="../src/app/app_module_properties.h" line="77"/>
         <source>meshingChordalDeflection</source>
         <translation>Chordal Deflection</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="70"/>
+        <location filename="../src/app/app_module_properties.h" line="78"/>
         <source>meshingAngularDeflection</source>
         <translation>Angular Deflection</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="71"/>
+        <location filename="../src/app/app_module_properties.h" line="79"/>
         <source>meshingRelative</source>
         <translation>Relative</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="74"/>
+        <location filename="../src/app/app_module_properties.h" line="81"/>
         <source>navigationStyle</source>
         <translation>View Navigation Style</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="75"/>
+        <location filename="../src/app/app_module_properties.h" line="83"/>
         <source>defaultShowOriginTrihedron</source>
         <translation>Show Origin Trihedron By Default</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="76"/>
+        <location filename="../src/app/app_module_properties.h" line="84"/>
         <source>instantZoomFactor</source>
         <translation>Instant Zoom Factor</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="77"/>
+        <location filename="../src/app/app_module_properties.h" line="85"/>
         <source>turnViewAngleIncrement</source>
         <translation>Turn View Angle Increment</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="79"/>
+        <location filename="../src/app/app_module_properties.h" line="87"/>
         <source>cappingOn</source>
         <translation>Capping</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="80"/>
+        <location filename="../src/app/app_module_properties.h" line="88"/>
         <source>cappingHatchOn</source>
         <translation>Capping Hatch</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="82"/>
+        <location filename="../src/app/app_module_properties.h" line="90"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="83"/>
+        <location filename="../src/app/app_module_properties.h" line="91"/>
         <source>edgeColor</source>
         <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="84"/>
+        <location filename="../src/app/app_module_properties.h" line="92"/>
         <source>material</source>
         <translation>Material</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="85"/>
+        <location filename="../src/app/app_module_properties.h" line="93"/>
         <source>showEgesOn</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/app/app_module_properties.h" line="86"/>
+        <location filename="../src/app/app_module_properties.h" line="94"/>
         <source>showNodesOn</source>
         <translation>Show Nodes</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="16"/>
+        <location filename="../src/app/app_module_properties.h" line="96"/>
+        <source>autoExpandCompoundToAssembly</source>
+        <translation>Automatic Expansion of Compounds to Assemblies</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="17"/>
         <source>SI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="17"/>
+        <location filename="messages.cpp" line="18"/>
         <source>ImperialUK</source>
         <translation>Imperial UK</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="19"/>
+        <location filename="messages.cpp" line="20"/>
         <source>VeryCoarse</source>
         <translation>Very Coarse</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="20"/>
+        <location filename="messages.cpp" line="21"/>
         <source>Coarse</source>
         <translation>Coarse</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="21"/>
+        <location filename="messages.cpp" line="22"/>
         <source>Normal</source>
         <translation>Normal</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="22"/>
+        <location filename="messages.cpp" line="23"/>
         <source>Precise</source>
         <translation>Precise</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="23"/>
+        <location filename="messages.cpp" line="24"/>
         <source>VeryPrecise</source>
         <translation>Very Precise</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="24"/>
+        <location filename="messages.cpp" line="25"/>
         <source>UserDefined</source>
         <translation>User Defined</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="26"/>
+        <location filename="messages.cpp" line="27"/>
         <source>None</source>
         <translation>None</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="27"/>
+        <location filename="messages.cpp" line="28"/>
         <source>ReloadIfUserConfirm</source>
         <translation>Reload If User Confirms</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="28"/>
+        <location filename="messages.cpp" line="29"/>
         <source>ReloadSilently</source>
         <oldsource>SilentReload</oldsource>
         <translation>Reload Silently</translation>
@@ -523,12 +568,12 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::Application</name>
     <message>
-        <location filename="../src/base/application.cpp" line="146"/>
+        <location filename="../src/base/application.cpp" line="164"/>
         <source>Binary Mayo Document Format</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/application.cpp" line="151"/>
+        <location filename="../src/base/application.cpp" line="171"/>
         <source>XML Mayo Document Format</source>
         <translation></translation>
     </message>
@@ -536,67 +581,67 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::BRepMeasureError</name>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="75"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="79"/>
         <source>Entity must be a vertex</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="77"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="81"/>
         <source>Entity must be a circular edge</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="79"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="83"/>
         <source>Entity must be a shape(BREP)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="81"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="85"/>
         <source>Entity must be a geometric or polygon edge</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="83"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="87"/>
         <source>Entity must be a geometric or triangulation face</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="85"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="89"/>
         <source>Computation of minimum distance failed</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="87"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="91"/>
         <source>Unable to find center of the shape</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="89"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="93"/>
         <source>All entities must be edges</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="91"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="95"/>
         <source>Entity must be a linear edge</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="93"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="97"/>
         <source>All entities must be faces</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="95"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="99"/>
         <source>Entities must not be parallel</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="97"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="101"/>
         <source>Bounding box computed is void</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_tool_brep.cpp" line="99"/>
+        <location filename="../src/measure/measure_tool_brep.cpp" line="103"/>
         <source>Unknown error</source>
         <translation></translation>
     </message>
@@ -604,27 +649,27 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::CliExport</name>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="131"/>
+        <location filename="../src/cli/cli_export.cpp" line="114"/>
         <source>Mesh BRep shapes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="135"/>
+        <location filename="../src/cli/cli_export.cpp" line="118"/>
         <source>Imported</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="158"/>
+        <location filename="../src/cli/cli_export.cpp" line="142"/>
         <source>Exported {}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="238"/>
+        <location filename="../src/cli/cli_export.cpp" line="222"/>
         <source>Importing...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/cli_export.cpp" line="250"/>
+        <location filename="../src/cli/cli_export.cpp" line="234"/>
         <source>Exporting {}...</source>
         <translation></translation>
     </message>
@@ -632,17 +677,17 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::Command</name>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="41"/>
+        <location filename="../src/app/commands_display.cpp" line="39"/>
         <source>Orthographic</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="42"/>
+        <location filename="../src/app/commands_display.cpp" line="40"/>
         <source>Perspective</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="56"/>
+        <location filename="../src/app/commands_display.cpp" line="54"/>
         <source>Projection</source>
         <translation></translation>
     </message>
@@ -652,274 +697,279 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="164"/>
+        <location filename="../src/app/commands_display.cpp" line="149"/>
+        <source>[%1] %2</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/commands_display.cpp" line="173"/>
         <source>Show Origin Trihedron</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="165"/>
+        <location filename="../src/app/commands_display.cpp" line="174"/>
         <source>Show/Hide Origin Trihedron</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="202"/>
+        <location filename="../src/app/commands_display.cpp" line="216"/>
         <source>Show Performance Stats</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="203"/>
+        <location filename="../src/app/commands_display.cpp" line="217"/>
         <source>Show/Hide rendering performance statistics</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="240"/>
+        <location filename="../src/app/commands_display.cpp" line="253"/>
         <source>Zoom In</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="257"/>
+        <location filename="../src/app/commands_display.cpp" line="269"/>
         <source>Zoom Out</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="274"/>
+        <location filename="../src/app/commands_display.cpp" line="285"/>
         <source>Turn Counter Clockwise</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_display.cpp" line="292"/>
+        <location filename="../src/app/commands_display.cpp" line="302"/>
         <source>Turn Clockwise</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="51"/>
+        <location filename="../src/app/commands_file.cpp" line="52"/>
         <source>%1 files(%2)</source>
         <extracomment>%1 is the format identifier and %2 is the file filters string</extracomment>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="113"/>
+        <location filename="../src/app/commands_file.cpp" line="94"/>
         <source>All files(*.*)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="115"/>
+        <location filename="../src/app/commands_file.cpp" line="96"/>
         <source>Select Part File</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="199"/>
-        <location filename="../src/app/commands_file.cpp" line="241"/>
+        <location filename="../src/app/commands_file.cpp" line="192"/>
+        <location filename="../src/app/commands_file.cpp" line="250"/>
         <source>Mesh BRep shapes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="204"/>
-        <location filename="../src/app/commands_file.cpp" line="246"/>
+        <location filename="../src/app/commands_file.cpp" line="197"/>
+        <location filename="../src/app/commands_file.cpp" line="255"/>
         <source>Import time: {}ms</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="268"/>
+        <location filename="../src/app/commands_file.cpp" line="277"/>
         <source>New</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="269"/>
+        <location filename="../src/app/commands_file.cpp" line="278"/>
         <source>New Document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="278"/>
+        <location filename="../src/app/commands_file.cpp" line="286"/>
         <source>Anonymous%1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="285"/>
+        <location filename="../src/app/commands_file.cpp" line="293"/>
         <source>Open</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="286"/>
+        <location filename="../src/app/commands_file.cpp" line="294"/>
         <source>Open Documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="336"/>
+        <location filename="../src/app/commands_file.cpp" line="337"/>
         <source>Recent files</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="365"/>
+        <location filename="../src/app/commands_file.cpp" line="364"/>
         <source>%1 | %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="373"/>
+        <location filename="../src/app/commands_file.cpp" line="372"/>
         <source>Clear menu</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="250"/>
-        <location filename="../src/app/commands_file.cpp" line="386"/>
+        <location filename="../src/app/commands_file.cpp" line="259"/>
+        <location filename="../src/app/commands_file.cpp" line="385"/>
         <source>Import</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="387"/>
+        <location filename="../src/app/commands_file.cpp" line="386"/>
         <source>Import in current document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="417"/>
-        <location filename="../src/app/commands_file.cpp" line="418"/>
+        <location filename="../src/app/commands_file.cpp" line="413"/>
+        <location filename="../src/app/commands_file.cpp" line="414"/>
         <source>Export selected items</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="427"/>
+        <location filename="../src/app/commands_file.cpp" line="422"/>
         <source>No item selected for export</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="439"/>
+        <location filename="../src/app/commands_file.cpp" line="434"/>
         <source>Select Output File</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="462"/>
+        <location filename="../src/app/commands_file.cpp" line="461"/>
         <source>Export time: {}ms</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="479"/>
+        <location filename="../src/app/commands_file.cpp" line="478"/>
         <source>Close &quot;%1&quot;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="513"/>
+        <location filename="../src/app/commands_file.cpp" line="511"/>
         <source>Close %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="514"/>
+        <location filename="../src/app/commands_file.cpp" line="512"/>
         <source>Close</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="523"/>
+        <location filename="../src/app/commands_file.cpp" line="522"/>
         <source>Close all</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="524"/>
+        <location filename="../src/app/commands_file.cpp" line="523"/>
         <source>Close all documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="544"/>
-        <location filename="../src/app/commands_file.cpp" line="585"/>
+        <location filename="../src/app/commands_file.cpp" line="540"/>
+        <location filename="../src/app/commands_file.cpp" line="580"/>
         <source>Close all except current</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="545"/>
+        <location filename="../src/app/commands_file.cpp" line="541"/>
         <source>Close all except current document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="584"/>
+        <location filename="../src/app/commands_file.cpp" line="579"/>
         <source>Close all except %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_file.cpp" line="593"/>
+        <location filename="../src/app/commands_file.cpp" line="590"/>
         <source>Quit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_help.cpp" line="25"/>
+        <location filename="../src/app/commands_help.cpp" line="24"/>
         <source>Report Bug</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_help.cpp" line="38"/>
+        <location filename="../src/app/commands_help.cpp" line="37"/>
         <source>About %1</source>
         <translation></translation>
     </message>
     <message>
+        <location filename="../src/app/commands_tools.cpp" line="27"/>
         <location filename="../src/app/commands_tools.cpp" line="28"/>
-        <location filename="../src/app/commands_tools.cpp" line="29"/>
         <source>Save View to Image</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_tools.cpp" line="51"/>
-        <location filename="../src/app/commands_tools.cpp" line="52"/>
+        <location filename="../src/app/commands_tools.cpp" line="49"/>
+        <location filename="../src/app/commands_tools.cpp" line="50"/>
         <source>Inspect XDE</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_tools.cpp" line="90"/>
-        <location filename="../src/app/commands_tools.cpp" line="91"/>
+        <location filename="../src/app/commands_tools.cpp" line="88"/>
+        <location filename="../src/app/commands_tools.cpp" line="89"/>
         <source>Options</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="21"/>
+        <location filename="../src/app/commands_window.cpp" line="22"/>
         <source>Fullscreen</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="22"/>
+        <location filename="../src/app/commands_window.cpp" line="23"/>
         <source>Switch Fullscreen/Normal</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="83"/>
+        <location filename="../src/app/commands_window.cpp" line="80"/>
         <source>Hide Left Sidebar</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="87"/>
+        <location filename="../src/app/commands_window.cpp" line="84"/>
         <source>Show Left Sidebar</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="48"/>
+        <location filename="../src/app/commands_window.cpp" line="51"/>
         <source>Show/Hide Left Sidebar</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="98"/>
-        <location filename="../src/app/commands_window.cpp" line="150"/>
+        <location filename="../src/app/commands_window.cpp" line="95"/>
+        <location filename="../src/app/commands_window.cpp" line="145"/>
         <source>Go To Home Page</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="147"/>
+        <location filename="../src/app/commands_window.cpp" line="142"/>
         <source>Go To Documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="161"/>
-        <location filename="../src/app/commands_window.cpp" line="162"/>
+        <location filename="../src/app/commands_window.cpp" line="156"/>
+        <location filename="../src/app/commands_window.cpp" line="157"/>
         <source>Previous Document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/commands_window.cpp" line="186"/>
-        <location filename="../src/app/commands_window.cpp" line="187"/>
+        <location filename="../src/app/commands_window.cpp" line="181"/>
+        <location filename="../src/app/commands_window.cpp" line="182"/>
         <source>Next Document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/command_system_information.cpp" line="54"/>
+        <location filename="../src/app/command_system_information.cpp" line="51"/>
         <source>System Information...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/command_system_information.cpp" line="73"/>
+        <location filename="../src/app/command_system_information.cpp" line="69"/>
         <source>Copy to Clipboard</source>
         <translation></translation>
     </message>
@@ -933,8 +983,8 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
     </message>
     <message>
         <location filename="../src/app/dialog_about.ui" line="53"/>
-        <source>Mayo By Fougue Ltd.</source>
-        <translation></translation>
+        <source>Mayo By Fougue</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/app/dialog_about.ui" line="60"/>
@@ -957,12 +1007,12 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_about.cpp" line="23"/>
+        <location filename="../src/app/dialog_about.cpp" line="22"/>
         <source>%1 By %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_about.cpp" line="43"/>
+        <location filename="../src/app/dialog_about.cpp" line="42"/>
         <source>%1 %2</source>
         <translation></translation>
     </message>
@@ -975,87 +1025,87 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="174"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="171"/>
         <source>Yes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="175"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="172"/>
         <source>No</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="381"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="378"/>
         <source>File Size: %1&lt;br&gt;Dimensions: %2x%3 Depth: %4</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="386"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="383"/>
         <source>Error when loading texture file(invalid path?)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="417"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="414"/>
         <source>%1,offset:%2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="433"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="430"/>
         <source>&lt;data&gt;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="857"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="861"/>
         <source>Shape</source>
         <translation>Shape</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="861"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="865"/>
         <source>Color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="865"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="869"/>
         <source>Material</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="870"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="874"/>
         <source>VisMaterial</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="875"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="879"/>
         <source>Dimension</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="878"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="882"/>
         <source>Datum</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="881"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="885"/>
         <source>GeomTolerance</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="825"/>
         <source>Error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="129"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="126"/>
         <source>ShapeType=%1, ShapeLocation=%2, Evolution=%3</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="821"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="825"/>
         <source>This document is not suitable for XDE</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_inspect_xde.cpp" line="843"/>
+        <location filename="../src/app/dialog_inspect_xde.cpp" line="847"/>
         <source>Attributes</source>
         <translation></translation>
     </message>
@@ -1068,71 +1118,71 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="151"/>
+        <location filename="../src/app/dialog_options.cpp" line="148"/>
         <source>Restore default values</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="186"/>
+        <location filename="../src/app/dialog_options.cpp" line="183"/>
         <source>%1 / %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="270"/>
+        <location filename="../src/app/dialog_options.cpp" line="267"/>
         <source>Exchange</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="273"/>
+        <location filename="../src/app/dialog_options.cpp" line="270"/>
         <source>Load from file...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="274"/>
+        <location filename="../src/app/dialog_options.cpp" line="271"/>
         <source>Save as...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="355"/>
-        <location filename="../src/app/dialog_options.cpp" line="378"/>
+        <location filename="../src/app/dialog_options.cpp" line="350"/>
+        <location filename="../src/app/dialog_options.cpp" line="373"/>
         <source>Choose INI file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="355"/>
-        <location filename="../src/app/dialog_options.cpp" line="378"/>
+        <location filename="../src/app/dialog_options.cpp" line="350"/>
+        <location filename="../src/app/dialog_options.cpp" line="373"/>
         <source>INI files(*.ini)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="361"/>
-        <location filename="../src/app/dialog_options.cpp" line="366"/>
-        <location filename="../src/app/dialog_options.cpp" line="387"/>
+        <location filename="../src/app/dialog_options.cpp" line="357"/>
+        <location filename="../src/app/dialog_options.cpp" line="362"/>
+        <location filename="../src/app/dialog_options.cpp" line="382"/>
         <source>Error</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="361"/>
+        <location filename="../src/app/dialog_options.cpp" line="357"/>
         <source>&apos;%1&apos; doesn&apos;t exist</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="366"/>
+        <location filename="../src/app/dialog_options.cpp" line="362"/>
         <source>&apos;%1&apos; is not readable</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="387"/>
+        <location filename="../src/app/dialog_options.cpp" line="382"/>
         <source>Error when writing to &apos;%1&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="413"/>
+        <location filename="../src/app/dialog_options.cpp" line="408"/>
         <source>Restore values for default section only</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_options.cpp" line="416"/>
+        <location filename="../src/app/dialog_options.cpp" line="411"/>
         <source>Restore values for the whole group</source>
         <translation></translation>
     </message>
@@ -1225,7 +1275,7 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/dialog_task_manager.cpp" line="191"/>
+        <location filename="../src/app/dialog_task_manager.cpp" line="189"/>
         <source> / </source>
         <translation></translation>
     </message>
@@ -1233,32 +1283,32 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::DocumentPropertyGroup</name>
     <message>
-        <location filename="../src/app/document_property_group.h" line="21"/>
+        <location filename="../src/app/document_property_group.h" line="20"/>
         <source>filepath</source>
         <translation>File Path</translation>
     </message>
     <message>
-        <location filename="../src/app/document_property_group.h" line="22"/>
+        <location filename="../src/app/document_property_group.h" line="21"/>
         <source>fileSize</source>
         <translation>File Size</translation>
     </message>
     <message>
-        <location filename="../src/app/document_property_group.h" line="23"/>
+        <location filename="../src/app/document_property_group.h" line="22"/>
         <source>createdDateTime</source>
         <translation>Created</translation>
     </message>
     <message>
-        <location filename="../src/app/document_property_group.h" line="24"/>
+        <location filename="../src/app/document_property_group.h" line="23"/>
         <source>modifiedDateTime</source>
         <translation>Modified</translation>
     </message>
     <message>
-        <location filename="../src/app/document_property_group.h" line="25"/>
+        <location filename="../src/app/document_property_group.h" line="24"/>
         <source>owner</source>
         <translation>Owner</translation>
     </message>
     <message>
-        <location filename="../src/app/document_property_group.h" line="26"/>
+        <location filename="../src/app/document_property_group.h" line="25"/>
         <source>entityCount</source>
         <translation>Count Of Entities</translation>
     </message>
@@ -1266,39 +1316,82 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
 <context>
     <name>Mayo::GraphicsMeshObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="37"/>
         <source>Mesh_Wireframe</source>
-        <translation>[Mesh] Wireframe</translation>
+        <translation type="vanished">[Mesh] Wireframe</translation>
+    </message>
+    <message>
+        <source>Mesh_Shaded</source>
+        <translation type="vanished">[Mesh] Shaded</translation>
+    </message>
+    <message>
+        <source>Mesh_Shrink</source>
+        <translation type="vanished">[Mesh] Shrink</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="36"/>
+        <source>Wireframe</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="37"/>
+        <source>Shaded</source>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="38"/>
-        <source>Mesh_Shaded</source>
-        <translation>[Mesh] Shaded</translation>
+        <source>Shrink</source>
+        <translation></translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="39"/>
-        <source>Mesh_Shrink</source>
-        <translation>[Mesh] Shrink</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="201"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="200"/>
         <source>color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="202"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="201"/>
         <source>edgeColor</source>
         <translation>Edge Color</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="203"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="202"/>
         <source>showEdges</source>
         <translation>Show Edges</translation>
     </message>
     <message>
-        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="204"/>
+        <location filename="../src/graphics/graphics_mesh_object_driver.cpp" line="203"/>
         <source>showNodes</source>
         <translation>Show Nodes</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::GraphicsMeshObjectDriverI18N</name>
+    <message>
+        <source>Mesh_Wireframe</source>
+        <translation type="obsolete">[Mesh] Wireframe</translation>
+    </message>
+    <message>
+        <source>Mesh_Shaded</source>
+        <translation type="obsolete">[Mesh] Shaded</translation>
+    </message>
+    <message>
+        <source>Mesh_Shrink</source>
+        <translation type="obsolete">[Mesh] Shrink</translation>
+    </message>
+    <message>
+        <source>color</source>
+        <translation type="obsolete">Color</translation>
+    </message>
+    <message>
+        <source>edgeColor</source>
+        <translation type="obsolete">Edge Color</translation>
+    </message>
+    <message>
+        <source>showEdges</source>
+        <translation type="obsolete">Show Edges</translation>
+    </message>
+    <message>
+        <source>showNodes</source>
+        <translation type="obsolete">Show Nodes</translation>
     </message>
 </context>
 <context>
@@ -1352,42 +1445,76 @@ If activated, deflection used for the polygonalisation of each edge will be `Cho
     </message>
 </context>
 <context>
+    <name>Mayo::GraphicsObjectDriverI18N</name>
+    <message>
+        <location filename="messages.cpp" line="36"/>
+        <source>GraphicsShapeObjectDriver</source>
+        <translation>Shape</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="37"/>
+        <source>GraphicsMeshObjectDriver</source>
+        <translation>Mesh</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="38"/>
+        <source>GraphicsPointCloudObjectDriver</source>
+        <translation>Point Cloud</translation>
+    </message>
+</context>
+<context>
     <name>Mayo::GraphicsShapeObjectDriver</name>
     <message>
-        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="33"/>
         <source>Shape_Wireframe</source>
-        <translation>[Shape] Wireframe</translation>
+        <translation type="vanished">[Shape] Wireframe</translation>
+    </message>
+    <message>
+        <source>Shape_HiddenLineRemoval</source>
+        <translation type="vanished">[Shape] Hidden Line Removal</translation>
+    </message>
+    <message>
+        <source>Shape_Shaded</source>
+        <translation type="vanished">[Shape] Shaded</translation>
+    </message>
+    <message>
+        <source>Shape_ShadedWithFaceBoundary</source>
+        <translation type="vanished">[Shape] Shaded With Edges</translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="32"/>
+        <source>Wireframe</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="33"/>
+        <source>HiddenLineRemoval</source>
+        <translation>Hidden Line Removal</translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="34"/>
-        <source>Shape_HiddenLineRemoval</source>
-        <translation>[Shape] Hidden Line Removal</translation>
+        <source>Shaded</source>
+        <translation>Shaded</translation>
     </message>
     <message>
         <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="35"/>
-        <source>Shape_Shaded</source>
-        <translation>[Shape] Shaded</translation>
-    </message>
-    <message>
-        <location filename="../src/graphics/graphics_shape_object_driver.cpp" line="36"/>
-        <source>Shape_ShadedWithFaceBoundary</source>
-        <translation>[Shape] Shaded With Edges</translation>
+        <source>ShadedWithFaceBoundary</source>
+        <translation>Shaded With Edges</translation>
     </message>
 </context>
 <context>
     <name>Mayo::IO::AssimpReaderI18N</name>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="370"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="365"/>
         <source>LINE primitives not supported yet</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="373"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="368"/>
         <source>Some primitive not supported</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="504"/>
+        <location filename="../src/io_assimp/io_assimp_reader.cpp" line="499"/>
         <source>Texture not found: {}
 Tried:</source>
         <translation></translation>
@@ -1396,42 +1523,36 @@ Tried:</source>
 <context>
     <name>Mayo::IO::DxfReader::Properties</name>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="156"/>
-        <source>Scale entities according some factor</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="158"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="543"/>
         <source>Import text/dimension objects</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="160"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="545"/>
         <source>Group all objects within a layer into a single compound shape</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="162"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="547"/>
         <source>Name of the font to be used when creating shape for text objects</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="173"/>
         <source>scaling</source>
-        <translation>Scaling</translation>
+        <translation type="vanished">Scaling</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="174"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="557"/>
         <source>importAnnotations</source>
         <translation>Import annotations</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="175"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="558"/>
         <source>groupLayers</source>
         <translation>Group objects by layer</translation>
     </message>
     <message>
-        <location filename="../src/io_dxf/io_dxf.cpp" line="176"/>
+        <location filename="../src/io_dxf/io_dxf.cpp" line="559"/>
         <source>fontNameForTextObjects</source>
         <translation>Font for TEXT objects</translation>
     </message>
@@ -1439,84 +1560,84 @@ Tried:</source>
 <context>
     <name>Mayo::IO::GmioAmfWriter::Properties</name>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="136"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="134"/>
         <source>Decimal floating point(ex: 392.65)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="137"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="135"/>
         <source>Scientific notation(ex: 3.9265E+2)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="138"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="136"/>
         <source>Use the shortest representation: decimal or scientific</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="134"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="132"/>
         <source>Format used when writing `double` values as strings</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="144"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="142"/>
         <source>Maximum number of significant digits when writing `double` values</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="147"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="145"/>
         <source>Write AMF document in ZIP archive containing one file entry</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="150"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="148"/>
         <source>Filename of the single AMF entry within the ZIP archive.
 Only applicable if option `{}` is on</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="155"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="153"/>
         <source>Use the ZIP64 format extensions.
 Only applicable if option `{}` is on</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="183"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="181"/>
         <source>float64Format</source>
         <translation>64bit Float Format</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="184"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="182"/>
         <source>float64Precision</source>
         <translation>64bit Float Precision</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="185"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="183"/>
         <source>createZipArchive</source>
         <translation>Create ZIP Archive</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="186"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="184"/>
         <source>zipEntryFilename</source>
         <translation>ZIP Entry Filename</translation>
     </message>
     <message>
-        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="187"/>
+        <location filename="../src/io_gmio/io_gmio_amf_writer.cpp" line="185"/>
         <source>useZip64</source>
         <translation>Use ZIP64 extensions</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="35"/>
+        <location filename="messages.cpp" line="41"/>
         <source>Decimal</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="36"/>
+        <location filename="messages.cpp" line="42"/>
         <source>Scientific</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="37"/>
+        <location filename="messages.cpp" line="43"/>
         <source>Shortest</source>
         <translation></translation>
     </message>
@@ -1557,80 +1678,195 @@ Only applicable if option `{}` is on</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="60"/>
+        <location filename="../src/io_image/io_image.cpp" line="59"/>
+        <source>Start color of the image background gradient</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="62"/>
+        <source>End color of the image background gradient</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="65"/>
+        <source>Type of gradient fill for the image background</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="69"/>
+        <source>No gadient fill, single color background</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="70"/>
+        <source>Gradient directed from left to right</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="71"/>
+        <source>Gradient directed from top to bottom</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="72"/>
+        <source>Gradient directed from top left corner to bottom right</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="73"/>
+        <source>Gradient directed from top right corner to bottom left</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="74"/>
+        <source>Gradient directed from center in all directions forming concentric circles</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="78"/>
         <source>Camera orientation expressed in Z-up convention as a unit vector</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="75"/>
+        <location filename="../src/io_image/io_image.cpp" line="81"/>
+        <source>Camera projection type, specifies how the 3D scene is projected onto a 2D image for display</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="101"/>
+        <source>Graphics display mode for the objects of type `{}`</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="128"/>
         <source>width</source>
         <translation>Width</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="76"/>
+        <location filename="../src/io_image/io_image.cpp" line="129"/>
         <source>height</source>
         <translation>Height</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="77"/>
-        <source>backgroundColor</source>
-        <translation>Background Color</translation>
+        <location filename="../src/io_image/io_image.cpp" line="130"/>
+        <source>backgroundColorStart</source>
+        <translation>Background Color Start</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="78"/>
+        <location filename="../src/io_image/io_image.cpp" line="131"/>
+        <source>backgroundColorEnd</source>
+        <translation>Background Color End</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="132"/>
+        <source>backgroundGradientFill</source>
+        <translation>Background Gradient Fill</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="195"/>
+        <source>Background radial gradient fill is available since OpenCascade 7.6.
+Default to background single color</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>backgroundColor</source>
+        <translation type="vanished">Background Color</translation>
+    </message>
+    <message>
+        <location filename="../src/io_image/io_image.cpp" line="133"/>
         <source>cameraOrientation</source>
         <translation>Camera Orientation</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="79"/>
+        <location filename="../src/io_image/io_image.cpp" line="134"/>
         <source>cameraProjection</source>
         <translation>Camera Projection</translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="101"/>
+        <location filename="../src/io_image/io_image.cpp" line="183"/>
         <source>No transferred application items</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_image/io_image.cpp" line="109"/>
+        <location filename="../src/io_image/io_image.cpp" line="191"/>
         <source>Camera orientation vector must not be null</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="62"/>
+        <location filename="messages.cpp" line="68"/>
         <source>Perspective</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="63"/>
+        <location filename="messages.cpp" line="69"/>
         <source>Orthographic</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="71"/>
+        <source>None</source>
+        <translation>None</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="72"/>
+        <source>Horizontal</source>
+        <translation>Horizontal</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="73"/>
+        <source>Vertical</source>
+        <translation>Vertical</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="74"/>
+        <source>DiagonalTopLeftBottomRight</source>
+        <translation>Diagonal Top Left → Bottom Right</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="75"/>
+        <source>DiagonalTopRightBottomLeft</source>
+        <translation>Diagonal Top Right → Bottom Left</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="76"/>
+        <source>Radial</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="77"/>
+        <source>GraphicsShapeObjectDriver_displayMode</source>
+        <translation>Display Mode for Shape Objects</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="78"/>
+        <source>GraphicsMeshObjectDriver_displayMode</source>
+        <translation>Display Mode for Mesh Objects</translation>
     </message>
 </context>
 <context>
     <name>Mayo::IO::OccBaseMeshReaderProperties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="22"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="27"/>
         <source>rootPrefix</source>
         <translation>Root Prefix</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="23"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="28"/>
         <source>systemCoordinatesConverter</source>
         <translation>System Coordinates Converter</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="24"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="29"/>
         <source>systemLengthUnit</source>
         <translation>System Length Unit</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="26"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="31"/>
         <source>Prefix for generating root labels name</source>
         <translation>Prefix for generating root labels name</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="27"/>
+        <location filename="../src/io_occ/io_occ_base_mesh.cpp" line="32"/>
         <source>System length units to convert into while reading files</source>
         <translation>System length units to convert into while reading files</translation>
     </message>
@@ -1638,58 +1874,58 @@ Only applicable if option `{}` is on</source>
 <context>
     <name>Mayo::IO::OccCommon</name>
     <message>
-        <location filename="messages.cpp" line="39"/>
-        <location filename="messages.cpp" line="43"/>
+        <location filename="messages.cpp" line="45"/>
+        <location filename="messages.cpp" line="49"/>
         <source>Undefined</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="40"/>
+        <location filename="messages.cpp" line="46"/>
         <source>posYfwd_posZup</source>
         <translation>+Zup</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="41"/>
+        <location filename="messages.cpp" line="47"/>
         <source>negZfwd_posYup</source>
         <translation>+Yup</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="44"/>
+        <location filename="messages.cpp" line="50"/>
         <source>Micrometer</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="45"/>
+        <location filename="messages.cpp" line="51"/>
         <source>Millimeter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="46"/>
+        <location filename="messages.cpp" line="52"/>
         <source>Centimeter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="47"/>
+        <location filename="messages.cpp" line="53"/>
         <source>Meter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="48"/>
+        <location filename="messages.cpp" line="54"/>
         <source>Kilometer</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="49"/>
+        <location filename="messages.cpp" line="55"/>
         <source>Inch</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="50"/>
+        <location filename="messages.cpp" line="56"/>
         <source>Foot</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="51"/>
+        <location filename="messages.cpp" line="57"/>
         <source>Mile</source>
         <translation></translation>
     </message>
@@ -1697,22 +1933,22 @@ Only applicable if option `{}` is on</source>
 <context>
     <name>Mayo::IO::OccGltfReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="34"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="32"/>
         <source>skipEmptyNodes</source>
         <translation>Skip Empty Nodes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="35"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="33"/>
         <source>useMeshNameAsFallback</source>
         <translation>Use Mesh Name As Fallback</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="20"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="18"/>
         <source>Ignore nodes without geometry(`Yes` by default)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="23"/>
+        <location filename="../src/io_occ/io_occ_gltf_reader.cpp" line="21"/>
         <source>Use mesh name in case if node name is empty(`Yes` by default)</source>
         <translation></translation>
     </message>
@@ -1724,67 +1960,67 @@ Only applicable if option `{}` is on</source>
         <translation type="vanished">Coordinates Converter</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="109"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="107"/>
         <source>transformationFormat</source>
         <translation>Transformation Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="110"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="108"/>
         <source>format</source>
         <translation>Target Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="111"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="109"/>
         <source>forceExportUV</source>
         <translation>Force UV Export</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="32"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="30"/>
         <source>Source coordinate system transformation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="34"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="32"/>
         <source>Target coordinate system transformation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="36"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="34"/>
         <source>Preferred transformation format for writing into glTF file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="38"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="36"/>
         <source>Export UV coordinates even if there is no mapped texture</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="42"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="40"/>
         <source>Automatically choose most compact representation between Mat4 and TRS</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="44"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="42"/>
         <source>4x4 transformation matrix</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="45"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="43"/>
         <source>Transformation decomposed into Translation vector, Rotation quaternion and Scale factor(T * R * S)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="51"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="49"/>
         <source>Name format for exporting nodes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="52"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="50"/>
         <source>Name format for exporting meshes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="54"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="52"/>
         <source>Write image textures into target file.
 
 If set to `false` then texture images will be written as separate files.
@@ -1793,14 +2029,14 @@ Applicable only if option `{0}` is set to `{1}`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="62"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="60"/>
         <source>Merge faces within a single part.
 
 May reduce JSON size thanks to smaller number of primitive arrays</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="66"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="64"/>
         <source>Prefer keeping 16-bit indexes while merging face.
 
 May reduce binary data size thanks to smaller triangle indexes.
@@ -1809,52 +2045,52 @@ Applicable only if option `{}` is on</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="107"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="105"/>
         <source>inputCoordinateSystem</source>
         <translation>Input Coordinate System</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="108"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="106"/>
         <source>outputCoordinateSystem</source>
         <translation>Output Coordinate System</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="112"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="110"/>
         <source>nodeNameFormat</source>
         <translation>Node Name Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="113"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="111"/>
         <source>meshNameFormat</source>
         <translation>Mesh Name Format</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="114"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="112"/>
         <source>embedTextures</source>
         <translation>Embed Textures</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="115"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="113"/>
         <source>mergeFaces</source>
         <translation>Merge Faces</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="116"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="114"/>
         <source>keepIndices16b</source>
         <translation>Keep 16bit Indices</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="172"/>
+        <location filename="../src/io_occ/io_occ_gltf_writer.cpp" line="170"/>
         <source>Option supported from OpenCascade ≥ v7.6 [option={}, actual version={}]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="56"/>
+        <location filename="messages.cpp" line="62"/>
         <source>Json</source>
         <translation>JSON</translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="57"/>
+        <location filename="messages.cpp" line="63"/>
         <source>Binary</source>
         <translation>Binary</translation>
     </message>
@@ -1862,32 +2098,32 @@ Applicable only if option `{}` is on</source>
 <context>
     <name>Mayo::IO::OccIgesReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="90"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="88"/>
         <source>bsplineContinuity</source>
         <translation>BSpline Continuity</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="91"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="89"/>
         <source>surfaceCurveMode</source>
         <translation>Surface Curve Mode</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="92"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="90"/>
         <source>readFaultyEntities</source>
         <translation>Read Faulty Entities</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="93"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="91"/>
         <source>readOnlyVisibleEntities</source>
         <translation>Read Only Visible Entities</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="28"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="26"/>
         <source>Manages the continuity of BSpline curves (IGES entities 106, 112 and 126) after translation to Open CASCADE (it requires that the curves in a model be at least C1 continuous; no such requirement is made by IGES).This parameter does not change the continuity of curves that are used in the construction of IGES BRep entities. In this case, the parameter does not influence the continuity of the resulting Open CASCADE curves (it is ignored).</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="39"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="37"/>
         <source>Preference for the computation of curves in case of 2D/3D inconsistency in an entity which has both 2D and 3D representations.
 
 Concerned entity types are 141 (Boundary), 142 (CurveOnSurface) and 508 (Loop). These are entities representing a contour lying on a surface, which is translated to a TopoDS_Wire, formed by TopoDS_Edges. Each TopoDS_Edge must have a 3D curve and a 2D curve that reference the surface.
@@ -1898,47 +2134,47 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="58"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="56"/>
         <source>Read failed entities</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="61"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="59"/>
         <source>Curves are taken as they are in the IGES file. C0 entities of Open CASCADE may be produced</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="64"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="62"/>
         <source>If an IGES BSpline, Spline or CopiousData curve is C0 continuous, it is broken down into pieces of C1 continuous Geom_BSplineCurve</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="67"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="65"/>
         <source>IGES Spline curves are broken down into pieces of C2 continuity. If C2 cannot be ensured, the Spline curves will be broken down into pieces of C1 continuity</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="74"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="72"/>
         <source>Use the preference flag value in the entity&apos;s `Parameter Data` section</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="75"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="73"/>
         <source>The 2D is used to rebuild the 3D in case of their inconsistency</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="76"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="74"/>
         <source>The 2D is always used to rebuild the 3D (even if 3D is present in the file)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="77"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="75"/>
         <source>The 3D is used to rebuild the 2D in case of their inconsistency</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="78"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="76"/>
         <source>The 3D is always used to rebuild the 2D (even if 2D is present in the file)</source>
         <translation></translation>
     </message>
@@ -1946,32 +2182,32 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
 <context>
     <name>Mayo::IO::OccIgesWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="177"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="176"/>
         <source>brepMode</source>
         <translation>BRep Mode</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="178"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="177"/>
         <source>planeMode</source>
         <translation>Plane Mode</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="179"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="178"/>
         <source>lengthUnit</source>
         <translation>Length Unit</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="158"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="156"/>
         <source>Indicates if planes should be saved as Bsplines or Planes (type 108). Writing p-curves on planes is disabled</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="161"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="160"/>
         <source>OpenCascade TopoDS_Faces will be translated into IGES 144 (Trimmed Surface) entities, no BRep entities will be written to the IGES file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_iges.cpp" line="164"/>
+        <location filename="../src/io_occ/io_occ_iges.cpp" line="163"/>
         <source>OpenCascade TopoDS_Faces will be translated into IGES 510 (Face) entities, the IGES file will contain BRep entities</source>
         <translation></translation>
     </message>
@@ -1979,12 +2215,12 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
 <context>
     <name>Mayo::IO::OccObjReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="30"/>
+        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="28"/>
         <source>singlePrecisionVertexCoords</source>
         <translation>Single Precision For Vertex Coordinates</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="20"/>
+        <location filename="../src/io_occ/io_occ_obj_reader.cpp" line="18"/>
         <source>Single precision flag for reading vertex data(coordinates)</source>
         <translation></translation>
     </message>
@@ -1996,22 +2232,33 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
         <translation type="vanished">Coordinates Converter</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="29"/>
+        <source>inputCoordinateSystem</source>
+        <translation type="vanished">Input Coordinate System</translation>
+    </message>
+    <message>
+        <source>outputCoordinateSystem</source>
+        <translation type="vanished">Output Coordinate System</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OccObjWriterI18N</name>
+    <message>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="30"/>
         <source>Source coordinate system transformation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="30"/>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="33"/>
         <source>Target coordinate system transformation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="39"/>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="43"/>
         <source>inputCoordinateSystem</source>
         <translation>Input Coordinate System</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="40"/>
+        <location filename="../src/io_occ/io_occ_obj_writer.cpp" line="44"/>
         <source>outputCoordinateSystem</source>
         <translation>Output Coordinate System</translation>
     </message>
@@ -2019,43 +2266,43 @@ The processor also decides to re-compute either the 3D or the 2D curve even if b
 <context>
     <name>Mayo::IO::OccStepReader::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="114"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="118"/>
         <source>productContext</source>
         <translation>Product Context</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="115"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="119"/>
         <source>assemblyLevel</source>
         <translation>Assembly Level</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="116"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="120"/>
         <source>preferredShapeRepresentation</source>
         <translation>Preferred Shape Representation</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="117"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="121"/>
         <source>readShapeAspect</source>
         <translation>Read Shape Aspect</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="118"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="122"/>
         <source>readSubShapesNames</source>
         <translation>Read Names of sub Shapes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="119"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="123"/>
         <source>encoding</source>
         <translation>Encoding</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="37"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="35"/>
         <source>When reading AP 209 STEP files, allows selecting either only `design` or `analysis`, or both types of products for translation
 Note that in AP 203 and AP214 files all products should be marked as `design`, so if this mode is set to `analysis`, nothing will be read</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="43"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="42"/>
         <source>Specifies which data should be read for the products found in the STEP file</source>
         <translation></translation>
     </message>
@@ -2065,68 +2312,68 @@ Note that in AP 203 and AP214 files all products should be marked as `design`, s
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="51"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="52"/>
         <source>Defines whether shapes associated with the `PRODUCT_DEFINITION_SHAPE` entity of the product via `SHAPE_ASPECT` should be translated.
 This kind of association was used for the representation of hybrid models (i.e. models whose shape is composed of different types of representations) in AP 203 files before 1998, but it is also used to associate auxiliary information with the sub-shapes of the part. Though STEP translator tries to recognize such cases correctly, this parameter may be useful to avoid unconditionally translation of shapes associated via `SHAPE_ASPECT` entities.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="61"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="63"/>
         <source>Indicates whether to read sub-shape names from &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="65"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="68"/>
         <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `design`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="68"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="71"/>
         <source>Translate only products that have `PRODUCT_DEFINITION_CONTEXT` with field `life_cycle_stage` set to `analysis`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="71"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="74"/>
         <source>Translates all products</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="75"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="78"/>
         <source>Translate the assembly structure and shapes associated with parts only(not with sub-assemblies)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="78"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="81"/>
         <source>Translate only the assembly structure without shapes(a structure of empty compounds). This mode can be useful as an intermediate step in applications requiring specialized processing of assembly parts</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="82"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="85"/>
         <source>Translate only shapes associated with the product, ignoring the assembly structure (if any). This can be useful to translate only a shape associated with specific product, as a complement to assembly mode</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="86"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="89"/>
         <source>Translate both the assembly structure and all associated shapes. If both shape and sub-assemblies are associated with the same product, all of them are read and put in a single compound</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="94"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="97"/>
         <source>Translate all representations(if more than one, put in compound)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="97"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="101"/>
         <source>Shift Japanese Industrial Standards</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="98"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="102"/>
         <source>EUC(Extended Unix Code), multi-byte encoding primarily for Japanese, Korean, and simplified Chinese</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="100"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="104"/>
         <source>GB(Guobiao) encoding for Simplified Chinese</source>
         <translation></translation>
     </message>
@@ -2134,108 +2381,108 @@ This kind of association was used for the representation of hybrid models (i.e. 
 <context>
     <name>Mayo::IO::OccStepWriter::Properties</name>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="285"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="289"/>
         <source>schema</source>
         <translation>Schema</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="286"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="290"/>
         <source>lengthUnit</source>
         <translation>Length Unit</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="287"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="291"/>
         <source>assemblyMode</source>
         <translation>Assembly Mode</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="288"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="292"/>
         <source>freeVertexMode</source>
         <translation>Mode for Free Vertices</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="289"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="293"/>
         <source>writeParametericCurves</source>
         <translation>Write Parametric Curves</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="290"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="294"/>
         <source>writeSubShapesNames</source>
         <translation>Write Names of sub Shapes</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="291"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="295"/>
         <source>headerAuthor</source>
         <translation>Author(header)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="292"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="296"/>
         <source>headerOrganization</source>
         <translation>Organization(header)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="293"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="297"/>
         <source>headerOriginatingSystem</source>
         <translation>Originating system(header)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="294"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="298"/>
         <source>headerDescription</source>
         <translation>Description(header)</translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="231"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="235"/>
         <source>Version of schema used for the output STEP file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="234"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="238"/>
         <source>Defines a unit in which the STEP file should be written. If set to unit other than millimeter, the model is converted to these units during the translation</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="240"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="244"/>
         <source>Parameter to write all free vertices in one SDR (name and style of vertex are lost) or each vertex in its own SDR (name and style of vertex are exported)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="245"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="249"/>
         <source>All free vertices are united into one compound and exported in one shape definition representation (vertex name and style are lost)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="248"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="252"/>
         <source>Each vertex is exported in its own `SHAPE DEFINITION REPRESENTATION`(vertex name and style are not lost, but the STEP file size increases)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="254"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="258"/>
         <source>Indicates whether parametric curves (curves in parametric space of surface) should be written into the STEP file.
 It can be disabled in order to minimize the size of the resulting file.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="260"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="264"/>
         <source>Indicates whether to write sub-shape names to &apos;Name&apos; attributes of STEP Representation Items</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="264"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="268"/>
         <source>Author attribute in STEP header</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="265"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="269"/>
         <source>Organization(of author) attribute in STEP header</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="266"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="270"/>
         <source>Originating system attribute in STEP header</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/io_occ/io_occ_step.cpp" line="267"/>
+        <location filename="../src/io_occ/io_occ_step.cpp" line="271"/>
         <source>Description attribute in STEP header</source>
         <translation></translation>
     </message>
@@ -2258,112 +2505,14 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::IO::OccStlWriterI18N</name>
     <message>
-        <location filename="../src/io_occ/io_occ_stl.cpp" line="71"/>
+        <location filename="../src/io_occ/io_occ_stl.cpp" line="68"/>
         <source>targetFormat</source>
         <translation>Target Format</translation>
     </message>
     <message>
+        <location filename="../src/io_occ/io_occ_stl.cpp" line="120"/>
         <location filename="../src/io_occ/io_occ_stl.cpp" line="123"/>
-        <location filename="../src/io_occ/io_occ_stl.cpp" line="126"/>
         <source>Not all BRep faces are meshed</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="messages.cpp" line="53"/>
-        <source>Ascii</source>
-        <translation>Text</translation>
-    </message>
-    <message>
-        <location filename="messages.cpp" line="54"/>
-        <source>Binary</source>
-        <translation>Binary</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OccVrmlWriter::Properties</name>
-    <message>
-        <location filename="../src/io_occ/io_occ_vrml_writer.cpp" line="43"/>
-        <source>shapeRepresentation</source>
-        <translation>Shape Representation</translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OffReaderI18N</name>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="184"/>
-        <source>Can&apos;t open input file</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="192"/>
-        <location filename="../src/io_off/io_off_reader.cpp" line="212"/>
-        <source>Unexpected end of file</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="196"/>
-        <source>Wrong header keyword(should be [C][N][4]OFF</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="217"/>
-        <source>No vertex or face count</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="238"/>
-        <source>No vertex coordinates at current line</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_off/io_off_reader.cpp" line="263"/>
-        <source>Inconsistent vertex count of face</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::OffWriterI18N</name>
-    <message>
-        <location filename="../src/io_off/io_off_writer.cpp" line="46"/>
-        <source>Failed to open file</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
-    <name>Mayo::IO::PlyWriterI18N</name>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="68"/>
-        <source>Line that will appear in header</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="79"/>
-        <source>targetFormat</source>
-        <translation>Target Format</translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="80"/>
-        <source>writeColors</source>
-        <translation>Write Colors</translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="81"/>
-        <source>defaultColor</source>
-        <translation>Default Color</translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="82"/>
-        <source>comment</source>
-        <translation>Comment</translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="140"/>
-        <source>Failed to open file</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/io_ply/io_ply_writer.cpp" line="153"/>
-        <source>Unknown host endianness</source>
         <translation></translation>
     </message>
     <message>
@@ -2378,67 +2527,140 @@ It can be disabled in order to minimize the size of the resulting file.</source>
     </message>
 </context>
 <context>
+    <name>Mayo::IO::OccVrmlWriter::Properties</name>
+    <message>
+        <location filename="../src/io_occ/io_occ_vrml_writer.cpp" line="41"/>
+        <source>shapeRepresentation</source>
+        <translation>Shape Representation</translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OffReaderI18N</name>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="164"/>
+        <source>Can&apos;t open input file</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="172"/>
+        <location filename="../src/io_off/io_off_reader.cpp" line="192"/>
+        <source>Unexpected end of file</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="176"/>
+        <source>Wrong header keyword(should be [C][N][4]OFF</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="197"/>
+        <source>No vertex or face count</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="218"/>
+        <source>No vertex coordinates at current line</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/io_off/io_off_reader.cpp" line="243"/>
+        <source>Inconsistent vertex count of face</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::OffWriterI18N</name>
+    <message>
+        <location filename="../src/io_off/io_off_writer.cpp" line="44"/>
+        <source>Failed to open file</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
+    <name>Mayo::IO::PlyWriterI18N</name>
+    <message>
+        <source>targetFormat</source>
+        <translation type="vanished">Target Format</translation>
+    </message>
+    <message>
+        <source>writeColors</source>
+        <translation type="vanished">Write Colors</translation>
+    </message>
+    <message>
+        <source>defaultColor</source>
+        <translation type="vanished">Default Color</translation>
+    </message>
+    <message>
+        <source>comment</source>
+        <translation type="vanished">Comment</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="65"/>
+        <source>Ascii</source>
+        <translation>Text</translation>
+    </message>
+    <message>
+        <location filename="messages.cpp" line="66"/>
+        <source>Binary</source>
+        <translation>Binary</translation>
+    </message>
+</context>
+<context>
     <name>Mayo::IO::System</name>
     <message>
-        <location filename="../src/base/io_system.cpp" line="222"/>
+        <location filename="../src/base/io_system.cpp" line="234"/>
         <source>Reading file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="216"/>
+        <location filename="../src/base/io_system.cpp" line="228"/>
         <source>Unknown format</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="207"/>
+        <location filename="../src/base/io_system.cpp" line="218"/>
         <source>Error during import of &apos;{}&apos;
 {}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="225"/>
+        <location filename="../src/base/io_system.cpp" line="237"/>
         <source>No supporting reader</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="235"/>
+        <location filename="../src/base/io_system.cpp" line="247"/>
         <source>File read problem</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="244"/>
+        <location filename="../src/base/io_system.cpp" line="256"/>
         <source>Transferring file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="248"/>
-        <location filename="../src/base/io_system.cpp" line="354"/>
+        <location filename="../src/base/io_system.cpp" line="260"/>
+        <location filename="../src/base/io_system.cpp" line="386"/>
         <source>File transfer problem</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="340"/>
-        <source>Error during export to &apos;{}&apos;
-{}</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/base/io_system.cpp" line="346"/>
+        <location filename="../src/base/io_system.cpp" line="378"/>
         <source>No supporting writer</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="351"/>
+        <location filename="../src/base/io_system.cpp" line="383"/>
         <source>Transfer</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="358"/>
+        <location filename="../src/base/io_system.cpp" line="390"/>
         <source>Write</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/io_system.cpp" line="361"/>
+        <location filename="../src/base/io_system.cpp" line="393"/>
         <source>File write problem</source>
         <translation></translation>
     </message>
@@ -2446,145 +2668,150 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="105"/>
+        <location filename="../src/app/main.cpp" line="99"/>
         <source>Theme for the UI(classic|dark)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="106"/>
+        <location filename="../src/app/main.cpp" line="100"/>
         <source>name</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="119"/>
-        <location filename="../src/cli/main.cpp" line="227"/>
+        <location filename="../src/app/main.cpp" line="113"/>
+        <location filename="../src/cli/main.cpp" line="229"/>
         <source>Writes log messages into output file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="126"/>
-        <location filename="../src/cli/main.cpp" line="234"/>
+        <location filename="../src/app/main.cpp" line="120"/>
+        <location filename="../src/cli/main.cpp" line="236"/>
         <source>Don&apos;t filter out debug log messages in release build</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="132"/>
-        <location filename="../src/cli/main.cpp" line="246"/>
+        <location filename="../src/app/main.cpp" line="126"/>
+        <location filename="../src/cli/main.cpp" line="248"/>
         <source>Show detailed system information and quit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="137"/>
-        <location filename="../src/cli/main.cpp" line="251"/>
+        <location filename="../src/app/main.cpp" line="131"/>
+        <location filename="../src/cli/main.cpp" line="253"/>
         <source>files</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="138"/>
+        <location filename="../src/app/main.cpp" line="132"/>
         <source>Files to open at startup, optionally</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="139"/>
-        <location filename="../src/cli/main.cpp" line="253"/>
+        <location filename="../src/app/main.cpp" line="133"/>
+        <location filename="../src/cli/main.cpp" line="255"/>
         <source>[files...]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="145"/>
-        <source>Execute unit tests and exit application</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/app/main.cpp" line="188"/>
-        <location filename="../src/cli/main.cpp" line="299"/>
+        <location filename="../src/app/main.cpp" line="174"/>
+        <location filename="../src/cli/main.cpp" line="301"/>
         <source>OpenCascade settings file doesn&apos;t exist or is not readable [path=%1]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="195"/>
-        <location filename="../src/cli/main.cpp" line="306"/>
+        <location filename="../src/app/main.cpp" line="181"/>
+        <location filename="../src/cli/main.cpp" line="308"/>
         <source>OpenCascade settings file could not be loaded with QSettings [path=%1]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="363"/>
-        <location filename="../src/cli/main.cpp" line="400"/>
+        <location filename="../src/app/main.cpp" line="339"/>
+        <location filename="../src/cli/main.cpp" line="402"/>
         <source>Failed to load translation file [path=%1]</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="112"/>
+        <location filename="../src/app/main.cpp" line="436"/>
+        <source>[%1] %2</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="439"/>
+        <source>Unknown exception</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/main.cpp" line="106"/>
         <source>Settings file(INI format) to load at startup</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="98"/>
+        <location filename="../src/app/main.cpp" line="92"/>
         <source>Mayo the opensource 3D CAD viewer and converter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="113"/>
-        <location filename="../src/app/main.cpp" line="120"/>
-        <location filename="../src/cli/main.cpp" line="200"/>
-        <location filename="../src/cli/main.cpp" line="213"/>
-        <location filename="../src/cli/main.cpp" line="221"/>
-        <location filename="../src/cli/main.cpp" line="228"/>
+        <location filename="../src/app/main.cpp" line="107"/>
+        <location filename="../src/app/main.cpp" line="114"/>
+        <location filename="../src/cli/main.cpp" line="202"/>
+        <location filename="../src/cli/main.cpp" line="215"/>
+        <location filename="../src/cli/main.cpp" line="223"/>
+        <location filename="../src/cli/main.cpp" line="230"/>
         <source>filepath</source>
         <translation>File Path</translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="181"/>
+        <location filename="../src/cli/main.cpp" line="183"/>
         <source>mayo-conv the opensource CAD converter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="186"/>
+        <location filename="../src/cli/main.cpp" line="188"/>
         <source>Display help on commandline options</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="192"/>
+        <location filename="../src/cli/main.cpp" line="194"/>
         <source>Display version information</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="198"/>
+        <location filename="../src/cli/main.cpp" line="200"/>
         <source>Use settings file(INI format) for the conversion. When this option isn&apos;t specified then cached settings are used</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="206"/>
+        <location filename="../src/cli/main.cpp" line="208"/>
         <source>Cache settings file provided with --use-settings for further use</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="212"/>
+        <location filename="../src/cli/main.cpp" line="214"/>
         <source>Write settings cache to an output file(INI format)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="219"/>
+        <location filename="../src/cli/main.cpp" line="221"/>
         <source>Export opened files into an output file, can be repeated for different formats(eg. -e file.stp -e file.igs...)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="240"/>
+        <location filename="../src/cli/main.cpp" line="242"/>
         <source>Disable progress reporting in console output</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="252"/>
+        <location filename="../src/cli/main.cpp" line="254"/>
         <source>Files to open(import)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="445"/>
+        <location filename="../src/cli/main.cpp" line="453"/>
         <source>Error when writing to &apos;%1&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/cli/main.cpp" line="447"/>
+        <location filename="../src/cli/main.cpp" line="455"/>
         <source>Settings cache written to %1</source>
         <translation></translation>
     </message>
@@ -2599,8 +2826,8 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="338"/>
-        <location filename="../src/cli/main.cpp" line="376"/>
+        <location filename="../src/app/main.cpp" line="307"/>
+        <location filename="../src/cli/main.cpp" line="378"/>
         <source>Failed to load application settings file [path=%1]</source>
         <translation></translation>
     </message>
@@ -2610,7 +2837,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/main.cpp" line="427"/>
+        <location filename="../src/app/main.cpp" line="395"/>
         <source>Failed to load theme &apos;%1&apos;</source>
         <translation></translation>
     </message>
@@ -2652,13 +2879,23 @@ It can be disabled in order to minimize the size of the resulting file.</source>
         <translation type="vanished">Import</translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="285"/>
+        <location filename="../src/app/mainwindow.cpp" line="279"/>
+        <source>Information</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/mainwindow.cpp" line="283"/>
         <source>Warning</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/mainwindow.cpp" line="235"/>
-        <location filename="../src/app/mainwindow.cpp" line="288"/>
+        <location filename="../src/app/mainwindow.cpp" line="291"/>
+        <source>Question</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/mainwindow.cpp" line="221"/>
+        <location filename="../src/app/mainwindow.cpp" line="287"/>
         <source>Error</source>
         <translation></translation>
     </message>
@@ -2666,53 +2903,60 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::MeasureDisplayI18N</name>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="99"/>
+        <location filename="../src/measure/measure_display.cpp" line="104"/>
         <source>Sum</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="108"/>
+        <location filename="../src/measure/measure_display.cpp" line="113"/>
         <source>(&lt;font color=&quot;#FF5500&quot;&gt;X&lt;/font&gt;{0} &lt;font color=&quot;#55FF00&quot;&gt;Y&lt;/font&gt;{1} &lt;font color=&quot;#0077FF&quot;&gt;Z&lt;/font&gt;{2}){3}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="125"/>
+        <location filename="../src/measure/measure_display.cpp" line="130"/>
         <source> X{0} Y{1} Z{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="249"/>
+        <location filename="../src/measure/measure_display.cpp" line="254"/>
         <source>Diameter: {0}{1}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="252"/>
+        <location filename="../src/measure/measure_display.cpp" line="257"/>
         <source> Ø{0}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="361"/>
-        <source>Angle: {0}{1}</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../src/measure/measure_display.cpp" line="400"/>
-        <location filename="../src/measure/measure_display.cpp" line="438"/>
+        <location filename="../src/measure/measure_display.cpp" line="313"/>
+        <location filename="../src/measure/measure_display.cpp" line="386"/>
+        <location filename="../src/measure/measure_display.cpp" line="436"/>
+        <location filename="../src/measure/measure_display.cpp" line="473"/>
         <source>{0}: {1}{2}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="401"/>
+        <location filename="../src/measure/measure_display.cpp" line="318"/>
+        <source>{0}: {1}{2}&lt;br&gt;Point1: {3}&lt;br&gt;Point2: {4}</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="387"/>
+        <source>Angle</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/measure/measure_display.cpp" line="437"/>
         <source>Length</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="439"/>
+        <location filename="../src/measure/measure_display.cpp" line="474"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/measure/measure_display.cpp" line="499"/>
+        <location filename="../src/measure/measure_display.cpp" line="530"/>
         <source>Min point: {0}&lt;br&gt;Max point: {1}&lt;br&gt;Size: {2} x {3} x {4}{5}&lt;br&gt;Volume: {6}{7}</source>
         <translation></translation>
     </message>
@@ -2720,53 +2964,63 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::Mesh_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="235"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="389"/>
         <source>NodeCount</source>
         <translation>Count Of Nodes</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="236"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="390"/>
         <source>TriangleCount</source>
         <translation>Count Of Triangles</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="237"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="391"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="238"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="392"/>
         <source>Volume</source>
         <translation>Volume</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="411"/>
+        <source>Data</source>
+        <translation>Data</translation>
     </message>
 </context>
 <context>
     <name>Mayo::PointCloud_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="279"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="442"/>
         <source>PointCount</source>
         <translation>Point Count</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="280"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="443"/>
         <source>HasColors</source>
         <translation>Has Colors</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="281"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="444"/>
         <source>CornerMin</source>
         <translation>Corner Min</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="282"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="445"/>
         <source>CornerMax</source>
         <translation>Corner Max</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="464"/>
+        <source>Data</source>
+        <translation>Data</translation>
     </message>
 </context>
 <context>
     <name>Mayo::PropertyEditorI18N</name>
     <message>
-        <location filename="../src/app/property_editor_factory.cpp" line="194"/>
+        <location filename="../src/app/property_editor_factory.cpp" line="193"/>
         <source>Choose color ...</source>
         <translation></translation>
     </message>
@@ -2774,33 +3028,33 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::PropertyItemDelegate</name>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="79"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="75"/>
         <source>%1d </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="82"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="78"/>
         <source>%1h </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="85"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="81"/>
         <source>%1min </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="88"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="84"/>
         <source>%1s</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="148"/>
-        <location filename="../src/app/property_item_delegate.cpp" line="158"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="144"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="155"/>
         <source>%1%2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/property_item_delegate.cpp" line="293"/>
+        <location filename="../src/app/property_item_delegate.cpp" line="287"/>
         <source>ERROR no stringifier for property type &apos;%1&apos;</source>
         <translation></translation>
     </message>
@@ -2808,56 +3062,56 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::QStringUtils</name>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="47"/>
-        <location filename="../src/app/qstring_utils.cpp" line="67"/>
+        <location filename="../src/app/qstring_utils.cpp" line="45"/>
+        <location filename="../src/app/qstring_utils.cpp" line="65"/>
         <source>(%1 %2 %3)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="81"/>
+        <location filename="../src/app/qstring_utils.cpp" line="79"/>
         <source>[%1; %2%3; %4]</source>
         <translation></translation>
     </message>
     <message>
+        <location filename="../src/app/qstring_utils.cpp" line="100"/>
         <location filename="../src/app/qstring_utils.cpp" line="102"/>
         <location filename="../src/app/qstring_utils.cpp" line="104"/>
         <location filename="../src/app/qstring_utils.cpp" line="106"/>
         <location filename="../src/app/qstring_utils.cpp" line="108"/>
-        <location filename="../src/app/qstring_utils.cpp" line="110"/>
         <source>%1%2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="102"/>
+        <location filename="../src/app/qstring_utils.cpp" line="100"/>
         <source>B</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="104"/>
+        <location filename="../src/app/qstring_utils.cpp" line="102"/>
         <source>KB</source>
         <translation></translation>
     </message>
     <message>
+        <location filename="../src/app/qstring_utils.cpp" line="104"/>
         <location filename="../src/app/qstring_utils.cpp" line="106"/>
         <location filename="../src/app/qstring_utils.cpp" line="108"/>
-        <location filename="../src/app/qstring_utils.cpp" line="110"/>
         <source>MB</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="115"/>
-        <location filename="../src/app/qstring_utils.cpp" line="123"/>
+        <location filename="../src/app/qstring_utils.cpp" line="113"/>
+        <location filename="../src/app/qstring_utils.cpp" line="121"/>
         <source>Yes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="115"/>
-        <location filename="../src/app/qstring_utils.cpp" line="121"/>
+        <location filename="../src/app/qstring_utils.cpp" line="113"/>
+        <location filename="../src/app/qstring_utils.cpp" line="119"/>
         <source>No</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/qstring_utils.cpp" line="122"/>
+        <location filename="../src/app/qstring_utils.cpp" line="120"/>
         <source>Partially</source>
         <translation></translation>
     </message>
@@ -2937,7 +3191,7 @@ It can be disabled in order to minimize the size of the resulting file.</source>
 <context>
     <name>Mayo::WidgetFileSystem</name>
     <message>
-        <location filename="../src/app/widget_file_system.cpp" line="105"/>
+        <location filename="../src/app/widget_file_system.cpp" line="104"/>
         <source>%1
 Size: %2
 Last modified: %3</source>
@@ -3101,121 +3355,146 @@ Last modified: %3</source>
 <context>
     <name>Mayo::WidgetGuiDocument</name>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="97"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="92"/>
         <source>Fit All</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="99"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="94"/>
         <source>Edit Grid</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="102"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="97"/>
         <source>Edit clip planes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="105"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="100"/>
         <source>Explode assemblies</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="108"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="103"/>
         <source>Measure shapes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="330"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="342"/>
         <source>Isometric</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="331"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="343"/>
         <source>Back</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="332"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="344"/>
         <source>Front</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="333"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="345"/>
         <source>Left</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="334"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="346"/>
         <source>Right</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="335"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="347"/>
         <source>Top</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="336"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="348"/>
         <source>Bottom</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_gui_document.cpp" line="346"/>
+        <location filename="../src/app/widget_gui_document.cpp" line="352"/>
         <source>&lt;b&gt;Left-click&lt;/b&gt;: popup menu of pre-defined views
 &lt;b&gt;CTRL+Left-click&lt;/b&gt;: apply &apos;%1&apos; view</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="387"/>
+        <source>Show/hide items</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="395"/>
+        <source>Show all</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="396"/>
+        <source>Show selection</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="397"/>
+        <source>Hide selection</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_gui_document.cpp" line="398"/>
+        <source>Show only selection</source>
         <translation></translation>
     </message>
 </context>
 <context>
     <name>Mayo::WidgetHomeFiles</name>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="48"/>
+        <location filename="../src/app/widget_home_files.cpp" line="44"/>
         <source>New Document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="49"/>
+        <location filename="../src/app/widget_home_files.cpp" line="45"/>
         <source>
 
 Create and add an empty document where you can import files</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="60"/>
+        <location filename="../src/app/widget_home_files.cpp" line="56"/>
         <source>Open Document(s)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="61"/>
+        <location filename="../src/app/widget_home_files.cpp" line="57"/>
         <source>
 
 Select files to load and open as distinct documents</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="129"/>
+        <location filename="../src/app/widget_home_files.cpp" line="125"/>
         <source>today %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="132"/>
-        <source>yersterday %1</source>
+        <location filename="../src/app/widget_home_files.cpp" line="128"/>
+        <source>yesterday %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="136"/>
-        <location filename="../src/app/widget_home_files.cpp" line="143"/>
+        <location filename="../src/app/widget_home_files.cpp" line="132"/>
+        <location filename="../src/app/widget_home_files.cpp" line="139"/>
         <source>%1 %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="139"/>
+        <location filename="../src/app/widget_home_files.cpp" line="135"/>
         <source>%1 days ago %2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_home_files.cpp" line="153"/>
+        <location filename="../src/app/widget_home_files.cpp" line="149"/>
         <source>%1
 
 Size: %2
@@ -3277,23 +3556,27 @@ Read: %5
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="264"/>
-        <location filename="../src/app/widget_main_control.cpp" line="271"/>
+        <location filename="../src/app/widget_main_control.cpp" line="382"/>
         <source>Data</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="285"/>
+        <location filename="../src/app/widget_main_control.cpp" line="363"/>
         <source>Graphics</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="318"/>
+        <location filename="../src/app/widget_main_control.cpp" line="343"/>
+        <source>%1(%2)</source>
+        <translation>%1(%2)</translation>
+    </message>
+    <message>
+        <location filename="../src/app/widget_main_control.cpp" line="412"/>
         <source>Options</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="369"/>
+        <location filename="../src/app/widget_main_control.cpp" line="461"/>
         <source>Document file `%1` has been changed since it was opened
 
 Do you want to reload that document?
@@ -3302,7 +3585,7 @@ File: `%2`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_main_control.cpp" line="376"/>
+        <location filename="../src/app/widget_main_control.cpp" line="468"/>
         <source>Question</source>
         <translation></translation>
     </message>
@@ -3503,7 +3786,7 @@ File: `%2`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_measure.cpp" line="400"/>
+        <location filename="../src/app/widget_measure.cpp" line="424"/>
         <source>Select entities to measure</source>
         <translation></translation>
     </message>
@@ -3516,12 +3799,12 @@ File: `%2`</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree.cpp" line="146"/>
+        <location filename="../src/app/widget_model_tree.cpp" line="152"/>
         <source>Remove from document</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder.cpp" line="65"/>
+        <location filename="../src/app/widget_model_tree_builder.cpp" line="64"/>
         <source>&lt;unnamed&gt;</source>
         <translation></translation>
     </message>
@@ -3529,27 +3812,27 @@ File: `%2`</source>
 <context>
     <name>Mayo::WidgetModelTreeBuilder_Xde</name>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="67"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="70"/>
         <source>instanceNameFormat</source>
         <translation>Name Format Of Assembly Instances</translation>
     </message>
     <message>
-        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="125"/>
+        <location filename="../src/app/widget_model_tree_builder_xde.cpp" line="128"/>
         <source>Show {}</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="30"/>
+        <location filename="messages.cpp" line="31"/>
         <source>Instance</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="31"/>
+        <location filename="messages.cpp" line="32"/>
         <source>Product</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="messages.cpp" line="32"/>
+        <location filename="messages.cpp" line="33"/>
         <source>Both</source>
         <translation></translation>
     </message>
@@ -3575,108 +3858,134 @@ File: `%2`</source>
 <context>
     <name>Mayo::XCaf_DocumentTreeNodeProperties</name>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="181"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="58"/>
         <source>Name</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="182"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="59"/>
         <source>Shape</source>
         <translation>Shape</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="183"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="60"/>
         <source>XdeShape</source>
         <translation>XDE Shape Type</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="184"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="61"/>
         <source>XdeLayer</source>
         <translation>Layer</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="185"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="62"/>
         <source>Color</source>
         <translation>Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="186"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="63"/>
         <source>Location</source>
         <translation>Location</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="187"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="64"/>
         <source>Centroid</source>
         <translation>Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="188"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="65"/>
         <source>Area</source>
         <translation>Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="189"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="66"/>
         <source>Volume</source>
         <translation>Volume</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="190"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="67"/>
         <source>MaterialDensity</source>
         <translation>Material Density</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="191"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="68"/>
         <source>MaterialName</source>
         <translation>Material Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="193"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="70"/>
         <source>ProductName</source>
         <translation>Product Name</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="194"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="71"/>
         <source>ProductColor</source>
         <translation>Product Color</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="195"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="72"/>
         <source>ProductCentroid</source>
         <translation>Product Centroid</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="196"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="73"/>
         <source>ProductArea</source>
         <translation>Product Area</translation>
     </message>
     <message>
-        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="197"/>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="74"/>
         <source>ProductVolume</source>
         <translation>Product Volume</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="302"/>
         <source>Assembly</source>
-        <translation type="vanished">Assembly</translation>
+        <translation>Assembly</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="305"/>
         <source>Reference</source>
-        <translation type="vanished">Instance</translation>
+        <translation>Instance</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="308"/>
         <source>Component</source>
-        <translation type="vanished">Component</translation>
+        <translation>Component</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="311"/>
         <source>Compound</source>
-        <translation type="vanished">Compound</translation>
+        <translation>Compound</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="314"/>
         <source>Simple</source>
-        <translation type="vanished">Simple</translation>
+        <translation>Simple</translation>
     </message>
     <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="317"/>
         <source>Sub</source>
-        <translation type="vanished">Sub</translation>
+        <translation>Sub</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="359"/>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="360"/>
+        <source>Validation</source>
+        <translation>Validation</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="361"/>
+        <source>MetaData</source>
+        <translation>Metadata</translation>
+    </message>
+    <message>
+        <location filename="../src/app/document_tree_node_properties_providers.cpp" line="362"/>
+        <source>ProductMetaData</source>
+        <translation>Product metadata</translation>
     </message>
 </context>
 <context>
@@ -3704,67 +4013,67 @@ File: `%2`</source>
 <context>
     <name>OpenCascade::Aspect_HatchStyle</name>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="46"/>
+        <location filename="../src/base/occt_enums.cpp" line="45"/>
         <source>Solid</source>
         <translation>Solid</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="47"/>
+        <location filename="../src/base/occt_enums.cpp" line="46"/>
         <source>Horizontal</source>
         <translation>Horizontal</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="48"/>
+        <location filename="../src/base/occt_enums.cpp" line="47"/>
         <source>HorizontalSparse</source>
         <translation>Horizontal Sparse</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="49"/>
+        <location filename="../src/base/occt_enums.cpp" line="48"/>
         <source>Vertical</source>
         <translation>Vertical</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="50"/>
+        <location filename="../src/base/occt_enums.cpp" line="49"/>
         <source>VerticalSparse</source>
         <translation>Vertical Sparse</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="51"/>
+        <location filename="../src/base/occt_enums.cpp" line="50"/>
         <source>Diagonal45</source>
         <translation>Diagonal 45°</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="52"/>
+        <location filename="../src/base/occt_enums.cpp" line="51"/>
         <source>Diagonal45Sparse</source>
         <translation>Diagonal 45° Sparse</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="53"/>
+        <location filename="../src/base/occt_enums.cpp" line="52"/>
         <source>Diagonal135</source>
         <translation>Diagonal 135°</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="54"/>
+        <location filename="../src/base/occt_enums.cpp" line="53"/>
         <source>Diagonal135Sparse</source>
         <translation>Diagonal 135° Sparse</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="55"/>
+        <location filename="../src/base/occt_enums.cpp" line="54"/>
         <source>Grid</source>
         <translation>Grid</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="56"/>
+        <location filename="../src/base/occt_enums.cpp" line="55"/>
         <source>GridSparse</source>
         <translation>Grid Sparse</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="57"/>
+        <location filename="../src/base/occt_enums.cpp" line="56"/>
         <source>GridDiagonal</source>
         <translation>Grid Diagonal</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="58"/>
+        <location filename="../src/base/occt_enums.cpp" line="57"/>
         <source>GridDiagonalSparse</source>
         <translation>Grid Diagonal Sparse</translation>
     </message>
@@ -3772,102 +4081,102 @@ File: `%2`</source>
 <context>
     <name>OpenCascade::Graphic3d_NameOfMaterial</name>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="19"/>
+        <location filename="../src/base/occt_enums.cpp" line="18"/>
         <source>Brass</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="20"/>
+        <location filename="../src/base/occt_enums.cpp" line="19"/>
         <source>Bronze</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="21"/>
+        <location filename="../src/base/occt_enums.cpp" line="20"/>
         <source>Copper</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="22"/>
+        <location filename="../src/base/occt_enums.cpp" line="21"/>
         <source>Gold</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="23"/>
+        <location filename="../src/base/occt_enums.cpp" line="22"/>
         <source>Pewter</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="24"/>
+        <location filename="../src/base/occt_enums.cpp" line="23"/>
         <source>Plaster</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="25"/>
+        <location filename="../src/base/occt_enums.cpp" line="24"/>
         <source>Plastic</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="26"/>
+        <location filename="../src/base/occt_enums.cpp" line="25"/>
         <source>Silver</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="27"/>
+        <location filename="../src/base/occt_enums.cpp" line="26"/>
         <source>Steel</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="28"/>
+        <location filename="../src/base/occt_enums.cpp" line="27"/>
         <source>Stone</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="29"/>
+        <location filename="../src/base/occt_enums.cpp" line="28"/>
         <source>ShinyPlastic</source>
         <translation>Shiny plastic</translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="30"/>
+        <location filename="../src/base/occt_enums.cpp" line="29"/>
         <source>Satin</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="31"/>
+        <location filename="../src/base/occt_enums.cpp" line="30"/>
         <source>Metalized</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="32"/>
+        <location filename="../src/base/occt_enums.cpp" line="31"/>
         <source>NeonGnc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="33"/>
+        <location filename="../src/base/occt_enums.cpp" line="32"/>
         <source>Chrome</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="34"/>
+        <location filename="../src/base/occt_enums.cpp" line="33"/>
         <source>Aluminium</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="35"/>
+        <location filename="../src/base/occt_enums.cpp" line="34"/>
         <source>Obsidian</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="36"/>
+        <location filename="../src/base/occt_enums.cpp" line="35"/>
         <source>NeonPhc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="37"/>
+        <location filename="../src/base/occt_enums.cpp" line="36"/>
         <source>Jade</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/base/occt_enums.cpp" line="38"/>
+        <location filename="../src/base/occt_enums.cpp" line="37"/>
         <source>Default</source>
         <translation></translation>
     </message>

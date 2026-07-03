@@ -1,13 +1,10 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "property_item_delegate.h"
-#include "../base/application.h"
 #include "../base/property_builtins.h"
-#include "../base/settings.h"
 #include "../base/unit_system.h"
 #include "../qtcommon/filepath_conv.h"
 #include "../qtcommon/qstring_conv.h"
@@ -15,6 +12,7 @@
 #include "qmeta_property.h"
 #include "qstring_utils.h"
 #include "qtgui_utils.h"
+#include "qtwidgets_utils.h"
 #include "theme.h"
 
 #include <QtCore/QDir>
@@ -29,9 +27,7 @@ namespace {
 
 class PanelEditor : public QWidget {
 public:
-    PanelEditor(QWidget* parent = nullptr)
-        : QWidget(parent)
-    {}
+    using QWidget::QWidget; // Inherit QWidget constructors
 
     static QWidget* create(QWidget* parentWidget)
     {
@@ -58,12 +54,12 @@ protected:
     }
 };
 
-static QStringUtils::TextOptions appDefaultTextOptions()
+QStringUtils::TextOptions appDefaultTextOptions()
 {
     return AppModule::get()->defaultTextOptions();
 }
 
-static QString toStringDHMS(QuantityTime time)
+QString toStringDHMS(QuantityTime time)
 {
     const double duration_s = UnitSystem::seconds(time);
     const double days = duration_s / 86400.;
@@ -90,54 +86,54 @@ static QString toStringDHMS(QuantityTime time)
     return text.trimmed();
 }
 
-static QString propertyValueText(const PropertyBool* prop) {
+QString propertyValueText(const PropertyBool* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyInt* prop) {
+QString propertyValueText(const PropertyInt* prop) {
     return AppModule::get()->qtLocale().toString(prop->value());
 }
 
-static QString propertyValueText(const PropertyDouble* prop) {
+QString propertyValueText(const PropertyDouble* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyCheckState* prop) {
+QString propertyValueText(const PropertyCheckState* prop) {
     return QStringUtils::yesNoText(*prop);
 }
 
-static QString propertyValueText(const PropertyString* prop) {
+QString propertyValueText(const PropertyString* prop) {
     return to_QString(prop->value());
 }
 
-static QString propertyValueText(const PropertyFilePath* prop) {
+QString propertyValueText(const PropertyFilePath* prop) {
     const FilePath filepath = filepathCanonical(prop->value());
     return QDir::toNativeSeparators(filepathTo<QString>(filepath));
 }
 
-static QString propertyValueText(const PropertyOccColor* prop) {
+QString propertyValueText(const PropertyOccColor* prop) {
     return QStringUtils::text(prop->value());
 }
 
-static QString propertyValueText(const PropertyOccPnt* prop) {
+QString propertyValueText(const PropertyOccPnt* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyOccTrsf* prop) {
+QString propertyValueText(const PropertyOccTrsf* prop) {
     return QStringUtils::text(prop->value(), appDefaultTextOptions());
 }
 
-static QString propertyValueText(const PropertyEnumeration* prop)
+QString propertyValueText(const PropertyEnumeration* prop)
 {
     for (const Enumeration::Item& enumItem : prop->enumeration().items()) {
         if (enumItem.value == prop->value())
             return to_QString(enumItem.name.tr());
     }
 
-    return QString();
+    return {};
 }
 
-static QString propertyValueText(const BasePropertyQuantity* prop)
+QString propertyValueText(const BasePropertyQuantity* prop)
 {
     if (prop->quantityUnit() == Unit::Time) {
         auto propTime = static_cast<const PropertyTime*>(prop);
@@ -150,9 +146,10 @@ static QString propertyValueText(const BasePropertyQuantity* prop)
             .arg(trRes.strUnit);
 }
 
-static QString propertyValueText(
+QString propertyValueText(
         const BasePropertyQuantity* prop,
-        const PropertyItemDelegate::UnitTranslation& unitTr)
+        const PropertyItemDelegate::UnitTranslation& unitTr
+    )
 {
     const double trValue = prop->quantityValue() * unitTr.factor;
     return PropertyItemDelegate::tr("%1%2")
@@ -164,7 +161,7 @@ static QString propertyValueText(
 
 PropertyItemDelegate::PropertyItemDelegate(QObject* parent)
     : QStyledItemDelegate(parent),
-      m_editorFactory(new DefaultPropertyEditorFactory)
+    m_editorFactory(std::make_unique<DefaultPropertyEditorFactory>())
 {}
 
 void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEditorFactory> editorFactory)
@@ -173,17 +170,19 @@ void PropertyItemDelegate::setPropertyEditorFactory(std::unique_ptr<IPropertyEdi
 }
 
 bool PropertyItemDelegate::overridePropertyUnitTranslation(
-        const BasePropertyQuantity* prop, PropertyItemDelegate::UnitTranslation unitTr)
+        const BasePropertyQuantity* prop, PropertyItemDelegate::UnitTranslation unitTr
+    )
 {
     if (!prop || prop->quantityUnit() != unitTr.unit)
         return false;
 
-    m_mapPropUnitTr.emplace(prop, unitTr);
+    m_mapPropUnitTr.try_emplace(prop, unitTr);
     return true;
 }
 
 void PropertyItemDelegate::paint(
-        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+        QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index
+    ) const
 {
     bool cellPainted = false;
     if (index.column() == 1) {
@@ -193,26 +192,21 @@ void PropertyItemDelegate::paint(
             painter->save();
 
             QApplication::style()->drawPrimitive(
-                QStyle::PE_PanelItemViewItem,
-                &option,
-                painter,
-                option.widget
+                QStyle::PE_PanelItemViewItem, &option, painter, option.widget
             );
 
             const QColor color = QtGuiUtils::toQColor(propColor->value());
             const QPixmap pixColor = IPropertyEditorFactory::colorSquarePixmap(color, option.rect.height());
             painter->drawPixmap(option.rect.x(), option.rect.y(), pixColor);
-            const QString strColor = propertyValueText(propColor);
 
-            QRect labelRect = option.rect;
-            labelRect.setX(option.rect.x() + pixColor.width() + 6);
+            const QString strColor = propertyValueText(propColor);
+            const QRect labelRect = option.rect.adjusted(pixColor.width() + 6, 0, 0, 0);
+            const Qt::Alignment itemAlignement =
+                QtWidgetsUtils::textLeadingAlignment(option.direction, option.widget, &option.locale)
+                | Qt::AlignVCenter;
+            const bool isItemEnabled = option.state.testFlag(QStyle::State_Enabled);
             QApplication::style()->drawItemText(
-                painter,
-                labelRect,
-                Qt::AlignLeft | Qt::AlignVCenter,
-                option.palette,
-                option.state.testFlag(QStyle::State_Enabled),
-                strColor
+                painter, labelRect, itemAlignement, option.palette, isItemEnabled, strColor
             );
 
             painter->restore();
@@ -293,11 +287,12 @@ QString PropertyItemDelegate::displayText(const QVariant& value, const QLocale&)
         return tr("ERROR no stringifier for property type '%1'").arg(propTypeName);
     }
 
-    return QString();
+    return {};
 }
 
 QWidget* PropertyItemDelegate::createEditor(
-        QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index) const
+        QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index
+    ) const
 {
     if (index.column() == 0)
         return nullptr;

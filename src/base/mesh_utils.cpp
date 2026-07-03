@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "mesh_utils.h"
@@ -11,8 +10,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace Mayo {
-namespace MeshUtils {
+namespace Mayo::MeshUtils {
 
 namespace {
 
@@ -159,59 +157,49 @@ const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& tria
 #endif
 }
 
-// Adapted from http://cs.smith.edu/~jorourke/Code/polyorient.C
 MeshUtils::Orientation orientation(const AdaptorPolyline2d& polyline)
 {
     const int pntCount = polyline.pointCount();
-    if (pntCount < 2)
+    if (pntCount < 3)
         return Orientation::Unknown;
 
-    gp_Pnt2d pntExtreme = polyline.pointAt(0);
-    int indexPntExtreme = 0;
-    for (int i = 1; i < pntCount; ++i) {
-        const gp_Pnt2d pnt = polyline.pointAt(i);
-        if (pnt.Y() < pntExtreme.Y()
-                || (MathUtils::fuzzyEqual(pnt.Y(), pntExtreme.Y()) && (pnt.X() > pntExtreme.X())))
-        {
-            pntExtreme = pnt;
-            indexPntExtreme = i;
-        }
-    }
-
-    const gp_Pnt2d beforeExtremePnt = polyline.pointAt((indexPntExtreme + (pntCount - 1)) % pntCount);
-    const gp_Pnt2d afterExtremePnt = polyline.pointAt((indexPntExtreme + 1) % pntCount);
-    const gp_Pnt2d& a = beforeExtremePnt;
-    const gp_Pnt2d& b = pntExtreme;
-    const gp_Pnt2d& c = afterExtremePnt;
-    const double triangleArea =
-            a.X() * b.Y() - a.Y() * b.X()
-            + a.Y() * c.X() - a.X() * c.Y()
-            + b.Y() * c.X() - c.X() * b.Y();
-
-    auto fnQualifyArea = [](double area) {
-        if (area > 0)
-            return Orientation::CounterClockwise;
-        else if (area < 0)
-            return Orientation::Clockwise;
-        else
-            return Orientation::Unknown;
+    auto samePoint = [](const gp_Pnt2d& lhs, const gp_Pnt2d& rhs) {
+        return lhs.IsEqual(rhs, Precision::Confusion());
     };
 
-    const Orientation orientation = fnQualifyArea(triangleArea);
-    if (orientation != Orientation::Unknown) {
-        return orientation;
+    double area2 = 0.;
+
+    // Find a starting point not followed by a duplicate
+    int iStart = 0;
+    for (; iStart < pntCount; ++iStart) {
+        const gp_Pnt2d& p = polyline.pointAt(iStart);
+        const gp_Pnt2d& q = polyline.pointAt((iStart + 1) % pntCount);
+        if (!samePoint(p, q))
+            break;
     }
-    else {
-        double polylineArea = 0.;
-        for (int i = 0; i < pntCount; ++i) {
-            const gp_Pnt2d pntBefore = polyline.pointAt((i + (pntCount - 1)) % pntCount);
-            const gp_Pnt2d pntCurrent = polyline.pointAt(i);
-            const gp_Pnt2d pntAfter = polyline.pointAt((i + 1) % pntCount);
-            polylineArea += pntCurrent.X() * (pntAfter.Y() - pntBefore.Y());
+
+    if (iStart < pntCount) {
+        int validEdges = 0;
+        gp_Pnt2d prev = polyline.pointAt(iStart);
+        for (int k = 1; k <= pntCount; ++k) { // <= n to close(last edge towards iStart)
+            const gp_Pnt2d curr = polyline.pointAt((iStart + k) % pntCount);
+            if (samePoint(prev, curr))
+                continue; // Null edge -> skip
+
+            // Shoelace accumulating
+            area2 += prev.X() * curr.Y() - curr.X() * prev.Y();
+            prev = curr;
+            ++validEdges;
         }
 
-        return fnQualifyArea(polylineArea);
+        if (validEdges < 3)
+            area2 = 0.; // Too much duplicate vertices
     }
+
+    if (MathUtils::fuzzyIsNull(area2))
+        return Orientation::Unknown;
+
+    return area2 > 0. ? Orientation::CounterClockwise : Orientation::Clockwise;
 }
 
 gp_Vec directionAt(const AdaptorPolyline3d& polyline, int i)
@@ -291,5 +279,4 @@ OccHandle<Poly_Polygon3D> Polygon3dBuilder::get() const
     return m_polygon;
 }
 
-} // namespace MeshUtils
-} // namespace Mayo
+} // namespace Mayo::MeshUtils

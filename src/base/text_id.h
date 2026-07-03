@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -13,10 +12,10 @@
 #define MAYO_DECLARE_TEXT_ID_FUNCTIONS(context) \
 public: \
     static inline std::string_view textIdContext() { return #context; } \
-    static inline Mayo::TextId textId(const char* sourceText) { \
+    static inline Mayo::TextId textId(std::string_view sourceText) { \
         return Mayo::TextId{ #context, sourceText }; \
     } \
-    static inline std::string_view textIdTr(const char* sourceText) { \
+    static inline std::string_view textIdTr(std::string_view sourceText) { \
         return textId(sourceText).tr(); \
     } \
 private:
@@ -31,8 +30,9 @@ struct TextId {
     // Source text
     std::string_view key;
 
-    // Returns the translation text of 'key' by querying registered Application::Translator objects
-    // 'n' is used to support plural forms
+    // Returns the translation text of 'key' by querying translator functions registered with
+    // addTranslatorFunction()
+    // Parameter 'n' is used to support plural forms
     std::string_view tr(int n = -1) const;
 
     // Whether source text(key) is empty or not

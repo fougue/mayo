@@ -1,13 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "io_occ_vrml_reader.h"
 
-namespace Mayo {
-namespace IO {
+namespace Mayo::IO {
 
 OccVrmlReader::OccVrmlReader()
     : OccBaseMeshReader(m_reader)
@@ -27,5 +25,4 @@ std::unique_ptr<PropertyGroup> OccVrmlReader::createProperties(PropertyGroup* pa
     return std::make_unique<OccBaseMeshReaderProperties>(parentGroup);
 }
 
-} // namespace IO
-} // namespace Mayo
+} // namespace Mayo::IO

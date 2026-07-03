@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -19,6 +18,9 @@
 #include <XCAFDoc_MaterialTool.hxx>
 #if OCC_VERSION_HEX >= 0x070500
 #  include <XCAFDoc_VisMaterialTool.hxx>
+#endif
+#if OCC_VERSION_HEX < 0x070400
+#  include <TDataStd_NamedData.hxx>
 #endif
 
 namespace Mayo {
@@ -66,7 +68,11 @@ public:
     static bool isShapeSub(const TDF_Label& lbl);
 
     // Is 'shape' a subshape of the shape stored in 'lbl' ?
-    bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape);
+    bool isShapeSubOf(const TDF_Label& lbl, const TopoDS_Shape& shape) const;
+
+    // Does shape stored at 'lbl' have at least one user?
+    // Returns 'false' is shape is free
+    static bool hasShapeUsers(const TDF_Label& lbl);
 
     // Various flags for findShapeLabel()
     enum FindShapeLabelFlag {
@@ -91,6 +97,8 @@ public:
 
     // Returns labels of the top-level free shapes that were not found in 'seqOther'
     TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
+
+    OccHandle<TDataStd_NamedData> shapeUserDefinedAttributes(const TDF_Label& lbl) const;
 
     // --
     // -- XCAFDoc_ColorTool helpers

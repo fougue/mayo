@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -74,7 +73,7 @@ public:
 
     // Factory method to create an IMeasureDisplay object suited to input measure value
     static std::unique_ptr<IMeasureDisplay> createFrom(MeasureType type, const MeasureValue& value);
-    static std::unique_ptr<IMeasureDisplay> createEmptySumFrom(MeasureType type);
+    static std::unique_ptr<IMeasureDisplay> createEmptySum(MeasureType type);
 
     void adaptGraphics(const OccHandle<Graphic3d_GraphicDriver>& driver) override;
 
@@ -92,6 +91,11 @@ protected:
     static std::string graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config);
     static void adaptScale(const OccHandle<AIS_TextLabel>& gfxText, const MeasureDisplayConfig& config);
 
+    // Converts the UTF8 string to a TCollection_ExtendedString suitable for AIS_TextLabel display
+    // Normalizes Unicode space variants (U+00A0, U+202F, U+2009, ...) to regular space (U+0020)
+    // to work around a Font_TextFormatter limitation on Windows (still there on v7.9.x)
+    static void setTextLabel(OccHandle<AIS_TextLabel> textLabel, const std::string& str);
+
     static void applyGraphicsDefaults(IMeasureDisplay* measureDisplay);
 
 private:
@@ -105,14 +109,15 @@ private:
 
 class MeasureDisplayVertex : public BaseMeasureDisplay {
 public:
-    MeasureDisplayVertex(const gp_Pnt& pnt);
+    explicit MeasureDisplayVertex(const gp_Pnt& pnt);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
 private:
     gp_Pnt m_pnt;
-    OccHandle<AIS_TextLabel> m_gfxText;
+    OccHandle<AIS_TextLabel> m_gfxText{new AIS_TextLabel};
 };
 
 // --
@@ -121,7 +126,8 @@ private:
 
 class MeasureDisplayCircleCenter : public BaseMeasureDisplay {
 public:
-    MeasureDisplayCircleCenter(const MeasureCircle& circle);
+    explicit MeasureDisplayCircleCenter(const MeasureCircle& circle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -129,7 +135,7 @@ public:
 private:
     gp_Circ m_circle;
     OccHandle<AIS_Point> m_gfxPoint;
-    OccHandle<AIS_TextLabel> m_gfxText;
+    OccHandle<AIS_TextLabel> m_gfxText{new AIS_TextLabel};
     OccHandle<AIS_Circle> m_gfxCircle;
 };
 
@@ -139,7 +145,8 @@ private:
 
 class MeasureDisplayCircleDiameter : public BaseMeasureDisplay {
 public:
-    MeasureDisplayCircleDiameter(const MeasureCircle& circle);
+    explicit MeasureDisplayCircleDiameter(const MeasureCircle& circle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 3; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -150,24 +157,28 @@ private:
     gp_Circ m_circle;
     OccHandle<AIS_Circle> m_gfxCircle;
     OccHandle<AIS_Line> m_gfxDiameter;
-    OccHandle<AIS_TextLabel> m_gfxDiameterText;
+    OccHandle<AIS_TextLabel> m_gfxDiameterText{new AIS_TextLabel};
 };
 
 // --
-// -- MinDistance
+// -- Distance
 // --
 
 class MeasureDisplayDistance : public BaseMeasureDisplay {
 public:
-    MeasureDisplayDistance(const MeasureDistance& dist);
+    explicit MeasureDisplayDistance(const MeasureDistance& dist);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 4; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
 
+    bool isSumSupported() const override { return true; }
+    void sumAdd(const IMeasureDisplay& other) override;
+
 private:
     MeasureDistance m_dist;
     OccHandle<AIS_Line> m_gfxLength;
-    OccHandle<AIS_TextLabel> m_gfxDistText;
+    OccHandle<AIS_TextLabel> m_gfxDistText{new AIS_TextLabel};
     OccHandle<AIS_Point> m_gfxPnt1;
     OccHandle<AIS_Point> m_gfxPnt2;
 };
@@ -178,17 +189,21 @@ private:
 
 class MeasureDisplayAngle : public BaseMeasureDisplay {
 public:
-    MeasureDisplayAngle(MeasureAngle angle);
+    explicit MeasureDisplayAngle(MeasureAngle angle);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override;
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
+
+    bool isSumSupported() const override { return true; }
+    void sumAdd(const IMeasureDisplay& other) override;
 
 private:
     MeasureAngle m_angle;
     OccHandle<AIS_Line> m_gfxEntity1;
     OccHandle<AIS_Line> m_gfxEntity2;
     OccHandle<AIS_Circle> m_gfxAngle;
-    OccHandle<AIS_TextLabel> m_gfxAngleText;
+    OccHandle<AIS_TextLabel> m_gfxAngleText{new AIS_TextLabel};
 };
 
 // --
@@ -197,7 +212,8 @@ private:
 
 class MeasureDisplayLength : public BaseMeasureDisplay {
 public:
-    MeasureDisplayLength(const MeasureLength& length);
+    explicit MeasureDisplayLength(const MeasureLength& length);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -207,7 +223,7 @@ public:
 
 private:
     MeasureLength m_length;
-    OccHandle<AIS_TextLabel> m_gfxLenText;
+    OccHandle<AIS_TextLabel> m_gfxLenText{new AIS_TextLabel};
 };
 
 // --
@@ -216,7 +232,8 @@ private:
 
 class MeasureDisplayArea : public BaseMeasureDisplay {
 public:
-    MeasureDisplayArea(const MeasureArea& area);
+    explicit MeasureDisplayArea(const MeasureArea& area);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 1; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -226,7 +243,7 @@ public:
 
 private:
     MeasureArea m_area;
-    OccHandle<AIS_TextLabel> m_gfxAreaText;
+    OccHandle<AIS_TextLabel> m_gfxAreaText{new AIS_TextLabel};
 };
 
 // --
@@ -235,7 +252,8 @@ private:
 
 class MeasureDisplayBoundingBox : public BaseMeasureDisplay {
 public:
-    MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+    explicit MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd);
+
     void update(const MeasureDisplayConfig& config) override;
     int graphicsObjectsCount() const override { return 6; }
     GraphicsObjectPtr graphicsObjectAt(int i) const override;
@@ -245,9 +263,9 @@ private:
     OccHandle<AIS_Point> m_gfxMinPoint;
     OccHandle<AIS_Point> m_gfxMaxPoint;
     OccHandle<AIS_InteractiveObject> m_gfxBox;
-    OccHandle<AIS_TextLabel> m_gfxXLengthText;
-    OccHandle<AIS_TextLabel> m_gfxYLengthText;
-    OccHandle<AIS_TextLabel> m_gfxZLengthText;
+    OccHandle<AIS_TextLabel> m_gfxXLengthText{new AIS_TextLabel};
+    OccHandle<AIS_TextLabel> m_gfxYLengthText{new AIS_TextLabel};
+    OccHandle<AIS_TextLabel> m_gfxZLengthText{new AIS_TextLabel};
 };
 
 } // namespace Mayo

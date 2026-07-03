@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2023, Fougue Ltd. <https://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_help.h"
@@ -41,18 +40,15 @@
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QWindow>
 
-#include <stdexcept>
 #include <thread>
-#include <vector>
 
 namespace Mayo {
 
 CommandSystemInformation::CommandSystemInformation(IAppContext* context)
     : Command(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("System Information..."));
-    this->setAction(action);
 }
 
 void CommandSystemInformation::execute()
@@ -208,7 +204,7 @@ QString CommandSystemInformation::data()
     ostr << '\n' << "OpenCascade: " << OCC_VERSION_STRING_EXT << " (build)" << '\n';
 
     // Other registered libraries
-    for (const auto& libInfo : LibraryInfoArray::get()) {
+    for (const LibraryInfo& libInfo : AppModule::get()->libraryInfoArray()) {
         ostr << '\n' << libInfo.name << ": " << libInfo.version << " " << libInfo.versionDetails << '\n';
     }
 

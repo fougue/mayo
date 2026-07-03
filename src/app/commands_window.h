@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
@@ -12,7 +11,7 @@ namespace Mayo {
 
 class CommandMainWidgetToggleFullscreen : public Command {
 public:
-    CommandMainWidgetToggleFullscreen(IAppContext* context);
+    explicit CommandMainWidgetToggleFullscreen(IAppContext* context);
     void execute() override;
 
     static constexpr std::string_view Name = "toggle-fullscreen";
@@ -25,7 +24,7 @@ private:
 // the "Documents" main page
 class CommandLeftSidebarWidgetToggle : public Command {
 public:
-    CommandLeftSidebarWidgetToggle(IAppContext* context);
+    CommandLeftSidebarWidgetToggle(IAppContext* context, QWidget* panelWidget);
 
     void execute() override;
     bool getEnabledStatus() const override;
@@ -36,11 +35,13 @@ public:
 
 private:
     void updateAction();
+
+    QWidget* m_panelWidget = nullptr;
 };
 
 class CommandSwitchMainWidgetMode : public Command {
 public:
-    CommandSwitchMainWidgetMode(IAppContext* context);
+    explicit CommandSwitchMainWidgetMode(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -54,7 +55,7 @@ private:
 
 class CommandPreviousDocument : public Command {
 public:
-    CommandPreviousDocument(IAppContext* context);
+    explicit CommandPreviousDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 
@@ -63,7 +64,7 @@ public:
 
 class CommandNextDocument : public Command {
 public:
-    CommandNextDocument(IAppContext* context);
+    explicit CommandNextDocument(IAppContext* context);
     void execute() override;
     bool getEnabledStatus() const override;
 

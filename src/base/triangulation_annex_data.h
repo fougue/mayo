@@ -1,13 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #pragma once
 
 #include "occ_handle.h"
-#include "span.h"
+#include <gsl/span>
 
 #include <Quantity_Color.hxx>
 #include <TDF_Attribute.hxx>
@@ -23,10 +22,10 @@ class TriangulationAnnexData : public TDF_Attribute {
 public:
     static const Standard_GUID& GetID();
     static TriangulationAnnexDataPtr Set(const TDF_Label& label);
-    static TriangulationAnnexDataPtr Set(const TDF_Label& label, Span<const Quantity_Color> spanNodeColor);
+    static TriangulationAnnexDataPtr Set(const TDF_Label& label, gsl::span<const Quantity_Color> spanNodeColor);
     static TriangulationAnnexDataPtr Set(const TDF_Label& label, std::vector<Quantity_Color>&& vecNodeColor);
 
-    Span<const Quantity_Color> nodeColors() const { return m_vecNodeColor; }
+    gsl::span<const Quantity_Color> nodeColors() const { return m_vecNodeColor; }
 
     // -- from TDF_Attribute
     const Standard_GUID& ID() const override;
@@ -38,7 +37,7 @@ public:
     DEFINE_STANDARD_RTTI_INLINE(TriangulationAnnexData, TDF_Attribute)
 
 private:
-    void copyNodeColors(Span<const Quantity_Color> spanNodeColor);
+    void copyNodeColors(gsl::span<const Quantity_Color> spanNodeColor);
 
     std::vector<Quantity_Color> m_vecNodeColor;
 };

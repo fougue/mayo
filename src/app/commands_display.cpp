@@ -1,14 +1,12 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "commands_display.h"
 
 #include "../base/application.h"
 #include "../base/cpp_utils.h"
-#include "../base/unit_system.h"
 #include "../gui/gui_application.h"
 #include "../gui/gui_document.h"
 #include "../gui/v3d_view_controller.h"
@@ -52,31 +50,32 @@ CommandChangeProjection::CommandChangeProjection(IAppContext* context)
     group->addAction(m_actionOrtho);
     group->addAction(m_actionPersp);
 
-    auto action = new QAction(this);
-    action->setText(Command::tr("Projection"));
-    action->setMenu(menu);
-    this->setAction(action);
+    auto menuAction = this->createAction();
+    menuAction->setText(Command::tr("Projection"));
+    menuAction->setMenu(menu);
 
-    QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
+    QObject::connect(group, &QActionGroup::triggered, this, [this](const QAction* action) {
         GuiDocument* guiDoc = this->currentGuiDocument();
         if (guiDoc) {
             guiDoc->v3dView()->Camera()->SetProjectionType(
-                        action == m_actionOrtho ?
-                            Graphic3d_Camera::Projection_Orthographic :
-                            Graphic3d_Camera::Projection_Perspective
+                action == m_actionOrtho ?
+                    Graphic3d_Camera::Projection_Orthographic :
+                    Graphic3d_Camera::Projection_Perspective
             );
             guiDoc->graphicsView().redraw();
         }
     });
 
     QObject::connect(
-                context, &IAppContext::currentDocumentChanged,
-                this, &CommandChangeProjection::onCurrentDocumentChanged
+        context, &IAppContext::currentDocumentChanged,
+        this, &CommandChangeProjection::onCurrentDocumentChanged
     );
 }
 
 void CommandChangeProjection::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandChangeProjection::onCurrentDocumentChanged()
@@ -87,8 +86,9 @@ void CommandChangeProjection::onCurrentDocumentChanged()
 
     // Sync menu with current projection type
     const auto viewProjType = guiDoc->v3dView()->Camera()->ProjectionType();
-    Q_ASSERT(viewProjType == Graphic3d_Camera::Projection_Perspective
-             || viewProjType == Graphic3d_Camera::Projection_Orthographic
+    Q_ASSERT(
+        viewProjType == Graphic3d_Camera::Projection_Perspective
+        || viewProjType == Graphic3d_Camera::Projection_Orthographic
     );
     QAction* actionProj = viewProjType == Graphic3d_Camera::Projection_Perspective ? m_actionPersp : m_actionOrtho;
     [[maybe_unused]] QSignalBlocker sigBlk(this->action());
@@ -98,12 +98,11 @@ void CommandChangeProjection::onCurrentDocumentChanged()
 CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Mode"));
-    this->setAction(action);
 }
 
-CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* containerMenu)
+CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, const QMenu* containerMenu)
     : CommandChangeDisplayMode(context)
 {
     QObject::connect(
@@ -114,6 +113,8 @@ CommandChangeDisplayMode::CommandChangeDisplayMode(IAppContext* context, QMenu* 
 
 void CommandChangeDisplayMode::execute()
 {
+    // Intentionally left empty because this command is UI-driven
+    // execute() is unused but required by the Command interface
 }
 
 void CommandChangeDisplayMode::recreateMenuDisplayMode()
@@ -138,10 +139,18 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
         if (driver != spanDrivers.front())
             menu->addSeparator();
 
+        const std::string driverTypeName = driver->DynamicType()->Name();
+        const std::string trDriverTypeName{GraphicsObjectDriverI18N::textIdTr(driverTypeName)};
+
         auto group = new QActionGroup(menu);
         group->setExclusive(true);
         for (const Enumeration::Item& displayMode : driver->displayModes().items()) {
-            auto action = new QAction(to_QString(displayMode.name.tr()), menu);
+            const QString actionText =
+                Command::tr("[%1] %2")
+                    .arg(to_QString(trDriverTypeName))
+                    .arg(to_QString(displayMode.name.tr()))
+                ;
+            auto action = new QAction(actionText, menu);
             action->setCheckable(true);
             action->setData(displayMode.value);
             menu->addAction(action);
@@ -150,7 +159,7 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
                 action->setChecked(true);
         }
 
-        QObject::connect(group, &QActionGroup::triggered, this, [=](QAction* action) {
+        QObject::connect(group, &QActionGroup::triggered, this, [=](const QAction* action) {
             guiDoc->setActiveDisplayMode(driver, action->data().toInt());
             guiDoc->graphicsView().redraw();
         });
@@ -160,16 +169,21 @@ void CommandChangeDisplayMode::recreateMenuDisplayMode()
 CommandToggleOriginTrihedron::CommandToggleOriginTrihedron(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Show Origin Trihedron"));
     action->setToolTip(Command::tr("Show/Hide Origin Trihedron"));
     action->setCheckable(true);
     action->setChecked(false);
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
         this, &CommandToggleOriginTrihedron::onCurrentDocumentChanged
+    );
+    context->guiApp()->signalGuiDocumentOriginTrihedronVisibilityToggled.connectSlot(
+        [=](const GuiDocument* guiDoc, bool on) {
+            if (guiDoc->documentIdentifier() == context->currentDocument())
+                action->setChecked(on);
+        }
     );
 }
 
@@ -184,7 +198,7 @@ void CommandToggleOriginTrihedron::execute()
 
 void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 {
-    GuiDocument* guiDoc = this->currentGuiDocument();
+    const GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
         // Sync action with current visibility status of origin trihedron
         [[maybe_unused]] QSignalBlocker sigBlk(this->action());
@@ -198,12 +212,11 @@ void CommandToggleOriginTrihedron::onCurrentDocumentChanged()
 CommandTogglePerformanceStats::CommandTogglePerformanceStats(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Show Performance Stats"));
     action->setToolTip(Command::tr("Show/Hide rendering performance statistics"));
     action->setCheckable(true);
     action->setChecked(false);
-    this->setAction(action);
 
     QObject::connect(
         context, &IAppContext::currentDocumentChanged,
@@ -215,18 +228,18 @@ void CommandTogglePerformanceStats::execute()
 {
     GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
-        CppUtils::toggle(guiDoc->graphicsView()->ChangeRenderingParams().ToShowStats);
+        Cpp::toggle(guiDoc->graphicsView()->ChangeRenderingParams().ToShowStats);
         guiDoc->graphicsView().redraw();
     }
 }
 
 void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 {
-    GuiDocument* guiDoc = this->currentGuiDocument();
+    const GuiDocument* guiDoc = this->currentGuiDocument();
     if (guiDoc) {
         // Sync action with current visibility status of rendering performance stats
         [[maybe_unused]] QSignalBlocker sigBlk(this->action());
-        this->action()->setChecked(guiDoc->v3dView()->ChangeRenderingParams().ToShowStats);
+        this->action()->setChecked(guiDoc->v3dView()->RenderingParams().ToShowStats);
     }
     else {
         this->action()->setChecked(false);
@@ -236,11 +249,10 @@ void CommandTogglePerformanceStats::onCurrentDocumentChanged()
 CommandZoomInCurrentDocument::CommandZoomInCurrentDocument(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Zoom In"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomIn));
-    action->setShortcut(Qt::CTRL + Qt::Key_Plus);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::ZoomIn);
 }
 
 void CommandZoomInCurrentDocument::execute()
@@ -253,11 +265,10 @@ void CommandZoomInCurrentDocument::execute()
 CommandZoomOutCurrentDocument::CommandZoomOutCurrentDocument(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Zoom Out"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::ZoomOut));
-    action->setShortcut(Qt::CTRL + Qt::Key_Minus);
-    this->setAction(action);
+    action->setShortcut(QKeySequence::StandardKey::ZoomOut);
 }
 
 void CommandZoomOutCurrentDocument::execute()
@@ -270,11 +281,10 @@ void CommandZoomOutCurrentDocument::execute()
 CommandTurnViewCounterClockWise::CommandTurnViewCounterClockWise(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Turn Counter Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnCounterClockwise));
-    action->setShortcut(Qt::CTRL + Qt::Key_Left);
-    this->setAction(action);
+    action->setShortcut(Qt::CTRL | Qt::Key_Left);
 }
 
 void CommandTurnViewCounterClockWise::execute()
@@ -288,11 +298,10 @@ void CommandTurnViewCounterClockWise::execute()
 CommandTurnViewClockWise::CommandTurnViewClockWise(IAppContext* context)
     : BaseCommandDisplay(context)
 {
-    auto action = new QAction(this);
+    auto action = this->createAction();
     action->setText(Command::tr("Turn Clockwise"));
     action->setIcon(mayoTheme()->icon(Theme::Icon::TurnClockwise));
-    action->setShortcut(Qt::CTRL + Qt::Key_Right);
-    this->setAction(action);
+    action->setShortcut(Qt::CTRL | Qt::Key_Right);
 }
 
 void CommandTurnViewClockWise::execute()

@@ -1,11 +1,11 @@
 /****************************************************************************
-** Copyright (c) 2022, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "measure_display.h"
 
+#include "../base/geom_utils.h"
 #include "../base/occ_handle.h"
 #include "../base/text_id.h"
 #include "../base/unit_system.h"
@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 #include <cmath>
+#include <utility>
 
 namespace Mayo {
 
@@ -56,9 +57,14 @@ std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createFrom(MeasureType type
     }
 }
 
-std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySumFrom(MeasureType type)
+std::unique_ptr<IMeasureDisplay> BaseMeasureDisplay::createEmptySum(MeasureType type)
 {
     switch (type) {
+    case MeasureType::MinDistance:
+    case MeasureType::CenterDistance:
+        return std::make_unique<MeasureDisplayDistance>(Mayo::MeasureDistance{});
+    case MeasureType::Angle:
+        return std::make_unique<MeasureDisplayAngle>(Mayo::MeasureAngle{});
     case MeasureType::Length:
         return std::make_unique<MeasureDisplayLength>(Mayo::MeasureLength{});
     case MeasureType::Area:
@@ -105,11 +111,11 @@ std::string BaseMeasureDisplay::text(const gp_Pnt& pnt, const MeasureDisplayConf
     auto trPntY = UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit);
     auto trPntZ = UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit);
     const std::string str = fmt::format(
-                MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">X</font>{0} "
-                                             "<font color=\"#55FF00\">Y</font>{1} "
-                                             "<font color=\"#0077FF\">Z</font>{2}){3}"),
-                text(trPntX, config), text(trPntY, config), text(trPntZ, config),
-                trPntX.strUnit
+        MeasureDisplayI18N::textIdTr("(<font color=\"#FF5500\">X</font>{0} "
+                                     "<font color=\"#55FF00\">Y</font>{1} "
+                                     "<font color=\"#0077FF\">Z</font>{2}){3}"),
+        text(trPntX, config), text(trPntY, config), text(trPntZ, config),
+        trPntX.strUnit
     );
     return str;
 }
@@ -122,10 +128,10 @@ std::string BaseMeasureDisplay::text(double value, const MeasureDisplayConfig& c
 std::string BaseMeasureDisplay::graphicsText(const gp_Pnt& pnt, const MeasureDisplayConfig& config)
 {
     const std::string BaseMeasureDisplay = fmt::format(
-                MeasureDisplayI18N::textIdTr(" X{0} Y{1} Z{2}"),
-                text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit), config),
-                text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit), config),
-                text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit), config)
+        MeasureDisplayI18N::textIdTr(" X{0} Y{1} Z{2}"),
+        text(UnitSystem::translateLength(pnt.X() * Quantity_Millimeter, config.lengthUnit), config),
+        text(UnitSystem::translateLength(pnt.Y() * Quantity_Millimeter, config.lengthUnit), config),
+        text(UnitSystem::translateLength(pnt.Z() * Quantity_Millimeter, config.lengthUnit), config)
     );
     return BaseMeasureDisplay;
 }
@@ -134,6 +140,15 @@ void BaseMeasureDisplay::adaptScale(const OccHandle<AIS_TextLabel>& gfxText, con
 {
     static const Prs3d_TextAspect defaultTextAspect;
     gfxText->SetHeight(defaultTextAspect.Height() * config.devicePixelRatio);
+}
+
+void BaseMeasureDisplay::setTextLabel(OccHandle<AIS_TextLabel> textLabel, const std::string& str)
+{
+    TCollection_ExtendedString extStr = to_OccExtString(" " + str + " ");
+    extStr.ChangeAll(0x00A0, 0x0020); // no-break space
+    extStr.ChangeAll(0x202F, 0x0020); // narrow NBSP
+    extStr.ChangeAll(0x2009, 0x0020); // thin space
+    textLabel->SetText(extStr);
 }
 
 void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
@@ -159,8 +174,7 @@ void BaseMeasureDisplay::applyGraphicsDefaults(IMeasureDisplay* measureDisplay)
 // --
 
 MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
-    : m_pnt(pnt),
-      m_gfxText(new AIS_TextLabel)
+    : m_pnt(pnt)
 {
     m_gfxText->SetPosition(pnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -169,7 +183,7 @@ MeasureDisplayVertex::MeasureDisplayVertex(const gp_Pnt& pnt)
 void MeasureDisplayVertex::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_pnt, config));
-    m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_pnt, config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxText, graphicsText(m_pnt, config));
     BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
@@ -184,12 +198,11 @@ GraphicsObjectPtr MeasureDisplayVertex::graphicsObjectAt(int i) const
 
 MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circle)
     : m_circle(circle.value),
-      m_gfxPoint(new AIS_Point(new Geom_CartesianPoint(m_circle.Location()))),
-      m_gfxText(new AIS_TextLabel)
+      m_gfxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(m_circle.Location())))
 {
     m_gfxText->SetPosition(m_circle.Location());
     if (circle.isArc)
-        m_gfxCircle = new AIS_Circle(new Geom_Circle(m_circle));
+        m_gfxCircle = new AIS_Circle(makeOccHandle<Geom_Circle>(m_circle));
 
     BaseMeasureDisplay::applyGraphicsDefaults(this);
     // BEWARE LineAspect() is created indirectly by SetColor() call in applyGraphicsDefaults() function
@@ -200,7 +213,7 @@ MeasureDisplayCircleCenter::MeasureDisplayCircleCenter(const MeasureCircle& circ
 void MeasureDisplayCircleCenter::update(const MeasureDisplayConfig& config)
 {
     this->setText(BaseMeasureDisplay::text(m_circle.Location(), config));
-    m_gfxText->SetText(to_OccExtString(BaseMeasureDisplay::graphicsText(m_circle.Location(), config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxText, graphicsText(m_circle.Location(), config));
     BaseMeasureDisplay::adaptScale(m_gfxText, config);
 }
 
@@ -225,11 +238,13 @@ GraphicsObjectPtr MeasureDisplayCircleCenter::graphicsObjectAt(int i) const
 
 MeasureDisplayCircleDiameter::MeasureDisplayCircleDiameter(const MeasureCircle& circle)
     : m_circle(circle.value),
-      m_gfxCircle(new AIS_Circle(new Geom_Circle(m_circle))),
-      m_gfxDiameterText(new AIS_TextLabel)
+      m_gfxCircle(new AIS_Circle(makeOccHandle<Geom_Circle>(m_circle)))
 {
     const gp_Pnt otherPntAnchor = diameterOpposedPnt(circle.pntAnchor, m_circle);
-    m_gfxDiameter = new AIS_Line(new Geom_CartesianPoint(circle.pntAnchor), new Geom_CartesianPoint(otherPntAnchor));
+    m_gfxDiameter = new AIS_Line(
+        makeOccHandle<Geom_CartesianPoint>(circle.pntAnchor),
+        makeOccHandle<Geom_CartesianPoint>(otherPntAnchor)
+    );
     m_gfxDiameter->SetWidth(2.5);
     m_gfxDiameter->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
 
@@ -246,10 +261,10 @@ void MeasureDisplayCircleDiameter::update(const MeasureDisplayConfig& config)
     const auto trDiameter = UnitSystem::translateLength(diameter, config.lengthUnit);
     const auto strDiameter = BaseMeasureDisplay::text(trDiameter, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
+        MeasureDisplayI18N::textIdTr("Diameter: {0}{1}"), strDiameter, trDiameter.strUnit
     ));
 
-    m_gfxDiameterText->SetText(to_OccExtString(fmt::format(MeasureDisplayI18N::textIdTr(" Ø{0}"), strDiameter)));
+    BaseMeasureDisplay::setTextLabel(m_gfxDiameterText, fmt::format(MeasureDisplayI18N::textIdTr("Ø{0}"), strDiameter));
     BaseMeasureDisplay::adaptScale(m_gfxDiameterText, config);
 }
 
@@ -270,15 +285,17 @@ gp_Pnt MeasureDisplayCircleDiameter::diameterOpposedPnt(const gp_Pnt& pntOnCircl
 }
 
 // --
-// -- MinDistance
+// -- Distance
 // --
 
 MeasureDisplayDistance::MeasureDisplayDistance(const MeasureDistance& dist)
     : m_dist(dist),
-      m_gfxLength(new AIS_Line(new Geom_CartesianPoint(dist.pnt1), new Geom_CartesianPoint(dist.pnt2))),
-      m_gfxDistText(new AIS_TextLabel),
-      m_gfxPnt1(new AIS_Point(new Geom_CartesianPoint(dist.pnt1))),
-      m_gfxPnt2(new AIS_Point(new Geom_CartesianPoint(dist.pnt2)))
+      m_gfxLength(new AIS_Line(
+          makeOccHandle<Geom_CartesianPoint>(dist.pnt1),
+          makeOccHandle<Geom_CartesianPoint>(dist.pnt2))
+      ),
+      m_gfxPnt1(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt1))),
+      m_gfxPnt2(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(dist.pnt2)))
 {
     m_gfxLength->SetWidth(2.5);
     m_gfxLength->Attributes()->LineAspect()->SetTypeOfLine(Aspect_TOL_DOT);
@@ -290,31 +307,34 @@ void MeasureDisplayDistance::update(const MeasureDisplayConfig& config)
 {
     const auto trLength = UnitSystem::translateLength(m_dist.value, config.lengthUnit);
     const auto strLength = BaseMeasureDisplay::text(trLength, config);
-    
-    std::string distStr;
-    switch(m_dist.type)
-    {
-        case DistanceType::Mininmum:
-            distStr = "Min Distance";
-            break;
-        case DistanceType::CenterToCenter:
-            distStr = "Distance";
-            break;
+    auto fnStrDistanceType = [](MeasureDistance::Type distType) -> std::string_view {
+        switch(distType) {
+        case MeasureDistance::Type::Mininmum:
+            return "Min Distance";
+        case MeasureDistance::Type::CenterToCenter:
+            return "Distance";
         default:
-            distStr = "Distance";
-            break;
+            return "Distance";
+        }
+    };
+
+    if (this->sumCount() > 1) {
+        this->setText(fmt::format(
+            MeasureDisplayI18N::textIdTr("{0}: {1}{2}"), this->sumTextOr({}), strLength, trLength.strUnit
+        ));
     }
-    
-    distStr += ": {0}{1}<br>Point1: {2}<br>Point2: {3}";
-    
-    this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr(distStr.c_str()),
-                      strLength,
-                      trLength.strUnit,
-                      BaseMeasureDisplay::text(m_dist.pnt1, config),
-                      BaseMeasureDisplay::text(m_dist.pnt2, config)
-    ));
-    m_gfxDistText->SetText(to_OccExtString(" " + strLength));
+    else {
+        this->setText(fmt::format(
+            MeasureDisplayI18N::textIdTr("{0}: {1}{2}<br>Point1: {3}<br>Point2: {4}"),
+            fnStrDistanceType(m_dist.type),
+            strLength,
+            trLength.strUnit,
+            BaseMeasureDisplay::text(m_dist.pnt1, config),
+            BaseMeasureDisplay::text(m_dist.pnt2, config)
+        ));
+    }
+
+    BaseMeasureDisplay::setTextLabel(m_gfxDistText, strLength);
     BaseMeasureDisplay::adaptScale(m_gfxDistText, config);
 }
 
@@ -330,22 +350,39 @@ GraphicsObjectPtr MeasureDisplayDistance::graphicsObjectAt(int i) const
     return {};
 }
 
+void MeasureDisplayDistance::sumAdd(const IMeasureDisplay& other)
+{
+    const auto& otherDist = dynamic_cast<const MeasureDisplayDistance&>(other);
+    m_dist.value += otherDist.m_dist.value;
+    BaseMeasureDisplay::sumAdd(other);
+}
+
 // --
 // -- Angle
 // --
 
 MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     : m_angle(angle),
-      m_gfxEntity1(new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt1))),
-      m_gfxEntity2(new AIS_Line(new Geom_CartesianPoint(angle.pntCenter), new Geom_CartesianPoint(angle.pnt2))),
-      m_gfxAngleText(new AIS_TextLabel)
+      m_gfxEntity1(new AIS_Line(
+          makeOccHandle<Geom_CartesianPoint>(angle.pntCenter),
+          makeOccHandle<Geom_CartesianPoint>(angle.pnt1))
+      ),
+      m_gfxEntity2(new AIS_Line(
+          makeOccHandle<Geom_CartesianPoint>(angle.pntCenter),
+          makeOccHandle<Geom_CartesianPoint>(angle.pnt2))
+      )
 {
     const gp_Vec vec1(angle.pntCenter, angle.pnt1);
     const gp_Vec vec2(angle.pntCenter, angle.pnt2);
-    const gp_Ax2 axCircle(angle.pntCenter, vec1.Crossed(vec2), vec1);
+    const gp_Dir nCircle = GeomUtils::isNull(vec1) || GeomUtils::isNull(vec2) ? gp::DZ() : gp_Dir{vec1.Crossed(vec2)};
+    const gp_Dir xCircle = GeomUtils::isNull(vec1) ? gp::DX() : gp_Dir{vec1};
+    const gp_Ax2 axCircle(angle.pntCenter, nCircle, xCircle);
     auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
-    const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
-    const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
+    double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
+    double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
+    if (param1 > param2)
+        std::swap(param1, param2);
+
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
     m_gfxAngle->SetWidth(2);
@@ -358,8 +395,13 @@ void MeasureDisplayAngle::update(const MeasureDisplayConfig& config)
 {
     const auto trAngle = UnitSystem::translateAngle(m_angle.value, config.angleUnit);
     const auto strAngle = BaseMeasureDisplay::text(trAngle, config);
-    this->setText(fmt::format(MeasureDisplayI18N::textIdTr("Angle: {0}{1}"), strAngle, trAngle.strUnit));
-    m_gfxAngleText->SetText(to_OccExtString(" " + strAngle));
+    this->setText(fmt::format(
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Angle")),
+        strAngle,
+        trAngle.strUnit
+    ));
+    BaseMeasureDisplay::setTextLabel(m_gfxAngleText, strAngle);
     BaseMeasureDisplay::adaptScale(m_gfxAngleText, config);
 }
 
@@ -380,13 +422,20 @@ GraphicsObjectPtr MeasureDisplayAngle::graphicsObjectAt(int i) const
     return {};
 }
 
+void MeasureDisplayAngle::sumAdd(const IMeasureDisplay& other)
+{
+    const auto& otherAngle = dynamic_cast<const MeasureDisplayAngle&>(other);
+    m_angle.value += otherAngle.m_angle.value;
+    BaseMeasureDisplay::sumAdd(other);
+}
+
+
 // --
 // -- Length
 // --
 
 MeasureDisplayLength::MeasureDisplayLength(const MeasureLength& length)
-    : m_length(length),
-      m_gfxLenText(new AIS_TextLabel)
+    : m_length(length)
 {
     m_gfxLenText->SetPosition(length.middlePnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -397,12 +446,12 @@ void MeasureDisplayLength::update(const MeasureDisplayConfig& config)
     const auto trLength = UnitSystem::translateLength(m_length.value, config.lengthUnit);
     const auto strLength = BaseMeasureDisplay::text(trLength, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
-                      BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
-                      strLength,
-                      trLength.strUnit
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Length")),
+        strLength,
+        trLength.strUnit
     ));
-    m_gfxLenText->SetText(to_OccExtString(" " + strLength));
+    BaseMeasureDisplay::setTextLabel(m_gfxLenText, strLength);
     BaseMeasureDisplay::adaptScale(m_gfxLenText, config);
 }
 
@@ -423,8 +472,7 @@ void MeasureDisplayLength::sumAdd(const IMeasureDisplay& other)
 // --
 
 MeasureDisplayArea::MeasureDisplayArea(const MeasureArea& area)
-    : m_area(area),
-      m_gfxAreaText(new AIS_TextLabel)
+    : m_area(area)
 {
     m_gfxAreaText->SetPosition(area.middlePnt);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
@@ -435,12 +483,12 @@ void MeasureDisplayArea::update(const MeasureDisplayConfig& config)
     const auto trArea = UnitSystem::translateArea(m_area.value, config.areaUnit);
     const auto strArea = BaseMeasureDisplay::text(trArea, config);
     this->setText(fmt::format(
-                      MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
-                      BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
-                      strArea,
-                      trArea.strUnit
+        MeasureDisplayI18N::textIdTr("{0}: {1}{2}"),
+        BaseMeasureDisplay::sumTextOr(MeasureDisplayI18N::textIdTr("Area")),
+        strArea,
+        trArea.strUnit
     ));
-    m_gfxAreaText->SetText(to_OccExtString(" " + strArea));
+    BaseMeasureDisplay::setTextLabel(m_gfxAreaText, strArea);
     BaseMeasureDisplay::adaptScale(m_gfxAreaText, config);
 }
 
@@ -462,16 +510,12 @@ void MeasureDisplayArea::sumAdd(const IMeasureDisplay& other)
 
 MeasureDisplayBoundingBox::MeasureDisplayBoundingBox(const MeasureBoundingBox& bnd)
     : m_bnd(bnd),
-      m_gfxMinPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMin))),
-      m_gfxMaxPoint(new AIS_Point(new Geom_CartesianPoint(bnd.cornerMax))),
-      m_gfxXLengthText(new AIS_TextLabel),
-      m_gfxYLengthText(new AIS_TextLabel),
-      m_gfxZLengthText(new AIS_TextLabel)
+      m_gfxMinPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(bnd.cornerMin))),
+      m_gfxMaxPoint(new AIS_Point(makeOccHandle<Geom_CartesianPoint>(bnd.cornerMax)))
 {
 
     const TopoDS_Shape shapeBox = BRepPrimAPI_MakeBox(bnd.cornerMin, bnd.cornerMax);
-    auto aisShapeBox = new AIS_Shape(shapeBox);
-    m_gfxBox = aisShapeBox;
+    m_gfxBox = makeOccHandle<AIS_Shape>(shapeBox);
     m_gfxBox->SetDisplayMode(AIS_Shaded);
     m_gfxBox->SetTransparency(0.85);
     m_gfxBox->Attributes()->SetFaceBoundaryDraw(true);
@@ -511,9 +555,9 @@ void MeasureDisplayBoundingBox::update(const MeasureDisplayConfig& config)
         trVolume.strUnit
     ));
 
-    m_gfxXLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trXLength, config)));
-    m_gfxYLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trYLength, config)));
-    m_gfxZLengthText->SetText(to_OccExtString(BaseMeasureDisplay::text(trZLength, config)));
+    BaseMeasureDisplay::setTextLabel(m_gfxXLengthText, BaseMeasureDisplay::text(trXLength, config));
+    BaseMeasureDisplay::setTextLabel(m_gfxYLengthText, BaseMeasureDisplay::text(trYLength, config));
+    BaseMeasureDisplay::setTextLabel(m_gfxZLengthText, BaseMeasureDisplay::text(trZLength, config));
     BaseMeasureDisplay::adaptScale(m_gfxXLengthText, config);
     BaseMeasureDisplay::adaptScale(m_gfxYLengthText, config);
     BaseMeasureDisplay::adaptScale(m_gfxZLengthText, config);

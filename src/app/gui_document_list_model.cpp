@@ -1,7 +1,6 @@
 /****************************************************************************
-** Copyright (c) 2021, Fougue Ltd. <http://www.fougue.pro>
-** All rights reserved.
-** See license at https://github.com/fougue/mayo/blob/master/LICENSE.txt
+** Copyright (c) 2016, Fougue SAS <https://www.fougue.pro>
+** SPDX-License-Identifier: BSD-2-Clause
 ****************************************************************************/
 
 #include "gui_document_list_model.h"
@@ -63,7 +62,7 @@ void GuiDocumentListModel::removeGuiDocument(const GuiDocument* guiDoc)
 {
     auto itFound = std::find(m_vecGuiDocument.begin(), m_vecGuiDocument.end(), guiDoc);
     if (itFound != m_vecGuiDocument.end()) {
-        const int row = itFound - m_vecGuiDocument.begin();
+        const auto row = static_cast<int>(itFound - m_vecGuiDocument.begin());
         this->beginRemoveRows(QModelIndex(), row, row);
         m_vecGuiDocument.erase(itFound);
         this->endRemoveRows();
@@ -73,13 +72,13 @@ void GuiDocumentListModel::removeGuiDocument(const GuiDocument* guiDoc)
 void GuiDocumentListModel::onDocumentNameChanged(const DocumentPtr& doc, const std::string& /*name*/)
 {
     auto itFound = std::find_if(
-                m_vecGuiDocument.cbegin(),
-                m_vecGuiDocument.cend(),
-                [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
+        m_vecGuiDocument.cbegin(),
+        m_vecGuiDocument.cend(),
+        [&](const GuiDocument* guiDoc) { return guiDoc->document() == doc; }
     );
     if (itFound != m_vecGuiDocument.cend()) {
-        const int row = itFound - m_vecGuiDocument.begin();
-        const QModelIndex itemIndex = this->index(row);
+        const auto row = static_cast<int>(itFound - m_vecGuiDocument.begin());
+        const auto itemIndex = this->index(row);
         emit this->dataChanged(itemIndex, itemIndex, { Qt::DisplayRole, Qt::EditRole });
     }
 }
