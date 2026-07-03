@@ -5,7 +5,7 @@
 [![macOS CI](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml/badge.svg?branch=develop)](https://github.com/fougue/mayo/actions/workflows/ci_macos.yml)
 <br>
 [![Downloads](https://img.shields.io/github/downloads/fougue/mayo/total.svg)](https://github.com/fougue/mayo/releases)
-[![Version](https://img.shields.io/badge/version-v0.9.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
+[![Version](https://img.shields.io/badge/version-v0.10.0-blue.svg?style=flat)](https://github.com/fougue/mayo/releases)
   
 </div>
 
