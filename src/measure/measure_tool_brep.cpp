@@ -17,16 +17,19 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <Bnd_OBB.hxx>
+#include <ElCLib.hxx>
 #include <ElSLib.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
 #include <GCPnts_QuasiUniformAbscissa.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GProp_GProps.hxx>
+#include <Geom_BSplineCurve.hxx>
 #include <Precision.hxx>
 #include <ProjLib.hxx>
 #include <StdSelect_BRepOwner.hxx>
@@ -295,6 +298,53 @@ FittedCircle2DResult fittedCircle2D_taubin(gsl::span<const gp_Pnt2d> points)
     result.center = gp_Pnt2d{centerX, centerY};
     result.radius = radius;
     return result;
+}
+
+// Attempts to convert a linear BSpline edge into an equivalent analytic edge
+// If the underlying curve is Geom_BSplineCurve whose control poles are all collinear this function
+// rebuilds and returns an equivalent edge based on a gp_Lin.
+TopoDS_Edge tryGetLinearEdge(const TopoDS_Edge& edge)
+{
+    if (edge.IsNull())
+        return edge;
+
+    const BRepAdaptor_Curve curve(edge);
+    if (curve.GetType() == GeomAbs_BSplineCurve) {
+        OccHandle<Geom_BSplineCurve> bspline = curve.BSpline();
+        if (bspline->NbPoles() < 2)
+            return edge;
+
+        const gp_Pnt p0 = bspline->Pole(1);
+        const gp_Pnt p1 = bspline->Pole(bspline->NbPoles());
+        if (GeomUtils::equal(p0, p1))
+            return edge;
+
+        const double distTolerance = std::max(BRep_Tool::Tolerance(edge), Precision::Confusion());
+        const gp_Lin line(p0, gp_Vec{p0, p1});
+        for (int i = 2; i < bspline->NbPoles(); ++i) {
+            if (line.Distance(bspline->Pole(i)) > distTolerance)
+                return edge;
+        }
+
+        const double tFirst = ElCLib::Parameter(line, curve.Value(curve.FirstParameter()));
+        const double tLast  = ElCLib::Parameter(line, curve.Value(curve.LastParameter()));
+        const double t0 = std::min(tFirst, tLast);
+        const double t1 = std::max(tFirst, tLast);
+        if (MathUtils::fuzzyEqual(t0, t1))
+            return edge;
+
+        BRepBuilderAPI_MakeEdge makeEdge(line, t0, t1);
+        if (!makeEdge.IsDone())
+            return edge;
+
+        TopoDS_Edge linEdge = makeEdge.Edge();
+        if (tFirst > tLast)
+            linEdge.Reverse();
+
+        return linEdge;
+    }
+
+    return edge;
 }
 
 } // namespace
@@ -574,8 +624,9 @@ MeasureAngle MeasureToolBRep::brepAngle(const TopoDS_Shape& shape1, const TopoDS
     throwErrorIf<ErrorCode::NotBRepShape>(shape1.IsNull());
     throwErrorIf<ErrorCode::NotBRepShape>(shape2.IsNull());
 
-    TopoDS_Edge edge1 = TopoDS::Edge(shape1);
-    TopoDS_Edge edge2 = TopoDS::Edge(shape2);
+    TopoDS_Edge edge1 = tryGetLinearEdge(TopoDS::Edge(shape1));
+    TopoDS_Edge edge2 = tryGetLinearEdge(TopoDS::Edge(shape2));
+
     // TODO What if edge1 and edge2 are not geometric?
     const BRepAdaptor_Curve curve1(edge1);
     const BRepAdaptor_Curve curve2(edge2);

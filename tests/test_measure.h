@@ -29,6 +29,7 @@ private slots:
 
     void BRepAngle_TwoLinesIntersect_test();
     void BRepAngle_TwoLinesParallelError_test();
+    void BRepAngle_QuasiLinearBSpline45degrees_test();
 
     void BRepLength_PolygonEdge_test();
 

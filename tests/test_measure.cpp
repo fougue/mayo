@@ -51,6 +51,36 @@ TopoDS_Edge makePolygonEdge(const TColgp_Array1OfPnt& points)
     return edge;
 }
 
+// Builds a degree-3 BSpline edge whose 4 control poles are all collinear, ie an edge that is
+// geometrically a straight segment from p0 to p1 but represented as a non-trivial BSpline curve
+// (mimics artifacts produced by some CAD importers instead of a native Geom_Line)
+TopoDS_Edge makeQuasiLinearBSplineEdge(const gp_Pnt& p0, const gp_Pnt& p1)
+{
+    constexpr int degree = 3;
+    constexpr int nbPoles = 4;
+
+    TColgp_Array1OfPnt poles(1, nbPoles);
+    for (int i = 0; i < nbPoles; ++i) {
+        const double t = static_cast<double>(i) / (nbPoles - 1);
+        const gp_Pnt pnt{
+            p0.X() + t * (p1.X() - p0.X()),
+            p0.Y() + t * (p1.Y() - p0.Y()),
+            p0.Z() + t * (p1.Z() - p0.Z())
+        };
+        poles.SetValue(i + 1, pnt);
+    }
+
+    // Clamped knot vector: single interior span, degree-3 curve, 4 poles
+    TColStd_Array1OfReal knots(1, 2);
+    knots.SetValue(1, 0.);
+    knots.SetValue(2, 1.);
+    TColStd_Array1OfInteger mults(1, 2);
+    mults.SetValue(1, degree + 1);
+    mults.SetValue(2, degree + 1);
+
+    return BRepBuilderAPI_MakeEdge(makeOccHandle<Geom_BSplineCurve>(poles, knots, mults, degree));
+}
+
 } // namespace
 
 void TestMeasure::BRepVertexPosition_test()
@@ -174,6 +204,15 @@ void TestMeasure::BRepAngle_TwoLinesParallelError_test()
     const TopoDS_Shape shape1 = BRepBuilderAPI_MakeEdge(gp_Lin(gp::Origin(), gp::DX()));
     const TopoDS_Shape shape2 = BRepBuilderAPI_MakeEdge(gp_Lin({ 0, 5, 5 }, gp::DX()));
     MAYO_QVERIFY_THROWS_EXCEPTION(IMeasureError, MeasureToolBRep::brepAngle(shape1, shape2));
+}
+
+// edge1 along +X, edge2 at 45° in the XY plane -> expected angle = pi/4
+void TestMeasure::BRepAngle_QuasiLinearBSpline45degrees_test()
+{
+    const TopoDS_Edge edge1 = makeQuasiLinearBSplineEdge(gp::Origin(), gp_Pnt(10., 0., 0.));
+    const TopoDS_Edge edge2 = makeQuasiLinearBSplineEdge(gp::Origin(), gp_Pnt(10., 10., 0.));
+    const MeasureAngle angle = MeasureToolBRep::brepAngle(edge1, edge2);
+    QCOMPARE(static_cast<double>(UnitSystem::radians(angle.value)), MathConst::pi / 4.);
 }
 
 void TestMeasure::BRepLength_PolygonEdge_test()

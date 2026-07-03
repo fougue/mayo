@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 #include <cmath>
+#include <utility>
 
 namespace Mayo {
 
@@ -377,8 +378,11 @@ MeasureDisplayAngle::MeasureDisplayAngle(MeasureAngle angle)
     const gp_Dir xCircle = GeomUtils::isNull(vec1) ? gp::DX() : gp_Dir{vec1};
     const gp_Ax2 axCircle(angle.pntCenter, nCircle, xCircle);
     auto geomCircle = makeOccHandle<Geom_Circle>(axCircle, 0.8 * vec1.Magnitude());
-    const double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
-    const double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
+    double param1 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt1);
+    double param2 = ElCLib::Parameter(geomCircle->Circ(), angle.pnt2);
+    if (param1 > param2)
+        std::swap(param1, param2);
+
     m_gfxAngle = new AIS_Circle(geomCircle, param1, param2);
     BaseMeasureDisplay::applyGraphicsDefaults(this);
     m_gfxAngle->SetWidth(2);
