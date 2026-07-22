@@ -139,10 +139,10 @@ template<> struct StringConv<std::string_view, OccHandle<TCollection_HAsciiStrin
     }
 };
 
-// std::string_view -> NCollection_Utf8String
-template<> struct StringConv<std::string_view, NCollection_Utf8String> {
+// std::string_view -> NCollection_UtfString<char>
+template<> struct StringConv<std::string_view, NCollection_UtfString<char>> {
     static auto to(std::string_view str) {
-        return NCollection_Utf8String(str.data(), static_cast<int>(str.size()));
+        return NCollection_UtfString<char>(str.data(), static_cast<int>(str.size()));
     }
 };
 
@@ -189,10 +189,10 @@ template<> struct StringConv<std::string, TCollection_ExtendedString> {
     }
 };
 
-// std::string -> NCollection_Utf8String
-template<> struct StringConv<std::string, NCollection_Utf8String> {
+// std::string -> NCollection_UtfString<char>
+template<> struct StringConv<std::string, NCollection_UtfString<char>> {
     static auto to(const std::string& str) {
-        return NCollection_Utf8String(str.c_str(), static_cast<int>(str.size()));
+        return NCollection_UtfString<char>(str.c_str(), static_cast<int>(str.size()));
     }
 };
 

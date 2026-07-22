@@ -14,13 +14,13 @@ namespace Mayo::MeshUtils {
 
 namespace {
 
-// Helper function to create TColStd_Array1OfReal
-[[maybe_unused]] TColStd_Array1OfReal createArray1OfReal(int count)
+// Helper function to create NCollection_Array1<double>
+[[maybe_unused]] NCollection_Array1<double> createArray1OfReal(int count)
 {
     if (count > 0)
-        return TColStd_Array1OfReal(1, count);
-    else
-        return TColStd_Array1OfReal();
+        return NCollection_Array1<double>(1, count);
+
+    return {};
 }
 
 } // namespace
@@ -147,7 +147,7 @@ Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triang
     return nvec;
 }
 
-const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation)
+const NCollection_Array1<Poly_Triangle>& triangles(const OccHandle<Poly_Triangulation>& triangulation)
 {
 #if OCC_VERSION_HEX < 0x070600
     return triangulation->Triangles();

@@ -6,6 +6,7 @@
 #include "command_system_information_occopengl.h"
 
 #include "../base/meta_enum.h"
+#include "../base/occt_ncollection_indexed_datamap_of_stringstring.h"
 #include "../base/string_conv.h"
 
 #include <OpenGl_Context.hxx>
@@ -21,9 +22,9 @@ OccOpenGlInfos getOccOpenGlInfos()
 
     OccOpenGlInfos infos;
 
-    TColStd_IndexedDataMapOfStringString dict;
+    NCollection_IndexedDataMapOfStringString dict;
     occContext.DiagnosticInformation(dict, Graphic3d_DiagnosticInfo_Basic);
-    for (TColStd_IndexedDataMapOfStringString::Iterator it(dict); it.More(); it.Next())
+    for (NCollection_IndexedDataMapOfStringString::Iterator it(dict); it.More(); it.Next())
         infos[to_stdString(it.Key())] = to_stdString(it.Value());
 
     infos["MaxDegreeOfAnisotropy"] = occContext.MaxDegreeOfAnisotropy();

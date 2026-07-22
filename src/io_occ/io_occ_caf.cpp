@@ -34,10 +34,10 @@ bool cafGenericReadFile(CafReaderType& reader, const FilePath& filepath, TaskPro
 }
 
 template<typename CafReaderType>
-TDF_LabelSequence cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> cafGenericReadTransfer(CafReaderType& reader, DocumentPtr doc, TaskProgress* progress)
 {
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
-    const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
+    const NCollection_Sequence<TDF_Label> seqMark = doc->xcaf().topLevelFreeShapes();
     OccHandle<TDocStd_Document> stdDoc = doc;
 #if OCC_VERSION_HEX >= OCC_VERSION_CHECK(7, 5, 0)
     [[maybe_unused]]const bool okTransfer = reader.Transfer(stdDoc, indicator->Start());
@@ -101,11 +101,11 @@ bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskPr
     return cafGenericReadFile(reader, filepath, progress);
 }
 
-TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+NCollection_Sequence<TDF_Label> cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 
-TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
+NCollection_Sequence<TDF_Label> cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress) {
     return cafGenericReadTransfer(reader, doc, progress);
 }
 

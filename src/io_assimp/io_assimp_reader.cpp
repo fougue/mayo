@@ -224,7 +224,7 @@ OccHandle<Image_Texture> createOccTexture(const aiTexture* texture)
         NCollection_BaseAllocator::CommonBaseAllocator(),
         textureSize
     );
-    auto textureData = reinterpret_cast<const Standard_Byte*>(texture->pcData);
+    auto textureData = reinterpret_cast<const uint8_t*>(texture->pcData);
     std::copy(textureData, textureData + textureSize, buff->ChangeData());
     return new Image_Texture(buff, texture->mFilename.C_Str());
 }
@@ -387,7 +387,7 @@ bool AssimpReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return true;
 }
 
-TDF_LabelSequence AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> AssimpReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     if (!m_scene)
         return {};

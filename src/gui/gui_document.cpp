@@ -113,7 +113,7 @@ GuiDocument::GuiDocument(const DocumentPtr& doc, GuiApplication* guiApp)
     // 3D view - Configure stats
     m_v3dView->ChangeRenderingParams().CollectedStats = Graphic3d_RenderingParams::PerfCounters_Extended;
     m_v3dView->ChangeRenderingParams().StatsPosition = new Graphic3d_TransformPers(
-        Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, Graphic3d_Vec2i(20, 20)
+        Graphic3d_TMF_2d, Aspect_TOTP_RIGHT_UPPER, NCollection_Vec2<int>{20, 20}
     );
     // 3D view - Enable anti-aliasing
     // NOTE Graphic3d_RenderingParams::NbMsaaSamples needs to be set just after an OpenGL is active,
@@ -781,7 +781,7 @@ void GuiDocument::configureViewCubeSizes()
             new Graphic3d_TransformPers(
                 Graphic3d_TMF_TriedronPers,
                 m_viewTrihedronCorner,
-                Graphic3d_Vec2i{offsetXY, offsetXY}
+                NCollection_Vec2<int>{offsetXY, offsetXY}
             )
         );
     }

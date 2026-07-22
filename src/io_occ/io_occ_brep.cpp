@@ -35,7 +35,7 @@ bool OccBRepReader::readFile(const FilePath& filepath, TaskProgress* progress)
     );
 }
 
-TDF_LabelSequence OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
+NCollection_Sequence<TDF_Label> OccBRepReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_shape.IsNull())
         return {};

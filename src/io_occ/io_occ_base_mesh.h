@@ -19,7 +19,7 @@ namespace Mayo::IO {
 class OccBaseMeshReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
+    NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     void applyProperties(const PropertyGroup* params) override;
 

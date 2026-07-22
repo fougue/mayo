@@ -9,6 +9,7 @@
 #include "../base/enumeration_fromenum.h"
 #include "../base/io_system.h"
 #include "../base/messenger.h"
+#include "../base/occt_ncollection_indexed_datamap_of_stringstring.h"
 #include "../base/occ_progress_indicator.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
@@ -188,7 +189,7 @@ bool OccGltfWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
         this->messenger()->emitWarning(fnWarningOptionNA("keepIndices16b"));
 
 #endif
-    const TColStd_IndexedDataMapOfStringString fileInfo;
+    const NCollection_IndexedDataMapOfStringString fileInfo;
     if (m_seqRootLabel.IsEmpty())
         return writer.Perform(m_document, fileInfo, occProgress->Start());
     else

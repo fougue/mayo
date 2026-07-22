@@ -21,7 +21,7 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
 {
     if (!m_mesh.IsNull()) {
         const int lenCoords = m_mesh->NbNodes();
-        m_nodeCoords = makeOccHandle<TColStd_HArray2OfReal>(1, lenCoords, 1, 3);
+        m_nodeCoords = makeOccHandle<NCollection_HArray2OfReal>(1, lenCoords, 1, 3);
 
         for(int i = 1; i <= lenCoords; ++i) {
             m_nodes.Add(i);
@@ -31,10 +31,10 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
             m_nodeCoords->SetValue(i, 3, xyz.Z());
         }
 
-        const Poly_Array1OfTriangle& aSeq = MeshUtils::triangles(m_mesh);
+        const NCollection_Array1<Poly_Triangle>& aSeq = MeshUtils::triangles(m_mesh);
         const int lenTriangles = aSeq.Length();
-        m_elemNormals = makeOccHandle<TColStd_HArray2OfReal>(1, lenTriangles, 1, 3);
-        m_elemNodes = makeOccHandle<TColStd_HArray2OfInteger>(1, lenTriangles, 1, 3);
+        m_elemNormals = makeOccHandle<NCollection_HArray2OfReal>(1, lenTriangles, 1, 3);
+        m_elemNodes = makeOccHandle<NCollection_HArray2OfInteger>(1, lenTriangles, 1, 3);
 
         for(int i = 1; i <= lenTriangles; ++i ) {
             m_elements.Add(i);
@@ -65,7 +65,7 @@ GraphicsMeshDataSource::GraphicsMeshDataSource(const OccHandle<Poly_Triangulatio
 bool GraphicsMeshDataSource::GetGeom(
         const int ID,
         const bool IsElement,
-        TColStd_Array1OfReal& Coords,
+        NCollection_Array1<double>& Coords,
         int& NbNodes,
         MeshVS_EntityType& Type
     ) const
@@ -109,7 +109,7 @@ bool GraphicsMeshDataSource::GetGeomType(const int, const bool IsElement, MeshVS
     return true;
 }
 
-bool GraphicsMeshDataSource::GetNodesByElement(const int ID, TColStd_Array1OfInteger& theNodeIDs, int& /*theNbNodes*/) const
+bool GraphicsMeshDataSource::GetNodesByElement(const int ID, NCollection_Array1<int>& theNodeIDs, int& /*theNbNodes*/) const
 {
     if (m_mesh.IsNull())
         return false;

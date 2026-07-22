@@ -51,9 +51,9 @@ public:
     // -- XCAFDoc_ShapeTool  helpers
     // --
 
-    TDF_LabelSequence topLevelFreeShapes() const;
-    static TDF_LabelSequence shapeComponents(const TDF_Label& lbl);
-    static TDF_LabelSequence shapeSubs(const TDF_Label& lbl);
+    NCollection_Sequence<TDF_Label> topLevelFreeShapes() const;
+    static NCollection_Sequence<TDF_Label> shapeComponents(const TDF_Label& lbl);
+    static NCollection_Sequence<TDF_Label> shapeSubs(const TDF_Label& lbl);
 
     static TopoDS_Shape shape(const TDF_Label& lbl);
     void setShape(const TDF_Label& label, const TopoDS_Shape& shape);
@@ -96,7 +96,7 @@ public:
     static TDF_Label shapeReferred(const TDF_Label& lbl);
 
     // Returns labels of the top-level free shapes that were not found in 'seqOther'
-    TDF_LabelSequence diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const;
+    NCollection_Sequence<TDF_Label> diffTopLevelFreeShapes(const NCollection_Sequence<TDF_Label>& seqOther) const;
 
     OccHandle<TDataStd_NamedData> shapeUserDefinedAttributes(const TDF_Label& lbl) const;
 
@@ -119,7 +119,7 @@ public:
     // -- XCAFDoc_LayerTool helpers
     // --
 
-    TDF_LabelSequence layers(const TDF_Label& lbl) const;
+    NCollection_Sequence<TDF_Label> layers(const TDF_Label& lbl) const;
     TCollection_ExtendedString layerName(const TDF_Label& lbl) const;
 
     static ValidationProperties validationProperties(const TDF_Label& lbl);

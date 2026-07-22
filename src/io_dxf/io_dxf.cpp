@@ -15,6 +15,7 @@
 #include "../base/mesh_utils.h"
 #include "../base/messenger.h"
 #include "../base/occ_handle.h"
+#include "../base/occt_ncollection_harray1_of_gppnt.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/task_progress.h"
@@ -24,29 +25,31 @@
 #include "aci_table.h"
 #include "dxf_parser.h"
 
+#include <BRepBuilderAPI_GTransform.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
-#include <BRepBuilderAPI_GTransform.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRep_Builder.hxx>
 #include <BSplCLib.hxx>
 #include <ElCLib.hxx>
 #include <Font_BRepTextBuilder.hxx>
 #include <Font_FontMgr.hxx>
+#include <GC_MakeArcOfCircle.hxx>
 #include <GeomAPI_Interpolate.hxx>
-#include <Geom_BezierCurve.hxx>
 #include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <Geom_Circle.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <Graphic3d_HorizontalTextAlignment.hxx>
 #include <Graphic3d_VerticalTextAlignment.hxx>
-#include <GC_MakeArcOfCircle.hxx>
+#include <NCollection_Sequence.hxx>
 #include <Poly_Triangulation.hxx>
 #include <Precision.hxx>
 #include <Resource_Unicode.hxx>
+#include <TCollection_HAsciiString.hxx>
 #include <TDataStd_Name.hxx>
 #include <TopoDS_Edge.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
@@ -146,7 +149,7 @@ std::array<char, 4> toUtf8(char16_t code)
 const Enumeration& systemFontNames()
 {
     static Enumeration fontNames;
-    static TColStd_SequenceOfHAsciiString seqFontName;
+    static NCollection_Sequence<OccHandle<TCollection_HAsciiString>> seqFontName;
     if (fontNames.empty()) {
         OccHandle<Font_FontMgr> fontMgr = Font_FontMgr::GetInstance();
         fontMgr->GetAvailableFontsNames(seqFontName);
@@ -163,9 +166,9 @@ double computeStringWidth(const NCollection_String& str, Font_BRepFont& brepFont
 {
     double w = 0.;
     for (auto it = str.Iterator(); it.Index() < str.Length(); ) {
-        const Standard_Utf32Char ch = *it;
+        const char32_t ch = *it;
         ++it;
-        const Standard_Utf32Char chNext = (it.Index() < str.Length()) ? *it : 0;
+        const char32_t chNext = (it.Index() < str.Length()) ? *it : 0;
         w += brepFont.AdvanceX(ch, chNext);
     }
 
@@ -425,7 +428,7 @@ public:
         : m_doc(targetDoc)
     {}
 
-    const TDF_LabelSequence& labelShapes() const
+    const NCollection_Sequence<TDF_Label>& labelShapes() const
     {
         return m_shapeLabels;
     }
@@ -488,7 +491,7 @@ private:
     std::unordered_map<DxfStringRef, TDF_Label> m_mapLayerNameLabel;
     std::unordered_map<DxfColorIndex, TDF_Label> m_mapColorIndexLabel;
     DocumentPtr m_doc;
-    TDF_LabelSequence m_shapeLabels;
+    NCollection_Sequence<TDF_Label> m_shapeLabels;
 };
 
 } // namespace
@@ -612,7 +615,7 @@ bool DxfReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return m_impl->read(filepath, progress);
 }
 
-TDF_LabelSequence DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> DxfReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     if (!m_impl)
         return {};
@@ -1175,7 +1178,7 @@ std::string DxfReader::getPlainMText(std::string_view strMText)
     return out;
 }
 
-TDF_LabelSequence DxfReader::transferByGroupLayers(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> DxfReader::transferByGroupLayers(DocumentPtr doc, TaskProgress* progress)
 {
     struct TransferObject {
         const Dxf_EntityVariant* entityVariantPtr{nullptr};
@@ -1239,7 +1242,7 @@ TDF_LabelSequence DxfReader::transferByGroupLayers(DocumentPtr doc, TaskProgress
     return transferHelper.labelShapes();
 }
 
-TDF_LabelSequence DxfReader::transferBySingleEntities(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> DxfReader::transferBySingleEntities(DocumentPtr doc, TaskProgress* progress)
 {
     TransferHelper transferHelper(doc);
 
@@ -1536,7 +1539,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolygonMesh3d(const Dxf_POLYLINE&
         return j * meshM + i + 1;
     };
 
-    TColgp_Array1OfPnt nodes(1, nodeCount);
+    NCollection_Array1<gp_Pnt> nodes(1, nodeCount);
     // Vertices are listed line-by-line
     for (int j = 0; j < meshN; ++j) {
         for (int i = 0; i < meshM; ++i) {
@@ -1546,7 +1549,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolygonMesh3d(const Dxf_POLYLINE&
     }
 
     int ktri = 1; // Current triangle index(1..triCount)
-    Poly_Array1OfTriangle triangles(1, triCount);
+    NCollection_Array1<Poly_Triangle> triangles(1, triCount);
     auto addTri = [&](int i1, int i2, int i3) {
         triangles.ChangeValue(ktri++) = Poly_Triangle{i1, i2, i3};
     };
@@ -1590,7 +1593,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolyfaceMesh(const Dxf_POLYLINE& 
 {
     const auto& vertices = polyline.vertices;
     const int meshVertexCount = polyline.polygonMeshMVertexCount;
-    TColgp_Array1OfPnt nodes(1, meshVertexCount);
+    NCollection_Array1<gp_Pnt> nodes(1, meshVertexCount);
     for (int i = 0; i < meshVertexCount; ++i)
         nodes.ChangeValue(i + 1) = toOccPnt(vertices.at(i).point);
 
@@ -1608,11 +1611,11 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapePolyfaceMesh(const Dxf_POLYLINE& 
             vecTriangle.emplace_back(meshVertex1, meshVertex3, meshVertex4);
     }
 
-    Poly_Array1OfTriangle triangles(1, static_cast<int>(vecTriangle.size()));
+    NCollection_Array1<Poly_Triangle> triangles(1, static_cast<int>(vecTriangle.size()));
     for (unsigned i = 0; i < vecTriangle.size(); ++i)
         triangles.ChangeValue(i + 1) = vecTriangle.at(i);
 
-    return BRepUtils::makeFace(new Poly_Triangulation(nodes, triangles));
+    return BRepUtils::makeFace(makeOccHandle<Poly_Triangulation>(nodes, triangles));
 }
 
 TopoDS_Shape DxfReader::ReaderImpl::createShapePolyline3d(const Dxf_POLYLINE& polyline)
@@ -1652,7 +1655,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapeCurveFit(const Dxf_POLYLINE& poly
     const int nodeCount = gsl::narrow<int>(vertices.size() + (isPolylineClosed ? 1 : 0));
     const gp_Dir extrusionDir = toOccDir(polyline.extrusionDirection);
     const Frame frame = Frame::makeOcs(extrusionDir);
-    auto points = makeOccHandle<TColgp_HArray1OfPnt>(1, nodeCount);
+    auto points = makeOccHandle<NCollection_HArray1OfPnt>(1, nodeCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
         points->SetValue(i + 1, ocsPointToWcs(vertices.at(i).point, frame));
 
@@ -1713,7 +1716,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShapeSplineFit(const Dxf_POLYLINE& pol
         ;
 
     const int pointCount = int(vertices.size()) + (isPolylineClosed ? 1 : 0);
-    auto points = makeOccHandle<TColgp_HArray1OfPnt>(1, pointCount);
+    auto points = makeOccHandle<NCollection_HArray1OfPnt>(1, pointCount);
     for (unsigned i = 0; i < vertices.size(); ++i)
         points->SetValue(i+1, ocsPointToWcs(vertices.at(i)->point, frame));
 
@@ -1804,7 +1807,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createShape(const Dxf_SPLINE& spline)
     }
     catch (const Standard_Failure& err) {
         m_messenger->emitWarning(
-            fmt::format("DxfReader - Failed to create bspline({})", err.GetMessageString())
+            fmt::format("DxfReader - Failed to create bspline({})", TKernelUtils::errorMessage(err))
         );
     }
 
@@ -2019,7 +2022,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createSplineFromPolesAndKnots(const Dxf_SPLI
 
     // Handle poles
     const auto iNumPoles = gsl::narrow<int>(spline.controlPoints.size());
-    TColgp_Array1OfPnt occPoles(1, iNumPoles);
+    NCollection_Array1<gp_Pnt> occPoles(1, iNumPoles);
     for (const DxfCoords& pnt : spline.controlPoints) {
         const auto iPnt = static_cast<int>(&pnt - &spline.controlPoints.front());
         occPoles.ChangeValue(iPnt + 1) = toOccPnt(pnt);
@@ -2027,16 +2030,16 @@ TopoDS_Shape DxfReader::ReaderImpl::createSplineFromPolesAndKnots(const Dxf_SPLI
 
     // Handle knots and mults
     const auto iNumKnots = gsl::narrow<int>(spline.knots.size());
-    TColStd_Array1OfReal occKnots(1, iNumKnots);
+    NCollection_Array1<double> occKnots(1, iNumKnots);
     std::copy(spline.knots.cbegin(), spline.knots.cend(), occKnots.begin());
 
     const auto iNumUniqueKnots = BSplCLib::KnotsLength(occKnots, isPeriodic);
-    TColStd_Array1OfReal occUniqueKnots(1, iNumUniqueKnots);
-    TColStd_Array1OfInteger occMults(1, iNumUniqueKnots);
+    NCollection_Array1<double> occUniqueKnots(1, iNumUniqueKnots);
+    NCollection_Array1<int> occMults(1, iNumUniqueKnots);
     BSplCLib::Knots(occKnots, std::ref(occUniqueKnots), std::ref(occMults), isPeriodic);
 
     // Handle weights
-    TColStd_Array1OfReal occWeights(1, iNumPoles);
+    NCollection_Array1<double> occWeights(1, iNumPoles);
     if (isRational && spline.weights.size() == spline.controlPoints.size())
         std::copy(spline.weights.cbegin(), spline.weights.cend(), occWeights.begin());
     else
@@ -2087,13 +2090,13 @@ TopoDS_Shape DxfReader::ReaderImpl::createSplineFromPolesAndKnots(const Dxf_SPLI
     else {
         // Split curve into cubic Bézier segments
         const int numPolesPerSegment = spline.degree + 1;
-        const int numSegments = occUniqueKnots.Size() - 1;
+        const int numSegments = static_cast<int>(occUniqueKnots.Size()) - 1;
         if (numSegments * numPolesPerSegment != iNumPoles)
             return {};
 
         BRepBuilderAPI_MakeWire makeWire;
         for (int i = 0; i < numSegments; ++i) {
-            TColgp_Array1OfPnt segPoles(1, numPolesPerSegment);
+            NCollection_Array1<gp_Pnt> segPoles(1, numPolesPerSegment);
             for (int j = 0; j < numPolesPerSegment; ++j)
                 segPoles.SetValue(j+1, occPoles.Value(i * numPolesPerSegment + j + 1));
 
@@ -2122,7 +2125,7 @@ TopoDS_Shape DxfReader::ReaderImpl::createInterpolationSpline(const Dxf_SPLINE& 
     const int addFirstPoint = isPeriodic || isClosed ? 1 : 0;
 
     // Handle poles
-    auto fitpoints = makeOccHandle<TColgp_HArray1OfPnt>(1, fitPointCount + addFirstPoint);
+    auto fitpoints = makeOccHandle<NCollection_HArray1OfPnt>(1, fitPointCount + addFirstPoint);
     for (const DxfCoords& pnt : spline.fitPoints) {
         const auto iPnt = static_cast<int>(&pnt - &spline.fitPoints.front());
         fitpoints->ChangeValue(iPnt + 1) = toOccPnt(pnt);

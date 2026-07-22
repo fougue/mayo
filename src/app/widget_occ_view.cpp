@@ -87,7 +87,7 @@ void QOpenGLWidgetOccView::initializeGL()
 
     auto nativeWin = (Aspect_Drawable)this->effectiveWinId();
     const QRect wrect = this->rect();
-    const Graphic3d_Vec2i viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
+    const NCollection_Vec2<int> viewSize(wrect.right() - wrect.left(), wrect.bottom() - wrect.top());
 
     if (!QtOpenGlUtils::initializeGlWindow(this->v3dView(), nativeWin, viewSize, this->devicePixelRatioF())) {
         Message::SendFail() << "OpenGl_Context is unable to wrap OpenGL context";

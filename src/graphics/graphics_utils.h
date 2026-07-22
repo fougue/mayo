@@ -62,7 +62,7 @@ struct GraphicsUtils {
 
     static int AspectWindow_width(const OccHandle<Aspect_Window>& wnd);
     static int AspectWindow_height(const OccHandle<Aspect_Window>& wnd);
-    static Graphic3d_Vec2i AspectWindow_size(const OccHandle<Aspect_Window>& wnd);
+    static NCollection_Vec2<int> AspectWindow_size(const OccHandle<Aspect_Window>& wnd);
     static OccHandle<Aspect_DisplayConnection> AspectDisplayConnection_create();
 
     static void Gfx3dClipPlane_setCappingHatch(

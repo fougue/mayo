@@ -54,9 +54,9 @@ OccHandle<XCAFDoc_VisMaterialTool> XCaf::visMaterialTool() const
 }
 #endif
 
-TDF_LabelSequence XCaf::topLevelFreeShapes() const
+NCollection_Sequence<TDF_Label> XCaf::topLevelFreeShapes() const
 {
-    TDF_LabelSequence seq;
+    NCollection_Sequence<TDF_Label> seq;
     OccHandle<XCAFDoc_ShapeTool> tool = this->shapeTool();
     if (tool)
         tool->GetFreeShapes(seq);
@@ -64,16 +64,16 @@ TDF_LabelSequence XCaf::topLevelFreeShapes() const
     return seq;
 }
 
-TDF_LabelSequence XCaf::shapeComponents(const TDF_Label& lbl)
+NCollection_Sequence<TDF_Label> XCaf::shapeComponents(const TDF_Label& lbl)
 {
-    TDF_LabelSequence seq;
+    NCollection_Sequence<TDF_Label> seq;
     XCAFDoc_ShapeTool::GetComponents(lbl, seq);
     return seq;
 }
 
-TDF_LabelSequence XCaf::shapeSubs(const TDF_Label& lbl)
+NCollection_Sequence<TDF_Label> XCaf::shapeSubs(const TDF_Label& lbl)
 {
-    TDF_LabelSequence seq;
+    NCollection_Sequence<TDF_Label> seq;
     XCAFDoc_ShapeTool::GetSubShapes(lbl, seq);
     return seq;
 }
@@ -231,9 +231,9 @@ TDF_Label XCaf::shapeReferred(const TDF_Label& lbl)
     return referred;
 }
 
-TDF_LabelSequence XCaf::layers(const TDF_Label& lbl) const
+NCollection_Sequence<TDF_Label> XCaf::layers(const TDF_Label& lbl) const
 {
-    TDF_LabelSequence seq;
+    NCollection_Sequence<TDF_Label> seq;
     auto tool = this->layerTool();
     if (tool)
         tool->GetLayers(lbl, seq);
@@ -319,10 +319,10 @@ XCaf::ValidationProperties XCaf::validationProperties(const TDF_Label& lbl)
     return props;
 }
 
-TDF_LabelSequence XCaf::diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther) const
+NCollection_Sequence<TDF_Label> XCaf::diffTopLevelFreeShapes(const NCollection_Sequence<TDF_Label>& seqOther) const
 {
-    const TDF_LabelSequence& seqBefore = seqOther;
-    const TDF_LabelSequence seqAfter = this->topLevelFreeShapes();
+    const NCollection_Sequence<TDF_Label>& seqBefore = seqOther;
+    const NCollection_Sequence<TDF_Label> seqAfter = this->topLevelFreeShapes();
     std::set<int> setBeforeTag;
     const TDF_Label firstBeforeLabel = !seqBefore.IsEmpty() ? seqBefore.First() : TDF_Label();
     for (const TDF_Label& label : seqBefore) {
@@ -330,7 +330,7 @@ TDF_LabelSequence XCaf::diffTopLevelFreeShapes(const TDF_LabelSequence& seqOther
         setBeforeTag.insert(label.Tag());
     }
 
-    TDF_LabelSequence seqDiff;
+    NCollection_Sequence<TDF_Label> seqDiff;
     for (const TDF_Label& label : seqAfter) {
         Expects(firstBeforeLabel.IsNull() || label.Depth() == firstBeforeLabel.Depth());
         if (setBeforeTag.find(label.Tag()) == setBeforeTag.cend())

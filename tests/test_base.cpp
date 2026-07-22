@@ -24,6 +24,7 @@
 #include "../src/base/mesh_utils.h"
 #include "../src/base/messenger.h"
 #include "../src/base/meta_enum.h"
+#include "../src/base/occt_ncollection_harray1_of_builtintypes.h"
 #include "../src/base/property_builtins.h"
 #include "../src/base/property_enumeration.h"
 #include "../src/base/property_value_conversion.h"
@@ -598,14 +599,14 @@ void TestBase::CafUtils_getNamedDataKeys_test()
 
     {
         const int cintArray1[] = { 1, 9, 2, 8, 3, 7, 4};
-        const TColStd_Array1OfInteger intArray1(cintArray1[0], 1, int(std::size(cintArray1)));
-        data->SetArrayOfIntegers(L"intArray1", makeOccHandle<TColStd_HArray1OfInteger>(intArray1));
+        const NCollection_Array1<int> intArray1(cintArray1[0], 1, int(std::size(cintArray1)));
+        data->SetArrayOfIntegers(L"intArray1", makeOccHandle<NCollection_HArray1OfInteger>(intArray1));
     }
 
     {
         const double cdoubleArray1[] = { 1.9, 8.2, 3.7, 6.4, 5.5 };
-        const TColStd_Array1OfReal doubleArray1(cdoubleArray1[0], 1, int(std::size(cdoubleArray1)));
-        data->SetArrayOfReals(L"doubleArray1", makeOccHandle<TColStd_HArray1OfReal>(doubleArray1));
+        const NCollection_Array1<double> doubleArray1(cdoubleArray1[0], 1, int(std::size(cdoubleArray1)));
+        data->SetArrayOfReals(L"doubleArray1", makeOccHandle<NCollection_HArray1OfReal>(doubleArray1));
     }
 
     auto keys = CafUtils::getNamedDataKeys(data);

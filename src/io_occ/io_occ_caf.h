@@ -41,8 +41,8 @@ OccHandle<Transfer_FinderProcess> cafFinderProcess(const STEPCAFControl_Writer& 
 bool cafReadFile(IGESCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
 bool cafReadFile(STEPCAFControl_Reader& reader, const FilePath& filepath, TaskProgress* progress);
 
-TDF_LabelSequence cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
-TDF_LabelSequence cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
+NCollection_Sequence<TDF_Label> cafTransfer(IGESCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
+NCollection_Sequence<TDF_Label> cafTransfer(STEPCAFControl_Reader& reader, DocumentPtr doc, TaskProgress* progress);
 
 bool cafTransfer(IGESCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);
 bool cafTransfer(STEPCAFControl_Writer& writer, gsl::span<const ApplicationItem> appItems, TaskProgress* progress);

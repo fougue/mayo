@@ -24,7 +24,7 @@ double triangulationVolume(const OccHandle<Poly_Triangulation>& triangulation);
 double triangulationArea(const OccHandle<Poly_Triangulation>& triangulation);
 
 #if OCC_VERSION_HEX >= 0x070600
-using Poly_Triangulation_NormalType = gp_Vec3f;
+using Poly_Triangulation_NormalType = NCollection_Vec3<float>;
 #else
 using Poly_Triangulation_NormalType = gp_Vec;
 #endif
@@ -37,7 +37,7 @@ void setUvNode(const OccHandle<Poly_Triangulation>& triangulation, int index, do
 void allocateNormals(const OccHandle<Poly_Triangulation>& triangulation);
 
 Poly_Triangulation_NormalType normal(const OccHandle<Poly_Triangulation>& triangulation, int index);
-const Poly_Array1OfTriangle& triangles(const OccHandle<Poly_Triangulation>& triangulation);
+const NCollection_Array1<Poly_Triangle>& triangles(const OccHandle<Poly_Triangulation>& triangulation);
 
 enum class Orientation {
     Unknown,
@@ -83,11 +83,11 @@ private:
     bool m_isFinalized = false;
     OccHandle<Poly_Polygon3D> m_polygon;
 #if OCC_VERSION_HEX < 0x070500
-    TColgp_Array1OfPnt m_nodes;
-    TColStd_Array1OfReal m_params;
+    NCollection_Array1<gp_Pnt> m_nodes;
+    NCollection_Array1<double> m_params;
 #endif
-    TColgp_Array1OfPnt* m_ptrNodes = nullptr;
-    TColStd_Array1OfReal* m_ptrParams = nullptr;
+    NCollection_Array1<gp_Pnt>* m_ptrNodes = nullptr;
+    NCollection_Array1<double>* m_ptrParams = nullptr;
 };
 
 } // namespace MeshUtils

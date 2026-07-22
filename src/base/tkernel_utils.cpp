@@ -20,6 +20,24 @@ TKernelUtils::start(const OccHandle<Message_ProgressIndicator>& progress)
 #endif
 }
 
+const char* TKernelUtils::errorMessage(const Standard_Failure& err)
+{
+#if OCC_VERSION_HEX >= 0x080000
+    return err.what();
+#else
+    return err.GetMessageString();
+#endif
+}
+
+const char* TKernelUtils::errorTypeName(const Standard_Failure& err)
+{
+#if OCC_VERSION_HEX >= 0x080000
+    return err.ExceptionType();
+#else
+    return err.DynamicType()->Name();
+#endif
+}
+
 std::string TKernelUtils::colorToHex(const Quantity_Color& color)
 {
 //#if OCC_VERSION_HEX >= 0x070400

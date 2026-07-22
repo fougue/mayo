@@ -23,7 +23,6 @@
 #include <Image_AlienPixMap.hxx>
 #include <TDF_AttributeIterator.hxx>
 #include <TDF_ChildIterator.hxx>
-#include <TDF_LabelSequence.hxx>
 #include <TDataStd_Name.hxx>
 #include <TDataStd_TreeNode.hxx>
 #include <TDataStd_UAttribute.hxx>
@@ -183,7 +182,8 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, int value)
 }
 
 static QTreeWidgetItem* createPropertyTreeItem(
-        const QString& text, double value, const QStringUtils::TextOptions& options = appDefaultTextOptions())
+        const QString& text, double value, const QStringUtils::TextOptions& options = appDefaultTextOptions()
+    )
 {
     auto itemProperty = createPropertyTreeItem(text);
     itemProperty->setText(1, QStringUtils::text(value, options));
@@ -197,7 +197,9 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const QStrin
     return itemProperty;
 }
 
-static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const OccHandle<TCollection_HAsciiString>& value)
+static QTreeWidgetItem* createPropertyTreeItem(
+        const QString& text, const OccHandle<TCollection_HAsciiString>& value
+    )
 {
     return createPropertyTreeItem(text, to_QString(value));
 }
@@ -264,7 +266,8 @@ static QTreeWidgetItem* createPropertyTreeItem(const QString& text, const TopoDS
 }
 
 static void loadLabelMaterialProperties(
-        const TDF_Label& label, const OccHandle<XCAFDoc_MaterialTool>& materialTool, QTreeWidgetItem* treeItem)
+        const TDF_Label& label, const OccHandle<XCAFDoc_MaterialTool>& materialTool, QTreeWidgetItem* treeItem
+    )
 {
     QList<QTreeWidgetItem*> listItemProp;
     auto fnAddItem = [&](QTreeWidgetItem* item) { listItemProp.push_back(item); };
@@ -321,7 +324,7 @@ static QPixmap loadPixmap(const QByteArray& fileData)
         // QPixmap::loadFromData() failed, try with OpenCascade Image_AlienPixMap::Load()
         Image_AlienPixMap occPixmap;
         okLoad = occPixmap.Load(
-            reinterpret_cast<const Standard_Byte*>(fileData.constData()),
+            reinterpret_cast<const uint8_t*>(fileData.constData()),
             fileData.size(),
             TCollection_AsciiString{}
         );
@@ -570,9 +573,9 @@ static void loadLabelShapeProperties(
     fnAddItem(createPropertyTreeItem("IsExternRef", XCAFDoc_ShapeTool::IsExternRef(label)));
     fnAddItem(createPropertyTreeItem("IsReference", XCAFDoc_ShapeTool::IsReference(label)));
 
-    TDF_LabelSequence seqLabelUser;
+    NCollection_Sequence<TDF_Label> seqLabelUser;
     XCAFDoc_ShapeTool::GetUsers(label, seqLabelUser);
-    fnAddItem(createPropertyTreeItem("UserCount", seqLabelUser.Size()));
+    fnAddItem(createPropertyTreeItem("UserCount", static_cast<int>(seqLabelUser.Size())));
 
     if (XCAFDoc_ShapeTool::IsReference(label)) {
         TDF_Label labelRef;
@@ -622,7 +625,7 @@ static void loadLabelDimensionProperties(const TDF_Label& label, QTreeWidgetItem
 
     fnAddItem(createPropertyTreeItem("IsDimWithClassOfTolerance", dimObject->IsDimWithClassOfTolerance()));
     if (dimObject->IsDimWithClassOfTolerance()) {
-        Standard_Boolean hole;
+        bool hole;
         XCAFDimTolObjects_DimensionFormVariance formVariance;
         XCAFDimTolObjects_DimensionGrade grade;
         if (dimObject->GetClassOfTolerance(hole, formVariance, grade)) {

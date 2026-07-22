@@ -6,6 +6,7 @@
 #include "../base/application.h"
 #include "../base/io_system.h"
 #include "../base/settings.h"
+#include "../base/tkernel_utils.h"
 #include "../io_assimp/io_assimp.h"
 #include "../io_dxf/io_dxf.h"
 #include "../io_gmio/io_gmio.h"
@@ -429,11 +430,13 @@ static int runApp(QCoreApplication* qtApp)
         appModule->settings()->save();
         return code;
     }
+    catch (const Standard_Failure& err) {
+        fnCriticalExit(
+            Main::tr("[%1] %2").arg(TKernelUtils::errorTypeName(err), TKernelUtils::errorMessage(err))
+        );
+    }
     catch (const std::exception& err) {
         fnCriticalExit(err.what());
-    }
-    catch (const Standard_Failure& err) {
-        fnCriticalExit(Main::tr("[%1] %2").arg(err.DynamicType()->Name(), err.GetMessageString()));
     }
     catch (...) {
         fnCriticalExit(Main::tr("Unknown exception"));

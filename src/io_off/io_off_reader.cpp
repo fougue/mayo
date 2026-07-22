@@ -267,7 +267,7 @@ bool OffReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return true;
 }
 
-TDF_LabelSequence OffReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> OffReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     if (m_vecVertex.empty())
         return {};

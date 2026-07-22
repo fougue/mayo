@@ -31,7 +31,7 @@ class V3dViewCameraAnimation {
 public:
     using ViewFunction = std::function<void(const OccHandle<V3d_View>&)>;
 
-    V3dViewCameraAnimation();
+    V3dViewCameraAnimation() = default;
     ~V3dViewCameraAnimation() = default;
 
     bool hasBackend() const { return m_backend.get() != nullptr; }
@@ -62,9 +62,9 @@ private:
 
     std::unique_ptr<IAnimationBackend> m_backend;
     OccHandle<V3d_View> m_view;
-    OccHandle<Graphic3d_Camera> m_cameraStart;
-    OccHandle<Graphic3d_Camera> m_cameraEnd;
-    QuantityTime m_duration = 1 * Quantity_Second;
+    OccHandle<Graphic3d_Camera> m_cameraStart{new Graphic3d_Camera};
+    OccHandle<Graphic3d_Camera> m_cameraEnd{new Graphic3d_Camera};
+    QuantityTime m_duration{1 * Quantity_Second};
     std::function<void(const OccHandle<V3d_View>&)> m_fnViewRender;
 };
 

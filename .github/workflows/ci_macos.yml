@@ -27,15 +27,13 @@ jobs:
       run: brew install qt@${{matrix.qt_version_major}}
 
     - name: Install OpenCascade
-      run: |
-        brew tap-new local/pinned || true
-        curl -fsSL -o "$(brew --repo local/pinned)/Formula/opencascade.rb" \
-          https://raw.githubusercontent.com/Homebrew/homebrew-core/a8a19dc560345e127253bf8f20c53e8d2ffabdf3/Formula/o/opencascade.rb
-
-        sed -i '' '/no_autobump!/d' "$(brew --repo local/pinned)/Formula/opencascade.rb"
-        brew install local/pinned/opencascade
-        brew pin opencascade
-        brew info opencascade
+      run: brew install opencascade
+#        # Install v7.9.3
+#        brew tap-new local/pinned || true
+#        curl -fsSL -o "$(brew --repo local/pinned)/Formula/opencascade.rb" \
+#          https://raw.githubusercontent.com/Homebrew/homebrew-core/a8a19dc560345e127253bf8f20c53e8d2ffabdf3/Formula/o/opencascade.rb
+#        sed -i '' '/no_autobump!/d' "$(brew --repo local/pinned)/Formula/opencascade.rb"
+#        brew install local/pinned/opencascade
 
     - name: Install Assimp
       run: brew install assimp

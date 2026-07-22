@@ -9,12 +9,6 @@
 
 namespace Mayo {
 
-V3dViewCameraAnimation::V3dViewCameraAnimation()
-    : m_cameraStart(new Graphic3d_Camera),
-      m_cameraEnd(new Graphic3d_Camera)
-{
-}
-
 void V3dViewCameraAnimation::setBackend(std::unique_ptr<IAnimationBackend> anim)
 {
     m_backend = std::move(anim);
@@ -94,7 +88,7 @@ void V3dViewCameraAnimation::updateCurrentTime(QuantityTime currTime)
 
     const double t = m_backend ? m_backend->valueForProgress(currTime / m_duration) : 0.;
     const bool prevImmediateUpdate = m_view->SetImmediateUpdate(false);
-    const Graphic3d_CameraLerp cameraLerp(m_cameraStart, m_cameraEnd);
+    const NCollection_Lerp<OccHandle<Graphic3d_Camera>> cameraLerp(m_cameraStart, m_cameraEnd);
     OccHandle<Graphic3d_Camera> camera = m_view->Camera();
     cameraLerp.Interpolate(t, camera);
     m_view->SetCamera(camera);

@@ -51,9 +51,9 @@ bool CafUtils::hasAttribute(const TDF_Label& label, const Standard_GUID& attrGui
     return label.FindAttribute(attrGuid, attr);
 }
 
-TDF_LabelSequence CafUtils::makeLabelSequence(std::initializer_list<TDF_Label> listLabel)
+NCollection_Sequence<TDF_Label> CafUtils::makeLabelSequence(std::initializer_list<TDF_Label> listLabel)
 {
-    TDF_LabelSequence seqLabel;
+    NCollection_Sequence<TDF_Label> seqLabel;
     for (const TDF_Label& label : listLabel)
         seqLabel.Append(label);
 
@@ -66,12 +66,14 @@ int CafUtils::namedDataCount(const OccHandle<TDataStd_NamedData>& data)
         return 0;
 
     return
-        data->GetIntegersContainer().Size()
+        static_cast<int>(
+             data->GetIntegersContainer().Size()
            + data->GetRealsContainer().Size()
            + data->GetStringsContainer().Size()
            + data->GetBytesContainer().Size()
            + data->GetArraysOfIntegersContainer().Size()
            + data->GetArraysOfRealsContainer().Size()
+        )
     ;
 }
 

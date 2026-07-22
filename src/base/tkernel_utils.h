@@ -22,6 +22,8 @@
 class Message_ProgressIndicator;
 #endif
 
+class Standard_Failure;
+
 namespace Mayo {
 
 // Provides helper functions for OpenCascade TKernel library
@@ -37,6 +39,9 @@ public:
                 const OccHandle<Message_ProgressIndicator>&;
 #endif
     static ReturnType_StartProgressIndicator start(const OccHandle<Message_ProgressIndicator>& progress);
+
+    static const char* errorMessage(const Standard_Failure& err);
+    static const char* errorTypeName(const Standard_Failure& err);
 
     // Encodes 'color' into hexadecimal representation with #RRGGBB format
     static std::string colorToHex(const Quantity_Color& color);

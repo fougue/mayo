@@ -43,7 +43,7 @@ bool compareCircle(const gp_Circ& lhs, const gp_Circ& rhs, double tolerance = Pr
             && std::abs(lhs.Radius() - rhs.Radius()) < tolerance;
 }
 
-TopoDS_Edge makePolygonEdge(const TColgp_Array1OfPnt& points)
+TopoDS_Edge makePolygonEdge(const NCollection_Array1<gp_Pnt>& points)
 {
     TopoDS_Edge edge;
     BRep_Builder builder;
@@ -59,7 +59,7 @@ TopoDS_Edge makeQuasiLinearBSplineEdge(const gp_Pnt& p0, const gp_Pnt& p1)
     constexpr int degree = 3;
     constexpr int nbPoles = 4;
 
-    TColgp_Array1OfPnt poles(1, nbPoles);
+    NCollection_Array1<gp_Pnt> poles(1, nbPoles);
     for (int i = 0; i < nbPoles; ++i) {
         const double t = static_cast<double>(i) / (nbPoles - 1);
         const gp_Pnt pnt{
@@ -71,10 +71,10 @@ TopoDS_Edge makeQuasiLinearBSplineEdge(const gp_Pnt& p0, const gp_Pnt& p1)
     }
 
     // Clamped knot vector: single interior span, degree-3 curve, 4 poles
-    TColStd_Array1OfReal knots(1, 2);
+    NCollection_Array1<double> knots(1, 2);
     knots.SetValue(1, 0.);
     knots.SetValue(2, 1.);
-    TColStd_Array1OfInteger mults(1, 2);
+    NCollection_Array1<int> mults(1, 2);
     mults.SetValue(1, degree + 1);
     mults.SetValue(2, degree + 1);
 
@@ -138,7 +138,7 @@ void TestMeasure::BRepCircle_PolygonEdge_test()
     const gp_Pnt pntCenter{ 41.85, 1547.27, 45.89 };
     const double radius = 25.48;
     const int pntCount = 128;
-    TColgp_Array1OfPnt points(1, pntCount);
+    NCollection_Array1<gp_Pnt> points(1, pntCount);
     for (int i = 0; i < pntCount; ++i) {
         const double a = 1.5 * MathConst::pi * (static_cast<double>(i) / static_cast<double>(pntCount));
         const double x = radius * std::cos(a);
@@ -217,7 +217,7 @@ void TestMeasure::BRepAngle_QuasiLinearBSpline45degrees_test()
 
 void TestMeasure::BRepLength_PolygonEdge_test()
 {
-    TColgp_Array1OfPnt points(1, 5);
+    NCollection_Array1<gp_Pnt> points(1, 5);
     points.ChangeValue(1) = gp::Origin();
     points.ChangeValue(2) = gp_Pnt{0, 10, 0};
     points.ChangeValue(3) = gp_Pnt{0, 10, 5};
@@ -237,7 +237,7 @@ void TestMeasure::BRepArea_TriangulationFace_test()
 
     auto app = makeOccHandle<Application>();
     auto doc = app->newDocument();
-    const TDF_LabelSequence seqLabel = reader.transfer(doc, progress);
+    const NCollection_Sequence<TDF_Label> seqLabel = reader.transfer(doc, progress);
     QCOMPARE(seqLabel.Size(), 1);
     const TopoDS_Shape shape = doc->xcaf().shape(seqLabel.First());
     const MeasureArea area = MeasureToolBRep::brepArea(shape);
