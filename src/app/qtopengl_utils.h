@@ -44,7 +44,7 @@ void resetGlStateAfterOcct(const OccHandle<V3d_View>& view);
 
 // Initialize native window for OpenCascade view
 bool initializeGlWindow(
-    const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const Graphic3d_Vec2i& size, double pixelRatio
+    const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const NCollection_Vec2<int>& size, double pixelRatio
 );
 
 // Wrap FBO created by QOpenGLFramebufferObject to OpenCascade viewe target

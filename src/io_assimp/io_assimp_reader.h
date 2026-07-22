@@ -29,7 +29,7 @@ namespace Mayo::IO {
 class AssimpReader : public Reader {
 public:
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
+    NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     static std::unique_ptr<PropertyGroup> createProperties(PropertyGroup* parentGroup);
     void applyProperties(const PropertyGroup* params) override;

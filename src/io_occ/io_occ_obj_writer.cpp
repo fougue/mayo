@@ -10,6 +10,7 @@
 #include "../base/io_system.h"
 #include "../base/messenger.h"
 #include "../base/occ_progress_indicator.h"
+#include "../base/occt_ncollection_indexed_datamap_of_stringstring.h"
 #include "../base/property_builtins.h"
 #include "../base/property_enumeration.h"
 #include "../base/text_id.h"
@@ -76,7 +77,7 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
     RWObj_CafWriter writer(filepath.u8string().c_str());
     writer.ChangeCoordinateSystemConverter().SetInputCoordinateSystem(m_params.inputCoordinateSystem);
     writer.ChangeCoordinateSystemConverter().SetOutputCoordinateSystem(m_params.outputCoordinateSystem);
-    const TColStd_IndexedDataMapOfStringString fileInfo;
+    const NCollection_IndexedDataMapOfStringString fileInfo;
     try {
         if (m_seqRootLabel.IsEmpty())
             return writer.Perform(m_document, fileInfo, occProgress->Start());
@@ -84,7 +85,7 @@ bool OccObjWriter::writeFile(const FilePath& filepath, TaskProgress* progress)
             return writer.Perform(m_document, m_seqRootLabel, nullptr, fileInfo, occProgress->Start());
     }
     catch (const Standard_Failure& err) {
-        this->messenger()->error() << err.GetMessageString();
+        this->messenger()->error() << TKernelUtils::errorMessage(err);
     }
 
     return false;

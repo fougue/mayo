@@ -140,7 +140,7 @@ private:
 template<typename Function>
 void GraphicsScene::foreachDisplayedObject(Function fn) const
 {
-    AIS_ListOfInteractive listObject;
+    NCollection_List<GraphicsObjectPtr> listObject;
     this->aisContextPtr()->DisplayedObjects(listObject);
     for (const GraphicsObjectPtr& ptr : listObject)
         fn(ptr);
@@ -149,7 +149,7 @@ void GraphicsScene::foreachDisplayedObject(Function fn) const
 template<typename Function>
 void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, Function fn) const
 {
-    TColStd_ListOfInteger listMode;
+    NCollection_List<int> listMode;
     this->aisContextPtr()->ActivatedModes(object, listMode);
     for (GraphicsObjectSelectionMode mode : listMode)
         fn(mode);
@@ -158,7 +158,8 @@ void GraphicsScene::foreachActiveSelectionMode(const GraphicsObjectPtr& object, 
 template<typename Function>
 void GraphicsScene::foreachOwner(const GraphicsObjectPtr& object, int selectionMode, Function fn) const
 {
-    OccHandle<SelectMgr_IndexedMapOfOwner> mapEntityOwner;
+    using MapOfOwners = NCollection_Shared<NCollection_IndexedMap<OccHandle<SelectMgr_EntityOwner>>>;
+    OccHandle<MapOfOwners> mapEntityOwner;
     this->aisContextPtr()->EntityOwners(mapEntityOwner, object, selectionMode);
     for (auto it = mapEntityOwner->cbegin(); it != mapEntityOwner->cend(); ++it)
         fn(*it);

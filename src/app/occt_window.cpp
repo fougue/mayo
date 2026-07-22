@@ -57,7 +57,7 @@ Aspect_Drawable OcctWindow::NativeHandle() const
 // function : IsMapped
 // purpose  :
 // =======================================================================
-Standard_Boolean OcctWindow::IsMapped() const
+bool OcctWindow::IsMapped() const
 {
   return !( myWidget->isMinimized() || myWidget->isHidden() );
 }
@@ -98,10 +98,10 @@ Aspect_TypeOfResize OcctWindow::DoResize() const
   const auto scale = myWidget->devicePixelRatioF();
   if ( !myWidget->isMinimized() )
   {
-    if ( Abs ( scale * myWidget->rect().left()   - myXLeft   ) > 2 ) aMask |= 1;
-    if ( Abs ( scale * myWidget->rect().right()  - myXRight  ) > 2 ) aMask |= 2;
-    if ( Abs ( scale * myWidget->rect().top()    - myYTop    ) > 2 ) aMask |= 4;
-    if ( Abs ( scale * myWidget->rect().bottom() - myYBottom ) > 2 ) aMask |= 8;
+    if ( std::abs ( scale * myWidget->rect().left()   - myXLeft   ) > 2 ) aMask |= 1;
+    if ( std::abs ( scale * myWidget->rect().right()  - myXRight  ) > 2 ) aMask |= 2;
+    if ( std::abs ( scale * myWidget->rect().top()    - myYTop    ) > 2 ) aMask |= 4;
+    if ( std::abs ( scale * myWidget->rect().bottom() - myYBottom ) > 2 ) aMask |= 8;
 
     switch ( aMask )
     {
@@ -155,7 +155,7 @@ Aspect_TypeOfResize OcctWindow::DoResize() const
 // function : Ratio
 // purpose  :
 // =======================================================================
-Standard_Real OcctWindow::Ratio() const
+double OcctWindow::Ratio() const
 {
   QRect aRect = myWidget->rect();
   return Standard_Real( aRect.right() - aRect.left() ) / Standard_Real( aRect.bottom() - aRect.top() );
@@ -165,7 +165,7 @@ Standard_Real OcctWindow::Ratio() const
 // function : Size
 // purpose  :
 // =======================================================================
-void OcctWindow::Size ( Standard_Integer& theWidth, Standard_Integer& theHeight ) const
+void OcctWindow::Size (int& theWidth, int& theHeight) const
 {
   QRect aRect = myWidget->rect();
   const auto scale = myWidget->devicePixelRatioF();
@@ -177,8 +177,7 @@ void OcctWindow::Size ( Standard_Integer& theWidth, Standard_Integer& theHeight 
 // function : Position
 // purpose  :
 // =======================================================================
-void OcctWindow::Position ( Standard_Integer& theX1, Standard_Integer& theY1,
-                            Standard_Integer& theX2, Standard_Integer& theY2 ) const
+void OcctWindow::Position (int& theX1, int& theY1, int& theX2, int& theY2) const
 {
   const auto scale = myWidget->devicePixelRatioF();
   theX1 = qRound(scale * myWidget->rect().left());

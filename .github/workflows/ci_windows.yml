@@ -6,7 +6,7 @@ jobs:
   build-windows:
     strategy:
       matrix:
-        occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0]
+        occ_version: [7.3.0, 7.4.0, 7.5.0, 7.6.0, 7.7.0, 7.8.0, 7.9.0, 8.0.0]
         assimp_version: [6.0.5]
         pch: [OFF]
         include:
@@ -39,6 +39,8 @@ jobs:
           echo "occ_zip_sha256=beb30920efe5e5384d500d43dcb8ba1f476a76bb65b268b1af32d807b697bdee" >> "${GITHUB_OUTPUT}"
         ) else if "%occ_version%"=="7.9.0" (
           echo "occ_zip_sha256=e3ec8adea37dd519d6580e3dd1288625c2b0dccbd811c9348c4b138ff9938d32" >> "${GITHUB_OUTPUT}"
+        ) else if "%occ_version%"=="8.0.0" (
+          echo "occ_zip_sha256=0e31fc307db958daa663dc67e2cdaf99fe35836640a95bb3586f93064311facf" >> "${GITHUB_OUTPUT}"
         )
 
         if "%assimp_version%"=="5.3.1" (

@@ -10,7 +10,6 @@
 
 #include <RWGltf_WriterTrsfFormat.hxx>
 #include <RWMesh_CoordinateSystemConverter.hxx>
-#include <TDF_LabelSequence.hxx>
 
 namespace Mayo::IO {
 
@@ -55,7 +54,7 @@ private:
     class Properties;
     Parameters m_params;
     DocumentPtr m_document;
-    TDF_LabelSequence m_seqRootLabel;
+    NCollection_Sequence<TDF_Label> m_seqRootLabel;
 };
 
 } // namespace Mayo::IO

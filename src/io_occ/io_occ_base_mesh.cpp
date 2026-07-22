@@ -107,14 +107,14 @@ static void deepFixInstanceScaling(const TDF_Label& label, Messenger* messenger)
     }
 }
 
-TDF_LabelSequence OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> OccBaseMeshReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     this->applyParameters();
     m_reader.SetDocument(doc);
-    const TDF_LabelSequence seqMark = doc->xcaf().topLevelFreeShapes();
+    const NCollection_Sequence<TDF_Label> seqMark = doc->xcaf().topLevelFreeShapes();
     auto indicator = makeOccHandle<OccProgressIndicator>(progress);
     m_reader.Perform(m_filepath.u8string().c_str(), TKernelUtils::start(indicator));
-    const TDF_LabelSequence seqShapeLabel = doc->xcaf().diffTopLevelFreeShapes(seqMark);
+    const NCollection_Sequence<TDF_Label> seqShapeLabel = doc->xcaf().diffTopLevelFreeShapes(seqMark);
     for (const TDF_Label& shapeLabel : seqShapeLabel)
         deepFixInstanceScaling(shapeLabel, this->messenger());
 

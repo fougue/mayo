@@ -242,7 +242,7 @@ std::unique_ptr<Property> XCaf_DocumentTreeNodePropertiesProvider::Properties::c
     // Helper function taking a TColStd_Array1Of[Integer/Real] and returns a string representation
     // Only the first 20 array items can appear in the string, otherwise it's elided with "..."
     auto fnToString = [](const auto& array) -> std::string {
-        const int arrayTrimSize = std::min(20, array.Size());
+        const int arrayTrimSize = std::min(20, static_cast<int>(array.Size()));
         const bool isTrimArray = arrayTrimSize < array.Size();
         std::string strArray;
         for (auto it = array.cbegin(); it != (array.cbegin() + arrayTrimSize); ++it)
@@ -323,9 +323,9 @@ std::string XCaf_DocumentTreeNodePropertiesProvider::Properties::strShapeLayers(
         const XCaf& xcaf, const TDF_Label& label
     )
 {
-    TDF_LabelSequence seqLayerLabel = xcaf.layers(label);
+    NCollection_Sequence<TDF_Label> seqLayerLabel = xcaf.layers(label);
     if (XCaf::isShapeReference(label)) {
-        TDF_LabelSequence seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
+        NCollection_Sequence<TDF_Label> seqLayerLabelProduct = xcaf.layers(XCaf::shapeReferred(label));
         seqLayerLabel.Append(seqLayerLabelProduct);
     }
 

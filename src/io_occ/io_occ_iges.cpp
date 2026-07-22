@@ -114,7 +114,7 @@ bool OccIgesReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return Private::cafReadFile(*m_reader, filepath, progress);
 }
 
-TDF_LabelSequence OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> OccIgesReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     MayoIO_CafGlobalScopedLock(cafLock);
     OccStaticVariablesRollback rollback;

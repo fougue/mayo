@@ -28,7 +28,7 @@ public:
     ~OccStepReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
+    NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     // Parameters
 

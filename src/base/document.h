@@ -66,7 +66,7 @@ public:
     TDF_Label newEntityShapeLabel();
 
     void addEntityTreeNode(const TDF_Label& label);
-    void addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel);
+    void addEntityTreeNodeSequence(const NCollection_Sequence<TDF_Label>& seqLabel);
     void destroyEntity(TreeNodeId entityTreeNodeId);
 
     // Signals

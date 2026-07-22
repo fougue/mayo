@@ -92,7 +92,7 @@ void WidgetModelTreeBuilder_Xde::refreshTextTreeItem(
         const DocumentTreeNode& node, QTreeWidgetItem* treeItem)
 {
     const TDF_Label labelNode = node.label();
-    TDF_LabelSequence seqLabelRefresh;
+    NCollection_Sequence<TDF_Label> seqLabelRefresh;
     if (XCaf::isShapeReference(labelNode)
             && Module::get()->instanceNameTemplate().contains("%product"))
     {

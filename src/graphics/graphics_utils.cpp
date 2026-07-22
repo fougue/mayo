@@ -213,12 +213,12 @@ int GraphicsUtils::AspectWindow_height(const OccHandle<Aspect_Window>& wnd)
     return AspectWindow_size(wnd).y();
 }
 
-Graphic3d_Vec2i GraphicsUtils::AspectWindow_size(const OccHandle<Aspect_Window>& wnd)
+NCollection_Vec2<int> GraphicsUtils::AspectWindow_size(const OccHandle<Aspect_Window>& wnd)
 {
     if (wnd.IsNull())
         return {};
 
-    Graphic3d_Vec2i size;
+    NCollection_Vec2<int> size;
     wnd->Size(size.x(), size.y());
     return size;
 }

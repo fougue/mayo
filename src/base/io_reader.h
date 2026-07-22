@@ -10,8 +10,6 @@
 #include "io_format.h"
 #include "messenger_client.h"
 
-#include <TDF_LabelSequence.hxx>
-
 #include <gsl/span>
 #include <memory>
 
@@ -36,7 +34,7 @@ public:
 
     // Converts data read during readFile() step into document 'doc' using indicator to report progress
     // Returns the list of entities added to document 'doc'
-    virtual TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) = 0;
+    virtual NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) = 0;
 
     // Apply properties contain in 'group' to the reader's parameter values(known in reader sub-class)
     virtual void applyProperties(const PropertyGroup* group) = 0;

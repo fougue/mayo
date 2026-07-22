@@ -99,7 +99,11 @@ DocumentPtr Application::openDocument(const FilePath& filepath, PCDM_ReaderStatu
 DocumentPtr Application::findDocumentByIndex(int docIndex) const
 {
     OccHandle<TDocStd_Document> doc;
+#if OCC_VERSION_HEX >= 0x080000
+    doc = XCAFApp_Application::GetDocument(docIndex + 1);
+#else
     XCAFApp_Application::GetDocument(docIndex + 1, doc);
+#endif
     return !doc.IsNull() ? DocumentPtr::DownCast(doc) : DocumentPtr();
 }
 

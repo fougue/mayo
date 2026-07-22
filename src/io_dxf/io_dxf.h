@@ -20,7 +20,7 @@ public:
     ~DxfReader();
 
     bool readFile(const FilePath& filepath, TaskProgress* progress) override;
-    TDF_LabelSequence transfer(DocumentPtr doc, TaskProgress* progress) override;
+    NCollection_Sequence<TDF_Label> transfer(DocumentPtr doc, TaskProgress* progress) override;
 
     struct Parameters {
         bool importAnnotations = true;
@@ -63,11 +63,11 @@ public:
 private:
     // Transfer DXF objects by creating a Document root(entity) per DXF layer
     // In the resulting model tree each Document entity is actually a DXF layer
-    TDF_LabelSequence transferByGroupLayers(DocumentPtr doc, TaskProgress* progress);
+    NCollection_Sequence<TDF_Label> transferByGroupLayers(DocumentPtr doc, TaskProgress* progress);
 
     // Transfer DXF objects without considering layers
     // This creates a Document root(entity) per DXF object
-    TDF_LabelSequence transferBySingleEntities(DocumentPtr doc, TaskProgress* progress);
+    NCollection_Sequence<TDF_Label> transferBySingleEntities(DocumentPtr doc, TaskProgress* progress);
 
     class Properties;
     class ReaderImpl;

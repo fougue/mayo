@@ -239,7 +239,7 @@ void WidgetClipPlanes::createPlaneCappingTexture()
     if (file.open(QIODevice::ReadOnly)) {
         const QByteArray fileContents = file.readAll();
         const QByteArray filenameUtf8 = file.fileName().toUtf8();
-        auto fileContentsData = reinterpret_cast<const Standard_Byte*>(fileContents.constData());
+        auto fileContentsData = reinterpret_cast<const uint8_t*>(fileContents.constData());
         auto imageCapping = makeOccHandle<Image_AlienPixMap>();
         imageCapping->Load(fileContentsData, fileContents.size(), filenameUtf8.constData());
         m_textureCapping = new GraphicsTexture2D(imageCapping);

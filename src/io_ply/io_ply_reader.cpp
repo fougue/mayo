@@ -134,7 +134,7 @@ bool PlyReader::readFile(const FilePath& filepath, TaskProgress* /*progress*/)
     return okLoad;
 }
 
-TDF_LabelSequence PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
+NCollection_Sequence<TDF_Label> PlyReader::transfer(DocumentPtr doc, TaskProgress* progress)
 {
     TDF_Label entityLabel;
     if (!m_vecNodeCoord.empty() && !m_vecIndex.empty())

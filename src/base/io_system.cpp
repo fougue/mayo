@@ -200,7 +200,7 @@ bool System::importInDocument(const Args_ImportInDocument& args) const
         Format fileFormat = Format_Unknown;
         TaskProgress* progress = nullptr;
         TaskId taskId = 0;
-        TDF_LabelSequence seqTransferredEntity;
+        NCollection_Sequence<TDF_Label> seqTransferredEntity;
         bool readSuccess = false;
         bool transferred = false;
         MessageCollecter messenger;

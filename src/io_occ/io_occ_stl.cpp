@@ -76,7 +76,7 @@ bool OccStlReader::readFile(const FilePath& filepath, TaskProgress* progress)
     return !m_mesh.IsNull();
 }
 
-TDF_LabelSequence OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
+NCollection_Sequence<TDF_Label> OccStlReader::transfer(DocumentPtr doc, TaskProgress* /*progress*/)
 {
     if (m_mesh.IsNull())
         return {};

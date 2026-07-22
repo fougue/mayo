@@ -203,7 +203,7 @@ void Document::addEntityTreeNode(const TDF_Label& label)
     }
 }
 
-void Document::addEntityTreeNodeSequence(const TDF_LabelSequence& seqLabel)
+void Document::addEntityTreeNodeSequence(const NCollection_Sequence<TDF_Label>& seqLabel)
 {
     std::vector<TreeNodeId> vecTreeNodeId;
     vecTreeNodeId.reserve(seqLabel.Size());

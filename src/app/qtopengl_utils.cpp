@@ -258,7 +258,7 @@ void resetGlStateAfterOcct(const OccHandle<V3d_View>& view)
 }
 
 bool initializeGlWindow(
-        const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const Graphic3d_Vec2i& size, double pixelRatio
+        const OccHandle<V3d_View>& view, Aspect_Drawable nativeWin, const NCollection_Vec2<int>& size, double pixelRatio
     )
 {
     auto driver = OccHandle<OpenGl_GraphicDriver>::DownCast(view->Viewer()->Driver());
@@ -305,8 +305,8 @@ bool initializeGlFramebufferObject(const OccHandle<V3d_View>& view)
         return false;
     }
 
-    Graphic3d_Vec2i viewSizeOld;
-    const Graphic3d_Vec2i viewSizeNew = defaultFbo->GetVPSize();
+    NCollection_Vec2<int> viewSizeOld;
+    const NCollection_Vec2<int> viewSizeNew = defaultFbo->GetVPSize();
     auto window = OccHandle<OcctNeutralWindow>::DownCast(view->Window());
     window->Size(viewSizeOld.x(), viewSizeOld.y());
     if (viewSizeNew != viewSizeOld) {

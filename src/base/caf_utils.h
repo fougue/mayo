@@ -6,9 +6,9 @@
 #pragma once
 
 #include "occ_handle.h"
+#include <NCollection_Sequence.hxx>
 #include <Standard_Version.hxx>
 #include <TDF_Label.hxx>
-#include <TDF_LabelSequence.hxx>
 
 #include <vector>
 
@@ -43,8 +43,8 @@ struct CafUtils {
     // Is there an attribute of type 'AttributeType' attached to 'label'?
     template<typename AttributeType> static bool hasAttribute(const TDF_Label& label);
 
-    // Returns a TDF_LabelSequence object built from initializer list
-    static TDF_LabelSequence makeLabelSequence(std::initializer_list<TDF_Label> listLabel);
+    // Returns a NCollection_Sequence<TDF_Label> object built from initializer list
+    static NCollection_Sequence<TDF_Label> makeLabelSequence(std::initializer_list<TDF_Label> listLabel);
 
     // -- TDataStd_NamedData
 

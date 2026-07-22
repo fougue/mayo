@@ -64,11 +64,11 @@ public:
 
   //! Returns True if the window <me> is opened
   //! and False if the window is closed.
-  Standard_Boolean IsMapped() const override;
+  bool IsMapped() const override;
 
   //! Apply the mapping change to the window <me>
   //! and returns TRUE if the window is mapped at screen.
-  Standard_Boolean DoMapping() const override { return Standard_True; }
+  bool DoMapping() const override { return true; }
 
   //! Opens the window <me>.
   void Map() const override;
@@ -76,14 +76,13 @@ public:
   //! Closes the window <me>.
   void Unmap() const override;
 
-  void Position( Standard_Integer& theX1, Standard_Integer& theY1,
-                 Standard_Integer& theX2, Standard_Integer& theY2 ) const override;
+  void Position(int& theX1, int& theY1, int& theX2, int& theY2 ) const override;
 
   //! Returns The Window RATIO equal to the physical
   //! WIDTH/HEIGHT dimensions.
-  Standard_Real Ratio() const override;
+  double Ratio() const override;
 
-  void Size( Standard_Integer& theWidth, Standard_Integer& theHeight ) const override;
+  void Size(int& theWidth, int& theHeight) const override;
 
   Aspect_FBConfig NativeFBConfig() const override { return nullptr; }
 
